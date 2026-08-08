@@ -4,7 +4,7 @@ title: Solana dex_pool_swaps indexer — finalize
 summary: >-
   Gated finalize companion for solana_dex_pool_swaps_indexer_2026_08_08.md — reconcile evidence back into the source
   scoping doc, re-check any deferred follow-up, then archive both docs per the standard 6-step ritual.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -35,9 +35,8 @@ locked_since:
 supersedes:
 superseded_by:
 source: >-
-  Authored alongside solana_dex_pool_swaps_indexer_2026_08_08.md per task_template.md's "Every AO-dispatched plan
-  needs a gated finalize plan" rule (2026-07-24 operator ruling) — this plan is multi-todo, not the single-todo
-  exemption.
+  Authored alongside solana_dex_pool_swaps_indexer_2026_08_08.md per task_template.md's "Every AO-dispatched plan needs
+  a gated finalize plan" rule (2026-07-24 operator ruling) — this plan is multi-todo, not the single-todo exemption.
 context_scope:
   [
     /plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md,
@@ -47,27 +46,31 @@ context_scope:
 
 # Solana dex_pool_swaps indexer — finalize
 
-> Gated on `solana_dex_pool_swaps_indexer_2026_08_08.md` (`depends_on` + `gate_on_depends: true`) — every task in
-> THIS plan waits until every task in the named plan is done.
+> Gated on `solana_dex_pool_swaps_indexer_2026_08_08.md` (`depends_on` + `gate_on_depends: true`) — every task in THIS
+> plan waits until every task in the named plan is done.
 
 ## Todos
 
 - [ ] [REVIEW] P2. **Reconcile evidence into the source scoping doc.** Re-verify every commit cited by
       `solana_dex_pool_swaps_indexer_2026_08_08.md`'s completed todos actually exists (`git show <sha>` /
       `git merge-base --is-ancestor`, never trust the plan's own citation blind), then update
-      `/plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`'s "Open actions" todo + Progress Log
-      to point at the finished implementation plan, closing that doc's own sole open item by citation. Repo:
+      `/plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`'s "Open actions" todo + Progress Log to
+      point at the finished implementation plan, closing that doc's own sole open item by citation. Repo:
       unified-trading-pm.
 - [ ] [DOC] P2. **Archive both docs.** Once the plan above is fully done (all 5 todos `[x]`, unlocked) and the
       reconciliation todo above has landed, run the standard 6-step archival ritual on
       `solana_dex_pool_swaps_indexer_2026_08_08.md` — and separately confirm whether
-      `solana_dex_pool_swaps_indexer_scope_2026_07_12.md` (the source scoping issue doc) now has zero open todos
-      after the reconciliation above; if so, archive it too via the same ritual (task_template.md §4's rule 4:
-      "for a batch-style extraction plan, also check each SOURCE doc"). Fix every corpus referrer path in the same
-      pass. Repo: unified-trading-pm.
+      `solana_dex_pool_swaps_indexer_scope_2026_07_12.md` (the source scoping issue doc) now has zero open todos after
+      the reconciliation above; if so, archive it too via the same ritual (task_template.md §4's rule 4: "for a
+      batch-style extraction plan, also check each SOURCE doc"). Fix every corpus referrer path in the same pass. Repo:
+      unified-trading-pm.
 
 ## Progress Log
 
 - **2026-08-08**: authored alongside the main plan (`solana_dex_pool_swaps_indexer_2026_08_08.md`), `status: draft`
   until that plan's todos complete (per its own `gate_on_depends: true` — this is belt-and-suspenders with the draft
   status, since the plan is genuinely new and untouched).
+- **2026-08-08**: flipped `status: draft` → `active` — `gate_on_depends: true` already holds actual dispatch until the
+  parent plan's todos are done, so the extra `draft` gate was redundant (flagged by `check_finalize_plan_coverage.py`'s
+  "finalize plan stuck at draft" ratchet). Per task_template.md §4 / ag-closeout-audit SKILL.md's 2026-07-30 fix: a
+  gated finalize plan should be `active` from authorship.

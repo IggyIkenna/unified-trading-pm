@@ -190,6 +190,13 @@ def main() -> int:
     report = build_report(cast(str, args.repo), findings, cast(int, args.threshold), newest_url)
     print(report)
     _write_github_output("stuck", "true" if findings else "false")
+    # Worst-repo streak, exposed so the caller can fold it into notify-slack.yml's dedup_key
+    # (sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md): a flat dedup_key +
+    # cooldown_min suppressed a repost even while the streak was measurably worsening (4->6) —
+    # the condition never got quieter, the alert just went silent. Folding max_streak into the
+    # key means a NEW worse (or better) value is a "new" key that bypasses the cooldown, while a
+    # truly flat streak still dedupes normally.
+    _write_github_output("max_streak", str(max(findings.values())) if findings else "0")
     if args.slack:
         print("---SLACK---")
         print(report)
