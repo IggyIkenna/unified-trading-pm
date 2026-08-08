@@ -38,6 +38,7 @@ repos:
     unified-trading-system-ui,
     deployment-service,
     e2e-testing,
+    unified-trading-pm,
   ]
 scope: [engineer]
 tags: [reconciliation, paper-trading, determinism, ao-dispatch, close-out, batch-1, citadel]
@@ -181,24 +182,30 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       P2.11.14, DONE) produces non-null signals on the next paper run. Source:
       `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P2.11.16 (moved verbatim).
 
-- [ ] [BACKEND] P2. **Complete `TSMOM_BTC_CTA` capability wiring into the UAC `archetype_capability_manifest`** (was
-      Phase 11 P2.11.20 in the source doc) — `TSMOM_BTC_CTA` is already in `StrategyArchetype` + the UI
-      enum/capability-verdict-matrix (Phase 11 P2.11.17, DONE) but is MISSING from
-      `unified-api-contracts/.../internal/architecture_v2/archetype_capability_manifest.json` (22 archetypes, no TSMOM)
-      — the archetype is half-wired (no per-venue/asset-group capability cells), and the e2e playbook
-      `tests/e2e/playbooks/refactor/refactor-g1-8-uac-archetype-capability.spec.ts` fails on it. Fix: add TSMOM's
-      capability declaration to `registry/archetype_capability_matrix.py` (family RULES_DIRECTIONAL, BTC-level CTA →
-      CEFI perp+spot on the major venues, signal `price`/trend). **round5-cross-cutting-audit 2026-08-08**: the "confirm
-      with operator (CeFi-only BTC, or hybrid)" note is answered by
-      `/codex/09-strategy/architecture-v2/category-     instrument-coverage.md` §19 `TSMOM_BTC_CTA` — "Scope is
-      intentionally BTC-only... DeFi/TradFi: N/A by design." No live operator decision needed; implement CeFi-only per
-      that SSOT. (was: confirm the exact venue/asset-group profile against the already-shipped `TsmomBtcCtaEngine`
-      implementation in strategy-service if the source's original "confirm with operator" note turns out to need a live
-      decision, rather than blocking on it) → regen via `scripts/generate_archetype_capability_manifest.py` → sync to UI
-      via `scripts/propagation/sync-archetype-capability-to-ui.sh` → re-QG/ship UAC+UI. Repo: unified-api-contracts (+
-      UI sync). **Done when**: `archetype_capability_manifest.json` includes TSMOM_BTC_CTA (23 archetypes), the UI sync
-      script has run, `refactor-g1-8-uac-archetype-capability.spec.ts` passes, and both repos are QG-green. Source:
-      `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P2.11.20 (moved verbatim).
+- [x] ✅ [BACKEND] P2. **Complete `TSMOM_BTC_CTA` capability wiring into the UAC `archetype_capability_manifest`** (was
+      Phase 11 P2.11.20 in the source doc) — **this todo's own premise was STALE by the time it was picked up**:
+      verified 2026-08-08 that `archetype_capability_manifest.json` already carries TSMOM_BTC_CTA with full CEFI
+      perp+spot capability cells (53 archetypes total, not the 22 the todo text describes —
+      `test_registry_has_eighteen_archetypes` in `unified-api-contracts` already asserts 53 and documents the TSMOM
+      addition landing 2026-06-22, ahead of subsequent Phase-9 growth 2026-07-21), the UI `coverage.ts` mirror already
+      carries the synced row, and `unified-api-contracts` is CI-green on `live-defi-rollout` (`quality-gates-v2` run
+      31280977700, 2026-08-08T22:08:02Z). No code change was needed in `unified-api-contracts` or
+      `unified-trading-system-ui` — both were already correctly wired. What was actually blocking
+      `refactor-g1-8-uac-archetype-capability.spec.ts` (and thus this todo's own done-when):
+      `unified-trading-pm/scripts/propagation/sync_archetype_capability_to_ui.py`'s `--check` mode compared the RAW
+      (unformatted) generator render byte-for-byte against the prettier-formatted committed `coverage.ts` — a structural
+      bug (unrelated to TSMOM/archetype content) that made `--check` report false drift on every single invocation,
+      failing the spec's "PM sync --check reports coverage.ts in sync" test regardless of manifest state. Fix: pipe the
+      render through prettier (version-guarded ≥3.9.5, mirroring `prettier-autostage.sh`'s own resolution/fallback
+      chain) before both the `--write` output and the `--check` comparison, so the generator's notion of "in sync"
+      matches what the repo's own formatting hook actually commits. Repo: unified-trading-pm —
+      unified-trading-pm@bbaf01e17. **Verified**: `sync-archetype-capability-to-ui.sh --check` now exits 0 against the
+      unmodified committed `coverage.ts`; `refactor-g1-8-uac-archetype-capability.spec.ts` 6/6 pass
+      (`--project=chromium --workers=1`, one retry needed at default 30s timeout due to shared-host dev-server
+      cold-start contention — passes cleanly at 60s, a known flake class per
+      `codex/06-coding-standards/ui-testing-layers.md`, not a regression); `unified-api-contracts` CI green (cited
+      above, no local re-run needed since no code changed there); `unified-trading-pm` `quality-gates.sh` green on this
+      commit. Source: `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 11, item P2.11.20 (moved verbatim).
 
 - [ ] [DATA] P2. **features-service: recompute the corpus for the intraday BTC mean-reversion cs-ML feature (bounded
       scope — corpus recompute + drift-check only, NOT the cs retrain)** (was Phase 11 P2.11.18 in the source doc,
