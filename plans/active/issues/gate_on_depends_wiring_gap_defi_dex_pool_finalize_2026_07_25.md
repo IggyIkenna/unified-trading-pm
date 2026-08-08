@@ -745,3 +745,37 @@ note above already covers. Independently re-verified before declining:
   `- [ ]` todo — a violation of the workspace's own "every follow-up is a todo, never prose" rule. Added the todo above
   so it's dispatchable rather than perpetually re-discovered in prose across future bounces. Doc stays open, NOT
   archived.
+
+## 2026-08-08 recurrence — another distinct plan pair (defi_expected_unattempted_backlog_1m_2026_07_03), zero-derived-parent-row again, new sub-bullet shape
+
+Slot 7 was dispatched `defi_expected_unattempted_backlog_1m_2026_07_03_finalize-001` (plan_ref
+`plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md`,
+`depends_on: [defi_expected_unattempted_backlog_1m_2026_07_03]`, `gate_on_depends: true`) while the upstream issue doc's
+sole remaining `[SCRIPT] P2` todo was still `- [ ]` open. Verified live:
+
+```
+GET /api/backlog/defi_expected_unattempted_backlog_1m_2026_07_03_finalize-001/blockers
+→ {"explanation":"ready (no blockers)"}
+
+GET /api/backlog (filtered for defi_expected_unattempted_backlog_1m_2026_07_03):
+defi_expected_unattempted_backlog_1m_2026_07_03_finalize-001   dispatched
+defi_expected_unattempted_backlog_1m_2026_07_03_finalize-002   queued
+```
+
+Zero backlog rows exist for the upstream `[SCRIPT]` todo itself — only the finalize plan's own 2 tasks are present. Same
+"zero-derived-parent-row" pattern as the 10th/11th+ bounces above. **New data point for the still-open root-cause item 3
+(the suspected markdown-bold-after-`P<n>.`-tag derivation edge case)**: the undispatched todo here is BOTH (a) an
+indented `  * [ ]` sub-bullet nested under a parent `- [x]` checkbox (not a top-level `- [ ]` line — a shape not
+previously recorded in this doc's repro list) AND (b) carries `**bold**` immediately after its `P2.` tag
+(`* [ ] [SCRIPT] P2. **Add \`a_token\`/\`debt_token\`
+aliases...**`) — both suspected trigger shapes present at once. Worth the `backend_engineer`checking whether`regen_backlog_from_plan.py`'s todo-derivation regex requires a top-level (unindented) `-
+[ ]`/`- [x]`prefix and silently skips indented` * [ ]` sub-bullets entirely, independent of the bold-span hypothesis.
+
+Independently re-verified the underlying code state before declining (did not just skip blind): the source doc's
+`[SCRIPT]` todo turned out to be significantly over-scoped relative to actual current code — most of its claimed effect
+(alias resolution, the `perp_trades` over-fan non-reproduction) already holds true via an unrelated pre-existing fix;
+only a small VENUS/SOLEND `oracle_prices` widening + one regression test remain. Narrowed the source todo in place to
+reflect this (see `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`'s 2026-08-08 Progress Log entry for full
+evidence) — a genuine content correction, not a false-completion claim. Declining to flip the finalize plan's `[REVIEW]`
+checkbox (the gate is still genuinely unmet even after narrowing); not touching the `[DOC]` archival todo. Skipping this
+task rather than forcing it through, per this doc's established disposition.

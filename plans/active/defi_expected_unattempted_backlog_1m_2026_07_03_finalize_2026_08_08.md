@@ -67,6 +67,12 @@ is done. Do not start manually before then.
       own follow-up note (only if that deletion sub-step was actually attempted — the source todo scopes it as a "do not
       do in this todo" follow-up, so its absence is not itself a finding). Done-when: all applicable points
       independently re-verified with cited evidence; any mis-citation found is corrected in the source doc directly.
+      **NOT DISPATCHABLE YET (2026-08-08, slot 7)** — GATED: the source doc's `[SCRIPT]` todo this depends on is still
+      `- [ ]` open (confirmed live). Dispatched anyway due to the standing `gate_on_depends` wiring gap tracked in
+      `issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` (a further documented bounce — see the
+      recurrence note added there). Declining to flip this checkbox; see that doc + this plan's Progress Log for the
+      independent re-verification I DID perform (found the underlying build mostly never shipped; narrowed + corrected
+      the source doc's `[SCRIPT]` todo directly). Re-dispatch once the source doc's todo is genuinely done.
 - [ ] [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` and this finalize doc itself: archive both to
@@ -81,3 +87,14 @@ is done. Do not start manually before then.
 
 - **2026-08-08 (na-eligibility-audit round7 RECLASSIFY sweep)**: finalize plan authored alongside the RECLASSIFY flip of
   the source issue doc, per `task_template.md`'s finalize-plan-coverage rule.
+- **2026-08-08 (REVIEW re-verification, slot 7)**: dispatched despite the gate — the source doc's `[SCRIPT]` todo is
+  still open (0 backlog rows derive for it at all, matching the still-open "zero-derived-parent-row" root-cause
+  mechanism in `issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`; added a recurrence note there).
+  Performed the independent re-verification anyway (didn't just skip blind): the underlying
+  `_INSTRUMENT_TYPE_ ALIASES`/`PROTOCOL_CAPABILITIES` build was NEVER shipped, but live-testing found most of its
+  claimed effect already true via an unrelated pre-existing fix (identity-fallback alias resolution +
+  AAVE_V3/SPARK/FLUID already declaring `oracle_prices`) — only VENUS/SOLEND `oracle_prices` widening + one regression
+  test remain genuinely outstanding. Narrowed + corrected the source doc's `[SCRIPT]` todo in place to that reduced
+  scope (see its Progress Log entry dated 2026-08-08). NOT flipping this `[REVIEW]` checkbox (source doc still has one
+  open todo) — declining per the gate_on_depends issue doc's established disposition; skipping this task rather than
+  forcing it through.
