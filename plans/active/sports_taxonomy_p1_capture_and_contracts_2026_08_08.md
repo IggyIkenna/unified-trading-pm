@@ -249,7 +249,7 @@ achieved by exclusion, not canonicalisation.**
       deployment-api) are P2/P3 scope once the data re-stamp actually happens. Flagging here so P2 picks up: UTL
       `AvailabilityRecord.timeframe` needs the physical split, and the two readers above need to switch to the new
       `horizon` column once the writer stamps it.
-- [ ] [CODE] P0. **Merge the sports data_type vocabulary to ONE lowercase form.** This is the operator ruling that
+- [x] ✅ [CODE] P0. **Merge the sports data_type vocabulary to ONE lowercase form.** This is the operator ruling that
       OVERTURNS `/codex/02-data/sports-data-types-catalog.md`'s "legitimately coexist; do NOT merge". Blast radius is
       the WHOLE 19-token IS reference vocabulary (`FIXTURES`, `MATCHES`, `PLAYER_STATS`, `INJURIES`, `STANDINGS`,
       `TEAMS`, `XG`, …) — not just `ODDS`. Land the CONTRACT here; the data re-stamp is P2 and is gated on the in-flight
@@ -258,7 +258,21 @@ achieved by exclusion, not canonicalisation.**
       (`SCHEDULE_DEFINING_DATA_TYPES` frozenset), `availability_semantics.py`, `required_window_registry.py`,
       `league_data.py`, `feature_upstream.py` — all carry uppercase IS tokens; IS scripts
       `enumerate_expected_universe.py` + `build_instrument_catalogue.py`; every features-service/ml-service loader
-      keying on uppercase IS entity names. Full enumeration: P2 `[REVIEW] P0`.
+      keying on uppercase IS entity names. Full enumeration: P2 `[REVIEW] P0`. — **LANDED 2026-08-08**
+      `unified-api-contracts@298e628b` — added `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM` (dict comprehension over every
+      `SPORTS_DATA_TYPE_TO_SOURCE` key, all 19 IS tokens) + `canonical_sports_is_data_type()` resolver (accepts either
+      case, returns the lowercase target form) in `league_data.py`, exported from both the sports domain `__init__.py`
+      and the top-level `unified_api_contracts/__init__.py`. Additive-only — deliberately NOT wired into
+      `SPORTS_DATA_TYPE_TO_SOURCE`'s own keys or `enumerate_expected_universe.py`'s could-exist enumeration this phase,
+      to avoid double-counting the axis ahead of P2's physical re-stamp (same pattern as the `SPORTS_HORIZONS` todo
+      above). Drift-guard test (`test_sports_is_data_type_lowercase_form_covers_every_axis_key`) asserts every
+      `SPORTS_DATA_TYPE_TO_SOURCE` key has a registered lowercase form so a future IS data_type addition can't silently
+      miss the contract; 4 new tests green (export presence, drift-guard coverage, lowercase-value invariant, both-case
+      resolution via `canonical_sports_is_data_type`). Full UAC `quality-gates.sh` green. The 9 UAC consumer files +
+      IS's `enumerate_expected_universe.py`/`build_instrument_catalogue.py` + features-service/ ml-service loaders are
+      NOT yet wired to this table (unchanged this phase, per the plan header's "contracts only, no GCS/manifest
+      mutation" scope) — that live-wiring is the P2 `[REVIEW] P0` full-enumeration todo referenced above.
+      unified-api-contracts
 - [ ] [CODE] P0. **Retire the `exchange_odds`/`fixed_odds` instrument_type split** — exchange-vs-sportsbook is a
       property of the VENUE (UAC `SportsVenueType` already encodes it), so stamping it per-instrument is redundant.
       Derive at read time. This also resolves
