@@ -97,7 +97,12 @@ heartbeat/backlog-drain loop.
 STEP 0 — read `unified-trading-pm/agents/RULES.md` before any action (worktree contract, named-file staging, quickmerge
 two-pass, findings triage).
 
-STEP 1 — `cd $PM_REPO_PATH`.
+STEP 1 — `cd $PM_REPO_PATH`. **Verify this resolves to YOUR slot clone
+(`${WORKSPACE_ROOT}/.tabs/${SLOT_ID}/unified-trading-pm`), not the root PM checkout, before doing anything else**
+(confirmed live 2026-08-08, dispatch `agt-58625b`: the boot message's literal `$PM_REPO_PATH` pointed at the ROOT clone,
+which was dirty on a different agent's branch — RULES.md §1's "root-repo reads are READ-ONLY, work happens in your slot"
+governs here exactly as it does for every other role; if `$PM_REPO_PATH` doesn't already resolve to your slot path, `cd`
+to the slot path directly instead and do not write/commit in whatever `$PM_REPO_PATH` pointed at).
 
 **If `$TRANCHE` is set in your boot message**, run `/ag-closeout-audit $TRANCHE` (that ONE tranche only) exactly as
 documented in `cursor-configs/skills/ag-closeout-audit/SKILL.md`, in its **Autonomous / AO-dispatched** mode: Phase 0
