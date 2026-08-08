@@ -281,6 +281,15 @@ cycle).
   glue-runner-pool depletion issue — see `fleet_promoter_glue_runner_stall_2026_08_06.md` Progress Log entry added the
   same session. Will update this doc's Progress Log once the fleet promoter recovers and the live tag-mint verification
   completes.
+- **2026-08-07 (fleet_workflow_template_dedup todo 5 session, correction)**: The "0 glue runners" causal attribution
+  above was a misdiagnosis (see the full correction in `fleet_promoter_glue_runner_stall_2026_08_06.md`'s Progress Log)
+  — `ldr-to-main-promote-fleet.yml` had already been flipped to `ubuntu-latest` hours earlier
+  (`unified-trading-pm@c8cd56251e`, 12:23 UTC), so it never actually depended on the glue pool's runner count. The real
+  blocker was a separate cancel-treadmill livelock, independently root-caused and fixed by slot-2 at 16:36 UTC
+  (`383090a998`). `gh run list` showed all runs 17:30 UTC onward `completed success` as of this same-day check —
+  flagging this as informational context for whoever next runs the actual verification, not as a substitute for it: per
+  the na-eligibility-audit verdict below, this doc's own evidence bar for closing anything here is a real
+  `reconcile_release_tags.py --dry-run` re-run or a minted tag, not an inference from CI run history.
 
 ## na-eligibility-audit verdict
 

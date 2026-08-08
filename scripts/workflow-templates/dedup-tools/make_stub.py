@@ -11,13 +11,22 @@
 # staging is un-frozen. Fix the ruleset context strings FIRST (todo 11's option (a)), verify
 # with a real triggered run, THEN convert.
 #
-# For semver-agent.yml.tmpl (todo 5): add its RUNS_ON-equivalent handling (see
-# make_reusable.py's header) and add its job name to FILE_JOB_NAME below before use.
+# semver-agent.yml.tmpl (todo 5, DONE 2026-08-07, all 23 fleet repos converted): unlike
+# the other files, this one needed REAL per-repo `with:` values (repo_name/source_dir/
+# version_source) on EVERY caller, not just self-hosted ones -- passed as extra positional
+# args (see usage below). `.tmpl` is stripped from the canonical filename to get both the
+# FILE_JOB_NAME lookup key and the unified-trading-ci `uses:` target name (the hosted file
+# has no .tmpl suffix). This logic lived only in a scratchpad copy for part of the todo-5
+# session (the real copy of this file kept getting overwritten by a concurrent session's
+# `git pull --rebase --autostash` mid-session) -- reconciled back here post-hoc, verified
+# byte-identical output to what actually shipped to all 23 repos.
 """Generate a thin caller-stub workflow file for a given canonical template + repo.
 Keeps the ORIGINAL on:/permissions:/concurrency: blocks (the physical trigger every
 caller must carry) and replaces jobs: with a single uses: call into unified-trading-ci.
 
-Usage: python3 make_stub.py <canonical-template.yml> <0|1 self-hosted>
+Usage: python3 make_stub.py <canonical-template.yml> <0|1 self-hosted> [repo_name] [source_dir] [version_source]
+The 3 extra positional args are required for semver-agent.yml.tmpl only (its reusable
+workflow has no universal default for them); omit for every other file.
 """
 
 import re
@@ -46,6 +55,7 @@ FILE_JOB_NAME = {
     "request-major-bump.yml": "request-major-bump",
     "staging-backmerge-to-ldr.yml": "backmerge",
     "update-dependency-version.yml": "update-dep",
+    "semver-agent.yml": "semver",
 }
 
 REQUEST_MAJOR_BUMP_WITH_EXTRA = """      proposed_version: ${{ inputs.proposed_version }}
@@ -57,7 +67,10 @@ REQUEST_MAJOR_BUMP_WITH_EXTRA = """      proposed_version: ${{ inputs.proposed_v
 def main():
     canonical_path = sys.argv[1]
     self_hosted = sys.argv[2] == "1"
+    extra_args = sys.argv[3:]
     fname = canonical_path.split("/")[-1]
+    if fname.endswith(".tmpl"):
+        fname = fname[: -len(".tmpl")]
 
     with open(canonical_path) as f:
         content = f.read()
@@ -102,12 +115,18 @@ def main():
     out.append("jobs:")
     out.append(f"  {job_name}:")
     out.append(f"    uses: IggyIkenna/unified-trading-ci/.github/workflows/{fname}@main")
-    if self_hosted or fname == "request-major-bump.yml":
+    needs_with = self_hosted or fname in ("request-major-bump.yml", "semver-agent.yml")
+    if needs_with:
         out.append("    with:")
         if self_hosted:
             out.append('      self_hosted_runner_labels: \'["self-hosted","glue"]\'')
         if fname == "request-major-bump.yml":
             out.append(REQUEST_MAJOR_BUMP_WITH_EXTRA.rstrip("\n"))
+        if fname == "semver-agent.yml":
+            repo_name, source_dir, version_source = extra_args
+            out.append(f'      repo_name: "{repo_name}"')
+            out.append(f'      source_dir: "{source_dir}"')
+            out.append(f'      version_source: "{version_source}"')
     out.append("    secrets: inherit")
     out.append("")
 
