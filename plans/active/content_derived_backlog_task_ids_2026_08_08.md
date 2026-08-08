@@ -117,11 +117,11 @@ Both were established by reading the code, and both are silent — neither raise
       collides for exactly that documented case and would ship a NEW id-collision bug on day one. `N` is an explicit
       named constant with a test, not a borrowed value — see the next todo. Do NOT yet change any call site. (repo:
       agent-orchestrator) — agent-orchestrator@e0f107a
-- [ ] [BACKEND] P2. **Pin the truncation length with a measured collision-probability test.** The `RB-<hex8>`/
+- [x] ✅ [BACKEND] P2. **Pin the truncation length with a measured collision-probability test.** The `RB-<hex8>`/
       `sjr-<hex8>` precedent (`orm.py:991, :1036`) is a different id namespace and its 8 chars must not be assumed
       transferable. Assert the birthday bound at this corpus's real scale (~2,187 backlog rows today, ~90/tick regen)
       and record the chosen `N` + the margin. Done-when: a test names the constant and fails if it shrinks. (repo:
-      agent-orchestrator)
+      agent-orchestrator) — agent-orchestrator@0b1507e
 - [ ] [BACKEND] P1. **Switch new-task minting to the content id, collision-checked against BOTH yaml ids AND the full
       historical `tasks` table.** `_make_task_id`'s next-index scan is yaml-only (`:1717, :1831`) — a `done`-and-pruned
       id is invisible to it, which is itself a contributing root cause. `remint_backlog_collision` already does the
@@ -263,3 +263,9 @@ Both were established by reading the code, and both are silent — neither raise
   `tests/test_regen_backlog_from_plan.py` covering format, occurrence-differentiation, determinism, plan_ref-in-hash,
   and `_CONTENT_ID_HEX_CHARS` minimum floor. No call sites changed. QG: 2732 passed. Evidence:
   agent-orchestrator@ac36202 (feat) + e0f107a (pyright fix, both verified on origin/live-defi-rollout).
+
+- **2026-08-08 (slot 16, content_derived_backlog_task_ids-003)**: Replaced placeholder floor test with measured
+  birthday-bound assertion in `tests/test_regen_backlog_from_plan.py`. At n=2187 corpus rows (measured 2026-08-08) and
+  p_target=1e-6 per regen tick, k_min=11; `_CONTENT_ID_HEX_CHARS=12` has 16x margin above that minimum. Test
+  `test_content_id_hex_chars_birthday_bound` names the constant and fails if it shrinks below k_min. QG: 2732+ passed.
+  Evidence: agent-orchestrator@0b1507e (verified on origin/live-defi-rollout).
