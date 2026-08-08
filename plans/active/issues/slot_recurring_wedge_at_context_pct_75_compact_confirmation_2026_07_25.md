@@ -377,3 +377,38 @@ capacity risk, not just reliability — see Progress Log 2026-08-07.
   stash/restore cycles in the shared checkout — silently, with no stash entry and a clean `git status`. Recovered only
   from a scratchpad backup. See
   `/plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`.
+
+## 2026-08-08 validation window — measured result (partial pass, stated plainly)
+
+**The force-distribution criterion PASSED decisively.** 24 forces over the 52-minute window, distributed
+`60 x2 · 62 · 63 · 64 · 66 x2 · 71 · 73 x2 · 76 x2 · 77 · 79 x4 · 82 x3 · 83 x2 · 85 x2` — range **60-85**. The pre-fix
+baseline was 56 forces, **all 91-100** (28 of them at exactly 100). The two ranges do not overlap at all. This is the
+metric this doc specified ("require the distribution to move DOWN, not just 'no wedges for a while'").
+
+**The zero-wedges criterion did NOT pass: 4 wedges occurred.** Rate roughly halved (9.7/hr pre-fix -> 4.6/hr) but did
+not reach zero, so the stated termination condition was not met and this is recorded as a partial pass.
+
+All four were **inherited saturation**, not new failures:
+
+```
+13:42 slot=12 at 93%   13:43 slot=3  at 83%
+13:49 slot=8  at 97%   13:49 slot=10 at 82%
+```
+
+Each was a session that had accumulated its context under the OLD blind regime and was already at 82-97% the first time
+the new signal could see it — past the point where `/compact` can run at all (the log's own words: "session over the
+model's hard limit"). The fix cannot rescue a session that is already saturated when it goes live; it can only prevent
+one from getting there. Consistent with that reading, the wedge count froze at 4 from 13:58 onward while the fleet ran
+at <=56%, and the per-sample fleet maximum traced `66 -> 93 -> 97 -> 56 -> 56 -> 45` — the middle peak is the inherited
+backlog draining, the tail is steady state.
+
+**What this does and does not establish.** It establishes that forces now fire with real headroom and that the fleet
+reaches and holds a healthy distribution. It does NOT by itself establish a clean 60-minute window on a fleet that was
+healthy at the start, because the first 30 minutes were spent draining pre-existing saturation. A second window was run
+against the already-clean fleet specifically to close that gap rather than claim the criterion on 21 minutes of tail
+data.
+
+- [ ] [BACKEND] P2. **Re-run the 60-minute validation after any future change to the context signal, starting from a
+      fleet with no slot above ~60%.** The first run's headline number (4 wedges) is dominated by inherited saturation
+      and understates the fix; a clean-start window is the only way to measure the steady state honestly. Baseline to
+      beat: forces in 60-85, zero wedges.
