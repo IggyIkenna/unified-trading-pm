@@ -69,26 +69,26 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.0",
     "deployment-api": "0.71.0",
-    "deployment-service": "0.120.0",
+    "deployment-service": "0.121.0",
     "deployment-ui": "0.1.0",
-    "execution-service": "0.46.0",
-    "features-service": "0.76.0",
+    "execution-service": "0.47.0",
+    "features-service": "0.76.1",
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.0.74",
     "instruments-service": "0.1.0",
-    "market-tick-data-service": "0.106.0",
+    "market-tick-data-service": "0.107.0",
     "system-integration-tests": "0.15.0",
-    "unified-api-contracts": "0.96.1",
+    "unified-api-contracts": "0.97.0",
     "unified-trading-library": "0.75.0",
     "unified-trading-pm": "1.2.741",
-    "market-data-processing-service": "0.26.0",
+    "market-data-processing-service": "0.26.1",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.100.1",
     "greeks-service": "0.18.13",
     "trading-agent-service": "0.12.11",
-    "strategy-service": "0.51.0",
-    "ml-service": "0.52.0",
-    "alerting-service": "0.61.0",
+    "strategy-service": "0.52.0",
+    "ml-service": "0.52.1",
+    "alerting-service": "0.61.1",
     "unified-trading-api": "0.4.0",
     "client-reporting-api": "0.32.0"
   },
@@ -2045,7 +2045,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT failed — open for fixes",
+    "locked_reason": "SIT passed — validated + unlocked",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -2225,18 +2225,18 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.75.1.dev6+g813228226",
-      "published_at": "2026-08-08T04:31:05Z",
+      "version": "0.76.0",
+      "published_at": "2026-08-08T09:51:29Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.96.2.dev8+g0225ef811",
-      "published_at": "2026-08-08T06:47:11Z",
+      "version": "0.97.1.dev1+g774fa7e5b",
+      "published_at": "2026-08-08T09:33:11Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.98.1.dev19+gd89b9cb19",
-      "published_at": "2026-08-08T04:04:25Z",
+      "version": "0.98.2.dev2+g7ad78f19b",
+      "published_at": "2026-08-08T09:49:12Z",
       "registry": "artifact-registry"
     }
   }
