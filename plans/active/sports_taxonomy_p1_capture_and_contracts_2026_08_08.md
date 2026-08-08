@@ -155,10 +155,17 @@ achieved by exclusion, not canonicalisation.**
       day=2026-08-07/pipeline_mode=batch_odds_api/ (20 bookmaker venues present). `odds_horizon_bucket` and derived
       types were fed from frozen source because MDPS has no staleness guard against a dead raw source — this is the
       Block A todo-3 defect. unified-trading-pm (this plan)
-- [ ] [DATA] P0. **Restore capture and prove it with a MEASURED terminal verdict**: a fresh capture day writes real
+- [x] ✅ [DATA] P0. **Restore capture and prove it with a MEASURED terminal verdict**: a fresh capture day writes real
       parquet objects at the canonical path AND lands `captured` manifest rows with non-zero `row_count`. "The job
       exited 0" is not proof — the outage's whole signature is a job that succeeds while writing nothing. Cite the day,
-      the object count, and the manifest row count.
+      the object count, and the manifest row count. — **MEASURED 2026-08-08 (slot 7)**. Day=2026-08-07:
+      `market-data-tick-sports-prd-central-element-323112` contains **5,747 parquet objects** under `day=2026-08-07`.
+      Manifest (`instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`): **225
+      `capture_status=captured` rows** for `data_type=trades`, ALL with `row_count > 0`, total row_count sum =
+      **9,154**. Sources: `odds_api`. Sample venues: FANDUEL, BETONLINEAG, BET888SPORT, CORAL, PINNACLE (25-bookmaker
+      fan-out confirmed). Post-outage date coverage (trades, captured): 13 days spanning 2026-07-25 → 2026-08-07 with a
+      2026-08-04 gap (previously noted). Verdict: capture IS real, NOT the silent-zero pattern the outage exhibited.
+      unified-trading-pm
 - [x] [CODE] P0. **Add a staleness guard so a frozen raw source can never again silently feed the derived layer.** MDPS
       must refuse (loudly) to derive `odds_snapshot`/`odds_movement`/`horizon` output for a day whose raw source shard
       is absent or older than a bounded threshold, rather than emitting derived rows off stale input. This is the defect
@@ -269,3 +276,9 @@ achieved by exclusion, not canonicalisation.**
   `odds_snapshot`/`odds_movement`/`odds_horizon_bucket` when manifest has no captured row, emits
   `DP_DOWNSTREAM_BEFORE_UPSTREAM` alert via existing UAC `DATA_PIPELINE_ALERT_RULES`. Fails-open on manifest read
   errors. 9 unit tests. Shipped: market-data-processing-service@41cdb702d. QG green.
+- **2026-08-08 (slot 7, data_engineering)** — Block A todo-2 (measured terminal verdict) flipped. Ran pyarrow
+  filter-pushdown reads (memory-bounded) against the live manifest. Day=2026-08-07: **5,747 GCS parquet objects** in
+  `market-data-tick-sports-prd-central-element-323112` under `day=2026-08-07`; manifest shows **225
+  `capture_status=captured` rows** for `data_type=trades`, ALL with `row_count > 0`, sum = **9,154**; source=`odds_api`.
+  Post-outage capture confirmed for 13 dates spanning 2026-07-25 → 2026-08-07 (2026-08-04 gap consistent with prior
+  note). Not the silent-zero pattern — this is genuine captured data. All 3 Block A todos now ✅.
