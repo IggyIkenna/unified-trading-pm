@@ -390,3 +390,16 @@ hours unattended in the slot-6/`703695`/`703746` lineage). Current live pair, ge
 for both, per the standard verification): **watcher PID `3762433`, heartbeat PID `3762556`** (started 22:30:37Z, poll 1
 = 157 VMs). PID record: `scratchpad/watcher/watcher.pid`. A fresh session picking this up should check these PIDs first
 via `kill -0` before assuming dead / re-arming.
+
+**Update 2026-08-08T22:38Z (same slot-28 session) — setsid pair also died, ~7 min after launch, no FATAL entry.**
+Watcher `3762433`/heartbeat `3762556` found DEAD (both `kill -0` failed) after only reaching poll 2 (22:35:41Z, 154 VMs)
+— this contradicts the slot-6 precedent of 7+ hour setsid survival. No FATAL in either log; death was silent, same
+signature as the earlier PGID-cleanup theory, but PGID=SID=PID was verified correct for this pair at launch, so that
+specific mechanism is ruled out here. Working theory (unconfirmed): this interactive session received several rapid
+operator "proceed now" nudges in close succession, and the ~5-7min survival window correlates more with elapsed
+_nudge-to-nudge_ time than with any process-group mechanism — possibly a sandbox/session-boundary teardown independent
+of setsid. Re-armed immediately: **watcher PID `4017297`, heartbeat PID `4017373`** (both PGID=SID=PID re-verified,
+started 22:38:08Z, poll 1 = 154 VMs). **Open question for a future session**: if this pair also dies on a similar
+timescale, the setsid approach may not be reliable in this environment either, and the only real answer may be accepting
+reactive re-arm on every check-in (whatever the trigger) rather than expecting either mechanism to survive unattended
+for long stretches.
