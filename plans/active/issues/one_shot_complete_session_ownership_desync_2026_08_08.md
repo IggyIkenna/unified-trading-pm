@@ -26,6 +26,7 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 source: [direct instruction from main agent, BLK-dc3f8317 + BLK-af6cef6a]
+depends_on: []
 ---
 
 # one_shot_complete session-ownership desync — idle-reap during async-wait

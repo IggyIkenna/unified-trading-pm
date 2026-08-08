@@ -244,16 +244,19 @@ log_df_sample_mismatch_if_any() {
 #   item 1); every consumer only ever tests dirty_files >0/==0, never an exact count.
 classify_repo() {
     local repo_dir="$1"
-    local repo_name branch local_sha int_branch state dirty_files ahead behind dirty_oldest_iso unpushed_plans dirty_sample
+    local repo_name branch local_sha int_branch state dirty_files ahead behind dirty_oldest_iso unpushed_plans dirty_sample abs_path
     repo_name=$(basename "${repo_dir}")
     int_branch="${INTEGRATION_BRANCH}"
 
     pushd "${repo_dir}" >/dev/null 2>&1 || return 0
+    # Resolved absolute path — used as repo_key for per-repo dirty-ticks lookup in
+    # post_snapshot (matches slot-cron-ff-pull.sh's repo_key = "$(pwd)").
+    abs_path="$(pwd)"
     branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "DETACHED")
     local_sha=$(git rev-parse --short=12 HEAD 2>/dev/null || echo "")
 
     if [[ "${branch}" == "DETACHED" || "${branch}" == "HEAD" || -z "${local_sha}" ]]; then
-        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\t\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}"
+        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\t%s\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}" "${abs_path}"
         popd >/dev/null || return 0
         return 0
     fi
@@ -335,8 +338,8 @@ classify_repo() {
             behind=$(git rev-list --count "HEAD..${remote_ref}" 2>/dev/null || echo 0)
         else
             state="no-remote-ref"
-            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-                "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}"
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+                "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}" "${abs_path}"
             popd >/dev/null || return 0
             return 0
         fi
@@ -355,8 +358,8 @@ classify_repo() {
         state="clean"
     fi
 
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}" "${abs_path}"
     popd >/dev/null || return 0
 }
 
@@ -403,12 +406,32 @@ post_snapshot() {
         return 0
     }
 
+    # Read the per-repo dirty-ticks map from the result file once for this POST.
+    # Keyed by the repo's resolved absolute path (repo_key in slot-cron-ff-pull.sh),
+    # same as column 11 (abs_path) in each TSV row.  Falls back to "{}" on any
+    # read/parse error so the POST still proceeds without per-repo values.
+    local repo_dirty_ticks_json
+    repo_dirty_ticks_json=$(python3 -c "
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(json.dumps(d.get('repo_dirty_ticks', {}), separators=(',', ':')))
+except Exception:
+    print('{}')
+" "${FF_RESULT_FILE}" 2>/dev/null || echo '{}')
+
     local payload
     payload=$(printf '%s' "${rows_tsv}" | python3 -c '
 import json, sys
 slot_id = int(sys.argv[1])
 host = sys.argv[2]
 reported_at = sys.argv[3]
+# Per-repo dirty-ticks map (keyed by absolute repo path = repo_key in ff_one()).
+# Populated from the FF-result file; empty dict when the file is absent or unparseable.
+try:
+    repo_dirty_ticks = json.loads(sys.argv[7]) if len(sys.argv) > 7 else {}
+except Exception:
+    repo_dirty_ticks = {}
 repos = []
 for line in sys.stdin:
     line = line.rstrip("\n")
@@ -418,6 +441,7 @@ for line in sys.stdin:
     if len(parts) < 11:
         parts += [""] * (11 - len(parts))
     name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest, unpushed_raw, dirty_sample_raw = parts[:11]
+    abs_path = parts[11] if len(parts) > 11 else ""
     repo = {
         "name": name,
         "branch": branch,
@@ -434,6 +458,12 @@ for line in sys.stdin:
         repo["unpushed_plans"] = [p for p in unpushed_raw.split("|") if p]
     if dirty_sample_raw:
         repo["dirty_files_sample"] = [p for p in dirty_sample_raw.split("|") if p]
+    # Per-repo dirty_consecutive_ticks: look up by the resolved abs_path (repo_key).
+    # Always emitted when abs_path is known (even as 0 = "confirmed clean for this
+    # repo") so the server can distinguish a new reporter (field present) from an old
+    # one (field absent, server falls back to the slot-level scalar).
+    if abs_path and repo_dirty_ticks is not None:
+        repo["dirty_consecutive_ticks"] = int(repo_dirty_ticks.get(abs_path, 0))
     repos.append(repo)
 ff_last_run = sys.argv[4] if len(sys.argv) > 4 else ""
 ff_last_result = sys.argv[5] if len(sys.argv) > 5 else ""
@@ -446,7 +476,7 @@ if ff_last_result:
 if dirty_ticks:
     out["dirty_consecutive_ticks"] = dirty_ticks
 print(json.dumps(out))
-' "${slot_id}" "${HOSTNAME_SHORT}" "${NOW_ISO}" "${FF_LAST_RUN}" "${FF_LAST_RESULT}" "${FF_DIRTY_CONSECUTIVE_TICKS}")
+' "${slot_id}" "${HOSTNAME_SHORT}" "${NOW_ISO}" "${FF_LAST_RUN}" "${FF_LAST_RESULT}" "${FF_DIRTY_CONSECUTIVE_TICKS}" "${repo_dirty_ticks_json}")
     if [[ -z "${payload}" ]]; then
         log "[skip:empty-payload] slot ${slot_id}"
         return 0
