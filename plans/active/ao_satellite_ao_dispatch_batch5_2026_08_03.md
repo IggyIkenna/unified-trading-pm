@@ -12,7 +12,7 @@ summary: >-
   ARE AO-eligible bounded work — this batch extracts those 9 plus the 1 `archivable_now` bookkeeping item (10 todos
   total), each conflict-checked against the whole `plans/active` corpus before drafting (2 same-file adjacencies found
   and handled via a sequencing rule rather than exclusion, matching batch3/batch4's own precedent).
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -32,7 +32,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-03"
-last_updated: "2026-08-03"
+last_updated: "2026-08-08"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -66,9 +66,13 @@ source: >-
 
 # AO satellite AO batch 5
 
-> **`status: draft` — NOT ingested, NOT dispatched.** Flipping this to `active` is the operator's call
-> (`/plans/PLAN_FORMAT.md`; CLAUDE.md § "Plan destination — ASK BEFORE CREATING"). Authored autonomously (scheduled
-> dispatch); deliberately stops at draft per the skill's Autonomous-mode contract.
+> **`status: active`** — approved 2026-08-08 after a fresh conflict-check found no blocking overlap (see Progress Log).
+> **`assigned_vm: NA` / `execution_scope: local-only` are UNCHANGED, deliberately** — this is the `ao` tranche's own
+> established convention (100%-consistent across batch1-8; origin: the operator's 2026-07-17 "local execution" ruling on
+> `ao_open_issues_consolidated_close_out_2026_07_17.md`, this batch's own ultimate parent), not an oversight; see this
+> doc's Progress Log for the full citation trail. Active means: live, tracked, ready for an interactive/human session —
+> NOT AO-dispatched. Authored autonomously (scheduled dispatch) and originally shipped `status: draft` pending operator
+> approval.
 
 ## Why this plan exists
 
@@ -193,17 +197,26 @@ below rather than duplicated here.
       `/plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md` (diagnostic half of its
       remaining scope only). Repo: agent-orchestrator (read-only).
 
-- [ ] [BACKEND] P2. **Verify whether the shipped `qg_host_adaptive_resource_governor_2026_07_14.md` reservation-ledger
-      admission governor satisfies `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s own
-      still-open `[DEVOPS] P1` done-when** — a real host-level semaphore gating full-suite QG launches on the shared
-      orchestrator host so they queue instead of pinning the host at saturation. Check specifically against the
-      2026-07-26 incident's own facts (the saturating QG was the features-service full-suite QG, a `base-service.sh`
-      -sourcing repo the governor's admission hook covers) and against the 2026-08-02 finding that the governor's
-      ledger-sharing only covers the slot-worktree topology, not the separate GHA-glue-runner cross-repo gap (forked
-      into `qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). **Done when**: either (a) the `[DEVOPS] P1`
-      checkbox flips `[x]` citing the governor's shipped commit(s)/tests as evidence, with an archival check to follow,
-      or (b) it stays open with a NEW dated Progress Log entry naming the SPECIFIC uncovered gap with evidence — not a
-      4th silent re-confirmation of "genuinely open." Source:
+- [x] ✅ [BACKEND] P2. **CLOSED 2026-08-08 — verified via source-doc re-read, option (a) applies.** The source doc
+      (`host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`) was independently resolved+archived
+      2026-08-06 (`resolved_by`: "the standing `[DEVOPS] P1` admission-semaphore todo found already shipped via
+      unified-trading-pm's `qg-host-governor.sh` (flock-based, wired into `base-service.sh`/`base-library.sh`); checkbox
+      had never been flipped") — its `[DEVOPS] P1` checkbox is already `[x]` at
+      `/plans/archive/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md:146`, citing
+      `qg_governor_acquire`'s real `flock`-based `K=max(2, floor(cores/4))` token semaphore wired into both entry points
+      — matches this todo's own done-when option (a) exactly. No new verification needed; this todo's own ask was
+      answered by a different process before this plan could be dispatched. **Verify whether the shipped
+      `qg_host_adaptive_resource_governor_2026_07_14.md` reservation-ledger admission governor satisfies
+      `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s own still-open `[DEVOPS] P1`
+      done-when** — a real host-level semaphore gating full-suite QG launches on the shared orchestrator host so they
+      queue instead of pinning the host at saturation. Original text follows. Check specifically against the 2026-07-26
+      incident's own facts (the saturating QG was the features-service full-suite QG, a `base-service.sh`-sourcing repo
+      the governor's admission hook covers) and against the 2026-08-02 finding that the governor's ledger-sharing only
+      covers the slot-worktree topology, not the separate GHA-glue-runner cross-repo gap (forked into
+      `qg_governor_glue_runner_ledger_coordination_2026_08_03.md`). **Done when**: either (a) the `[DEVOPS] P1` checkbox
+      flips `[x]` citing the governor's shipped commit(s)/tests as evidence, with an archival check to follow, or (b) it
+      stays open with a NEW dated Progress Log entry naming the SPECIFIC uncovered gap with evidence — not a 4th silent
+      re-confirmation of "genuinely open." Source:
       `/plans/archive/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` (`[DEVOPS] P1`
       only). Repo: agent-orchestrator (verification, read-only + a possible checkbox flip).
 
@@ -401,3 +414,34 @@ methodology step 1), not re-derive the classification from scratch.
   ratchet. The 2026-07-30 "direction superseded" annotation (grant IAM + REMOVE fallback) postdates the shipped fix by 2
   days; whether to additionally grant the IAM role is a live design tradeoff, not a correctness gap. Source issue doc's
   `[SCRIPT] P3` also flipped `[x]` in the same turn.
+- **2026-08-08 (operator-authorized draft→active review)** — Re-ran the shared 3-surface conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) against (a) every active
+  `assigned_vm: planning` plan in `parent_epic: orchestrator_master` (only the batch2-8 finalize twins, all correctly
+  `gate_on_depends`-held — no independent claim), (b) sibling batches 6/7/8 (no new overlap beyond what those docs'
+  own drafting already cross-referenced), and (c) `ao_open_issues_consolidated_close_out_2026_07_17.md` (no new
+  conflict). Also spot-checked every open todo's Source doc for post-drafting closure: todo 5's Source
+  (`host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`) was independently resolved+archived
+  2026-08-06, so its `[DEVOPS] P1` was already answered — closed todo 5 above via verification (option (a), hard
+  evidence: the archived doc's own `[x]` checkbox + `resolved_by` citation). Todos 1-4, 6-8, 10 re-verified still
+  genuinely open against their live Source docs (todo 1: `agents/review.md` STEP 2 still shows unconditional `/reply`,
+  no `in_reply_to`/`from_role` branch, confirmed by direct grep; todo 2: the source doc's `[OPERATOR]`/`[REVIEW]`
+  checkboxes are already `[x]` but the doc itself is still `status: open`, un-archived, and the tracker's MISTAGGED-row
+  bookkeeping this todo also covers is still pending — todo correctly stays open for that remainder). **Investigated
+  the `assigned_vm: NA`/`execution_scope: local-only` frontmatter (atypical for a fresh `_satellite_ao_dispatch_batch{N}_`
+  doc per `ag-closeout-audit/SKILL.md`'s own stated `assigned_vm: planning` convention) before touching either field**:
+  confirmed via `ao_open_issues_consolidated_close_out_2026_07_17.md`'s own frontmatter `source:` block — a direct
+  operator quote, 2026-07-17: _"for all the remaining issues check which are live vs resolved … for all the relevant
+  open issue docs create ONE plan, local execution"_ — and its body (line ~98: "**Human plan — operator session
+  executes it**"; line ~107: "All are **LOCAL** … operator-assigned agents on this host, never AO-dispatched") that
+  this is a real, deliberate, tranche-rooted operator ruling this batch inherits as the consolidated closeout's own
+  satellite extraction, not an unexplained deviation — batch2's 2026-08-01 na-eligibility-audit note ("worth the
+  operator's attention as a possible systemic skill-convention drift… no explicit ruling/citation found") had not yet
+  traced it to this origin. Given the ruling is real but was never re-cited per-batch (and a 2026-07-17-vintage ruling
+  extending to fresh 2026-08-03..08-08 batches is itself worth an explicit re-confirmation), left `assigned_vm`/
+  `execution_scope` UNCHANGED — flipping `status: draft → active` only, matching the exact precedent already live on
+  batch2/batch3 (`status: active`, `assigned_vm: NA`). Fixed the stale draft-era H1 banner to match. **Flagged to the
+  operator as a corpus-wide question worth one explicit ruling**: should the `ao` tranche's satellite batches keep
+  deviating from the general `assigned_vm: planning` convention indefinitely (codify the exception in
+  `ag-closeout-audit/SKILL.md`), or should the 2026-07-17 ruling be treated as scoped to that one plan's original
+  children and NOT extended to new batches going forward (in which case batch5-8 should be reclassified to
+  `assigned_vm: planning` after this same conflict-check)? Not resolved unilaterally here.
