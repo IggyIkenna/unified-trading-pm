@@ -124,7 +124,7 @@ every other in-flight plan — safe to run concurrently (no `sequential: true`).
 
 ## Todos
 
-- [ ] [SCRIPT] P3. **Implement content-hash (frontmatter-blind diff) verification in
+- [x] ✅ [SCRIPT] P3. **Implement content-hash (frontmatter-blind diff) verification in
       `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py`'s incremental-mode output**, per the source doc's own
       "Recommended fix" option 1 (preferred: record a body-content hash — frontmatter stripped or at minimum excluding
       `context_scope:` — alongside each verdict marker; skip a doc on the next run when the current hash matches,
@@ -138,7 +138,8 @@ every other in-flight plan — safe to run concurrently (no `sequential: true`).
       `stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`); a unit/regression test pins the
       distinction. Source:
       `issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md` (todo 1).
-      (repo: unified-trading-pm)
+      (repo: unified-trading-pm) — unified-trading-pm@7a75115ef; 22/22 tests pass; 3/3 active measurement-table docs
+      report incremental_skip=True (2 others archived, no longer in active scan scope)
 - [ ] [DOCS] P3. **Update `cursor-configs/skills/na-eligibility-audit/SKILL.md`'s Phase 0 section** to instruct
       verifying an "in scope via date-fallback" doc's actual diff (`git show <marker-commit>..HEAD -- <path>` or
       equivalent) before trusting the date comparison, as an interim mitigation until the SCRIPT todo above lands. Done
