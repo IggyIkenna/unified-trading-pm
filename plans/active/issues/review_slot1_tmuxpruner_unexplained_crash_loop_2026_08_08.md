@@ -122,3 +122,13 @@ own Tick history.
   `reassign kill_worker:true` again here (task returned to queue, `released_task_affinity:"high"`) — if this task wedges
   a THIRD slot, switch to `skip-current-task` instead of `reassign` per the tardis precedent, and consider filing a
   dedicated task-specific issue rather than continuing to treat it as generic fleet evidence here.
+- 2026-08-08 ~17:49Z (main agt-22de53): Rate observation — since the 17:36Z entry above, the same confirmed signature
+  (`slot_boot`→`forced_precompact`→`forced_compact`→silent/`worker_alive:false`, no recovery) has now hit slots 9, 24,
+  25, and 26 across 5 consecutive ~60s ticks (17:36-17:49Z), i.e. roughly one new wedge per tick, each on a different
+  task/slot with no task-family overlap between them (solana indexer, 2x sports_taxonomy, ao_satellite, citadel
+  satellite) except the one same-task repeat already logged above. This reads as a genuine fleet-wide acceleration, not
+  sporadic noise — every wedge escalated cleanly via `reassign kill_worker:true` with the task returned to queue, so
+  there is no user-visible stall, but the respawn/compact churn rate is real and climbing. Not paging the operator
+  separately (this doc is already P1 with a BACKEND todo assigned and the rate itself doesn't change root-cause scope),
+  but flagging the acceleration here so whoever picks up todo 1 has the full frequency picture, not just the original
+  3-instance sample.
