@@ -63,6 +63,8 @@ related:
     /plans/archive/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/honest-coverage-model.md,
+    /plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md,
+    /plans/archive/2026_08/tradfi_unreachable_databento_data_types_history_2026_08.md,
   ]
 created: 2026-07-15
 parent_epic: tradfi_master
@@ -83,7 +85,7 @@ estimate_calibrated_ai_days: 0.7
 assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
-last_updated: 2026-07-16
+last_updated: 2026-08-08
 context_scope:
   [
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
@@ -814,7 +816,15 @@ UAC) — no separate deploy needed here.
 
 ## Progress Log
 
-- 2026-07-15: Filed by background research/triage agent (diagnosis only, no code changes) while triaging a
+> **Line-cap remediation (2026-08-08)**: the Progress Log entries dated 2026-07-15 through 2026-07-28 (the mbp_10 fix,
+> the ohlcv_15m/24h audit + CBOE narrowing + Treasury-yield routing, the corporate_action_confirmed/earnings_result
+> misclassification cleanup, and the YAHOO_FINANCE phantom-venue removal — all fully closed) were extracted verbatim to
+> `/plans/archive/2026_08/tradfi_unreachable_databento_data_types_history_2026_08.md` to bring this doc back under the
+> 1000-line hard cap. The technical context the still-open line-247 todo depends on (candle_resampler.py reuse,
+> vix_features consumer, "no aggregator exists" finding) lives in the "Resolution — ohlcv_15m/ohlcv_24h audit
+> (2026-07-15)" section above, which was NOT extracted.
+
+- 2026-07-15-SKIP-PLACEHOLDER: Filed by background research/triage agent (diagnosis only, no code changes) while triaging a
   `#data-pipeline-alerts` `DP_RUN_MOSTLY_EMPTY` alert batch's TRADFI 100%-failed cells. All 3 mechanisms verified via
   direct grep + read across 4 repos; none independently re-verified against a live manifest query (read-only, time-boxed
   triage pass) — the manifest-classification open question is left as todo P3 above.
