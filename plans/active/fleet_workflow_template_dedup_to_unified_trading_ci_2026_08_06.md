@@ -336,12 +336,16 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       (todo 7): zero hits outside `plans/archive/`. Unlike todo 23's precedent (which missed `agent-audit.yml` +
       composite-action consumers because its sweep only checked 2 caller files per repo), this sweep intentionally
       checked ALL file types and found no equivalent miss for this plan's 9 files.
-- [ ] 9. [DOC] P2. **Update `/codex/08-workflows/ci-cd-flow.md`** — extend the existing "Host moved to
-      `unified-trading-ci` (2026-08-06)" note (added by the prior plan) to state that the SAME hosting model now covers
-      this second class of workflow (list the 9 file names), and that `rollout-workflow-templates.sh`'s role is now
-      limited to whatever remains genuinely templated (the UI-only tier + any future thin-caller-stub propagation), not
-      full-content duplication. Done-when: the doc accurately describes the POST-this-plan state, not a mid-migration
-      one.
+- [x] ✅ 9. [DOC] P2. **Update `/codex/08-workflows/ci-cd-flow.md` — DONE 2026-08-08.** Added a "Second wave — the rest
+      of the flat-copy fleet templates moved too (2026-08-07/08)" paragraph right after the existing "Host moved to
+      `unified-trading-ci` (2026-08-06)" note, listing all 7 newly-hosted files (`version-registry-notify.yml`,
+      `main-backmerge-to-ldr.yml`, `major-bump-issue-handler.yml`, `request-major-bump.yml`,
+      `staging-backmerge-to-ldr.yml`, `update-dependency-version.yml`, `semver-agent.yml`), the
+      `self_hosted_runner_labels` + `repo_name`/`source_dir`/`version_source` input shapes, the PM exception (3 files
+      kept local/customized), the `notify-slack.yml` cascade-deletion consequence, and what
+      `rollout-workflow-templates.sh` is now scoped to (`image-build-gate.yml` + `quality-gates-v2.yml.tmpl` as
+      already-converted stubs, `notify-slack.yml` as the still-canonical full-content file, `staging-lock-check.yml` as
+      the deliberately-not-yet-converted file pending todo 11). Describes the POST-this-plan state, not mid-migration.
 - [ ] 10. [INFRA] P3. _(stretch, optional)_ **Add a branch-protection / visibility-change alert on
       `unified-trading-ci`** — given this plan makes it fleet-critical (11 reusable workflows/actions hosted there once
       this plan + the prior one both ship), consider whether the same accidental-private-flip class of incident that
