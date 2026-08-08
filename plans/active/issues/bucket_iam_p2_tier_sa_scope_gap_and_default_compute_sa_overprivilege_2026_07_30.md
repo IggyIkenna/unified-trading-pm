@@ -307,6 +307,6 @@ still-open P2 (depends on P1, now met) and P3.2 (depends on P0, now met); no cha
 
 > **2026-08-06 archive-candidate audit**: All 5 todos are [x]: P0 operator ruling (C: hybrid), P1 tier-SA grants
 > (deployment-service@e8684fe), P2 deploy-shared wiring (@118ad9e), P3.1 default-compute-SA hardening (@c76f710), P3.2
-> launcher rewiring (@ce7ef8f). But P3.2 explicitly defers '30 launchers remain unwired... filed as follow-up' as
-> prose-only — a deferred follow-up never converted to a `- [ ]` todo, which the workspace's own 'every follow-up is a
-> todo' hard rule requires.
+> launcher rewiring (@ce7ef8f). P3.2's '30 launchers remain unwired... filed as follow-up' deferral is tracked as a
+> `- [ ]` todo in the Follow-ups section above. **Corrected 2026-08-08 (plan_reconciler)**: this note previously claimed
+> the deferral was prose-only with no tracked todo — the todo directly above it disproves that.

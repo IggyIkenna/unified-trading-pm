@@ -270,6 +270,6 @@ input gap didn't change.
 
 > **2026-08-06 archive-candidate audit**: Both todos are [x] and the two-layer fix is confirmed working
 > (features-service@1b272676 + @ecd548b8, re-run CONFIRMED 2026-08-05; the honest-empty TRADFI path is now correctly
-> skipped). But the genuine force+skip proof remains gated on upstream TRADFI MDPS candle backfill, and the 'ticks'
-> malformed instrument_id is explicitly flagged in prose as 'worth tracking as a low-priority issue' — a follow-up that
-> was never made a tracked todo.
+> skipped). The genuine force+skip proof remains gated on upstream TRADFI MDPS candle backfill, and the 'ticks'
+> malformed instrument_id is tracked as a `- [ ]` todo in the Follow-ups section above. **Corrected 2026-08-08
+> (plan_reconciler)**: this note previously claimed no tracked todo existed — it does.

@@ -387,5 +387,5 @@ root-cause fix.
 
 > **2026-08-06 archive-candidate audit**: The P2 fix (market-tick-data-service@65beaeaf) covers NEW captures only; the
 > P3 todo verified none of the 3 existing migration scripts can reconcile the pre-existing blank-instrument_id rows and
-> 'a new, dedicated script would be needed', but no - [ ] todo tracks writing/running it — context-scout 2026-08-06
-> still refers to 'the pre-existing blank-instrument_id backfill this fix doesn't retroactively touch'.
+> 'a new, dedicated script would be needed', and this is tracked as a `- [ ]` todo in the Follow-ups section above.
+> **Corrected 2026-08-08 (plan_reconciler)**: this note previously claimed no tracked todo existed — it does.
