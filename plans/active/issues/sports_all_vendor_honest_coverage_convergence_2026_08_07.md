@@ -804,3 +804,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   now in chunk 25 (`2026-05-06→2026-08-03`) — only chunk 26 remains after this. odds smallchunk6: chunk 8/451
   (`2020-07-11`), zero OOMs, healthy. Both healthy, no intervention. Watching very closely next tick for FIXTURE_STATS's
   genuine convergence.
+- **2026-08-08T14:36Z** — FIXTURE_STATS still in chunk 25/26, but very close to its end now
+  (`last_completed_date=2026-07-17`, fresh `14:34:51Z`, vs chunk boundary `2026-08-03`) — likely converges within the
+  next tick or two. odds smallchunk6: chunk 11/451 (`2020-07-26`), zero OOMs, healthy. Both healthy, no intervention.
+  (Note: FIXTURE_STATS's `run.log` returned a transient 404 this tick before a retry succeeded — PROGRESS.json stayed
+  reliable throughout, consistent with the earlier-documented GCS flakiness pattern, not a real signal.)
