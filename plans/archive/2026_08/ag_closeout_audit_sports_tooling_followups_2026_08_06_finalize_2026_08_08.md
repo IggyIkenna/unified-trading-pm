@@ -9,7 +9,7 @@ summary: >-
   AO-dispatched todos ship (citing each landing commit), then archives it via the standard 6-step ritual once fully
   closed. Authored 2026-08-08 as part of a /na-eligibility-audit Phase 2/3 reclassification pass, per task_template.md's
   finalize-plan-coverage rule (every ≥2-todo assigned_vm:planning plan needs a companion gated finalize plan).
-status: active
+status: complete
 nature: process
 asset_group: [sports, ci]
 stage: [meta]
@@ -51,6 +51,13 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-08.** Only todo done: source doc ([[ag_closeout_audit_sports_tooling_followups_2026_08_06]])
+> reconciled + archived to `plans/archive/2026_08/issues/` (unified-trading-pm@52ee40038, @a690990e9). This finalize
+> plan itself now has 0 open todos and no lock, so it archives in the same session per
+> plan-completion-and-archival-discipline's "archive immediately" rule — its own checkbox-flip commit (`a690990e9`) and
+> this `git mv` are kept separate per RULES.md's never-combine rule. No new durable contract from this finalize plan
+> itself — the codex-alignment work is recorded on the source doc's own archived banner and this plan's Progress Log.
 
 # ag_closeout_audit_sports_tooling_followups_2026_08_06 — finalize
 
