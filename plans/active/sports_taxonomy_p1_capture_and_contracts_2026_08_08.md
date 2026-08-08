@@ -410,6 +410,40 @@ achieved by exclusion, not canonicalisation.**
 
 ## Progress Log
 
+### Deferred work after 2026-08-08 (interactive session checkpoint)
+
+Nothing below is uncommitted — every item is either a tracked `- [ ]` or is owned elsewhere. Kinds are separated because
+they need different responses.
+
+| item                                                                                                                 | kind                     | blocked on                                                                       |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------- |
+| P2 migration (17 todos), P3 consumers (15), P4 backfill (9)                                                          | **Not done** — real work | P1 completing; P2 additionally on the API-Football campaign                      |
+| `markets`/`outcomes`/`settlements` YAML+UAC parity; collapse `odds_snapshot`/`odds_movement` onto `odds`+`timeframe` | **Not done**             | tracked as P0 todos in P1/P2                                                     |
+| MTDS `_asset_group_for_venue` fail-fast (default still `cefi`, now WARN-logged)                                      | **Not done**             | deliberately deferred off an in-flight chain; needs its own consumer enumeration |
+| Two WS-cassette xfails (`jupiter_solana_ws`, `aave_liquidations_ethereum_ws`)                                        | **Cannot be done yet**   | needs a real WS capture session; fabricating a cassette is explicitly banned     |
+| Sports live-trading activation                                                                                       | **Operator-owned**       | permanent hard-stop; now formally gated on this chain                            |
+| Other artifact tranches (123 open operator questions, Cross-cutting 37)                                              | **Operator-owned**       | only sports got the reconcile-then-plan treatment                                |
+
+**Recommended NEXT: let P1 finish, then release P2.** P2 is the long pole (375k-shard re-stamp) and is double-gated;
+everything else is cheaper and can follow. Do NOT start P4's backfill early — backfilling pre-migration guarantees a
+redo, which is exactly why it was split out.
+
+### Lessons carried forward (would otherwise be re-learned)
+
+- **A green panel can be produced by exclusion.** Sports read "0 non-canonical" while hiding 21 venues / ~340k shards;
+  the detector drops accepted-exceptions BEFORE enumerating. Success criterion for the chain is the exception sets
+  reaching EMPTY, never the badge count reaching zero.
+- **`quality-gates.sh` exit 0 is NOT green.** The MTDS/UAC runs exited 0 with real test failures inside; read the
+  summary line, not the exit code.
+- **A quickmerge that exits 0 has not necessarily landed.** Twice this session it exited 0 leaving work staged-only —
+  always re-verify with `git rev-list --count origin/<b>..HEAD` and a content check on origin.
+- **An autostash can silently pull your fix out from under a passing test.** `reader.py` tested green, then got stashed;
+  the tests still passed because the file was gone. Re-verify behaviour end-to-end, not just the test result.
+- **Read the producer before judging a consumer's defensive default.** The aave `# noqa` disposition and the
+  `remediate_risk_params` fix were both settled by reading the upstream contract, not by reasoning about the call site.
+- **Baselines that only ever rise are a smell, not a policy.** `fabricated_sha_citation` went 2->4->6->8 because the
+  gate itself mis-reported; the fix was to the gate, and the baseline then ratcheted to 0.
+
 - **2026-08-08** — Authored from the interactive sports venue/data-type audit (27 operator rulings). All figures above
   measured against the live prod manifest and the 2026-08-05 honest-coverage rollup, not inferred. Capture-outage block
   placed FIRST per operator ruling ("fix inside this plan, phase 0").
