@@ -109,8 +109,10 @@ A repo's version reaches `1.0.0` ONLY when ALL of these are verified AND user gi
   _archive/
     batch/                           — archived per-service batch audit files (pre-v3.0 schema)
     live/                            — archived per-service live audit files (pre-v3.0 schema)
-  _checklist-template.yaml           — v1.0 full 110-item checklist (preserved for reference)
-  _checklist-template-enhanced.yaml  — v2.0 enhanced template with validator IDs (preserved for reference)
+  _checklist-template.yaml           — v1.0 full 110-item checklist (preserved for reference; SUPERSEDED
+                                        2026-08-08 -- reconciled union is deployment-service/configs/checklist.template.yaml, 112 items)
+  _checklist-template-enhanced.yaml  — v2.0 enhanced template with validator IDs (preserved for reference; SUPERSEDED
+                                        2026-08-08 -- reconciled union is deployment-service/configs/checklist.template.yaml, 112 items)
   _service-baseline-template.yaml    — service baseline template (preserved)
   ...other audit reports and matrices
 ```

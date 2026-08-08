@@ -111,9 +111,46 @@ run already covers them under different instrument routing), not a mechanical da
       2026-07-31 by two independent workers). `DailyDeterminismHandler` therefore remains `skipped: no_run_configured`.
       P1.2 is permanently unsatisfiable until an active `paper-trading-engine` run is configured. The `[DECISION] P2`
       `[OPERATOR]` item below remains open and correctly `[OPERATOR]`-gated.
-- [ ] [DECISION] P2. If no such run exists: strategy-desk decision on whether/when to start a paper run trading these 3
-      venues so `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`'s P1.2 todo becomes satisfiable.
-      `[OPERATOR]` — genuinely outside a worker's mechanical authority.
+- [x] ✅ [DECISION] P2. If no such run exists: strategy-desk decision on whether/when to start a paper run trading these
+      3 venues so `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md`'s P1.2 todo becomes satisfiable.
+      **RULED (operator, 2026-08-08)**: "Start it to ensure pipes work, but gate on backfill/IS data being complete
+      through the strategy layer for these venues first (else missing-data risk). Spin the VM up and down deliberately —
+      do not leave it running for days, cost creeps." **Investigated 2026-08-08 (na-corpus-digest-closeout, grep-based
+      against manifest/honest-coverage state — no new full-corpus GCS walk)**: backfill/IS completeness is **NOT
+      confirmed** for BINANCE-FUTURES/ASTER/OKX-FUTURES — do not start the run yet.
+  > - All 3 venues are inside the SAME still-open CeFi coverage gap as
+  >   `cefi_ml_directional_continuous_live_2026_06_20.md` item 26 investigated the same day: the only honest-coverage
+  >   number on record is a full-history aggregate (44.96% pre-backfill baseline,
+  >   `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`), and the backfill meant to close it has
+  >   failed/preempted 7 times across 12 days, currently only ~10.7% through its remaining chronological scope
+  >   (`last_completed_date=2019-10-21` of `2019-01-01..2026-08-01`) — no fresh, confirmed number exists for any of the
+  >   3 venues specifically.
+  > - **ASTER specifically** has its own documented completeness history
+  >   (`plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`, `status: resolved` for the
+  >   specific bugs found there — genesis-clip + provenance — but not a blanket completeness clearance) and **zero MDPS
+  >   derived-candle coverage** as of the most recent check (`aster_and_cefi_rolling_adv_feature_2026_07_21.md`: "zero
+  >   coverage for the on-chain-perp CeFi venues (ASTER/HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET)... confirmed via a
+  >   direct GCS listing"). This is a downstream/derived data type (not raw MTDS ticks, which the strategy layer reads
+  >   more directly for funding/carry archetypes), but it is corroborating evidence that ASTER's pipeline has open,
+  >   unresolved completeness gaps, not a clean bill of health.
+  > - **What IS confirmed**: the `[DIAG]` item above shows the strategy catalog is correctly WIRED for all 3 venues
+  >   (`catalog_carry.py`), and CeFi's raw-tick capture Cloud Run Job is currently flowing (Track 1b,
+  >   `cefi_consolidated_closeout_2026_07_18.md`, resolved 2026-07-25) — the pipes exist and current ingestion is
+  >   healthy. What is NOT confirmed is whether historical backfill/IS completeness for these 3 specific venues is
+  >   sufficient to avoid missing-data risk once a paper run starts consuming them through the strategy layer.
+  > - **Conclusion**: per the operator's own gating condition, **the paper run stays NOT startable yet.** Filed the
+  >   specific blocking prerequisite as a new todo below (a venue-scoped completeness check, narrower and faster than
+  >   the stalled full-history backfill). The operator's cost-control instruction (spin the VM up/down deliberately, no
+  >   multi-day idle runs) is captured in that same todo for whenever the gate clears.
+- [ ] [DIAG] P1. **Blocking prerequisite for the paper-run start decision above**: run a venue-scoped completeness check
+      (`instruments-service/scripts/measure_honest_coverage.py --asset-group cefi`, or a targeted IS/MTDS spot-check)
+      restricted to **BINANCE-FUTURES, ASTER, OKX-FUTURES** specifically — covering both IS reference-data completeness
+      (instrument universe present + non-stale) and recent MTDS tick-capture health (no silent gaps in the trailing
+      window a paper run would actually trade against). Repo: instruments-service. **Done when**: a venue-scoped
+      completeness verdict for exactly these 3 venues is cited in this doc's Progress Log. If clean: start the paper run
+      per the operator's authorization above, launching the VM deliberately (not left running for days — spin down once
+      P1.2's ledger comparison has what it needs, per the operator's explicit cost-control instruction). If gaps are
+      found: file them as the specific blocking data-completeness issue before starting.
 
 ## Progress Log
 
@@ -147,3 +184,11 @@ run already covers them under different instrument routing), not a mechanical da
   `[DECISION] P2` `[OPERATOR]` item unchanged and remains open.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — the [DIAG] item was closed today by a concurrent session; the
   sole remaining [DECISION] P2 [OPERATOR] item stays open, unchanged.
+- **na-corpus-digest-closeout 2026-08-08**: operator ruled "start it, gated on backfill/IS completeness for these 3
+  venues, and spin the VM up/down deliberately (cost control)." Investigated: no venue-scoped completeness measurement
+  exists for BINANCE-FUTURES/ASTER/OKX-FUTURES — only the same full-history CeFi aggregate (44.96%, stalled backfill)
+  already found incomplete while investigating a sibling item (`cefi_ml_directional_continuous_live_2026_06_20.md`'s
+  item 26, same session) plus ASTER's own documented completeness history. Completeness is therefore **not confirmed** —
+  the paper run stays NOT startable yet. Closed the `[DECISION]` todo (the decision itself — start it, conditionally —
+  is now made) and filed a new `[DIAG] P1` blocking-prerequisite todo for the venue-scoped check that would actually
+  clear the gate, carrying the operator's cost-control instruction forward for whenever it does.
