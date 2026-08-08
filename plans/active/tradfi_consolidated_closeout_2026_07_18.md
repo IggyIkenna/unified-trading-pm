@@ -63,6 +63,8 @@ related:
     /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
     /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -82,7 +84,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: "2026-08-06"
+last_updated: "2026-08-08"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
