@@ -221,11 +221,16 @@ ever applied after an explicit operator ruling — filed here, not edited:
       empty (currently a naive `grep -oP` extracts the quote characters themselves as a non-empty string) — found via 6
       real corpus instances this run, all now individually normalized, but the parser bug itself is unfixed and will
       recur on any future doc authored with `locked_by: ""` instead of a true-blank value.
-- [ ] [REVIEW] P3. Live-check whether `market-tick-data-service`'s VM `fts-backfill-20260806-012831`
+- [x] ✅ [REVIEW] P3. Live-check whether `market-tick-data-service`'s VM `fts-backfill-20260806-012831`
       (`sports_closeout_track_s2_foldin_2026_07_25.md` todo, "RELAUNCHED 2026-08-06") has since completed —
       last-observed state (2026-08-06) was "still RUNNING, no exit signal"; ~2 days have passed as of this run
       (2026-08-08) so it has almost certainly resolved one way or the other by now, but I have no VM/cloud read access
-      from this role to confirm.
+      from this role to confirm. **DONE 2026-08-08 (slot-27, review)**: it has NOT resolved — live `gcloud`/`gsutil`
+      check confirms genuinely still RUNNING (not stalled: log written 2s before check, watchdog trace monotonically
+      growing), at 39.6% of its date range (892/2,253 days) after 67.4h, ETA ~4.3 more days. Also found + fixed an
+      adjacent premature-checkbox-flip bug on the same VM's plan todo (flipped `[x]` at launch instead of at its own
+      done-when, same class as the 08-05 predecessor VM). Full evidence + fix:
+      `sports_closeout_track_s2_foldin_2026_07_25.md` Progress Log, 2026-08-08 entry. unified-trading-pm (this commit).
 
 ## Archive candidates (operator review)
 

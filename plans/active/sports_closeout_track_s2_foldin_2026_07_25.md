@@ -192,25 +192,25 @@ context_scope:
       the todo's own "if genuinely different, do not purge" branch.
 
       **UPDATE 2026-08-03 — items 1+2 resolved, figures now authoritative (see
-                                                                      `sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md` Progress Log for full methodology):**
+                                                                          `sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md` Progress Log for full methodology):**
 
-                                                                      **Item 1 (re-baseline, `instruments-service@7409c5b1` dry-run):** Operator ruled the full 383-league registry is
-                                                                      authoritative for the "not in registry" wipe (not MVP-96). Fixed-script dry-run against the live
-                                                                      `availability_index.parquet` (11,853,040 rows): **11,403 non-canonical rows / 755 unique league_ids** under the
-                                                                      full 383-league registry, football-data-types-only (top data_types: MATCHES 3665, FIXTURES 3332, INJURIES 1644,
-                                                                      ODDS 1044, PREDICTIONS 804, STANDINGS 614 — all football, zero `trades`/`odds_horizon_bucket`, confirming the
-                                                                      `_FOOTBALL_DATA_TYPES` scope-bug fix holds). Supersedes the 2026-07-27 manual census's 17,767/734 figure for the
-                                                                      same cut.
+                                                                          **Item 1 (re-baseline, `instruments-service@7409c5b1` dry-run):** Operator ruled the full 383-league registry is
+                                                                          authoritative for the "not in registry" wipe (not MVP-96). Fixed-script dry-run against the live
+                                                                          `availability_index.parquet` (11,853,040 rows): **11,403 non-canonical rows / 755 unique league_ids** under the
+                                                                          full 383-league registry, football-data-types-only (top data_types: MATCHES 3665, FIXTURES 3332, INJURIES 1644,
+                                                                          ODDS 1044, PREDICTIONS 804, STANDINGS 614 — all football, zero `trades`/`odds_horizon_bucket`, confirming the
+                                                                          `_FOOTBALL_DATA_TYPES` scope-bug fix holds). Supersedes the 2026-07-27 manual census's 17,767/734 figure for the
+                                                                          same cut.
 
-                                                                      **Item 2 (§U reconciliation, `instruments-service@153063e4`):** The G1 script's `_FOOTBALL_DATA_TYPES` frozenset
-                                                                      does NOT include `FIXTURES_SCHEDULE` or `FIXTURES_OUTCOMES` — §U's ENTIRE population is drawn from
-                                                                      `FIXTURES_SCHEDULE` raw content, so the two populations are **DISJOINT BY CONSTRUCTION**. A scoped walk of the
-                                                                      raw `fixtures_schedule` corpus restricted to the 363 non-registry `FIXTURES_SCHEDULE` league_ids found **7,573
-                                                                      non-registry blank-`round` rows across 296 distinct leagues** — the honest 2026-08-03 equivalent of §U's original
-                                                                      10,869/489 figure (smaller because the registry grew 94→383 leagues since §U's 2026-07-19 measurement, plus the
-                                                                      intervening §T/§W backfills and the 2026-07-23 pre-floor wipe). 60 of the 2,111 scoped blobs (all
-                                                                      `day=2026-04-14`) hit the already-tracked wrong-schema contamination from
-                                                                      `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` — known residue, not a new defect.
+                                                                          **Item 2 (§U reconciliation, `instruments-service@153063e4`):** The G1 script's `_FOOTBALL_DATA_TYPES` frozenset
+                                                                          does NOT include `FIXTURES_SCHEDULE` or `FIXTURES_OUTCOMES` — §U's ENTIRE population is drawn from
+                                                                          `FIXTURES_SCHEDULE` raw content, so the two populations are **DISJOINT BY CONSTRUCTION**. A scoped walk of the
+                                                                          raw `fixtures_schedule` corpus restricted to the 363 non-registry `FIXTURES_SCHEDULE` league_ids found **7,573
+                                                                          non-registry blank-`round` rows across 296 distinct leagues** — the honest 2026-08-03 equivalent of §U's original
+                                                                          10,869/489 figure (smaller because the registry grew 94→383 leagues since §U's 2026-07-19 measurement, plus the
+                                                                          intervening §T/§W backfills and the 2026-07-23 pre-floor wipe). 60 of the 2,111 scoped blobs (all
+                                                                          `day=2026-04-14`) hit the already-tracked wrong-schema contamination from
+                                                                          `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` — known residue, not a new defect.
 
 - [x] ✅ [DIAG] P1. **Sports P2a sub-item (b) — G2 2015-2017 zero-captured diagnosis — DONE 2026-07-27, read-only, no
       fix implemented.** **FINDING: subscription-tier limit (high confidence), not a backfill bug.** This question was
@@ -388,10 +388,10 @@ context_scope:
       pending a purge/retype pass, not real work. (repo: instruments-service). **Done when**: P2a(c) (sibling
       plan)/P2b's odds_api backfill/P2c all confirmed landed AND the full gate re-run passes corpus-wide with a fresh
       census.
-- [x] ✅ [DATA] P2. **RELAUNCHED 2026-08-06 (slot-4) — Features recompute for enriched dates.** Gated on
-      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s INJURIES 94-league enrichment backfill landing first** (that
-      plan was archived 2026-07-28 with `[x]` ✅ 94-league enrichment backfill COMPLETE — prereq met). After
-      full-history AF enrichment lands, re-run sports features with force/no-skip for the enriched dates
+- [ ] [DATA] P2. **STILL RUNNING as of 2026-08-08 live-check (slot-27, review) — Features recompute for enriched
+      dates.** Gated on `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s INJURIES 94-league enrichment backfill
+      landing first** (that plan was archived 2026-07-28 with `[x]` ✅ 94-league enrichment backfill COMPLETE — prereq
+      met). After full-history AF enrichment lands, re-run sports features with force/no-skip for the enriched dates
       (`derived_features` + `fixture_features` only; `odds_features` unaffected). (repo: features-service,
       deployment-service). **Relaunched 2026-08-06 (slot-4)**: VM `fts-backfill-20260806-012831` (SPOT, e2-standard-4,
       zone asia-northeast1-c) running
@@ -403,7 +403,10 @@ context_scope:
       when**: the forced re-run completes (VM exit 0, manifest rows written for enriched dates). **Prior attempts**: VM
       `fts-backfill-20260805-045644` (slot-13, 2026-08-05) was PREEMPTED mid-run at ~2021-01-30 (~10% of range).
       Launcher comma-escaping fix `deployment-service@1fabb73` (gcloud `^|^` delimiter for multi-table `--tables`
-      values) already shipped on prior attempt.
+      values) already shipped on prior attempt. **REVERTED to `[ ]` 2026-08-08 (slot-27, review) — same premature-flip
+      pattern as the 08-05 attempt: this todo was flipped `[x]` at launch time (08-06) even though its own done-when (VM
+      exit 0, manifest rows written) was unmet; live-check confirms it's genuinely still unmet, not just unconfirmed.**
+      See Progress Log for the full live-check evidence.
 - [ ] [VERIFY] P2. BLOCKED-PREREQUISITES — **ML-readiness re-verify, transitively gated behind the features-recompute
       todo above.** (repo: unified-trading-pm). **Done when**: the features-recompute todo above is confirmed done AND
       the ML-readiness re-verify passes.
@@ -450,6 +453,30 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-08 (slot-27, review)** — Live-check of `fts-backfill-20260806-012831` per
+  `plan_reconciler_findings_2026_08_08.md`'s filed `[REVIEW] P3` todo (2026-08-06 last-observed state was "still
+  RUNNING, no exit signal"; ~2 days had passed, hypothesized it had "almost certainly resolved one way or the other by
+  now"). **Live gcloud/GCS check (this dispatch) finds it has NOT resolved — it is genuinely, actively still running,
+  not stalled and not dead:**
+  - `gcloud compute instances describe fts-backfill-20260806-012831 --zone=asia-northeast1-c`: status=`RUNNING`,
+    `lastStartTimestamp=2026-08-05T18:28:48-07:00` (=2026-08-06T01:28:48Z, matches the launch record above).
+  - `run.log` last GCS object update: 2026-08-08T20:57:32Z — 2 seconds before this check, actively growing
+    (`WATCHDOG_TRACE.log` shows monotonically increasing size across iters 3900-3919, no stuck-size pattern).
+  - Progress metric (target-artifact count, not activity — per RULES.md § 1): distinct `Target fixtures on <date>` log
+    lines cover 892 of the 2,253 total days in the `2020-06-06..2026-08-06` range = **39.6% complete**, currently on
+    `2022-11-14`. At the measured rate (892 dates / 67.4h elapsed = 13.2 dates/h), ETA to completion is **~4.3 more
+    days** (~7.1 days total run time) — far longer than a typical features-backfill VM, but this is throughput, not a
+    hang: no exceptions/tracebacks, only expected per-date `data_quality` schema-validation warnings with
+    `recovery=skip` (pre-existing sparse-source columns like `ht_*`/`*_xg_understat` on early dates, not new breakage).
+  - `ManifestWriter` per-VM shard log lines show `process_final=False` throughout — the manifest write for this VM
+    hasn't been finalized, confirming the todo's own done-when (VM exit 0, manifest rows written) is not met.
+  - **Reverted the todo's premature `[x]` flip** (see todo text) — this is the same bug class already documented for
+    this VM's 08-05 predecessor (`fts-backfill-20260805-045644`, flipped-at-launch then reverted 2026-08-06 below):
+    flipping on launch instead of on the stated done-when. Not filing a fresh issue doc for the pattern itself since
+    `plan_reconciler_findings_2026_08_08.md`'s live-check todo already covers this dispatch's finding.
+  - Not escalated as a billing-waste concern: SPOT VM, actively progressing (no preemption-without-recovery), and
+    `/vm-preemption-billing-waste-audit` is the standing mechanism for that surface if the ~7-day total runtime proves
+    symptomatic on a future pass.
 - **2026-08-06 (slot-13, data_engineering)** — P2c (`sports_closeout_track_s2_foldin-007`) re-dispatch: still genuinely
   blocked, declined via `/skip-current-task` `reason_code=GATED` (not `/done` — the done-when is unmet). Fresh evidence
   gathered this dispatch: (1) **P2b not done** — odds_api gap-fill P1 backfill still `[ ]` + `BLOCKED-CREDENTIALS`
