@@ -316,9 +316,18 @@ its own threshold — your value-add is the DIAGNOSIS. For each long-dirty slot,
 
 - Worker `status == "blocked"` (or a pending /blocked question) → the WIP is uncommitted because the worker is WAITING
   ON AN ANSWER. Make sure the block gets answered — main is first responder; if it has sat unanswered, chat-ping main.
-- Worker dead/stale (slot `killed`/`idle` with no live tmux session, or heartbeat silent) → it died mid-task with
-  UNPUSHED WIP (orphan). Chat main so the worktree is inherited/recovered (`chore(orphan-wip)` + push) per the
-  inherited-dirty-WIP rule. A clean fleet (`summary.dirty == 0`, no stale crons) → nothing to do here.
+- **Before concluding dead/stale, check liveness-by-progress** (mirrors the backend suppression shipped in
+  `agent-orchestrator@0757a751`/`@0cc12fdb`; operator-approved 2026-08-08 per
+  `issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md`): run
+  `git -C <any-dirty-repo-path> log -1 --format=%ct` — if the most-recent commit is newer than ~10 min, the worker is
+  burst-committing or mid-QG and NOT wedged. Also check `pgrep -f <worktree-path>` — a live child process
+  (`quality-gates.sh`, `pytest`, `basedpyright`) under the worktree confirms the worker is actively running. Both
+  signals can be true while the worker is completely silent on the API (no heartbeat, no inbox drain) — that is normal
+  for a long autonomous run and is NOT evidence of a wedge. Hold off escalation or recycle if either check passes.
+- Worker dead/stale (slot `killed`/`idle` with no live tmux session, or heartbeat silent, **AND** the
+  liveness-by-progress check above fails) → it died mid-task with UNPUSHED WIP (orphan). Chat main so the worktree is
+  inherited/recovered (`chore(orphan-wip)` + push) per the inherited-dirty-WIP rule. A clean fleet
+  (`summary.dirty == 0`, no stale crons) → nothing to do here.
 
 3e. **Mark what you've reviewed (advisory ledger).** After you finish reviewing an ISOLATED commit / task / event,
 record it so you don't redundantly re-review the SAME item next tick:
