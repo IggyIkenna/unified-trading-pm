@@ -18,7 +18,7 @@ summary: >-
   Deferred section on 2026-07-26, back when this doc was still infra-tagged). Only 3 todos, from 2 source docs, cleared
   every gate — this is a deliberately small first batch, not an exhaustive one; see `## Deferred` for the other 9
   orphaned items and why each is held back.
-status: draft
+status: active
 nature: process
 asset_group: [ui]
 stage: [meta]
@@ -68,9 +68,10 @@ source: >-
 
 # UI satellite docs — AO dispatch batch 1
 
-> **`status: draft` — NOT ingested, NOT dispatched.** Flipping this to `active` is the operator's call (CLAUDE.md §
-> "Plan destination — ASK BEFORE CREATING"). Drafted autonomously 2026-08-06 by the scheduled `ag_closeout_auditor`
-> role; see `## Operator approval gate` at the bottom for exactly what approving this means.
+> **`status: active` — operator-approved 2026-08-08, ingested/dispatched.** Drafted autonomously 2026-08-06 by the
+> scheduled `ag_closeout_auditor` role; a fresh conflict-check re-verified the original Phase 3 clearance still held
+> before dispatch — see `## Operator approval gate` at the bottom for what approving this batch meant, and the Progress
+> Log for the re-check.
 
 ## Why this plan exists (the coverage gap, measured)
 
@@ -298,3 +299,11 @@ Approving this plan means: flip `status: draft` → `active` here (the finalize 
   itself is still unapproved/undispatched, and batch2-candidate discovery is explicitly this batch's own finalize plan's
   job (todo 2) once triggered. Recommendation carried to `/done` evidence: approve + dispatch this batch; batch2
   candidates will surface naturally once the finalize plan's re-check runs.
+- **2026-08-08 (operator approval)**: flipped `status: draft` → `active` after a fresh conflict-check: (a) no
+  `deployment_and_user_management_master` sibling batch drafted after this one besides batch2
+  (`ui_satellite_ao_dispatch_batch2_2026_08_08.md`, also flipped active today in the same session) — the two batches'
+  todos touch disjoint target files (this batch: deployment-api cell-grid endpoint, a stale-checkbox reconciliation, and
+  a codex doc; batch2: `deployment-api/routes/costs.py` + `deployment-ui/CostObservability.tsx`), no collision; (b) no
+  new active `parent_epic: deployment_and_user_management_master` claim found on any of the 3 todos' targets; (c)
+  `ui_consolidated_closeout_2026_07_30.md` unchanged since this batch's 2026-08-07 re-verification. `locked_by` unset.
+  Dispatching.

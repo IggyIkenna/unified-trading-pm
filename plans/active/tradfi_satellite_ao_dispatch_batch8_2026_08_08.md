@@ -18,7 +18,7 @@ summary: >-
   independent corroboration for both this pass's correction and batch7's original judgment. Net: **17 orphaned docs this
   pass** (down from batch7's 36), of which 3 cleared the Phase-3 conflict-check as bounded, conflict-free, AO-eligible
   work and are drafted below (from 3 distinct source docs). The other 14 stay deferred/flagged — see below.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -79,9 +79,10 @@ context_scope:
 
 # TradFi satellite AO batch 8 — fresh audit extraction
 
-> **Status: draft — needs operator review before dispatch.** Per the ag-closeout-audit skill's autonomous-mode contract,
-> a freshly-drafted batch always ships `status: draft` regardless of how clean the conflict-check came back; flipping to
-> `active` to actually dispatch it is an operator decision, never autonomous.
+> **Status: active — operator-approved 2026-08-08.** A fresh conflict-check re-verified the original Phase 3 clearance
+> still held before dispatch (see Progress Log). Per the ag-closeout-audit skill's autonomous-mode contract, a
+> freshly-drafted batch always ships `status: draft` regardless of how clean the conflict-check came back; flipping to
+> `active` is an operator decision, never autonomous — that decision has now been made.
 >
 > All 3 todos below are same-priority-independent and were checked for file collisions (see the matrix near the bottom)
 > — all 3 touch distinct repos/files, no overlap.
@@ -274,6 +275,14 @@ mirroring the batch1-7 finalize pattern.
   not batched" list from 2 days prior). 3 of 17 orphaned docs cleared the conflict-check and are drafted above; 1
   candidate (`tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`) failed the conflict-check against a doc
   outside tradfi's own covering set and is deferred, not drafted.
+- **2026-08-08 (operator approval)**: flipped `status: draft` → `active` after a fresh conflict-check re-verified the
+  original Phase 3 clearance: (a) no `tradfi_master` sibling batch drafted after this one exists (batch6/7 remain the
+  only other active tradfi batches, both already accounted for in this doc's own drafting/file-collision matrix); (b)
+  re-grepped the 3 todos' target files (`canonicalize_cboe_vx_combo_catalog_2026_07_08.py`/
+  `canonicalize_dbeq_stock_class_catalog_2026_07_08.py`, `_candle_contracts.py`/`ohlcv_passthrough.py`, and the
+  delta_one pre-flight scanner) across the full active corpus — only this doc and its cited source docs reference them,
+  no new claim; (c) `tradfi_consolidated_closeout_2026_07_18.md` unchanged since this batch's drafting. `locked_by`
+  unset. Dispatching.
 
 ## Codex SSOTs
 
