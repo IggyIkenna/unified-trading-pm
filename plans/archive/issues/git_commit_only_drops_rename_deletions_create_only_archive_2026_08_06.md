@@ -18,7 +18,7 @@ summary: >-
   renames. Concurrent partial commits interleave without index corruption and are NOT the cause; concurrent full commits
   abort loudly (index.lock), matching the slot-8 finding. Live corpus consequence: 5 active/archive duplicate pairs
   survive today, each diverged 15-34 diff lines. Prevents recurrence with a create-only guard + workflow fix.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -44,7 +44,7 @@ source: [prek_patch_cache_replays_stale_diff_onto_unrelated_files-002 review tas
 drift_direction: worsening-slowly
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: slot-26 (review), 2026-08-08
 context_scope:
   [
     /scripts/plan-hygiene/check_create_only_archive_commits.py,
@@ -53,6 +53,14 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-08** — fully resolved, all 4 todos closed. P1 shipped the create-only guard
+> (`check_create_only_archive_commits.py`, wired into `run_hygiene_sweep.sh`), P2 reconciled the 5 live diverged
+> duplicate pairs, P3 (this doc's last open item) updated the archival-discipline codex doc + `plan-hygiene.md` to
+> require a safe commit shape (`safe-doc-push.sh` or two-path `--only`) plus a post-commit `git status --porcelain`
+> check, and the parent `prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md` doc was archived
+> separately. Fixed in `unified-trading-pm@5bfe78fca` (P1), the 2026-08-06 duplicate-removal commits (P2), and
+> `unified-trading-pm@4ad2f00f4` (P3).
 
 # `git commit --only` drops rename deletions → create-only archival commits
 
