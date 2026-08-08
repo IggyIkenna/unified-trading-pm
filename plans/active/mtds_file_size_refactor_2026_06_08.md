@@ -165,9 +165,13 @@ byte-identical output before/after).
       ~18 source adapters still emit/accept pandas at the seam, forcing a per-shard conversion; thread the polars frame
       through the adapter protocol to drop it. Repo: market-data-processing-service. (MIGRATED FROM:
       `mdps_adapter_protocol_pandas_to_polars_2026_06_21`.)
-- [ ] [DESIGN] P3. **Phase-6 `_publish_emission_check` scalability — operator option-pick** — the per-shard
-      emission-policy check materialises the availability index per call. Surface the option set (in-process TTL cache
-      vs batched pre-flight vs incremental index), get the operator pick, then implement. Repo:
+- [x] ✅ [DESIGN] P3. **Phase-6 `_publish_emission_check` scalability — RESOLVED, already shipped
+      (round5-cross-cutting-audit 2026-08-08).** Both options already live+composed: in-process 60s-TTL cache
+      (`read_availability_index`) + optional `manifest_index` pre-read passthrough (MDPS commit `ca69f512`, "F3 safe
+      pass-through"). Closed 2026-07-29,
+      `plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`. No operator pick needed. The
+      per-shard emission-policy check materialises the availability index per call. Surface the option set (in-process
+      TTL cache vs batched pre-flight vs incremental index), get the operator pick, then implement. Repo:
       market-data-processing-service. (MIGRATED FROM: same.)
 
 ### From `mdps_coverage_85pct_2026_06_10` (archived — 9/10 done; MDPS coverage→86.71% SHIPPED)
