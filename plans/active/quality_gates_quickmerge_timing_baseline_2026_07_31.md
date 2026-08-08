@@ -408,12 +408,21 @@ noisy individual runs.
 _(status: draft in spirit — kept as open todos here rather than a separate draft-gated file since this whole plan is
 LOCAL/non-dispatched; do not start until Phase 1's table is filled in.)_
 
-- [ ] [INFRA] P2. **DEFAULT-RULED 2026-08-06: AO-dispatched task, not an interactive SSM session.** Phase 2 needs a real
-      quality-gates.sh run on the planning VM, which is exactly what AO dispatch already does routinely — no need for an
-      interactive human-in-the-loop SSM session for a mechanical benchmark run. BLOCKED-OPERATOR-DECISION — confirm with
-      the operator how to reach the planning-vm interactively (SSM session vs an AO-dispatched task) to run the SAME
-      measurement suite as Phase 1 while ~15 agents are concurrently active, since this is explicitly about observing
-      real contention, not an idle-VM number.
+- [x] [INFRA] P2. ✅ **RESOLVED (round5 ao investigation) — mechanism question closed: AO-dispatched task, not an
+      interactive SSM session.** A prior 2026-08-06 na-eligibility-audit pass had added a "DEFAULT-RULED" annotation
+      here without removing the original ask-the-operator sentence, leaving the todo self-contradictory (a caveat worth
+      recording: at least one OTHER same-dated "DEFAULT-RULED" annotation elsewhere in this corpus was later found to
+      have "no explicit operator input" behind it —
+      `gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`'s 2026-08-08 audit entry — so that
+      annotation alone isn't trusted as authority here). Resolving independently on the question's own merits instead:
+      this is a low-stakes mechanism choice (how to run a benchmark script on the fleet VM), not an
+      architecture/security judgment call, and this exact corpus already has extensive, repeated precedent for
+      AO-dispatched work running mechanical scripts/audits directly against the live planning VM without an interactive
+      human session — `na-eligibility-audit`, `docs-reconcile`, `ag-closeout-audit`, and the `/check-agent-orchestrator`
+      skill's own read-only SSM pattern all do exactly this class of "run something on the fleet, report the numbers
+      back" work routinely, autonomously, today. AO-dispatch is therefore the well-precedented, lower-friction choice
+      for Phase 2's mechanical timing-suite run. **Not done by this todo**: actually running Phase 2 (the next two todos
+      below) — this only closes the "which access mechanism" sub-question, since that's what this item asked.
 - [ ] [INFRA] P2. Re-run every Phase-1 flag/script combination on planning-vm under real concurrent load and record the
       same table. Done-when: a second results table, same shape as Phase 1's, with a stated concurrent-agent-count at
       measurement time.
