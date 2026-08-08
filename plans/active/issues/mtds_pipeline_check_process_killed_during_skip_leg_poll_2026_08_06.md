@@ -225,8 +225,16 @@ proven this run.
   every single ~60-70s heartbeat cycle throughout the whole 29min run (never once succeeds) — worth checking whether
   that failed-dual-write retry path leaks a transaction/retry object per attempt rather than discarding it cleanly.
   **Workaround used this run**: retried scoped to `--asset-group CEFI` only (this role's actual mandate) rather than
-  re-attempting the full unscoped sweep a second time — see this run's own report for the outcome. Suggested follow-up
-  (not attempted — same access gap as before, now narrower): reproduce on a dedicated driver VM with
-  `VM_SHUTDOWN_ON_COMPLETION` temporarily disabled + a periodic `ps -o rss= -p <pid>` logged into `run.log` itself, so a
-  future recurrence leaves both a live VM to SSH into AND an in-band RSS timeline instead of requiring a postmortem
-  guess from the kill signature alone.
+  re-attempting the full unscoped sweep a second time — see this run's own report for the outcome. Converted to a
+  tracked todo below (was prose, violating the "every follow-up is a `- [ ]` todo" HARD RULE).
+
+## Follow-ups
+
+- [ ] [DATA] P2. Add periodic RSS self-logging to the `pipeline_e2e_check.py` driver's polling loop (or the VM's
+      `heartbeat_daemon.py` sidecar — either sampling point works, pick whichever is simpler to wire) — e.g.
+      `ps -o rss= -p <pid>` logged into `run.log` itself every heartbeat cycle. A future OOM recurrence would then leave
+      an in-band RSS timeline instead of requiring a postmortem guess from the kill signature alone (this run's rc=137
+      diagnosis was inferred, not measured, because the VM had already self-deleted before anyone could inspect it).
+      Reproduce/verify by re-triggering a long unscoped sweep (the original OOM trigger, 2026-08-08 Progress Log entry
+      above) with the instrumentation active and confirming the log shows RSS climbing toward the kill. (repos:
+      market-tick-data-service or deployment-service, whichever owns the chosen sampling point)
