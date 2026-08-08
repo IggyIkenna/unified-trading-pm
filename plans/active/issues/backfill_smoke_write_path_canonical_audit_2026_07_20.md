@@ -352,6 +352,14 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
   na-eligibility-audit passes cited it as an unresolved scope-decision without cross-checking the sibling doc. Only todo
   3 (doc-comment correction) remains genuinely open; doc stays `assigned_vm: NA` pending that one bounded item being
   claimed.
+- **finalize-plan todo 1, 2026-08-08 (slot 7)**: Todo 3's cited commit `instruments-service@9c2cddf1` was itself
+  factually wrong — re-verification against live code found the generic `_write_venue` writer had already been
+  hive-canonicalised by `instruments-service@108f5120` (2026-07-22), 17 days BEFORE `9c2cddf1` re-asserted the stale
+  flat-shape claim. Corrected in `instruments-service@37d48151` + `market-tick-data-service@a36d3cf1` (see
+  `backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md` todo 1 for the full re-verification). Todo 3 stays
+  `[x]` (a fix was genuinely shipped); this note documents the follow-up correction so a future reader doesn't re-trust
+  the now-superseded `9c2cddf1` citation alone.
+
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY, `assigned_vm: NA` → `planning`
   (`execution_scope: local-only` → `orchestrator-agent`, `assigned_role: data` → `data_engineering` — the prior value
   was not a registered `agents/*.md` role). With todo 6 already closed (2026-08-08, above), the doc's sole remaining
