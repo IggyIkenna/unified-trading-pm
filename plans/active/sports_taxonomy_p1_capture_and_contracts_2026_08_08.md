@@ -446,16 +446,41 @@ achieved by exclusion, not canonicalisation.**
       described `odds_movement` as a `price_prev`/`price_curr`/`delta` shape; the real adapter output is OHLC columns) —
       unified-trading-pm@\<pending\>, in `/codex/02-data/sports-data-types-catalog.md` § "Snapshot vs Candle
       Discriminator (P1 decision, 2026-08-08)".
-- [ ] [CODE] P1. **Make MTDS's `_asset_group_for_venue` FAIL LOUD instead of defaulting to cefi.**
-      `market_tick_data_service/reader.py::_asset_group_for_venue` resolved any unrecognised venue to `"cefi"` SILENTLY.
-      When this chain's venue-axis split removed `ODDS_API`/`FOOTYSTATS` from the canonical venue axis, that default
-      began pointing every read of their **146,163 historical shards** (ODDS_API 123,650 + FOOTYSTATS 22,513) at the
-      **CEFI bucket** — a silent wrong answer, caught only because one unit test happened to assert the sports case.
-      Hot-fixed 2026-08-08 (`SPORTS_VENUES` consulted before the fallback + the fallback now WARN-logs), but the default
-      itself remains. Replace it with a typed raise, and sweep for other `.get(..., <default asset_group>)` lookups in
-      the same class of resolver across MTDS/MDPS/IS. Deferred from the hot-fix only to keep the blast radius off an
-      in-flight chain — a genuinely-unknown cefi venue currently relies on this default, so the raise needs its own
-      enumeration pass first.
+- [x] ✅ [CODE] P1. **Make MTDS's `_asset_group_for_venue` FAIL LOUD instead of defaulting to cefi.** —
+      market-tick-data-service@55d8abc7. `market_tick_data_service/reader.py::_asset_group_for_venue` resolved any
+      unrecognised venue to `"cefi"` SILENTLY. When this chain's venue-axis split removed `ODDS_API`/`FOOTYSTATS` from
+      the canonical venue axis, that default began pointing every read of their **146,163 historical shards** (ODDS_API
+      123,650 + FOOTYSTATS 22,513) at the **CEFI bucket** — a silent wrong answer, caught only because one unit test
+      happened to assert the sports case. Hot-fixed 2026-08-08 (`SPORTS_VENUES` consulted before the fallback + the
+      fallback now WARN-logs), but the default itself remained. **Enumeration pass** (required before the raise, per
+      this todo's own text): resolving through UAC's `to_canonical_venue()` before the `VENUE_TO_ASSET_GROUP` lookup
+      surfaced a SECOND, previously-undetected instance of the same bug class — all 62 DeFi legacy bare-name venue
+      aliases (`ANKR`, `LIDO`, `UNISWAP_V2`, …) are NOT keys in `VENUE_TO_ASSET_GROUP` (only their canonical `-CHAIN`
+      forms are), so they were ALSO silently defaulting to cefi. Closed that gap, then replaced the remaining default
+      with a typed raise (`UnknownVenueAssetGroupError`, matching the existing `InvalidChainError`/
+      `InvalidCanonicalQuestionGroupError` fail-loud convention in `reader_errors.py`) — the "genuinely-unknown cefi
+      venue" carve-out this todo flagged turned out to be empty once the DeFi alias gap was closed, so nothing
+      legitimately depends on the silent default anymore. Updated the reader's existing test suite (2 tests asserting
+      the old silent-cefi behavior now assert the raise; 4 DeFi chain-axis tests' stale `VENUE_TO_ASSET_GROUP` mocks
+      removed in favor of the real registry; 2 no-blobs tests swapped their placeholder venue for a registered one; the
+      file-wide stale `"BINANCE"` bare-token fixture convention corrected to `"BINANCE-SPOT"`). `quality-gates.sh`
+      genuinely green (sentinel-verified on the shipped SHA): 10198 passed, 0 failed, 28 skipped. The broader "sweep for
+      other `.get(..., <default asset_group>)` lookups across MTDS/MDPS/IS" this todo also called for is tracked as its
+      own follow-up todo below (found ~15 more sites; fixing all of them was outside this todo's 1h estimate).
+- [ ] [CODE] P2. **Sweep the other `.get(venue, "cefi")`-style silent-default resolvers found across MTDS/IS during the
+      2026-08-08 `_asset_group_for_venue` enumeration pass** (same bug class as the fixed todo above — a wrong bucket is
+      a silent wrong answer). Concrete sites found (not exhaustive — re-grep `VENUE_TO_ASSET_GROUP.get(` before
+      starting): `market-tick-data-service/market_tick_data_service/engine/orchestrator/preflight.py:428`
+      (`cat = _orch.VENUE_TO_ASSET_GROUP.get(venue, "cefi")`),
+      `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py:195,375`
+      (`ag = _orch.VENUE_TO_ASSET_GROUP.get(venue_name, "cefi").lower()`, two call sites),
+      `instruments-service/instruments_service/engine/orchestrator/writers.py:286`
+      (`_cat = "defi" if manifest_chain else (VENUE_TO_ASSET_GROUP.get(venue_str, "cefi"))`). For each: determine via
+      the same enumeration approach (does any currently-live venue actually rely on the default, incl. DeFi legacy bare
+      aliases via `to_canonical_venue()`) whether it's safe to raise, then either raise or document why a default is
+      still correct there. NOT in scope: `instruments-service/.../process_write.py::_asset_group_for_venue` (a
+      deliberately different, already-reasoned resolver defaulting to `"sports"`, not `"cefi"` — see its own docstring).
+      **Done when**: each listed site is either converted to fail-loud or has a recorded reason it's a genuine default.
 - [x] ✅ [CODE] P1. **Update `venue_data_types.yaml` in the SAME change as the markets/outcomes/settlements deletion.**
       — unified-trading-pm@\<pending\>, market-tick-data-service@\<pending\>. Fixed via the `ldr_qg_failure` escalation
       (agt-fecbe9): UAC commit `1f5879fc` (2026-08-08) collapsed `odds_snapshot`/`odds_movement` out of
@@ -548,14 +573,14 @@ achieved by exclusion, not canonicalisation.**
 Nothing below is uncommitted — every item is either a tracked `- [ ]` or is owned elsewhere. Kinds are separated because
 they need different responses.
 
-| item                                                                                                                 | kind                     | blocked on                                                                       |
-| -------------------------------------------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------- |
-| P2 migration (17 todos), P3 consumers (15), P4 backfill (9)                                                          | **Not done** — real work | P1 completing; P2 additionally on the API-Football campaign                      |
-| `markets`/`outcomes`/`settlements` YAML+UAC parity; collapse `odds_snapshot`/`odds_movement` onto `odds`+`timeframe` | **Not done**             | tracked as P0 todos in P1/P2                                                     |
-| MTDS `_asset_group_for_venue` fail-fast (default still `cefi`, now WARN-logged)                                      | **Not done**             | deliberately deferred off an in-flight chain; needs its own consumer enumeration |
-| Two WS-cassette xfails (`jupiter_solana_ws`, `aave_liquidations_ethereum_ws`)                                        | **Cannot be done yet**   | needs a real WS capture session; fabricating a cassette is explicitly banned     |
-| Sports live-trading activation                                                                                       | **Operator-owned**       | permanent hard-stop; now formally gated on this chain                            |
-| Other artifact tranches (123 open operator questions, Cross-cutting 37)                                              | **Operator-owned**       | only sports got the reconcile-then-plan treatment                                |
+| item                                                                                                                 | kind                                                     | blocked on                                                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P2 migration (17 todos), P3 consumers (15), P4 backfill (9)                                                          | **Not done** — real work                                 | P1 completing; P2 additionally on the API-Football campaign                                                                                                |
+| `markets`/`outcomes`/`settlements` YAML+UAC parity; collapse `odds_snapshot`/`odds_movement` onto `odds`+`timeframe` | **Not done**                                             | tracked as P0 todos in P1/P2                                                                                                                               |
+| MTDS `_asset_group_for_venue` fail-fast (default still `cefi`, now WARN-logged)                                      | **Done** (2026-08-08, market-tick-data-service@55d8abc7) | enumeration pass also found + fixed a 2nd silent-cefi-default class (DeFi legacy bare aliases); the broader MTDS/IS sweep is now its own P2 follow-up todo |
+| Two WS-cassette xfails (`jupiter_solana_ws`, `aave_liquidations_ethereum_ws`)                                        | **Cannot be done yet**                                   | needs a real WS capture session; fabricating a cassette is explicitly banned                                                                               |
+| Sports live-trading activation                                                                                       | **Operator-owned**                                       | permanent hard-stop; now formally gated on this chain                                                                                                      |
+| Other artifact tranches (123 open operator questions, Cross-cutting 37)                                              | **Operator-owned**                                       | only sports got the reconcile-then-plan treatment                                                                                                          |
 
 **Recommended NEXT: let P1 finish, then release P2.** P2 is the long pole (375k-shard re-stamp) and is double-gated;
 everything else is cheaper and can follow. Do NOT start P4's backfill early — backfilling pre-migration guarantees a
