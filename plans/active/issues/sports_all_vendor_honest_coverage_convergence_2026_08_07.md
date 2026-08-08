@@ -605,3 +605,36 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   Transfermarkt PLAYER_VALUES/TEAM launcher todo should grep this doc (or its `BLOCKED-UPSTREAM-OUTAGE` tag) for a live
   outage before launching, not just check the launcher's own singleton lock — the singleton lock only prevents a
   _second_ concurrent VM, it doesn't stop the _first_ one from launching blind into a known-dead endpoint.
+- **2026-08-08T00:16Z-02:46Z — long tick: (1) FIXTURE_STATS confirmed chunk 12/26 @ `2023-03-05`, (2) odds smallchunk2
+  found DELETED with no explanation, root-caused as an external forced-kill (not self-delete-on-exit, not OOM, not
+  preemption), real progress preserved through chunk 25/451, and RELAUNCHED as `smallchunk3`.** FIXTURE_STATS:
+  `PROGRESS.json` read via direct HTTPS GET (see below) shows `last_completed_date=2023-03-05`, `run.log`'s own
+  `PROGRESS: chunk=11/26 range=2022-11-23→2023-02-20 time=2026-08-08T02:00:13Z` +
+  `--- Chunk 12/26: 2023-02-21 → 2023-05-21 ---` confirms **chunk 12/26**, actively processing `date=2023-03-06` with
+  real API calls succeeding — healthy, no action needed. **Tooling note (not a durable lesson, just this tick's
+  noise)**: `gcloud storage cat`/`cp` intermittently failed for over an hour with THREE different error types in
+  sequence (404, network error, 401) on files that `gcloud storage ls -L` proved existed and were being freshly written
+  (`Update Time` matched real recent activity) — worked around via a direct HTTPS GET
+  (`curl -H "Authorization: Bearer $(gcloud auth print-access-token ...)" "https://storage.googleapis.com/storage/v1/b/<bucket>/o/<url-encoded-path>?alt=media"`,
+  optionally with a `Range:` header for large files), which worked reliably throughout. Resolved on its own by ~02:44Z
+  (plain `gcloud storage cat` worked normally again for the relaunch verification below). <br><br>**odds smallchunk2
+  deletion**: `gcloud compute operations list` showed `delete` ops at `00:55:20Z` and `00:56:15Z`,
+  principal=`1060025368044-compute@developer.gserviceaccount.com` (the shared automation SA — not attributable to a
+  specific human or session from this alone). `run.log`'s GCS object `Update Time` metadata (`00:37:08Z`) confirms the
+  file genuinely stopped growing ~18 min before the delete, mid-chunk-26 (`league=EPL, 2020-10-09→2020-10-13`), ending
+  on an ordinary `RESOURCE_SAMPLE` line — **no terminal `exit_code=` line, no `Traceback`, no `CHUNK_FAILED`, no
+  completion marker**, which per `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`'s "Self-deleting VM/job"
+  rule (a graceful self-delete-on-exit writes the terminal exit_code to `run.log` _before_ destroying itself) means this
+  does **not** match the VM's own normal self-delete-on-completion-or-crash behavior — it looks like an external forced
+  deletion. No entry anywhere in this doc from another worker/slot claims responsibility (checked full-doc grep for
+  "smallchunk2"). **Not proof of completion either way** (rule 4a) — real confirmed progress stops at chunk 25/451
+  (`2020-10-08`), 426 chunks still remaining, nowhere near done. **Recovery**: `odds-api-concurrency-guard.sh` confirmed
+  0 running odds VMs (cap=1, would permit a relaunch), so relaunched immediately with the identical params
+  (`START_DATE=2020-06-06 END_DATE=2026-08-07 CHUNK_SIZE=5`, tarballs verified fresh incl.
+  `market-tick-data-service@0e40bc53b168`) as **`mtds-backfill-odds-smallchunk3-20260808`** — guard passed
+  (`0 running + 1 planned = 1 <= cap 1`), VM created RUNNING, verified booted and correctly skip-fasting through
+  already-covered dates (`chunk 1/451`, ~7s/league) confirming zero data loss and correct resume behavior. Using
+  `smallchunk3`'s `run.log` as ground truth going forward (same `PROGRESS.json`-may-lag caveat applies until proven
+  otherwise on this new instance). **Open question, not investigated further**: who/what actually issued the delete —
+  worth asking the operator or checking other slots' session logs if this pattern recurs, since an unexplained VM kill
+  mid-run is exactly the kind of thing that should be attributable.
