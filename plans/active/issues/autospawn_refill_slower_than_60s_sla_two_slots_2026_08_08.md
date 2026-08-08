@@ -42,6 +42,7 @@ resolved_by:
 locked_by:
 source:
   "review (agent-orchestrator loop tick, msg 4091, ~2026-08-08T11:22Z); main independently verified via /api/state read"
+depends_on: []
 ---
 
 # AutoSpawn refill slower than documented ~60s SLA — two data points

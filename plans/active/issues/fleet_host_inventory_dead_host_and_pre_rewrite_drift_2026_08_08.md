@@ -37,6 +37,7 @@ locked_by:
 source:
   "review (agent-orchestrator loop tick, msg 4113, ~2026-08-08T12:58:58Z); main independently corroborated slot 3 state
   via /api/state before filing"
+depends_on: []
 ---
 
 # Fleet host inventory gaps — dead host + pre-rewrite repo drift
