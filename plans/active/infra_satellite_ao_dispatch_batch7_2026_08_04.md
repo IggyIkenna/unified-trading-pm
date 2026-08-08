@@ -147,9 +147,9 @@ every other in-flight plan — safe to run concurrently (no `sequential: true`).
       `issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md` (todo 2).
       (repo: unified-trading-pm) — unified-trading-pm@afa14d4eb; Phase 0 now states the diff-verification step
       explicitly
-- [ ] [INFRA] P3. **Investigate (read-only) whether `deployment-service/terraform/gcp/live_event_log/` was ever wired as
-      an actual `module "live_event_log" { source = "./live_event_log" }` block of the parent `terraform/gcp/` root.**
-      Run `git log --follow` / `git blame` on `live_event_log/main.tf:9`'s inheritance comment and on the parent
+- [x] ✅ [INFRA] P3. **Investigate (read-only) whether `deployment-service/terraform/gcp/live_event_log/` was ever wired
+      as an actual `module "live_event_log" { source = "./live_event_log" }` block of the parent `terraform/gcp/`
+      root.** Run `git log --follow` / `git blame` on `live_event_log/main.tf:9`'s inheritance comment and on the parent
       `main.tf` around when `live_event_log/` was first added. Report findings (whether a module block ever existed and
       was removed, or the directory was always structured this way) into
       `issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md`'s own Progress Log — **do NOT
@@ -158,7 +158,11 @@ every other in-flight plan — safe to run concurrently (no `sequential: true`).
       doc's Progress Log carries a dated finding stating what the git history actually shows, and its Todos section is
       updated to reflect that the investigation is complete and only the (a)/(b) decision remains open. Source:
       `issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md` (todo 1, investigation portion
-      only). (repo: deployment-service investigation, unified-trading-pm doc update)
+      only). (repo: deployment-service investigation, unified-trading-pm doc update) — investigation complete per source
+      doc Progress Log 2026-08-08: `live_event_log/` was intentional isolation from day one (commit fc7047c7 added it
+      with its own backend/provider blocks; no `module "live_event_log"` ever existed in parent root's history). Source
+      doc todo `[x] ✅` and Progress Log updated. Mechanical comment-fix follow-up remains for a deployment-service
+      dispatch (named in source doc).
 
 ## Deferred — non-batchable this round
 
@@ -208,3 +212,8 @@ operator sign-off before dispatch" rule, not a signal any todo itself is risky.
   `na-eligibility-audit/SKILL.md`, and `live_event_log/main.tf`).
 - **2026-08-08** — todo 2 ([DOCS] P3) complete: added date-fallback diff-verification guidance to Phase 0 of
   `cursor-configs/skills/na-eligibility-audit/SKILL.md` — unified-trading-pm@afa14d4eb.
+- **2026-08-08** — todo 3 ([INFRA] P3) complete: git-history investigation confirms `live_event_log/` was intentional
+  isolation from the start (commit fc7047c7 added it with its own `backend "gcs"` + `provider "google"` blocks; no
+  `module "live_event_log"` block ever existed in the parent root at any point in history). Source doc Progress Log and
+  Todos updated accordingly. Remaining mechanical fix (correct the misleading "inherited" comment in
+  `live_event_log/main.tf:9`) named explicitly for a deployment-service dispatch in the source doc.
