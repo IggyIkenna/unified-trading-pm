@@ -77,12 +77,22 @@ curl -s -m 10 localhost:8765/api/escalations/active
 This is the SAME view the AO dashboard's escalations widget renders (default `active_within_hours` window) — never act
 on a different endpoint or a cached/stale read. Evaluate the result:
 
-- **`[]`, or every row is `status` in `{queued, dispatched}` with `created_at` well inside the retuned 45-minute
-  deadline** (`RESOLUTION_DEADLINE_MINUTES` in `agent-orchestrator/server/escalation.py`) → **healthy. Report one terse
-  line (row count + oldest age) and STOP.** Do not run Step 2. Do not file anything. This is the expected, common-case
-  outcome and must stay cheap — one SSM round-trip, nothing else.
-- **Any row has `status=unresolved`**, or a `dispatched`/`queued` row's `created_at` is past ~45 min, or the curl itself
-  failed → proceed to Step 2.
+- **`[]`, or every row is healthy on its own clock**: a `queued` row's `created_at`, OR a `dispatched` row's
+  `dispatched_at`, well inside the retuned 45-minute deadline (`RESOLUTION_DEADLINE_MINUTES` in
+  `agent-orchestrator/server/escalation.py`) → **healthy. Report one terse line (row count + oldest age) and STOP.** Do
+  not run Step 2. Do not file anything. This is the expected, common-case outcome and must stay cheap — one SSM
+  round-trip, nothing else.
+- **Any row has `status=unresolved`**, or a `queued` row's `created_at` is past ~45 min, or a `dispatched` row's
+  `dispatched_at` is past ~45 min, or the curl itself failed → proceed to Step 2.
+
+  **Judge a `dispatched` row by `dispatched_at`, never `created_at`.** `verify_dispatched_escalations` anchors its
+  deadline check on `dispatched_at` (falling back to `created_at` only when `dispatched_at` is null) — a re-escalated
+  row's `dispatched_at` resets on every fresh redispatch while `created_at` stays pinned at the original enqueue time. A
+  `dispatched` row with an old `created_at` but a recent `dispatched_at` (the API response's `attempts` > 1 confirms
+  it's been redispatched) is mid-cycle in the designed re-escalation loop, not stuck — scoring it on `created_at` alone
+  manufactures a false anomaly on every busy-queue run and defeats this step's "stay cheap" goal (confirmed live
+  2026-08-08: a `dispatched` row, `attempts=2`, `created_at` ~96min old but `dispatched_at` ~43min old, was healthy and
+  mid re-escalation, not stuck).
 
 **Connection failure ≠ regression by itself.** If the curl fails (`exit status 7` / connection refused), first rule out
 a benign service restart before calling it a finding — this has happened twice in one 6-hour observation window and both
