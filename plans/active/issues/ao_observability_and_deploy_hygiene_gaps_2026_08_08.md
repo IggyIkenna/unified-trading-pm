@@ -84,8 +84,16 @@ source: ['interactive session 2026-08-08 — operator: "did you fix all these so
 
 ## Todos
 
-- [ ] [BACKEND] P2. **`ao-self-pull.sh` silently stops auto-deploying when an UNTRACKED file appears.** Measured
-      2026-08-08: the central VM's AO checkout carried one untracked file
+- [x] ✅ [BACKEND] P2. **`ao-self-pull.sh` silently stops auto-deploying when an UNTRACKED file appears** — FIXED
+      agent-orchestrator@2c08afd85. Gate now uses `--porcelain -uno` (TRACKED changes only). An untracked file cannot be
+      blown away by a fast-forward merge, so there is no uncommitted WORK to protect — this gate's entire stated purpose
+      — and the one genuinely-conflicting case (incoming commit creates that exact path) is already handled safely by
+      `merge --ff-only`, which refuses and falls through to the same skip+alert. This fixes the CLASS: the 2026-07-29
+      fix patched the INSTANCE by gitignoring two specific filenames via `accounts.json.bak-pre-sub-*`, and a
+      differently-named backup slipped past it on 2026-08-08 and wedged the same gate again. Verified against the REAL
+      wedged state on the VM: old predicate blocks, new one clears with that exact file still present. Untracked files
+      are now logged so litter stays visible; `.gitignore` broadened to `accounts.json.bak*` as hygiene, not as the fix.
+      ORIGINAL FINDING: Measured 2026-08-08: the central VM's AO checkout carried one untracked file
       (`data/config/accounts.json.bak-2026-08-08-tier`, someone's manual accounts backup) and self-pull logged
       `is dirty (non-churn) — skip (manual review)` and did nothing. An untracked `.bak-` file cannot conflict with a
       fast-forward pull, so this is a false block on the fleet's ONLY auto-deploy path — and it fails SILENTLY (a log
@@ -93,28 +101,44 @@ source: ['interactive session 2026-08-08 — operator: "did you fix all these so
       `git pull --ff-only` (untracked files do not block it) + `systemctl restart orchestrator`. **Done when**: the
       dirty-check distinguishes untracked-and-non-conflicting from a genuinely dirty TRACKED file, and a skip that
       persists past N ticks pages rather than only logging. (repo: agent-orchestrator)
-- [ ] [BACKEND] P2. **Reconcile the ~26 genuine false-done backlog rows the `audit-false-done` cron keeps re-finding.**
-      The unit exiting 1 is BY DESIGN (its own unit file documents "a nonzero exit means a false-done row was FOUND —
-      real signal, not a bug"), and Slack alerting is already transition-deduped through `audit_cron_notify.py` — so the
-      unit is not the defect and must NOT be "fixed" by changing its exit code. The defect is the finding: backlog rows
-      with `status=done` whose plan checkbox is still `- [ ]`, i.e. the false-progress class CLAUDE.md names as its #1
-      risk. IDs captured 2026-08-08 include `agent_orchestrator_ldr_terminal_promotion-001..004`,
-      `cefi_live_event_cold_compactor_oom_*-004..005`, `sports_arb_operator_group_and_commission_bugfix-001..008` (+ its
-      `_finalize-001..004`), `wip_preserve_refs_silently_unrecovered-002..003`,
-      `sit_gate_fleet_green_auto_retrigger_stuck-005`, `infra_satellite_ao_dispatch_batch8-001`,
-      `fleet_promoter_glue_runner_stall-004`. **NOT auto-resolvable**: each needs a per-item read of whether the work
-      actually landed, then either flip the checkbox or reopen the task — guessing 26 verdicts is exactly the
-      fabrication this audit exists to catch. Note several are same-day `_finalize-*` rows where the flip may simply
-      still be in flight; re-run the audit before triaging so the genuinely-stale subset is isolated first. **Done
-      when**: `systemctl start audit-false-done.service` exits 0. (repo: agent-orchestrator, unified-trading-pm)
-- [ ] [BACKEND] P3. **Triage the `stash_pile_stale` backlog — 50 events in a 1000-row activity window (2026-08-08).**
-      Operator-reported corroboration the same day: slot 11 carries 8 git stashes in `market-tick-data-service`, oldest
-      23 days. A stash pile that old is either recoverable work nobody has claimed or litter that should be dropped;
-      either way `git stash drop` on foreign WIP is banned, so this needs a per-stash liveness/ownership read. **Done
-      when**: every stale stash is either landed, preserved to a `wip-preserve/` ref, or explicitly written off with the
-      decision recorded. (repo: all slot clones)
-- [ ] [OPERATOR] P3. **Decide the glue-runner fleet's fate — 51 orphaned systemd unit files on the central VM.**
-      `scripts/self-hosted-runners/README.md` still reads
+- [x] ✅ [BACKEND] P2. **False-done rows: 26 -> 1, and the 1 is not a false-done.** Re-ran the audit 2026-08-08 ~12:50Z:
+      **TOTAL FINDINGS: 1**. The other ~25 were same-day in-flight `_finalize-*` flips their own workers reconciled —
+      exactly what this todo predicted ("re-run the audit before triaging so the genuinely-stale subset is isolated").
+      The survivor, `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-025`, was read in full: that
+      plan carries FOUR near-identical "Round-8 ACTUAL LAUNCH" todos (3 checked, 1 open) because each time-gated
+      deferral appended a fresh copy. The DB row is legitimately `done` — that dispatch DID complete, the worker
+      verified the UTC gate was unmet, launched nothing, and spawned the follow-up — and the open `- [ ]` is
+      legitimately open, because the launch still has not happened. **Neither side is wrong; it is the positional-
+      task-ID mapping artifact** (`regen_positional_task_ids_not_content_stable_2026_07_17`). Flipping the checkbox
+      would falsely claim 8 SPOT VMs were launched; reopening the row would falsely reopen completed work — so
+      deliberately did NEITHER. Root fix is ALREADY IN FLIGHT by another agent: `_make_content_task_id` exists in
+      `regen_backlog_from_plan.py` behind a `reportUnusedFunction` suppression (agent-orchestrator@ac36202 + @e0f107a),
+      built but not yet wired. Not colliding with it.
+- [ ] [BACKEND] P2. **Stash piles are ~15x bigger than first reported, and need a CONTENT VERIFIER before any discard.**
+      The original report was "slot 11 has 8 stashes in `market-tick-data-service`". A full fleet sweep on 2026-08-08
+      found **hundreds across 20 slots** — in `unified-trading-pm` alone: slot 10 = 31, slot 12 = 24, slot 11 = 23, slot
+      13 = 23; plus slot 12 `market-tick-data-service` = 11, slot 11 `market-tick-data-service` = 8, and long tails on
+      features-service / unified-api-contracts / instruments-service. The oldest reach back to 2026-06-23. Priority
+      raised P3 -> P2 on that measured scale. **Deliberately NOT bulk-discarded this session.** Discarding foreign WIP
+      is a workspace HARD RULE (and is hook-blocked for autonomous workers); at this scale a wrong call destroys real
+      work fleet-wide — the single worst outcome available in this doc. Two findings make it tractable rather than
+      open-ended: (a) the large majority are `autostash`, which git pops AUTOMATICALLY on a successful rebase — so a
+      LEFTOVER autostash specifically means the pop FAILED (conflict), i.e. genuinely un-restored working state rather
+      than noise; (b) the safe test is content-identity, the exact question
+      `worktree_clean_check.verify_all_wip_preserve_refs` already answers for orphaned commits (is this content already
+      in origin? SUPERSEDED / GONE / STILL-ORPHANED). **Done when**: a stash verifier reusing that verdict vocabulary
+      exists, and every stash is either landed, preserved to a `wip-preserve/` ref, or written off with its verdict
+      recorded. Note the detection half already exists (`stash_audit_watchdog.py` emits `stash_pile_stale`, 50 events in
+      a 1000-row window) — what is missing is the verifier, not the alarm. (repo: all slot clones, agent-orchestrator)
+- [x] ✅ [OPERATOR] P3. **Glue-runner litter removed — 51 orphaned unit files retired 2026-08-08T13:05Z.** Verified
+      immediately before acting, and re-asserted inside the same script as a refuse-guard: **0 of 51 active, 0 enabled,
+      no `/opt/github-glue*` directory anywhere, and no `Runner.Listener` process** (an earlier `pgrep -fc` reading of 1
+      was the grep matching itself). So nothing was serving CI from them. Moved — not deleted — to
+      `/etc/systemd/system/.retired-glue-units-20260808T130521Z/`, fully reversible, and regenerable from
+      `setup-glue-runners.sh` whenever the two-pool deployment actually happens. `systemctl --failed` is now 1
+      (`audit-false-done`, by design) instead of carrying permanent litter that already cost one false "12 failing
+      units" diagnosis this session. The runbook's `last_executed: NEVER` was already accurate and stands. ORIGINAL
+      FINDING: `scripts/self-hosted-runners/README.md` still reads
       `last_executed: NEVER (files created 2026-07-15, redesigned     two-pool 2026-07-16; not yet deployed)`, yet 51
       `github-glue-*` unit files exist (written 2026-07-27) whose `ExecStart` points at
       `/opt/github-glue-runners-<repo>/refresh-gh-token.sh` — and **no such directory exists anywhere on the box**. They
