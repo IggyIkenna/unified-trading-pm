@@ -791,7 +791,34 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       delta is expected to be dominated by those, not GitHub JSON. If the delta is not materially lower, the next-ranked
       lever is the sync-handler allocations (profile + trim the fleet census / cost / alerts tiles), not another
       concurrency guard — the guard + projection already cover the stacking + retention mechanisms. (repo:
-      deployment-api)
+      deployment-api) — **2026-08-08 (slot 13, review): precondition NOT met — staying open.** `0050de6` is genuinely
+      live (content-verified via direct image extraction, not ancestry: 100%-traffic revision `00473-zkw`, created
+      `12:57:11Z`, carries `_project_compare`/`_project_pulls`/`_project_workflow_runs` verbatim). But
+      `/api/repo-ci/overview` has NOT been called even once since the fix deployed (`00:10:41Z` onward, checked via both
+      exact-path and broader `=~"repo-ci"` request-log sweeps) — zero `memory-profile repo_ci.get_overview` lines exist
+      to read, at any severity. Same for `/api/health/overview`. This todo's literal ask has no data yet, distinct from
+      "the fix didn't work." Checked the wider SIGKILL signal instead: 3 post-fix occurrences
+      (`00460-jnb@2026-08-07T18:38:30Z`, `00464-94g@08-08T01:00:23Z`, `00469-wz8@08-08T09:29:15Z`, both bracketing
+      revisions content-verified to carry the fix), down from 23 in the 2.6-day pre-fix window — but this is CONFOUNDED
+      (the cockpit page simply wasn't loaded either) and not attributable to `0050de6` without a repo_ci call to
+      measure. New finding: 2 of the 3 post-fix SIGKILLs correlate with a DIFFERENT burst than the cockpit cluster this
+      doc has tracked — a data-status dashboard load
+      (`/api/data-status/{coverage-summary,manifest,prediction-catalogue}`, `/api/config/shard-axis-matrix`,
+      `/api/capabilities/service-asset-groups/*`), several legs timing out at 32-34s right at the SIGKILL. The 3rd
+      (`18:38:30Z`) has no correlating burst at all — routine `/health` polls only. Filed a fresh `[BACKEND]` P2 below
+      for the data-status lead rather than re-guessing; this todo stays open pending an actual repo_ci call to measure.
+      No code shipped (pure verification).
+
+- [ ] [BACKEND] P2. **NEW, opened 2026-08-08 (slot 13, review) — a data-status dashboard burst, not the cockpit cluster,
+      now correlates with 2 of 3 post-`0050de6` SIGKILLs; profile it before guessing a fix.**
+      `/api/data-status/{coverage-summary,manifest,prediction-catalogue}` + `/api/config/shard-axis-matrix` +
+      `/api/capabilities/service-asset-groups/*` (instruments-service + market-tick-data-service) land as a burst with
+      several legs timing out at 32-34s immediately before `00464-94g@2026-08-08T01:00:23Z` and `00469-wz8@09:29:15Z`'s
+      SIGKILLs. None of these handlers carry the `130c3a2` `log_rss_delta` instrumentation (only
+      `repo_ci.get_overview`/`health_overview.get_health_overview`/`vm_deployments._compute_vm_deployments` do) — add it
+      to the data-status manifest/coverage-summary/catalogue handlers before guessing a fix, per this doc's own
+      established discipline. The 3rd post-fix SIGKILL (`00460-jnb@18:38:30Z`) has NO correlating burst (routine
+      `/health` polls only) — note but don't force an explanation. (repo: deployment-api)
 
 - [ ] [BACKEND] P3. **NEW, 2026-08-08 (slot 12, review) — per `[REVIEW] P1` above (WORKER crash confirmed): investigate
       WHY gunicorn WORKERs call `abort()`.** All confirmed SIGABRTs were WORKERs (age 1–67 at crash time). SIGABRT
@@ -928,3 +955,10 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   (pid=2) never appeared in SIGABRT data. Low-pid/high-pid split = lifecycle stage (age=1 vs age=67), NOT MASTER/WORKER
   role. Flipped `[REVIEW] P1`, filed `[BACKEND] P3` follow-up. SIGABRT silent since `2026-08-04T05:57:56Z`. No code
   shipped (pure verification).
+
+- **2026-08-08 (slot 13, review)** — Dispatched `deployment_api_sigabrt_crash_loop-031` (the `[REVIEW] P2` `0050de6`
+  memory-profile-monitoring todo). Content-verified `0050de6` is live (direct image extraction on 100%-traffic
+  `00473-zkw`). Precondition not met — `/api/repo-ci/overview` hasn't been called since the fix deployed, so no
+  memory-profile line exists to read; left unchecked. SIGKILL rate dropped 23→3 across the pre/post-fix windows but
+  that's confounded by the cockpit page simply not being loaded. New finding: 2 of 3 post-fix SIGKILLs correlate with an
+  UN-instrumented data-status dashboard burst instead — filed a `[BACKEND] P2` follow-up. No code shipped.
