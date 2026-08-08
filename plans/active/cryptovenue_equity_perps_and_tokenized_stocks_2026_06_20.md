@@ -6,7 +6,13 @@ summary:
   enabling equity basis/dispersion arb cross-venue.
 status: active
 nature: process
-asset_group: [cefi, defi]
+asset_group:
+  [cefi] # corrected 2026-08-08 (ag-closeout-audit cefi, Phase 0.3 orthogonality check) -- was [cefi, defi], a mistag:
+  # doc scope is 100% CeFi (Binance/OKX/Bybit single-stock perps + tokenized stocks, parent_epic:cefi_master), zero
+  # on-chain/DEX/DeFi-protocol content anywhere (the "DEFI" hits are the Binance margin-asset enum value and the
+  # live-defi-rollout branch name, not the DeFi asset group). The dual tag made this doc invisible to both cefi's and
+  # defi's own tranche audits (each excludes docs carrying a peer-AG marker per SKILL.md's Orthogonality HARD CHECK) --
+  # the exact falls-through-both-audits failure class that check exists to catch.
 stage: [meta]
 repos: [deployment-api, deployment-service, e2e-testing, execution-service, ibkr-gateway-infra, instruments-service]
 scope: [engineer, admin]
