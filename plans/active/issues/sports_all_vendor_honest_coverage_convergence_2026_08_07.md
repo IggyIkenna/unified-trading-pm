@@ -661,3 +661,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   (EPL, LA_LIGA, BUNDESLIGA, SERIE_A), **zero OOMs** — confirms the skip-fast-for-already-captured-leagues hypothesis
   from last tick, materially better than smallchunk2's original 55% OOM rate on this same chunk. Watching for it to
   clear; not alarming if OOMs do appear on the previously-`attempted_failed` leagues later in this chunk.
+- **2026-08-08T05:05Z** — FIXTURE_STATS +49 days (`last_completed_date=2023-12-08`, fresh `05:04:33Z`), steady. odds
+  smallchunk3: still in chunk 18, now **10 distinct leagues attempted, still zero OOMs** (~46 min into this chunk) — the
+  skip-fast-plus-partial-real-fetch pattern is holding cleanly, just at the usual ~4.5min/league bootstrap-bound pace
+  rather than a faster-than-normal clip; the real win is avoiding the wasted OOM-restart cycles entirely. Both healthy,
+  no intervention.
