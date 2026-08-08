@@ -20,7 +20,7 @@ priority: P2
 author: slot-5 (data_engineering)
 assigned_vm: planning
 source: [mvp_backfill_defi_onchain_v10-005]
-locked_by: ""
+locked_by:
 resolved_by: ""
 execution_scope: orchestrator-agent
 drift_direction: advance-code
