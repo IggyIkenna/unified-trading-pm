@@ -647,3 +647,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **2026-08-08T03:43Z** — FIXTURE_STATS +72 days (`last_completed_date=2023-08-04`, fresh `03:41:29Z`), steady. odds
   smallchunk3: chunk 13/451 now (`2020-08-05`), up from chunk 7 — pace holding at ~4.5min/chunk, zero OOMs. ~13 chunks
   (~58 min) remaining to reach chunk 26. Both healthy, no intervention.
+- **2026-08-08T04:10Z** — FIXTURE_STATS +30 days (`last_completed_date=2023-09-03`, fresh `04:09:26Z`), steady. odds
+  smallchunk3: chunk 17/451 (`2020-08-25`), zero OOMs still. **Forward-looking note**: chunk 18
+  (`2020-08-30→2020-09-03`) is next — the same season-opener week that took smallchunk2 3h38m with a 55% per-league OOM
+  rate. Since smallchunk2 already durably captured ~14/30 of that window's leagues before dying (manifest writes survive
+  VM death regardless of which VM wrote them), `smallchunk3` should skip-fast through those and only need real
+  re-fetches for the ~16 leagues smallchunk2 left `attempted_failed` (EPL, EREDIVISIE, PRIMEIRA_LIGA, JUPILER_PRO,
+  SUPER_LIG, GREEK_SUPER_LEAGUE, SWISS_SUPER_LEAGUE, DANISH_SUPERLIGA, ELITESERIEN, ALLSVENSKAN, and others per the
+  earlier per-league tally) — expect SOME OOMs to resume there, but a materially shorter pass than the original ordeal.
+  Not alarming if it happens; logging the expectation now so it reads as anticipated, not a new incident.
