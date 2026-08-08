@@ -242,6 +242,9 @@ before launch.
   full data at 06-21 — the 0s on 06-19 and 06-20 are genuine Tardis archive absences, not a date-order artifact. Also
   06-18: OKX-SWAP=0 and KRAKEN-FUTURES=0 only — separate Tardis gap for those two venues on that day. Throughput ~0.66
   days/hour (consistent with prior measurement). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~35h elapsed)**: 06-26 COMPLETE (all venues: BIN=563, BYB=489, OKX=353,
+  KRA=252, BITGET=493, BITFINEX=58). OKX/KRA lag confirmed ~3-4h per day behind fast venues. Frontier advancing to
+  06-27. ETA ~2026-08-12T05:00Z unchanged.
 - **VM-4 progress update (slot-17, ~2026-08-09, ~34h elapsed)**: 06-26 near-complete for fast venues: BIN=563 (done),
   BYB=487 (done, ~486 expected), BITGET=493 (done), BITFINEX=58 (done); OKX=3/KRA=2 (pre-existing remnants — consistent
   multi-hour lag, not a stall). VM confirmed alive via serial port (gcloud ops every ~60s). ETA ~2026-08-12T05:00Z.
