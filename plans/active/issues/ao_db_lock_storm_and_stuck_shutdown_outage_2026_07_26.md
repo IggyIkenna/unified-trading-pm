@@ -10,7 +10,7 @@ summary:
   watcher triggered a restart whose graceful shutdown hung for ~20s before systemd SIGKILLed it. The service recovered
   on its own once restarted; this doc tracks the two real open questions the incident raises rather than letting the
   diagnosis live only in chat.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -22,10 +22,12 @@ related:
     /plans/archive/issues/ao_review_agent_spawn_db_lock_under_load_2026_07_26.md,
     /plans/archive/issues/ao_dispatch_health_idle_slot_thrash_2026_07_26.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+    /plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md,
+    /plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md,
   ]
 created: 2026-07-26
 author: unknown
-last_updated: 2026-07-27
+last_updated: 2026-08-08
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -38,7 +40,14 @@ source:
   Operator screenshot of the dashboard stuck on "LOADING... Fetching dashboard state" with the connection indicator
   showing off/red, at a moment coinciding with a fleet-wide burst of concurrent AO worker activity (15 slots, most
   WORKING). journalctl on the VM confirmed the exact timeline within the same session.
-resolved_by:
+resolved_by: >-
+  Problem 2 (--reload removal + live deploy): agent-orchestrator@90a2b2f shipped ao-self-pull.sh self-heal (2026-07-31);
+  live unit verified by
+  /plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md (3-way
+  evidence: ExecStart via SSM shows no --reload, 26 clean restarts in journalctl, stop-sigterm pattern absent across
+  those restarts). Problem 1 (SQLite lock-storm) open — tracked separately in
+  ao_scheduled_job_reserve_and_staggering_2026_08_04.md and
+  orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md.
 locked_by:
 supersedes:
 superseded_by:
@@ -259,19 +268,19 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       restarts is a real sample, not a quiet window.
 
       **Stated limitation — do not over-read this as a before/after comparison.** This VM's journald retention is only
-                                          ~15 hours (oldest retained `orchestrator` entry at measurement time: `2026-08-06T00:45:03Z`, ~220 MB total
-                                          journal). A pre-fix baseline is therefore **unavailable** — querying `--since 2026-07-20 --until 2026-07-30`
-                                          silently returns `0` too, not because the pattern was absent then but because those logs are rotated away. So
-                                          the evidence here is "the failure mode does not occur across 26 post-fix restarts", which is strong on its own
-                                          terms; it is NOT "occurrences went from N to 0". Anyone re-verifying should measure the retained window first
-                                          (`journalctl -u orchestrator -o short-iso | head -1`) before trusting a `--since` date that predates it — a
-                                          `--since` older than retention produces a confident-looking zero that means nothing.
+                                              ~15 hours (oldest retained `orchestrator` entry at measurement time: `2026-08-06T00:45:03Z`, ~220 MB total
+                                              journal). A pre-fix baseline is therefore **unavailable** — querying `--since 2026-07-20 --until 2026-07-30`
+                                              silently returns `0` too, not because the pattern was absent then but because those logs are rotated away. So
+                                              the evidence here is "the failure mode does not occur across 26 post-fix restarts", which is strong on its own
+                                              terms; it is NOT "occurrences went from N to 0". Anyone re-verifying should measure the retained window first
+                                              (`journalctl -u orchestrator -o short-iso | head -1`) before trusting a `--since` date that predates it — a
+                                              `--since` older than retention produces a confident-looking zero that means nothing.
 
-                                          **Incidental observation, not part of this todo**: those 26 unit starts fall inside a ~15-hour window (~1.7
-                                          restarts/hour). Some are legitimate `ao-self-pull.sh` deploy restarts, but the rate is high enough to be worth a
-                                          glance against
-                                          `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`'s crash-loop concern.
-                                          Not investigated here and NOT claimed to be a fault — recorded so the number is not lost.
+                                              **Incidental observation, not part of this todo**: those 26 unit starts fall inside a ~15-hour window (~1.7
+                                              restarts/hour). Some are legitimate `ao-self-pull.sh` deploy restarts, but the rate is high enough to be worth a
+                                              glance against
+                                              `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`'s crash-loop concern.
+                                              Not investigated here and NOT claimed to be a fault — recorded so the number is not lost.
 
 - [x] ✅ [BACKEND] P2. **Second, independent contributing-latency finding + fix, 2026-07-30** (downstream of Problem 1
       above, NOT a duplicate of the `--reload`/`ee98ccb` finding two todos up — both are real, `ee98ccb` is the one that
