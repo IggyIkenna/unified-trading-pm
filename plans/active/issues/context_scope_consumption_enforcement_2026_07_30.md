@@ -31,7 +31,7 @@ source:
   landed as a real commit — surfaced by a stash-pile audit (unified_trading_pm_stash_pile_accumulation_2026_07_26.md);
   the related: link to the now-nonexistent context_scope_frontmatter_and_scout_skill_2026_07_30.md plan doc was
   repointed to the shipped cursor-configs/skills/context-scout/SKILL.md — everything else recovered verbatim."
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
 context_scope:
@@ -102,10 +102,25 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
 
 ## Next steps (todos — scope THIS specific follow-up; do not expand beyond what's listed)
 
-- [ ] [INFRA] P1. Design + author a proper plan (LOCAL or AO-dispatched per the ask-before-creating HARD RULE — ask the
-      operator which track) covering: the chosen consumption mechanism (design question 1 above), the blast-radius
-      verification (design question 2), and a bounded rollout (pilot on one role/plan family before fleet-wide). Source:
-      this issue doc.
+- [x] ✅ [INFRA] P1. **DECIDED — operator ruling 2026-08-08** (ao round-5 apply session, item 6): "AO-dispatched plan
+      (operator general preference noted: default to AO-dispatched plans going forward when this LOCAL-vs-AO framing
+      recurs). Mechanism choice itself not specified — use engineering judgment among task-brief rendering / RULES.md
+      STEP0 / QG-style gate." Track decided: AO-dispatched. Mechanism chosen (engineering judgment): **option (b),
+      worker boot/`agents/RULES.md` STEP 0/1 instructing the worker to read its plan's `context_scope` before starting**
+      — not (a) task-brief rendering (a fleet-wide mechanical change to `regen_backlog_from_plan.py`'s task-brief output
+      touches every dispatched task's brief shape at once, the exact "gate stricter than what the whole fleet already
+      passes" blast-radius `AUTONOMOUS_AGENT_RULES.md` rule 11 warns about, and is the highest-blast-radius of the 3
+      options for zero extra enforcement benefit over (b)), and not (c) a QG-style first-tool-call gate (needs new
+      tool-call observability plumbing that doesn't exist yet — heaviest option, no evidence (b) is insufficient first).
+      (b) is cheap, reversible (a RULES.md line, not a backend/DB change), and mirrors this exact codebase's own
+      existing convention — `agents/main.md`/`agents/review.md` STEP 2A/2B already carry mechanical "for each X, do Y"
+      instructions workers are held to; adding a STEP 0 "read your plan's `context_scope` entries before touching any
+      todo" is the same pattern, not a new one. Design + author the AO-dispatched plan covering: the RULES.md STEP 0
+      wording, the blast-radius verification (confirm every currently-dispatchable plan/issue has a real, fresh
+      `context_scope` before flipping this on — per design question 2, re-run `generate_context_scope_inventory.py`
+      first), and a bounded rollout (pilot on one role, e.g. `backend_engineer`, before fleet-wide across all roles). If
+      (b) alone proves insufficient in practice (workers still skip the read), escalate to (c) as a follow-up — not a
+      reason to hold this off now. Source: this issue doc.
 - [ ] [INFRA] P2. Once the mechanism ships, re-run the `context-scout` skill's freshness check across the corpus once
       more immediately before flipping enforcement on, to catch any doc whose `context_scope` drifted stale in the
       interim.
@@ -157,3 +172,13 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
 - **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — re-verified; both open items remain
   operator-gated: todo 1 needs an operator pick among 3 named consumption-mechanism design options plus the
   ask-before-creating LOCAL-vs-AO track call, todo 2 stays gated behind it. Unchanged since the 2026-08-06 marker.
+- **2026-08-08 (ao round-5 operator Q&A apply session, item 6)**: operator ruling — track: AO-dispatched (+ general
+  preference recorded to default to AO-dispatched when this LOCAL-vs-AO framing recurs, applied to item 5's sibling doc
+  too); mechanism: engineering judgment. Chose option (b) (worker boot/`RULES.md` STEP 0 instruction) over (a)
+  task-brief rendering (highest blast-radius, touches every dispatched task fleet-wide for no extra benefit over (b))
+  and (c) a QG-style gate (needs new observability plumbing, no evidence (b) is insufficient first). Flipped
+  `assigned_vm: NA` → `planning` in place (this doc's `execution_scope` was already `orchestrator-agent`, an
+  inconsistent combo now corrected) — per this corpus's established convention (`task_template.md` §1: an `assigned_vm`
+  reclassification "happens in place," no separate wrapping plan doc needed) rather than authoring a fresh 10-100-todo
+  AO plan around a 2-todo scope. Todo 1 closed (design resolved); todo 2 (freshness re-check before flip-on) stays open,
+  now dispatch-eligible directly from this doc.

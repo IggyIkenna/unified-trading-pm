@@ -141,19 +141,43 @@ BLAZESTAKE still blocking — Option A still needed).
       scheduling/trigger/cron-registration issue rather than a code-level capture bug. Read-only diagnosis is
       AO-dispatchable (a checkable root-cause question, not an operator judgment call); any actual fix (e.g.
       re-registering a stalled cron/Workflow trigger) may still need an `[OPERATOR]` follow-up once the cause is known.
-- [ ] [OPERATOR] P3. **Decide DP-FETCH-009 paging policy for permanent retirement-marker cells** — the 1404 BLAZESTAKE
-      markers permanently keep `(defi, lst_rates)` over the `attempted_failed` abs threshold, so the alert re-pages as
-      STATIC BACKLOG each re-nag cooldown forever. Suppression / paging-cadence policy for stale cells is explicitly
-      left open to the operator/alerting owner (`attempted_failed_staleness.py` docstring); options: (a) accept visible
-      pressure on the known backlog, (b) have the detector exclude `superseded_by_*`-reason rows from the high count,
-      (c) reclassify markers out of `attempted_failed`. Disposition evidence: slot-6 escalation agt-d87c1c, 2026-08-06.
-      **Context (2026-08-08, not a reclassification — still genuinely operator-gated)**: the 1404 retirement markers
-      were stamped 2026-08-06 (relabel Phase B); if the alert's staleness check uses a ~14-day trailing window (per
-      `attempted_failed_staleness.py`), this self-resolves around 2026-08-19/20 once the markers age out on their own —
-      worth knowing before spending operator time on a permanent policy for what may be a transient nag.
+- [ ] [SCRIPT] P3. **RULED 2026-08-08 (operator), option (c): reclassify the 1,404 BLAZESTAKE retirement markers OUT of
+      `attempted_failed` entirely** — the previously-open options (a)/(b) are superseded by this ruling. Disposition
+      evidence: slot-6 escalation agt-d87c1c, 2026-08-06. **Scoping read of `attempted_failed_staleness.py` (2026-08-08,
+      before filing this todo)**: that module is a pure staleness-LABELING helper
+      (`stale_days_since`/`stale_backlog_annotation`) — it computes a display annotation ("STATIC BACKLOG — no new
+      activity in Nd") for an alert body; it does **NOT** mutate `capture_status` and does **NOT** gate/suppress paging
+      cadence (its own docstring says so explicitly). Its threshold (`STATIC_BACKLOG_STALE_DAYS_THRESHOLD = 1`) is a
+      1-day label cutoff, not the "~14-day trailing window" this doc's earlier 2026-08-08 context note speculated might
+      self-resolve the backlog — no code in this module supports that self-resolve assumption; the 1404 rows stay
+      `attempted_failed` in the manifest indefinitely (and keep tripping DP-FETCH-009's abs-threshold count) until
+      something actually rewrites their `capture_status`. **The real fix is a manifest-mutation script**, not a
+      config/threshold change: write a targeted reclassification script (same shape as the already-shipped
+      `relabel_retire_blazestake_venue_2026_08_06.py`, which flipped these exact rows `captured`→`attempted_failed` with
+      reason `superseded_by_content_verified_canonical_solblaze_solana_relabel_2026_08_06`) that finds every
+      `(defi, lst_rates, BLAZESTAKE)` row with `capture_status=attempted_failed` AND an `error_reason` starting
+      `superseded_by_` (currently 1,404 rows, live-reverify the count at execution time — do NOT assume it's still
+      exactly 1,404), and rewrites each to `capture_status=empty_confirmed` via the standard manifest recorder's
+      honest-absence path (mirrors how a retired/superseded venue is otherwise represented — `empty_confirmed` is the
+      manifest's designated state for "genuinely will never produce data", distinct from `attempted_failed` = "we tried
+      and it errored"; matches the sibling doc's own Option B framing). Verify: (1) a bounded pushdown read
+      (`pyarrow.fs.GcsFileSystem` + `dataset.scanner(columns=..., filter=...)`, NOT a full `to_table()` — the 2.6GB defi
+      `_index` OOMs on a full read, per this doc's own verification-traps note) confirms 0 remaining `attempted_failed`
+      rows for `(BLAZESTAKE, lst_rates)` with a `superseded_by_*` reason after the script runs; (2) DP-FETCH-009's
+      `(defi, lst_rates)` `attempted_failed` count drops by the reclassified row count. Repo: deployment-service (or
+      wherever the manifest-mutation script family for this consolidator lives — mirror the existing
+      `relabel_retire_blazestake_venue_2026_08_06.py`'s repo). parent_epic: infrastructure_master.
 
 ## Progress Log
 
+- **round5-na-digest-defi 2026-08-08 (apply pass, item 72)**: operator answered the DP-FETCH-009 paging-policy question
+  — option (c), reclassify the 1,404 markers out of `attempted_failed` entirely. Read `attempted_failed_staleness.py`
+  first to scope the real change: confirmed it is a pure display-labeling helper (no `capture_status` mutation, no
+  paging gate) with a 1-day (not ~14-day) staleness threshold — the earlier "self- resolves ~2026-08-19/20" context note
+  has no code basis and is corrected here. Retagged the todo `[OPERATOR]`→ `[SCRIPT]` and filed the concrete
+  manifest-mutation script scope (reclassify to `empty_confirmed`, mirroring the already-shipped
+  `relabel_retire_blazestake_venue_2026_08_06.py`'s shape) — not implemented directly this session (real prod-manifest
+  mutation across ~1,404 rows warrants its own careful build+verify pass, not a blind inline edit).
 - **2026-08-06 (slot-5, data_engineering)**: diagnosed from VM exit_code=1 log. Filed this issue. BLAZESTAKE
   attempted_failed + lending_indices stall = no valid date for the dep check. Recommended Option A (known-outage
   exemption code fix). BLOCKED-OPERATOR-DECISION.

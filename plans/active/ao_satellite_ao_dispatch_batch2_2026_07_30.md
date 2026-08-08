@@ -116,34 +116,34 @@ other orphaned candidate considered and why it was NOT drafted.
       — the 4th, a codex-doc note, is sequenced behind these and stays with the source doc). Repo: agent-orchestrator.
 
       **Verification (not a re-implementation)**: on picking this up, read `server/verify.py` directly before writing
-                                      any code and found all 3 sub-items already present on current HEAD:
-                                      - Sub-items (1) + (2) (the `BLOCKED-ON` disposition + the Mode-1/Mode-2 marker-fallback for an aged-out log
-                                      window): already shipped by a different worker (slot-7, per the source doc's own Progress Log) at
-                                      `agent-orchestrator@22a14b1` (`_diff_blocks_checkbox`, `_ADDED_BLOCKED_LINE_RE`,
-                                      `reason="todo_blocked_pending_other_owner"`) and `agent-orchestrator@e1b30f5` (`_marker_disposition_in_text`,
-                                      `_mode1_fallback_disposition`/`_mode2_no_recent_commit_disposition`) — both confirmed ancestors of my current
-                                      HEAD via `git merge-base --is-ancestor`.
-                                      - Sub-item (3) (self-archival rename-blindness): traced `_same_commit_added_path_matching_basename` +
-                                      `_flips_at_path_or_rename`/`_cancels_at_path_or_rename`/`_defers_at_path_or_rename` — already wired into BOTH
-                                      `_mode1_disposition` AND `_mode2_disposition` — to an EARLIER, separate commit,
-                                      `agent-orchestrator@587c8db` (2026-07-28T20:30:49+01:00, `fix(ao): M3 plan-flip check follows an archival
-                                      git-mv bundled with the checkbox flip`), also confirmed an ancestor of HEAD. This means the 2 real-world
-                                      recurrences the source doc's todo 4 cites (2026-07-29, slots 12 and 2) hit an already-shipped-but-likely
-                                      not-yet-deployed-to-the-live-orchestrator-process version of the fix, not a genuine code gap — the codebase
-                                      itself was already correct by the time those recurrences were reported.
-                                      - Regression tests for all 3 sub-items already exist and PASS on HEAD — ran them directly rather than trusting
-                                      the claim: full `tests/test_done_gate_plan_flip_hard_reject.py` (29/29 passed), specifically confirming
-                                      `test_done_accepts_when_commit_blocks_todo_pending_other_owner` +
-                                      `test_done_accepts_cross_repo_when_pm_commit_blocks_todo_pending_other_owner` (sub-item 1),
-                                      `test_done_accepts_cross_repo_when_todo_blocked_outside_the_log_window` +
-                                      `test_done_accepts_cross_repo_when_todo_deferred_outside_the_log_window` +
-                                      `test_done_accepts_cross_repo_when_todo_cancelled_outside_the_log_window` +
-                                      `test_done_rejects_cross_repo_when_marker_disposition_is_ambiguous` (sub-item 2), and
-                                      `test_done_accepts_cross_repo_when_checkbox_flip_bundled_with_archival_git_mv` +
-                                      `test_done_accepts_single_repo_when_checkbox_flip_bundled_with_archival_git_mv` (sub-item 3, both PASSED).
-                                      - No code changes shipped (there was nothing to change) — per this plan's "don't edit the source issue doc's
-                                      checkboxes" rule, `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md`'s own todo 4 is
-                                      left untouched here; the paired finalize plan reconciles this evidence back into it.
+                                                  any code and found all 3 sub-items already present on current HEAD:
+                                                  - Sub-items (1) + (2) (the `BLOCKED-ON` disposition + the Mode-1/Mode-2 marker-fallback for an aged-out log
+                                                  window): already shipped by a different worker (slot-7, per the source doc's own Progress Log) at
+                                                  `agent-orchestrator@22a14b1` (`_diff_blocks_checkbox`, `_ADDED_BLOCKED_LINE_RE`,
+                                                  `reason="todo_blocked_pending_other_owner"`) and `agent-orchestrator@e1b30f5` (`_marker_disposition_in_text`,
+                                                  `_mode1_fallback_disposition`/`_mode2_no_recent_commit_disposition`) — both confirmed ancestors of my current
+                                                  HEAD via `git merge-base --is-ancestor`.
+                                                  - Sub-item (3) (self-archival rename-blindness): traced `_same_commit_added_path_matching_basename` +
+                                                  `_flips_at_path_or_rename`/`_cancels_at_path_or_rename`/`_defers_at_path_or_rename` — already wired into BOTH
+                                                  `_mode1_disposition` AND `_mode2_disposition` — to an EARLIER, separate commit,
+                                                  `agent-orchestrator@587c8db` (2026-07-28T20:30:49+01:00, `fix(ao): M3 plan-flip check follows an archival
+                                                  git-mv bundled with the checkbox flip`), also confirmed an ancestor of HEAD. This means the 2 real-world
+                                                  recurrences the source doc's todo 4 cites (2026-07-29, slots 12 and 2) hit an already-shipped-but-likely
+                                                  not-yet-deployed-to-the-live-orchestrator-process version of the fix, not a genuine code gap — the codebase
+                                                  itself was already correct by the time those recurrences were reported.
+                                                  - Regression tests for all 3 sub-items already exist and PASS on HEAD — ran them directly rather than trusting
+                                                  the claim: full `tests/test_done_gate_plan_flip_hard_reject.py` (29/29 passed), specifically confirming
+                                                  `test_done_accepts_when_commit_blocks_todo_pending_other_owner` +
+                                                  `test_done_accepts_cross_repo_when_pm_commit_blocks_todo_pending_other_owner` (sub-item 1),
+                                                  `test_done_accepts_cross_repo_when_todo_blocked_outside_the_log_window` +
+                                                  `test_done_accepts_cross_repo_when_todo_deferred_outside_the_log_window` +
+                                                  `test_done_accepts_cross_repo_when_todo_cancelled_outside_the_log_window` +
+                                                  `test_done_rejects_cross_repo_when_marker_disposition_is_ambiguous` (sub-item 2), and
+                                                  `test_done_accepts_cross_repo_when_checkbox_flip_bundled_with_archival_git_mv` +
+                                                  `test_done_accepts_single_repo_when_checkbox_flip_bundled_with_archival_git_mv` (sub-item 3, both PASSED).
+                                                  - No code changes shipped (there was nothing to change) — per this plan's "don't edit the source issue doc's
+                                                  checkboxes" rule, `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md`'s own todo 4 is
+                                                  left untouched here; the paired finalize plan reconciles this evidence back into it.
 
 - [x] [WORKER] P1. ✅ **MOOT — already fully resolved before this batch was drafted; re-verified 2026-07-30, no action
       needed.** The source doc (`branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`) was already
@@ -220,13 +220,22 @@ other orphaned candidate considered and why it was NOT drafted.
       — token survived). Full evidence in the source doc's own "Remaining work" section (both todos) — now archived at
       `/plans/archive/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`. Repo:
       agent-orchestrator (no code change needed for this todo specifically).
-- [ ] [DOCS] P1. [OPERATOR] **Update two codex docs still describing the old always-pin dispatch model.**
-      `/codex/12-agent-workflow/work-philosophy.md` and
+- [x] ✅ [DOCS] P1. **DUPLICATE OF ALREADY-SHIPPED WORK — stale todo, no action needed.** Update two codex docs still
+      describing the old always-pin dispatch model. `/codex/12-agent-workflow/work-philosophy.md` and
       `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` both need to state that
       `_claim_plan_for_slot` pinning is now GATED on `sequential: true` (non-sequential plans fan out to N slots by
-      default, matching `task_template.md` §4), citing `agent-orchestrator@867b1731e`. Obtain operator sign-off before
-      committing the codex-SSOT edit, per the workspace HARD RULE that a codex change needs sign-off. **Done when**:
-      neither doc describes unconditional pinning, and both cite the sequential gate + the shipping sha. Source:
+      default, matching `task_template.md` §4), citing `agent-orchestrator@867b1731e`. **Operator ruling 2026-08-08**
+      (interactive Q&A, item 1 of the ao round-5 apply digest): "Approve, ship as drafted" — but on locating the actual
+      source doc (`/plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md`), this exact edit was already
+      operator-approved and shipped 2 days earlier, 2026-08-06 (during `/plan-reconcile ao`, "Fix both codex docs now")
+      as `unified-trading-pm@41a51d9ff`. Re-verified live 2026-08-08: both
+      `codex/12-agent-workflow/work-philosophy.md:89-92` and
+      `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md:167-171` state the gate-on-`sequential:true`
+      behavior and cite `agent-orchestrator@867b1731e`; neither describes unconditional pinning. This batch2 todo was a
+      second, unresolved copy of the same source-doc citation that lagged the source doc's own closure — the source doc
+      itself has been `status: resolved` + archived since 2026-08-06. No further edit needed; the operator's 2026-08-08
+      approval is honored by confirming the already-shipped content matches what was approved. **Done when**: neither
+      doc describes unconditional pinning, and both cite the sequential gate + the shipping sha — CONFIRMED. Source:
       `/plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md` (its sole remaining DOCS P1 item — the BACKEND
       P1 live-VM verification half is already done, dated 2026-07-29). Repo: unified-trading-pm (codex).
 - [ ] [DATA] P2. **Check + recover-or-dispose `strategy-service`'s stranded wip-preserve ref.** Check whether
@@ -360,3 +369,8 @@ never-cited set). This is the same scope boundary the 2026-07-26 and 2026-07-30 
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
   2026-08-06 marker. Of the 4 open items, 3 need the specialized SSM/host/credential access this tranche consistently
   uses interactive sessions for, and the 4th (`[DOCS] P1`) is explicitly `[OPERATOR]`-tagged.
+- **2026-08-08 (ao round-5 operator Q&A apply session)**: operator answered "Approve, ship as drafted" on this doc's
+  `[DOCS] P1` codex-edit todo — but the edit was already shipped 2026-08-06 (`unified-trading-pm@41a51d9ff`) against the
+  actual source doc (`dispatch_sequential_gate_fix_2026_07_24.md`, archived same day); this batch2 copy of the citation
+  had simply gone stale. Re-verified both codex docs live and flipped the checkbox. 3 items remain open (na- timer
+  verification, orch_token re-mint, wip-preserve ref) — none in this session's scope.

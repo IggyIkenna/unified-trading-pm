@@ -181,9 +181,18 @@ too large.
       `to_agent` message in the recipient's poll. — **SHIPPED `unified-trading-pm@026b79fff`**: branch stated explicitly
       with both curl examples; STEP 2A's redelivery sentence updated to match. Sibling gap in `agents/review.md` STEP 2
       filed as the new todo directly below.
-- [ ] [REVIEW] P3. **Sign-off before the routing change ships** — it touches the reply-ack / redelivery-cap machinery
+- [x] ✅ [REVIEW] P3. **Sign-off before the routing change ships** — it touches the reply-ack / redelivery-cap machinery
       from `ao_operator_message_silent_drop_no_reply_ack_2026_07_08`; a careless change re-breaks at-least-once
-      delivery. **Gate**: approval recorded before the P1 todo ships.
+      delivery. **Gate**: approval recorded before the P1 todo ships. — **Operator ruling 2026-08-08** (ao round-5 apply
+      session, item 4): "Conditional: check for conflicts with other plans/issues/implementations first; ship only if it
+      is a clear improvement and does not conflict. Operator delegates the conflict-check judgment call back to Claude."
+      Conflict-check performed 2026-08-08: grepped `plans/active/issues/` for
+      `agent_reply`/`cross-role reply`/`reply routing`/`redelivery-cap`/`reply-ack` — only 1 doc references this fix
+      (`boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md`), and only as a `related:` link +
+      a one-line "related prior boot/comms defect" note, not a conflict or regression report. No doc anywhere in the
+      corpus reports a problem with the shipped routing change. This sign-off is retroactive — the P1 routing fix
+      already shipped 2026-07-24 (`agent-orchestrator@738b2d3`) and has been live 15 days with zero conflict/regression
+      findings across 6+ subsequent audit passes of this doc. Clear improvement, no conflict found: sign-off recorded.
 - [x] ✅ [DOCS] P2. **Apply the identical peer-vs-operator branch to `agents/review.md` STEP 2** (its "2. For each
       message … POST your reply" block, `agents/review.md:198-205`) — confirmed still present 2026-07-24, unconditional
       `/reply` regardless of `from_role`, same bug class as the main.md item above and never even adopted the interim ad
@@ -232,3 +241,11 @@ too large.
   (mirror the peer-vs-operator branch into `agents/review.md`) remains the 2026-08-03-flagged BOUNDED_RECLASSIFY
   candidate — re-flagged in this run's report to the orchestrator; doc stays NA as a whole per the established MIXED
   rule (flipping would also dispatch the still-gated `[REVIEW] P3` item).
+- **2026-08-08 (ao round-5 operator Q&A apply session, item 4)**: operator delegated the P3 sign-off conflict-check
+  judgment back to Claude (see the flipped todo above for the full ruling text + conflict-check evidence). All 4 todos
+  on this doc are now `[x]`. **Not self-archiving**:
+  `/plans/active/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md` todo 2 explicitly claims reconciliation +
+  archival ownership for this exact doc (names it by slug, "flip the specific todo(s)...
+  `agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md`"), gated behind batch5 (both
+  currently `status: draft`, pending operator activation) — leaving archival to that plan to avoid a concurrent-archival
+  collision once it dispatches.
