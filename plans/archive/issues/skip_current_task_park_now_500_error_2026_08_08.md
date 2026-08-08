@@ -15,7 +15,7 @@ summary: >-
   this specific task shape. No server log was reachable from the worker slot to capture the actual traceback (uvicorn
   process 2088889 on the shared host pipes to fds with no readable log-file path found from .tabs/16) -- a fix needs to
   run locally against the live DB/backlog to get the real stack trace, not guess from code reading alone.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -39,6 +39,11 @@ resolved_by: agent-orchestrator@55aedc9
 locked_by:
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-08** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-immediately rule. Root cause found + fixed: `resolved_by: agent-orchestrator@55aedc9`. See the Progress Log
+> below for the full root-cause writeup.
 
 # `skip-current-task` 500s when `park_now: true`
 
