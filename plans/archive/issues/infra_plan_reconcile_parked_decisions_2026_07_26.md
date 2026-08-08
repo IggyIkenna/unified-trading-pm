@@ -210,6 +210,11 @@ is out of this file's assigned scope to execute** (`stash_pile_workspace_cleanup
 assigned-file list) — recorded here as the ruling for whoever next touches that plan; not retagged/executed in this
 pass.
 
+**EXECUTED 2026-08-08** — an infra-tranche NA-question resolution pass applied this ruling directly to
+`stash_pile_workspace_cleanup_2026_06_03.md`: the 10 `vm-*` Phase-3 rows are now `[x]` VOID, and Phase 4's
+`tab/<op>/<N>`-branch step is rewritten to the current per-slot `live-defi-rollout` model. See that plan's own Progress
+Log for the commit.
+
 ---
 
 ## 5. `org_migration_to_odumresearch` — still wanted, or formally abandon? (P2, standing since 2026-06-07)
