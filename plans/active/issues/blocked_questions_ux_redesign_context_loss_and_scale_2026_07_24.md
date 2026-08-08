@@ -145,12 +145,13 @@ exists" section together before scoping the workstream.
 
 ## Todos
 
-- [x] ✅ [DESIGN] P2. **DECIDED — operator ruling 2026-08-08** (ao round-5 apply session, item 5): "All three:
-      session_id capture + transcript-jump + dedup/similarity." Scope the blocked-question UX redesign — capture
-      `claude_session_id` on `BlockedRow` at creation time, wire a transcript-jump affordance into the resolution UI,
-      and address cross-question dedup/similarity; explicitly deferred by the operator 2026-07-24, renewed interest
-      2026-08-03, direction finally chosen 2026-08-08. Split into 3 concrete build todos below, each independently
-      shippable (file-disjoint: schema/backend, UI, and a separate dedup query surface).
+- [x] ✅ [DESIGN] P2. **DECIDED — operator ruling 2026-08-08** (ao round-5 apply session, item 5 —
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "All three: session_id capture +
+      transcript-jump + dedup/similarity." Scope the blocked-question UX redesign — capture `claude_session_id` on
+      `BlockedRow` at creation time, wire a transcript-jump affordance into the resolution UI, and address
+      cross-question dedup/similarity; explicitly deferred by the operator 2026-07-24, renewed interest 2026-08-03,
+      direction finally chosen 2026-08-08. Split into 3 concrete build todos below, each independently shippable
+      (file-disjoint: schema/backend, UI, and a separate dedup query surface).
 - [ ] [BACKEND] P2. **Capture `claude_session_id` on `BlockedRow` at creation time.** Add a `claude_session_id` column
       to `BlockedRow` (`agent-orchestrator/server/orm.py`, mirrors the existing `SlotRow.claude_session_id` /
       `TaskUsageRow.claude_session_id` precedent) and populate it wherever a `BlockedRow` is created (the

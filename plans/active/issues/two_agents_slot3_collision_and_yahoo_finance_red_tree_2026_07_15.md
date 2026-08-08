@@ -161,16 +161,18 @@ is not complete until the counterpart's files build again, not just until your o
       hunk-level staging (`git add -p` / a restricted `git diff <path> | git apply --cached`) so shipping a hot shared
       file no longer silently sweeps a concurrent agent's uncommitted WIP into the commit; not attempted in this doc
       ("outside this plan's scope and risks its own regressions under contention"). — **RULED 2026-08-06 (operator,
-      interactive): DO NOT hunk-scope. Closed as decided-against, not as done.** Whole-file staging stays. Reasoning
-      recorded so this is not re-proposed every time the foreign-WIP-sweep class recurs: hunk-level staging in the
-      fleet's single most critical shipping path trades a **visible** failure for an **invisible** one. Sweeping in an
-      extra file produces a commit that is wrong but obvious — it shows up in `git show --stat` and in review. A
-      mis-applied hunk produces a commit that is silently **PARTIAL**: it compiles, it reviews clean, and it breaks
-      `git bisect` because the tree at that commit never existed as anyone's working state. That is a strictly worse
-      failure mode, and it lands in the path every repo ships through. **The class is being addressed where it actually
-      belongs**: (a) `scripts/dev/safe-doc-push.sh`'s defensive unstage-by-name already isolates foreign staged content
-      on the doc path (mandated fleet-wide 2026-08-06, `unified-trading-pm@73bfdbeda`), and (b) the `.agent-claim`
-      liveness heartbeat + session-start collision warning tracked in
+      interactive): DO NOT hunk-scope. Closed as decided-against, not as done.** (See also
+      /plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md, the doc that
+      attacks the underlying collision rate instead.) Whole-file staging stays. Reasoning recorded so this is not
+      re-proposed every time the foreign-WIP-sweep class recurs: hunk-level staging in the fleet's single most critical
+      shipping path trades a **visible** failure for an **invisible** one. Sweeping in an extra file produces a commit
+      that is wrong but obvious — it shows up in `git show --stat` and in review. A mis-applied hunk produces a commit
+      that is silently **PARTIAL**: it compiles, it reviews clean, and it breaks `git bisect` because the tree at that
+      commit never existed as anyone's working state. That is a strictly worse failure mode, and it lands in the path
+      every repo ships through. **The class is being addressed where it actually belongs**: (a)
+      `scripts/dev/safe-doc-push.sh`'s defensive unstage-by-name already isolates foreign staged content on the doc path
+      (mandated fleet-wide 2026-08-06, `unified-trading-pm@73bfdbeda`), and (b) the `.agent-claim` liveness heartbeat +
+      session-start collision warning tracked in
       `/plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` attack the
       **collision rate** rather than the staging granularity. Reduce how often two agents share a checkout; do not make
       the commit itself lossy. **If this is ever revisited**, the bar is a mechanism that cannot produce a partial
@@ -199,7 +201,8 @@ is not complete until the counterpart's files build again, not just until your o
 
 ## Follow-ups
 
-- [x] ✅ [OPERATOR] P2. **DECIDED 2026-08-08 (operator ruling, ao round-5 apply item 15): "Build a collision-warning
+- [x] ✅ [OPERATOR] P2. **DECIDED 2026-08-08 (operator ruling, ao round-5 apply item 15 — see
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "Build a collision-warning
       mechanism (detect + warn when 2 sessions share a slot, not a hard block)."** Not a hard each-slot-ONE-agent
       enforcement policy -- a detect-and-warn mechanism instead. Applied to the sibling doc that already carries the
       concrete mechanism design (candidate fixes 1+2):

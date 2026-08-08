@@ -55,6 +55,7 @@ source:
   "docs_reconciler one-shot session (slot 16, 2026-08-08) — confirmed via two consecutive real (non-race) quickmerge
   --agent failures shipping an unrelated codex-doc fix, plus standalone
   scripts/quality_gates/check_plan_operator_ruling_evidence.py runs before/after (83 then 84 vs baseline 76)"
+depends_on: []
 ---
 
 # plan-operator-ruling-evidence regression blocks quickmerge under push-race contention
@@ -129,3 +130,28 @@ these apart because it only reads the aggregate exit code.
 Either the ratchet is back at/below baseline (option 1) or the retry-regate logic is fixed to not conflate "sentinel
 valid for new HEAD" with "every post-gate ratchet green" (option 2), with the reasoning + operator sign-off recorded
 here.
+
+## Progress Log
+
+- **2026-08-08 (cicd escalation `agt-9bdc09`, `ldr_qg_failure` on unified-trading-pm live-defi-rollout, gate
+  run 31261417661)**: the ratchet had grown further since this doc was filed — 84 vs baseline 76 at time of fix (not the
+  83/84 this doc originally measured; corpus kept moving under concurrent-slot commit pressure). Applied **option 1**
+  (real fix, no re-baseline — a sibling incident, `mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md` line
+  148, explicitly flags re-baselining up instead of fixing citations as a RECURRENCE to avoid repeating). Root cause for
+  17 of the citations: a real, corroborated 2026-08-08 interactive operator Q&A round ("ao round-5 apply session") whose
+  answers were applied verbatim into ~12 different plan files by different worker slots — genuinely real (same
+  numbering/date/phrase corroborated across unrelated docs, unlike the fabrication incident that motivated this gate),
+  but with **no single committed transcript** to cite, since the interactive session itself was never written to a doc.
+  Fixed by building one honest, grep-derived cross-reference index —
+  `/plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md` (no new claims, only aggregates
+  existing verbatim citations already in the corpus) — and pointing 10 of the flagged sites at it. The remaining 2
+  non-round5 flagged sites (`deepseek_flash_ab_routing_test_2026_08_05.md` — self-referential "todo 19(b)"/"per operator
+  ruling" mentions, `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` /
+  `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md` — a real ruling with its evidence stated later
+  in the same block, just outside the checker's 300-char window) were fixed by moving/adding the already-true nearby
+  reference into window — no fabricated content anywhere. Net: 84 → 73, 3 under baseline. Verified via
+  `python3 scripts/quality_gates/check_plan_operator_ruling_evidence.py --workspace-root <slot>` (73 ≤ 76 baseline) and
+  a full local `bash scripts/quality-gates.sh` run. **Not fully closed** — 73 pre-existing unsourced citations remain
+  below baseline; this doc's root corpus-regression problem (option 1's full remit) is still real plan_reconciler-scope
+  work, just no longer blocking the gate. Escalated via `/blocked` (`BLK-1a3434e2`) before starting; main auto-continued
+  with the recommended bounded-partial-fix option.

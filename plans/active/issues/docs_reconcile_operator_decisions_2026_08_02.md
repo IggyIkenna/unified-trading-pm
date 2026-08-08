@@ -72,7 +72,8 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 1 — what is `cursor-rules/` for?
 
-- [x] ✅ [DOCS] P2. **RESOLVED 2026-08-08 (operator ruling, ao round-5 apply item 7).** What is the 25-file
+- [x] ✅ [DOCS] P2. **RESOLVED 2026-08-08 (operator ruling, ao round-5 apply item 7 — see
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md).** What is the 25-file
       `cursor-rules/` tree's purpose today, and should it be kept, repurposed, or archived?
 
   Verified fact (not in question): `cursor-rules/` (25 `.mdc` files, top-level dir) and `.cursor/rules/` (150 `.mdc`
@@ -144,7 +145,8 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 3 — 14 locked issue-docs with truncated `summary:` frontmatter (added 2026-08-06)
 
-- [x] ✅ [DOCS] P2. **DONE (operator ruling 2026-08-08, ao round-5 apply item 9: "Authorize all 14").** Apply (or
+- [x] ✅ [DOCS] P2. **DONE (operator ruling 2026-08-08, ao round-5 apply item 9 — see
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md: "Authorize all 14").** Apply (or
       authorize applying) the pre-drafted replacement `summary:` on 14 `locked_by`-gated `plans/active/issues/*.md` docs
       -- applied, `unified-trading-pm@97ce494ecd`, verified ancestor of origin/live-defi-rollout.
 

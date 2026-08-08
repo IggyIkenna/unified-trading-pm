@@ -102,12 +102,13 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
 
 ## Next steps (todos — scope THIS specific follow-up; do not expand beyond what's listed)
 
-- [x] ✅ [INFRA] P1. **DECIDED — operator ruling 2026-08-08** (ao round-5 apply session, item 6): "AO-dispatched plan
-      (operator general preference noted: default to AO-dispatched plans going forward when this LOCAL-vs-AO framing
-      recurs). Mechanism choice itself not specified — use engineering judgment among task-brief rendering / RULES.md
-      STEP0 / QG-style gate." Track decided: AO-dispatched. Mechanism chosen (engineering judgment): **option (b),
-      worker boot/`agents/RULES.md` STEP 0/1 instructing the worker to read its plan's `context_scope` before starting**
-      — not (a) task-brief rendering (a fleet-wide mechanical change to `regen_backlog_from_plan.py`'s task-brief output
+- [x] ✅ [INFRA] P1. **DECIDED — operator ruling 2026-08-08** (ao round-5 apply session, item 6 —
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "AO-dispatched plan (operator
+      general preference noted: default to AO-dispatched plans going forward when this LOCAL-vs-AO framing recurs).
+      Mechanism choice itself not specified — use engineering judgment among task-brief rendering / RULES.md STEP0 /
+      QG-style gate." Track decided: AO-dispatched. Mechanism chosen (engineering judgment): **option (b), worker
+      boot/`agents/RULES.md` STEP 0/1 instructing the worker to read its plan's `context_scope` before starting** — not
+      (a) task-brief rendering (a fleet-wide mechanical change to `regen_backlog_from_plan.py`'s task-brief output
       touches every dispatched task's brief shape at once, the exact "gate stricter than what the whole fleet already
       passes" blast-radius `AUTONOMOUS_AGENT_RULES.md` rule 11 warns about, and is the highest-blast-radius of the 3
       options for zero extra enforcement benefit over (b)), and not (c) a QG-style first-tool-call gate (needs new

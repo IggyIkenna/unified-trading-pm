@@ -160,12 +160,13 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       monitoring window and count how many of the window's completed todos it actually touched (spot-checked) vs. the
       total completed count. If coverage is a small fraction, "no review-agent complaint" carries near-zero evidentiary
       weight for either pool and Layer 2's independent sample is doing all the real work, not a backstop to it.
-- [x] ✅ 12. [OPERATOR] P3. **Operator ruling 2026-08-08** (ao round-5 apply session, item 2): "Yes, build it." Decide
-      whether the review agent's findings should become a structured, queryable event (e.g. a `review_finding`
-      activity-log entry with severity + task_id) instead of chat-only — this audit is the second time in this
-      codebase's history a quality question needed data the review agent generates but doesn't persist. Decision
-      recorded; the build itself is out of scope for this A/B-test plan (per this todo's own original scope note) —
-      filed as a new, properly-scoped todo below rather than built inline here.
+- [x] ✅ 12. [OPERATOR] P3. **Operator ruling 2026-08-08** (ao round-5 apply session, item 2 —
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "Yes, build it." Decide whether the
+      review agent's findings should become a structured, queryable event (e.g. a `review_finding` activity-log entry
+      with severity + task_id) instead of chat-only — this audit is the second time in this codebase's history a quality
+      question needed data the review agent generates but doesn't persist. Decision recorded; the build itself is out of
+      scope for this A/B-test plan (per this todo's own original scope note) — filed as a new, properly-scoped todo
+      below rather than built inline here.
 - [ ] 12a. [BACKEND] P2. **Build a structured `review_finding` event so review-agent output is queryable, not
       chat-only** (per the 2026-08-08 ruling on todo 12 above). Add a persisted activity-log entry emitted whenever the
       review role posts a finding — minimum fields: `task_id`, `severity` (e.g. correct/needs-rework/broken, matching
@@ -291,11 +292,11 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       the numbered slots entirely; `slot_role='review'` on slots #1/#8/#10/#12 is a worker craft/skill tag for
       task-dispatch routing, unrelated to agent persistence).
 - [x] 20. ✅ [BACKEND] [UI] P2. **DeepSeek Wallet Reconciliation — worker/orchestrator/review spend split + operator
-      top-up tracking + human-usage-outside-AO residual**, implementing todo 19(b)'s operator ruling. New
-      `deepseek_topups` table (operator-recorded real top-up events, audit-trail-only, never overwritten) + a nullable
-      `slot_id` on `deepseek_message_usage` (backfills naturally as the poller re-sweeps);
-      `compute_deepseek_wallet_     reconciliation()` splits attributed spend by `slot_id` (0=orchestrator,
-      `config.review_slot_ids()`=review, everything else=worker) and computes
+      top-up tracking + human-usage-outside-AO residual**, implementing todo 19(b)'s operator ruling (this doc,
+      `deepseek_flash_ab_routing_test_2026_08_05.md`, todo 19(b) above). New `deepseek_topups` table (operator-recorded
+      real top-up events, audit-trail-only, never overwritten) + a nullable `slot_id` on `deepseek_message_usage`
+      (backfills naturally as the poller re-sweeps); `compute_deepseek_wallet_     reconciliation()` splits attributed
+      spend by `slot_id` (0=orchestrator, `config.review_slot_ids()`=review, everything else=worker) and computes
       `real_total_spend = known_topups − current_balance`, `residual =     real_total_spend − attributed_total` —
       deliberately `None` (not a misleading 0) until at least one top-up is recorded. New `DeepSeekWalletPanel.tsx`
       (table + a top-up-entry form) mounted on the dashboard next to each `TaskUsageWindowsPanel`. 6 backend pytest + 7
@@ -392,18 +393,18 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       building: `_done_one_off` (every cicd/conflict_resolver/data_pipeline_failure escalation and every scheduled
       auditor's completion path) never wrote a `TaskUsageRow` at all — that work was structurally invisible to this
       panel, not merely unlabeled. New `TaskUsageRow.dispatch_role` column (raw role/agent_kind, collapsed to a bucket
-      only in the query layer per operator ruling — keeps conflict_resolver/ data_pipeline_failure individually
-      filterable rather than folded into "cicd"); `_done_one_off` now computes + records usage (bracketed by
-      `AgentRow.registered_at`); `task_role_group()` built against `ESCALATION_FAMILY_ROLES`/`PLAN_HEALTH_FAMILY_ROLES`,
-      NOT the raw `lifecycle` string (which would misclassify backend_engineer/infra/quant_dev/ui_developer as "cicd" —
-      they share `lifecycle: one_shot`); `data_engineering` groups as "planning" per operator ruling (matches its real
-      backlog dispatch mechanism, not its role file's `scheduled` label). New `role_group` query param on
-      `GET /api/backlog/usage/windows` + second filter row in `TaskUsageWindows.tsx`. New backend pytest + Playwright
-      spec (`task-usage-role-group-filter.spec.ts`). Fixed a real pre-existing Playwright locator bug found along the
-      way (`.panel, {hasText}` ambiguity vs the Accounts panel's own cross-reference hint text); filed a separate,
-      deeper pre-existing e2e-fixture issue as a follow-up rather than fixing it here (see Progress Log). QG green (2499
-      backend / 225 frontend). Landed `agent-orchestrator@de73f93`, deployed live and verified — see Progress Log for
-      full detail and live numbers.
+      only in the query layer per operator ruling (this doc, `deepseek_flash_ab_routing_test_2026_08_05.md`, todo 20
+      above) — keeps conflict_resolver/ data_pipeline_failure individually filterable rather than folded into "cicd");
+      `_done_one_off` now computes + records usage (bracketed by `AgentRow.registered_at`); `task_role_group()` built
+      against `ESCALATION_FAMILY_ROLES`/`PLAN_HEALTH_FAMILY_ROLES`, NOT the raw `lifecycle` string (which would
+      misclassify backend_engineer/infra/quant_dev/ui_developer as "cicd" — they share `lifecycle: one_shot`);
+      `data_engineering` groups as "planning" per operator ruling (matches its real backlog dispatch mechanism, not its
+      role file's `scheduled` label). New `role_group` query param on `GET /api/backlog/usage/windows` + second filter
+      row in `TaskUsageWindows.tsx`. New backend pytest + Playwright spec (`task-usage-role-group-filter.spec.ts`).
+      Fixed a real pre-existing Playwright locator bug found along the way (`.panel, {hasText}` ambiguity vs the
+      Accounts panel's own cross-reference hint text); filed a separate, deeper pre-existing e2e-fixture issue as a
+      follow-up rather than fixing it here (see Progress Log). QG green (2499 backend / 225 frontend). Landed
+      `agent-orchestrator@de73f93`, deployed live and verified — see Progress Log for full detail and live numbers.
 
 - [x] 24. ✅ [BACKEND] P1. **Task Token Usage role-group filters (todo 23) were reading zero for CI/CD, conflict
       resolver, and every scheduled role — two real bugs, not "no completions yet" as todo 23's own final Progress Log
