@@ -126,16 +126,12 @@ evidence-backed, zero-risk housekeeping action, not new work.
       6 open items stay local/NA, see this run's Workflow journal for why). Repo: agent-orchestrator (read-only). —
       unified-trading-pm@4f5a1e6ba
 
-- [ ] [DOC] P3. **Document the accepted BLOCKED‑marker `/done`-disposition convention in `task_template.md`.** Add a
-      section (alongside the existing CANCELLED/SUPERSEDED and DEFERRED‑BY‑DESIGN conventions — confirmed via grep
-      neither currently exists as a documented convention in that file) describing the `BLOCKED‑ON:<ref>` marker
-      `_ADDED_BLOCKED_LINE_RE` (`agent-orchestrator/server/verify.py`) recognizes for `/done`-time evidence-only closure
-      — distinct from the pre-existing `BLOCKED‑<TOKEN>` ingestion-gate marker family (e.g. `BLOCKED‑CREDENTIALS`)
-      already documented at `task_template.md:176`; do not conflate the two. **Done when**: `task_template.md` names and
-      documents the `BLOCKED‑ON:<ref>` convention distinctly from the ingestion-gate family; the source doc's `[DOC] P3`
-      checkbox flips `[x]` citing the commit. Source:
-      `/plans/active/issues/ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (its sole
-      remaining item). Repo: unified-trading-pm.
+- [x] ✅ [DOC] P3. **Document the accepted BLOCKED‑marker `/done`-disposition convention in `task_template.md`.** Added
+      a "`/done`-time disposition markers" bullet (right after the pre-existing `BLOCKED-<TOKEN>` ingestion-gate bullet)
+      documenting all three server-recognized closures — CANCELLED/SUPERSEDED, DEFERRED-BY-DESIGN, and
+      `BLOCKED-ON:<ref>` — with the `BLOCKED-ON:<ref>` entry explicitly distinguished from the `BLOCKED-<TOKEN>`
+      ingestion-gate family (the ingestion-gate family keeps a todo OUT of the backlog; the disposition markers are how
+      a DISPATCHED todo closes at `/done` without a false `[x]` flip). — unified-trading-pm@79565c404
 
 - [x] ✅ [BACKEND] P3. **CLOSED 2026-08-08 — already shipped, found during this review's re-verification.** The source
       doc (`external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`) is now `status: resolved` +
