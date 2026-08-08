@@ -430,11 +430,11 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       decision" landed 2026-08-08** (live interactive session): confirmed `onchain_event_poller.py` (already shipped)
       does not import either file, and the actual live-streaming pattern this codebase uses is the completed
       `batch_live_symmetry_master` epic's ~20 dedicated per-venue `WSFeedConnector`s, which neither file is part of —
-      operator ruled DELETE. Both files + their `defi_live/` package + scattered test coverage in 3 mixed test files
-      deleted; confirmed live on `origin/live-defi-rollout` HEAD (zero re-exports remain in
-      `market_interface/__init__.py`, `market_tick_data_service/market_interface/adapters/defi_live/` no longer exists).
-      Landed bundled into a concurrent session's cleanup commit rather than its own standalone SHA — verified by
-      content, not by a specific commit citation.
+      operator ruled DELETE. Blocked once by an unrelated repo-wide empty-string-fallback ratchet violation (fixed by a
+      concurrent session, `market-tick-data-service@505959b0`) and once by a false-positive "confirmed live" claim from
+      a transient clean working-tree read (corrected below) — actually shipped `market-tick-data-service@4e5d8b475`,
+      verified via `git show origin/live-defi-rollout:market_tick_data_service/market_interface/__init__.py` (0 refs)
+      and `git cat-file -e` on the deleted file (confirmed absent), not `git status` on a shared clone.
 - [ ] [SERVICE] P2. market-tick-data-service: consolidate `onchain/helius_solana.py::HeliusSolanaAdapter` and
       `cli/handlers/native_staking_handler.py`'s hand-rolled Helius calls onto one implementation. **2026-08-07 note**:
       the `BLOCKED-CREDENTIALS` framing in § 2.2 is STALE — `helius-api-key` was approved + provisioned 2026-05-15
