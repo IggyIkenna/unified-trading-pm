@@ -267,3 +267,10 @@ This plan's own "Model-improvement backlog" section remains the owner until a su
   stays pending, permanent hard-stop until operator says otherwise." Doc status re-confirmed accurate as-is (the
   "Reviewed 2026-07-28" note above already states this is a PERMANENT hard-stop, not retagged/unlocked) — no change
   needed.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — doc carries `locked_by:
+  live-defi-rollout` (conflict: not touched for a flip regardless of content). Both open todos were freshly
+  re-investigated by TODAY's own na-corpus-digest-closeout entries above (items 26 and 32) and both remain genuinely
+  gated: the backtest-fidelity grid run stays NOT schedulable (window-scoped coverage unconfirmed, a new bounded
+  `[DATA] P1` prerequisite todo was filed for that check itself but the grid-run gate above it stays judgment-adjacent
+  pending that check's result), and live-capital wallet keys/kill-switch arming is a reaffirmed PERMANENT
+  human-only hard-stop. No cheat-sheet precedent from today applies (not a delete, not IAM, not a script-flag gap).

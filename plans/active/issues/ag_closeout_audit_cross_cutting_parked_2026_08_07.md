@@ -303,3 +303,7 @@ spot per this skill's SKILL.md).
   by OTHER tranches (ci x5, ui x1, infrastructure x1), each explicitly scoped "owning-tranche fix, leave to X tranche's
   own audit, not this run" per the 2026-07-30 concurrent-sharded-worker rule. Cross-cutting cannot execute these retags
   itself by construction.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
+  all 7 open todos are cross-tranche `asset_group` retag handoffs (ci x5, ui x1, infrastructure x1), each
+  explicitly "owning-tranche fix, leave to X tranche's own audit, not this run" -- cross-cutting cannot execute
+  these itself by construction.

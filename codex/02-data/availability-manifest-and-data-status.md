@@ -21,7 +21,7 @@ related:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-04-13
-authoritative_for: [availability manifest schema + capture_status 4-state ledger]
+authoritative_for: [availability manifest schema + capture_status 4-state ledger, prediction canonical_question_group shard atom and taxonomy]
 referenced_by:
   [
     /codex/02-data/bar-boundary-candle-edge-convention.md,

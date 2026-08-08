@@ -15,7 +15,11 @@ stage: [data]
 repos: [unified-api-contracts, instruments-service]
 scope: [engineer]
 tags: [uac-contract, instrument-record, pydantic, schema-completeness, honest-absence, silent-drop]
-related: [/plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related:
+  [
+    /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-07-18
 last_updated: 2026-07-18
 parent_epic: instruments_master

@@ -136,18 +136,49 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
 
 ## Todos
 
-- [ ] [OPERATOR-DECISION] P1. Decide the durable direction. Candidates, none adopted yet: (a) extend the 2026-07-18
-      fix's `CLOUDSDK_CONFIG` isolation to wrap the WORKFLOW JOB STEPS too, not just the runner wrapper's internal calls
-      (the exact thing that fix explicitly declined to do, for a stated reason -- re-evaluate whether that reason still
-      holds); (b) move `unified-trading-sa`'s activation to a NON-shared location (e.g. a dedicated
-      `GOOGLE_APPLICATION_CREDENTIALS` env var pointed at a private key file that AO code always references explicitly,
-      never relying on `gcloud`'s ambient active-account resolution at all); (c) stop dual-purposing this VM as a
-      self-hosted runner pool (moves the runners elsewhere, removes the collision entirely, likely the highest-cost
-      option); (d) a periodic self-heal cron that detects the poisoned account (compares
-      `gcloud config get-value account` against the expected SA) and silently repoints it, treating poisoning as an
-      accepted, self-correcting condition rather than eliminating the collision.
-- [ ] [BACKEND] P2 (blocked on the decision above). Implement the chosen direction + a way to verify it holds under a
-      real glue-workflow CI run, not just a synthetic test.
+- [x] ✅ [OPERATOR-DECISION] P1. **RESOLVED 2026-08-08 -- operator ruling: option (b), a non-shared credential file per
+      job.** Decide the durable direction. Candidates were: (a) extend `CLOUDSDK_CONFIG` isolation to wrap WORKFLOW JOB
+      STEPS too; (b) move `unified-trading-sa`'s activation to a NON-shared location (a dedicated
+      `GOOGLE_APPLICATION_CREDENTIALS` env var / per-job credential file that AO code + CI steps always reference
+      explicitly, never relying on `gcloud`'s ambient active-account resolution); (c) stop dual-purposing the VM as a
+      self-hosted runner pool; (d) a periodic self-heal cron. **operator ruling 2026-08-08: (b) -- non-shared credential
+      file per job.** Investigated current exposure before scoping the follow-up (2026-08-08): **PM's own contribution
+      to this mechanism is ALREADY ELIMINATED**, as a side effect of an unrelated billing decision, not a fix for this
+      issue -- `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24 (`unified-trading-pm@c8cd56251e`,
+      2026-08-07, "full-revert unified-trading-pm's self-hosted workflows to ubuntu-latest") flipped every one of PM's
+      ~40 self-hosted-routed workflows to `ubuntu-latest`, and PM was removed from
+      `scripts/workflow-templates/self-hosted-qg-repos.txt`. Verified live 2026-08-08:
+      `grep -rE '^\s*runs-on:\s*\[self-hosted' .github/workflows/*.yml` in this repo returns ZERO matches -- no PM
+      workflow runs on the shared orchestrator VM anymore, so PM's `cloud-build-router.yml` WIF-auth step (the
+      root-cause section's own cited example) has been GitHub-hosted, ephemeral-per-job `ubuntu-latest` since 2026-08-07
+      and structurally cannot poison the shared config. **The exposure is NOT closed fleet-wide, only for PM**:
+      `self-hosted-qg-repos.txt` lists 7 repos still self-hosted on this same VM for billing reasons --
+      `agent-orchestrator, strategy-service, e2e-testing, features-service, market-tick-data-service,     execution-service, ml-service`
+      -- and `agent-orchestrator` itself is one of them, meaning AO's own CI can still run self-hosted on the exact host
+      its worker slots live on. None of those 7 repos are checked out in this workspace (PM-scoped session), so whether
+      any of THEIR workflows call `google-github-actions/auth` on a self-hosted job (the actual poisoning trigger) is
+      unverified here -- flagged as the audit half of the new todo below, not assumed either way.
+- [ ] [SCRIPT] P2. **NEW 2026-08-08 -- implement ruling (b), non-shared credential file per job, in two parts.** **Part
+      1 (AO worker-side, agent-orchestrator repo -- not editable from this PM-scoped session, named here so it's ready
+      to dispatch):** stop every AO worker-slot code path that shells out to bare `gcloud`/`gsutil` relying on ambient
+      active-account resolution. Provision a per-VM (or per-worker-slot) dedicated credential file at a fixed path (e.g.
+      `/etc/orchestrator/gcp-sa.json`, sourced fresh from Secret Manager `ORCHESTRATOR_VM_GCP_ADC` at boot, same key
+      `bootstrap_vm.sh` STEP 5.5 already uses) and set `GOOGLE_APPLICATION_CREDENTIALS` to it explicitly in every AO
+      worker process's own environment (not the shared user shell profile) -- AO code then always resolves credentials
+      from that file via ADC, never via `gcloud config get-value account`, so a CI job's WIF auth overwriting the shared
+      `~/.config/gcloud` active-account pointer can no longer affect AO's own calls even if it still poisons the raw
+      `gcloud` CLI for a bare interactive shell on the same host. Verify by deliberately running a self-hosted WIF-auth
+      CI job on the host, then confirming an AO worker's `gcloud`/`gsutil` call (via the pinned credential file, not
+      ambient resolution) still succeeds. **Part 2 (CI-workflow-side audit, repos outside this session's scope):** for
+      each of the 7 repos still on `self-hosted-qg-repos.txt`
+      (`agent-orchestrator, strategy-service, e2e-testing, features-service, market-tick-data-service,     execution-service, ml-service`),
+      grep for `google-github-actions/auth` combined with a self-hosted `runs-on:` on the SAME job (the exact pattern
+      PM's own since-reverted `cloud-build-router.yml` had) -- `agent-orchestrator` itself is the highest-priority
+      check, being the same repo as the host it would poison. Any match found needs the 2026-07-18 fix's
+      `CLOUDSDK_CONFIG`-isolation pattern extended to that job step (option (a) from the ruling above, as a CI-side
+      complement to the AO-side Part 1 fix -- the ruling picked (b) as the durable direction for AO's OWN calls, but a
+      still-self-hosted WIF-auth CI job remains a hazard to any OTHER bare-gcloud caller on the host, e.g. an
+      interactive operator session, unless also isolated).
 - [ ] [BACKEND] P3. Extend the `deployment-service@3ba14ff9` ADC-backed-client fix pattern to bare `gcloud compute`
       calls used by AO workers (VM stop/start/create), not just the `gsutil` upload path -- or at minimum, document the
       `CLOUDSDK_AUTH_ACCESS_TOKEN=$(gcloud auth application-default print-access-token)` per-command workaround (already
@@ -249,3 +280,12 @@ a duplicate-dispatch case (both are NA) so it doesn't change either doc's verdic
   yet in context_scope), now 6 entries.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — OPERATOR-DECISION auth design, 4 candidate directions unadopted
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — the head `[OPERATOR-DECISION]` item
+resolved TODAY (option (b)), which unblocks but does not itself dispatch the 2 remaining implementation todos. Checked
+all 9 of today's operator-Q&A precedents: this is explicitly NOT an IAM/permissions gap (the doc's own "Why this is NOT
+an IAM/permissions problem" section rules that out by name — it is an authentication/credential-resolution defect, not
+a missing grant); no other ruling matches either. Held at KEEP-NA on the merits regardless: this is shared-credential-
+resolution infrastructure on the exact host every AO worker slot boots from, spans two repos (one, `agent-orchestrator`,
+outside this session's own repo scope), and a bad change risks breaking credential resolution for the entire
+dispatching fleet — the same "too_large_or_risky" bar this tranche already applies to comparably shared-critical-path
+infra (`base-service.sh`, the CI VM's own concurrency governor). No `assigned_vm` change.

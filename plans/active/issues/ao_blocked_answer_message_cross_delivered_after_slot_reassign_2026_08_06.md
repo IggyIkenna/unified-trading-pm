@@ -33,6 +33,7 @@ related:
     /plans/archive/issues/ao_blocked_slot_no_timeout_or_redispatch_policy_2026_08_06.md,
     /plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-06
 author: agent

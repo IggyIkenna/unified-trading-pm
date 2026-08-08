@@ -163,3 +163,7 @@ auto-resolve. Finding 2 is a tag correction, not a todo.
   (1/3/4/5), the `batch10` draft this report checks coverage against, and SKILL.md for process context. Findings 2's 2
   mistag targets and finding 6's target dropped to stay within the minimal-list budget (lower-priority: tag-only fix /
   likely auto-resolving respectively).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 0 checkboxes (audit-report doc); this
+  skill dispatches from real todos, not an `/ag-closeout-audit` finding ledger. Superseded by the 2026-08-08
+  `ag_closeout_audit_defi_parked_2026_08_08.md` run's own "Finding 1" re-verification (findings 1/5 archived, finding 3
+  item 1 done, finding 6 still correctly NA-gated). No action.

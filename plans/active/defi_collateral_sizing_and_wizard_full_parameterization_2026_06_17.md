@@ -235,3 +235,9 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
   placeholder pending operator calibration (small comment-only diff, no logic change — the constant's numeric value is
   unchanged). Doc stays `assigned_vm: NA` (the remaining 3 open items — food-chain parameterization, codex SSOT update,
   the P3 test-isolation flake — are unaffected).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-read end to end, 3 open items
+  unchanged. The food-chain wizard-parameterization item is real cross-layer design/build work (exec-algo params, risk
+  ladder, collateral posting mode, source routing); the codex SSOT-doc update is small but bundled with it under the
+  same whole-doc `assigned_vm`; the P3 test-isolation flake remains too small to justify splitting the doc. No
+  cheat-sheet precedent matches. `locked_by: live-defi-rollout` (since 2026-06-17, a branch-name artifact per this
+  corpus's established pattern) not treated as a blocker. Doc stays `assigned_vm: NA`.

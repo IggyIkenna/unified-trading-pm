@@ -91,7 +91,7 @@ source: >-
       repo BEFORE auditing (incidents this session: UAC + PM version promotion-lag, PM regen churn, a staging backmerge
       landing a foreign over-limit `databento_classifier.py`). Run as `/autonomous` to completion. Owner: this slot
       (operator: "do it all here"). Provenance: operator message 2026-06-16.
-- [ ] [DATA] P1. **RESUME runbook (48 paused GCP schedulers + 26 AWS rules) un-pause** — runs ONLY after TradFi G4 also
+- [x] [DATA] P1. **RESUME runbook (48 paused GCP schedulers + 26 AWS rules) un-pause** — runs ONLY after TradFi G4 also
       verified; that precondition is now MET (2026-07-12). **CORRECTED 2026-07-14 (doc-reconciliation verify-rerun-2,
       finding 154): the runbook's own precondition text
       (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` §"RESUME runbook") requires TWO conditions, not
@@ -122,6 +122,8 @@ source: >-
       re-check (`gcloud scheduler jobs list`, 2026-08-08): 4 of 11 mtds-collect crons currently paused again, but this
       is a SEPARATE, already-tracked, deliberate pause pending an in-flight migration VM
       (`defi_consolidated_closeout_2026_07_18.md` Track 8), not a runbook regression.
+
+      **CLOSED 2026-08-08 (na-eligibility-audit round7)**: the runbook itself was executed 2026-07-16 (operator-authorized) and this doc's own 2026-08-08 round5-cross-cutting-audit entry live-re-checked current cron/rule state today -- no regression beyond the separately-tracked deliberate mtds-collect pause. Flipping to match the already-gathered evidence; nothing newly run here.
 - [x] ✅ [INFRA] P2. **DONE — ALREADY FIXED, stale checkbox.** **DONE 2026-08-01 (satellite-batch1 reconciliation):**
       `deployment-service@c04d4562` (2026-06-15) already added the `gcloud run jobs update --image` + async `execute`
       sync step to `deploy-shared.sh` ("[3/3] Sync data-status rollup Job to the new image") — landed 3 days after this
@@ -247,3 +249,8 @@ source: >-
   place. Remaining open items (FULL AUDIT confirm-judgment call; RESUME-runbook still needs per-AG operator OK even
   post-execution for any re-run; schema_version re-stamp irreversible-`--apply` sign-off; 2 pointer-only items) are
   unchanged judgment/operator-gated work. Not a RECLASSIFY case. `assigned_vm` untouched.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale item closed -- flipped the
+  RESUME-runbook checkbox (executed 2026-07-16, re-verified live today per this doc's own round5-cross-cutting-
+  audit entry). Remaining open items are a genuine multi-plan audit judgment call (FULL AUDIT), an irreversible
+  `--apply` schema re-stamp explicitly deferred pending an operator-authorized quiet backfill-fleet window, and
+  a pointer-only design task not yet filed under its owning epic -- genuine mix, whole doc stays NA.

@@ -22,7 +22,7 @@ related:
     /codex/04-architecture/prediction-batch-live.md,
   ]
 created: 2026-03-27
-authoritative_for: [prediction GCS schema paths, canonical_question_group shard atom and taxonomy]
+authoritative_for: [prediction GCS schema paths]
 referenced_by:
   [
     /codex/02-data/prediction-data-types-catalog.md,

@@ -156,10 +156,9 @@ per-domain path prefixes:
       the only creates are the new folded buckets. (GCP provisioning + GCP TF import/state-rm are already done — see the
       Provision and Delete-sources items.)
 - [ ] [INFRA] P2. **IAM + lifecycle** — join `portfolio-state-prd` to
-      [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B; `-test-` twin gets test-tier. **CONFIRM
-      retention before COLDLINE** — live-trading snapshots may need STANDARD longer than 60d (design §2.E flags
-      portfolio-state as a confirm-before-COLDLINE case); do not blanket-apply the 60d rule without operator
-      confirmation.
+      [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B; `-test-` twin gets test-tier. Retention
+      CONFIRMED by operator 2026-08-08 — ship the default STANDARD→COLDLINE@60d as-is, no longer-than-60d exception
+      needed for live-trading snapshots.
 - [ ] [CODE] P3. **Alias sunset** — after the fallback window closes + retired kinds grep-clean, hard-remove
       `_KIND_ALIASES` entries + retired yaml keys; `terraform plan` green. (May defer to closeout.)
 
@@ -199,3 +198,6 @@ per-domain path prefixes:
   operator ruling (HUMAN plans, this is the LAST/live-trading-adjacent fold) governs the AWS-leg/alias-sunset residuals;
   IAM+lifecycle remains OPERATOR_QUESTION-gated (explicit "CONFIRM retention before COLDLINE... do not blanket-apply
   without operator confirmation").
+- **operator ruling 2026-08-08** (NA-corpus blocker digest, cross-cutting round 5, id=45): 60 days is fine — ship the
+  default STANDARD→COLDLINE@60d for `portfolio-state-prd` live-trading snapshots, no exception needed. IAM+lifecycle
+  todo updated to drop the retention-confirm gate; still open pending the actual IAM-join + lifecycle-policy execution.

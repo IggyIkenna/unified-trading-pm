@@ -20,10 +20,10 @@ related:
     /codex/04-architecture/backtest-groups.md,
   ]
 created: "2026-07-21"
-last_updated: "2026-07-21"
+last_updated: "2026-08-08"
 parent_epic: sports_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
@@ -62,9 +62,23 @@ context_scope:
 
 # Sports/predictions Group-C execution-alpha backtest harness — scope note
 
-**This is a LOCAL/human plan (`assigned_vm: NA`) — not ingested by the AO backlog.** It scopes the work; it does not
-implement it. Sits for operator review; flip to `assigned_vm: planning` (or author a referencing AO plan) if/when
-approved for dispatch.
+> **RECLASSIFIED 2026-08-08 (na-eligibility-audit, sports tranche, round7 RECLASSIFY sweep)** — flipped
+> `assigned_vm: NA → planning` / `execution_scope: local-only → orchestrator-agent`. The 2026-08-08 OPERATOR RULING
+> banner above explicitly says "dispatch APPROVED" and resolves both blocking design forks that kept this doc NA: the
+> craft-split question (non-question, all `assigned_role`s route to the same pool) and todo 3's
+> `SportsMatchingEngine`-vs-`L0Matcher` fork (ruled: delete `SportsMatchingEngine`, confirmed dead code). Conflict-check
+> (§3 of `ao-dispatch-batch-naming-and-conflict-check.md`): checked
+> `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` (the only other active `assigned_vm: planning` doc in
+> `parent_epic: sports_master` touching sports consumers) — it lists this doc under `related:` and its Progress Log
+> records investigating (not claiming) the craft-split question, but its own Todos (panel/arbitrage/ML/Betfair/
+> catalogue-browser-dependency sections) do not include `run_sports_backtest`/Group-C harness work; no other
+> batch/finalize doc or the consolidated-closeout doc claims this ground either
+> (`grep -rl "run_sports_backtest\|SportsMatchingEngine" plans/active/*.md` — zero hits outside this doc and
+> doc-inventory/index files). Clear to dispatch. Paired finalize sibling:
+> `sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md`.
+
+**This is now an AO-dispatched plan (`assigned_vm: planning`).** It scopes the work AND is now the dispatch target —
+the 5 implementation checkboxes below are the AO backlog content.
 
 ## Why this is needed (not just "run the strategy backtest again")
 
@@ -89,12 +103,14 @@ CLI wiring, same shape as the 3 domains that already have it.
       port or import it into execution-service's catalog/data layer rather than inventing a second fixture format.
       Confirm whether `CatalogManager` needs a new sports/prediction data-type branch or can consume the same
       synthetic-tick shape CeFi uses.
-- [ ] [DESIGN] P3. Resolve the `SportsMatchingEngine` vs `L0Matcher` duplication found while scoping this
+- [ ] [DESIGN] P3. **RESOLVED by the 2026-08-08 OPERATOR RULING banner above — option (a), delete it.** Resolve the
+      `SportsMatchingEngine` vs `L0Matcher` duplication found while scoping this
       (`execution_service/matching_engine/sports_matching.py` — zero callers anywhere in `execution_service/` or
       `tests/`, always fills at requested odds with no rejection/queue model, i.e. Group-B-shaped behavior sitting in
-      the matching-engine module). Either: (a) delete it as unused dead code once confirmed truly orphaned, or (b) if it
-      was meant to replace `L0Matcher` for sports specifically, explain why and wire it in instead of `L0Matcher`. Do
-      this BEFORE building the CLI above so the harness targets the right matcher.
+      the matching-engine module). ~~Either: (a) delete it as unused dead code once confirmed truly orphaned, or (b) if
+      it was meant to replace `L0Matcher` for sports specifically, explain why and wire it in instead of `L0Matcher`.~~
+      Ruled: confirmed dead code, delete it (no shims) rather than wiring it — do not re-litigate. Do this BEFORE
+      building the CLI below so the harness targets the right matcher (`L0Matcher`).
 - [ ] [SCRIPT] P3. Add a hermetic test asserting `run_sports_backtest` produces a non-trivial `execution_alpha_bps` (per
       `backtest-groups.md`'s Group-C output contract) against the fixture data, proving the harness actually measures
       something (not just that it runs).
@@ -137,3 +153,18 @@ CLI wiring, same shape as the 3 domains that already have it.
   `SportsMatchingEngine` confirmed dead code) added earlier this session by a concurrent agent; struck through the
   now-answered bullets. Closes round-5 sports item 2. The 5 `[BACKEND]/[DESIGN]/[SCRIPT]` implementation checkboxes
   remain open (real code not yet shipped) — left unchanged per this corpus's evidence-backed-completion rule.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: **RECLASSIFY → planning.** With the operator-question
+  resolution above, every prior pass's KEEP-NA rationale (2026-07-30/08-07: "self-declared scope note... an
+  established, still-unanswered gate") no longer holds — the doc's own gate is answered. Flipped
+  `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`, kept `assigned_role:
+  backend_engineer` (ruling-confirmed). Conflict-check (§3 of `ao-dispatch-batch-naming-and-conflict-check.md`): no
+  other active `assigned_vm: planning` doc in `parent_epic: sports_master` claims `run_sports_backtest`/
+  `SportsMatchingEngine` ground (`sports_taxonomy_p3_consumers_2026_08_08.md` references this doc but its own Todos
+  don't touch execution-service's backtest CLI); no sibling batch/finalize doc claims it either (checked batch9/batch10,
+  both pre-date today's ruling and both explicitly cite the now-resolved craft-split/SportsMatchingEngine forks as their
+  reason for excluding this doc). Todo 3's remaining `(a) vs (b)` fork is also now resolved by the same ruling (delete
+  `SportsMatchingEngine`) — annotated inline on that todo rather than flipped `[x]` (no commit ships the deletion yet,
+  per the evidence-backed-completion rule). Todo 5 (docs/BACKTESTS.md placement) is the one item the ruling doesn't
+  address; left as a real judgment call for the worker/finalize pass to resolve via precedent (do the other 3 domain
+  runners' CLIs appear in that surface?) rather than blocking dispatch of the other 4 bounded todos on it. Paired
+  finalize sibling authored: `sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md`.

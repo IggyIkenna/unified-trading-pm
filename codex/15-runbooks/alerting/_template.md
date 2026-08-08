@@ -9,10 +9,10 @@ authoritative_for:
   with "N/A — <one-line reason>" rather than deleted.
 referenced_by: [/codex/15-runbooks/alerting/README.md, /plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md]
 related:
-  - codex/15-runbooks/alerting/README.md
-  - codex/15-runbooks/alerting/operator-playbook.md
-  - codex/15-runbooks/alerting/alert-code-taxonomy.md
-  - codex/15-runbooks/alerting/threshold-tuning.md
+  - /codex/15-runbooks/alerting/README.md
+  - /codex/15-runbooks/alerting/operator-playbook.md
+  - /codex/15-runbooks/alerting/alert-code-taxonomy.md
+  - /codex/15-runbooks/alerting/threshold-tuning.md
 ---
 
 # `<AlertCode>` Runbook

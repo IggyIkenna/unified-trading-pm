@@ -13,11 +13,12 @@ summary: >-
   default. This supersedes the 2026-08-04 ruling below, which had already narrowed Opus from three qualitative
   categories to one (main orchestrator role); that last category is now ALSO retired as a default. Model tier is also
   NOT a function of raw context size (Sonnet's 1M context matches Opus; operator ruling 2026-07-23 retired the old
-  ">200k ctx" / ">50KB plan" opus triggers). **Within the sonnet tier, a second axis (operator ruling 2026-08-04) picks
-  the concrete snapshot**: sonnet-4.6 is the default for routine/specified AO dispatch (target >=80% of the fleet),
-  sonnet-5 is for harder/judgment-heavy work, escalation (server/escalation.py), CI (agents/cicd.md), AND now the main
-  orchestrator role — set via a plan's/role's `sonnet_variant: light | default` frontmatter, resolved at spawn by
-  `agent-orchestrator/server/model_tier.py::resolve_sonnet_snapshot`. **Every AO planning-VM-eligible plan
+  ">200k ctx" / ">50KB plan" opus triggers). **Within the sonnet tier, a second axis picks the concrete snapshot**:
+  sonnet-5 is the default for ALL AO dispatch (operator ruling 2026-08-08 — smarter, 1M-vs-200K context AND cheaper than
+  sonnet-4.6 through end of August 2026, so the light snapshot wins on no axis while that pricing holds; INVERTS the
+  2026-08-04 "light by default, target >=80%" posture). sonnet-4.6 survives only as an explicit `sonnet_variant: light`
+  opt-in, which nothing declares today — set via a plan's/role's `sonnet_variant: light | default` frontmatter, resolved
+  at spawn by `agent-orchestrator/server/model_tier.py::resolve_sonnet_snapshot`. **Every AO planning-VM-eligible plan
   (`assigned_vm: planning`) defaults to Sonnet**, with effort set by a separate todo-count-derived ladder, not a flat
   max: a plan declaring no tier gets xhigh baseline, max past model_tier.LARGE_PLAN_TODO_THRESHOLD open todos (operator
   ruling 2026-07-22), not a silent "medium". Covers the mandatory task-start self-check (model + effort mismatch →
@@ -55,6 +56,20 @@ Sonnet 5** — model tier itself has no size trigger left. Effort is a separate 
 STANDARD configuration for a plan declaring no tier is the todo-count-derived default (xhigh baseline, max past the
 10-todo threshold), not an unconditional `effort: max` and not a silent fallback either. The `audit_model_tier.py`
 heuristic's size-based signal (`SIZE_OPUS_BYTES`) is removed to match.
+
+**Operator ruling (2026-08-08) — the sonnet sub-tier default INVERTS: sonnet-5 everywhere, sonnet-4.6 opt-in only.**
+Sonnet 5 is simultaneously smarter, 1M-context (vs sonnet-4.6's 200K — see `_CONTEXT_WINDOW_200K` in `model_tier.py`,
+measured over 17,974 transcripts), and **cheaper than sonnet-4.6 through end of August 2026**. There is no axis on which
+the light snapshot still wins, so routing ~80% of the fleet to it became a pure downgrade. Absent or
+`sonnet_variant: default` → **sonnet-5**; only an EXPLICIT `sonnet_variant: light` still resolves to sonnet-4.6, and no
+role or plan declares it. This supersedes amendment 2 of the 2026-08-04 ruling below (the `>=80% light` dispatch target
+is **RETIRED**, not merely relaxed); amendment 1 (opus narrowed, then fully retired 2026-08-07) is untouched. The
+mechanism is deliberately KEPT rather than deleted: when the promotional pricing ends, re-arming the cost split is a
+frontmatter edit on the roles that should take it, not a code change. Applied in `model_tier.resolve_sonnet_snapshot`
+plus its two `prefer_light` derivations (`role_registry.RoleSpec.sonnet_prefer_light`, `autospawn._resolve_task_model`),
+which now test for an explicit `== "light"` instead of `!= "default"`; `light` is also preserved verbatim through
+`_coerce_sonnet_variant` / `_parse_frontmatter_sonnet_variant`, which previously collapsed it to `None` because `None`
+and `light` used to mean the same thing. Shipped: agent-orchestrator@96f6318.
 
 **Operator ruling (2026-08-04) — opus narrowed to ONE category; a new sonnet-4.6/sonnet-5 axis added.** Two amendments,
 both cost-driven, both qualitative (neither reintroduces a size trigger — the 2026-07-23 ruling's core point stands):
@@ -109,8 +124,8 @@ Both tiers now have the same 1M context ceiling — Opus is never chosen because
 EVERY slot (including main orchestrator, large plans, multi-file context,   → Sonnet
    cross-repo architecture judgment, trading judgment,                         (effort: max if large/complex)
    AO planning-VM-eligible work of any size)
-   IF task is harder/judgment-heavy, escalation, or CI                     →   sonnet_variant: default (sonnet-5)
-   ELSE (routine/specified — target >=80% of AO dispatch)                  →   sonnet_variant: light (sonnet-4.6, the default)
+   ALL sonnet-tier work (2026-08-08: 5 is smarter AND cheaper)             →   sonnet-5 (absent/`default` — declare nothing)
+   ONLY if a price change makes 4.6 genuinely cheaper again                →   sonnet_variant: light (explicit opt-in)
 
 Opus is NEVER a plan/role/work-split declaration anymore — only a manual, operator-triggered dashboard
 escalation (Switch Model lever) for a session visibly struggling on Sonnet.
@@ -166,23 +181,31 @@ default.
 
 ---
 
-## Sonnet sub-tier: 4.6 vs 5 (added 2026-08-04)
+## Sonnet sub-tier: 4.6 vs 5 (added 2026-08-04; default INVERTED 2026-08-08)
 
 Within `model_tier: sonnet` (the vast majority of AO dispatch), a second, INDEPENDENT axis picks the concrete snapshot —
-this is a cost/capability tradeoff WITHIN the sonnet tier, not a replacement for the model_tier decision above.
+this is a cost/capability tradeoff WITHIN the sonnet tier, not a replacement for the model_tier decision above. As of
+2026-08-08 that tradeoff is temporarily one-sided: sonnet-5 is better AND cheaper, so it takes everything.
 
-| Value                      | Snapshot            | Default for                                                                             |
-| -------------------------- | ------------------- | --------------------------------------------------------------------------------------- |
-| `light` (absent = default) | `claude-sonnet-4-6` | Routine/specified work — the target is **>=80% of AO dispatch** on this snapshot.       |
-| `default`                  | `claude-sonnet-5`   | Harder/judgment-heavy work, escalation (`server/escalation.py`), CI (`agents/cicd.md`). |
+| Value                        | Snapshot            | Default for                                                                                   |
+| ---------------------------- | ------------------- | --------------------------------------------------------------------------------------------- |
+| `default` (absent = default) | `claude-sonnet-5`   | **Everything** — all AO dispatch, escalation (`server/escalation.py`), CI (`agents/cicd.md`). |
+| `light`                      | `claude-sonnet-4-6` | Nothing today. Explicit opt-in, kept armed for when sonnet-5's promotional pricing ends.      |
 
 **How it's set**: a plan's or role's `sonnet_variant: light | default` frontmatter (mirrors `model_tier`'s own
 plan-overrides-role-overrides-absent-default precedence — see `_resolve_task_tier` / `_parse_frontmatter_sonnet_variant`
-in `regen_backlog_from_plan.py`). Absent → `light` (sonnet-4.6) — this is the STANDARD, not a fallback needing
-justification; only declare `sonnet_variant: default` when the work is genuinely harder-judgment, or the dispatch path
-is escalation/CI. The four daily cross-corpus audit roles moved off opus in this same ruling
-(`ag_closeout_auditor`/`docs_reconciler`/`na_eligibility_auditor`/`plan_reconciler`) all declare
-`sonnet_variant: default` — that whole-corpus reconciliation judgment work is exactly what sonnet-5 is for.
+in `regen_backlog_from_plan.py`). Absent → sonnet-5, so **no plan or role needs to declare anything** to get the right
+snapshot today. The nine roles carrying an explicit `sonnet_variant: default` (`main`, `cicd`, and the daily
+cross-corpus audit/reconcile roles `ag_closeout_auditor`/`docs_reconciler`/`na_eligibility_auditor`/`plan_reconciler`/
+`escalation_queue_reconciler`/`cefi_reconciliation_auditor`/`cefi_mtds_smoke_tester`) are now redundant-but-harmless and
+are deliberately LEFT in place: they are exactly the roles that must stay on sonnet-5 if the default ever flips back.
+
+**Reversal recipe (when the sonnet-5 promo ends)**: preferred — add `sonnet_variant: light` to the roles that should
+take the cheap snapshot (no code change). Wholesale revert — flip the two `prefer_light` derivations back to
+`!= "default"` (`role_registry.RoleSpec.sonnet_prefer_light`, `autospawn._resolve_task_model`). Re-check actual
+per-token pricing AND the context-window gap first (4.6 is 200K, sonnet-5 is 1M — the 200K ceiling was itself the root
+cause of the worker terminal-wedge class); do NOT assume 4.6 is the cheaper one, which is precisely the assumption this
+ruling invalidated.
 
 **Where it's actually applied**: `agent-orchestrator/server/model_tier.py::resolve_sonnet_snapshot(prefer_light=...)`,
 called from `autospawn.py::_resolve_task_model` (the main per-task dispatch path — reads `BacklogTask.sonnet_variant`),
@@ -254,7 +277,8 @@ tier is no longer advisory-only:
 - `model_tier: opus-required` → the regen-derived backlog task gets `model: opus`; else `sonnet`. Effort is a SEPARATE
   decision (below) — it does not follow from model tier in either direction.
 - `sonnet_variant: light | default` (2026-08-04, meaningful only when the resolved model is `sonnet`) → the backlog
-  task's `sonnet_variant` field; absent → `light`. See "Sonnet sub-tier" above.
+  task's `sonnet_variant` field; absent → sonnet-5, same as `default` (2026-08-08 inversion). See "Sonnet sub-tier"
+  above.
 - `thinking_tier: max | high | medium` → task `effort`: `max`→`effort=max`; `high`→`effort=high`; `medium`/absent (and
   no `effort:` frontmatter, no `assigned_role`) → **todo-count-derived default** (operator ruling 2026-07-22): `max` if
   the plan has more than `model_tier.LARGE_PLAN_TODO_THRESHOLD` (10) open todos, else `xhigh` — replacing what used to

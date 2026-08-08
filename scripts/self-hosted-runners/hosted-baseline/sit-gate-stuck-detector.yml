@@ -43,6 +43,7 @@ jobs:
     outputs:
       stuck: ${{ steps.scan.outputs.stuck }}
       report: ${{ steps.scan.outputs.report }}
+      max_streak: ${{ steps.scan.outputs.max_streak }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -79,7 +80,12 @@ jobs:
       # Standing condition (the treadmill persists tick-to-tick until the underlying race
       # resolves) — page on the false->true transition, re-remind every hour while it persists.
       # Distinct key from promotion-lag's / startup-failure's / glue-pool-starved's so none share
-      # a cooldown.
-      dedup_key: sit-gate-stuck
+      # a cooldown. max_streak is folded IN (not a flat "sit-gate-stuck" key,
+      # sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md): a plain time-based
+      # cooldown suppressed a repost even while the worst repo's streak was climbing 4->6 — the
+      # alert went quiet while the condition got WORSE. A worse (or better) max_streak value is a
+      # "new" key, so it always re-arms on a genuine severity change; a truly flat streak still
+      # dedupes for the full hour.
+      dedup_key: sit-gate-stuck-${{ needs.check.outputs.max_streak }}
       cooldown_min: 60
     secrets: inherit

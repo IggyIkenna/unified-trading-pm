@@ -18,6 +18,7 @@ related:
   [
     /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"
@@ -129,3 +130,10 @@ key rename; this fix covers the position-tracking consumer path.
 - [ ] [OPERATOR] P1. Confirm the live-trading gap window: was strategy-service running against live
       execution-service@08808415 before strategy-service@f1a98416 was deployed? If yes: audit FillDB for missing fills
       in the gap window and reconcile.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- the sole open todo is an `[OPERATOR]`
+  P1 live-trading data-correctness call (confirm whether a live strategy-service instance ran against the broken
+  execution-service window, and if so audit FillDB/reconcile position state) -- a real-money live-trading
+  judgment/investigation call, not a bounded mechanical fix.

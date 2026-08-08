@@ -96,6 +96,14 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
       after a bounded number of kicks or a wall-clock threshold, so a wedged-but-pane-alive slot self-heals instead of
       looping resume-kicks for 1.5h+. Also reconcile the `phase=pre_boot`/`worker_alive=false`-vs-alive-pane bookkeeping
       mismatch (the pane is past boot; the state says pre_boot). (repo: agent-orchestrator)
+- [ ] [OPERATOR] P2. **Slot 3 — 3rd occurrence, RECURRED same day it was marked resolved**: review (msg 4113,
+      2026-08-08T12:58:58Z) + main independently confirmed via `/api/state` (2026-08-08T~12:59Z): slot 3 back to
+      `phase=booting`, `worker_alive=false`, `tmux_alive=true`, `current_task=null`, `last_ping=12:28:17Z` — 30+ min
+      stuck, same signature as the two prior instances on this exact slot. This recurred only ~4h after the todo above
+      was marked RESOLVED at 08:55-08:57Z the same day, which is itself evidence the point-fix (kill+respawn) doesn't
+      hold and the [BACKEND] durable watchdog-escalation fix above is the actual blocker, not yet shipped. Needs another
+      kill+respawn (operator-owned, main cannot self-serve per this doc's established precedent). (repo:
+      agent-orchestrator — operator action)
 - [x] ✅ [OPERATOR] P2. **Slot 3 — 2nd instance of the same wedged class (kill+respawn)** — **RESOLVED, verified live
       2026-08-08 (round5-cross-cutting-audit).** Live `GET /api/state` shows slot 3 also now `phase: "idle"` (not
       `working`/wedged), same coherent "214 task(s) blocked" message, `last_ping` fresh (2026-08-08T08:57:01Z). The
@@ -114,6 +122,13 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
 
 ## Progress Log
 
+- **2026-08-08 ~12:59Z (main agt-30eb02)** — slot 3 RECURRED (3rd occurrence of this exact class), only ~4h after the
+  2026-08-08 08:55-08:57Z resolution. Flagged by review (msg 4113); main independently confirmed via `/api/state`:
+  `phase=booting`, `worker_alive=false`, `tmux_alive=true`, `last_ping=12:28:17Z` (30+ min stalled at time of
+  confirmation). Added a fresh `[OPERATOR]` kill+respawn todo above (the prior two are already checked off from earlier
+  instances). This recurrence is itself the strongest evidence yet that the `[BACKEND]` durable watchdog-escalation fix
+  is still needed — the operator-side kill+respawn is a point-fix, not a cure, and the class keeps coming back on the
+  same slot.
 - **2026-08-04 ~04:00Z (main agt-1756f6)** — added slot 3 as a 2nd instance of the wedged-slot class (review #3662).
   Same dead-worker-live-pane signature (`worker_alive=false`/`tmux_alive=true`), watchdog kicking with
   `ping_advanced=false` and never escalating to respawn — corroborates the [BACKEND] watchdog-escalation todo above (now
@@ -135,3 +150,7 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged): todos 1/3 are
   [OPERATOR]-tagged kill+respawn/judgment actions main cannot self-serve; todo 2 touches live dispatch-critical watchdog
   machinery already under active sequenced modification elsewhere (batch5).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-06 (unchanged):
+  the 2 remaining open todos are an `[OPERATOR]`-tagged live kill+respawn action (slot 3, 3rd recurrence) and a
+  `[BACKEND]` fix to live dispatch-critical-path watchdog machinery -- neither is a worker-determinable bounded
+  fix safely dispatchable through the same fleet it would be modifying.

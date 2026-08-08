@@ -44,6 +44,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.1
 estimate_calibrated_ai_days: 0.9
 assigned_role: ui_developer
+effort: max
 drift_direction: advance-code
 locked_by:
 locked_since:
@@ -139,14 +140,21 @@ AND conflict-clear today.
       `artifact_pipeline_observability_2026_07_17.md` (line 652), cross-referencing
       `build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`. — unified-trading-pm@d2094b791
 
-- [ ] [REVIEW] P2. **Fix the 5 named `dual-cloud-image-builds.md` codex drifts.** Correct
+- [x] ✅ [REVIEW] P2. **Fix the 5 named `dual-cloud-image-builds.md` codex drifts.** Correct
       `/codex/05-infrastructure/dual-cloud-image-builds.md` per the source doc's own "Phase 5" description: registry
       name, tag convention, trigger/project naming, the canonical-trigger claim, and empty-manifest provenance — then
       run the standard post-phase codex audit for this doc (check the rest of that codex file against current behavior
       while touching it, not just the 5 named lines). A narrowly-scoped doc-correction action, not implementation work.
-      **Done when**: all 5 named drifts are corrected with evidence (current registry/trigger/project config confirmed
-      against the doc's new text), and the source doc's own corresponding checkbox is flipped. Repo: unified-trading-pm.
-      Source: `artifact_pipeline_observability_2026_07_17.md`.
+      **DONE 2026-08-08**: all 5 named drifts corrected with fresh 2026-08-08 evidence (live `gcloud artifacts`,
+      `gcloud builds triggers`, and `workspace-manifest.json` re-verification — not just re-citing the 2026-07-17
+      finding); AWS-side sub-claims retained unverified-this-pass due to an identity/permission gap (tracked as a
+      follow-up, not silently assumed). Post-phase audit additionally found + fixed 2 more stale sections
+      (live-defi-rollout trigger claim now stale-in-the-other-direction; reusable validate workflow moved repos
+      2026-08-06). 5 smaller code/infra findings surfaced during verification filed as follow-up todos rather than fixed
+      inline (out of this narrowly-scoped doc task):
+      `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md`. Source doc's own Phase 5 checkbox flipped
+      too. Repo: unified-trading-pm. Source: `artifact_pipeline_observability_2026_07_17.md`. —
+      unified-trading-pm@dab5f0273
 
 ## Deferred — real remaining work held back, with the reason (per the non-batchable taxonomy)
 

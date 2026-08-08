@@ -32,11 +32,12 @@
 Default **Sonnet**; model tier (sonnet/opus/fable) and effort (`low<medium<high<xhigh<max`) are INDEPENDENT axes (ground
 truth: `agent-orchestrator/server/model_tier.py`). **`opus-required` = ZERO categories** — opus is now manual-only
 (cross-repo/trading/sizing dropped 2026-07-23/08-04; main dropped 2026-08-07 — `main.md` sonnet+`default`).
-**`sonnet_variant: light|default` (2026-08-04) picks sonnet-4.6 vs sonnet-5** — light is the default (target ≥80% of AO
-dispatch); default is for harder work + escalation + CI, always. Every `assigned_vm: planning` plan defaults to
-`effort: max`. **Effort default (2026-07-22)**: no declared tier → todo-count-derived (`xhigh`/`max` past
-`LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent `Agent` calls MUST set `model=` explicitly. Self-check
-every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP. SSOT:
+**`sonnet_variant: light|default` picks sonnet-4.6 vs sonnet-5** — **sonnet-5 is the default for EVERYTHING**
+(2026-08-08 ruling INVERTING 2026-08-04's ≥80%-light target: 5 is smarter, 1M-vs-200K context AND cheaper through end of
+Aug 2026); `light` is an explicit opt-in nothing declares — re-check pricing before re-arming it. Every
+`assigned_vm: planning` plan defaults to `effort: max`. **Effort default (2026-07-22)**: no declared tier →
+todo-count-derived (`xhigh`/`max` past `LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent `Agent` calls MUST
+set `model=` explicitly. Self-check every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP. SSOT:
 `/codex/06-coding-standards/model-tier-selection.md`.
 
 ## Environment + how to run quality gates
@@ -60,9 +61,11 @@ UAC-internal.
 - **Ship via `bash scripts/quickmerge.sh "msg" --agent --files '<paths>'`** — always `--agent`, scope `--files` by name.
   **CODE reaches the integration branch ONLY via quickmerge** (a raw `git push` of code is BANNED — it dodges the dep
   gates + early-exits on a clean tree so commits pile up behind main). Closed carve-out direct pushes: (1) dirty-deps;
-  (2) the FF-pull-in & cross-repo PM `docs(plans):` flip; (3) PM `scripts/**` & any `.github/**` change that must reach
-  `main` to unblock the pipeline. Machine guard: `Quickmerge:` trailer + `check_strict_quickmerge.py` pre-push hook;
-  per-repo `quickmerge.sh` are SYMLINKS to the PM SSOT.
+  (2) the FF-pull-in & cross-repo PM `docs(plans):` flip; (3) any repo's `scripts/**` & any `.github/**` change that
+  must reach `main` to unblock the pipeline (D16, operator-ruled 2026-08-08 — all-repos, matching what
+  `check_strict_quickmerge.py`'s repo-agnostic `CARVE_PREFIX` already did in practice; was mis-stated as "PM
+  scripts/**"). Machine guard: `Quickmerge:` trailer + `check_strict_quickmerge.py` pre-push hook; per-repo
+  `quickmerge.sh` are SYMLINKS to the PM SSOT.
 - **Quality gates BEFORE COMMIT — the commit is the per-repo quality boundary (HARD RULE)**: commit only from a
   `quality-gates.sh`-green tree (not just prek). **QG-sweep batching** — gate once over a batch → per-unit commits;
   committing own named files → `quality-gates.sh --no-fix` (no tree reformat); deliberate tree-wide reformat you own →

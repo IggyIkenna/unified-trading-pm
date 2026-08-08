@@ -49,6 +49,28 @@ it.
 
 ---
 
+## S5.1a — Repo-type tiering: `GCS_PATHS.md` / `SCHEMA_VALIDATION.md` (operator ruling 2026-08-08)
+
+The S5.1 set above assumes a data-writing-service shape. Not every `*-service`/`*-api` repo has a GCS write path or an
+owned schema — for those, `docs/GCS_PATHS.md` and `docs/SCHEMA_VALIDATION.md` are **not applicable**, not missing.
+
+**Data-writing services** (the common case — every repo NOT in the closed set below) keep the **full S5.1 set**, all 8
+docs, `GCS_PATHS.md`/`SCHEMA_VALIDATION.md` included — no change.
+
+**Closed non-data-writing set** (compute/orchestration/test/infra repos with no GCS write path and no owned schema —
+operator-ruled 2026-08-08, `plans/active/issues/s5_7_required_docs_gaps_2026_07_29.md`): `agent-orchestrator`,
+`e2e-testing`, `system-integration-tests`, `ibkr-gateway-infra`, `batch-live-reconciliation-service`. For these 5 repos,
+`docs/GCS_PATHS.md` and `docs/SCHEMA_VALIDATION.md` are marked **N/A** in any S5.7 audit output — they do NOT count as a
+gap and do NOT block the S5.10 documentation gate. Every other required doc (`README.md`, `ARCHITECTURE.md`,
+`CONFIGURATION.md`, `DEPLOYMENT_GUIDE.md`, `TESTING.md`, `QUALITY_GATE_BYPASS_AUDIT.md`) still applies to these 5 —
+tiering is scoped to exactly these two docs, not a blanket exemption.
+
+This set is **closed, not inferred** from a repo-name pattern (`*-infra`, `*-testing`, etc.) — a repo added to the
+non-data-writing tier later must be added to the list above explicitly, with the same "no GCS write path, no owned
+schema" justification.
+
+---
+
 ## S5.2 — Library-Canonical Required Docs
 
 All library repos (`unified-*-interface`, `unified-trading-library`, `matching-engine-library`, etc.) must contain:
@@ -124,6 +146,11 @@ grep -rn "odum-\|trading-prod-\|trading-staging-" docs/ README.md 2>/dev/null
 ---
 
 ## S5.7 — Audit Script
+
+Per S5.1a, `docs/GCS_PATHS.md` and `docs/SCHEMA_VALIDATION.md` are N/A (not "missing") for the closed non-data-writing
+set (`agent-orchestrator`, `e2e-testing`, `system-integration-tests`, `ibkr-gateway-infra`,
+`batch-live-reconciliation-service`) — the script below is written for the common data-writing-service case; a
+tiered-repo audit skips those two entries for the 5 repos above rather than reporting them as gaps.
 
 ```bash
 #!/usr/bin/env bash
@@ -249,7 +276,8 @@ Phase 1 doc filling (`documentation_standards_enforcement.plan.md`) is blocked u
 
 The documentation gate passes when:
 
-- All service repos have all 8 required docs (no missing, no stub)
+- All service repos have all 8 required docs (no missing, no stub) — except the 5 repos in the S5.1a non-data-writing
+  set, where `GCS_PATHS.md`/`SCHEMA_VALIDATION.md` are N/A and do not block the gate (the other 6 docs still apply)
 - All library repos have all 5 required docs (no missing, no stub)
 - Zero docs contain hardcoded GCP project IDs or bucket names
 - `docs/ARCHITECTURE.md` is under `docs/` (not root) in all repos

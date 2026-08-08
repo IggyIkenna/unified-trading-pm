@@ -84,15 +84,54 @@ in the same way and at the same time when they're the same physical connection.
 
 ## Todos
 
-- [ ] [DATA] P2. **Decide + document the intended reliability model for ad hoc long-running backfill VMs**: either (a)
-      explicitly accept that session-bound monitoring is best-effort only (document the caveat prominently in
-      `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md` so future agents don't over-promise "I'll
-      keep watching" as if it were a guarantee), or (b) wire ad hoc backfill VMs (matching `VM_PREFIX_TO_BUCKET` but
-      launched outside the fleet-tracked set) into the existing `RelaunchPreemptedVm` / exit-code-fleet-monitor actuator
-      so SPOT preemption recovery doesn't depend on any particular session being reachable. **Done when**: the codex doc
-      states the decided model explicitly (not left implicit), and if (b) is chosen, a follow-up scoped todo names the
-      specific registration mechanism. This is a genuine operator/design decision (which model to commit to), not a
-      worker-determinable fact — do not dispatch (a) or (b) speculatively without that decision.
+- [x] ✅ [DATA] P2. **DECIDED 2026-08-08 — operator ruling: (b) wire into the fleet-level `RelaunchPreemptedVm` /
+      exit-code-fleet-monitor actuator**, not a documented-best-effort caveat. Scoping read of the actual current code
+      (`deployment-service/deployment_service/data_pipeline_monitors/{cli.py,exit_code_fleet_monitor.py,     launcher_registry.py,vm_classification.py}`,
+      `deployment-service/scripts/recovery/relaunch_backfill_vm.py`) confirms the fleet-level actuator is **already
+      built and already NOT session-bound**: `cli.py --mode exit-code` runs on a Cloud Scheduler cadence
+      (`dp_exit_code_monitor_cron`, `*/5 * * * *`), scans the WHOLE project's RUNNING VM census via
+      `_list_running_vms()` (unfiltered `aggregated_list_instances`, not a session-armed watch), filters to data VMs via
+      `vm_classification.is_data_vm()` (an asset_group-name substring OR a `DATA_VM_PREFIXES` entry), and for any
+      terminated VM whose prefix has a `launcher_registry.LAUNCHER_FOR_VM_PREFIX` binding, a PREEMPTED verdict
+      unconditionally fires `RelaunchPreemptedVm` via `escalation.py`'s `auto_recover` tier — independent of any Claude
+      Code session staying reachable. So the 2026-07-26 `af-backfill-*` incident this issue is about was NOT a
+      "session-bound monitoring is inherently unreliable" problem — it was `af-backfill-` being **absent from
+      `vm_classification.DATA_VM_PREFIXES`** at the time (confirmed: `LAUNCHER_FOR_VM_PREFIX` already had it, but the
+      census filter didn't), so the fleet sweep never even considered the VM. That specific gap was found + fixed
+      2026-08-04 (`plans/archive/issues/af_backfill_preemption_auto_recovery_not_firing_2026_08_04.md`,
+      `deployment-service@16938c1`), which also added a guard test
+      (`test_data_vm_prefixes_cover_every_relaunchable_launcher`) so an existing `LAUNCHER_FOR_VM_PREFIX` entry can
+      never again silently drop out of `DATA_VM_PREFIXES`. The residual gap — a **brand-new** one-off/ad hoc launcher
+      script whose `VM_NAME=`/`VM_PREFIX=` was never registered in ANY of the three registries in the first place (which
+      is exactly how `af-backfill-` went unnoticed for ~9 days before the 2026-08-04 fix, and would recur for the next
+      novel one-off backfill VM naming scheme) — is filed as the scoped follow-up build below.
+
+- [ ] [SCRIPT] P2. **Build a forward-registration CI guard so a NEW ad hoc/one-off backfill launcher can never launch a
+      VM invisible to the fleet monitor** (closes the residual gap the decision above identified — the runtime actuator
+      is already fleet-wired; what's missing is catching an unregistered launcher BEFORE its first VM ever runs, not
+      after a preemption incident). Concrete integration approach: 1. Add
+      `deployment-service/scripts/quality_gates/check_vm_launcher_prefix_registration.py` (or fold into an existing QG
+      check in that dir): glob every `deployment-service/scripts/vm/launch-*.sh`, grep each for its
+      `VM_NAME=`/`VM_PREFIX=` bash assignment (same derivation method `launcher_registry.py`'s own module docstring
+      already documents doing by hand — mechanize it), and derive the literal/prefix portion (a fixed string prefix
+      before the first `${...}` interpolation). 2. For each derived prefix, FAIL when it is not covered by
+      `vm_classification.is_data_vm(<a synthetic VM name        with that prefix>)` (mirrors the existing
+      `test_data_vm_prefixes_cover_every_relaunchable_launcher` unit-test logic in
+      `tests/unit/test_data_pipeline_monitors_cli.py:77`, but driven from the launcher FILE SET, not the registry's own
+      keys — so a launcher with NO entry anywhere is caught, not just a registry-internal drift) OR when
+      `launcher_registry.resolve_launcher_for_vm(<that prefix>)` returns `None` (unless the launcher script itself
+      carries an explicit `# non-relaunchable: <reason>` marker, mirroring the documented `None` entries in
+      `LAUNCHER_FOR_VM_PREFIX` for fan-out/read-only/live-service launchers). 3. Wire the check into
+      `deployment-service/scripts/quality-gates.sh` (ratcheted the same way STEP 5.94/5.95 checks are — a fleet-wide
+      baseline pass first if any existing launcher fails it, then hard-fail on new violations only) so
+      `bash scripts/quality-gates.sh` — the same gate a new one-off launcher script's own commit must pass — rejects an
+      unregistered launcher at commit time. 4. Update
+      `deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py`'s module docstring +
+      `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md` to state the closed-loop contract: "a new
+      `scripts/vm/launch-*.sh` MUST register its `VM_NAME`/`VM_PREFIX` in `vm_classification.DATA_VM_PREFIXES` +
+      `launcher_registry.LAUNCHER_FOR_VM_PREFIX` (+ `vm_prefix_registry.VM_PREFIX_TO_BUCKET` for umbrella
+      classification) in the SAME commit that adds the launcher, enforced by QG — not a follow-up someone has to
+      remember." (repo: deployment-service, unified-trading-pm for the codex doc)
 - [ ] [DATA] P3. **Audit whether the `PREEMPTED` marker's shutdown-script grace period is survivable in practice** — the
       marker write (`gcloud storage cp` of a one-line file) didn't complete before this instance was reclaimed, which is
       the SAME mechanism `zombie_watchdog`/`exit_code_fleet_monitor` rely on to classify a gone VM as a benign
@@ -103,6 +142,25 @@ in the same way and at the same time when they're the same physical connection.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid. Re-read end-to-end;
+  `grep -cE '^- \[ \]'` = 2, matching (the `[SCRIPT] P2` forward-registration CI guard, and the `[DATA] P3`
+  PREEMPTED-marker survivability audit). The `[SCRIPT] P2` item is very well-specified (4 concrete implementation
+  steps, filed today directly off the operator's item-78 ruling) and is a strong RECLASSIFY candidate on its own — a
+  corpus-wide grep found no conflicting active claim on
+  `deployment-service/scripts/quality_gates/check_vm_launcher_prefix_registration.py` or the launcher registries it
+  touches. However `assigned_vm` flips whole-doc: the `[DATA] P3` item remains a genuine judgment call (its own
+  done-when requires "a mitigation is proposed," and the 2 candidate mitigations named in the evidence — write the
+  marker earlier vs. switch to the Compute Operations API fallback — are a real design choice between approaches, not
+  yet decided). Doc stays NA as a whole; flagging the `[SCRIPT] P2` item as ready for extraction into a future infra
+  batch, not actioned this run (the whole-doc constraint blocks a clean flip).
+- **2026-08-08 (operator Q&A round5, infra tranche, item 78)**: Operator ruled (b) — wire into the fleet-level
+  `RelaunchPreemptedVm`/exit-code-fleet-monitor actuator. Read the actual current code before filing the follow-up (see
+  the flipped todo above for exact file citations): the fleet-level actuator was ALREADY built and cron-scheduled (not
+  session-bound) — the 2026-07-26 incident was a registry-coverage gap (`af-backfill-` missing from `DATA_VM_PREFIXES`),
+  separately found + fixed 2026-08-04. Filed a scoped `[SCRIPT] P2` follow-up: a forward-looking QG guard so a brand-new
+  one-off launcher can never again launch a VM invisible to the fleet monitor (closes the same bug CLASS, not just the
+  one instance already fixed). Retagged the primary todo from its self-declared operator/design-judgment status (now
+  resolved) to `[x] ✅ DECIDED`.
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-07-30. Re-read end-to-end;
   `grep -cE '^- \[ \]'` = 2, matching. Primary todo remains a genuine design/judgment call (which reliability model to
   commit to) with no decision made. The secondary P3 audit todo now carries stronger measured evidence (2026-08-04

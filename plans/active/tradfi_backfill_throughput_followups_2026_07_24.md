@@ -34,6 +34,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 assigned_role: data_engineering
+effort: xhigh
 context_scope:
   [
     /plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md,

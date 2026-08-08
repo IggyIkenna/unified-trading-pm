@@ -31,6 +31,7 @@ source:
     slot-3 2026-06-10 — cold-clone UI build tripped the 90s QG gate; warm rebuild = 365 ms,
   ]
 assigned_role: ui_developer
+effort: xhigh
 drift_direction: advance-code
 context_scope:
   [

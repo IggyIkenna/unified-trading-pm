@@ -227,3 +227,13 @@ exposed to this class before the veto shipped.
   this doc's `2026-08-06T10:53:59+01:00` fix commit), and `gcloud run jobs describe uts-prod-dp-exit-code-monitor`
   confirms it runs `deployment-api:latest`. This was never a genuine operator-only decision — `deployment-api`
   rebuilds on a routine multi-times-daily cadence independent of manual triggering.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — never re-litigated (established
+  ruling). The remaining line-181 `[SCRIPT]` P2 TOCTOU-race item is still ALREADY claimed by
+  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 2 (confirmed re-checked in that batch's own text, "unclaimed
+  by any other" caveat notwithstanding — this doc IS the claim it's checking against); reclassifying here would
+  create a duplicate-dispatch surface. Independently re-confirmed by
+  `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s "Deferred — operator-gated" section (drafted/activated the
+  same day, a separate `/ag-closeout-audit` run), which lists this exact doc and reaches the identical conclusion
+  ("item 2 is already covered by an active in-flight batch9 todo"). Line-187 `[SCRIPT]` P3 item remains explicitly
+  time-gated/opportunistic, not blocking. Doc stays NA; the 2026-08-07 conflict citation and this run's independent
+  reaffirmation both hold.

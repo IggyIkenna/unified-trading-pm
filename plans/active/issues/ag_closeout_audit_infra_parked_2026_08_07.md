@@ -228,6 +228,9 @@ since it produced a shipped draft artifact, not an unresolved item).
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — unchanged since 2026-08-07. Re-read
+  end-to-end; `grep -cE '^- \[ \]'` = 2, matching (findings 12/13, both `[DOCS] P3` tooling design/scoping calls).
+  Checked against today's operator-Q&A rulings cheat sheet: no precedent applies to either. `assigned_vm: NA` correct.
 - **2026-08-07** — `/ag-closeout-audit infra` run (autonomous mode, scheduled daily run, slot 8, dispatch agt-164a48).
   Re-derived the candidate set (12 covering docs, down from 13 — batch5 fully archived since 2026-08-06; 51 members,
   down from 57, plausibly explained by the same-day 2026-08-06 archive-candidates-audit sweep; 7 never-cited, 3

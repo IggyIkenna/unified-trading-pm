@@ -125,3 +125,10 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
   todo's "confirm the regen cadence" asks about — previously uncited); kept `fixtures_browser.py` (the likely
   live-day-overlay implementation site if that option is chosen).
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is an operator question.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA-STALE, already-duplicated — the sole open
+  `[DATA] P2` is resolved by the dated `✅ OPERATOR RULING 2026-08-08` banner at the top of this doc ("accept and LABEL
+  the staleness; do NOT build a live-day overlay... Implemented by
+  `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` under the `[UI]` + `pw:L2` playwright gate"), and that
+  plan's "Catalogue, browser, dependency" section's second todo names this doc verbatim. Conflict-check clear (same
+  `parent_epic: sports_master`, no other doc claims this ground). Doc stays NA; checkbox flips via that plan's finalize
+  sibling. Citation-only, no reclassification.

@@ -427,6 +427,12 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — unchanged since 2026-08-07. Re-read
+  end-to-end; `grep -cE '^- \[ \]'` = 1, matching (todo 10 only). Checked against today's operator-Q&A rulings cheat
+  sheet: no precedent matches a "should we build a standing visibility-change alert" question, and a fresh grep for any
+  existing repo-visibility-monitoring precedent fleet-wide found none — todo 10 remains a genuine, explicitly
+  self-described "genuinely optional... consider whether... warrants a standing guard" design/priority call, not a
+  bounded spec. `assigned_vm: NA` correct.
 - **2026-08-06 (interactive session)**: Plan authored immediately after
   `shared_ci_workflow_repo_extraction_2026_08_06.md`'s dangling-reference sweep closed out. Operator asked why fleet
   workflow updates still touch 100s of files across 20+ repos, whether those are "just clones" that could run from

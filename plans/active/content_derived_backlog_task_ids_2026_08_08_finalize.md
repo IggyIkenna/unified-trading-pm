@@ -25,7 +25,6 @@ related:
   ]
 created: 2026-08-08
 last_updated: "2026-08-08"
-author: ikennaigboaka [interactive session, slot 1]
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -33,7 +33,7 @@ At wall-clock `T+0`, for the chosen tuple `(protocol, chain, asset)` ∈ {(`aave
 2. **ORDER-layer tap (Phase 3.E)**: configures execution-service matching-engine adversarial-mode
    `RejectFills(reason="BORROW_CAP_REACHED" | "POOL_PAUSED", protocol=<protocol>, chain=<chain>)` for any borrow tx
    targeting `(protocol, chain, asset)`. Tenderly-fork simulation returns the revert deterministically per
-   `codex/04-architecture/tenderly-execution-provider.md`.
+   `/codex/04-architecture/tenderly-execution-provider.md`.
 3. **MANIFEST-layer tap (Phase 3.G)**: writes a `ManifestPhantom` row in the features-onchain availability manifest
    stamped `scenario_id=defi_liquidity_drain_lending_pool` so downstream consumers see the synthetic row's
    `available_at` semantics.
@@ -55,7 +55,7 @@ the matrix because they have DIFFERENT auto-recovery contracts (see § Auto-reco
 - Strategy-service deleverage-path planner: emits a structured `deleverage_blocked` log + lifecycle event
   `INSTRUCTION_REJECTED_RISK` with `reject_reason="lending_pool_unavailable"`. Strategy's deleverage state machine
   transitions to `borrow_blocked` (autonomous-recovery state from
-  `codex/04-architecture/autonomous-recovery-matrix.md`).
+  `/codex/04-architecture/autonomous-recovery-matrix.md`).
 - features-onchain availability manifest: `record_failed(LendingPoolPausedError, attempted_at=...)` for the affected
   `(protocol, asset)` partition when `pause_mode="governance_paused"`; `record_captured()` with `paused=true` +
   `utilization=0.99` payload when `pause_mode="borrow_cap_reached"` (data IS captured, the pool just isn't usable). The
@@ -101,7 +101,7 @@ the matrix because they have DIFFERENT auto-recovery contracts (see § Auto-reco
   Per parent plan Phase 2.E (lines 397-401) the applier MUST stamp `_synthetic_available_at_shift: bool = True` on the
   injected row so UTL `lookahead_bias_check(scenario_overlay_active=True)` downgrades to a structured warning rather
   than raising `LookaheadBiasError`. Strict mode stays ON for all non-overlay paths. The `record_captured` vs
-  `record_failed` choice mirrors the honest-absence taxonomy per `codex/02-data/honest-absence-downstream-handling.md`.
+  `record_failed` choice mirrors the honest-absence taxonomy per `/codex/02-data/honest-absence-downstream-handling.md`.
 
 ### Expected outcomes (per archetype × per pause-mode)
 
@@ -179,10 +179,10 @@ Per-pause-mode contract — both sub-shapes asserted in the matrix:
 - features-onchain lending-indices source: `features-service/features_service/onchain/lending_indices/` (per
   `defi_master` references; scenario harness must register `ScenarioOverlayApplier` for the `FEATURE` layer at the
   lending-indices adapter exit per parent plan Phase 3.C).
-- Tenderly-fork execution provider: `codex/04-architecture/tenderly-execution-provider.md` — the ORDER-layer tap (Phase
+- Tenderly-fork execution provider: `/codex/04-architecture/tenderly-execution-provider.md` — the ORDER-layer tap (Phase
   3.E) uses the existing Tenderly-fork integration to return `BORROW_CAP_REACHED` / `POOL_PAUSED` reverts
   deterministically.
-- Autonomous-recovery matrix: `codex/04-architecture/autonomous-recovery-matrix.md` — `borrow_blocked` is the
+- Autonomous-recovery matrix: `/codex/04-architecture/autonomous-recovery-matrix.md` — `borrow_blocked` is the
   strategy-service state transition triggered by 3 consecutive `DEFI_TX_SIMULATION_FAILED` events on `borrow()` calls;
   documented as a Layer-4 (post-venue-error) classification distinct from this scenario's Layer-2 (pre-flight)
   `RISK_RULE_BLOCKED` consequence per `risk_rule.py:181-219` § 7 SSOT reconciliation.
@@ -199,6 +199,6 @@ Per-pause-mode contract — both sub-shapes asserted in the matrix:
   `simulation_scenarios_post_cutover_2026_06_01.md` Phase 1.B extension).
 - Confirm features-onchain lending-indices adapter exposes a `record_failed(LendingPoolPausedError)` path distinct from
   `record_captured(paused=true)` — current honest-absence taxonomy in
-  `codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy" does not enumerate `LENDING_POOL_PAUSED` as
+  `/codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy" does not enumerate `LENDING_POOL_PAUSED` as
   an `EMPTY_CONFIRMED_REASONS` member (it's a failure mode, not an honest gap). No change needed if the adapter raises a
   typed exception via `classify_venue_error()`; verification owned by `defi_master.md` features-onchain phase.

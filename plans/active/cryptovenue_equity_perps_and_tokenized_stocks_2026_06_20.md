@@ -628,11 +628,19 @@ realized +26–40% ann during spikes, 0 most ticks; SPX ~5.5%).
       MVP tickers; manifest shows them `expected_unattempted`; a sample equity captures non-NaN OHLCV. Repo:
       deployment-service (launchers) + instruments-service (catalogue/enumerator CLIs). **IN PROGRESS** (this session) —
       see Progress Log.
-- [ ] [DATA] P2. **BLOCKED-DATA** — HYUNDAI / SAMSUNG / SK Hynix (3 Binance tradfi-perps with NO US-listed twin, KRX
+- [x] ✅ [DATA] P2. ~~**BLOCKED-DATA** — HYUNDAI / SAMSUNG / SK Hynix (3 Binance tradfi-perps with NO US-listed twin, KRX
       primary): source a Korea-equity reference + tick vendor so the cash-equity twin exists for basis (databento
       DBEQ.BASIC is US-only). Until sourced these perps have a dispersion-only (cross-crypto-venue) leg, no cash hedge.
       Repo: instruments-service (vendor ask → operator). **DEFERRED** — needs an operator credential/vendor decision
-      (Korea equities).
+      (Korea equities).~~ **CLOSED — na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep), stale item.** This
+      doc's own Progress Log already records the resolution: **RULED 2026-08-07 (operator, interactive session)**: no
+      dedicated Korea-equity tick vendor — "daily from yahoo finance is enough." Accept reduced fidelity for these 3
+      basis-arb cash-twin legs specifically — use the already-live KRX-venue Yahoo daily OHLCV coverage
+      (`unified-api-contracts@844c5ee6b` + `instruments-service@1ba5da4b`, Phase 5) as the cash UNDERLYING reference at
+      daily (not tick) resolution. This checkbox was simply never flipped when that ruling landed. The "Deferred work —
+      migrated to" section's note below (pre-dating the 2026-08-07 ruling) is correspondingly superseded — the
+      basis-execution cash-twin need it describes as "still open" is now closed at daily resolution, not still needing
+      a fresh operator ask.
 - [ ] [SCRIPT] P1. market-tick-data-service — capture Binance/OKX/Bybit `indexPrice` + `markPrice` + `fundingRate` for
       the equity-perps as a first-class data_type (the venue's DISCLOSED mark — needed for basis = mark−index and for
       OFF-HOURS synthetic-mark detection where the cash tape is closed). These ride the existing CeFi
@@ -829,3 +837,15 @@ closed the tradfi manifest-completeness gate (KRX eu 378→0) but did NOT acquir
 `[DATA] P2` **BLOCKED-DATA** item is a different, still-open need (a live cash-equity twin for crypto-perp BASIS
 execution, not manifest completeness) — the cited issue doc is the closest precedent ruling (operator declined to source
 a vendor at that time), not a code successor; a fresh operator ask is needed if the basis trade is prioritized.
+**SUPERSEDED — na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: the "different, still-open need" this note
+describes was itself resolved 2026-08-07 (see the checkbox above and the Progress Log entry dated 2026-08-07) — the
+basis-execution cash-twin need is now closed at daily Yahoo resolution, accepted by the operator as a reduced-fidelity
+answer rather than a paid tick vendor. This note is kept for historical record, not as an open pointer.
+
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid overall — of the 21 remaining open
+  items, at least 11 are genuine `[DESIGN]`/`[RESEARCH]` strategy-archetype, hedge-venue, and universe-construction
+  judgment calls (confirmed independently by today's `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` audit, which
+  reached the same 11/22 figure), including a 2026-08-08-dated item explicitly re-affirmed `assigned_vm: NA` in-doc
+  ("not a single-worker bounded-outcome task... pending its own scoped build plan"). Whole-doc flip is blocked per the
+  HARD RULE. Closed 1 stale item (the KRX BLOCKED-DATA checkbox, above) with evidence from this doc's own recorded
+  2026-08-07 ruling.

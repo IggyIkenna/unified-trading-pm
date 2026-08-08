@@ -30,8 +30,8 @@ last_updated: 2026-07-24
 priority: P2
 parent_epic: escalation_and_disaster_recovery_master
 source: "Operator design context, relayed 2026-07-24 after the /api/escalation/{id} scope question"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: design
 drift_direction: advance-code
 resolved_by:
@@ -145,9 +145,44 @@ exists" section together before scoping the workstream.
 
 ## Todos
 
-- [ ] [DESIGN] P2. **Scope the blocked-question UX redesign** — capture `claude_session_id` on `BlockedRow` at creation
-      time, wire a transcript-jump affordance into the resolution UI, and address cross-question dedup/similarity;
-      explicitly deferred by the operator 2026-07-24, not yet scoped or actioned.
+- [x] ✅ [DESIGN] P2. **DECIDED — operator ruling 2026-08-08** (ao round-5 apply session, item 5 —
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "All three: session_id capture +
+      transcript-jump + dedup/similarity." Scope the blocked-question UX redesign — capture `claude_session_id` on
+      `BlockedRow` at creation time, wire a transcript-jump affordance into the resolution UI, and address
+      cross-question dedup/similarity; explicitly deferred by the operator 2026-07-24, renewed interest 2026-08-03,
+      direction finally chosen 2026-08-08. Split into 3 concrete build todos below, each independently shippable
+      (file-disjoint: schema/backend, UI, and a separate dedup query surface).
+- [ ] [BACKEND] P2. **Capture `claude_session_id` on `BlockedRow` at creation time.** Add a `claude_session_id` column
+      to `BlockedRow` (`agent-orchestrator/server/orm.py`, mirrors the existing `SlotRow.claude_session_id` /
+      `TaskUsageRow.claude_session_id` precedent) and populate it wherever a `BlockedRow` is created (the
+      `/ask`-blocking endpoint path, wherever that currently reads `slot_id`/`task_id` — find it via
+      `grep -n "BlockedRow(" server/`). Add an idempotent migration (mirror `_migrate_tasks_sequential_column`'s pattern
+      in `server/bootstrap.py`: `ALTER TABLE` + backfill NULL for pre-existing rows, since historical blocked questions
+      have no recoverable session id). **Done when**: a fresh blocked question's row has a non-null `claude_session_id`
+      matching the asking session, a regression test proves it survives a slot respawn (the exact BLK-f09e9ca9 failure
+      mode this doc describes — `slot_id` alone points at the CURRENT session post-respawn, `claude_session_id` must
+      still point at the ORIGINAL asking session), and `quality-gates.sh` is green. Repo: agent-orchestrator.
+- [ ] [UI] P2. **Wire a transcript-jump affordance into the blocked-question resolution UI**, using the
+      `claude_session_id` from the todo above and the already-working `server/transcript_log.py` retrieval primitive
+      (the dashboard's existing "Show log" render, keyed by `claude_session_id` — reuse it, don't rebuild it). Add a
+      "View asking session's transcript" link/button on each open `BlockedRow` card in whichever dashboard component
+      renders the blocked-questions queue (`deployment-ui`), so the operator can jump straight to what the asking agent
+      actually saw, even if that agent/slot is now dead or respawned to a different session. Handle the case where the
+      transcript file has itself rotated out (`claude_session_id` present but no matching JSONL) with a clear
+      "transcript no longer available" state, not a silent failure. **Done when**: a live blocked question shows a
+      working transcript-jump link, a dead-agent/respawned-slot case is manually verified to still resolve to the
+      ORIGINAL session's transcript (not the current occupant's), `pw:L2` Playwright coverage per this workspace's UI
+      gate, and `tsc`/`vitest` clean. Repo: deployment-ui. Depends on the `[BACKEND] P2` todo above (needs the column
+      populated first) — sequence via `sequential: true` if these are ever pulled into their own dispatched plan.
+- [ ] [BACKEND] P3. **Cross-question dedup/similarity surfacing.** Add a lightweight similarity signal across open
+      `BlockedRow` entries (per this doc's pain point 3: the same underlying question sometimes gets asked by multiple
+      different agents, or multiple times by different sessions on the same respawned slot) — start with an
+      exact/near-exact `question` text match (normalized whitespace/case) grouped and surfaced as "N other open
+      questions look like this one" on the dashboard queue, rather than a full embedding-similarity system (that's a
+      much bigger build with no stated operator appetite yet — start cheap, revisit if exact-match dedup proves
+      insufficient in practice). **Done when**: two blocked questions with matching normalized text are visibly
+      grouped/flagged in the dashboard queue API response, a regression test covers the grouping logic, and
+      `quality-gates.sh` is green. Repo: agent-orchestrator (+ `deployment-ui` render of the grouping signal, small).
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
@@ -155,3 +190,33 @@ exists" section together before scoping the workstream.
 - **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — re-verified end-to-end; sole open item
   (`[DESIGN] P2`, blocked-question UX redesign) remains an open-ended scoping call explicitly deferred by the operator
   2026-07-24, unchanged since the 2026-08-06 marker.
+- **2026-08-08 (ao round-5 operator Q&A apply session, item 5)**: operator ruling — "All three: session_id capture +
+  transcript-jump + dedup/similarity." Closed the `[DESIGN]` scoping todo and filed 3 concrete build todos (backend
+  `claude_session_id` column+migration, UI transcript-jump affordance depending on it, backend+UI dedup surfacing).
+  Flipped `assigned_vm: NA` → `planning` / `execution_scope: local-only` → `orchestrator-agent` — the design gate is
+  resolved and the remaining work is bounded, matching the operator's general preference (recorded on item 6 of this
+  same apply session) to default to AO-dispatched plans once a LOCAL-vs-AO fork like this resolves.
+- **2026-08-08 (slot-11, ui_developer, dispatched onto `-002`)**: dispatcher offered the `[UI] P2` transcript-jump todo
+  (task `blocked_questions_ux_redesign_context_loss_and_scale-002`) while its own stated dependency, `[BACKEND] P2`
+  (`-001`, `claude_session_id` capture), was still `queued`/undispatched — confirmed live via the backlog API, and
+  confirmed in code that `BlockedRow` (`agent-orchestrator/server/orm.py:334-374`) has no `claude_session_id` column
+  yet. The UI todo's own text already flagged this ("sequence via `sequential: true` if these are ever pulled into their
+  own dispatched plan") but no such gate exists on this doc, so the backlog derivation offered `-002` with no prereq
+  enforcement. Declining via `POST /api/slots/11/skip-current-task` (`reason_code: GATED`, no `park_now` — the
+  dependency is a small, actively-queued in-plan task expected to land soon, not an external gate needing a durable
+  park) rather than doing the backend column work myself (out of ui_developer craft scope per `ui_developer.md`) or
+  building the UI against a field that doesn't exist yet (unverifiable per the todo's own done-when). Filed the
+  `[INFRA]` todo below so this doesn't silently re-happen once `-001` lands and `-002` re-dispatches.
+
+## Todos (continued)
+
+- [ ] [INFRA] P3. **Gate `-002` (UI transcript-jump) behind `-001` (BACKEND `claude_session_id` capture) so the
+      dispatcher can't offer the UI todo before its dependency lands** — confirmed 2026-08-08 (slot-11) that it can:
+      `-002` was dispatched while `-001` was still `queued`. Per CLAUDE.md's "partial-parallelism isn't expressible in
+      one plan → SPLIT" guidance, `sequential: true` on this whole doc would over-serialize (it would also block the
+      independent `[BACKEND] P3` dedup todo behind the UI todo for no reason) — either split the UI todo into its own
+      `depends_on`-gated companion doc, or attach a
+      `prereqs.completed_tasks: [blocked_questions_ux_redesign_context_loss_and_scale-001]` tuning entry to `-002`'s
+      derived backlog row (RULES.md §4/§5) once regen re-derives it. Repo: unified-trading-pm (doc restructure) or
+      agent-orchestrator (if `regen_backlog_from_plan.py` needs a new per-todo `depends_on_todo` primitive to express
+      this without a doc split — worth checking before hand-rolling the split).

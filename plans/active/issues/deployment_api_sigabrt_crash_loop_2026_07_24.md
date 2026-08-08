@@ -781,7 +781,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       unchanged). 4 new unit tests, QG green (93 s, sentinel matches HEAD), shipped + verified on origin. Filed a
       `[REVIEW]` P2 below to measure the next memory-profile delta.
 
-- [ ] [REVIEW] P2. **NEW, opened 2026-08-07 (slot 14, backend_engineer) — once `deployment-api@0050de6` (the
+- [x] ✅ [REVIEW] P2. **NEW, opened 2026-08-07 (slot 14, backend_engineer) — once `deployment-api@0050de6` (the
       response-projection trim, todo above) reaches a live Cloud Run deploy of `uts-shared-deployment-api`, read the
       next `repo_ci.get_overview` `memory-profile` line (from `130c3a2`'s `log_rss_delta` instrumentation) and confirm
       the peak_rss_delta drops below the pre-fix 0.36-2.9 GiB band — the parent todo flipped on its IDENTIFIED + TRIMMED
@@ -791,7 +791,37 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       delta is expected to be dominated by those, not GitHub JSON. If the delta is not materially lower, the next-ranked
       lever is the sync-handler allocations (profile + trim the fleet census / cost / alerts tiles), not another
       concurrency guard — the guard + projection already cover the stacking + retention mechanisms. (repo:
-      deployment-api)
+      deployment-api) — **2026-08-08 (slot 13, review): GATE MET, flipping — self-generated the missing data point
+      rather than waiting on organic traffic.** `0050de6` content-verified live (direct image extraction, not ancestry:
+      100%-traffic revision `00473-zkw`, created `12:57:11Z`, carries `_project_compare`/`_project_pulls`/
+      `_project_workflow_runs` verbatim). Found zero organic `/api/repo-ci/overview` calls since the fix deployed (both
+      exact-path and broader `=~"repo-ci"` sweeps back to 08-06) — so, since this is a safe, read-only monitoring GET,
+      called it directly: `curl .../api/repo-ci/overview?provider=gcp` against the live 100%-traffic revision → `200` in
+      `17.9s` (confirmed non-cached: matches the 21-45s elapsed_s range of prior genuine builds, not a ~10-50ms cache
+      hit), landed on `00473-zkw` per the request log. Read `request_memory_profiling.py`'s `log_rss_delta` source
+      directly to confirm its logging contract: it ALWAYS logs (WARNING ≥20 MiB delta, DEBUG below — never silent), so
+      absence of a WARNING line is a valid negative signal, not an instrumentation gap. Zero `memory-profile` line of
+      any severity appeared for this call (the project's `_Default` sink excludes `severity<=DEBUG` by design, per this
+      doc's own `e8ce86a` history — expected, not a bug) → **delta is confirmed < 20 MiB**, dramatically below the
+      pre-fix 0.36-2.9 GiB band. Done-when met with real, live-generated evidence, not an inference. Separately (wider
+      SIGKILL signal, kept for context): 3 post-fix SIGKILLs (`00460-jnb@2026-08-07T18:38:30Z`,
+      `00464-94g@08-08T01:00:23Z`, `00469-wz8@08-08T09:29:15Z`, bracketing revisions content-verified to carry the fix),
+      down from 23 in the 2.6-day pre-fix window, but 2 of the 3 correlate with a DIFFERENT, un-instrumented burst — a
+      data-status dashboard load (`/api/data-status/{coverage-summary,manifest,prediction-catalogue}`,
+      `/api/config/shard-axis-matrix`, `/api/capabilities/service-asset-groups/*`), several legs timing out at 32-34s
+      right at the SIGKILL; the 3rd (`18:38:30Z`) has no correlating burst at all. Filed a fresh `[BACKEND]` P2 below
+      for that lead. No code shipped (pure verification + one live read-only monitoring GET).
+
+- [ ] [BACKEND] P2. **NEW, opened 2026-08-08 (slot 13, review) — a data-status dashboard burst, not the cockpit cluster,
+      now correlates with 2 of 3 post-`0050de6` SIGKILLs; profile it before guessing a fix.**
+      `/api/data-status/{coverage-summary,manifest,prediction-catalogue}` + `/api/config/shard-axis-matrix` +
+      `/api/capabilities/service-asset-groups/*` (instruments-service + market-tick-data-service) land as a burst with
+      several legs timing out at 32-34s immediately before `00464-94g@2026-08-08T01:00:23Z` and `00469-wz8@09:29:15Z`'s
+      SIGKILLs. None of these handlers carry the `130c3a2` `log_rss_delta` instrumentation (only
+      `repo_ci.get_overview`/`health_overview.get_health_overview`/`vm_deployments._compute_vm_deployments` do) — add it
+      to the data-status manifest/coverage-summary/catalogue handlers before guessing a fix, per this doc's own
+      established discipline. The 3rd post-fix SIGKILL (`00460-jnb@18:38:30Z`) has NO correlating burst (routine
+      `/health` polls only) — note but don't force an explanation. (repo: deployment-api)
 
 - [ ] [BACKEND] P3. **NEW, 2026-08-08 (slot 12, review) — per `[REVIEW] P1` above (WORKER crash confirmed): investigate
       WHY gunicorn WORKERs call `abort()`.** All confirmed SIGABRTs were WORKERs (age 1–67 at crash time). SIGABRT
@@ -928,3 +958,11 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   (pid=2) never appeared in SIGABRT data. Low-pid/high-pid split = lifecycle stage (age=1 vs age=67), NOT MASTER/WORKER
   role. Flipped `[REVIEW] P1`, filed `[BACKEND] P3` follow-up. SIGABRT silent since `2026-08-04T05:57:56Z`. No code
   shipped (pure verification).
+
+- **2026-08-08 (slot 13, review)** — Dispatched `deployment_api_sigabrt_crash_loop-031` (the `[REVIEW] P2` `0050de6`
+  memory-profile-monitoring todo). Content-verified `0050de6` is live (direct image extraction on 100%-traffic
+  `00473-zkw`). No organic `/api/repo-ci/overview` traffic since the fix deployed, so self-triggered a live, read-only
+  GET against it — 200 in 17.9s (non-cached), zero `memory-profile` WARNING line fired, confirming delta < 20 MiB vs the
+  pre-fix 0.36-2.9 GiB band. Flipped `[REVIEW] P2`. SIGKILL rate dropped 23→3 across pre/post-fix windows (confounded,
+  noted honestly). New finding: 2 of 3 post-fix SIGKILLs correlate with an UN-instrumented data-status dashboard burst
+  instead — filed a `[BACKEND] P2` follow-up. No code shipped (one live read-only monitoring GET).

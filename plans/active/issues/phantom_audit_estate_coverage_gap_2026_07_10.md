@@ -173,10 +173,43 @@ noted here only so the two aren't conflated.
 
 ## Todos
 
-- [ ] [DATA] P2. **Make the phantom audit's bucket list dynamic** — enumerate every consolidated-manifest bucket (or
-      widen `_BUCKET_KIND_MAP` to the full kind×AG matrix) instead of the hardcoded 5-entry map, so the other 42
-      un-audited manifests (incl. the 64,227-row `instruments-store-cefi-prd` flagship case) get phantom-checked too
-      (see "Suggested fix" above).
+- [x] ✅ [DECISION] P2. **RULED (operator, 2026-08-08)**: "Widen it, but batch/optimize the walks rather than doing 42
+      separate full-corpus GCS walks." Approves widening `_BUCKET_KIND_MAP` to the full ~47-bucket kind×AG matrix, on
+      the explicit condition that it ships as ONE batched pass, not 42 independent sequential walks — filed as the
+      concrete `[SCRIPT]` implementation todo below.
+- [ ] [SCRIPT] P2. **Widen the phantom audit to the full ~47-bucket kind×AG matrix as ONE combined batched walk** (per
+      the 2026-08-08 ruling above), not N separate full-corpus GCS walks. Concrete batching approach:
+  > 1. **Replace the hardcoded 5-entry `_BUCKET_KIND_MAP`** (`reconcile_phantom_manifest_rows_all.py:106`) with the full
+  >    kind×AG matrix — mirror the manifest consolidator's own bucket census rather than re-deriving a parallel list (a
+  >    second hand-maintained bucket enumeration is its own drift risk).
+  > 2. **Cheap phase first, in-memory (not a walk)**: for every bucket in the matrix, read ONLY its small
+  >    `_index/availability_index.parquet` (one file per bucket — not a corpus walk) to pull the `captured` rows +
+  >    derive each row's candidate `(date, venue[, chain])` prefixes via the existing `_venue_level_prefixes()` /
+  >    `prefix_tpls` machinery (`reconcile_phantom_manifest_rows_all.py:231-306`), unchanged. Aggregate every bucket's
+  >    prefix-list into ONE combined in-memory work queue — `list[tuple[bucket_name, prefix]]` across all 47 buckets —
+  >    instead of building 47 separate per-bucket prefix lists that each spawn their own listing pass.
+  > 3. **Expensive phase once, shared pool**: submit that ENTIRE combined queue to a SINGLE shared
+  >    `concurrent.futures` worker pool (the same `list_blobs()`-per-prefix pattern `_audit_generic`/`_audit_sports`
+  >    already use per-bucket today, at `reconcile_phantom_manifest_rows_all.py:517-524` — reuse the pattern, widen the
+  >    pool's input) — one shared client, one shared concurrency cap, one shared progress/log stream — rather than 47
+  >    sequential invocations each paying its own process-startup + client-init + logging overhead and running
+  >    back-to-back. This is the actual "batch/optimize" the operator asked for: same total GCS `list_blobs` call count
+  >    (unavoidable — 47 real buckets need real listings), but ONE orchestrated pass instead of 47 independent full
+  >    walks.
+  > 4. **Classify + emit phantoms in-memory, per bucket**, from the aggregated listing results (substring-match each
+  >    captured row's key against its bucket's listing set, same logic as today, just fed from the shared pool's output
+  >    keyed by bucket).
+  > 5. **Concurrency/QPS safety check** (per the doc's own "Suggested fix" note): the existing per-bucket concurrency cap
+  >    was tuned for 5 buckets' worth of prefixes; widening the SAME pool to ~47 buckets' combined prefix count needs a
+  >    fresh cap/backoff check against GCS QPS limits before shipping — measure real prefix-count totals across the full
+  >    matrix first (cheap, phase 2 above already computes this) rather than guessing a safe pool size.
+  > 6. **Orchestrator side**: `manifest_hygiene_daily.py`'s cron loop (`:384`, currently 5 sequential per-AG CLI
+  >    invocations) changes to ONE invocation carrying the full bucket list (or an `--all-buckets` flag), preserving the
+  >    weekly `--mode full` cadence (schedule-level single-walk-discipline unchanged — still once/week, just wider per
+  >    run).
+  >
+  > Covers the other 42 un-audited manifests (incl. the 64,227-row `instruments-store-cefi-prd` flagship case). Repo:
+  > instruments-service (script) + e2e-testing (cron orchestrator).
 
 ## Progress Log
 
@@ -197,3 +230,20 @@ noted here only so the two aren't conflated.
 - **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — sole open todo (dynamic bucket-list
   enumeration for the phantom audit) sits under a section explicitly titled "Suggested fix (data-pipeline owner to
   scope)" with an unresolved runtime/parallelism cost-tradeoff against the single-walk-discipline hard rule.
+- **na-corpus-digest-closeout 2026-08-08**: operator ruled "widen it, but batch/optimize the walks rather than doing 42
+  separate full-corpus GCS walks." Filed the concrete `[SCRIPT]` implementation todo above: replace the hardcoded
+  5-entry map with the full kind×AG matrix, read every bucket's small index parquet first (cheap, in-memory), aggregate
+  every bucket's candidate prefixes into ONE combined work queue, submit that queue to a SINGLE shared worker pool
+  (instead of 47 separate per-bucket sequential passes), classify phantoms in-memory per bucket from the shared pool's
+  output, and re-check the concurrency/QPS cap against the widened combined prefix count before shipping. Doc stays
+  `assigned_vm: NA` — this is real, non-trivial engineering (touches the audit script's core listing strategy + the
+  cron orchestrator), not a bounded single-worker AO-dispatch task as scoped.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — independently re-assessed rather
+  than deferring to the same-day verdict above. The 6-step batching plan is unusually well-specified (exact
+  file/function references, no open "how should this work" question), which is a genuine RECLASSIFY signal — but step
+  5's concurrency/QPS safety check ("measure real prefix-count totals... rather than guessing a safe pool size") still
+  asks the worker to PICK a safe concurrency cap/backoff strategy against GCS QPS limits from first principles, not
+  apply a stated formula — a residual judgment component. Combined with the multi-file, 2-repo scope (audit script's
+  core listing strategy + the cron orchestrator) touching a single-walk-discipline-sensitive path, this stays just shy
+  of whole-doc worker-determinable. No cheat-sheet ruling matches directly. Reaffirms the concurrent verdict on
+  independent grounds.

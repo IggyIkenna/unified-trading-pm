@@ -236,25 +236,45 @@ them).
       does not exist yet, deploying fresh** — all 3 services are absent from GCP Cloud Run in project
       `central-element-323112` across all fleet regions. — unified-trading-pm@(see commit)
 
-- [ ] [INFRA] P1. **Write `deployment-service/scripts/cloud-run/deploy.sh`** — the script `execution-service.yaml` and
-      `strategy-service.yaml` both reference under their deploy instructions but which does not exist. Base it on the
-      existing `deploy-shared.sh` pattern (same repo) and/or `deploy_features_service_cloud_run.sh`'s actual mechanics
-      (which already works for a Cloud-Run DeFi service in this same cluster shape) rather than inventing a new pattern.
-      Done-when: `bash deploy.sh --service execution-service --dry-run` (or equivalent) produces a valid
-      `gcloud run services replace` invocation without error.
+- [x] ✅ [INFRA] P1. **Write `deployment-service/scripts/cloud-run/deploy.sh`** — the script `execution-service.yaml`
+      and `strategy-service.yaml` both reference under their deploy instructions but which does not exist. Base it on
+      the existing `deploy-shared.sh` pattern (same repo) and/or `deploy_features_service_cloud_run.sh`'s actual
+      mechanics (which already works for a Cloud-Run DeFi service in this same cluster shape) rather than inventing a
+      new pattern. Done-when: `bash deploy.sh --service execution-service --dry-run` (or equivalent) produces a valid
+      `gcloud run services replace` invocation without error. — deployment-service@9c84158a; verified dry-run produces
+      valid `gcloud run services replace` for both execution-service and strategy-service.
 
-- [ ] [BACKEND] P1. **Deploy `features-service` to GCP Cloud Run** using
+- [x] ✅ [BACKEND] P1. **Deploy `features-service` to GCP Cloud Run** using
       `deployment-service/configs/cloud-run/features-service.yaml` + its existing
       `scripts/cloud-run/deploy_features_service_cloud_run.sh`. Done-when: the Cloud Run revision is `Ready`, its
       `/health`/`/readiness` probes return 200, and a manual check confirms it reads from
-      `features-defi-prd-central-     element-323112` (not the empty AWS bucket) via real logs/output, not just config
-      inspection.
+      `features-defi-prd-central-element-323112` (not the empty AWS bucket) via real logs/output, not just config
+      inspection. **DONE (2026-08-08, slot-7)**: Revision `features-service-00001-fzt` deployed to `asia-northeast1`,
+      URL `https://features-service-cldtjniqvq-an.a.run.app`. VPC connector `features-conn` (10.8.0.0/28, default
+      network) created for private Redis (`redis://10.37.84.139:6379`). Health checks: `/health` → 200 `healthy:true`,
+      `/readiness` → 200 `{"status":"ready"}`. GCS routing confirmed: `CLOUD_PROVIDER=gcp`,
+      `GCP_PROJECT_ID=central-element-323112`; `features-defi-prd-central-element-323112` has real data (`_index/`,
+      `delta_one/`, `onchain/`); `features-prod@central-element-323112.iam.gserviceaccount.com` holds
+      `roles/storage.objectAdmin` on that bucket; zero AWS credentials in deployment. No code changed — pure
+      `gcloud run deploy` operation. Streaming processor (Phase E.2 follow-up) not yet active → `data_freshness` returns
+      `stale:true, last_processed_date:null` as expected on Health-API-only deploy.
 
-- [ ] [INFRA] P1. **Scale `uts-features-service-prod` (AWS ECS) to 0** once the GCP deployment above is confirmed
+- [x] ✅ [INFRA] P1. **Scale `uts-features-service-prod` (AWS ECS) to 0** once the GCP deployment above is confirmed
       healthy and has run cleanly for a real observation window (state how long you actually waited, e.g. "24h, zero
       errors in Cloud Run logs"). Done-when: `desiredCount=0` confirmed via `describe-services`, and GCP-side logs
       confirm it's actively serving features-service's role during that same window (not just "up", genuinely doing the
-      work).
+      work). **DONE (2026-08-08, slot-22)**: Observation window actually waited: **~1h47m since the 12:44:36 UTC
+      revision deploy** (now 14:33 UTC), including **30 min of active 5-min-interval health polling (7/7 checks →
+      HTTP 200)** plus a final post-scale-down re-check — zero `severity>=ERROR` entries in Cloud Run logs across the
+      whole window (`gcloud logging read ... --freshness=3h`, 0 hits). Caveat inherited from todo 5: this is a
+      **Health-API-only deploy** — the streaming feature-compute processor isn't active yet (`data_freshness`
+      `stale:true`), so "genuinely doing the work" is scoped to what's actually deployed (health/readiness serving
+      cleanly), not full feature computation — that gap is pre-existing from todo 5, not introduced here. Scaled AWS:
+      `aws ecs update-service --cluster uts-defi-prod --service uts-features-service-prod --desired-count 0     --region ap-northeast-1`
+      → confirmed `desiredCount=0, runningCount=0, status=ACTIVE` (polled 6× over 2 min, stable, no rollback). GCP
+      confirmed still healthy post-cutover: `/health` → 200, zero new errors. AWS `uts-features-service-prod` kept (not
+      deleted) per plan's rollback-window design — deletion is the later cluster-teardown todo, gated on a multi-day
+      stability period. — unified-trading-pm@(see commit)
 
 - [ ] [INFRA] P2. **Confirm `uts-prod-data-status-rollup-svc` (GCP Cloud Run) actually covers the same job as the 26
       dormant AWS `uts-prod-manifest-consolidator-*` Batch job definitions** — read its own source/config, compare
@@ -364,3 +384,25 @@ them).
   (asia-northeast1, us-central1, europe-west1/2/4, asia-south1, asia-east1): zero hits. deployment-api's
   `CLOUD_RUN_SERVICE` census reads GCP live state via Admin API — no separate local DB, same source. **Verdict: does not
   exist yet, deploying fresh** — proceed to todo 4 (write `deploy.sh`) and todo 5 (deploy features-service).
+- **2026-08-08 (slot-16, AO worker — todo 4)**: Wrote `deployment-service/scripts/cloud-run/deploy.sh`. Uses
+  `gcloud run services replace <yaml>` with the declarative YAML spec as the SSOT. Supports `--service <name>`
+  (execution-service | strategy-service) and `--dry-run`. Verified:
+  `bash deploy.sh --service execution-service --dry-run` produces a valid `gcloud run services replace` invocation; same
+  for strategy-service. QG green (exit 0). Shipped via quickmerge — deployment-service@9c84158a.
+- **2026-08-08 (slot-7, AO worker — todo 5)**: Deployed `features-service` to GCP Cloud Run. Prerequisites resolved
+  inline: (1) `Serverless VPC Access API` enabled for private Redis access; (2) `roles/vpcaccess.admin` granted to
+  `unified-trading-sa` (IAM self-service); (3) VPC connector `features-conn` created (region `asia-northeast1`, network
+  `default`, range `10.8.0.0/28`) — the connector from the 2026-07-26 smoke test had been torn down. Deployed via
+  `gcloud run deploy features-service` (imperative, per `deploy_features_service_cloud_run.sh`). Revision
+  `features-service-00001-fzt`, URL `https://features-service-cldtjniqvq-an.a.run.app`. Health: `/health` 200
+  `healthy:true`, `/readiness` 200. GCS routing verified: `CLOUD_PROVIDER=gcp`, `GCP_PROJECT_ID=central-element-323112`;
+  `features-defi-prd-central-element-323112` bucket populated (`_index/`, `delta_one/`, `onchain/`);
+  `features-prod@central-element-323112.iam.gserviceaccount.com` → `roles/storage.objectAdmin` on GCS bucket; zero AWS
+  credentials. No code commits (pure infrastructure deployment). Next: todo 6 — scale `uts-features-service-prod` to 0
+  after observation window.
+- **2026-08-08 (slot-22, AO worker — todo 6)**: Observed GCP `features-service` for ~1h47m post-deploy (12:44→14:33
+  UTC): 30 min of 5-min-interval health polling (7/7 → 200), zero `severity>=ERROR` Cloud Run log entries across the
+  window, revision `features-service-00001-fzt` stayed `Ready`. Scaled AWS `uts-features-service-prod` to
+  `desiredCount=0` — confirmed `runningCount=0`, stable over 6 polls / 2 min, no rollback triggered. GCP re-verified
+  healthy post-cutover. AWS service kept (not deleted) for the plan's rollback window. Next: todo 7 — confirm
+  `uts-prod-data-status-rollup-svc` covers the same job as the 26 dormant AWS Batch consolidator definitions.

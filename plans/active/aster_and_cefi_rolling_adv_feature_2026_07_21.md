@@ -234,3 +234,14 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 | Phase 2 (MDPS candle coverage extension) | Not started | Operator explicit decision — consumer-first, producer later   |
 | Phase 3 (strategy-side wiring)           | Not started | RULED 2026-08-08 (order-sizing time, 10% ADV) — build pending |
 | `book_depth.py` → Phase-1 utility wiring | Not started | Stretch, only after Phase 1 ships and proves out              |
+
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid overall — the Phase-3 `[BACKEND] P2`
+  implementation todo is now bounded/deterministic per today's 2026-08-08 ruling (clamp `AllocationSizer.size_signal()`
+  to `0.10 * adv_usd`, fail-closed on non-`OK` `AdvStatus`), but the sibling `[DATA] P3` `book_depth.py` stretch item
+  ("consider whether... should be wired") is a genuine open judgment call, not yet decided either way. Per the HARD
+  RULE (`assigned_vm` flips WHOLE-DOC only, every remaining open item must be worker-determinable), the doc cannot
+  flip while that stretch item stays open. Cross-checked against `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`
+  (today's independent full-corpus audit), which reached the same verdict via its own "Deferred — human-only" list.
+  **Recommendation for the next `/ag-closeout-audit` cefi batch (batch11)**: extract the Phase-3 backend todo alone
+  into a satellite AO-dispatch item (leaving this source doc's stretch item open/NA) — not executed in this pass, since
+  satellite-batch authoring is that skill's own numbered sequence, not this sweep's mechanism.

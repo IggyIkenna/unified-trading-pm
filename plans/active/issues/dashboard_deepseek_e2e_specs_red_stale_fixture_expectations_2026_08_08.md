@@ -21,7 +21,8 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [agent-orchestrator, dashboard, e2e, playwright, deepseek, test-fixture, ci-gap]
-related: [/codex/06-coding-standards/ui-testing-layers.md]
+related:
+  [/codex/06-coding-standards/ui-testing-layers.md, /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md]
 created: 2026-08-08
 author: interactive-session (slot 4)
 priority: P2

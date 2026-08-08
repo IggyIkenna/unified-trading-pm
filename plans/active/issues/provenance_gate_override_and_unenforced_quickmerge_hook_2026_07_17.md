@@ -153,8 +153,26 @@ Not rogue agents — **the workspace contradicted itself, and the enforcement wa
 
 ## Remaining / for the operator
 
-- [ ] [DEVOPS] P2. Decide whether the 33 laundered commits need any dep-order spot-check beyond the bot's gate, or
-      whether this doc closes it. Nothing automated will ever re-surface them.
+- [x] ✅ [DEVOPS] P2. **RESOLVED 2026-08-08 -- operator ruling: run the spot-check. Ran it live; CLEAN, closing
+      this item.** Method (no local checkout of `market-tick-data-service`/`deployment-api` in this session -- used
+      `gh api`/`gh run list`/`gh pr view` against both repos directly): (1) confirmed both repos' `quality-gates-v2` on
+      `main` is green RIGHT NOW, 2026-08-08 -- 5/5 most-recent runs `success` for each repo (mtds newest
+      `99b600c0d9` 2026-08-08T10:07Z; deployment-api newest `af6aaf6e3d` 2026-08-08T12:17Z); (2) the specific residual
+      risk this doc names is dep-ordering -- e.g. mtds/deployment-api `main` code referencing a UTL/UAC symbol not yet
+      on that dep's `main` at promote time (2026-07-16) -- which would surface as an import/collection failure in
+      `QG slice (tests)`, not a silent pass; (3) checked the FULL failure history on `main` for both repos since the
+      bypass (`gh run list --status failure`): **mtds's first failure after 2026-07-16 is 2026-07-31** (15 days later,
+      run `30673172481`/`30658470782` -- checked job breakdown, ordinary `QG slice (tests)`/`(checks)` failures, not a
+      dependency/import error at collection time); **deployment-api's first failure after 2026-07-16 is 2026-07-30**
+      (14 days later). **Zero failures in the immediate aftermath window (2026-07-16 through the first failure two
+      weeks later)** -- the window where a genuine dep-floor mismatch tied to these specific 33 commits would be most
+      likely to surface, before subsequent legitimate quickmerged dep-bumps could mask or coincidentally resolve it.
+      (4) Re-read PR #596's own body: `Tier-A + content + SIT + combination gates passed` -- corroborates this doc's
+      claim that the promote bot's own dep-order-inclusive gate set passed at promote time, independent of the
+      provenance-gate override. **Verdict: no dep-order issue found, live or historical, traceable to the 33 laundered
+      commits.** This doc's own "Nothing automated will ever re-surface them" is still true (the provenance baseline
+      moved past them permanently), but this manual spot-check is the closure this todo asked for -- closing this item
+      for good, not deferring further.
 - [x] [DEVOPS] P2. `check_strict_quickmerge.py` **fails OPEN on a bad range** — an unresolvable/invalid range prints "no
       bypassed code commits" (exit 0) rather than erroring. Found while testing the hook with a malformed sha. A typo'd
       range therefore reads as a pass. — already covered by plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md
@@ -205,3 +223,9 @@ false-[x] risk). No RECLASSIFY candidates.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator judgment item, P3 extraction in draft batch4
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA-STALE (already-duplicated), confirmed — the sole
+remaining open item (delete `scripts/dev/hooks/pre-push-strict-quickmerge.sh` + repoint its 4 referrers) is a genuinely
+bounded, deterministic deletion task and was considered as a RECLASSIFY candidate on its own merits. Conflict-check:
+`ci_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 owns this exact file (verbatim claim) and is now `status: active`
+(not draft) — a live, current claim. Flipping this doc's copy would draft a competing todo against an already-dispatched
+claim. Stays NA on citation; no `assigned_vm` change.

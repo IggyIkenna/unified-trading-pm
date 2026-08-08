@@ -567,3 +567,12 @@ files.
   (same pattern as the IS-side `jupiter.py` this doc already flagged); the wire-in item narrows from 3 files to 1
   (`onchain_event_poller.py` only — `alchemy_adapter.py`/`thegraph_ws_adapter.py` lack a determinable single-venue
   target, flagged as an open question in the new plan rather than forced into a todo).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-read §6 end to end (4 open items).
+  Items 1 (Jupiter) and 3 (onchain_event_poller wiring) are deliberately-open citation-trackers only — both explicitly
+  say "leave this checkbox open until that plan's todo N lands," with the REAL execution already `assigned_vm: planning`
+  in `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md`; flipping this doc's own `assigned_vm`
+  would risk a worker picking these up as fresh, redundant work. Item 4 (Helius/native_staking_handler consolidation)
+  gained a full operator ruling + detailed scoping TODAY (2026-08-08) and is now genuinely bounded — a strong
+  RECLASSIFY candidate on its own, flagged for a future round or a dedicated extraction. Item 2 (governance-params-poller
+  cross-repo re-verify, the OPERATOR-NOTIFY big finding) remains unruled and cross-repo. Net: whole-doc flip is not
+  clean this round. Doc stays `assigned_vm: NA`.

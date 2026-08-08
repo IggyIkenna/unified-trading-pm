@@ -741,3 +741,9 @@ pass, unchanged. Still 3/3 open items, still [UI]-role-mismatch (rollout-ratchet
 (runtime-level deploy signal v2, E14) / dependent-on-the-first-item (G4 ruleset drift, explicitly stated to fold into
 the rollout-ratchet panels as a third column). Same independently-corroborated citation chain as every prior pass; no
 RECLASSIFY candidates.
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 6th consecutive pass, unchanged. Checked
+all 9 of today's operator-Q&A precedents against the 3 open items — none apply. Deliberately did not overturn 5
+independently-corroborated prior KEEP-NA passes without a matching precedent — "requires a `[UI]`-capable
+`assigned_role`" is not itself disqualifying for AO dispatch, but the standing citation chain's real basis (role-mismatch
+framing plus a genuinely-unscoped design-call status, both re-derived across 5 passes) was not re-litigated here — a
+fresh scoping pass, not a mechanical precedent match, would be needed to responsibly flip this. No `assigned_vm` change.

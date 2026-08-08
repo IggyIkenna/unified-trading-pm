@@ -347,10 +347,26 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
           `expiry`/`delisted_at` for dated instruments. QG-green, 54 roll-up tests pass. NOTE: tradfi prod-regen verify
           rides tradfi G3 (catalogue-regen-tradfi is operator-PAUSED pending tradfi G1 retirement/sign-off — do NOT
           regen it before the §9 retirement purge or it re-bakes the ICE/OPRA pollutants).
-    - [ ] [INFRA] P0. **RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — GO AHEAD.** G1
-          retirement (§8, 4 legs), approved to purge — ICE (whole venue, 16,158) · CBOE OPRA OPTION (33,258) · CBOE
-          VX-spread SPOT_PAIR (4,216) · VIX-cash INDEX (^VIX+I:VIX) · NASDAQ/NYSE mis-class SPOT_PAIR (318) ·
-          cefi-singles. Execute: pause consolidator→snapshot→filter→resume; verify gone all 4 legs. Ready to execute.
+    - [x] ✅ [INFRA] P0. **RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — GO AHEAD.**
+          **EXECUTED 2026-08-08** (round5-cross-cutting-audit, id=52) — the literal "4 legs" (ICE whole-venue 16,147 ·
+          CBOE OPRA OPTION 33,258 · CBOE VX-spread SPOT_PAIR 4,216 · VIX-cash INDEX 2) purged from
+          `instruments-store-tradfi-prd-.../prod/catalog.parquet`: 53,623 rows removed, 973,116→919,493, snapshot +
+          `.bak` taken first, post-write verify clean (0 remaining, CBOE COMBO/FUTURE untouched). **Full evidence + the
+          critical scheduler-was-actually-live finding**: see `instruments_completion_tracker_2026_07_06.md`'s twin todo
+          (this session's other citation of the same work) — do not re-execute there, it's the same purge. **NASDAQ/NYSE
+          mis-class SPOT_PAIR (318) and cefi-singles (12 tickers, EQUITY-type rows) deliberately NOT purged this pass**
+          — this doc's own paragraph bundles 6 items under "4 legs" (an internal miscount), but the digest item that
+          carried the operator's actual approval only asked about the literal 4 named above; those 2 residual legs stay
+          open, tracked as their own explicit todo immediately below rather than assumed-approved by association.
+    - [ ] [DATA] P2. **NEW (filed 2026-08-08, split out of the item above)**: purge the 2 residual tradfi catalogue legs
+          NOT covered by the executed 4-leg purge — NASDAQ/NYSE mis-classified `SPOT_PAIR` rows (318, all equity tickers
+          incorrectly typed as spot-pairs) and the 12 cefi-singles' `EQUITY`/`EQUITY-USD` rows (NVDA/MSFT/
+          CRCL/INTC/GOOGL/AMD/TSLA/AMZN/META/HOOD/AAPL/BABA — `unified_api_contracts.TRADFI_DATABENTO_INSTRUMENTS`
+          filtered `asset_group=="cefi"`; each ticker's `SPOT_PAIR` row is already covered by the NASDAQ/NYSE leg, only
+          the `EQUITY`/`EQUITY-USD` rows remain). Needs its own explicit operator confirmation before executing (not
+          blanket-covered by the 4-leg go-ahead). Same target bucket/blob, same script pattern as the executed purge —
+          mechanical once confirmed. Also needs the same scheduler-pause precondition (currently already paused from the
+          4-leg purge; re-verify live state at execution time, don't assume it's still paused).
     - [x] ✅ [SCRIPT] P1. **G1.a.2 §7.1 follow-up — massive.py (the OPRA/I:VIX pollution source)** — DONE
           instruments-service@1198549 (LDR). massive KEPT as the tradfi FALLBACK (operator 2026-06-25); endpoint
           `https://api.polygon.io` VERIFIED correct (Polygon.io→Massive 2025-10-30 rebrand kept the host). Removed the
@@ -670,3 +686,15 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   correctly stays NA pending that check, not flagged for extraction yet. `assigned_vm` unchanged (doc-level RECLASSIFY
   does not apply -- the top-level Gated-Phase-2 rollup and ICE BLOCKED-CREDENTIALS items remain genuinely
   operator/credential-gated).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: **KEEP-NA at doc level, confirmed — but one item now
+  matches a fresh same-day precedent, flagged for extraction, not a whole-doc flip.** Re-read all 5 open items against
+  today's 9 operator-Q&A rulings. The ICE-Databento parquet GCS-cleanup item (P3, "RULED 2026-08-07 ... GO AHEAD,
+  conditional on ... twin-verify still required before delete") now matches today's ruling 6 precisely: the operator's
+  own GO-AHEAD already covers the delete itself; the sole remaining gate (twin-verify 0 consumers + a fresh
+  reversibility check) is exactly the class ruling 6 describes as agent-executable. **Not flipping this doc's
+  `assigned_vm`** — the HARD RULE is whole-doc-only, and 3 other open items remain genuinely gated (the top-level
+  Gated-Phase-2 rollup; the residual 2-leg catalogue purge, which still needs its OWN NEW operator confirmation, so
+  ruling 6 does not reach it; ICE BLOCKED-CREDENTIALS). A single-item carve-out is `/ag-closeout-audit`'s Phase-3
+  mechanism, not this skill's whole-doc reclassification — recording the match here so the next satellite-batch author
+  (who already missed the sibling G1-retirement-purge extraction per the marker above) picks up both together. No
+  `assigned_vm` change.

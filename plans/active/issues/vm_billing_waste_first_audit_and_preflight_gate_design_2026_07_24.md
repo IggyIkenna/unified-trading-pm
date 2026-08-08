@@ -28,8 +28,8 @@ created: "2026-07-24"
 author: unknown
 last_updated: "2026-07-25"
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 1
@@ -64,12 +64,23 @@ context_scope:
       new billing-waste finding (`tradfi-bf-*`) and an alerting gap. AWS side remains IAM-blocked
       (`ec2:DescribeSpotInstanceRequests` — re-confirmed 2026-07-25, `uts-orchestrator-epic-role` still lacks the
       permission) — noted gap per this todo's own carve-out, not treated as a blocker.**
-- [ ] [BACKEND] P2. Design + wire a cross-run pre-flight gate: when `classify_venue_error()` returns `action=FAIL` for a
-      shard (or N consecutive waves hit the identical `error_reason` on the same shard), route it to a "known-dead, do
-      not re-attempt" manifest-level marker instead of the current default (silent infinite retry via
-      `record_failed()`). Definition-of-done: the marker mechanism is designed (schema field or side-table), at least
-      one launcher family wired to check it before dispatching a shard, and a regression test proving a marked shard is
-      skipped on the next wave.
+- [ ] [BACKEND] P2. **DESIGN DECIDED 2026-08-08 (operator ruling, ao round-5 apply item 17): "Let Claude pick based on
+      existing patterns/conventions."** Mechanism: **side-table**, not a manifest-schema field. Reasoning: the canonical
+      availability manifest is a fleet-wide contract with the shard-atom-identical-across-
+      writer/manifest/status/gate/UI invariant (`/codex/02-data/availability-manifest-and-data-status.md`) and a
+      single-walk-discipline HARD RULE against whole-corpus rewrites -- adding a new field to that schema would touch
+      every writer, every reader, the status/gate computation, and the UI at once, exactly the "schema blast radius"
+      concern batch1's BLOCKED-OPERATOR-DECISION flagged. A side-table (a small, additive, shard-atom-keyed marker store
+      consulted ONLY by the pre-flight gate itself) requires zero changes to the existing manifest
+      writers/readers/UI/gate -- pure addition, matching this workspace's general preference for additive mechanisms
+      over schema migrations (e.g. `capture_status`'s "trust the actual distribution, not the constant" convention, and
+      the standing avoid-a-new-whole-corpus-walk rule). Design + wire a cross-run pre-flight gate: when
+      `classify_venue_error()` returns `action=FAIL` for a shard (or N consecutive waves hit the identical
+      `error_reason` on the same shard), write a "known-dead, do not re-attempt" entry to this new side-table instead of
+      the current default (silent infinite retry via `record_failed()`). Definition-of-done: the side-table schema is
+      designed (shard atom key + `error_reason` + first-seen/last-seen wave + `attempt_count`), at least one launcher
+      family wired to check it before dispatching a shard, and a regression test proving a marked shard is skipped on
+      the next wave.
 
 ## Progress Log
 
@@ -452,3 +463,7 @@ context_scope:
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA-STALE — Prior markers were KEEP-NA-STALE; 6 of 7 todos done via batch1
   (08-03), sole remaining pre-flight-gate design is operator-gated (schema blast radius). Citation unchanged.
+- **2026-08-08 (ao round-5 operator Q&A apply session, item 17)**: operator ruled "Let Claude pick based on existing
+  patterns/conventions." Chose side-table over a manifest-schema field (see the updated todo above for full reasoning).
+  Flipped `assigned_vm: NA` -> `planning` -- the design fork blocking this doc is now resolved, the remaining work is a
+  concrete, bounded implementation. Not implemented this session.

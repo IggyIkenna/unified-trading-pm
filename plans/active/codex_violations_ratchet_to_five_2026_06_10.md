@@ -370,8 +370,15 @@ unchanged:
       2026-07-26 to batch into ONE `sequential: true` unit with 3 sibling `base-service.sh`/`base-library.sh` edits in
       the next infra batch (no `batch2` exists yet — same fallback as the pip-audit item above). Stays open here until
       that batch lands.
-- [ ] [CODE] P3. **UAC `internal/domain/execution_service/defi_position.py` STALE vs the live local copy** — UAC
-      hardcodes liquidation threshold 1.1; the execution-service local uses
+- [x] ✅ [CODE] P3. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — DONE via the cross-referenced
+      doc.** `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own copy of this exact item is `[x]` DONE at
+      `unified-api-contracts@194f3f7f`: `is_at_risk` now resolves `LIQUIDATION_PARAMS_REGISTRY[AAVE_V3].health_factor_critical`
+      (`1.15`) instead of the hardcoded `1.1`, mirroring execution-service's local copy; every consumer grepped, only a
+      bare re-export found; a pinning regression test added
+      (`tests/internal/unit/domain/execution_service/test_defi_position.py`); QG green. Independently re-verified this
+      pass: `git merge-base --is-ancestor 194f3f7f origin/live-defi-rollout` confirms ancestor. Original text preserved
+      below for record. Was: **UAC `internal/domain/execution_service/defi_position.py` STALE vs the live local
+      copy** — UAC hardcodes liquidation threshold 1.1; the execution-service local uses
       `LIQUIDATION_PARAMS_REGISTRY[MarginModel.AAVE_V3].health_factor_critical` (1.15). Reconcile UAC to the
       registry-driven form. Repo: unified-api-contracts. **MIGRATED 2026-07-27** — confirmed present with real content
       as its own `[CODE] P3` todo in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` ("Reconcile UAC's stale
@@ -614,6 +621,23 @@ for a `batch2` on the next pass and rehome then.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale items — closed the UAC
+  `defi_position.py` item with hard evidence (`unified-api-contracts@194f3f7f`, ancestor-verified), which was already
+  DONE in the cross-referenced `infra_satellite_ao_dispatch_batch1_2026_07_26.md` but never reflected back here. Doc
+  stays NA overall: the 3 remaining items (pip-audit follow-ups, the domain-client base-gate retarget, Phase-3
+  schema-provenance) were checked against today's operator-Q&A rulings cheat sheet and against every newer infra batch
+  (batch1/6/7) — none is a clean match. The domain-client base-gate retarget's `base-service.sh`/`base-library.sh`
+  contention (batch1 finding 2, "batch these 4 deferred items into ONE sequential unit in the next infra batch") now
+  appears CLEARED — the two sibling claims that created it
+  (`cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s lint-generalization item, done; `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md`, archived)
+  are both resolved, and a corpus-wide grep found zero other open todos touching either file — but this doc's own item
+  is only 1 of the 4 the operator ruled must land as ONE bundled `sequential: true` unit, so a solo flip here would
+  violate that ruling rather than honor it; flagging as a strong RECLASSIFY-candidate for a fresh, properly-scoped
+  batch bundling all 4, not actioned this run. The pip-audit item remains genuinely blocked (batch1 finding 7:
+  dep-manifest contention across `workspace-constraints.toml` + 15 repos, "genuinely too large for a batch todo") —
+  `cve_affected_pinned_deps_remediation_2026_06_18.md` (an active `assigned_vm: planning` doc) covers ujson/twisted/
+  msgpack but not pyarrow/mako, so only partial overlap. Phase 3's schema-provenance migration remains an explicitly
+  acknowledged too-large-for-a-batch-todo design pass. `assigned_vm: NA` correct.
 - **na-eligibility-audit 2026-08-07** (infra tranche): KEEP-NA, valid — unchanged since 2026-08-02; re-verified the 5
   open items fresh. The UAC `defi_position.py` citation (line ~373) remains correctly cross-referenced into
   `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (no new citation needed — same conclusion as the 2026-07-30 audit).

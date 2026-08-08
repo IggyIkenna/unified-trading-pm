@@ -27,6 +27,7 @@ related:
   [
     /plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md,
     /codex/06-coding-standards/quality-gates.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-06
 author: agent
@@ -77,11 +78,19 @@ context_scope:
       picks it up: make `agent-orchestrator`'s `format`/`format:check` scripts and the wrapper agree, so the repo's own
       documented command stops disagreeing with its own commit hook.
 
+- [ ] [INFRA] P3. **Bump `agent-orchestrator/dashboard/package.json`'s `"prettier": "^3.6.2"` → `"^3.9.5"`,
+      `npm     install`, confirm `format:check` clean.** Follow-up extracted from todo 1's closed decision above (per
+      the "every follow-up is a todo, never prose" rule — this was left as prose only, "out of scope for this dispatch,
+      repo-scoped to unified-trading-pm only... a bounded, no-longer-judgment-call follow-up"). No remaining judgment:
+      todo 1 already empirically proved byte-identical output + zero idempotency drift on every dashboard file type, so
+      this is a mechanical version bump. Done when: `agent-orchestrator/dashboard`'s `format`/`format:check` scripts
+      agree with `scripts/hooks/prettier-autostage.sh`'s 3.9.5 pin on the same file set. Repo: agent-orchestrator.
 - [ ] [INFRA] P3. **Then decide whether the dashboard should gate on formatting at all.**
       `agent-orchestrator/scripts/quality-gates.sh` runs `tsc --noEmit` + `vitest` for the dashboard but never
       `format:check`, which is the only reason this skew has not failed anyone's gate. That is a gap or a deliberate
       choice; it is currently neither documented nor obvious. If formatting should be enforced, wiring `format:check` in
-      is a one-line change — but do it AFTER todo 1, or the gate starts failing on the disagreement itself.
+      is a one-line change — but do it AFTER the version-bump todo above, or the gate starts failing on the disagreement
+      itself.
 
 ## Progress Log
 
@@ -97,3 +106,10 @@ and the gate passed, so nothing was blocked.
   side moves" judgment calls (todo 1 trades off adopting a version with a known documented proseWrap defect; todo 2 is
   gated behind todo 1). Not bounded/deterministic; genuine operator/engineer tradeoff call.
 - **context-scout 2026-08-07**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — stale-item fix, not a
+  reclassification. Todo 1's own empirical resolution (round5 ao investigation, 2026-08-08) left a bounded mechanical
+  follow-up (bump `agent-orchestrator/dashboard/package.json`'s prettier pin) stated only in prose — converted to a real
+  tracked `[INFRA] P3` todo per the "every follow-up is a todo, never prose" hard rule. Doc stays NA as a whole: the
+  remaining "decide whether the dashboard should gate on formatting at all" item is still a genuine, undecided
+  design/policy call ("a gap or a deliberate choice... currently neither documented nor obvious"), so the whole-doc bar
+  for RECLASSIFY is not met.

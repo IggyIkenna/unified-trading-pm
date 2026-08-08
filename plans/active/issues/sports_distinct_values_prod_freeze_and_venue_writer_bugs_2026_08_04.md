@@ -396,3 +396,11 @@ verified live. The one remaining todo (`LC_TARBALL_FRESHNESS=enforce`) is an unr
 that doesn't block or affect anything here; pick it up whenever, no urgency.
 
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is genuine unblocked work.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA-STALE, already-duplicated — verdict unchanged
+  from 2026-08-07. This doc now also carries a dated `⚠️ CORRECTION 2026-08-08` banner (this doc's own "0/0
+  non-canonical" headline was achieved by adding values to `_ACCEPTED_EXCEPTIONS`, not by genuinely canonicalising them
+  — real gap: 21 hidden fan-out bookmakers, `KALSHI`, a blank venue, uppercase `ODDS`) — but that correction does not
+  reopen this doc's own sole tracked todo (`LC_TARBALL_FRESHNESS=enforce`, already extracted into
+  `sports_satellite_ao_dispatch_batch10_2026_08_06.md` todo 3, `assigned_vm: planning`); the panel-badging fix the
+  correction names is owned end-to-end by `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`'s "The panel"
+  section, not by this doc. No new open work here, no reclassification.

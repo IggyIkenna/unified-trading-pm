@@ -956,3 +956,9 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   new extractable work beyond batch7's prior extraction.
 - **context-scout 2026-08-07**: re-verified context_scope, no change needed (6 entries) -- the 2026-08-06 commit was a
   referrer-path fix only (an archived sibling's path updated in prose), no new reference target.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid, on citation alone — this doc's own
+  frontmatter carries `depends_on: [defi_track01_per_instrument_and_canon_id_2026_07_24,
+  defi_lending_writer_retire_prerequisite_2026_07_20]` with `gate_on_depends: true` (Half-B historical
+  canonicalisation is machine-held on Track 1 landing). Per the HARD RULE (an explicit `depends_on`+`gate_on_depends`
+  gate = KEEP-NA on citation alone, never re-litigated), the whole-doc-flip question doesn't reach individual-todo
+  assessment. Not re-read line-by-line this round. Doc stays `assigned_vm: NA`.

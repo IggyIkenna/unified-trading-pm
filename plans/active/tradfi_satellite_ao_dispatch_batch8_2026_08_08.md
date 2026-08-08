@@ -64,6 +64,7 @@ source: >-
   (`tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s todo 1) is deferred, not drafted — see Deferred —
   conflict-gated below.
 assigned_role: data_engineering
+effort: max
 sequential: false
 drift_direction: advance-code
 context_scope:

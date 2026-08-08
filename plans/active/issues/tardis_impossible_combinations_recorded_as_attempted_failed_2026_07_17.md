@@ -34,7 +34,8 @@ source:
   - Operator questions 2026-07-17 ("is it doing data that doesnt exist or is it just skipping", "why you looking for
     wrong symbol dont we have a converter / mapping", "is it the date (available for and to?)") - all three proved
     correct against live measurement; the date hypothesis in particular surfaced a class I had missed.
-assigned_vm: NA
+assigned_vm: planning
+execution_scope: orchestrator-agent
 assigned_role: data_engineering
 priority: P0
 estimate_class: refactor
@@ -42,7 +43,6 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
 drift_direction: advance-code
 parent_epic: cefi_master
-execution_scope: local-only
 depends_on: []
 last_updated: 2026-07-17
 locked_by:
@@ -120,10 +120,14 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
 
 ## Todos
 
-- [ ] [CODE] P0. Gate the Tardis request universe on the vendor catalog (symbol x data_type x date-range). Cache the
+- [x] ✅ [CODE] P0. Gate the Tardis request universe on the vendor catalog (symbol x data_type x date-range). Cache the
       per-venue catalog; refresh daily. This is the operator's "impossible combinations" exclusion with the VENDOR as
       the authority — coordinate with the in-flight `coverage_exclusions` work in unified-api-contracts (another agent,
-      live as of 2026-07-17).
+      live as of 2026-07-17). — **DONE**: `market-tick-data-service@8e406dbb` + `market-tick-data-service@07cafbbb`
+      (2026-08-08) — new `tardis_vendor_catalog.py` gates every per-symbol request on Tardis's own
+      `GET /v1/exchanges/<venue>` `datasets.symbols[]` catalog (symbol-in-catalog AND data_type-in-dataTypes AND
+      availableSince<=date<=availableTo), fails open on any fetch/parse error, excluded combinations recorded as honest
+      absence (never `attempted_failed`).
 - [x] ✅ [CODE] P0. Stop recording impossible combos as `attempted_failed`. Distinguish by Tardis JSON code: `140`/`300`
       -> honest absence / excluded (NOT the denominator); keep 5xx/429/`274` -> `attempted_failed` (genuinely
       transient). The body is ALREADY captured on `TardisHTTPError` (added for the 274 lock) — it is simply discarded on
@@ -133,30 +137,49 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
       before anything tries to size this. — **VERIFIED DONE 2026-07-26**: the same commit `a7569298` already added
       `code=%s` to both 400-path log lines (streaming + non-streaming).
 - [ ] [DATA] P1. Size the damage: count existing `attempted_failed` rows attributable to 400s, and purge/reclassify them
-      (snapshot-first, like the 2026-07-17 eu purge). Expect a real coverage-% correction upward.
-      **Sizing half DONE 2026-07-27** (`market-tick-data-service@c36d35d1`) via
+      (snapshot-first, like the 2026-07-17 eu purge). Expect a real coverage-% correction upward. **Sizing half DONE
+      2026-07-27** (`market-tick-data-service@c36d35d1`) via
       `scripts/reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py` (dry-run only, `--apply` never invoked —
       see Progress Log for the count + methodology). The `--apply` half remains open. **NOT operator-gated
       (round5-cefi-question-resolution 2026-08-08)** — two independent blockers, both resolved: (1) **reversibility**:
       fresh same-run check (2026-08-08),
-      `gcloud storage buckets describe gs://market-data-tick-cefi-prd-central-element-323112
-      --format="value(softDeletePolicy.retentionDurationSeconds)"` → **604800** (the 7-day floor `plans/active/task_template.md`
-      finding T requires), and the script is already backup-first/snapshot-before-write by design (same shape as the
-      cited EU-purge precedent) — qualifies under finding T/U, not a whole-bucket destroy. (2) **taxonomy**: the
-      script's own Progress Log already names the precedent to follow —
-      `reclass_tradfi_expected_reason_attempted_failed_2026_07_15.py`'s `EXPECTED_SOURCE_NOT_AVAILABLE` pattern (a raw
-      descriptive `error_reason` string for bulk historical reclass, since `record_empty()`'s enum-membership check
-      can't be used retroactively) — apply the SAME pattern here (`EXPECTED_TARDIS_STRUCTURAL_ABSENCE_400`, already
-      the script's own proposed string) rather than routing through the in-flight `coverage_exclusions` registry,
-      which is for NEW writes going forward, not backfilling historical rows. Also directly reinforced by CLAUDE.md's
-      "Data pipeline correctness is the heartbeat" HARD RULE (fix in FULL, no deadline deferrals) — leaving 5,572+
-      rows permanently mis-denominatored is exactly the kind of incomplete fix that rule exists to prevent. Re-run the
-      sizing script fresh before `--apply` (counts drift, per the script's own note) — the actual `--apply` was not
-      executed in this pass (documentation-question audit, not an implementation dispatch).
+      `gcloud storage buckets describe gs://market-data-tick-cefi-prd-central-element-323112     --format="value(softDeletePolicy.retentionDurationSeconds)"`
+      → **604800** (the 7-day floor `plans/active/task_template.md` finding T requires), and the script is already
+      backup-first/snapshot-before-write by design (same shape as the cited EU-purge precedent) — qualifies under
+      finding T/U, not a whole-bucket destroy. (2) **taxonomy**: the script's own Progress Log already names the
+      precedent to follow — `reclass_tradfi_expected_reason_attempted_failed_2026_07_15.py`'s
+      `EXPECTED_SOURCE_NOT_AVAILABLE` pattern (a raw descriptive `error_reason` string for bulk historical reclass,
+      since `record_empty()`'s enum-membership check can't be used retroactively) — apply the SAME pattern here
+      (`EXPECTED_TARDIS_STRUCTURAL_ABSENCE_400`, already the script's own proposed string) rather than routing through
+      the in-flight `coverage_exclusions` registry, which is for NEW writes going forward, not backfilling historical
+      rows. Also directly reinforced by CLAUDE.md's "Data pipeline correctness is the heartbeat" HARD RULE (fix in FULL,
+      no deadline deferrals) — leaving 5,572+ rows permanently mis-denominatored is exactly the kind of incomplete fix
+      that rule exists to prevent. Re-run the sizing script fresh before `--apply` (counts drift, per the script's own
+      note) — the actual `--apply` was not executed in this pass (documentation-question audit, not an implementation
+      dispatch).
 - [x] ✅ [CONTRACT] P2. Register Tardis error codes in UAC (`classify_venue_error` currently knows none), so the
       honest-absence-vs-fetch-failure decision is contract-driven rather than string-matched on `"Empty CSV"`. — **DONE
       2026-07-26**: `unified-api-contracts@c144f975` — `140`/`300` registered as `ErrorAction.SKIP`, 2 new unit tests,
       QG green.
+- [ ] [CODE] P2. **Verify the shipped vendor-catalog gate (`tardis_vendor_catalog.py`,
+      `market-tick-data-service@8e406dbb`) reads its `dataTypes`/`availableSince`/`availableTo` from the RIGHT array —
+      likely reading the wrong one, which silently degrades the data_type dimension of the 3-condition gate to a no-op
+      (fail-open-safe, not a correctness bug, but an incomplete implementation of this todo's own spec).** Evidence: (1)
+      `_fetch_vendor_catalog` in `tardis_vendor_catalog.py` parses `exchange_info.get("availableSymbols", [])` and reads
+      `sym.get("dataTypes", [])` off THOSE entries — but this issue doc's own "The fix" section (verified live against
+      the real API, 2026-07-17) states the 3-tuple lives under `datasets.symbols[]`, a SEPARATE array, not
+      `availableSymbols[]`. (2) `unified_api_contracts.external.tardis.schemas.TardisAvailableSymbol` (the pre-existing,
+      already-live model for `availableSymbols[]` entries, used by instruments-service's own enumeration) deliberately
+      has NO `dataTypes` field — only `id`/`type`/`availableSince`/`availableTo` — consistent with `dataTypes` genuinely
+      not existing on that array in the real response. (3) The shipped code's own unit tests
+      (`tests/unit/test_tardis_vendor_catalog.py`) mock `availableSymbols[]` entries WITH a fabricated `dataTypes` key
+      to make the tests pass — i.e., the tests validate the code's assumption, not the real API shape, so a live
+      response never exercised this. If confirmed: point the fetch at `datasets.symbols[]` instead (or additionally), or
+      run one live authenticated `GET /v1/exchanges/<venue>` call and diff the two arrays to settle this before touching
+      code. Low severity — the `availableSince`/`availableTo`/symbol-presence dimensions likely still work (those DO
+      exist on `availableSymbols[]`), and the reactive 400 classification (`tardis_csv_transport.is_structural_absence`,
+      already shipped) remains the correctness backstop regardless — this is a missed proactive-optimization dimension,
+      not a denominator-corruption or infinite-retry risk. (repo: market-tick-data-service)
 
 ## Progress Log (append-only)
 
@@ -207,9 +230,57 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
   P0 vendor-catalog-gate is still entangled with the unresolved canonical-enum-vs-coverage_exclusions taxonomy decision
   the script explicitly declines to make; the P1 `--apply` purge half is still operator-gated + snapshot- first (counts
   drift). No duplicate-claim risk found (grepped all active cefi_master planning docs — no overlap).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. Both remaining
+  items are now bounded. (1) **P1 `--apply` purge** — the doc's own `round5-cefi-question-resolution 2026-08-08` entry
+  above already resolved both blockers this round exists to check for: reversibility (fresh same-run
+  `softDeletePolicy.retentionDurationSeconds` check = 604800s, qualifying under `task_template.md` finding T) and
+  taxonomy (use the `EXPECTED_TARDIS_STRUCTURAL_ABSENCE_400` raw-string precedent, same shape as the cited
+  `reclass_tradfi_expected_reason_attempted_failed_2026_07_15.py` pattern — matches cheat-sheet ruling #6 exactly: "a
+  doc whose only remaining gate is 'needs a human at the keyboard for an already-approved, reversibility-provable
+  delete' may now be reclassifiable"). That resolution session explicitly stopped short of `--apply` itself
+  ("documentation-question audit, not an implementation dispatch") — the remaining work is mechanical: re-run the sizing
+  script fresh (counts drift per its own note), confirm the gate, `--apply`. (2) **P0 vendor-catalog gate** —
+  re-verified the "coordinate with the in-flight `coverage_exclusions` work" blocker this doc has carried since
+  2026-07-17: `unified-api-contracts/unified_api_contracts/canonical/coverage_exclusions.py` (git log: created +
+  finished same-day 2026-07-17, commit `a1284b3d`, untouched since — genuinely NOT in-flight anymore) is a manually
+  curated, evidence-gated registry for permanent historical outage windows (mandatory `evidence_uri`/`verified_by` per
+  entry) — a structurally different mechanism from this todo's live, machine-refreshed per-venue Tardis catalog cache
+  (`GET /v1/exchanges/<venue>`, refreshed daily, thousands of symbols). The two don't actually intersect; the
+  "coordination" concern was a 2026-07-17-vintage hedge that no longer applies now that `coverage_exclusions` has
+  shipped as a stable, orthogonal registry. The fix (already-checked `exc.is_structural_absence` classification exists
+  at `tardis_csv_transport.py`'s streaming-download 400 handler, confirming the reactive half is live) is a
+  self-contained, fully-specified implementation (exact request shape + 3-condition gate given in "The fix" section
+  above) — no design call remains. Conflict-check: grepped `plans/active/cefi_satellite_ao_dispatch_batch{9,10}*`,
+  `cross_cutting_satellite_ao_dispatch_batch1*`, `defi_satellite_ao_dispatch_batch6*_finalize`, and
+  `cefi_consolidated_closeout_2026_07_18.md`/`cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` — all
+  mentions are cross-references/rollup listings of this doc's own still-open items, none is an active AO dispatch
+  implementing either todo. **Note for whoever reads `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s "Deferred —
+  human-only" listing for this doc**: that snapshot predates this doc's own `round5-cefi-question-resolution 2026-08-08`
+  entry above, which supersedes it. Companion finalize plan:
+  `/plans/active/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md`.
 
 ## Progress Log
 
+- **2026-08-08 (slot-13, task `tardis_impossible_combinations_recorded_as_attempted_failed-003`)**: dispatched the SAME
+  `[CODE] P0` vendor-catalog-gate todo slot-29/slot-33 already closed below — a THIRD concurrent pickup of this task.
+  Built an independent implementation (new `tardis_catalog_gate.py` + a UAC `TardisDatasetSymbol` schema addition for
+  `datasets.symbols[]`) before fresh-pulling mid-session and discovering the checkbox was already flipped with shipped
+  commits. Discarded this slot's own uncommitted duplicate work entirely (never staged/committed — no conflicting second
+  implementation shipped) after verifying the landed code addresses the todo. While building my own version I
+  cross-checked the issue doc's own "The fix" spec (`datasets.symbols[]` carries `dataTypes`) against the SHIPPED
+  `tardis_vendor_catalog.py`, which instead reads `dataTypes` off `availableSymbols[]` — filed as a new `[CODE] P2` todo
+  above (evidenced against the pre-existing `TardisAvailableSymbol` UAC schema, which has no `dataTypes` field, and
+  against the shipped code's own test fixtures, which fabricate a `dataTypes` key on `availableSymbols` mocks rather
+  than asserting the real API shape). Low severity — fail-open, reactive 400 classification remains the correctness
+  backstop — so filed as a follow-up rather than reopening this todo.
+- **2026-08-08 (slot-29)**: flipped the `[CODE] P0` vendor-catalog-gate checkbox — the fix landed on
+  `origin/live-defi-rollout` via `market-tick-data-service@8e406dbb` (gate) + `@07cafbbb` (file-size-cap follow-up,
+  moved manifest emission into `tardis_vendor_catalog.py`), shipped by slot-33 concurrently with this slot's independent
+  implementation of the same todo (a genuine dispatch-collision — both slots picked up this task around the same time).
+  Verified slot-33's landed code fast-forward-clean on this slot's `market-tick-data-service` worktree and matches the
+  todo's spec (3-condition gate, fail-open, honest-absence manifest write) before discarding this slot's own duplicate
+  WIP and flipping the checkbox against the ALREADY-SHIPPED commits rather than re-shipping a conflicting second
+  implementation.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (2 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped in
   `unified-api-contracts/.../coverage_exclusions.py` (the in-flight UAC work the open `[CODE] P0` vendor-catalog-gate

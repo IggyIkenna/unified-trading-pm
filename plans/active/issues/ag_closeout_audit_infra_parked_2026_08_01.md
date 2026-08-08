@@ -221,6 +221,14 @@ no drift:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — unchanged since 2026-08-07. Re-read
+  end-to-end; `grep -cE '^- \[ \]'` = 1, matching (the `CITE_RE` self-referential-citation hardening item, finding 5).
+  Checked against today's operator-Q&A rulings cheat sheet: no precedent applies. Also checked the sibling
+  `ag_closeout_audit_infra_parked_2026_08_03.md`'s finding 13, which carries the SAME item and explicitly states it
+  "needs a design decision (e.g., only count a mention inside an actual todo line, or within N lines of a `Source:`
+  marker) that this run did not make" — that doc's own 2026-08-03 na-eligibility-audit verdict independently reached
+  the same conclusion ("neither clears the bounded/deterministic bar for RECLASSIFY"). Consistent, unchanged. NA
+  correct.
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06. Re-read end-to-end;
   `grep -cE '^- \[ \]'` = 1, matching. The sole remaining open item (harden `generate_ag_closeout_audit_candidates.py`'s
   `CITE_RE` so a Progress Log narrative mention doesn't count as a citation) is still a genuine, unresolved, corpus-wide

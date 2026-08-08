@@ -327,3 +327,12 @@ todo's isolated wording. No reclassification.
   data." Flipped Phase C to DONE-BY-FAIT-ACCOMPLI citing that conclusion — no residual gap-fill work remains, and the
   source bucket the original `--also-legacy` step would read from is gone anyway (confirmed 404, deleted 2026-07-14).
   Phases D/E remain open, unaffected by this change (they don't touch the legacy bucket).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-confirmed against today's 9
+  cheat-sheet rulings (IAM self-service, D16 all-repos, S5.1 tiering, context_scope default, escalation-N default,
+  reversibility-qualified deletes, Option B retirement, AWS lower-stakes, script-flag self-service precedent) — none
+  apply here. Phases D (manifest `_index` rebuild `--apply`) and E (verify) remain real-production, VM-scale
+  manifest-rewrite work on the data-correctness critical path; this doc's own banner ("all steps human-executed...
+  never an autonomous-agent action") and 6 prior na-eligibility-audit passes (07-31 through 08-07) all reach the same
+  verdict. Not a delete (ruling #6 doesn't apply), not IAM, not a scripted-flag gap — a genuine real-write VM-scale
+  step this corpus has historically kept human-supervised given its track record of hidden production surprises on
+  this exact migration.

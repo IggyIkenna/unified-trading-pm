@@ -928,3 +928,11 @@ overwrite.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — open-item count updated 4->3 (1 item shipped since 2026-08-03);
   2 dependency-blocked, 1 operator question remain.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: re-verified via `grep -n '^\s*- \[ \]'` — exactly 2
+  open todos live today (~line 407, ~line 462), both the SAME literal duplicated `[DIAG] P0` ("audit every consumer
+  above for the same staleness") this doc's own text has annotated since 2026-07-30: **KEEP-NA-STALE,
+  already-duplicated** — both cite "Owned by `sports_consolidated_closeout_2026_07_19.md` Track E," and Track E's
+  matching `[CODE] P1` ("repoint the remaining stale `entity=fixtures` consumers, 7-file list") is confirmed still open
+  there (re-read live). The `[PROCESS] P1`/§R codex-authoring todo and the `[CODE] P2`/batch6 todo that the 2026-08-03
+  marker also tracked are both now `[x]` in this doc (shipped since) — not part of today's open count. No
+  reclassification: this doc's remaining open work is a citation, not new dispatchable content.

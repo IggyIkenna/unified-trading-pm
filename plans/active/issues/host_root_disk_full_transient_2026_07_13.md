@@ -132,6 +132,24 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid. The sole open todo (2, bundling
+  sub-items a/b/c) is unchanged in count (`grep -cE '^- \[ \]'` = 1) but its content moved substantially today: (a)
+  DONE (operator ran the cron installer 2026-08-07); (b) INVESTIGATED today by
+  `infra_satellite_ao_dispatch_batch6_2026_08_02.md`'s own `[INFRA] P3` todo (also `[x]` DONE today,
+  cross-referenced back to this doc) — root cause confirmed (fleet-wide zero cache→venv hardlink dedup,
+  `scripts/setup.sh` never exporting `UV_LINK_MODE`/`UV_CACHE_DIR` itself is the leading candidate) but the
+  investigating agent's own text explicitly declines to treat the fix as ready-to-dispatch as-is: "the exact
+  regression trigger needs a live-tracing follow-up (out of this read-only investigation's scope)... Recommended next
+  step (not this task's to do — a separate, properly-scoped follow-up)." That self-assessment from the same-day
+  investigating worker is a stronger signal than a generic "looks bounded" read — a worker already closest to the
+  problem judged it not yet dispatchable without further scoping. (c) remains an explicit fallback contingent on (b)'s
+  live-tracing outcome. Net: this doc's own literal remaining todo (c, the liveness-aware prune) is still genuinely
+  gated on a not-yet-done follow-up investigation, so it does not clear the bounded/deterministic bar today — but the
+  concrete 2-step fix now on record (add `UV_LINK_MODE=hardlink`/`UV_CACHE_DIR` exports directly to `scripts/setup.sh`,
+  verify via an `nlink>1` check on one repo) is a strong RECLASSIFY-candidate for a fresh, properly-scoped dispatch
+  once that live-tracing step lands — flagging, not actioned this run (consistent with this doc's own established
+  practice, e.g. the 2026-08-07 marker's identical "flagging as a RECLASSIFY-candidate... not actioned this run").
+  `assigned_vm: NA` correct.
 - **2026-08-08 (infra, `infra_satellite_ao_dispatch_batch6-001`, root-cause investigation of sub-item (b)).** **Root
   cause: CONFIRMED REGRESSION to zero cache→venv hardlink dedup, fleet-wide — not a cache-keying mismatch, not a
   cross-filesystem fallback.** Read-only investigation, no `.venv` modified anywhere, no fresh installs triggered.

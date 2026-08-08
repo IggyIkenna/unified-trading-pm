@@ -261,3 +261,7 @@ HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mir
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — re-confirms 2026-07-30; all 10 open todos are gated behind the
   BLOCKED-INFRA tarball-persistence 3-option operator decision, prod-bucket deletes (human-only hard stop), or per-AG L3
   plans' own C-GREEN gates this plan only coordinates, not executes.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
+  today's round5-cross-cutting-audit entry cleared the tarball-persistence operator-gate on the
+  `[BLOCKED-INFRA]` P0 fan-out item, but the doc's other 9 open todos remain gated behind prod-bucket deletes
+  (human-only hard stop) or per-AG L3-plan C-GREEN gates this plan only coordinates -- whole doc stays NA.

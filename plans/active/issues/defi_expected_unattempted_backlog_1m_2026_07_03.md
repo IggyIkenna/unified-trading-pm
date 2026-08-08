@@ -12,20 +12,24 @@ status: open
 nature: record
 asset_group: [defi]
 stage: [data]
-repos: [instruments-service]
+repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [manifest, expected-unattempted, enumerator, honest-coverage, defi, backlog]
-related: [plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md]
+related:
+  [
+    plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
+    /plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md,
+  ]
 created: 2026-07-03
 author: unknown
 parent_epic: instruments_master
 source: [defi expected_unattempted manifest backlog finding 2026-07-03 — 1.38M rows, operator decision pending]
-assigned_vm: NA
-execution_scope: local-only
-priority: P1
-estimate_class: infra
-estimate_baseline_ai_days: 1
-estimate_calibrated_ai_days: 0.8
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: refactor
+estimate_baseline_ai_days: 0.5
+estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
@@ -36,9 +40,10 @@ resolved_by:
 context_scope:
   [
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
-    unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
+    unified-api-contracts/unified_api_contracts/registry/possible_manifest.py,
+    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py,
     instruments-service/scripts/enumerate_expected_universe.py,
-    /codex/02-data/honest-coverage-model.md,
+    /plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md,
   ]
 ---
 
@@ -401,3 +406,19 @@ above are otherwise fully reproducible via the shipped CLI.
   aliases + widen `("defi","lending")` `oracle_prices` validity per the finding (code change NOT implemented this
   session — task scope was ruling + reclassification only). Doc's `assigned_vm: NA` left unchanged (not asked to flip it
   this pass; the new `[SCRIPT]` todo is dispatchable once a future triage pass promotes it).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning` (was `NA`),
+  `execution_scope: orchestrator-agent`. The sole remaining open item (the indented `[SCRIPT] P2` alias/validity todo)
+  is exactly the deterministic, bounded follow-up the 2026-08-08 SSOT ruling above invited — add 2 named dict entries
+  (`market_data_categories._INSTRUMENT_TYPE_ALIASES`), widen 5 named protocols' declared `data_types` in
+  `capability_declarations/_defi.py`, delete the now-confirmed-dead `venue_mapping.DataTypeConfig` + its one unit test,
+  with an explicit `Done when` (two `valid_data_types_for_instrument_type` calls return non-`None` frozensets
+  containing `oracle_prices`; existing tests pass; a new regression test added). No remaining judgment call. Priority
+  downgraded doc-level P1->P2 to match the sole remaining todo's own tag. Conflict-check clear:
+  `defi_satellite_ao_dispatch_batch6/batch9/batch10` (all still `status: active`) each cite this doc only in
+  pre-2026-08-08 "cite-only"/Deferred informational lists characterizing it as SSOT-gated — none carries an active
+  `- [ ]` todo claiming this specific alias-fix work, and all three citations predate today's SSOT ruling (stale, not
+  a live conflict). `repos:` widened to include `unified-api-contracts`; `context_scope` refreshed to the 3
+  live-consumed files the SSOT ruling identified, dropping the now-confirmed-dead `venue_mapping.py`. Gated finalize
+  companion authored: `defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md`. `locked_by:
+  live-defi-rollout` (stale since 2026-07-03, a branch-name artifact — every na-eligibility-audit round since has
+  classified/edited this doc under the same lock without incident) not treated as a blocker.

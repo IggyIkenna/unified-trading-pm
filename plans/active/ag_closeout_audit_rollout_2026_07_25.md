@@ -988,3 +988,7 @@ real, active, AO-dispatchable work — the batched-decisions gate that held it b
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is the mass-flip gated on the operator personally
   running /ag-closeout-audit + /plan-reconcile.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale — the sole open todo's "mass-flip
+  all 5 AGs at once" framing is superseded by reality (cefi alone is now at incremental batch10, scheduled-timer-
+  produced, not a manual mass-flip). Not flipped/archived here — 6-asset_group cross-cutting doc, out of a cefi-scoped
+  sweep's authority; recommend a dedicated cross-cutting pass close + archive this doc (line-cap-tight already).

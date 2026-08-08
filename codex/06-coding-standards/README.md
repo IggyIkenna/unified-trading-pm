@@ -10,7 +10,7 @@ All services follow a unified set of coding standards enforced by quality gates,
 key rules: no `os.getenv()` / `os.environ.get()` / `os.environ[KEY]` (use `UnifiedCloudConfig` for config values,
 `get_secret_client()` for secrets), no bare `except:` (use `@handle_api_errors`), no `print()` (use `logging`), no naive
 datetimes (use UTC), imports at top of file, ruff for formatting/linting. Quality gates run in two phases (auto-fix then
-verify) and must pass before quickmerge. The 51-point production readiness checklist governs all services.
+verify) and must pass before quickmerge. The 112-item production readiness checklist governs all services.
 
 **Cloud provider SSOT:**
 
@@ -543,17 +543,24 @@ Every service MUST have:
 
 ## Production Readiness Checklist
 
-The 52-point checklist in `deployment-service/configs/checklist.template.yaml` covers:
+The 112-item checklist in `deployment-service/configs/checklist.template.yaml` (reconciled 2026-08-08 from the two prior
+codex templates -- see that file's header) covers 10 category areas:
 
-| Phase                              | Items       | Focus                                                                                                                                                                      |
-| ---------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Phase 1: Repository Foundation     | Items 1-6   | Repo, deps, config, logging, Dockerfile                                                                                                                                    |
-| Phase 2: Testing and Quality       | Items 7-12  | Unit/e2e/smoke tests, quality gates, CI                                                                                                                                    |
-| Phase 3: Deployment Infrastructure | Items 13-18 | Sharding, dependencies, Terraform                                                                                                                                          |
-| Phase 4: Local Validation          | Items 19-22 | Local runs, schema validation                                                                                                                                              |
-| Phase 5: Production Deployment     | Items 23-25 | Image builds, data completeness                                                                                                                                            |
-| Phase 6: Documentation             | Items 26-33 | README, architecture, schemas                                                                                                                                              |
-| Phase 7: Data Catalogue            | Items 34-37 | Shard enumeration, pipeline chain. ManifestWriter writes Parquet manifests; ManifestReader queries via DuckDB; deployment-service data-status --source manifest\|gcs\|auto |
+| Category                     | Area                                            | Items |
+| ---------------------------- | ----------------------------------------------- | ----- |
+| DOM (01-domain)              | Domain model, signal architecture               | 8     |
+| DAT (02-data)                | Data governance, schemas, storage               | 20    |
+| OBS (03-observability)       | Lifecycle events, logging, monitoring, alerting | 14    |
+| ARC (04-architecture)        | Pipeline, sharding, compute, communication      | 11    |
+| INF (05-infrastructure)      | Terraform, CI/CD, Docker, deployment            | 15    |
+| COD (06-coding-standards)    | Config, error handling, tests, quality gates    | 25    |
+| SEC (07-security)            | Secrets, credentials, dependency scanning       | 7     |
+| WRK (08-workflows)           | DR, rollback, reconciliation, lifecycle         | 6     |
+| ANL (09-analysis)            | Backtest, live performance, cost                | 4     |
+| BASE (11-project-management) | Service classification, MVP coverage            | 2     |
+
+Item counts are read directly from the checklist file's own `items:` list and `# Item Count by Area` footer comment --
+if they ever drift, the file is the source of truth, not this table.
 
 ### Service Hardening: D1→D5 progression
 

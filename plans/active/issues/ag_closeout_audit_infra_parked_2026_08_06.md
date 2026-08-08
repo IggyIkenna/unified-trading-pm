@@ -203,13 +203,25 @@ findings since each produced either a durable entry here or a shipped fix).
       FIFTH consecutive day open) — set line 39 to `assigned_vm: planning` (currently blank), then verify the
       `[BACKEND] P3` todo actually reaches the live AO backlog (live-backlog dispatch itself not independently
       re-verified this pass — the frontmatter fix is the mechanical fact this audit checks).
-- [ ] [OPERATOR] P1. **Investigate the missing stash-backup bundle** (finding 11, third consecutive day confirmed
-      absent) — confirm whether `instruments-service-agentwork-sports-2026-07-13-stashes.bundle` (67.8 MB) was relocated
-      to a durable location or represents an unrecovered loss. Update
+- [x] ✅ [OPERATOR] P1. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — RESOLVED 2026-08-07,
+      operator accepted the loss.** `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`
+      is now archived with `status: resolved` and `resolved_by:` recording the operator's ruling ("unrecovered loss,
+      accepted, no further investigation. Both the source directory and the stash-backup bundle are confirmed genuinely
+      absent; the operator declined recovery."). Original text preserved below for record. Was: **Investigate the
+      missing stash-backup bundle** (finding 11, third consecutive day confirmed absent) — confirm whether
+      `instruments-service-agentwork-sports-2026-07-13-stashes.bundle` (67.8 MB) was relocated to a durable location or
+      represents an unrecovered loss. Update
       `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` with the outcome either way.
-- [ ] [OPERATOR] P1. **Resolve `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`'s `asset_group` mistag**
-      (finding 6, fourth consecutive day) — pick one of the 3 parked options (authorize tranche retag / corpus-wide
-      non-sharded pass / `owning_tranche()` fallback change).
+- [x] ✅ [OPERATOR] P1. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — RULED 2026-08-07 (verified
+      by `ag_closeout_audit_infra_parked_2026_08_07.md`'s own todo).**
+      `issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` is now live `asset_group: [ao]` (confirmed
+      via direct `grep '^asset_group:'` this pass — was `[infrastructure]`). The operator ruled option B+C combined
+      ("make it correct"): retagged both live instances of this mistag class (this doc +
+      `ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md`) and added authoring-time guidance to
+      `plans/active/task_template.md`'s `asset_group` field so the pattern stops recurring. Original text preserved
+      below for record. Was: **Resolve `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`'s `asset_group`
+      mistag** (finding 6, fourth consecutive day) — pick one of the 3 parked options (authorize tranche retag /
+      corpus-wide non-sharded pass / `owning_tranche()` fallback change).
 - [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-06 (governance sweep, commit `unified-trading-pm@de1d795de1`).** All 4
       batches reviewed and flipped `status: active`. The "missing finalize twins for batch4/batch5" sub-note is moot —
       `check_finalize_plan_coverage.py` passed with 0 violations post-activation, confirming both correctly qualify for
@@ -241,6 +253,13 @@ findings since each produced either a durable entry here or a shipped fix).
   Sources (Track 2: cloud_run_traffic_pin; Track 3: smoke_matrix) → `check_ag_closeout_linkage.py` infra orphans 2→0.
   **Ledger**: 3 new parked findings + 4 re-verified carry-forwards (all still open) + 6 net-new docs classified
   - 1 linkage fix, 3 entries written above — balanced.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale items — closed 2 of 4 open todos with
+  hard evidence: (1) finding 11's stash-backup-bundle investigation — the source doc is now archived,
+  `status: resolved`, operator ruling recorded (2026-08-07, unrecovered loss accepted); (2) finding 6's `asset_group`
+  mistag — `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` is now live `asset_group: [ao]`, confirmed
+  by direct grep this pass, per the operator's 2026-08-07 B+C ruling recorded in the successor
+  `ag_closeout_audit_infra_parked_2026_08_07.md`. Left findings 12/13 (`[DOCS] P3` design/scoping calls) open — checked
+  against today's operator-Q&A cheat sheet, no precedent applies to either. Doc stays NA.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) -- replaced the batch9/hub-only pair with
   the two oldest still-open carried findings' direct targets (finding 11's stash-clone doc, finding 6's ao_self_pull
   mistag doc), kept the predecessor doc + this run's own headline finding-15 target + the tranche hub.

@@ -28,6 +28,7 @@ context_scope:
   [
     /plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
+    /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md,
     /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
     market-tick-data-service/market_tick_data_service/scripts/reclass_cefi_futures_chain_no_tardis_source.py,
     deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh,
@@ -233,3 +234,12 @@ argument for that issue's Option A). Cross-linked from there.
 - **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — genuine data-pipeline-correctness
   blocker (DERIBIT options/futures chain ~100% attempted_failed); the doc's own 2026-07-18 correction banner rules out
   the literal action in its remaining open checkbox, leaving no bounded dispatchable action.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA-STALE (already-duplicated), citation-fix
+  only — this doc's remaining ground (the futures_chain/options_chain gate, pending Track-2 actually running) is
+  fully claimed by `cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md` (confirmed independently by
+  `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s "Archivable-after-planned-work" section, same-day, separate
+  `/ag-closeout-audit` run: "fully claimed by `cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md`").
+  Added that finalize doc to `related:`/`context_scope` below (was previously only citing the non-finalize
+  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`). Not reclassified (`assigned_vm` stays `NA`) — this is a
+  stale-citation correction, not a dispatch decision, and the doc also carries `locked_by: live-defi-rollout` /
+  `locked_since: 2026-05-21`, noted but not touched (no archival attempted here).

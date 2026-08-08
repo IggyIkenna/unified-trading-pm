@@ -115,17 +115,22 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
       `ao_fleet_health_investigation_followups_2026_08_06.md`'s own PR #791 todo (same underlying fix — this doc's
       Problem 2 and that doc's #791 backmerge are the same conflict, closed together). Evidence:
       agent-orchestrator@5872b3e5. (repo: agent-orchestrator)
-- [ ] [DEVOPS] P3. Rollout-process gap (flagged by the same audit, not `agent-orchestrator`-specific): today is the
+- [ ] [SCRIPT] P3. Rollout-process gap (flagged by the same audit, not `agent-orchestrator`-specific): today is the
       SECOND time in one day a shared-CI-repo-extraction/rollout event landed new/moved workflow files on
       `live-defi-rollout` without every affected repo's `main` (or even every repo's own LDR — see the 3-repo
       sub-finding in the strategy-service doc's "Fleet-wide audit" section) being caught up in the same pass, each time
       reproducing the identical chicken-and-egg (the file's absence breaks the one mechanism — `main-backmerge-to-ldr` —
       that would normally deliver it). `scripts/workflow-templates/rollout-workflow-templates.sh` only writes local
       files into whichever branch happens to be checked out per-repo at run time; it does not verify parity across
-      `main` and every repo's `live-defi-rollout`, and does not push. Consider having the rollout script (or the fleet
-      bot's health check) assert that every repo's `main` carries the files its own `main-backmerge-to-ldr.yml` needs
-      before a rollout is considered complete. Operator/rollout-process-owner decision on whether to build this now or
-      accept the recurring cost.
+      `main` and every repo's `live-defi-rollout`, and does not push. **operator ruling 2026-08-08 (NA-corpus blocker
+      digest round 5, id=54)**: yes, add the cross-branch parity check. Scoped implementation: extend
+      `rollout-workflow-templates.sh` with a post-rollout verification pass — for every repo in the rollout's target
+      set, `git show origin/main:<workflow-path>` vs `git show origin/live-defi-rollout:<workflow-path>` (byte-compare,
+      per file the rollout just wrote/moved) and fail the rollout run (non-zero exit, printed per-repo diff summary) if
+      any target repo's `main` doesn't yet carry the same content its own `main-backmerge-to-ldr.yml` will need —
+      surfacing the chicken-and-egg gap AT rollout time instead of at the next promotion attempt. A rollout is not
+      "complete" until this check is green for every repo in scope. (repo: unified-trading-pm,
+      `scripts/workflow-templates/rollout-workflow-templates.sh`)
 
 ## Progress Log
 

@@ -464,3 +464,13 @@ Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit
   "is the pipeline dormant, should it relaunch" operator-question framing is now retired — the pipeline IS alive
   (since 2026-07-31); the remaining gap is a bounded technical one (wire `depth_of_book_10` into the new event-log
   live-capture dispatcher). See the todo's own annotation above.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid overall — todo 7 is now bounded per
+  the round5 finding directly above (a scoped wiring gap, not an operator question), but todo 5 remains explicitly
+  `BLOCKED-OPERATOR-DECISION` (Option A/MDPS-column-extension authorization gated on todo 7's backtest work actually
+  being picked up — an explicit dated ruling, not re-litigated per this sweep's own rules). Whole-doc flip stays
+  blocked per the HARD RULE. Cross-checked against `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (today's
+  independent full-corpus audit, authored before this same-day round5 update landed) — its "todo 7 similarly
+  judgment-gated" characterization is now stale; todo 7's re-scoped bounded framing supersedes it.
+  **Recommendation for the next `/ag-closeout-audit` cefi batch (batch11)**: extract todo 7 alone (wire
+  `depth_of_book_10` into the live event-log capture dispatcher) into a satellite AO-dispatch item — not executed in
+  this pass, same reasoning as the other extraction recommendations in this sweep.

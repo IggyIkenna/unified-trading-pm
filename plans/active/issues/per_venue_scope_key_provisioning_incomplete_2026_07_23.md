@@ -151,10 +151,28 @@ All three are real design/priority calls, not something determinable from code o
       scope split. The decision to do this is no longer open; only the credential-creation ACTION remains, and only the
       operator's own Bybit exchange login can perform it (no cloud identity or automation can create a new exchange-side
       API key) — that is why the tag stays `[HUMAN]` rather than moving to an AO execution tag.
-- [ ] [HUMAN] P2. **Decide on OKX/Hyperliquid's scope-separation design**, if wanted at all, since neither fits the
-      Binance/Deribit pattern.
-- [ ] [HUMAN] P3. **Decide whether to build the Aster execution adapter** (scoped above) and/or provision
-      Upbit/Kraken/Bitfinex/Bitget credentials, given none of the 5 currently have any live trading volume.
+- [ ] [BACKEND] P2. **Decide on OKX/Hyperliquid's scope-separation design**, if wanted at all, since neither fits the
+      Binance/Deribit pattern. **APPROVED (operator, 2026-08-08)**: "Build both: OKX/Hyperliquid scope-separation AND
+      the Aster execution adapter" — retagged `[HUMAN]`→`[BACKEND]`. This item's own text already narrows the design
+      space (see table above): OKX is client-scoped only (`exec-{client}-okx-*`, no pooled/house key) so a read/trade/
+      write split needs a per-client design, not a copy of Binance/Deribit's pooled-key pattern; Hyperliquid is a
+      wallet-style EIP-712 agent-wallet blob (`hyperliquid-trade-key`), not a REST key pair, so scope separation there
+      means separate agent wallets with different on-chain authorizations, not three Secret Manager entries. Scope the
+      exact per-venue mechanism (client-scoped OKX sub-keys vs. multi-wallet Hyperliquid) before estimating — this is a
+      genuine build task once scoped, not a config change. Repo: execution-service.
+- [ ] [BACKEND] P2. **Build the Aster execution adapter** (scope already fully specced above, § "Aster — execution
+      adapter doesn't exist; build-scope estimate"). **APPROVED (operator, 2026-08-08)**: "Build both... AND the Aster
+      execution adapter" — retagged `[HUMAN]`→`[BACKEND]`. Concrete scope (unchanged from the analysis above): new
+      `aster_ccxt.py` mirroring `upbit_ccxt.py`'s CCXT-wrapper shape (place/cancel order, fetch balance/positions/fills,
+      sim-mode); add `"aster"` to `factory.py`'s `CCXT_VENUES` + a `_create_ccxt_adapter()` dispatch branch; add an
+      `aster` case to `live_execution_handler.py`'s `_load_venue_trade_credentials` (secrets already exist,
+      `aster-api-key`/`aster-secret-key` — just needs a `service_config.py` field + wiring, no new GCP provisioning for
+      a first unscoped-key version); ~35-40 unit tests mirroring `test_hyperliquid_ccxt.py`. Estimated ~1 day
+      (refactor-tier, established pattern). Repo: execution-service.
+- [ ] [HUMAN] P3. **Decide whether to provision Upbit/Kraken/Bitfinex/Bitget credentials**, given none of the 4
+      currently have any live trading volume. **NOT part of the 2026-08-08 "build both" ruling** — that answer named
+      only OKX/Hyperliquid scope-separation and the Aster adapter; this credential-provisioning question stays an open
+      priority call (also needs the operator's own exchange logins, same class as the Bybit item above).
 
 ## Codex SSOTs
 
@@ -179,3 +197,25 @@ All three are real design/priority calls, not something determinable from code o
   `/plans/archive/2026_08/ag_closeout_audit_cefi_parked_2026_08_06.md`.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 3 open items: 1 credential-blocked (Bybit key, operator's own
   exchange login), 2 operator design/priority calls.
+- **na-corpus-digest-closeout 2026-08-08 (item 29 — OKX/Hyperliquid + Aster)**: operator ruled "Build both:
+  OKX/Hyperliquid scope-separation AND the Aster execution adapter." Retagged both todos `[HUMAN]`→`[BACKEND]` and
+  spelled out the concrete build scope (already mostly pre-specced in this doc's own analysis sections). The
+  Upbit/Kraken/Bitfinex/Bitget credential-provisioning question was NOT part of this ruling — split into its own
+  `[HUMAN] P3` todo, still an open priority call.
+- **na-corpus-digest-closeout 2026-08-08 (item 33 — Bybit key creation)**: operator answer: "Operator will create it
+  later — leave blocked for now." Doc status re-confirmed accurate as-is — the `[HUMAN] P1` todo already correctly
+  states only the operator's own Bybit exchange login can perform this, direction already approved 2026-07-28, action
+  still pending. No change needed.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — whole-doc flip fails on 3 of 4 open
+  items. Checked carefully against cheat-sheet rulings #1 (IAM self-service) and #9 (self-service sibling-precedent)
+  as directed: NEITHER applies — the `[HUMAN] P1` Bybit item needs the operator's own EXCHANGE-side API-key login (not
+  a GCP IAM role grant; no cloud identity/service-account can create a third-party exchange trading key), so ruling #1
+  is a category mismatch, and there is no adjacent-script `--flag` precedent making ruling #9 fit either. The
+  `[BACKEND] P2` OKX/Hyperliquid item is operator-approved to build but its own text still asks the worker to "scope
+  the exact per-venue mechanism... before estimating" — an unresolved design call (task_template.md's "figure out how
+  X should look" trap), not yet bounded. The `[HUMAN] P3` Upbit/Kraken/Bitfinex/Bitget item is an explicit,
+  undispatched priority call. Only the `[BACKEND] P2` Aster-adapter item (scope fully specced: mirror
+  `upbit_ccxt.py`, wire `factory.py` + `live_execution_handler.py`, ~35-40 tests, ~1 day) is independently bounded —
+  noted as a future split-candidate for a dedicated single-item AO doc, not split this round (out of this audit's
+  scope, which reclassifies existing docs whole, not decomposes them). No conflict found in
+  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` (lists this doc as "no new work landed," consistent).

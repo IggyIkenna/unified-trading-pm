@@ -220,18 +220,40 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
 
 ## Todos
 
-- [ ] [DATA] P1. **Legacy-bucket delete (defi/tradfi/sports) ~~+ cefi CF-audit adjudication~~** — the standalone legacy
-      bucket each remaining AG's own E8 step targets (defi/tradfi/sports) remains genuinely undeleted~~, and cefi's
-      CF-4/CF-5/Era-B data-content claims are NOT ADJUDICATED (no fresh 2026-07 CF-audit re-run found for cefi)~~.
-      **cefi's own legacy-bucket delete is DONE (corrected 2026-08-02, see the cefi table row above) — dropped from this
-      todo's AG list.** **STALE (na-eligibility-audit 2026-08-03)** — the cefi CF-audit adjudication half is ALSO done,
-      not "unaffected and still open" as the 2026-08-02 correction claimed:
+- [x] ✅ [DATA] P1. **Legacy-bucket delete (defi/tradfi/sports) ~~+ cefi CF-audit adjudication~~** — the standalone
+      legacy bucket each remaining AG's own E8 step targets (defi/tradfi/sports) remains genuinely undeleted~~, and
+      cefi's CF-4/CF-5/Era-B data-content claims are NOT ADJUDICATED (no fresh 2026-07 CF-audit re-run found for
+      cefi)~~. **cefi's own legacy-bucket delete is DONE (corrected 2026-08-02, see the cefi table row above) — dropped
+      from this todo's AG list.** **STALE (na-eligibility-audit 2026-08-03)** — the cefi CF-audit adjudication half is
+      ALSO done, not "unaffected and still open" as the 2026-08-02 correction claimed:
       `cross_cutting_satellite_ao_dispatch_batch1_     2026_07_26.md`:465 (DONE 2026-08-01, slot-6, data_engineering)
       ran a fresh `cf_manifest_audit.py` against the live `market-data-tick-cefi-prd-central-element-323112` manifest
       and confirmed CF-1/CF-3/CF-4/CF-5/Era-B all GREEN for cefi (`market-tick-data-service@c2ae82e0`, 9,662,116 rows,
       independently re-verified post-apply) — this is exactly the named CF-4/CF-5/Era-B adjudication this todo asked for
-      (CF-8/CF-2-paths stay RED but were already explicitly out of that todo's scope, tracked separately). **Remaining
-      open scope on this todo: legacy-bucket delete for defi/tradfi/sports only.**
+      (CF-8/CF-2-paths stay RED but were already explicitly out of that todo's scope, tracked separately). **RESOLVED
+      2026-08-08 (operator, NA-corpus blocker digest round 5, id=57 — "execute it, but only after verifying zero live
+      callers first"): all 3 remaining buckets are ALREADY GONE — nothing to execute.** Zero-live-callers check done
+      first as instructed: grepped the FULL workspace (all repos, not just unified-trading-pm) for
+      `market-data-tick-{defi,tradfi,sports}` — every application-code hit is a comment/docstring narrating history
+      (e.g. `market-data-processing-service/.../build_continuous_engine.py:116-118` documents a prior
+      `resolve_bucket_name(kind="market-data-tick-tradfi")` call that ALWAYS raised `BucketNamingError`, never worked),
+      Terraform `gcs_volumes` blocks use the bare name only as a local mount LABEL (the real `bucket =` value
+      interpolates the env-tiered project-suffixed name), and the 3 bare names are not registered `bucket_template`s
+      anywhere in `cloud-providers.yaml` (registry already superseded) — **zero live callers, confirmed**. Then checked
+      current existence, fresh (not assumed — the doc's own table already flagged tradfi as suspect-already-deleted):
+      `gcloud storage buckets describe gs://market-data-tick-{defi,tradfi,sports}` → **all 3 return a clean `404` (not a
+      permission-denied ambiguity)**, and a project-level
+      `gcloud asset search-all-resources --scope=projects/central-element-323112     --asset-types=storage.googleapis.com/Bucket --query="name:market-data-tick-"`
+      cross-check lists only the canonical `-{ag}-{env}-central-element-323112` shaped buckets — **none of the 3 legacy
+      bare names exist in this project.** Nothing to delete; this todo's "still pending" framing was stale (matches the
+      tradfi discrepancy already flagged in this doc's own table: tradfi's flat bucket was independently confirmed
+      deleted 2026-07-14 in `tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md`, and defi/sports
+      have evidently since followed the same path, untracked). **One residual finding**: a dormant one-off script,
+      `market-tick-data-service/scripts/cleanup_may4_bait_sentinels.py` (lifecycle=oneoff, marked "Delete-when: after
+      prod-run verified complete" but still present), hardcodes these exact 3 legacy bucket names in an
+      `ASSET_GROUP_BUCKET` map — not a live caller (only reachable via manual `--apply`), but should be deleted as dead
+      code alongside this finding; flagged for market-tick-data-service, not actioned here (out of this session's edit
+      scope).
 
 ## Progress Log
 

@@ -52,6 +52,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 6.0
 estimate_calibrated_ai_days: 4.8
 assigned_role: data_engineering
+effort: max
 drift_direction: none
 locked_by:
 locked_since:

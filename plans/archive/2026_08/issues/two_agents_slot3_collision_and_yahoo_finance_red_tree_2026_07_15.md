@@ -7,7 +7,7 @@ summary:
   UAC edit into uac@fec3f110, and its YAHOO_FINANCE removal broke instruments-service QG (test_silent_absent_fixes.py
   fixture + stale tradfi golden) — fleet-blocking for all IS commits. Operator-visibility issue — needs one slot-3
   session halted or explicit file ownership; the red IS tree needs the fec3f110 fallout fixed.
-status: open
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -37,7 +37,7 @@ supersedes:
 superseded_by:
 depends_on:
 source: CeFi completion program /autonomous session (slot-3, 2026-07-15T14:36Z) + this session's 2026-07-16 recurrence
-resolved_by:
+resolved_by: cicd-agt-9bdc09-2026-08-08
 context_scope:
   [
     scripts/quickmerge.sh,
@@ -161,16 +161,18 @@ is not complete until the counterpart's files build again, not just until your o
       hunk-level staging (`git add -p` / a restricted `git diff <path> | git apply --cached`) so shipping a hot shared
       file no longer silently sweeps a concurrent agent's uncommitted WIP into the commit; not attempted in this doc
       ("outside this plan's scope and risks its own regressions under contention"). — **RULED 2026-08-06 (operator,
-      interactive): DO NOT hunk-scope. Closed as decided-against, not as done.** Whole-file staging stays. Reasoning
-      recorded so this is not re-proposed every time the foreign-WIP-sweep class recurs: hunk-level staging in the
-      fleet's single most critical shipping path trades a **visible** failure for an **invisible** one. Sweeping in an
-      extra file produces a commit that is wrong but obvious — it shows up in `git show --stat` and in review. A
-      mis-applied hunk produces a commit that is silently **PARTIAL**: it compiles, it reviews clean, and it breaks
-      `git bisect` because the tree at that commit never existed as anyone's working state. That is a strictly worse
-      failure mode, and it lands in the path every repo ships through. **The class is being addressed where it actually
-      belongs**: (a) `scripts/dev/safe-doc-push.sh`'s defensive unstage-by-name already isolates foreign staged content
-      on the doc path (mandated fleet-wide 2026-08-06, `unified-trading-pm@73bfdbeda`), and (b) the `.agent-claim`
-      liveness heartbeat + session-start collision warning tracked in
+      interactive): DO NOT hunk-scope. Closed as decided-against, not as done.** (See also
+      /plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md, the doc that
+      attacks the underlying collision rate instead.) Whole-file staging stays. Reasoning recorded so this is not
+      re-proposed every time the foreign-WIP-sweep class recurs: hunk-level staging in the fleet's single most critical
+      shipping path trades a **visible** failure for an **invisible** one. Sweeping in an extra file produces a commit
+      that is wrong but obvious — it shows up in `git show --stat` and in review. A mis-applied hunk produces a commit
+      that is silently **PARTIAL**: it compiles, it reviews clean, and it breaks `git bisect` because the tree at that
+      commit never existed as anyone's working state. That is a strictly worse failure mode, and it lands in the path
+      every repo ships through. **The class is being addressed where it actually belongs**: (a)
+      `scripts/dev/safe-doc-push.sh`'s defensive unstage-by-name already isolates foreign staged content on the doc path
+      (mandated fleet-wide 2026-08-06, `unified-trading-pm@73bfdbeda`), and (b) the `.agent-claim` liveness heartbeat +
+      session-start collision warning tracked in
       `/plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` attack the
       **collision rate** rather than the staging granularity. Reduce how often two agents share a checkout; do not make
       the commit itself lossy. **If this is ever revisited**, the bar is a mechanism that cannot produce a partial
@@ -192,11 +194,21 @@ is not complete until the counterpart's files build again, not just until your o
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **2026-08-08 (ao round-5 operator Q&A apply session, item 15)**: operator ruled "Build a collision-warning mechanism
+  (detect + warn when 2 sessions share a slot, not a hard block)." Closed the `[OPERATOR]` follow-up todo; applied the
+  decision to `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`'s already-designed
+  candidate fixes 1+2 (unblocked, ready for dispatch there).
 
 ## Follow-ups
 
-- [ ] [OPERATOR] P2. Decide the each-slot-ONE-agent / explicit file-ownership policy (operator-gated design call) —
-      na-eligibility-audit 2026-08-06 marks this as remaining open.
+- [x] ✅ [OPERATOR] P2. **DECIDED 2026-08-08 (operator ruling, ao round-5 apply item 15 — see
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "Build a collision-warning
+      mechanism (detect + warn when 2 sessions share a slot, not a hard block)."** Not a hard each-slot-ONE-agent
+      enforcement policy -- a detect-and-warn mechanism instead. Applied to the sibling doc that already carries the
+      concrete mechanism design (candidate fixes 1+2):
+      `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` -- both its `[SCRIPT]` todos (live
+      `.agent-claim` heartbeat + session-start collision warning) are now unblocked (warn, not refuse) and ready for
+      dispatch. No further action needed on this doc itself.
 
 > **2026-08-06 archive-candidate audit**: The sole hunk-scope todo was RULED decided-against 2026-08-06, but the
 > na-eligibility-audit 2026-08-06 marker explicitly says 'Operator-gated, design-judgment, or standing-corpus-ruling
@@ -207,3 +219,7 @@ is not complete until the counterpart's files build again, not just until your o
 - **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — re-verified; sole open item
   (`[OPERATOR] P2`, each-slot-ONE-agent / file-ownership policy) remains an unresolved operator policy decision the doc
   itself declines to make. Unchanged since the 2026-08-06 marker.
+- **2026-08-08 (cicd escalation agt-9bdc09, archive-candidates ratchet cleanup)**: the `[OPERATOR] P2` item was resolved
+  the same day (ao round-5 apply session item 15 — see the Follow-ups section above) and no other doc claims
+  reconciliation ownership of this one. All todos are `[x]`, no `locked_by` — archiving now per the 6-step ritual
+  (`status: resolved`, `git mv` to `plans/archive/2026_08/issues/`, referrer paths fixed corpus-wide).

@@ -37,10 +37,13 @@ author: unknown
 last_updated: "2026-07-26"
 parent_epic: infrastructure_master
 source: "slot-11 (infra), discovered while executing ao_satellite_ao_dispatch_batch1_2026_07_26.md item 3"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
+estimate_baseline_ai_days: 1
+estimate_calibrated_ai_days: 0.8
+assigned_role: cicd
 drift_direction: advance-code
 resolved_by:
 locked_by:
@@ -164,3 +167,24 @@ BATS-phase work itself (that still needs its own dedicated plan doc, not a silen
 narrow authority question so the escalation in `ci_satellite_ao_dispatch_batch4_2026_07_31.md` D4-10 stops being read as
 "unanswered." The operator can still explicitly override to AO-dispatch later if they prefer batch4's option (a); this
 resolution just supplies the default that governs absent such an override.
+
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: **RECLASSIFY `assigned_vm: NA → planning`.** The
+round5-ci-question-resolution entry immediately above was superseded within the same day: the operator's 2026-08-08
+interactive Q&A session established a corpus-wide precedent that post-dates and overrides it — "context_scope /
+plan-destination 'LOCAL vs AO-dispatched' questions default to AO-dispatched going forward — operator's explicit stated
+preference today, not a case-by-case call anymore" (round7 cheat-sheet ruling 4). That ruling directly answers this
+doc's own stated blocker ("needs its own properly-scoped plan with the operator's plan-destination call"). Independently
+corroborated by a second same-day ruling: "self-service default extends to script/tooling gaps with an exact existing
+sibling precedent in the same repo" (ruling 9) — this doc's own Recommended-decision section already names the exact
+precedent (`base-service.sh`'s actionlint warn-only→re-harden pattern at [5.5]), so the mechanism isn't a novel design,
+it's a mechanical repeat of an already-proven-safe rollout shape in the SAME file. **Conflict-check** (per
+`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3): (a) no active `assigned_vm: planning`
+plan in `parent_epic: infrastructure_master` currently claims `scripts/quality-gates-base/base-service.sh`'s BATS phase
+— `ci_satellite_ao_dispatch_batch4_2026_07_31.md` D4-10 tracks this exact item but only as a Deferred/escalated
+question, never as a claimed todo, and `ci_satellite_ao_dispatch_batch6_2026_08_08.md` D6-12 explicitly re-confirms it
+"unchanged from batch4 D4-10" without claiming it either — zero competing claim exists to flip against; (b) no sibling
+batch/finalize doc drafted this same run touches `base-service.sh`; (c) no `ci_consolidated_closeout` doc is live for
+this tranche. Clear — flipping this doc directly (retroactive reclassification, per the naming-convention SSOT's shape
+(b)) resolves batch4 D4-10's escalation rather than competing with it; paired finalize doc authored:
+`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md`. Both existing todos (warn-only BATS
+phase + re-harden-after-clean-baseline) stay unchanged in content, now dispatchable as-is.

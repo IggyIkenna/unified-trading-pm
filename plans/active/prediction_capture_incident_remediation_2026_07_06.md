@@ -510,3 +510,12 @@ orchestrator-dispatched).
   was never an open architect judgment call; see the todo's own annotation above. The 7 DESCOPED-NOT-MVP perp items
   remain correctly parked on the standing 2026-07-14 operator ruling (that ruling itself doesn't need re-asking —
   see this same round's Item 20 finding on the sibling doc).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid overall — Phase 6's backfill-assessment
+  todo is now bounded per the round5 finding directly above, but the 7 `[DESCOPED-NOT-MVP 2026-07-14]` perp-repoint
+  items (Phases 1-4) remain open (parked, not closed) pending a future operator announcement of Kalshi/Polymarket
+  perps prod access — genuinely not worker-determinable today. Whole-doc flip stays blocked per the HARD RULE.
+  **Conflict + scope note**: this doc carries `locked_by: live-defi-rollout` (not touched for a flip regardless of a
+  flip) and is dual-tagged `asset_group: [prediction, cefi]` — `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`
+  (today's independent cefi full-corpus audit) explicitly excluded it as "cross-tranche... ambiguous parent_epic
+  ownership." Extracting Phase 6's now-bounded todo is deferred to a prediction-tranche sweep or a dedicated
+  cross-tranche pass, not claimed unilaterally here.

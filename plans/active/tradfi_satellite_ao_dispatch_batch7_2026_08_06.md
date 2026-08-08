@@ -67,6 +67,7 @@ source: >-
   no `_quarantine/`-prefix guard (confirmed live read), and the same file carries zero `_VENUE_REMAP`-equivalent
   validation while its predecessor `migrate_tradfi_to_hive.py` does (confirmed via grep diff).
 assigned_role: data_engineering
+effort: max
 sequential: false
 drift_direction: advance-code
 context_scope:

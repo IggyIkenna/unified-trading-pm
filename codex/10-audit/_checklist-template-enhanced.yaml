@@ -1,6 +1,16 @@
 # ==============================================================================
-# Unified Trading Codex - Enhanced Master Audit Checklist Template (v2.0)
+# Unified Trading Codex - Enhanced Master Audit Checklist Template (v2.0 -- SUPERSEDED)
 # ==============================================================================
+#
+# SUPERSEDED 2026-08-08: this template was reconciled with the v1.0 template
+# (_checklist-template.yaml, in this same directory) into ONE canonical union
+# file: deployment-service/configs/checklist.template.yaml (the 24 ids this
+# file shares with v1.0 kept THIS file's body -- it is the newer/richer
+# version -- plus 86 v1.0-only ids plus this file's 2 unique ids, BASE-19 and
+# BASE-22 = 112 items total). That merged file is now THE citation target for
+# all 5 docs that used to point at the v1.0 template. This file is PRESERVED
+# FOR REFERENCE (not deleted) but is no longer maintained as a live checklist
+# -- read the canonical file instead.
 #
 # Copy this file to checklist.{service}.yaml and assess each item.
 #

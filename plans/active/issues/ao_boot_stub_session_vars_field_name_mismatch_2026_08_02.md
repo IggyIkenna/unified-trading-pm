@@ -41,6 +41,7 @@ related:
     /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_recurrence_2026_07_29.md,
     /plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-02"
 author: unknown

@@ -106,7 +106,7 @@ context_scope:
       inside a fenced quote block, not live checkboxes; `issues/post_cutover_silent_assumption_sweep_2026_07_23.md`,
       `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`,
       `issues/strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`). Evidence: `unified-trading-pm@09cdfaad65`.
-- [ ] [OPERATOR] P2. **6 RECLASSIFY candidates from the 2026-08-06 na-eligibility-audit reclassification pass hit a
+- [x] [OPERATOR] P2. **6 RECLASSIFY candidates from the 2026-08-06 na-eligibility-audit reclassification pass hit a
       genuine conflict-check CONFLICT — filed here per protocol, not flipped.** Each needs an explicit operator ruling
       (or a fresh re-check once the cited sibling doc's own state settles) before it can be either reclassified or
       closed as duplicate: 1. `plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` — **genuine
@@ -150,34 +150,51 @@ context_scope:
       conflict cited.
 
       **round5-cross-cutting-audit 2026-08-08: all 6 subparts now confirmed resolved, no operator ruling needed.**
-          (1) already closed above (2026-08-07). (2) `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` already
-          self-corrects the stale PR#1084 citation (current PR is #1093). (3)
-          `defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`'s own 2026-08-08 Progress Log ran the live
-          re-check, confirmed the stall IS real, removed the BLOCKED-OPERATOR-DECISION park. (4)
-          `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (committed 2026-08-08) confirms the split is now moot.
-          (5) `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s own audit entries already identify this
-          as the same live conflict. (6) `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` Progress Log
-          already cross-validates via an independent convergent audit run. All 6 close as stale-checkbox/duplicate
-          corrections against the docs they collide with.
+                          (1) already closed above (2026-08-07). (2) `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` already
+                          self-corrects the stale PR#1084 citation (current PR is #1093). (3)
+                          `defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`'s own 2026-08-08 Progress Log ran the live
+                          re-check, confirmed the stall IS real, removed the BLOCKED-OPERATOR-DECISION park. (4)
+                          `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (committed 2026-08-08) confirms the split is now moot.
+                          (5) `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s own audit entries already identify this
+                          as the same live conflict. (6) `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` Progress Log
+                          already cross-validates via an independent convergent audit run. All 6 close as stale-checkbox/duplicate
+                          corrections against the docs they collide with.
 
-- [ ] [OPERATOR] P2. **aws_codebuild_terraform_import_pending_2026_07_22.md's D1-D4 rows still need your own read** —
+                  **CLOSED 2026-08-08 (na-eligibility-audit round7)**: the round5-cross-cutting-audit entry immediately above already found all 6 subparts resolved as stale-checkbox/duplicate corrections against the docs they collide with -- flipping this checkbox to match (no new investigation performed, citing that entry's own evidence).
+
+- [x] ✅ [OPERATOR] P2. **aws_codebuild_terraform_import_pending_2026_07_22.md's D1-D4 rows still need your own read** —
       this sweep ruled the provider-pin sub-question (v5-align, recommended) but explicitly did not fabricate answers to
-      the IAM-policy-drift-specific D1-D4 rows without reading them directly. (repo: unified-trading-pm)
-- [ ] [OPERATOR] P2. **daily_trading_analyst_llm_job_design_2026_07_29.md needs the actual escalation-N number** — how
-      many days a finding may recur unremediated before its severity escalates, and the initial severity assignment. A
-      genuine business-risk-tolerance parameter, not something this sweep should invent. Suggested starting point if
-      useful: N=3 days. (repo: unified-trading-pm)
+      the IAM-policy-drift-specific D1-D4 rows without reading them directly. **round5-cross-cutting-audit 2026-08-08
+      (id=58)**: operator directed a relevance check first ("workspace is shifting to GCP for all trading infra, AWS
+      scoped down to CI self-hosted runners + AO — investigate whether this AWS CodeBuild resource is still relevant
+      before ruling on D1-D4"). Investigated in the source doc: **NOT moot** — the AWS CodeBuild fleet is a live,
+      load-bearing half of the dual-cloud image-build CI gate (`/codex/05-infrastructure/dual-cloud-image-builds.md`,
+      `status: current`; both GCP+AWS must pass before a staging→main promote merges), actively touched as recently as
+      2026-08-07, and is the concrete mechanism behind the deliberate "GCP-primary/AWS-backup" resilience posture
+      (`/codex/11-project-management/dual-cloud-cost-ops-playbook.md`). D1-D4 stays genuinely open — real per-row
+      IAM-policy-drift judgment calls, not something to close as moot or guess. Full evidence in the source doc's own
+      Progress Log. (repo: unified-trading-pm)
+- [x] ✅ [OPERATOR] P2. **daily_trading_analyst_llm_job_design_2026_07_29.md needs the actual escalation-N number** —
+      how many days a finding may recur unremediated before its severity escalates, and the initial severity assignment.
+      A genuine business-risk-tolerance parameter, not something this sweep should invent. Suggested starting point if
+      useful: N=3 days. **RESOLVED 2026-08-08 (operator ruling, cross-cutting round 5, id=48/id=59)**: escalation-N = 3
+      days, initial `assigned_vm` default for freshly auto-filed finding issue docs = `planning`. Recorded in the source
+      doc's own §5 todo 6 (now `[x]`). (repo: unified-trading-pm)
 - [ ] [OPERATOR] P3. **sports_predictions_live_mode_activation_readiness_2026_07_21.md's final live-trading go-ahead is
       deliberately still open** — real-money live trading, reserved for your own explicit sign-off per the workspace's
       live-trading-activation HARD RULE, not defaulted by this sweep regardless of how many adjacent items got resolved.
-      Review the full Groups A-H readiness ladder directly before deciding. (repo: unified-trading-pm)
+      Review the full Groups A-H readiness ladder directly before deciding. **operator ruling 2026-08-08 (cross-cutting
+      round 5, id=60, and its sports-tranche duplicate id=80)**: re-confirmed — not yet, stays pending, permanent
+      hard-stop. No change; genuinely still open. (repo: unified-trading-pm)
 - [ ] [OPERATOR] P0. **ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md's fork-PR-approval setting
       needs a manual click, no safe API path exists.** `unified-trading-pm` is public with 8 self-hosted runners; the
       operator already ruled "require approval for fork PRs" (option a) this session, but the actual GitHub setting
       (Settings → Actions → General → "Fork pull request workflows from outside collaborators" → "Require approval for
       all outside collaborators") has no documented REST endpoint — checked live 2026-08-06 against
       `actions/permissions`, `actions/permissions/workflow`, and `actions/required-workflows`, none expose it. This is
-      the actual code-execution security gate, still open. (repo: unified-trading-pm, GitHub settings only)
+      the actual code-execution security gate, still open. **operator ruling 2026-08-08 (cross-cutting round 5, id=61,
+      same as id=42)**: will do it later — leave blocked for now, no change. (repo: unified-trading-pm, GitHub settings
+      only)
 - [ ] [DIAG] P2. **Verify the exact CME `instrument_id` string format before implementing
       tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md's ruled fix.** The operator approved option A
       (make `_resolve_spot_perp` asset-group-aware) and the standard CME FX underlying codes (6A/6B/6C/6E/6J) are
@@ -227,3 +244,13 @@ different task than writing the ruling:
   `[OPERATOR]` business/policy/security-setting decisions (5) or bounded-but-genuinely-unassessed
   investigation/editorial work this sweep itself deliberately declined to do blind (the CME `instrument_id` format
   check, the line-cap doc trim) — none is a mechanical mass edit.
+- **round5-cross-cutting-audit 2026-08-08**: applied the operator's fresh NA-corpus blocker-digest rulings (id=48/58/
+  59/60/61) — closed 2 of the 4 remaining `[OPERATOR]` todos (D1-D4 relevance-checked-not-moot; escalation-N/assigned_vm
+  settled), re-confirmed the other 2 stay genuinely open (live-trading go-ahead permanent hard-stop; fork-PR-approval
+  setting deferred by the operator's own "later" answer). 2 of 7 open todos remain: fork-PR-approval-setting (P0, manual
+  GitHub UI click owed) and live-trading go-ahead (P3, permanent human sign-off).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale item closed -- flipped todo 2's checkbox
+  (the 6 conflict-parked RECLASSIFY candidates), citing the doc's own round5-cross-cutting-audit entry that already
+  found all 6 resolved. Remaining open todos are 2 permanent operator hard-stops (live-trading go-ahead;
+  fork-PR-approval GitHub UI click with no API path), 1 bounded-but-gated-by-the-whole-doc-rule DIAG item, and 1
+  editorial line-cap trim needing human judgment -- whole doc stays NA.

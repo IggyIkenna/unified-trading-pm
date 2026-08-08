@@ -138,3 +138,7 @@ its own review):
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-03 (unchanged): all 3 open todos are
   shared-infra concurrency-critical performance-design investigation/tradeoff work, not pre-committed implementation.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-06 (unchanged):
+  all 3 open todos are shared-infra concurrency-critical performance-design investigation/tradeoff work (the P3
+  alternative explicitly needs an explicit durability-vs-throughput call per its own round5-cross-cutting-audit
+  2026-08-08 annotation), not pre-committed implementation.

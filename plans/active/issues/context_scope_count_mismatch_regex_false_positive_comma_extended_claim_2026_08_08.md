@@ -29,6 +29,7 @@ related:
     /plans/active/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md,
     /scripts/plan-hygiene/generate_context_scope_inventory.py,
     /cursor-configs/skills/context-scout/SKILL.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"

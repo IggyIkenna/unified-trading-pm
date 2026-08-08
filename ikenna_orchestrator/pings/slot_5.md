@@ -458,6 +458,18 @@ the object-bundle "Target" was superseded). — slot-6 (Ikenna)
   `ssm:SendCommand` for headless worker-verify — removes hardcoded AMI and SSH workarounds.
 - **Plan ref**: `plans/active/monitoring_control_plane_master_2026_06_10.md` [CREDS] P2 — found 2026-06-12 live run.
 
+> **✅ RESOLVED 2026-08-08** — operator ruling (ao round-5 apply session item 23): "Approve the grant." Self-granted
+> live via the `admin_od` AWS identity (confirmed IAM admin rights): attached an inline policy
+> `orchestrator-fleet-ssm-access` on `harsh-worker` (the AWS-managed `AmazonSSMReadOnlyAccess` policy could not be
+> directly attached — `harsh-worker` was already at the 10-managed-policy-per-user quota — so its exact permission set,
+> `ssm:Describe*`/`ssm:Get*`/`ssm:List*` on `Resource: *`, was replicated inline instead, functionally identical). Added
+> `ssm:SendCommand` scoped to `arn:aws:ec2:ap-northeast-1:427895769566:instance/i-0c9b283b31d6b5ca7` (the orchestrator
+> VM — the fleet is down to this single instance per the 2026-06-27 single-VM architecture ruling, so "scoped to the
+> orchestrator fleet" now means exactly this one ARN) + `arn:aws:ssm:ap-northeast-1::document/*` (SSM's own IAM model
+> requires a document-resource grant alongside the instance grant for `SendCommand`). Verified live via
+> `aws iam get-user-policy --user-name harsh-worker --policy-name orchestrator-fleet-ssm-access`. AMI/SSH workarounds
+> can now be retired from `verify_vm_e2e.sh`.
+
 ---
 
 ## CREDENTIAL APPROVAL REQUEST — 2026-07-27 (slot-5, filed to close a credential-ask-orphan QG regression)

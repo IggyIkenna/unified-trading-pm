@@ -312,3 +312,12 @@ which has no MVP wiring today, and precomputes the sports/prediction catalogue `
   (re-confirm consolidator freshness, run the parity verify) than a design call — flagged here as a possible
   MISCLASSIFIED_LIKELY_AO_ELIGIBLE candidate for a future pass, not reclassified this run since it shares the doc with
   genuinely operator-gated scope.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- flagged-but-deferred, not
+  reclassified. Today's round5-cross-cutting-audit entry resolved the P2b-2 open design call ("both
+  sub-questions have live precedent already... narrows to ordinary wiring, no design session needed first"),
+  which on its face clears 2 of the 3 remaining open todos' judgment-call blockers. Held rather than flipped:
+  `locked_by: live-defi-rollout` (set since creation, 2026-06-08) on a heavily-designed strategy/data-status
+  architecture doc carries real risk if misjudged, and the doc's own multi-week history shows partial-unblocks
+  handled by forking a slice out (P2a already dispatched separately via
+  `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`) rather than a whole-doc flip. Flagging as a
+  promising candidate for a dedicated follow-up pass, not forcing it here.

@@ -629,3 +629,13 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — hub doc, 15 open items: 9 genuine build/investigation work, 3
   operator-gated (Korea-equity vendor ask, 2 strategy-desk design calls), 3 dependency-blocked (Track 1 cutover + 2
   Track 2 post-backfill gates in sibling fleet docs).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-checked against today's 9
+  cheat-sheet rulings; none convert this hub's mixed content into a bounded whole (Track 0's Korea-equity vendor ask
+  was independently resolved 2026-08-07 in the sibling `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
+  doc — see that doc's own fix in this same sweep — but this doc's DART/hedge-venue design item was already resolved
+  today in-doc, and Track 0 still carries genuine `[SCRIPT]`/`[UAC]`/`[DESIGN]` build items alongside real operator-
+  and dependency-gated ones). Whole-doc flip stays blocked per the HARD RULE (mixed judgment + bounded items). Track
+  0's remaining bounded items (B1/B3/B4 propagation ops, index-perp UAC mapping, KRX Yahoo backfill, Databento
+  L-floor measurement, Barchart removal) are candidates for a future satellite-batch extraction (mirroring the
+  established `cefi_satellite_ao_dispatch_batchN` pattern) — not executed in this pass, out of this sweep's
+  whole-doc-flip mechanism.

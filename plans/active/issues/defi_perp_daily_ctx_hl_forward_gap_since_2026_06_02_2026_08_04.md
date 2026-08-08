@@ -25,6 +25,7 @@ related:
   [
     /plans/archive/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
     /plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md,
+    /plans/active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md,
   ]
 created: "2026-08-04"
 author: unknown
@@ -35,11 +36,11 @@ source: >-
   Found while executing defi_satellite_ao_dispatch_batch6_2026_07_30.md's todo -010 (perp_daily_ctx manifest
   registration), 2026-08-04 — a real bounded GCS scan of the historical corpus surfaced this forward gap as a byproduct
   of establishing the corpus's exact date range.
-assigned_vm: NA
-execution_scope: local-only
-estimate_class: research
+assigned_vm: planning
+execution_scope: orchestrator-agent
+estimate_class: infra
 estimate_baseline_ai_days: 0.5
-estimate_calibrated_ai_days: 0.6
+estimate_calibrated_ai_days: 0.4
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
@@ -51,9 +52,10 @@ depends_on: []
 context_scope:
   [
     market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_hyperliquid.py,
     market-tick-data-service/scripts/backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py,
     strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
-    /plans/archive/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
+    /plans/active/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md,
   ]
 ---
 
@@ -111,13 +113,41 @@ is the open question below.
 
 ## Todos
 
-- [ ] [DIAG] P2. Decide the fix approach for HYPERLIQUID `perp_daily_ctx` going forward: (a) add a `perp_daily_ctx`
-      write to the existing daily `perp_funding_handler.py` cron path (mirrors how `perp_funding` itself is already
-      produced live — likely the lowest-risk option since the manifest/schema plumbing this session added already covers
-      the data_type), (b) revive the backfill script's HL S3 `asset_ctxs` read logic against a live/current source and
-      wire it into a scheduled job, or (c) some other approach. Read `perp_funding_handler.py`'s current write logic
-      first to scope the actual diff size before deciding. Repo: market-tick-data-service. Done when: an approach is
-      chosen and recorded here (or a design doc), with a scoped follow-up `[CODE]` todo filed against it.
+- [x] N. ✅ [DIAG] P2. **RULED 2026-08-08 (operator): approach (a)** — add a `perp_daily_ctx` write to the existing
+      daily `perp_funding_handler.py` cron path. Read `perp_funding_handler.py` + its `_perp_funding_hyperliquid.py`
+      stage module before this ruling was applied, to scope the real diff (see the follow-up `[CODE]` todo below). **Key
+      scoping facts found**: (1) `_collect_hyperliquid()` (`_perp_funding_hyperliquid.py`) currently calls ONLY the HL
+      `/info` `fundingHistory` endpoint (`_fetch_coin_funding`), which returns `funding_rate`/`premium`/ `timestamp` —
+      no mark price / notional volume / open interest at all; a NEW HL `/info` request (mirroring the old dead backfill
+      script's source data — `type: metaAndAssetCtxs`/`assetCtxs`, the live-REST equivalent of the S3 `asset_ctxs`
+      archive it read historically) is needed to get `mark_px`/`day_ntl_vlm`/`open_interest` per coin. (2) The **write
+      path itself must NOT reuse the old dead backfill script's path convention** — that script wrote to the
+      now-confirmed-DELETED dedicated `perp-funding-{project}` bucket via a bare
+      `pipeline_mode=batch_hyperliquid/asset_group=defi/...` shape; HYPERLIQUID was reclassified DeFi→CeFi 2026-07-06,
+      so the LIVE write path (matching `perp_funding`'s own current write) is the CeFi partition path —
+      `build_cefi_partition_path(venue="HYPERLIQUID", instrument_type=InstrumentType.PERPETUAL,     data_type="perp_daily_ctx", day=..., pipeline_mode=...)`
+      via `_write_hyperliquid_perp_funding_rows`'s own sharding pattern — written to
+      `get_write_bucket_name("market_data", "cefi")`, registered through
+      `DefiManifestRecorder(..., asset_group="cefi")`, exactly mirroring how `perp_funding` rows are produced today. (3)
+      Target row schema (from the dead backfill script's own `_records_for_day`, adapted to the live per-coin `/info`
+      response shape instead of the CSV archive): `coin`/`mark_price`/`day_ntl_vlm`/`open_interest`/
+      `timestamp`/`instrument_id`/`venue`/`chain`/`instrument_type`/`data_type=perp_daily_ctx`.
+- [ ] [CODE] P2. **Implement the perp_daily_ctx forward-write per the ruled approach (a) scoping above.** In
+      `market_tick_data_service/cli/handlers/_perp_funding_hyperliquid.py`: add a new fetch step alongside
+      `_fetch_coin_funding` that calls HL `/info` for the day's per-coin mark price / day notional volume / open
+      interest (the live equivalent of the `asset_ctxs` archive
+      `backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py` reads historically — confirm the exact live request
+      `type` against HL's public API docs before coding, do not assume `metaAndAssetCtxs` without checking); build +
+      write `perp_daily_ctx` rows via the SAME `_write_hyperliquid_perp_funding_rows`-style CeFi partition-path sharding
+      `perp_funding` already uses (NOT the old dead-bucket path — see scoping note above); register via
+      `DefiManifestRecorder(asset_group="cefi")`, `record_captured`/`record_zero_rows`/`record_failed` per the existing
+      honest-absence contract. Wire the new fetch into `_collect_hyperliquid()`'s existing per-coin-batch loop so it
+      lands in the same daily cron run `perp_funding` already produces (no new scheduled job). Unit tests: mock the new
+      HL endpoint response, assert a `perp_daily_ctx` shard is written per instrument with the columns above; assert
+      honest-absence (`record_zero_rows`/`record_failed`) on an empty/error response, mirroring `perp_funding`'s own
+      pattern. Repo: market-tick-data-service. Done-when: a live/backfill run produces real `perp_daily_ctx` manifest
+      rows for HYPERLIQUID on a fresh date (closing the forward gap since 2026-06-02) and existing `perp_funding` tests
+      stay green.
 - [ ] [DIAG] P3. Once the forward-write gap is closed, confirm whether the CeFi Tardis `perp_funding_corpus.py` writer
       (features-service, fixed to include a manifest write this same session per
       `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`) has ever actually run in production since —
@@ -127,6 +157,24 @@ is the open question below.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning` (was `NA`),
+  `execution_scope: orchestrator-agent`. Both open todos are bounded/worker-determinable: the operator's
+  round5-na-digest-defi ruling (item 73, same day) named the exact approach and the `[CODE] P2` todo below already
+  carries the full scoping (write path, schema, wiring point, Done-when criterion) — this is exactly the invitation
+  the same-day filer left ("a future `/na-eligibility-audit` pass may reclassify it"). The `[DIAG] P3` todo is a small,
+  independently bounded follow-up check. Conflict-check clear: no active `assigned_vm: planning` plan in
+  `parent_epic: defi_master` claims this work; `defi_satellite_ao_dispatch_batch9/batch10` (still active) don't
+  reference this doc; the consolidated-closeout doesn't cite it either. Gated finalize companion authored:
+  `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md`.
+- **round5-na-digest-defi 2026-08-08 (apply pass, item 73)**: operator ruled approach (a) — add the `perp_daily_ctx`
+  write to the existing `perp_funding_handler.py` cron path. Read `perp_funding_handler.py` +
+  `_perp_funding_hyperliquid.py` before writing the follow-up to scope the real diff: the current handler has no
+  mark-price/volume/OI fetch at all (only `fundingHistory`), and — importantly — the write path must NOT reuse the old
+  dead backfill script's now-deleted-bucket convention; it needs the CURRENT CeFi partition-path shape `perp_funding`
+  itself already uses (HYPERLIQUID reclassified DeFi→CeFi 2026-07-06). Filed a concrete `[CODE]` P2 implementation todo
+  with the exact write-path/schema/wiring scope (not built this session — real code build, not a small inline fix). Doc
+  stays `assigned_vm: NA` for now (not asked to flip this one); the new todo is a bounded, worker-determinable
+  implementation task, so a future `/na-eligibility-audit` pass may reclassify it.
 - **2026-08-04**: Filed while executing `defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo -010 (manifest backfill
   for the historical `perp_daily_ctx` corpus). No code changed here — pure investigation + issue filing.
 - **na-eligibility-audit 2026-08-04** (tranche=defi, dispatch agt-62865a): KEEP-NA valid — both open todos are an

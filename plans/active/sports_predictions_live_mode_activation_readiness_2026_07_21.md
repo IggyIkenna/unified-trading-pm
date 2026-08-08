@@ -381,3 +381,16 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 4 open items: 1 genuine work, 2 dependency-blocked, 1 operator
   question.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-verified via
+  `grep -n '^\s*- \[ \]'`: exactly 2 open todos live today (Todo 5 REVIEW, Todo 6 OPERATOR — the 2026-08-07 stale-items
+  pass above already flipped Todo 2/Todo 3 `[x]` with cited evidence, so the "4 open items" tail-entry count is stale
+  relative to the doc's current state, superseded by that same-day KEEP-NA-stale-items entry). This doc now carries a
+  fresh dated `✅ OPERATOR RULING 2026-08-08` banner explicitly REAFFIRMING the live-trading hard-stop (Todo 6) and
+  additionally sequencing it behind the sports canonicalisation chain
+  (`/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` etc.) so it "stops surfacing as an unanswered
+  operator question in every audit sweep" — an explicit dated operator ruling = KEEP-NA on citation alone, never
+  re-litigated. Todo 5 (run a sports archetype through the promote-workflow CLI) remains gated on the Group-C
+  execution-alpha harness landing — cross-referencing this pass's OWN sports-tranche RECLASSIFY of
+  `sports_group_c_execution_backtest_harness_2026_07_21.md` (now `assigned_vm: planning`): once that harness ships,
+  Todo 5 becomes ripe, but is not itself reclassified this pass (still gated on unshipped prerequisite work). Doc stays
+  NA, unchanged.

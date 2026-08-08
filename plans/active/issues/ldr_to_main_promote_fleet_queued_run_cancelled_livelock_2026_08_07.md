@@ -170,7 +170,7 @@ sufficient.
       on whether the problem recurs after these two land (observe via run history / live recheck, not built
       preemptively). - **(b) rate-limit ad-hoc verification — DONE.** Added a HARD RULE against
       `gh workflow run       ldr-to-main-promote-fleet.yml` used just to check promotion status, in TWO places (both
-      needed — see `codex/05-infrastructure/claude-code-settings-symlink.md` for why one alone doesn't cover both AO
+      needed — see `/codex/05-infrastructure/claude-code-settings-symlink.md` for why one alone doesn't cover both AO
       workers and Task-tool sub-agents): `unified-trading-pm/cursor-configs/CLAUDE.md`'s
       `## CI verification after every push` section (auto-loaded by every AO top-level worker + interactive session) and
       `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`'s `## Async-wait / background work` section (pasted at every

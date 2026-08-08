@@ -73,12 +73,52 @@ context_scope:
 > one-line todo did not name. **Do not re-add a gas-fee todo here** — that doc is the single place it ships from. This
 > doc now tracks ONLY the P2 e2e-testing schema-contract decision.
 
-- [ ] [BACKEND] P2. **e2e-testing** — resolve the schema-contract decision `validate_shards_4pillar.py`'s pillar-2 (NaN)
-      / pillar-3 (schema) checks need: they are vacuous (degrade to `row_count > 0`) for 51 of 61
+- [x] ✅ [BACKEND] P2. **e2e-testing** — resolve the schema-contract decision `validate_shards_4pillar.py`'s pillar-2
+      (NaN) / pillar-3 (schema) checks need: they are vacuous (degrade to `row_count > 0`) for 51 of 61
       `(asset_group, data_type)` pairs because no per-pair schema/NaN-tolerance contract exists to check against. This
       is the harness MTDS quality-gates STEP 5.88 runs and the batch+live matrix delegates its batch verdict to, so the
       gap is load-bearing, not cosmetic. Source: silent_wrong_answer_audit_candidates_2026_07_20.md P1 finding 9 (the
       7th "safe survivor" — flagged as needing this decision, never actioned).
+
+      **RESOLVED 2026-08-08 (operator ruling, NA-corpus blocker digest round 5, id=62 — "let Claude propose a real
+          contract per pair, deriving from the existing 10 real pairs' conventions").** Read
+          `e2e-testing/scripts/validation/validate_shards_4pillar.py` in full (563 lines) first.
+
+          **Root finding**: the script already LOADS a per-family UAC-sourced required-column contract for all 4
+          families — `_OHLCV_REQUIRED`, `_TICK_REQUIRED`, `_DEFI_REQUIRED`, `_SPORTS_REQUIRED` (`_load_uac_required()`,
+          lines 96-129, sourced from `unified_api_contracts.internal.testing.seed_validator`). **But
+          `required_row_columns_for()` (line 184) only ever consults `_OHLCV_REQUIRED`** — every non-OHLCV family
+          hardcodes `base = frozenset()` (line 196), discarding the already-loaded tick/defi/sports contracts. Pillar-3
+          degrades to time-column-only for 51/61 pairs not because no contract exists, but because 3 of 4 already-defined
+          contracts are dead code. Pillar-2 has the matching gap: `_NAN_SCAN_COLUMNS` (lines 162-166) has no `tick` entry
+          at all, so tick-family NaN checks are vacuously green regardless of `price`/`quantity` nulls.
+
+          **Proposed concrete contract (extends the OHLCV pattern verbatim)**: (1) wire `_TICK_REQUIRED` into
+          `required_row_columns_for()` for `family=="tick"` → required columns `{trade_id, price, quantity, side}`,
+          covers every `trades`/`tick`/`tbbo`/`bbo`/`mbo`/`mbp` pair fleet-wide; (2) add `"tick": ("price", "quantity")`
+          to `_NAN_SCAN_COLUMNS` at the same 1% default threshold; (3) wire `_DEFI_REQUIRED`/`_SPORTS_REQUIRED` too, but
+          ONLY for the specific data_types their single flat UAC contract actually matches (yield/lending-shaped defi;
+          `odds` sports) — do NOT apply blindly to the whole family (defi/sports each span several distinct real schemas,
+          e.g. `dex_pools` has no `apy` column; forcing the yield contract on it would false-fail). The remaining
+          non-matching defi/sports data_types need their own per-data_type UAC contracts first — genuine design work,
+          filed as its own follow-up below, not blocking the tick-family fix.
+
+          **NOT implemented this session** — the code change is in `e2e-testing`, out of this session's edit scope;
+          filed as a fully-scoped spec citing exact file:line targets (`:96-129`, `:162-166`, `:184-197`) for the next
+          e2e-testing session. See the implementation todo immediately below.
+
+- [ ] [SCRIPT] P2. **Implement the schema/NaN contract decided above** in
+      `e2e-testing/scripts/validation/validate_shards_4pillar.py`: (1) wire `_TICK_REQUIRED` into
+      `required_row_columns_for()` for `family=="tick"`; (2) add a `"tick": ("price", "quantity")` entry to
+      `_NAN_SCAN_COLUMNS`; (3) wire `_DEFI_REQUIRED` for yield/lending-shaped defi data_types and `_SPORTS_REQUIRED` for
+      `odds` only (not the whole family) — narrow `_data_type_family()`'s defi/sports branches if needed to avoid
+      false-fails on non-matching data_types. Add/update regression tests pinning the new required-column sets per
+      family. Re-run `--json-out` against a live sample to confirm the actual pair-count split (tick vs. defi-yield vs.
+      sports-odds vs. still-advisory) before claiming a specific "N of 51 now real" number. (repo: e2e-testing)
+- [ ] [DESIGN] P3. **Define real per-data_type UAC contracts for the remaining defi/sports data_types** that don't match
+      the single flat `_DEFI_REQUIRED`/`_SPORTS_REQUIRED` contract (dex_pools/swaps/bridge/gas_fees for defi;
+      fixtures/results/lineups for sports) — genuine design work (new UAC `seed_validator` entries per data_type), not
+      bounded implementation; stays `assigned_vm: NA` until scoped. (repos: unified-api-contracts, e2e-testing)
 
 ## Why this wasn't fixed inline
 

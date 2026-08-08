@@ -38,8 +38,8 @@ created: 2026-08-08
 author: agt-30eb02 (main)
 priority: P2
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 locked_by:
 resolved_by:
 source: >-
@@ -165,6 +165,15 @@ stale-redelivery problem this doc is primarily about.
 
 ## Progress Log
 
+- **2026-08-08 ~13:03Z (main agt-30eb02)**: Review (msg 4116, agt-d470f7) caught a real dispatch-gating bug in this
+  doc's own frontmatter: Todo 2 (the P2 slot_messages ack-primitive fix) said "leaving implementation to normal AO
+  dispatch" but the doc itself carried `assigned_vm: NA` / `execution_scope: local-only`. Independently verified in code
+  (`agent-orchestrator/server/regen_backlog_from_plan.py` `_resolve_plan_vms`, ~L690-701): an `assigned_vm: NA` (or any
+  `_UNASSIGNED_SENTINELS` variant) plan returns an EMPTY VM set, so no VM ever ingests it into the backlog — Todo 2 was
+  structurally unreachable via normal dispatch this whole time, independent of the redelivery bug it describes. Flipped
+  `assigned_vm: NA` -> `planning` and `execution_scope: local-only` -> `orchestrator-agent` (matching the pairing used
+  by other `assigned_vm: planning` docs in this corpus) so it can actually dispatch. This is likely why Todo 2 sat
+  unpicked since the P3->P2 bump despite being a small, well-scoped fix.
 - **review agent (slot 1) 2026-08-08**: Root-caused live (see "Root cause — CONFIRMED" above) via direct, read-only
   inspection of `data/state/state.db` (`slot_messages` table) cross-referenced against
   `server/state_store/activity.py`'s `enqueue_message`/`take_pending_messages` and `server/routes/slots_ops.py`'s
@@ -192,3 +201,40 @@ stale-redelivery problem this doc is primarily about.
   (dispatch-durability against a busy slot) stays P3 as a smaller, separately-scoped follow-up. Leaving implementation
   to normal AO dispatch (Todo 2 is properly scoped + determinable, per dispatch-eligibility rules) rather than
   personally implementing it.
+- **review agent (slot 1) 2026-08-08**: SIXTH same-day redelivery of the identical `BLK-091671d7` instruction hit this
+  session's heartbeat inbox on boot. Re-verified once more: `deployment-service@27fd5779` still an ancestor of
+  `origin/live-defi-rollout`, the `halt_safety_retriable` carve-out (severity=WARN/tier=FILE_ISSUE, gated on
+  `EXPECTED_UNIVERSE_VM_PREFIX`) and both named regression tests still present at HEAD — no code changes needed,
+  consistent with every prior pass; not re-detailing that verification further here since it adds nothing new. **New
+  finding this pass**: Todo 2 below (P2, "leaving implementation to normal AO dispatch") cannot actually reach a worker
+  as currently filed — THIS doc's own frontmatter is `assigned_vm: NA` / `execution_scope: local-only`, and
+  `agent-orchestrator/server/regen_backlog_from_plan.py`'s own NA-handling (the "intentionally unassigned" set/comment
+  around L683-701) means a doc tagged `assigned_vm: NA` is never ingested into the backlog at all — read directly in the
+  gating code, not inferred from the doc alone. So main's stated intent is currently unreachable by construction,
+  independent of the redelivery bug this doc otherwise tracks. Recommended fix: flip `assigned_vm: NA` → `planning`
+  (drop `execution_scope: local-only`) so Todo 2 actually ingests. Left that flip to main/a worker rather than doing it
+  myself — changing a doc's dispatch-gating frontmatter is an orchestration/dispatch decision
+  (`does_not: orchestrate / author backlog / set conditions` in review's own role file), distinct from the
+  Progress-Log/todo-tracking edits review has been making on this doc throughout. Flagged to main via chat
+  (`POST /api/agents/by-role/main/message`). Not planning to re-log further identical stale redeliveries of this exact
+  `BLK-091671d7` text going forward unless something changes — the underlying finding is fully captured here and in
+  `dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`.
+- **2026-08-08 ~13:41Z (main agt-30eb02)**: Small clarification, not a new structural bug — the
+  `agent_messages`/`/reply` channel (this doc's "already solves this exact problem" comparison point) does have a
+  working ack primitive, but silence is NOT equivalent to ack on it: main and a review session (agt-290afd) tried going
+  silent on bare "Ack." messages to reduce chat noise, and confirmed via two consecutive polls that an unreplied message
+  redelivers identically every tick (no redelivery-count decay/backoff observed). Explicitly replying (even tersely) is
+  what stamps `answered_at` and stops redelivery on this channel. Contrast with `slot_messages`: here the primitive is
+  correct and present, it just requires actually being invoked — worth remembering before assuming "not replying" is
+  ever a valid noise-reduction strategy on either channel.
+- **worker (slot 11) 2026-08-08**: Fresh evidence the redelivery pattern is NOT specific to the one `BLK-091671d7` text
+  this doc has tracked so far — on this session's `/boot`-time heartbeat, THREE unrelated "Direct instruction from main"
+  messages arrived, all already fully resolved: (1) append a Progress Log entry to
+  `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md` — the exact requested text was already
+  present verbatim (committed at `9361e9899`); (2) file `fill_completed_event_schema_break_live_defi_2026_08_08.md` —
+  already existed, committed at `9817e4d1e`; (3) file this very doc — already existed, with 6+ Progress Log entries
+  since. All three confirmed via `git log -- <path>` showing prior commits already on `origin/live-defi-rollout`, no new
+  work needed, no duplicate commits made. This generalizes Todo 2's fix requirement: the gap is in `slot_messages`
+  delivery/ack generally, not tied to one escalation id's text — any direct instruction whose underlying doc-write
+  already landed is a candidate for stale redelivery on the next boot. Not implementing Todo 2 myself (out of this
+  session's assigned scope this turn); noting as reinforcing evidence for whoever picks it up next.

@@ -1,8 +1,16 @@
 name: Rules Alignment Agent
 
 # Triggers when plan files change on PM main. Claude reads the diff, checks if any new
-# architectural constraints in the changed plans are covered by cursor-rules/ .mdc files,
+# architectural constraints in the changed plans are covered by .cursor/rules/ .mdc files,
 # and creates missing rules. Keeps PM plans and cursor rules in sync automatically.
+#
+# RETARGETED 2026-08-08 (operator ruling, ao round-5 apply session item 7): the top-level
+# `cursor-rules/` tree this workflow used to target was archived 2026-08-02
+# (`plans/archive/cursor-rules_2026_08_02/`) in favor of the real canonical, git-tracked
+# `.cursor/rules/` tree -- but this workflow kept running against the now-nonexistent old
+# path, silently no-op'ing on every ~15-20min trigger since the archival. Operator confirmed
+# the archival was correct and ruled to retarget (not retire) this workflow. See
+# plans/active/issues/docs_reconcile_operator_decisions_2026_08_02.md BLOCKED-OPERATOR-DECISION 1.
 #
 # Secrets required:
 #   ANTHROPIC_API_KEY  — Claude Code CLI invocation
@@ -113,7 +121,7 @@ jobs:
 
           You are running inside unified-trading-pm.
 
-          Your task: ensure cursor-rules/ has .mdc coverage for every new architectural constraint introduced by the recently changed plan files.
+          Your task: ensure .cursor/rules/ has .mdc coverage for every new architectural constraint introduced by the recently changed plan files.
 
           === CHANGED PLAN FILES ===
           ${CHANGED_PLANS}
@@ -121,8 +129,8 @@ jobs:
           === STEPS ===
           1. Run: git diff HEAD~1 -- plans/active/ and read the full diff
           2. For each new constraint, decision, or architectural rule in the changed todos:
-             - Search cursor-rules/ for an existing .mdc that covers it
-             - If none found: create a minimal .mdc file in the appropriate cursor-rules/ subdirectory
+             - Search .cursor/rules/ for an existing .mdc that covers it
+             - If none found: create a minimal .mdc file in the appropriate .cursor/rules/ subdirectory
           3. .mdc format (follow exactly):
              ---
              description: \"<one line>\",
@@ -156,7 +164,7 @@ jobs:
         run: |
           # For any plan change that introduces new readiness criteria:
           # 1. Check if codex/10-audit/REPO_READINESS_CHECKLIST.yaml covers the new criteria
-          # 2. Check if cursor-rules/core/repo-readiness-checklist.mdc references the new criteria
+          # 2. Check if .cursor/rules/quality-gates/production-readiness-validators.mdc references the new criteria
           # If not, the agent should update them in the same commit
           echo "Readiness criteria alignment check: verify new plan criteria appear in codex YAML template"
 

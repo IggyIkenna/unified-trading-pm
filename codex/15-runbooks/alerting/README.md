@@ -7,9 +7,12 @@ authoritative_for:
   Index of the alerting-service playbook docs — alert taxonomy, operator response, threshold tuning, rehearsal
   procedure. Anchors every other alerting doc in this directory.
 referenced_by:
-  [/codex/15-runbooks/alerting/pagerduty-escalation-policy.md, /plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md]
+  [
+    /codex/15-runbooks/alerting/pagerduty-escalation-policy.md,
+    /plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md,
+  ]
 related:
-  - codex/05-infrastructure/live-deployment-monitoring.md
+  - /codex/05-infrastructure/live-deployment-monitoring.md
   - codex/14-customer-journeys/dart/
 ---
 

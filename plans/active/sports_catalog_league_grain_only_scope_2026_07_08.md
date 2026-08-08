@@ -208,3 +208,11 @@ honest-coverage denominator math, not a same-file fix.
   root-cause builder every open fixture-grain todo extends) and `SPORTS_INSTRUMENTS.md` (the doc the codex-alignment
   todo would update).
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 4 open items, all dependency-blocked.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA-STALE, already-duplicated — all 4 open todos
+  are now resolved by the dated `✅ OPERATOR RULING 2026-08-08` banner at the top of this doc ("DISPATCH APPROVED,
+  gated on the taxonomy contracts phase... All 4 open todos are carried by
+  `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` and flipped by its finalize sibling") and that plan's
+  "Catalogue, browser, dependency" section's first todo names this doc verbatim as what it resolves. Conflict-check:
+  `sports_taxonomy_p3_consumers_2026_08_08.md` is `assigned_vm: planning`, status: active, same `parent_epic:
+  sports_master` — flipping this doc too would dispatch a duplicate. Doc stays NA; checkboxes flip via that plan's
+  finalize sibling once shipped. Citation-only, no reclassification.

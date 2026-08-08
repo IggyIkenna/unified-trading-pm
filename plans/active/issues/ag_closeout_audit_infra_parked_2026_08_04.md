@@ -172,11 +172,15 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
       `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm` flip correctly** (finding 10, third consecutive
       day open) — set line 39 to `assigned_vm: planning` (currently blank), then verify the `[BACKEND] P3` todo actually
       reaches the live AO backlog.
-- [ ] [OPERATOR] P1. **Investigate the missing stash-backup bundle** (finding 11, second consecutive day confirmed
-      absent) — confirm whether `instruments-service-agentwork-sports-2026-07-13-stashes.bundle` (67.8 MB) was relocated
-      to a durable location before `.tabs/3/stash-bundles/` disappeared, or represents an unrecovered loss of 10 real
-      stash entries. Update `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` with the
-      outcome either way.
+- [x] ✅ [OPERATOR] P1. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — RESOLVED 2026-08-07,
+      operator accepted the loss.** `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`
+      is now archived with `status: resolved` and `resolved_by: "RESOLVED 2026-08-07 (operator ruling) -- unrecovered
+      loss, accepted, no further investigation. Both the source directory and the stash-backup bundle are confirmed
+      genuinely absent; the operator declined recovery."` Original text preserved below for record. Was: **Investigate
+      the missing stash-backup bundle** (finding 11, second consecutive day confirmed absent) — confirm whether
+      `instruments-service-agentwork-sports-2026-07-13-stashes.bundle` (67.8 MB) was relocated to a durable location
+      before `.tabs/3/stash-bundles/` disappeared, or represents an unrecovered loss of 10 real stash entries. Update
+      `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` with the outcome either way.
 - [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-06 (governance sweep, commit `unified-trading-pm@de1d795de1`).** All 4
       batches (batch4/5/6/7) reviewed and flipped `status: active` — batch4/5/6 activated as-drafted after verification;
       batch7's 2 duplicate-dispatch todos activated per operator ruling (finalize twin will citation-close the
@@ -191,6 +195,11 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale items — closed finding 11's
+  stash-backup-bundle investigation todo with hard evidence: `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`
+  is now archived, `status: resolved`, `resolved_by:` recording the operator's 2026-08-07 ruling ("unrecovered loss,
+  accepted, no further investigation"). Doc stays NA overall: findings 12/13 (both `[DOCS] P3` design/scoping calls)
+  checked against today's operator-Q&A cheat sheet — no precedent applies to either; still genuinely un-bounded.
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, stale-items — closed finding 10's re-apply todo (batch3
   `assigned_vm` flip): verified live on `plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md`
   (`status: complete`, `assigned_vm: planning` confirmed via direct `grep`, 2026-08-07) — the blank-flip regression is

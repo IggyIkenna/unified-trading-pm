@@ -25,10 +25,17 @@ Generalizes `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`'s proven m
 reclassified `NA → planning` across its first two sessions, ~65 more identified-and-triaged in a third) into a
 repeatable, `/`-invocable, tranche-parameterized skill — the same treatment `/ag-closeout-audit` got for orphan
 detection. Where that skill asks "is anything uncovered?", this skill asks a different question about a DIFFERENT,
-disjoint population: **"of the docs that already have an owner (`assigned_vm: NA`), is that self-classification still
-correct?"** An `assigned_vm: NA`, `status: active`/`open` doc is by definition not orphaned — `/ag-closeout-audit`
-correctly never touches it. Sampling that population has repeatedly found it is a genuine mix, not a monolith: real
-evidenced judgment work (majority), stale-but-harmless duplication, and genuinely mis-defaulted AO-eligible content.
+population that in practice OVERLAPS `/ag-closeout-audit`'s: **"of the docs that already have an owner
+(`assigned_vm: NA`), is that self-classification still correct?"** Operator ruling 2026-08-08 (ao round-5,
+`na_and_ag_closeout_audit_population_overlap_2026_07_31.md`): `generate_ag_closeout_audit_candidates.py`
+deliberately does NOT exclude `assigned_vm: NA` docs from its candidate population -- keep it that way, since a
+never-cited NA doc might genuinely be a mis-tracked orphan this skill alone wouldn't catch. So an `assigned_vm: NA`,
+`status: active`/`open` doc is NOT by definition safe from `/ag-closeout-audit` -- the two skills' populations can
+legitimately claim the same doc, and the 4th conflict-check surface
+(`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) is the load-bearing mechanism
+that prevents a double-dispatch, not population disjointness. Sampling the NA population has repeatedly found it is
+a genuine mix, not a monolith: real evidenced judgment work (majority), stale-but-harmless duplication, and
+genuinely mis-defaulted AO-eligible content.
 
 **Out of scope** (route there instead of duplicating): orphan detection with no active covering plan
 (`/ag-closeout-audit`'s corpus); corpus-wide contradiction/false-unchecked-checkbox sweeps across the WHOLE corpus

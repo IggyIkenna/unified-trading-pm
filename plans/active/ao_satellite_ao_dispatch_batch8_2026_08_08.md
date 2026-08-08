@@ -179,16 +179,20 @@ agent-orchestrator's own dashboard — the `cross-cutting` half was redundant, d
       `/plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md` (its 1st item only —
       items 2-3 stay deferred, operator-gated). Repo: agent-orchestrator.
 
-- [ ] [TEST] P2. **Root-cause `worker-chat.spec.ts`'s 2 intermittent failures.** Check the real background tmux
-      session's (`run-e2e-backend-chat.sh`) startup-timing dependency — this spec is the most operationally distinct of
-      the flaky set (a real background process, not just DB state), so the fix shape may differ from todo 1's. If a
-      startup-timing race is confirmed, add an explicit readiness wait (poll for the session's ready signal) rather than
-      a fixed sleep. **Done when**: a written root-cause verdict is recorded in the source doc's Progress Log; a landed
-      fix (or an explicit "cannot fix without X" finding if genuinely blocked) + a passing stable re-run (10x in a loop,
-      zero flakes on both of this spec's tests) or an operator-ask if the fix needs a design call; full
-      `agent-orchestrator` `quality-gates.sh` green. Source:
-      `/plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md` (its 2nd item only). Repo:
-      agent-orchestrator.
+- [x] ✅ [TEST] P2. **DONE 2026-08-08 (slot-19, backend_engineer craft)** — Root-caused `worker-chat.spec.ts`'s
+      intermittent failures. The hypothesized tmux startup-timing race was DISPROVEN (13 independent reproductions, the
+      real fixture pane never raced). Actual root cause: `PlanRegenLoop` runs unconditionally regardless of
+      `ORCHESTRATOR_MODE`; e2e backend scripts inherit `ORCHESTRATOR_VM_ID` from the launching shell (every orchestrator
+      worker slot exports it), so the loop scanned the real `plans/active/*.md` corpus and overwrote e2e fixture backlog
+      files with real production data — confirmed 19,000+ lines of corruption per fixture file in one run. **Fix**:
+      `agent-orchestrator@ef73a44` — gate `plan_regen.start()` behind `not config.is_mock()`. **Verification**: 10/10
+      clean isolated re-runs (zero flakes, zero fixture mutation), full `agent-orchestrator` `quality-gates.sh` green
+      (sentinel matches `ef73a44`), SHA independently verified ancestor of `origin/live-defi-rollout`. A genuine
+      residual finding (global `webServer` array + shared-host contention, NOT a worker-chat.spec.ts defect) filed as a
+      new todo 5 in the source doc — operator-ask territory, not fixed here per this todo's own "operator-ask if the fix
+      needs a design call" escape hatch. Full write-up + Progress Log in the source doc (checkbox there intentionally
+      left unflipped per this batch's own reconciliation rule — the finalize plan flips it). Repo: agent-orchestrator.
+      Source: `/plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md` (its 2nd item only).
 
 - [ ] [TEST] P3. **Root-cause `backlog-collision.spec.ts`'s intermittent "click Fix" failure.** Check for an
       async-completion race in the remint→confirm sequence (the "remint" action + "a follow-up API call confirms the new

@@ -135,7 +135,7 @@ orthogonal layers. The seam:
   transitions state per its own state machine.
 
 `RISK_TO_BREAKER_ESCALATION_MAP: dict[(RiskRuleConsequence, int, timedelta), BreakerAction]` is the SSOT for these
-thresholds. Risk plan Phase 7.E `codex/04-architecture/risk-breaker-seam.md` documents it; populating the actual
+thresholds. Risk plan Phase 7.E `/codex/04-architecture/risk-breaker-seam.md` documents it; populating the actual
 threshold values is Phase 4 of risk plan (cutover-aspirational).
 
 For scenario design (this plan): scenarios assert against BOTH layers when applicable. Per-rule firing assertions are

@@ -291,3 +291,124 @@ capacity risk, not just reliability — see Progress Log 2026-08-07.
   observable at mid-range, then measure `"was NN at force"` and require the distribution to move DOWN, not just "no
   wedges for a while". `d6f3df2` shipped QG-green with 5 passing unit tests and still did nothing in production — green
   tests proved the code path, not the premise.
+
+- **2026-08-08 (interactive session, slot 1) — ROOT CAUSE FOUND AND FIXED; it was not (only) pane blindness.** Ran this
+  doc's own acceptance test first, before writing any code. It confirmed the pane is blind (`"% context used"` matched
+  **0/11** live worker panes, `"% until auto-compact"` **2/11**) — but the decisive finding was a second, larger defect
+  underneath it. `orch-slot-8` on `claude-sonnet-4-6` held **165,797 tokens** while its OWN pane read **99% used**,
+  implying a ~167K usable window. `model_tier.context_window()` returned **1M for every model except Haiku**, so AO
+  computed `165797/1e6 = 16%` for a session the CLI itself considered full. **The denominator was 5x too big for the
+  model then carrying most of the fleet** — every threshold was unreachable by construction. That is why the pre-fix
+  force distribution has NO value below 91: measured over 3h before the fix, 29 wedges (~9.7/hr) and forces at
+  `100 x28 · 99 x5 · 97 x5 · 96 x5 · 93 x4 · 95 x3 · 94 x3 · 91 x3`. AO only ever saw a high number when the pane's
+  end-of-life auto-compact countdown appeared.
+- **The window is now LEARNED, not tabulated** (operator ruling this session: "shouldn't be hardcoded, should adapt to
+  the model — deepseek, sonnet, whatever"). `server/context_probe.py` reads `message.usage` from the session transcript
+  — present on EVERY assistant turn, so it works mid-range where the pane is silent — and divides by a per-model window
+  inferred from observation: exact calibration from a pane pct when one is visible, else the observed high-water mark,
+  else the `model_tier` prior. A corpus scan over **17,974 transcripts** separates the tiers with no table: opus-4-8
+  999,934 · sonnet-5 937,882 · deepseek-v4-flash 917,159 · deepseek-v4-pro 425,572 · sonnet-4-6 171,577 · haiku-4-5
+  104,369. Note `deepseek-v4-pro` sits BELOW `deepseek-v4-flash` despite **more** sessions (671 vs 518) and **more**
+  turns (87,828 vs 70,202) — not under-sampling, a genuinely smaller window, and precisely the kind of fact a
+  hand-written table gets backwards.
+- **Two measurement traps, both hit while building — the guards are load-bearing.** (1) `model: "<synthetic>"` records
+  carry a zero-token `usage` block and are frequently the LAST record: a naive "last usage wins" read reported 0% for
+  full sessions on **8/21** slots in the first probe run. (2) A `compact_boundary` AFTER the last usage record means the
+  reading describes the pre-compact session; reporting it would force a second, pointless compaction. Both are asserted
+  in `tests/test_context_probe.py`, which also pins the old arithmetic (`int(165797*100/1e6) == 16`) so the defect
+  itself is documented, not just the fix.
+- **Shipped** `agent-orchestrator@c6e6d982a` (QG green: 2746 passed, basedpyright 0 errors, 262 dashboard tests).
+  **Deployed and verified live** on the orchestrator VM at 13:10:57 UTC — `git` HEAD `c6e6d98`, service PID 2406505 ->
+  90097, and `context_window_for("claude-sonnet-4-6")` evaluated **in that process** returns `200000`. Verifying the new
+  code is loaded in the RUNNING process (not merely present on disk) is deliberate: the previous attempt was reported
+  live while the process predated it.
+
+## Follow-ups from the 2026-08-08 root-cause session
+
+- [ ] [BACKEND] P2. **Do not spend the force latch on a merely-QUEUED `/compact`.** `tmux_spawn.submit_to_pane()`
+      returns True when the text leaves the input box, and its own docstring counts "consumed by an already-running
+      turn" as success — but a message consumed into the CLI's queue ("Press up to edit queued messages", caught live on
+      `orch-slot-4`) has NOT executed. The caller then sets `forced_at`, and the compaction that never ran counts toward
+      `ineffective_forces` -> terminal wedge. Detect the queued-messages state and hold the latch un-spent until the
+      queue drains, rather than re-sending (which would compact twice). Lower priority now that forces fire with real
+      headroom instead of at 99%.
+- [ ] [BACKEND] P2. **Port the measured signal to the local watcher.**
+      `unified-trading-pm/scripts/dev/precompact-     watcher.py` still derives context% purely from the pane
+      (`read_pct()`), so it carries BOTH defects fixed here: it is blind mid-range, and its `_TOKEN_USAGE_RE` fallback
+      divides by a hardcoded `_DEFAULT_CONTEXT_WINDOW_K = 1000`. It should read the session transcript and learn the
+      window the same way. Note the `UserPromptSubmit` hook `cursor-configs/hooks/context-threshold-nudge.sh` already
+      does the transcript half correctly (measured `message.usage`, windowed at the last `compact_boundary`) — reuse its
+      approach, but it only fires on user prompt submission, so it cannot cover an autonomous loop.
+- [ ] [BACKEND] P3. **Re-check the learned windows once the fleet is fully on sonnet-5.** The high-water mark only ever
+      rises, which is the safe direction, but a model whose sessions never run long keeps an under-estimated window and
+      will compact earlier than necessary. `learned_context_windows.json` sits next to `state.db`; deleting it is safe
+      and forces re-learning from the priors.
+
+- **2026-08-08 — SECOND defect found and fixed while shipping the first; caught by testing, not by review.** The
+  learned-window logic in `c6e6d982a` treated any high-water mark as the model's ceiling. Testing the local port against
+  a REAL session (not a fixture) exposed the flaw immediately: a fresh registry saw ONE in-flight `claude-opus-5`
+  session at 222,121 tokens and reported **97% full when the truth was ~22%** — the mirror image of the original bug,
+  and it would force a compaction immediately and forever after. It was live for ~17 minutes, and the cache proves it
+  was not hypothetical: the deployed buggy version had already written
+  `"claude-sonnet-5": {"watermark_tokens": 355496}`, which would have force-compacted a sonnet-5 worker at a real ~30%.
+  **One session reaching N proves the window is AT LEAST N, never that it stops there.** A watermark now becomes a
+  window estimate only once observations CLUSTER near it (3 hits within 5%); exceeding it resets the hit count, since a
+  higher ceiling voids the earlier saturation evidence. Shipped `agent-orchestrator@9b269c0ce`, redeployed 13:27:26 UTC,
+  stale cache reset. Cold-start verified in-process: opus-5 -> 1,000,000, sonnet-4-6 -> 200,000, and one 222,121
+  observation leaves opus-5 at 1,000,000.
+- **ACCEPTANCE TEST PASSED — the distribution moved DOWN, which is what this doc demanded.** Pre-fix baseline over 3h:
+  29 wedges (~9.7/hr) with forces at `100 x28 · 99 x5 · 97 x5 · 96 x5 · 93 x4 · 95 x3 · 94 x3 · 91 x3` — **nothing below
+  91**. Seven seconds after redeploy:
+
+  ```
+  13:27:33 FORCED /pre-compact on orch-slot-5 (worker): pct=66 submitted=True
+  13:28:39 FORCED /compact     on orch-slot-5 (worker): pct=66 submitted=True (post-precompact)
+  ```
+
+  A force at **pct=66** was structurally unreachable before. The other half of the acceptance test — "a non-null pct is
+  actually observable at mid-range" — also passes: slot pcts now read `66 · 55 · 48 · 48 · 47 · 45 · 20 · 0` across the
+  fleet, where previously only a pane at 91-100 ever produced a number at all.
+
+- **Local watcher ported** — `unified-trading-pm@8bff8f5792` gives `scripts/dev/precompact-watcher.py` the same measured
+  signal and learned window (it had both original defects: pane-only, and a hardcoded 1M divisor). Verified end-to-end
+  against a real local session: the cwd encoding resolves to the true project dir, and the reading is 24% for a
+  `claude-opus-5` session at 239,867 tokens.
+- **Process finding, filed separately**: this session lost the same working file THREE times to concurrent prek
+  stash/restore cycles in the shared checkout — silently, with no stash entry and a clean `git status`. Recovered only
+  from a scratchpad backup. See
+  `/plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`.
+
+## 2026-08-08 validation window — measured result (partial pass, stated plainly)
+
+**The force-distribution criterion PASSED decisively.** 24 forces over the 52-minute window, distributed
+`60 x2 · 62 · 63 · 64 · 66 x2 · 71 · 73 x2 · 76 x2 · 77 · 79 x4 · 82 x3 · 83 x2 · 85 x2` — range **60-85**. The pre-fix
+baseline was 56 forces, **all 91-100** (28 of them at exactly 100). The two ranges do not overlap at all. This is the
+metric this doc specified ("require the distribution to move DOWN, not just 'no wedges for a while'").
+
+**The zero-wedges criterion did NOT pass: 4 wedges occurred.** Rate roughly halved (9.7/hr pre-fix -> 4.6/hr) but did
+not reach zero, so the stated termination condition was not met and this is recorded as a partial pass.
+
+All four were **inherited saturation**, not new failures:
+
+```
+13:42 slot=12 at 93%   13:43 slot=3  at 83%
+13:49 slot=8  at 97%   13:49 slot=10 at 82%
+```
+
+Each was a session that had accumulated its context under the OLD blind regime and was already at 82-97% the first time
+the new signal could see it — past the point where `/compact` can run at all (the log's own words: "session over the
+model's hard limit"). The fix cannot rescue a session that is already saturated when it goes live; it can only prevent
+one from getting there. Consistent with that reading, the wedge count froze at 4 from 13:58 onward while the fleet ran
+at <=56%, and the per-sample fleet maximum traced `66 -> 93 -> 97 -> 56 -> 56 -> 45` — the middle peak is the inherited
+backlog draining, the tail is steady state.
+
+**What this does and does not establish.** It establishes that forces now fire with real headroom and that the fleet
+reaches and holds a healthy distribution. It does NOT by itself establish a clean 60-minute window on a fleet that was
+healthy at the start, because the first 30 minutes were spent draining pre-existing saturation. A second window was run
+against the already-clean fleet specifically to close that gap rather than claim the criterion on 21 minutes of tail
+data.
+
+- [ ] [BACKEND] P2. **Re-run the 60-minute validation after any future change to the context signal, starting from a
+      fleet with no slot above ~60%.** The first run's headline number (4 wedges) is dominated by inherited saturation
+      and understates the fix; a clean-start window is the only way to measure the steady state honestly. Baseline to
+      beat: forces in 60-85, zero wedges.

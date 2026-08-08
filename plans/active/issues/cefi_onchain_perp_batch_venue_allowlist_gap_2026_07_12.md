@@ -34,7 +34,7 @@ source:
     slot-2 2026-07-12,
     slot-4 2026-07-12,
   ]
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
@@ -435,19 +435,49 @@ and burn SPOT spend for nothing.
       `code: 140` on some OTHER Tardis venue/caller not yet gated this way would still hit the existing hard-failure
       path; not addressed here (out of scope for this todo, no other caller currently hits it per the investigation
       above).
-- [ ] [BLOCKED-CREDENTIALS] P1. The production `tardis-api-key` secret (GCP Secret Manager project
-      `central-element-323112`) only has free-tier/preview entitlement for the `lighter` exchange's historical CSV
-      datasets — confirmed via direct probe: `2026-05-01` (1st-of-month) → HTTP 200 with real rows;
-      `2026-04-17`/`2026-05-02` (any other date) → HTTP 401
-      `"For unauthorized requests, only historical CSV market     datasets for the first day of each month are available"`,
-      even for a symbol genuinely listed since that exact date. **No code change can land real non-1st-of-month
-      LIGHTER-ZKSYNC `derivative_ticker` rows via Tardis under the current plan/key.** Per the
-      external-data-always-available rule (`codex/02-data/…`): this is a credential ask, not a descope — the
-      adapter/delegation scaffold is already built and verified correct (this issue doc's item above); what's missing is
-      entitlement. Needs operator action: verify/upgrade the Tardis subscription to include full `lighter`-exchange
-      historical access, or make an explicit accepted-limitation call (e.g. 1st-of-month sampling only, rely on the live
-      WS connector for everything else going forward) and update `TARDIS_COVERAGE_START`'s design accordingly once bug
-      above is also resolved. (repo: market-tick-data-service, or an ops/credentials action outside any repo)
+- [x] ✅ [BLOCKED-CREDENTIALS] P1. **RESOLVED 2026-08-08 — the Tardis entitlement gap is GONE, re-probed live and
+      confirmed.** The production `tardis-api-key` secret (GCP Secret Manager project `central-element-323112`)
+      previously only had free-tier/preview entitlement for the `lighter` exchange's historical CSV datasets —
+      confirmed via direct probe: `2026-05-01` (1st-of-month) → HTTP 200 with real rows; `2026-04-17`/`2026-05-02` (any
+      other date) → HTTP 401 `"For unauthorized requests, only historical CSV market datasets for the first day of
+      each month are available"`, even for a symbol genuinely listed since that exact date.
+      >
+      > **Operator answer (item 31, 2026-08-08 cefi digest)**: re-probe first — operator believes they may now have a
+      > fuller Tardis license. **Re-probed live** (this session has `gcloud`/network access; retrieved the real
+      > `tardis-api-key` secret value, called the exact same `datasets.tardis.dev/v1/lighter/derivative_ticker/...`
+      > endpoint the original probe used, `Authorization: Bearer <key>` per `tardis_base_client.py`'s real header
+      > construction):
+      >
+      > | Date (non-1st-of-month) | Symbol | Result |
+      > | --- | --- | --- |
+      > | 2026-05-02 | 0 | **HTTP 302 → real S3-signed download, 200, 2,007,383 bytes, real CSV rows (funding_rate/open_interest/mark_price)** |
+      > | 2026-04-17 | 0 | **HTTP 302 → real data** (symbol genuinely listed since exactly this date) |
+      > | 2026-06-15 | 0 | **HTTP 302 → real data** |
+      > | 2026-07-20 | 0 | **HTTP 302 → real data** |
+      > | 2026-08-03 | 0 | **HTTP 302 → real data** |
+      > | 2026-08-05 | 0 | **HTTP 302 → real data** (transient 403 on first attempt, real data on retry — S3-signing flake, not an access issue) |
+      > | 2026-04-17 | 207 | HTTP 403, structured `code:140` "not available for '2026-04-17'... available since '2026-06-24'" — symbol-specific not-yet-listed, matches the ALREADY-SHIPPED per-symbol `availableSince` gate (`market-tick-data-service@3f1b5246`), not a credential issue |
+      >
+      > **The 1st-of-month-only restriction is gone.** Every non-1st-of-month date tested across April-August 2026
+      > returned real, downloadable data (verified by actually decompressing and reading real CSV rows, not just the
+      > HTTP status). The one 403 seen (symbol 207 on 2026-04-17) is the CORRECT, expected per-symbol availability gate
+      > already coded and tested — not a credential block. **No further "try other adapters/paths" step or
+      > honest-coverage denominator/manifest-reason fix is needed** — the direct Tardis path now works.
+      >
+      > **Net**: the adapter/delegation code shipped for this doc (items above, `market-tick-data-service@57493789` +
+      > `@3db2e92d` + `@3f1b5246`) is fully correct AND now fully unblocked. No code change needed — this was purely an
+      > entitlement gap that has since been resolved (operator's Tardis subscription upgrade, exact date not confirmed
+      > from this side, but live-confirmed as of 2026-08-08). See the new `[VERIFY]` re-launch todo below.
+- [ ] [VERIFY] P1. **Re-launch the real LIGHTER-ZKSYNC `derivative_ticker` backfill now that the entitlement gap is
+      confirmed resolved** (2026-08-08 re-probe above) — this is the exact re-launch the earlier `[VERIFY]` item
+      couldn't complete, now unblocked. Rebuild the code tarball first (stale-tarball gotcha, per items 3/4 above —
+      current code at `market-tick-data-service@3f1b5246` already has the per-symbol availability gate, no further code
+      change needed). Launch via `VENUES="LIGHTER-ZKSYNC" bash scripts/vm/launch-cefi-hl-aster-historical-backfill.sh`
+      (deployment-service), confirm real rows land across a full multi-day range (not just the single spot-checked
+      days above), verify via the manifest (Tardis self-records under `pipeline_mode=BATCH_TARDIS`) that
+      `capture_status=captured` with real row counts, and re-run `measure_honest_coverage.py` Layer-1 for LIGHTER-ZKSYNC
+      to confirm `present_tuples` moves off 0. Spin the VM down once confirmed (per the standing SPOT-cost-control
+      practice this doc's own prior sessions already followed). Repo: deployment-service, instruments-service (verify).
 
 ## Progress Log
 
@@ -460,3 +490,25 @@ and burn SPOT spend for nothing.
 - **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — sole open item is BLOCKED-CREDENTIALS
   (tardis-api-key lacks entitlement for LIGHTER's historical CSV datasets beyond first-of-month, confirmed via direct
   probe) — a credential gap, not worker-determinable.
+- **na-corpus-digest-closeout 2026-08-08 (item 31)**: operator asked to re-probe before accepting the limitation
+  (believed the Tardis license may now be fuller). Had live `gcloud`/network access this session — retrieved the real
+  `tardis-api-key` secret and re-ran the exact probe against `datasets.tardis.dev`. **Result: entitlement gap is GONE.**
+  6 non-1st-of-month dates across April-August 2026 all returned real downloadable data (verified by decompressing and
+  reading actual CSV rows, not just HTTP status); the only 403 seen was the pre-existing, correctly-coded per-symbol
+  `availableSince` gate (symbol not listed yet on that date), not a credential block. Flipped `[BLOCKED-CREDENTIALS]`
+  to resolved and filed a `[VERIFY]` re-launch todo (the actual multi-day backfill VM launch + manifest verification —
+  not run this session, since the operator's answer authorized re-probing, not launching a real multi-hour SPOT VM).
+  Doc stays `assigned_vm: NA` for now — the new VERIFY todo is a real infra action a future dispatch can pick up.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY, `assigned_vm` `NA -> planning`. Sole
+  open item (`[VERIFY]` P1, re-launch LIGHTER-ZKSYNC `derivative_ticker` + confirm real rows) is now
+  bounded/deterministic — the entitlement gap that previously required an operator/credential decision was resolved
+  and re-probed live earlier the same day (see the "na-corpus-digest-closeout 2026-08-08 (item 31)" entry above,
+  commit `a5a97cf4`, 13:34+01:00). Conflict-check: (a) `parent_epic: cefi_master` — no other active
+  `assigned_vm: planning` plan covers this exact re-launch; (b) no `cefi_satellite_ao_dispatch_batch*`/finalize doc
+  claims it; (c) `cefi_consolidated_closeout_2026_07_18.md` line 329 still reads "BLOCKED-CREDENTIALS, scaffold
+  correct" — stale, predates this session's resolution, not a competing claim (citation fix left as a follow-up, out
+  of this sweep's scope). **Note**: `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s "Deferred — operator-gated"
+  section also still lists this doc as credential/operator-gated — that verdict was drafted 01:18 UTC / activated
+  04:04 UTC, ~8-11h BEFORE this doc's own entitlement-resolution commit (`a5a97cf4`, 12:34 UTC), so it is stale, not
+  a live conflict; batch10 carries no todo actually claiming this doc's ground (it deferred rather than dispatched
+  it). Companion finalize: `cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md`.

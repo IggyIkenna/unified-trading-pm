@@ -40,7 +40,7 @@ authoritative_for:
   ]
 referenced_by:
 owner:
-last_reviewed: 2026-07-21
+last_reviewed: 2026-08-08
 code_refs:
   [
     unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py,
@@ -135,3 +135,19 @@ is phantom-free.** Status, split by surface (verified 2026-07-21 in
 Any plan/track that backfills sports history before 2020-06 is moot — the 2015→present `derived_features` backfill, the
 api-football 2015→2020-06 reference expansion, and the 2017/2018 fabricated-corpus remediation are all inside the wipe's
 blast radius. Only the 2020-06→present slice is legitimate work.
+
+## Reaffirmed against the P4 derived-layer backfill (2026-08-08 — no change)
+
+`/plans/active/sports_taxonomy_p4_backfill_2026_08_08.md` runs a derived-layer backfill (`odds_snapshot`,
+`odds_movement`, the relocated arbitrage series, and the `horizon` axis) to close the gap between the 2020-06-06 floor
+and today. **This floor governs that backfill's start date unchanged** — the backfill's window is 2020-06-06 → present,
+never earlier; a launcher or resume path that starts before the floor re-fabricates exactly as described above, so the
+"Backfill launcher `START_DATE` defaults" enforcement site (§ above) covers P4's launchers too, not just the ones live
+when this doc was written.
+
+The floor also governs the P4 **C3 pre-launch corpus disposition**: the 10,345-object pre-launch C3 population
+(`/plans/archive/2026_08/sports_prelaunch_cf5_verify_residual_2026_07_24.md`'s sole open todo) is **disposed of by this
+ruling, not reopened as a fresh decision** — this doc already supersedes the 2018 `SOURCE_COVERAGE_START` extension that
+todo offered as an alternative (see "The ruling" above), so C3 is deleted per the wipe protocol (§ "The wipe" above),
+never backfilled or coverage-window-extended. P4 cites this doc rather than re-litigating the choice; the next reader
+hitting either the P4 backfill window or the C3 disposition should treat both as settled here, not open questions.

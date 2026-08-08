@@ -36,6 +36,7 @@ authoritative_for:
     DeFi canonical naming vocabulary,
     DeFi data_type/chain/instrument_type/path/bucket canonical forms,
     on-chain perp CLOB cefi-vs-defi asset_group boundary,
+    defi two-id / dual-key model (instrument_id vs canonical_instrument_id),
   ]
 referenced_by:
   [

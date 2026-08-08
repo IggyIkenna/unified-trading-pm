@@ -937,3 +937,8 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged): 2 of 7 open items (N5r/N6r
   wholesale index rebuild, N1b ~698k-row reclassify) remain large-blast-radius live-manifest APPLY-class writes lacking
   the [OPERATOR]/delete-safety citation their sibling items in this same doc carry.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
+  today's round5-cross-cutting-audit entries on N5r/N6r and N1b explicitly tightened (not removed) their
+  `[OPERATOR]` gate, citing `gcs-and-manifest-delete-safety-protocol.md` §3a to explain why neither qualifies
+  for the reversibility downgrade the sibling Phase-D item used (wholesale live-manifest replace-not-merge, not
+  object/prefix-scoped) -- genuine mix, whole doc stays NA.

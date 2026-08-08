@@ -713,7 +713,7 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 
 ## Master coordination todos (this plan's OWN work — pure coordination, no execution)
 
-- [ ] [UAC] [IS] P1. **G1-ENUM present-set asymmetry — combo/chain underlyings get PHANTOM
+- [x] [UAC] [IS] P1. **G1-ENUM present-set asymmetry — combo/chain underlyings get PHANTOM
       `(options_chain|futures_chain, trades)` `expected_unattempted` seeds (CROSS-AG: tradfi + cefi; found slot-6
       2026-06-08 tradfi pre-apply audit).** `enumerate_expected_universe.py` rolls the CATALOG's option/combo leaves up
       to a per-underlying `options_chain`/`futures_chain` bundle candidate with `data_type=trades`
@@ -752,6 +752,8 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
       decides call needed. Owner: vm-cross-cutting / slot-7 (the central enumerate producer). Repos: instruments-service
       (`scripts/enumerate_expected_universe.py`) + unified-api-contracts (validity matrix). `parent_epic`:
       manifest_master. Provenance: tradfi pre-apply audit, slot-6 2026-06-08.
+
+      **CLOSED 2026-08-08 (na-eligibility-audit round7)**: the round5-cross-cutting-audit entry immediately above already confirmed option (a) is shipped and production-quantified, "No owner-decides call needed" -- flipping to match, no new investigation performed.
 
 - [x] ✅ [DOCS] P0. **M-COORD-1 — G0 doc-coherence reconcile GREEN (R6-codex closure, slot-4 2026-06-11 — pm@a28cbd4d7 +
       pm@51863c157 + pm@05456c343)**: CLAUDE.md + the codex layer (`pipeline-mode-partition.md` now carries the M1–M8
@@ -892,6 +894,11 @@ sequenced and nothing is unblocked-out-of-order or orphaned.
   are unchanged: a future-gated bookkeeping placeholder (WAVE 5 live-side, "assign to slots when reached") and a 3-way
   unresolved architecture design call (G1-ENUM present-set asymmetry fix, "owner decides" among 3 named options). Doc's
   own stated role is "a PURE COORDINATOR — executes nothing" (operator 2026-06-07).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale item closed -- flipped the
+  G1-ENUM present-set asymmetry checkbox (option (a) confirmed shipped per this doc's own round5-cross-cutting-
+  audit entry). Remaining open todo (WAVE 5 / live-side) is a future-gated bookkeeping placeholder ("assign to
+  slots when reached") -- doc's own stated role is "a PURE COORDINATOR -- executes nothing" (operator
+  2026-06-07), stays NA.
 
 ## Deferred work — migrated to:
 

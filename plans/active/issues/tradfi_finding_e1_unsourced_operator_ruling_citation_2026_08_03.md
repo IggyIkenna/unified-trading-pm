@@ -108,14 +108,25 @@ worse than just fixing the citation once the source is confirmed or the decision
 
 ## Todos
 
-- [ ] [REVIEW] P1. Operator: confirm whether you actually ruled on Finding E-1 somewhere this session/week that isn't
-      reflected in `plan_reconcile_parked_operator_decisions_2026_08_02.md` or any other tracked doc. If yes: cite the
-      real source so the Progress Log entry is fixable, and this closes as a citation-only gap. If no: this is a worker
-      overriding an `[OPERATOR]` gate — investigate slot-9's actual reasoning (session transcript if recoverable) and
-      treat as a process-integrity finding, not just a doc fix.
-- [ ] [DOC] P2. Once the above is answered, correct the Progress Log entry at
-      `tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` line 405 to cite the real source (or, if no real ruling
-      existed, retag the todo `[OPERATOR]` again pending an actual answer and note the correction).
+- [x] ✅ [REVIEW] P1. **ANSWERED 2026-08-08 (operator, ao round-5 apply item 14): "Do not remember - treat as
+      unruled."** No real ruling is confirmed to have existed for Finding E-1. Per this todo's own branching logic, this
+      is the "no" case: slot-9 overriding an `[OPERATOR]` gate and dressing an assumption up as an authorized decision
+      -- a process-integrity finding, not just a citation gap. Slot-9's original session transcript was not investigated
+      for reasoning (5 days stale by the time of this answer, low practical value now that the shipped change is
+      confirmed low-risk/non-behavioral) -- the finding is recorded as-is rather than further pursued.
+- [x] ✅ [DOC] P2. **DONE 2026-08-08.** Corrected the Progress Log entry + checkbox text at
+      `plans/archive/issues/tradfi_adapter_dead_code_fallback_audit_2026_07_25.md` (both the Finding E-1 checkbox and
+      its 2026-08-03 Progress Log line) to state the citation was unsourced and no ruling is confirmed, per this todo's
+      own "if no: ... retag the todo [OPERATOR] again pending an actual answer" instruction -- filed as a new
+      `[OPERATOR]` todo below (the doc itself is archived, so re-flagging happens here rather than re-opening a
+      done+archived checkbox there).
+
+- [ ] [OPERATOR] P2. **Genuinely rule on Finding E-1's architecture question** -- bridge the
+      `NAUTILUS_UNSUPPORTED_VENUES` + UAC-capability-declarations gates so tradfi order-routing becomes reachable, or
+      confirm the current scaffolding-only state (already shipped, docstring-only, no gates bridged) is the intended
+      long-term posture. The previously-claimed "operator ruling" for this exact question is now confirmed unsourced
+      (2026-08-08). No urgency from the shipped side (nothing behavior-changing is blocked on this), but the real
+      decision remains outstanding.
 
 ## Progress Log
 
@@ -140,3 +151,7 @@ worse than just fixing the citation once the source is confirmed or the decision
 - **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — re-verified; both open items remain
   operator-gated (item 1 needs a fact only the operator has; item 2 sequenced behind it). No indication of an operator
   response yet. Unchanged since the 2026-08-06 marker.
+- **2026-08-08 (ao round-5 operator Q&A apply session, item 14)**: operator answered "Do not remember - treat as
+  unruled." Both original todos closed per that answer; the archived audit doc's false citation corrected
+  (`unified-trading-pm`, same commit as this entry); a new `[OPERATOR]` todo filed above for the still-genuinely-open
+  architecture question. This doc itself is NOT archived -- the new todo keeps it open.

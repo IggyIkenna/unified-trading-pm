@@ -44,13 +44,13 @@ created: 2026-07-20
 author: unknown
 last_updated: 2026-07-20
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-assigned_role: data
+assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -341,3 +341,17 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
   commit as todo 1's fix. 5 prior na-eligibility-audit passes cited it as an unresolved scope-decision without
   cross-checking the sibling doc. Only todo 3 (doc-comment correction) remains genuinely open; doc stays `assigned_vm:
   NA` pending that one bounded item being claimed.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY, `assigned_vm: NA` → `planning`
+  (`execution_scope: local-only` → `orchestrator-agent`, `assigned_role: data` → `data_engineering` — the prior value
+  was not a registered `agents/*.md` role). With todo 6 already closed (2026-08-08, above), the doc's sole remaining
+  open item is todo 3: a checkable, worker-determinable doc-comment correction (3 named file:line locations across 2
+  repos that assert the IS live writer emits the hive layout, when this audit's own §3b already proved it emits the
+  flat shape) — no judgment call, the 2026-08-07 audit had already flagged it "bounded but not yet claimed." Not a
+  direct match to any of today's 9 generalizable rulings, but the same "bounded/deterministic, previously just
+  unclaimed" shape the sweep exists to catch. Conflict-check: (a) grepped `plans/active/` for other `assigned_vm:
+  planning` docs under `parent_epic: infrastructure_master` — none cover this exact doc-comment fix; (b) grepped
+  `plans/active/infra_satellite_ao_dispatch_batch*` and `cefi_satellite_ao_dispatch_batch9/10` — zero hits for this
+  doc's filename or the 3 named source paths (`instrument_availability_paths.py`,
+  `repair_tradfi_instrument_type_counts_2026_07_17.py`); (c) `cefi_consolidated_closeout_2026_07_18.md` does not
+  reference this doc. Clear. Companion finalize plan:
+  `plans/active/backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md`.

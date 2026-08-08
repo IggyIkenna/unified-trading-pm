@@ -18,6 +18,7 @@ related:
   [
     plans/active/features_input_manifest_migration_2026_05_25.md,
     plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-05-25
 parent_epic: features_and_ml_master
@@ -764,3 +765,8 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
   backfill; `usdc_idle_yield_apy_bps` stub disposition) each carry an explicit 2026-07-27 "re-check before dispatch"
   gate confirming they aren't already superseded by concurrent work — real engineering-dispatch work, but not yet in a
   clean re-verified-and-ready state.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
+  each of the 4 open Track-1 todos still carries its own 2026-07-27 "re-check before dispatch" gate (confirm not already
+  superseded by concurrent work) before it is genuinely dispatch-ready; today's round5-cross-cutting-audit entry settled
+  the `usdc_idle_yield_apy_bps` disposition question (leave-as-0-floor is standing) but the actual wiring half stays
+  gated on a not-yet-shipped upstream feature (`venue_funding_yield`), so that item is not yet actionable either.

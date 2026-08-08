@@ -558,6 +558,17 @@ here only for todo-count sanity, not for skipping per-repo verification.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — with a live conflict found, don't
+  flip. Re-read end-to-end; `grep -cE '^- \[ \]'` = 2, matching (both `(stretch, optional)` `[INFRA] P3` items: todo
+  3, add `image-build-gate.yml` to `rollout-workflow-templates.sh`'s managed file set; todo 20, add a
+  `.pre-commit-config.yaml` to `unified-trading-ci`). Both looked genuinely bounded and low-risk on this doc's own
+  text alone, so ran the required conflict-check before considering a flip — and found todo 3 is ALREADY
+  conflict-gated by a concurrent, same-day ci-tranche audit: `ci_satellite_ao_dispatch_batch6_2026_08_08.md` (D6-1)
+  explicitly defers this exact todo, citing its own todo 9 as owning `scripts/workflow-templates/`'s rollout
+  mechanism this round. Since `assigned_vm` flips whole-doc and todo 3 has a live, real collision with concurrently
+  dispatched work, this doc stays NA even though todo 20 (`.pre-commit-config.yaml`) shows no conflict on its own —
+  flagging todo 20 as a RECLASSIFY candidate for a future, properly-scoped follow-up once todo 3's collision clears,
+  not actioned this run. This is exactly the "Conflict → don't flip" case the sweep's own protocol names.
 - **infra-tranche NA-question resolution 2026-08-08**: closed todo 7f as moot — the human-planning VM
   (`i-0dd9812a96cdda5dc`) is not a stopped VM waiting to be restarted, it was permanently TERMINATED 2026-08-03 by
   deliberate operator policy (confirmed via 3 codex SSOTs: `/codex/05-infrastructure/agent-orchestrator-deploy.md`,

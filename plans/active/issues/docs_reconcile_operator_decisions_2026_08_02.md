@@ -72,8 +72,9 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 1 — what is `cursor-rules/` for?
 
-- [ ] [DOCS] P2. **What is the 25-file `cursor-rules/` tree's purpose today, and should it be kept, repurposed, or
-      archived?**
+- [x] ✅ [DOCS] P2. **RESOLVED 2026-08-08 (operator ruling, ao round-5 apply item 7 — see
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md).** What is the 25-file
+      `cursor-rules/` tree's purpose today, and should it be kept, repurposed, or archived?
 
   Verified fact (not in question): `cursor-rules/` (25 `.mdc` files, top-level dir) and `.cursor/rules/` (150 `.mdc`
   files, dot-dir) have **zero file overlap** — confirmed via basename spot-check across both trees. The real, current
@@ -121,8 +122,10 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 2 — locked doc's broken `source:` field
 
-- [ ] [DOCS] P3. **Fix (or authorize fixing) the broken `source:` frontmatter entry in
-      `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md`.**
+- [x] ✅ [DOCS] P3. **RESOLVED (operator ruling 2026-08-08, ao round-5 apply item 8: "Authorize").** Fix (or authorize
+      fixing) the broken `source:` frontmatter entry in
+      `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` -- already applied as a side effect of an
+      earlier cleanup commit, re-verified live: all 6 leading-slash entries present, no brace-expansion remains.
 
   That doc carries `locked_by: live-defi-rollout` in its own frontmatter — per the workspace HARD RULE, any edit
   touching a `locked_by:` doc's frontmatter needs operator sign-off, so this was NOT auto-fixed even though the fix
@@ -142,8 +145,10 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 3 — 14 locked issue-docs with truncated `summary:` frontmatter (added 2026-08-06)
 
-- [ ] [DOCS] P2. **Apply (or authorize applying) the pre-drafted replacement `summary:` on 14 `locked_by`-gated
-      `plans/active/issues/*.md` docs.**
+- [x] ✅ [DOCS] P2. **DONE (operator ruling 2026-08-08, ao round-5 apply item 9 — see
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md: "Authorize all 14").** Apply (or
+      authorize applying) the pre-drafted replacement `summary:` on 14 `locked_by`-gated `plans/active/issues/*.md` docs
+      -- applied, `unified-trading-pm@97ce494ecd`, verified ancestor of origin/live-defi-rollout.
 
   All 14 carry a real `locked_by` value (13× `live-defi-rollout`, 1× `harsh-fleet-audit`) — per the same HARD RULE as
   item 2 above, none were auto-fixed. This is a distinct, larger recurrence of the exact same gate, found by today's

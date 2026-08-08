@@ -324,3 +324,17 @@ casing), the pre-floor registry fix, or the shard-enumeration/honest-coverage wo
   context-scout touches since). Both open todos still independently justify NA: the RUSSIA_PREMIER_LEAGUE purge is a GCS
   delete/re-derive operation tagged `[DATA]` not `[OPERATOR]` with no delete-safety-cite or stated safe-idempotent
   justification; the gate-reassessment todo bundles a bounded re-run with an open judgment call.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, both open todos re-verified, doc stays NA.
+  (1) `[DATA] P3` (re-run `verify_ml_readiness.py`, then reassess the strict-per-day-vs-aggregate-≥95% gate) — the
+  judgment half is now resolved by the dated `✅ OPERATOR RULING 2026-08-08` banner at the top of this doc ("switch to
+  the precedented aggregate ≥95% pass bar"), implemented by `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`;
+  that same ruling restates this doc's own ordering constraint verbatim ("the P1/P2 zombie-tick fixes in this doc must
+  land FIRST... otherwise the change would mask a real regression") — i.e. it is gated on THIS doc's own still-open
+  `[DATA] P2` purge below, not yet clear to dispatch on its own. (2) `[DATA] P2` (purge the confirmed
+  RUSSIA_PREMIER_LEAGUE zombie contamination, 20 shards/54 rows) — considered for RECLASSIFY against today's
+  reversibility-qualified-delete precedent (task_template.md finding O path (c): a FRESH same-run
+  `gcs_bucket_soft_delete_retention_seconds()` check ≥604800s self-justifies a GCS delete without an `[OPERATOR]` tag).
+  **Not reclassified this pass** — path (c) requires the check to be actually run and its real value stated inline
+  ("verified, not asserted"; the codex's own canonical negative example is a sports-plan todo that self-justified on
+  soft-delete WITHOUT querying the real policy), and this audit pass did not execute a live GCS policy query. Both
+  items stay open, doc stays NA; flagging the purge as a good target for a future pass that runs the live check.

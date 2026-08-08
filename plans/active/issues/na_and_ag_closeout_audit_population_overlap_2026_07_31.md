@@ -145,11 +145,12 @@ mechanical addition (not a judgment call) and I'd recommend it regardless of how
       finalizing a RECLASSIFY or drafting a new extraction." Update both `na-eligibility-audit/SKILL.md` and
       `ag-closeout-audit/SKILL.md` to reference the new surface explicitly (the former's Phase 2, the latter's own Phase
       3 conflict-check) rather than leaving it to be independently rediscovered per run.
-- [ ] [SCRIPT] P3. Decide question (1) above (operator or design-owning agent), then either (a) add an
-      `assigned_vm != "NA"` guard to `generate_ag_closeout_audit_candidates.py`'s candidate filter and correct nothing
-      else (SKILL.md's claim becomes true), or (b) correct `na-eligibility-audit/SKILL.md`'s "disjoint population" /
-      "`/ag-closeout-audit` correctly never touches it" claim to describe the actual (non-disjoint) boundary, making the
-      4th conflict-check surface above load-bearing rather than defense-in-depth.
+- [x] ✅ [SCRIPT] P3. **RESOLVED 2026-08-08 (operator ruling, ao round-5 apply item 11 — see
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "Keep including them -- catches
+      real orphans."** Decided question (1) as option (b): `generate_ag_closeout_audit_candidates.py`'s candidate
+      population continues to include `assigned_vm: NA` docs (no code change); corrected
+      `na-eligibility-audit/SKILL.md`'s "disjoint population" claim to describe the actual (non-disjoint) boundary
+      instead -- applied.
 
 ## What I did NOT do
 

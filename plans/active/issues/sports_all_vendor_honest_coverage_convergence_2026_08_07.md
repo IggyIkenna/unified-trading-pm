@@ -776,3 +776,85 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **2026-08-08T11:53Z — smallchunk5 cleared chunk 18.** Chunk 18 took `10:20:04Z→11:51:19Z` (1h31m), 24 total OOMs this
   pass, zero hangs — now on **chunk 19/451** (`2020-09-04`), moving fast with skip-fast dates. FIXTURE_STATS +24 days
   (`last_completed_date=2025-09-22`, fresh `11:52:30Z`), steady. Both healthy, no intervention.
+- **2026-08-08T12:15Z** — FIXTURE_STATS +25 days (`last_completed_date=2025-10-17`, fresh `12:15:18Z`), steady. odds
+  smallchunk5: chunk 20/451 (`2020-09-09`), zero new OOMs since clearing chunk 18 (still 24 total). Both healthy, no
+  intervention.
+- **2026-08-08T12:37Z** — FIXTURE_STATS +18 days (`last_completed_date=2025-11-04`, fresh `12:37:03Z`), steady. odds
+  smallchunk5: chunk 22/451 (`2020-09-19`), zero new OOMs (still 24 total). Both healthy, no intervention.
+- **2026-08-08T12:59Z** — FIXTURE_STATS +26 days (`last_completed_date=2025-11-30`, fresh `12:58:49Z`), steady. odds
+  smallchunk5: chunk 24/451 (`2020-09-29`), zero new OOMs (still 24 total). Both healthy, no intervention.
+- **2026-08-08T13:21Z — FIXTURE_STATS crossed into 2026.** +34 days (`last_completed_date=2026-01-03`, fresh
+  `13:20:37Z`) — very close to its 2026-08-07 target end now, likely just 1-2 chunks remaining. Watching very closely
+  next tick. odds smallchunk5: chunk 25/451 (`2020-10-04`), 1 new OOM (25 total). Both healthy, no intervention.
+- **2026-08-08T13:45Z — FIXTURE_STATS confirmed chunk 23/26, entering 24/26 (3 chunks remain, not 1-2 as estimated).**
+  Verified via `run.log`'s own chunk markers: chunk 23 (`2025-11-07→2026-02-04`) done, now in chunk 24
+  (`2026-02-05→2026-05-05`). `last_completed_date=2026-02-26`, fresh `13:37:06Z`. **odds smallchunk5 died — FOURTH
+  occurrence**, this time at chunk 26 (`LA_LIGA`, RSS=13.5GiB), same ~17min silent-gap signature, no exit_code. This was
+  smallchunk5's longest life yet (~5h27m) and furthest progress (cleared chunk 18 fully, then 8 more chunks to 26) —
+  genuinely useful evidence downgrading the "chunk 18 is special" hypothesis toward a time-since-boot/cumulative-load
+  trigger instead. Reconsidered pause-vs-relaunch seriously at 4 occurrences; decided to keep relaunching (empirically
+  working — durable net progress every time, doesn't block anything). Relaunched as
+  `mtds-backfill-odds-smallchunk6-20260808` (guard passed, confirmed RUNNING). Full detail + updated Timeline table:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`@`179166cf88` (also resolved a git stash conflict
+  with a concurrent na-eligibility-audit entry on that doc — both pieces of content preserved).
+- **2026-08-08T14:02Z** — FIXTURE_STATS still chunk 24/26 (`2026-02-05→2026-05-05`), `last_completed_date=2026-04-09`
+  fresh — **2 chunks remain (25, 26)**. odds smallchunk6: chunk 4/451 (`2020-06-21`), zero OOMs, healthy skip-fast pace.
+  Both healthy, no intervention.
+- **2026-08-08T14:19Z — FIXTURE_STATS entered chunk 25/26, the LAST chunk before it.** Chunk 24 completed `14:12:30Z`,
+  now in chunk 25 (`2026-05-06→2026-08-03`) — only chunk 26 remains after this. odds smallchunk6: chunk 8/451
+  (`2020-07-11`), zero OOMs, healthy. Both healthy, no intervention. Watching very closely next tick for FIXTURE_STATS's
+  genuine convergence.
+- **2026-08-08T14:36Z** — FIXTURE_STATS still in chunk 25/26, but very close to its end now
+  (`last_completed_date=2026-07-17`, fresh `14:34:51Z`, vs chunk boundary `2026-08-03`) — likely converges within the
+  next tick or two. odds smallchunk6: chunk 11/451 (`2020-07-26`), zero OOMs, healthy. Both healthy, no intervention.
+  (Note: FIXTURE_STATS's `run.log` returned a transient 404 this tick before a retry succeeded — PROGRESS.json stayed
+  reliable throughout, consistent with the earlier-documented GCS flakiness pattern, not a real signal.)
+- **2026-08-08T14:54Z — 🎉 MAJOR MILESTONE: FIXTURE_STATS GENUINELY CONVERGED.** `af-backfill-20260807-161736` completed
+  all 26 chunks: `PROGRESS: chunk=26/26 range=2026-08-04→2026-08-07 time=2026-08-08T14:40:07Z`,
+  `instruments-backfill loop complete`, `exit_code=0`, clean graceful self-delete via `VM_SHUTDOWN_ON_COMPLETION`. **Per
+  rule 4a, re-censused live before trusting the clean exit** — ran
+  `instruments-service/scripts/census_fixture_stats_lineups_widening_volume_2026_07_31.py`: **FIXTURE_STATS needed
+  dropped from 24,462 to just 116** (99.5%+ resolved — a genuine honest-absence-floor residual, not a real gap, matching
+  the campaign's own stated completion criterion). Same census run also confirmed **PLAYER_STATS is now fully resolved**
+  (`census_all_af_entities_completion_2026_08_03.py`: needed=0, down from 18) — hadn't been re-checked in a while, a
+  nice bonus find. **Launched FIXTURE_LINEUPS immediately** per the AF doc's own todo (line 205, corrected earlier this
+  session from the wrong INJURIES-first assumption): `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh`
+  with `RESUME_ENTITY=FIXTURE_LINEUPS RESUME_START_DATE=2020-06-06 RESUME_END_DATE=2026-08-07` (same range/launcher
+  family FIXTURE_STATS used, singleton lock confirmed free first). Launch took >120s (moved to background) — confirming
+  the new VM actually started next tick, not assuming success from the command alone. FIXTURE_LINEUPS still needs the
+  full 58,523 shards (unchanged, no backfill had run against it yet). This flips the AF campaign's remaining scope to:
+  FIXTURE_LINEUPS (running now) → INJURIES (62,709 needed, queued behind the same singleton lock) → final re-census
+  across all 8 entities → close the doc. AF entity doc flipped + pushed at its 1000-line cap exactly (`0f2ba70293`).
+- **2026-08-08T15:00Z — CORRECTION: the first FIXTURE_LINEUPS launch attempt actually FAILED** (good thing the Progress
+  Log entry above already said "confirming next tick, not assuming success" — it hadn't converged yet, this confirms
+  why). Launcher output ended `ERROR: auto-republish completed but tarball(s) still stale ... aborting launch`.
+  Root-caused: `instruments-service` had a dirty `uv.lock` (harmless auto-regenerated diff — just added marker variants
+  for an already-declared `schema-validation` extra, from running the census scripts earlier this tick — not real work,
+  confirmed via `git diff --stat` = 7 lines, all mechanical). This IS the `auto`-mode tarball guard working as designed
+  (fixed `deployment-service@450b212`, 2026-08-07, per
+  `lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md`) — it correctly refused to launch onto
+  potentially-stale code rather than a new bug. Fixed by `git restore uv.lock` (confirmed zero content loss — pure
+  lockfile noise, not intentional work) and retried. Retry is currently in progress (backgrounded, >120s again — tarball
+  republish across 3 repos takes a while); confirming genuine VM creation next tick before trusting it.
+- **2026-08-08T15:08Z** — 2nd retry ALSO failed, differently: only `instruments-service` flagged stale despite a
+  genuinely clean, origin-synced tree (`git status --short` empty, 0 ahead/0 behind `origin/live-defi-rollout`).
+  Root-caused via direct manifest read (`gcloud storage cat .../instruments-service-code.manifest.json`):
+  `commit_sha=8548182b...` (older) vs local HEAD `6cdb0423...` — a genuine concurrent-push timing race on the shared
+  branch between the republish step reading HEAD and the manifest settling, not a bug in this checkout. Retried a 3rd
+  time (backgrounded).
+- **2026-08-08T15:16Z — ✅ FIXTURE_LINEUPS LAUNCH CONFIRMED GENUINE on the 3rd attempt.** `lc_verify_tarball_freshness`
+  passed clean this time (`tarball fresh: instruments-service @ 6cdb04239097`), VM `af-backfill-20260808-160815` created
+  (`asia-northeast1-c`, RUNNING). Per no-fire-and-forget discipline, waited and read `run.log` directly rather than
+  trusting the launcher's own exit code: confirmed genuine real work — `Fetched N lineup rows for fixture=<id>` lines
+  against real AF fixture IDs, `PIPELINE_HEARTBEAT` emitting on schedule, a healthy mix of populated (36-40 rows) and
+  legitimately-empty (0 rows — fixtures with no lineup data, expected) fetches. FIXTURE_LINEUPS is genuinely progressing
+  now. Two of three launch attempts failing on transient/environmental causes (not logic bugs) is now the established
+  pattern for this launcher under concurrent multi-worker load — noted for future launches, not a standalone issue worth
+  its own doc.
+- **2026-08-08T15:40Z** — both fleets healthy, no intervention. odds smallchunk6: entered chunk 18/451 (the danger chunk
+  — 2 of 4 prior occurrences died here) at `15:16:04Z`; as of `15:39:26Z` still actively logging fresh real work
+  (`Odds API batch complete: date=2020-08-31`), essentially current — NOT a silent hang like the prior 4 deaths (which
+  always went 16-21 min quiet before the watchdog kill). RSS sawtooth continues (climbs to ~24GiB then resets <1GiB per
+  date-batch, expected/normal). FIXTURE_LINEUPS (`af-backfill-20260808-160815`): confirmed progressing to genuinely
+  different fixture IDs between this check and the 15:14Z check (was 503xxx/209xxx/208xxx range, now
+  164xxx/564xxx/566xxx range) — rules out a stuck retry-loop, real forward movement through the 58,523-shard backlog.

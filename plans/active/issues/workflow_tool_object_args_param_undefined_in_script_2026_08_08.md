@@ -29,6 +29,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /cursor-configs/skills/plan-reconcile/SKILL.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"

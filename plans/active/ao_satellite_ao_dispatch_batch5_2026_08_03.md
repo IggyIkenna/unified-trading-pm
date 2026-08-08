@@ -143,23 +143,21 @@ below rather than duplicated here.
       4th, docs-only item — its P1 backend-routing-code item and P3 operator-sign-off item are explicitly self-gated in
       the source doc and NOT in scope here). Repo: unified-trading-pm. — unified-trading-pm@ea5d699c9
 
-- [ ] [REVIEW] P2. **Close out `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md` — pure bookkeeping, no new
-      investigation.** Flip its remaining `[OPERATOR] P2` (line ~225) and `[REVIEW] P2` (line ~232) checkboxes to
-      `- [x] ✅`, citing `agent-orchestrator@90a2b2f` and
-      `/plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md` as the
-      doc that actually performed + verified the live systemd-unit fix (3-way verification already on record: unit
-      mtime, `/proc/<pid>/cmdline` no `--reload`, clean `ActiveState`, plus the durable `ao-self-pull.sh` self-heal
-      verified live twice). Add that archived doc, plus
-      `/plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md` (the follow-up this doc's own
-      Progress Log says it filed but never linked), to this doc's `related:`. Set `status: resolved` + `resolved_by`,
-      then run the standard 6-step archival ritual (`git mv` to `plans/archive/issues/`, fix every corpus referrer —
-      **including the stale "MISTAGGED" table row at
-      `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`** which should move this doc out of that
-      bucket now that it's closed, not just retagged — see the file-adjacency rule above, land this BEFORE todo 3).
-      **Done when**: the doc reads `status: resolved`, both checkboxes `[x]` with the citations above, lives at
-      `plans/archive/issues/`, and `grep -rl ao_db_lock_storm_and_stuck_shutdown_outage plans/ codex/` returns only the
-      archived path. Source: `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`. Repo:
-      unified-trading-pm.
+- [x] ✅ [REVIEW] P2. **Close out `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md` — pure bookkeeping, no new
+      investigation.** ~~Flip its remaining `[OPERATOR] P2` / `[REVIEW] P2` checkboxes~~ — **stale premise**: both were
+      already `[x]` (closed by other sessions on 2026-08-06, before this todo was dispatched). ~~Set
+      `status: resolved` + run the 6-step archival ritual~~ — **not done**: this doc's own `/plan-reconcile ao` pass,
+      also 2026-08-06 (same day, after both checkboxes closed — postdates and supersedes this todo's premise), added an
+      explicit DO-NOT-ARCHIVE guard: Problem 1 (the SQLite `database is locked` storm) is not resolved by anything in
+      the doc, and it must stay `status: open` until that closes (see the doc's own `## Follow-ups` `[AO] P0` todo).
+      Archiving now would silently drop a live, still-tracked P0 finding. Did the safe bookkeeping subset instead: added
+      `/plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md` and
+      `/plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md` to the doc's `related:`, and
+      recorded this finding in the doc's own Progress Log. The
+      `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` MISTAGGED-row correction is deferred with it —
+      the doc is not actually closed yet, so there is nothing to retag out of that bucket. Source:
+      `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`. Repo: unified-trading-pm. —
+      unified-trading-pm (this commit)
 
 - [ ] [DOCS] P3. **Close `ao_tranche_full_content_audit_findings_2026_07_31.md`'s §3 (duplicate-doc merge) and §4 (stale
       MOVED-item bookkeeping) — the two eligible slices only; §1/§2 stay NA/operator-gated as the doc already has

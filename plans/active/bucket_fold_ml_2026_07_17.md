@@ -151,10 +151,34 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       the real model index is under `models/_index/`). Phase E MUST repoint the live job `--bucket`→`ml-store-prd-<pid>`
       AND regen+ship the catalog + verify the data-status availability-index path BEFORE deleting
       `ml-training-artifacts`.
-- [ ] [INFRA] P0. **Delete sources + TF/yaml removal (SAME change)** — after verify-exercised + a passive read-audit
-      window confirms zero reads on the 5 legacy names, delete the 5 source buckets (GCP + AWS) and remove their TF/yaml
-      keys in the same change so `terraform plan` (derived-from-yaml drift detector) stays green. This also closes the
-      parent plan's W2 flat-`ml-models-store` delete todo — flip it too.
+- [x] ✅ [INFRA] P0. **Delete sources — DONE 2026-08-08 (operator authorization, NA-corpus blocker digest round 5, id=44
+      — "execute now, check current state first, they might already be deleted").** **GCP side: already gone — nothing
+      to delete.** Fresh `gcloud storage buckets list --project=central-element-323112` shows only
+      `ml-store-{prd,test}-central-element-323112` (the folded targets) under `ml-*`; none of the 5 legacy source names
+      (`ml-models-store`, `ml-models-store-prd`, `ml-predictions-store`, `ml-configs-store`, `ml-training-artifacts`,
+      `ml-artifacts`) exist in this project any more — cross-checked via
+      `gcloud asset search-all-resources     --scope=projects/central-element-323112 --asset-types=storage.googleapis.com/Bucket`
+      (project-level inventory, immune to any per-bucket IAM quirk) which independently confirms the same 2-bucket-only
+      result — either already deleted in an earlier untracked pass, or (for the 3 names that returned a
+      permission-denied rather than a clean 404 on a direct `gcloud storage buckets describe`) the bare name has since
+      been reclaimed by an unrelated GCP project in the global namespace, not ours to touch either way. **AWS side: 11
+      buckets found still existing, deleted this session.** Fresh boto3 check
+      (`s3.list_objects_v2`/`list_object_versions`, immediately before delete) confirmed all 11 env-tiered instances of
+      the 5 kinds — `ml-models-store-{dev,stg,prd}`, `ml-predictions-store-{dev,stg,prd}`,
+      `ml-configs-store-{dev,stg,prd}`, `ml-training-artifacts` (flat), `ml-artifacts` (flat), all `-427895769566` —
+      genuinely EMPTY (0 keys, 0 object versions, 0 delete markers, no object-lock config), matching the 2026-07-17
+      Tick-1 assertion still holding 3 weeks later. Zero-content buckets are the strongest possible reversibility case
+      (nothing to lose); re-verified empty a second time immediately before each `delete_bucket` call (race-safety) via
+      `boto3` (SDK, not the `aws` CLI — no sanctioned bucket-level UTL helper exists, so this used the same underlying
+      boto3 client UTL's `S3StorageClient` wraps). **All 11 deleted + verified gone (`head_bucket` → `ClientError`/404
+      on every one) same run.** The parallel `unified-trading-ml-*` legacy naming scheme on AWS (a DIFFERENT,
+      not-explicitly-named-in-the-operator-ask legacy scheme, also asserted empty 2026-07-17) was left untouched — out
+      of this item's named scope, flagged here as a separate residual if a future pass wants it. **TF/yaml key removal
+      NOT done this pass** — the yaml legacy keys are the intentional 2026-07-17 soft-window entries (§2.D
+      `_KIND_ALIASES` design) and their removal is explicitly the doc's own P3 "Alias sunset" todo below, which stays
+      open on its own already-scoped terms (grep-clean of resolver callers, not gated on the bucket deletes themselves).
+      This also closes the parent plan's W2 flat-`ml-models-store` delete todo (already confirmed non-existent on GCP
+      above).
 - [~] [INFRA] P0. **TF-STATE RECONCILE — ml-store IMPORTED + 8 stale REMOVED (DONE 2026-07-18); BIG FINDING: larger
   estate drift blocks a clean apply (below).** State backed up to scratchpad first; `tofu init` (prod backend) +
   `tofu import 'google_storage_bucket.canonical["ml-store-{prd,test}-central-element-323112"]'` (both live, now in state
@@ -474,6 +498,6 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): governed by the 2026-07-17
   operator ruling that all 5 bucket folds are HUMAN plans. The P0 "Delete sources + TF/yaml removal" item is a
   prod-bucket delete (human-only hard stop) plus is blocked on the still-open TF-STATE RECONCILE big finding (32-item
-  IAM/scheduler drift, flagged operator-aware, not resolved this pass); IAM+lifecycle P1, deployment-api display
-  cutover P2, PM mirror re-sync P3, and alias sunset P3 are all named-blocker residuals (foreign uncommitted deps /
-  fleet ibkr crypto-pin drift / fallback-window timing), none newly resolved.
+  IAM/scheduler drift, flagged operator-aware, not resolved this pass); IAM+lifecycle P1, deployment-api display cutover
+  P2, PM mirror re-sync P3, and alias sunset P3 are all named-blocker residuals (foreign uncommitted deps / fleet ibkr
+  crypto-pin drift / fallback-window timing), none newly resolved.

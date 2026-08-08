@@ -847,3 +847,13 @@ speed-note (both deferred optimisations, non-blocking).
   Updated the coverage-matrix table's disposition column for all 11 rows to match, and filed 3 concrete `[DATA]` P2
   "wire a real source" todos (one per newly-in-scope data_type) immediately below the retagged todo — sources not built
   this session, just properly scoped+filed per the round5 apply-phase instruction.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-read the full open-todo set (17
+  items). The doc mixes genuinely bounded items (the 3 new "wire a real source" todos, the aggregator-routes 9th
+  migrator-spec todo, the per-venue SOURCE_PRIORITY overrides — already ruled 2026-07-28) with several that remain
+  hard-gated: Era-B legacy retirement is explicitly `GATED on cefi+tradfi G4 apply complete`; the delete-after-migration
+  bucket purges require `Owner: vm-defi (operator sign-off on the bucket deletes — destructive)`; GATE C
+  (instruments-store v9 WRITE) is an operational apply gate, not worker-determinable. Because `assigned_vm` flips
+  whole-doc, the destructive-delete-gated items block a clean flip. Flagging for a future round: the 3 "wire a real
+  source" todos + the aggregator-routes spec are strong RECLASSIFY candidates if forked into their own child plan
+  (mirroring this same doc's own gas-fees/liquidations-spec precedent) — not done this round (scope: classification,
+  not authoring a new fork). Doc stays `assigned_vm: NA`.

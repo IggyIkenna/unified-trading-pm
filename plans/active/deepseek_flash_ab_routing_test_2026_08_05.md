@@ -160,10 +160,22 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       monitoring window and count how many of the window's completed todos it actually touched (spot-checked) vs. the
       total completed count. If coverage is a small fraction, "no review-agent complaint" carries near-zero evidentiary
       weight for either pool and Layer 2's independent sample is doing all the real work, not a backstop to it.
-- [ ] 12. [OPERATOR] P3. **Decide whether the review agent's findings should become a structured, queryable event**
-      (e.g. a `review_finding` activity-log entry with severity + task_id) instead of chat-only — this audit is the
-      second time in this codebase's history a quality question needed data the review agent generates but doesn't
-      persist. Out of scope to build inside this A/B test; flag as a follow-up if the operator agrees it's worth it.
+- [x] ✅ 12. [OPERATOR] P3. **Operator ruling 2026-08-08** (ao round-5 apply session, item 2 —
+      /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "Yes, build it." Decide whether the
+      review agent's findings should become a structured, queryable event (e.g. a `review_finding` activity-log entry
+      with severity + task_id) instead of chat-only — this audit is the second time in this codebase's history a quality
+      question needed data the review agent generates but doesn't persist. Decision recorded; the build itself is out of
+      scope for this A/B-test plan (per this todo's own original scope note) — filed as a new, properly-scoped todo
+      below rather than built inline here.
+- [ ] 12a. [BACKEND] P2. **Build a structured `review_finding` event so review-agent output is queryable, not
+      chat-only** (per the 2026-08-08 ruling on todo 12 above). Add a persisted activity-log entry emitted whenever the
+      review role posts a finding — minimum fields: `task_id`, `severity` (e.g. correct/needs-rework/broken, matching
+      this plan's own todo 10 rubric), `finding_text`/summary, `agent_id`, `created_at`. Emit it from the review role's
+      existing finding-post path (`agent-orchestrator/agents/review.md` step + whatever `POST /api/agents/...` call
+      currently carries a finding as free-text chat) so future audits (like this plan's todos 10/11) can query real
+      review coverage instead of re-deriving it from chat history. **Done when**: the event is written on every review
+      finding, a query/report endpoint or script can pull findings by task_id/date range/severity, a regression test
+      proves emission + retrieval, and `quality-gates.sh` is green. Repo: agent-orchestrator.
 - [ ] 13. [DOC] P2. Write up the final verdict (keep flash / drop it / use it only for a specific task class) in this
       plan's Progress Log, with the real numbers cited, then archive this plan per the standard 6-step ritual.
 - [x] 14. ✅ [BACKEND] [UI] P1. **Per-turn/per-task efficiency metrics** — operator ask (2026-08-05): avg turns/task,
@@ -280,11 +292,11 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       the numbered slots entirely; `slot_role='review'` on slots #1/#8/#10/#12 is a worker craft/skill tag for
       task-dispatch routing, unrelated to agent persistence).
 - [x] 20. ✅ [BACKEND] [UI] P2. **DeepSeek Wallet Reconciliation — worker/orchestrator/review spend split + operator
-      top-up tracking + human-usage-outside-AO residual**, implementing todo 19(b)'s operator ruling. New
-      `deepseek_topups` table (operator-recorded real top-up events, audit-trail-only, never overwritten) + a nullable
-      `slot_id` on `deepseek_message_usage` (backfills naturally as the poller re-sweeps);
-      `compute_deepseek_wallet_     reconciliation()` splits attributed spend by `slot_id` (0=orchestrator,
-      `config.review_slot_ids()`=review, everything else=worker) and computes
+      top-up tracking + human-usage-outside-AO residual**, implementing todo 19(b)'s operator ruling (this doc,
+      `deepseek_flash_ab_routing_test_2026_08_05.md`, todo 19(b) above). New `deepseek_topups` table (operator-recorded
+      real top-up events, audit-trail-only, never overwritten) + a nullable `slot_id` on `deepseek_message_usage`
+      (backfills naturally as the poller re-sweeps); `compute_deepseek_wallet_     reconciliation()` splits attributed
+      spend by `slot_id` (0=orchestrator, `config.review_slot_ids()`=review, everything else=worker) and computes
       `real_total_spend = known_topups − current_balance`, `residual =     real_total_spend − attributed_total` —
       deliberately `None` (not a misleading 0) until at least one top-up is recorded. New `DeepSeekWalletPanel.tsx`
       (table + a top-up-entry form) mounted on the dashboard next to each `TaskUsageWindowsPanel`. 6 backend pytest + 7
@@ -381,18 +393,18 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       building: `_done_one_off` (every cicd/conflict_resolver/data_pipeline_failure escalation and every scheduled
       auditor's completion path) never wrote a `TaskUsageRow` at all — that work was structurally invisible to this
       panel, not merely unlabeled. New `TaskUsageRow.dispatch_role` column (raw role/agent_kind, collapsed to a bucket
-      only in the query layer per operator ruling — keeps conflict_resolver/ data_pipeline_failure individually
-      filterable rather than folded into "cicd"); `_done_one_off` now computes + records usage (bracketed by
-      `AgentRow.registered_at`); `task_role_group()` built against `ESCALATION_FAMILY_ROLES`/`PLAN_HEALTH_FAMILY_ROLES`,
-      NOT the raw `lifecycle` string (which would misclassify backend_engineer/infra/quant_dev/ui_developer as "cicd" —
-      they share `lifecycle: one_shot`); `data_engineering` groups as "planning" per operator ruling (matches its real
-      backlog dispatch mechanism, not its role file's `scheduled` label). New `role_group` query param on
-      `GET /api/backlog/usage/windows` + second filter row in `TaskUsageWindows.tsx`. New backend pytest + Playwright
-      spec (`task-usage-role-group-filter.spec.ts`). Fixed a real pre-existing Playwright locator bug found along the
-      way (`.panel, {hasText}` ambiguity vs the Accounts panel's own cross-reference hint text); filed a separate,
-      deeper pre-existing e2e-fixture issue as a follow-up rather than fixing it here (see Progress Log). QG green (2499
-      backend / 225 frontend). Landed `agent-orchestrator@de73f93`, deployed live and verified — see Progress Log for
-      full detail and live numbers.
+      only in the query layer per operator ruling (this doc, `deepseek_flash_ab_routing_test_2026_08_05.md`, todo 20
+      above) — keeps conflict_resolver/ data_pipeline_failure individually filterable rather than folded into "cicd");
+      `_done_one_off` now computes + records usage (bracketed by `AgentRow.registered_at`); `task_role_group()` built
+      against `ESCALATION_FAMILY_ROLES`/`PLAN_HEALTH_FAMILY_ROLES`, NOT the raw `lifecycle` string (which would
+      misclassify backend_engineer/infra/quant_dev/ui_developer as "cicd" — they share `lifecycle: one_shot`);
+      `data_engineering` groups as "planning" per operator ruling (matches its real backlog dispatch mechanism, not its
+      role file's `scheduled` label). New `role_group` query param on `GET /api/backlog/usage/windows` + second filter
+      row in `TaskUsageWindows.tsx`. New backend pytest + Playwright spec (`task-usage-role-group-filter.spec.ts`).
+      Fixed a real pre-existing Playwright locator bug found along the way (`.panel, {hasText}` ambiguity vs the
+      Accounts panel's own cross-reference hint text); filed a separate, deeper pre-existing e2e-fixture issue as a
+      follow-up rather than fixing it here (see Progress Log). QG green (2499 backend / 225 frontend). Landed
+      `agent-orchestrator@de73f93`, deployed live and verified — see Progress Log for full detail and live numbers.
 
 - [x] 24. ✅ [BACKEND] P1. **Task Token Usage role-group filters (todo 23) were reading zero for CI/CD, conflict
       resolver, and every scheduled role — two real bugs, not "no completions yet" as todo 23's own final Progress Log
@@ -430,17 +442,29 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       **Correction to todo 23's own final Progress Log entry** (2026-08-06, quoted below): "all correctly read zero...
       expected, not a bug" was WRONG — it was bug 1 above, silently swallowing every one-off completion. This fixes it
       going forward from whichever deploy picks up `acd6d70`; it does NOT backfill the historical gap — see todo 25.
-- [ ] 25. [BACKEND] [OPERATOR] P3. **Decide + (if approved) run a historical backfill for the one-off completions lost
-      to todo 24's bug 1 while it was live** (`agent-orchestrator@de73f93` deploy through whenever `acd6d70` reaches the
-      VM) — an unknown-but-nonzero number of cicd/conflict_resolver/data_pipeline_failure/scheduled completions in that
-      window have no `TaskUsageRow` at all. Their transcripts may still be recoverable on disk
-      (`scripts/orchestrator/backfill_task_usage.py` precedent exists for the normal Class-A path, keyed off
-      `SlotHistoryRow`/`TaskRow.dispatched_at` — it would need extending to also match one-off `AgentRow.registered_at`
-      windows and `task_id=f"one-off:{agent_id}"`, since one-offs have no `SlotHistoryRow`/backlog `TaskRow` entry at
-      all). Not started — genuinely optional (the numbers are gone from the historical rolling-window totals either way
-      until this runs; going-forward correctness doesn't depend on it) and the transcript-retention window may have
-      already rotated some of the affected sessions out. **Operator call**: worth the backfill effort, or accept the
-      historical gap and move on?
+- [ ] 25. [BACKEND] P3. **Operator ruling 2026-08-08** (ao round-5 apply session, item 3): "Run the backfill." Extend
+      `agent-orchestrator/scripts/orchestrator/backfill_task_usage.py` to cover one-off completions, then run it, for
+      the completions lost to todo 24's bug 1 while it was live (`agent-orchestrator@de73f93` deploy through whenever
+      `acd6d70` reached the VM) — an unknown-but-nonzero number of
+      cicd/conflict_resolver/data_pipeline_failure/scheduled completions in that window have no `TaskUsageRow` at all.
+      **Investigated 2026-08-08**: read the live script in full — its `backfill()` is keyed purely off `SlotHistoryRow`
+      (`slot_id, task_id, completed_at`) joined to `TaskRow.dispatched_at`; one-off tasks have neither row (no backlog
+      `TaskRow`, no `SlotHistoryRow` — they're `AgentRow`-only, `task_id=f"one-off:{agent_id}"`), so today's script
+      silently has ZERO candidates for them — confirmed by reading `backfill()`'s single candidate source
+      (`select(SlotHistoryRow)`), not inferred. **Concrete extension needed** before this can run: add a second
+      candidate source that selects `AgentRow` rows in the affected window (`registered_at` between the `de73f93` and
+      `acd6d70` deploy timestamps) lacking a `TaskUsageRow` for `task_id=f"one-off:{agent.id}"`, derive
+      `assigned_at`/`completed_at` from `AgentRow.registered_at`/`AgentRow` completion state (mirroring todo 24's own
+      fix for how one-off `TaskUsageRow`s are now captured going forward — reuse the same session/window-matching logic
+      `deepseek_usage.build_task_usage_snapshot` already uses per-slot, keyed off the one-off agent's own transcript
+      rather than a slot's), then merge into the same `_match_usage`/`record_task_usage(backfilled=True)` path the
+      Class-A candidates already use. Dry-run first (script's own `--apply` contract), then apply via SSM against the
+      live orchestrator VM (`i-0c9b283b31d6b5ca7`), same provenance/pattern as todo 16's
+      `repair_unpriced_deepseek_spend.py` run. **Done when**: the extension ships with a regression test (a one-off
+      candidate with no `SlotHistoryRow` gets matched and backfilled), a live dry-run report is reviewed, then `--apply`
+      runs and the affected window's one-off `TaskUsageRow` count is verified non-zero (or genuinely unmatched due to
+      transcript rotation — report either way, don't silently drop). Not run yet — the code path needed to run it
+      doesn't exist yet; this is now a concrete, non-operator-gated build+run todo, not an open decision.
 
 ## Codex SSOTs
 
@@ -735,7 +759,15 @@ appetite for it.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
-  2026-08-06 marker. Note: todo 8's ~24h monitoring window (target check-in ~2026-08-06 20:41 UTC) has now elapsed as
-  of this audit date — todos 9-11 are time-gate-clear and ready to pick up directly, still correctly NA per this plan's
-  own frontmatter/Progress Log (a live production routing change the operator wants to review, not autonomous AO
-  dispatch).
+  2026-08-06 marker. Note: todo 8's ~24h monitoring window (target check-in ~2026-08-06 20:41 UTC) has now elapsed as of
+  this audit date — todos 9-11 are time-gate-clear and ready to pick up directly, still correctly NA per this plan's own
+  frontmatter/Progress Log (a live production routing change the operator wants to review, not autonomous AO dispatch).
+- **2026-08-08 (ao round-5 operator Q&A apply session, items 2+3)**: operator ruled on both remaining `[OPERATOR]`
+  decision todos. Todo 12 (structured review-finding event): "Yes, build it" — decision recorded, closed, and the actual
+  build filed as new todo 12a (`[BACKEND] P2`, concrete spec written from a fresh read of the review-finding post path).
+  Todo 25 (historical backfill for one-off completions lost during todo 24's bug 1): "Run the backfill" — investigated
+  the live `scripts/orchestrator/backfill_task_usage.py`; confirmed it has ZERO candidate-matching path for one-off
+  tasks today (keyed purely off `SlotHistoryRow`, which one-offs never get), so it cannot simply be run — retagged from
+  `[OPERATOR]` to `[BACKEND]` with a concrete extension spec (add an `AgentRow`-keyed candidate source for the affected
+  window) so it's now a build+run todo, not an open decision. Neither todo is fully closed-out yet (12a is new work; 25
+  needs the extension built before the actual backfill runs) — both are now unblocked and worker-determinable.

@@ -209,7 +209,7 @@ achieved by exclusion, not canonicalisation.**
       (test_sports_schemas, test_venue_context_integration, test_instrument_generator, representative_sample) to use
       BETFAIR_EX_UK as the canonical data-axis exchange representative; hierarchy already in place via arb bugfix
       (OPERATOR_GROUP_VENUES@b9a0be80); QG green (12533 passed).
-- [ ] [CODE] P0. **Collapse the raw odds vocabulary to a single lowercase `odds`.** `trades` → `odds`; footystats
+- [x] ✅ [CODE] P0. **Collapse the raw odds vocabulary to a single lowercase `odds`.** `trades` → `odds`; footystats
       `ODDS`/`odds` → `odds`; the two populations stay distinguishable via the existing `source` column (`odds_api` vs
       `footystats`), which is exactly the axis that should carry that distinction. Add an `in_play` boolean column
       (derivable from `bm_minutes_to_kickoff < 0`) and retire `trades_inplay`. Re-reserve `trades` for genuine matched
@@ -220,7 +220,22 @@ achieved by exclusion, not canonicalisation.**
       `_process_one_category`; IS `enumerate_expected_universe.py`; features-service reads `odds_horizon_bucket` shards
       by GCS path prefix via `_ODDS_BUCKETED_PREFIXES` (NOT data_type column — a data_type rename does NOT find it);
       ml-service `sports_feature_loader._ODDS_BUCKETED_PREFIXES` (same); deployment-api distinct_values +
-      honest-coverage rollup. Full exhaustive enumeration: P2 `[REVIEW] P0`.
+      honest-coverage rollup. Full exhaustive enumeration: P2 `[REVIEW] P0`. — **LANDED 2026-08-08 (slot 2,
+      data_engineering)**: `unified-api-contracts@b2c5197d5`. Added `SPORTS_ODDS_DATA_TYPE_CANONICAL_FORM` (dict mapping
+      `trades`/`ODDS`/`odds` → `odds`) + `canonical_sports_odds_data_type()` resolver in `league_data.py`, exported from
+      both the sports domain `__init__.py` and top-level `unified_api_contracts/__init__.py` — mirrors the
+      already-shipped `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM`/`canonical_sports_is_data_type` pattern exactly. **This is
+      the P1 CONTRACT only**, per the plan header ("mutates NO GCS object and NO manifest row"): deliberately NOT wired
+      into `DATA_TYPES_BY_ASSET_GROUP["sports"]` or any writer/reader this phase — the physical manifest re-stamp (the
+      9-consumer inventory above) is P2 scope. **`in_play` column + `trades_inplay` retirement also deferred to P2** —
+      NOT bolted onto `SPORTS_ODDS_TRADES` this phase: read `_validation.py::validate_dataframe` directly and confirmed
+      it flags any declared-but-absent column as `missing_column` regardless of `nullable`/`required` (the
+      `required=False`/`provided_by_venues` fields on `ColumnSpec` are never actually consulted by the missing-column
+      check), so adding `in_play` now would flag every currently-shipping row as a violation — the identical reason
+      `SPORTS_ODDS_HORIZON_BUCKET` was registered as its own contract instead of an optional column on
+      `SPORTS_ODDS_TRADES`. 4 new drift-guard tests green (`test_sports_exports.py`): export presence, all 3 raw tokens
+      covered, values collapse to `odds`, both-case resolution via `canonical_sports_odds_data_type`. Full
+      `unified-api-contracts` `quality-gates.sh` green (346s).
 - [x] ✅ [CODE] P0. **Add a first-class `horizon` axis** to the manifest/shard contract and stop overloading
       `timeframe`. `timeframe` reverts to meaning candle grain only. `odds_horizon_bucket` stops being a data_type and
       becomes `odds` at a horizon. Enumerate every reader of the current `timeframe` column BEFORE changing it (see the
@@ -249,7 +264,7 @@ achieved by exclusion, not canonicalisation.**
       deployment-api) are P2/P3 scope once the data re-stamp actually happens. Flagging here so P2 picks up: UTL
       `AvailabilityRecord.timeframe` needs the physical split, and the two readers above need to switch to the new
       `horizon` column once the writer stamps it.
-- [ ] [CODE] P0. **Merge the sports data_type vocabulary to ONE lowercase form.** This is the operator ruling that
+- [x] ✅ [CODE] P0. **Merge the sports data_type vocabulary to ONE lowercase form.** This is the operator ruling that
       OVERTURNS `/codex/02-data/sports-data-types-catalog.md`'s "legitimately coexist; do NOT merge". Blast radius is
       the WHOLE 19-token IS reference vocabulary (`FIXTURES`, `MATCHES`, `PLAYER_STATS`, `INJURIES`, `STANDINGS`,
       `TEAMS`, `XG`, …) — not just `ODDS`. Land the CONTRACT here; the data re-stamp is P2 and is gated on the in-flight
@@ -258,7 +273,21 @@ achieved by exclusion, not canonicalisation.**
       (`SCHEDULE_DEFINING_DATA_TYPES` frozenset), `availability_semantics.py`, `required_window_registry.py`,
       `league_data.py`, `feature_upstream.py` — all carry uppercase IS tokens; IS scripts
       `enumerate_expected_universe.py` + `build_instrument_catalogue.py`; every features-service/ml-service loader
-      keying on uppercase IS entity names. Full enumeration: P2 `[REVIEW] P0`.
+      keying on uppercase IS entity names. Full enumeration: P2 `[REVIEW] P0`. — **LANDED 2026-08-08**
+      `unified-api-contracts@298e628b` — added `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM` (dict comprehension over every
+      `SPORTS_DATA_TYPE_TO_SOURCE` key, all 19 IS tokens) + `canonical_sports_is_data_type()` resolver (accepts either
+      case, returns the lowercase target form) in `league_data.py`, exported from both the sports domain `__init__.py`
+      and the top-level `unified_api_contracts/__init__.py`. Additive-only — deliberately NOT wired into
+      `SPORTS_DATA_TYPE_TO_SOURCE`'s own keys or `enumerate_expected_universe.py`'s could-exist enumeration this phase,
+      to avoid double-counting the axis ahead of P2's physical re-stamp (same pattern as the `SPORTS_HORIZONS` todo
+      above). Drift-guard test (`test_sports_is_data_type_lowercase_form_covers_every_axis_key`) asserts every
+      `SPORTS_DATA_TYPE_TO_SOURCE` key has a registered lowercase form so a future IS data_type addition can't silently
+      miss the contract; 4 new tests green (export presence, drift-guard coverage, lowercase-value invariant, both-case
+      resolution via `canonical_sports_is_data_type`). Full UAC `quality-gates.sh` green. The 9 UAC consumer files +
+      IS's `enumerate_expected_universe.py`/`build_instrument_catalogue.py` + features-service/ ml-service loaders are
+      NOT yet wired to this table (unchanged this phase, per the plan header's "contracts only, no GCS/manifest
+      mutation" scope) — that live-wiring is the P2 `[REVIEW] P0` full-enumeration todo referenced above.
+      unified-api-contracts
 - [ ] [CODE] P0. **Retire the `exchange_odds`/`fixed_odds` instrument_type split** — exchange-vs-sportsbook is a
       property of the VENUE (UAC `SportsVenueType` already encodes it), so stamping it per-instrument is redundant.
       Derive at read time. This also resolves
@@ -318,17 +347,21 @@ achieved by exclusion, not canonicalisation.**
       `pipeline_mode=…/asset_group=…/venue={BOOKMAKER}/instrument_type=…/data_type=…/league_id=…` — wrong axis name,
       missing two segments; (c) it documents 8 data types and never documents `trades`/`trades_inplay`, the largest
       population in the estate. Rewrite against the new model rather than patching. ✅ unified-trading-pm@69db5f8ed
-- [ ] [DOCS] P1. **Reaffirm the 2020-06 floor against the P4 backfill** in `/codex/02-data/sports-2020-06-data-floor.md`
-      — no change expected, but state explicitly that the floor governs the derived-layer backfill and the C3 pre-launch
-      corpus disposition, so the next reader does not re-open it.
+- [x] ✅ [DOCS] P1. **Reaffirm the 2020-06 floor against the P4 backfill** in
+      `/codex/02-data/sports-2020-06-data-floor.md` — no change expected, but state explicitly that the floor governs
+      the derived-layer backfill and the C3 pre-launch corpus disposition, so the next reader does not re-open it. —
+      **DONE 2026-08-08 (slot 11, data_engineering)**: added "Reaffirmed against the P4 derived-layer backfill" section
+      — confirms no change to the floor date/window, states explicitly the floor governs both P4's backfill start-date
+      and the C3 corpus disposition (delete per the standing wipe ruling, not reopened as a 2018-extension choice).
+      unified-trading-pm@6030eb32a
 
 ### Added 2026-08-08 (operator, mid-flight) — collapse the remaining derived data_types onto `odds` + axes
 
 > Operator question that triggered this: _"what's the point of odds movement and snapshot as data types vs just being
 > manipulations of odds"_. Correct — and there is a decisive precedent this chain under-used.
 
-- [ ] [CODE] P0. **Collapse `odds_snapshot` and `odds_movement` into `data_type=odds` + the `timeframe` axis.** They are
-      not distinct data — they are a LOCF resample and an OHLC candle OF `odds`. Sports is the only asset_group that
+- [x] ✅ [CODE] P0. **Collapse `odds_snapshot` and `odds_movement` into `data_type=odds` + the `timeframe` axis.** They
+      are not distinct data — they are a LOCF resample and an OHLC candle OF `odds`. Sports is the only asset_group that
       mints new data_type names for its derived grains; the fleet-wide MDPS ruling (2026-07-21, recorded in
       `registry/processed_data_dependencies.py`) is explicit: _"an MDPS manifest row's `data_type` column carries the
       RAW source token (`trades`, `book_snapshot_5`, …) — the SAME vocabulary MTDS's raw-tick manifest rows use — with
@@ -337,7 +370,27 @@ achieved by exclusion, not canonicalisation.**
       ALREADY carry the grain in `timeframe` — `odds_movement` 15m=10,300 / 1h=10,276; `odds_snapshot` 15m=9,464 /
       1h=9,454 (live prod manifest, 2026-08-08). The data_type name restates what `timeframe` already says, so
       collapsing loses nothing. End state: sports raw vocabulary is ONE type (`odds`) plus the `timeframe`, `horizon`
-      and `in_play` axes. Apply the codex rename rule — enumerate consumers BEFORE changing anything.
+      and `in_play` axes. Apply the codex rename rule — enumerate consumers BEFORE changing anything. — **DONE
+      2026-08-08 (slot 32, data_engineering)**. The RAW-vocabulary side of the collapse was already shipped by a prior
+      session at `unified-api-contracts@1f5879fc` (verified on origin: 3 files, `market_data_categories.py` +
+      `_mvp_scope_rules.py` + `test_mvp_scope.py`) — removed `odds_snapshot`/`odds_movement` from
+      `DATA_TYPES_BY_ASSET_GROUP["sports"]`, `FREQUENCY_MAP`, `NEEDS_CANDLE_PROCESSING`,
+      `VALID_DATA_TYPES_BY_INSTRUMENT_TYPE`, and `MVP_SCOPE["sports"].data_types`; every removal site left an inline
+      comment naming this as the reason. This session verified the commit is genuinely on `origin/live-defi-rollout`
+      (not a dangling/lost commit per the RULES.md quickmerge-regate caution) and closed the checkbox, since only the
+      flip was missing. **Consumer inventory (codex rename rule)** — enumerated, not yet migrated, because they are the
+      declared scope of the very next todo below ("snapshot-vs-candle discriminator"), which this todo's own text
+      explicitly hands the physical rename to (`_RAW_TO_PROCESSED_PREFIX`,
+      `canonical_writer_shaping.mdps_data_type_key`): MDPS `odds_snapshot_adapter.py`/`odds_movement_adapter.py`
+      (`data_type` class attrs still literally `"odds_snapshot"`/`"odds_movement"`, registered in
+      `CandleAdapterRegistry`); UAC `_SPORTS_ODDS_DERIVED_CANDLE_PREFIXES` + `_candle_contracts.py`'s per-timeframe
+      contract registration loop + `_sports_prediction_contracts.py`'s
+      `CONTRACT_REGISTRY[("sports","odds","sports_odds_snapshot"/"sports_odds_movement")]` (the PROCESSED-key contracts,
+      deliberately untouched — they still back the live MDPS writer); UAC `_honest_coverage_clusters.py`
+      (`SPORTS_FIXTURE_CLUSTERS` mapping); MDPS `canonical_writer_shaping.py`'s `mdps_data_type_key` (the actual
+      key-minting function the next todo must read before changing). None of these are RAW MTDS capture vocabulary (this
+      todo's scope, per the plan header's "contracts only" phase boundary) — they are MDPS-internal processed-output
+      keys, correctly deferred.
 - [ ] [CODE] P1. **Decide and record the snapshot-vs-candle discriminator on the collapsed model.** `odds_snapshot`
       (point-in-time LOCF) and `odds_movement` (OHLC bar) are different SHAPES at the same grain, so `timeframe` alone
       cannot distinguish them once the names are gone. **PRE-SPECIFIED**: follow the fleet convention already used for
@@ -509,3 +562,10 @@ redo, which is exactly why it was split out.
   Codex note already in `/codex/02-data/sports-data-types-catalog.md` lines 183-185, 200-201: "ML labels come from IS
   `fixtures_outcomes`/`matches`, not from the retired types." Session ended before the checkbox was flipped; flipping
   now.
+- **2026-08-08 (slot 11, data_engineering)** — Block B [DOCS] P1 (reaffirm 2020-06 floor against P4 backfill) flipped.
+  Added a "Reaffirmed against the P4 derived-layer backfill" section to `/codex/02-data/sports-2020-06-data-floor.md`:
+  no change to the floor date/window, but states explicitly that (1) the floor's `START_DATE` clamp governs P4's
+  `odds_snapshot`/`odds_movement`/arbitrage/`horizon` backfill launchers, same as every other sports launcher already
+  enumerated in the enforcement surface, and (2) the P4 C3 pre-launch corpus disposition (10,345 objects) is settled by
+  this doc's standing supersession of the 2018 coverage-window-extension option, not a fresh decision — P4 cites this
+  doc rather than re-litigating.

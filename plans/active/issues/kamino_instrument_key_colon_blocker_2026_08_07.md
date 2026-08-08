@@ -16,7 +16,11 @@ execution_scope: local-only
 priority: P2
 assigned_role: data_engineering
 tags: [defi, canonical-id, kamino, blocker]
-related: [/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md]
+related:
+  [
+    /plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 nature: issue
 scope: [engineer]
 parent_epic: defi_master
@@ -69,5 +73,5 @@ Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batc
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — first audit pass, doc filed today. The doc carries
   no tracked checkboxes at all — it is a pure findings-plus-options write-up awaiting a real operator ruling on a
   GCS-path-changing instrument-key format decision (options (a)/(b)/(c) above, each with different migration
-  implications for existing manifest rows) — a textbook OPERATOR_QUESTION, not a worker-determinable outcome. Doc
-  stays `assigned_vm: NA`.
+  implications for existing manifest rows) — a textbook OPERATOR_QUESTION, not a worker-determinable outcome. Doc stays
+  `assigned_vm: NA`.

@@ -435,3 +435,10 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   runs success, 2026-08-07T20:19Z..23:02Z). Marked the `[OPERATOR] P2` "should IS redeploy" todo resolved/superseded —
   the code question is closed — and filed a new `[SCRIPT] P2` mechanical ops-check todo to confirm the LIVE Cloud Run
   revision actually serves that main HEAD (distinct from "is the fix on main", which is now answered).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 2 open items remain: `[DATA] P3`
+  (reconcile the 3 coexisting `instrument_id` naming conventions) is genuine design/judgment work the doc's own text
+  flags as previously producing a false "77 gap days" result — real risk, not a mechanical rename; `[SCRIPT] P2` (the
+  Cloud Run revision ops-check filed today) is bounded/mechanical on its own, but `assigned_vm` flips whole-doc, so it
+  can't be split from the naming-reconciliation item. `defi_satellite_ao_dispatch_batch10_2026_08_06.md`'s own
+  pre-2026-08-08 "cite-only" bucket already characterizes the naming half as "deliberately deferred as risky design
+  work," consistent with this verdict. Doc stays `assigned_vm: NA`.

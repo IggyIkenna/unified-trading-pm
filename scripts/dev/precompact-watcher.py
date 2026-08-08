@@ -29,11 +29,14 @@ Tier 2 — forced two-phase fallback after --force-after-seconds unacked AND
 from __future__ import annotations
 
 import argparse
+import glob
+import json
 import re
 import subprocess
 import sys
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import cast
 
 # -- ported regexes (agent-orchestrator/server/worker_liveness/__init__.py) --------
@@ -174,15 +177,203 @@ def submit_to_pane(session: str, text: str, submit_settle_s: float = 1.0) -> boo
     return not pane_input_pending(session)
 
 
+# -- transcript-measured context (ported from agent-orchestrator/server/context_probe.py,
+#    2026-08-08) ------------------------------------------------------------------
+#
+# The pane readouts above cannot drive a mid-range threshold. Measured on the
+# orchestrator VM: "% context used" matched 0/11 live panes and "% until auto-compact"
+# 2/11 -- the CLI only renders the countdown in the last few percent. Worse, the
+# _TOKEN_USAGE_RE fallback divides by a HARDCODED window, which was 5x too big for
+# sonnet-4.6 (a 165,797-token session reading 99% full in its own pane computed as
+# 16%). Both are fixed the same way as in AO: read message.usage from the session
+# transcript -- present on EVERY assistant turn -- and divide by a window LEARNED per
+# model instead of assumed.
+#
+# This also answers "don't count history from before the last compact" directly. The
+# transcript is append-only across every /compact (one real session accumulated 13
+# compact_boundary events), so a whole-file byte heuristic runs wildly high --
+# measured ~1475% of budget on a session the operator read at ~15%. The LAST
+# assistant turn's usage is inherently POST-compact (after a compaction the next
+# turn's input is just [summary + new turns]), so it needs no windowing at all; the
+# only extra guard required is the stale case below.
+
+_SYNTHETIC_MODEL = "<synthetic>"
+_MIN_CALIBRATION_PCT = 25
+_WATERMARK_TO_WINDOW = 0.97
+_MIN_WATERMARK_TOKENS = 50_000
+# A watermark is a WINDOW estimate only once sessions demonstrably SATURATE at it --
+# one session reaching N proves the window is at least N, not that it stops there.
+# Caught by testing this port against a real session: a fresh registry learned 222,121
+# from ONE in-flight claude-opus-5 session and reported 97% full when the truth was
+# ~22%, which would force a compaction immediately and forever after. Exceeding the
+# watermark RESETS the hit count -- the ceiling just moved, so old evidence is void.
+_WATERMARK_CONFIRM_HITS = 3
+_WATERMARK_CLUSTER_FRACTION = 0.95
+_LEARNED_WINDOWS_PATH = Path.home() / ".claude" / "precompact-learned-windows.json"
+
+
+def _as_int(value: object) -> int:
+    return value if isinstance(value, int) else 0
+
+
+def _token_total(usage: dict[str, object]) -> int:
+    """Live context size for one assistant turn -- the same four fields AO sums."""
+    raw_cache = usage.get("cache_creation")
+    cache = raw_cache if isinstance(raw_cache, dict) else {}
+    return (
+        _as_int(usage.get("input_tokens"))
+        + _as_int(usage.get("cache_read_input_tokens"))
+        + _as_int(cache.get("ephemeral_5m_input_tokens"))
+        + _as_int(cache.get("ephemeral_1h_input_tokens"))
+    )
+
+
+def _pane_cwd(session: str) -> str:
+    try:
+        res = subprocess.run(
+            ["tmux", "display-message", "-p", "-t", _exact_pane_target(session), "#{pane_current_path}"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        return res.stdout.strip() if res.returncode == 0 else ""
+    except (subprocess.SubprocessError, OSError):
+        return ""
+
+
+def _project_dir_for_cwd(cwd: str) -> str:
+    """Claude Code's project-dir encoding of a cwd: every non-alphanumeric character
+    becomes ``-`` (so ``/Users/x/Code/.tabs/1`` -> ``-Users-x-Code--tabs-1``).
+    Verified against a real local transcript directory."""
+    return re.sub(r"[^a-zA-Z0-9]", "-", cwd)
+
+
+def newest_transcript(session: str) -> Path | None:
+    """Newest transcript JSONL for the pane's current working directory.
+
+    Scoped to the pane's OWN project dir rather than "newest file anywhere under
+    ~/.claude/projects" so a second local Claude session in another repo can never be
+    mistaken for this one."""
+    cwd = _pane_cwd(session)
+    if not cwd:
+        return None
+    project_dir = Path.home() / ".claude" / "projects" / _project_dir_for_cwd(cwd)
+    matches = [Path(p) for p in glob.glob(str(project_dir / "*.jsonl"))]
+    if not matches:
+        return None
+    return max(matches, key=lambda p: p.stat().st_mtime if p.exists() else 0.0)
+
+
+def read_transcript_snapshot(path: Path) -> tuple[str, int, bool] | None:
+    """``(model, tokens, stale_after_compaction)`` from a transcript, or None.
+
+    Two guards, both load-bearing (see context_probe.py for the measured evidence):
+    ``<synthetic>`` records carry ZERO-token usage and are often the LAST record, and
+    a ``compact_boundary`` after the last usage record means the reading describes
+    the PRE-compact session."""
+    try:
+        text = path.read_text(errors="replace")
+    except OSError:
+        return None
+    model, tokens, last_usage, last_compaction = "", 0, -1, -1
+    for index, line in enumerate(text.split("\n")):
+        if '"compact_boundary"' in line:
+            last_compaction = index
+        if '"usage"' not in line:
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(record, dict) or record.get("type") != "assistant":
+            continue
+        raw_message = record.get("message")
+        message = raw_message if isinstance(raw_message, dict) else {}
+        record_model = message.get("model")
+        if not isinstance(record_model, str) or record_model == _SYNTHETIC_MODEL:
+            continue
+        raw_usage = message.get("usage")
+        if not isinstance(raw_usage, dict):
+            continue
+        model, tokens, last_usage = record_model, _token_total(raw_usage), index
+    if last_usage < 0 or tokens <= 0:
+        return None
+    return model, tokens, last_compaction > last_usage
+
+
+def _load_learned() -> dict[str, dict[str, int]]:
+    try:
+        raw = json.loads(_LEARNED_WINDOWS_PATH.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    return {k: v for k, v in raw.items() if isinstance(k, str) and isinstance(v, dict)}
+
+
+def observe_window(model: str, tokens: int, pane_pct: int | None, fallback_window_k: int) -> int:
+    """Record an observation and return the best window estimate for ``model``.
+
+    Precedence: exact calibration from a visible pane pct > a SATURATED high-water
+    mark > the caller's ``--context-window-k`` fallback. Monotonic, so a short
+    session can never shrink a window learned from a long one. Adapts to any model,
+    which is the point -- nothing here knows the name "sonnet" or "deepseek"."""
+    data = _load_learned()
+    entry = dict(data.get(model, {}))
+    watermark = entry.get("watermark_tokens", 0)
+    if tokens > watermark:
+        entry["watermark_tokens"] = tokens
+        entry["watermark_hits"] = 1
+    elif tokens >= watermark * _WATERMARK_CLUSTER_FRACTION:
+        entry["watermark_hits"] = entry.get("watermark_hits", 0) + 1
+    if pane_pct is not None and pane_pct >= _MIN_CALIBRATION_PCT:
+        calibrated = int(tokens / (pane_pct / 100))
+        if calibrated > entry.get("calibrated_window", 0):
+            entry["calibrated_window"] = calibrated
+    data[model] = entry
+    try:
+        _LEARNED_WINDOWS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        _LEARNED_WINDOWS_PATH.write_text(json.dumps(data, indent=2, sort_keys=True))
+    except OSError:
+        pass  # advisory cache only -- a failed write just means re-learning next tick
+    if entry.get("calibrated_window", 0) > 0:
+        return entry["calibrated_window"]
+    watermark = entry.get("watermark_tokens", 0)
+    if watermark >= _MIN_WATERMARK_TOKENS and entry.get("watermark_hits", 0) >= _WATERMARK_CONFIRM_HITS:
+        return int(watermark / _WATERMARK_TO_WINDOW)
+    return fallback_window_k * 1000
+
+
 def read_pct(session: str, context_window_k: int) -> int | None:
+    """Context% for the session -- MEASURED from its transcript, pane as fallback.
+
+    The pane reading is still taken first because when it IS present it is
+    authoritative about the window the CLI itself divides by, so it calibrates the
+    learned window exactly. Returns None for "unknown" (never 0), including the
+    just-compacted case where the last transcript reading is stale-high."""
+    pane_pct: int | None = None
     try:
         pane = capture_pane(session)
     except (subprocess.SubprocessError, OSError):
-        return None
-    m = _AUTO_COMPACT_RE.search(pane)
-    if m:
-        return max(0, min(100, 100 - int(m.group(1))))
-    toks: list[str] = _TOKEN_USAGE_RE.findall(pane)
+        pane = ""
+    if pane:
+        m = _AUTO_COMPACT_RE.search(pane)
+        if m:
+            pane_pct = max(0, min(100, 100 - int(m.group(1))))
+
+    path = newest_transcript(session)
+    if path is not None:
+        snapshot = read_transcript_snapshot(path)
+        if snapshot is not None:
+            model, tokens, stale = snapshot
+            if stale:
+                return None  # just compacted -- the last reading describes the old session
+            window = observe_window(model, tokens, pane_pct, context_window_k)
+            if window > 0:
+                return max(0, min(100, round(tokens * 100 / window)))
+    if pane_pct is not None:
+        return pane_pct
+    toks: list[str] = _TOKEN_USAGE_RE.findall(pane) if pane else []
     if toks:
         try:
             return max(1, min(100, int(float(toks[-1]) * 100 / context_window_k)))
