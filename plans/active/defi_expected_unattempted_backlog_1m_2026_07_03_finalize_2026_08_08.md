@@ -69,27 +69,27 @@ is done. Do not start manually before then.
       independently re-verified with cited evidence; any mis-citation found is corrected in the source doc directly.
 
       **DONE 2026-08-08 (slot 30)** — the gate is now genuinely satisfied: the source doc's `[SCRIPT]` todo was
-              completed this session (`unified-api-contracts@768c6f93`), so this re-verification is against real shipped code,
-              not a narrowing note. All 5 points independently re-verified against a fresh
-              `git pull --ff-only origin live-defi-rollout` (`unified-api-contracts` HEAD `768c6f93`):
-              (1) **mis-citation, corrected** — `_INSTRUMENT_TYPE_ALIASES` did NOT gain explicit `a_token`/`debt_token`
-              entries (confirmed absent, `'a_token' in _INSTRUMENT_TYPE_ALIASES` → `False`) — slot 7's 2026-08-08 narrowing
-              already found this unnecessary (the alias table's own identity fallback + `_LENDING_ATOKEN_DEBTTOKEN`'s
-              already-lowercase enum values make an explicit entry redundant) and dropped it from the `[SCRIPT]` todo's scope;
-              point (1) as originally worded does not apply to what was actually built. (2) **true** — live-verified all 5
-              named protocols (AAVE_V3/FLUID/SPARK pre-existing; VENUS/SOLEND newly shipped this session) declare
-              `oracle_prices` in their venue-narrowed `valid_data_types_for_venue_instrument_type` sets. (3) **true** —
-              `valid_data_types_for_instrument_type("defi", "A_TOKEN"/"DEBT_TOKEN")` both return non-`None` frozensets
-              containing `oracle_prices` (live-tested). (4) **true** —
-              `test_lending_a_token_debt_token_exclude_perp_trades` (added this session,
-              `tests/test_valid_data_types_by_instrument_type.py::TestValidDataTypesForVenueInstrumentType`) passes,
-              asserting `perp_trades` excluded from A_TOKEN/DEBT_TOKEN on AAVE_V3/VENUS/SOLEND. (5) **not attempted, per
-              design** — `venue_mapping.DataTypeConfig` still exists; its deletion was correctly deferred (the source todo's
-              own "do not do in this todo" scoping) and filed as its own tracked follow-up doc,
-              `issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md`, so its absence here is not a finding.
-              Full `quality-gates.sh` green (427s) covering the whole `unified-api-contracts` suite including
-              `is_valid_shard_key`/enumerator tests. Evidence: `unified-api-contracts@768c6f93`,
-              `.qg_last_passed_sha=768c6f9325eb235ca9da5caad4f3bb4459bcf4f9`.
+                  completed this session (`unified-api-contracts@768c6f93`), so this re-verification is against real shipped code,
+                  not a narrowing note. All 5 points independently re-verified against a fresh
+                  `git pull --ff-only origin live-defi-rollout` (`unified-api-contracts` HEAD `768c6f93`):
+                  (1) **mis-citation, corrected** — `_INSTRUMENT_TYPE_ALIASES` did NOT gain explicit `a_token`/`debt_token`
+                  entries (confirmed absent, `'a_token' in _INSTRUMENT_TYPE_ALIASES` → `False`) — slot 7's 2026-08-08 narrowing
+                  already found this unnecessary (the alias table's own identity fallback + `_LENDING_ATOKEN_DEBTTOKEN`'s
+                  already-lowercase enum values make an explicit entry redundant) and dropped it from the `[SCRIPT]` todo's scope;
+                  point (1) as originally worded does not apply to what was actually built. (2) **true** — live-verified all 5
+                  named protocols (AAVE_V3/FLUID/SPARK pre-existing; VENUS/SOLEND newly shipped this session) declare
+                  `oracle_prices` in their venue-narrowed `valid_data_types_for_venue_instrument_type` sets. (3) **true** —
+                  `valid_data_types_for_instrument_type("defi", "A_TOKEN"/"DEBT_TOKEN")` both return non-`None` frozensets
+                  containing `oracle_prices` (live-tested). (4) **true** —
+                  `test_lending_a_token_debt_token_exclude_perp_trades` (added this session,
+                  `tests/test_valid_data_types_by_instrument_type.py::TestValidDataTypesForVenueInstrumentType`) passes,
+                  asserting `perp_trades` excluded from A_TOKEN/DEBT_TOKEN on AAVE_V3/VENUS/SOLEND. (5) **not attempted, per
+                  design** — `venue_mapping.DataTypeConfig` still exists; its deletion was correctly deferred (the source todo's
+                  own "do not do in this todo" scoping) and filed as its own tracked follow-up doc,
+                  `issues/venue_mapping_datatypeconfig_dead_code_deletion_2026_08_08.md`, so its absence here is not a finding.
+                  Full `quality-gates.sh` green (427s) covering the whole `unified-api-contracts` suite including
+                  `is_valid_shard_key`/enumerator tests. Evidence: `unified-api-contracts@768c6f93`,
+                  `.qg_last_passed_sha=768c6f9325eb235ca9da5caad4f3bb4459bcf4f9`.
 
 - [ ] [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
@@ -140,3 +140,10 @@ is done. Do not start manually before then.
   unlock (all todos on both docs are genuinely done; the lock's own value is the branch name, not a distinguishing agent
   claim) and am closing out my assigned `[REVIEW]` task via `/done` instead of holding the slot on a human-gated step.
   `[DOC]` todo remains open, correctly gated on the operator's unlock decision — re-dispatch once answered.
+- **2026-08-08 (DOC archival re-dispatch, slot 29)**: same `[DOC]` todo redispatched directly (recurring
+  `gate_on_depends` wiring-gap bounce noted above). Re-verified: source doc still carries the genuine
+  `locked_by: live-defi-rollout` / `locked_since: 2026-07-03` lock; no operator answer to slot 30's prior `/blocked`
+  question is visible in the live `blocked_queue` (not present under any currently-tracked `blocked_id`, likely pruned
+  or never surfaced against this specific task_id). Per the same HARD RULE, did NOT unlock autonomously. Re-filed the
+  `/blocked` question against this task (`BLK-3d18ef7c`), recommending approve-and-archive. `[DOC]` todo remains open,
+  gated on the operator's answer — re-dispatch once answered.
