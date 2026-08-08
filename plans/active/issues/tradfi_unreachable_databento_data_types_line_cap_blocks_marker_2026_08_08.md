@@ -36,10 +36,13 @@ related:
 created: 2026-08-08
 author: na_eligibility_auditor (agt-29c933, slot 4)
 parent_epic: tradfi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
+estimate_baseline_ai_days: 0.3
+estimate_calibrated_ai_days: 0.12
+assigned_role: docs_reconciler
 drift_direction: advance-code
 depends_on: []
 source:
@@ -135,3 +138,23 @@ Progress Log entry recording the conflict finding above (both described in full 
   not a rushed side-effect of an unrelated marker write. The source doc's na-eligibility-audit verdict this pass
   (KEEP-NA, valid, 1 open item) stands independently of this line-cap issue; only the Phase-0 incremental-skip
   optimization and the cross-doc conflict finding's visibility ON the source doc are lost until this is fixed.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: **RECLASSIFY `assigned_vm: NA → planning`.** This doc's
+sole open todo is a fully bounded, mechanical doc-hygiene extraction with a precise, checkable `Done-when` (verbatim
+Progress-Log-section extraction to a dated `_history_2026_08.md` archive, `related:` cross-reference add, conflict
+finding recorded, `wc -l` back under 500, `check_line_caps.sh` still green) — no design or operator judgment involved,
+and this exact procedure (extract oldest closed dated sections, leave a pointer, re-verify line caps) is already an
+established, repeatedly-executed sibling precedent throughout this corpus (e.g. the "line-cap remediation" extractions
+already performed on `github_actions_operator_gated_followups_2026_07_17.md` and
+`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`, both cited by their own Progress Logs) — the same
+"self-service default extends to a script/tooling gap with an exact existing sibling precedent" reasoning behind today's
+operator-Q&A ruling 9, applied to a doc-hygiene procedure rather than a script flag. **Conflict-check**: (a) no active
+`assigned_vm: planning` plan in `parent_epic: tradfi_master` claims this file or the target archive path; (b) no sibling
+batch/finalize doc drafted this run touches it; (c) no `tradfi_consolidated_closeout` doc exists to check against; (d)
+the sibling `prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` (same issue shape, different tranche) is
+independently still `assigned_vm: NA` — not a prior claim on THIS file, no cross-tranche conflict. Clear — flipped
+directly (this issue doc's own single todo already is the properly-scoped work); paired finalize doc authored at
+`plans/active/tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08_finalize_2026_08_08.md` (placed
+directly under `plans/active/`, not `issues/`, since it is `doc_type: plan`).
