@@ -812,16 +812,25 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       right at the SIGKILL; the 3rd (`18:38:30Z`) has no correlating burst at all. Filed a fresh `[BACKEND]` P2 below
       for that lead. No code shipped (pure verification + one live read-only monitoring GET).
 
-- [ ] [BACKEND] P2. **NEW, opened 2026-08-08 (slot 13, review) — a data-status dashboard burst, not the cockpit cluster,
-      now correlates with 2 of 3 post-`0050de6` SIGKILLs; profile it before guessing a fix.**
-      `/api/data-status/{coverage-summary,manifest,prediction-catalogue}` + `/api/config/shard-axis-matrix` +
-      `/api/capabilities/service-asset-groups/*` (instruments-service + market-tick-data-service) land as a burst with
-      several legs timing out at 32-34s immediately before `00464-94g@2026-08-08T01:00:23Z` and `00469-wz8@09:29:15Z`'s
-      SIGKILLs. None of these handlers carry the `130c3a2` `log_rss_delta` instrumentation (only
-      `repo_ci.get_overview`/`health_overview.get_health_overview`/`vm_deployments._compute_vm_deployments` do) — add it
-      to the data-status manifest/coverage-summary/catalogue handlers before guessing a fix, per this doc's own
-      established discipline. The 3rd post-fix SIGKILL (`00460-jnb@18:38:30Z`) has NO correlating burst (routine
-      `/health` polls only) — note but don't force an explanation. (repo: deployment-api)
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-08 (slot-23, backend_engineer) — `deployment-api@995bdfb`.** Added `log_rss_delta`
+      instrumentation to the 3 named data-status handlers this todo's own final instruction scoped to
+      (`data_status.get_coverage_summary`, `data_status.get_data_status_manifest` in
+      `routes/data_status/_status_core.py`; `prediction_catalogue.get_prediction_catalogue` in
+      `routes/prediction_catalogue.py`), wrapping each handler's real (non-mock) compute path exactly as `130c3a2` did
+      for `repo_ci.get_overview`/`health_overview.get_health_overview`/ `vm_deployments._compute_vm_deployments`.
+      **Intentionally did NOT instrument `shard-axis-matrix` or `service-asset-groups`**: both are pure in-memory
+      registry/yaml reads (no network/GCS I/O, no loop that could plausibly cross the 20 MiB warn threshold), unlike the
+      3 real-I/O handlers this doc's own established discipline (profile the compute-heavy candidates, not the whole
+      burst-cluster) already targets for `130c3a2`/`59fc391` — the todo's own final sentence ("add it to the data-status
+      manifest/coverage-summary/ catalogue handlers") names exactly these 3, narrower than the full 5-endpoint symptom
+      list in its first sentence. Full `deployment-api` `quality-gates.sh` green twice (183s pre-commit, 133s
+      post-commit re-run, sentinel matches HEAD `995bdfb`); shipped via quickmerge, verified `995bdfb` an ancestor of
+      `origin/live-defi-rollout`. No new unit tests added — mirrors `130c3a2`'s own precedent (unit tests cover the
+      `log_rss_delta` utility contract in `test_request_memory_profiling.py` only; the wrapping itself is a
+      behavior-neutral context manager around existing handler bodies, and the existing route-level tests for these 3
+      handlers passed unchanged). The next `Container terminated on signal 9` on a `995bdfb`-carrying revision will now
+      surface a `memory-profile data_status.<handler>`/`memory-profile prediction_catalogue.<handler>` line if one of
+      these 3 dominates — read those before guessing a fix, per this doc's own discipline. (repo: deployment-api)
 
 - [ ] [BACKEND] P3. **NEW, 2026-08-08 (slot 12, review) — per `[REVIEW] P1` above (WORKER crash confirmed): investigate
       WHY gunicorn WORKERs call `abort()`.** All confirmed SIGABRTs were WORKERs (age 1–67 at crash time). SIGABRT
