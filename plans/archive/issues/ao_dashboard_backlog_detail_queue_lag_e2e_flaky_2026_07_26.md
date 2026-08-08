@@ -82,6 +82,13 @@ tick interval and how long the test takes to reach the assertion (explaining why
 though every run in this session did fail). Not traced further — out of scope for the todo this was found under (a
 UI-only Backlog Integrity panel task).
 
+**Two other candidates, raised independently by the confirmed-duplicate doc**
+(`backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md`, filed 4 days later, same symptom, now `superseded_by`
+this doc): (1) `E2E-QUEUED.queued_at` might be stamped by `bootstrap.initialise()` at a different wall-clock point than
+the seed script's own later `now`; (2) the frontend `queued_at` sort comparator might be inverted/wrong for a
+still-queued row. Both are superseded by the `WorkerLivenessWatchdog` cause confirmed below — folded in here for the
+record, not independently investigated.
+
 ## Recommended decision
 
 A `data_engineering`/`backend_engineer` pass should: (a) grep the background loops the mock-mode server starts for any
@@ -138,3 +145,8 @@ is just wrong to assume it won't fire.
   while these two checkboxes were left unflipped, surfaced by `/plan-reconcile ao` 2026-08-06. Active twin
   `plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md` removed (create-only archival
   duplicate reconciliation).
+- **ao_satellite_ao_dispatch_batch5 2026-08-08** (§3 formal-closure,
+  `ao_tranche_full_content_audit_findings_2026_07_31.md`): folded the duplicate doc's two extra root-cause candidates
+  into "Why it matters" above, and added the missing `superseded_by:` frontmatter pointer on that doc (was `resolved_by`
+  prose only). Both docs now internally consistent: survivor `status: resolved` + fix cited, duplicate
+  `status: resolved` + `superseded_by:` this doc, both archived.

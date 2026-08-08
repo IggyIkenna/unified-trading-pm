@@ -137,9 +137,8 @@ run). #5 waits on #1 because both touch the lifecycle loops.
 #1's re-measure), the 07-12 degradation onset, the two `[REVIEW]` doc close-out/archival passes (they fire as each
 source doc's last todo lands), and the operator-sequenced Layer-1 producer rewire — **plus the 4 Phase-8 residuals
 inherited from the archived children** (2 calendar-time re-measurements + 2 operator-gated `.env.local` actions), for a
-genuine remainder of **9**. Separately, **14 `- [ ]` MOVED items stay open** because their child plan is still active
-(`ao_scheduled_agent_hygiene` ×3, `ao_fleet_infra_hardening` ×5, `ao_fleet_observability_kpis` ×6); the **15 MOVED items
-whose child is archived were flipped `- [x]` on 2026-07-20** with a per-item `DONE via <child>` pointer.
+genuine remainder of **9**. Separately, the 14 MOVED items once pending on those 3 children are now ALSO flipped `- [x]`
+with `DONE via <child>` pointers (all archived); **all 29 MOVED items here are closed** (fixed 2026-08-08).
 
 ## Satellite AO-dispatch layer (2026-07-26 → 2026-07-31) — this plan's related: never linked to it until now
 

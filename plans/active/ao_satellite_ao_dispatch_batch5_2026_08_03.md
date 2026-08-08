@@ -161,25 +161,22 @@ below rather than duplicated here.
       `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`. Repo: unified-trading-pm. —
       unified-trading-pm (this commit)
 
-- [ ] [DOCS] P3. **Close `ao_tranche_full_content_audit_findings_2026_07_31.md`'s §3 (duplicate-doc merge) and §4 (stale
-      MOVED-item bookkeeping) — the two eligible slices only; §1/§2 stay NA/operator-gated as the doc already has
-      them.** (a) Duplicate-doc formal closure: na-eligibility-audit already concluded (2026-07-31, re-affirmed
-      2026-08-02) that `backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md` is a duplicate of
-      `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`. Flip the 07-30 doc's frontmatter to
-      `status: resolved` + `superseded_by: ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26`, fold its two
-      extra root-cause candidates (seed-timestamp-ordering in `bootstrap.initialise()`; a possibly-inverted frontend
-      sort comparator) into the 07-26 survivor's "What was found" section, then archive the 07-30 doc per the standard
-      ritual. (b) Tracker MOVED-item bookkeeping: in `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`
-      (land AFTER todo 2 above — same-file rule), re-verify every `➡️ MOVED 2026-07-20 to <child>` bullet tied to
-      `ao_scheduled_agent_hygiene_2026_07_20.md` / `ao_fleet_infra_hardening_2026_07_20.md` /
-      `ao_fleet_observability_kpis_2026_07_20.md` (all 3 children archived) is flipped `[x]` with a DONE citation, then
-      correct the stale MOVED-item count sentence and the `ao_fleet_infra_hardening_2026_07_20.md` status-table cell to
-      match the freshly re-counted true state. **Done when**: both duplicate docs have internally-consistent frontmatter
-      (07-30 `resolved`+`superseded_by`, archived); the tracker's MOVED-item summary + status-table cell reflect the
-      freshly-verified count with no stale figures; this doc's own §3/§4 todos flip `[x]` with commit-sha citations;
-      §1/§2 explicitly left open/NA in the same edit. Source:
+- [x] [DOCS] P3. ✅ **Close `ao_tranche_full_content_audit_findings_2026_07_31.md`'s §3 (duplicate-doc merge) and §4
+      (stale MOVED-item bookkeeping) — DONE 2026-08-08.** (a) Both duplicate docs were already `status: resolved` +
+      archived from an earlier sweep, but the 07-30 doc was missing the machine-readable `superseded_by:` pointer (had
+      only `resolved_by:` prose) — added `superseded_by: [ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26]`
+      and folded its two extra root-cause candidates into the 07-26 survivor's "Why it matters" section. No re-archival
+      needed (already there). (b) **Finding that changed scope**: live-checked every `➡️ MOVED 2026-07-20 to <child>`
+      bullet tied to all 3 named children in `ao_open_issues_consolidated_close_out_2026_07_17.md` — all 14 (not just
+      `ao_fleet_observability_kpis`'s 6) were **already** `- [x]` with `DONE via <child>` citations pre-existing from
+      earlier sessions; only the summary sentence was stale (claimed "stay open... still active" when the status table
+      already showed all 3 archived). Corrected that sentence (all 29 MOVED items now stated closed) — and had to trim
+      it to a net -1 line to clear `check_line_caps.sh`'s HARD gate, the doc having crept to exactly 1001L (now 1000L,
+      right at the soft-warn line, zero headroom for the next touch). `ao_fleet_infra_hardening`'s status-table cell was
+      already accurate, no separate fix needed. This doc's own §3/§4 todos flipped `[x]` with citations; §1/§2 stay
+      `[x]`-operator-ruled as before. Source:
       `/plans/active/issues/ao_tranche_full_content_audit_findings_2026_07_31.md` (§3+§4 only). Repo:
-      unified-trading-pm.
+      unified-trading-pm. — unified-trading-pm (this commit)
 
 - [ ] [DATA] P2. **Read-only diagnostic on the orchestrator VM's own `data/state/state.db` + `activity_log` (no external
       credential needed — same host every dispatched worker already runs on).** For each of the 5 escalation/agent_ids
