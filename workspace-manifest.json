@@ -79,14 +79,14 @@
     "market-tick-data-service": "0.107.1",
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.97.0",
-    "unified-trading-library": "0.75.0",
+    "unified-trading-library": "0.76.1",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.26.1",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.100.1",
     "greeks-service": "0.18.13",
     "trading-agent-service": "0.12.11",
-    "strategy-service": "0.52.1",
+    "strategy-service": "0.53.0",
     "ml-service": "0.52.1",
     "alerting-service": "0.61.1",
     "unified-trading-api": "0.4.0",
@@ -2045,7 +2045,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT failed — open for fixes",
+    "locked_reason": "SIT passed — validated + unlocked",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -2225,8 +2225,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.76.0",
-      "published_at": "2026-08-08T09:51:29Z",
+      "version": "0.76.1",
+      "published_at": "2026-08-08T11:47:13Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
