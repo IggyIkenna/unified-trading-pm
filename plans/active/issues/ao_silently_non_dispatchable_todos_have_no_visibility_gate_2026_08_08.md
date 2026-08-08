@@ -74,7 +74,7 @@ ending: _"Do NOT mark this `BLOCKED-CREDENTIALS` — the credential ask is a sep
 gate the scaffold."_ That final sentence made the todo permanently non-dispatchable: `_has_live_blocked_token` scans the
 whole block, and "Do NOT mark this" is not one of the resolution prefixes `_STALE_MARKER_PREFIX_RE` recognises (`was` /
 `no longer` / `retagged from` / `previously`). The todo never entered the backlog from authoring until it was rewritten
-2026-08-08 (`unified-trading-pm@<see progress log>`), verified before/after with regen's real parser (14/15 -> 15/15).
+2026-08-08 (`unified-trading-pm@a134a45948`), verified before/after with regen's real parser (14/15 -> 15/15).
 
 This is the **fourth** distinct trigger shape for the same underlying bug class, after
 `/plans/active/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md` (27 todos across 21 files,
