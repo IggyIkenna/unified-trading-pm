@@ -131,32 +131,47 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
       (b), see the checked todo above).
 
       **Fresh coverage re-measure** (`.venv/bin/python scripts/plan-hygiene/generate_context_scope_inventory.py`, run
-          in background per the async-wait discipline — per-doc `git log` subprocess calls make it slow, not a memory
-          concern):
+                  in background per the async-wait discipline — per-doc `git log` subprocess calls make it slow, not a memory
+                  concern):
 
-          ```
-          Total in-scope plan/issue docs: 658
-            NEVER_SCOUTED  27
-            STALE          406
-            COUNT_MISMATCH 1
-            UP_TO_DATE     224
-          ```
+                  ```
+                  Total in-scope plan/issue docs: 658
+                    NEVER_SCOUTED  27
+                    STALE          406
+                    COUNT_MISMATCH 1
+                    UP_TO_DATE     224
+                  ```
 
-          224/658 `UP_TO_DATE` ≈ 34% — same conclusion as the 2026-08-01 measurement (222/647, ~34%): **still
-          majority-uncovered, NOT yet safe to treat as fleet-wide-ready.** Composition shifted materially though:
-          `NEVER_SCOUTED` collapsed 410→27 (real `/context-scout` sweep progress), but `STALE` grew 15→406 — consistent
-          with high-edit-velocity docs (e.g. `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`, touched by
-          dozens of Progress Log entries this week alone) outpacing their last `context-scout` marker date faster than the
-          skill's incremental sweep can re-stamp them; this is the staleness heuristic (`marker >= last-touched`) working
-          as designed, not a script defect — not filing a separate issue for it (no fix needed beyond what `/context-scout`
-          already exists to do, more frequent sweeps on high-churn docs). The mechanism (STEP 0 line) itself is safe to ship
-          regardless of corpus coverage — it degrades to a no-op on any doc without `context_scope` — but per the todo's own
-          framing, do NOT treat this as grounds to widen the rollout beyond the pilot scope until coverage genuinely
-          improves. Todo below (freshness re-check immediately before any enforcement flip) stays correctly gated on this.
+                  224/658 `UP_TO_DATE` ≈ 34% — same conclusion as the 2026-08-01 measurement (222/647, ~34%): **still
+                  majority-uncovered, NOT yet safe to treat as fleet-wide-ready.** Composition shifted materially though:
+                  `NEVER_SCOUTED` collapsed 410→27 (real `/context-scout` sweep progress), but `STALE` grew 15→406 — consistent
+                  with high-edit-velocity docs (e.g. `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`, touched by
+                  dozens of Progress Log entries this week alone) outpacing their last `context-scout` marker date faster than the
+                  skill's incremental sweep can re-stamp them; this is the staleness heuristic (`marker >= last-touched`) working
+                  as designed, not a script defect — not filing a separate issue for it (no fix needed beyond what `/context-scout`
+                  already exists to do, more frequent sweeps on high-churn docs). The mechanism (STEP 0 line) itself is safe to ship
+                  regardless of corpus coverage — it degrades to a no-op on any doc without `context_scope` — but per the todo's own
+                  framing, do NOT treat this as grounds to widen the rollout beyond the pilot scope until coverage genuinely
+                  improves. Todo below (freshness re-check immediately before any enforcement flip) stays correctly gated on this.
 
-- [ ] [INFRA] P2. Once the mechanism above ships, re-run the `context-scout` skill's freshness check across the corpus
-      once more immediately before flipping enforcement on, to catch any doc whose `context_scope` drifted stale in the
-      interim.
+- [x] ✅ [INFRA] P2. **DONE 2026-08-08 (slot-22, infra craft)** — mechanism confirmed shipped (`agents/RULES.md` §
+      "## 0. STEP 0" present, grep-verified). Re-ran `generate_context_scope_inventory.py` fresh (background, per the
+      async-wait discipline — this exact script timed out in the foreground for slot-16 earlier the same day):
+
+      ```
+              Total in-scope plan/issue docs: 656
+                NEVER_SCOUTED  27
+                STALE          404
+                COUNT_MISMATCH 1
+                UP_TO_DATE     224
+              ```
+
+              224/656 `UP_TO_DATE` ≈ 34% — essentially unchanged from the todo-1 measurement taken minutes earlier
+              (224/658, same session) and from the 2026-08-01 baseline (222/647). No material drift in the interim: corpus
+              coverage remains majority-`STALE`/`NEVER_SCOUTED`, so this doc's own scoped work (design + ship the STEP 0
+              mechanism + a bounded freshness re-check) is complete, but a fleet-wide-beyond-pilot enforcement flip is still
+              **not** supported by current coverage — that decision stays a future call for whoever owns the pilot-to-fleet
+              widening step, not something this issue doc's remaining scope covers.
 
 ## Codex SSOTs
 
@@ -235,3 +250,10 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
   (real scout progress) while `STALE` grew 15→406 (high-churn docs outpacing scout-marker refresh cadence — the
   staleness heuristic working as designed, not a defect; no separate issue filed). Flipped this todo done; the remaining
   freshness-recheck todo stays correctly gated behind it.
+- **2026-08-08 (slot-22, infra craft, same session)**: final scoped todo — re-ran `generate_context_scope_inventory.py`
+  once more (fresh background run, ~4 min wall-clock) as the immediately-pre-flip freshness re-check the todo asked for:
+  656 in-scope docs / 27 `NEVER_SCOUTED` / 404 `STALE` / 1 `COUNT_MISMATCH` / 224 `UP_TO_DATE` (≈34%) — no material
+  drift from the measurement taken minutes earlier in the same session. All three of this doc's todos are now checked;
+  every remaining "flip fleet-wide enforcement on" decision is explicitly out of THIS doc's scope (per its own "do not
+  expand beyond what's listed" framing) — it is a future call, not tracked here. Doc has zero open todos and is unlocked
+  → archiving per the plan-completion-and-archival-discipline HARD RULE.
