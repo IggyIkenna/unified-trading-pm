@@ -3,10 +3,11 @@ scope: [engineer, admin]
 title: "<AlertCode> Runbook (Template)"
 status: template
 created: 2026-05-08
-authoritative_for:
+summary: >-
   Canonical shape for per-AlertCode operator runbooks. Every runbook in this directory MUST conform to this template.
   Copy this file, replace `<AlertCode>` with the actual code, and fill in every section. Empty sections MUST be replaced
   with "N/A — <one-line reason>" rather than deleted.
+authoritative_for: [alerting runbook template shape]
 referenced_by: [/codex/15-runbooks/alerting/README.md, /plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md]
 related:
   - /codex/15-runbooks/alerting/README.md

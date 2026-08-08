@@ -3,9 +3,10 @@ scope: [engineer, admin]
 title: Alerting Playbook — Index
 status: planned
 created: 2026-05-07
-authoritative_for:
+summary: >-
   Index of the alerting-service playbook docs — alert taxonomy, operator response, threshold tuning, rehearsal
   procedure. Anchors every other alerting doc in this directory.
+authoritative_for: [alerting playbook index]
 referenced_by:
   [
     /codex/15-runbooks/alerting/pagerduty-escalation-policy.md,
