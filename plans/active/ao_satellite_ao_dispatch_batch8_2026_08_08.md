@@ -198,7 +198,7 @@ agent-orchestrator's own dashboard — the `cross-cutting` half was redundant, d
       `quality-gates.sh` green. Source: `/plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`
       (its 3rd item only). Repo: agent-orchestrator.
 
-- [ ] [INFRA] P1. **Deliberately and minimally reproduce the autostash-pop content-loss hazard, and determine whether
+- [x] [INFRA] P1. **Deliberately and minimally reproduce the autostash-pop content-loss hazard, and determine whether
       discarded content is recoverable — one combined todo (the two source items are tightly sequential: the
       recoverability check must run immediately after a live reproduction, before `git gc` can prune anything).** Set up
       two throwaway clones of the SAME repo (not two independent remotes — the point is to test whether two processes
@@ -297,3 +297,13 @@ isolation does NOT cover", `/codex/12-agent-workflow/plan-completion-and-archiva
 - **2026-08-08 (operator, interactive)**: RULED — the 2026-07-17 local-only ruling is LIFTED going forward; see batch5's
   Progress Log for the full note. `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`
   applied here too.
+- **2026-08-08 (slot 4, ao_satellite_ao_dispatch_batch8-004)** — Todo 4 ✅. Deliberate minimal reproduction run in
+  throwaway scratchpad clones. **Clean 2-clone verdict: DOES NOT REPRODUCE** — `git pull --rebase --autostash` in clone
+  A (with dirty file_x) correctly preserved the edit when running sequentially; 5 concurrent pulls in the same directory
+  all failed at "Cannot rebase onto multiple branches" (FETCH_HEAD race) before reaching autostash. **Trigger IS
+  specific to same `.git` directory:** the stash-interleaving race was manually reproduced — two processes both running
+  `git stash push` before either pops causes the pops to consume the wrong stash entry, leaving the victim's edit stuck
+  in an unpopped stash. **Recoverability: RELIABLE** (if stash not explicitly dropped + no `git gc`): edit IS in stash,
+  IS the final-version content, IS recoverable via `git stash list` + `git stash pop`. Full verdict recorded in source
+  doc Progress Log (`/plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md`).
+  No mitigation code changed (operator-gated per Deferred).
