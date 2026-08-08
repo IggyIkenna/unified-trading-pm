@@ -190,12 +190,30 @@ Manifest rows for retired types and physical GCS objects are cleaned up in P2.
 
 ## IS Reference Data (not MTDS/MDPS)
 
-The following types live in the **instruments-service** manifest (not the MTDS tick manifest) and will lowercase in P1
-alongside the vocabulary merge:
+The following types live in the **instruments-service** manifest (not the MTDS tick manifest). **CONTRACT LANDED P1**
+(`unified-api-contracts` — `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM` + `canonical_sports_is_data_type()`,
+`canonical/domain/sports/league_data.py`): the exact 19-token axis (`SPORTS_DATA_TYPE_TO_SOURCE`'s live keys — supersedes
+this doc's prior approximate "`PLAYERS`/`COACHES`, ~9 further" listing, which was aspirational and did not match the
+real registry) now has a registered TARGET lowercase form for every key:
 
-`FIXTURES` → `fixtures`, `MATCHES` → `matches`, `PLAYER_STATS` → `player_stats`, `INJURIES` → `injuries`, `STANDINGS` →
-`standings`, `TEAMS` → `teams`, `XG` → `xg`, `FIXTURES_OUTCOMES` → `fixtures_outcomes`, `PLAYERS` → `players`, `COACHES`
-→ `coaches`, and ~9 further IS entity types.
+`FIXTURES` → `fixtures`, `MATCHES` → `matches`, `ODDS` → `odds`, `PREDICTIONS` → `predictions`, `XG` → `xg`, `XG_SHOTS`
+→ `xg_shots`, `FIXTURES_SCHEDULE` → `fixtures_schedule`, `FIXTURES_OUTCOMES` → `fixtures_outcomes`, `INJURIES` →
+`injuries`, `FIXTURE_STATS` → `fixture_stats`, `FIXTURE_EVENTS` → `fixture_events`, `FIXTURE_LINEUPS` →
+`fixture_lineups`, `PLAYER_STATS` → `player_stats`, `TEAMS` → `teams`, `STANDINGS` → `standings`, `PLAYER_VALUES` →
+`player_values`, `SFI_PROGRESSIVE_STATS` → `sfi_progressive_stats`, `WEATHER` → `weather`, `ODDS_HORIZON_BUCKET` →
+`odds_horizon_bucket` (the one entry already live on disk — every other real manifest row still carries the uppercase
+form as of P1).
+
+**Deliberately NOT wired into `SPORTS_DATA_TYPE_TO_SOURCE`'s own keys or into `enumerate_expected_universe.py`'s
+could-exist enumeration this phase** — doing either before the physical re-stamp would double the axis (both cases
+iterating) and duplicate every `expected_unattempted` seed row per league × date, the exact denominator-corruption
+class the `FIXTURES`/`FIXTURES_SCHEDULE` incident already produced once (see
+`_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE` in `instruments-service/scripts/enumerate_expected_universe.py`). P2 wires the
+real writers/readers (UAC `data_type_capability.py`/`schema_spec.py`/`sports_league_entity_coverage.py`/
+`_source_priority_data.py`/`availability_semantics.py`/`required_window_registry.py`/`feature_upstream.py`, IS
+`enumerate_expected_universe.py` + `build_instrument_catalogue.py`, and every features-service/ml-service loader keying
+on uppercase IS entity names) to the new SSOT and performs the physical restamp, gated on the in-flight API-Football
+campaign.
 
 These are structurally separate from MTDS odds data — IS bucket, not MTDS tick bucket. ML labels (match outcomes,
 fixture results) come from IS `fixtures_outcomes`/`matches`, not from the retired `markets`/`outcomes`/`settlements`

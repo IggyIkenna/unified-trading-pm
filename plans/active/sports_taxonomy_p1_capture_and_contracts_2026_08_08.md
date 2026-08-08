@@ -249,7 +249,7 @@ achieved by exclusion, not canonicalisation.**
       deployment-api) are P2/P3 scope once the data re-stamp actually happens. Flagging here so P2 picks up: UTL
       `AvailabilityRecord.timeframe` needs the physical split, and the two readers above need to switch to the new
       `horizon` column once the writer stamps it.
-- [ ] [CODE] P0. **Merge the sports data_type vocabulary to ONE lowercase form.** This is the operator ruling that
+- [x] ✅ [CODE] P0. **Merge the sports data_type vocabulary to ONE lowercase form.** This is the operator ruling that
       OVERTURNS `/codex/02-data/sports-data-types-catalog.md`'s "legitimately coexist; do NOT merge". Blast radius is
       the WHOLE 19-token IS reference vocabulary (`FIXTURES`, `MATCHES`, `PLAYER_STATS`, `INJURIES`, `STANDINGS`,
       `TEAMS`, `XG`, …) — not just `ODDS`. Land the CONTRACT here; the data re-stamp is P2 and is gated on the in-flight
@@ -258,7 +258,30 @@ achieved by exclusion, not canonicalisation.**
       (`SCHEDULE_DEFINING_DATA_TYPES` frozenset), `availability_semantics.py`, `required_window_registry.py`,
       `league_data.py`, `feature_upstream.py` — all carry uppercase IS tokens; IS scripts
       `enumerate_expected_universe.py` + `build_instrument_catalogue.py`; every features-service/ml-service loader
-      keying on uppercase IS entity names. Full enumeration: P2 `[REVIEW] P0`.
+      keying on uppercase IS entity names. Full enumeration: P2 `[REVIEW] P0`. — **LANDED 2026-08-08 (slot 12,
+      data_engineering)**: `unified-api-contracts@298e628b`. Confirmed the live axis (`SPORTS_DATA_TYPE_TO_SOURCE`,
+      `canonical/domain/sports/league_data.py`) has EXACTLY 19 keys — the same count the todo's prose cites, but a
+      different membership than this doc's prior "`PLAYERS`/`COACHES`, ~9 further" illustrative list, which was
+      approximate and didn't match the real registry (corrected in the codex doc below). Added
+      `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM: dict[str, str]` (every axis key → its lowercase target form) +
+      `canonical_sports_is_data_type()` (case-insensitive resolver), exported top-level + from the sports domain
+      `__init__.py`, plus a drift-guard test (`tests/unit/sports/test_sports_exports.py`) asserting every
+      `SPORTS_DATA_TYPE_TO_SOURCE` key has a registered lowercase form — mirrors the `SPORTS_HORIZONS`/MDPS
+      drift-guard pattern. Full `quality-gates.sh` green (357s, 0 new warnings).
+      **Deliberately NOT done this phase** (same additive-only discipline as the horizon-axis todo above): did NOT
+      change any of the 9 named consumer files' existing dict keys, did NOT touch IS's
+      `enumerate_expected_universe.py`/`build_instrument_catalogue.py`, and did NOT touch any features-service/ml-service
+      reader. Reasoning, not an oversight: `SPORTS_DATA_TYPE_TO_SOURCE` directly drives
+      `enumerate_expected_universe._sports_data_types()`'s could-exist axis — adding lowercase-duplicate keys to it (or
+      to the other 8 files) TODAY, before the physical re-stamp, would double-iterate the axis and duplicate every
+      `expected_unattempted` seed row per league × date, exactly the denominator-corruption class the
+      `FIXTURES`/`FIXTURES_SCHEDULE` incident already produced once (see that file's own
+      `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE` docstring). Confirmed via a live read of `enumerate_expected_universe.py`'s
+      comments: real captured manifest rows carry the UPPERCASE form for 18 of the 19 tokens today (0 exceptions across
+      570k+ rows, 2026-07-13 measurement) — only `ODDS_HORIZON_BUCKET`'s writer already stamps lowercase. Full
+      per-file consumer wiring + the physical restamp is P2's `[REVIEW] P0` scope, unchanged from this todo's own
+      framing. Codex doc `/codex/02-data/sports-data-types-catalog.md` updated to the corrected 19-token list + point
+      at the new SSOT — unified-trading-pm (this commit).
 - [ ] [CODE] P0. **Retire the `exchange_odds`/`fixed_odds` instrument_type split** — exchange-vs-sportsbook is a
       property of the VENUE (UAC `SportsVenueType` already encodes it), so stamping it per-instrument is redundant.
       Derive at read time. This also resolves
