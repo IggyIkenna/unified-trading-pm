@@ -25,8 +25,8 @@ related:
 created: 2026-07-23
 author: unknown
 parent_epic: strategy_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 3.0
@@ -726,11 +726,33 @@ auto-generated section's own owner script, rather than hand-editing the table) �
 > (textbook judgment call, escalated rather than guessed). Item 2 (7-archetype sweep) closed as stale, see inline note.
 > Doc stays `assigned_vm: NA` — item 1's real work remains open.
 
-- [ ] [DESIGN] P0. **Human design decision for 5 broken archetypes (66 rows)** — `RULES_DIRECTIONAL_CONTINUOUS`,
+- [x] ✅ [DESIGN] P0. **Human design decision for 5 broken archetypes (66 rows)** — `RULES_DIRECTIONAL_CONTINUOUS`,
       `RULES_DIRECTIONAL_EVENT_SETTLED`, `ML_DIRECTIONAL_EVENT_SETTLED`, `MARKET_MAKING_EVENT_SETTLED`,
       `VOL_TRADING_OPTIONS` each need a real trading-parameter/design ruling (threshold values, outcome-id convention,
       option strike/expiry rule) before the mechanical catalog fix can ship; currently held as visible
-      `xfail(strict=True)`.
+      `xfail(strict=True)`. **RULED (operator, 2026-08-08)**, per-archetype (split below): -
+      `RULES_DIRECTIONAL_CONTINUOUS`: build real reversion-exit support in the engine (not a static-threshold
+      approximation) — filed as `[SCRIPT] P1` below. - `ML_DIRECTIONAL_EVENT_SETTLED`: extend the existing 2-market-type
+      test-fixture `outcome_order` precedent to all 4 market types — filed as `[SCRIPT] P2` below. -
+      `VOL_TRADING_OPTIONS`: ATM straddle, nearest weekly expiry ≥ 7 DTE — filed as `[SCRIPT] P2` below. -
+      `RULES_DIRECTIONAL_EVENT_SETTLED` (9 rows) and `MARKET_MAKING_EVENT_SETTLED` (6 rows): stay `xfail` — genuinely
+      need real per-row rule DSL strings / real per-exchange instrument IDs only the operator has; not derivable, not
+      guessed.
+- [ ] [SCRIPT] P1. **`RULES_DIRECTIONAL_CONTINUOUS` (19 rows) — build reversion-exit support in the rule engine** (per
+      the 2026-08-08 ruling above): the engine today is a single static-threshold long/short rule with no
+      exit-on-reversion concept; the catalog's `entry_zscore`/`exit_zscore`/`window_size`/`signal` config needs a real
+      engine-level mechanism to enter at `entry_zscore`, hold, and exit at `exit_zscore` (mean-reversion, not a second
+      independent threshold rule). A genuine build task, not a config rename — scope the engine change before
+      estimating.
+- [ ] [SCRIPT] P2. **`ML_DIRECTIONAL_EVENT_SETTLED` (15 rows) — wire `outcome_order` for all 4 market types** (per the
+      2026-08-08 ruling above): `1X2`/`halftime_1x2` → `"home,draw,away"` (3-way), `match_winner`/`moneyline` →
+      `"home,away"` (2-way) — the same convention the existing test fixture already uses for 2 of the 4 market types,
+      promoted to the production catalog and extended to cover the other 2. Verify against the real upstream ML model's
+      `predicted_class` indexing before shipping (money-path archetype).
+- [ ] [SCRIPT] P2. **`VOL_TRADING_OPTIONS` (14 rows) — wire the ATM-straddle strike/expiry resolver** (per the
+      2026-08-08 ruling above): select the strike nearest to spot (at-the-money) and the nearest weekly expiry with ≥ 7
+      days to expiry; resolve `call_instrument`/`put_instrument` from that pair. Same class of gap as
+      `CARRY_STAKED_BASIS_DATED`'s dated-contract resolver — reuse that pattern if applicable.
 - [x] ✅ [SCRIPT] P2. **Sweep the remaining 7 already-drivable archetypes** — `CARRY_FUNDING_DISPERSION`,
       `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL`, `DEFI_LP_VAULT` remain fully unchecked against either catalog surface for
       the same config-key-contract drift bug class this doc found everywhere else. **na-eligibility-audit 2026-08-01:
@@ -747,6 +769,12 @@ auto-generated section's own owner script, rather than hand-editing the table) �
 
 ## Progress Log
 
+- **na-corpus-digest-closeout 2026-08-08**: operator ruled interactively on the 5-broken-archetype design decision,
+  per-archetype: `RULES_DIRECTIONAL_CONTINUOUS` gets a real engine-level reversion-exit build (not an approximation);
+  `ML_DIRECTIONAL_EVENT_SETTLED` extends the existing test-fixture `outcome_order` precedent to all 4 market types;
+  `VOL_TRADING_OPTIONS` gets an ATM-straddle/nearest-weekly-≥7DTE resolver; `RULES_DIRECTIONAL_EVENT_SETTLED` and
+  `MARKET_MAKING_EVENT_SETTLED` stay `xfail` — genuinely need real per-row values only the operator has. Filed 3 new
+  `[SCRIPT]` implementation todos, flipped `assigned_vm: NA` → `planning`.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **na-eligibility-audit 2026-08-03**: KEEP-NA valid — re-confirmed independently. Item 2 (7-archetype sweep) is now
   checked off (`[x]`), so the doc's only remaining open item is item 1, the P0 human design decision for 5 broken
