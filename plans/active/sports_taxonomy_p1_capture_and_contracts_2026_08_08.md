@@ -389,6 +389,13 @@ achieved by exclusion, not canonicalisation.**
       work was real, corrected to `01c3dbbab9`/`79c4a72737`/`b7e41849d6` (each verified to exist first). Checker fixed
       to fetch once on the miss path; **baseline ratcheted 8 -> 0**, verified 2,549 citations / 0 unresolvable.
 
+- [ ] [REVIEW] P2. **The weakened-test sweep counted assertions; it did not read them.** The 2026-08-08 fleet sweep
+      screened 47 test-touching commits for NET assertion loss + added xfail/skip. That shape is blind to a commit which
+      DELETES a strong assertion and ADDS a weak one — it nets zero and never surfaces. Treat the sweep's result as "no
+      net coverage loss in the window", NOT "no weakening anywhere". Decide whether a semantic check is worth building
+      (e.g. flag any commit where an `assert` line is replaced rather than added/removed) or record why counting is good
+      enough. **Done when**: the decision is recorded, or the semantic check exists.
+
 ## Codex SSOTs
 
 - `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md` — HARD RULE governing every rename/split in this

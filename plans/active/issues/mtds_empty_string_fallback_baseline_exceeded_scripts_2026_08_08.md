@@ -75,12 +75,25 @@ goes down.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Fix or annotate the 7 over-baseline empty-string-fallback sites in `scripts/pipeline_e2e_check.py` (3
-      sites, ~L1177-1181), `scripts/rebuild_mtds_manifest.py` (1 site, ~L153),
+- [x] ✅ [SCRIPT] P1. Fix or annotate the 7 over-baseline empty-string-fallback sites in `scripts/pipeline_e2e_check.py`
+      (3 sites, ~L1177-1181), `scripts/rebuild_mtds_manifest.py` (1 site, ~L153),
       `scripts/reclass_nasdaq_nyse_eu_format_mismatch.py` (1 site, ~L132), and
       `scripts/remediate_risk_params_dishonest_stamps_2026_08_05.py` (2 sites, ~L174-175) so the count drops back to
       ≤66. Unblocks all future market-tick-data-service ships, including the alchemy/thegraph deletion parked pending
-      this (see Progress Log for the exact diff still sitting uncommitted, safe to re-apply).
+      this (see Progress Log for the exact diff still sitting uncommitted, safe to re-apply). — **DONE 2026-08-08,
+      `market-tick-data-service@505959b0f`** (fixed by a different session that hit the same block). **No `# noqa` was
+      needed and the baseline was NOT touched** — on reading each site, all 7 defaults were already dead: 3 in
+      `pipeline_e2e_check.py` were `str(row.get(k, "") or "")` where the `or ""` already handles `None` (the `, ""` was
+      redundant); `rebuild_mtds_manifest.py` and `reclass_nasdaq_nyse_eu_format_mismatch.py` were both guarded by a
+      column-presence / `pd.notna` check that made the default unreachable; and the 2 in
+      `remediate_risk_params_dishonest_stamps_2026_08_05.py` read from dicts built by `to_dict(orient="records")` over
+      an EXPLICITLY-requested column list containing both keys. That last pair was not harmless: `venue` degrading to
+      `""` falls through to the existing `not candidates` skip, but `date_str` had NO guard — it would have appended a
+      worklist entry with an empty date and written it under `--apply`. Verified
+      `check_no_empty_string_fallback.py --scope market-tick-data-service` -> `[OK] 66 (== baseline)`. Also cleared 6
+      PRE-EXISTING ruff errors in `reclass_nasdaq_nyse_eu_format_mismatch.py` (4x RUF002 `x`, B905 `strict=`, F841
+      unused local) that blocked the commit hook; confirmed pre-existing by stashing first. **Your parked
+      alchemy/thegraph deletion is now unblocked** — re-run the quickmerge in your Progress Log.
 
 ## Progress Log
 

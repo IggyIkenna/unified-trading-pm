@@ -45,6 +45,15 @@ locked_since:
 source: ["sports canonicalisation session 2026-08-08 — blocked landing an unrelated MTDS reader fix"]
 ---
 
+> **🔁 DUPLICATE — superseded 2026-08-08 by
+> `/plans/active/issues/mtds_empty_string_fallback_baseline_exceeded_scripts_2026_08_08.md`.** Two sessions
+> independently hit and filed the SAME MTDS STEP 5.101 breach hours apart, neither seeing the other — itself a finding
+> about concurrent-agent issue-filing. That doc is the survivor: it was filed first, carries the author's own intended
+> disposition ("fix or annotate... Do NOT bump the baseline YAML"), and records the parked deletion diff waiting on it.
+> The breach is RESOLVED (`market-tick-data-service@505959b0f`, count 66 == baseline, baseline untouched). This doc is
+> retained only for the analysis the survivor lacks: the per-field reasoning on the aave connector sites and the
+> fleet-blast-radius argument. Do not action its todos — action theirs.
+
 # MTDS STEP 5.101 over baseline — blocks every push
 
 ## Measured
