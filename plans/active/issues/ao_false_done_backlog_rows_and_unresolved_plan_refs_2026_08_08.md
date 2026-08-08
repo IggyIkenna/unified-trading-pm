@@ -292,8 +292,24 @@ plan + verifying the `done_sha`, never from the row's status alone.
       [
       ]`, consistent with both the live backlog (queued, real     unstarted work) and the script (no checkpoint present). No REOPEN (nothing `done`to reopen) or FLIP (work     genuinely isn't done) was warranted or performed; this item only needed its tracker checkbox resolved with the     verification trail above — the real checkpoint work stays live in the backlog as task    `mtds_migrate_executor_progress_checkpoint_gap-010`
       for a future data_engineering dispatch.
-- [ ] [BACKEND] P2. `deployment_scripts_bucket_soft_delete_retention_drift-002` (`done_sha=97d37ce57`) — explicitly
-      dated "Final drain confirmation on/after 2026-08-09", i.e. **not due yet**; likely REOPEN, not FLIP
+- [x] ✅ [BACKEND] P2. `deployment_scripts_bucket_soft_delete_retention_drift-002` (`done_sha=97d37ce57`) — **verified
+      2026-08-08 (slot 7): no REOPEN or FLIP action needed or possible — the row this audit item names has already
+      self-corrected**, same `regen_positional_task_ids_not_content_stable_2026_07_17.md` reshuffle pattern as every
+      item above. `GET /api/backlog` (2,429 rows) has zero rows currently holding the id
+      `deployment_scripts_bucket_soft_delete_retention_drift-002` (only the unrelated `-001` orphan,
+      `done_sha=2e9c249d7`, survives under this doc family). `97d37ce57` is a real, on-origin commit
+      (`docs(plans): exact - [x] brief match for 08-06 pre-gate verification flip…`, slot-6, 2026-08-06T14:33:53Z) that
+      flipped the PRE-GATE checkpoint todo (line 104: "Final drain confirmation on/after 2026-08-09" — **VERIFIED
+      2026-08-06 (slot-6, infra, PRE-GATE): NOT yet drained**, 98.6% bloat_pct vs done-when ≤9%, explicitly recorded as
+      "records the 08-06 verification cycle, NOT the final drain"), not the real final-drain todo — a legitimate,
+      honestly-documented interim checkpoint, not an over-claim. Read the cited plan
+      (`plans/active/issues/deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md`): line 104 is correctly
+      `[x]` matching `97d37ce57` exactly, and the REAL final-drain todo (line 114, same title, separate checkbox) is
+      correctly still `- [ ]` with a `DEFERRED-BY-DESIGN` marker gating it to on/after 2026-08-09 (today is 2026-08-08 —
+      not due yet, confirming this audit item's own "likely REOPEN, not FLIP" hunch was half right: the gate is
+      genuinely unmet, but there is no live `done` backlog row left to REOPEN either). No REOPEN (nothing currently
+      `done` to reopen) or FLIP (already flipped, honestly, on the correct pre-gate todo) was warranted or performed;
+      this item only needed its tracker checkbox resolved with the verification trail above.
 - [ ] [BACKEND] P2. `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-025` (`done_sha=0e9185d2c`) —
       round-8 launch across 8 shards; verify launch evidence before flipping
 
@@ -449,3 +465,13 @@ plan + verifying the `done_sha`, never from the row's status alone.
   `origin/live-defi-rollout`, matching the plan's own still-open checkbox (line 124). No REOPEN or FLIP performed; the
   real checkpoint work remains correctly queued as its own backlog task. See the checklist item above for the full
   trail.
+
+- **2026-08-08 (slot 7, backend_engineer)**: Verdict on `deployment_scripts_bucket_soft_delete_retention_drift-002`
+  (`done_sha=97d37ce57` at audit time): **no REOPEN or FLIP action needed or possible** — same self-correcting
+  positional-id pattern as the 10 items above. `GET /api/backlog` (2,429 rows) shows zero rows currently holding this
+  exact id. `97d37ce57` (slot-6, 2026-08-06) is a real commit that flipped the PRE-GATE verification checkpoint (line
+  104), a legitimate interim checkpoint distinct from the REAL final-drain todo (line 114, same title, separate
+  checkbox) — both are correctly stated in the plan doc: line 104 `[x]` matches `97d37ce57` exactly, line 114 is
+  correctly still `- [ ]` and `DEFERRED-BY-DESIGN`-gated to on/after 2026-08-09 (not due yet as of today, 2026-08-08).
+  Nothing to correct on either the backlog row (already gone/self-corrected) or the plan checkbox (already honest). See
+  the checklist item above for the full trail.
