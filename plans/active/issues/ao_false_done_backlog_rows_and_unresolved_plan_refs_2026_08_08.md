@@ -144,8 +144,29 @@ plan + verifying the `done_sha`, never from the row's status alone.
       matching `ffd41f98e` exactly. The false-done condition the audit captured has already been superseded by genuine,
       correctly-flipped follow-up work — nothing to REOPEN (would re-open already-honestly-done work) or FLIP (already
       flipped, by the row now holding the real work).
-- [ ] [BACKEND] P2. `sports_fast_t1_recon_oom_live_capture_outage-003` (`done_sha=80265d6`) — gate-shaped ("Once fixed,
-      backfill/re-fetch the resulting gap (2026-07-27, 2026-07-28…)")
+- [x] ✅ [BACKEND] P2. `sports_fast_t1_recon_oom_live_capture_outage-003` (`done_sha=80265d6`) — gate-shaped ("Once
+      fixed, backfill/re-fetch the resulting gap (2026-07-27, 2026-07-28…)") — **verified 2026-08-08 (slot 32): no
+      REOPEN or FLIP action needed or possible — the row this audit item names has already self-corrected**, same
+      positional-id-reshuffle pattern as the 4 items above
+      (`regen_positional_task_ids_not_content_stable_2026_07_17.md`). `GET /api/backlog` shows zero rows with
+      `done_sha=80265d6` anywhere in the current 2,430-row set, and no row currently holds the id
+      `sports_fast_t1_recon_oom_live_capture_outage-003` at all. `80265d67` is a real, on-origin commit
+      (`deployment-service`, slot-12, 2026-08-06T00:36:24Z —
+      `fix(vm): odds-api guard counts gcloud     stderr WARNING as a VM, blocking every backfill launch`) that genuinely
+      shipped, but it fixed a launcher pre-flight guard, not the gap-backfill todo itself. Read the cited plan
+      (`plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` line 497): the P1 "Once fixed,
+      backfill/re-fetch the resulting gap…" todo is correctly still `- [ ]` — its own Progress Log records that a
+      slot-12 session on 2026-08-06 prematurely flipped it to done citing `80265d6`'s backfill VM launch, and a same-day
+      interactive session caught that "gate cleared" was premature (final manifest-full-coverage verification was never
+      run) and **reverted the checkbox to open**, then ran the todo's own literal done-when (manifest-only read,
+      `instruments-store-sports-prd`) and found coverage genuinely NOT full on any of the 5 gap days (25–57% reachable
+      coverage, real `attempted_failed` residue). The live backlog now reflects this honestly: the current
+      `sports_fast_t1_recon_oom_live_capture_outage-015` row (same "Once fixed, backfill/re-fetch…" title) is
+      `status: queued`, `done_sha: null`, blocked on an unmet auto-unpark prerequisite — not `done`. So the false-done
+      state the 03:15 UTC audit snapshot captured has already been corrected upstream (both the backlog row and the plan
+      checkbox), by a different session, before this task was ever picked up. No REOPEN (would re-open work that's
+      already honestly open) or FLIP (would falsely mark unmet work done) was warranted or performed; this item only
+      needed its tracker checkbox resolved with the verification trail above.
 - [ ] [BACKEND] P2. `infra_capture_and_devops_leftovers-001` (`done_sha=c3c65402e`)
 - [ ] [BACKEND] P2. `sports_closeout_track_x_hygiene-006` (`done_sha=976786c5`) — 9,733-object
       `instruments-store-sports-prd` migration; verify against the real object count, not the plan's prose
@@ -247,3 +268,15 @@ plan + verifying the `done_sha`, never from the row's status alone.
   of that same line-224 todo (slot 12 today: gate met, 7/7 SIGABRT pids matched `gunicorn WORKER`, checkbox flipped
   `[x]` with a `[BACKEND] P3` follow-up filed). Current plan-doc state already matches `ffd41f98e` exactly — nothing to
   correct. See the checklist item above for the full trail.
+
+- **2026-08-08 (slot 32, backend_engineer)**: Verdict on `sports_fast_t1_recon_oom_live_capture_outage-003`
+  (`done_sha=80265d6` at audit time): **no REOPEN or FLIP action needed or possible** — same self-correcting
+  positional-id pattern as the 4 items above. `GET /api/backlog` (2,430 rows) has zero rows with `done_sha=80265d6` and
+  no row currently holding this exact id. `80265d67` (deployment-service, slot-12, 2026-08-06) is a real commit that
+  fixed a VM-launch guard, not the backfill todo itself. The cited plan
+  (`plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` line 497) shows its own Progress Log
+  already caught + reverted a premature flip of this exact todo on 2026-08-06 (checkbox restored to `- [ ]` after a
+  manifest-only re-check found only 25-57% reachable coverage across the 5 gap days, not full coverage) — the current
+  live backlog row for this same todo (`-015`) is correctly `queued`/`done_sha: null`, not `done`. Both the backlog and
+  the plan checkbox already reflect the honest state; nothing to correct. See the checklist item above for the full
+  trail.
