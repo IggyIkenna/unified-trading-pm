@@ -24,7 +24,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-05-16
-authoritative_for: [prediction asset-group batch/live architecture, prediction canonical-question-group shard atom]
+authoritative_for: [prediction asset-group batch/live architecture]
 referenced_by:
   [
     /codex/04-architecture/batch-live-architecture.md,
