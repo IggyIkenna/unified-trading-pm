@@ -786,3 +786,14 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **2026-08-08T13:21Z — FIXTURE_STATS crossed into 2026.** +34 days (`last_completed_date=2026-01-03`, fresh
   `13:20:37Z`) — very close to its 2026-08-07 target end now, likely just 1-2 chunks remaining. Watching very closely
   next tick. odds smallchunk5: chunk 25/451 (`2020-10-04`), 1 new OOM (25 total). Both healthy, no intervention.
+- **2026-08-08T13:45Z — FIXTURE_STATS confirmed chunk 23/26, entering 24/26 (3 chunks remain, not 1-2 as estimated).**
+  Verified via `run.log`'s own chunk markers: chunk 23 (`2025-11-07→2026-02-04`) done, now in chunk 24
+  (`2026-02-05→2026-05-05`). `last_completed_date=2026-02-26`, fresh `13:37:06Z`. **odds smallchunk5 died — FOURTH
+  occurrence**, this time at chunk 26 (`LA_LIGA`, RSS=13.5GiB), same ~17min silent-gap signature, no exit_code. This was
+  smallchunk5's longest life yet (~5h27m) and furthest progress (cleared chunk 18 fully, then 8 more chunks to 26) —
+  genuinely useful evidence downgrading the "chunk 18 is special" hypothesis toward a time-since-boot/cumulative-load
+  trigger instead. Reconsidered pause-vs-relaunch seriously at 4 occurrences; decided to keep relaunching (empirically
+  working — durable net progress every time, doesn't block anything). Relaunched as
+  `mtds-backfill-odds-smallchunk6-20260808` (guard passed, confirmed RUNNING). Full detail + updated Timeline table:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`@`179166cf88` (also resolved a git stash conflict
+  with a concurrent na-eligibility-audit entry on that doc — both pieces of content preserved).
