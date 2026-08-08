@@ -322,3 +322,19 @@ context_scope:
   the 23 deterministically-excluded list and each orphaned doc's full one-paragraph reasoning) is retained in this run's
   Workflow journal (`wf_0163b57f-8da`, transcript dir under the slot-8 session) — not duplicated into this plan to stay
   under the line cap; cite the journal or re-run `/ag-closeout-audit cefi` for a fresh full accounting.
+- **2026-08-08 (re-confirmation pass)** — a second `/ag-closeout-audit cefi` dispatch (slot 13, dispatch agt-2d0648)
+  landed for this same tranche the same calendar day. Per the iterative-drain methodology's "re-check before fresh
+  triage" step: verified via `git log --since="2026-08-08 01:18:04"` that the only intervening cefi-touching commit is
+  the disjoint `/na-eligibility-audit` cefi pass (`1512cf1b7`, 02:09 UTC, a different skill/question over the
+  `assigned_vm:NA` population) — its 3 edits (`bybit_futures_chain_write_shape_2026_07_13.md`,
+  `fail_hard_canonical_enforcement_design_2026_07_20.md`, `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`)
+  leave every one of this batch's Deferred/excluded verdicts above unchanged (still operator-gated / still design-gated
+  / still `exclude_cross_cutting` respectively — the new PROGRESS.json-upload todo added to the third doc is genuine
+  bounded work but is cross-cutting/infra-owned, not cefi's). Re-ran the Orthogonality HARD CHECK (full 9-tranche peer
+  set): 2 `cefi`+`cross-cutting` dual-tag hits found, both `plans/archive/` with `status: complete`/`resolved` — no live
+  mistag. Given zero material corpus change, did NOT re-run the 45-agent Phase 1 Workflow (would reproduce this batch's
+  own verdicts at full cost) or draft a batch11 — this batch remains the current, correct, not-yet-operator-reviewed
+  candidate. **Operational note (not investigated further, out of cefi-tranche scope)**:
+  `install-ag-closeout-auditor-timer.sh` documents a per-tranche "already dispatched successfully today" guard
+  (`scheduled-job-already-ran.py --list-done-tranches`) meant to stop exactly this same-tranche-same-day re-fire; worth
+  a look by whoever owns `ao`-tranche scheduling if the pattern recurs.
