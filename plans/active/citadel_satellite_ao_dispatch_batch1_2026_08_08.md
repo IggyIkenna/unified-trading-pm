@@ -121,13 +121,17 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       `make_trade_key`), `side`, `qty`, `price`, `fees_in_quote`; `_build_instruction_fill_result` per-fill dicts carry
       the same fields; 2 new unit tests assert keyed shape; `quality-gates.sh` green.
 
-- [ ] [BACKEND] P1. **colocated_engine fill records carry the trade key** (was Phase 2 P2.2 in the source doc) —
+- [x] [BACKEND] P1. **colocated_engine fill records carry the trade key** (was Phase 2 P2.2 in the source doc) —
       `fill_id` becomes the UAC `trade_key` (not a bare id); persist `correlation_id` as a real correlation identifier,
       not a sequential int. Repo: strategy-service. **Done when**: colocated_engine fill records carry the UAC
       `trade_key` + a non-sequential `correlation_id`, a new/updated unit test asserts this, `quality-gates.sh` is
       green, and (if the prior todo already landed) a quick cross-repo sanity check confirms the same `trade_key` scheme
       is used on both sides. Source: `citadel_paper_batch_live_reconciliation_2026_06_19.md` Phase 2, item P2.2 (moved
-      verbatim).
+      verbatim). ✅ 2. strategy-service@f1a98416 — `fill_event_consumer._parse_fill_event` now unwraps `details` from
+      FILL_COMPLETED envelope and reads `trade_key` as `fill_id`; `_extract_correlation_id` returns `trade_key` (not a
+      sequential int); `FillEventDataDict` updated for new format; 2 new tests assert `fill_id==trade_key` +
+      `correlation_id==trade_key`; legacy flat-format backwards-compat test added; QG green; cross-repo sanity:
+      execution-service@08808415 emits same `make_trade_key` scheme in FILL_COMPLETED details. ✓
 
 - [ ] [BACKEND] P2. **GroupC smart-fill handoff into the paper run (`fill_model` BENCHMARK→SMART)** (was Phase 11 P1.6
       in the source doc) — the paper-run manifest is currently honest at `BENCHMARK` (not faked) because
