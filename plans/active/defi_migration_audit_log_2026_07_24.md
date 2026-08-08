@@ -331,33 +331,33 @@ done) + the tracked P1/P2 live-track handler-derive remediation (post-migration,
 > disposition. Verdict: **8 MIGRATED · 3 DATA-BEARING-ORPHAN (fold) · 14 NO-DATA scaffolds (collection gaps)** — nothing
 > unaccounted. (Migrator specs went 6→8 this turn: gas-fees + liquidations added, mtds@01fda7ce.)
 
-| data_type               | migrator spec        | data on disk?                                               | disposition                                                              |
-| ----------------------- | -------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------ |
-| dex_pool_state          | ✅ dex-pools         | yes                                                         | **MIGRATED**                                                             |
-| dex_pool_swaps          | ✅ dex-swaps         | yes                                                         | **MIGRATED** (source fixed: `n`→dex_pool_swaps→subgraph)                 |
-| lending_indices         | ✅ lending-indices   | yes                                                         | **MIGRATED**                                                             |
-| perp_funding            | ✅ perp-funding      | yes                                                         | **MIGRATED**                                                             |
-| lst_rates               | ✅ lst-rates         | yes                                                         | **MIGRATED**                                                             |
-| oracle_prices           | ✅ oracle-prices     | yes (incl LST/LRT: stETH/wstETH/weETH/cbETH/rETH)           | **MIGRATED** — LST/LRT prices ride this existing data_type               |
-| gas_fees                | ✅ gas-fees ⬅NEW     | yes (`gas-fees-central`)                                    | **MIGRATED** (this turn, mtds@01fda7ce)                                  |
-| liquidations            | ✅ liquidations ⬅NEW | yes (`liquidations-central`)                                | **MIGRATED** (this turn, mtds@01fda7ce)                                  |
-| vault_share_price       | ❌                   | YES — in `market-data-tick-defi` orphan (active 2026-05-01) | **ORPHAN-FOLD** (P1) — fold into a dedicated bucket + migrate            |
-| risk_params             | ❌                   | YES — in `market-data-tick-defi` orphan                     | **ORPHAN-FOLD** (P1)                                                     |
-| utilization             | ❌                   | YES — in `market-data-tick-defi` orphan                     | **ORPHAN-FOLD** (P1)                                                     |
-| eigenlayer_rewards      | ❌                   | NO (`eigenlayer-rewards{,-prd}` EMPTY)                      | **COLLECTION GAP** — adapter exists, not producing; spec when data lands |
-| staking_yields          | ❌                   | NO (`staking-yields` empty)                                 | **COLLECTION GAP**                                                       |
-| native_staking_rates    | ❌                   | NO                                                          | **COLLECTION GAP** (multi-source solana_rpc/helius)                      |
-| bridge_events           | ❌                   | NO                                                          | scaffold (no data; no dedicated/tick-data bucket exists)                 |
-| flash_loan_events       | ❌                   | NO                                                          | scaffold                                                                 |
-| flash_loan_availability | ❌                   | NO                                                          | scaffold                                                                 |
-| governance_events       | ❌                   | NO                                                          | scaffold                                                                 |
-| liquidation_events      | ❌                   | NO                                                          | scaffold (distinct from `liquidations`)                                  |
-| mev_events              | ❌                   | NO                                                          | scaffold                                                                 |
-| position_data           | ❌                   | NO                                                          | scaffold                                                                 |
-| token_transfers         | ❌                   | NO                                                          | scaffold                                                                 |
-| rewards                 | ❌                   | NO                                                          | scaffold / computed-downstream                                           |
-| vault_apy               | ❌                   | NO                                                          | scaffold / computed-downstream                                           |
-| vault_tvl               | ❌                   | NO                                                          | scaffold / computed-downstream                                           |
+| data_type               | migrator spec        | data on disk?                                               | disposition                                                                                           |
+| ----------------------- | -------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| dex_pool_state          | ✅ dex-pools         | yes                                                         | **MIGRATED**                                                                                          |
+| dex_pool_swaps          | ✅ dex-swaps         | yes                                                         | **MIGRATED** (source fixed: `n`→dex_pool_swaps→subgraph)                                              |
+| lending_indices         | ✅ lending-indices   | yes                                                         | **MIGRATED**                                                                                          |
+| perp_funding            | ✅ perp-funding      | yes                                                         | **MIGRATED**                                                                                          |
+| lst_rates               | ✅ lst-rates         | yes                                                         | **MIGRATED**                                                                                          |
+| oracle_prices           | ✅ oracle-prices     | yes (incl LST/LRT: stETH/wstETH/weETH/cbETH/rETH)           | **MIGRATED** — LST/LRT prices ride this existing data_type                                            |
+| gas_fees                | ✅ gas-fees ⬅NEW     | yes (`gas-fees-central`)                                    | **MIGRATED** (this turn, mtds@01fda7ce)                                                               |
+| liquidations            | ✅ liquidations ⬅NEW | yes (`liquidations-central`)                                | **MIGRATED** (this turn, mtds@01fda7ce)                                                               |
+| vault_share_price       | ❌                   | YES — in `market-data-tick-defi` orphan (active 2026-05-01) | **ORPHAN-FOLD** (P1) — fold into a dedicated bucket + migrate                                         |
+| risk_params             | ❌                   | YES — in `market-data-tick-defi` orphan                     | **ORPHAN-FOLD** (P1)                                                                                  |
+| utilization             | ❌                   | YES — in `market-data-tick-defi` orphan                     | **ORPHAN-FOLD** (P1)                                                                                  |
+| eigenlayer_rewards      | ❌                   | NO (`eigenlayer-rewards{,-prd}` EMPTY)                      | **COLLECTION GAP** — adapter exists, not producing; spec when data lands                              |
+| staking_yields          | ❌                   | NO (`staking-yields` empty)                                 | **COLLECTION GAP**                                                                                    |
+| native_staking_rates    | ❌                   | NO                                                          | **COLLECTION GAP** (multi-source solana_rpc/helius)                                                   |
+| bridge_events           | ❌                   | NO                                                          | scaffold (no data; no dedicated/tick-data bucket exists) — deprioritized (2026-08-08 operator ruling) |
+| flash_loan_events       | ❌                   | NO                                                          | scaffold — deprioritized (2026-08-08 operator ruling)                                                 |
+| flash_loan_availability | ❌                   | NO                                                          | scaffold — deprioritized (2026-08-08 operator ruling)                                                 |
+| governance_events       | ❌                   | NO                                                          | **MVP SCOPE (2026-08-08 operator ruling)** — wire a real source                                       |
+| liquidation_events      | ❌                   | NO                                                          | **MVP SCOPE (2026-08-08 operator ruling)** — wire a real source (distinct from `liquidations`)        |
+| mev_events              | ❌                   | NO                                                          | scaffold — deprioritized (2026-08-08 operator ruling)                                                 |
+| position_data           | ❌                   | NO                                                          | scaffold — deprioritized (2026-08-08 operator ruling)                                                 |
+| token_transfers         | ❌                   | NO                                                          | **MVP SCOPE (2026-08-08 operator ruling)** — wire a real source                                       |
+| rewards                 | ❌                   | NO                                                          | scaffold / computed-downstream — deprioritized (2026-08-08 operator ruling)                           |
+| vault_apy               | ❌                   | NO                                                          | scaffold / computed-downstream                                                                        |
+| vault_tvl               | ❌                   | NO                                                          | scaffold / computed-downstream                                                                        |
 
 **So no data_type is silently dropped:** the migrator now covers all 8 data-bearing DEDICATED-bucket data_types; the 3
 data-bearing-in-the-orphan-bucket ones (`vault_share_price`/`risk_params`/`utilization`) ride the market-data-tick-defi
@@ -397,7 +397,35 @@ a migration gap). Probe basis: `gcloud storage` bucket sweep + `market-data-tick
       `native_staking_rates` genuinely still has NO scheduler entry in that same file (confirmed via a fresh grep
       2026-08-08) — that half of the claim holds._* Each gets a migrator spec ONLY once it produces data. Repo:
       market-tick-data-service + UAC. Owner: vm-defi. parent_epic: defi_master. Provenance: slot-2 coverage matrix
-      2026-06-09.
+      2026-06-09. **"confirm in/out of MVP scope" RESOLVED 2026-08-08 (operator ruling)**: of the remaining untriaged
+      scaffolds (`bridge_events`/`flash_loan_events`/`flash_loan_availability`/`governance_events`/
+      `liquidation_events`/`mev_events`/`position_data`/`token_transfers`/`rewards`/`vault_apy`/`vault_tvl`) —
+      `liquidation_events`, `token_transfers`, `governance_events` are now MVP scope (3 concrete wire-a-source todos
+      filed immediately below); the other 8 stay deprioritized scaffolds unless the operator says otherwise. Coverage
+      matrix table above updated to match.
+
+- [ ] [DATA] P2. **Wire a real source for `liquidation_events` (MVP scope, 2026-08-08 operator ruling)** — distinct from
+      the already-migrated `liquidations` data_type (which carries protocol-level liquidation EVENT SUMMARIES from the
+      dedicated `liquidations-central` bucket); `liquidation_events` is the currently-unproduced per-event scaffold (no
+      GCS data at all today, handler-if-any produces nothing). Determine the real on-chain source (Aave/Compound/Morpho
+      liquidation-call event logs via existing RPC/subgraph access already used elsewhere in this asset_group — check
+      `_dex_factory_registry.py`/`solana_defi_handler.py`-style precedent before assuming a new credential is needed)
+      and wire a collector that writes real rows, following the same
+      `record_captured`/`record_zero_rows`/`record_failed` honest-absence contract every other DeFi handler uses. Repo:
+      market-tick-data-service. parent_epic: defi_master. Done-when: a real `liquidation_events` manifest row lands for
+      at least one live venue/day.
+- [ ] [DATA] P2. **Wire a real source for `token_transfers` (MVP scope, 2026-08-08 operator ruling)** — currently a
+      no-data scaffold. Determine the real source (EVM `Transfer` event logs via existing Alchemy/RPC access, or a
+      subgraph if one of the already-registered `SUBGRAPH_IDS` protocols exposes transfer history) and wire a collector
+      writing real rows via the standard `record_captured`/honest-absence contract. Repo: market-tick-data-service.
+      parent_epic: defi_master. Done-when: a real `token_transfers` manifest row lands for at least one live venue/day.
+- [ ] [DATA] P2. **Wire a real source for `governance_events` (MVP scope, 2026-08-08 operator ruling)** — currently a
+      no-data scaffold. Determine the real source (on-chain governance-contract event logs — proposal
+      created/voted/executed — for the DeFi protocols this asset_group already tracks governance for, e.g. via the
+      existing `_defi_chain_data`/`SOLANA_RPC_TEMPLATES`-style RPC registry, or a governance subgraph) and wire a
+      collector writing real rows via the standard `record_captured`/honest-absence contract. Repo:
+      market-tick-data-service. parent_epic: defi_master. Done-when: a real `governance_events` manifest row lands for
+      at least one live venue/day.
 
 ### 🗑️ DeFi ORPHAN-COVERAGE DRILLDOWN — GCS data NOT covered by the migrator + delete-after plan (slot-2, 2026-06-08)
 
@@ -811,3 +839,11 @@ speed-note (both deferred optimisations, non-blocking).
   product-scope call spanning 11 data types with no blanket precedent (the sibling doc
   `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md` explicitly bars a flat-clip decision for the same class
   of never-collected/out-of-MVP residual, and only speaks generally to 4 of these 11, not all of them individually).
+- **round5-na-digest-defi 2026-08-08 (apply pass, item 67)**: the "~10 untriaged scaffolds" MVP-scope question above IS
+  now answered (this is a separate operator Q&A round from the same-day entry directly above, which pre-dates this
+  answer) — operator ruling: `liquidation_events`, `token_transfers`, `governance_events` move to MVP scope (wire a real
+  source); the remaining 8 (`bridge_events`/`flash_loan_events`/`flash_loan_availability`/`mev_events`/
+  `position_data`/`rewards`/`vault_apy`/`vault_tvl`) stay deprioritized scaffolds unless the operator says otherwise.
+  Updated the coverage-matrix table's disposition column for all 11 rows to match, and filed 3 concrete `[DATA]` P2
+  "wire a real source" todos (one per newly-in-scope data_type) immediately below the retagged todo — sources not built
+  this session, just properly scoped+filed per the round5 apply-phase instruction.
