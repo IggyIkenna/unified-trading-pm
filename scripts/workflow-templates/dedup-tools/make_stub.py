@@ -3,13 +3,27 @@
 # Lifecycle: temporary
 # Delete-when: fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md todo 9 ships
 #
-# DO NOT run this for staging-lock-check.yml (todo 11) without reading that todo first: its
-# `check-staging-lock` job is a literal required-status-check context on 16 repos' branch
-# protection rulesets (`require-staging-lock-check`), and a workflow_call caller job reports
-# its check as "<caller job name> / <callee job name>" -- NOT the bare callee name. Converting
-# it with this script's default pattern silently breaks that required check the moment
-# staging is un-frozen. Fix the ruleset context strings FIRST (todo 11's option (a)), verify
-# with a real triggered run, THEN convert.
+# staging-lock-check.yml (todo 11, DONE 2026-08-08): its `check-staging-lock` job is a
+# literal required-status-check context on 16 repos' branch protection rulesets
+# (`require-staging-lock-check`), and a workflow_call caller job reports its check as
+# "<caller job name> / <callee job name>" -- NOT the bare callee name. The FILE_JOB_NAME
+# entry below ("check-staging-lock") makes that resolve to the ruleset's NEW context
+# "check-staging-lock / check-staging-lock" -- the 16 rulesets were updated to that string
+# BEFORE converting, verified live via a real triggered PR (trading-agent-service canary,
+# run 31236639223, conclusion=success, check name confirmed via the Checks API).
+#
+# REAL BUG found + fixed during that canary (SKIP_CALLER_CONCURRENCY below): this file's
+# source template carries its own `concurrency:` block, which (unlike every OTHER converted
+# file) this script would otherwise ALSO copy into the caller stub -- duplicating the exact
+# same group expression (`${{ github.workflow }}-${{ github.ref }}`) in BOTH the caller and
+# the callee. For a `pull_request`-triggered caller, that self-referential collision makes
+# GitHub fail the ENTIRE run with zero jobs scheduled ("This run likely failed because of a
+# workflow file issue", conclusion=failure) -- bisected empirically (7 iterations against a
+# live throwaway branch) since actionlint validates each file in isolation and catches
+# neither half of the collision. Confirmed NOT an issue for the other 8 files' push-triggered
+# callers (semver-agent.yml has the identical duplicate-declaration pattern and works fine
+# live) -- this is specific to pull_request triggers, so the fix is scoped to this one file
+# rather than stripping caller-side concurrency fleet-wide.
 #
 # semver-agent.yml.tmpl (todo 5, DONE 2026-08-07, all 23 fleet repos converted): unlike
 # the other files, this one needed REAL per-repo `with:` values (repo_name/source_dir/
@@ -56,7 +70,12 @@ FILE_JOB_NAME = {
     "staging-backmerge-to-ldr.yml": "backmerge",
     "update-dependency-version.yml": "update-dep",
     "semver-agent.yml": "semver",
+    "staging-lock-check.yml": "check-staging-lock",
 }
+
+# See the header note above: staging-lock-check.yml's callee already declares this exact
+# concurrency group; duplicating it in the caller breaks pull_request-triggered runs.
+SKIP_CALLER_CONCURRENCY = {"staging-lock-check.yml"}
 
 REQUEST_MAJOR_BUMP_WITH_EXTRA = """      proposed_version: ${{ inputs.proposed_version }}
       reason: ${{ inputs.reason }}
@@ -106,7 +125,7 @@ def main():
         p_s, p_e = sec_map["permissions"]
         out.append("\n".join(body_lines[p_s:p_e]).rstrip("\n"))
         out.append("")
-    if "concurrency" in sec_map:
+    if "concurrency" in sec_map and fname not in SKIP_CALLER_CONCURRENCY:
         c_s, c_e = sec_map["concurrency"]
         out.append("\n".join(body_lines[c_s:c_e]).rstrip("\n"))
         out.append("")
