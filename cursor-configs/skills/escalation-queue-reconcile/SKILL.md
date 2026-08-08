@@ -1,0 +1,125 @@
+---
+name: escalation-queue-reconcile
+description: >-
+  Reconcile the AO escalation-queue MECHANISM itself to healthy — not an individual CI wall (that's `/ci-reconcile`'s
+  job once the queue is healthy), but the watchdog/reconcile-pass subsystem that dispatches, retries, pages on, and
+  eventually gives up on a red CI wall. Built from the 2026-08-07 incident where two `unified-trading-pm` rows sat
+  `unresolved — still_red_past_deadline` for 15-17h because `verify_dispatched_escalations` only ever re-polled
+  `status=="dispatched"` rows — once a row went terminal `unresolved` nothing ever looked at it again — plus the
+  regression caught in the SAME session where the fix's own reconcile pass (`reconcile_stale_unresolved_escalations`)
+  sorted `resolved_at` ASCENDING with a small limit, so 238 historical rows starved out the 2 recent ones the feature
+  was built for. Cheap-first by design (2026-08-07 operator direction, "keep the polling interval wide so genuinely-no-
+  issue doesn't waste tool calls"): Step 1 is always ONE curl call against `GET /api/escalations/active`; a healthy
+  queue (empty, or only fresh in-flight rows well inside the retuned 45-min deadline) exits immediately with a one-line
+  report — no deep diagnosis, no issue-doc churn, minimal tokens. Only a genuine anomaly (a `status=unresolved` row, a
+  `dispatched`/`queued` row past its deadline, or the retuned constants having drifted back toward the old single-shot
+  behavior) triggers the expensive path: diagnose at the root via the same read-only SSM approach used to catch the
+  original bug, auto-fix anything small/clear/obviously-correct the same way this workspace's background agents already
+  do (quickmerge the fix), and file/update a `plans/active/issues/` doc for anything ambiguous or not immediately
+  fixable — mirroring `/ci-reconcile`'s "always auto-fixes, never silently logs" contract, scoped down to this one
+  subsystem. Designed to be dispatched on a 3-hour systemd timer via `agent-orchestrator/scripts/
+  install-escalation-queue-reconciler-timer.sh` (`mode=escalation_reconcile`, `agents/escalation_queue_reconciler.md`) —
+  a ONE-SHOT check per invocation, not a self-looping watch; AO's own timer supplies the cadence. Trigger on
+  `/escalation-queue-reconcile`, "check the escalation queue is healthy", "did the escalation watchdog regress", "audit
+  the AO escalation queue", "is a CI wall stuck unresolved".
+---
+
+# /escalation-queue-reconcile — escalation-queue mechanism health check
+
+Answers one question, cheaply when the answer is "yes": **is the escalation-queue MECHANISM itself healthy right now —
+not an individual red wall, but the watchdog that dispatches/retries/pages/reconciles it?** A queue with active
+`queued`/`dispatched` rows is normal fleet churn, not a finding — the finding is a row that got PERMANENTLY stuck, or
+the reconcile pass that's supposed to catch that silently not working.
+
+**Not `/ci-reconcile`.** That skill fixes an individual CI wall once the queue notices it's red. This skill checks
+whether the queue's own dispatch/retry/give-up/reconcile machinery is still doing its job — a narrower, cheaper,
+higher-frequency check than a fleet-wide CI sweep.
+
+## Step 1 — the cheap check (always do this first, and ONLY this, on a healthy queue)
+
+```bash
+CMD_ID=$(aws ssm send-command \
+  --instance-ids i-0c9b283b31d6b5ca7 --region ap-northeast-1 \
+  --document-name "AWS-RunShellScript" \
+  --parameters 'commands=["curl -s -m 10 localhost:8765/api/escalations/active"]' \
+  --query "Command.CommandId" --output text)
+sleep 4
+aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id i-0c9b283b31d6b5ca7 \
+  --region ap-northeast-1 --query "{Status:Status,Out:StandardOutputContent,Err:StandardErrorContent}" --output json
+```
+
+This is the SAME view the AO dashboard's escalations widget renders (default `active_within_hours` window) — never act
+on a different endpoint or a cached/stale read. Evaluate the result:
+
+- **`[]`, or every row is `status` in `{queued, dispatched}` with `created_at` well inside the retuned 45-minute
+  deadline** (`RESOLUTION_DEADLINE_MINUTES` in `agent-orchestrator/server/escalation.py`) → **healthy. Report one terse
+  line (row count + oldest age) and STOP.** Do not run Step 2. Do not file anything. This is the expected, common-case
+  outcome and must stay cheap — one SSM round-trip, nothing else.
+- **Any row has `status=unresolved`**, or a `dispatched`/`queued` row's `created_at` is past ~45 min, or the curl itself
+  failed → proceed to Step 2.
+
+**Connection failure ≠ regression by itself.** If the curl fails (`exit status 7` / connection refused), first rule out
+a benign service restart before calling it a finding — this has happened twice in one 6-hour observation window and both
+times was ordinary maintenance, not a bug:
+
+```bash
+# same SSM pattern, command: systemctl is-active orchestrator; journalctl -u orchestrator --since "-10 min" | tail -20
+```
+
+`deactivating`/`Stopping orchestrator.service` in the log around the failure time → benign restart, retry the Step 1
+curl after ~20-40s and treat the retry's result as the real answer. Only escalate to Step 2 if the retry ALSO fails with
+the service showing `active`, or the restart pattern itself is recurring across multiple runs (a NEW finding in its own
+right — file it, don't just keep silently retrying).
+
+## Step 2 — root-cause diagnosis (only reached on a genuine anomaly)
+
+1. **Confirm the retuned constants haven't drifted back** — read `agent-orchestrator/server/escalation.py`'s
+   `RESOLUTION_DEADLINE_MINUTES` (expect 45), `MAX_REESCALATIONS` (expect 10), `PAGE_AFTER_REESCALATIONS` (expect 2),
+   `RECONCILE_UNRESOLVED_WINDOW_HOURS` (expect 24). Any of these reverted toward the old single-shot values
+   (90/1/page-on-first-miss) is itself the finding — someone shipped a revert, intentionally or not.
+2. **Confirm the reconcile pass is actually running and ordered correctly** — the ordering-bug class (ascending instead
+   of descending `resolved_at`, or a `LIMIT` too small for the backlog) is exactly the kind of regression that looks
+   correct in a code review and only shows up live. Pull a few `unresolved` rows via the same SSM approach
+   (`GET /api/escalations/active?include_resolved_within_hours=<N>`, widen `N` until the stuck row appears) and check:
+   is `reconcile_stale_unresolved_escalations()` (`agent-orchestrator/server/autospawn.py`'s `_drain_escalations()`
+   calls it) even being invoked on a live tick — check recent `journalctl`/activity-log output for its log lines, not
+   just that the function exists in the source.
+3. **For a genuinely stuck row**: diagnose why it never resolved and never got reconciled — read the row's `wall_type`
+   - `repo` + `pr_number`, cross-check the real CI state (`gh run list`/`gh pr view`) the same way `/ci-reconcile` does,
+     and determine whether the underlying wall is ACTUALLY still red (a real ongoing problem, hand off to
+     `/ci-reconcile` or the `cicd` worker) or already cleared (a reconcile-pass bug that should have caught it, file it
+     here).
+
+## Step 3 — fix or file, never silently log
+
+Same findings-triage HARD RULE this whole workspace uses: a small, clear, obviously-correct code fix (a reverted
+constant, an ordering bug, a missing log line) → fix it directly and ship via `bash scripts/quality-gates.sh --no-fix` +
+`quickmerge.sh --agent --files '<paths>'`, add a regression test if the bug class is the kind unit tests can catch (the
+ordering bug from 2026-08-07 needed a REAL in-memory SQLite test — a MagicMock-based test cannot catch an `ORDER BY`
+regression, see `tests/test_escalation.py`'s `test_reconcile_prioritizes_recent_over_ancient_under_a_tight_limit`).
+Anything ambiguous, cross-repo, or requiring a judgment call → `plans/active/issues/<slug>_<date>.md`, citing the
+specific row(s)/evidence found. A genuinely stuck wall whose root cause is in the TARGET repo's own code (not the
+escalation mechanism) is out of scope for THIS skill — hand it to `/ci-reconcile` rather than fixing it here.
+
+## Step 4 — report
+
+**Cheap path (Step 1 only, the expected common case)**: one line — row count, oldest age, verdict. Nothing more.
+
+**Deep path (Step 2+ reached)**: what was found, the root-cause diagnosis, what was fixed (repo@sha) or filed (issue doc
+path), and the Step-1 re-check confirming the queue is healthy again post-fix.
+
+## Under `/autonomous`
+
+One-shot per dispatch, matching AO's 3-hour scheduled-timer cadence (`install-escalation-queue-reconciler-timer.sh`) —
+do not loop internally waiting for the next tick; the timer supplies that. If Step 2+ fixed something, do one confirming
+Step-1 re-check before finishing, then stop (mirrors `/ci-reconcile`'s own no-pause contract).
+
+## What this skill does NOT do
+
+Does not fix an individual red CI wall's actual failing test/lint/build (that's `/ci-reconcile` or the `cicd` worker's
+job) — only the queue mechanism that dispatches/retries/pages/reconciles it. Does not touch `escalation.py`'s tuning
+constants without a clear, evidenced reason (a confirmed drift/revert, not a preference change). Does not force-push,
+does not bypass the provenance gate. Codex/plan SSOTs: `agent-orchestrator/server/escalation.py` (the constants +
+`reconcile_stale_unresolved_escalations` docstrings are the living SSOT for expected values),
+`plans/archive/issues/escalation_watchdog_retune_and_reconcile_2026_08_07.md` (the incident this skill exists to keep
+fixed).
