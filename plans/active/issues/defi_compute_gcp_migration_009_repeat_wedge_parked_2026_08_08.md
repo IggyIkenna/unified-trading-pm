@@ -1,0 +1,99 @@
+---
+doc_type: issue
+title:
+  defi_compute_gcp_migration-009 wedged/failed on 3 different slots within ~35min via the fleet-wide silent-post-boot
+  signature — durably parked
+summary: >-
+  Task `defi_compute_gcp_migration-009` cycled through 3 consecutive slots (16, 7, 13) between ~20:14Z and ~20:50Z on
+  2026-08-08 without ever completing — all 3 hit an identical variant of the fleet-wide crash-loop pattern: boot,
+  `task_dispatched`, then complete silence (no `forced_compact`, no `slot_progress`, nothing at all) for 4+ minutes
+  before escalation. This is the SAME silent-no-compact signature (not the classic `forced_precompact`->
+  `forced_compact`->silent one) already noted as a possible server-restart-correlated variant in
+  `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md`'s ~20:22Z progress-log entry. Durably parked via `POST
+  /api/backlog/{task_id}/park` (condition `auto_unpark__defi_compute_gcp_migration-009`) per the standing
+  3rd-distinct-slot mitigation rule, to stop the churn while the fleet-wide root cause is being investigated.
+status: open
+nature: issue
+asset_group: [defi]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: [agent-orchestrator, tmux, crash-loop, task-affinity, live-incident, spawn-overhead, park]
+related:
+  - /plans/active/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md
+  - /plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md
+  - /plans/active/issues/citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md
+created: 2026-08-08
+author: agt-22de53 (main)
+parent_epic: infrastructure_master
+priority: P1
+source: >-
+  Main-agent routine stale-slot sweep (STEP 2.4/2.6), 2026-08-08 20:14Z-20:50Z window. Escalated straight to durable
+  park once the task hit a 3rd distinct slot without completing, per the standing mitigation rule.
+assigned_vm: NA
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
+locked_by:
+resolved_by:
+last_updated: 2026-08-08
+locked_since:
+context_scope:
+  [
+    agent-orchestrator/server/routes/slots_worker.py,
+    agent-orchestrator/server/routes/slots_ops.py,
+    agent-orchestrator/server/auto_park.py,
+  ]
+---
+
+# defi_compute_gcp_migration-009 repeat-wedge — durably parked pending root cause
+
+## What was found
+
+Live, directly-observed during routine stale-slot sweeps (not a self-report):
+
+| #   | Slot | `task_dispatched` | Outcome                                                                                |
+| --- | ---- | ----------------- | -------------------------------------------------------------------------------------- |
+| 1   | 16   | ~20:14Z           | Silent 4:25 post-boot, zero events, no `forced_compact` -> `reassign kill_worker:true` |
+| 2   | 7    | ~20:35Z           | Silent 4:18 post-boot, zero events, no `forced_compact` -> `reassign kill_worker:true` |
+| 3   | 13   | 20:46:20Z         | Silent 4:05 post-boot, zero events, no `forced_compact` -> `park` (this doc)           |
+
+All 3 occurrences share the exact same signature: `slot_boot` -> `task_dispatched` (sometimes with a
+`slot_branch_quarantine_auto_heal` or `autospawn_succeeded` alongside) -> then **total silence** for 4+ minutes — no
+`forced_precompact`, no `forced_compact`, no `slot_progress`, nothing. This is a DIFFERENT signature from the classic
+`forced_precompact`->`forced_compact`->silent wedge tracked in
+`review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` todo 1 — these sessions appear to die before ever
+reaching the point where a compact would be needed.
+
+## Why it matters
+
+- Same spawn-overhead/continuity cost as the tracked fleet-wide pattern, concentrated on one task: 3 wedge/release
+  cycles in ~35 minutes with zero forward progress on the actual GCP-migration work.
+- Timing note: occurrence 1 (slot 16, ~20:14Z) and the broader silent-signature cluster first observed by main (~20:22Z,
+  slots 4/7/8 all booting within the same ~5s window) both fall shortly after a brief AO server restart observed
+  independently around ~20:15Z and again ~20:29Z (uvicorn PID changes confirmed via `ss -tlnp`, ~15s connection-refused
+  windows both times). Possible correlation already flagged in the crash-loop doc's progress log — not confirmed, but
+  worth checking whether THIS specific task's dispatch timing lines up with either restart window.
+
+## Todos
+
+- [ ] [BACKEND] P1. Once `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` todo 1 identifies the root cause
+      of the silent-no-compact variant (distinct from the classic forced-compact wedge), check specifically whether
+      `defi_compute_gcp_migration-009` shares a workload characteristic (prompt size, tool-call pattern, repo state,
+      worktree size, or dispatch-timing proximity to a server restart) that makes it disproportionately likely to
+      trigger it. Repo: agent-orchestrator.
+- [ ] [OPERATOR] P2. Decide whether to `unpark` (`POST /api/backlog/defi_compute_gcp_migration-009/unpark`) once the
+      root cause is fixed, or whether the underlying GCP-migration task itself needs rescoping first.
+- [ ] [REVIEW] P3. Once unparked and re-dispatched, independently verify via `GET /api/activity` (filtered client-side
+      by `task_id` — the `task=` query param does not filter server-side, confirmed 2026-08-08) that it completes a full
+      boot->work->done cycle without re-wedging. Repo: unified-trading-pm (verification + checkbox flip only).
+
+## Progress log
+
+- 2026-08-08 ~20:50Z (main agt-22de53): Filed after the 3rd consecutive slot pickup without completion (slot 13),
+  following the standing mitigation rule ("any task that wedges a SAME task id on a 3rd distinct slot -> go straight to
+  durable park rather than trying skip-current-task/reassign again"). Skipped straight to `park` without attempting
+  `skip-current-task` first, consistent with the citadel-004 and solana precedents where that lever was already
+  confirmed insufficient (per-slot-only). Task parked via `POST /api/backlog/defi_compute_gcp_migration-009/park` —
+  condition `auto_unpark__defi_compute_gcp_migration-009` confirmed set in the response. Slot 13's stuck session
+  released via a follow-up `reassign kill_worker:true` for slot hygiene (task already parked so it won't re-dispatch).
