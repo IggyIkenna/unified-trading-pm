@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -27,6 +28,7 @@ MANIFEST_REL = Path(
     "unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json"
 )
 COVERAGE_TS_REL = Path("unified-trading-system-ui/lib/architecture-v2/coverage.ts")
+ENUMS_TS_REL = Path("unified-trading-system-ui/lib/architecture-v2/enums.ts")
 
 _HEADER = """\
 // AUTO-GENERATED from UAC archetype_capability_manifest.json.
@@ -45,7 +47,8 @@ export type InstrumentTypeV2 =
   | "lending"
   | "staking"
   | "lp"
-  | "event_settled";
+  | "event_settled"
+  | "sleeve_mix";
 
 export const INSTRUMENT_TYPES_V2: readonly InstrumentTypeV2[] = [
   "spot",
@@ -56,6 +59,7 @@ export const INSTRUMENT_TYPES_V2: readonly InstrumentTypeV2[] = [
   "staking",
   "lp",
   "event_settled",
+  "sleeve_mix",
 ] as const;
 
 export type CoverageStatus = "SUPPORTED" | "PARTIAL" | "BLOCKED" | "NOT_APPLICABLE";
@@ -138,6 +142,43 @@ def _const_name(archetype_id: str) -> str:
     return archetype_id.lower()
 
 
+def _read_enum_archetype_ids(enums_ts_path: Path) -> list[str]:
+    """Parse the hand-maintained ``STRATEGY_ARCHETYPES_V2`` array out of enums.ts.
+
+    Some UAC archetypes are declared in the UI's enums mirror ahead of landing
+    in the capability manifest (see sync commit 7cd80d34's "manifest-pending"
+    note). Reading the enum list lets the generator emit stub coverage for
+    those archetypes itself, so a plain ``--write`` re-run doesn't silently
+    drop hand-added stubs the next time only the manifest side changes.
+    """
+
+    text = enums_ts_path.read_text(encoding="utf-8")
+    # Skip past the `readonly StrategyArchetype[]` type annotation's own brackets to the
+    # array literal's opening `[` (the one following `=`).
+    match = re.search(r"export const STRATEGY_ARCHETYPES_V2:[^=]*=\s*\[(.*?)\]", text, re.DOTALL)
+    if not match:
+        raise ValueError(f"could not locate STRATEGY_ARCHETYPES_V2 in {enums_ts_path}")
+    return re.findall(r'"([A-Z0-9_]+)"', match.group(1))
+
+
+_STUB_COMMENT = (
+    "// Stub entries — archetypes declared in UAC enums but not yet in the capability manifest.\n"
+    "// Re-run sync-archetype-capability-to-ui.sh --write to replace these with real data when the\n"
+    "// manifest is populated.\n"
+)
+
+
+def _render_stub_archetype(archetype_id: str) -> str:
+    const = _const_name(archetype_id)
+    return (
+        f"const {const}: ArchetypeCoverage = {{\n"
+        f"  archetype: {_ts_string_literal(archetype_id)},\n"
+        f"  usesRollingFutures: false,\n"
+        f"  cells: [],\n"
+        "};\n"
+    )
+
+
 def _render_archetype(entry: dict[str, object]) -> str:
     archetype_id = str(entry["archetype_id"])
     const = _const_name(archetype_id)
@@ -205,15 +246,21 @@ export function rollingFutureCells(): readonly CoverageCell[] {
 """
 
 
-def render_coverage_ts(manifest: dict[str, object]) -> str:
+def render_coverage_ts(manifest: dict[str, object], enum_archetype_ids: list[str]) -> str:
     archetypes = list(manifest["archetypes"])  # type: ignore[arg-type]
     archetype_blocks = "\n".join(_render_archetype(entry) for entry in archetypes)
 
+    manifest_ids = {str(entry["archetype_id"]) for entry in archetypes}
+    pending_ids = [aid for aid in enum_archetype_ids if aid not in manifest_ids]
+    stub_blocks = "\n".join(_render_stub_archetype(aid) for aid in pending_ids)
+    stub_section = f"\n{_STUB_COMMENT}\n{stub_blocks}\n" if pending_ids else ""
+
     mapping_lines = [f"  {entry['archetype_id']!s}: {_const_name(str(entry['archetype_id']))}," for entry in archetypes]
+    mapping_lines += [f"  {aid}: {_const_name(aid)}," for aid in pending_ids]
     mapping_body = "\n".join(mapping_lines)
     footer = _FOOTER.replace("__MAPPING_BODY__", mapping_body)
 
-    return _HEADER + archetype_blocks + "\n" + footer
+    return _HEADER + archetype_blocks + stub_section + "\n" + footer
 
 
 def main() -> int:
@@ -226,13 +273,18 @@ def main() -> int:
     workspace = Path(args.workspace_root).resolve()
     manifest_path = workspace / MANIFEST_REL
     coverage_ts_path = workspace / COVERAGE_TS_REL
+    enums_ts_path = workspace / ENUMS_TS_REL
 
     if not manifest_path.is_file():
         sys.stderr.write(f"ERROR: UAC manifest not found at {manifest_path}\n")
         return 2
+    if not enums_ts_path.is_file():
+        sys.stderr.write(f"ERROR: UI enums mirror not found at {enums_ts_path}\n")
+        return 2
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    rendered = render_coverage_ts(manifest)
+    enum_archetype_ids = _read_enum_archetype_ids(enums_ts_path)
+    rendered = render_coverage_ts(manifest, enum_archetype_ids)
 
     if args.write:
         coverage_ts_path.write_text(rendered, encoding="utf-8")
