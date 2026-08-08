@@ -6,16 +6,17 @@ title:
   of hitting a structured QUICKMERGE_BLOCKED path.
 summary: >
   Live-observed 2026-08-08 ~03:00-03:11 UTC: two (arguably three) near-simultaneous commits landed on the SAME file,
-  `unified-trading-pm/plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md`, within an 11-minute window.
-  Commit `c886da0f6` (2026-08-08T03:07:35Z, interactive session slot-1) landed a substantial Progress Log entry + a
-  todo-closing annotation with real engineering content (sync_backlog_to_db root-cause, 12 disabled systemd timers, a
-  GCP_PROJECT_ID env var fix). Commit `d52a11058` (2026-08-08T03:10:55Z, slot-4, via `Quickmerge: agent`) landed ~3
-  minutes later, and its diff shows it based its edit off the PRE-`c886da0f6` version of the file — it blindly clobbered
-  `c886da0f6`'s entire Progress Log entry and todo annotation with its own (also legitimate, but unrelated) finding,
-  instead of hitting the expected `QUICKMERGE_BLOCKED` conflict path or an append-alongside merge. A THIRD, prior
-  instance of this exact class already happened in the same file: commit `f8f3b7435` ("fix(cicd): reconcile
-  make_stub.py's semver-agent.yml handling") is literally titled "(lost to concurrent-session collision)" in its own
-  message, i.e. whoever landed it already noticed and named the same failure mode inline.
+  `unified-trading-pm/plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md` (archived since, was
+  `plans/active/issues/` at the time of this incident), within an 11-minute window. Commit `c886da0f6`
+  (2026-08-08T03:07:35Z, interactive session slot-1) landed a substantial Progress Log entry + a todo-closing annotation
+  with real engineering content (sync_backlog_to_db root-cause, 12 disabled systemd timers, a GCP_PROJECT_ID env var
+  fix). Commit `d52a11058` (2026-08-08T03:10:55Z, slot-4, via `Quickmerge: agent`) landed ~3 minutes later, and its diff
+  shows it based its edit off the PRE-`c886da0f6` version of the file — it blindly clobbered `c886da0f6`'s entire
+  Progress Log entry and todo annotation with its own (also legitimate, but unrelated) finding, instead of hitting the
+  expected `QUICKMERGE_BLOCKED` conflict path or an append-alongside merge. A THIRD, prior instance of this exact class
+  already happened in the same file: commit `f8f3b7435` ("fix(cicd): reconcile make_stub.py's semver-agent.yml
+  handling") is literally titled "(lost to concurrent-session collision)" in its own message, i.e. whoever landed it
+  already noticed and named the same failure mode inline.
 
   Verified via direct `git show c886da0f6` / `git show d52a11058` on the same file path: nothing is destroyed in git
   HISTORY (both commits' content is fully recoverable via reflog/git-log), but the doc's CURRENT working content only
@@ -43,7 +44,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [backend, git-discipline, quickmerge, cross-cutting, ci-cd, conflict-detection]
-related: [/plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md]
+related: [/plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md]
 created: 2026-08-08
 author: main (direct instruction, relayed by data_engineering worker slot-7)
 parent_epic: infrastructure_master
@@ -68,7 +69,7 @@ context_scope: [/codex/08-workflows/ci-cd-flow.md, unified-trading-pm/scripts/qu
 ## What I found
 
 Three near-simultaneous commits landed on the same file
-(`unified-trading-pm/plans/active/issues/fleet_promoter_glue_runner_stall_2026_08_06.md`) within an 11-minute window on
+(`unified-trading-pm/plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md`) within an 11-minute window on
 2026-08-08:
 
 1. `f8f3b7435` — commit message itself titled "(lost to concurrent-session collision)", i.e. a prior instance of this
