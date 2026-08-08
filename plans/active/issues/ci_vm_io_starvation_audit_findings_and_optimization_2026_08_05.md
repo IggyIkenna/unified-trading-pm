@@ -660,6 +660,19 @@ background of that work.
 
 ## Progress Log
 
+- **2026-08-08 (interactive session)**: Also right-sized the AO/planning VM's EBS volume (`i-0c9b283b31d6b5ca7`,
+  `agent-orchestrator-vm-1`, `vol-0b4f0237fa0f5cd0f`) while auditing AWS spend more broadly — this VM is out of this
+  doc's own CI-VM scope but the same live-CloudWatch-data method applies, recorded here as the closest existing home.
+  48h of real `AWS/EBS` CloudWatch metrics (576 5-min samples, full coverage, `VolumeReadOps`/`VolumeWriteOps`/
+  `VolumeReadBytes`/`VolumeWriteBytes`) showed combined IOPS peaking at 8,429 (53% of the provisioned 16,000) and
+  combined throughput peaking at 68.9 MB/s (6.9% of the provisioned 1,000 MB/s) — even the free gp3 baseline (125 MB/s)
+  already covered 1.8x the observed peak. Live `aws ec2 modify-volume` (no downtime, gp3 supports live modification):
+  16,000 → 12,000 IOPS (1.4x the observed max), 1,000 → 200 MB/s (2.9x the observed max). Verified via
+  `describe-volumes` post-change: `Iops: 12000, Throughput: 200, State: in-use`. Estimated saving:
+  $120.00/mo →
+  $57.60/mo in IOPS+throughput charges (storage unchanged) — **~$62.40/mo**, on top of the CI-VM
+  instance-type downsize below.
+
 - **2026-08-08 (interactive session)**: Executed the downsize todo (Part 8) — see that checkbox's own evidence for the
   full audit numbers, pre-flight, execution, and post-verify detail. Ran ~2.5h ahead of the formal 11:00 UTC checkpoint
   at operator instruction, against a genuinely post-fix (since 2026-08-07 11:39 UTC) 20.6h window rather than a partial
