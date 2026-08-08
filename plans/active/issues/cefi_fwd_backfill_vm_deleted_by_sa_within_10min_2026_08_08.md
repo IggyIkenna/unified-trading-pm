@@ -201,9 +201,13 @@ before launch.
       `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="cefi")`),
       prefix=`raw_tick_data/by_date/     day={day:%Y-%m-%d}/pipeline_mode=batch_tardis/asset_group=cefi/venue={venue}/instrument_type=perpetual/     data_type=derivative_ticker/`.
       Use the `probe_cefi_perp_funding_raw_coverage.py` script for the final gate only. **Frontier at 2026-08-09T13:45Z
-      (25h elapsed)**: all 6 venues complete through 2026-06-22; 06-23 in-progress (OKX-SWAP at 146/~340); 06-19 and
-      06-20 are 0 across all venues (possible Tardis archive gap or date order — investigate if still 0 after VM
-      terminates); pre-existing remnants on 06-24/06-25 (BYBIT/OKX/KRAKEN ~3 objects each) are NOT from this VM.
+      (25h elapsed)**: all 6 venues complete through 2026-06-22; 06-23 in-progress (OKX-SWAP at 146/~340). **Updated
+      frontier (~28h elapsed)**: 06-23 complete (OKX-SWAP 346); 06-24 in-progress (BIN=563, BYB=484, OKX=224/~344,
+      KRA=252, BITGET=493, BITFINEX=58 — OKX-SWAP actively writing). **Confirmed Tardis archive gaps**: 06-19 and 06-20
+      are 0 across ALL venues (VM has now processed through 06-23 and returned full coverage at 06-21 → 06-19/06-20 are
+      genuine Tardis data absences, NOT a processing order artifact). Also 06-18: OKX-SWAP=0 and KRAKEN=0 only (other 4
+      venues have data) — Tardis gap for those two venues on that day. Pre-existing remnants on 06-25 (BYBIT/OKX/KRAKEN
+      ~3 objects each) are NOT from this VM.
 - [ ] [CODE] P2. **Fix MTDS pre-flight code bug**: `venue_fetch.py:526-552` missing positive `if has_instruments:`
       branch that populates `venue_instrument_ids` from IS data. When IS data IS available, `venue_instrument_ids` stays
       None → empty expected_atoms → false "fully covered" for any venue+date with EXPECTED_* atoms. Fix: fetch IS
@@ -231,7 +235,13 @@ before launch.
   KRAKEN ~252, BITGET ~478, BITFINEX ~58). 06-23 in-progress (OKX at 146). 06-19/06-20 are 0 across all venues — unknown
   if Tardis gap or processing order (monitor after termination). Pre-existing remnants (BYBIT/OKX/KRAKEN ~3 objects on
   06-24/06-25) are NOT from VM-4. Revised ETA: ~0.68 days/hour → total ~90h (~2026-08-12T05:00Z). 18-24h original
-  estimate was 4× too low. GCS tee heartbeats confirmed live at 17:06Z (serial port). Conflict-check clear: grepped
+  estimate was 4× too low. GCS tee heartbeats confirmed live at 17:06Z (serial port).
+- **VM-4 progress update (slot-17, ~2026-08-09)**: GCS spot-check at ~28h elapsed. Frontier advanced: 06-23 complete
+  (OKX-SWAP 346 confirmed), 06-24 in-progress (BIN=563, BYB=484, OKX=224/~344, KRA=252, BITGET=493, BITFINEX=58 —
+  OKX-SWAP actively writing). **06-19/06-20 Tardis gap confirmed**: VM has now processed through 06-23 and returned to
+  full data at 06-21 — the 0s on 06-19 and 06-20 are genuine Tardis archive absences, not a date-order artifact. Also
+  06-18: OKX-SWAP=0 and KRAKEN-FUTURES=0 only — separate Tardis gap for those two venues on that day. Throughput ~0.66
+  days/hour (consistent with prior measurement). ETA ~2026-08-12T05:00Z unchanged. Conflict-check clear: grepped
   `plans/active/*.md` for `cefi-fwd-20260808`, `_VENUES_NEEDING_INSTRUMENT_PREFLIGHT`, and
   `_check_instruments_available` — zero hits; not referenced in `cefi_consolidated_closeout_2026_07_18.md`; not claimed
   by any `cefi_satellite_ao_dispatch_batch*`/finalize doc, including the freshest one
