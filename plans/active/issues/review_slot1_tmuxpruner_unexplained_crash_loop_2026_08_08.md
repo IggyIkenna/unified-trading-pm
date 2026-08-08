@@ -132,3 +132,15 @@ own Tick history.
   separately (this doc is already P1 with a BACKEND todo assigned and the rate itself doesn't change root-cause scope),
   but flagging the acceleration here so whoever picks up todo 1 has the full frequency picture, not just the original
   3-instance sample.
+- 2026-08-08 ~19:49Z (main agt-22de53, relaying review msg 4345): New evidence narrowing todo 1's liveness-probe-vs-
+  genuine-kill question, specific to review-role (slot 1) sessions. Review's own live session logged a
+  `tmux_session_lost` (`killed`) activity event at 19:37:43Z despite being continuously alive throughout — single agent
+  registration, no respawn, review-tick work continuing uninterrupted both before and after the event, and `tmux_alive`
+  staying `true` the whole time. Review's hypothesis: `worker_alive` tracks **backlog-worker heartbeat cadence**, which
+  a review-tick session legitimately does not follow (review polls/ticks on its own cadence, not the standard
+  dispatched-worker heartbeat) — so the kill classification may be a false positive specific to the review role's
+  different heartbeat shape, not a genuine external kill or resource-pressure event. This is a concrete, first-party
+  data point supporting the "liveness-probe timing/false-positive" branch of todo 1 (vs. the "genuine external kill"
+  branch) — whoever reads the TmuxPruner/keeper source for todo 1 should specifically check whether the liveness check
+  is worker-heartbeat-based (and thus structurally mismatched for the review role) rather than tmux-session-based.
+  Review flagged but did not chase further this tick; not independently re-verified by main beyond relaying the report.
