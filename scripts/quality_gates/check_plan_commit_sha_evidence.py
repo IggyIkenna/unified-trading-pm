@@ -215,7 +215,8 @@ def _iter_todo_citations(text: str, path: Path, citation_re: re.Pattern[str]) ->
     return out
 
 
-def _resolves_to_commit(repo_path: Path, sha: str) -> bool:
+def _cat_file_is_commit(repo_path: Path, sha: str) -> bool:
+    """Bare `git cat-file -t <sha> == commit` against whatever this clone already has."""
     try:
         proc = subprocess.run(  # fixed argv, no shell=True
             ["git", "-C", str(repo_path), "cat-file", "-t", sha],
@@ -228,6 +229,43 @@ def _resolves_to_commit(repo_path: Path, sha: str) -> bool:
         # git itself couldn't run — treat as verifiable-elsewhere-only, never a violation here.
         return True
     return proc.returncode == 0 and proc.stdout.strip() == "commit"
+
+
+def _resolves_to_commit(repo_path: Path, sha: str) -> bool:
+    """True when ``sha`` is a real commit in ``repo_path`` — fetching once before giving up.
+
+    Bug fixed 2026-08-08: this used to be a BARE `git cat-file` against whatever the local
+    clone happened to have already fetched, with no `git fetch` anywhere in the module (both
+    prior mentions of "fetch" were comments). A genuinely-real commit that had just been
+    pushed by another slot therefore read as FABRICATED until this clone happened to fetch
+    it — the gate conflated "I cannot verify this" with "this is invented", which is the
+    exact silent-wrong-answer class it exists to catch, turned on itself.
+
+    Measured: 4 of the 8 entries in `plan_commit_sha_evidence_baseline.yaml`
+    (`unified-trading-ci@b498ec2`, `@892bb81` x2, `@686bca7`) are REAL commits that only
+    failed because the capturing clone was behind. `686bca7` was reproduced live — it did
+    NOT resolve before a `git fetch` and DID after. Those false positives then got absorbed
+    by RAISING the baseline (2 -> 4 -> 6 -> 8 over two days), which is what a ratchet is
+    explicitly never supposed to do.
+
+    A fetch is attempted only on the miss path, so the common (already-present) case costs
+    nothing extra.
+    """
+    if _cat_file_is_commit(repo_path, sha):
+        return True
+    try:
+        subprocess.run(  # fixed argv, no shell=True
+            ["git", "-C", str(repo_path), "fetch", "--quiet", "--no-tags", "origin"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        # Offline / no remote / slow network — we still cannot PROVE fabrication, and this
+        # gate must never manufacture a violation out of its own inability to verify.
+        return True
+    return _cat_file_is_commit(repo_path, sha)
 
 
 def _load_baseline(baseline_path: Path) -> int:

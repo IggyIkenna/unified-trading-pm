@@ -238,7 +238,7 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       `unified-trading-pm` — independent re-research found PM's local copies are genuinely customized (dedup/cooldown
       Slack alerting via `notify-slack.yml`, richer than the fleet canonical), not stale; converting them would have
       regressed PM. PM's `main-backmerge-to-ldr.yml` matched canonical exactly and WAS converted
-      (`unified-trading-pm@12832f77ab`). Fan-out order: `unified-api-contracts`/`unified-trading-library` first, then
+      (`unified-trading-pm@01c3dbbab9`). Fan-out order: `unified-api-contracts`/`unified-trading-library` first, then
       the other 22 non-PM carriers, then PM. Every one of the 24 non-PM carriers (main-backmerge-to-ldr.yml) + 24 (the
       other 4 files) shipped + independently re-verified via a direct `git show origin/live-defi-rollout:<path>` content
       check per repo (not just trusting quickmerge's own "✅ Landed" message — see the shared-clone race note below) —
@@ -318,7 +318,7 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       gone). Verified via `bash rollout-workflow-templates.sh --dry-run`: only `image-build-gate.yml`,
       `notify-slack.yml`, `staging-lock-check.yml`, and `quality-gates-v2.yml.tmpl` still process (the 2 correctly-kept
       tier-1 templates plus the 2 from the separate, earlier `shared_ci_workflow_repo_extraction_2026_08_06.md`
-      migration). Shipped `unified-trading-pm@54b6fa6945`, independently verified via
+      migration). Shipped `unified-trading-pm@79c4a72737`, independently verified via
       `git show origin/live-defi-rollout:     scripts/workflow-templates/main-backmerge-to-ldr.yml` (path does not
       exist) and the header comment no longer listing the 4 it used to.
 - [x] ✅ 8. [INFRA] P2. **Fleet-wide dangling-reference re-sweep — DONE 2026-08-08.** Ran
@@ -387,7 +387,7 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       `rollout-workflow-templates.sh`'s header comment + stale usage examples (dry-run verified: only
       `image-build-gate.yml`, `notify-slack.yml`, `quality-gates-v2.yml.tmpl` still process). Shipped:
       `unified-trading-ci@686bca7` (hosted reusable workflow, final content after the debug session),
-      `unified-trading-pm@79223bec17` (make_stub.py fix), `unified-trading-pm@290100bb3c` (template deletion + script
+      `unified-trading-pm@79223bec17` (make_stub.py fix), `unified-trading-pm@b7e41849d6` (template deletion + script
       update, landed as a rebased sha on origin), plus one commit per fleet repo (24 total).
 
 ## Todo 1 findings (2026-08-06)

@@ -1,28 +1,16 @@
-fabricated_sha_citation_baseline: 8
+fabricated_sha_citation_baseline: 0
 rule: plan-commit-sha-evidence (ratchet)
 source: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
-baseline_citations:
-  - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
-    line: 214
-    cited: unified-trading-ci@b498ec2
-  - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
-    line: 227
-    cited: unified-trading-ci@892bb81
-  - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
-    line: 227
-    cited: unified-trading-pm@12832f77ab
-  - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
-    line: 309
-    cited: unified-trading-pm@54b6fa6945
-  - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
-    line: 358
-    cited: unified-trading-ci@686bca7
-  - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
-    line: 358
-    cited: unified-trading-pm@290100bb3c
-  - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md
-    line: 174
-    cited: unified-trading-ci@892bb81
-  - path: /home/ubuntu/unified-trading-system-repos/unified-trading-pm/plans/active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md
-    line: 195
-    cited: unified-trading-pm@54b6fa6945
+# RATCHETED 8 -> 0 on 2026-08-08. The baseline had been RAISED 2 -> 4 -> 6 -> 8 over two days,
+# which a ratchet is explicitly never supposed to do ("NEVER raise a count"). Root-caused:
+#   * 4 of the 8 entries (unified-trading-ci@b498ec2, @892bb81 x2, @686bca7) were NEVER
+#     fabricated — they are real commits that failed only because `_resolves_to_commit` ran a
+#     BARE `git cat-file` with no `git fetch` anywhere in the module, so a freshly-pushed commit
+#     read as invented until the capturing clone happened to catch up. Reproduced live: 686bca7
+#     did not resolve before a fetch and did after. Fixed in check_plan_commit_sha_evidence.py
+#     (fetch once on the miss path before declaring fabrication).
+#   * 4 entries (unified-trading-pm@12832f77ab, @54b6fa6945 x2, @290100bb3c) were genuinely
+#     wrong citations. The underlying WORK was real in every case — corrected to the true
+#     commits 01c3dbbab9 / 79c4a72737 / b7e41849d6, each verified to exist before rewriting.
+# Verified after both fixes: 2,549 citations scanned, 0 unresolvable.
+baseline_citations: []

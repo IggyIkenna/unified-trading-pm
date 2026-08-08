@@ -358,8 +358,8 @@ achieved by exclusion, not canonicalisation.**
       clause — the YAML is a consumer no `data_type` grep of the Python registries would surface. Fix both sides
       together and get the test to pass.
 
-- [ ] [REVIEW] P1. **Sweep this chain's landed work for tests WEAKENED rather than fixed.** Measured instance: when P1's
-      venue-axis split broke `tests/unit/test_reader.py::TestTickBucket`'s sports case, the red was cleared by
+- [x] ✅ [REVIEW] P1. **Sweep this chain's landed work for tests WEAKENED rather than fixed.** Measured instance: when
+      P1's venue-axis split broke `tests/unit/test_reader.py::TestTickBucket`'s sports case, the red was cleared by
       `market-tick-data-service@85423040` — _"fix(test): swap retired ODDS_API venue for PINNACLE"_ — which changed the
       test to stop asserting `ODDS_API` while leaving the underlying defect live: `_asset_group_for_venue` was still
       silently routing all 146,163 ODDS_API/FOOTYSTATS shards at the **cefi** bucket. The test that CAUGHT a real
@@ -367,7 +367,27 @@ achieved by exclusion, not canonicalisation.**
       `market-tick-data-service@fc704195` (the new test is verified to FAIL without the fix — the property the swap
       lacked). Re-read every other test this chain has touched and confirm each still asserts the behaviour it was
       written to protect, rather than having been relaxed to match new code. **Done when**: each touched test is
-      confirmed still load-bearing, or re-strengthened.
+      confirmed still load-bearing, or re-strengthened. — **DONE 2026-08-08 (fleet-wide sweep, operator-requested
+      "across the board")**. Scanned all 47 test-touching commits since 2026-08-07 across 8 repos for net assertion loss
+      / added xfail-skip; 5 flagged, then read individually: **(1) `market-tick-data-service@85423040` — CONFIRMED
+      weakening**, the seed case: swapped the failing `ODDS_API` parametrize entry for `PINNACLE` while
+      `_asset_group_for_venue` still routed 146,163 sports shards at the cefi bucket. Root-fixed + genuine coverage
+      restored `market-tick-data-service@fc704195`; their PINNACLE case kept (not reverted) and the new test verified to
+      FAIL without the fix. **(2) `unified-api-contracts@05a709fd`** — legitimate: the removed assert tested behaviour
+      ruling #2 intentionally changed, and the same commit promoted 22 bookmakers into the sentinel set (net MORE
+      coverage). **(3) `market-tick-data-service@a897ef60`** — legitimate: deleted 643 lines of SOURCE alongside the
+      tests (`databento_fetch.py` -266, `tardis_csv_transport.py` -104); the subject genuinely went away. **(4)
+      `unified-api-contracts@12bed42e` + the jupiter sibling** — honest xfails ("needs a real WS capture, not a
+      fabricated cassette") but with NO tracked remediation; now tracked in
+      `/plans/active/defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md`. **(5)
+      `unified-api-contracts@8f670c45` / `market-tick-data-service@2f7d7840`** — net +3 and +11 assertions, not
+      weakening. **Then extended the sweep to the fleet-scale form of the same anti-pattern — RAISED RATCHET BASELINES**
+      (a ratchet says "NEVER raise a count"). Found `fabricated_sha_citation_baseline` raised **2 -> 4 -> 6 -> 8 in two
+      days**. Root-caused as HALF gate-bug, HALF real: 4 entries were real commits that only failed because
+      `check_plan_commit_sha_evidence.py` ran a bare `git cat-file` with NO fetch, so a freshly-pushed commit read as
+      fabricated (reproduced live on `unified-trading-ci@686bca7`); 4 were genuinely wrong citations whose underlying
+      work was real, corrected to `01c3dbbab9`/`79c4a72737`/`b7e41849d6` (each verified to exist first). Checker fixed
+      to fetch once on the miss path; **baseline ratcheted 8 -> 0**, verified 2,549 citations / 0 unresolvable.
 
 ## Codex SSOTs
 
