@@ -208,12 +208,19 @@ them).
       Run) does NOT need to repoint any live caller's target URL** — there is no caller that knows the AWS ECS endpoint
       exists. — unified-trading-pm@(see commit)
 
-- [ ] [INFRA] P1. **Find what scaled `uts-defi-prod` from 0 running tasks (2026-07-17) to running (2026-08-08)** — check
-      ECS service events (`aws ecs describe-services --query services[].events`) for a scale-up timestamp/reason, cross
-      reference against any CI/CD deploy pipeline or manual `update-service --desired-count` in CloudTrail for that
-      window. Done-when: the trigger is identified (a specific deploy, a manual action, an autoscaling policy) and
+- [x] ✅ [INFRA] P1. **Find what scaled `uts-defi-prod` from 0 running tasks (2026-07-17) to running (2026-08-08)** —
+      check ECS service events (`aws ecs describe-services --query services[].events`) for a scale-up timestamp/reason,
+      cross reference against any CI/CD deploy pipeline or manual `update-service --desired-count` in CloudTrail for
+      that window. Done-when: the trigger is identified (a specific deploy, a manual action, an autoscaling policy) and
       documented here, or CloudTrail retention has already expired and that's stated explicitly as the reason it can't
-      be determined.
+      be determined. **FINDING (2026-08-08, slot-9)**: CloudTrail (`ap-northeast-1`, retention current) shows a **manual
+      operator action** via `aws ecs update-service`: IAM user `arn:aws:iam::427895769566:user/admin_od` (operator's
+      admin account) issued `update-service --desired-count 1` for both `uts-features-service-prod` and
+      `uts-execution-service-prod` on **2026-07-26T18:56:52Z / 18:56:54Z** from IP 148.252.133.4 (AWS CLI/macOS). A
+      second call for `uts-execution-service-prod` at 22:30:19Z from IP 102.188.39.132 (same user). No CI/CD deploy
+      pipeline, autoscaling policy, or scheduled task triggered this — it was a direct manual CLI scale-up 9 days after
+      the 2026-07-17 observation of 0 running tasks. **No automated process to disable before AWS teardown.** —
+      unified-trading-pm@(see flip commit)
 
 - [ ] [INFRA] P1. **Confirm the 3 GCP Cloud Run services (`execution-service`, `features-service`, `strategy-service`)
       are not already deployed under a name this plan's `gcloud run services list` pass missed** — re-check with
@@ -335,3 +342,12 @@ them).
   to an AWS ALB/ELB DNS, `EXECUTION_SERVICE_URL` env var, or HTTP client calls from the live path. **Conclusion:
   confirmed no live caller references the AWS ECS `uts-execution-service-prod` deployment; it is not in any current hot
   path. Todo 5 (deploy execution-service to Cloud Run) requires no caller repointing.**
+- **2026-08-08 (slot-9, AO worker — todo 2)**: CloudTrail query (`ap-northeast-1`, `UpdateService` events,
+  2026-07-17→2026-08-08). Finding: the scale-up was a **manual operator action** — IAM user `admin_od`
+  (`arn:aws:iam::427895769566:user/admin_od`) issued `update-service --desired-count 1` via AWS CLI from macOS on
+  2026-07-26T18:56:52Z for `uts-features-service-prod` and 18:56:54Z for `uts-execution-service-prod` (both from IP
+  148.252.133.4). A second call for `uts-execution-service-prod` at 22:30:19Z from IP 102.188.39.132 (same user,
+  different network). No CI/CD pipeline, autoscaling policy, or scheduled task triggered the scale-up — it was a direct
+  manual CLI action 9 days after the 2026-07-17 observation. **Implication for cutover**: no automated process needs to
+  be disabled before scaling the services back to 0 and decommissioning the ECS cluster. Proceed with the remaining
+  cutover todos (3 onward) with confidence.
