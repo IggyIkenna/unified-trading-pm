@@ -985,3 +985,5 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-08T04:38Z** — FIXTURE_STATS +47 days (`last_completed_date=2023-10-20`, fresh `04:37:30Z`). smallchunk3 now
   in chunk 18, 4 leagues attempted, zero OOMs so far — confirms the skip-fast hypothesis. Full detail:
   `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`8c7d3249ac`.
+- **2026-08-08T05:05Z** — FIXTURE_STATS +49 days (`last_completed_date=2023-12-08`, fresh `05:04:33Z`). smallchunk3
+  still chunk 18, 10 leagues attempted, zero OOMs. Both healthy.
