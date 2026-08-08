@@ -195,3 +195,13 @@ dates the backfill is still mid-processing, and could race a live write.
     and traced the wire-form writes to the active, bounded `cefi-fwd-20260808-123230` `--force` historical backfill VM
     (tracked separately, ETA ~2026-08-12T05:00Z). Determination: self-resolving race, not a code bug. Todo 2 left open,
     gated on that VM's completion.
+- **2026-08-08 (slot 18, re-dispatch attempt)** — Re-picked up todo 2; VM `cefi-fwd-20260808-123230` confirmed still
+  RUNNING via `gcloud compute instances list`. Fresh GCS spot-check (BINANCE-FUTURES, `derivative_ticker`,
+  `raw_tick_data/by_date/day=<d>/pipeline_mode=batch_tardis/asset_group=cefi/venue=BINANCE-FUTURES/instrument_type=perpetual/data_type=derivative_ticker/`):
+  2026-07-14 COMPLETE (584 objects, matches sibling doc's last logged frontier); 2026-07-15/16/17 all 0 objects (matches
+  the sibling doc's established structural-lag pattern, not yet reached); 2026-07-18/07-20/07-24 all 0 objects
+  (`CommandException: One or more URLs matched no objects` — confirmed genuinely empty, not a false-positive count).
+  **Frontier has NOT yet reached the Range-2 window end (2026-07-24)** — the todo's own gate is still accurate; NOT
+  ready to re-attempt. Parked via `POST /api/slots/18/skip-current-task` (`reason_code=GATED`, `park_now=true`) per
+  `RULES.md`/`auto_park.py`'s "worker hitting an EXTERNAL gate" mechanism, rather than forcing the apply or busy-waiting
+  ~4 days in-session. No code/data changed this pass.
