@@ -607,3 +607,7 @@ Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, S
   `e2e-testing/scripts/paper_trading/` (the standalone paper-trading POC dashboard named in the doc's own summary) + its
   `RECOVERY.md` remain the correct source targets alongside the parent plan + line-cap-remediation issue +
   strategy_master epic.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-confirmed against today's 9
+  cheat-sheet rulings; none apply to a corpus of alpha-research strategy-desk judgment calls (execution-config sweeps,
+  leg re-specs, allocator design, universe construction, all `[RESEARCH]`/`[STRATEGY]`). This is the archetypal
+  trading-judgment content the NA classification exists for — reaffirms the 2026-07-30 verdict, no change.
