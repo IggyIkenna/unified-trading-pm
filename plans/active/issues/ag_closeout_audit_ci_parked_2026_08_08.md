@@ -228,3 +228,6 @@ This doc is itself a findings-tracker produced by a DIFFERENT skill (`ag-closeou
 2026-08-07 predecessor: `assigned_vm: NA` is correct (a report, not dispatchable content in its own right); 0
 checkbox-style todos (all content is prose/informational + pointers to batch6, which carries the real dispatchable
 work). Not this audit's to reclassify or archive.
+
+**na-eligibility-audit 2026-08-08** (tranche `ci`): KEEP-NA, valid — confirmed independently: 0 open `- [ ]` todos, doc
+is a prose findings-report (not dispatchable content in its own right), `assigned_vm: NA` correct as-is.

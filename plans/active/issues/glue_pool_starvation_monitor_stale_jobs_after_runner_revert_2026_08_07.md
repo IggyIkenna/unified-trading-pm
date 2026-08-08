@@ -171,3 +171,10 @@ every healthy tick forever) — that is a real, if modest, additional job
   permanently-stranded runs, disabled the monitor's schedule (mirroring the sibling monitor's same-day precedent fix),
   and live-verified via a manual `workflow_dispatch` that the monitor now reports healthy. Filed this doc + the one P3
   follow-up (recovery-announcement audit) rather than silently letting the alerts merely stop.
+
+- **na-eligibility-audit 2026-08-08** (tranche `ci`): KEEP-NA-STALE (already-duplicated) — the doc's sole open todo
+  ("Audit which of this repo's standing CI monitors implement a real state-diffed recovery/all-clear post...") is
+  already extracted verbatim into `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 4 (`status: draft`,
+  `assigned_vm: planning`, drafted by `/ag-closeout-audit ci` the same day). Not reclassifying `assigned_vm` here —
+  batch6 is still draft pending operator activation; flipping this doc too would risk a duplicate dispatch once batch6
+  activates.

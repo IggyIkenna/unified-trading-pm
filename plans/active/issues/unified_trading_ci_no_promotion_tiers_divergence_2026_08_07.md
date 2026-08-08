@@ -142,3 +142,9 @@ silent merge choice here risks dropping one side's fix. Not attempted.
   `live-defi-rollout` at session start. Fixed via `integration_branch: "main"` in the manifest.
   `promotion_lag_monitor.py` re-run confirms unified-trading-ci no longer appears in the lagging list in either
   direction.
+
+- **na-eligibility-audit 2026-08-08** (tranche `ci`): KEEP-NA-STALE (already-duplicated) — both remaining open todos
+  (the post-2026-08-05 repo audit, and the SC2015 shellcheck fleet-propagation) are extracted verbatim into
+  `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todos 8 and 9 respectively (`status: draft`, `assigned_vm: planning`).
+  Not reclassifying this doc's `assigned_vm` — batch6 activation is the operator's call; flipping here too risks a
+  duplicate dispatch once it activates.

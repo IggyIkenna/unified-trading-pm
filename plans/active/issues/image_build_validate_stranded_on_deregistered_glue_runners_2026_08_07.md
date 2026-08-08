@@ -153,3 +153,10 @@ needed a brand new dispatch). Result: `validate / GCP Cloud Build — alerting-s
     chase) treat it as a hard gate even where GitHub's ruleset doesn't.
   - Full sweep covered all 20 remaining `ldr_main`/other repos in the manifest with zero other open `chore(promote)` PRs
     at sweep time.
+
+- **na-eligibility-audit 2026-08-08** (tranche `ci`): Mixed verdict on the 2 open todos. Todo 1 (fleet-wide sweep for
+  other stranded self-hosted `runs-on:` in `unified-trading-ci`) is KEEP-NA-STALE (already-duplicated) — extracted
+  verbatim into `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 5 (`status: draft`, `assigned_vm: planning`); not
+  reclassifying this doc's `assigned_vm` — batch6 activation is the operator's call, and flipping here too risks a
+  duplicate dispatch. Todo 2 (standing check for repo-visibility/runner-registration drift as a re-audit trigger) stays
+  KEEP-NA, valid — a genuine design decision (what mechanism, where implemented), not extracted anywhere.

@@ -465,3 +465,12 @@ unrelated pre-existing test failure tracked elsewhere. All fixes are already shi
 the strength of any fresh "fleet promotion is healthy again" corroboration that may exist elsewhere in this doc's
 Progress Log — this audit's evidence bar requires a real `reconcile_release_tags.py --dry-run` re-run or a minted tag,
 not an inference; still genuinely open, likely to clear soon.
+
+**na-eligibility-audit 2026-08-08** (tranche `ci`): KEEP-NA, valid — re-verified with fresh live evidence, not an
+inference. `python3 scripts/cicd/reconcile_release_tags.py --dry-run` still reports 13 STALLED (unchanged from this
+doc's own 13-repo baseline) — the "confirm the stall count drops" todo does not clear yet.
+`gh api .../actions/workflows` for both spot-checked caller repos (`instruments-service`, `unified-trading-api`) still
+resolves the raw file path, not `"Semver Agent"` — caller re-registration still pending, and
+`gh pr list --search "chore(promote)"` shows zero queued promote PRs for either. All 5 open items remain genuinely
+externally-blocked (fleet promoter / natural `push:[main]` triggers / the unrelated MTDS test fix), none closeable with
+today's evidence.
