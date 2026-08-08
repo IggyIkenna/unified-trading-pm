@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, plan-hygiene, dispatch, false-progress, quality-gates]
 related:
   [
-    /plans/active/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md,
+    /plans/archive/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md,
     /plans/active/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md,
   ]
 created: 2026-08-08

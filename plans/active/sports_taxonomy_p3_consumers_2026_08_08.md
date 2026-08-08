@@ -200,6 +200,6 @@ spelling variant survives, which is the entire point of the panel". It does not.
   `unified-trading-pm@a134a45948`; re-verified with regen's REAL parser, not a re-implementation: P3 14/15 -> 15/15, and
   all 8 docs now parse 75/75. Corpus-wide the same silent drop hits 47 todos across 37 AO docs (14 of them parse to ZERO
   dispatchable todos) — filed as
-  `/plans/active/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md`, NOT hand-triaged,
+  `/plans/archive/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md`, NOT hand-triaged,
   because three prior regex-widening fixes all regressed. Ingestion of the fixed todo lands on the next plan-regen tick
   (~30 min default); no operator action.
