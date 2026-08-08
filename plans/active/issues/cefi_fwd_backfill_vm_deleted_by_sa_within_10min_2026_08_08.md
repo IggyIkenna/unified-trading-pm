@@ -92,15 +92,24 @@ both.
 - The P2 forward-cron venue gap fix (new todo in contamination plan) is also blocked on raw data
 - The daily cefi corpus recompute cron fires at 07:00 UTC but will honest-skip the gap window
 
+## Additional finding (slot-14 2026-08-08)
+
+**IS data gap hypothesis ELIMINATED** by direct catalogue read: `prod/catalog.parquet` has full mvp coverage for all 6
+CARRY_BASIS_PERP venues on 2026-06-05 (BINANCE-FUTURES 537, BYBIT 810, OKX-SWAP 329, KRAKEN-FUTURES 275, BITGET-FUTURES
+469, BITFINEX-FUTURES 55; max_from=2026-08-06). The VM produced 0 GCS objects because it was deleted during the setup
+phase (before MTDS had a chance to run), not because IS lacked data. The "NO SYMBOLS for binance-delivery" log is
+EXPECTED — BINANCE-DELIVERY was removed from CeFi MVP in mvp_scope.py v10 #3. The root cause is solely the premature
+deletion.
+
 ## Action items
 
 - [ ] [OPERATOR] P0. **Diagnose root cause of double-insert + deletion pattern.** Check if the Tardis concurrency guard
       (`tardis-concurrency-guard.sh`) is triggering on double-launch and killing both instances. Check if the zombie
       watchdog (`exit_code_fleet_monitor`) has a `vm.delete` path that fires on concurrency violations. Confirm whether
       `cefi-fwd-20260806-065837`'s early termination at 12/75 days was also a deletion (check its audit log the same
-      way).
+      way). Note: Tardis guard does NOT delete VMs (only refuses new launches); the deleter must be a separate process.
 - [ ] [INFRA] P1. **Re-launch the backfill** once root cause is understood. Pre-check: run
       `tardis-concurrency-guard.sh cefi-fwd` before launching to ensure no concurrent instances. Use a single-launch
-      only (prevent double-insert). Expected runtime: ~18-24h for 62 days × 6 venues.
+      only (prevent double-insert). Expected runtime: ~18-24h for 62 days × 6 venues. IS catalogue is NOT a blocker.
 - [ ] [DATA] P1. **Re-run GCS probe to confirm coverage** after backfill VM terminates normally. Only then re-dispatch
       task `-011` (corpus recompute). Do NOT flip `-011` done on VM-STOPPED alone — measure GCS coverage.
