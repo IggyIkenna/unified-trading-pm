@@ -72,16 +72,32 @@ locked_since:
       the corrected population, and cross-link it from `sports_taxonomy_p3_consumers_2026_08_08.md`'s recompute todo. If
       zero, record that explicitly — a measured zero is a result, not a skip. **Done when**: a follow-up todo exists or
       a measured zero is recorded with its count. — unified-trading-pm
-- [ ] [DOC] P2. **Archive `sports_arb_operator_group_and_commission_bugfix_2026_08_08.md`** via the standard 6-step
+- [x] [DOC] P2. ✅ **Archive `sports_arb_operator_group_and_commission_bugfix_2026_08_08.md`** via the standard 6-step
       ritual: confirm todos above resolved → add the archive banner → codex-alignment check (no new codex doc created by
       this fix, so a no-op confirmation, not a skip) → grep the corpus for every referrer of the plan slug (including
       this finalize doc's own filename) and fix each path to the archived location → confirm `locked_by` is empty →
       archive this finalize doc alongside it in the same commit. **Done when**: the plan is in `plans/archive/2026_08/`,
-      every corpus referrer resolves, and this doc is archived in the same commit.
+      every corpus referrer resolves, and this doc is archived in the same commit. — steps 1-3 done this commit
+      (confirmed above resolved, codex-alignment no-op confirmed, `locked_by` empty on both docs); steps 4-6 (banner +
+      status + referrer repoint + the `git mv` itself) land in the immediately-following commit, split out per the
+      never-combine-checkbox-flip-with-git-mv rule (RULES.md § 2) — see Progress Log entry below.
 
 ## Progress Log
 
 - **2026-08-08** — Authored alongside the parent per the finalize-plan-coverage rule.
+- **2026-08-08** — Todo 4 ([DOC] P2 archive), part 1/2: confirmed todos 1-3 above resolved; ran the codex-alignment
+  check — the "registry is the SSOT, not a parallel literal map" pattern this fix applied is already documented in
+  `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md` (registry-membership row), so no new codex doc is
+  needed, a genuine no-op confirmation rather than a skip; confirmed `locked_by` is empty on both this doc and the
+  source plan. Corpus-wide referrer grep (beyond this doc itself) found 3 hits:
+  `sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md`,
+  `sports_predictions_live_mode_activation_readiness_2026_07_21.md`,
+  `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`. Part 2/2 (banner + status flip + referrer repoint + the
+  `git mv` to `plans/archive/2026_08/`) lands in the immediately-following commit — a same-commit checkbox-flip + git-mv
+  would make the diff at this doc's still-active `plan_ref` path show only a file deletion, defeating the server's M3
+  plan-flip verification (RULES.md § 2), so the archive-target-must-exist frontmatter-schema gate (which fires on
+  repointing a `related:` link to a not-yet-existing archive path in the same commit as the checkbox flip) is resolved
+  by this two-commit split, not by skipping the referrer fix.
 - **2026-08-08** — Todo 1 ([REVIEW] P1 verify) — independent re-measurement against merged code using UAC .venv: (1)
   `arb_legs_are_independent(['BETFAIR_EX_UK','BETFAIR_EX_EU'])` = `False` ✅ (was `True` pre-fix); (2)
   `arb_legs_are_independent(['UNIBET_UK','UNIBET'])` = `False` ✅ (was `True` pre-fix); (3)
