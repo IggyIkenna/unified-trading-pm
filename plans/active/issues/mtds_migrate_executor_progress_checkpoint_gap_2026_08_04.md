@@ -23,7 +23,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 resolved_by: ""
-locked_by: ""
+locked_by:
 source:
   [
     "slot-12 audit of migrate_*_2026_07*.py family, task tradfi_satellite_ao_dispatch_batch5-008",
