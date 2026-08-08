@@ -110,11 +110,27 @@ repeated per-incident coaching.
 
 ## Todos
 
-- [ ] [BACKEND] P3. Decide (A) / (B) / (C) with the operator/plan-owner, then implement: either add a QG/prek rule
-      detecting rename-into-`plans/archive/`-plus-content-diff in one commit for plan/issue docs (rejecting or
-      hunk-verifying the flip), tighten the `cross_repo_pm_file_touched_no_checkbox_flip` guard's own rename-similarity
-      threshold, or document the guard's blind spot in `/codex/12-agent-workflow/commit-push-flip-rule.md`. Confirm the
-      chosen fix against the bfd1194dc / ae19b3fd0 commit shapes. (repos: agent-orchestrator, unified-trading-pm)
+- [ ] [BACKEND] P3. **DECIDED 2026-08-08 (operator ruling, NA-corpus blocker digest round 5, id=56): option (B)** —
+      tighten the `cross_repo_pm_file_touched_no_checkbox_flip` guard's own rename-similarity threshold. Scoped the
+      exact fix by reading the live guard (it does NOT live in `unified-trading-pm/scripts/` — the literal string
+      `cross_repo_pm_file_touched_no_checkbox_flip` is a `reason` value emitted from `check_plan_flip()` in
+      `agent-orchestrator/server/verify.py:1385`, line 1700). **Root mechanism**: four sibling diff-shape checks —
+      `_diff_flips_checkbox` (verify.py:865, git call :890), `_diff_cancels_checkbox` (:915/:936),
+      `_diff_defers_checkbox` (:961/:976), `_diff_blocks_checkbox` (:1001/:1028) — all run
+      `git show --unified=0 --no-color --format= <sha> -- <path>` with NO `-M`/`--find-renames`/`--no-renames` flag, so
+      git's default `diff.renames=true` (~50% similarity threshold) pairs a bundled archival-rename+flip commit as a
+      clean rename and only prints the changed hunks against the OLD path — a similarity-%-dependent knife-edge, not a
+      deterministic check. **Concrete fix**: add `"--no-renames"` to the `git show` argv at verify.py lines 890, 936,
+      976, 1028 — forces every archival git-mv+edit commit to present as delete+add regardless of similarity%, routing
+      ALL bundled-flip commits through the already-hardened content-based fallback (`_flips_at_path_or_rename` →
+      `_same_commit_added_path_matching_basename` → `_archival_rename_disposition`, verify.py:1053-1206) instead of the
+      size-dependent hunk-diff path. No existing test currently exercises rename-similarity
+      (`agent-orchestrator/tests/test_done_gate_plan_flip_hard_reject.py`) — add one pinning a bundled-rename+flip
+      commit is still detected post-fix. **NOT implemented this session** — the actual code change is in
+      `agent-orchestrator`, out of this session's edit scope (unified-trading-pm only); filed here as a fully-scoped,
+      ready-to-implement todo citing exact file:line targets so the next agent-orchestrator session can ship it
+      directly. Confirm the fix against the bfd1194dc / ae19b3fd0 commit shapes once implemented. (repos:
+      agent-orchestrator)
 
 ## Progress Log
 
