@@ -56,6 +56,24 @@ context_scope:
   ]
 ---
 
+> **🟡 CROSS-PLAN BANNER (added 2026-08-08) — an IS data_type vocabulary migration is inbound and is GATED ON THIS
+> DOC.** The sports venue/data-type canonicalisation chain (authored 2026-08-08 from the live distinct-values audit)
+> carries an operator ruling to **merge the sports data_type vocabulary to a single lowercase form** — which renames
+> every UPPERCASE API-Football entity token this campaign writes and measures (`FIXTURES`, `FIXTURE_EVENTS`,
+> `FIXTURE_STATS`, `FIXTURE_LINEUPS`, `PLAYER_STATS`, `INJURIES`, `STANDINGS`, `TEAMS`) to `fixtures`, `fixture_events`,
+> … .
+>
+> **Ordering is settled: this doc runs FIRST, the rename waits.** The rename phase declares
+> `depends_on: sports_af_full_entity_completion_2026_08_03` + `gate_on_depends: true`. Rationale: renaming the registry
+> while the two remaining all-leagues backfills (`FIXTURE_LINEUPS` 58,523 · `INJURIES` 62,709) are in flight would make
+> the fetch loop write a token the registry no longer expects — minting phantom `expected_unattempted` rows — and would
+> leave this doc's P0 re-census measuring the pre-rename axis. Letting this campaign converge first means the migration
+> makes ONE pass over the finished corpus.
+>
+> **Action required of THIS doc: none.** Do NOT "fix" the uppercase tokens here, do not pre-emptively lowercase
+> anything, and do not treat the casing as drift — it is the correct vocabulary until the gated rename phase lands. Keep
+> launching the backfills and closing the re-census exactly as written.
+
 ## Why this doc exists (not folded into the parent plan or the FIXTURE_EVENTS issue doc)
 
 `sports_satellite_ao_dispatch_batch2_2026_07_24.md` is at 996/1000 lines (hard cap) — no room to add this scope there.
