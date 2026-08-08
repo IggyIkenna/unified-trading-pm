@@ -1308,7 +1308,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
@@ -2230,13 +2230,13 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.96.2.dev3+gab90e4b45",
-      "published_at": "2026-08-07T21:51:50Z",
+      "version": "0.96.2.dev4+g660bfb039",
+      "published_at": "2026-08-08T04:21:39Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.98.1.dev18+gdb7f7d3b4",
-      "published_at": "2026-08-07T23:03:48Z",
+      "version": "0.98.1.dev19+gd89b9cb19",
+      "published_at": "2026-08-08T04:04:25Z",
       "registry": "artifact-registry"
     }
   }
