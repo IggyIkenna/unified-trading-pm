@@ -65,14 +65,6 @@ external_references:
 
 # Orchestrator Master (L5)
 
-> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation** (guardrails phase:
-> [`utl_reuse_phase0_guardrails_2026_07_13`](../archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md); compose
-> phases: `utl_reuse_phase1_strategy_risk_hwm_2026_07_13` (strategy risk/HWM),
-> `utl_reuse_phase3_ml_model_registry_2026_07_13` (ml ModelRegistry),
-> `utl_reuse_phase4_features_builder_registry_2026_07_13` (features builder_registry)). Concurrent slots: do not
-> re-touch the strategy risk-eval, ml-registry, or features-builder-registry surfaces until those phase plans land —
-> check them first.
-
 **Owns**: agent-orchestrator multi-VM stack (central/orchestrator VM `planning` + human planning VM `human-planning` + 9
 epic VMs — human/central SPLIT 2026-06-12, see `plans/active/orchestrator_human_central_vm_split_2026_06_12.md`);
 dashboard aggregation; auth failover (long-lived setup-token pattern); per-spawn account isolation; cross-VM
