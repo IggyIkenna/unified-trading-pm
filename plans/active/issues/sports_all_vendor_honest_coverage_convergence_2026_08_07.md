@@ -737,3 +737,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   its 2026-08-07 target end now. odds smallchunk5: still chunk 18, 11 distinct leagues attempted (zero repeats), 8 OOMs
   total (up from 3) with normal self-recovery, actively logging as recently as ~17s ago — no 4th occurrence. Both
   healthy, no intervention.
+- **2026-08-08T11:13Z — operator invoked `/autonomous`, "finish everything," and left.** Continuing this loop under the
+  autonomous completion contract (`cursor-configs/AUTONOMOUS_AGENT_RULES.md`) — no change to method, just no further
+  per-tick user check-ins expected. FIXTURE_STATS +26 days (`last_completed_date=2025-08-15`, fresh `11:12:09Z`) — pace
+  has accelerated sharply the last several ticks (enrichment-only mode, mostly-covered dates), likely converging within
+  a few more ticks. odds smallchunk5: still chunk 18, 16 OOMs total (up from 8) but actively logging as recently as ~15s
+  ago — genuinely alive, no hang signature. Both healthy, no intervention. Per rule 2 of the autonomous contract, also
+  picking up the previously-parked cross-vendor honest-absence/denominator-hardening generalization ask as a scoped
+  audit + documented proposal (not a unilateral architecture change) rather than leaving it `BLOCKED-OPERATOR` — will
+  work this in as a parallel thread once the current milestone watch eases.
