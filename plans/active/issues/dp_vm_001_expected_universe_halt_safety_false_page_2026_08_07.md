@@ -208,3 +208,17 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
   specifically rather than re-auditing the underlying exit_code=5 fix a further time (that part is definitively closed).
   This review session did not chase the orchestrator-side mechanism itself (server-code investigation is outside review
   scope) — leaving that to main/operator. No code shipped this session; this Progress Log entry is the only change.
+- **review agent (slot 1, fresh boot #2) 2026-08-08**: FIFTH independent redelivery of the identical `BLK-091671d7`
+  instruction (message id 5866, this slot). Re-verified same conclusion once more (fix intact at
+  `origin/live-defi-rollout` HEAD, both regression tests present, no code changes made). This time chased the
+  orchestrator-side mechanism to ground: root-caused via a direct, read-only query against the live
+  `data/state/state.db` (`slot_messages` table) cross-referenced against
+  `agent-orchestrator/server/state_store/activity.py` — confirmed root cause (not a hypothesis) is a structural gap in
+  the `SlotMessageRow` delivery primitive: `POST /api/slots/{id}/message` never sets `task_id`, so every free-text
+  direct instruction falls into the "general recurring notice" bucket, which has no ack path short of a 30x redelivery
+  cap. Confirmed this is not unique to this instruction — 15 distinct "Direct instruction from main" campaigns are
+  currently unanswered fleet-wide (18 rows, 12 slots). Full detail + recommended fix now lives in
+  `/plans/active/issues/ao_direct_instruction_stale_redelivery_after_blocked_resolution_2026_08_08.md` (updated this
+  session, its own Todo 1 flipped `[x]` with evidence). Nothing further to add here — this doc's own finding remains
+  fully closed; future redeliveries of this same stale text should be resolved by the OTHER doc's fix, not by another
+  re-verification pass here.

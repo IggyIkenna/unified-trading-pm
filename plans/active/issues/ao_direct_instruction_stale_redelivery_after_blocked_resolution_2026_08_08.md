@@ -77,12 +77,46 @@ Full technical detail of the underlying (already-fixed) issue is in
 ruling out a simple "unanswered blocked-question redelivers on every poll" explanation. Whatever is re-queueing this
 instruction is not visible in the blocked-queue itself.
 
-## Root cause (not yet investigated)
+## Root cause — CONFIRMED (review agent, slot 1, 2026-08-08, live DB + code read)
 
-Unverified hypothesis (review's, echoed by main): a direct-instruction record tied to the original escalation never got
-marked resolved/cleared once the escalation was answered, so it re-dispatches on a later respawn/heartbeat cycle for
-whichever slot picks it up next — independent of role (has hit both `review` and generic `worker` roles) and independent
-of which physical slot (4 different sessions, not the same slot repeating).
+Not a blocked-question/escalation bug at all — confirmed structural gap in the `SlotMessageRow` delivery primitive
+itself (`agent-orchestrator/server/state_store/activity.py`), verified by reading the live `data/state/state.db`
+(read-only) plus the delivery code:
+
+1. `POST /api/slots/{slot_id}/message` (`server/routes/slots_ops.py:75-85`) is the send path main used for this
+   instruction (and for every other free-text "Direct instruction from main — bypasses backlog" send). Its
+   `SendMessageRequest` body has **no `task_id` field at all** — the handler always calls
+   `ss.enqueue_message(session, slot_id, text=req.text, from_role=req.from_role)` with `task_id` implicitly `None`.
+2. `enqueue_message`'s own docstring (`activity.py:277-286`) says leaving `task_id` unset is correct for "general
+   slot-directed notices (git-health alerts, operator broadcasts) that aren't tied to one task's lifecycle" — but a
+   one-shot "go implement fix X" instruction is NOT that kind of message; it has no live condition to keep re-checking,
+   it either got done or didn't.
+3. `take_pending_messages` (`activity.py:289-367`) is the read/redeliver path. For a `task_id IS NULL` row, the ONLY way
+   `answered_at` ever gets stamped is `redelivery_count >= max_redeliveries` (default 30, `server/config.py:893`) —
+   there is **no ack/reply primitive for `slot_messages` at all**, by explicit design (class docstring: "task workers
+   have no reply endpoint... 'unanswered' is unobservable for them"). Every NEW `claude_session_id` on the target slot
+   (any fresh spawn — a respawn, a task-boundary reset, a review-agent recycle) re-satisfies the
+   `delivered_to_session != live_session` redelivery predicate, so the message is handed to literally every future
+   session on that slot until the 30x cap, with **zero way for a recipient session to close it early** even after
+   independently confirming the underlying ask is already fulfilled.
+4. This design is CORRECT for the notices it was built for (a dirty-worktree nag SHOULD re-show to a fresh session — the
+   fresh session can re-check the live condition and the redelivery is doing real work). It is the wrong bucket for a
+   one-shot ask, and main's own `POST /message` endpoint has no other bucket to put one in.
+
+**Confirmed live blast radius (2026-08-08, queried directly against `data/state/state.db`, read-only)**: this is not one
+stale message — **15 distinct "Direct instruction from main — bypasses backlog" message campaigns** are currently
+unanswered (`answered_at IS NULL`), spanning **18 rows across 12 distinct slots** (0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11,
+15), `redelivery_count` ranging 0–17 out of the 30 cap (none capped yet, several past halfway: slot 9 at 17, slots 4 and
+10 at 16, slot 2 at 14). Every one of these campaigns is structurally unable to close early, for the identical reason —
+this is the general shape of every message main sends through this endpoint, not a one-off. One row (id 5883, slot 15)
+is main's own follow-up explicitly titled "CORRECTED / REPLACES an earlier garbled message I just sent to this slot" —
+even main's manual attempt to retract a mistake did not (and structurally could not, since no supersede/ack path exists)
+mark the original (id 5882) answered; both are still live and independently redelivering today.
+
+This confirms the review/main hypothesis's shape (independent of role, independent of physical slot — a fresh
+`claude_session_id` on ANY slot re-triggers delivery) but the actual mechanism is simpler and fully deterministic: no
+race, no queueing artifact, no per-escalation state — just a redelivery predicate with no early-exit for
+`task_id IS NULL` messages.
 
 ## Blast radius
 
@@ -96,16 +130,49 @@ stale-redelivery problem this doc is primarily about.
 
 ## Todo
 
-- [ ] [INFRA] P3. Root-cause why the `BLK-091671d7` / DP-VM-001 direct instruction survived at least 4 respawn/dispatch
-      cycles after its underlying escalation was resolved on 2026-08-07. Check the agent-orchestrator server's
-      direct-instruction delivery/queueing code path for whether it dedups/invalidates against blocked-question
-      `answered_at` or escalation-resolution state. Fix so a direct instruction citing an already-resolved
-      blocked_id/escalation_id is not redelivered on the next respawn/heartbeat. Done-when: reproduce the stale-delivery
-      condition (or confirm root cause via code read), ship a fix or confirm no code fix is needed (e.g. if it's a
-      one-time backlog-generation artifact, not a recurring code bug) — either way close this loop with evidence, not
-      speculation.
+- [x] [INFRA] P3. Root-cause why the `BLK-091671d7` / DP-VM-001 direct instruction survived at least 4 respawn/dispatch
+      cycles after its underlying escalation was resolved on 2026-08-07 — CONFIRMED 2026-08-08 (review agent, slot 1).
+      See "Root cause — CONFIRMED" above: `POST /api/slots/{id}/message` never sets `task_id`, so every free-text direct
+      instruction falls into the `task_id IS NULL` "general notice" bucket, which has no ack path short of the 30x
+      redelivery cap. Not escalation-state-related — no dedup against `blocked_id`/escalation `answered_at` exists or is
+      needed; the fix belongs in the message-delivery primitive itself (see the new todo below). Evidence: direct read
+      of `server/state_store/activity.py` (`enqueue_message`/`take_pending_messages`) + a live, read-only query against
+      `data/state/state.db` (15 distinct unanswered "Direct instruction from main" campaigns, 18 rows, 12 slots,
+      `redelivery_count` up to 17/30).
+- [ ] [INFRA] P3. Implement the fix: add an explicit close/ack primitive for `slot_messages` so a one-shot instruction
+      can terminate the moment ANY recipient session confirms it's fulfilled/stale, instead of waiting out up to 30
+      redeliveries across up to 30 future sessions. Recommended shape (mirrors the `agent_messages`/`/reply` pattern
+      that already solves this exact problem for the main/review/chat channel):
+      `POST /api/slots/{slot_id}/messages/{message_id}/ack` stamps `answered_at` immediately; update
+      `unified-trading-pm/agents/worker.md` + `review.md` so a session that reads a "Direct instruction from main"
+      message and determines the ask is already done (by someone else, or moot) calls this before continuing, closing
+      the loop the same turn rather than leaving it to expire. Bonus: accept an optional `supersedes_message_id` on
+      `POST /api/slots/{slot_id}/message` so a correction (e.g. id 5883 correcting garbled id 5882 — both still live
+      today) auto-acks the message it replaces. Cheaper interim mitigation if the new endpoint is non-trivial: let
+      `SendMessageRequest` carry a `max_redeliveries` override (e.g. 2-3) for one-shot sends, distinct from the 30
+      default that's correctly tuned for recurring notices (git-health, etc.) — bounds the blast radius without a new
+      endpoint. Done-when: a session that acks a one-shot instruction (or hits the lowered cap) stops seeing it
+      redelivered to the NEXT fresh session on that slot, verified live against a real send, not just a unit test.
 - [ ] [INFRA] P3. Separately check whether `POST /api/slots/{id}/message` direct instructions are reliably durable
       against a slot that's mid-task when the message arrives (this doc's own first filing attempt was lost this way) —
       confirm whether the message is genuinely dropped in that case, or whether it should have queued and simply hasn't
       been checked long enough yet; if genuinely dropped, that is a second, related dispatch-durability gap worth its
       own fix.
+
+## Progress Log
+
+- **review agent (slot 1) 2026-08-08**: Root-caused live (see "Root cause — CONFIRMED" above) via direct, read-only
+  inspection of `data/state/state.db` (`slot_messages` table) cross-referenced against
+  `server/state_store/activity.py`'s `enqueue_message`/`take_pending_messages` and `server/routes/slots_ops.py`'s
+  `post_message` handler — no speculation, no DB writes (read-only `sqlite3` URI connection throughout; did not mutate
+  live server state). This session's own hit was message id 5866 (slot 1, `redelivery_count=6` at read time,
+  `delivered_to_session` matching this session's own id verbatim) — the 5th confirmed same-day redelivery of the
+  identical `BLK-091671d7` text fleet-wide, and independently re-verified (again) that `deployment-service@27fd5779`'s
+  exit_code=5 carve-out + both regression tests are still intact at `origin/live-defi-rollout` HEAD — no code changes
+  needed, nothing to ship for the underlying DP-VM-001 finding. Went further than prior sessions (which correctly
+  flagged this as outside review's code-editing scope but didn't chase the server-side mechanism) by tracing the exact
+  live DB rows and confirming the fix belongs in the message-delivery primitive, not the exit_code=5 handling. Updated
+  Todo 1 to `[x]` with evidence, added Todo 2 with a concrete recommended fix shape, left implementation to a worker
+  session (out of review's own `does_not: edit/commit code` scope). Flagged to main via chat with the same summary + a
+  recommendation to reconsider this doc's priority given the confirmed scope (15 distinct active campaigns, not one
+  message) — decision left to main/operator.
