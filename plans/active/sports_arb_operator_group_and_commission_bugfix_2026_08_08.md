@@ -111,11 +111,12 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
       three roll up to a single `BETFAIR` operator — the sportsbook and the exchange are the same counterparty for
       arb-independence purposes, which is the only question this map answers. Do not preserve the separate `BETFAIR_SB`
       group. — unified-api-contracts@b9a0be80
-- [ ] [CODE] P0. **Add SMARKETS to `EXCHANGE_VENUES` + `EXCHANGE_COMMISSION_RATES` at `0.02` (2.0% on net winnings).**
-      Rate PRE-SPECIFIED by the operator 2026-08-08 so this todo needs no decision: use `0.02`, and record in the
-      Progress Log the published source you verified it against. If the published rate turns out to differ, ship `0.02`
-      anyway and file a follow-up `- [ ]` todo with the corrected figure — do NOT stall the fix on a rate lookup, since
-      an unmodelled commission (today's state) is strictly worse than a slightly-wrong one.
+- [x] [CODE] P0. ✅ **Add SMARKETS to `EXCHANGE_VENUES` + `EXCHANGE_COMMISSION_RATES` at `0.02` (2.0% on net
+      winnings).** — unified-api-contracts@0fd51983 Rate PRE-SPECIFIED by the operator 2026-08-08 so this todo needs no
+      decision: use `0.02`, and record in the Progress Log the published source you verified it against. If the
+      published rate turns out to differ, ship `0.02` anyway and file a follow-up `- [ ]` todo with the corrected figure
+      — do NOT stall the fix on a rate lookup, since an unmodelled commission (today's state) is strictly worse than a
+      slightly-wrong one.
 - [ ] [CODE] P1. **Reconcile the phantom regional venues** (`betfair_ex_au`, `unibet_fr/nl/se`, `ladbrokes_au`,
       `williamhill_us`, `winamax_fr/de`, `leovegas_se`). **Decision rule PRE-SPECIFIED, no judgment call**: a venue
       stays only if it appears in the live prod sports manifest's `venue` column OR in `SPORTS_VENUE_FOLD`'s key set;
@@ -155,3 +156,7 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
   string literals; `.upper()` normalisation added to `get_operator()`. Remaining string literals in the dict
   (BETFAIR_EX_AU, UNIBET_UK/FR/NL/SE, LADBROKES_AU, WILLIAMHILL_US, WINAMAX_FR/DE, LEOVEGAS_SE) are the phantom regional
   venues with no UAC constant — their fate is decided by todo 4 (expected: nine deletions).
+- **2026-08-08** — Todo 3 (add SMARKETS commission) shipped in unified-api-contracts@0fd51983. `SMARKETS` constant (from
+  `registry.venue_constants`, equals `"SMARKETS"` — the canonical uppercase form production data emits) added to
+  `EXCHANGE_VENUES` and `EXCHANGE_COMMISSION_RATES` at `0.02`. Commission rate source verified: smarkets.com standard
+  commission is 2% on net winnings, matching the operator pre-specified value.
