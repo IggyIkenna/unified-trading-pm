@@ -150,8 +150,12 @@ conflict/operator/time-gated (parked below, not silently dropped).
       until manual respawn" text corrected to Trigger-3 auto-recovery message (worker_liveness/_auth_failover.py). QG
       green.
 
-- [ ] [SCRIPT] P2. **Reorder `WorkerLivenessWatchdog._tick_once()`'s cleanup/reconcile sub-mechanisms ahead of the
-      daily-kill-cap early-return, and fix a stale docstring.** Today `if self._daily_cap_reached(): return` sits after
+- [x] ✅ [SCRIPT] P2. **Reorder `WorkerLivenessWatchdog._tick_once()`'s cleanup/reconcile sub-mechanisms ahead of the
+      daily-kill-cap early-return, and fix a stale docstring.** — agent-orchestrator@bc37d03 (reorder + docstring fix) +
+      agent-orchestrator@53492cb (notify_watchdog_kill cap-hit alert text disclosure +
+      test_tick_daily_cap_still_runs_orphan_session_reclaim regression test). Verified: orphan-session reclaim
+      (`_tick_once`, server/worker_liveness_watchdog.py) runs ahead of the `_daily_cap_reached()` check; full
+      `quality-gates.sh` green (2769 passed). Today `if self._daily_cap_reached(): return` sits after
       `_sweep_dirty_slots`/`_sweep_unpushed_slots` (deliberately moved ahead of it in a prior incident fix) but before
       everything else — including orphan-session reclaim, whose OWN comment already states it is cleanup of an
       already-dead worker, not a new kill decision, so it is mis-gated by sitting after the cap check. Move
