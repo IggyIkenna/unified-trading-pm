@@ -195,3 +195,27 @@ exists" section together before scoping the workstream.
   Flipped `assigned_vm: NA` → `planning` / `execution_scope: local-only` → `orchestrator-agent` — the design gate is
   resolved and the remaining work is bounded, matching the operator's general preference (recorded on item 6 of this
   same apply session) to default to AO-dispatched plans once a LOCAL-vs-AO fork like this resolves.
+- **2026-08-08 (slot-11, ui_developer, dispatched onto `-002`)**: dispatcher offered the `[UI] P2` transcript-jump todo
+  (task `blocked_questions_ux_redesign_context_loss_and_scale-002`) while its own stated dependency, `[BACKEND] P2`
+  (`-001`, `claude_session_id` capture), was still `queued`/undispatched — confirmed live via the backlog API, and
+  confirmed in code that `BlockedRow` (`agent-orchestrator/server/orm.py:334-374`) has no `claude_session_id` column
+  yet. The UI todo's own text already flagged this ("sequence via `sequential: true` if these are ever pulled into their
+  own dispatched plan") but no such gate exists on this doc, so the backlog derivation offered `-002` with no prereq
+  enforcement. Declining via `POST /api/slots/11/skip-current-task` (`reason_code: GATED`, no `park_now` — the
+  dependency is a small, actively-queued in-plan task expected to land soon, not an external gate needing a durable
+  park) rather than doing the backend column work myself (out of ui_developer craft scope per `ui_developer.md`) or
+  building the UI against a field that doesn't exist yet (unverifiable per the todo's own done-when). Filed the
+  `[INFRA]` todo below so this doesn't silently re-happen once `-001` lands and `-002` re-dispatches.
+
+## Todos (continued)
+
+- [ ] [INFRA] P3. **Gate `-002` (UI transcript-jump) behind `-001` (BACKEND `claude_session_id` capture) so the
+      dispatcher can't offer the UI todo before its dependency lands** — confirmed 2026-08-08 (slot-11) that it can:
+      `-002` was dispatched while `-001` was still `queued`. Per CLAUDE.md's "partial-parallelism isn't expressible in
+      one plan → SPLIT" guidance, `sequential: true` on this whole doc would over-serialize (it would also block the
+      independent `[BACKEND] P3` dedup todo behind the UI todo for no reason) — either split the UI todo into its own
+      `depends_on`-gated companion doc, or attach a
+      `prereqs.completed_tasks: [blocked_questions_ux_redesign_context_loss_and_scale-001]` tuning entry to `-002`'s
+      derived backlog row (RULES.md §4/§5) once regen re-derives it. Repo: unified-trading-pm (doc restructure) or
+      agent-orchestrator (if `regen_backlog_from_plan.py` needs a new per-todo `depends_on_todo` primitive to express
+      this without a doc split — worth checking before hand-rolling the split).
