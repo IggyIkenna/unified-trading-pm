@@ -53,11 +53,11 @@ temperament_base: meticulous
 > READ-ONLY.** ALL your work — every checkpoint commit — happens inside your assigned slot `.tabs/<your-slot>/` clones,
 > never a root clone.
 >
-> The **daily retrieval-layer + codex doc-health** worker: opus (effort max, extended thinking), running the existing
-> `/docs-reconcile` skill in its documented `--autonomous` mode. This role file is a THIN wrapper — the full procedure
-> (Phase 0-5) is the skill's own SSOT (`cursor-configs/skills/docs-reconcile/SKILL.md`); this file does not duplicate
-> it, it only carries the scheduled-dispatch boot/completion contract every other `plan_health`-family scheduled role
-> uses.
+> The **daily retrieval-layer + codex doc-health** worker: sonnet-5 (effort max, extended thinking — opus narrowed to
+> the orchestrator role only, operator ruling 2026-08-04), running the existing `/docs-reconcile` skill in its
+> documented `--autonomous` mode. This role file is a THIN wrapper — the full procedure (Phase 0-5) is the skill's own
+> SSOT (`cursor-configs/skills/docs-reconcile/SKILL.md`); this file does not duplicate it, it only carries the
+> scheduled-dispatch boot/completion contract every other `plan_health`-family scheduled role uses.
 >
 > Dispatch: `POST /api/plan-health/dispatch {"mode": "docs_reconcile"}` — the daily systemd timer on the central VM (see
 > `agent-orchestrator/scripts/install-docs-reconcile-timer.sh`). Rendered by `server/plan_health.py` via

@@ -111,3 +111,23 @@ to confirm the doc is back under the soft cap (not just barely under the hard ca
   audit verdict (KEEP-NA, valid, 5 open items, mixed content) stands independently of this line-cap issue and is
   unaffected by not writing this run's marker — only the FUTURE incremental-skip optimization is lost until this is
   fixed.
+- **na-eligibility-audit 2026-08-08 (Phase 2, prediction tranche)**: this doc's sole todo clears the whole-doc bar
+  (bounded mechanical extraction, done-when stated) — but the conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) found a near-verbatim duplicate
+  already drafted: `plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md` (`status: draft`,
+  `assigned_vm: planning`, authored TODAY by `/ag-closeout-audit prediction`) carries the identical extraction as its
+  own todo, citing this doc's own todo verbatim as its source, and states its own done-when explicitly checks off this
+  doc's todo as part of its close-out. Flipping this doc too would create a genuine duplicate-dispatch hazard (two
+  AO-dispatchable surfaces claiming the same file edit) the moment batch8 flips `draft` -> `active`. NOT reclassified —
+  left `assigned_vm: NA`; the work already has a dispatch path via batch8 (+ its
+  `prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md` twin).
+- **na-eligibility-audit 2026-08-08, second pass (independent re-verification, same conclusion)**: concurred
+  independently before seeing the entry above (converged on the identical KEEP-NA-STALE/no-reclassify verdict via the
+  same conflict-check). One additional re-verification this pass adds: source doc
+  (`prediction_cross_venue_arb_and_coverage_2026_07_24.md`) is still exactly 999 lines (was 1000 on 2026-08-07) and so
+  still cannot safely take a dated verdict marker itself (a minimal marker wraps to 2+ lines under this corpus's
+  prose-wrap formatter) — its Phase-0 incremental-skip optimization remains blocked exactly as this doc describes. That
+  source doc's other 2 open items (tarball-overwrite-race design call, line 172; mid-gap historical-backfill build,
+  line 702) were independently re-checked and remain genuinely open, unchanged in substance since the 2026-08-06 marker
+  (the 5→3 open-item drop since then was two unrelated closures via batch4's 2026-08-07 finalize, not new
+  na-eligibility-audit work).

@@ -34,7 +34,7 @@ related:
   ]
 created: 2026-08-06
 author: ag_closeout_auditor (cefi tranche, dispatch agt-02411c, slot 3)
-last_updated: 2026-08-07
+last_updated: 2026-08-08
 parent_epic: plan_hygiene_master
 assigned_vm: NA
 execution_scope: local-only
@@ -152,12 +152,18 @@ family, which is exactly the failure mode this gate exists to catch.
       signal is the live, re-measurable total against baseline, not a frozen per-doc attribution. The per-doc git-log
       split remains available as a follow-up IF a future re-measure shows the count holding steady long enough for it to
       stay meaningful; not re-opened as a new todo here since no such steady-state has been observed yet.
-- [ ] [DOCS] P2. For every genuinely-new orphan, add the missing `related:` link (or a basename mention in the owning
+- [x] ✅ [DOCS] P2. For every genuinely-new orphan, add the missing `related:` link (or a basename mention in the owning
       tranche's `_consolidated_closeout_aggregated_sources_*.md` digest) to close the linkage gap — mirrors the fix
       pattern `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`'s own todos used. **Done when**: a fresh
       `check_ag_closeout_linkage.py` run reads <= 69 again (or the baseline is legitimately re-seeded downward per
       `--update-baseline` if some of the 87 turn out to be intentionally-standalone docs with no real closeout-family
-      home).
+      home). **MET 2026-08-08**: fresh run reads **65 (<= 69)** — gate PASSES. Reached via the outcome test, not the
+      literal per-doc `related:`-link mechanism this todo describes: distributed retag/archival work across multiple
+      tranches' own daily audits over 08-06→08-08 (cross-cutting alone added 14 permanent linkage citations the same
+      day, see `cross_cutting_consolidated_closeout_2026_07_25.md`'s new "Known non-orphan dispositions" section) drove
+      the count down, not one coordinated link-adding pass. Closing on the stated done-when, but note the count is
+      measurably volatile day-to-day (69→87→72→71→65 across 3 days) — a future re-measure reading over 69 again would be
+      a regression of THIS todo, not evidence it was never really done; re-open rather than silently re-fix if so.
 - [ ] [SCRIPT] P3. Consider whether `check_ag_closeout_linkage.py` should gain a `--tranche <name>` filter (mirroring
       `generate_ag_closeout_audit_candidates.py`'s own flag) so a single-tranche `/ag-closeout-audit` dispatch can
       cheaply cross-check just its own tranche instead of paying the full 700-doc corpus-wide scan cost every run — a
@@ -206,3 +212,9 @@ the triage given their concentration.
   same-day re-measurement shows cross-cutting's 37-doc share is dominated by the same same-day-mistag-cluster pattern —
   retag-by-owning-tranche, not this doc's own write); todo 3 is an open "is this worth building" feature-investment call
   with no stated done-when.
+- **2026-08-08 — re-measured by the scheduled `/ag-closeout-audit cross-cutting` tranche run (slot 3, dispatch
+  `agt-58625b`)**: `check_ag_closeout_linkage.py` = **65 orphan(s) (baseline 69)** — gate PASSES for the first time
+  since this doc was filed (down from 71 on 2026-08-07 / 72-87 on 08-06). Cross-cutting's own share 37→29, driven
+  largely by today's cross-cutting run adding 14 permanent linkage citations (see that tranche's closeout doc). Closed
+  Todo 2 on the met done-when — see its own checkbox note for the volatility caveat. Todo 3 remains open, untouched
+  (still an unruled feature-investment question, not this run's to decide).

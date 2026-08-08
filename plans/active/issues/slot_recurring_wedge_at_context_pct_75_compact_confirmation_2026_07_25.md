@@ -54,7 +54,7 @@ related:
   ]
 created: 2026-07-25
 author: unknown
-last_updated: 2026-08-07
+last_updated: 2026-08-08
 priority: P1
 parent_epic: orchestrator_master
 source:
@@ -218,3 +218,23 @@ capacity risk, not just reliability — see Progress Log 2026-08-07.
   at/over weekly limits), not just a bounded single-slot throughput nuisance. Existing 2 open [BACKEND] todos
   (auto-submit the compact confirmation; force-kill-before-cap ordering) remain the right fix target — this entry is
   additive evidence, not a new root cause.
+
+- **2026-08-08 (review agent, second data point on a higher-threshold wedge sub-mode)**: Two occurrences now of a wedge
+  shape distinct from this doc's original ~75%-typed-but-unsubmitted-compact-freeze mechanism — a higher-threshold
+  (92-96%) genuine compact-ineffective mode. Instance 1: slot-3, ~92%, framed as "context-wedged... /compact could not
+  run (session over the models hard limit)". Instance 2: slot-9, context climbed 92%->94%->96% over ~6min (2026-08-08
+  01:53-01:59Z); forced_compact/forced_precompact fired repeatedly, forced_compact_ineffective logged at 96%
+  (pct_at_force=94, 300s since force, verdict=re-armed) — i.e. the compact genuinely did not clear the session, not a
+  display/UI-confirmation stall. 3 consecutive worker_kick_failed(idle) followed, then slot_wedged_killed_for_resume
+  (forced kill+requeue), then slot_resume_skipped correctly refused to resume since context
+  96%>=resume_fresh_context_pct 80% (would immediately re-wedge), followed by a second near-identical
+  context_saturated_session_lost_task_requeued. The resume_fresh_context_pct=80% threshold was traced to
+  agent-orchestrator@998574b (dated 2026-07-27, predates this issue doc's own discovery) — this is existing containment
+  logic working correctly on the wedge, not a new fix. Good news: both instances completed the full
+  wedge->kill->requeue->fresh-spawn-productively-working cycle in well under a minute, a much better outcome than this
+  doc's original episode-1 (exhausted retries, needed manual operator kick). No data loss confirmed in instance 2 (one
+  staged-but-uncommitted routine progress-banner text update survived in the worktree post-kill, picked up cleanly by
+  the next dirty-state sweep). Open question, not yet resolved: whether this 92-96%-hard-limit-ineffective-compact mode
+  and the original ~75%-typed-unsubmitted-confirmation-stall mode are the same underlying mechanism at different
+  severities, or two genuinely distinct wedge causes sharing one doc — flagging for whoever next reads the actual
+  _respawn.py / compact-confirmation logic to determine, per the earlier 2026-08-08 addendum on this same open question.

@@ -6,11 +6,10 @@ title:
 summary:
   na-eligibility-audit (defi tranche, 2026-08-03) independently verified 3 of that doc's 6 open checkboxes are stale
   (work already shipped elsewhere, real shas confirmed) and one has a live, actionable finding (a backfill VM dead 6+
-  days with no auto-recovery) — but the source doc is already over the 1000-line plan hard-cap
-  (`scripts/plan-hygiene/check_line_caps.sh`), so a normal commit closing those checkboxes hard-fails the prek gate;
-  only a small non-checkbox marker append is currently permitted there (operator ruling 2026-08-02, see that script's
-  header comment). This doc carries the ready-to-apply evidence as real todos plus the VM finding, so neither is lost to
-  prose. Do NOT re-derive the evidence below — it is already verified; the work is applying it once unblocked.
+  days with no auto-recovery). **2026-08-08 update** — Todo 3 (VM relaunch) shipped 2026-08-07; Todo 2 (the 3 stale
+  closes) applied directly 2026-08-08 once na-eligibility-audit found the source doc had already dropped under the 1000L
+  hard cap via an unrelated 2026-08-05 trim (no longer needed Todo 1's extraction as a gate — empirically verified the
+  close lands at 998L). Only Todo 1 remains open, now decoupled, downgraded to P3 SOFT-cap hygiene.
 status: open
 nature: issue
 asset_group: [defi]
@@ -30,7 +29,7 @@ author: unknown
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P2
+priority: P3
 estimate_class: refactor
 estimate_baseline_ai_days: 0.8
 estimate_calibrated_ai_days: 0.3
@@ -66,32 +65,42 @@ operator-approved wider edit.
 
 ## Todo 1 — split `lst_rate_honest_coverage_2026_07_21.md` under the 1000L cap
 
-- [ ] [SCRIPT] P2. The doc's Progress Log carries a long, safe-to-extract chronological block of VM-monitoring check-in
-      entries (roughly the `2026-07-21` through `2026-07-26` "VM re-check" entries — dozens of timestamped status
-      updates for the now-largely-complete LST-rates and DEX-swaps backfill VMs). Extract that historical block into a
-      companion doc (e.g. `plans/archive/issues/lst_rate_honest_coverage_vm_monitoring_history_2026_07_21.md` per the
-      "extracted-history" pattern `check_line_caps.sh`'s own comments reference), leaving the live plan with its
-      frontmatter, Phase sections/todos, and a condensed summary of the extracted history plus a pointer to the new doc.
-      Verify no other doc references a specific timestamped entry inside the extracted range before moving it. Re-run
-      `bash scripts/plan-hygiene/check_line_caps.sh plans/active/lst_rate_honest_coverage_2026_07_21.md` to confirm it's
-      back under 1000L before applying todos 2-4 below.
+- [ ] [SCRIPT] P3. **(was P2, downgraded — see 2026-08-08 note.)** The doc's Progress Log carries a long,
+      safe-to-extract chronological block of VM-monitoring check-in entries (roughly the `2026-07-21` through
+      `2026-07-26` "VM re-check" entries — dozens of timestamped status updates for the now-largely-complete LST-rates
+      and DEX-swaps backfill VMs). Extract that historical block into a companion doc (e.g.
+      `plans/archive/issues/lst_rate_honest_coverage_vm_monitoring_history_2026_07_21.md` per the "extracted-history"
+      pattern `check_line_caps.sh`'s own comments reference), leaving the live plan with its frontmatter, Phase
+      sections/todos, and a condensed summary of the extracted history plus a pointer to the new doc. Verify no other
+      doc references a specific timestamped entry inside the extracted range before moving it. **DECOUPLED from Todo 2
+      (2026-08-08 na-eligibility-audit)**: an unrelated 2026-08-05 trim commit (`4718f3532`, condensed 8 repetitive
+      VM-monitoring entries) already brought the source plan from ~1008L to 986L, and it has stayed under the 1000L hard
+      cap since — Todo 2 below was applied directly without this extraction. This todo is now pure SOFT-cap (500L)
+      hygiene, no longer a blocking prerequisite for anything in this doc — per
+      `cursor-configs/skills/na-eligibility-audit/SKILL.md`'s own rubric, a line-cap split is `/plan-reconcile` Phase
+      5's remit, not something to force through here. **Still cited by
+      `defi_satellite_ao_dispatch_batch10_2026_08_06.md:160` (bundled with Todo 2, now stale — see that plan's own
+      2026-08-08 update) as its dispatch path; that citation now only covers this decoupled extraction, not Todo 2.**
 
 ## Todo 2 — close 3 stale checkboxes (evidence already verified, just apply)
 
-- [ ] [SCRIPT] P3. Once todo 1 lands, flip these 3 open checkboxes in `lst_rate_honest_coverage_2026_07_21.md` to
-      `[x] ✅` with the evidence below (verified 2026-08-03 — shas confirmed to exist on `live-defi-rollout` via
-      `git log --oneline -1 <sha>`, do not re-verify): - **Phase 6 "A2 staking leg"** (`- [ ] [STRATEGY] P2`) — DONE,
-      shipped `strategy-service@e93902d8` ("feat(strategy): wire carry_staked_basis STAKING leg to real lst_yields
-      index-ratio accrual"), per `pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`'s "PROGRESS
-      2026-07-23 — STAKING leg SHIPPED" entry. - **Phase 6 "Recursive-staking borrow leg"** (`- [ ] [STRATEGY] P3`) —
-      DONE, shipped `strategy-service@23bd8b76` ("feat(strategy): wire CARRY_RECURSIVE_STAKED tick builder + Aave
-      borrow-index leg"), per the same sibling doc's checked-off E3 todo, built as part of
+- [x] ✅ [SCRIPT] P3. **DONE 2026-08-08 (na-eligibility-audit)** — applied directly to
+      `lst_rate_honest_coverage_2026_07_21.md` without waiting on Todo 1 (empirically verified first: closing all 3 with
+      their evidence citations lands the source plan at 998L, still under the 1000L hard cap). All 3 flipped to `[x] ✅`
+      with the evidence below (verified 2026-08-03, not re-verified this pass per this doc's own instruction): - **Phase
+      6 "A2 staking leg"** (`- [ ] [STRATEGY] P2`) — DONE, shipped `strategy-service@e93902d8` ("feat(strategy): wire
+      carry_staked_basis STAKING leg to real lst_yields index-ratio accrual"), per
+      `pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`'s "PROGRESS 2026-07-23 — STAKING leg SHIPPED"
+      entry. - **Phase 6 "Recursive-staking borrow leg"** (`- [ ] [STRATEGY] P3`) — DONE, shipped
+      `strategy-service@23bd8b76` ("feat(strategy): wire CARRY_RECURSIVE_STAKED tick builder + Aave borrow-index leg"),
+      per the same sibling doc's checked-off E3 todo, built as part of
       `defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`'s Phase 2. - **Phase 3 "sample-download test on
-      the -test- bucket"** (`- [ ] [MTDS] P3`) — superseded, not separately executed: Phase 5 #3 (AAVE oracle) proved
-      the force-write leg via real climbing manifest counts to a clean `exit_code=0` completion; Phase 5 #2 (DEX)'s
-      2026-07-23 01:26 UTC preemption-resume entry explicitly proved the skip-leg firing ("confirms the freshness-skip
-      logic is genuinely working ... not re-fetching from scratch"). Both are stronger evidence than a
-      `-test-`-bucket-only sample would add.
+      the -test- bucket"** (`- [ ] [MTDS] P3`) — **upgraded finding (2026-08-08): actually DIRECTLY executed**, not just
+      superseded — `defi_satellite_ao_dispatch_batch8_2026_08_02.md` (now archived) proved this exact `-test-`-bucket
+      force+skip surface 2026-08-05 (54 parquet files + 56 manifest `captured` rows written; DEX endpoints confirmed
+      live), a more direct closure than the originally-cited "superseded by Phase 5" reasoning (which also still holds
+      as secondary evidence). **`defi_satellite_ao_dispatch_batch10_2026_08_06.md:160`'s bundled citation of this Todo 2
+      is now stale — that plan's todo #160 updated 2026-08-08 to reflect this is already done.**
 
 ## Todo 3 — stalled DEX-swaps backfill VM needs a relaunch decision
 
@@ -146,3 +155,25 @@ for the compact pointer back to this doc.
   within normal); PIPELINE_HEARTBEATs firing every 60s. ManifestConsolidatorStaleError in freshness-cache refresh
   (non-blocking; GCS is authoritative source; VM continues capturing). Firestore dual-write fails (best-effort, GCS
   authoritative, expected).
+- **na-eligibility-audit 2026-08-08 (Phase 2, defi tranche)**: Todo1+Todo2 clear the whole-doc bar (both `[SCRIPT]`-
+  tagged, bounded, sequential, done-when stated) — Todo3 above is already DONE. NOT reclassified: the conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) found a near-verbatim duplicate
+  already live — `plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md` carries an OPEN `[DOC] P2` todo ("Bring
+  lst_rate_honest_coverage_2026_07_21.md under the 1000L hard line cap...") that explicitly cites this doc's own
+  Todo1+Todo2 verbatim as its source. `defi_satellite_ao_dispatch_batch9_2026_08_06.md` (line ~300) independently
+  reached the same conclusion a day earlier ("already tracked elsewhere, no new park"). Flipping this doc to
+  `assigned_vm: planning` would create a genuine duplicate-dispatch hazard (two AO-dispatchable surfaces claiming the
+  same file edit). Left `assigned_vm: NA` — no action needed here; the work already has a live dispatch path via
+  batch10's todo.
+- **na-eligibility-audit 2026-08-08 (later same day, separate defi-tranche dispatch — concurrent with the entry
+  above)**: independently arrived at the same no-RECLASSIFY conclusion, then went one step further: verdict-2 ("KEEP-NA,
+  stale items") doesn't require flipping `assigned_vm` at all, so applied Todo 2's pre-verified closes DIRECTLY rather
+  than leaving them for batch10's todo #160 to eventually pick up. Found Todo 1's premise (file over 1000L hard cap) was
+  already stale — a 2026-08-05 unrelated trim (`4718f3532`) had brought it under cap days earlier — so empirically
+  verified (scratch-copy + `check_line_caps.sh`) that Todo 2's closes land at 998L without needing Todo 1's extraction,
+  and applied them to `lst_rate_honest_coverage_2026_07_21.md` directly. Also upgraded the Phase-3 checkbox's evidence:
+  archived `defi_satellite_ao_dispatch_batch8_2026_08_02.md` had already DIRECTLY executed the `-test-`-bucket
+  force/skip proof (2026-08-05), a more accurate citation than "superseded, not separately executed." Todo 1 downgraded
+  P2→P3 and decoupled (pure SOFT-cap hygiene now). Updated `defi_satellite_ao_dispatch_batch10_2026_08_06.md` todo #160
+  to reflect Todo 2 is done and only the (optional, decoupled) extraction remains. Doc stays `assigned_vm: NA` — Todo 1
+  still open, not yet archival-eligible.

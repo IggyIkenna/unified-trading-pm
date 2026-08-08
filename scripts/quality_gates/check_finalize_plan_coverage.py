@@ -224,10 +224,36 @@ def main(argv: list[str] | None = None) -> int:
     strict: bool = cast(bool, ns.strict)
     only: list[str] | None = cast("list[str] | None", ns.only)
 
+    # The normal (sibling-checkout) workspace layout is `<workspace_root>/unified-trading-pm/plans/active`
+    # (all existing tests construct exactly this shape) — preserved as the first candidate below. An
+    # isolated per-agent worktree (`git worktree add` under `<pm-checkout>/.claude/worktrees/agent-*`,
+    # per /codex/05-infrastructure/per-tab-worktrees.md) breaks that assumption two ways at once: the
+    # checkout's own directory is NOT named `unified-trading-pm`, AND run_hygiene_sweep.sh's
+    # `--workspace-root "$(dirname "$PM_DIR")"` passes the checkout's PARENT (one hop too far — neither
+    # `<parent>/unified-trading-pm/plans/active` nor `<parent>/plans/active` exists; the real
+    # `plans/active` lives directly under `$PM_DIR` itself, i.e. two hops up from THIS script's own
+    # location). This used to hard-fail with a bare "ERROR: plans/active not found" instead of ever
+    # running the actual check — a false gate-block unrelated to any real violation (found 2026-08-08
+    # while committing a plan-only change from exactly this worktree shape). Self-locate as the last
+    # resort: this script always physically lives at `<pm-checkout>/scripts/quality_gates/<this file>`,
+    # so `parents[2]` (quality_gates -> scripts -> checkout root, three hops up) is always the real
+    # checkout root regardless of what `--workspace-root` was given or what the checkout directory
+    # happens to be named.
     active_dir = workspace_root / "unified-trading-pm" / "plans" / "active"
     if not active_dir.is_dir():
-        print(f"ERROR: plans/active not found at {active_dir}", file=sys.stderr)
-        return 2
+        fallback_dir = workspace_root / "plans" / "active"
+        if fallback_dir.is_dir():
+            active_dir = fallback_dir
+        else:
+            self_located_dir = Path(__file__).resolve().parents[2] / "plans" / "active"
+            if self_located_dir.is_dir():
+                active_dir = self_located_dir
+            else:
+                print(
+                    f"ERROR: plans/active not found at {active_dir}, {fallback_dir}, or {self_located_dir}",
+                    file=sys.stderr,
+                )
+                return 2
 
     violations = _find_violations(active_dir)
     draft_gate_violations = _find_draft_gate_violations(active_dir)

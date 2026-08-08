@@ -26,10 +26,11 @@ related: []
 created: 2026-07-27
 author: unknown
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: infra
+assigned_role: backend_engineer
 source: >-
   Discovered by the persistent review agent (agent_id agt-160e62, slot 2) during its standing poll loop while
   spot-checking `/api/fleet/git-health` for long-dirty worktrees per review.md § 3d. Root-caused in chat by main (agent
@@ -229,3 +230,24 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
   crossed from "genuine judgment call between 2 design options" into "bounded, worker-determinable code fix with the
   exact target lines already identified," i.e. a candidate for RECLASSIFY on a future pass. Not flipping `assigned_vm`
   myself (needs the standing corpus conflict-check).
+
+- **na-eligibility-audit 2026-08-08 (Phase 2/3, sub-agent conflict-check + apply)**: **RECLASSIFY, applied.** Re-verified
+  the whole-doc bar independently: the sole remaining open item is now a fully bounded code fix with exact target lines
+  already identified (per the 2026-08-07 root-cause section above) — no design/judgment call left undecided, clears
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility". Ran the shared
+  conflict-check protocol (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3): grepped
+  every `status: active`, `assigned_vm: planning` doc under `parent_epic: orchestrator_master` (and corpus-wide) for
+  `dirty_consecutive_ticks`/`_read_repo_dirty_ticks`/`slot-git-status-report.sh` — zero overlap found.
+  `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s own combined todo (now archived, `unified-trading-pm@594aea342`)
+  explicitly excluded this exact scope ("a code change only if the verdict is (i) or (ii)... NOT a schema/field
+  addition"), so no live claim on this ground anywhere else in the corpus. Verdict: clear. Applied: `assigned_vm: NA` ->
+  `planning`, `execution_scope: local-only` -> `orchestrator-agent`, added `assigned_role: backend_engineer` (matches the
+  sole remaining todo's `[BACKEND]` tag; the field was previously absent). **No separate finalize-plan twin authored**:
+  `scripts/quality_gates/check_finalize_plan_coverage.py::_find_violations` scans `plans/active/*.md` only
+  (non-recursive `Path.glob("*.md")`), never `plans/active/issues/*.md` — confirmed by direct code read, and confirmed
+  live by the ~110 other `assigned_vm: planning` issue docs already sitting in `plans/active/issues/` with no companion
+  finalize-plan file anywhere in the corpus. This doc (`doc_type: issue`, lives in `plans/active/issues/`) is
+  structurally outside that gate's scanned population, matching `task_template.md` §4's own single-todo/self-contained
+  carve-out in spirit — archival will be handled directly (by whichever worker closes the sole remaining todo, or a
+  future `/na-eligibility-audit`/`/archive-candidates-audit` pass) once it reaches zero open todos, same as every other
+  `assigned_vm: planning` issue doc in this corpus.

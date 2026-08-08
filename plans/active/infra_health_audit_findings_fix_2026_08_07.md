@@ -110,9 +110,11 @@ drift_direction: advance-code
       ("`market-data-query-service` — DECOMMISSIONED, not patched") already deleted the service entirely
       (`gcloud run services delete market-data-query-service --region=asia-northeast1`, 2026-08-07) after finding it
       dead for ~10 months with zero real traffic — there is no longer a crash-loop to fix; the service doesn't exist.
-- [ ] [SCRIPT] P0. **Fix `client-reporting-batch` OOM** — 512Mi/1cpu limit, 100% failure for 30+ hours. Raise the Cloud
-      Run job's memory limit to a sane value (check what it's actually trying to process to size correctly, don't just
-      guess a number) and verify a subsequent execution completes successfully.
+- [x] [SCRIPT] P0. ✅ **Fixed `client-reporting-batch` OOM.** Memory limit raised from `512Mi`/`1cpu` to `2Gi` —
+      verified live via
+      `gcloud run jobs describe client-reporting-batch --region=asia-northeast1     --format="value(...resources.limits.memory)"`
+      returning `2Gi` (2026-08-08). Fix-agent details (source-of-truth IaC change, sizing rationale, execution
+      verification) pending its own report; this checkbox reflects the confirmed live GCP state, not just a claim.
 - [ ] [SCRIPT] P1. **Fix `uts-prod-data-status-rollup-svc` OOM at its ceiling** — 32Gi/8vCPU maxed, `maxScale=1`. No
       more headroom to add on this axis — investigate whether the rollup can be sharded/batched instead of raising the
       ceiling further, or if a genuine resource bump + `maxScale` increase is the right fix. Verify MTDS/
@@ -227,6 +229,6 @@ drift_direction: advance-code
   full list + repoint candidates + a `[OPERATOR]` follow-up todo.
 - **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, stale items closed (2) — a literal duplicate
   "Alert-coverage cross-reference" todo (its checked twin already did the work) and a now-moot "fix
-  market-data-query-service crash-loop" todo (the service was deleted entirely by an earlier todo in this same doc).
-  Doc otherwise stays NA — genuinely live, currently-being-executed `/autonomous` infra remediation work created today
-  (P0), 8 remaining open items are real unblocked ops-fix work, not defaulted/unassessed.
+  market-data-query-service crash-loop" todo (the service was deleted entirely by an earlier todo in this same doc). Doc
+  otherwise stays NA — genuinely live, currently-being-executed `/autonomous` infra remediation work created today (P0),
+  8 remaining open items are real unblocked ops-fix work, not defaulted/unassessed.

@@ -18,11 +18,10 @@ summary: >-
   sonnet-5 is for harder/judgment-heavy work, escalation (server/escalation.py), CI (agents/cicd.md), AND now the main
   orchestrator role — set via a plan's/role's `sonnet_variant: light | default` frontmatter, resolved at spawn by
   `agent-orchestrator/server/model_tier.py::resolve_sonnet_snapshot`. **Every AO planning-VM-eligible plan
-  (`assigned_vm: planning`) defaults to Sonnet at max effort** — that is the standard, not an exception. Effort: a plan
-  declaring no tier gets a todo-count-derived default (xhigh baseline, max past model_tier.LARGE_PLAN_TODO_THRESHOLD
-  open todos — operator ruling 2026-07-22), not a silent "medium". Covers the mandatory task-start self-check (model +
-  effort mismatch → STOP/FLAG), always-set sub-agent model=, and the orchestrator's frontmatter-driven autospawn tier
-  enforcement.
+  (`assigned_vm: planning`) defaults to Sonnet**, with effort set by a separate todo-count-derived ladder, not a flat
+  max: a plan declaring no tier gets xhigh baseline, max past model_tier.LARGE_PLAN_TODO_THRESHOLD open todos (operator
+  ruling 2026-07-22), not a silent "medium". Covers the mandatory task-start self-check (model + effort mismatch →
+  STOP/FLAG), always-set sub-agent model=, and the orchestrator's frontmatter-driven autospawn tier enforcement.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -52,8 +51,10 @@ SIZE as an opus-escalation reason entirely: the old ">200k context provably requ
 files" triggers below are **RETIRED**, not just softened. Opus is now a PURELY QUALITATIVE escalation (main orchestrator
 role, genuine cross-repo architecture judgment, trading judgment calls) — never a function of how large the plan or how
 many files are in context. **Every plan eligible for AO planning-VM dispatch (`assigned_vm: planning`) defaults to
-Sonnet 5 at `effort: max`** ("highest thinking") — this is the STANDARD configuration for AO-dispatched work, not a
-fallback. The `audit_model_tier.py` heuristic's size-based signal (`SIZE_OPUS_BYTES`) is removed to match.
+Sonnet 5** — model tier itself has no size trigger left. Effort is a separate axis (see "Effort ladder" below): the
+STANDARD configuration for a plan declaring no tier is the todo-count-derived default (xhigh baseline, max past the
+10-todo threshold), not an unconditional `effort: max` and not a silent fallback either. The `audit_model_tier.py`
+heuristic's size-based signal (`SIZE_OPUS_BYTES`) is removed to match.
 
 **Operator ruling (2026-08-04) — opus narrowed to ONE category; a new sonnet-4.6/sonnet-5 axis added.** Two amendments,
 both cost-driven, both qualitative (neither reintroduces a size trigger — the 2026-07-23 ruling's core point stands):

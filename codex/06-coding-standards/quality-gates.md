@@ -1719,7 +1719,7 @@ Standard `pyproject.toml` ruff config:
 ```toml
 [tool.ruff]
 line-length = 120
-target-version = "py311"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
@@ -2660,7 +2660,7 @@ canonical). UI deliberate-copy (`unified-internal-contracts/modes.py`) DEFERRED 
 > `rg 'class RuntimeMode'` returns exactly 1 hit. **Target:** `rg 'class RuntimeMode'` returns exactly 1 hit; 0 baseline
 > suppressions.
 
-**What it catches**: `RuntimeMode` declared outside the UTL canonical / UAC re-export path:
+**What it catches**: `RuntimeMode` declared outside the UAC canonical / UTL re-export path:
 
 ```typescript
 // FORBIDDEN — UI redeclaration (violation #1)
@@ -2673,7 +2673,9 @@ class RuntimeMode(StrEnum):  # in a non-canonical UAC file
 
 **SSOT**: `unified_api_contracts.internal.modes.RuntimeMode`. All consumers import from there. Tab 3 ships:
 
-- UAC re-exports `RuntimeMode` from UTL canonical (fixing UAC-internal violation).
+- The non-canonical UAC file imports `RuntimeMode` from `unified_api_contracts.internal.modes` instead of locally
+  redeclaring it (fixing the UAC-internal violation — UAC's own `internal/modes.py` is the canonical declaration; UTL is
+  the one that re-exports from UAC, not the reverse).
 - UI imports `RuntimeMode` from UAC schema bundle (fixing UI redeclaration — see `batch-live-architecture.md §12`).
 
 **Enforcement**: `scripts/quality-gates-base/base-service.sh` STEP 5.78 — `rg 'class RuntimeMode'` across workspace,

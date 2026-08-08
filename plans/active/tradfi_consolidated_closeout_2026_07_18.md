@@ -63,6 +63,8 @@ related:
     /plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01_finalize.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
     /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -82,7 +84,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: "2026-08-06"
+last_updated: "2026-08-08"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -911,7 +913,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     and were found already `[x]` there — disposed as applied-by-decomposition, no parent-doc edit needed.
   - [`plans/archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`](/plans/archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md)
     - **[BACKEND] P1.** Add a manifest-vs-disk consistency check so a `captured` row with no object on disk fails loudly
-  - [`plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`](/plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md)
+  - [`plans/archive/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`](/plans/archive/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md)
     — **CORRECTED 2026-07-30 (was wrongly listed "0 open"; this is exactly the checkbox-grep trap the doc carried
     PROSE-only remaining work with zero checkboxes at generation time).** `status: open`, 4 open todos added 2026-07-27
     by the post-drain re-measurement (post-fix equity/etf/index canonicality 99.57%, up from 30.8%, but 3 new live-path

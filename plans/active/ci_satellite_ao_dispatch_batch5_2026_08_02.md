@@ -439,8 +439,8 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   `asset_group:[meta]` fold-in candidate per the skill's Phase 0.3 meta-sweep rule,
   `quality_gates_quickmerge_timing_ baseline_2026_07_31.md`) — **run id `wf_1f04b9b2-680`, still executing when this
   checkpoint was written; results pending, to be reconciled in a follow-up entry.** Phase-0-only findings already
-  written durably (not left in chat): see `/plans/active/issues/ag_closeout_audit_ci_parked_2026_08_07.md` — 6 docs
-  dual-tagged `[ci, infrastructure]` (content reads CI-specific in all 6, not retagged here per the same
+  written durably (not left in chat): see `/plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_07.md` — 6
+  docs dual-tagged `[ci, infrastructure]` (content reads CI-specific in all 6, not retagged here per the same
   non-owning-tranche-race caution the 2026-08-04 run applied to the first of these six), 1 doc dual-tagged
   `[sports, ci]` (sports-owned, not retagged here), the `asset_group:[meta]` fold-in candidate noted above, and a
   `check_ag_closeout_linkage.py` ratchet cross-check (71 vs baseline 69, corpus-wide — 7 of the 71 are

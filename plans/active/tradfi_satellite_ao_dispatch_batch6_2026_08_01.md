@@ -39,12 +39,12 @@ related:
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md,
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
-    /plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md,
+    /plans/archive/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md,
     /plans/active/issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-01"
-last_updated: "2026-08-06"
+last_updated: "2026-08-08"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -121,7 +121,7 @@ This is the first fresh `/ag-closeout-audit tradfi` pass since batch5 (2026-07-2
 
 ## Todos
 
-- [ ] [DATA] P2. **Historical manifest repair for the 2026-07-27T16:46:40-48Z registration burst's null-id rows.** 3,612
+- [x] [DATA] P2. **Historical manifest repair for the 2026-07-27T16:46:40-48Z registration burst's null-id rows.** 3,612
       NASDAQ/NYSE equity/ETF rows (`ohlcv_1m`/`trades`) + 100 CBOE INDEX rows (`ohlcv_15m`) carry canonical UPPERCASE
       `instrument_type` but `instrument_id=None`; content `date` spans dozens of historical dates 2024-2026 sharing one
       8-second write burst — the signature of a one-time metadata registration/recovery script, NOT a live writer bug
@@ -786,8 +786,75 @@ slot_recurring_wedge issue doc already applied by prior session — confirmed pr
   PYTHON=.tabs/3/market-tick-data-service/.venv/bin/python) + `run_in_background:true`, NO `&` inside. Do NOT use
   TaskList. Do NOT re-arm if alive.
 
+### 2026-08-08T00:58Z — slot 2 — watcher re-armed (b80259it6)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Prior watcher `bzfv850ih` (slot 10, 22:26Z) dead at boot.** Fleet at boot:
+**24 VMs** (draining from 18 at slot-10 check → new wave brought count back up). No ES_OPT VMs exist. Python binary:
+`.tabs/2/market-tick-data-service/.venv/bin/python` (slot 2 has venv). Operator keep-waiting decision unchanged.
+
+Re-armed: watcher **`b80259it6`** launched `run_in_background:true`, NO `&` inside. Poll 1 (00:58:53Z): 24 VMs.
+Heartbeat: **`bnwbjx249`** (20-min intervals). Scratchpad:
+`…/ba26466e-4673-45ad-a2d7-6cdc4ba14555/scratchpad/watcher/es_opt_watcher_slot2.sh`.
+
+- **NEXT ACTION (fresh session):** (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check `b80259it6.output`
+  via TaskOutput non-blocking. (3) If watcher dead: sed-patch `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`
+  (SLOT_ID=<new>/SLOT_TABS/PYTHON) + `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm
+  `heartbeat.sh` same way. Do NOT use TaskList.
+
+### 2026-08-08 — slot-7, task `tradfi_satellite_ao_dispatch_batch6-001` (todo #1) — DONE
+
+**1. ✅ [DATA] P2 (todo #1) — historical manifest repair** — resolved via before/after manifest census +
+non-recoverability determination. Live manifest read (6,837,762 rows, column-pruned census script,
+`run-bounded-analysis.sh` RSS-poll-capped): **BEFORE** = 3,712 null-id rows; **AFTER** = 0 null-id rows in burst window
+(both phantom-purge-overlap 16:46:38-42Z and post-purge 16:46:42-50Z return zero).
+
+Non-recoverability recorded for all 3,712 rows:
+
+- **CBOE INDEX ohlcv_15m (100 rows)**: dead cell — `reclass_tradfi_cboe_ohlcv_15m_dead_cell_2026_07_29.py` confirms
+  Databento never offered ohlcv_15m for CBOE INDEX (stale from retired Yahoo VIX-cash-index; narrowed out of expected
+  coverage 2026-07-15, `unified-api-contracts@78b9e899`); phantom purge removal was correct data hygiene.
+- **NASDAQ/NYSE equity/ETF ohlcv_1m/trades (3,612 rows)**: data confirmed covered by canonical captured entries — 97,242
+  NASDAQ + 848,622 NYSE rows, non-null instrument_ids, 830 dates (2023-04-17..2026-07-20), 133+1,049 instruments. Burst
+  rows were duplicate registrations of data the live writer captured correctly with canonical ids.
+
+Side-finding (out of scope): 149 new CBOE INDEX ohlcv_24h `empty_confirmed` null-id rows written 2026-08-07 — separate
+population. Source issue resolved + checkbox flipped:
+`plans/archive/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md` (all todos done, status=resolved). No
+code changes required; quality-gates.sh green (no code modified).
+
 ## Codex SSOTs
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
 `/codex/05-infrastructure/vm-launcher-runbook.md`,
 `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`.
+
+### 2026-08-08T01:32Z — slot 14 — watcher re-armed (bal4znoit)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Prior watcher `b80259it6` (slot 2, 00:58Z) dead at boot** (different session,
+expected per the established pattern — watchers die when the owning session ends). Fleet at boot: **16-17 VMs**
+(draining from 24 at slot-2 check). No ES_OPT VMs exist yet. Operator keep-waiting decision unchanged (multiple
+confirmations, all still standing).
+
+Re-armed from committed `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch SLOT_ID=14,
+SLOT_TABS=.tabs/14, PYTHON=.tabs/3/market-tick-data-service/.venv/bin/python — slot 14 has no local mtds venv). Watcher:
+**`bal4znoit`** (`run_in_background:true`, no `&` inside), poll 1 confirmed = 16 VMs (01:31:58Z). Heartbeat:
+**`bf9n4fut3`** (20-min interval loop, no `&` inside). Scratchpad:
+`…/fa0b6e55-41d0-4834-bb99-2c113bb42f02/scratchpad/watcher/`.
+
+- **NEXT ACTION (fresh session)**: (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, use
+  `TaskOutput bal4znoit --non-blocking` to check liveness (do NOT use TaskList — always shows "No tasks found" for
+  background Bash tasks). (3) If watcher dead: sed-patch `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`
+  (SLOT_ID=<new>/SLOT_TABS/ PYTHON) + `run_in_background:true`, NO `&` inside. (4) If heartbeat dead, re-arm
+  `watcher/heartbeat.sh` same way (or write a fresh one per the slot-14 template above — 20-min loop,
+  `/api/slots/<N>/heartbeat`). Do NOT re-arm either if alive — singleton lock race risk. Expect harness to kill
+  background tasks every ~25-46 min per the documented rapid-kill pattern — this is normal, re-arm reactively on each
+  kill notification.
+
+### 2026-08-08T02:05Z — slot 14 — re-armed after harness kill (run 2: bqxm55orc)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`.** Prior run (`bal4znoit`, poll 1-7, 01:31Z-02:02Z) killed by harness at
+~02:03Z — normal rapid-kill pattern. Fleet drained 16→14→14→11→11→10→10 across those 7 polls (~31 min). Re-armed
+immediately: watcher **`bqxm55orc`** (poll 1 = 10 VMs at 02:05:46Z), heartbeat **`bkbbkfn9u`**. Same scratchpad/script.
+
+- **NEXT ACTION**: same as prior entry — check checkbox, `TaskOutput bqxm55orc --non-blocking`, re-arm reactively on
+  kill notification, do not re-arm if alive.

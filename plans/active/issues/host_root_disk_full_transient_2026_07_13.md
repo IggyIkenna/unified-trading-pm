@@ -124,11 +124,71 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
       ~~operator runs `install-prune-uv-cache-cron.sh`~~ **DONE 2026-08-07** — operator ran it directly on the AO
       orchestrator VM (`ip-172-31-5-118`, via `ssh agent-orchestrator-vm`); registered `0 */6 * * *` (every 6h, matches
       the script's default cadence), replacing a stale differing entry. Confirmed via
-      `crontab -l | grep prune-uv-cache`. **(b) and (c) remain open** — investigate why `UV_LINK_MODE=hardlink` isn't
-      deduping `.venv` across slots (~150-200G footprint); if cross-slot dedup can't be made to work, build a
-      liveness-aware per-slot `.venv` prune. Not attempted this pass.
+      `crontab -l | grep prune-uv-cache`. **(b) INVESTIGATED 2026-08-08 — see dated finding below (root cause + verdict:
+      FIXABLE but regression trigger not conclusively isolated by read-only investigation; needs a live-tracing
+      follow-up before a fix can be written).** **(c) remains open** — a liveness-aware per-slot `.venv` prune, gated on
+      whether a future live-tracing pass concludes cross-slot dedup genuinely can't be restored; out of this
+      investigation's scope (explicitly excluded — it was read-only, no prune tooling built/deployed).
 
 ## Progress Log
+
+- **2026-08-08 (infra, `infra_satellite_ao_dispatch_batch6-001`, root-cause investigation of sub-item (b)).** **Root
+  cause: CONFIRMED REGRESSION to zero cache→venv hardlink dedup, fleet-wide — not a cache-keying mismatch, not a
+  cross-filesystem fallback.** Read-only investigation, no `.venv` modified anywhere, no fresh installs triggered.
+  - **Reproduced + extended the 2026-07-13 finding.** Compared the identical `numpy==2.3.5`
+    `libscipy_openblas64_-fdde5778.so` (confirmed via `uv.lock`: every checked slot pins the same version, so this is
+    NOT a "different package version" false-dedup case) across `deployment-service/.venv` in 7 live slots (2, 4, 6, 8,
+    11, 12, 13): **7 distinct inodes, all `nlink=1`, identical size (25,034,001 bytes), identical device (`dev=66305`)**
+    — same conclusion as 2026-07-13, same repro, 6 more months of drift later.
+  - **The shared cache's OWN copy of that exact file is also `nlink=1`.** Located the single canonical cache entry
+    (`~/.uv-cache/archive-v0/7PtdCUWLMi3pew-lyMqNz/numpy.libs/...`, mtime 2026-07-27 — i.e. it existed **11 days
+    before** any of the 7 venv copies were built on 2026-08-07). If cache→venv hardlinking worked, every one of those 7
+    post-dating installs should have linked to this pre-existing entry (`nlink` climbing to 8). None did. This **refutes
+    candidate cause 1** from the original todo ("each slot's `uv sync` may resolve to a distinct cache entry") — there
+    is exactly ONE cache entry, confirmed shared, and every slot's lockfile resolves to it.
+  - **Fleet-wide sample, not repo-specific:** sampled 1,800 large (`>1MB`) `.so` files across ALL 16 slots'
+    `.tabs/*/*/.venv` trees — **1,800/1,800 show `nlink=1`.** Zero cache→venv hardlinks exist anywhere on this host
+    right now. This refines **candidate cause 2** ("hardlink may only apply within a single sync's own cache→venv copy,
+    not across independently-run syncs") — it is not merely "doesn't survive across syncs," the cache→venv link step
+    appears to never fire, even for the very first install that would populate a cold cache entry.
+  - **Hardlinking capability itself is NOT broken at the OS/filesystem level.** Root `/` is `ext4` (no reflink/clone
+    support, so `hardlink` vs `copy` is the only real choice), and a parallel sample of 152 large files INSIDE
+    `.uv-cache/archive-v0` (cache-internal, not cache→venv) found 4 with `nlink>1` (3×`nlink=2`, 1×`nlink=3`) — uv's own
+    internal cache-population dedup (identical file content shared between different cache archive entries) demonstrably
+    still works. The break is specifically at the **install-into-venv** step, not hardlinking in general.
+  - **This is a genuine regression, not "never worked."** The 2026-06-29 fix
+    (`/plans/archive/issues/slot_venv_duplication_disk_pressure_2026_06_29.md`) was independently re-proven live on
+    2026-07-17 (`links=81` on a shared file) — cross-slot dedup DID work at that point. The fix's code is still present
+    and unreverted today: `agent-orchestrator/server/tmux_spawn.py:760` still exports
+    `UV_CACHE_DIR=<shared-path>; UV_LINK_MODE=hardlink` into every spawned session; `base-service.sh` still exports the
+    same pair (with the correct `.tabs`-relative derivation, not a hardcoded `~/.cache` path); `vm-disk-guard.sh:77`
+    still uses the safe `uv cache prune` (not the original `rm -rf` bug). None of the previously-identified failure
+    modes (B1/B2 from the archived doc) are back. My own current interactive shell already inherits
+    `UV_CACHE_DIR`/`UV_LINK_MODE=hardlink` correctly (verified via `env`), consistent with the fix being intact at that
+    layer.
+  - **Leading candidate for the regression (not conclusively proven — see verdict):** `scripts/setup.sh` — the script
+    that actually builds/refreshes a repo's `.venv` via `uv sync` / `uv pip install -e .` — does **not** itself export
+    `UV_LINK_MODE`/`UV_CACHE_DIR` anywhere; it relies entirely on inheriting them from its caller's environment. This
+    makes venv-building fragile to ANY invocation path that doesn't already carry the vars — grepped
+    `agent-orchestrator/server/*.py` for a `subprocess`-driven `setup.sh`/`uv sync` call that might run with a
+    scrubbed/minimal env (none found conclusively; `autospawn.py` only mentions `uv sync` in a comment). The
+    2026-08-07-dated venvs sampled above were NOT limited to the 5 repos affected by the 2026-08-05T11:24:53Z
+    security-driven git-history rewrite
+    (`issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`) — `deployment-service` and
+    `market-tick-data-service` are unaffected by that rewrite — so a mass-reclone provisioning gap is a plausible
+    contributing factor for the history-rewrite-affected repos specifically, but does NOT by itself explain the fully
+    general, 1,800/1,800 fleet-wide failure rate observed above.
+  - **Verdict: FIXABLE, not yet fixed.** The mechanism is proven to work end-to-end when the environment correctly
+    reaches the actual `uv` install invocation (2026-07-17 proof). The current 100% fleet-wide failure means something
+    in the actual install call path is not receiving/honoring `UV_LINK_MODE=hardlink` — most likely an
+    environment-propagation gap somewhere between session spawn and `setup.sh`'s `uv sync` call, though this read-only
+    investigation could not conclusively isolate the exact break point (that would require a live, monitored `uv sync`
+    re-run — e.g. `UV_VERBOSE=1`/strace on a real install — which is explicitly out of this task's read-only scope).
+    **Recommended next step** (not this task's to do — a separate, properly-scoped follow-up): (1) add an explicit
+    `export UV_CACHE_DIR=...; export UV_LINK_MODE=hardlink` directly inside `setup.sh` itself (removing the dependency
+    on env inheritance entirely — the same derivation `base-service.sh` already uses), (2) re-run `setup.sh` for one
+    repo in one slot and verify `nlink>1` on a shared file immediately after, before rolling fleet-wide. If that alone
+    doesn't restore dedup, sub-item (c)'s liveness-aware prune becomes the fallback path.
 
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06 (the operator ran the
   cron installer 2026-08-07, closing sub-item (a) inline in the same open checkbox, evidence already cited there).

@@ -166,11 +166,15 @@ not lost if the bound expires unanswered.
 
 ## Todos
 
-- [ ] [CODE] P2. **RULED 2026-08-06 (operator), option A: approved.** `[CODE]` tag (was `[OPERATOR]`), AO-dispatchable —
+- [x] [CODE] P2. **RULED 2026-08-06 (operator), option A: approved.** `[CODE]` tag (was `[OPERATOR]`), AO-dispatchable —
       change `check_high_attempted_failed` to compute thresholds over a trailing window (7-14 days) instead of the full
       lifetime manifest, closing this alert class generally. Decide among options A/B/C above (or another approach) for
       how `DP-FETCH-009` should treat a cell whose `attempted_failed` classification is dominated by already-fixed
-      historical incidents. Repo: deployment-service.
+      historical incidents. Repo: deployment-service. ✅ deployment-service@96271280 — added
+      `ATTEMPTED_FAILED_TRAILING_WINDOW_DAYS=14` constant; `_read_attempted_failed_cells` now filters attempted_failed
+      rows to the 14-day trailing window (NaT rows treated as recent, conservative); `check_high_attempted_failed`
+      accepts injectable `now=` for deterministic testing; 3 existing tests updated + 3 new trailing-window tests added;
+      QG green.
 - [ ] [DIAG] P3. If the operator wants the residual trickle root-caused before deciding: pull Cloud Logging /
       Tardis-side request logs for the exact process that produced the 2026-07-29 09:00 UTC
       `Tardis HTTP 403 code=274 concurrent-IP-lock` COINBASE-FUTURES rows (the VM-creation audit-log trace in this doc
@@ -232,3 +236,12 @@ not lost if the bound expires unanswered.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **context-scout 2026-08-07 (batch11 independent re-verify)**: all 5 entries confirmed resolving on disk; content
   unchanged.
+- **slot-6 2026-08-08 (todo-1 SHIPPED)**: Implemented option A — 14-day trailing window for
+  `check_high_attempted_failed`. Added `ATTEMPTED_FAILED_TRAILING_WINDOW_DAYS=14` constant;
+  `_read_attempted_failed_cells` now counts only `attempted_failed` rows where `attempted_at >= (now - 14d)` (NaT rows
+  treated as "recent" to avoid silencing genuine failures with missing timestamps); `max_attempted_at` + staleness
+  metadata still use the lifetime set for diagnostic value. `check_high_attempted_failed` accepts
+  `now: datetime | None = None` for testing. Updated 3 tests that used hardcoded 2026-07-07 timestamps (now outside the
+  window) to inject `now=datetime(2026,7,20,UTC)`. Added 3 new tests: old-outside-window no-page, cefi/liquidations
+  exact-scenario (44k old + 26 fresh = no page), recent-within-window still-pages. QG green (952 lines < 960 cap).
+  Shipped: `deployment-service@96271280`.

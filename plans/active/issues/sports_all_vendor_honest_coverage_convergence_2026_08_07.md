@@ -172,10 +172,14 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       `--force`), guard confirmed `0 running + 1 planned <= cap 1`, all 4 tarballs fresh. RUNNING as of the check right
       after launch — watching through to actual clean completion next tick (see
       `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` for the full history/context).
-- [ ] [SCRIPT][BLOCKED-UPSTREAM-OUTAGE] P2. **Retry Transfermarkt's 8 attempted_failed PLAYER_VALUES rows** once
+- [ ] [SCRIPT][BLOCKED-UPSTREAM-OUTAGE] P2. **Retry Transfermarkt's 8 attempted_failed PLAYER_VALUES rows** (now the
+      golden-window relaunch's 256-cell scope too — see
+      `/plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo 2) once
       `transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` recovers — confirmed still
       returning HTTP 502 at 2026-08-07T12:21Z (3h+ after initial failure at 10:17Z; RapidAPI message: "API (not
-      working)"). Tagged BLOCKED-UPSTREAM-OUTAGE; do not relaunch without verifying the endpoint returns 200 first.
+      working)"), and **still 502 at 2026-08-08T01:20Z** (15h+ outage, direct probe with the correct `id`/`season`
+      params, ~52s latency before the 502 — see Progress Log entry below). Tagged BLOCKED-UPSTREAM-OUTAGE; do not
+      relaunch without verifying the endpoint returns 200 first.
 - [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill, ran to `exit_code=0`** —
       `weather-backfill-20260807-120241` completed cleanly but did NOT resolve the gap (re-census:
       `expected_unattempted` barely moved 205,517→205,302; 16,241 new `attempted_failed` rows appeared) — split into the
@@ -541,3 +545,63 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   smallchunk2 STILL chunk 18/451 (~3.5h) — lighter rule-1b diff (root cause already established, not re-litigating): 29
   distinct leagues now (up from 25), 15 OOM (up from 13), still zero repeats, RSS cycling normally — continued genuine
   movement, no intervention.
+- **2026-08-07T23:17Z — CLOSED: chunk 18/451 finally cleared. FIXTURE_STATS +72 days.** FIXTURE_STATS:
+  `last_completed_date=2022-08-01` (fresh `23:16:40Z`), continuing to accelerate. odds smallchunk2: `run.log`'s own
+  `PROGRESS: chunk=18/451 ... time=2026-08-07T22:59:42Z` line confirms the chunk completed — total elapsed **3h38m**
+  (started 19:21:28Z per chunk 17's completion line), final tally **30 distinct leagues attempted, 16 OOM'd once each
+  (14 succeeded clean on first try)**, zero repeats throughout — closes out the season-opener-week investigation as
+  designed-behavior, not a bug. Chunk 19 (`2020-09-04→2020-09-08`) is already under way and moving fast — its first
+  league is skip-fasting through dates (`SKIP date=2020-09-04/05/06`), confirming the off-season-weeks-move-faster
+  hypothesis. **New finding for future ticks**: `PROGRESS.json` itself did NOT update at the chunk-18→19 transition — it
+  still read the stale `2020-08-29`/`19:22:22Z` value even ~18 minutes after chunk 18's own `run.log` completion line.
+  The true checkpoint state must be cross-checked against `run.log`'s own `PROGRESS: chunk=N` lines near a suspected
+  chunk boundary, not trusted from `PROGRESS.json` alone — worth a rule-1b/4a addendum if this recurs. Reverting to
+  lightweight per-tick `PROGRESS.json` checks per the standing instruction, since the outlier is now closed; will only
+  re-deep-dive if a future chunk shows the same multi-hour-stall signature.
+- **2026-08-07T23:17Z — self-correction: FIXTURE_STATS's chunk NUMBER had gone stale in the journal for several ticks.**
+  Every tick's `last_completed_date` reading was genuinely accurate (each one re-fetched live), but I'd been carrying
+  forward the label "chunk 6/26" from an early tick without re-verifying it against `run.log` — a live check just now
+  shows it's actually **chunk 9/26** (`2022-05-27→2022-08-24`, chunks 6-8 each cleared in well under an hour: chunk 6 @
+  21:25:10Z, chunk 7 @ 21:56:53Z, chunk 8 @ 22:51:26Z). No data-integrity issue — the underlying values were never
+  wrong, only the derived chunk-number label I was echoing. At this clip (~3-9 chunks/hour once past quota-limited early
+  chunks), 26/26 is plausibly within the next 1-3 hours. Using the verified chunk 9/26 going forward.
+- **2026-08-07T23:47Z — upgrading last tick's `PROGRESS.json` finding: it's not lag, the file appears to have STOPPED
+  updating entirely for odds smallchunk2.** FIXTURE_STATS: +30 days (`last_completed_date=2022-08-31`, fresh
+  `23:46:43Z`) — a bit slower than recent ticks but healthy. odds smallchunk2: `PROGRESS.json` still reads the exact
+  same stale value as 4.5 hours ago (`2020-08-29`/`19:22:22Z`, chunk 17's write), but `run.log`'s own
+  `PROGRESS: chunk=N` lines prove real progress has continued well past the last tick's finding: **chunk 19 @ 23:18:02Z,
+  chunk 20 @ 23:24:10Z, chunk 21 @ 23:30:17Z — each cleared in ~6 minutes**, currently on **chunk 22/451**
+  (`2020-09-19→2020-09-23`), zero new OOMs since chunk 18 closed (still 16 total). This confirms two things at once: (1)
+  the season-opener week really was the sole outlier — normal off-season chunks fly through in ~6 min once the league
+  roster is mostly skip-fast/cheap real-fetches, and (2) `PROGRESS.json`'s GCS upload for this VM has not written a
+  single new value since chunk 17 (19:22:22Z) despite 5 more chunks completing since — this is no longer "lag," it looks
+  like the upload step itself stopped functioning for this file specifically (the VM is otherwise clearly alive:
+  `run.log` keeps growing, manifest shards keep writing, heartbeats keep firing). **Not blocking** — `run.log`'s own
+  `PROGRESS: chunk=N` lines are a fully reliable substitute and this doc will use them as ground truth for this VM going
+  forward — but worth a note in `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` for whoever next touches the
+  launcher, since a future session trusting `PROGRESS.json` alone on this specific VM would wrongly conclude it's been
+  stuck since 19:22Z.
+- **2026-08-08T00:16Z** — FIXTURE_STATS +29 days (`last_completed_date=2022-09-29`, fresh `00:15:42Z`), steady. odds
+  smallchunk2 (via `run.log`, `PROGRESS.json` still not used per above): now **chunk 25/451** (`2020-10-04`), up from
+  chunk 22 — chunks 23 (00:07:19Z) and 24 (00:13:41Z) both cleared, zero new OOMs (still 16 total since chunk 18). Both
+  VMs healthy, no intervention.
+- **2026-08-08T01:24Z (slot 14)** — **Recurrence of the exact killed-and-tagged anti-pattern: a second Transfermarkt
+  backfill VM was launched blind, 13h into the still-ongoing outage, and got stuck the same way.** Dispatched
+  `sports_satellite_ao_dispatch_batch9-002` (the golden-window PLAYER_VALUES relaunch todo) and found
+  `tm-backfill-20260807-233040` already RUNNING (launched 2026-08-07T23:30:47Z, exact matching scope:
+  `--sports-entity PLAYER_VALUES --sports-provider TRANSFERMARKT --start-date 2025-09-01 --end-date 2025-11-30`, no
+  `--force`) — some earlier session/dispatch launched it without checking this doc's BLOCKED-UPSTREAM-OUTAGE tag first.
+  `run.log` showed the identical signature this doc already diagnosed at 10:17Z the day before:
+  `transfermarkt_teams_fetch` cycling through leagues, each one exhausting all 10 retry-with-backoff attempts against
+  `GET /api/v1/competitions/standings` (HTTP 502 every time), ~10 min/league, **zero rows written and zero leagues
+  captured across 1h45m** (23:33Z→01:16Z). Direct-probed the endpoint myself with the adapter's real params
+  (`id=GB1&season=2025`, not the malformed query I tried first which returned a fast 422 from RapidAPI's gateway itself)
+  — still **HTTP 502, ~52s latency**, confirming the outage is continuous and now 15h+ old (started 2026-08-07T10:17Z).
+  Killed `tm-backfill-20260807-233040` (`gcloud compute instances delete`, confirmed via heartbeat-blob freshness +
+  run.log zero-progress — same justified-stale basis as the original 2h17m kill this doc already recorded), matching
+  this doc's own standing guidance rather than letting it burn further GCE billing against a call that cannot succeed.
+  Did **not** relaunch. `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo 2 stays unchecked, annotated with this
+  citation — real completion requires the vendor endpoint to recover first. **Lesson for future dispatches**: any
+  Transfermarkt PLAYER_VALUES/TEAM launcher todo should grep this doc (or its `BLOCKED-UPSTREAM-OUTAGE` tag) for a live
+  outage before launching, not just check the launcher's own singleton lock — the singleton lock only prevents a
+  _second_ concurrent VM, it doesn't stop the _first_ one from launching blind into a known-dead endpoint.

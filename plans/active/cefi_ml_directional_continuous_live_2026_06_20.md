@@ -6,7 +6,13 @@ summary:
   to live strategy to live execution."
 status: active
 nature: process
-asset_group: [cefi, defi]
+asset_group:
+  [cefi] # corrected 2026-08-08 (ag-closeout-audit cefi, Phase 0.3 orthogonality check) -- was [cefi, defi], a mistag:
+  # doc's own provenance note says "Distinct from the rules-based DeFi carry family" and scope is 100% CeFi
+  # (OKX/Binance/Bybit live trading, parent_epic:cefi_master), zero DeFi content anywhere. The dual tag made this doc
+  # invisible to both cefi's and defi's own tranche audits (each excludes docs carrying a peer-AG marker per
+  # SKILL.md's Orthogonality HARD CHECK) -- the exact falls-through-both-audits failure class that check exists to
+  # catch.
 stage: [meta]
 repos: [alerting-service, execution-service, features-service, ml-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]

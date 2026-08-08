@@ -124,19 +124,21 @@ concurrently (no `sequential: true`).
       `sync-system.mdc` (x2), `provider-api-version-manifest.mdc`, `ui-quality-gates-typescript.mdc` — outside this
       todo's named scope, not touched). Marking done rather than dispatching a redundant worker onto an already-closed
       item.
-- [ ] [INFRA] P3. **Root-cause why `UV_LINK_MODE=hardlink` (configured in `base-service.sh:322`) is not actually
-      deduping `.venv` files across slots** on the shared host (per `host_root_disk_full_transient_2026_07_13.md`'s
-      confirmed root driver #2 — identical `numpy.libs/libscipy_openblas64_*.so` content/size across two different
-      slots' `.venv`s, `nlink=1` on both, different inodes). Investigate the two stated candidate causes (each slot's
-      `uv sync` may resolve to a distinct cache entry; hardlink may only apply within a single sync's own cache→venv
-      copy, not across independently-run syncs) by reading `uv`'s cache/link-mode behavior and directly comparing
-      inode/cache-key state across 2-3 live slots (read-only — do not modify any other slot's `.venv`). **Explicitly
-      excludes building or deploying any prune/cleanup tooling** — that remains a separate, more carefully-scoped
-      follow-up given the live/in-use nature of other slots' `.venv` directories (per the source doc's own caution: "a
-      blanket prune risks breaking an active slot's `quality-gates.sh`/`quickmerge.sh` mid-run"). Done when:
-      `issues/host_root_disk_full_transient_2026_07_13.md` is updated with a dated finding stating the root cause and an
-      explicit fixable/not-fixable verdict (with reasoning), not just "investigated." (repo: unified-trading-pm,
-      read-only host investigation)
+- [x] ✅ [INFRA] P3. **DONE 2026-08-08 (infra)** — **Root-cause why `UV_LINK_MODE=hardlink` is not actually deduping
+      `.venv` files across slots.** Confirmed a genuine fleet-wide REGRESSION, not the two originally-suspected causes:
+      sampled 1,800 large `.so` files across all 16 slots — 1,800/1,800 `nlink=1` (zero cache→venv hardlinks exist
+      anywhere today); the shared cache's own copy of the exact file from the original finding is ALSO `nlink=1` despite
+      existing 11 days before the 7 venv copies compared against it — refuting "distinct cache entry per slot" (there is
+      exactly one, confirmed shared). Cache-internal hardlinking still works (a few `nlink>1` hits inside
+      `.uv-cache/archive-v0` itself), isolating the break to the install-into-venv step specifically. The 2026-06-29
+      fix's code (`tmux_spawn.py`'s env export, `base-service.sh`'s derivation, `vm-disk-guard.sh`'s safe
+      `uv cache prune`) is unchanged and still present — this isn't a reverted fix, and the mechanism is proven feasible
+      (2026-07-17 `links=81` re-proof). **Verdict: FIXABLE, not yet fixed** — leading candidate is `scripts/setup.sh`
+      never exporting `UV_LINK_MODE`/`UV_CACHE_DIR` itself (relies entirely on inherited env), but the exact regression
+      trigger needs a live-tracing follow-up (out of this read-only investigation's scope) before a fix can be written.
+      Full evidence + recommended next step in the dated finding. Source:
+      `issues/host_root_disk_full_transient_2026_07_13.md` (todo's sub-item (b); (c) stays open, gated on the
+      follow-up's outcome).
 
 ## Deferred — non-batchable this round
 

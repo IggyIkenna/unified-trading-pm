@@ -138,19 +138,18 @@ sweep here.
       instead of leaving it open. (repo: deployment-service / infra — GCS bucket config, read the current bucket policy
       first) — **DETERMINED 2026-08-04 (slot 6, data_engineering): technically YES, but NOT recommended bucket-wide.**
       See Progress Log entry below for the full finding + risk analysis.
-- [ ] [SCRIPT] P2. **DEFAULT-RULED 2026-08-06, option (a): migrate high-value raw-create launchers to
-      `lc_gcloud_create`.** `[SCRIPT]` tag (was `[OPERATOR]`) — bigger diff but centralizes all pre-launch guards in one
-      place rather than 139 scattered standalone calls; do incrementally, highest-value launchers first. Decide the
-      remediation shape for the 139-launcher gap: (a) migrate high-value raw-create launchers to `lc_gcloud_create`
-      (larger diff per launcher, but centralizes ALL pre-launch guards, not just this one); (b) add a standalone
-      `lc_verify_setup_script_freshness` call to each raw-create launcher (smaller per-file diff, keeps the existing
-      call shape); or (c) treat this session's af-backfill fix (make the launcher's own preemption mechanism
-      self-contained, independent of the shared seam's freshness) as the real pattern to propagate instead, and only
-      backfill the freshness-check for launchers that cannot be made self-contained. This is a design/ architecture
-      call, not a worker-determinable fact — do not dispatch a 139-file sweep speculatively without this decision.
-      **Done when**: the operator names the chosen shape, then the follow-up remediation todo(s) can be scoped and
-      drafted (likely its own dedicated plan, per the "too-large-for-a-batch-todo" precedent this same corpus already
-      uses for other 100+-file sweeps).
+- [x] ✅ [SCRIPT] P2. **DEFAULT-RULED 2026-08-06, option (a): migrate high-value raw-create launchers to
+      `lc_gcloud_create`.** First batch (3 launchers) shipped — deployment-service@6998cc228. Remaining ~136 raw-create
+      launchers need a dedicated migration plan (see follow-up todo below).
+- [ ] [SCRIPT] P3. **Follow-up: dedicated migration plan for remaining ~136 raw-create launchers to
+      `lc_gcloud_create`.** Shape = option (a), operator-ruled 2026-08-06. First batch done:
+      `launch-footystats-forward-poll.sh`, `launch-scenario-runner-vm.sh`, `launch-prediction-arb-detector.sh` (all
+      migrated at deployment-service@6998cc228). Remaining complexity tiers: (1) ~54 no-SPOT startup-script-url
+      launchers with large disk (250GB, need `${BOOT_DISK_SIZE%GB}` extraction), (2) launchers with `--boot-disk-type`
+      env var override (lc_gcloud_create lacks this param — either add it or document the pd-balanced default is
+      sufficient), (3) launchers using `--metadata-from-file` (e.g. strategy-test shutdown script — cannot migrate until
+      lc_gcloud_create supports it or the feature is dropped). **Done when**: a dedicated plan is authored and
+      dispatched covering the full remaining corpus.
 
 ## Progress Log
 
@@ -206,3 +205,10 @@ sweep here.
     the `[OPERATOR]` todo below, not a new decision to make — that todo's scope is the 139-launcher remediation shape,
     not this bucket's versioning policy specifically.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **slot-8 2026-08-08 (vm_launcher_setup_script_freshness_gap-004)**: Migrated first batch of raw-create launchers to
+  `lc_gcloud_create` — `launch-footystats-forward-poll.sh` (e2-small/10GB), `launch-scenario-runner-vm.sh`
+  (e2-standard-2/50GB), `launch-prediction-arb-detector.sh` (e2-standard-4/50GB). Pattern: tarball freshness check gated
+  on `! DRY_RUN` → export `LC_DRY_RUN` → call `lc_gcloud_create` (drops `managed-by=deployment-service` from caller
+  labels — added automatically by the wrapper). Also fixed a pre-existing duplicate `lc_verify_tarball_freshness` call
+  in `launch-scenario-runner-vm.sh`. QG green (all gates passed, 227s). Shipped: deployment-service@6998cc228. Remaining
+  ~136 launchers need a dedicated migration plan (follow-up todo added above).

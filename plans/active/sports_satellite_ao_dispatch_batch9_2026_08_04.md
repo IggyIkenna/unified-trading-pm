@@ -126,12 +126,21 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `launch_budget_registry.py` carries measured safe_rate_rpm/recovery_seconds with `calibrated=True` for each, and
       the measured table is recorded in the plan's Progress Log. — deployment-service@0eb9c36 + instruments-service
       secret-fix quickmerged (rapidapi-key → soccer-football-info-api-key). See Progress Log below.
-- [ ] [DATA] P2. Re-launch the instruments-service Transfermarkt PLAYER_VALUES backfill scoped to the golden window
-      (2025-09-01..2025-11-30) with skip-fresh enabled so only the 256 `attempted_failed` cells (as of the 2026-06-24
-      measurement) are re-attempted, then re-measure coverage. Source: `data_completion_sports_2026_07_24.md`. Done
-      when: the scoped relaunch VM completes cleanly (exit_code=0) and a post-run manifest re-measurement of the golden
-      window shows the `attempted_failed` PLAYER_VALUES cell count has dropped from the 256 baseline (either to 0, or
-      the residual is re-classified with a stated reason).
+- [ ] [DATA][BLOCKED-UPSTREAM-OUTAGE] P2. Re-launch the instruments-service Transfermarkt PLAYER_VALUES backfill scoped
+      to the golden window (2025-09-01..2025-11-30) with skip-fresh enabled so only the 256 `attempted_failed` cells (as
+      of the 2026-06-24 measurement) are re-attempted, then re-measure coverage. Source:
+      `data_completion_sports_2026_07_24.md`. Done when: the scoped relaunch VM completes cleanly (exit_code=0) and a
+      post-run manifest re-measurement of the golden window shows the `attempted_failed` PLAYER_VALUES cell count has
+      dropped from the 256 baseline (either to 0, or the residual is re-classified with a stated reason). **2026-08-08
+      (slot 14): the exact-scoped VM (`tm-backfill-20260807-233040`) was already running (launched by an earlier,
+      unrelated dispatch at 2026-08-07T23:30:47Z) — do NOT re-launch. It was killed after confirming zero progress in
+      1h45m against a confirmed, still-live vendor outage**
+      (`transfermarkt-football-data-api.p.rapidapi.com/api/v1/competitions/standings` returning HTTP 502 continuously
+      since 2026-08-07T10:17Z, still 502 at 2026-08-08T01:20Z via a direct probe with the adapter's real params — 15h+
+      outage). Tracked + tagged BLOCKED-UPSTREAM-OUTAGE in
+      `/plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md` (todo + Progress Log, both docs
+      cross-referenced). **Next worker**: verify the endpoint returns 200 (see that doc's probe recipe) before
+      relaunching; do not relaunch blind.
 - [ ] [DIAG] P2. Re-measure the golden-window (2025-09-01..2025-11-30) ODDS+PREDICTIONS blank-reason `empty_confirmed`
       residual (~3,062/3,078 cells as of the 2026-06-24 measurement, later ~3,255 combined) against the live manifest,
       and file a scoped issue doc
@@ -750,6 +759,101 @@ doc's `[SCRIPT]` P3 no-relaunch STOP is cleared.
   own inline `Source:` citation) — no single source path is appropriate per SKILL.md's dispatch-batch-coordinator
   exemption.
 
+### 2026-08-07 — P2 PLAYER_VALUES Transfermarkt backfill launched (slot 14)
+
+VM `tm-backfill-20260807-233040` (SPOT e2-standard-8, `asia-northeast1-c`) launched 2026-08-07T23:30:40Z via
+`bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2025-09-01 2025-11-30`.
+All 4 tarballs confirmed fresh at launch time.
+
+**Status at pre-compact (2026-08-07T23:36Z):** VM RUNNING. GCS log at
+`gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260807-233040/run.log` shows:
+
+- Service started, PLAYER_VALUES+TRANSFERMARKT filters applied
+- `TRANSFERMARKT short-circuit: skipping orchestrator for date=2025-09-01` — skip-fresh working correctly (captured
+  dates skipped, only `attempted_failed` cells re-attempted)
+- 502 retry from `transfermarkt-football-data-api.p.rapidapi.com` in progress (attempt 1/10, backoff 3.0s)
+
+**Next step after VM completes (exit_code=0):** run manifest re-measurement to count PLAYER_VALUES `attempted_failed`
+cells in 2025-09-01..2025-11-30 (baseline=256), then flip this todo's checkbox citing VM name + measurement result.
+Measurement script pattern: 3-col read (`date`, `data_type`, `capture_status`) from
+`instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, filter
+`data_type==PLAYER_VALUES AND date∈[START,END]`. Run via `run-bounded-analysis.sh` per memory-bounding rule.
+
+### 2026-08-07T23:50Z — second pre-compact (slot 14); VM still active
+
+**VM status at 23:50Z:** RUNNING — at attempt 4/10 (backoff 24.0s) for Transfermarkt 502 retries at 23:37Z; within
+normal 10-attempt retry envelope. Background 5-min poll armed (up to 90 min).
+
+**Updated at 23:42Z (third pre-compact):** VM at attempt 7/10 (backoff capped at 48.0s since attempt 5) on
+`/api/v1/competitions/standings`. Attempts 8–10 also at ~48s each — VM may exit non-zero ~23:44–23:46Z if API stays
+down.
+
+**Resume steps (pick up from repo, zero session memory needed):**
+
+1. Check VM:
+   `gcloud compute instances list --filter="name=tm-backfill-20260807-233040" --zones=asia-northeast1-c --format='value(name,status)'`
+2. If gone:
+   `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260807-233040/run.log | tail -30`
+   and look for `[[VM_PROGRESS]] last_completed_date=2025-11-30` (success) or final `exit` line.
+3. If exit_code=0: create `measure_pv_golden.py` with the snippet below, run via
+   `cd instruments-service && bash scripts/dev/run-bounded-analysis.sh python <path>/measure_pv_golden.py`.
+4. Flip P2 checkbox (`- [ ] → - [x] ✅`), commit `docs(plans):`, POST `/api/slots/14/done`
+   `{"task_id":"sports_satellite_ao_dispatch_batch9-002","sha":"<sha>","evidence":"<measurement output>"}`.
+5. **If exit_code≠0 (API exhaustion):** wait 15–30 min for Transfermarkt API recovery, then re-launch:
+   `bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2025-09-01 2025-11-30`
+   (skip-fresh is default — already-captured cells won't be re-attempted; idempotent re-launch is safe).
+
+**Measurement script (inline — scratchpad not durable):**
+
+```python
+#!/usr/bin/env python3
+"""Measure PLAYER_VALUES attempted_failed in golden window 2025-09-01..2025-11-30."""
+from __future__ import annotations
+import io
+from datetime import UTC, datetime
+import pandas as pd
+from unified_trading_library import get_storage_client
+
+BUCKET = "instruments-store-sports-prd-central-element-323112"
+START, END, TARGET = "2025-09-01", "2025-11-30", "PLAYER_VALUES"
+
+def main() -> int:
+    ts = datetime.now(UTC).strftime("%Y-%m-%dT%H:%MZ")
+    client = get_storage_client()
+    raw = client.download_bytes(BUCKET, "_index/availability_index.parquet")
+    manifest = pd.read_parquet(io.BytesIO(raw), columns=["date", "data_type", "capture_status"])
+    mask = (manifest["data_type"] == TARGET) & (manifest["date"] >= START) & (manifest["date"] <= END)
+    counts = manifest[mask]["capture_status"].value_counts().to_dict()
+    af = counts.get("attempted_failed", 0)
+    print(f"[{ts}] PLAYER_VALUES {START}..{END}: attempted_failed={af} (baseline=256); counts={counts}")
+    verdict = "PASS — dropped from 256" if af < 256 else "WARN — unchanged or higher"
+    print(f"VERDICT: {verdict}")
+    return 0
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
+
+### 2026-08-08T00:18Z — sustained Transfermarkt API outage; VM still cycling (slot 14)
+
+**VM `tm-backfill-20260807-233040` RUNNING at 00:18Z** (48+ min since first 502 at 23:34Z). API is returning 502 on
+`competitions/standings` continuously. Service handles each `attempted_failed` date by exhausting its 10-attempt retry
+window (~9 min), writing `attempted_failed` to the manifest, then moving on — no outer exit on per-date exhaustion.
+
+**Progress as of 00:18Z:** 5 date-batches cycled (~45 min × 1 date/9 min). Zero captures. `attempted_failed` cells are
+being re-stamped as `attempted_failed` for each date processed.
+
+**Path forward:** VM will continue cycling through all `attempted_failed` dates. Either:
+
+- **(A) API recovers mid-run** → remaining dates capture successfully; VM exits 0; run measurement (script inline
+  above); if `attempted_failed < 256` → flip P2 checkbox + `docs(plans):` commit + POST `/api/slots/14/done`.
+- **(B) API stays down; VM cycles to completion** → VM exits (likely exit_code=0 having processed all dates); run
+  measurement expecting `attempted_failed ≈ 256`; wait 20–30 min for API recovery; re-launch:
+  `bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2025-09-01 2025-11-30`
+  (idempotent — skip-fresh re-attempts `attempted_failed` cells).
+
+**Do NOT launch a new VM while `tm-backfill-20260807-233040` is still RUNNING** — singleton lock will reject it.
+
 ## Codex SSOTs
 
 - `/cursor-configs/skills/ag-closeout-audit/SKILL.md` — the full Phase 0-3 procedure this batch executes.
@@ -762,3 +866,21 @@ doc's `[SCRIPT]` P3 no-relaunch STOP is cleared.
   curated-universe GCS cleanup todo).
 - `/codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator merge/dedup mechanics (the rows_out-freeze
   root-cause todo).
+
+### 2026-08-08 — Todo 2 (Transfermarkt PLAYER_VALUES golden-window relaunch) — BLOCKED-UPSTREAM-OUTAGE (slot 14)
+
+Dispatched `sports_satellite_ao_dispatch_batch9-002`. Found the exact-scoped VM (`tm-backfill-20260807-233040`,
+`--sports-provider TRANSFERMARKT --sports-entity PLAYER_VALUES --start-date 2025-09-01 --end-date 2025-11-30`, no
+`--force`) already launched by an earlier, unrelated dispatch (2026-08-07T23:30:47Z) — the launcher's own singleton lock
+correctly would have refused a second one anyway. `run.log` showed 1h45m of zero productive progress: every per-league
+`get_teams` call was exhausting all 10 retry-with-backoff attempts against `GET /api/v1/competitions/standings` with
+HTTP 502, then moving to the next league and repeating identically — 0 rows written, 0 leagues captured.
+Cross-referenced `/plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md`, which already
+tagged this exact endpoint `BLOCKED-UPSTREAM-OUTAGE` the day before (first failure 2026-08-07T10:17Z, confirmed still
+down at 12:21Z) and recorded a prior session killing an identical stuck VM after 2h17m of zero progress. Direct-probed
+the endpoint myself with the adapter's real params (`id=GB1&season=2025`) — still HTTP 502 at 2026-08-08T01:20Z (~52s
+latency before the error), confirming a sustained 15h+ outage, not a transient blip. Killed
+`tm-backfill-20260807-233040` (heartbeat-blob-confirmed alive but zero useful progress — same justified basis as the
+prior kill) rather than let it keep burning GCE billing against a call that cannot succeed. Did not relaunch. Todo 2
+annotated in place with this citation and tagged `BLOCKED-UPSTREAM-OUTAGE`; stays unchecked — completion requires the
+vendor endpoint to recover first (verify via the convergence doc's probe recipe before any future relaunch).

@@ -93,7 +93,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -171,19 +171,50 @@ source: cicd-escalation-agt-62ba62
       Verified fully resolved: `batch-live-reconciliation-service` main and LDR are now tree-identical
       (`427541269dd8...`), `quality-gates-v2` + `main-backmerge-to-ldr` both green on `main` (push run
       31162503341/31162503702), zero open PRs. (conflict_resolver agt-8289f1, 2026-08-07)
-- [ ] [DEVOPS] P1. Re-roll + ship for the other 6 locally-confirmed repos: client-reporting-api, deployment-api,
+- [x] ✅ [DEVOPS] P1 — STALE-CHECKBOX FIX (na-eligibility-audit 2026-08-08), superseded not executed as originally
+      scoped. Re-roll + ship for the other 6 locally-confirmed repos: client-reporting-api, deployment-api,
       features-service, fund-administration-service, ibkr-gateway-infra, instruments-service (same recipe as above, one
       commit+push per repo). **Also check each for accumulated main/LDR drift from the second-order
       `main-backmerge-to-ldr.yml` break above** — after the workflow-template re-roll, manually dispatch
       `gh workflow run main-backmerge-to-ldr.yml --ref live-defi-rollout` for each repo BEFORE relying on the fleet
       promoter's next tick, since any push-to-main backmerge since 2026-08-05 may have silently failed to schedule.
-- [ ] [SCRIPT] P2. Sweep the remaining ~14 fleet repos not locally checked out here (full list in
+      **Resolved by an entirely different, larger mechanism**: `/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`
+      todo 4 (`unified-trading-ci@892bb81`, 2026-08-07) converted `main-backmerge-to-ldr.yml` +
+      `major-bump-issue-handler.yml` + `request-major-bump.yml` + `staging-backmerge-to-ldr.yml` +
+      `update-dependency-version.yml` from per-repo flat copies into thin `unified-trading-ci`-hosted
+      `workflow_call` stubs for **every one of the 24 non-PM fleet carriers**, which structurally eliminates the local
+      `runs-on: __RUNS_ON__` placeholder (and the `{{RUNS_ON}}` mangling risk) for these files everywhere — there is no
+      longer a local flat copy to re-roll. Live-verified directly (not just trusting the sibling plan's own claim), 3
+      of the named 6 plus 1 of the "~14 remaining" repo below, via `gh api repos/IggyIkenna/<repo>/contents/.github/workflows/<file>?ref=live-defi-rollout`:
+      `client-reporting-api/main-backmerge-to-ldr.yml`, `ibkr-gateway-infra/major-bump-issue-handler.yml`, and
+      `strategy-service/update-dependency-version.yml` (a repo NOT in the original 6, part of the "~14 remaining" scope
+      of the next todo) all now read
+      `uses: IggyIkenna/unified-trading-ci/.github/workflows/<file>@main` with a header comment citing this exact todo
+      4. The main/LDR-drift check sub-clause is superseded the same way (no local file left to drift). Nothing left to
+      do here.
+- [x] ✅ [SCRIPT] P2 — STALE-CHECKBOX FIX (na-eligibility-audit 2026-08-08), superseded not executed as originally
+      scoped. Sweep the remaining ~14 fleet repos not locally checked out here (full list in
       `workspace-manifest.json`) for the same broken `runs-on: { { RUNS_ON } }` pattern in their
-      `.github/workflows/*.yml`, and re-roll any that are affected.
+      `.github/workflows/*.yml`, and re-roll any that are affected. **Moot for the same reason as the todo above**:
+      `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 4 converted ALL 24 non-PM fleet repos
+      (not just the 6 locally-confirmed here), and todo 7 (`unified-trading-pm@54b6fa6945`, 2026-08-07) then DELETED
+      the 7 template sources this todo's "re-roll" would have used from `scripts/workflow-templates/` — confirmed live:
+      `ls scripts/workflow-templates/` today shows only `image-build-gate.yml`, `notify-slack.yml`,
+      `quality-gates-v2.yml.tmpl`, `staging-lock-check.yml` remain (matches todo 7's own dry-run claim exactly). There
+      is no remaining fleet repo carrying the broken flat-copy pattern for any of these 7 files, and no template left
+      to re-roll from even if one were found. `staging-lock-check.yml` (the 7th originally-broken file, excluded from
+      the dedup plan's conversion for an unrelated required-check-name reason, todo 11) was independently confirmed
+      live on `instruments-service` to already resolve `runs-on: ubuntu-latest` correctly (its source template already
+      carries the fixed `__RUNS_ON__` token this doc's own summary describes shipping) — not broken either.
 - [ ] [SCRIPT] P3. Consider adding a template-content lint to `check-action-pins.py`'s pre-flight pass (or a new
       lightweight pre-flight check in `rollout-workflow-templates.sh`) that `yaml.safe_load`s each flat-copy template
       after prettier would run on it, so a future prettier-mangled placeholder fails the ROLLOUT script's own pre-flight
-      instead of silently propagating to 26 repos again.
+      instead of silently propagating to 26 repos again. **Scale note (na-eligibility-audit 2026-08-08)**: the "26
+      repos" framing is now stale — `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` removed 7 of
+      the 9 templates that used to flow through this rollout mechanism, so the residual blast radius for THIS specific
+      check is now `image-build-gate.yml` + `notify-slack.yml` + `staging-lock-check.yml` +
+      `quality-gates-v2.yml.tmpl` only — still real (any of these could suffer the same prettier-mangling class), just
+      smaller than originally stated. Not resolved by the dedup plan; still open, genuine engineering work.
 - [ ] [DEVOPS] P2. Investigate: after `greeks-service@f5a63a8` landed on LDR (content/TIER-A/SIT/LABEL-CHECK all PASS
       per `scripts/cicd/ldr_to_main_fleet_promote.sh --repo greeks-service` re-runs 31156978197 + 31157072912), the
       stale promotion PR #420 (head=`promote/greeks-service/49b92a1a7ca0`, the pre-fix SHA) was NOT superseded by a
@@ -201,3 +232,32 @@ source: cicd-escalation-agt-62ba62
 ## Codex SSOTs
 
 - `/codex/08-workflows/ci-cd-flow.md` (gate set / quickmerge / workflow templates)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-08**: Phase 1 re-verification (per this run's own explicit instruction to sanity-check
+  whether this recipe's remaining todos were already done by one of the 4 same-day escalation-agent runs before
+  flipping) found MORE than staleness — the P1 "re-roll 6 repos" and P2 "sweep ~14 repos" todos are not just already
+  executed, they were superseded by a structurally different fix
+  (`/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`, live-verified directly via `gh
+  api` against 4 separate fleet repos, not just trusting that plan's own claims — see the 2 checkbox entries above for
+  full evidence). Applied the shared conflict-check protocol's case 4
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3: "already-shipped-elsewhere-but-
+  checkbox-never-flipped is a DIFFERENT outcome — stale-checkbox fix, not reclassify") and closed both todos in place
+  with citations, rather than dispatching now-pointless re-roll work.
+  **Whole-doc RECLASSIFY bar NOT cleared — staying `assigned_vm: NA`, overriding this doc's Phase 1 candidate
+  classification.** The remaining P2 "Investigate: … the promote-PR non-supersession itself may be a live bug worth
+  its own root-cause pass" todo is genuinely open-ended per
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility": it names 2
+  unconfirmed candidate hypotheses ("possibly `ONLY_REPO`-mode-specific or a race…"), states no done-when (fix it?
+  diagnose-only? file a separate doc?), and is explicitly hedged ("may be… worth its own root-cause pass") rather than
+  a checkable fact or a scoped code change — the "figure out whether/what" shape the eligibility SSOT's own example
+  explicitly excludes, not the "does X match Y" shape it explicitly allows. Per this run's own instruction ("If even
+  ONE open item still needs judgment, this doc does NOT qualify for a whole-doc flip"), leaving the whole doc
+  `assigned_vm: NA`. The remaining P3 lint todo is bounded but its motivating scale claim needed correcting (see its
+  own entry above) — not itself disqualifying, moot given the P2 item already disqualifies the doc. No finalize twin
+  authored (doc was not flipped). Corrected `assigned_role: devops` (not a valid `agents/*.md` role — see the sibling
+  `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`'s same-day fix) → `cicd`.
+  **Recommendation for a future pass**: split the P2 "Investigate…" todo into its own properly-scoped issue doc (or
+  resolve the judgment call interactively first, per the eligibility SSOT's own prescribed path) — once that's done,
+  this doc's remaining open item (the P3 lint todo) would likely clear the bar on its own.

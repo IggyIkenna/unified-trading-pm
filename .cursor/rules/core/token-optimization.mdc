@@ -31,10 +31,13 @@ GLOBAL RULES:
 - Keep answers minimal and precise
 
 SUB-AGENT POLICY:
-- Sub-agents run in isolation (auto mode = free)
+- Sub-agents run in isolation, in their own context window
 - Sub-agents return ONLY final results
 - Each sub-agent has ONE narrowly scoped task
-- NEVER pass `model=` in Task tool calls. Omitting model entirely = auto mode = FREE. Passing model="fast" or any named model costs real tokens and is NEVER correct for sub-agents. Auto mode runs in isolated context at zero cost to the session.
+- ALWAYS pass `model=` explicitly in Task tool calls (CLAUDE.md § Model tier HARD RULE, current as of 2026-07 —
+  supersedes the older "never pass model=" framing below, which no longer matches policy). Sub-agents are still ~10x
+  cheaper than doing the work in the main thread because they run in an isolated context window, not because omitting
+  `model=` triggers a free tier.
 
 ## When to Launch Parallel Agents
 
@@ -73,7 +76,7 @@ FAILURE MODE:
 SESSION TRACKING:
 - Report at end of each turn: "**Token Report (Turn N):** Input ~XXK, Output ~XK, Cost ~$X.XX, **Session Total:** ~XXXK, ~$X.XX"
 - Baseline: ~48K input per turn (~$0.19)
-- Sub-agents (auto mode): FREE
-- Compare session total to Cursor dashboard (filter out "auto" mode)
+- Sub-agents: ~10x cheaper than main-thread work (isolated context, not a free tier — always pass `model=`)
+- Compare session total to Cursor dashboard
 
 CODEX: 06-coding-standards/token-optimization.md

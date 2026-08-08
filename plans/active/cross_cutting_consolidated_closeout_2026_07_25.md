@@ -71,7 +71,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-08-07"
+last_updated: "2026-08-08"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -703,6 +703,80 @@ own child plan:
 other 23 data-pipeline Tracks, too large to drain in one closeout pass. See that doc for the Sources + close-out
 criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this Track's audit flagged.
 
+## Known non-orphan dispositions (recorded here so a mechanical rescan never re-raises them)
+
+**Why this section exists (added 2026-08-08)**: `generate_ag_closeout_audit_candidates.py`'s "never cited" signal is
+citation-based — a doc is only "covered" if its basename appears somewhere in this closeout doc or a live batch/finalize
+doc. A doc `exclude_cross_cutting`-verdicted (a mistag) or genuinely-cross-cutting-but-operator-gated by a `batchN`
+doc's own "Not orphaned — checked, not assumed" section LOSES that coverage the moment `batchN` archives (confirmed
+2026-08-08: `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md`'s archival on/around 2026-08-07 caused 3
+already-classified docs — `checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`,
+`gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`,
+`strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` — to resurface as false "never cited" candidates in the very
+next day's scan). This doc never archives, so a citation recorded HERE is permanent. Each entry below is a markdown link
+(not a bare backtick filename — prettier can wrap a long bare filename across a line break and silently break the
+substring match both `generate_ag_closeout_audit_candidates.py` and `check_ag_closeout_linkage.py` rely on).
+
+### Mistags awaiting owning-tranche retag (verdicted `exclude_cross_cutting` — NOT this tranche's doc to retag, per the
+
+2026-07-30 concurrent-sharded-worker primary-owner rule; full evidence in the dated parked-findings issue doc cited per
+batch)
+
+- **ao**:
+  [`checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`](/plans/active/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md)
+  (evidence: `ag_closeout_audit_cross_cutting_parked_2026_08_01.md` finding 2),
+  [`ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`](/plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md),
+  [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`](/plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
+  (dual-tagged `[ao, cross-cutting]`, orthogonality mistag),
+  [`slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md`](/plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md)
+  — evidence for the latter 3: `ag_closeout_audit_cross_cutting_parked_2026_08_08.md`.
+- **ci**:
+  [`agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`](/plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md),
+  [`deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md`](/plans/active/issues/deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md),
+  [`glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md`](/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md),
+  [`glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`](/plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md),
+  [`image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md`](/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md),
+  [`mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md`](/plans/active/issues/mtds_type_ignore_ratchet_blocks_prek_intel_mac_fix_2026_08_03.md),
+  [`promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`](/plans/active/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md),
+  [`provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`](/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md),
+  [`workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`](/plans/active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md)
+  — evidence: `ag_closeout_audit_cross_cutting_parked_2026_08_07.md` findings 1/5/6, `…_2026_08_08.md` for the rest.
+- **infrastructure**:
+  [`autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md`](/plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md),
+  [`claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md`](/plans/active/issues/claude_code_agent_deletes_active_canonical_migration_vm_2026_08_07.md),
+  [`deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md`](/plans/active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md)
+  (ci also defensible),
+  [`deployment_service_prod_terraform_drift_2026_08_07.md`](/plans/active/issues/deployment_service_prod_terraform_drift_2026_08_07.md),
+  [`gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`](/plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md)
+  (evidence: `ag_closeout_audit_cross_cutting_parked_2026_08_01.md` finding 4) — evidence for the rest:
+  `ag_closeout_audit_cross_cutting_parked_2026_08_08.md`.
+- **ui**:
+  [`deployment_api_prod_disable_auth_true_2026_08_06.md`](/plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md)
+  (⚠️ live P1 unauthenticated-prod-endpoint exposure, all 4 fix steps still open as of 2026-08-08 — 2 days stale),
+  [`unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`](/plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md)
+  (very likely already resolved on `main`, needs verify-and-archive not a fresh fix) — evidence:
+  `ag_closeout_audit_cross_cutting_parked_2026_08_07.md` findings 4/carry-3.
+- **meta** (genuinely process-spanning, no single owning tranche):
+  [`governance_sweep_deferred_followups_2026_08_06.md`](/plans/active/issues/governance_sweep_deferred_followups_2026_08_06.md).
+- **Ambiguous, dual-tagged `[defi, cross-cutting]`** (real owner `ci` or `infrastructure`, needs whichever tranche's
+  audit claims it first):
+  [`over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`](/plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md).
+
+### Genuinely cross-cutting, operator-gated (NOT a mistag — tracked here pending an operator ruling, not a retag)
+
+- [`strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`](/plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md)
+  — `drift_direction: needs-decision`: is `/codex/04-architecture/live-strategy-config-hot-reload.md`'s documented
+  safe-field allow-list/`UnsafeConfigChangeError` the target to BUILD, or is the doc wrong and the shipped
+  unconditional-swap behavior the accepted state? Unruled since 2026-07-31.
+
+### Genuinely cross-cutting, real open work, currently uncovered (orphaned_never_touched)
+
+- [`honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md`](/plans/active/issues/honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md)
+  — `measure_honest_coverage.py --asset-group all`'s GCE VM OOM'd (root cause undetermined: organic growth / gc-loop
+  leak / data-shape burst), no fix shipped, fire-and-forget launcher gap unaddressed. 3 of 4 remaining items are
+  operator-gated/judgment calls; 1 (fix the stale `TASK=features-backfill` VM metadata label) is small and bounded but
+  not enough alone to justify a fresh batch — held for a future batch or direct pickup.
+
 ## Todos
 
 - [ ] [DOC] P1. **Track open items are not tracked as checkbox work in this digest** — e.g. Track 1's G5 ("no AG has
@@ -919,3 +993,14 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   operator gate ("do NOT flip to `assigned_vm: planning` until they confirm they've personally run
   `/ag-closeout-audit` + `/plan-reconcile` for this AG... on the planning VM") still governs; the sole open todo (line
   ~708, a meta-note that Track open items aren't tracked as checkboxes in this digest) is not itself dispatchable work.
+- **2026-08-08** — `/ag-closeout-audit cross-cutting` run (dispatch `agt-58625b`, slot 3). 90 members, 19 never-cited +
+  4 found only via a `check_ag_closeout_linkage.py` cross-check (invisible to the mechanical pre-filter's "member" test
+  — non-data `parent_epic` + zero citations). Widened the Orthogonality HARD CHECK to the full 9-tranche peer set
+  (`ao`/`ci`/`infrastructure`/`ui` were missing from every prior run's check; SKILL.md updated) — found 5 more dual-tag
+  hits. 13 of 14 triaged docs were `exclude_cross_cutting` mistags (ci ×6, ao ×3, infrastructure ×3, meta ×1); 1 genuine
+  new orphan (`honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md`, mostly operator-gated — no batch drafted,
+  its 1 bounded item is too small alone). Added the "Known non-orphan dispositions" section above (permanent
+  markdown-link citations) to fix the citation-loss-on-archival bug also diagnosed this run (batch3's archival
+  resurfaced 3 already-classified docs as false orphans). `check_ag_closeout_linkage.py` now PASSES: 65 (baseline 69),
+  down from 71-87 on 08-06/07; cross-cutting's share 37→29. Full evidence:
+  `issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md`.

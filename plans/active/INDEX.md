@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 219 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 221 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (23)
+### cefi (21)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -353,7 +353,7 @@ by hand._
   "registry-aware honest-coverage denominator" todo — confirmed still unshipped across 4 consecutive same-day
   dispatches…
 
-### prediction (24)
+### prediction (26)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -416,6 +416,14 @@ by hand._
   — Gated closeout for prediction_satellite_ao_dispatch_batch7_2026_08_04.md — machine-held via depends_on +
   gate_on_depends: true until that plan's one todo is done. Mirrors the batch4/batch6-finalize pattern (reconcile the
   source doc's…
+- [`prediction_satellite_ao_dispatch_batch8_2026_08_08`](./prediction_satellite_ao_dispatch_batch8_2026_08_08.md)
+  **[draft]** — Eighth AO-dispatch batch for prediction, produced by the `/ag-closeout-audit prediction` scheduled run
+  2026-08-08 (ag_closeout_auditor, slot 4, dispatch agt-15e876). Live re-run of
+  `generate_ag_closeout_audit_candidates.py --tranche…
+- [`prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize`](./prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md)
+  — Gated closeout for prediction_satellite_ao_dispatch_batch8_2026_08_08.md — machine-held via depends_on +
+  gate_on_depends: true until that plan's one todo is done. Mirrors the batch4/batch6/batch7-finalize pattern (reconcile
+  the source…
 - [`predictions_ml_walk_forward_and_arb_2026_06_20`](./predictions_ml_walk_forward_and_arb_2026_06_20.md) — Run Model 2A
   walk-forward validation (AUC gate) and ship the FSS arb_calculator — the predictions-ML half of the
   sports_predictions_e2e milestone.
@@ -623,7 +631,7 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (16)
+### ao (18)
 
 - [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md) —
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
@@ -666,6 +674,14 @@ by hand._
   set…
 - [`ao_satellite_ao_dispatch_batch7_finalize_2026_08_06`](./ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md) —
   Gated closeout for ao_satellite_ao_dispatch_batch7_2026_08_06.md — machine-held via depends_on + gate_on_depends until
+  every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
+  (the…
+- [`ao_satellite_ao_dispatch_batch8_2026_08_08`](./ao_satellite_ao_dispatch_batch8_2026_08_08.md) **[draft]** — EIGHTH
+  AO-dispatch batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-08-08,
+  autonomous mode, scheduled `ag_closeout_auditor` dispatch, slot 12). Phase 0 re-confirmed the tranche's covering-plan
+  set…
+- [`ao_satellite_ao_dispatch_batch8_finalize_2026_08_08`](./ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md) —
+  Gated closeout for ao_satellite_ao_dispatch_batch8_2026_08_08.md — machine-held via depends_on + gate_on_depends until
   every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
   (the…
 - [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30`](./context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)

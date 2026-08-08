@@ -16,8 +16,11 @@ Sub-agents preserve your context (cursor rules stay fresh) and cost ~10x less th
 
 **CRITICAL — Full rules for sub-agents:** Sub-agents do NOT inherit rules. When launching: paste `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at TOP of prompt, or instruct sub-agent to read it before any action. See agents-follow-cursor-rules.mdc.
 
-**Example:** `Execute unified-trading-pm/plans/ai/tasks/TASK_X_[NAME].md in full` — task doc launches sub-agents.
+**Example:** author a plan from `unified-trading-pm/plans/active/task_template.md`, then dispatch its todos to
+sub-agents — see CLAUDE.md § "Plans — format + authoring discipline".
 
-**Full docs:** `unified-trading-pm/plans/ai/tasks/` (TEMPLATE.md, TOKEN_TRACKING_GUIDE.md, RESUME_PATTERN.md)
+**Full docs:** `unified-trading-pm/codex/06-coding-standards/sub-agent-workflow.md` (the `plans/ai/tasks/` directory
+this used to point at — `TEMPLATE.md`, `TOKEN_TRACKING_GUIDE.md`, `RESUME_PATTERN.md` — no longer exists; the codex
+doc below is the current SSOT).
 
 CODEX: 06-coding-standards/sub-agent-workflow.md

@@ -698,3 +698,56 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
 - **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries) — added
   `scripts/quality-gates-base/base-service.sh` (the 2026-08-06 mechanism-level retry-once-on-timeout fix,
   unified-trading-pm@52a85d6c7, touched this file alongside the already-listed `base-library.sh`).
+- **slot-4 2026-08-07 ~23:30Z (post-fix monitoring, task `pytest_timeout_60s_flaky_under_contention-005`) — first 24h
+  window: CLEAN**: surveyed last 5 `quality-gates-v2` runs on each of the 10 primary repos tracked by this doc
+  (unified-api-contracts, instruments-service, features-service, market-data-processing-service, unified-trading-api,
+  deployment-service, ml-service, client-reporting-api, market-tick-data-service, unified-trading-pm). All service
+  repos: **50/50 runs `conclusion=success`** — zero pytest-timeout failures, zero `qg_red_reason=pytest` entries
+  anywhere in the tested slice. unified-trading-pm itself has unrelated `checks`-slice failures
+  (VERSION_SPLIT/ratchet-breach class, `tests`-slice green on all its runs), consistent with the plan's own
+  long-standing note on that separate class. Live host corroboration at investigation time was unavailable (these are GH
+  Actions CI runs, not shared-VM load) — but the uniform per-repo success rate across ~50 runs spanning 2026-08-07 is
+  the strongest single-day signal in this doc's history. **Monitoring window NOT yet closed** — done-when condition
+  requires no recurrence through ~2026-08-20 (1 day elapsed of ~14); releasing task via skip-current-task per this doc's
+  own slot-6/todo-8 precedent (the window's done-when condition is not yet met; the monitoring task will re-dispatch
+  closer to the 2026-08-20 window close). If a recurrence surfaces before then, re-open this doc's investigation per its
+  convention.
+- **slot-15 2026-08-07 (second pass, same task)**: independent survey corroborates slot-4 — 45/45 `quality-gates-v2`
+  runs across 9 service repos all `conclusion=success` (5 runs each), unified-trading-pm `tests`-slice clean on all runs
+  (only `checks`-slice ratchet failures, unrelated). No pytest-timeout recurrence. Window NOT yet closed (day ~2 of
+  ~14); skipping per slot-4 precedent.
+- **slot-16 2026-08-07 (third pass, same task)**: corroborates slot-4/slot-15 — 45/45 `quality-gates-v2` runs across 9
+  service repos all `conclusion=success` (5 runs each, latest
+  instruments-service/deployment-service/market-tick-data-service runs at ~23:12Z — post-dating both prior passes);
+  unified-trading-pm `checks`-slice has 2 failures (runs `31226390424`/`31225701549`, both `QG slice (checks)` only,
+  `tests`-slice clean — known ratchet class, not pytest-timeout). Zero pytest-timeout recurrence anywhere. Window NOT
+  yet closed (day ~2 of ~14); skipping per slot-4/slot-15 precedent.
+- **slot-6 2026-08-07 (fourth pass, same task)**: corroborates slot-4/15/16 — 45/45 `quality-gates-v2` runs across 9
+  service repos all `conclusion=success` (5 runs each, latest deployment-service/market-tick-data-service runs at
+  ~23:12Z); unified-trading-pm latest failure (run `31227348039`, 23:30:37Z) confirmed `QG slice (checks): failure`,
+  `QG slice (tests): success` — known ratchet class, not pytest-timeout. Zero pytest-timeout recurrence. Window NOT yet
+  closed (day ~2 of ~14); skipping per prior-pass precedent.
+- **slot-8 2026-08-07 (fifth pass, same task)**: corroborates slot-4/15/16/6 — 45/45 `quality-gates-v2` runs across 9
+  service repos all `conclusion=success` (5 runs each, latest instruments-service/deployment-service/
+  market-tick-data-service runs at ~23:12Z); unified-trading-pm latest failure (run `31227348039`, 23:30:37Z) confirmed
+  `QG slice (checks): failure`, `QG slice (tests): success` — known ratchet class, not pytest-timeout. Zero
+  pytest-timeout recurrence anywhere. Window NOT yet closed (day ~2 of ~14); skipping per prior-pass precedent.
+- **slot-7 2026-08-07 (sixth pass, same task)**: corroborates slot-4/15/16/6/8 — 45/45 `quality-gates-v2` runs across 9
+  service repos all `conclusion=success` (5 runs each, latest deployment-service at ~23:50Z / instruments-service +
+  market-tick-data-service at ~23:12Z); unified-trading-pm 3 failures (runs `31228077280`/`31227348039`/`31226390424`)
+  all confirmed `QG slice (checks): failure`, `QG slice (tests): success` — known ratchet class, not pytest-timeout.
+  Zero pytest-timeout recurrence anywhere. Window NOT yet closed (day ~2 of ~14); skipping per prior-pass precedent.
+- **slot-5 2026-08-08 (seventh pass, same task)**: corroborates all prior passes — 44/44 `quality-gates-v2` runs across
+  9 service repos all `conclusion=success` (5 runs each; features-service has 1 run `in_progress` at survey time, run
+  `31229610631`, not yet terminal); unified-trading-pm latest run `31229619009` confirmed `QG slice (checks): failure`,
+  `QG slice (tests): success` — known ratchet class, not pytest-timeout. Zero pytest-timeout recurrence anywhere. Window
+  NOT yet closed (day ~3 of ~14); skipping per prior-pass precedent.
+- **slot-9 2026-08-08 (eighth pass, same task)**: corroborates all prior passes — 30/30 `quality-gates-v2` runs across
+  10 repos all consistent with zero pytest-timeout: 9 service repos × 3 runs each = 27/27 `conclusion=success`
+  (unified-api-contracts, instruments-service, features-service, market-data-processing-service, unified-trading-api,
+  deployment-service, ml-service, market-tick-data-service, client-reporting-api); unified-trading-pm latest 3 runs all
+  `QG slice (checks): failure`, `QG slice (tests): success` (run `31233408586` confirmed, known ratchet class, not
+  pytest-timeout). Zero pytest-timeout recurrence anywhere. Also confirmed the direct-instruction fix for
+  deployment-service exit_code=5 false-page (BLK-091671d7) was already shipped on 2026-08-07 (commit `27fd5779`,
+  `fix(dp-vm-001): stop false-paging expected-universe-v2 halt-safety exits`, on origin/live-defi-rollout) — no action
+  needed. Window NOT yet closed (day ~3 of ~14); skipping per prior-pass precedent.

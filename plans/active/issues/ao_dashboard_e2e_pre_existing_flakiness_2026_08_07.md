@@ -14,15 +14,19 @@ summary: >-
   port-collision work that surfaced it.
 status: open
 nature: issue
-asset_group: [ao, cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-08 (/ag-closeout-audit ao) -- was [ao, cross-cutting]. Content is 100% agent-orchestrator's
+  # own dashboard e2e test suite (Playwright flakiness in agent-orchestrator/dashboard/tests/e2e/*); nothing spans
+  # outside ao -- cross-cutting was a redundant mistag per the Orthogonality HARD CHECK.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [agent-orchestrator, e2e, playwright, flaky-tests, dashboard]
 related:
   [
-    plans/archive/issues/ao_local_mock_server_workflow_truncation_and_e2e_port_collision_2026_08_07.md,
+    /plans/archive/issues/ao_local_mock_server_workflow_truncation_and_e2e_port_collision_2026_08_07.md,
     /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md,
   ]
 created: "2026-08-07"
 author: ikennaigboaka [interactive session]
@@ -47,6 +51,7 @@ context_scope:
     agent-orchestrator/dashboard/tests/e2e/deepseek-wallet-reconciliation.spec.ts,
     agent-orchestrator/dashboard/tests/e2e/worker-chat.spec.ts,
     agent-orchestrator/dashboard/tests/e2e/backlog-collision.spec.ts,
+    /plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md,
   ]
 ---
 
@@ -120,3 +125,32 @@ these 3 specs' timing/race conditions properly needs focused per-spec debugging 
 isolation repeatedly to find the actual failure mode), which is out of scope for the session that surfaced them.
 Confirmed via a stash-based control run that none of it is caused by or blocks the port-collision fix, so that fix
 shipped independently or these findings would still be sitting entirely undocumented.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-08 (Phase 2/3, sub-agent conflict-check)**: **DEFER — CONFLICT found, not flipped.**
+  Re-verified the whole-doc bar first: all 4 open todos read as bounded diagnostics with a stated hypothesis + a known
+  fix pattern to apply if confirmed (todo 1's async-poller-vs-test-timeout race check names the exact convention to
+  reuse from `critical-health.spec.ts`), so this doc would otherwise clear Step 1. Ran the shared conflict-check
+  protocol (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) and found a real
+  CONFLICT on todo 1: `/plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`
+  already root-caused `deepseek-per-turn-metrics.spec.ts`'s failure to a MORE SPECIFIC, confirmed mechanism —
+  `DeepSeekUsagePoller`'s `_sweep_account` unconditionally overwrites the spec's hand-seeded fixture blob on every live
+  tick, not a race — and that doc's own 2026-08-07 na-eligibility-audit pass already verdicted KEEP-NA because its
+  todo 2 is explicitly "(operator call, not unilateral)" between 3 named fix directions. Todo 1 here bundles
+  `deepseek-per-turn-metrics.spec.ts` together with `deepseek-wallet-reconciliation.spec.ts` as ONE dispatchable line,
+  so the whole todo is compromised, not just the per-turn-metrics half — and per this task's own protocol, a
+  verbatim/near-verbatim duplicate claim blocks the flip rather than being silently resolved by picking a side.
+  **Not fixed by simply re-pointing todo 1 at the sibling doc**: this doc's hypothesis (an async-poller/test-timeout
+  race, fixable by a wait-for-tick or longer assertion timeout) is actually superseded by the sibling doc's finding —
+  the real mechanism is a deterministic overwrite on every tick, not a race, and the right fix is one of 3 named
+  options requiring an operator call, not a mechanical timeout bump. Dispatching todo 1 as written would send a worker
+  down an already-disproven path and/or have it re-discover the sibling doc's own operator-gated fork mid-task.
+  **Recommendation, not executed here** (restructuring this doc is outside this pass's mandate): split todo 1 out of
+  this doc — fold the `deepseek-per-turn-metrics.spec.ts` sub-claim into
+  `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md` (where the real root-cause context already
+  lives) and re-scope todo 1 here to `deepseek-wallet-reconciliation.spec.ts` only, which has no known conflict and
+  would likely clear on its own. Todos 2-4 (worker-chat, backlog-collision, the doc-update note) showed no conflict on
+  the same 3-surface check and would also likely clear independently, but this doc's `assigned_vm` cannot be flipped
+  as a single unit while todo 1 stays conflicted. Left `assigned_vm: NA`. Cross-linked both directions with the
+  conflicting doc (`related`/`context_scope` above) so a future worker on either doc sees the other.

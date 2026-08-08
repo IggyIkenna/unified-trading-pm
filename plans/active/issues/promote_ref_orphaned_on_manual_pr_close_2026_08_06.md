@@ -23,9 +23,10 @@ related: [/plans/archive/2026_06/cicd_consolidated_remaining_2026_06_24.md]
 created: 2026-08-06
 parent_epic: infrastructure_master
 source: conflict_resolver escalation agt-7e7e2c (fleet-bot promotion-conflict dispatch, 2026-08-06)
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -69,9 +70,29 @@ manual step for anyone who closes a promote PR outside the fleet bot.
 - **B: document the manual step** — note in the conflict_resolver role / ci-cd codex that manually closing a promote PR
   must also delete its ref. Cheaper, but leaves accumulation to memory.
 
-- [ ] [P3] fleet-bot orphan-ref sweep: delete `promote/<repo>/*` refs with no open PR (and not current PROMOTE_HEAD) in
-      `ldr_to_main_fleet_promote.sh` — owner: LDR→main fleet bot maintainer (unified-trading-pm).
+- [ ] [DEVOPS] P3. Fleet-bot orphan-ref sweep: in `ldr_to_main_fleet_promote.sh`'s "Superseded ref cleanup" step (or the
+      PM-only `ldr-to-main-promote.yml` twin), after the existing `gh pr list --state open`-driven cleanup, list
+      `promote/<repo>/*` refs and delete those with no open PR and not equal to the current `PROMOTE_HEAD`. Owner:
+      LDR→main fleet bot maintainer (unified-trading-pm). Done-when: a live fleet-promoter run's log shows the new sweep
+      step executing with zero errors, and `git ls-remote` for at least one repo with known pre-existing orphans (e.g.
+      `execution-service`) shows those orphan `promote/execution-service/*` refs gone.
 
 ## Progress Log
 
 - **context-scout 2026-08-07**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-08**: Phase 2/3 — re-verified whole-doc bar: the sole open todo (fleet-bot orphan-ref
+  sweep in `ldr_to_main_fleet_promote.sh`) is a fully bounded, scoped code change with no judgment call left undecided.
+  Conflict-check (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) run against (a) every
+  `status: active`/`assigned_vm: planning` plan in `parent_epic: infrastructure_master`, (b) sibling `ci`
+  batch/finalize docs (`ci_satellite_ao_dispatch_batch{1,4,5}*`), (c) `ag_closeout_audit_cross_cutting_parked_2026_08_07.md`
+  (which independently found this doc's own todo "real, live, undispatched work" and recommended only an `asset_group`
+  retag, a milestone-only, non-conflicting overlap) — zero prior claim on this ground found, CLEAR. Also fixed the
+  todo's own malformed `[P3]`-only bracket (missing a real `[TAG]`, which `regen_backlog_from_plan.py`'s
+  `[TAG] P<n>.` parser would not have routed/prioritized correctly) to `[DEVOPS] P3.` and added an explicit
+  done-when. Flipped `assigned_vm: NA` → `planning`, `execution_scope: local-only` → `orchestrator-agent`, added
+  `assigned_role: cicd` (was absent; validated against `agents/cicd.md`'s `role: cicd`, not the near-miss `devops`
+  used elsewhere in this corpus). **No finalize twin authored** — verified against
+  `scripts/quality_gates/check_finalize_plan_coverage.py` directly: it globs only `plans/active/*.md` (not the
+  `issues/` subdirectory this doc lives in) AND separately exempts any plan with ≤1 open todo (`_todo_count(...) <= 1:
+  continue # single-todo carve-out`) — this doc clears both the structural (issues/) and content (single-todo)
+  exemptions task_template.md §4 documents, so archival folds into this one todo's own done-when instead.

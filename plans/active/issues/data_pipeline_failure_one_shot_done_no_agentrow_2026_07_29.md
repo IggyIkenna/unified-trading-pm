@@ -262,3 +262,33 @@ still in flight.
   `ao_satellite_ao_dispatch_batch5_2026_08_03.md` and `batch6_2026_08_04.md` still exist, still `status: draft`/
   `assigned_vm: NA`, and still cite this doc's diagnostic ([DATA] P2) and gated code-fix ([CODE] P2) items by name — no
   change to the parked status since the 2026-08-06 marker.
+- **2026-08-08 (ag_closeout_auditor, slot 8, dispatch agt-6bc9c4, tranche=`cefi`):** ninth corroboration, and resolves
+  the 2026-08-04 report's open caveat with a **confirmed negative**: applying the `claim-interactive` workaround does
+  NOT fix the `one_shot_complete` `/done` path. Hit the identical 400 (`task_id: "agt-6bc9c4"`, twice, plus once with
+  `task_id: ""` and once with an extra `session_id` field — 4 attempts total, same message every time) after shipping
+  this session's real work (`unified-trading-pm@ae02e533a`, independently `git merge-base --is-ancestor`-verified
+  against `origin/live-defi-rollout`). A `/heartbeat` call in between returned `{"ok": true}` with a **fresh Class-A
+  backlog dispatch** (`sports_manifest_...-001`, unrelated role) — same "server re-registered this slot as a plain
+  backlog worker mid-session" variant as the 2026-08-01/08-03 reports. Released it via
+  `POST /api/slots/8/skip-current-task` (confirmed via the response body, `task_skipped` field matched), then — per the
+  2026-08-04 report's own suggested next step, the one data point every prior report left untested — called
+  `GET /api/slots/8/claim` (`{"present": false}`), then
+  `POST /api/slots/8/claim-interactive {tmux_session: "orch-slot-8", operator: "planning"}` (succeeded,
+  `{"ok": true, "role": "interactive", ...}`, confirmed present via a follow-up `GET`), then retried the SAME
+  `one_shot_complete: true` `/done` call immediately after — **still the identical 400, no change**. This confirms the
+  2026-08-04 report's fix (which unstuck normal Class-A backlog dispatch) is NOT the same code path
+  `_done_one_off`/`find_active_agent_for_session` reads — `.agent-claim` and the one-shot `AgentRow` lookup are
+  genuinely two independent registration systems, exactly the open question that report flagged as unconfirmed. Ending
+  session without a clean `/done` per the established precedent (all 8 prior reports); this session's actual assigned
+  work (the `/ag-closeout-audit cefi` run — 68-doc corpus sweep, 2 orthogonality retags,
+  `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` + finalize drafted) is independently git-verified complete
+  regardless, logged via `/progress` instead.
+- **2026-08-08 (ag_closeout_auditor, slot 12, `agt-9e8893`, tranche=ao, session `orch-slot-12`):** tenth corroboration —
+  independently hit the identical 400 and ran the SAME `claim-interactive`-then-retry probe as slot 8's entry directly
+  above (unaware of each other, landed within minutes of each other on the same doc — see this commit's own conflict
+  resolution), with the identical result: `{"present": false}` → `claim-interactive` succeeds → immediate `/done` retry
+  still 400s, unchanged. A second, fully independent confirmation of that entry's finding — `.agent-claim` and the
+  `one_shot_complete` AgentRow check are genuinely separate mechanisms. This session's own work (`/ag-closeout-audit ao`
+  — 66-doc corpus sweep, 2 mistags retagged, `ao_satellite_ao_dispatch_batch8_2026_08_08.md` + finalize drafted) is
+  independently git-verified complete as `9895da4c5`, ancestor of `origin/live-defi-rollout`, logged via `/progress`
+  instead of a clean `/done`, matching the established precedent.

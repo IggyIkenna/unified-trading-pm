@@ -56,6 +56,24 @@ context_scope:
   ]
 ---
 
+> **🟡 CROSS-PLAN BANNER (added 2026-08-08) — an IS data_type vocabulary migration is inbound and is GATED ON THIS
+> DOC.** The sports venue/data-type canonicalisation chain (authored 2026-08-08 from the live distinct-values audit)
+> carries an operator ruling to **merge the sports data_type vocabulary to a single lowercase form** — which renames
+> every UPPERCASE API-Football entity token this campaign writes and measures (`FIXTURES`, `FIXTURE_EVENTS`,
+> `FIXTURE_STATS`, `FIXTURE_LINEUPS`, `PLAYER_STATS`, `INJURIES`, `STANDINGS`, `TEAMS`) to `fixtures`, `fixture_events`,
+> … .
+>
+> **Ordering is settled: this doc runs FIRST, the rename waits.** The rename phase declares
+> `depends_on: sports_af_full_entity_completion_2026_08_03` + `gate_on_depends: true`. Rationale: renaming the registry
+> while the two remaining all-leagues backfills (`FIXTURE_LINEUPS` 58,523 · `INJURIES` 62,709) are in flight would make
+> the fetch loop write a token the registry no longer expects — minting phantom `expected_unattempted` rows — and would
+> leave this doc's P0 re-census measuring the pre-rename axis. Letting this campaign converge first means the migration
+> makes ONE pass over the finished corpus.
+>
+> **Action required of THIS doc: none.** Do NOT "fix" the uppercase tokens here, do not pre-emptively lowercase
+> anything, and do not treat the casing as drift — it is the correct vocabulary until the gated rename phase lands. Keep
+> launching the backfills and closing the re-census exactly as written.
+
 ## Why this doc exists (not folded into the parent plan or the FIXTURE_EVENTS issue doc)
 
 `sports_satellite_ao_dispatch_batch2_2026_07_24.md` is at 996/1000 lines (hard cap) — no room to add this scope there.
@@ -924,3 +942,23 @@ are genuinely in scope for the operator's "no exceptions" directive.
 - **2026-08-07T22:50Z** — FIXTURE_STATS +45 days (`last_completed_date=2022-05-21`, fresh `22:49:35Z`), steady. odds
   smallchunk2 still chunk 18/451 (~3.5h) — 29 leagues (up from 25), 15 OOM (up from 13), zero repeats — continued
   genuine progress, root cause already established, no further deep-dive needed each tick.
+- **2026-08-07T23:17Z — CLOSED: chunk 18 cleared (3h38m total, 30 leagues, 16 OOM, 14 clean first-try).** FIXTURE_STATS
+  +72 days (`last_completed_date=2022-08-01`, fresh `23:16:40Z`), accelerating well. odds smallchunk2 now on chunk 19
+  (`2020-09-04→2020-09-08`), already moving fast (skip-fast dates), confirming off-season weeks are much cheaper as
+  hypothesized. Noted for future ticks: `PROGRESS.json` lagged the true `run.log` checkpoint by 18+ minutes at this
+  transition — cross-check `run.log`'s own `PROGRESS: chunk=N` line near a suspected boundary rather than trusting
+  `PROGRESS.json` alone. Full detail: `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`8c34027029`.
+  Reverting to lightweight per-tick checks now that the outlier is resolved.
+- **Self-correction**: FIXTURE_STATS's chunk-number label had gone stale in this doc for several ticks (I kept writing
+  "chunk 6/26" from an early read without re-verifying against `run.log`) — a live check shows it's actually **chunk
+  9/26**. The `last_completed_date` values reported each tick were always accurate; only the chunk-number label was
+  stale. Chunks 6-8 each cleared in under an hour once past the early quota-limited chunks. Using chunk 9/26 going
+  forward.
+- **2026-08-07T23:47Z** — FIXTURE_STATS +30 days (`last_completed_date=2022-08-31`, fresh `23:46:43Z`). odds
+  smallchunk2: `PROGRESS.json` appears to have stopped uploading entirely after chunk 17 (unrelated to OOM — VM is
+  confirmed healthy) — cross-checked via `run.log`'s own `PROGRESS: chunk=N` lines instead: genuinely on **chunk
+  22/451** now (`2020-09-19`), chunks 19-21 each cleared in ~6 min, zero new OOMs since chunk 18 closed. Full detail:
+  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md`@`7889dffd04`,
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`@`9422004062`.
+- **2026-08-08T00:16Z** — FIXTURE_STATS +29 days (`last_completed_date=2022-09-29`, fresh `00:15:42Z`), steady. odds
+  smallchunk2 now chunk 25/451 (`2020-10-04`, via `run.log`), zero new OOMs (16 total, unchanged). Both healthy.

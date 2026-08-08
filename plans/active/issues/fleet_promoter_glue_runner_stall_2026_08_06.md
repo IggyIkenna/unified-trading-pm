@@ -124,3 +124,16 @@ of load or a single additional offline runner triggers a complete stall.
   escalation to investigate further (unrelated to the QG wall dispatched here — the failing quality-gates-v2 slice runs
   on GitHub-hosted runners, not `glue`). Synthesized a tracked Follow-up todo above; doc stays open pending that
   investigation.
+- **2026-08-07 (fleet_workflow_template_dedup todo 5 session)**: **Correction — the "0 glue runners" signal above was a
+  red herring for THIS workflow specifically, not a real blocker.** `ldr-to-main-promote-fleet.yml`'s own `runs-on:` was
+  flipped `[self-hosted, glue]` → `ubuntu-latest` by `unified-trading-pm@c8cd56251e` (12:23 UTC, the
+  `self_hosted_runner_public_repo_revert_2026_08_05.md` todo-24 revert) — i.e. BEFORE slot-2's 13:34–13:38 UTC
+  observation. Once on `ubuntu-latest`, this workflow's runs no longer depend on the glue pool's registered-runner count
+  at all, so a genuinely-empty glue pool (itself real and expected post-revert — PM no longer routes ANY workflow to
+  self-hosted) cannot be what stalled it. The real cause was the separate cancel-treadmill livelock slot-2 root-caused
+  and fixed at 16:36 UTC (`383090a998`, `*/5`→`*/15` cadence cut) — confirmed via `gh run list`: runs 15:45–17:19 UTC
+  are all `cancelled` (the livelock), runs 17:30 UTC onward are all `completed success`. **Fleet promotion is healthy
+  again as of this check (18:00 UTC).** Also observed several `workflow_dispatch` events firing every few minutes in
+  that 17:00–18:00 UTC window — looks like the exact ad-hoc-dispatch anti-pattern this doc's sibling livelock issue
+  warns against (multiple sessions manually checking their own promotion status); did not dispatch it myself, flagging
+  for whoever owns that pattern to stop.

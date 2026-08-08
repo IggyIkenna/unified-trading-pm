@@ -26,7 +26,12 @@ summary: >-
   fix reaches main/the deployed image, DP-CATALOG-001 recurs.
 status: open
 nature: issue
-asset_group: [sports, ao]
+asset_group:
+  [sports, ci] # corrected 2026-08-08 (/ag-closeout-audit ao) -- was [sports, ao]. Content is 100% CI/CD
+  # promotion-pipeline governance (provenance gate, quickmerge-bypass, promotion-blocked PR) -- nothing touches
+  # agent-orchestrator dispatch/worker-lifecycle/framework tooling, the domains the `ao` tranche covers. Per
+  # doc-frontmatter-schema.md §5, `ao` and `ci` are distinct sibling enum values split 2026-07-27 specifically to
+  # separate these two concerns.
 stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
@@ -39,7 +44,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-08-06
-last_updated: "2026-08-06"
+last_updated: "2026-08-08"
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only
