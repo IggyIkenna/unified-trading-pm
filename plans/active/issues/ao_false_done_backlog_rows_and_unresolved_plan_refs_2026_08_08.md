@@ -310,8 +310,27 @@ plan + verifying the `done_sha`, never from the row's status alone.
       genuinely unmet, but there is no live `done` backlog row left to REOPEN either). No REOPEN (nothing currently
       `done` to reopen) or FLIP (already flipped, honestly, on the correct pre-gate todo) was warranted or performed;
       this item only needed its tracker checkbox resolved with the verification trail above.
-- [ ] [BACKEND] P2. `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-025` (`done_sha=0e9185d2c`) —
-      round-8 launch across 8 shards; verify launch evidence before flipping
+- [x] ✅ [BACKEND] P2. `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-025`
+      (`done_sha=0e9185d2c`) — **verified 2026-08-08 (slot 20): no REOPEN or FLIP action needed — the plan checkbox
+      already honestly matches the sha.** `0e9185d2c` (`unified-trading-pm`, slot-11, 2026-08-07T19:22:15Z, confirmed
+      ancestor of `origin/live-defi-rollout`) is the **twelfth** dispatch of the time-gated "Round-8 ACTUAL LAUNCH" todo
+      in `plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`
+      (line 868) — it did NOT launch any VMs (its own text: "UTC=2026-08-07T19:12Z (NOT ≥ 2026-08-08T00:00Z...) ... No
+      VMs launched"), it correctly deferred (all 8 shards were AT/OVER the `≤2/(vm-prefix,day)` budget cap) and added a
+      gated follow-up todo (line 888, `-026` in the backlog, still genuinely `- [ ]`/`queued`). The checkbox this sha
+      touched is `[x]` — consistent with the doc's own established pattern (11 prior "Nth deferred" todos, lines
+      688-841, all correctly checked done-as-correctly-deferred, not done-as-launched) — so this was never a false-done
+      in truth: "done" here means "this dispatch cycle completed (by deferring honestly)", not "shards launched".
+      **Adjacent finding while verifying**: the Cloud Scheduler job meant to auto-flip the `-026` gating prereq
+      (`cefi-round8-midnight-prereq-flip`) fired at its scheduled 2026-08-08T00:01:00Z time but FAILED
+      (`gcloud scheduler jobs describe cefi-round8-midnight-prereq-flip --location=asia-northeast1     --project=central-element-323112`
+      → `status.code=2`, i.e. UNKNOWN/unreachable) — its `httpTarget.uri` is
+      `http://13.113.200.22:8765/api/prerequisites/...`, the orchestrator VM's PUBLIC EIP on port 8765, which has NO
+      inbound firewall rule (confirmed workspace-wide convention: `/check-agent-orchestrator` skill exists specifically
+      because "VM:8765 has no inbound rule"). Its cron (`1 0 8 8 *`) next fires **2027-08-08** — this prereq is now
+      stuck false indefinitely, permanently blocking `-026` unless someone manually flips it or fixes the job. Filed as
+      a tracked todo in the cefi plan doc itself (see that doc's new Follow-ups todo) rather than fixed inline here —
+      root-causing/redesigning the flip mechanism is out of scope for this verification-only item.
 
 ## Follow-ups
 
