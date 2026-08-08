@@ -880,3 +880,49 @@ matching RULES.md's 5-min heartbeat cadence more closely). Scratchpad:
   (SLOT_ID=<new>/SLOT_TABS/PYTHON) + `run_in_background:true`, NO `&` inside. (4) If heartbeat dead (check `b58l2j9nt`),
   re-arm `watcher/heartbeat.sh` same way. Do NOT re-arm either if alive — singleton lock race risk. Expect harness to
   kill background tasks periodically per the documented rapid-kill pattern — this is normal, re-arm reactively.
+
+### 2026-08-08T~11:10Z — slot 6, same session (b235dij83 lineage) — DUAL-WATCHER RACE found + fixed; pre-compact checkpoint
+
+**Status: IN FLIGHT — todo #2 still `[ ]`. Fleet at 100 VMs** (continuous-launch campaign still active, largest wave
+observed this batch — grew steadily 5→34→7(drain)→34→100 across this session via repeated re-arm/kill cycles). Operator
+keep-waiting decision unchanged; no `--force`.
+
+**LESSON LEARNED — genuine dual-watcher race, root-caused and fixed (new failure mode, not previously documented in this
+doc's long re-arm history):** across many reactive re-arms this session (each triggered by a harness
+`task-notification: killed` event for the watcher/heartbeat pair), a harness task-id ≠ live-process mapping drifted:
+`ps -ef` showed **two independent copies** of `es_opt_watcher_slot6.sh` (and two of `heartbeat.sh`) running concurrently
+against the SAME scratchpad — one pair started ~07:16Z, a second pair ~07:22Z — each with its own independent poll
+counter, both writing into the same `es_opt_watcher.log` (interleaved, drifted poll numbers e.g. "poll 17" appearing
+twice at different timestamps was the tell). **This is exactly the "dual-watcher race" the script's own header comments
+(trap 6) and this doc's session-15 entry (2026-08-07T15:20Z) warned about** — never previously triggered because those
+prior recoveries always confirmed liveness via `TaskOutput <id>` before re-arming. This session instead re-armed
+reactively off `task-notification: killed` events without cross-checking that the notification's task-id still matched a
+live PID — when a `kill` notification arrived for task A while task B (a still-untracked survivor of an earlier
+notification mismatch) was ALSO alive, re-arming created a second live pair instead of replacing the first.
+
+**Why this mattered**: BOTH pairs would have raced to launch ES_OPT and commit the plan-flip the moment the singleton
+lock cleared — risk of a double-launch (10 ES_OPT VMs instead of 5, wasted SPOT spend) and/or a git commit/push race on
+the SAME plan file between two untracked processes.
+
+**Fix applied**: confirmed via `ps -o pid,ppid,pgid,sid,lstart,cmd` that both pairs ran the identical script+scratchpad
+path; killed the newer duplicate pair by **exact PID** (never a name-pattern `pkill`, per RULES.md HARD RULE) — watcher
+PID 808356 (+wrapper 808327), heartbeat PID 808473 (+wrapper 808453), confirmed dead via `kill -0`. Surviving single
+pair: watcher PID **703695**, heartbeat PID **703746** (both from the ~07:16Z launch) — confirmed still alive and still
+the sole writer to the log as of this checkpoint.
+
+**New operational lesson for future watcher-pattern sessions on this task (or any long multi-session watcher loop)**:
+after killing a duplicate off a `task-notification`, the survivor is **untracked by any known harness task-id** (the
+tracked id was the one just killed) — subsequent liveness checks MUST use direct `kill -0 <PID>` against the PID
+identified during the dedup, not `TaskOutput <id>`/`task-notification` events, since no notification will ever arrive
+for an untracked survivor. This session switched to `kill -0 703695` / `kill -0 703746` for all liveness checks after
+the fix and that has worked correctly since.
+
+- **NEXT ACTION (fresh session)**: (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, run
+  `ps -ef | grep es_opt_watcher_slot6.sh | grep -v grep` — if **more than one** `bash .../es_opt_watcher_slot6.sh`
+  process appears (excluding the wrapper `/bin/bash -c` parent), that IS a dual-watcher race: keep the OLDER one
+  (earliest `lstart`), kill the newer duplicate pair (wrapper + script) by exact PID (`kill`, escalate to `kill -9`
+  after ~2s if still alive), same for any duplicate `heartbeat.sh` pair. (3) If exactly one watcher process: confirm
+  alive via `kill -0 <pid>` (not TaskOutput, unless you just freshly launched it and have its task-id). (4) If zero
+  watcher processes: re-arm from committed `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patch
+  SLOT_ID/SLOT_TABS/PYTHON) + `run_in_background:true`, NO `&` inside; re-arm heartbeat the same way. (5) Do NOT re-arm
+  if a live single pair already exists — that is exactly how this race started.
