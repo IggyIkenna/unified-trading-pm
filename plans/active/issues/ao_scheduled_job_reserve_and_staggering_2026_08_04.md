@@ -395,6 +395,32 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       should be raised to 60 mins, and add an `_is_actively_thinking` guard"; VM-waiters may wait as long as they are
       looping). Evidence: `quality-gates.sh` green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262
       vitest. (repo: agent-orchestrator)
+- [x] ✅ [CODE][OPERATOR] P1. **Planning-worker capacity 8 → 12 without touching either reserve; fleet-cap off-by-one
+      fixed; slot guard made capacity-derived.** Three linked changes, all live on the central VM 2026-08-08. (a)
+      **Off-by-one** (agent-orchestrator@665e5d0c9): `_apply_fleet_cap` clamped to `len(non_review_slots) - reserve`,
+      and `non_review_slots` excluded only REVIEW slots — so the main agent's SlotRow counted as worker capacity.
+      Measured live: slot 0 is `operator=main` with an EMPTY branch/worktree, so `slot_is_spawnable` is False and no
+      worker can ever land there; its session is `orch-agent-main`, not `orch-slot-0`, so it was never in
+      `active_workers` either — only the denominator. Effective cap read 9 where only 8 slots could take backlog work,
+      and that phantom 9th spawn could only land by eating the scheduled reserve — this issue's own starvation, and
+      consistent with the 30h sample where 71% of scheduled dispatches hit `no_capacity`. Filters on CONFIGURED-ness,
+      deliberately not the full `slot_is_spawnable` (which would let an operator PAUSING a slot silently shrink the
+      cap). Merged with the concurrent `fleet_cap_configured`/`fleet_cap_effective` work (@f1558bc) that found the same
+      clamp from the observability side; its diagnostic now reports the denominator actually used. (b) **Slot guard**
+      (unified-trading-pm@676b7ba965): `setup-tab-worktrees.sh` refused slot >16 on a hardcoded `MAX_SLOTS=16` justified
+      by "290G root, ~35G/slot". Both premises were stale — root measured 678G, and 16 real slots measured 181G total
+      (~11G each, not 35G). Intent preserved verbatim (a full root WEDGED the orchestrator, incident 2026-06-28); it now
+      MEASURES free space and real per-slot cost, refuses against a reserve (`SLOT_RESERVE_PCT`, default 12%), fails
+      CLOSED, and keeps `MAX_SLOTS` only as a runaway backstop. Uses POSIX `df -k`/`du -sk`, not GNU
+      `df --output=`/`du -BG` — this script also provisions macOS laptops, where a GNU-ism behind a fail-closed guard
+      would hard-block every provision rather than degrade. (c) **4 slots added** (17-20, `--operator planning`, 27
+      repos each; slot 17 needed one re-run after a `git clone --reference` core-dump, memory was not the cause at 23G
+      free). Orchestrator restarted → `seed_worker_slots_from_tabs: registered 19 worker slot(s)`. **Verified live**:
+      `AutoSpawn fleet cap: configured=15 CLAMPED to 12 by slot arithmetic (configured_slots=19 - reserve=7 [ci=3 +     scheduled=4])`.
+      Reserves shift automatically with the fleet (they are the highest-numbered N slots): CI/data- pipeline now 18-20,
+      scheduled now 14-17, backlog pool 2-13. Disk 54% / 318G free after. Operator ruling 2026-08-08. Evidence:
+      `quality-gates.sh` green — 2684 python (2 new), basedpyright 0/0, tsc clean, 262 vitest. (repo:
+      agent-orchestrator, unified-trading-pm)
 - [x] ✅ [CODE] P1. **All 8 timer installers converted to `systemd --user` — the re-install below is the LAST one that
       needs sudo** — agent-orchestrator@c3a85c3b4. Root cause of this todo being `[OPERATOR]` at all was WHERE the
       installers wrote (`/etc/systemd/system`, `/usr/local/bin`), never what they did: the dispatch scripts only
