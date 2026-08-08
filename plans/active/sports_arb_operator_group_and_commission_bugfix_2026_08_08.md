@@ -123,11 +123,12 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
       otherwise DELETE the entry. Measured today, none of the nine appear in either — so the expected outcome is nine
       deletions. Re-measure at run time and report the actual counts; no shims, workspace rule is delete deprecated
       code.
-- [ ] [TEST] P0. **Regression test asserting the exact measured failures above now pass**:
+- [x] [TEST] P0. ✅ **Regression test asserting the exact measured failures above now pass**:
       `arb_legs_are_independent(['BETFAIR_EX_UK','BETFAIR_EX_EU']) is False`,
       `arb_legs_are_independent(['UNIBET_UK','UNIBET']) is False`, `get_operator('BETFAIR_EX_UK') == 'BETFAIR'`, and a
       SMARKETS leg producing a non-zero expected commission. Test the CANONICAL uppercase spellings specifically — a
-      test written in lowercase would have passed against the broken code and is exactly why this shipped.
+      test written in lowercase would have passed against the broken code and is exactly why this shipped. —
+      unified-api-contracts@968237b8
 - [ ] [TEST] P1. **Property test: every venue in `SPORTS_BET_PLACEMENT_VENUES` resolves through `get_operator()` without
       falling through to the identity default unless it is genuinely a standalone operator.** This is the guard that
       stops the next venue addition from silently reintroducing the bug.
@@ -160,3 +161,9 @@ of defect; the canonical fix is to key everything on the UAC venue constants.
   `registry.venue_constants`, equals `"SMARKETS"` — the canonical uppercase form production data emits) added to
   `EXCHANGE_VENUES` and `EXCHANGE_COMMISSION_RATES` at `0.02`. Commission rate source verified: smarkets.com standard
   commission is 2% on net winnings, matching the operator pre-specified value.
+- **2026-08-08** — Todo 5 ([TEST] P0 regression tests) shipped in unified-api-contracts@968237b8. Twelve assertions
+  across three test classes: `TestArbLegIndependenceBug1Regression` tests exact measured uppercase failures
+  (BETFAIR_EX_UK/EU pair, UNIBET_UK/UNIBET pair, three-leg same-group rejection) + genuine independence pass;
+  `TestGetOperatorBug1Regression` tests operator mapping for canonical and lowercase inputs + identity fallback;
+  `TestSmarketsCommissionBug2Regression` confirms SMARKETS ∈ EXCHANGE_VENUES and EXCHANGE_COMMISSION_RATES[SMARKETS] ==
+  0.02. QG green, SHA verified ancestor of origin/live-defi-rollout.
