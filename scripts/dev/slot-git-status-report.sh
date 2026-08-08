@@ -253,7 +253,7 @@ classify_repo() {
     local_sha=$(git rev-parse --short=12 HEAD 2>/dev/null || echo "")
 
     if [[ "${branch}" == "DETACHED" || "${branch}" == "HEAD" || -z "${local_sha}" ]]; then
-        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\t\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}"
+        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\t\t%s\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}" "$(pwd)"
         popd >/dev/null || return 0
         return 0
     fi
@@ -335,8 +335,8 @@ classify_repo() {
             behind=$(git rev-list --count "HEAD..${remote_ref}" 2>/dev/null || echo 0)
         else
             state="no-remote-ref"
-            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-                "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}"
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+                "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}" "$(pwd)"
             popd >/dev/null || return 0
             return 0
         fi
@@ -355,8 +355,8 @@ classify_repo() {
         state="clean"
     fi
 
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}" "$(pwd)"
     popd >/dev/null || return 0
 }
 
@@ -409,15 +409,22 @@ import json, sys
 slot_id = int(sys.argv[1])
 host = sys.argv[2]
 reported_at = sys.argv[3]
+ff_result_file = sys.argv[7] if len(sys.argv) > 7 else ""
+per_repo_ticks = {}
+if ff_result_file:
+    try:
+        per_repo_ticks = json.load(open(ff_result_file)).get("repo_dirty_ticks", {})
+    except Exception:
+        pass
 repos = []
 for line in sys.stdin:
     line = line.rstrip("\n")
     if not line:
         continue
     parts = line.split("\t")
-    if len(parts) < 11:
-        parts += [""] * (11 - len(parts))
-    name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest, unpushed_raw, dirty_sample_raw = parts[:11]
+    if len(parts) < 12:
+        parts += [""] * (12 - len(parts))
+    name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest, unpushed_raw, dirty_sample_raw, full_path = parts[:12]
     repo = {
         "name": name,
         "branch": branch,
@@ -434,6 +441,9 @@ for line in sys.stdin:
         repo["unpushed_plans"] = [p for p in unpushed_raw.split("|") if p]
     if dirty_sample_raw:
         repo["dirty_files_sample"] = [p for p in dirty_sample_raw.split("|") if p]
+    repo_ticks = per_repo_ticks.get(full_path, 0)
+    if repo_ticks:
+        repo["dirty_consecutive_ticks"] = repo_ticks
     repos.append(repo)
 ff_last_run = sys.argv[4] if len(sys.argv) > 4 else ""
 ff_last_result = sys.argv[5] if len(sys.argv) > 5 else ""
@@ -446,7 +456,7 @@ if ff_last_result:
 if dirty_ticks:
     out["dirty_consecutive_ticks"] = dirty_ticks
 print(json.dumps(out))
-' "${slot_id}" "${HOSTNAME_SHORT}" "${NOW_ISO}" "${FF_LAST_RUN}" "${FF_LAST_RESULT}" "${FF_DIRTY_CONSECUTIVE_TICKS}")
+' "${slot_id}" "${HOSTNAME_SHORT}" "${NOW_ISO}" "${FF_LAST_RUN}" "${FF_LAST_RESULT}" "${FF_DIRTY_CONSECUTIVE_TICKS}" "${FF_RESULT_FILE}")
     if [[ -z "${payload}" ]]; then
         log "[skip:empty-payload] slot ${slot_id}"
         return 0
