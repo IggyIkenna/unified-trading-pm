@@ -720,3 +720,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   possible from here — needs a session/operator with working SSH access). No data loss — durable progress through chunk
   17 + partial chunk 18. Relaunched as **`mtds-backfill-odds-smallchunk5-20260808`** (guard passed, RUNNING).
   FIXTURE_STATS unaffected, continuing healthy.
+- **2026-08-08T09:13Z** — FIXTURE_STATS +86 days (`last_completed_date=2024-12-08`, fresh `09:12:35Z`), accelerating
+  well. odds smallchunk5: chunk 7/451 (`2020-07-06`), zero OOMs, healthy skip-fast pace — still well before chunk 18's
+  danger zone. Both healthy, no intervention.
