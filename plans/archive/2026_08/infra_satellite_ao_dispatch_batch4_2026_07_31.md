@@ -21,7 +21,7 @@ summary: >-
   filtered on `assigned_vm: planning` regardless of `status`), no separate finalize plan is authored; the archival step
   is folded into this one todo's own "Done when", mirroring the archived `ci_satellite_ao_dispatch_batch3_2026_07_30.md`
   precedent.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -83,9 +83,10 @@ source: >-
 
 # Infra satellite AO batch 4
 
-> **✅ STATUS: `active`** — operator-approved 2026-08-06, dispatching. Flipped from `draft` per CLAUDE.md § "Plan
-> destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's autonomous-mode rule. Nothing here has been
-> shipped.
+> **✅ ARCHIVED 2026-08-08** — single todo complete. `_solana_utils.py` (1,068L) split into `_solana_utils.py` (815L)
+>
+> - `_solana_pool_discovery.py` (271L); instruments-service@06791d0e; 5,234 tests green. Source doc checkbox flipped
+>   (`codex_violations_ratchet_to_five_2026_06_10.md` P3). Archived under `plans/archive/2026_08/`.
 
 ## Why this is a single-todo plan with no finalize twin
 
