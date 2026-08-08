@@ -6,7 +6,7 @@ summary:
   nothing yet makes a dispatched worker actually READ a doc's context_scope list before starting its todos. Until this
   ships, the field is a well-maintained but unconsumed index: real value (a human or an agent CAN grep it) but not the
   intended context-window/model-tier-downgrade payoff, which needs mechanical enforcement at dispatch/boot time."
-status: open
+status: resolved
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -32,7 +32,7 @@ source:
   the related: link to the now-nonexistent context_scope_frontmatter_and_scout_skill_2026_07_30.md plan doc was
   repointed to the shipped cursor-configs/skills/context-scout/SKILL.md — everything else recovered verbatim."
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-22 (infra craft), 2026-08-08
 locked_by:
 context_scope:
   [
@@ -45,6 +45,14 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **ARCHIVED 2026-08-08** — all 3 todos done: design decided (option (b), 2026-08-08 operator ruling), the STEP 0
+> mechanism shipped (`unified-trading-pm@b1845c411`), and the final pre-flip freshness re-check ran (656 docs / 224
+> `UP_TO_DATE` ≈ 34% — still majority-uncovered, so a further fleet-wide enforcement flip is explicitly NOT part of this
+> doc's scope). The one genuinely open follow-up (design question 3, sufficiency measurement for a future model-tier
+> downgrade) was migrated to a tracked todo at
+> `/plans/active/issues/context_scope_sufficiency_measurement_2026_08_08.md`. Original path:
+> `plans/active/issues/context_scope_consumption_enforcement_2026_07_30.md`.
 
 ## What's true today (corrected 2026-08-01 — see Progress Log)
 
@@ -131,47 +139,47 @@ pressure. The operator explicitly named this as "the rest of the work" for a lat
       (b), see the checked todo above).
 
       **Fresh coverage re-measure** (`.venv/bin/python scripts/plan-hygiene/generate_context_scope_inventory.py`, run
-                  in background per the async-wait discipline — per-doc `git log` subprocess calls make it slow, not a memory
-                  concern):
+                      in background per the async-wait discipline — per-doc `git log` subprocess calls make it slow, not a memory
+                      concern):
 
-                  ```
-                  Total in-scope plan/issue docs: 658
-                    NEVER_SCOUTED  27
-                    STALE          406
-                    COUNT_MISMATCH 1
-                    UP_TO_DATE     224
-                  ```
+                      ```
+                      Total in-scope plan/issue docs: 658
+                        NEVER_SCOUTED  27
+                        STALE          406
+                        COUNT_MISMATCH 1
+                        UP_TO_DATE     224
+                      ```
 
-                  224/658 `UP_TO_DATE` ≈ 34% — same conclusion as the 2026-08-01 measurement (222/647, ~34%): **still
-                  majority-uncovered, NOT yet safe to treat as fleet-wide-ready.** Composition shifted materially though:
-                  `NEVER_SCOUTED` collapsed 410→27 (real `/context-scout` sweep progress), but `STALE` grew 15→406 — consistent
-                  with high-edit-velocity docs (e.g. `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`, touched by
-                  dozens of Progress Log entries this week alone) outpacing their last `context-scout` marker date faster than the
-                  skill's incremental sweep can re-stamp them; this is the staleness heuristic (`marker >= last-touched`) working
-                  as designed, not a script defect — not filing a separate issue for it (no fix needed beyond what `/context-scout`
-                  already exists to do, more frequent sweeps on high-churn docs). The mechanism (STEP 0 line) itself is safe to ship
-                  regardless of corpus coverage — it degrades to a no-op on any doc without `context_scope` — but per the todo's own
-                  framing, do NOT treat this as grounds to widen the rollout beyond the pilot scope until coverage genuinely
-                  improves. Todo below (freshness re-check immediately before any enforcement flip) stays correctly gated on this.
+                      224/658 `UP_TO_DATE` ≈ 34% — same conclusion as the 2026-08-01 measurement (222/647, ~34%): **still
+                      majority-uncovered, NOT yet safe to treat as fleet-wide-ready.** Composition shifted materially though:
+                      `NEVER_SCOUTED` collapsed 410→27 (real `/context-scout` sweep progress), but `STALE` grew 15→406 — consistent
+                      with high-edit-velocity docs (e.g. `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`, touched by
+                      dozens of Progress Log entries this week alone) outpacing their last `context-scout` marker date faster than the
+                      skill's incremental sweep can re-stamp them; this is the staleness heuristic (`marker >= last-touched`) working
+                      as designed, not a script defect — not filing a separate issue for it (no fix needed beyond what `/context-scout`
+                      already exists to do, more frequent sweeps on high-churn docs). The mechanism (STEP 0 line) itself is safe to ship
+                      regardless of corpus coverage — it degrades to a no-op on any doc without `context_scope` — but per the todo's own
+                      framing, do NOT treat this as grounds to widen the rollout beyond the pilot scope until coverage genuinely
+                      improves. Todo below (freshness re-check immediately before any enforcement flip) stays correctly gated on this.
 
 - [x] ✅ [INFRA] P2. **DONE 2026-08-08 (slot-22, infra craft)** — mechanism confirmed shipped (`agents/RULES.md` §
       "## 0. STEP 0" present, grep-verified). Re-ran `generate_context_scope_inventory.py` fresh (background, per the
       async-wait discipline — this exact script timed out in the foreground for slot-16 earlier the same day):
 
       ```
-              Total in-scope plan/issue docs: 656
-                NEVER_SCOUTED  27
-                STALE          404
-                COUNT_MISMATCH 1
-                UP_TO_DATE     224
-              ```
+                  Total in-scope plan/issue docs: 656
+                    NEVER_SCOUTED  27
+                    STALE          404
+                    COUNT_MISMATCH 1
+                    UP_TO_DATE     224
+                  ```
 
-              224/656 `UP_TO_DATE` ≈ 34% — essentially unchanged from the todo-1 measurement taken minutes earlier
-              (224/658, same session) and from the 2026-08-01 baseline (222/647). No material drift in the interim: corpus
-              coverage remains majority-`STALE`/`NEVER_SCOUTED`, so this doc's own scoped work (design + ship the STEP 0
-              mechanism + a bounded freshness re-check) is complete, but a fleet-wide-beyond-pilot enforcement flip is still
-              **not** supported by current coverage — that decision stays a future call for whoever owns the pilot-to-fleet
-              widening step, not something this issue doc's remaining scope covers.
+                  224/656 `UP_TO_DATE` ≈ 34% — essentially unchanged from the todo-1 measurement taken minutes earlier
+                  (224/658, same session) and from the 2026-08-01 baseline (222/647). No material drift in the interim: corpus
+                  coverage remains majority-`STALE`/`NEVER_SCOUTED`, so this doc's own scoped work (design + ship the STEP 0
+                  mechanism + a bounded freshness re-check) is complete, but a fleet-wide-beyond-pilot enforcement flip is still
+                  **not** supported by current coverage — that decision stays a future call for whoever owns the pilot-to-fleet
+                  widening step, not something this issue doc's remaining scope covers.
 
 ## Codex SSOTs
 
