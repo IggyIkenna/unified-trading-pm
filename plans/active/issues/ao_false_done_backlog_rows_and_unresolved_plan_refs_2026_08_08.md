@@ -184,8 +184,28 @@ plan + verifying the `done_sha`, never from the row's status alone.
       matches `f79fbded3` exactly. No REOPEN (would re-open genuinely, freshly-verified-done work) or FLIP (already
       flipped, honestly) was warranted or performed; this item only needed its tracker checkbox resolved with the
       verification trail above.
-- [ ] [BACKEND] P2. `sports_closeout_track_x_hygiene-006` (`done_sha=976786c5`) — 9,733-object
-      `instruments-store-sports-prd` migration; verify against the real object count, not the plan's prose
+- [x] ✅ [BACKEND] P2. `sports_closeout_track_x_hygiene-006` (`done_sha=976786c5`) — 9,733-object
+      `instruments-store-sports-prd` migration; verify against the real object count, not the plan's prose — **verified
+      2026-08-08 (slot 27): no REOPEN or FLIP action needed or possible — no live false-done state exists, same
+      self-correcting positional-id pattern as the 6 items above.** `GET /api/backlog` for this exact id currently
+      returns `status: "queued"`, `done_sha: null` (title: "Migrate the 9,733 legacy-contaminated
+      `instruments-store-sports-prd` objects…") — not the row the 03:15 UTC audit snapshot captured; zero rows in the
+      live backlog carry `done_sha=976786c5` anywhere. `976786c5` (market-tick-data-service, slot-8, 2026-08-04) is a
+      real, on-origin commit, but per its OWN commit message and the cited plan/issue-doc trail it only built + shipped
+      the migration SCRIPT (path-only GCS copy tool) — "the dry-run itself has NOT been executed… a follow-up dispatch
+      must run the dry-run… Plan-level P2 checkbox stays open (gated on the full migration, not just the script)." Read
+      the cited plan (`plans/active/sports_closeout_track_x_hygiene_2026_07_25.md` line 138) and its issue doc
+      (`issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md` todo 4, line 172): both correctly
+      show the actual migrate-to-prod todo still `- [ ]` — the write-path fix (`unified-api-contracts@f3f1bbe0`) and the
+      census+script-build sub-todos are done, but neither the dry-run nor `--apply-prod` has run. **Verified against
+      real GCS state, not just prose**: `gcloud storage ls` on the sample prefix the issue doc's own census already
+      inspected (`sports_reference/by_date/day=2026-06-20/pipeline_mode=batch_api_football/entity=fixtures/`) shows
+      `league=ARGENTINA_PRIMERA_NACIONAL/` still present at its original, non-canonical path today — live confirmation
+      the migration genuinely has not been applied (contaminated objects have not moved), matching the plan's own honest
+      open state. No REOPEN (nothing live to reopen — the audit-captured row is gone) or FLIP (the underlying migration
+      genuinely isn't done) was warranted or performed; this item only needed its tracker checkbox resolved with the
+      verification trail above.
+- [ ] [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-011` (`done_sha=45b5112e7`)
 - [ ] [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-011` (`done_sha=45b5112e7`)
 - [ ] [BACKEND] P2. `defi_cefi_venue_chain_axis_contamination-014` (`done_sha=b78ec6e7c`)
 - [ ] [BACKEND] P2. `mtds_migrate_executor_progress_checkpoint_gap-008` (`done_sha=c98e0abb`)
@@ -306,3 +326,15 @@ plan + verifying the `done_sha`, never from the row's status alone.
   VM freshly re-verified RUNNING with a clean run.log. The plan checkbox at
   `infra_capture_and_devops_leftovers_2026_07_06.md` line 292 is correctly `[x]` ✅ and matches `f79fbded3` exactly.
   Nothing to correct. See the checklist item above for the full trail.
+
+- **2026-08-08 (slot 27, backend_engineer)**: Verdict on `sports_closeout_track_x_hygiene-006` (`done_sha=976786c5` at
+  audit time): **no REOPEN or FLIP action needed or possible** — same self-correcting positional-id pattern as the 6
+  items above; `GET /api/backlog` shows this id now points at the still-open full-migration task (`status: "queued"`,
+  `done_sha: null`), zero rows carry `done_sha=976786c5`. `976786c5` genuinely only shipped the migration SCRIPT (its
+  own commit message: dry-run not executed), not the migration itself — both the plan
+  (`sports_closeout_track_x_hygiene_2026_07_25.md` line 138) and the issue doc
+  (`sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md` todo 4) correctly show the apply-to-prod
+  todo still open. Went beyond the plan's prose per this item's own instruction: a live `gcloud storage ls` against
+  `instruments-store-sports-prd-central-element-323112` (bounded single-day sample, not a corpus walk) confirms
+  `league=ARGENTINA_PRIMERA_NACIONAL/` objects are still present at their contaminated path — the migration has not
+  moved any objects. See the checklist item above for the full trail.
