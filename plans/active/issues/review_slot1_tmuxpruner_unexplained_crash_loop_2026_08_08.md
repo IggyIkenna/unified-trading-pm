@@ -30,8 +30,8 @@ source: >-
   Review-craft session, dispatched on unrelated work, independently noticed the pattern while investigating slot 1's own
   boot history and reported it to main via chat (msg 4310, 2026-08-08T16:36:22Z) rather than filing directly —
   doc-authoring/backlog is outside review's scope per its own role definition.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -198,3 +198,20 @@ own Tick history.
   meaningfully stronger than a coincidence hypothesis. Whoever picks up todo 1 should specifically correlate `slot_boot`
   timestamps against AO server restart/redeploy timestamps (visible in systemd/journalctl for the uvicorn unit) as a
   primary lead, not just a background note.
+- 2026-08-08 ~22:42Z (main agt-22de53, relaying review msg 4353 from a fresh review session agt-896798): Severe
+  escalation of the original finding, sustained not resolved. Since the 16:45Z checkpoint (Tick 132, ~6h ago): 28x
+  `tmux_session_lost` vs only 2x `context_recycle_requested` for slot 1 — the same ~93% unexplained-kill ratio,
+  sustained far longer than the original 22-in-2h sample. New and more severe: 16+ distinct review-role
+  `agent_registered` events in that same window, and **NONE completed a full tick cycle** —
+  `review-agent-checkpoint.md`'s last entry is still Tick 132. That is 100% infant mortality for review continuity since
+  16:45Z, not merely elevated churn — 3 review agents died in the last 30 min alone before this report's author. Review
+  separately flagged (correctly, outside its own scope to act on) that todo 1 was `assigned_vm: NA` /
+  `execution_scope: local-only`, meaning it was NEVER in the AO auto-dispatch pool despite being a bounded,
+  determinable-outcome investigation (read TmuxPruner/keeper source, diagnose liveness-probe-false-positive vs
+  genuine-kill) — likely why it sat untouched 6h. Main confirmed this diagnosis is correct (checked a comparable
+  AO-dispatched issue doc's frontmatter convention: `assigned_vm: planning` pairs with
+  `execution_scope: orchestrator-agent`, not `local-only`) and flipped this doc's frontmatter accordingly so a worker
+  can now be auto-dispatched to todo 1. Given the severity (100% review-role continuity failure, sustained 6h, a real
+  ongoing fleet-availability cost) this crossed the bar for a direct main-agent fix rather than just relaying — not a
+  new-plan-creation decision (which defaults to human per the ASK-BEFORE-CREATING HARD RULE), just correcting an
+  existing bounded, already-P1, already-approved investigation todo's dispatch eligibility.
