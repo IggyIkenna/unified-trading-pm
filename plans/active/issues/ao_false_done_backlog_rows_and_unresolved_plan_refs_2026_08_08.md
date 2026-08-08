@@ -38,8 +38,8 @@ created: 2026-08-08
 last_updated: "2026-08-08"
 author: ikennaigboaka [interactive session, slot 1]
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 1
@@ -137,3 +137,21 @@ plan + verifying the `done_sha`, never from the row's status alone.
   with `overage_disabled_reason=org_level_disabled`, leaving only sub-c/sub-d usable), with 282 tasks already queued
   against 1 dispatched. Reopening 14 tasks into that queue would have deepened the starvation while producing no
   throughput. Sequencing is therefore: resolve account capacity first, then work these 14.
+
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. All 17 open
+  items are bounded, worker-determinable audit work with a clear evidence requirement: the 14 named backlog rows
+  each need "read the cited plan + verify the `done_sha`, verdict REOPEN or FLIP" — the exact same per-row
+  evidence-based audit pattern this tranche's workers already run routinely elsewhere in this corpus (see e.g.
+  `ao_open_issues_consolidated_close_out_2026_07_17.md`'s own false-done reconciliation work); the 3 follow-ups
+  (characterise the 1,013 unresolved rows; bound the 12 UNAUDITABLE rows; decide whether a standing breach should
+  page, checked against an existing codex contract) are similarly bounded fact-finding/verification tasks, none a
+  fresh design/judgment call. The filing session's own capacity-starvation concern (deferring the 14 REOPEN-or-FLIP
+  verdicts until account headroom recovers) is an operational sequencing note, not a design gate — a worker
+  dispatched this doc naturally queues behind the fleet's existing capacity-aware dispatch throttling the same way
+  every other backlog task does; it does not require a hard `assigned_vm: NA` block. Conflict-check clear: grepped
+  `plans/active/*.md` for every one of the 14 named task ids plus "audit_false_done"/"false_done" — zero hits
+  outside this doc (the `ao_observability_and_deploy_hygiene_gaps_2026_08_08.md` false-done item, filed earlier the
+  same day from a shallower ~26-row snapshot, is independently confirmed already closed/superseded by this doc's
+  own more precise 14-row audit — no overlap remains to conflict on). `execution_scope: local-only →
+  orchestrator-agent`. Companion gated finalize:
+  `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md`.

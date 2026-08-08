@@ -17,8 +17,8 @@ related: [/codex/08-workflows/ci-cd-flow.md, /codex/06-coding-standards/quality-
 created: "2026-07-31"
 last_updated: 2026-07-31
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 1
@@ -348,11 +348,14 @@ enough to rule out interference arising DURING the run. Not re-measured further 
 the profiler's own numbers are the trustworthy artifact for "where does the time go," not the wall-clock deltas across
 noisy individual runs.
 
-- [ ] [INFRA] P2. Follow-up, not executed this session: investigate optimizing `check_pm_script_path_refs.py` (28% of a
-      from-scratch quality-gates.sh run, single-threaded full-corpus sweep) — e.g. incremental/changed-files-only
-      scoping (mirroring `--fast`'s change-scoped codex-grep tier), or parallelizing the corpus walk. Done-when: a
-      measured before/after on the profiler (`profile_qg_resources.py --repo unified-trading-pm`) showing a real
-      wall-time reduction, not just a code change.
+- **[INFRA] P2.** Follow-up, not executed this session: investigate optimizing `check_pm_script_path_refs.py`
+      (28% of a from-scratch quality-gates.sh run, single-threaded full-corpus sweep) — e.g.
+      incremental/changed-files-only scoping (mirroring `--fast`'s change-scoped codex-grep tier), or parallelizing
+      the corpus walk. **CONFLICT-DEFERRED (na-eligibility-audit round7 RECLASSIFY sweep, 2026-08-08)**: this exact
+      item is already claimed verbatim by `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 11 (`status:
+      active`, `assigned_vm: planning`), which cites this doc by name and line number as its source. Converted to a
+      bold digest pointer (not a real checkbox — see `task_template.md`'s digest-line convention) so flipping this
+      doc's own `assigned_vm` does not dispatch a competing duplicate. Do the work via batch6, not here.
 - [ ] [INFRA] P2. Operator explicitly asked for a solo, idle-host-verified re-measurement of `--test`,
       `--skip-typecheck`, `--skip-lint`, `--fast`, `--skip-codex` (the flags that looked implausibly slow in the batched
       Results table 2) — only `--quick` was actually re-run solo (81.95s, see above) before the profiler investigation
@@ -477,3 +480,15 @@ solo work.
   these as "a targeted-extraction candidate for a future infra batch" and it was never acted on. The 4th Deferred-work
   row (solo re-measurement of 5 flags) is explicitly deprioritized by the doc's own text ("check with the operator... or
   consider it satisfied") — left as GENUINE_WORK, not flagged.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. Acted on the
+  2026-08-07 marker's flagged candidates plus one more: the Phase-2 "which access mechanism" blocker (planning-vm
+  interactive-vs-AO-dispatched) was independently resolved TODAY (round5 ao investigation, in-doc below) —
+  AO-dispatch is now the ruled mechanism, which unblocks the Phase-2 re-run + comparison todos too. Of the 5
+  remaining open items: the `check_pm_script_path_refs.py` optimization is CONFLICT-DEFERRED (already claimed by
+  `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 11 — converted to a non-checkbox digest pointer, see above,
+  so it will not dispatch a duplicate); the `--skip-tests --skip-<X>` delta measurement is bounded and "ready to
+  run" per its own text; the solo 5-flag re-measurement is bounded (lower-priority but not a judgment call); the
+  Phase-2 flag-suite re-run and its DOC comparison follow-up are both bounded now that the mechanism question is
+  resolved. No remaining judgment call blocks the whole-doc flip. `execution_scope: local-only →
+  orchestrator-agent`. Companion gated finalize:
+  `quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md`.
