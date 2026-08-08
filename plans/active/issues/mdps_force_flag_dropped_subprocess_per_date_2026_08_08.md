@@ -124,3 +124,13 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
 - **slot-26 data_engineering 2026-08-08**: Root-caused + fixed while checking terminal state of
   `mdps-backfill-cefi-20260807-130321` for `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` todo 3. Filed as a
   separate doc since the defect is cross-cutting (any multi-day `--force` MDPS backfill), not Track-7-specific.
+- **data_engineering (slot 11) 2026-08-08T22:14Z**: Checked terminal-state gate for todo 2 (P2 relaunch). VM
+  `mdps-backfill-cefi-20260808-095136` (`asia-northeast1-c`) is still `RUNNING` — confirmed via
+  `gcloud compute instances describe` (status=RUNNING) +
+  `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260808-095136/run.log` showing active
+  POLARS aggregation output at `2026-08-08T22:12:28Z` (~2 min before this check — not stalled, genuinely progressing, no
+  zombie-watchdog intervention needed per STEP 0.55). Todo 2 remains gated: not actionable until this VM reaches a
+  terminal state (completed or preempted), which per this doc's own estimate (~12 min/day, ~950 remaining days) is far
+  more likely to be a SPOT preemption than natural completion, on an unpredictable timeline. Not busy-waiting on this in
+  a live session — releasing the task back to the queue rather than holding a session open for an indeterminate
+  (possibly month-scale) external condition; a future dispatch cycle should re-check terminal state the same way.
