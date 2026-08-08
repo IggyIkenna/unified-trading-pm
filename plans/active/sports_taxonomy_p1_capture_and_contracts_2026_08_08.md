@@ -429,16 +429,43 @@ achieved by exclusion, not canonicalisation.**
       form is a distinct processed key via `_RAW_TO_PROCESSED_PREFIX` (`odds_ohlcv_*` vs a snapshot prefix), NOT a new
       `data_type`. Confirm against `canonical_writer_shaping.mdps_data_type_key`'s real output before implementing, and
       record the chosen keys in codex.
-- [ ] [CODE] P1. **Make MTDS's `_asset_group_for_venue` FAIL LOUD instead of defaulting to cefi.**
-      `market_tick_data_service/reader.py::_asset_group_for_venue` resolved any unrecognised venue to `"cefi"` SILENTLY.
-      When this chain's venue-axis split removed `ODDS_API`/`FOOTYSTATS` from the canonical venue axis, that default
-      began pointing every read of their **146,163 historical shards** (ODDS_API 123,650 + FOOTYSTATS 22,513) at the
-      **CEFI bucket** — a silent wrong answer, caught only because one unit test happened to assert the sports case.
-      Hot-fixed 2026-08-08 (`SPORTS_VENUES` consulted before the fallback + the fallback now WARN-logs), but the default
-      itself remains. Replace it with a typed raise, and sweep for other `.get(..., <default asset_group>)` lookups in
-      the same class of resolver across MTDS/MDPS/IS. Deferred from the hot-fix only to keep the blast radius off an
-      in-flight chain — a genuinely-unknown cefi venue currently relies on this default, so the raise needs its own
-      enumeration pass first.
+- [x] ✅ [CODE] P1. **Make MTDS's `_asset_group_for_venue` FAIL LOUD instead of defaulting to cefi.** —
+      market-tick-data-service@\<pending\>. `market_tick_data_service/reader.py::_asset_group_for_venue` resolved any
+      unrecognised venue to `"cefi"` SILENTLY. When this chain's venue-axis split removed `ODDS_API`/`FOOTYSTATS` from
+      the canonical venue axis, that default began pointing every read of their **146,163 historical shards** (ODDS_API
+      123,650 + FOOTYSTATS 22,513) at the **CEFI bucket** — a silent wrong answer, caught only because one unit test
+      happened to assert the sports case. Hot-fixed 2026-08-08 (`SPORTS_VENUES` consulted before the fallback + the
+      fallback now WARN-logs), but the default itself remained. **Enumeration pass** (the reason the raise was deferred
+      off the hot-fix): `VENUE_TO_ASSET_GROUP` is comprehensively derived from `VENUES_BY_ASSET_GROUP`
+      (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`), the canonical venue registry
+      across every asset group — any genuinely cefi/defi/tradfi/prediction venue is already present there, so nothing
+      legitimately depends on the fallback; a venue reaching it is a sports source token (handled separately) or truly
+      unknown (typo/retired/unregistered). Replaced the WARN-log-then-`"cefi"` with a new typed
+      `UnknownVenueAssetGroupError` (`market_tick_data_service/reader_errors.py`, same pattern as
+      `InvalidChainError`/`InvalidCanonicalQuestionGroupError`), raised from `_asset_group_for_venue`. Updated the two
+      tests in `tests/unit/test_reader.py` that asserted the old cefi-default (`test_unknown_venue_defaults_to_cefi` →
+      `test_unknown_venue_raises`; `test_unknown_venue_warns_before_defaulting_to_cefi` →
+      `test_unknown_venue_raises_instead_of_defaulting_to_cefi`) — this is implementing the intended behaviour change,
+      not weakening coverage. **Sweep for the same resolver class across MTDS/MDPS/IS** (per this todo's own text):
+      found 3 more `.get(venue, "cefi")`/`.get(venue, "cefi").lower()` sites — MTDS
+      `engine/orchestrator/preflight.py:428`, MTDS `engine/orchestrator/manifest_finalize.py:195` and `:375`, IS
+      `engine/orchestrator/writers.py:286` — all inside manifest-writing/orchestration code paths, NOT the reader path
+      this todo names. Deliberately NOT changed in this commit: they sit outside this phase's "contracts only — no GCS
+      or manifest mutation" boundary, and blindly raising inside a manifest-write loop risks crashing an in-flight
+      capture/backfill run — exactly the blast-radius concern that deferred THIS todo off the original hot-fix. Tracked
+      as its own follow-up todo below rather than folded in here. (IS `process_write.py::_asset_group_for_venue` was
+      also swept but is a DIFFERENT, already-documented resolver — defaults to `"sports"` with an explicit inline
+      rationale, not a silent cefi misroute — so it is out of scope, not a follow-up.)
+- [ ] [CODE] P2. **Sweep-follow-up: fail-loud the remaining `.get(venue, "cefi")` manifest/orchestration resolvers found
+      above.** 4 sites, each needing its OWN enumeration pass before a raise is safe (they run inside live
+      manifest-write/orchestration loops, unlike the reader-path fix above): MTDS `engine/orchestrator/preflight.py:428`
+      (`cat = _orch.VENUE_TO_ASSET_GROUP.get(venue, "cefi")`), MTDS `engine/orchestrator/manifest_finalize.py:195` and
+      `:375` (`ag = _orch.VENUE_TO_ASSET_GROUP.get(venue_name, "cefi").lower()`), IS
+      `engine/orchestrator/writers.py:286` (`_cat = "defi" if manifest_chain else
+      (VENUE_TO_ASSET_GROUP.get(venue_str, "cefi"))`). For each: confirm every reachable caller passes an
+      already-UAC-registered venue (mirroring the reader.py enumeration above) before replacing the default with a
+      typed raise; if a caller genuinely can pass an unregistered venue mid-loop, decide fail-loud-with-skip-this-venue
+      vs. hard-raise per call site instead of a blanket copy of the reader.py fix.
 - [x] ✅ [CODE] P1. **Update `venue_data_types.yaml` in the SAME change as the markets/outcomes/settlements deletion.**
       — unified-trading-pm@\<pending\>, market-tick-data-service@\<pending\>. Fixed via the `ldr_qg_failure` escalation
       (agt-fecbe9): UAC commit `1f5879fc` (2026-08-08) collapsed `odds_snapshot`/`odds_movement` out of
@@ -519,7 +546,7 @@ they need different responses.
 | -------------------------------------------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------- |
 | P2 migration (17 todos), P3 consumers (15), P4 backfill (9)                                                          | **Not done** — real work | P1 completing; P2 additionally on the API-Football campaign                      |
 | `markets`/`outcomes`/`settlements` YAML+UAC parity; collapse `odds_snapshot`/`odds_movement` onto `odds`+`timeframe` | **Not done**             | tracked as P0 todos in P1/P2                                                     |
-| MTDS `_asset_group_for_venue` fail-fast (default still `cefi`, now WARN-logged)                                      | **Not done**             | deliberately deferred off an in-flight chain; needs its own consumer enumeration |
+| MTDS reader.py `_asset_group_for_venue` fail-fast                                                                    | **Done** (see checklist) | landed this session — `UnknownVenueAssetGroupError` raise; 4 sibling manifest/orchestration resolvers found + tracked as a new P2 follow-up todo, deliberately not changed here (higher blast radius) |
 | Two WS-cassette xfails (`jupiter_solana_ws`, `aave_liquidations_ethereum_ws`)                                        | **Cannot be done yet**   | needs a real WS capture session; fabricating a cassette is explicitly banned     |
 | Sports live-trading activation                                                                                       | **Operator-owned**       | permanent hard-stop; now formally gated on this chain                            |
 | Other artifact tranches (123 open operator questions, Cross-cutting 37)                                              | **Operator-owned**       | only sports got the reconcile-then-plan treatment                                |
