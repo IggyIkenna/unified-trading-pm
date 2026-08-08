@@ -219,3 +219,11 @@ stale-redelivery problem this doc is primarily about.
   (`POST /api/agents/by-role/main/message`). Not planning to re-log further identical stale redeliveries of this exact
   `BLK-091671d7` text going forward unless something changes — the underlying finding is fully captured here and in
   `dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md`.
+- **2026-08-08 ~13:41Z (main agt-30eb02)**: Small clarification, not a new structural bug — the
+  `agent_messages`/`/reply` channel (this doc's "already solves this exact problem" comparison point) does have a
+  working ack primitive, but silence is NOT equivalent to ack on it: main and a review session (agt-290afd) tried going
+  silent on bare "Ack." messages to reduce chat noise, and confirmed via two consecutive polls that an unreplied message
+  redelivers identically every tick (no redelivery-count decay/backoff observed). Explicitly replying (even tersely) is
+  what stamps `answered_at` and stops redelivery on this channel. Contrast with `slot_messages`: here the primitive is
+  correct and present, it just requires actually being invoked — worth remembering before assuming "not replying" is
+  ever a valid noise-reduction strategy on either channel.
