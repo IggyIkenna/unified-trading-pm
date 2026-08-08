@@ -22,7 +22,7 @@ tags: [evidence-backed-completion, fabricated-citation, quality-gates, deploymen
 related:
   [
     /plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md,
-    /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
+    /plans/archive/2026_08/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
   ]
 created: 2026-07-31
 parent_epic: infrastructure_master
@@ -65,7 +65,7 @@ source: >-
 `git cat-file -t 7ba17e2` in the `agent-orchestrator` local clone returns `fatal: Not a valid object name 7ba17e2`, both
 before and after `git fetch origin --quiet` — the cited SHA does not exist under that name, on any ref, in this clone.
 `check_plan_commit_sha_evidence.py` (added per
-`plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`, a prior incident of the exact same
+`plans/archive/2026_08/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`, a prior incident of the exact same
 class) confirmed this is genuinely unresolvable, not a stale-clone artifact — the baseline (captured 2026-07-25 or
 earlier from a different slot's clone, `.tabs/21`) predates this citation, so it was never caught until this session's
 re-baseline pass surfaced the delta (18→19).

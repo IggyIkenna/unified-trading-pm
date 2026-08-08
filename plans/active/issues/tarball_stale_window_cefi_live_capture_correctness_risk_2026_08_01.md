@@ -371,5 +371,6 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
       _publish_boundary_event (minor, 'worth a P3 note, not investigated further', flagged 2026-08-02).
 
 > **2026-08-06 archive-candidate audit**: Doc's own entries flag two unfixed bugs as 'worth a P3 note but not
-> investigated further here' — prose-only deferrals never turned into tracked `- [ ]` todos (all incident todos
-> themselves are done, but these two would evaporate on archival).
+> investigated further here' — both are tracked as `- [ ]` todos in the Follow-ups section above (all incident todos
+> themselves are done). **Corrected 2026-08-08 (plan_reconciler)**: this note previously claimed these were prose-only
+> deferrals that would evaporate on archival — they are tracked todos and will not.

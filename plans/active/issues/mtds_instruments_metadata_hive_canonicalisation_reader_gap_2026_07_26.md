@@ -366,5 +366,6 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       reader + confirm manifest rows appear (todo 9(b-c), deferred 2026-08-05 slot-4).
 
 > **2026-08-06 archive-candidate audit**: Progress Log (slot-4, 2026-08-05): 'Smoke-fetch verification deferred to next
-> capture cycle per todo 9(b-c)' — todo 9's own stated done-when (b)/(c) was deferred in prose and never turned into a
-> tracked `- [ ]` todo.
+> capture cycle per todo 9(b-c)' — todo 9's own stated done-when (b)/(c) is tracked as a `- [ ]` todo in the Follow-ups
+> section above. **Corrected 2026-08-08 (plan_reconciler)**: this note previously claimed no tracked todo existed — it
+> does.

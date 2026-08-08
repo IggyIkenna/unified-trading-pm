@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, fabricated-citation, quality-gates, repo-blocker]
 related:
   [
-    /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
+    /plans/archive/2026_08/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     /plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md,
   ]

@@ -526,7 +526,7 @@ promote went **green / SUCCESS** — MUST cite structured evidence on the checkb
 > evidence is "the commit + the local QG sentinel" — but nothing previously verified that commit actually EXISTS. A
 > `docs(plans):` flip commit cited `resolved_by: market-tick-data-service@6efb252b` for a SHA that does not exist
 > anywhere in that repo's history (not local, not on GitHub) — a fabricated completion-evidence citation. See
-> `plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`.
+> `plans/archive/2026_08/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`.
 
 Any `resolved_by:` frontmatter value or `- [x]` todo citation of the form `<repo>@<sha>` — where `<repo>` is the exact
 directory name of a repo checked out as a sibling clone — is verified by running `git cat-file -t <sha>` in that repo's

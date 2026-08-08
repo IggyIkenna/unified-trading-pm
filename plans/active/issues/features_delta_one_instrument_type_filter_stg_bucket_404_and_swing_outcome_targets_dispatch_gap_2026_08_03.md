@@ -385,6 +385,6 @@ from `calculators/__init__.py`'s module-level registry):
 - [ ] [DATA] P3. Scope a -test-/IS_TEST_RUN-aware relaxation of _filter_market_state's gap-tolerance
       (boundary_tolerance) so sparse dev-tier TRADFI runs don't fail on a production-density assumption.
 
-> **2026-08-06 archive-candidate audit**: P3 verdict (a) accepted the sparse-data environment as a characteristic, but
-> Progress Log says a gap-tolerance relaxation 'should be scoped as its own follow-up' — deferred work with no tracked
-> todo.
+> **2026-08-06 archive-candidate audit**: P3 verdict (a) accepted the sparse-data environment as a characteristic, and
+> the gap-tolerance relaxation Progress Log called out is tracked as a `- [ ]` todo in the Follow-ups section above.
+> **Corrected 2026-08-08 (plan_reconciler)**: this note previously claimed no tracked todo existed — it does.

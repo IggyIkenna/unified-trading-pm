@@ -37,7 +37,7 @@ resolved_by:
   evidence. At the time that citation was written, item 1 was genuinely unfixed (only became real via 41372139, pushed
   after this correction was investigated) and item 2, while independently fixed for real moments earlier by slot 7
   (00c2cfe4, 2026-07-30 07:57:57Z), was NOT the commit actually cited. See
-  plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md for the standalone finding."
+  plans/archive/2026_08/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md for the standalone finding."
 locked_by: ""
 ---
 

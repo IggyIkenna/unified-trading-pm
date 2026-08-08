@@ -87,9 +87,11 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
       `bash scripts/quickmerge.sh "<original commit subject> (rescue orphaned slot-12 WIP)" --agent --files     '<the commit's files>'`.
       Done-when: each SHA's change is an ancestor of origin/live-defi-rollout. (repos: unified-trading-library,
       unified-api-contracts, deployment-service)
-- [ ] [BACKEND] P2. Reconcile slot-8's stranded `market-tick-data-service@bd0e231f` — ONLY if main confirms slot 8 did
-      not self-resolve it post-boot (see Progress Log). The key difference: bd0e231f has never had a successful QG, so
-      it MUST get a fresh `bash scripts/quality-gates.sh` green run against the reconciled commit (that IS the missing
+- [x] ✅ [BACKEND] P2. **VERIFIED MOOT 2026-08-08 (plan_reconciler)** — independently re-confirmed both shas via
+      `git merge-base --is-ancestor`: `b0909a5e` IS an ancestor of `origin/live-defi-rollout`; `bd0e231f` is NOT.
+      Reconcile slot-8's stranded `market-tick-data-service@bd0e231f` — ONLY if main confirms slot 8 did not
+      self-resolve it post-boot (see Progress Log). The key difference: bd0e231f has never had a successful QG, so it
+      MUST get a fresh `bash scripts/quality-gates.sh` green run against the reconciled commit (that IS the missing
       `.qg_last_passed_sha` sentinel), then quickmerge. Verify it's a real orphan first
       (`git merge-base --is-ancestor     bd0e231f origin/live-defi-rollout` → not-ancestor) before landing. (repo:
       market-tick-data-service) — **MOOT — already covered by `market-tick-data-service@b0909a5e`** (ancestor-verified

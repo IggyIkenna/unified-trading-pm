@@ -263,7 +263,7 @@ drift_direction: advance-code
     - **2. [OPERATOR] P1.** Disposition ruling needed on the 83,541 pre-floor `FIXTURES_SCHEDULE` rows — DONE
     - **3. [DATA] P2.** Once ruled, run the delete-safety protocol's 5-part proof + execute the wipe — DONE
     - **4. [REVIEW] P2.** Re-run `migration_orphan_sweep_sports.py --bucket reference --dry-run` after the wipe — DONE
-  - [`plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`](/plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md)
+  - [`plans/archive/2026_08/sports_index_recency_masked_captured_atoms_2026_07_13.md`](/plans/archive/2026_08/sports_index_recency_masked_captured_atoms_2026_07_13.md)
     (4 open):
     - **[INFRA] P1.** Redeploy the `expected-universe-v2-sports` Cloud Run job image
     - **[CODE] P1.** Extend the "never emit empty_confirmed over a captured atom" guard to regular sports instruments
