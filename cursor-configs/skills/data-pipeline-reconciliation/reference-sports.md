@@ -277,6 +277,15 @@ This is the sports-specific procedure for SKILL.md § 3b's `capture_status` surf
    on the relevant repo if its output looks off; verify a relaunch's tarball commit actually includes a fix via
    `git merge-base --is-ancestor <fix-sha> <tarball-sha>`, don't just trust the launcher's "tarball fresh" line (that
    line only proves the tarball matches HEAD at launch, not that HEAD included your fix at that moment).
+6. **Sub-classify `empty_confirmed` rows by `error_reason` blank-vs-typed.** A nonzero blank-reason fraction on a large
+   sample is the SFI/weather-class bug signature (a narrower current write-scope than the reason was historically seeded
+   for — see `/codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy", principle 3) and needs a
+   `type_<vendor>_eu_no_provider_coverage.py`-style retype script, same pattern as
+   `instruments-service/scripts/type_sfi_eu_no_provider_coverage_2026_06_27.py` /
+   `type_weather_eu_no_provider_coverage_2026_06_27.py`. Measured 2026-08-08 (full 9-source audit): 0% blank across
+   every sports source at that time — a clean baseline, not a guarantee for future writers; a newly-descoped league set
+   re-sweeping under an honest reason code (e.g. footystats' China/Russia rows after their 2026-08-07 out-of-scope
+   purge) is expected churn, not a bug — don't re-purge rows that regenerate honestly on the next full-history sweep.
 
 **Report format**: per source, `{captured, empty_confirmed, attempted_failed, expected_unattempted}` counts +
 `reachable_coverage` (§ 3b formula) + the `error_reason` breakdown for any non-trivial `attempted_failed` cluster +
