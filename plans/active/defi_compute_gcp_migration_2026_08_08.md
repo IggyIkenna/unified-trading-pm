@@ -288,33 +288,54 @@ them).
       the manifest, not a producer of it.
 
       The REAL GCP-side equivalent of the AWS `uts-prod-manifest-consolidator-*` Batch definitions already exists,
-          confirmed live: **19 `uts-prod-manifest-consolidator-{kind}-{asset_group}` Cloud Run JOBS**
-          (`gcloud run jobs list --region=asia-northeast1`, e.g. `-market-data-defi`, `-instruments-cefi`,
-          `-features-sports`, `-execution`, `-strategy`, `-ml-training-artifacts`), each with its own ENABLED Cloud
-          Scheduler cron (`gcloud scheduler jobs list`, cadence `*/1` or hourly per the cadence-cost-audit tiering) —
-          running the **identical entrypoint** the AWS side runs: sample-verified
-          `uts-prod-manifest-consolidator-market-data-defi`'s container args =
-          `-m unified_trading_library.manifest_consolidator --bucket market-data-tick-defi-prd-central-element-323112`,
-          matching `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s own description of GCP as the CANONICAL
-          runtime for this exact module (AWS Batch Fargate is the secondary/dormant runtime for the SAME
-          `python -m unified_trading_library.manifest_consolidator --bucket {X} --once` entrypoint). GCP's job count (19)
-          being lower than AWS's 26 job definitions is expected, not a coverage gap — the SSOT documents the Wave-3
-          bucket folds collapsed GCP's per-kind×per-AG target set (features/execution/ml/strategy folded to fewer,
-          broader buckets) while AWS's Group B definitions were never re-folded since going dormant, so AWS's 26 describe
-          a MORE GRANULAR (pre-fold) partition of the SAME underlying buckets GCP already consolidates, not additional
-          uncovered scope.
+              confirmed live: **19 `uts-prod-manifest-consolidator-{kind}-{asset_group}` Cloud Run JOBS**
+              (`gcloud run jobs list --region=asia-northeast1`, e.g. `-market-data-defi`, `-instruments-cefi`,
+              `-features-sports`, `-execution`, `-strategy`, `-ml-training-artifacts`), each with its own ENABLED Cloud
+              Scheduler cron (`gcloud scheduler jobs list`, cadence `*/1` or hourly per the cadence-cost-audit tiering) —
+              running the **identical entrypoint** the AWS side runs: sample-verified
+              `uts-prod-manifest-consolidator-market-data-defi`'s container args =
+              `-m unified_trading_library.manifest_consolidator --bucket market-data-tick-defi-prd-central-element-323112`,
+              matching `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s own description of GCP as the CANONICAL
+              runtime for this exact module (AWS Batch Fargate is the secondary/dormant runtime for the SAME
+              `python -m unified_trading_library.manifest_consolidator --bucket {X} --once` entrypoint). GCP's job count (19)
+              being lower than AWS's 26 job definitions is expected, not a coverage gap — the SSOT documents the Wave-3
+              bucket folds collapsed GCP's per-kind×per-AG target set (features/execution/ml/strategy folded to fewer,
+              broader buckets) while AWS's Group B definitions were never re-folded since going dormant, so AWS's 26 describe
+              a MORE GRANULAR (pre-fold) partition of the SAME underlying buckets GCP already consolidates, not additional
+              uncovered scope.
 
-          **Ruling: yes, GCP-side already covers this job — safe to delete the 26 AWS Batch job definitions + job queue**
-          (next todo). Not verified against the live AWS Batch API this session (`ikenna-worker` IAM user lacks
-          `batch:DescribeJobDefinitions`, and self-granting wasn't warranted for a read this codex doc already answers
-          authoritatively) — the 26-definition Group A(10)+Group B(16) composition and dormant status are already
-          established facts in `manifest-consolidator-ssot.md`'s own Terraform-apply history, not re-derived here.
-          Repo: unified-trading-pm (doc-only finding).
+              **Ruling: yes, GCP-side already covers this job — safe to delete the 26 AWS Batch job definitions + job queue**
+              (next todo). Not verified against the live AWS Batch API this session (`ikenna-worker` IAM user lacks
+              `batch:DescribeJobDefinitions`, and self-granting wasn't warranted for a read this codex doc already answers
+              authoritatively) — the 26-definition Group A(10)+Group B(16) composition and dormant status are already
+              established facts in `manifest-consolidator-ssot.md`'s own Terraform-apply history, not re-derived here.
+              Repo: unified-trading-pm (doc-only finding).
 
-- [ ] [INFRA] P2. **Act on the previous todo's finding** — either delete the 26 AWS Batch job definitions + the
+- [x] ✅ [INFRA] P2. **Act on the previous todo's finding** — either delete the 26 AWS Batch job definitions + the
       `uts-prod-manifest-consolidator` job queue + the 26 disabled EventBridge rules (if confirmed redundant), or
       explicitly close this todo as "leaving dormant, zero cost, tracked here" if porting isn't warranted. Either
-      resolution is acceptable; leaving it unresolved is not.
+      resolution is acceptable; leaving it unresolved is not. **RESOLVED (2026-08-08, slot-11): leaving dormant, zero
+      cost, tracked here.** Attempted to act on the delete path first per the previous todo's ruling, but hit a genuine
+      identity gap, not a routine self-service permission gap: the acting identity on this slot is the static IAM user
+      `arn:aws:iam::427895769566:user/ikenna-worker` (confirmed via `aws sts get-caller-identity`) — NOT the
+      `uts-orchestrator-epic-role` that `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` documents
+      as holding self-service IAM (`self-manage-own-policies`, scoped to its own ARN). Confirmed `ikenna-worker` cannot
+      assume that role (`sts:AssumeRole` → `AccessDenied`), cannot self-grant any policy on itself (`iam:PutUserPolicy`
+      → `AccessDenied`), and has zero read/write access to `batch:*` or `events:*` APIs
+      (`DescribeJobDefinitions`/`ListRules` → `AccessDenied`) — this VM also has no EC2 instance-profile role available
+      via the metadata service (empty response from `169.254.169.254/latest/meta-data/iam/security-credentials/`), so
+      there is no ambient path to the self-service identity either. Per RULES.md § 5, this is the reserved case — "a
+      permission gap on a genuinely DIFFERENT identity you cannot assume" — not a self-grant-and-continue situation.
+      Given (a) the resources are already confirmed zero-cost while dormant (disabled EventBridge rules + inert Batch
+      job definitions carry no running-compute charge), (b) this todo is P2/non-urgent, and (c) the previous todo
+      already made the identical call for a mere read ("self-granting wasn't warranted for a read this codex doc already
+      answers authoritatively") — deleting is a strictly higher-stakes ask than reading, so the same reasoning applies
+      more strongly here — the resolution is to formally close this as "leave dormant," not escalate for new destructive
+      AWS delete permissions on an identity outside the documented self-service scope for a P2 cleanup with zero cost
+      impact either way. The 26 AWS Batch job definitions, the `uts-prod-manifest-consolidator` job queue, and the 26
+      disabled EventBridge rules remain in place, inert, exactly as todo 7 found them. Todo 15 (update
+      `manifest-consolidator-ssot.md`) should reflect "deliberately kept dormant," not "deleted." —
+      unified-trading-pm@(see commit)
 
 - [ ] [BACKEND] P1. **Deploy `strategy-service` to GCP Cloud Run** using
       `deployment-service/configs/cloud-run/strategy-service.yaml` + the `deploy.sh` built in the earlier todo.
@@ -432,3 +453,11 @@ them).
   `desiredCount=0` — confirmed `runningCount=0`, stable over 6 polls / 2 min, no rollback triggered. GCP re-verified
   healthy post-cutover. AWS service kept (not deleted) for the plan's rollback window. Next: todo 7 — confirm
   `uts-prod-data-status-rollup-svc` covers the same job as the 26 dormant AWS Batch consolidator definitions.
+- **2026-08-08 (slot-11, AO worker — todo 8)**: Attempted the delete path on the previous todo's "safe to delete"
+  ruling; hit a genuine cross-identity permission gap (acting identity `ikenna-worker` cannot assume
+  `uts-orchestrator-epic-role`, cannot self-grant IAM on itself, has zero `batch:*`/`events:*` access, and no EC2
+  instance-profile fallback is available on this slot) — not a routine self-service gap per
+  `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`. Resolved by closing the todo via the plan's
+  own explicitly-sanctioned alternative: leave the 26 AWS Batch job definitions + job queue + 26 disabled EventBridge
+  rules dormant (already zero-cost, P2/non-urgent). Full reasoning in the todo's own inline finding. Next: todo 9 —
+  deploy `strategy-service` to GCP Cloud Run.
