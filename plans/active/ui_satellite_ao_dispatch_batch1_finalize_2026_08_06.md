@@ -74,14 +74,22 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile both source docs' checkboxes.** For each of batch 1's 3 now-done todos, find the
-      corresponding checkbox in the source doc its text names (every todo ends with
-      `Source: \`<doc>.md\``) and flip     it `[x]`, citing the batch-1 commit(s) that shipped it. **Verify each cited sha actually exists and is an     ancestor of `origin/live-defi-rollout`** (`git
-      merge-base --is-ancestor <sha>
-      origin/live-defi-rollout`) before     citing it — do not copy batch 1's own evidence line blind. The 2 source docs:     `data_status_cell_grid_rearchitecture_2026_07_18.md`(todo 1 of 7 — do NOT touch todos 2-7, still correctly     NA/operator-gated) and`artifact_pipeline_observability_2026_07_17.md`
-      (2 of its Phase-5 items — do NOT touch its other 10 open items, still correctly deferred per batch 1's own
-      reasoning). **Done when**: both source-doc boxes corresponding to done batch-1 todos are flipped with a verified
-      sha, and either is left unflipped only with a stated reason. Repo: unified-trading-pm.
+- [x] ✅ [REVIEW] P1. **Reconcile both source docs' checkboxes — ALREADY DONE by prior sessions before this task
+      dispatched; verified, not re-flipped.** All 3 target checkboxes were found already `[x]` on fresh-pull, each with
+      a verified-ancestor sha: - `data_status_cell_grid_rearchitecture_2026_07_18.md` todo 1 of 7 — flipped by
+      `unified-trading-pm@a93e12221` ("flip todo 1 + add profiling findings (deployment-api@8a36931)"), which itself
+      cites `deployment-api@8a36931`. Both shas verified ancestors of `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor`. - `artifact_pipeline_observability_2026_07_17.md` line 652 (Phase-5 stale
+      issue-filing checkbox) — flipped by `unified-trading-pm@2b8073083` ("na-eligibility-audit ui batch 2026-08-07 — 10
+      KEEP-NA markers, 4 stale closes"), predating batch-1's own dispatch; the checkbox correctly cites the existing
+      issue doc `build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`. That issue doc's own #1 item
+      (the semver-agent correction batch-1 todo 2 was responsible for) was separately confirmed applied by
+      `unified-trading-pm@d2094b791` (issue doc's own Progress Log: "2026-08-08 (ui_satellite_ao_dispatch_batch1-002,
+      slot 10): Applied confirmed-dead-semver-agent finding to #1"). All 3 shas verified ancestors. -
+      `artifact_pipeline_observability_2026_07_17.md` Phase-5 dual-cloud-image-builds.md drift-fix item — flipped by
+      `unified-trading-pm@f5cff20aa` ("flip dual-cloud-image-builds.md codex-drift item
+      (unified-trading-pm@dab5f0273)"), citing `unified-trading-pm@dab5f0273`. Both shas verified ancestors. No
+      source-doc box was left unflipped. Repo: unified-trading-pm.
 
 - [ ] [REVIEW] P1. **Re-check all 11 of batch 1's `## Deferred` items for resolution.** Batch 1 found zero
       conflict-gated items (the tranche's first batch has nothing yet to conflict with), so this step is broader than
@@ -163,3 +171,9 @@ every category, not just conflicts) to match that.
   existing list already matches this doc's own "Codex SSOTs" section plus the gated parent batch. No prior marker
   existed despite `context_scope` already being populated at doc-creation time — this is the first context-scout pass on
   this doc.
+- **2026-08-08 (slot 20)** — Todo 1 dispatched + worked. Found all 3 target source-doc checkboxes already flipped by
+  earlier, independent sessions (na-eligibility-audit passes + batch-1's own commits) before this task's dispatch —
+  verified rather than re-applied. Fresh-pulled all repos to `origin/live-defi-rollout`, confirmed all 5 referenced shas
+  (`deployment-api@8a36931`, `unified-trading-pm@a93e12221`, `@2b8073083`, `@d2094b791`, `@f5cff20aa` citing
+  `@dab5f0273`) are real ancestors via `git merge-base --is-ancestor`. No box left unflipped. Todo 1 checkbox flipped
+  with the full evidence trail above; todo 2 (batch1's Deferred re-check) unblocked next per `sequential: true`.
