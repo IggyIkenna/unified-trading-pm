@@ -178,19 +178,30 @@ below rather than duplicated here.
       `/plans/active/issues/ao_tranche_full_content_audit_findings_2026_07_31.md` (§3+§4 only). Repo:
       unified-trading-pm. — unified-trading-pm (this commit)
 
-- [ ] [DATA] P2. **Read-only diagnostic on the orchestrator VM's own `data/state/state.db` + `activity_log` (no external
-      credential needed — same host every dispatched worker already runs on).** For each of the 5 escalation/agent_ids
-      `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`'s Progress Log names (`agt-79063c`, `agt-0cd704`,
-      `agt-765e33`, `agt-8fa8d1`, `agt-8e95ca`), determine (a) whether an `AgentRow` with that `agent_id` exists now or
-      ever existed (cross-check `escalation_dispatched`/`plan_health_dispatch` `activity_log` rows for that id if the
-      `AgentRow` itself is gone/archived), (b) if found, its current `status`/`tmux_session`, and (c) if it existed then
-      transitioned away from active/stale before its worker's `/done` call, the `activity_log` event that did it. **Do
-      NOT attempt the code fix** (that doc's Todo 2) in this same todo — it is two-hypothesis-contingent on this
-      diagnostic's result, a separate gated follow-up. **Done when**: a new dated Progress Log entry on the source doc
-      records the table above for all 5 ids that are still within retention; a fully-attempted-but-inconclusive result
-      (e.g. all 5 rows already pruned) is an acceptable, explicitly-recorded outcome. Source:
+- [x] ✅ [DATA] P2. **Read-only diagnostic on the orchestrator VM's own `data/state/state.db` + `activity_log` (no
+      external credential needed — same host every dispatched worker already runs on).** For each of the 5
+      escalation/agent_ids `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`'s Progress Log names
+      (`agt-79063c`, `agt-0cd704`, `agt-765e33`, `agt-8fa8d1`, `agt-8e95ca`), determine (a) whether an `AgentRow` with
+      that `agent_id` exists now or ever existed (cross-check `escalation_dispatched`/`plan_health_dispatch`
+      `activity_log` rows for that id if the `AgentRow` itself is gone/archived), (b) if found, its current
+      `status`/`tmux_session`, and (c) if it existed then transitioned away from active/stale before its worker's
+      `/done` call, the `activity_log` event that did it. **Do NOT attempt the code fix** (that doc's Todo 2) in this
+      same todo — it is two-hypothesis-contingent on this diagnostic's result, a separate gated follow-up. **Done
+      2026-08-08** (data_engineering, slot 11) — queried the LIVE `agent-orchestrator/data/state/state.db` (`mode=ro`;
+      NOT the empty 0-byte root-clone artifact of the same basename) for all 5 ids. None has a current `AgentRow` (table
+      itself appears to carry a rolling retention window, unconfirmed mechanism, independent of this bug); all 5
+      registrations are confirmed indirectly via `escalation_dispatched`/`plan_health_dispatched` (one-shot registration
+      never logs its own `agent_registered` event — only the persistent-agent `/register` path does,
+      `server/routes/agents.py:764`); all 5 were archived via the SAME event, `tmux_session_lost`
+      (`archived_lifecycle_complete: true`, from `tmux_pruner.py`'s dead-tmux-session sweep calling
+      `archive_agent(exit_reason="reaped-stale")` — confirmed as the ONLY possible transition path since `health.py`
+      explicitly skips its silence-based stale dimmers for `lifecycle in (one_shot, scheduled)`), across 3 distinct
+      proximate triggers (slot-reuse collision ×2 — the same physical tmux pane completed an unrelated Class-A task
+      seconds before the reap; context-saturation wedge-kill ×1; plain silent session loss ×2). Full per-id table +
+      evidence in the source doc's new dated Progress Log entry. Source:
       `/plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md` (diagnostic half of its
-      remaining scope only). Repo: agent-orchestrator (read-only).
+      remaining scope only; its own [DATA] P2 todo flipped `[x]` in the same commit). Repo: agent-orchestrator
+      (read-only, no code changed). — unified-trading-pm (this commit)
 
 - [x] ✅ [BACKEND] P2. **CLOSED 2026-08-08 — verified via source-doc re-read, option (a) applies.** The source doc
       (`host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`) was independently resolved+archived
