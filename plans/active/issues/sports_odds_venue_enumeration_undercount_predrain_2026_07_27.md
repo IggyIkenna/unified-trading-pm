@@ -23,7 +23,7 @@ summary: >-
   cumulative history — or whether the plan's venue enumeration is genuinely incomplete. This doc does not attempt that
   reconciliation; it exists so the discrepancy is on record before the Move todos are dispatched against a possibly
   incomplete list.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -38,6 +38,7 @@ related:
 created: 2026-07-27
 author: unknown
 priority: P0
+resolved_by: sports_taxonomy_p1_capture_and_contracts_2026_08_08
 parent_epic: sports_master
 source: >-
   Measured directly against the live
@@ -264,15 +265,13 @@ now has a concrete, checkable hypothesis to confirm rather than an open judgment
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       session's final report. Follow-up tracked as a fresh todo below (never left as prose per the
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       todos-not-prose rule). Repos: market-tick-data-service (verification only) / unified-trading-pm (doc).
 
-- [ ] [DATA] P0. **Extend `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`'s venue→class mapping to cover all 19
-      previously-"unmapped" venues** (BETONLINEAG, UNIBET, BETRIVERS, WILLIAMHILL, CASUMO, SPORT888, CORAL, PADDYPOWER,
-      DRAFTKINGS, UNIBET_UK, SKYBET, BETSSON, FANDUEL, VIRGINBET, LIVESCOREBET, BETVICTOR, LADBROKES_UK, BOVADA, BETWAY,
-      UNIBET_EU — 292,117 real `data_type=trades` shards / 51,291,778 rows, measured 2026-07-29, see the todo above) —
-      classify each as EXCHANGE_ODDS or FIXED_ODDS (mirroring the already-executed 9-venue precedent), move the GCS
-      objects, and only then let the fork plan's legacy-contract-retirement todo proceed. This is an operator/
-      data-engineering decision (which class each bookmaker belongs to), not a mechanical fact — genuinely needs the
-      same `[OPERATOR]`-adjacent mapping-ruling pattern the fork plan's own todo 1 already used for the first 9 venues.
-      Repos: market-tick-data-service, unified-api-contracts, unified-trading-pm.
+- [x] ✅ [DATA] P0. **Extend venue→class mapping for all 21 previously-"unmapped" venues** — RESOLVED mechanically by
+      `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` (2026-08-08): the exchange_odds/fixed_odds split is
+      retired entirely. `SportsVenueType` already encodes exchange-vs-sportsbook at the venue level; the per-instrument
+      instrument_type fork was redundant. All sports venues now map to the canonical `odds` instrument_type in
+      `INSTRUMENT_TYPES_BY_VENUE`; new writer output uses `InstrumentType.ODDS`. The 21 previously-unmapped venues
+      (corrected count per operator ruling banner; doc said 19) require no per-venue operator classification — the
+      merger makes the question moot. GCS objects and manifest rows carrying exchange_odds/fixed_odds are migrated in P2.
 
 ## Secondary, smaller finding (not this doc's main subject)
 
@@ -303,3 +302,7 @@ on this bucket.
   open todo still self-identifies as an operator/data-engineering classification call (which of the 19 bookmakers is
   EXCHANGE_ODDS vs FIXED_ODDS), same `[OPERATOR]`-adjacent mapping-ruling pattern as the already-executed 9-venue
   precedent.
+- **resolved 2026-08-08** (`sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` P1 shipping): the issue is moot —
+  `exchange_odds`/`fixed_odds` retired as first-class instrument_types. All sports venues (incl. the 21 previously
+  unmapped; corrected count per operator ruling banner) now map to `ODDS` in `INSTRUMENT_TYPES_BY_VENUE`. No per-venue
+  EXCHANGE_ODDS vs FIXED_ODDS decision required. Status set to resolved.
