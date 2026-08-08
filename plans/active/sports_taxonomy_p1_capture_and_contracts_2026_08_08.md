@@ -262,7 +262,7 @@ achieved by exclusion, not canonicalisation.**
 - [ ] [CODE] P0. **Retire the `exchange_odds`/`fixed_odds` instrument_type split** — exchange-vs-sportsbook is a
       property of the VENUE (UAC `SportsVenueType` already encodes it), so stamping it per-instrument is redundant.
       Derive at read time. This also resolves
-      `/plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md`'s "classify 19 unmapped
+      `/plans/archive/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md`'s "classify 19 unmapped
       bookmakers" todo mechanically, with no per-venue operator judgment. NOTE the count discrepancy: that doc says 19,
       the live manifest says **21** venues still carrying only the pre-fork `odds` token. **PRE-SPECIFIED**: the live
       prod manifest is authoritative; re-measure it and correct the issue doc's figure, do not reconcile by discussion.

@@ -17,7 +17,7 @@ tags: [sports, backfill, finalize, archival, honest-coverage, data-floor]
 related:
   [
     /plans/active/sports_taxonomy_p4_backfill_2026_08_08.md,
-    /plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md,
+    /plans/archive/2026_08/sports_prelaunch_cf5_verify_residual_2026_07_24.md,
     /plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md,
     /codex/02-data/sports-2020-06-data-floor.md,
   ]

@@ -23,7 +23,7 @@ related:
   [
     /plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/archive/issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md,
-    /plans/active/issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md,
+    /plans/archive/issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-04"
@@ -70,14 +70,17 @@ skill's no-double-gate mechanism).
       todos are consumed by this batch — if flipping both leaves it with zero open checkboxes and no other
       operator-gated remainder, treat it as an archival candidate (confirm via `check_archive_candidates.sh` or a direct
       re-read) rather than leaving it stranded `active`/`open` with nothing left to do. (repo: unified-trading-pm)
-- [ ] [REVIEW] P3. **Reconcile `issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md`'s sole
-      todo — narrow, do NOT close.** Once batch7's investigation todo ships (with its dated git-history finding recorded
-      in that doc's Progress Log), update the source doc's own
-      `- [ ] [OPERATOR] P3. Investigate via git log --follow/git blame...` todo text to reflect that the investigation
-      is done and cite the finding — but do **NOT** flip it to `[x]`: the (a)/(b) structural decision (fix the
-      misleading comment vs. wire a real `module` block) remains an open, narrower `[OPERATOR]` item regardless of what
-      the investigation found. This source doc stays `assigned_vm: NA`, NOT an archival candidate this round. (repo:
-      unified-trading-pm)
+- [x] ✅ SUPERSEDED-BY-EVENTS 2026-08-08 (cicd wall-fix pass) — [REVIEW] P3. ~~Reconcile
+      `issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md`'s sole todo — narrow, do NOT
+      close.~~ This todo's own premise (the (a)/(b) structural decision stays open, source doc not archival-eligible
+      this round) is now stale: a later 2026-08-08 session already ran the git-history investigation this todo
+      anticipated AND found it dispositive — answer (a) intentional isolation, confirmed, with no further
+      operator/architect decision needed (only a mechanical one-line comment fix on
+      `deployment-service/terraform/gcp/live_event_log/main.tf:9` remains, which this same finalize plan already names
+      explicitly). The source doc's sole todo was flipped `[x]` on that basis and the doc is now genuinely 0-open-todos
+      — archived 2026-08-08 to
+      `/plans/archive/issues/deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md` per the standard
+      6-step ritual (this is that reconciliation). (repo: unified-trading-pm)
 - [ ] [DOC] P3. **Archive `infra_satellite_ao_dispatch_batch7_2026_08_04.md`** once all three todos above are done and
       both reconciliations are verified — run the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`,
       fix every corpus referrer path, confirm `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py`

@@ -17,7 +17,7 @@ related:
   [
     /plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
-    /plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md,
+    /plans/archive/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
   ]
 created: 2026-08-08
@@ -57,7 +57,7 @@ locked_since:
 
 - [ ] [REVIEW] P1. **Reconcile every SOURCE doc P1 resolved, re-verifying each cited commit exists.** P1 is a
       batch-style phase: its todos close open items in
-      `/plans/active/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` (the 19-vs-21 unmapped
+      `/plans/archive/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` (the 19-vs-21 unmapped
       bookmaker classification, resolved mechanically by retiring the split),
       `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md` (the codex rename/split
       process rule), and the two capture-outage docs (`mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md`,

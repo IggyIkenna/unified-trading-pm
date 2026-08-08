@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [quality-gates, ratchet, empty-string-fallback, blocked-pushes, mtds, multi-agent]
 related:
   [
-    /plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
+    /plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
     /plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
   ]
 created: 2026-08-08
@@ -107,7 +107,7 @@ is not scoped to the connector's own author.
       aave_liquidations_ethereum_ws.py updated with explicit payload evidence.
 - [ ] [REVIEW] P2. **Consider whether the ratchet should fail the AUTHOR's push rather than everyone's.** This is the
       second recorded instance of a whole-tree ratchet in MTDS blocking unrelated agents
-      (`/plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` is the first). A
+      (`/plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` is the first). A
       ratchet that only counts sites in the pushing agent's own `--files` scope would have caught this at authoring time
       and not blocked the fleet. Evaluate feasibility and either implement or record why whole-tree is deliberate.
       **Done when**: a decision is recorded with rationale.

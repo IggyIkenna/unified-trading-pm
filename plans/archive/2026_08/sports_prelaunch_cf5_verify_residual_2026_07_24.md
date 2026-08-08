@@ -5,7 +5,7 @@ summary: >-
   2 small residual todos forked verbatim out of the archived migration-verification/orphan-safety harness plan
   (2026-07-24 plan line-cap remediation split): the operator-gated sports pre-launch-window (C3) corpus decision and the
   sports CF-5 trades-relabel fix, last recorded (2026-06-16) as code-complete but not yet landed.
-status: active
+status: complete # was: active — archived 2026-08-08, both todos done (CF-5 landed, C3 superseded per data-floor ruling)
 nature: process
 asset_group:
   [sports] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
@@ -57,6 +57,10 @@ context_scope:
     instruments-service/scripts/backfill_orphan_class_e_sports.py,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-08** — both todos done: CF-5 relabel fix landed (`market-tick-data-service@7f1262a0`), C3
+> pre-launch-window question SUPERSEDED by the sports 2020-06 data floor ruling (see banner below). Disposition executed
+> by `/plans/active/sports_taxonomy_p4_backfill_2026_08_08.md`.
 
 > **✅ OPERATOR RULING 2026-08-08 — this doc's sole open todo is STALE, not open.** It offers a choice between extending
 > `SOURCE_COVERAGE_START["footystats"]` 2019→2018 (plus the api_football sub-entity windows) and re-backfilling the

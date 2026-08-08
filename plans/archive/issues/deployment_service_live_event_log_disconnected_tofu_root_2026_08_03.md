@@ -15,7 +15,7 @@ summary: >-
   backend state for blast-radius reasons) or a historical accident (e.g. a module block that was removed/never added).
   Left as-is, it remains a standing risk for the SAME class of drift the parent issue found (two roots, one resource) to
   recur for any other resource `live_event_log/` declares.
-status: open
+status: resolved # was: open — archived 2026-08-08, investigation done (intentional isolation confirmed via git history)
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -45,6 +45,8 @@ source: >-
   deployment_service_root_state_orphaned_pubsub_publisher_iam_member_2026_08_03.md — not investigated in that doc's
   scope.
 resolved_by:
+  "infra-tranche NA-question resolution 2026-08-08 — git-history investigation confirmed (a) intentional isolation;
+  mechanical comment fix tracked in infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md"
 locked_by:
 locked_since:
 depends_on: []
@@ -79,6 +81,10 @@ comment either way.
 **RESOLVED by git-history investigation 2026-08-08 — (a) intentional isolation, confirmed.** See Progress Log for
 evidence. The remaining action (correct the misleading comment) is now a plain mechanical fix, not a judgment call — no
 operator/architect decision needed.
+
+> **🗄️ ARCHIVED 2026-08-08** — investigation + decision (this doc's actual scope) is done. The remaining one-line
+> comment fix on `deployment-service/terraform/gcp/live_event_log/main.tf:9` is a mechanical follow-up left for a
+> deployment-service-scoped dispatch (see todo below) — not tracked further here.
 
 ## Todos
 

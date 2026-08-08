@@ -8,7 +8,7 @@ summary: >-
   code is written — per operator ruling (BLK-b567ce7d, 2026-07-21) on
   sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md's todo, writing speculative
   threshold/decay-curve code against zero spec risks building the wrong thing.
-status: active
+status: complete # was: active — archived 2026-08-08, all 8 [DESIGN] todos ratified/complete (see banner)
 nature: design
 asset_group: [sports, prediction]
 stage: [strategy]
@@ -53,6 +53,10 @@ context_scope:
     strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/sports_arb_dutching.py,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-08** — fully complete. All 8 `[DESIGN]` todos ratified/done, §3 sign-off answered.
+> Implementation is carried forward by `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` (still active,
+> unimplemented); this spec-only doc's job (define the decay-window statistic + alpha-gate criteria) is finished.
 
 > **✅ OPERATOR RULING 2026-08-08 — RATIFIED AS WRITTEN. All 8 [DESIGN] todos are unblocked for implementation.** The
 > operator approved every one of this doc's own recommended answers: per-leg decay measured against a shared t=0 (option
