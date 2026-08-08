@@ -209,7 +209,7 @@ achieved by exclusion, not canonicalisation.**
       (test_sports_schemas, test_venue_context_integration, test_instrument_generator, representative_sample) to use
       BETFAIR_EX_UK as the canonical data-axis exchange representative; hierarchy already in place via arb bugfix
       (OPERATOR_GROUP_VENUES@b9a0be80); QG green (12533 passed).
-- [ ] [CODE] P0. **Collapse the raw odds vocabulary to a single lowercase `odds`.** `trades` → `odds`; footystats
+- [x] ✅ [CODE] P0. **Collapse the raw odds vocabulary to a single lowercase `odds`.** `trades` → `odds`; footystats
       `ODDS`/`odds` → `odds`; the two populations stay distinguishable via the existing `source` column (`odds_api` vs
       `footystats`), which is exactly the axis that should carry that distinction. Add an `in_play` boolean column
       (derivable from `bm_minutes_to_kickoff < 0`) and retire `trades_inplay`. Re-reserve `trades` for genuine matched
@@ -220,7 +220,22 @@ achieved by exclusion, not canonicalisation.**
       `_process_one_category`; IS `enumerate_expected_universe.py`; features-service reads `odds_horizon_bucket` shards
       by GCS path prefix via `_ODDS_BUCKETED_PREFIXES` (NOT data_type column — a data_type rename does NOT find it);
       ml-service `sports_feature_loader._ODDS_BUCKETED_PREFIXES` (same); deployment-api distinct_values +
-      honest-coverage rollup. Full exhaustive enumeration: P2 `[REVIEW] P0`.
+      honest-coverage rollup. Full exhaustive enumeration: P2 `[REVIEW] P0`. — **LANDED 2026-08-08 (slot 2,
+      data_engineering)**: `unified-api-contracts@b2c5197d5`. Added `SPORTS_ODDS_DATA_TYPE_CANONICAL_FORM` (dict mapping
+      `trades`/`ODDS`/`odds` → `odds`) + `canonical_sports_odds_data_type()` resolver in `league_data.py`, exported from
+      both the sports domain `__init__.py` and top-level `unified_api_contracts/__init__.py` — mirrors the
+      already-shipped `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM`/`canonical_sports_is_data_type` pattern exactly. **This is
+      the P1 CONTRACT only**, per the plan header ("mutates NO GCS object and NO manifest row"): deliberately NOT wired
+      into `DATA_TYPES_BY_ASSET_GROUP["sports"]` or any writer/reader this phase — the physical manifest re-stamp (the
+      9-consumer inventory above) is P2 scope. **`in_play` column + `trades_inplay` retirement also deferred to P2** —
+      NOT bolted onto `SPORTS_ODDS_TRADES` this phase: read `_validation.py::validate_dataframe` directly and confirmed
+      it flags any declared-but-absent column as `missing_column` regardless of `nullable`/`required` (the
+      `required=False`/`provided_by_venues` fields on `ColumnSpec` are never actually consulted by the missing-column
+      check), so adding `in_play` now would flag every currently-shipping row as a violation — the identical reason
+      `SPORTS_ODDS_HORIZON_BUCKET` was registered as its own contract instead of an optional column on
+      `SPORTS_ODDS_TRADES`. 4 new drift-guard tests green (`test_sports_exports.py`): export presence, all 3 raw tokens
+      covered, values collapse to `odds`, both-case resolution via `canonical_sports_odds_data_type`. Full
+      `unified-api-contracts` `quality-gates.sh` green (346s).
 - [x] ✅ [CODE] P0. **Add a first-class `horizon` axis** to the manifest/shard contract and stop overloading
       `timeframe`. `timeframe` reverts to meaning candle grain only. `odds_horizon_bucket` stops being a data_type and
       becomes `odds` at a horizon. Enumerate every reader of the current `timeframe` column BEFORE changing it (see the
