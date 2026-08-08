@@ -14,12 +14,12 @@ summary: >-
   the same window — this is NOT a false-positive watchdog read of a still-alive VM (the codebase's documented 2026-07-18
   precedent for API-Football VMs), it looks like the watchdog correctly caught a genuine hang and killed it as designed.
   What's still unconfirmed: WHY the underlying Python process (or its wrapping `mtds_chunk_loop.sh`) stops emitting ANY
-  output — no OOM kernel message, no Python exception, nothing — for that specific ~20-minute window. Both occurrences
-  happened during REAL-FETCH-heavy work (not skip-fast dates): `smallchunk2` died mid-chunk-26 (past its own prior-run
-  boundary, genuinely new ground); `smallchunk3` died mid-chunk-18 (the known 2020-08-30→2020-09-03 season-opener week,
-  mid-`SCOTTISH_PREMIERSHIP` real-fetch). No data loss either time — the manifest's per-VM shard writes are durable
-  regardless of which VM instance wrote them, and a relaunch with `RESUME_FORCE=false` correctly skip-fasts through
-  already-captured ground.
+  output — no OOM kernel message, no Python exception, nothing — for that specific ~16-21-minute window. All three
+  occurrences happened during REAL-FETCH-heavy work (not skip-fast dates): `smallchunk2` died mid-chunk-26 (past its own
+  prior-run boundary, genuinely new ground); `smallchunk3` and `smallchunk4` both died mid-chunk-18 (the known
+  2020-08-30→2020-09-03 season-opener week, different leagues each time). No data loss in any case — the manifest's
+  per-VM shard writes are durable regardless of which VM instance wrote them, and a relaunch with `RESUME_FORCE=false`
+  correctly skip-fasts through already-captured ground.
 status: open
 nature: issue
 asset_group: [sports]
@@ -75,30 +75,32 @@ week, so real-fetch load remains the strongest circumstantial correlate, though 
 simply "chunk 18 always hangs," more like elevated real-fetch load raises the odds of hitting whatever the underlying
 trigger is.
 
-Both delete operations' `principalEmail` = `1060025368044-compute@developer.gserviceaccount.com` — the shared automation
-service account used by both the watchdog itself and every manual `gcloud` action in this workspace, so this alone
-doesn't distinguish "watchdog" from "a human/session ran `gcloud compute instances delete` directly." The codex rule
-cited in `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (`Self-deleting VM/job` section) says a GRACEFUL
-self-delete-on-exit writes a terminal `exit_code=` line to `run.log` before destroying itself — neither occurrence has
-one, which rules out the VM's own normal completion-or-crash self-delete path. The consistent ~19-21 minute gap across
-two independent occurrences (different VM instances, different chunks, different real-fetch content) is the strongest
-evidence this is the **watchdog's heartbeat-staleness check** (`HEARTBEAT_STALE_MINUTES`, default ~15-20 min per
-`vm_zombie_watchdog.py` / its AWS twin) firing on a genuine silence, not two coincidental unrelated events.
+All three delete operations' `principalEmail` = `1060025368044-compute@developer.gserviceaccount.com` — the shared
+automation service account used by both the watchdog itself and every manual `gcloud` action in this workspace, so this
+alone doesn't distinguish "watchdog" from "a human/session ran `gcloud compute instances delete` directly." The codex
+rule cited in `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (`Self-deleting VM/job` section) says a GRACEFUL
+self-delete-on-exit writes a terminal `exit_code=` line to `run.log` before destroying itself — none of the three
+occurrences has one, which rules out the VM's own normal completion-or-crash self-delete path. The consistent ~16-21
+minute gap across three independent occurrences (different VM instances, different chunks, different real-fetch content,
+different RSS) is the strongest evidence this is the **watchdog's heartbeat-staleness check**
+(`HEARTBEAT_STALE_MINUTES`, default ~15-20 min per `vm_zombie_watchdog.py` / its AWS twin) firing on a genuine silence,
+not coincidental unrelated events.
 
 ## What's confirmed
 
-- **Not OOM.** Neither death has a kernel OOM-kill message or an `exit=137` `CHUNK_FAILED` line — the last RSS reading
-  in both cases (16.3GiB and 8.6GiB) is well below the ~28-31GiB range where this launcher's known OOM pattern
-  (`mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`) actually triggers.
+- **Not OOM.** None of the three deaths has a kernel OOM-kill message or an `exit=137` `CHUNK_FAILED` line — the last
+  RSS reading in all three cases (16.3GiB, 8.6GiB, 24.4GiB) is at or below the ~28-31GiB range where this launcher's
+  known OOM pattern (`mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`) actually triggers, and varies too widely
+  across the three to be a fixed-threshold trigger.
 - **Not a watchdog false-positive against a genuinely-alive VM** (the documented 2026-07-18 API-Football precedent) —
   the heartbeat blob itself (a separate GCS object from `run.log`, updated by a distinct mechanism) also stopped
-  refreshing in the same window on `smallchunk3`, so the underlying VM/process genuinely went silent, not just the
-  watchdog's read of it.
-- **No data loss either time** — manifest per-VM shard writes are durable and address-independent of which VM wrote
-  them; a same-checkpoint relaunch (`RESUME_FORCE=false`) correctly skip-fasts through already-covered ground with zero
-  re-fetching or re-billing.
-- **Both occurrences were during real-fetch-heavy work**, not pure skip-fast dates — circumstantial, not proven, but
-  worth noting as the search space narrows.
+  refreshing in the same window on both `smallchunk3` and `smallchunk4`, so the underlying VM/process genuinely went
+  silent, not just the watchdog's read of it.
+- **No data loss in any occurrence** — manifest per-VM shard writes are durable and address-independent of which VM
+  wrote them; a same-checkpoint relaunch (`RESUME_FORCE=false`) correctly skip-fasts through already-covered ground with
+  zero re-fetching or re-billing.
+- **All three occurrences were during real-fetch-heavy work**, not pure skip-fast dates — circumstantial, not proven,
+  but worth noting as the search space narrows.
 
 ## What's NOT yet confirmed (open investigation)
 
