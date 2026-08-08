@@ -89,15 +89,20 @@ here.
       unchanged from the parent doc-chain; still open per `continued2`'s own last check — a brief runner-idle window was
       observed once but did not hold). Once landed AND sustained (not a momentary idle blip), re-test whether
       `main_ci_red`/`ldr_qg_failure` re-fires across this whole doc-chain stop recurring.
-- [ ] 2. [SCRIPT] P2. **RESOLVED 2026-08-06 — same ruling as the parent doc-chain's decision, do not duplicate here.**
-      `[SCRIPT]` tag (was `[OPERATOR]`) — option (a), minimum cooldown since last dispatch with unchanged HEAD. Same
-      operator-level gap flagged repeatedly across the whole doc-chain, now also observed for `instruments-service`: no
-      cooldown/state-transition dedup guard exists on the `main_ci_red`/`ldr_qg_failure` escalation trigger, so an
-      escalation can fire (and a worker be dispatched) for a state that self-resolved before the worker even started
-      investigating (this session's PR merged 2 seconds before its own escalating run began). Recommend gating re-fire
-      on either (a) a minimum cooldown since the last dispatch for the same repo with an unchanged target-branch HEAD,
-      or (b) checking PR merge/HEAD-advancement state at dispatch time, not just at escalation-creation time. Operator
-      decision, not something a one-shot wall-clearing session should self-implement.
+- [x] ✅ 2. [SCRIPT] P2. **RESOLVED 2026-08-06 — same ruling as the parent doc-chain's decision, do not duplicate
+      here.** `[SCRIPT]` tag (was `[OPERATOR]`) — option (a), minimum cooldown since last dispatch with unchanged HEAD.
+      Same operator-level gap flagged repeatedly across the whole doc-chain, now also observed for
+      `instruments-service`: no cooldown/state-transition dedup guard exists on the `main_ci_red`/`ldr_qg_failure`
+      escalation trigger, so an escalation can fire (and a worker be dispatched) for a state that self-resolved before
+      the worker even started investigating (this session's PR merged 2 seconds before its own escalating run began).
+      Recommend gating re-fire on either (a) a minimum cooldown since the last dispatch for the same repo with an
+      unchanged target-branch HEAD, or (b) checking PR merge/HEAD-advancement state at dispatch time, not just at
+      escalation-creation time. Operator decision, not something a one-shot wall-clearing session should self-implement.
+      — **DONE 2026-08-08, agent-orchestrator@a351d0d** (same fix as the parent doc's todo 3 — see
+      `pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md` todo 3 and
+      `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 6; not re-implemented separately here). Note: option (b)'s
+      PR-merge/HEAD-advancement-at-dispatch-time refinement was not built — option (a) alone was operator-ruled; not a
+      gap left open by this fix.
 - [ ] 3. [INFRA] P3. Once `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phases 2-3
       land and hold, re-check whether this entire doc-chain (4 docs now, 30+ occurrences across 8+ repos) self-resolves
       — if so, archive all four docs together rather than leaving them open indefinitely as "still waiting."

@@ -183,8 +183,8 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       `issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md` (`## Still open` item 1, now
       flipped) + its Progress Log 2026-08-08 entry.
 
-- [ ] 6. [SCRIPT] P2. **Implement the operator-DEFAULT-RULED-2026-08-06 escalation-dispatch cooldown guard (option a): a
-      minimum cooldown since the last `main_ci_red`/`ldr_qg_failure` dispatch for the same repo with an unchanged
+- [x] ✅ 6. [SCRIPT] P2. **Implement the operator-DEFAULT-RULED-2026-08-06 escalation-dispatch cooldown guard (option
+      a): a minimum cooldown since the last `main_ci_red`/`ldr_qg_failure` dispatch for the same repo with an unchanged
       target-branch HEAD.** Locate the escalation-raising site (likely `agent-orchestrator/server/ci_reconcile.py`,
       confirm exact site first) and add a state-transition dedup guard consistent with
       `/codex/04-architecture/agent-orchestrator-alerting.md`'s "fire on change/RESOLVED, never every tick" principle —
@@ -196,7 +196,19 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       corrected from `[OPERATOR]`) — the one prior assessment of this doc (2026-08-03) called it "too hot to batch";
       re-verified this run: the doc's own 2026-08-06/08-07 na-eligibility-audit entries confirm todo 3 is a decided,
       bounded implementation task, not an open judgment call — it cooled from "operator needs to decide" to "operator
-      decided, needs building."
+      decided, needs building." — **agent-orchestrator@a351d0d**. Confirmed exact site:
+      `CIReconcileLoop._dispatch_failures` calls `escalate()` directly (bypassing `enqueue()`'s existing AF-1b
+      context-snapshot cooldown entirely), and its own `_last_dispatch` in-process cooldown is wall-clock-only and
+      resets on every restart — the documented root cause of the repeat-fire pattern. Added a disk-persisted
+      `RedispatchState` (`ci_reconcile_redispatch_cooldown.json`, mirrors the existing ETag-cache persistence pattern)
+      keyed by `repo:wall_type` → `(head_sha, dispatched_at)`, gated by a new pure `should_suppress_redispatch()`:
+      suppresses ONLY when the target-branch HEAD is unchanged since the last dispatch AND still inside the cooldown
+      window; a HEAD change always dispatches immediately regardless of cooldown. Wired via an injectable `head_sha_fn`
+      (same convention as the staleness/billing-wall gates) so existing tests are unaffected (default no-op when
+      `conclusion_fn` is test-injected). 11 new regression tests, incl. two end-to-end tests that construct a SECOND
+      `CIReconcileLoop` instance pointed at the same persisted state file (simulating an orchestrator restart, which
+      wipes `_last_dispatch`) — confirms the redispatch stays suppressed for an unchanged HEAD, and still fires for a
+      changed HEAD. `quality-gates.sh` green (2810 passed, 2 skipped, 185s).
 
 - [x] ✅ 7. [SCRIPT] P2. **Make `promotion_lag_monitor.py`'s lag alert distinguish a cause per line**
       (SIT-gated-in-flight / no promote PR / PR blocked-conflicting / cause-unknown) instead of implying generic
@@ -393,3 +405,16 @@ contention to the smallest fully-decided edit) rather than needing a fresh rulin
   `_ldr_main_finding()` to stay under the ruff C901 complexity cap. 12 new tests in
   `test_promotion_lag_monitor_promote_pr_cause.py` cover a synthetic case per cause plus the helper functions.
   `quality-gates.sh` green (1839 passed, 17 skipped, 84s).
+- **2026-08-08 (todo 6 shipped, slot 2)**: `agent-orchestrator@a351d0d`. Implemented the operator-DEFAULT-RULED
+  2026-08-06 option (a) escalation-dispatch cooldown guard in `CIReconcileLoop._dispatch_failures`
+  (`server/ci_reconcile.py`) — confirmed the exact site (it calls `escalation.escalate()` directly, bypassing
+  `enqueue()`'s existing AF-1b context-snapshot cooldown, and its own `_last_dispatch` cooldown is in-process/wall-clock
+  only and resets on every restart). Added a disk-persisted `RedispatchState` keyed by `repo:wall_type` →
+  `(head_sha, dispatched_at)`, gated by a new pure `should_suppress_redispatch()`: suppresses a redispatch ONLY when the
+  target-branch HEAD is unchanged since the last dispatch AND still inside the cooldown window; a genuine new
+  HEAD/failure always dispatches immediately. 11 new regression tests (incl. two that construct a second
+  `CIReconcileLoop` instance against the same persisted state file to simulate a restart, proving the cooldown survives
+  it). `quality-gates.sh` green (2810 passed, 2 skipped, 185s). Also flipped the source doc's todo 3
+  (`issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md`) and the identical-gap todos in its
+  `_continued2`/`_continued3` siblings, all citing the same commit — this closes the one gap `/ag-closeout-audit ci`
+  extracted this round.
