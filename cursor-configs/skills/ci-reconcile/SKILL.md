@@ -9,19 +9,23 @@ description:
   silently not taking effect, e.g. a release-tag minter that reports success while minting nothing), fixes each at the
   root via the correct documented recovery path, cross-checks whether the AO `ci_failure_watcher` escalation should have
   caught it and didn't, and re-sweeps EVERY repo AND every standing monitor before declaring done — the monitor
-  population is re-derived fresh each run from the generated `CICD-WORKFLOW-CATALOG.md`, never a hand-picked list of
-  "other alert sources I happened to notice," because that whack-a-mole pattern already produced one false "unblocked"
-  declaration this skill had to walk back. Needs no Slack read access at all — every signal it checks has a
-  directly-queryable system of record via `gh`/`gcloud`, so it runs identically whether invoked interactively or
-  dispatched to AO (which has no Slack access and can't be pasted into). Always auto-fixes — no separate `--fix` flag,
-  no propose-then-wait; it ships corrections directly (quickmerge / reprovenance_bypass.sh / a reviewed template
-  rollout) the same way this workspace's background agents already do, and reports what it found + did + verified,
-  closing with a visible checklist of every repo and monitor swept so "unblocked" doesn't have to be taken on faith. A
-  genuinely foreign/bulk/design-level decision (bulk-blessing someone else's bypass commits, a branching-model change)
-  still stops for an operator decision with structured options — auto-fix means "don't ask before shipping an obvious
-  fix," not "never ask." Trigger on `/ci-reconcile`, "unblock the CI alerts", "fix these Slack CI alerts at the root",
-  "reconcile the pipeline", "why is Slack saying X but CI shows Y", "is the pipeline actually unblocked", "check if CI
-  escalation caught this", "check the runner fleet / Cloud Build health", "make sure nothing is left unresolved".
+  population is re-derived fresh each run from BOTH the generated `CICD-WORKFLOW-CATALOG.md` (GitHub-Actions-native
+  `schedule(...)` workflows) AND a `scripts/self-hosted-runners/*.sh` grep for host/VM-dispatched monitors (systemd
+  timers on the CI runner boxes that page via `repository_dispatch` — invisible to the GH Actions catalog entirely),
+  never a hand-picked list of "other alert sources I happened to notice," because that whack-a-mole pattern already
+  produced two false "all quiet"/"unblocked" declarations this skill had to walk back — once for a monitor the catalog
+  never listed, once for a monitor that doesn't run in GitHub Actions at all. Needs no Slack read access at all — every
+  signal it checks has a directly-queryable system of record via `gh`/`gcloud`, so it runs identically whether invoked
+  interactively or dispatched to AO (which has no Slack access and can't be pasted into). Always auto-fixes — no
+  separate `--fix` flag, no propose-then-wait; it ships corrections directly (quickmerge / reprovenance_bypass.sh / a
+  reviewed template rollout) the same way this workspace's background agents already do, and reports what it found + did
+  + verified, closing with a visible checklist of every repo and monitor swept so "unblocked" doesn't have to be taken
+  on faith. A genuinely foreign/bulk/design-level decision (bulk-blessing someone else's bypass commits, a
+  branching-model change) still stops for an operator decision with structured options — auto-fix means "don't ask
+  before shipping an obvious fix," not "never ask." Trigger on `/ci-reconcile`, "unblock the CI alerts", "fix these
+  Slack CI alerts at the root", "reconcile the pipeline", "why is Slack saying X but CI shows Y", "is the pipeline
+  actually unblocked", "check if CI escalation caught this", "check the runner fleet / Cloud Build health", "make sure
+  nothing is left unresolved".
 ---
 
 # /ci-reconcile — fleet CI/CD reconciliation and root-cause fix
@@ -98,6 +102,52 @@ read-only health check), verify the OUTCOME, not just the run conclusion: did a 
 actually go to zero, did the PR it was supposed to merge actually merge. Read the underlying script the workflow invokes
 if the outcome doesn't match a green conclusion — that mismatch (green run, wrong/no outcome) is a bug class of its own,
 not a lower-priority one.
+
+## 0c. Host/VM-dispatched monitors — invisible to the GH Actions catalog, enumerate them separately
+
+**This section exists because of a real failure**: a sweep declared "30 minutes quiet" using only §0b's catalog-derived
+check, while a real, correctly-firing `glue-runner-crash-loop-watchdog` alert had been paging the whole time. §0b's
+catalog only sees GitHub Actions workflows with a `schedule(...)` trigger — it is structurally blind to monitors that
+run as a **systemd timer on the EC2 host itself** and dispatch INTO GitHub Actions via `repository_dispatch` (e.g.
+`ci-health.yml`'s `glue-runner-alert` job receives the page; the systemd timer that decided to fire it never appears as
+a row in `CICD-WORKFLOW-CATALOG.md` at all, because nothing about it lives in `.github/workflows/`). "I checked every
+`schedule(...)`-triggered workflow" is not the same claim as "I checked every standing monitor" — these are a
+structurally different, non-overlapping population and both must be swept.
+
+Enumerate this population the same non-hand-picked way as §0b — don't hardcode the list below, re-derive it:
+
+```bash
+grep -rl "dispatch_alert\|repository_dispatch\|/dispatches\"" scripts/self-hosted-runners/*.sh
+```
+
+As of 2026-08-08 this finds `glue-runner-crash-loop-watchdog.sh` and `ci-vm-resource-watchdog.sh` (NOT
+`classify-glue-workflows.sh` — that one's a manual advisory tool, no timer, not a standing alert source; confirm each
+hit actually has its own `.timer` unit before counting it). For each, get LIVE state directly from the host via SSM —
+never trust its last Slack post's timestamp as "still current":
+
+```bash
+aws ssm send-command --instance-ids <host> --document-name AWS-RunShellScript \
+  --parameters 'commands=["systemctl status <name>.timer --no-pager", "journalctl -u <name>.service --no-pager -n 20"]' \
+  --region <region>
+```
+
+Known host running these as of 2026-08-08: `i-042a6332509482556` (`ap-northeast-1`, the glue-runner pool). If a new CI
+host is ever provisioned, re-check there too — don't assume this is the only box that can run one of these.
+
+**Don't trust a monitor's own internal reasoning without independently checking the ground-truth data it claims to
+describe** — this is the second half of the 2026-08-08 failure above. When `glue-runner-crash-loop-watchdog` paged, its
+own code correctly asked GitHub's busy API first (its documented "primary signal," added specifically to close an
+earlier false-positive class) and got `busy: true` — reading that code and seeing the corroboration step present is not
+the same as verifying it actually measured the right thing. It didn't: the alert reported `unit_active_seconds` (the
+systemd PROCESS's uptime) as the job's duration, silently assuming a busy process and a long-running job are the same
+thing. They weren't — pulling the ACTUAL job history (`gh api repos/<owner>/<repo>/actions/runs?status=in_progress` →
+`.../jobs`, matching `runner_name`, reading each job's own `started_at`) showed a ~3-hour IDLE gap immediately before a
+fresh, minutes-old job; the process had been alive 3.2h, the job had not. Before accepting "the tool checked X so its
+verdict is correct," independently confirm what X actually measures against the real system state — this applies
+especially to any TIME-DURATION claim (process uptime, job age, and queue age are three different things a script can
+easily conflate). Root-cause fixed in `scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh`
+(`current_job_started_epoch()` now resolves the real job start time via the Actions API instead of trusting process
+uptime) — read that function's comment for the full incident if this recurs in a different script.
 
 A recovery/informational post (e.g. `glue-runner-crash-loop-watchdog` "recovered") is not an open finding by itself —
 but if the SAME condition (same runner, same monitor) recurs across the sweep window, that crosses from "an existing
@@ -203,7 +253,8 @@ without understanding the design intent first.
 
 ## 6. Verify — full-fleet sweep AND full-monitor sweep, not just the repos/monitors that were named
 
-Two separate sweeps, both required before the word "unblocked" is allowed in § 7's report:
+Three separate sweeps, all required before the word "unblocked"/"quiet window"/"no new issues" is allowed in § 7's
+report:
 
 1. Re-run § 0's sweep across every repo in `workspace-manifest.json`'s registry, not just the ones the original alert
    named. Every repo should show `quality-gates-v2` conclusion `success` on its trigger branch, and every branch-pair
@@ -211,13 +262,18 @@ Two separate sweeps, both required before the word "unblocked" is allowed in § 
    it.
 2. Re-run § 0b's catalog-derived monitor sweep, fresh (not reused from earlier in the same session — a monitor you
    checked at the start of a long session may have re-fired since). Every standing monitor gets an explicit verdict.
+3. Re-run § 0c's host/VM-dispatched monitor sweep, fresh, via live SSM state — **a `gh run list` scan of PM's own
+   Actions runs does NOT cover this population; skipping it is exactly the 2026-08-08 "30-min quiet window" failure** (a
+   genuinely-firing host-dispatched alert went unchecked the whole window because the sweep only ever looked at
+   GitHub-Actions-native run conclusions). Sweeps 2 and 3 are DIFFERENT populations found by DIFFERENT commands —
+   completing one is never evidence the other was covered.
 
-**The bar for saying "unblocked": every repo from sweep 1 AND every monitor from sweep 2 has an explicit, current,
-verified-clean status in this run — not "I didn't see anything more in Slack."** Silence is not evidence of health;
-several of this skill's own real findings were monitors that were failing/stale while posting nothing new (a
-dedup/cooldown suppressing a repeat page, or a monitor that's simply not running on its expected cadence). If a
-monitor's coverage genuinely can't be verified this pass (no direct query path, credentials unavailable), say so
-explicitly as a coverage gap in § 7 — never silently drop it from the count.
+**The bar for saying "unblocked": every repo from sweep 1, every monitor from sweep 2, AND every monitor from sweep 3
+has an explicit, current, verified-clean status in this run — not "I didn't see anything more in Slack" and not "no new
+Actions-run failures."** Silence is not evidence of health; several of this skill's own real findings were monitors that
+were failing/stale while posting nothing new (a dedup/cooldown suppressing a repeat page, or a monitor that's simply not
+running on its expected cadence). If a monitor's coverage genuinely can't be verified this pass (no direct query path,
+credentials unavailable), say so explicitly as a coverage gap in § 7 — never silently drop it from the count.
 
 ## 7. Report
 
@@ -227,11 +283,12 @@ out: (1) any alert that was already stale/self-resolved by the time you looked (
 any alert-accuracy issue found and its fix, (3) the AO-escalation verdict from § 5, (4) anything that could NOT be
 resolved this pass — file it per findings-triage, never leave it as an unlogged "still broken."
 
-**Close every report with the § 6 checklist made visible**: a table or list of every repo swept (sweep 1) and every
-standing monitor swept (sweep 2, from the regenerated catalog) with its verified status — not a prose summary that asks
-the reader to trust the sweep happened. This is the concrete fix for the failure mode that motivated § 0b: the reader
-should be able to look at the list and see for themselves that nothing was skipped, rather than taking "unblocked" on
-faith.
+**Close every report with the § 6 checklist made visible**: a table or list of every repo swept (sweep 1), every
+GH-Actions-native standing monitor swept (sweep 2, from the regenerated catalog), AND every host/VM-dispatched monitor
+swept (sweep 3, from the `scripts/self-hosted-runners/*.sh` grep + live SSM check) — with each item's verified status,
+not a prose summary that asks the reader to trust the sweep happened. This is the concrete fix for the failure mode that
+motivated § 0b/§ 0c: the reader should be able to look at the list and see for themselves that nothing was skipped,
+rather than taking "unblocked" on faith.
 
 ## Under `/autonomous`
 
