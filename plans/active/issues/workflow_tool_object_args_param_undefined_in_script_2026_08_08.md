@@ -34,13 +34,13 @@ created: "2026-08-08"
 last_updated: "2026-08-08"
 author: ikennaigboaka [slot-13 · ag_closeout_auditor agt-b4c4ab]
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: research
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.24
-assigned_role: data_engineering
+assigned_role: infra
 drift_direction: advance-process
 depends_on: []
 locked_by:
@@ -109,3 +109,14 @@ by accident — exactly the kind of trap this ritual exists to pre-empt for the 
 - **slot-13 (ag_closeout_auditor agt-b4c4ab) 2026-08-08**: Filed during the pre-compact ritual, per the workspace HARD
   RULE that findings become `- [ ]` todos, not chat-only prose. Not blocking this session's sports audit — the
   workaround (inline literals) let Phase 1 classification proceed normally.
+- **na-eligibility-audit 2026-08-08** (ao tranche): RECLASSIFY — the sole `[DIAG] P3` todo is bounded/deterministic (run
+  a minimal + a large `Workflow` `args` call, observe pass/fail, done-when is an objective repro-confirmed-or-ruled-out
+  outcome; the follow-on doc-caution edit is a one-line addition to 4 named skill files, not a design call).
+  Conflict-check cleared: 0 hits for `assigned_vm: planning` docs in `parent_epic: orchestrator_master` mentioning
+  Workflow args/reproduction; 0 hits for a sibling batch/finalize doc claiming it; 0 overlap in
+  `ao_open_issues_consolidated_close_out_2026_07_17.md`. Flipped `assigned_vm: NA -> planning`,
+  `execution_scope: local-only -> orchestrator-agent`; corrected `assigned_role: data_engineering -> infra` (this
+  touches no manifest/capture_status/GCS-writer code at all — data_engineering's stated scope — and is closer to general
+  tooling/observability than any other craft role, matching the precedent `634dabc01` set for an analogous
+  not-data-pipeline-work retag). Issue doc under `plans/active/issues/` — exempt from the finalize-plan-coverage rule,
+  no companion finalize doc needed.

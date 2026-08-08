@@ -292,3 +292,8 @@ still in flight.
   — 66-doc corpus sweep, 2 mistags retagged, `ao_satellite_ao_dispatch_batch8_2026_08_08.md` + finalize drafted) is
   independently git-verified complete as `9895da4c5`, ancestor of `origin/live-defi-rollout`, logged via `/progress`
   instead of a clean `/done`, matching the established precedent.
+- **na-eligibility-audit 2026-08-08** (ao tranche): KEEP-NA, CONFLICT-PARKED, re-affirmed — re-verified both
+  `ao_satellite_ao_dispatch_batch5_2026_08_03.md` and `batch6_2026_08_04.md` still exist, still `status: draft`,
+  `assigned_vm: NA`, and still cite this doc's diagnostic ([DATA] P2) and gated code-fix ([CODE] P2) items by name. Only
+  in scope this run because 3 more corroboration entries landed since the 08-07 marker — none change either todo's own
+  content or the parked status. Not re-litigated.

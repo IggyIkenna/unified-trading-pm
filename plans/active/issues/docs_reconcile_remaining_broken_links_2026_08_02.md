@@ -294,3 +294,12 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   note, and the custody-onboarding-checklist.md / `fireblocks_copper_client_integration` item) are unchanged — none of
   these are tracked in either link-existence baseline, so they were not in scope for this pass's live-reproduction
   check; all remain genuine VALID_JUDGMENT items per the last na-eligibility-audit verdict.
+- **na-eligibility-audit 2026-08-08** (ao tranche): KEEP-NA, valid (MIXED, doc stays NA) —
+  `grep -cE '^[[:space:]]*[-*] \[ \]'` = **12**, matching. Re-affirms the 2026-08-03 MIXED_NO_CLEAN_FLIP disposition:
+  the prior pass's 6 BOUNDED_RECLASSIFY items are now all fixed/closed (docs-reconcile 2026-08-05 + 08-08), leaving 11
+  genuine VALID_JUDGMENT/design-observation items unchanged. One NEW item looks individually bounded on this read — the
+  `[SCRIPT] P2` `fix_frontmatter.py::get_first_paragraph_after_heading()` truncation fix (added 2026-08-08): the doc
+  already names the exact function, the exact bug (`if len(result) > 200: result = result[:197] + "..."`, no
+  boundary-awareness), and a specific recommended fix (word/sentence-boundary truncation + flag-for-review) —
+  MISCLASSIFIED_LIKELY_AO_ELIGIBLE, flagging for a future partial split rather than acting on it here (doc stays NA in
+  full, same as the 2026-08-03 precedent for this exact doc).

@@ -268,3 +268,7 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   no word/sentence-boundary awareness (verified by reading the function directly) — filed as a standalone P2 finding in
   `docs_reconcile_remaining_broken_links_2026_08_02.md` (a script-tooling fix, not a doc-content fix, so out of scope
   for the item-3 sign-off itself) rather than duplicated here.
+- **na-eligibility-audit 2026-08-08** (ao tranche): KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` = **4**,
+  matching. All 4 items are explicit `BLOCKED-OPERATOR-DECISION` A/B/C(/D) authority calls per the doc's own framing
+  (items 1-3 unchanged; item 4, added today, is a genuine security-relevant content contradiction the docs-reconcile
+  entry above already correctly declined to guess at). Textbook KEEP-NA, no re-derivation needed.
