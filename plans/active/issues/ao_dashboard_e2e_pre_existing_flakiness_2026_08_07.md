@@ -110,13 +110,50 @@ known — see the "Findings triage" note in `CLAUDE.md` if this needs its own tr
       backend's independent usage/balance pollers); add an explicit wait-for-poller-tick or increase the assertion
       timeout if confirmed, per the standard Playwright convention already used in `critical-health.spec.ts`'s own
       cold-start comment.
-- [ ] [TEST] P2. **Root-cause `worker-chat.spec.ts`'s 2 intermittent failures** — check the real tmux session's
-      startup-timing dependency; this spec is the most operationally distinct (real background process, not just DB
-      state) so may need a different fix shape than the others.
+- [ ] [TEST] P2. **EXECUTED 2026-08-08 (ao_satellite_ao_dispatch_batch8-002, backend_engineer craft) — checkbox left
+      unflipped per this batch's own rule ("do not edit a source doc's checkboxes beyond appending evidence"); the
+      paired finalize plan reconciles this into `[x]`.** Root-caused `worker-chat.spec.ts`'s intermittent failures.
+      **NOT a tmux startup-timing race** — `run-e2e-backend-chat.sh`'s real fixture pane
+      (`fixtures/fake_worker_pane.sh`) boots before uvicorn and was never observed to race in 13 independent
+      reproductions. Actual root cause: `PlanRegenLoop` (`server/server.py`) started UNCONDITIONALLY on every backend
+      boot regardless of `ORCHESTRATOR_MODE`. Any e2e backend launched from a shell that ambiently exports
+      `ORCHESTRATOR_VM_ID` (every orchestrator worker slot does, for its own live-mode operation — confirmed
+      `ORCHESTRATOR_VM_ID=planning` in this session's env) still resolved a real `vm_id`, so ~60s after boot the loop
+      scanned the REAL `plans/active/*.md` corpus and wrote the result to `config.backlog_path()` — which honours
+      `ORCHESTRATOR_BACKLOG` regardless of mock/live mode — silently overwriting the e2e fixture backlog files with real
+      production task data. Reproduced live: a single full-suite run corrupted
+      `dashboard/tests/e2e/fixtures/{backlog,chat,parked}.e2e.yaml` with 19,000+ lines each of real backlog rows.
+      **Fix**: `agent-orchestrator@ef73a44` — gate `plan_regen.start()` behind `not config.is_mock()` in
+      `server/server.py`. **Verification**: 10x re-run of `worker-chat.spec.ts` in TRUE isolation (a single
+      backend+dashboard pair, no other webServer entries) — 10/10 clean passes, all 3 tests each run, zero flakes, zero
+      fixture mutation (`git status` clean after every run). Full `agent-orchestrator` `quality-gates.sh` green
+      (sentinel matches `ef73a44`), shipped via quickmerge, SHA independently verified ancestor of
+      `origin/live-defi-rollout`. **Residual finding (see new todo 5 below)**: re-running against the REAL
+      `playwright.config.ts` (which boots ALL 6 backend+dashboard pairs regardless of `--project` filter — a Playwright
+      architecture property, not a bug this fix touches) still failed 3/3 times post-fix, but on a DIFFERENT symptom
+      (`getByText(/Slots:/)` login timeout, not the tmux/transcript assertions) and with NO fixture corruption this time
+      (confirming the PlanRegenLoop bug is genuinely fixed). Host `uptime` showed sustained load average 7-9 on an
+      8-core box during these runs (other slots' concurrent QG/test activity) — consistent with genuine CPU contention
+      from booting 12 processes at once, not a worker-chat.spec.ts code defect. This is now filed as its own todo since
+      it's a suite-wide architectural property (global `webServer` coupling), not specific to this spec.
 - [ ] [TEST] P3. **Root-cause `backlog-collision.spec.ts`'s intermittent "click Fix" failure** — check for an
       async-completion race in the remint→confirm sequence.
 - [ ] [DOC] P3. **Once root-caused, note the fix pattern in `/codex/06-coding-standards/ui-testing-layers.md`** if a
-      general "async-poller-vs-test" convention emerges, so future specs avoid the same class of flake.
+      general "async-poller-vs-test" convention emerges, so future specs avoid the same class of flake. Should also
+      cover the `PlanRegenLoop`-in-mock-mode class from todo 2 (a "background loop with no interval=0 env-gate can still
+      corrupt state deterministically inherited from the launching shell's env" pattern), not just async-poller-vs-test
+      races.
+- [ ] [INFRA] P3. **Investigate whether Playwright's `webServer` config (an array, applied globally regardless of
+      `--project` filtering) should be split so a single-project e2e run doesn't boot all 6 backend+dashboard pairs.**
+      Discovered while verifying todo 2's fix: running `worker-chat.spec.ts` against the real `playwright.config.ts`
+      (not an isolated single-pair config) still fails intermittently under host CPU contention even with the
+      PlanRegenLoop corruption fixed, because every `--project=<x>` invocation still starts all 12 processes (6
+      backends + 6 vite dev servers). This is a genuine Playwright config-architecture property (not natively
+      per-project-scoped), likely a contributing factor to the ORIGINAL "different subsets fail each run" observation in
+      this doc's own "What was observed" section — whichever pair is slowest to boot under contention that run
+      determines which spec(s) time out. This is a DESIGN CALL (split into per-project config files invoked separately
+      in CI vs. accept the coupling and raise timeouts vs. something else) — operator-ask before implementing, not a
+      mechanical fix.
 
 ## Why this wasn't chased further this session
 
@@ -174,3 +211,19 @@ shipped independently or these findings would still be sitting entirely undocume
   `quality-gates.sh` skips dashboard checks when node_modules is absent and still passes. Fix is reasoned-correct by the
   root cause + follows the established convention; a slot with `npm install` should run the 10x loop before ticking this
   doc's todo 1 ✅.
+
+- **ao_satellite_ao_dispatch_batch8-002 2026-08-08 (slot-19, backend_engineer craft)**: Root-caused + fixed todo 2
+  (`worker-chat.spec.ts`). `npm install` run first (`dashboard/node_modules` was absent). Full detail in the flipped
+  todo above; summary: the hypothesized tmux-startup-race was disproven (the fixture pane boots before uvicorn by design
+  and never raced across 13 reproductions) — the real mechanism was `PlanRegenLoop` running unconditionally in mock mode
+  and silently overwriting e2e fixture backlog files with the real production backlog, because e2e backend scripts
+  inherit `ORCHESTRATOR_VM_ID`/`ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` from the launching shell without isolating
+  them. Fixed at the single correct layer (`server.py`: mock mode never starts `PlanRegenLoop`) rather than patching
+  each of the 6 `run-e2e-backend*.sh` scripts individually. Evidence: `agent-orchestrator@ef73a44` (independently
+  verified ancestor of origin), full `quality-gates.sh` green, 10/10 clean isolated re-runs (zero flakes, zero fixture
+  mutation). Filed a genuine residual finding as new todo 5 (global `webServer` array booting all 6 pairs regardless of
+  `--project` filter, compounding with shared-host CPU contention) — explicitly NOT fixed here since it's a design call,
+  not a mechanical one; the todo's own Done-when criteria's "operator-ask if the fix needs a design call" escape hatch
+  applies. Also reverted an incidental `parked.e2e.yaml` re-serialization-only diff (68 lines, same content reordered)
+  observed during a full-config repro run — pre-existing `bootstrap.initialise()` YAML-normalize-on-load behavior,
+  unrelated to this todo, not touched.
