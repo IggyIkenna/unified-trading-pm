@@ -152,7 +152,9 @@ stale-redelivery problem this doc is primarily about.
       `SendMessageRequest` carry a `max_redeliveries` override (e.g. 2-3) for one-shot sends, distinct from the 30
       default that's correctly tuned for recurring notices (git-health, etc.) — bounds the blast radius without a new
       endpoint. Done-when: a session that acks a one-shot instruction (or hits the lowered cap) stops seeing it
-      redelivered to the NEXT fresh session on that slot, verified live against a real send, not just a unit test.
+      redelivered to the NEXT fresh session on that slot, verified live against a real send, not just a unit test —
+      specifically confirm the acked message does NOT reappear in that slot's subsequent `/progress`/`/heartbeat` poll
+      responses (end-to-end delivery-path verification, not just that `answered_at` got set in the DB row).
 - [ ] [INFRA] P3. Separately check whether `POST /api/slots/{id}/message` direct instructions are reliably durable
       against a slot that's mid-task when the message arrives (this doc's own first filing attempt was lost this way) —
       confirm whether the message is genuinely dropped in that case, or whether it should have queued and simply hasn't
