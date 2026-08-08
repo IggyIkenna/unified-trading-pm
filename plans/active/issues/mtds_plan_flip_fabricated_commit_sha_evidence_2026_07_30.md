@@ -37,8 +37,8 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by: ""
-locked_by: ""
+resolved_by: "plan_reconciler agt-2add8d, 2026-08-08 — all 5 todos verified done + evidenced, archived"
+locked_by:
 context_scope:
   [
     /plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md,
@@ -145,6 +145,8 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
       `plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md` `resolved_by` and both todo
       citations rewritten with the real SHAs (`41372139` for item 1, `00c2cfe4` for item 2) and an explicit correction
       note. Repo: unified-trading-pm.
+
+## Deferred work — migrated to: none (all 5 todos done, no open deferrals)
 
 ## Progress Log
 
