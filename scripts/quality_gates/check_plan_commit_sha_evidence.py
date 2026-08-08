@@ -215,6 +215,10 @@ def _iter_todo_citations(text: str, path: Path, citation_re: re.Pattern[str]) ->
     return out
 
 
+# Repos already fetched once during this run (see _resolves_to_commit's miss path).
+_FETCHED_REPOS: set[Path] = set()
+
+
 def _cat_file_is_commit(repo_path: Path, sha: str) -> bool:
     """Bare `git cat-file -t <sha> == commit` against whatever this clone already has."""
     try:
@@ -253,18 +257,25 @@ def _resolves_to_commit(repo_path: Path, sha: str) -> bool:
     """
     if _cat_file_is_commit(repo_path, sha):
         return True
-    try:
-        subprocess.run(  # fixed argv, no shell=True
-            ["git", "-C", str(repo_path), "fetch", "--quiet", "--no-tags", "origin"],
-            capture_output=True,
-            text=True,
-            timeout=120,
-            check=False,
-        )
-    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
-        # Offline / no remote / slow network — we still cannot PROVE fabrication, and this
-        # gate must never manufacture a violation out of its own inability to verify.
-        return True
+    # Fetch AT MOST ONCE per repo per run. The caller's sha_cache already dedups by
+    # (repo, sha), but N *distinct* stale SHAs in one repo would otherwise pay N fetches of
+    # up to 120s each — so a single behind clone could turn a fast gate into a multi-minute
+    # one. One fetch brings the clone current for every SHA in that repo.
+    if repo_path not in _FETCHED_REPOS:
+        _FETCHED_REPOS.add(repo_path)
+        try:
+            subprocess.run(  # fixed argv, no shell=True
+                ["git", "-C", str(repo_path), "fetch", "--quiet", "--no-tags", "origin"],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                check=False,
+            )
+        except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+            # Offline / no remote / slow network — we still cannot PROVE fabrication, and
+            # this gate must never manufacture a violation out of its own inability to
+            # verify. Recorded as fetched so the next miss does not retry the same timeout.
+            return True
     return _cat_file_is_commit(repo_path, sha)
 
 
