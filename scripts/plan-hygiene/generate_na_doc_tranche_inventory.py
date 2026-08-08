@@ -31,15 +31,112 @@ the sibling script's identical bug, already fixed there).
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
 import yaml
 
 PM = Path(__file__).resolve().parents[2]
+
+# Matches the dated na-eligibility-audit verdict marker and an optional [body-hash:…] tag
+# written alongside it.  Handles all known marker variants:
+#   **na-eligibility-audit 2026-07-30**: ...
+#   **na-eligibility-audit 2026-07-30** [body-hash:abc123]: ...
+#   **na-eligibility-audit 2026-08-06 (infra tranche)**: ...
+#   **na-eligibility-audit 2026-08-03** (infra tranche, dispatch …): **KEEP-NA…
+_VERDICT_MARKER_RE = re.compile(
+    r"\*\*na-eligibility-audit (\d{4}-\d{2}-\d{2})"  # group 1: date
+    r"[^\n\[]*"  # anything on the same line before '[' or newline
+    r"(?:\[body-hash:([a-f0-9]{8,64})\])?"  # group 2: optional stored body hash
+)
+
+# Strips entire lines that contain a verdict marker so body_content_hash is stable
+# w.r.t. marker addition/update (the marker itself lives in the body, so without
+# this the hash would change every time a verdict is written or updated).
+_VERDICT_MARKER_LINE_RE = re.compile(
+    r"^[^\n]*\*\*na-eligibility-audit \d{4}-\d{2}-\d{2}[^\n]*\n?",
+    re.MULTILINE,
+)
+
+
+def strip_frontmatter(text: str) -> str:
+    """Return the doc body with the leading YAML frontmatter block removed."""
+    lines = text.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "---":
+        return text
+    for i, line in enumerate(lines[1:], 1):
+        if line.strip() == "---":
+            return "".join(lines[i + 1 :])
+    return text  # no closing ---, treat as bodyless frontmatter
+
+
+def body_content_hash(text: str) -> str:
+    """SHA-256 of the verdict-relevant body, truncated to 16 hex chars.
+
+    Stable w.r.t.:
+    - frontmatter-only changes (e.g. context_scope: backfills) — frontmatter is stripped.
+    - verdict marker additions/updates — marker lines are excluded so writing or updating
+      a [body-hash:…] tag does not change the hash that was stored at verdict time.
+
+    Two docs that differ only in frontmatter or verdict markers produce the same hash,
+    while any real body-content change (new todo, status update, body text edit) produces
+    a different hash.
+    """
+    body = strip_frontmatter(text)
+    body = _VERDICT_MARKER_LINE_RE.sub("", body)
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()[:16]
+
+
+def _latest_verdict_marker(text: str) -> tuple[str, str | None] | None:
+    """Parse the most recent na-eligibility-audit verdict marker from a doc.
+
+    Returns (date, stored_hash) where stored_hash is None for pre-hash-extension
+    markers (written before [body-hash:…] was added to the marker format).
+    Returns None when the doc has no verdict marker at all.
+    """
+    best: tuple[str, str | None] | None = None
+    for m in _VERDICT_MARKER_RE.finditer(text):
+        date = m.group(1)
+        stored = m.group(2)  # None when no [body-hash:…] tag
+        if best is None or date > best[0]:
+            best = (date, stored)
+    return best
+
+
+def _git_body_hash_at_date(pm: Path, rel_path: str, marker_date: str) -> str | None:
+    """Return body_content_hash of rel_path at the latest git commit on or before marker_date.
+
+    Fallback for markers written before the [body-hash:…] extension.  Returns None
+    when git is unavailable, the path has no history, or the call times out.
+    """
+    try:
+        log = subprocess.run(
+            ["git", "log", "--format=%H", f"--until={marker_date}T23:59:59", "--", rel_path],
+            cwd=pm,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if log.returncode != 0 or not log.stdout.strip():
+            return None
+        sha = log.stdout.splitlines()[0].strip()
+        show = subprocess.run(
+            ["git", "show", f"{sha}:{rel_path}"],
+            cwd=pm,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if show.returncode != 0:
+            return None
+        return body_content_hash(show.stdout)
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return None
 
 
 def _load_docspec():
@@ -168,8 +265,9 @@ def main(argv: list[str] | None = None) -> int:
     records = []
     for path in _iter_docs():
         rel = path.relative_to(PM).as_posix()
+        text = path.read_text(encoding="utf-8", errors="replace")
         try:
-            fm, _ = ds.parse_frontmatter(path.read_text(encoding="utf-8", errors="replace"))
+            fm, _ = ds.parse_frontmatter(text)
         except yaml.YAMLError:
             continue
         if fm is None:
@@ -187,7 +285,25 @@ def main(argv: list[str] | None = None) -> int:
         parent_epic = fm.get("parent_epic") or ""
         basename = path.name
 
-        open_todos = len(CHECKBOX_RE.findall(path.read_text(encoding="utf-8", errors="replace")))
+        open_todos = len(CHECKBOX_RE.findall(text))
+
+        # Content-hash (frontmatter-blind) incremental-skip logic.  A doc is skippable when its
+        # body content has not changed since its last na-eligibility-audit verdict marker —
+        # regardless of intervening frontmatter-only commits (e.g. context_scope: backfills).
+        current_hash = body_content_hash(text)
+        marker = _latest_verdict_marker(text)
+        verdict_date: str | None = None
+        incremental_skip = False
+        if marker is not None:
+            verdict_date, stored_hash = marker
+            if stored_hash is not None:
+                # Primary path: hash stored in marker — exact comparison, no git needed.
+                incremental_skip = stored_hash == current_hash
+            else:
+                # Fallback for pre-hash-extension markers: retrieve body at marker commit via git
+                # and compare.  Returns None if git is unavailable or the path has no history.
+                hist_hash = _git_body_hash_at_date(PM, rel, verdict_date)
+                incremental_skip = hist_hash is not None and hist_hash == current_hash
 
         tranches: list[str] = []
         for ag in AGS:
@@ -235,6 +351,15 @@ def main(argv: list[str] | None = None) -> int:
                 "open_todos": open_todos,
                 "tranches": doc_tranches,
                 "owning_tranche": owning_tranche(parent_epic, doc_tranches),
+                # Incremental-diff fields (Phase 0 of /na-eligibility-audit).
+                # body_content_hash: SHA-256 of frontmatter-stripped body (first 16 hex chars).
+                #   Skills write this into the verdict marker as [body-hash:…] so future runs
+                #   can skip without a git call when only frontmatter changed.
+                # incremental_skip: True when the body hasn't changed since the last verdict.
+                #   A doc with incremental_skip=True needs no Phase-1 re-read.
+                "body_content_hash": current_hash,
+                "verdict_marker_date": verdict_date,
+                "incremental_skip": incremental_skip,
             }
         )
 
