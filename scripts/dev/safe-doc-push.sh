@@ -102,10 +102,28 @@ if [[ ! -d .git ]]; then
   exit 2
 fi
 
+# is_staged_rename_source <path> -- true if <path> is the SOURCE half of a currently
+# staged rename (per `git diff --cached --name-status -M`). A rename source is never a
+# live index entry on its own (git mv removes it outright; "rename" is purely a
+# display-time heuristic diffing the index against HEAD) -- so it correctly can't exist on
+# disk AND can't be found by `git ls-files`, but it is still real, protected content this
+# script must not refuse to handle. Defined before the pre-flight loop below so a caller
+# can name BOTH halves of a rename (`--files "old/path new/path"`) instead of only the
+# destination, which is all `git diff --cached --name-only` itself would show them.
+is_staged_rename_source() {
+  local candidate="$1"
+  git diff --cached --name-status -M 2>/dev/null |
+    awk -F'\t' -v c="$candidate" '$1 ~ /^R/ && $2 == c { found=1 } END { exit !found }'
+}
+
 for f in "${FILES[@]}"; do
   if [[ ! -e "$f" ]]; then
-    echo "Refusing: named path does not exist: $f" >&2
-    exit 2
+    if is_staged_rename_source "$f"; then
+      echo "  (note: $f is absent from disk but staged as a rename source -- allowed)"
+    else
+      echo "Refusing: named path does not exist: $f" >&2
+      exit 2
+    fi
   fi
 done
 
@@ -177,6 +195,42 @@ unstage_foreign_paths() {
   done <<<"$staged"
 }
 
+# capture_rename_pairs -- snapshot currently-staged rename (dest\tsource) pairs BEFORE any
+# reconcile (autostash_rebase_reconcile's `git pull --rebase --autostash` + unconditional
+# `git restore --staged .`) can wipe them. Bug fixed 2026-08-08 (discovered live 2026-08-06
+# archiving a plan through the newly-mandated flow, see
+# multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md): git only
+# reports a rename's DESTINATION in `git diff --cached --name-only` (the source's deletion
+# is folded into the single R100 status line), so the unconditional `restore --staged .`
+# that makes the autostash-pop safe for ordinary edits also silently drops that implicit
+# deletion -- the subsequent `git add -- "${FILES[@]}"` then re-adds only the destination,
+# committing the new path WITHOUT removing the old one and leaving the doc at BOTH paths.
+capture_rename_pairs() {
+  git diff --cached --name-status -M 2>/dev/null | awk -F'\t' '$1 ~ /^R/ { print $3 "\t" $2 }'
+}
+
+# reassert_rename_deletions <pairs-from-capture_rename_pairs> -- run AFTER re-adding the
+# named files and AFTER unstage_foreign_paths (ordering matters: the source path is never
+# one of our named files, so if this ran BEFORE unstage_foreign_paths, the foreign-path
+# sweep would treat our re-staged deletion as a concurrent process's stray content and
+# revert it -- reproducing the exact bug this fixes). For each rename whose destination is
+# one of our named files, re-stage the source's deletion using the pre-reconcile snapshot;
+# a no-op if the reconcile never touched it (source already absent from the index) or if
+# nothing was actually lost.
+reassert_rename_deletions() {
+  local pairs="$1" dest source
+  [[ -z "$pairs" ]] && return 0
+  while IFS=$'\t' read -r dest source; do
+    [[ -z "$dest" || -z "$source" ]] && continue
+    is_named "$dest" || continue
+    [[ -e "$source" ]] && continue # still present -- nothing was actually dropped
+    if git ls-files --error-unmatch -- "$source" >/dev/null 2>&1; then
+      echo "  -> re-staging rename deletion dropped by the reconcile: $source -> $dest"
+      git rm --cached --quiet -- "$source" 2>/dev/null || true
+    fi
+  done <<<"$pairs"
+}
+
 # autostash_rebase_reconcile -- `git pull --rebase --autostash` PLUS verification that the
 # autostash actually popped. Bug fixed 2026-08-08 (see
 # autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md): under heavy
@@ -232,6 +286,8 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
 
   if [[ "$committed" == false ]]; then
     ahead="$(git rev-list --count "origin/${BRANCH}..HEAD" 2>/dev/null || echo 0)"
+    # Snapshot BEFORE either reconcile path below can wipe it (see capture_rename_pairs).
+    rename_pairs="$(capture_rename_pairs)"
 
     if [[ "$ahead" -eq 0 ]]; then
       # Pre-commit case: a plain merge-pull is a true no-cost fast-forward here,
@@ -258,6 +314,8 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
 
     git add -- "${FILES[@]}"
     unstage_foreign_paths
+    # Must run AFTER unstage_foreign_paths -- see reassert_rename_deletions's own comment.
+    reassert_rename_deletions "$rename_pairs"
 
     if ! git diff --cached --quiet -- "${FILES[@]}"; then
       : # there is something to commit
