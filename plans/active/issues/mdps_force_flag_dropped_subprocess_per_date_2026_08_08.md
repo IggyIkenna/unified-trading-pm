@@ -134,3 +134,9 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
   more likely to be a SPOT preemption than natural completion, on an unpredictable timeline. Not busy-waiting on this in
   a live session — releasing the task back to the queue rather than holding a session open for an indeterminate
   (possibly month-scale) external condition; a future dispatch cycle should re-check terminal state the same way.
+- **data_engineering (slot 15) 2026-08-08T22:26Z**: Re-checked terminal-state gate for todo 2. VM
+  `mdps-backfill-cefi-20260808-095136` is still `RUNNING` (`gcloud compute instances describe` status=RUNNING) — run.log
+  shows active POLARS aggregation at `2026-08-08T22:26:32Z` (this check's own timestamp), now on `Date: 2023-08-09` (up
+  from `2023-07-14` at the prior check ~12 min earlier — consistent with the doc's ~12 min/day rate, so genuinely
+  progressing, not stalled). Still ~880 days from `2026-01-01`. Todo 2 remains gated, same as the prior check —
+  releasing back to the queue rather than busy-waiting on an external condition with a month-scale timeline.
