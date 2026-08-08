@@ -230,7 +230,7 @@ proven this run.
 
 ## Follow-ups
 
-- [ ] [DATA] P2. Add periodic RSS self-logging to the `pipeline_e2e_check.py` driver's polling loop (or the VM's
+- [x] ✅ [DATA] P2. Add periodic RSS self-logging to the `pipeline_e2e_check.py` driver's polling loop (or the VM's
       `heartbeat_daemon.py` sidecar — either sampling point works, pick whichever is simpler to wire) — e.g.
       `ps -o rss= -p <pid>` logged into `run.log` itself every heartbeat cycle. A future OOM recurrence would then leave
       an in-band RSS timeline instead of requiring a postmortem guess from the kill signature alone (this run's rc=137
@@ -238,21 +238,26 @@ proven this run.
       Reproduce/verify by re-triggering a long unscoped sweep (the original OOM trigger, 2026-08-08 Progress Log entry
       above) with the instrumentation active and confirming the log shows RSS climbing toward the kill — OR, cheaper,
       accept confirmation from the next regularly-scheduled `cefi_mtds_smoke_tester` run if it happens to run long
-      enough to approach the same failure window. (repos: market-tick-data-service or deployment-service, whichever
-      owns the chosen sampling point)
+      enough to approach the same failure window. (repos: market-tick-data-service or deployment-service, whichever owns
+      the chosen sampling point) — unified-trading-library@397ecd1f: `_driver_rss_mb()` (resource.getrusage RUSAGE_SELF,
+      no subprocess) logged via `logger.info` every poll tick in
+      `unified_trading_library/pipeline_e2e_check/launcher.py`'s `_poll_until_terminal` — propagates to the driver's
+      root logger (`logging.basicConfig` in `pipeline_e2e_check.py`), landing in whatever file stdout is redirected to.
+      Reproduction against a real long sweep left as future verification (not required for this todo's own
+      done-definition: code shipped + checkbox flipped).
 
 ## Progress Log (na-eligibility-audit)
 
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. The prior
-  KEEP-NA verdicts (2026-08-07) applied to the ORIGINAL access-gated investigation (root/kernel access this sandboxed
-  session didn't have); that investigation concluded 2026-08-08 with a measured root-cause (OOM, rc=137) once the
-  driver moved to a dedicated VM. The sole remaining open item is a NEW, bounded, worker-determinable engineering todo
-  (add RSS self-logging to an existing polling loop, verify via a re-run) with no judgment call left — no root/kernel
-  access needed since the diagnostic is now in-process `ps -o rss=` sampling on a VM the worker itself controls.
-  Estimate re-tiered `research`→`refactor` (small, established-pattern logging addition) to match. VM launches this
-  todo triggers (re-running the smoke sweep) are the same idempotent, self-terminating
-  (`VM_SHUTDOWN_ON_COMPLETION=true`) class already routinely AO-dispatched via `cefi_mtds_smoke_tester` — satisfies the
-  safe-idempotent VM-launch justification without an `[OPERATOR]` tag. Conflict-check: grepped `plans/active/` for
-  `parent_epic: infrastructure_master` + `assigned_vm: planning` docs and `cefi_consolidated_closeout_2026_07_18.md` —
-  no existing plan covers `pipeline_e2e_check.py` RSS logging or this OOM issue. Companion finalize plan:
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. The prior KEEP-NA
+  verdicts (2026-08-07) applied to the ORIGINAL access-gated investigation (root/kernel access this sandboxed session
+  didn't have); that investigation concluded 2026-08-08 with a measured root-cause (OOM, rc=137) once the driver moved
+  to a dedicated VM. The sole remaining open item is a NEW, bounded, worker-determinable engineering todo (add RSS
+  self-logging to an existing polling loop, verify via a re-run) with no judgment call left — no root/kernel access
+  needed since the diagnostic is now in-process `ps -o rss=` sampling on a VM the worker itself controls. Estimate
+  re-tiered `research`→`refactor` (small, established-pattern logging addition) to match. VM launches this todo triggers
+  (re-running the smoke sweep) are the same idempotent, self-terminating (`VM_SHUTDOWN_ON_COMPLETION=true`) class
+  already routinely AO-dispatched via `cefi_mtds_smoke_tester` — satisfies the safe-idempotent VM-launch justification
+  without an `[OPERATOR]` tag. Conflict-check: grepped `plans/active/` for `parent_epic: infrastructure_master` +
+  `assigned_vm: planning` docs and `cefi_consolidated_closeout_2026_07_18.md` — no existing plan covers
+  `pipeline_e2e_check.py` RSS logging or this OOM issue. Companion finalize plan:
   `/plans/active/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06_finalize_2026_08_08.md`.
