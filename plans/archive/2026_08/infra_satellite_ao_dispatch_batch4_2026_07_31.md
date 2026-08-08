@@ -21,7 +21,7 @@ summary: >-
   filtered on `assigned_vm: planning` regardless of `status`), no separate finalize plan is authored; the archival step
   is folded into this one todo's own "Done when", mirroring the archived `ci_satellite_ao_dispatch_batch3_2026_07_30.md`
   precedent.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -83,9 +83,10 @@ source: >-
 
 # Infra satellite AO batch 4
 
-> **✅ STATUS: `active`** — operator-approved 2026-08-06, dispatching. Flipped from `draft` per CLAUDE.md § "Plan
-> destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's autonomous-mode rule. Nothing here has been
-> shipped.
+> **✅ ARCHIVED 2026-08-08** — single todo complete. `_solana_utils.py` (1,068L) split into `_solana_utils.py` (815L)
+>
+> - `_solana_pool_discovery.py` (271L); instruments-service@06791d0e; 5,234 tests green. Source doc checkbox flipped
+>   (`codex_violations_ratchet_to_five_2026_06_10.md` P3). Archived under `plans/archive/2026_08/`.
 
 ## Why this is a single-todo plan with no finalize twin
 
@@ -113,11 +114,14 @@ finalize twin would normally do is folded directly into that todo's own "Done wh
 
 ## Todos
 
-- [ ] [CODE] P3. **Split instruments-service's `_solana_utils.py` under the 900-line codex cap** (currently 1,068 lines,
-      up from 1,016 when `infra_satellite_ao_dispatch_batch1_2026_07_26.md` first observed it 2026-07-26 — confirm the
-      live count with `wc -l` before starting in case it has grown further). Identify natural seams (e.g. RPC-based
-      creation-timestamp resolution vs. the protocol-level floor-date fallback logic — read the module docstring and
-      structure first rather than assuming this split) and extract into cleanly-named sibling modules under
+- [x] ✅ [CODE] P3. **Split instruments-service's `_solana_utils.py` under the 900-line codex cap** —
+      instruments-service@06791d0e. `_solana_utils.py` (1,068L) → `_solana_utils.py` (815L) +
+      `_solana_pool_discovery.py` (271L); all callers/tests updated; QG green (5,234 pass); source doc checkbox flipped
+      @`codex_violations_ratchet_to_five_2026_06_10.md`. Original (currently 1,068 lines, up from 1,016 when
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md` first observed it 2026-07-26 — confirm the live count with
+      `wc -l` before starting in case it has grown further). Identify natural seams (e.g. RPC-based creation-timestamp
+      resolution vs. the protocol-level floor-date fallback logic — read the module docstring and structure first rather
+      than assuming this split) and extract into cleanly-named sibling modules under
       `instruments_service/reference_data/adapters/defi/`, preserving all existing public symbols' import paths (or
       updating every caller in the same unit if a symbol genuinely moves) — mirror the precedent split pattern used for
       `unified-api-contracts@da76afe1` (`partition_paths.py`, 1297→under 900L). Confirm all 10 sibling adapter callers

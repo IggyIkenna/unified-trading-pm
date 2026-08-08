@@ -30,7 +30,7 @@ related:
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
     /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
     /plans/active/sports_taxonomy_p4_backfill_2026_08_08.md,
-    /plans/active/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md,
+    /plans/archive/2026_08/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md,
     /plans/active/issues/mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md,
     /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md,
     /codex/02-data/sports-data-types-catalog.md,

@@ -65,11 +65,10 @@ source: >-
 # AO satellite AO batch 6
 
 > **`status: active`** — approved 2026-08-08 after a fresh conflict-check found no blocking overlap (see Progress Log).
-> **`assigned_vm: NA` / `execution_scope: local-only` are UNCHANGED, deliberately** — same `ao`-tranche established
-> convention as batch5/batch2/batch3 (see this doc's Progress Log and batch5's own Progress Log for the full citation
-> trail back to the operator's 2026-07-17 "local execution" ruling). Active means: live, tracked, ready for an
-> interactive/human session — NOT AO-dispatched. Authored autonomously (scheduled dispatch) and originally shipped
-> `status: draft` pending operator approval.
+> **`assigned_vm: planning` / `execution_scope: orchestrator-agent`** — the `ao` tranche's 2026-07-17 "local execution
+> only" ruling was explicitly LIFTED 2026-08-08 (operator, interactive); see this doc's Progress Log and batch5's own
+> Progress Log for the full citation trail. AO-dispatchable now, same as every other tranche. Authored autonomously
+> (scheduled dispatch) and originally shipped `status: draft` pending operator approval.
 
 ## Why this plan exists
 
@@ -115,8 +114,8 @@ evidence-backed, zero-risk housekeeping action, not new work.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Two read-only DB/activity-log measurements on the orchestrator host (no external credential needed
-      — same host every dispatched worker already runs on).** (1) Re-measure the `tmux_session_lost` rate vs. the
+- [x] ✅ [BACKEND] P0. **Two read-only DB/activity-log measurements on the orchestrator host (no external credential
+      needed — same host every dispatched worker already runs on).** (1) Re-measure the `tmux_session_lost` rate vs. the
       192-events-since-2026-07-18 baseline and record the delta (Phase 8's own stated gate). (2) The stale-dispatch
       invariant 24h spot-check: confirm live `dispatched`-status backlog count equals the live worker-held-task count —
       the fix + 9 regression tests already shipped (`agent-orchestrator@aa81706`); only the operational proof remains.
@@ -124,7 +123,8 @@ evidence-backed, zero-risk housekeeping action, not new work.
       and the delta/pass-fail verdict; both `- [ ]` items (Phase 8, "Re-measure the `tmux_session_lost` rate" and
       "Stale-dispatch invariant — the live 24h spot-check") flip `[x]`. Source:
       `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` (its Phase-8 items 5+6 only — the doc's other
-      6 open items stay local/NA, see this run's Workflow journal for why). Repo: agent-orchestrator (read-only).
+      6 open items stay local/NA, see this run's Workflow journal for why). Repo: agent-orchestrator (read-only). —
+      unified-trading-pm@4f5a1e6ba
 
 - [ ] [DOC] P3. **Document the accepted BLOCKED-marker `/done`-disposition convention in `task_template.md`.** Add a
       section (alongside the existing CANCELLED/SUPERSEDED and DEFERRED-BY-DESIGN conventions — confirmed via grep
@@ -368,3 +368,7 @@ methodology step 1), not re-derive the classification from scratch.
 - **2026-08-08 (operator, interactive)**: RULED — the 2026-07-17 local-only ruling is LIFTED going forward; see batch5's
   Progress Log for the full note. `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`
   applied here too.
+- **2026-08-08 (ao_satellite_ao_dispatch_batch6-001, slot-3)**: Todo 1 completed. Both Phase-8 measurements done against
+  orchestrator SQLite (`data/state/state.db`): (1) `tmux_session_lost` post-fix 2-day rate = ~322/day vs pre-fix ~95/day
+  — rate INCREASED ~3.4×, orphan-reaper NOT the driver; (2) stale-dispatch invariant PASS (dispatched=6 ==
+  worker-held=6). Evidence: `unified-trading-pm@4f5a1e6ba` (Phase-8 checkboxes flipped + Progress Log in source doc).

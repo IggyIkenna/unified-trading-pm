@@ -22,8 +22,22 @@ name: glue-pool-starvation-monitor
 # Source: issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md
 
 on:
-  schedule:
-    - cron: "*/15 * * * *" # every 15 min — starvation episode should page inside the hour
+  # SCHEDULE DISABLED 2026-08-07: PM's own self-hosted `glue` pool was permanently reverted to
+  # ubuntu-latest (plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md, todo #24, DONE
+  # — PM went public 2026-08-06 and self-hosted-on-a-public-repo is a fork-PR security exposure, so
+  # ~40 self-hosted-routed workflows were flipped back and the glue-N/writer-N systemd units on the
+  # CI VM were stopped+disabled). This is the SAME root cause + SAME fix already applied to the
+  # sibling `glue-runner-health-monitor.yml` (commit 95cce3aa4, same day): with the pool retired by
+  # design, a *routine* schedule tick can only ever fire this monitor on STALE jobs that were queued
+  # with the old `[self-hosted, glue]` label set before the revert landed (frozen at dispatch time —
+  # a workflow_run's requested runner labels don't hot-swap when the workflow file later changes on
+  # the branch) — those jobs can never be claimed by anything and will falsely CRITICAL forever,
+  # exactly what happened 2026-08-07 (9 stuck jobs, 6+ hours, resolved by cancelling them — see
+  # issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md). Re-enable the
+  # schedule only if a self-hosted `glue` pool is ever deliberately re-established for this repo.
+  # schedule:
+  #   - cron: "*/15 * * * *" # every 15 min — the pool serves ~37 low-frequency movers; a starvation
+  #     # episode should page well inside the hour, not once a day like the AR-lag check.
   workflow_dispatch:
     inputs:
       threshold_min:

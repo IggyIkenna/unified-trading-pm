@@ -67,12 +67,10 @@ source: >-
 # AO satellite AO batch 5
 
 > **`status: active`** — approved 2026-08-08 after a fresh conflict-check found no blocking overlap (see Progress Log).
-> **`assigned_vm: NA` / `execution_scope: local-only` are UNCHANGED, deliberately** — this is the `ao` tranche's own
-> established convention (100%-consistent across batch1-8; origin: the operator's 2026-07-17 "local execution" ruling on
-> `ao_open_issues_consolidated_close_out_2026_07_17.md`, this batch's own ultimate parent), not an oversight; see this
-> doc's Progress Log for the full citation trail. Active means: live, tracked, ready for an interactive/human session —
-> NOT AO-dispatched. Authored autonomously (scheduled dispatch) and originally shipped `status: draft` pending operator
-> approval.
+> **`assigned_vm: planning` / `execution_scope: orchestrator-agent`** — the `ao` tranche's 2026-07-17 "local execution
+> only" ruling (100%-consistent across batch1-8 until today) was explicitly LIFTED 2026-08-08 (operator, interactive);
+> see this doc's Progress Log for the full citation trail. AO-dispatchable now, same as every other tranche. Authored
+> autonomously (scheduled dispatch) and originally shipped `status: draft` pending operator approval.
 
 ## Why this plan exists
 
