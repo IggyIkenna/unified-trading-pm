@@ -101,6 +101,29 @@ phase (before MTDS had a chance to run), not because IS lacked data. The "NO SYM
 EXPECTED — BINANCE-DELIVERY was removed from CeFi MVP in mvp_scope.py v10 #3. The root cause is solely the premature
 deletion.
 
+## Second VM (cefi-fwd-20260808-115442) — pre-flight false positive finding (slot-14 2026-08-08)
+
+`cefi-fwd-20260808-115442` launched at 11:54:47Z survived past T+17min (past the deletion window), RUNNING. However, it
+wrote **0 derivative_ticker records** for ALL gap dates due to a pre-flight false positive:
+
+**Root cause**: `venue_fetch.py:526-552` — when `_VENUES_NEEDING_INSTRUMENT_PREFLIGHT` contains the venue
+(BINANCE-FUTURES IS in the frozenset via `tardis_to_venue.values()`) and `instrument_ids` is None, the code checks
+`_check_instruments_available(venue, date)`. The `if not has_instruments:` branch handles the MISSING case (fallback or
+skip). But when `has_instruments=True`, there is NO positive branch — `venue_instrument_ids` stays `None`. Then
+`_apply_preflight_skip_filter` receives `venue_instrument_ids=None` → `_expected_atoms = set()` →
+`{} ⊆ {83 EXPECTED_* empty_confirmed atoms}` = True always → fires "all requested data_types fully covered, skipping"
+for ALL gap dates. The 83 atoms are EXPECTED_INSTRUMENT_NOT_LISTED/DELISTED records in the availability_index for
+BINANCE-FUTURES/derivative_ticker from the prior DERIBIT-only backfill.
+
+**MTDS code bug** (`venue_fetch.py:526-552`): the `if has_instruments: venue_instrument_ids = [IS data]` positive branch
+is missing. The `--force-download` flag bypasses this by setting `VM_FORCE=true` → MTDS `--force` → skips
+`_apply_preflight_skip_filter` entirely.
+
+**Action**: VM `cefi-fwd-20260808-115442` was deleted at 12:25 UTC (confirmed 0 data). New VM `cefi-fwd-20260808-122833`
+launched at 12:28 UTC with `--force-download --data-types derivative_ticker` (per `launch-cefi-forward-poll.sh` line 43
+comment which documents this exact fix). All 4 tarballs refreshed (SHA-verified). Concurrency guard confirmed clear
+before launch.
+
 ## Action items
 
 - [ ] [OPERATOR] P0. **Diagnose root cause of double-insert + deletion pattern.** Check if the Tardis concurrency guard
@@ -108,8 +131,20 @@ deletion.
       watchdog (`exit_code_fleet_monitor`) has a `vm.delete` path that fires on concurrency violations. Confirm whether
       `cefi-fwd-20260806-065837`'s early termination at 12/75 days was also a deletion (check its audit log the same
       way). Note: Tardis guard does NOT delete VMs (only refuses new launches); the deleter must be a separate process.
-- [ ] [INFRA] P1. **Re-launch the backfill** once root cause is understood. Pre-check: run
-      `tardis-concurrency-guard.sh cefi-fwd` before launching to ensure no concurrent instances. Use a single-launch
-      only (prevent double-insert). Expected runtime: ~18-24h for 62 days × 6 venues. IS catalogue is NOT a blocker.
+- [x] [INFRA] P1. **Re-launch the backfill** — two failed intermediate launches before a working VM: (1)
+      `cefi-fwd-20260808-115442`: 0 data from pre-flight false positive (wrong tarballs, no `--force-download`); deleted
+      manually 12:25 UTC after confirming 0 writes. (2) `cefi-fwd-20260808-122833`: SETUP FAILED at T+90s — tarballs
+      created with wrong structure (`-C parent repo_name` gives tarball with repo dir as top-level; VM extracts without
+      `--strip-components` → `uac/unified-api-contracts/...` instead of `uac/...` → pyproject.toml not found →
+      `uv pip install` fails rc=2). VM self-deleted. (3) `cefi-fwd-20260808-123230`: launched 12:32:30 UTC with
+      `--force --force-download --data-types derivative_ticker`. All 4 tarballs rebuilt with CORRECT structure:
+      `tar czf tarball.tar.gz -C "$repo_path" "${EXCLUDES[@]}" .` (verified `./pyproject.toml at root: 1`). MTDS
+      launched 2026-08-08T12:34:45Z with `--force --data-types derivative_ticker` (serial port confirmed). Runtime
+      estimate: ~18-24h for 62 days × 6 venues. **RUNNING with MTDS active.**
 - [ ] [DATA] P1. **Re-run GCS probe to confirm coverage** after backfill VM terminates normally. Only then re-dispatch
       task `-011` (corpus recompute). Do NOT flip `-011` done on VM-STOPPED alone — measure GCS coverage.
+- [ ] [CODE] P2. **Fix MTDS pre-flight code bug**: `venue_fetch.py:526-552` missing positive `if has_instruments:`
+      branch that populates `venue_instrument_ids` from IS data. When IS data IS available, `venue_instrument_ids` stays
+      None → empty expected_atoms → false "fully covered" for any venue+date with EXPECTED_* atoms. Fix: fetch IS
+      instrument IDs when `has_instruments=True` (or treat `_expected_atoms = {}` as "no filter" in
+      `_apply_preflight_skip_filter` to disable skip when no instrument filter is active).
