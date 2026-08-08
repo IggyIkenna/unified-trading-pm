@@ -160,12 +160,13 @@ Both were established by reading the code, and both are silent — neither raise
 
 ## Phase 2 — historical backfill (Option B). Every irreversible step is operator-gated.
 
-- [ ] [BACKEND] P1. **Build the old→new id map as a REPORT ONLY — no writes.** For every row, derive the new id from the
-      ALREADY-STORED `TaskRow.brief_hash` (`orm.py:70`; `sync_backlog_to_db` has populated it since @4695db6), so no
-      plaintext re-derivation is needed. Recover the slug from the old id's prefix, or from `TaskRow.plan_ref` for
-      orphan `done` rows with no yaml counterpart (the `_orphan_view` case, `routes/backlog.py:67-101`). Emit the map as
-      a durable artifact. Done-when: the artifact exists and its row count matches `SELECT COUNT(*) FROM tasks`. (repo:
-      agent-orchestrator)
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-08 (slot-7, content_derived_backlog_task_ids-008)** — Build the old→new id map as
+      a REPORT ONLY — no writes. For every row, derive the new id from the ALREADY-STORED `TaskRow.brief_hash`
+      (`orm.py:70`; `sync_backlog_to_db` has populated it since @4695db6), so no plaintext re-derivation is needed.
+      Recover the slug from the old id's prefix, or from `TaskRow.plan_ref` for orphan `done` rows with no yaml
+      counterpart (the `_orphan_view` case, `routes/backlog.py:67-101`). Emit the map as a durable artifact. Done-when:
+      the artifact exists and its row count matches `SELECT COUNT(*) FROM tasks`. See Progress Log for the algorithm +
+      live counts. (repo: agent-orchestrator) — agent-orchestrator@8a8454c
 - [ ] [BACKEND] P1. **Exclude the NULL-`brief_hash` tail from the map, permanently.** Those rows' briefs are documented
       unrecoverable (`bootstrap.py:710-727` — backlog.yaml is gitignored, no VCS history, no archive writer,
       activity_log never stored the brief), so they can never get a content id. This mirrors the already-ruled "(c)
@@ -365,3 +366,44 @@ Both were established by reading the code, and both are silent — neither raise
   after an explicit remint at 2026-08-08T15:44:23Z, contradicting the endpoint's own claim that reminting stops future
   re-derivation at the same position — needs a `regen_backlog_from_plan` matching-path trace to confirm/refute, not
   fixed here.
+
+- **2026-08-08 (slot-7, content_derived_backlog_task_ids-008, Phase 2 todo 1)**: Built
+  `scripts/orchestrator/build_content_id_migration_map.py` (+ `tests/test_build_content_id_migration_map.py`, 11 tests)
+  and ran it read-only against the LIVE `state.db` + `backlog.yaml`. **No writes to either store.**
+
+  **Why the new id can't bit-match a fresh `_make_content_task_id` call**: that function hashes the PLAINTEXT brief
+  (`sha256(plan_ref|brief|occurrence)`), but `TaskRow` never stores plaintext brief — only `brief_hash = sha256(brief)`
+  — and for a `done` row whose yaml entry is pruned, the plaintext is permanently gone (confirmed again reading
+  `sync_backlog_to_db`'s own docstring: no VCS history on backlog.yaml, no archive writer, `activity_log` never stores
+  brief/title). A hash cannot be un-hashed, so no formula recovers it. The script instead derives
+  `sha256(plan_ref|brief_hash|dup_index)` — same shape, `brief_hash` substituted for the unrecoverable plaintext.
+  `dup_index` mirrors `_group_plan_tasks_by_brief`'s own "sorted by old id ascending" disambiguation for rows sharing an
+  identical (plan_ref, brief_hash) — the same hard-wrap-collision case `_make_content_task_id`'s docstring documents for
+  `occurrence`.
+
+  **De-risking finding (verified against code, not assumed)**: a migrated id does NOT need to bit-match a live
+  `_make_content_task_id` recomputation to avoid a duplicate mint on the next regen tick. Traced `regen()`'s matching
+  path (`regen_backlog_from_plan.py` ~:1922-1952): the RECONCILE branch matches an open todo to an existing task by
+  `(plan_ref, brief-TEXT)` via `_group_plan_tasks_by_brief` — **never by comparing task_id** — and keeps whatever id the
+  matched row already has. `_make_content_task_id` is only ever called when NO existing task matches the brief at all (a
+  genuinely new todo). So renaming a still-`queued` row is safe for regen correctness, PROVIDED `backlog.yaml`'s `id:`
+  field and `state.db`'s `tasks.task_id` are renamed in the same operation — which the Phase 2 apply todo below already
+  requires for the two-store-divergence reason. This directly informs (de-risks, doesn't change the plan of) the
+  "Enforce the dispatched-row deferral" and "Make the migration idempotent" todos below.
+
+  **Live run** (2026-08-08T23:06Z): 2445 rows, matches `SELECT COUNT(*) FROM tasks` exactly (done-when met).
+  - 2342 derived (positional → content)
+  - 92 already content-derived (Phase 1 fresh mints since `agent-orchestrator@ba6eff5` landed — correctly passed through
+    as no-ops, not re-derived)
+  - 11 unrecoverable (`brief_hash IS NULL`, the permanent legacy tail — down from the 38 baseline recorded 2026-07-20,
+    consistent with that ruling's "shrinks under normal operation" prediction)
+  - 0 unrecoverable-no-slug, 0 slug mismatches (id-prefix vs plan_ref-derived slug agreed on every row), **0 new_id
+    collisions** (the critical safety check the script performs — verified on the real corpus, not just unit tests)
+  - 1895 orphan rows (no yaml counterpart) — the `done`+pruned audit-history tail this whole effort protects
+
+  Artifact: `agent-orchestrator/scripts/orchestrator/content_derived_backlog_task_ids_2026_08_08_id_map.json` (847 KB,
+  compact JSON — added to `.prettierignore` since Prettier's pretty-print pushed it past the repo's 1000 KB pre-commit
+  large-file gate on every regen; same precedent as `data/state/state.json`). Re-runnable per the script's own docstring
+  (`--db`/`--backlog`/`--out`); exit code is 1 if collisions are ever found on a future run (loud failure, not silent).
+  QG: 2821 passed, 2 skipped (full suite, basedpyright clean). Evidence: agent-orchestrator@8a8454c (verified ancestor
+  of origin/live-defi-rollout before this flip).
