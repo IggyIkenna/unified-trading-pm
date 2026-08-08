@@ -155,3 +155,21 @@ here.
   below baseline; this doc's root corpus-regression problem (option 1's full remit) is still real plan_reconciler-scope
   work, just no longer blocking the gate. Escalated via `/blocked` (`BLK-1a3434e2`) before starting; main auto-continued
   with the recommended bounded-partial-fix option.
+- **2026-08-08 (same escalation, CI verification)**: pushed fix as `25630ed1e`+`eb6555578`; triggered `quality-gates-v2`
+  re-run (gate run 31262418685, head `eb6555578`). **The `check_plan_operator_ruling_evidence.py` check itself now
+  PASSES** (`✅ Plan operator-ruling evidence check passed (at/below baseline)`, confirmed in the `QG slice (checks)`
+  job log) — this doc's specific root cause is resolved and verified. However the overall `quality-gates-v2` run still
+  reports `failure`, because **5 different, unrelated post-gate ratchets went red during the intervening window** —
+  `check_reference_paths` (format: 91 vs baseline 81), `check_ag_closeout_linkage` (60 vs baseline 49),
+  `check_create_only_archive_commits` (1 violation), `Silent-default-effort plans`, and `Archive candidates`. Confirmed
+  via the ORIGINAL escalation's gate run (31259321766, head `cd3e4081f`) that all 5 of these were clean at that time —
+  only `check_plan_operator_ruling_evidence` was red then. This is the exact race pattern this doc documents (heavy
+  concurrent-slot commit pressure on `live-defi-rollout` causing post-gate ratchets to regress), now manifesting as a
+  SECOND, unrelated wave — not caused by this fix's own commits (citation-only diff) and out of `cicd`-escalation scope
+  (agt-9bdc09 was specifically diagnosed against `check_plan_operator_ruling_evidence`). All 3 of the named checks
+  already have dedicated OPEN tracked issue docs (confirmed, not re-filed):
+  `/plans/active/issues/reference_path_convention_2026_07_23.md`,
+  `/plans/active/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md`,
+  `/plans/active/issues/git_commit_only_drops_rename_deletions_create_only_archive_2026_08_06.md` — `plan_reconciler`
+  scope, not this escalation's. This escalation (agt-9bdc09) is being closed as resolved for its diagnosed root cause
+  per cicd.md's mandate scope.
