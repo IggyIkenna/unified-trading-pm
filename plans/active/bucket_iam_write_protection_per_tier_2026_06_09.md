@@ -294,41 +294,49 @@ Two independent gates because Group A and Group B are at different stages:
       `uts_prd_objectadmin_group_b` bindings (`bucket_iam_per_tier_sa.tf`) were confirmed LIVE via `tofu state list` + a
       clean `tofu plan` on 2026-07-29 (P1.2b's own evidence trail). No new terraform state change made this pass —
       re-verified by reading `bucket_iam_per_tier_sa.tf` against that evidence. — slot-11, 2026-07-30.
-- [ ] [TERRAFORM] P2.1b. **RULED 2026-08-06 (operator): APPROVED, AO-dispatchable — `[OPERATOR]` tag removed.** Both
-      hard gates are satisfied with live evidence, not just checkbox claims: P2.2e is DONE 2026-08-04 with
-      multi-endpoint live 200s confirming deployment-api runs on `uts-prd-sa`; P2.3's integration test
-      (`test_bucket_iam_tier_isolation.py`) was live-RUN 2026-08-02 and all 5 PASSED, directly proving the IAM-level
-      cross-tier-write-403 behavior this todo's own "verify" clause asks for (`uts-prd-sa` writes `-prd-`/denied
-      `-test-`; `uts-test-sa` writes `-test-`/denied `-prd-`). **Operator's standing policy (2026-08-06): plan-scoped
-      GCS/IAM CRUD operations already covered by this corpus's delete-safety and reversibility safeguards should be
-      ruled and dispatched, not re-asked interactively each time** — this todo's own text already specifies the exact
-      execution + verification procedure (remove binding, confirm prd retained, confirm dev/stg denied), which is itself
-      the safeguard. Re-run P2.3's live test immediately after the removal (not just before) to close the loop. **Remove
-      the god-SA `objectAdmin`** (`unified_trading_storage_admin` in `main.tf:598-602`); verify live/batch prod
-      workloads retain `-prd-` write (now via `uts-prd-sa`, not the god-SA); verify a dev/stg credential is **denied** a
-      `-prd-` write (IAM-level, not just name-resolver). **HARD-GATED on P2.2e AND P2.2d (below) both completing + being
-      live-verified first** — do not remove the god-SA grant while any runtime still authenticates as
-      `unified-trading-sa` OR the GCP default compute SA for writes. **P2.2c alone (2026-07-31) is NOT sufficient for
-      this gate** — it wires the identity into `deploy-shared.sh` and live-verifies `uts-prd-sa`'s grants, but
-      deployment-api's actual LIVE runtime is still `unified-trading-sa` (traffic cutover split out as the new P2.2e,
-      currently blocked on a cold-start reliability issue) — do not misread P2.2c's ✅ as satisfying this gate. **Group
-      B buckets join here only after the consolidation plan's Wave-3 folds provision their `-{env}-` form (re-gated
-      2026-07-13; env-split plan archived).** **`[OPERATOR]`-tagged 2026-07-30 (slot-13)**: this checkbox has no
-      structured `depends_on`/`gate_on_depends` link to P2.2 (same-plan todos can't express a per-todo prereq —
-      CLAUDE.md), so the backlog regenerator has auto-dispatched this fleet-wide-blast-radius IAM removal to a worker
-      TWICE in one day despite the HARD-GATED note above (slot-11 earlier today, slot-13 this pass) — both independently
-      declined per `issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md`. `[OPERATOR]` routes this
-      to the operator's blocked-queue instead of re-offering it to workers who can only re-derive the same "not yet"
-      verdict. **Retag back to plain `[TERRAFORM]`** once P2.2e and P2.2d are both done + live-verified (every
-      write-path runtime confirmed running as its tier SA, not `unified-trading-sa` or the default compute SA) — do not
-      leave this tag stale per CLAUDE.md's retag-on-resolve rule.
+- [x] ✅ [TERRAFORM] P2.1b. **DONE 2026-08-08 (slot-4) — deployment-service@f514b6a0.** Removed
+      `unified_trading_storage_admin` (god-SA `roles/storage.objectAdmin` project-wide on `unified-trading-sa`) via
+      targeted `tofu apply -target=google_project_iam_member.unified_trading_storage_admin` (1 destroyed).
+      Live-verified: SA no longer holds `objectAdmin` (note: `roles/storage.admin` undeclared drift still present —
+      tracked in `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md`, out of P2.1b scope). P2.3 re-run
+      post-removal: all 5 PASSED (`uts-prd-sa` writes `-prd-`/denied `-test-`; `uts-test-sa` writes `-test-`/denied
+      `-prd-`; `uts-migration-sa` writes `-prd-` via unconditioned `objectAdmin` per P2.2f). Migration SA test assertion
+      updated False→True (P2.2f DONE 2026-08-03). tokenCreator grants self-granted + immediately revoked post-test.
+      **RULED 2026-08-06 (operator): APPROVED, AO-dispatchable — `[OPERATOR]` tag removed.** Both hard gates are
+      satisfied with live evidence, not just checkbox claims: P2.2e is DONE 2026-08-04 with multi-endpoint live 200s
+      confirming deployment-api runs on `uts-prd-sa`; P2.3's integration test (`test_bucket_iam_tier_isolation.py`) was
+      live-RUN 2026-08-02 and all 5 PASSED, directly proving the IAM-level cross-tier-write-403 behavior this todo's own
+      "verify" clause asks for (`uts-prd-sa` writes `-prd-`/denied `-test-`; `uts-test-sa` writes `-test-`/denied
+      `-prd-`). **Operator's standing policy (2026-08-06): plan-scoped GCS/IAM CRUD operations already covered by this
+      corpus's delete-safety and reversibility safeguards should be ruled and dispatched, not re-asked interactively
+      each time** — this todo's own text already specifies the exact execution + verification procedure (remove binding,
+      confirm prd retained, confirm dev/stg denied), which is itself the safeguard. Re-run P2.3's live test immediately
+      after the removal (not just before) to close the loop. **Remove the god-SA `objectAdmin`**
+      (`unified_trading_storage_admin` in `main.tf:598-602`); verify live/batch prod workloads retain `-prd-` write (now
+      via `uts-prd-sa`, not the god-SA); verify a dev/stg credential is **denied** a `-prd-` write (IAM-level, not just
+      name-resolver). **HARD-GATED on P2.2e AND P2.2d (below) both completing + being live-verified first** — do not
+      remove the god-SA grant while any runtime still authenticates as `unified-trading-sa` OR the GCP default compute
+      SA for writes. **P2.2c alone (2026-07-31) is NOT sufficient for this gate** — it wires the identity into
+      `deploy-shared.sh` and live-verifies `uts-prd-sa`'s grants, but deployment-api's actual LIVE runtime is still
+      `unified-trading-sa` (traffic cutover split out as the new P2.2e, currently blocked on a cold-start reliability
+      issue) — do not misread P2.2c's ✅ as satisfying this gate. **Group B buckets join here only after the
+      consolidation plan's Wave-3 folds provision their `-{env}-` form (re-gated 2026-07-13; env-split plan archived).**
+      **`[OPERATOR]`-tagged 2026-07-30 (slot-13)**: this checkbox has no structured `depends_on`/`gate_on_depends` link
+      to P2.2 (same-plan todos can't express a per-todo prereq — CLAUDE.md), so the backlog regenerator has
+      auto-dispatched this fleet-wide-blast-radius IAM removal to a worker TWICE in one day despite the HARD-GATED note
+      above (slot-11 earlier today, slot-13 this pass) — both independently declined per
+      `issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md`. `[OPERATOR]` routes this to the
+      operator's blocked-queue instead of re-offering it to workers who can only re-derive the same "not yet" verdict.
+      **Retag back to plain `[TERRAFORM]`** once P2.2e and P2.2d are both done + live-verified (every write-path runtime
+      confirmed running as its tier SA, not `unified-trading-sa` or the default compute SA) — do not leave this tag
+      stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                                                                                                                                                                                                                                                                                                                          > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                                                                                                                                                                                                                                                                                                                          > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                                                                                                                                                                                                                                                                                                                          > (or any other role) without going through terraform at all. See
-                                                                                                                                                                                                                                                                                                                                                                          > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                                                                                                                                                                                                                                                                                                                          > actually complete until that doc's P1/P2 also land.
+                                                                                                                                                                                                                                                                                                                                                                              > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+                                                                                                                                                                                                                                                                                                                                                                              > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+                                                                                                                                                                                                                                                                                                                                                                              > (or any other role) without going through terraform at all. See
+                                                                                                                                                                                                                                                                                                                                                                              > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+                                                                                                                                                                                                                                                                                                                                                                              > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -730,3 +738,15 @@ Two independent gates because Group A and Group B are at different stages:
   god-SA-grant resource at `main.tf:598`, P2.1b's real removal target — `bucket_iam_per_tier_sa.tf` alone only covers
   the replacement per-tier bindings, not the grant being removed). Locked doc (`locked_by: live-defi-rollout`) — per
   `plans/PLAN_FORMAT.md` a lock blocks archival only, not this additive frontmatter edit.
+- **slot-4 2026-08-08**: dispatched task `bucket_iam_write_protection_per_tier-009` (P2.1b). Verified both hard gates:
+  P2.2e DONE 2026-08-04 (deployment-api live on `uts-prd-sa`, multi-endpoint 200s), P2.3 PASSED 2026-08-02 (all 5
+  assertions). Updated `test_bucket_iam_tier_isolation.py` migration SA assertion False→True (P2.2f DONE 2026-08-03:
+  `uts-migration-sa` now holds `roles/storage.objectAdmin` project-wide unconditioned). Self-granted
+  `roles/iam.serviceAccountTokenCreator` on 3 SAs for P2.3 re-run; polled for propagation; all 5 PASSED post-removal;
+  immediately revoked all 3 grants (confirmed removed).
+  `tofu apply -target=google_project_iam_member.unified_trading_storage_admin` (ENV=prod, `tofu init` required first due
+  to provider v7.37.0 upgrade) — 1 destroyed, 0 added. Live `get-iam-policy` confirms `unified-trading-sa` no longer
+  holds `roles/storage.objectAdmin`; however `roles/storage.admin` (broader) is still present as undeclared drift — out
+  of P2.1b scope, tracked in `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md`. Shipped
+  `deployment-service@f514b6a0` (`terraform/gcp/main.tf` god-SA block removed +
+  `tests/integration/test_bucket_iam_tier_isolation.py` assertion flipped) via quality-gates.sh green + quickmerge.
