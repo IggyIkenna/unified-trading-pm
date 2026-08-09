@@ -116,10 +116,39 @@ drift_direction: advance-code
       `gcloud run jobs describe client-reporting-batch --region=asia-northeast1     --format="value(...resources.limits.memory)"`
       returning `2Gi` (2026-08-08). Fix-agent details (source-of-truth IaC change, sizing rationale, execution
       verification) pending its own report; this checkbox reflects the confirmed live GCP state, not just a claim.
-- [ ] [SCRIPT] P1. **Fix `uts-prod-data-status-rollup-svc` OOM at its ceiling** — 32Gi/8vCPU maxed, `maxScale=1`. No
-      more headroom to add on this axis — investigate whether the rollup can be sharded/batched instead of raising the
-      ceiling further, or if a genuine resource bump + `maxScale` increase is the right fix. Verify MTDS/
-      instruments-service rollup timeouts stop recurring post-fix.
+- [ ] [SCRIPT] P1. **Fix `uts-prod-data-status-rollup-svc` OOM at its ceiling — IN PROGRESS, hotfix shipped, NOT yet
+      live-verified.** Status as of 2026-08-09T01:52Z: - **Root cause**: per-service rollup compute already ran in an
+      isolated spawned child (24Gi `RLIMIT_AS`, per `data_status_rollup_worker.py`'s `_run_service_isolated`), but
+      WITHIN that child the ~5 `MarketCategory` asset-groups (CEFI/DEFI/TRADFI/SPORTS/PREDICTION) built serially
+      IN-PROCESS. pandas/pyarrow/numpy's C allocators do not reliably return freed arena memory to the OS between loop
+      iterations, so RSS ratcheted up across categories even though only one was logically alive at a time — pushing the
+      container over 32Gi for the largest services (MTDS, instruments-service). - **Sharding fix (genuine, not a ceiling
+      bump)**: `deployment-api@4c0e039` adds a `_SERIAL_DISPATCH_ISOLATED` toggle so each category now runs in its own
+      throwaway subprocess (reusing the existing `build_category_in_subprocess` / `bounded_subprocess.run_bounded`
+      machinery), so the OS reclaims 100% of a category's memory via full process exit before the next category starts.
+      Reached `main`, deployed live ~2026-08-09T00:20-00:30Z. - **Regression found via live verification** (Cloud
+      Logging on the actual deployed revision, not just "deploy succeeded"): the per-service isolated child is spawned
+      with `daemon=True`; Python's multiprocessing hard-forbids a daemonic process from spawning its OWN children, and
+      the sharding fix made that child do exactly that. Every manifest+coverage rollup for every tracked service failed
+      instantly with "daemonic processes are not allowed to have children" — **0/14 services succeeding, worse than the
+      original OOM** (which let some services through). The container also independently still hit the same "Memory
+      limit of 32768 MiB exceeded with 32983 MiB used" — a separate concern: this "dedicated" rollup service actually
+      runs the full deployment-api app surface (background cache-warming, VM listing, redis, etc.), not a minimal
+      rollup-only process; worth its own follow-up, out of scope here. - **Hotfix shipped**: `deployment-api@e2b9a55`
+      (`daemon=True` → `daemon=False`; safe because the existing explicit `join(timeout=...)`/`terminate()`/`kill()`
+      lifecycle already fully owns the child's teardown) + a regression test
+      (`TestRunServiceIsolated.test_process_is_not_daemonic`). QG green (5247 passed). Pushed directly to LDR at
+      2026-08-09T01:52:45Z (quickmerge's dependency cascade hit an unrelated conflict in `deployment-service`'s
+      `.github/workflows/semver-agent.yml` from a concurrent fleet-workflow rollout, so used the sanctioned dirty-deps
+      carve-out — `Quickmerge: direct-carveout-dirty-deps`). - **Remaining**: as of 2026-08-09T01:58Z, `e2b9a55` is on
+      LDR but NOT yet on `main` (confirmed via direct content check —
+      `git show origin/main:deployment_api/scripts/data_status_rollup_worker.py` still shows `daemon=True`); this repo's
+      LDR→main promotion runs on an external ~hourly cadence outside agent control (last observed promote 00:20:47Z).
+      Once it lands: verify live via Cloud Logging that `SERVICE_PROCESSED` events actually appear for
+      MTDS/instruments-service (not just absence of the daemon error), THEN flip this checkbox with the evidence. Also
+      fixed in passing, unrelated pre-existing drift found while getting a green QG tree:
+      `unified-trading-pm/scripts/quality_gates/read_availability_index_bare_call_baseline.yaml`'s stale line-number
+      reference (449→483) for `_read_index_cached`, shipped separately in that repo.
 - [x] [SCRIPT] P1. ✅ **Killed the hung idle `mtds-dex-swaps-backfill-2` VM.** Re-confirmed before deleting: no
       `PROGRESS.json` at its GCS log path (404), `run.log` tail (15:15-15:20Z) showed only RESOURCE_SAMPLE/
       PIPELINE_HEARTBEAT lines at ~0-1.4% CPU, no processing activity since the `process_final=True` shard-complete line
