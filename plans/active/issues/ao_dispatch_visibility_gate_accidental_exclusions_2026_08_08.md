@@ -333,18 +333,19 @@ human already made the call and the fleet still never executes it.
       shows `deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md` with
       `disk_open=1, backlog_open=1, excluded=[]` — the sole open todo is correctly dispatchable right now, no rewrite
       needed. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in
-      `plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md`.** Its checkbox reads (truncated):
-      "[DATA] P2. **RULED 2026-08-06 (operator): proceed now.** Signed off to schedule the `--apply` against the full" —
-      the marker trips `_is_non_dispatchable` (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open
-      its own line, so `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is
-      genuinely still blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to
-      the start of its own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation
-      line) so it reads as a declared hold. If it is already resolved (several of these carry a dated
-      `RULED`/`DESIGN DECIDED` note — read the full todo before acting), rewrite the trigger phrase so the marker no
-      longer appears anywhere in the block. Verify:
-      `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-25, infra).** Triage accidental exclusion in
+      `plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md`. Moot, not accidental: this finding's
+      cited trigger text ("RULED 2026-08-06 (operator): proceed now... Signed off to schedule the `--apply`") no longer
+      exists in the target doc. Per that doc's own Progress Log, main agent independently rewrote the flagged checkbox
+      on 2026-08-09 — removing that erroneous "proceed now" framing (no corroborating Progress Log entry or live
+      escalation substantiated it) and replacing it with the corroborated `BLOCKED-OPERATOR` status, now opening the
+      checkbox's own line right after `[DATA] P2. **`. This independently fixed the classification as a side effect (the
+      marker now sits at the head of its own line instead of buried mid-sentence), not something this triage needed to
+      do. Verified:
+      `cd agent-orchestrator && uv run python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
+      shows `deribit_combo_perpetual_partition_move_2026_07_21.md` with
+      `disk_open=1, backlog_open=0,     excluded=[{"declared": true}]` — genuinely still operator-gated (per §7 of that
+      doc), correctly declared, no accidental exclusion remains. (repo: unified-trading-pm)
 - [x] ✅ [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`.** Its checkbox reads (truncated):
       "[SCRIPT] P3. **D4 — `recursive_borrow_paper_smoke.py` is a non-instantiating stub** (`INFRA_GAP`/" — the marker
@@ -591,3 +592,15 @@ human already made the call and the fleet still never executes it.
   doc's original 27-item list (the ~10 newly-visible accidental exclusions from the 2026-08-09 slot-3 rule-tightening
   note above are a separate, not-yet-enumerated population — re-run the live report before assuming this doc's job is
   fully done).
+- **2026-08-09 (slot 25, infra)** — Fixed the `deribit_combo_perpetual_partition_move_2026_07_21.md` todo. Moot, not
+  accidental: the finding's cited trigger text ("RULED 2026-08-06 (operator): proceed now") no longer exists in the
+  target doc — that doc's own Progress Log shows main agent independently rewrote the flagged checkbox on 2026-08-09,
+  correcting an erroneous "proceed now" framing (no corroborating evidence found for it) to the corroborated
+  `BLOCKED-OPERATOR` status, which now sits at the head of its own line. This fixed the classification as a side effect,
+  not something this triage needed to do. Confirmed via `dispatch_visibility_report --json`:
+  `disk_open=1, backlog_open=0, excluded=[{"declared": true}]` — genuinely still operator-gated per that doc's §7,
+  correctly declared, no rewrite needed. (Correcting the note above about "every enumerated finding" being closed — this
+  todo, and the still-open `cross_cutting_satellite_ao_dispatch_batch1`/`defi_satellite_ao_dispatch_batch9_finalize`/
+  `sports_satellite_ao_dispatch_batch5_finalize`/`ag_closeout_linkage_gate`/`credential_ask_orphan_checker`/
+  `sports_all_vendor_honest_coverage_convergence`/`sports_odds_api_scattered_multiyear_gaps` items above, were all part
+  of the original 27-item list and remained open at that time.)
