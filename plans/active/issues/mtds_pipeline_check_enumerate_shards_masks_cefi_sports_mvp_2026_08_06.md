@@ -45,7 +45,7 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
-assigned_role: data-pipeline
+assigned_role: data_engineering
 drift_direction: advance-code
 resolved_by:
 locked_by:
@@ -138,16 +138,22 @@ audit doesn't re-discover it as if new; not requesting action on it here.
 
 ## Suggested remediation (either sufficient alone; second is more robust)
 
-- **(a) Minimal, mirrors the existing TRADFI fix shape**: add `_CEFI_MVP_SHARDS` / a SPORTS equivalent (hand-listed
-  `(venue, data_type)` pairs, or thread a per-venue representative `base_ccy`/`league` into the enumeration-time probe)
-  the same way `_TRADFI_MVP_SHARDS` already does, so `_venue_data_type_is_mvp` stops returning a blanket `False` for
-  these two groups.
-- **(b) More robust, fixes the masking mechanism itself**: change the fallback to fire **per asset_group** (track which
-  groups contributed zero shards from the primary path and only fallback-enumerate THOSE via
-  `smoke_matrix.enumerate_cells(asset_group_filter=<that group>)`) instead of gating on the combined list's aggregate
-  truthiness. This is the fix that actually closes the "invisible in a combined sweep" failure mode — (a) alone still
-  leaves the same masking risk for the NEXT asset_group that acquires an unsupported enumeration-time `is_mvp()`
-  dependency.
+## Todos
+
+- [ ] [DATA] P1. **(b) Fix the masking mechanism itself (RECOMMENDED — closes the failure mode, not just this
+      instance).** In `market-tick-data-service/scripts/pipeline_e2e_check.py`, change the "last-resort fallback" (line
+      ~688) to fire PER asset_group instead of gating on the combined `shards` list's aggregate truthiness: track which
+      asset_groups contributed zero shards from the primary enumeration path and fallback-enumerate only THOSE via
+      `smoke_matrix.enumerate_cells(asset_group_filter=<that group>)`. Done when:
+      `enumerate_mtds_shards(None, None,     None, True, False)` (no `--asset-group` filter, the documented full-matrix
+      sweep mode) returns non-zero CEFI and SPORTS shards alongside DEFI/PREDICTION/TRADFI's existing 2967 — re-run the
+      two `enumerate_mtds_shards()` probes in "What I found" above to verify. Also closes the risk for any FUTURE
+      asset_group that acquires an enumeration-time `is_mvp()` kwarg dependency the primary path can't supply.
+- [ ] [DATA] P3. **(a) Minimal, mirrors the existing TRADFI fix shape (alternative/supplementary — not required if the
+      todo above ships; a narrower point-fix that would leave the masking mechanism itself unfixed for the next
+      asset_group).** Add `_CEFI_MVP_SHARDS` / a SPORTS equivalent (hand-listed `(venue, data_type)` pairs, or thread a
+      per-venue representative `base_ccy`/`league` into the enumeration-time probe) the same way `_TRADFI_MVP_SHARDS`
+      already does, so `_venue_data_type_is_mvp` stops returning a blanket `False` for these two groups.
 
 ## Workaround used this run (cefi_mtds_smoke_tester, day=2026-08-05)
 

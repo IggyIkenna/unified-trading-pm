@@ -81,9 +81,13 @@ SPOT-preemption auto-relaunch (`RelaunchPreemptedVm`) re-invoking with the SAME 
 predates this fix and inherits the same oversized full-date-range scope. It has not yet reached any of the 6 remaining
 Track-7 target days (`2023-08-02`, `2023-11-02`, `2024-02-01`, `2024-02-02`, `2024-07-01` — plus the already-passed
 `2023-06-01`), and at the observed ~12 min/day processing rate would need ~950 processed days / ~8 months of continuous
-uptime to reach `2026-01-01`, virtually guaranteeing further preemptions before completion. It was NOT terminated by
-this todo (STEP 0.55 VM-delete guardrail: it is actively progressing, not stale, so unilateral deletion is out of scope
-for this agent) — flagging for operator visibility given the compute waste.
+uptime to reach `2026-01-01` **[CORRECTED 2026-08-09, plan_reconciler agt-5f7f31: this was an arithmetic slip —
+`cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md`'s 2026-08-09 "ETA correction" entry re-measured the same VM
+class over a longer window (86 days/16.38h ≈ 5.25 days/hour) and found remaining ~860 days ÷ 5.25/h ≈ 164h ≈ **~7
+days**, not ~8 months; see that doc's Progress Log for the full math]**, virtually guaranteeing further preemptions
+before completion. It was NOT terminated by this todo (STEP 0.55 VM-delete guardrail: it is actively progressing, not
+stale, so unilateral deletion is out of scope for this agent) — flagging for operator visibility given the compute
+waste.
 
 ## Why it matters
 
@@ -116,8 +120,9 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
 - [ ] [DATA] P2. Once `mdps-backfill-cefi-20260808-095136` reaches a terminal state (completed or preempted), relaunch
       the CeFi Track-7 candle regen SCOPED PER-DAY (single-day `--start-date`==`--end-date` launches for each of the 6
       target days, NOT the full 2023-06-01→2026-01-01 range — the launcher has no day-list flag, and the full-range
-      scope is what caused 2 prior preemptions plus ~8 months of unnecessary compute at the observed ~12 min/day rate)
-      now that the force-forwarding fix is live. (repo: deployment-service, market-data-processing-service)
+      scope is what caused 2 prior preemptions plus needless full-range re-processing on every relaunch — see the
+      `[CORRECTED 2026-08-09...]` annotation above re: the corrected ~7-day, not ~8-month, natural-completion ETA) now
+      that the force-forwarding fix is live. (repo: deployment-service, market-data-processing-service)
 
 ## Progress Log
 

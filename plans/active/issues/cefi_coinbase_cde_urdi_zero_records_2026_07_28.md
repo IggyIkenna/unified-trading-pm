@@ -156,8 +156,8 @@ this historical spot-check date. No follow-up needed for these two.
 ## Codex SSOTs
 
 `/codex/02-data/four-surface-reconciliation-procedure.md` (venue-day gap classification),
-`.claude/skills/data-pipeline-check-is/SKILL.md` (ground-truth run.log verification method — no new pattern introduced
-by this doc, just applying the documented method to a genuinely-real finding).
+`cursor-configs/skills/data-pipeline-check-is/SKILL.md` (ground-truth run.log verification method — no new pattern
+introduced by this doc, just applying the documented method to a genuinely-real finding).
 
 ## Progress Log
 
