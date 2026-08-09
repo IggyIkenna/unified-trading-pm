@@ -33,6 +33,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true
 context_scope:
   [
     /plans/active/prediction_satellite_ao_dispatch_batch9_2026_08_09.md,
@@ -92,11 +93,29 @@ drift_direction: advance-code
       `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`,
       `prediction_phase_e_football_arb_live_2026_07_24.md`) confirmed still `status: active` with open todos (7+2+5+3=17
       total).
-- [ ] [DOC] P1. **Archive `prediction_satellite_ao_dispatch_batch9_2026_08_09.md`** via the standard 6-step ritual (per
-      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): confirm todo 2's verdict is recorded, add
-      the archived-banner cross-reference, run the post-phase codex audit, confirm no new CLAUDE.md contract is owed,
-      update every corpus referrer, `git mv` to `plans/archive/2026_08/`. Repo: unified-trading-pm. Done when: batch9 is
-      at its archived path with every referrer updated and this finalize plan's own todos all `[x]`.
+- [x] ✅ [DOC] P1. **Archive `prediction_satellite_ao_dispatch_batch9_2026_08_09.md`** via the standard 6-step ritual
+      (per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): confirm todo 2's verdict is recorded,
+      add the archived-banner cross-reference, run the post-phase codex audit, confirm no new CLAUDE.md contract is
+      owed, update every corpus referrer, `git mv` to `plans/archive/2026_08/`. Repo: unified-trading-pm. Done when:
+      batch9 is at its archived path with every referrer updated and this finalize plan's own todos all `[x]`. **DONE
+      2026-08-09.** Todo 2's verdict already recorded (above). Codex-alignment check: no staleness found — the new
+      launcher VM names this batch shipped (`mtds-prediction-kalshi-cqg-rewalk-*`, `mtds-prediction-kalshihistgap-*`)
+      already resolve via the existing `mtds-prediction-` prefix entry in
+      `deployment-service/deployment_service/vm_prefix_registry.py` (line 397), no new registry entry or CLAUDE.md
+      contract owed. Corpus referrer sweep (`grep -rl` for the doc's bare name):
+      `prediction_satellite_ao_dispatch_batch10_2026_08_09.md`'s `related:` frontmatter path — repoint deferred to the
+      immediately-following archival commit (a frontmatter `related`/`context_scope` field pointing at the archive path
+      fails `check_frontmatter_schema`'s dangling-reference check while the target doc still lives at its active path —
+      the repoint must land in the SAME commit as the `git mv`, not this flip-only commit); `plans/active/INDEX.md` is
+      auto-generated (regenerated in the archival commit, not hand-edited); the remaining referrers
+      (`prediction_satellite_ao_dispatch_batch8_2026_08_08.md`, the 2 issue docs, the 2 already-archived docs) cite the
+      doc by bare filename in historical Progress-Log prose, not a leading-slash path link — left as-is per the
+      established precedent for historical mentions (e.g. `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+      finalize entry). `locked_by` confirmed empty. `archive_exempt: true` added to this doc's own frontmatter as the
+      flip-then-mv bridge (this doc's own last todo is its own archival trigger, same shape as
+      `cefi_satellite_ao_dispatch_batch12_2026_08_09_finalize.md`'s precedent) — this commit is the flip-only half; the
+      immediately following commit does the `git mv` for both this doc and
+      `prediction_satellite_ao_dispatch_batch9_2026_08_09.md`, dropping the exempt flag.
 
 ## Progress Log
 
@@ -120,3 +139,12 @@ drift_direction: advance-code
   `prediction_consolidated_closeout_2026_07_18.md`'s 0-todo status — STILL HELD/VALID: re-verified 0 open native todos,
   `archive_exempt: true`, all 4 child Phase A-E plans confirmed active with 17 open todos combined. Doc line count
   unaffected (source doc stayed well under cap).
+- 2026-08-09 (todo 3 done, slot 13): archived `prediction_satellite_ao_dispatch_batch9_2026_08_09.md` (all 4 todos
+  confirmed `[x]`, unlocked) per the 6-step ritual. Codex-alignment check found no staleness — the new launcher VM
+  prefixes this batch shipped already resolve under the existing `mtds-prediction-` registry entry.
+  `prediction_satellite_ao_dispatch_batch10_2026_08_09.md`'s `related:` path repoint deferred to the immediately-
+  following archival commit (a frontmatter path pointing at a not-yet-existing archive location fails
+  `check_frontmatter_schema`'s dangling-reference check); other referrers are historical bare-filename prose mentions,
+  left as-is. `archive_exempt: true` added to this doc's own frontmatter as the flip-then-mv bridge (this todo's own
+  completion also makes this finalize doc itself archival-eligible) — this commit is the flip-only half; the immediately
+  following commit `git mv`s both this doc and batch9 to `plans/archive/2026_08/`, dropping the exempt flag.
