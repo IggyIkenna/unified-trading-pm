@@ -14,7 +14,7 @@ summary: >-
   same 2026-08-08 audit ("todo 20 ... shows no conflict on its own ... flagging todo 20 as a RECLASSIFY candidate for a
   future, properly-scoped follow-up once todo 3's collision clears") — this batch is that follow-up, re-conflict-checked
   fresh as of 2026-08-09.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]

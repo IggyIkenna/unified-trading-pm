@@ -14,7 +14,7 @@ summary: >-
   touch still flips `incremental_skip` to `false` — measured 44% false-positive rate (11/25 docs) on one tranche, one
   run. Both of the source doc's todos are bounded/deterministic (extend one regex + add a unit fixture; add one
   cross-reference line) with zero overlap against batch7's already-shipped work or any other in-flight plan.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]

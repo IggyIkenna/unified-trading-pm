@@ -16,7 +16,7 @@ summary: >-
   `ci`-tranche metadata-retag list, and an independently-resolved provenance-marker doc that fixed a different
   subsystem) neither of which claims this batch's extracted item. All 11 todos are file-disjoint (verified during
   drafting) so this plan needs no `sequential` gate.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]

@@ -15,7 +15,7 @@ summary: >-
   `parent_epic`-is-the-grouping-axis rule (batch11/13 precedent). The doc's sole OTHER open item (P3, prune/tombstone
   ghost fleet-git-health host rows) stays genuinely NA — it asks the worker to "decide which" of two disposal
   strategies, a real design call the source doc itself never resolves.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]

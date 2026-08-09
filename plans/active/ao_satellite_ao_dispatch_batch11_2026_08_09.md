@@ -13,7 +13,7 @@ summary: >-
   with no word/sentence-boundary awareness — the source doc's own 2026-08-08 `na-eligibility-audit` pass already flagged
   this exact item `MISCLASSIFIED_LIKELY_AO_ELIGIBLE`, naming the function, the bug, and a recommended fix, while
   correctly keeping the whole doc `NA` because its 11 sibling items are genuine judgment calls.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]

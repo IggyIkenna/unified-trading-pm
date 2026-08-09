@@ -16,7 +16,7 @@ summary: >-
   targets specifically the one item the new fact unblocks, not a re-litigation of the doc's other 4 genuinely-gated
   items (2 real-production pilots, 1 CLI-version design call, 1 gitignored-per-VM data check), which stay `assigned_vm:
   NA` per that same declination and this run's own re-confirmation.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]

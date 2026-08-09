@@ -13,7 +13,7 @@ summary: >-
   taxonomy tags. Two items initially looked batchable but turned out, on a deeper read, to already be live/in-flight
   under a THIRD doc (`sports_all_vendor_honest_coverage_convergence_2026_08_07.md`'s odds_api backfill VM chain) — fixed
   as a doc-hygiene note in their source docs instead of drafted here, to avoid racing a live VM.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]

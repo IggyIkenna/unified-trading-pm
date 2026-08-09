@@ -16,7 +16,7 @@ summary: >-
   resolved with zero remaining work, or a stale-checkbox-only situation with no new AO-eligible work — none needed a
   batch extraction. Full per-item disposition of all 48 re-checked items lives in
   `ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md`'s Progress Log, not duplicated here.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]

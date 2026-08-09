@@ -15,7 +15,7 @@ summary: >-
   prerequisite gate) and all 4 blockers cleared 2026-08-07/08, but none of the 4 items were ever promoted into a live
   dispatched todo anywhere in the tranche's 15-doc covering set — independently re-verified via a fresh basename +
   content-term grep across every active batch/finalize/phase-child doc before drafting.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]

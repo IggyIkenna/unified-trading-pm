@@ -13,7 +13,7 @@ summary: >-
   `check_plan_operator_ruling_evidence.py`'s `unsourced_ruling_baseline` from 53 toward 0 — the source doc's own
   2026-08-09 session already fixed 20 of the original 76 (fully verified, cited sources); the remaining 53 need the same
   per-entry verify-or-escalate treatment.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]

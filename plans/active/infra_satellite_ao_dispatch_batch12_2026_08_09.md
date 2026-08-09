@@ -11,7 +11,7 @@ summary: >-
   originally parked this item is gone. Drafted as batch1 archives so the item is not lost to archival. Low value on its
   own (the source doc's own text: `launched_by` already answers "who launched this" for most operator purposes) — P3,
   single bounded todo.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]

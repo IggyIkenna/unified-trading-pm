@@ -10,7 +10,7 @@ summary: >-
   source doc's other 2 items (deciding a Firebase Admin credential/emulator approach for CI, and a downstream re-run
   gated on both) are genuine operator/judgment or dependency-gated calls and are NOT extracted here — only this one
   self-contained diagnostic+fix item clears the bounded-outcome bar.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]

@@ -21,7 +21,7 @@ summary: >-
   package.json version bump — its sibling "should the dashboard gate on formatting at all" item stays, a genuine
   undecided policy call). All 6 todos are file-disjoint (verified during drafting) so this plan needs no `sequential`
   gate.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]

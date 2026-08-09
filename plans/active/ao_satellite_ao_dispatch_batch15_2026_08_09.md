@@ -16,7 +16,7 @@ summary: >-
   from a would-be `orchestrator_master`-epic batch (`ao_satellite_ao_dispatch_batch14_2026_08_09.md`, same run) per the
   established `parent_epic`-is-the-grouping-axis convention (batch11/13 precedent). All 3 todos are file-disjoint, so
   this plan needs no `sequential` gate.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
