@@ -91,15 +91,17 @@ CLAUDE.md's current § "Git discipline"), so it's AO-dispatchable once picked up
 
 ## Todos
 
-- [ ] [DOC] P2. Rewrite `/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" diagram + Gate
+- [x] ✅ [DOC] P2. Rewrite `/codex/08-workflows/deployment-flow.md`'s "Full Pipeline: LDR → Cloud Build" diagram + Gate
       1/2/3 walkthrough to reflect the LDR-direct-promote-with-dormant-staging model (mirror `ci-cd-flow.md`'s already-
       shipped rewrite, `unified-trading-pm@b9d0b9209`, for the target shape). Done when: the two sibling docs (engineer
       view / operator view) describe the SAME pipeline shape, and every staging-mediated-as-default claim in
-      `deployment-flow.md` is corrected or explicitly marked as the non-default toggle path. **Extraction citation
-      (na-eligibility-audit 2026-08-02):** the AO-dispatchable copy of this todo lives in
-      `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (its `[DOC] P2` item, line ~169) — that plan is
-      still `status: draft`, so no commit/sha exists to cite yet. This doc stays `assigned_vm: NA`; flip this checkbox
-      from batch4 when it ships.
+      `deployment-flow.md` is corrected or explicitly marked as the non-default toggle path. **DONE — shipped via
+      `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s `[DOC] P2` item: `unified-trading-pm@445f02081`
+      (2026-08-06T17:02:28Z, "docs(codex): rewrite deployment-flow.md pipeline diagram + Gates 1/2/3 for LDR-direct
+      model"), confirmed a real ancestor of `origin/live-defi-rollout`. Live-verified 2026-08-09 (stale-recheck sweep):
+      the doc now carries a "Target branch updated for the LDR-direct model" banner and the rewritten pipeline
+      sections. Batch4's own doc had already flipped this checkbox at the source (`status: active`) — this doc's
+      citation-copy was simply never updated to match; closing that gap now.**
 
 ## na-eligibility-audit verdict
 

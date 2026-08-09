@@ -120,7 +120,7 @@ silent merge choice here risks dropping one side's fix. Not attempted.
       `workspace-manifest.json` entry still carries `promotion_model: "single_branch"` and the monitor correctly places
       it in `_single_branch_repos()` (fully exempt, all 4 directions dormant-by-design). No other post-2026-08-05 repo
       exists, so there is no additional gap to close.
-- [ ] [DEVOPS] P3. Fleet-propagate the SC2015 shellcheck fix (`22a45ea`, notify-slack.yml's dedup-marker-write
+- [x] ✅ [DEVOPS] P3. Fleet-propagate the SC2015 shellcheck fix (`22a45ea`, notify-slack.yml's dedup-marker-write
       `A && B || C` -> `if`) from unified-trading-ci's `.github/workflows/notify-slack.yml` back into
       `scripts/workflow-templates/notify-slack.yml` (the fleet SSOT) and re-run `rollout-workflow-templates.sh` so all
       26 consuming repos pick it up — found 2026-08-07 while shipping this issue's reconciliation: `check_workflows`
@@ -129,9 +129,25 @@ silent merge choice here risks dropping one side's fix. Not attempted.
       copies are still on the un-fixed pattern, so updating the template naively would flip all of them to drifted in
       one shot — needs its own verified rollout, not a drive-by fix. Grandfathered `unified-trading-ci/notify-slack.yml`
       into `scripts/quality_gates/workflow_template_drift_baseline.json` via
-      `--baseline-write --baseline-write-allow-additions` to unblock shipping in the meantime.
+      `--baseline-write --baseline-write-allow-additions` to unblock shipping in the meantime. **DONE — shipped via
+      `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 9, 2026-08-08.** The "26 consumers" premise this todo
+      originally assumed was itself stale (corrected scope investigation:
+      `issues/notify_slack_yml_fleet_rollout_scope_contradiction_2026_08_08.md`) — 21 of the 26 manifest repos had
+      already had their local `notify-slack.yml` deliberately deleted as dead
+      (`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 6; a blanket rollout would have
+      silently resurrected 20 zombie files). Fix ported into the template + `unified-trading-pm@5d16f57f3` (PM's own
+      deployed copy) + `deployment-service@00a23128` (the sole confirmed remaining legitimate local caller). Template
+      drift baseline ratcheted to 0 entries for this file. `execution-service`/`strategy-service` carry pre-existing
+      zombie copies with zero current callers, left untouched and flagged in the new issue doc for a future cleanup
+      todo — not this fix's scope.
 
 ## Progress Log
+
+- **stale-recheck 2026-08-09** (KEEP-NA staleness re-audit, `ci` tranche): batch6 todo 9 (SC2015 shellcheck
+  fleet-propagation) shipped 2026-08-08 (`unified-trading-pm@5d16f57f3` + `deployment-service@00a23128`, scope
+  corrected per `notify_slack_yml_fleet_rollout_scope_contradiction_2026_08_08.md`) — flipped this doc's own checkbox
+  to `[x]` with the citation. Both of this doc's todos are now done — **flagging as an ARCHIVE candidate** (0 open
+  todos remain).
 
 - **2026-08-07**: Found while re-verifying the morning branch-health `PROMOTION LAG > 60m` alert. Not fixed autonomously
   — the correct remedy depends on a design intent only the operator can confirm (does this repo want real promotion

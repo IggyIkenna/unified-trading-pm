@@ -80,14 +80,16 @@ exact quoting/flags), so a genuine future rewording of this line doesn't require
 
 ## Todos
 
-- [ ] [SCRIPT] P3. Fix `scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh`'s structural-anchor
+- [x] ✅ [SCRIPT] P3. Fix `scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh`'s structural-anchor
       `case` pattern (line 50) to match `setup.sh`'s current pip-fallback wording (unquoted `uv==0.10.8`, `--quiet`,
       `$PYTHON_CMD -m` prefix) instead of the stale quoted-literal expectation. Done when:
-      `bash     scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh` reports 5/5 passed.
-      **Extraction citation (na-eligibility-audit 2026-08-02):** the AO-dispatchable copy of this todo lives in
-      `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (lines ~178-185, citing this doc as its Source) —
-      that plan is still `status: draft`, so no commit/sha exists to cite yet. This doc stays `assigned_vm: NA`; flip
-      this checkbox from batch4 when it ships.
+      `bash     scripts/quality-gates-base/tests/test-setup-sh-uv-bootstrap-fallback.sh` reports 5/5 passed. **DONE —
+      shipped via `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md`: `unified-trading-pm@eff7413da`
+      (2026-08-06T17:18:14Z, "fix(qg): update uv bootstrap fallback test structural anchor to match setup.sh's current
+      pip fallback"), confirmed a real ancestor of `origin/live-defi-rollout`. Live-verified 2026-08-09 (stale-recheck
+      sweep): re-ran the test directly — `── result: 5 passed / 0 failed ──`. Batch4's own doc had already flipped
+      this checkbox at the source (`status: active`) — this doc's citation-copy was simply never updated to match;
+      closing that gap now.**
 
 ## na-eligibility-audit verdict
 
