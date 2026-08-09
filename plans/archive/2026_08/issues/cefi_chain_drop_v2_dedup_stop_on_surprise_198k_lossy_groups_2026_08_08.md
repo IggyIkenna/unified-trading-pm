@@ -16,7 +16,7 @@ summary: >-
   `issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md` todo 2's original plan of "just re-run v2 apply";
   that todo is being closed via a narrower scoped equivalent that does not touch this population instead (see that doc's
   Progress Log).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -38,6 +38,13 @@ source: >-
   3, 2026-08-08 — a routine re-run of the already-proven-safe `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`
   dry-run (`canonical-migration-cefi-dedup-apply-20260808-233932`, e2-standard-8, asia-northeast1-c) refused to proceed.
 resolved_by:
+  data_engineering-worker-slot5 2026-08-09 — all 6 todos closed. Root cause (Finding 14): `instruments-service`'s CeFi
+  dedup `PIN_ATOM` key omitted `timeframe`+`service_name`, collapsing legitimate per-candle-timeframe manifest rows
+  into false-positive "lossy duplicate" groups. Fix shipped `instruments-service@ccd47ba9`/`@4f313782`; full-corpus
+  dry-run confirmed 198,250→5 lossy groups (todo 4); pre-cutoff population independently confirmed same mechanism,
+  58,682→0 (todo 5, Finding 15), fix shipped `market-tick-data-service@76169947e`; stale tolerance-comment updated
+  `instruments-service@8370df9a4` (todo 6). No writer/consolidator bug exists; no data-loss risk was real. See Progress
+  Log for full history.
 locked_by:
 assigned_vm: planning
 assigned_role: data_engineering
@@ -485,6 +492,59 @@ hand-reconstructed DataFrame from the live-pulled sample rows, run through the a
 `_effective_dedup_key` functions — not a full VM dry-run of the patched script. Todo 4 below is the full-corpus
 verification step; todo 5 (pre-cutoff re-run) should now also re-measure the 58,682 figure with the fixed key.
 
+## Finding 15 (2026-08-09T04:47Z, slot-5) — Finding 14's fix CONFIRMED for the pre-cutoff population too: 58,682 → 0
+
+lossy groups (answers todo 5)
+
+Picked up todo 5. `characterize_cefi_pre_2025_11_manifest_same_spelling_duplicate_rows_2026_08_09.py` (Finding 13's
+script) DOES exist in this slot's checkout — Finding 14's note that it "was not found" reflected that slot's clone
+state, not a deletion. Confirmed it does **NOT** reuse `v1._effective_dedup_key` as todo 5 hoped: it hand-rolls its own
+separate DuckDB SQL key (`_KEYED_VIEW_SQL`/`_WITH_KEY_VIEW_SQL`), built independently for wall-clock reasons (pandas
+groupby couldn't complete in 1500s on this multi-million-row frame under host contention — see Finding 13's Progress Log
+entry) — and that hand-rolled key had drifted out of sync with `v1.PIN_ATOM`, still missing `timeframe`/`service_name`,
+i.e. the exact same false-positive mechanism Finding 14 root-caused, reproduced by a second, independently-drifted key
+implementation.
+
+**Fix applied** (mirrors Finding 14's `PIN_ATOM` extension): added `timeframe`+`service_name` to `_LOAD_COLS`, to both
+`chain_dropped_key` and `dedup_key` construction in `_KEYED_VIEW_SQL`/`_WITH_KEY_VIEW_SQL`, and to the `detail_cols`
+sample-dump list.
+
+**Crash bug found + fixed as a side effect**: with the key fixed, the true lossy-group count is 0 — and DuckDB's `SUM()`
+over zero grouped rows returns SQL `NULL`, not `0`, which crashed the script's percentage-formatting line with
+`TypeError: unsupported operand type(s) for *: 'float' and 'NoneType'` (reproduced in `todo5_rerun.log`: the correct
+`0`-valued top-line stats print cleanly, then the crash fires later in the same run, in the per-group chain-composition
+breakdown). Fixed via `COALESCE(SUM(...), 0)` on both aggregates. This is the exact "fix works so well it exposes a
+latent crash-on-empty-result bug" trap — worth flagging since the top-line numbers were already correct before the
+crash-fix, so a hasty read of `todo5_rerun.log`'s early output plus its `EXIT_CODE=1` could have wrongly read as "still
+lossy," when the crash was purely a formatting-code bug downstream of an already-correct zero result.
+
+**Measured result, confirmed via two independent full runs** (`todo5_rerun.log`, pre-crash-fix — crashes late, after
+printing the correct top-line numbers; `todo5_rerun2.log`, post-crash-fix — runs clean end-to-end, `EXIT_CODE=0`):
+
+```
+total pre-cutoff cefi manifest rows: 5,122,415
+already-canonical rows: 5,073,386 (99.04%)
+distinct effective-dedup-key groups: 5,119,018
+LOSSY groups (>=2 CAPTURED rows, differing row_count, one dedup key): 0        (was 58,682 per Finding 13)
+LOSSY groups on CHAIN-DROPPED key (chain removed from key): 0
+rows involved in lossy groups: 0
+```
+
+**58,682 → 0**, fully confirming Finding 14's hypothesis explains the pre-cutoff population as a false positive too —
+same mechanism, same fix, zero genuine lossy rows remain in either the post-cutoff (198,250 → 5, todo 4) or pre-cutoff
+(58,682 → 0, todo 5) CeFi manifest data. No writer/consolidator bug exists anywhere in either population; the entire
+198k+58k "surprise" this issue doc was filed to STOP-ON-SURPRISE against was `instruments-service` analysis-script key
+drift, not data loss risk.
+
+**Shipped this pass**: `market-tick-data-service@76169947e` (dedup-key fix + crash fix, one script,
+`characterize_cefi_pre_2025_11_manifest_same_spelling_duplicate_rows_2026_08_09.py` only) and separately
+`instruments-service@8370df9a4` (todo 6 — updated the now-stale `_CHAIN_LOSSY_TOLERANCE_MAX` tolerance comment in
+`complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py` to note the tolerated residual's composition drifts between
+runs rather than re-describing one snapshot as if fixed). Both independently verified ancestor-of-origin
+(`ahead=0`/`behind=0` against `origin/live-defi-rollout`, clean working tree) before either checkbox below was flipped —
+no repeat of the 02:16Z entry's not-yet-pushed-evidence mistake. No GCS/manifest mutation in this pass — script source
+changes only, both read-only characterization/comment edits.
+
 ## Todos
 
 - [x] [DATA] P1. ✅ **Root-cause whether ASTER/HYPERLIQUID/EXTENDED-STARKNET manifest writes are appending a NEW row per
@@ -542,13 +602,14 @@ verification step; todo 5 (pre-cutoff re-run) should now also re-measure the 58,
       `DEPLOYMENT_COMPLETED exit_code=0`, self-deleted (`VM_SHUTDOWN_ON_COMPLETION`). Zero mutation (dry mode, confirmed
       via `DRY-RUN (default) — no write` in the log). Full log:
       `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-dedup-apply-20260809-034037/run.log`.
-- [ ] [DATA] P2. **After todo 4's dry-run confirms the fix, also re-run
+- [x] [DATA] P2. **After todo 4's dry-run confirms the fix, also re-run
       `instruments-service/scripts/apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py`'s dry-run (or
       `characterize_cefi_pre_2025_11_manifest_same_spelling_duplicate_rows_2026_08_09.py` if it still exists and can be
       confirmed to use `v1._effective_dedup_key`) to confirm the pre-cutoff same-spelling lossy-group count (58,682 per
       Finding 13, likely inflated by the same `timeframe` omission per Finding 14) also drops toward a small baseline.**
-      (repo: instruments-service, market-tick-data-service)
-- [ ] [DATA] P3. The `_CHAIN_LOSSY_TOLERANCE_MAX` tolerance comment in
+      (repo: instruments-service, market-tick-data-service) — ✅ CONFIRMED: 58,682 → 0 lossy groups (two independent
+      runs). See Finding 15 + Progress Log 2026-08-09T04:47Z entry. Evidence: `market-tick-data-service@76169947e`.
+- [x] [DATA] P3. The `_CHAIN_LOSSY_TOLERANCE_MAX` tolerance comment in
       `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py` (near `_chain_merge_safety`) describes the tolerated
       residual as "BITFINEX-SPOT + BYBIT-SPOT blank id/underlying/chain book_snapshot_5+trades market-wide-aggregate
       near-duplicate re-captures" (2026-07-24 baseline), but the post-fix 2026-08-09 dry-run's actual 5-group residual
@@ -557,7 +618,7 @@ verification step; todo 5 (pre-cutoff re-run) should now also re-measure the 58,
       but the comment is now stale and should describe the actual current residual (or note it drifts and isn't meant to
       be an exhaustive enumeration). See
       `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-dedup-apply-20260809-034037/run.log`
-      for the full 10-row detail table. (repo: instruments-service)
+      for the full 10-row detail table. (repo: instruments-service) — ✅ Evidence: `instruments-service@8370df9a4`.
 
 ## Progress Log
 
@@ -657,3 +718,19 @@ verification step; todo 5 (pre-cutoff re-run) should now also re-measure the 58,
   `perp_funding`, a different population. Todo 4 closed. Todo 5 (pre-cutoff re-verification, 58,682-group figure) is now
   unblocked/eligible for dispatch — left as `- [ ]` for the next worker per the one-task-per-session discipline, not
   absorbed into this session.
+- **2026-08-09T04:47Z (slot-5, data_engineering, todo 5 + todo 6 closed)** — Picked up todo 5. Found
+  `characterize_cefi_pre_2025_11_manifest_same_spelling_duplicate_rows_2026_08_09.py` hand-rolls its own DuckDB SQL
+  dedup key (not `v1._effective_dedup_key` as todo 5 hoped) that had independently drifted out of sync with
+  `v1.PIN_ATOM` — same `timeframe`/`service_name` omission Finding 14 fixed, reproduced by a second key implementation.
+  Added both columns to `_LOAD_COLS`, `_KEYED_VIEW_SQL`, `_WITH_KEY_VIEW_SQL` (both `chain_dropped_key` and
+  `dedup_key`), and `detail_cols`. Found + fixed a crash bug as a side effect: DuckDB `SUM()` over the now-zero
+  lossy-group population returns `NULL`, crashing a percentage-format line (`TypeError`) — fixed via
+  `COALESCE(SUM(...), 0)`. **Measured result, confirmed via two independent full runs: 58,682 → 0 lossy groups** — see
+  Finding 15 for the full detail and the "correct answer masked by a downstream crash" trap this surfaced. Shipped
+  `market-tick-data-service@76169947e` (both fixes, one file) and, separately, `instruments-service@8370df9a4` (todo 6 —
+  restated the `_CHAIN_LOSSY_TOLERANCE_MAX` comment to note the tolerated residual's composition drifts between runs,
+  using the Finding-14-era 5-group DERIBIT/HYPERLIQUID residual as the illustrating example rather than a fixed
+  enumeration). Both independently verified ancestor-of-origin (`ahead=0`/`behind=0`, clean tree) before flipping either
+  checkbox — evidence-backed per this doc's own 02:16Z lesson. Both todo 5 and todo 6 now closed; every todo in this
+  issue doc is `[x]`, no `locked_by` — archiving in this same turn per the plan-completion-and-archival-discipline SSOT
+  (6-step ritual below), rather than leaving it sitting `active` for a later audit pass to catch.

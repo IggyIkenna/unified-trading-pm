@@ -34,8 +34,9 @@ depends_on: []
 context_scope: [/codex/06-coding-standards/quality-gates.md]
 source: >-
   Filed during the `/pre-compact` audit of session work on
-  /plans/active/issues/cefi_chain_drop_v2_dedup_stop_on_surprise_198k_lossy_groups_2026_08_08.md todo 4 (2026-08-09,
-  slot-5) — see that doc's Progress Log for the shipping session this was discovered in.
+  /plans/archive/2026_08/issues/cefi_chain_drop_v2_dedup_stop_on_surprise_198k_lossy_groups_2026_08_08.md todo 4
+  (2026-08-09, slot-5) — see that doc's Progress Log for the shipping session this was discovered in (archived
+  2026-08-09, all todos closed).
 resolved_by:
 locked_by:
 ---
@@ -44,9 +45,9 @@ locked_by:
 
 ## What I found
 
-Working `/plans/active/issues/cefi_chain_drop_v2_dedup_stop_on_surprise_198k_lossy_groups_2026_08_08.md` todo 4
-(2026-08-09), I hit a busy shared host (multiple slots' full QG runs already active) before shipping a fix. CLAUDE.md's
-only guidance is:
+Working `/plans/archive/2026_08/issues/cefi_chain_drop_v2_dedup_stop_on_surprise_198k_lossy_groups_2026_08_08.md`
+(now-archived) todo 4 (2026-08-09), I hit a busy shared host (multiple slots' full QG runs already active) before
+shipping a fix. CLAUDE.md's only guidance is:
 
 > Shared-host ≤2 full QGs at once (`max(2, floor(cores/4))`); never bulk-kill another slot's `pytest`/QG.
 
