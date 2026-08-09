@@ -874,3 +874,18 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   known) for exactly this case. Releasing THIS pass via skip-current-task with `reason_code: "GATED"`,
   `estimated_unblock_minutes: 180` (the policy max) to arm the cooldown immediately rather than leaving the fix as
   docs-only-for-next-time. Window NOT yet closed (day ~4 of ~14, closes ~2026-08-20).
+- **slot-11 2026-08-09 ~19:12Z (nineteenth pass, same task) — first pass after slot-32's cooldown fix, ~6h10m gap
+  (cooldown expired ~16:05Z, legitimate redispatch, not a repeat of the dispatch-cadence waste)**: surveyed latest 3
+  `quality-gates-v2` runs across all 10 tracked repos (runs spanning ~16:29Z-19:04Z 2026-08-09). 9 service repos: 26/27
+  terminal runs `conclusion=success` (unified-api-contracts `31328326694`/`31326718574`/`31326495529`;
+  instruments-service `31325715413`/`31323944915`/`31323923561`; features-service `31330467895`/`31330127822`/
+  `31329477061`; market-data-processing-service `31328315966`/`31326727932`/`31326603148`; unified-trading-api
+  `31325728289`/`31323952849`/`31323934892`; deployment-service `31329350128`/`31329147021`/`31328304470`; ml-service
+  `31330710404`/`31330530860`/`31329287781`; client-reporting-api `31328419255`/`31328397339`/`31328300529`;
+  market-tick-data-service `31330154423`/`31330131852` success, `31330122032` `conclusion=cancelled` — an intentional
+  cancel, not a timeout failure). unified-trading-pm: 2 runs still in-progress at survey time, 1 terminal failure
+  (`31324643338`, 16:46Z) — job-level check confirms `QG slice (checks): failure`, `QG slice (tests): cancelled` (the
+  tests slice was cancelled as a consequence of the checks-slice failure in the same workflow run, not a pytest-timeout
+  itself) — same known ratchet class this doc has repeatedly ruled out, not the tracked flake. Zero pytest-timeout
+  recurrence anywhere in this survey. Window NOT yet closed (day ~4 of ~14, closes ~2026-08-20); releasing via
+  skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per slot-32's fix.
