@@ -87,10 +87,11 @@ own Tick history.
       the appropriate host-capacity issue if one already exists (check
       `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` first for a possible match
       before filing new). Repo: agent-orchestrator. — agent-orchestrator@e32d962 + Progress Log entry below.
-- [ ] [REVIEW] P3. **DO NOT close yet** — `e32d962` fixed a different code path (see todo 5 below); re-verify only once
-      todo 5 also lands. Then independently re-verify via `GET /api/activity?slot=1` (or whichever slot is currently the
-      review role) over a fresh 2h+ window that `tmux_session_lost` without a preceding `context_recycle_requested` has
-      dropped to near-zero. Repo: unified-trading-pm (verification + checkbox flip only).
+- [x] ✅ [REVIEW] P3. **Re-verified (2026-08-09 ~19:16Z, slot 19) — NOT resolved, rate unchanged.** All 3 landed fixes
+      (`e32d962`, `dd01255`, `5a163e7`) confirmed live for the full measured window; `tmux_session_lost` cadence for
+      slot 1 is statistically indistinguishable from the pre-fix baseline (~1/8.6min vs the original ~1/5-8min). See
+      Progress Log entry below for full methodology + data. New todo added below capturing the continued-investigation
+      ask this negative result implies. Repo: unified-trading-pm (verification + checkbox flip only).
 - [x] ✅ [BACKEND] P1. **Second, distinct root cause found (review, msg 4361, code-confirmed from live source, not
       guessed)**: `check_spawn_heartbeat_timeouts()` (`server/worker_liveness/_auth_failover.py:54`) gates a
       slot-bearing agent's liveness on `SlotRow.last_ping >= SlotRow.last_spawned_at` (line 96); past
@@ -233,6 +234,19 @@ own Tick history.
       (`SIGKILL`, `SIGTERM`, cgroup `oom-kill`, `Out of memory`) using a wider grep, since this session only eyeballed a
       tail rather than pattern-matching. Repo: unified-trading-pm (this doc) or agent-orchestrator (if a durable check
       gets code-ified).
+- [ ] [BACKEND] P1. **All 3 known fixes confirmed live with ZERO combined effect on kill cadence (review re-verify,
+      2026-08-09 ~19:16Z, see Progress Log below) — the 3 tested mechanisms (transient has-session miss, frozen
+      `SlotRow.last_ping`, undebounced `reap_orphan_agents`) are each individually patched but collectively explain none
+      of the observed cadence.** Need a genuinely different investigative angle rather than a 4th single-cause guess:
+      (a) repeat the `5a163e7` live-PID-capture method (proc-exists check at the instant of death) across MULTIPLE
+      deaths in one sitting, not just one, to see whether the exit mechanism is uniform or mixed; (b) cross-reference
+      each captured death's exact timestamp against the SQLite `database is locked` burst pattern from the ~07:54Z entry
+      below (not yet checked against actual slot-1 kill timestamps) — a write-lock stall could plausibly cause a
+      liveness probe to time out and misreport a live session as dead, which is a 4th, still-untested mechanism distinct
+      from all 3 already patched; (c) check whether `has_session_debounced()`'s 0.25s recheck window is even sufficient
+      under the observed CPU-contention levels (documented elsewhere in this doc reaching 5-8x core oversubscription) —
+      a 0.25s window that felt generous at low load may itself be too short under contention, which would explain why
+      the debounce fix moved the needle so little. Repo: agent-orchestrator.
 
 ## Progress log
 
@@ -686,3 +700,34 @@ own Tick history.
   investigator — did not chase the underlying "why does the process actually exit" question further, since that's
   outside this todo's own stated scope. No code shipped (this doc only) — the falsified hypothesis needed no fix, and
   the access finding is itself the deliverable for the next todo.
+- 2026-08-09 ~19:16Z (review, slot 19) — **Todo 3 re-verified: NOT resolved, rate unchanged from pre-fix baseline.**
+  Confirmed all 3 landed fixes are live for the ENTIRE measured window before pulling data:
+  `git merge-base --is-ancestor` confirms `e32d962`/`dd01255`/`5a163e7` are all ancestors of the current
+  `origin/live-defi-rollout` HEAD; `journalctl -u orchestrator` shows the orchestrator restarts roughly every 15-45min
+  (21 restarts observed 09:00-19:00Z, itself a new data point — see below), and the first restart at/after `5a163e7`'s
+  09:11:07Z commit time was 09:30:29Z, so used that as the clean-window start rather than the raw commit timestamp.
+
+  **Data**: `GET /api/activity?slot=1&type=tmux_session_lost&since=2026-08-09T09:30:29Z` (paginated to `limit=500`, well
+  under the cap) returned 67 events spanning 09:39:11Z → 19:15:20Z (9.6h). The matching `type=context_recycle_requested`
+  query over the identical window returned **0** events — i.e. 100% of deaths in this fresh post-fix window are still
+  unexplained kills, same as the original 22-in-2h sample that opened this doc. Cadence: median inter-kill gap 507s
+  (~8.5min), min 64s, max ~21.5min, effectively 1 kill per 8.6min averaged over the full 9.6h — statistically
+  indistinguishable from the documented pre-fix baseline (~5-8min) and from the post-`5a163e7`-but-pre-full-verification
+  05:39Z sample (7-10min). **Verdict: the hoped-for "near-zero" outcome this todo was gated on did not materialize** —
+  all 3 patched mechanisms (transient has-session miss debounce, frozen-`SlotRow.last_ping` heartbeat exemption,
+  undebounced-first-detector fix) are confirmed live and combined produced no measurable change in kill cadence.
+
+  **New angle checked, ruled minor**: cross-referenced the 67 kill timestamps against the 21 orchestrator restart
+  timestamps in the same window (the doc's earlier ~20:22Z/~21:32Z entries flagged restart-proximity as a possible 3rd
+  mechanism) — only 10/67 (~15%) fall within 120s of a restart, so frequent restarts are a contributing minority factor
+  at most, not the dominant driver of the steady ~8.5min drumbeat.
+
+  Per this todo's own "verification + checkbox flip only" scope, flipped the checkbox above with this finding rather
+  than leaving it open indefinitely — the specific re-verification action asked for is conclusively complete (answer:
+  no, not resolved), mirroring how todo 5's falsified-hypothesis result was checked off with its negative finding rather
+  than left open. Added a new `[BACKEND] P1` todo above synthesizing next steps given all 3 single-cause hypotheses
+  tested so far are individually patched with zero combined effect: multi-death live-PID capture in one sitting,
+  cross-referencing kill timestamps against the SQLite lock-contention burst pattern (~07:54Z entry, not yet checked
+  against actual slot-1 kill times), and questioning whether the existing 0.25s debounce window is itself too short
+  under the CPU-contention levels documented elsewhere in this doc. Did not attempt a 4th fix myself — genuinely outside
+  `[REVIEW]` scope and the remaining hypotheses need code-level investigation `[BACKEND]` craft owns.
