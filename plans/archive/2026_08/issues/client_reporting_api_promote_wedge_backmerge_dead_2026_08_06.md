@@ -16,7 +16,7 @@ summary: >-
   current promote PR #646 (promote/client-reporting-api/6e0622b853a7) is CONFLICTING on Dockerfile (ARG
   BASE_IMAGE_DIGEST: main stale sha256:9c1a… vs LDR current sha256:a27d…) and has NO quality-gates-v2 check + sit-gate
   fail-closed. LDR already carries the exact fixes that would repair main once promoted.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci, infrastructure]
 stage: [meta]
@@ -51,6 +51,18 @@ context_scope:
 ---
 
 # client-reporting-api promotion wedge (backmerge dead → #646 conflicting)
+
+> **✅ RESOLVED at the ROOT (verified live 2026-08-09 by plan_reconciler agt-c80749) — not via the 4-step manual recipe
+> below, but structurally eliminated by `shared_ci_workflow_repo_extraction_2026_08_06.md`'s wave-3 rollout.**
+> `main-backmerge-to-ldr.yml` on `main` now calls
+> `IggyIkenna/unified-trading-ci/.github/workflows/main-backmerge-to-ldr.yml@main` directly — the local
+> `./github/workflows/notify-slack.yml` reference that could exist on one branch and not the other (this doc's whole
+> root cause) no longer exists to drift; `notify-slack.yml` is gone from `main` entirely (confirmed 404 via `gh api`).
+> Backmerge has run SUCCESS 8 consecutive times through 2026-08-09T00:18:47Z. PR #646 itself is `CLOSED` (not merged) —
+> superseded by the extraction rather than manually conflict-resolved; promote PRs #657 through #669 (13 PRs) have all
+> `MERGED` cleanly since 2026-08-07, confirming the class of failure this doc tracks cannot recur for this repo. The
+> 4-step "Recommended resolution" below is retained as historical record of what was PROPOSED, not what actually
+> happened.
 
 ## What I found
 
