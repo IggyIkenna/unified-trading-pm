@@ -210,6 +210,23 @@ applied every CONFIRMED-mechanical fix not blocked by grace, in 6 checkpointed c
    `assigned_vm: NA` pending an explicit operator ruling on the 2026-07-26 DEFERRED ruling's scope). Already properly
    parked by prior sessions per the "never-re-litigate a standing revert" rule — noting as still-open, not re-asking.
 
+## Follow-up todos (HARD RULE: every deferral above is tracked here, not left as prose)
+
+- [ ] [DATA] P2. Draft a fresh AO-dispatch todo (satellite batch or standalone) to execute the operator-approved
+      (2026-08-07) 81,454-row `--apply` for `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md` todo 1
+      — dry-run output already measured (81,454 confirmed-safe, CBOE 100% clean, CME's 32,864-row residual deliberately
+      excluded); no active plan currently carries it. See Filed #3.
+- [ ] [REVIEW] P3. `ag_closeout_audit_rollout_2026_07_25.md` needs a dedicated close+archive pass by the `cross-cutting`
+      tranche (its own 2026-08-08 na-eligibility-audit entry already recommends this; out of a single-tranche's
+      authority to execute). See Filed #4.
+- [ ] [DOC] P3. Fix 2 stale details in `agents/plan_reconciler.md`: (a) STEP 2b's findings-doc path template has no
+      tranche/dispatch-id disambiguator, causing a same-day multi-tranche filename collision (see Hygiene fixes #1,
+      BLK-dce00835); (b) STEP 7's result-POST example uses `plan_health/result` (underscore) — the real route is
+      `plan-health/result` (hyphen, confirmed via `agent-orchestrator/server/routes/agents.py:465`) and states
+      `X-Orchestrator-Secret` "may be EMPTY... trusted regardless" — this session's `$ORCHESTRATOR_INTERNAL_SECRET` was
+      genuinely populated and required. Same fix needed in `cursor-configs/skills/plan-reconcile/SKILL.md` for (a). Out
+      of scope for this run (edits `agents/**`, outside `plans/**`) — flagging for whoever next touches that file.
+
 ## Archive candidates (operator review)
 
 1. **`plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`** — all 8
