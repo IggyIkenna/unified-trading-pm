@@ -31,7 +31,7 @@ related:
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -63,7 +63,7 @@ context_scope:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
-    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
   ]
 ---
 
@@ -221,12 +221,15 @@ member, not just a retag.
       `asset_group` `[cross-cutting]` → `[ao]` (finding 5)~~. Done when: the tag is corrected and the doc is folded into
       `ao_consolidated_closeout_2026_07_25.md`'s membership (already named there per 2 independent prior audits).
       **DONE, WITH A CORRECTION (na-eligibility-audit 2026-08-03)** — the doc's `asset_group` is now corrected
-      (2026-08-02, operator-ruled), but to `[ci]`, not `[ao]` as this todo proposed: comment reads "content is
+      (2026-08-02, operator-ruled per the Q&A recorded in
+      `/plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`, commit
+      `unified-trading-pm@5432f2c06`), but to `[ci]`, not `[ao]` as this todo proposed: comment reads "content is
       workflow-template-parity QG drift during the Phase-7 self-hosted-runner rollout, squarely ci-tranche... not
       generic cross-AG content." That also means the "fold into `ao_consolidated_closeout_2026_07_25.md`" clause is moot
       — the doc's real home is the `ci` tranche (`ci_consolidated_closeout_2026_07_25.md`, itself also archived
       `status: complete`), not `ao`. The underlying goal (fix the wrong cross-cutting tag) is achieved; this todo's
-      specific proposed target tranche was superseded by the operator ruling.
+      specific proposed target tranche was superseded by the operator ruling (see
+      `/plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` cited above).
 - [x] ✅ [DOCS] P3. ~~Retag `plans/active/tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`'s
       `asset_group` `[cross-cutting]` → `[tradfi]` (finding 6)~~ — **DONE (na-eligibility-audit 2026-08-07)**. Verified
       directly: the target doc's `asset_group` is now `[tradfi]` (inline comment: "corrected 2026-08-02
@@ -263,7 +266,7 @@ member, not just a retag.
   genuinely open — both target docs' `asset_group` still reads `[cross-cutting]` today (fresh grep), unretagged. Doc
   stays `assigned_vm: NA` — both remaining todos are cross-tranche retags per the 2026-07-30 concurrent-sharded-worker
   rule, not this tranche's write.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
-  a cross-tranche parked-findings register; the 2 remaining open todos are `[DOCS] P3` `asset_group` retags of docs
-  owned by OTHER tranches, explicitly scoped "leave to the owning tranche's own audit" per the 2026-07-30
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged): a
+  cross-tranche parked-findings register; the 2 remaining open todos are `[DOCS] P3` `asset_group` retags of docs owned
+  by OTHER tranches, explicitly scoped "leave to the owning tranche's own audit" per the 2026-07-30
   concurrent-sharded-worker rule -- structurally not this tranche's write, not a defaulted-to-NA judgment call.

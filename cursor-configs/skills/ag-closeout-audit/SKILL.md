@@ -80,7 +80,7 @@ result. It now genuinely derives its covered set from docspec's live `ASSET_GROU
 `plans/active` and `plans/archive` for each tranche's closeout family (closing the `ao`/`ci` gap for real — both are
 archived-only and now resolve non-empty, 11/44 and 11/38 enforced respectively), and reports any tranche with no
 discoverable closeout family LOUDLY instead of skipping it in silence. Baseline re-seeded 32 → 69 at the honest measured
-count. Track: `/plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
+count. Track: `/plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
 `/plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md` (resolved, see below) — repointed
 2026-08-06 (/plan-reconcile ao).
 
