@@ -120,7 +120,7 @@ restored — not just that the env vars are set.
   `install-prune-uv-cache-cron.sh` (bakes the stale path into its cron line via `--cache-dir`, which would have silently
   overridden `prune-uv-cache.sh`'s own corrected default) and `agent-orchestrator/server/tmux_spawn.py` (the AO
   spawn-time export every worker session — including this one — inherits; same sibling-of-`.tabs` derivation, same bug).
-  `unified-trading-pm@52235b1368`, `agent-orchestrator@9ae79d6`. **Verified two ways**: (1) a raw `ln` probe from the
+  `unified-trading-pm@2c028dee9d`, `agent-orchestrator@9ae79d6`. **Verified two ways**: (1) a raw `ln` probe from the
   new `.tabs/.uv-cache` into a live slot dir succeeds (same inode) — confirms the location is genuinely inside the mount
   boundary; (2) a real `uv sync` of `unified-api-contracts` against the relocated cache — **10/10 sampled `.so` files
   show `nlink=2`** (fleet-wide baseline was `nlink=1`, 1,800/1,800, per the 2026-08-08 investigation this fix corrects)

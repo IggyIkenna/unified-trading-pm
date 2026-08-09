@@ -123,7 +123,7 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
       cross-slot, a liveness-aware per-slot `.venv` prune (idle-slot detection, same pattern as the VM-collision guard)
       is the real fix for driver #2, not a blanket cron.
 - [x] ✅ [INFRA] P2. **CORRECTED VERDICT, 2026-08-09**
-      (`tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`, `unified-trading-pm@<see-below>`) — the
+      (`tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`, `unified-trading-pm@2c028dee9d`) — the
       leading candidate this todo previously recorded ("`setup.sh` never exports `UV_LINK_MODE`/`UV_CACHE_DIR` itself")
       was NOT the actual root cause and was never applied (`setup.sh` still does not export those vars today). The REAL
       root cause: `UV_CACHE_DIR` was derived as `${WORKSPACE_ROOT}/.uv-cache` — a SIBLING of `.tabs/`, not inside it.
