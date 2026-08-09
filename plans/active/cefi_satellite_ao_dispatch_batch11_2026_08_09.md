@@ -161,7 +161,7 @@ context_scope:
       docstrings updated to the measured values; test boundary assertions
       (`tests/unit/test_databento_subscription_allowlist.py`) updated to match (366d/31d no longer raise — they're now
       within the true free window). `quality-gates.sh` green (336s, 0 basedpyright errors, tests pass).
-- [ ] [REFACTOR] P2. **Deprecate and remove all Barchart code** (superseded by VX-futures-via-Databento for the VIX
+- [x] ✅ [REFACTOR] P2. **Deprecate and remove all Barchart code** (superseded by VX-futures-via-Databento for the VIX
       preload; CLAUDE.md: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"): delete the adapter/client/source-registry
       entries in unified-api-contracts and market-tick-data-service, no shim. **Conflict-checked 2026-08-09**: grepped
       "Barchart" across the full active-plan corpus — several TradFi docs (`tradfi_registry_coverage_and_ao_readiness`,
@@ -170,7 +170,8 @@ context_scope:
       manifest/docstring contexts — none claims the literal adapter-code deletion this todo performs; no conflict.
       Repos: unified-api-contracts, market-tick-data-service. Source: `cefi_consolidated_closeout_2026_07_18.md` Track 0
       (line 173, cites source Phase 5). **Done when**: no Barchart code/test references remain in either repo,
-      `quality-gates.sh` green.
+      `quality-gates.sh` green. **DONE 2026-08-09** — unified-api-contracts@fc1b4897, market-tick-data-service@aea655a9.
+      See Progress Log for full deletion list + scope boundary.
 - [ ] [DATA] P2. **Extend market-tick-data-service's existing CeFi live-ws order-book connectors to also record live
       BBO+depth for the crypto-venue equity-perp instruments** (Binance/OKX/Bybit), for basis-arb slippage calibration.
       Repo: market-tick-data-service. Source: `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` line 175.
@@ -393,3 +394,26 @@ context_scope:
   own blocking issue with 4 fix todos (P0 live-capture investigation, P1 futures_chain root-cause, P1 backfill-plan
   cross-reference, P2 targeted backfill):
   `/plans/active/issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md`.
+- **2026-08-09 (slot-17, data_engineering) — todo 5 (Barchart removal) IMPLEMENTED + DONE**, building on slot-6's
+  research above (no re-derivation needed). Shipped: **unified-api-contracts@fc1b4897** — deleted
+  `BARCHART_OHLCV_15M_SCHEMA` + its `DEFI_SCHEMA_MAP`/`__all__` entries in `external/defi/schemas.py`, the live
+  `barchart:` registry blocks in both `provider_api_versions.yaml` files (`unified_api_contracts/` +
+  `unified_api_contracts/config/`), and the stale illustrative comment in `registry/endpoints.py:371`. **
+  market-tick-data-service@aea655a9** — deleted `TestBarchartOhlcv` in
+  `tests/market_interface/integration/test_vcr_ac_schema_validation.py` (imported a nonexistent
+  `unified_api_contracts.external.barchart.BarchartOhlcv15m`; its referenced cassette was already deleted 2026-05-21 per
+  `scripts/canary/orphan-decisions.yaml`), renamed `test_barchart_and_yahoo_adapters.py` → `test_yahoo_adapter.py` (file
+  was 100% `YahooFinanceAdapter` tests, zero Barchart code — the filename itself was the last "Barchart reference"
+  there), and dropped the dead `"BARCHART"` entry from `smoke_matrix.py`'s `_REPRESENTATIVE_SYMBOL` map (confirmed dead,
+  not just redundant: `enumerate_cells()` iterates `VENUES_BY_ASSET_GROUP`, and BARCHART was already removed from
+  `VENUES_BY_ASSET_GROUP["tradfi"]` 2026-06-24, so no cell ever looks this key up). **Scope boundary held** (matches
+  slot-6's precedent on the `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES` frozenset): explicitly did NOT touch the
+  `batch_barchart` pipeline_mode/venue-override handling in `rebuild_tradfi_manifest.py`,
+  `migrate_tradfi_to_v9_canonical.py`, `populate_v9_index_columns_inplace.py`, or their tests
+  (`test_rebuild_tradfi_manifest_parser.py`, `test_rebuild_tradfi_manifest.py`,
+  `test_tradfi_shared_path_byte_identity.py`) — that code parses/validates ALREADY-CAPTURED historical
+  `BARCHART`-labeled manifest rows (the same 9,119-row legacy dataset the frozenset protects); it is live data-compat
+  code, not retired live-fetch adapter code, and deleting it would break manifest reads for real historical data rather
+  than clean anything up. Also left every "RETIRED 2026-06-24"-style historical-provenance comment in place per
+  CLAUDE.md's own framing. Both repos: `quality-gates.sh` green, shipped via `quickmerge --agent`, post-push ancestry
+  verified on `live-defi-rollout`.
