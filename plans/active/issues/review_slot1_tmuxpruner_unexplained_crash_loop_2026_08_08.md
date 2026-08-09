@@ -279,22 +279,81 @@ own Tick history.
       reliably reproducible, treat this single capture as one more low-probability contributing factor rather than the
       root cause, and look elsewhere. Repo: agent-orchestrator (investigation) / `scripts/orchestrator.service` (if a
       systemd-config fix is found).
-- [ ] [BACKEND] P1. **Next diagnostic step (backend, slot 20, 2026-08-09 ~19:55Z): capture the ACTUAL signal/exit status
-      of a dying slot-1 process, not just its absence.** Every "genuine death" check so far (5a163e7's capture, this
-      session's restart-window analysis) only confirmed the PID is GONE (`kill -0` fails / no `/proc` entry) — none
-      captured HOW it died (which signal, or a clean exit). Kernel OOM, cgroup OOM, `journalctl -k`, and logind
-      session-scoped kill are all now ruled out (see Progress Log below) with zero mechanism left that would explain a
-      SIGKILL/SIGTERM landing on one worker's `claude` PID roughly every 5-9min fleet-wide, silently, in every log
-      surface checked so far. Whoever picks this up: attach `strace -p <PID> -e trace=signal` (or equivalent, e.g. a
-      tight `/proc/<pid>/stat` state-field poll, since a delivered-but-uncaught SIGKILL leaves no trace for the target
-      process itself to log) to a live worker PID and wait for a natural death, to finally capture the actual signal
-      number — this is the one piece of direct evidence no prior session in this doc has gathered. Also worth a fresh
-      spot-check of `resource-watchdog.service`'s kill-relay log
-      (`journalctl -u orchestrator | grep -i resource-watchdog` or wherever it logs) for slot 1 specifically, since the
-      last check of it is now hours stale. Repo: agent-orchestrator (investigation only, unless a fix falls out of the
-      captured signal).
+- [x] ✅ [BACKEND] P1. **ROOT CAUSE FOUND + FIXED (backend, slot 33, 2026-08-09 ~20:20Z) — `remain-on-exit`, the
+      mechanism SUPPOSED to preserve a dying session's exit status/signal for this exact diagnosis, has been silently
+      non-functional since introduction (Gap B, `…gap_2026_06_25`), due to a tmux target-syntax bug: `_start_session`
+      targeted the WINDOW-scoped option via `exact_target()` (`=name`, session-only form), which fails outright
+      (`no such window: =name`, reproduced live) — return code never checked, so it silently no-op'd for EVERY spawn.
+      strace/bpftrace/perf are ALSO confirmed blocked from this sandbox (ptrace_scope=1, no root/CAP_BPF, paranoid=4) —
+      so the exit-status evidence was never preserved AND was never directly capturable either; this is very likely THE
+      explanation for the doc's whole "no session-cleanup evidence ever available" pattern. Fixed via
+      `exact_pane_target()` (the same fix already used for capture-pane/paste-buffer/send-keys, incident 2026-06-10) + a
+      failure warning log. **Compound risk fixed in the same change**: `reap_orphan_agents`/`TmuxPruner` both key
+      liveness on bare `has_session()`, which a preserved dead-pane zombie satisfies — fixing the target alone would let
+      a crashed slot read "alive" forever. Added `is_session_genuinely_alive()` (session exists AND pane not dead),
+      wired into both. Full detail in the Progress Log below. **Shipped**: `agent-orchestrator@c9dad3e`
+      (ancestry-verified), `quality-gates.sh` green (2995 passed), 6 new + 12 updated tests. **Not yet loaded**: live
+      orchestrator started before this commit — follow-up todo below. Repo: agent-orchestrator.
+- [ ] [BACKEND] P1. **Follow-up to the remain-on-exit fix above (slot 33, 2026-08-09).** (1) Confirm live orchestrator
+      restarted since `c9dad3e` (`GET /api/state` → `server_started` after 2026-08-09T20:21:42Z; if not, needs
+      operator/self-pull cron — never a manual `systemctl restart`, fleet-disruptive + outside sandbox permission). (2)
+      Smoke-verify on a fresh spawn `remain-on-exit on` is actually live (code-changed ≠ took-effect, per this exact
+      bug). (3) Before the (now correctly-composed) reaper clears the next genuine slot-1 death, capture
+      `tmux display-message -p -t '=<session>:' '#{pane_dead_status} #{pane_dead_signal}'` — the final answer to this
+      todo's original question. (4) A genuine external-kill signal with still no AO/kernel/systemd source escalates to a
+      deeper hypothesis (e.g. claude CLI exiting non-crash-like). Repo: agent-orchestrator.
 
 ## Progress log
+
+- 2026-08-09 ~20:35Z (backend_engineer, slot 33, agent-orchestrator@c9dad3e): Picked up the "capture the ACTUAL
+  signal/exit status" BACKEND P1 todo. Found the diagnostic mechanism the todo asked to use has itself been silently
+  broken since introduction.
+
+  **strace/bpftrace/perf confirmed infeasible from this sandbox** (hard evidence, not assumed): `strace` →
+  `PTRACE_SEIZE: Operation not permitted` (`ptrace_scope=1`, no CAP_SYS_PTRACE); `sudo -n true` → `NoNewPrivileges`
+  blocks it outright; `bpftrace` → root-only; `perf trace` → blocked by `perf_event_paranoid=4`; `auditd`'s log is
+  readable (group `adm`) but its rules only audit `execve`/`write`, no signal syscalls. Nobody could ever have captured
+  a signal via strace from a worker sandbox — this closes that avenue for good.
+
+  **Pivoted to the todo's fallback and found the actual root cause.** While setting up to watch slot 1's live PID, it
+  genuinely died mid-investigation (`tmux_session_lost` 20:08:03Z, no preceding heartbeat/retry event) — and by
+  20:10:14Z the tmux SESSION had vanished completely, not merely gone pane-dead. That's the anomaly: `_start_session`
+  (`tmux_spawn.py`) explicitly sets `remain-on-exit on` (Gap B fix, `…gap_2026_06_25`) so a dying session's pane — and
+  its exit status/signal — should survive for diagnosis.
+
+  **Empirically confirmed `remain-on-exit` is NOT set on any live session** (checked 4 concurrent sessions incl. my own
+  via `tmux show-window-options`, all read the tmux default `off`). **Root-caused + reproduced live**:
+  `_start_session`'s set-option targets via `exact_target()` (`=name`, session-exact-match) — but `remain-on-exit` is a
+  WINDOW option, and `set-option -t =name` with no window component fails:
+  `tmux set-option -t "=orch-slot-33" remain-on-exit on` → `no such window: =orch-slot-33` (rc=1, reproduced on my own
+  session). `exact_pane_target()`'s form (`=name:` — the SAME fix already applied to capture-pane/paste-buffer/send-keys
+  for the identical bug class, incident 2026-06-10) → rc=0, verified working. The original call's return code was never
+  checked, so this silently no-op'd for every spawn since 2026-06-25 — very likely THE explanation for this doc's entire
+  "no session-cleanup evidence ever available" pattern: tmux's default (destroy pane/session on process exit) fired
+  immediately, indistinguishable from an external kill. Doesn't contradict any prior "genuine death, PID confirmed gone"
+  finding (5a163e7, restart-window) — explains why none could see HOW, only THAT.
+
+  **Fix shipped (`c9dad3e`)**: `exact_target()`→`exact_pane_target()` + a failure warning log (loud, not silent, next
+  time). tmux natively exposes `#{pane_dead_signal}` — once live, the next death's actual signal should be directly
+  readable, no strace needed.
+
+  **Compound risk fixed in the same change**: shipping the target fix alone would be dangerous — `reap_orphan_agents`
+  (wired via `is_session_live=has_session_debounced`) and `TmuxPruner` (3 sites, bare `has_session()`) both treat
+  session-exists as worker-alive, true today only because remain-on-exit never worked. Once it does, a crashed session
+  persists as a preserved zombie that both would misreport as alive — review slots are exposed since
+  `WorkerLivenessWatchdog` already exempts them from its OTHER idle-reclaim backstops, so these are the only mechanisms
+  that would ever notice. Added `is_session_genuinely_alive()` (`has_session_debounced and not _pane_is_dead`,
+  short-circuit-cheap) and wired it into both.
+
+  **Testing**: 6 new tests (`test_tmux_spawn_targets.py`) + updated the wiring-regression-guard in
+  `test_main_agent_keeper.py` + every `has_session`-monkeypatch across 4 other test files (TmuxPruner's import changed).
+  Full `quality-gates.sh`: 2995 passed, 2 skipped. Shipped via quickmerge, `merge-base --is-ancestor` self-verified on
+  origin.
+
+  **Not yet loaded**: live orchestrator `server_started` (20:16:07Z) predates this commit (20:21:42Z) — fix shipped but
+  not yet live, same gap as the earlier `e32d962`-not-loaded OPERATOR todo in this doc. Follow-up todo above: confirm
+  restart, smoke-verify live, then capture `#{pane_dead_status}`/`#{pane_dead_signal}` off the next genuine death — the
+  actual final answer to this todo's original question.
 
 - 2026-08-09 ~20:10Z (infra→backend_engineer craft, slot 20, agent-orchestrator@05acc62): Picked up the "`journalctl -k`
   is readable from a worker sandbox" BACKEND P2 todo (slot 33's original finding, 4 samples).
