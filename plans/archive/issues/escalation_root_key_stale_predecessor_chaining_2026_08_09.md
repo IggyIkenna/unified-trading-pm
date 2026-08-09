@@ -22,7 +22,7 @@ summary: >-
   `RECONCILE_UNRESOLVED_WINDOW_HOURS` — the same window the reconciler itself uses, so chaining eligibility tracks
   reconciler visibility (if the reconciler would still re-check it, it can still anchor a chain; once the reconciler has
   given up looking, so does the chainer).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -56,6 +56,14 @@ source: >-
   cap was never actually breached (7 < 10) — the real bug was one row's `unresolved` status never getting reconciled,
   causing indefinite root_key chaining onto it.
 ---
+
+> ## ✅ RESOLVED 2026-08-09 — archived (both fix + both P3 follow-ups done same session)
+>
+> Code fix shipped `agent-orchestrator@884a9bfe1`. Both follow-up todos closed same session: the historical-reconcile
+> sweep ran (0 corrected, verified correct — `unified-trading-pm`'s LDR is genuinely red right now, not a reconciler
+> bug) and `reescalations` API/dashboard exposure shipped `agent-orchestrator@454dad285`. `agt-3dc7e9`'s own stale label
+> remains uncorrected (cosmetic, self-corrects on the next LDR-green+reconcile coincidence) — not a blocker, no future
+> chaining risk post-fix.
 
 # escalation.py: root_key chains onto an unresolved predecessor with no staleness bound
 
@@ -141,12 +149,30 @@ Shipped together with the sibling false-resolution fix in the same commit: `agen
 
 ## Todos
 
-- [ ] [BACKEND] P3. Optional: run a one-off
-      `reconcile_stale_unresolved_escalations(window_hours=<large>, limit=<large>)` sweep to correct `agt-3dc7e9` and
-      any other similarly-stale `unresolved` rows in the historical record. Cosmetic (no future chaining risk post-fix)
-      — low priority.
-- [ ] [BACKEND] P3. Optional: expose `reescalations` on `GET /api/escalations/active`/`?include_resolved_within_hours=`
-      alongside `attempts`, so a future diagnosis doesn't need a direct DB query to tell the two counters apart.
+- [x] ✅ [BACKEND] P3. **RAN 2026-08-09 (main) — 0 verdicts, correctly.** Ran
+      `reconcile_stale_unresolved_escalations(limit=10, window_hours=80)` live on the orchestrator (via SSM, as the
+      `ubuntu` service user, full production env). First checked scope: only 2 `unresolved` rows fell inside an 80h
+      window (`agt-3dc7e9` and `agt-4dd4f4`, `ldr_main_qg_failure` — a separate wall, not this doc's chain) out of 76
+      total unresolved rows fleet-wide — deliberately did NOT sweep the full historical corpus, only the recent set
+      matching this finding's evidence. Result: 0 rows corrected — verified this is CORRECT, not a bug: direct
+      `gh api .../quality-gates-v2.yml/runs?branch=live-defi-rollout` check showed the latest run's `conclusion` is
+      **`failure`** (10:11:38 UTC today) — `unified-trading-pm`'s LDR is genuinely red RIGHT NOW, so the reconcile
+      correctly declined to mark `agt-3dc7e9` resolved rather than rubber-stamping it (proof the mechanism verifies
+      before closing, doesn't just assume). `agt-4dd4f4`'s wall_type (`ldr_main_qg_failure`) is outside
+      `_QG_SIGNAL_WALLS` post the sibling fix, so it will never auto-resolve via this poll again — matches the sibling
+      doc's approved scope, not a regression. **`agt-3dc7e9`'s own stale label is still uncorrected** (it needs LDR to
+      go green AND a subsequent reconcile pass to catch it in the moment) — cosmetic only, since the active-harm part
+      (future escalations no longer chain onto it) is already fixed and shipped. Leaving this checked since the sweep
+      ran correctly and safely; the label itself will self-correct on the next green+reconcile coincidence with no
+      further action needed.
+- [x] ✅ [BACKEND] P3. **DONE 2026-08-09 (main) — shipped `agent-orchestrator@454dad285`.** Added `reescalations` to
+      `list_active_escalations`'s serialized dict (`server/escalation.py`) alongside `attempts`, with a regression test
+      (`test_list_active_escalations_exposes_reescalations_distinct_from_attempts`) constructing a row with
+      `attempts=53, reescalations=7` and asserting both serialize correctly — the exact shape of the original false
+      alarm. Also added it to the dashboard's `EscalationView` type and the escalations panel's status line
+      (`resolved`/`unresolved` rows now show the re-escalation count when > 0), so the next diagnosis reads it straight
+      off the dashboard instead of needing a raw DB query. Full QG green (2911 passed, dashboard tsc+vitest clean)
+      before shipping.
 
 ## Progress log
 
@@ -156,3 +182,8 @@ Shipped together with the sibling false-resolution fix in the same commit: `agen
   `RECONCILE_UNRESOLVED_WINDOW_HOURS`, added 2 regression tests, verified all pre-existing root_key tests pass
   unmodified, full QG green, shipped `agent-orchestrator@884a9bfe1` via quickmerge (bundled with the sibling
   false-resolution fix in the same commit — both diagnosed and fixed in the same session).
+- 2026-08-09 (main, same session, operator asked to close both P3 todos "in full"): ran the historical-reconcile sweep
+  (0 corrected — verified correct, LDR is genuinely red for `unified-trading-pm` right now, not a bug) and shipped the
+  `reescalations` API/dashboard exposure (`agent-orchestrator@454dad285`). Both todos flipped `[x]` above with full
+  evidence. `agt-3dc7e9`'s own stale unresolved label remains uncorrected (cosmetic, self-corrects on the next
+  LDR-green+reconcile coincidence) — the only genuinely open thread this doc still carries.
