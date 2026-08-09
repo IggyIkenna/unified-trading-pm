@@ -175,7 +175,7 @@ This is the first fresh `/ag-closeout-audit tradfi` pass since batch5 (2026-07-2
       explicitly documented as a non-bug exception. Source: `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`
       (Deferred work after 2026-07-26, row 2).
 
-- [ ] [DATA] P2. **Reconcile the `BASE_ASSET`/manifest `underlying` string-naming drift found incidentally during the
+- [x] ✅ [DATA] P2. **Reconcile the `BASE_ASSET`/manifest `underlying` string-naming drift found incidentally during the
       2026-07-28 within-bounds-source-zero cross-check.** `HEATING-OIL`/`HEATINGOIL`/`HO`,
       `NAT-GAS`/`NAT-GAS-HH`/`NATGAS`, and similar variants disagree between `BASE_ASSET` and the manifest's actual
       stored `underlying` string. Determine whether this drift causes any real denominator/accounting issue (per the
@@ -184,7 +184,29 @@ This is the first fresh `/ag-closeout-audit tradfi` pass since batch5 (2026-07-2
       indefinitely. Repos: market-tick-data-service, unified-api-contracts. **Done when**: either the drift is fixed
       with regression coverage, or it is confirmed harmless with the specific check that proved it (e.g. a
       denominator/count comparison before vs. after normalizing the strings). Source:
-      `issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md` (todo 3).
+      `issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md` (todo 3). —
+      **market-tick-data-service@b63200a7**. Investigated first (not blindly re-fixed): this exact drift class
+      (`HEATING-OIL`/`HEATINGOIL`, `NAT-GAS`/`NAT-GAS-HH`/`NATGAS`, etc.) was already root-caused + reconciled on the
+      enumerator/expected-universe side 2026-07-28
+      (`/plans/archive/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md`,
+      resolved) via a new `unified_api_contracts.resolve_tradfi_underlying_to_root()` reverse-lookup, real production-
+      quantified (503,588 → 503,588 `expected_unattempted`, 0 change — confirmed HARMLESS on that specific surface, the
+      negative-evidence branch of this todo's own done-when). BUT the retirement/migration script this todo's source
+      doc's own dry-run measured against
+      (`market-tick-data-service/scripts/retire_tradfi_cf11_bundle_grain_shard_atom_mismatch_2026_07_30.py`) does its
+      own SEPARATE, un-normalized `base_asset` string comparison and was NOT wired to the shipped resolver — its own
+      2026-07-30 dry-run explicitly attributed part of its 32,864-row CME unresolved residual to "the already-
+      documented commodity-symbol naming-drift tail," i.e. this drift DOES cause a real accounting gap on that surface
+      (false-negative matches: real captured twins missed due to naming-variant mismatch). Fixed: normalized both the
+      crosswalk's `base_asset` and the captured manifest's raw `underlying` column through the same shipped
+      `resolve_tradfi_underlying_to_root()` before the key comparison (fallback to raw value if unresolved — never
+      guessed), so recognised variants now correctly collide. 3 new regression tests
+      (`test_commodity_naming_drift_variant_still_matches_captured_twin`,
+      `test_commodity_naming_drift_hyphenated_spelled_form_still_matches`,
+      `test_genuinely_unresolvable_underlying_falls_back_unchanged_not_guessed`) — 12/12 tests green, `quality-gates.sh`
+      full green. Not re-run: the live 6M-row production dry-run to measure exactly how much of the 32,864 residual this
+      recovers — the retirement script's own `--apply` is still operator-gated pending a fresh go-ahead per its existing
+      operator-review gate; that re-measurement naturally happens as part of that already- tracked gate, not a new todo.
 
 ## Deferred — too-large-or-risky (needs its own dedicated plan, not a batch todo)
 
