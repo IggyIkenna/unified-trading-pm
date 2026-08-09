@@ -81,7 +81,7 @@
     "unified-api-contracts": "0.107.0",
     "unified-trading-library": "0.77.0",
     "unified-trading-pm": "1.2.741",
-    "market-data-processing-service": "0.27.0",
+    "market-data-processing-service": "0.28.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.100.1",
     "greeks-service": "0.18.13",
