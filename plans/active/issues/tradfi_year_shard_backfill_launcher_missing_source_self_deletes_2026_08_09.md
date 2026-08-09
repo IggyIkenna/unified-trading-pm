@@ -190,12 +190,17 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
 
 ## Action items
 
-- [ ] [DATA] P1. **NARROWED 2026-08-09 (see third finding above) — remaining gap is 2025 (0%) + finishing 2026 (73%),
-      NOT all 5 years.** The manifest count-check query itself was broken (false 0-row absence, fixed
-      `deployment-service@be6d4669`) — 2020-2024 are already 94.8-100% complete via a combination of earlier captures
-      and the concurrent in-scope CME root campaign's incidental options capture, confirmed via the corrected query
-      against a live manifest pull. Once the singleton lock is next clear (currently held, `wave_launcher.py`
-      out-of-scope cron recurring on top of the in-scope CME campaign — see
+- [ ] [DATA] P1. BLOCKED-ON:tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09 **NARROWED
+      2026-08-09 (see third finding above) — remaining gap is 2025 (0%) + finishing 2026 (73%), NOT all 5 years.** Real,
+      still-open work — temporarily blocked on the singleton lock clearing, which is itself blocked on the sibling issue
+      doc's own unfixed root cause (`wave_launcher.py`'s out-of-scope cron continuing to hold/refresh the lock — a
+      different owner's in-flight P1). Not CANCELLED, not DEFERRED-BY-DESIGN: this is live, real work with a corrected,
+      re-armed watcher (`es-opt-backfill-watcher.sh`, PID 1962373 at time of writing, see Progress Log) already polling
+      for the lock to clear and will complete autonomously once it does. The manifest count-check query itself was
+      broken (false 0-row absence, fixed `deployment-service@be6d4669`) — 2020-2024 are already 94.8-100% complete via a
+      combination of earlier captures and the concurrent in-scope CME root campaign's incidental options capture,
+      confirmed via the corrected query against a live manifest pull. Once the singleton lock is next clear (currently
+      held, `wave_launcher.py` out-of-scope cron recurring on top of the in-scope CME campaign — see
       `issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`), retry the launcher
       (idempotent) — but expect 2022-2024 to mostly skip-refetch and watch specifically for 2025/2026 progress, not a
       full 5-year restart. Retrying alone will likely still hit the zombie-watchdog reaper again (next action item,
