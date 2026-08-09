@@ -118,13 +118,24 @@ drift_direction: advance-code
       `deployment-service@d407b8b9`, `market-tick-data-service@4d235caf`/`@f8276e22`,
       `unified-trading-pm/plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2f/g/i, live
       `gsutil ls -b` 404s on all 5 legacy buckets (2026-08-09).
-- [ ] [INFRA] P0. Remove the 8 already-paused (not-yet-removed) legacy manifest-consolidator cron Terraform blocks for
-      cefi/defi/tradfi/sports (prediction's is already removed) from `manifest_consolidator_scheduler.tf` — the
-      underlying Cloud Scheduler jobs are already inert ("PAUSED-not-removed"), so this is a reversible config cleanup,
-      not a new pause action; coordinate with the liveness-watchdog plan if it references these same resources. Repo:
-      deployment-service. Source: `legacy_bucket_dual_write_decommission_2026_07_24.md` (pause-crons item). Done when:
-      `tofu plan` shows the 8 named scheduler-resource blocks removed with no unintended drift; the corresponding Cloud
-      Scheduler jobs stay paused/absent.
+- [x] ✅ [INFRA] P0. Remove the 8 already-paused (not-yet-removed) legacy manifest-consolidator cron Terraform blocks
+      for cefi/defi/tradfi/sports (prediction's is already removed) from `manifest_consolidator_scheduler.tf` —
+      **VERIFIED ALREADY DONE, no code change needed.**
+      `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` at live-defi-rollout HEAD (2c92c03d) carries
+      no `-legacy` keys in `manifest_consolidator_buckets` / `manifest_consolidator_buckets_extended` — its own inline
+      comments (L60-69, L99-101, L125-141) document the local-map entries + the live Cloud Run Jobs/crons themselves
+      were removed via direct `gcloud` on 2026-07-12 (prediction), 2026-07-13 (cefi/defi/sports) and 2026-07-16 (tradfi)
+      — all PREDATING this item's 2026-07-24 source doc, so the premise was already stale at extraction time.
+      Live-reverified 2026-08-09:
+      `gcloud scheduler jobs list --location=asia-northeast1 --project=central-element-323112` returns zero
+      `-legacy`-named or orphaned manifest-consolidator jobs (only the 12 current per-category jobs, all `ENABLED`); a
+      broader scan for any other cefi/defi/tradfi/sports-named scheduler job under a different naming scheme also found
+      none. `tofu state list` (terraform/gcp, freshly `tofu init`'d) shows this state file never tracked the
+      manifest-consolidator resources at all (12 unrelated resources total, none consolidator-related) — a `tofu plan`
+      drift-check is inapplicable to these resources, consistent with the file's own repeated "a real tofu apply is not
+      runnable here" precedent for this resource family. Done-when re-scoped to reality: confirmed no legacy blocks in
+      source + no legacy live jobs — stronger than the stated "paused/absent" bar (they're fully deleted, not paused).
+      Repo: deployment-service — no commit, nothing to change.
 
 ## Codex SSOTs
 
@@ -140,3 +151,9 @@ drift_direction: advance-code
 - **2026-08-09 (slot-17)**: Migration data-copy fan-out todo closed as RESOLVED-MOOT, not re-launched — the launcher +
   its target migration script were already deleted 2026-08-03/2026-07-25 as confirmed-dead, and live GCS checks confirm
   all 5 legacy flat tick buckets are already gone. See the todo's own entry for full evidence.
+- **2026-08-09 (infra worker, slot 16)**: Worked the "Remove the 8 legacy manifest-consolidator cron Terraform blocks"
+  todo — found it already resolved (see the flipped checkbox above for full evidence). The removal (both the HCL
+  local-map entries and the live GCP Cloud Scheduler jobs, via direct `gcloud`) happened 2026-07-12/13/16, before the
+  2026-07-24 source doc this item was extracted from even existed — the source doc's "pause-crons" item text was already
+  describing stale state when written. No code change required; verified live against both the terraform source (git
+  log) and actual GCP state (`gcloud scheduler jobs list` + a fresh `tofu init` + `tofu state list`).
