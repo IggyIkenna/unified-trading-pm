@@ -996,3 +996,5 @@ BigQuery `resource_samples` utilization: measured avg_cpu_pct=50.6%, within the 
 checkbox at ~line 685. (2) Test-impact design scoping: MOOT, already `[x]` at ~line 861 (extracted 2026-08-03, now fully
 shipped as `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`) — no fresh design needed.
 `ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2 is done.
+
+**round-9 sweep, 2026-08-09**: KEEP-NA, valid — unchanged from round7; no round-9 new-facts apply here.

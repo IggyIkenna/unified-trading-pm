@@ -742,3 +742,12 @@ vacuous-crons item bundles a plausibly-bounded sub-part (disable 4 named no-op c
 sub-part (`digest-drift-sweep`'s non-convergence, itself gated on the dormant- cascade investigation) — not split out or
 reclassified here. The `sit_validated_workspace_digest` item ("close the gap, or document why safe to drop") is a
 genuine design call, not a checkable fact. No `assigned_vm` change.
+
+**round-9 combined RECLASSIFY + satellite-extraction sweep, 2026-08-09** (ci tranche): KEEP-NA, valid — re-read all 5
+open items end-to-end, verdict unchanged from 2026-08-08. F1 (kill-switch) stays time-gated per its own re-affirmed
+operator ruling; the ~4-weeks-of-missing-tags reconciliation is explicitly NOT a backfill by design (deliberately scoped
+away from a bulk-write); the F3 success-reporting item's PM-owned half was already extracted
+(`ci_satellite_ ao_dispatch_batch5_2026_08_02.md` todo 6, shipped) — the remaining scope is the non-PM-owned dispatch
+sites, still genuinely open but not newly bounded; F4 stays the bundled bounded+open-ended pair described above; the
+digest-gap item stays a design call. No new facts from today's round-9 cheat sheet (GSM secrets, Slack webhooks) apply
+to this doc's content. No `assigned_vm` change.
