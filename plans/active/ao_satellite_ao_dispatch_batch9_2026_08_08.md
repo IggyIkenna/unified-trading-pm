@@ -182,7 +182,7 @@ Log for the full disposition of the other 47 items re-checked (none needed extra
   `cefi_reconciliation_auditor`/`cefi_mtds_smoke_tester` missing from `_ONE_SHOT_ESCALATION_ROLES` since their
   2026-08-05 addition to `plan_health.py` — `agent-orchestrator@5353b6b`; (2) `review.md`'s STEP-0 still claimed the
   live /boot gate enforces `worker.md` for it — stale post-`6166269` (review never calls `/boot` anymore), corrected to
-  a historical note — `unified-trading-pm@<pending>`. 14:30-16:30Z 2026-08-08 recurrence PREDATES `6166269` (19:35Z that
+  a historical note — `unified-trading-pm@6f7ed49c2`. 14:30-16:30Z 2026-08-08 recurrence PREDATES `6166269` (19:35Z that
   day) — not a live regression, no P0 filed. Regression test:
   `agent-orchestrator/tests/test_role_file_worker_md_read_sync.py`, full `quality-gates.sh` green (3060 tests + 262
   dashboard tests). Full audit table + evidence recorded in
