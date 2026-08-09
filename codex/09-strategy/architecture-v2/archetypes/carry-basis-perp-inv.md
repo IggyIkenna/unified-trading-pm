@@ -187,6 +187,17 @@ primitive but itself has zero production callers; no Cloud-Scheduler endpoint ex
 tracked as an open `[DESIGN]` decision: `/plans/active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`. Full
 build plan: `/plans/archive/2026_08/recursive_loop_orchestrator_wiring_2026_08_09.md`.
 
+**Close/unwind emission (2026-08-09):** SHIPPED — `_on_tick_family2_basis_perp_inv()` no longer permanently no-ops once
+open (`if self.current_position_units != 0: return []`). It now delegates to
+`_maybe_close_family2_position()`, which fires the exit condition this doc's own Risk profile already specifies
+("on-chain loop faces health-factor risk; kill-switch at `min_health_factor`"): reads a live `health_factor` feature
+against the `min_health_factor` param (same name/default `1.25` `_check_safety_gates()` already uses), and once
+breached emits a close `AtomicInstruction` (`UNSTAKE` loop-unwind leg + `TRADE BUY` leg closing the perp short at its
+originally-opened `hedge_size`) whose `correlation_id` is the open instruction's own `instruction_id` — the shape
+`execution_service/defi_execution/monitors/family2_position_registry.py` reads. Registry CONSUMPTION of this close
+event (retiring the position from `enumerate_open_positions()`) is separate, tracked scope:
+`/plans/active/family2_position_registry_unwind_consumption_2026_08_09.md`.
+
 ## Funding-regime degradation policy
 
 Phase 7.5 adaptive sizing (rolling 7d + 30d funding-APR mean):
