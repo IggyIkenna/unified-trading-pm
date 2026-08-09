@@ -16,7 +16,7 @@ summary: >-
   this session (reverted the intended one-line path repoint in each) rather than risk a bulk regex fix on unrelated,
   severely mangled content; `check_reference_paths.py`'s corpus-wide existence count stays within its shrinking-ratchet
   baseline either way (measured 82 vs baseline 86 with these 2 left un-repointed).
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -41,12 +41,17 @@ estimate_calibrated_ai_days: 0.08
 assigned_role: cicd
 author: slot 18
 source: ["plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md"]
-resolved_by:
+resolved_by: unified-trading-pm@b8847a8a2
 locked_by:
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true
 ---
+
+> **ARCHIVED 2026-08-09** — both todos hand-repaired (91 over-padded continuation lines collapsed to sane indentation in
+> `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`, 27 in
+> `silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md`); `check_prosewrap_padding.sh --only` passes clean
+> on both files; content-only verified via `git diff -w` (empty) on each. See the Progress Log below for the shipped
+> commits.
 
 ## What I found
 
