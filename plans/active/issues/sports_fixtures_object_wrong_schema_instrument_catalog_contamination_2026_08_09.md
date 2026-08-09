@@ -417,3 +417,23 @@ transcript available in that session's Progress Log entry on
   returning `NOT_FOUND` (self-delete after the WHOLE walk finishes), not any log line printed early in the run, and a
   report file's mere existence is not evidence of finality when the writer flushes checkpoints incrementally — compare
   size across two time points to distinguish a checkpoint from a completed artifact.
+
+- **2026-08-09 (slot-24, data_engineering, dispatched on todo 3 — "fix write path + remediate")**: independently reached
+  the same false-SUCCEEDED conclusion as the slot-16 entry directly above (confirmed both VMs still `RUNNING`, report
+  rows still climbing 19,172→23,328) before seeing that correction had already landed — no new information there,
+  deferring to that entry's more complete evidence. One additional data point it doesn't cover: as of my read, the
+  report's `day` column only reached `2020-07-06` — **zero rows for `day=2026-04-14`** exist yet, confirming the walk
+  hasn't reached the known-contaminated `league=BOLIVIA_PRIMERA_DIVISION` object at all. (Housekeeping: while diagnosing
+  this I briefly started a local `gcloud storage ls -r` full-corpus listing directly on this shared host to sanity-check
+  object counts, recognized mid-run this is exactly the single-walk-discipline / heavy-I/O-never-locally pattern the
+  craft rules ban, and killed the exact PID before it produced a countable result — no corpus-wide listing was completed
+  by this session.)
+
+  **Consequence for THIS session's task (todo 3, "fix write path + remediate")**: todo 3's own done-when condition ("a
+  fresh scoped check of the affected (day, pipeline_mode, entity) triples returns 0 schema-mismatched objects") is
+  corpus-wide and cannot be evaluated until todo 1's census actually terminates and the full affected-triple list is
+  known — todo 3 is genuinely gated, not just nominally. The "fix the write path" half is separately already resolved
+  (todo 2's finding: the shipped `_assert_not_cross_domain_contamination()` guard structurally covers `entity=fixtures`
+  today, no live write-path risk remains). Proceeding to remediate the ONE object this issue doc independently confirmed
+  by direct verification (not dependent on the census) as forward progress; the corpus-wide remainder stays open pending
+  the census's real completion.
