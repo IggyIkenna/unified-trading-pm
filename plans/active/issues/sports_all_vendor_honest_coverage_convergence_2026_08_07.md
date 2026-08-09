@@ -507,3 +507,19 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   **3,462 → 1,326** (-2,136 in ~24min, ~5,340/hr) — very close to the ~100-500 near-zero floor now but still just above
   the >1000 hold-off threshold, so NOT launching INJURIES yet. Expect genuine convergence within the next tick or two at
   this rate. Both fleets healthy, no intervention needed.
+- **20:34Z — 🎉 MAJOR MILESTONE: FIXTURE_LINEUPS shard-level target reached (needed 1,326 → 116, matching
+  FIXTURE_STATS's own 116-shard honest-absence floor exactly). Also: 8th silent-hang occurrence (smallchunk13, chunk 18,
+  relaunched).** Census confirms FIXTURE_LINEUPS has converged to the same genuine honest-absence residual as
+  FIXTURE_STATS — this is the target state, not a fluke (clean match to precedent). **However, the INJURIES launch is
+  NOT triggered yet**: the current FIXTURE_LINEUPS VM (`af-backfill-20260809-180612`) is still actively running its
+  full-range resume sweep (chunk 3/5 as of this check, ~70min estimated remaining) and the AF launcher's singleton lock
+  only permits ONE concurrent VM account-wide (previously confirmed: parallelizing
+  FIXTURE_STATS→FIXTURE_LINEUPS→INJURIES is not possible due to the real account-wide API-Football daily quota) — so
+  INJURIES must wait for this VM to complete and self-delete, matching the exact precedent FIXTURE_STATS itself set
+  (didn't declare done/launch-next until its own VM reached 26/26 chunks and gracefully exited). **Correction to my own
+  earlier-tick trigger criterion**: shard-count alone reaching the floor is necessary but not sufficient — the singleton
+  lock's actual availability (VM completion) is the real gate. Will launch INJURIES the moment
+  `af-backfill-20260809-180612` self-deletes. Separately: `smallchunk13` died with clean 3-signal evidence (~17.6min
+  gap, chunk 18 again — back-to-back with occurrence 7/smallchunk12, now the clear majority death chunk at 4/8),
+  relaunched as `mtds-backfill-odds-smallchunk14-20260809`, confirmed genuinely booted (chunk 1/451, correct skip-fast).
+  Full detail: `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 8x).
