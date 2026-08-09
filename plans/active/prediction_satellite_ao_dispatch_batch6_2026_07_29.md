@@ -156,7 +156,7 @@ sports-tranche-owned).
       all four repos — both true, `quality-gates.sh` green on unified-api-contracts, strategy-service,
       execution-service, and e2e-testing (SHAs above).
 
-- [ ] [BACKEND] P2. **Two-sided Betfair odds — persist back+lay, not just one side.** Item `[5]` under the source doc's
+- [ ] [BACKEND] P2. BLOCKED-ON:prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09 **Two-sided Betfair odds — persist back+lay, not just one side.** Item `[5]` under the source doc's
       "Smaller open items (documented, not blocking paper)" — items `[1]`-`[4]` shipped 2026-07-20, this one is still
       open and needs a Betfair-exchange book source. Different component (Betfair adapter) from the EventTransport todo
       above — no file overlap expected, safe to run concurrently. **Source**:
