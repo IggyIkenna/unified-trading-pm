@@ -276,7 +276,7 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       un-fixed pattern" claim (2026-08-07) is the specific stale premise this todo inherited — see the new issue doc for
       why.
 
-- [ ] 10. [SCRIPT] P3. **Root-cause why pnpm's content-addressable store isn't hardlinking `node_modules` across
+- [x] ✅ 10. [SCRIPT] P3. **Root-cause why pnpm's content-addressable store isn't hardlinking `node_modules` across
       per-slot worktree clones** (empirically confirmed non-hardlinked across 5 clones). Check pnpm version, `.npmrc`
       `node-linker` setting, and filesystem hardlink support across the slot clones; either fix the config gap or
       document the structural cause (e.g. cross-filesystem clones defeat hardlinking by design). **Playwright-gate
@@ -289,7 +289,26 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       sub-part 3 only — sub-parts 1-2 of this item are already shipped) — parts of this item were repeatedly
       acknowledged-but-declined in batch1 D20/D28, batch4, and batch5 D5-7 as "role-mismatch"/"needs its own plan", but
       sub-part 3 specifically is a diagnostic task, not the pnpm-migration implementation those deferrals were about —
-      narrower and genuinely uncovered.
+      narrower and genuinely uncovered. — **ROOT-CAUSED + FIXED, agent slot 24, 2026-08-09**: not a pnpm config gap
+      (node-linker/`.npmrc`/version were all already correct on every clone) — the default store
+      (`~/.local/share/pnpm/store`) sits on a DIFFERENT mount boundary than `.tabs/` on this host. Verified via raw `ln`
+      probes: `.tabs/<N>` <-> `.tabs/<M>` hardlinks succeed (exit 0); anything outside `.tabs/` (pnpm's default store, a
+      sibling repo clone, `${WORKSPACE_ROOT}/.uv-cache`) fails `EXDEV` (Invalid cross-device link) even though
+      `stat -c %d` reports an identical device id for both sides — `pnpm install`'s `auto` import method silently falls
+      back to a full copy on that failure, no error/warning. **Fix (config gap, not structural)**: `setup.sh` now
+      detects a `.tabs/<N>` ancestor and relocates pnpm's `store-dir` to `<.tabs>/.pnpm-store` (inside the boundary
+      every slot can reach) via `npm_config_store_dir`. **Evidence**: before —
+      `is-fullwidth-code-point@5.1.0/package.json` showed `nlink=1` + a DISTINCT inode in each of 5 real slot clones
+      (`.tabs/2,4,6,7,8`) despite byte-identical (sha256-matched) content; a real `deployment-ui` install via the OLD
+      default store reproduced this fresh (`nlink=1`, new inode) even though the content already existed in store from
+      another install. After — two independent real installs sharing the relocated store (real `deployment-ui` clone + a
+      second independent install of the same lockfile) show the IDENTICAL inode with `nlink=3`, confirmed via
+      `bash scripts/setup.sh --force` end-to-end (not just a raw `pnpm install`). Shipped: `deployment-ui@33c6a02`,
+      `unified-trading-system-ui@e70aeeb8`, `unified-trading-pm@e9e344a66` (canonical `setup.sh` template + both repos'
+      copies). **Adjacent finding, filed separately** (outside this todo's repo/scope): the SAME mount-boundary failure
+      applies to `UV_CACHE_DIR` (`${WORKSPACE_ROOT}/.uv-cache` is also outside `.tabs/`), meaning
+      `host_root_disk_full_transient_2026_07_13.md` sub-item (b)'s 2026-08-08 DONE claim likely does not actually
+      restore `.venv` cross-slot dedup — see `issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`.
 
 - [x] ✅ 11. [SCRIPT] P2. **Optimize `check_pm_script_path_refs.py`** — measured at 28% of a from-scratch
       `quality-gates.sh` run via `profile_qg_resources.py`. Profile the hot path, apply the optimization (e.g. cache
