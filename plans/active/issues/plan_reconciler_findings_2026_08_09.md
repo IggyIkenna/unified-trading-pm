@@ -143,6 +143,22 @@ depends_on: []
    `check_effort_signal_ratchet` hard gate when staging this doc's other fixes, and independently already flagged by
    this run's own STEP-1 corpus-wide hygiene sweep as 1 of ~9 ui-tranche docs in the silently-flagged set). Matches the
    convention of every sibling `ui_satellite_ao_dispatch_batch*` doc in this tranche (`effort: max`).
+2. **`data_status_cell_grid_rearchitecture_2026_07_18.md`, `data_status_catalogue_true_source_phase2_2026_07_24.md`** —
+   same silent-default-effort gap (`assigned_role` set, no `effort:`/`thinking_tier:`); added `thinking_tier: medium` to
+   both (human/`assigned_vm: NA` design docs, not AO-dispatched, so `effort: max` isn't the applicable convention —
+   matched the one sibling ui doc that already had this field set correctly,
+   `cost_observability_deferred_followups_2026_07_10.md`).
+3. **`data_status_catalogue_true_source_phase2_2026_07_24.md` — severe leading-whitespace formatting defect (~278
+   spaces/line across lines 90-136).** Under CommonMark, content indented 4+ columns past its list-item baseline renders
+   as an inert code block — this span (a load-bearing design-rationale writeup: why an identity-catalogue shortcut was
+   prototyped and reverted, plus a markdown comparison table) was at serious risk of rendering as unreadable
+   preformatted text everywhere the doc is displayed. Content was byte-for-byte preserved; re-indented to the todo's own
+   6-space continuation baseline (prettier settled nested paragraphs at 10 for its bold-emphasis continuation
+   convention). Verified via `git diff` that only whitespace changed, no wording. Evidence: hunter-B2 finding
+   (data_status_catalogue_true_source_phase2:90-137), independently re-measured myself (`awk`-counted 278 leading
+   spaces) before fixing.
+4. **Both docs above** — bumped `last_updated` to match each doc's own most recent Progress Log entry (2026-08-08 /
+   2026-08-07 respectively; both were stale at their `created:` date).
 
 ## Filed
 
