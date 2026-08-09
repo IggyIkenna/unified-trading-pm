@@ -47,7 +47,7 @@ related:
     /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     ../instruments_completion_tracker_2026_07_06.md,
     /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
-    ../layer1_remeasure_and_certify_2026_07_06.md,
+    /plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md,
     /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
   ]
 created: 2026-07-10
@@ -132,8 +132,10 @@ locked_since:
    doc-reconciliation finding 132: both headline P0 crash risks are already fixed (`market-tick-data-service@c55c1509`
    Deribit dash-count classification fix; `unified-api-contracts@42ce2de3`+`market-tick-data-service@f4a118be`
    Polymarket schema fix), per this doc's own later Progress Log (§ item 4, "9 todos flipped with commit-sha evidence")
-   and the source doc's `[x]`-flipped checkboxes; only ~2 of 13 todos genuinely remain open — 273-row root-cause, mockup
-   update) — CODE_PATH §1.3.
+   and the source doc's `[x]`-flipped checkboxes — **re-verified 2026-08-09 by plan_reconciler: the "~2 of 13" recount
+   is itself now stale.** `mtds_is_full_adapter_smoketest_findings_2026_07_07.md` currently has **15** todos: 11 done, 3
+   fully open (273-row root-cause; mockup update; a FLUID pre-resolver ~18-month coverage gap discovered the SAME day as
+   this 2026-07-14 correction, so it postdates the recount), plus 1 partial `[~]` P2/P3 sweep) — CODE_PATH §1.3.
 5. **Instruments Completion Tracker** — the master coordinator itself, 33 of 37 items still open
    (denominator-correctness, Stage 3 re-measure, Stage 5 capture-to-100, D6 implementation follow-ups — decision itself
    approved 2026-07-07, see item 2 below) — MANIFEST_COVERAGE §2.2.
@@ -822,10 +824,16 @@ Script:
 
 ## Todos
 
-- [ ] [DATA] P0. **Close the 6 remaining Headline P0s not covered by any in-flight workflow** — Turbo API 0/0 bug, CeFi
-      monotonicity guard alerting (live incident), is-daily-enum cloud crash, the 59-bug smoketest master record, the
-      Instruments Completion Tracker (33/37 open), and Layer-1 tradfi's `tradfi_v9_stage1_finish` block (per the final
-      `wf_60ecfd13-752` Progress Log entry).
+- [ ] [DATA] P0. **Corrected 2026-08-09 by plan_reconciler — 3 of the original 6 "Headline P0s" are already
+      `status: resolved` and archived** (verified live:
+      `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md`,
+      `is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md`, `tradfi_v9_stage1_finish_2026_07_06.md` —
+      all `plans/archive/`, all `status: resolved`). This doc is a self-labeled non-self-updating historical snapshot
+      (see banner above), which explains but doesn't excuse 4 na-eligibility-audit passes reaffirming KEEP-NA against
+      the stale 6-item framing without flagging the drift. **Close the 3 genuinely-still-open Headline P0s**: Turbo API
+      0/0 bug (`defi_turbo_api_hides_real_captured_data_2026_07_07.md`), the 59-bug smoketest master record
+      (`mtds_is_full_adapter_smoketest_findings_2026_07_07.md`, 3 open + 1 partial — see item 4 above), and the
+      Instruments Completion Tracker (`instruments_completion_tracker_2026_07_06.md`, 12 open as of this correction).
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole todo is an umbrella 'close the 6
   remaining Headline P0s not covered by any in-flight workflow' across a 979-line, 5-asset-group audit — a portfolio of
   independently-scoped P0s, not a single determinable outcome, and several of its constituents are themselves
