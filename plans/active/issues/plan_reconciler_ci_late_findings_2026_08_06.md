@@ -105,11 +105,11 @@ failure (75 orphans vs 69 baseline).
 
 ## P2 — Stale index + zero-checkbox docs
 
-- [ ] [DOC] P2. **`plans/epics/infrastructure_master.md:595-597`** — lists `mtds_retry_safe_default_audit_2026_07_14`
-      with `status: active`. The plan is archived at `plans/archive/2026_08/` and `status: complete` (L14). Same class
-      the epic previously fixed via finding 85 (L748-756). Fix: update to `status: complete`. **Re-verified still-open
-      2026-08-09 (round-9 sweep)** — epic index line still reads `status: active`. **Extracted to
-      `ci_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2.**
+- [x] [DOC] P2. ✅ — Updated `plans/epics/infrastructure_master.md:595-597` index entry for
+      `mtds_retry_safe_default_audit_2026_07_14` from `status: active` to
+      `status: complete (archived 2026-08-06 — 5/5 todos done; fleet-wide STEP 5.104 lint in base-service.sh is the     durable pin)`,
+      matching the sibling `cicd_mvp_ldr_to_main_pipeline_2026_06_30` entry's established format (L536). Epic stays
+      under its 2000-line hard cap. Via `ci_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2.
 - [x] [DOC] P2. ✅ **Moot — target doc never existed in git history.** `ag_closeout_audit_ci_parked_2026_08_06.md` —
       confirmed via `git log --all --diff-filter=A` (this doc's own 2026-08-09 Progress Log entry, slot-22): the corpus
       only ever had `_2026_08_07`/`_08`/`_09` daily-rotating snapshots. Nothing to convert.

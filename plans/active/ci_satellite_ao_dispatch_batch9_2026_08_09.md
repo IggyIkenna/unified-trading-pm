@@ -98,7 +98,7 @@ Todos 1 and 2 touch disjoint files (`qg_host_adaptive_resource_governor_2026_07_
     `check_reference_paths.py --only` clean. Source finding flipped in
     `issues/plan_reconciler_ci_late_findings_2026_08_06.md`. — unified-trading-pm@89925f0c6
 
-- [ ] 2. [DOC] P2. **Fix the stale `status: active` for `mtds_retry_safe_default_audit_2026_07_14` in
+- [x] 2. ✅ [DOC] P2. **Fix the stale `status: active` for `mtds_retry_safe_default_audit_2026_07_14` in
       `plans/epics/infrastructure_master.md` (around L595-597, re-locate by grepping the slug fresh — the epic file
       churns).** The plan itself is archived at `plans/archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md` with
       `status: complete` in its own frontmatter — the epic's P3-backlog index entry is stale, same class of drift the
@@ -112,6 +112,12 @@ Todos 1 and 2 touch disjoint files (`qg_host_adaptive_resource_governor_2026_07_
       `issues/plan_reconciler_ci_late_findings_2026_08_06.md` (P2, "`plans/epics/infrastructure_master.md:595-597`…")
       with the commit cited.
   - Source: `issues/plan_reconciler_ci_late_findings_2026_08_06.md`, P2 finding 1.
+  - **Done** — line 597 updated to
+    `status: complete (archived 2026-08-06 — 5/5 todos done; fleet-wide STEP 5.104 lint in base-service.sh is the durable pin)`,
+    matching the sibling `cicd_mvp_ldr_to_main_pipeline_2026_06_30` entry's format (L536). Entry stays IN PLACE in the
+    P3 section (that sibling convention keeps completed entries in their original section, doesn't relocate them).
+    `plans/epics/infrastructure_master.md` at 780 lines, well under the 2000-line hard cap. Source finding flipped in
+    `issues/plan_reconciler_ci_late_findings_2026_08_06.md`. — unified-trading-pm@PENDING_SHA
 
 ## Codex SSOTs (read before executing any todo)
 

@@ -594,7 +594,8 @@ cache warm so only changed code rebuilds
 
 ### [`mtds_retry_safe_default_audit_2026_07_14`](../archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md)
 
-**status**: active · **estimate**: 0.4 cal AI-days (class: refactor)
+**status**: complete (archived 2026-08-06 — 5/5 todos done; fleet-wide STEP 5.104 lint in `base-service.sh` is the
+durable pin) · **estimate**: 0.4 cal AI-days (class: refactor)
 
 ### [`stash_pile_workspace_cleanup_2026_06_03`](../active/stash_pile_workspace_cleanup_2026_06_03.md)
 
