@@ -97,11 +97,14 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
 
 ## Todos
 
-- [ ] [BACKEND] P1. Instrument the gate: emit a `context_force_idle_gate_blocked` activity event (details: `role`,
+- [x] ✅ [BACKEND] P1. Instrument the gate: emit a `context_force_idle_gate_blocked` activity event (details: `role`,
       `session`, `pct`, and WHICH signal refused — `classify_pane` verdict / `pane_input_pending` / child-process count)
       on every tick where a main/review target is past `context_compact_force_after_seconds` but `_maybe_force_compact`
       declines. Done-when: the event is visible in `GET /api/activity` for a real main tick, with the blocking signal
-      populated.
+      populated. — agent-orchestrator@279e07b (`_log_idle_gate_blocked` logs `signal` +
+      `pane_verdict`/`idle_streak`/`required` detail on every decline: `pane_capture_failed` / `classify_pane` /
+      `idle_streak_insufficient` / `pane_input_pending` / `child_processes`); unit-covered in
+      `tests/test_context_lifecycle.py`, full QG green.
 - [ ] [BACKEND] P1. Measure for >=6h with the instrumentation live: how many ticks had main/review deadline-past, how
       many times the gate OPENED, and the dominant blocking signal. Record the counts in this doc's Progress Log.
       Done-when: the Progress Log carries open-vs-blocked counts for both roles.
@@ -131,3 +134,8 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
   learned context window (separate issue, fixed and shipped); this doc captures the structural gaps underneath it that
   the measurement bug was masking. Live counts at filing time: 4.3h `/api/activity` window, `role=worker` = 132
   context-lifecycle events, `role=main` = 1.
+- 2026-08-09 (slot 19) — Dispatched todo 1 independently and implemented the same instrumentation, then found slot 15
+  had already shipped an equivalent, already-QG-green version at `agent-orchestrator@279e07b` (a known double-dispatch
+  pattern per `/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`). Skipped my
+  duplicate commit during rebase (`git rebase --skip`, no code conflict landed) and flipped this checkbox against
+  279e07b instead of shipping a redundant second implementation.
