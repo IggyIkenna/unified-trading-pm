@@ -37,6 +37,7 @@ created: 2026-07-20
 last_updated: 2026-07-30
 parent_epic: manifest_master
 assigned_vm: NA
+archive_exempt: true # standing reference surface, operator ruling entry #10 option A — 0 open todos expected here
 execution_scope: local-only
 priority: P0
 estimate_class: design
@@ -919,9 +920,8 @@ residual: the manifest-row registration follow-up.
 | Tier-2 datapoint-validation VM — a real launch-run                                   | **Not done** — built (32), never launch-run                                                                                                 | operator/operational — an actual campaign                             |
 | Funding/staking latent-trap cleanup (4 scripts + UTL registry)                       | **Not done** — P2, latent (non-runtime)                                                                                                     | nobody — `downstream_funding_staking…` todos                          |
 
-**Recommended NEXT:** the sports 214K orphan back-fill (todo 1 of the orphan issue) — it is measured, the audit data is
-already in GCS, and it is a live honest-coverage hole; OR, if the operator OKs it, launch the orphan VM for the 4
-blocked AGs first so the whole-estate orphan picture is complete before back-filling.
+**Recommended NEXT** (sports orphan back-fill this pointed at is now DONE, see flipped checkbox below): launch the
+orphan VM for the 4 blocked AGs.
 
 - [x] ✅ [DATA] P1. **Sports orphan back-fill (214,319 rows) + legacy-dup triage (34,385)** — **CLOSED 2026-08-09
       (round11 RECLASSIFY sweep), verified stale-citation, not new work.** Per the "Deferred work after 2026-07-21"
@@ -935,15 +935,15 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
       dedicated re-verification pass against the source doc; that re-verification is done now, so the checkbox flips.
       The other 7 still-"Not done" items in the "Deferred work after 2026-07-21" table are unaffected — not re-triaged
       in this pass.
-- [ ] [DATA] P2. **Measure the historical per-venue non-canonical row count for the 8 CeFi live spot venues fixed in
+- [x] ✅ [DATA] P2. **Measure the historical per-venue non-canonical row count for the 8 CeFi live spot venues fixed in
       `cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md`** (archived, resolved) — that issue's own
       code-level fix (BINANCE/COINBASE/OKX/UPBIT/BITFINEX/BITGET/BYBIT/KRAKEN-SPOT now emit canonical `SPOT_PAIR` +
       `BASE-QUOTE` ids) shipped without ever measuring the SIZE of the pre-fix non-canonical population — the census
       that originally found this only measured the aggregate `instrument_type=spot` lowercase axis (4,923 rows across
-      ALL cefi), never the id-FORM/hyphenation dimension per venue. Run this skill's distinct-value census (G1, § 3f)
-      scoped to `asset_group=cefi`, filtered to these 8 venues, comparing `is_canonical_instrument_id()` pre-fix-shape
-      vs post-fix-shape row counts — a real, not-yet-known number needed to size any historical backfill/repair decision
-      (the fix only stops NEW rows from being wrong).
+      ALL cefi), never the id-FORM/hyphenation dimension per venue. Run this skill's distinct-value census (G1, § 3f),
+      scoped to `asset_group=cefi` and these 8 venues, comparing `is_canonical_instrument_id()` pre/post-fix row counts
+      — a real, not-yet-known number needed to size any historical backfill/repair decision (the fix only stops NEW rows
+      from being wrong). **Landed 2026-08-09, `d8c682dd5a8`** — see Progress Log below.
 
 ## Lessons (do not re-learn)
 
