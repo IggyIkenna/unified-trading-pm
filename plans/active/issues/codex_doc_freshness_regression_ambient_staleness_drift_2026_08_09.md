@@ -30,9 +30,10 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: slot-28 (backend_engineer), unified-trading-pm@8bc27fe8f
 last_updated: 2026-08-09
 locked_since:
+archive_exempt: true
 source: >-
   Slot 10 (agt-1a9b86) hit this while shipping an unrelated ao-dispatch-visibility baseline ratchet, re-baselined 25->27
   locally but that session went orphaned/stale (worker died, 19 commits behind origin) before it could push — review
@@ -79,10 +80,22 @@ mechanism (e.g. per-file diffing so ambient decay doesn't block unrelated diffs)
       `check_codex_doc_freshness.py` (26 as of 2026-08-09 — re-run for the current list; reasons are
       `no-last_reviewed-field` and `stale`). Repo: unified-trading-pm. Once clean, re-run
       `check_codex_doc_freshness.py --baseline-write` to ratchet the count down. — unified-trading-pm@c54c344d9
-- [ ] [BACKEND] P3. Consider a structural fix so ambient time-decay doesn't repeatedly block unrelated shipping — e.g.
-      per-file baseline diffing (only fail on a NEWLY-stale doc vs. the baseline snapshot, not a rising total), or a
-      scheduled timer that refreshes `last_reviewed` proactively before the 90-day window lapses. Repo:
-      unified-trading-pm (`scripts/quality_gates/check_codex_doc_freshness.py`).
+- [x] ✅ [BACKEND] P3. Consider a structural fix so ambient time-decay doesn't repeatedly block unrelated shipping —
+      e.g. per-file baseline diffing (only fail on a NEWLY-stale doc vs. the baseline snapshot, not a rising total), or
+      a scheduled timer that refreshes `last_reviewed` proactively before the 90-day window lapses. Repo:
+      unified-trading-pm (`scripts/quality_gates/check_codex_doc_freshness.py`). — DONE 2026-08-09
+      (unified-trading-pm@8bc27fe8f): implemented the first option. `check_codex_doc_freshness.py`'s ratchet mode now
+      diffs the current violating PATH SET against the baseline snapshot's known-violation paths
+      (`BaselineSnapshot.known_paths`, `_new_violations()`) instead of comparing raw counts — a doc already
+      known-violating at baseline time drifting further stale is no longer a fresh regression; only a path absent from
+      the baseline is. Also fixed a related bug this doc's own history surfaced (slot 10's rejected diff embedded
+      absolute `.tabs/4/` paths): `_write_baseline`/`_load_baseline` now store/read paths RELATIVE to
+      `--workspace-root`, so a snapshot written by any slot is portable and diffable by every other slot. 15 new unit
+      tests (`test_check_codex_doc_freshness.py`), full `quality-gates.sh` green (1881 tests passed) at commit time.
+      Verified live against the current corpus: `0 new violations; 0 known, 0 at baseline` — clean. Did NOT also build
+      the scheduled-timer alternative — the todo phrased the two as alternatives, and per-file diffing alone directly
+      resolves the stated symptom (chaotic multi-session re-baselining on a vague count delta); a proactive-refresh
+      timer is a separate, bigger infra piece if still wanted later.
 
 ## Progress log
 
