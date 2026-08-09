@@ -25,7 +25,10 @@ summary: >-
 status: open
 nature: issue
 archive_exempt: true
-asset_group: [ci, cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-09 (/ag-closeout-audit ci) -- was [ci, cross-cutting]; content is a CI-alert-tuning
+  # incident (glue-pool-starvation-monitor false-CRITICAL after a self-hosted-runner revert), squarely ci-tranche --
+  # already flagged as a mistag by the 2026-08-08 cross-cutting tranche run, never retagged until now
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

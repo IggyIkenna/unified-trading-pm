@@ -245,11 +245,78 @@ ratchet improved further, exit 0). **Zero of the 20 are `ci`-tagged** — the as
 `cross-cutting` (6), `defi` (3), `tradfi` (1), `meta`/other (3). This independently confirms this run's Method-note
 conclusion: nothing in the `ci` tranche is silently uncovered by its closeout family right now.
 
+## Finding 4 — second same-day dispatch (agt-09695d, slot 24): delta-check re-confirmation + Orthogonality retag pass
+
+This tranche was dispatched a second time today (dispatch `agt-09695d`, slot 24) — a ~4h gap after the run above
+(dispatch `agt-d5ae54`, slot 16, this doc created 05:05 UTC). Same posture as the `ui` tranche's own second-same-day
+dispatch the same morning (`ag_closeout_audit_ui_parked_2026_08_09.md` Finding 5): whether this is a scheduler
+already-ran-guard gap or a legitimate non-timer redispatch path was not investigated — out of this skill's own scope
+(`ao`/scheduling-infra's surface), noted here only as a fact, not a `ci`-corpus finding.
+
+**Delta-check method** (cheap-before-expensive, same principle as the batchN Deferred-recheck step, extended to the
+whole-tranche case):
+
+1. **Fresh Phase 0 candidate regen** (`generate_ag_closeout_audit_candidates.py --tranche ci`): 49 members now vs. 48
+   this morning — delta is exactly this doc's own self-referential entry joining the corpus (expected; same pattern as
+   the 08-07/08-08 predecessors, `archivable_after_planned_work`-shaped).
+2. **`git log --since="2026-08-09T05:05:07Z"`** across all 59 candidate+covering paths: 19 commits touched files in
+   scope. Traced every one: (a) `ci_satellite_ao_dispatch_batch6_finalize`'s todo 1 (reconcile batch-6 source docs)
+   executed at 08:01 — exactly the action this morning's report flagged as "ready to execute, not executed by this
+   report" (see its "Live update caught mid-run" note) — flipped several source docs' own already-known-done checkboxes
+   to match (`fleet_wide_qg_self_hosted_runner_capacity_crisis`, `post_cutover_silent_assumption_sweep`,
+   `silent_failures_surfacing_as_generic_promotion_lag`, `breaking_change_differ_blind_to_registry_data_dicts`,
+   `ui_build_warm_cache`) — verified each is bookkeeping catch-up, not new open/closed-item information (2 spot-read in
+   full: `ui_build_warm_cache_2026_06_17.md` now `status: complete` but correctly NOT archived,
+   `locked_by: live-defi-rollout` blocking without an `[unlock-plan]` decision, fully self-documented in its own
+   Progress Log; `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` shows 0/7 open checkboxes but is
+   correctly `archive_exempt: true` — 2 genuine prose-form Follow-up items survive, the exact checkbox-blind trap
+   SKILL.md warns about, already self-caught by whoever ran the reconcile); (b) `ci_satellite_ao_dispatch_batch7` +
+   finalize fully executed and archived (its 1 todo shipped `unified-trading-pm@c8f7776fb`) — reduces the active
+   covering-plan count from 8 to 7 pairs, not a new-orphan event; (c) `na-eligibility-audit ci` ran at 08:14, confirming
+   KEEP-NA on several docs (informational, not a reclassification); (d) ~9 "stale SHA citation after Nth rebase" commits
+   repeatedly re-touched `ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` with large whitespace-only
+   diffs (confirmed via `git diff -b` — zero substantive content change, purely indentation churn from repeated
+   rebase+prettier cycles); worth a passing note as mildly wasteful commit noise, not a `ci`-corpus classification
+   finding. **Net: zero checkbox/status transitions found that change any doc's Phase 1 verdict bucket from this
+   morning's report.**
+3. **Orthogonality HARD CHECK re-run** (mandatory every run per SKILL.md, not just on first discovery): found 5 docs
+   still dual-tagged `[ci, cross-cutting]`/`[cross-cutting, ci]` — 2 of them
+   (`image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md`,
+   `glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md`) already named as mistags by the
+   2026-08-08 cross-cutting tranche run per SKILL.md's own history section, never retagged since. Content-read all 5; 3
+   are unambiguous CI/CD-pipeline-mechanics-only (no cross-AG scope) and retagged to bare `[ci]`:
+   [/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md](/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md),
+   [/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md](/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md),
+   and the
+   [/plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md](/plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md)
+   - finalize pair (batch-extraction docs are single-tranche by construction, per SKILL.md's own authoring discipline).
+     Per SKILL.md's "necessary but not sufficient" warning, re-ran `check_ag_closeout_linkage.py` after retagging:
+     `image_build_validate_stranded_on_deregistered_glue_runners` surfaced as a newly-orphaned-within-`ci` doc (the
+     other 2 retags needed no further fix, already reachable) — closed by adding a Progress Log citation to
+     `/plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md` (this tranche's only closeout-family doc);
+     re-verified 0 new net orphans, 22 corpus-wide (vs. this morning's 20 — the 2 net-new are `ci`-unrelated, other
+     tranches' surface). **Left 2 unretagged, genuinely ambiguous, reported rather than guessed** —
+     `issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md` (content is corpus-wide `assigned_role`
+     frontmatter hygiene, not CI-mechanics-specific — only 1 of its ~10 affected docs is ci-tranche-relevant, extracted
+     into batch8; `[ci, cross-cutting]` may be defensibly correct as-is rather than a mistag) and
+     `issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` (content is plans-corpus
+     archival-gate-interaction tooling, reads closer to `infra`/`meta` than `ci` — the specific-tranche half of the tag
+     itself may be wrong, not just the `cross-cutting` half; a guess here risks the same race the skill warns about for
+     ambiguous ownership). **Recommendation**: a human or a dedicated retag pass resolve these 2 directly rather than
+     another tranche audit re-discovering them.
+
+**Conclusion**: this morning's Phase 1 tally (40 classified, 0 archivable_now, 5 archivable_after_planned_work, 37
+orphaned) and Phase 3 conclusion (no new batch warranted, stopping condition met) are RE-CONFIRMED, not blindly copied
+forward — the delta-check traced every actual change to source and found none that alters a verdict bucket. The one
+substantive output of this second dispatch is corpus tag-hygiene (3 mistags fixed + linkage-verified, 2 flagged for a
+human), not a change to the orphan count or a new batch.
+
 ---
 
-**Parked-findings reconciliation**: 3 informational findings (Finding 1-3 above) + 0 `BLOCKED-OPERATOR-DECISION`
-questions (no genuine conflict found — nothing new needed a ruling) = **3 entries written to this doc, 3 parked findings
-generated this run — balanced.**
+**Parked-findings reconciliation**: 3 informational findings from the first run (Finding 1-3) + 1 finding from the
+second dispatch (Finding 4, itself containing 2 flagged-not-fixed items as its own sub-findings) + 0
+`BLOCKED-OPERATOR-DECISION` questions (no genuine unresolvable conflict found either run) = **4 entries written to this
+doc, 4 parked findings generated across both dispatches today — balanced.**
 
 ## na-eligibility-audit note
 
@@ -269,3 +336,12 @@ valid — confirmed independently: 0 open `- [ ]` todos, current (not-yet-supers
   `meta` tag), 37 carried-forward candidates re-confirmed via cross-reference rather than re-derived from scratch. No
   new batch drafted — Phase 3's stopping condition (all remaining orphans are non-batchable-taxonomy) is met for this
   tranche as of today.
+- **2026-08-09, second same-day dispatch** (`ag_closeout_auditor`, autonomous, slot 24, `agt-09695d`): delta-check
+  re-confirmation (Finding 4) rather than a fresh 40-agent Phase 1 re-run — traced all 19 post-05:05 commits touching
+  in-scope paths to source (batch6-finalize reconciliation catch-up + batch7 completing/archiving + na-eligibility-audit
+  - rebase-churn whitespace noise), found zero verdict-changing content. Ran the Orthogonality HARD CHECK: found 5
+    `[ci, cross-cutting]` dual-tag mistags, retagged 3 to bare `[ci]` (2 already flagged by the 2026-08-08 cross-cutting
+    run, never fixed until now), fixed the 1 resulting linkage orphan via a Progress Log citation in
+    `ci_consolidated_closeout_2026_07_25.md`, left 2 genuinely ambiguous ones flagged for human/dedicated-pass
+    resolution rather than guessed. Tally re-confirmed unchanged: 0 archivable_now, 5 archivable_after_planned_work, 37
+    orphaned. No new batch drafted — same stopping condition, still met.

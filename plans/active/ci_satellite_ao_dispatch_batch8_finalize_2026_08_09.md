@@ -7,7 +7,9 @@ summary: >-
   6-step ritual.
 status: active
 nature: process
-asset_group: [ci, cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-09 (/ag-closeout-audit ci) -- was [ci, cross-cutting]; mirrors batch8's own correction, a
+  # finalize plan's scope is definitionally its batch's scope
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

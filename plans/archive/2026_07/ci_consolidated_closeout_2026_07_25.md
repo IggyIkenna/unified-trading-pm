@@ -219,3 +219,22 @@ unblocked on a CI runner.
     Deferred tables of the batch plan, so they now have a live home. **Deliberately NOT added to the Track Sources
     above** — `infrastructure` and `meta` are valid `asset_group` values the 9-tranche partition's membership rule never
     swept, so which tranche owns them is an escalated operator question, not a mechanical fix.
+- **2026-08-09 — `/ag-closeout-audit ci` (autonomous, second same-day dispatch, slot 24, `agt-09695d`), Orthogonality
+  HARD CHECK retag pass.** Found 5 docs still dual-tagged `[ci, cross-cutting]`/`[cross-cutting, ci]` (2 of them —
+  `image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md` and
+  `glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md` — already flagged as mistags by the
+  2026-08-08 cross-cutting tranche run per SKILL.md's own history, never retagged since). Content-verified 3 as
+  unambiguous CI/CD-pipeline-mechanics-only (no cross-AG scope) and retagged to bare `[ci]`:
+  [/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md](/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md)
+  (GitHub Actions self-hosted-runner strand blocking LDR→main promotion),
+  [/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md](/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md)
+  (CI alert-tuning incident), and the
+  [/plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md](/plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md)
+  +finalize pair (batch-extraction docs are single-tranche by construction). Left 2 unretagged as genuinely ambiguous
+  (`assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md` — content is corpus-wide, not ci-specific;
+  `plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` — plan-hygiene-tooling content reads closer to
+  `infra`/`meta` than `ci`, needs a dedicated owner decision, not a guess). Post-retag linkage re-run (per SKILL.md's
+  own "necessary but not sufficient" warning) found
+  `image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07` newly orphaned within `ci`'s own family (this
+  Progress Log entry IS that link-back fix) — the other 2 retagged docs were already reachable and needed no further
+  linkage fix. Re-verified 0→0 new orphans after this entry landed.
