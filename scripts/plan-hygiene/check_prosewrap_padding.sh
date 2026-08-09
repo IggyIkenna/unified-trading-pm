@@ -105,6 +105,25 @@ _detect_hits() {
   ' "$@"
 }
 
+# All eligible-for-detector-2 lines (non-blank, non-table, outside fences) reduced to
+# "leading whitespace stripped, first 50 chars" -- the SAME content-preview shape
+# _detect_hits' over-indent branch prints, but for EVERY line, not just ones that
+# happen to cross INDENT_THRESHOLD. Used by --only below to recognize pre-existing
+# prose that merely crossed the threshold on THIS pass (see rec. (A) comment there).
+_all_content_previews() {
+  awk '
+    /^[[:space:]]*```/ { fence = !fence; next }
+    fence { next }
+    {
+      is_table = ($0 ~ /^[[:space:]]*\|/)
+      if (!is_table && $0 !~ /^[[:space:]]*$/) {
+        match($0, /^ */)
+        print substr($0, RLENGTH + 1, 50)
+      }
+    }
+  ' "$@"
+}
+
 if [ "${1:-}" = "--only" ]; then
   shift
   QUIET=0
@@ -121,25 +140,36 @@ if [ "${1:-}" = "--only" ]; then
     case "$f" in
       */plans/archive/*|plans/archive/*) continue ;;
     esac
-    # Normalize away the over-indent(NN) exact-depth number before comparing (2026-08-09,
-    # prosewrap_padding_precommit_gate_blocks_already_affected_files_2026_08_09.md, rec. (A)):
-    # prettier-autostage's mandatory reformat is a non-idempotent, MONOTONIC reflow for a
-    # paragraph nested 2+ deep in a checkbox list item — every pass shifts the SAME
-    # already-corrupted line's indent further (e.g. 10->14->18->...), which produced a
-    # "new" signature every single commit even with zero worker-authored content change,
-    # blocking ordinary docs(plans) commits fleet-wide. Comparing by TEXT (detector-type +
-    # matched content, indent number stripped) instead of the exact depth means a line whose
-    # underlying text already violated at HEAD (at any depth) is recognized as pre-existing
-    # debt -- covered by the full-sweep ratchet, not this commit's problem -- while a line
-    # whose TEXT is genuinely new (the worker's own edit) still flags correctly.
-    cur_sigs="$(_detect_hits "$f" | sed -E 's/^[0-9]+://; s/^over-indent\([0-9]+\):/over-indent:/' | sort -u)"
     rel="$(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
     rel="${rel#"$PM_DIR"/}"
-    head_sigs="$(git -C "$PM_DIR" show "HEAD:$rel" 2>/dev/null | _detect_hits | sed -E 's/^[0-9]+://; s/^over-indent\([0-9]+\):/over-indent:/' | sort -u)"
-    new_sigs=""
-    if [ -n "$cur_sigs" ]; then
-      new_sigs="$(comm -23 <(printf '%s\n' "$cur_sigs") <(printf '%s\n' "$head_sigs") 2>/dev/null || true)"
-    fi
+    head_content="$(git -C "$PM_DIR" show "HEAD:$rel" 2>/dev/null)"
+
+    # Detector 1 (backtick-padding): compare against HEAD's own violations only -- this
+    # detector isn't threshold-based, so it isn't subject to the rec. (A) gap below.
+    cur_backtick="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
+    head_backtick="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
+    new_backtick=""
+    [ -n "$cur_backtick" ] && new_backtick="$(comm -23 <(printf '%s\n' "$cur_backtick") <(printf '%s\n' "$head_backtick") 2>/dev/null || true)"
+
+    # Detector 2 (over-indent): 2026-08-09 rec. (A),
+    # prosewrap_padding_precommit_gate_blocks_already_affected_files_2026_08_09.md.
+    # prettier-autostage's mandatory reformat is a non-idempotent, MONOTONIC reflow for a
+    # paragraph nested 2+ deep in a checkbox list item -- every pass can shift a line's
+    # indent further, INCLUDING lines that sat comfortably under INDENT_THRESHOLD at HEAD
+    # and only cross it because of THIS pass's reflow (comparing HEAD's own violations,
+    # as detector 1 does, misses this case -- HEAD never flagged that line in the first
+    # place, so a naive comm(1) still reads it as brand new). Instead: a current
+    # over-indent hit is "new" only if its TEXT (leading whitespace stripped) does not
+    # appear ANYWHERE in HEAD's content -- i.e. genuinely worker-authored, not prose that
+    # already existed at HEAD (at any indent, flagged there or not) and merely got
+    # reflowed past the threshold this pass.
+    cur_overindent="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://' | sort -u)"
+    head_all_content="$(printf '%s' "$head_content" | _all_content_previews | sort -u)"
+    new_overindent=""
+    [ -n "$cur_overindent" ] && new_overindent="$(comm -23 <(printf '%s\n' "$cur_overindent") <(printf '%s\n' "$head_all_content") 2>/dev/null || true)"
+
+    new_sigs="$(printf '%s\n%s\n' "$new_backtick" "$new_overindent" | grep -v '^$' || true)"
+
     if [ -n "$new_sigs" ]; then
       FLAGGED_FILES=$(( FLAGGED_FILES + 1 ))
       if [ "$QUIET" -eq 0 ]; then
