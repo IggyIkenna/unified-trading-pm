@@ -53,9 +53,11 @@ context_scope:
 
 # Prediction satellite AO batch 4 — finalize
 
-> **Status: draft — NOT dispatched.** Gated (`gate_on_depends: true`) behind
-> `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`. It will not dispatch until batch4 is flipped `active` by the
-> operator AND every batch4 dispatched todo is done. Do NOT flip this to `active` independently of batch4.
+> **Status: active, machine-gated (banner corrected 2026-08-09, was stale "draft").** Frontmatter has read
+> `status: active` since authoring (no-double-gate precedent — the gate mechanism machine-holds this plan regardless of
+> the source doc's own status), gated (`gate_on_depends: true`) behind
+> `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`. Todos 1-2 already shipped once batch4's original 3 todos
+> landed; todo 3 stays machine-held — batch4 currently has 1 open item (4b-iii) as of 2026-08-09.
 
 ## Todos
 
@@ -76,15 +78,19 @@ context_scope:
       either promoted to a ready `[OPERATOR]` todo (with re-measured live counts) or left deferred with a dated reason;
       recorded in this plan's Progress Log.
 
-- [ ] [DATA] P3. **Archive fully-closed sibling docs + update the closeout digest.** For each of the 3 A3-relocated
-      sibling docs (`prediction_cross_venue_arb_and_coverage`, `prediction_live_clob_depth_capture`,
-      `prediction_perps_kalshi_polymarket_parked`): if every open item is now either shipped, promoted to a live
-      `[OPERATOR]`/batch todo, or a confirmed non-batchable (upstream/design/operator) residual, run the 6-step archival
-      ritual and move it to `plans/archive/2026_07/`; otherwise leave it active with the residual clearly scoped. Update
-      `prediction_consolidated_closeout_2026_07_18.md`'s "Aggregated source docs" digest to reflect any archival. Repo:
-      unified-trading-pm. **Done when**: each sibling doc is either archived (with the ritual completed + digest
-      updated) or has a one-line dated residual note explaining why it stays active; no sibling doc is left in a
-      half-reconciled state.
+- [ ] [DATA] P3. **Archive fully-closed sibling docs + update the closeout digest.** **Count corrected 2026-08-09
+      (plan_reconciler)**: only 2 of the original "3 A3-relocated sibling docs" are still active —
+      `prediction_perps_kalshi_polymarket_parked` was already at `plans/archive/2026_07/` at batch4's own 2026-07-26
+      drafting (batch4's own `related:` frontmatter already cited the archive path on day one), so it needs no archival
+      action here, only a digest-accuracy check. For each of the 2 genuinely-active sibling docs
+      (`prediction_cross_venue_arb_and_coverage`, `prediction_live_clob_depth_capture`): if every open item is now
+      either shipped, promoted to a live `[OPERATOR]`/batch todo, or a confirmed non-batchable (upstream/design/
+      operator) residual, run the 6-step archival ritual and move it to `plans/archive/2026_07/`; otherwise leave it
+      active with the residual clearly scoped. Update `prediction_consolidated_closeout_2026_07_18.md`'s "Aggregated
+      source docs" digest to reflect any archival. Repo: unified-trading-pm. **Done when**: each of the 2 sibling docs
+      is either archived (with the ritual completed + digest updated) or has a one-line dated residual note explaining
+      why it stays active, AND the digest's reference to the already-archived 3rd doc is confirmed accurate; no sibling
+      doc is left in a half-reconciled state.
 
 ## Progress Log
 
@@ -126,3 +132,12 @@ context_scope:
   filed as batch5 candidate. **Deferral (b)** — POLYMARKET re-enum + `book_snapshot_5` backfill: gate cleared; re-tagged
   off `[OPERATOR]` 2026-07-28; **promoted to ready `[DATA]` candidate** — batch5 or standalone plan, AO-dispatchable, no
   remaining gates. Batch4 Deferred entry updated.
+- **plan_reconciler 2026-08-09 (agt-c3a27f, slot 13, prediction tranche)**: 3 fixes. (1) Banner said "draft — NOT
+  dispatched" contradicting `status: active`; corrected to reflect the no-double-gate precedent (active, machine-held by
+  `gate_on_depends`). (2) Todo 3's "3 A3-relocated sibling docs" framing was stale — 1
+  (`prediction_perps_kalshi_polymarket_parked`) was already archived at this doc's own 2026-07-26 drafting; corrected to
+  2 genuinely-active docs. (3) Noted both "batch5 candidate" deferrals above (fixture-pairing manifest walk + POLYMARKET
+  re-enum/book_snapshot_5 backfill) are still unclaimed as of today —
+  `plans/archive/2026_07/ prediction_satellite_ao_dispatch_batch5_2026_07_26.md` predates their 2026-08-07 promotion and
+  batches 6-9 never picked them up. Routed to the operator (not fixed in-place — which batch/plan they land in is a
+  planning decision); see `plans/active/issues/plan_reconciler_findings_prediction_2026_08_09.md`.

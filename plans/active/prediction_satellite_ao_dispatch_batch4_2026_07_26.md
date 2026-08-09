@@ -74,12 +74,11 @@ context_scope:
 
 # Prediction satellite AO batch 4 — un-triaged sibling-doc gap extraction
 
-> **Status: draft — NOT dispatched.** This batch was drafted autonomously by the `/ag-closeout-audit prediction`
-> scheduled run (2026-07-26). Per CLAUDE.md's "Plan destination — ASK BEFORE CREATING" HARD RULE and the
-> ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-shipped: flipping
-> `status: draft` → `active` to actually dispatch these todos is an operator decision. The three dispatched todos below
-> touch distinct files (IS-adapter-lifecycle / MDPS-retention-read-only / IS-cqg-catalogue) — safe to dispatch
-> concurrently once activated.
+> **Status: active — dispatching since 2026-07-26 (banner corrected 2026-08-09, was stale "draft").** This batch was
+> drafted autonomously by the `/ag-closeout-audit prediction` scheduled run (2026-07-26) and operator-approved to
+> `status: active` the same day — frontmatter has read `active` since authoring, but this banner still said "draft — NOT
+> dispatched" despite extensive `[x]` DONE history through 2026-08-06. The three original dispatched todos touch
+> distinct files (IS-adapter-lifecycle / MDPS-retention-read-only / IS-cqg-catalogue) — safe to dispatch concurrently.
 
 ## Why this batch exists (the gap batch3 missed)
 
@@ -694,11 +693,16 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   #4 → canonical shape #1 (shape #4 carries richer `title`/`slug`/`eventSlug` metadata, 24 cols vs canonical 22),
   mirroring 4b-i's alias-aware additive-only approach in `migrate_prediction_trades_legacy_bundle_2026_07_28.py`. Filed
   as a new sub-item below.
-- **[DATA] P2. 4b-iii — merge shape #4 into canonical + delete legacy objects.** Gated on 4b-i completing (both
-  migrations share the same canonical target; concurrent writes would race). Once 4b-i's enrichment+delete lands, apply
-  the same read-transform-write-per-cell pattern to enrich canonical shape #1 objects with `title`/`slug`/ `event_slug`
-  from their shape #4 twins (1,126,358 objects, 348 days, 100% twin coverage confirmed by 4b-ii's enumeration), then
-  delete the now-redundant shape #4 legacy objects after content verification. Repo: market-tick-data-service.
+- [ ] [DATA] P2. **4b-iii — merge shape #4 into canonical + delete legacy objects.** **plan_reconciler 2026-08-09
+      correction**: this item was a bare bullet with no checkbox marker, sitting in the Progress Log narrative — a real,
+      ready, well-scoped item that was invisible to `regen_backlog_from_plan.py`'s checkbox-based todo extraction and so
+      could never be dispatched as written; converted to a proper checkbox here. Gate status: 4b-i is now COMPLETE (see
+      the 2026-08-06T21:5xZ slot-16 entry below), so this item is UNBLOCKED and ready to dispatch. Gated on 4b-i
+      completing (both migrations share the same canonical target; concurrent writes would race — that race condition is
+      now moot since 4b-i is done). Apply the same read-transform-write-per-cell pattern to enrich canonical shape #1
+      objects with `title`/`slug`/`event_slug` from their shape #4 twins (1,126,358 objects, 348 days, 100% twin
+      coverage confirmed by 4b-ii's enumeration), then delete the now-redundant shape #4 legacy objects after content
+      verification. Repo: market-tick-data-service.
 - **2026-08-02T19:53Z (slot 8, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`)**:
   blocker re-verified fresh, unchanged. `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED`
   (`gcloud scheduler jobs describe`, `unified-trading-sa` account). `GET /api/backlog`:
@@ -818,3 +822,8 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   at `gs://market-data-tick-pred-prd-central-element-323112/_ops/4bi_scratchpad_2026_08_06/`. **Checkbox flipped —
   `market-tick-data-service` (no new code commit; the shipped migration script `@e4acf0c4` drove the work, the delete
   pass used a scratchpad driver that's already durably uploaded to the GCS scratchpad).**
+- **plan_reconciler 2026-08-09 (agt-c3a27f, slot 13, prediction tranche)**: 2 fixes. (1) The 4b-iii merge+delete item
+  had no checkbox marker (bare Progress Log bullet) — invisible to backlog regen despite being a real, well-scoped,
+  now-gate-cleared item; converted to a proper `- [ ]` todo. (2) The top-of-doc banner still said "Status: draft — NOT
+  dispatched" contradicting the frontmatter's `status: active` and the doc's own extensive DONE history — corrected.
+  Both self-verified via direct read/grep (mechanical, no adversarial pair needed).

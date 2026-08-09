@@ -77,8 +77,8 @@ context_scope:
 > doc-inventory/index files). Clear to dispatch. Paired finalize sibling:
 > `sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md`.
 
-**This is now an AO-dispatched plan (`assigned_vm: planning`).** It scopes the work AND is now the dispatch target —
-the 5 implementation checkboxes below are the AO backlog content.
+**This is now an AO-dispatched plan (`assigned_vm: planning`).** It scopes the work AND is now the dispatch target — the
+5 implementation checkboxes below are the AO backlog content.
 
 ## Why this is needed (not just "run the strategy backtest again")
 
@@ -114,10 +114,25 @@ CLI wiring, same shape as the 3 domains that already have it.
 - [ ] [SCRIPT] P3. Add a hermetic test asserting `run_sports_backtest` produces a non-trivial `execution_alpha_bps` (per
       `backtest-groups.md`'s Group-C output contract) against the fixture data, proving the harness actually measures
       something (not just that it runs).
-- [ ] [DESIGN] P3. Once the harness runs, decide whether it belongs in the routine backtest-groups verification surface
-      (`docs/BACKTESTS.md` — currently DEAD per the sibling investigation's finding that its documented sports
-      invocation was deleted at `strategy-service@fe2e0c7a`) or stays a manually-invoked one-off given sports is
-      intentionally backtest-only / not on the live-mode critical path.
+- [ ] [DESIGN] P3. Once the harness runs, decide whether it belongs in a routine execution-service verification surface
+      or stays a manually-invoked one-off given sports is intentionally backtest-only / not on the live-mode critical
+      path. **Correction to this todo's original premise** (confirmed live, 2026-08-09): `docs/BACKTESTS.md` is not an
+      execution-service doc and is not dead — it lives at `strategy-service/docs/BACKTESTS.md`, is current, and already
+      lists `run_sports_arb_backtest.py` (Sports, cross-book arbitrage) alongside `run_cefi_backtest.py`/
+      `run_tradfi_backtest.py`/`run_defi_backtest.py`. That doc documents strategy-service's Group-B "portable
+      backtests" — standalone, fixture-driven scripts under `strategy-service/scripts/` — a different surface from THIS
+      todo's actual target, execution-service's Group-C `backtest_domains.py` CLI functions
+      (`run_cefi_backtest`/`run_tradfi_backtest`/`run_defi_backtest`, the ones Todo 1 above mirrors to add
+      `run_sports_backtest`). Checked execution-service's own `docs/` and `specs/` (incl.
+      `BACKTEST_QUICKSTART.md`/`BACKTEST_DEPLOYMENT.md`): none reference these 3 domain-runner function names — there is
+      currently no documented verification surface for the Group-C CLI in execution-service at all, so there is no
+      existing sibling entry to extend. Decide instead: (a) create one (e.g. a new
+      `execution-service/docs/BACKTEST_DOMAINS.md` covering all 4 Group-C runners including the new
+      `run_sports_backtest`), or (b) leave it a manually-invoked one-off — record which and why. (Root cause of the
+      original error: the archived investigation this todo cites conflated two separate facts — strategy-service's
+      BACKTESTS.md invocation WAS dead at investigation time via `strategy-service@fe2e0c7a`, since resurrected by
+      `strategy-service@9a7de7f8`/`@42e77acf` — with execution-service having no equivalent doc at all; adversarially
+      verified via independent refuter + confirmer before this correction.)
 
 ## Open questions for operator sign-off before implementation dispatches
 
@@ -154,17 +169,23 @@ CLI wiring, same shape as the 3 domains that already have it.
   now-answered bullets. Closes round-5 sports item 2. The 5 `[BACKEND]/[DESIGN]/[SCRIPT]` implementation checkboxes
   remain open (real code not yet shipped) — left unchanged per this corpus's evidence-backed-completion rule.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: **RECLASSIFY → planning.** With the operator-question
-  resolution above, every prior pass's KEEP-NA rationale (2026-07-30/08-07: "self-declared scope note... an
-  established, still-unanswered gate") no longer holds — the doc's own gate is answered. Flipped
-  `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`, kept `assigned_role:
-  backend_engineer` (ruling-confirmed). Conflict-check (§3 of `ao-dispatch-batch-naming-and-conflict-check.md`): no
-  other active `assigned_vm: planning` doc in `parent_epic: sports_master` claims `run_sports_backtest`/
-  `SportsMatchingEngine` ground (`sports_taxonomy_p3_consumers_2026_08_08.md` references this doc but its own Todos
-  don't touch execution-service's backtest CLI); no sibling batch/finalize doc claims it either (checked batch9/batch10,
-  both pre-date today's ruling and both explicitly cite the now-resolved craft-split/SportsMatchingEngine forks as their
-  reason for excluding this doc). Todo 3's remaining `(a) vs (b)` fork is also now resolved by the same ruling (delete
-  `SportsMatchingEngine`) — annotated inline on that todo rather than flipped `[x]` (no commit ships the deletion yet,
-  per the evidence-backed-completion rule). Todo 5 (docs/BACKTESTS.md placement) is the one item the ruling doesn't
-  address; left as a real judgment call for the worker/finalize pass to resolve via precedent (do the other 3 domain
-  runners' CLIs appear in that surface?) rather than blocking dispatch of the other 4 bounded todos on it. Paired
-  finalize sibling authored: `sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md`.
+  resolution above, every prior pass's KEEP-NA rationale (2026-07-30/08-07: "self-declared scope note... an established,
+  still-unanswered gate") no longer holds — the doc's own gate is answered. Flipped `assigned_vm: NA → planning`,
+  `execution_scope: local-only → orchestrator-agent`, kept `assigned_role: backend_engineer` (ruling-confirmed).
+  Conflict-check (§3 of `ao-dispatch-batch-naming-and-conflict-check.md`): no other active `assigned_vm: planning` doc
+  in `parent_epic: sports_master` claims `run_sports_backtest`/ `SportsMatchingEngine` ground
+  (`sports_taxonomy_p3_consumers_2026_08_08.md` references this doc but its own Todos don't touch execution-service's
+  backtest CLI); no sibling batch/finalize doc claims it either (checked batch9/batch10, both pre-date today's ruling
+  and both explicitly cite the now-resolved craft-split/SportsMatchingEngine forks as their reason for excluding this
+  doc). Todo 3's remaining `(a) vs (b)` fork is also now resolved by the same ruling (delete `SportsMatchingEngine`) —
+  annotated inline on that todo rather than flipped `[x]` (no commit ships the deletion yet, per the
+  evidence-backed-completion rule). Todo 5 (docs/BACKTESTS.md placement) is the one item the ruling doesn't address;
+  left as a real judgment call for the worker/finalize pass to resolve via precedent (do the other 3 domain runners'
+  CLIs appear in that surface?) rather than blocking dispatch of the other 4 bounded todos on it. Paired finalize
+  sibling authored: `sports_group_c_execution_backtest_harness_2026_07_21_finalize_2026_08_08.md`.
+- **plan_reconciler 2026-08-09 (agt-c3a27f, slot 13, prediction tranche)**: todo 5's premise was wrong on multiple
+  counts — `docs/BACKTESTS.md` doesn't exist in execution-service (never has); it's a strategy-service doc, current,
+  already covers sports, and documents a different backtest surface (Group-B scripts) than this todo's actual target
+  (Group-C CLI functions). Corrected the todo text with the real facts + a concrete decision path. Adversarially
+  verified (independent refuter + confirmer, both non-grace, root cause traced to a stale archived investigation
+  conflating two separate facts) before applying.
