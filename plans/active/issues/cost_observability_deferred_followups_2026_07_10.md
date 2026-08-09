@@ -140,3 +140,12 @@ context_scope:
   fix yet (batch2 hasn't shipped/been approved) — revisit once it has to close the 4 P3 checkboxes with a citation
   instead of leaving them open.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **round-9 combined RECLASSIFY + satellite-extraction sweep (2026-08-09)**: re-read this doc end to end (5 open
+  items). Stale-note correction: `ui_satellite_ao_dispatch_batch2_2026_08_08.md` (which carries the 4 unscheduled P3
+  items as its 1 combined todo) is no longer "pending operator approval" — its own Progress Log shows it was approved
+  and flipped `status: active` the same day it was drafted (2026-08-08). These 4 items are KEEP-NA-STALE
+  (already-duplicated in an active AO plan, not yet shipped) — batch2's own finalize plan
+  (`ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md` todo 1) already owns flipping these 4 checkboxes with a
+  shipped-sha citation once batch2's todo lands; not pre-flipped here without that evidence. The business-context
+  enrichment item (item 1) remains correctly NOT-BOUNDED per the 2026-08-08 scoping finding (176 launcher scripts, ~9
+  through the shared choke point) — no change. Doc stays NA as a whole.

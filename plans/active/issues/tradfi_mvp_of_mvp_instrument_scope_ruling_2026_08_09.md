@@ -145,17 +145,24 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **RECURRENCE CONFIRMED LIVE A SECOND TIME (2026-08-09, later same day)** — still not fixed. Fix
-      `wave_launcher.py`'s `running_cell_keys` dedup check so it matches the per-single-root CME dispatch candidate keys
-      it computes internally, instead of only matching a VM-name-parsed "root group" label — currently causes CME
-      launches to duplicate 3-13x per shard (measured: 167 stray VMs from one erroneous wave, per "Disposition of
-      currently-running infra" above). **Confirmed AGAIN live** (instrument-scope-diff session, 2026-08-09):
-      `-eth-eth-     2022-*` and `-met-met-2023-*` were each observed running as TWO separate VMs ~3h apart for the
-      identical shard — killed the newer (redundant) instance of each pair as a stopgap
-      (`gcloud compute instances delete`, `asia-northeast1-c`), keeping the earlier-started original. **This is a
-      stopgap, not a fix** — the root cause in `wave_launcher.py` is still unaddressed and will keep recurring on every
-      future gap-scan wave; not attempted this session (out of scope for the instrument-scope-diff task), still the
-      top-priority follow-up.
+- [x] ✅ [SCRIPT] P1. **RECURRENCE CONFIRMED LIVE A SECOND TIME (2026-08-09, later same day)** — was not fixed as of
+      that check. Fix `wave_launcher.py`'s `running_cell_keys` dedup check so it matches the per-single-root CME
+      dispatch candidate keys it computes internally, instead of only matching a VM-name-parsed "root group" label —
+      currently causes CME launches to duplicate 3-13x per shard (measured: 167 stray VMs from one erroneous wave, per
+      "Disposition of currently-running infra" above). **Confirmed AGAIN live** (instrument-scope-diff session,
+      2026-08-09): `-eth-eth-     2022-*` and `-met-met-2023-*` were each observed running as TWO separate VMs ~3h
+      apart for the identical shard — killed the newer (redundant) instance of each pair as a stopgap
+      (`gcloud compute instances delete`, `asia-northeast1-c`), keeping the earlier-started original.
+      **FIXED 2026-08-09 (round-9 combined RECLASSIFY + satellite-extraction sweep, found already-shipped by a
+      concurrent session)**: `deployment-service@bcf55c781f98f3834298252c443ed5ffa6f42a35` ("fix(tradfi): CME
+      --only-root VMs get a plain single-root name, closing the wave-launcher dedup gap", slot-4·laptop,
+      2026-08-09T10:24:07+01:00) — the fix is on the LAUNCHER side, not `wave_launcher.py` itself:
+      `launch-tradfi-bf-cme-ohlcv-1m.sh`'s single-root mode now names the VM
+      `tradfi-bf-cme-ohlcv-1m-${root}-${year}-${run_ts}` (no `g${idx}-${first}-${last}` bundling artifact) so
+      `wave_launcher.py`'s existing `_VM_NAME_RE`/`running_cell_keys` regex parses the clean root string correctly and
+      recognizes a running single-root VM as covering its candidate — closing the gap without needing to touch
+      `wave_launcher.py` itself. Verified `git merge-base --is-ancestor bcf55c781... origin/live-defi-rollout` = YES
+      (real ancestor, not a local-only peer commit).
 - [x] ✅ [DATA] P1. **NEW FINDING (2026-08-09)** — `tradfi-bf-nyse-ohlcv-1m-2023-d01-*` was observed RUNNING live,
       violating the "equities = 2026 ONLY" scope. **Resolved itself** — by the instrument-scope-diff session
       (2026-08-09, several hours later), this VM was no longer running (self-deleted on completion or reaped; not
@@ -178,7 +185,11 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
       macro backfill reportedly ran 2026-07-30 per
       `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` — this may already be a verify-only task).
       Then launch/verify full-history backfills for the CBOE Treasury yield-curve INDEX and KRW/USD (existing launchers,
-      manual invocation per "Known relaunch gotchas"), and DXY once its launcher exists (todo above).
+      manual invocation per "Known relaunch gotchas"), and DXY once its launcher exists (todo above). **EXTRACTED
+      2026-08-09 (round-9 combined RECLASSIFY + satellite-extraction sweep) →
+      `/plans/active/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1** — all 4 cells are Yahoo/FRED-sourced,
+      not gated by the open Databento billing-suspension issue; the DXY launcher shipped same-day (see todo above,
+      now `[x]`). Track completion there, not here.
 - [x] ✅ [DOCS] P2. **NEW (2026-08-09)** — propagate this scope update to `/codex/02-data/mvp-scope-canonical.md`,
       `/codex/02-data/cross-asset-canonical-target-ssot.md`, and `/codex/09-strategy/mvp-universe-per-asset-group.md`.
       **Shipped `unified-trading-pm@d5d0b75cc` / `@22d0a07d0` / `@ecddf76ad`**. The closeout doc
@@ -241,3 +252,12 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
   (`tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`) checked per operator question: still
   `status: draft`, not in the catalogue, blocked on an unresolved Cloudflare-bypass design decision — left as-is,
   already correctly tracked.
+- **round-9 combined RECLASSIFY + satellite-extraction sweep (2026-08-09)**: re-read this doc end to end (2 remaining
+  open todos). The `wave_launcher.py` CME dedup fix (todo 1, flagged by this doc's own earlier na-eligibility-audit
+  entry as "a RECLASSIFY candidate for a follow-up pass that reads `wave_launcher.py` directly") was found ALREADY
+  SHIPPED by a concurrent session (`deployment-service@bcf55c781`, confirmed ancestor of `origin/live-defi-rollout`)
+  — flipped `[x]` with evidence above; the fix landed on the VM-naming side, not `wave_launcher.py` itself. The
+  FRED/CBOE/KRW/DXY backfill-verify todo (todo 2) extracted into
+  `/plans/active/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (Yahoo/FRED-sourced, not
+  Databento-billing-gated). This doc stays `assigned_vm: NA` as an SSOT ruling doc — both remaining action items are
+  now tracked/closed elsewhere.

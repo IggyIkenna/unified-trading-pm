@@ -125,3 +125,12 @@ context_scope:
   Job/scheduler outright) is deliberately time-gated ("once confirmed stable for a few days"), not blocked on anything
   external; genuine unscheduled follow-up.
 - **context-scout 2026-08-09**: populated context_scope (4 entries).
+- **round-9 combined RECLASSIFY + satellite-extraction sweep (2026-08-09)**: RECLASSIFIED `assigned_vm: NA ->
+  planning`. The sole open item's time-gate ("once confirmed stable for a few days") is now live-confirmed: the
+  scheduler has been `PAUSED` and the Job has had ZERO executions for ~2 days since the last in-flight execution
+  drained (`2026-08-07T14:50:53Z` -> now), per fresh `gcloud` checks this run — evidence added to the todo above.
+  Conflict-checked: no other active plan/issue tracks deletion of `uts-prod-alerting-paging`/`-cron` (2 incidental
+  mentions found, `june_2026_vintage_audit_findings_2026_07_27.md` and
+  `issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md`, both read-only context references, not
+  trackers). Finalize twin authored:
+  `alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09.md`.

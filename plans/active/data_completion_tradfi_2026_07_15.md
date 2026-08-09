@@ -278,6 +278,13 @@ context_scope:
                                                                                                                                                                                                                                       flagged here rather than silently absorbed for whoever re-triages this axis next.
                                                                                                                                                                                                                                       **NOTE (na-eligibility-audit 2026-07-27, now executed — see above)**: this manifest-verify item was claimed in
                                                                                                                                                                                                                                       `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` (todo 8); see that plan's checkbox for shipped evidence.
+**SCOPE GATE (round-9 combined RECLASSIFY + satellite-extraction sweep, 2026-08-09)**: the remaining "needs an
+actual fetch attempt" work this item describes — filling the NASDAQ/NYSE `expected_unattempted` remainder for years
+OTHER than 2026 — is now explicitly `BLOCKED-OPERATOR-DECISION` per
+`/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s same-day ruling: immediate equities
+backfill work is narrowed to **year 2026 only**, with "completing the full historical equities corpus to 100%" (this
+item's 2023-2025 remainder) explicitly gated until November 2026. Do not dispatch further NASDAQ/NYSE multi-year
+backfill off this item before then — cite that ruling doc, not this checkbox, as the current gate.
 
 - [ ] [CODE] P1. ⑦ tradfi could-exist denominator seed — build the `--catalog-path` parquet from the tradfi IS catalog
       (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
@@ -907,3 +914,11 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
   integration test" sub-part is a MISCLASSIFIED_LIKELY_AO_ELIGIBLE candidate (low confidence -- the backfill half is not
   actually runnable, per `eia_adapter.py`'s own "not yet registered" docstring / Finding M-2 above) but not promoted
   this pass. Doc stays NA.
+- **round-9 combined RECLASSIFY + satellite-extraction sweep (2026-08-09)**: re-read all 15 open items. No new
+  RECLASSIFY or satellite-extraction candidates found (the majority remains genuine operator/credential/design-gated,
+  consistent with 8 prior na-eligibility-audit passes). One conflict-check finding applied: the NASDAQ/NYSE equities
+  COVERAGE GAP item's remaining fetch-attempt work is now scope-gated to November 2026 for years other than 2026, per
+  the same-day `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` ruling — citation added above. The
+  `⑫ FOLLOW` phantom-reconcile item (already `[x]`, delegated) was re-checked and confirmed its real open tracker
+  lives in `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (a different, out-of-candidate-list doc this
+  round) — not re-extracted here to avoid a double-dispatch. Doc stays NA.
