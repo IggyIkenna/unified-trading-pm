@@ -200,3 +200,30 @@ in-flight VMs (which stay hands-off per the separate staleness-check rule).
   staleness-check posture as before). This is now a **confirmed-recurring** pattern (2 occurrences, ~3h apart: ~06:08Z
   and ~09:00Z) — the reactive kill is a stopgap that will need to repeat every cycle until the P1 fix lands; flagging
   this doc's P1 as higher-urgency given the repeat, not re-triaging the priority itself (already P1).
+- **2026-08-09 ~12:47Z, slot-28 (dispatched todo 2 — determine whether the relaunch/duplicates should be individually
+  killed)**: root-caused the actual mechanism (prior entries hadn't identified it):
+  `deployment-service/terraform/gcp/ wave_launcher_scheduler.tf` wires this as a **GCP Cloud Scheduler job
+  (`0 */3 * * *` UTC) → Cloud Run Job**, not a local cron/systemd timer on the `planning` host — confirmed no matching
+  systemd timer (`systemctl list-timers --all`, 26 timers, none named wave/tradfi), no crontab entry visible, no GH
+  Actions workflow reference. The observed local `ps aux` shell-wrapper PIDs in the prior two entries are the Cloud Run
+  Job's container process, which happens to be reachable/visible from this shared host (same GCP project ambient
+  credentials) — the 3h recurrence cadence (~06:08Z/~09:00Z/now) matches the Terraform schedule exactly, confirming this
+  IS the wired scheduler, not an unknown rogue process. **Current live state (12:47Z), no wave_launcher process running
+  (this tick already completed and exited — one-shot Cloud Run Job task, not a persistent daemon)**: 27 `tradfi-bf-*`
+  VMs running — the highest count observed across all entries in this doc. Breakdown: 2 confirmed CME duplicate pairs
+  (same root+year, two different launcher naming shapes both RUNNING: `cme-ohlcv-1m-es-2020` +
+  `cme-ohlcv-1m-g01-es-es-2020`; `cme-ohlcv-1m-met-2023` + `cme-ohlcv-1m-g01-met-met-2023`) + 4 non-duplicated CME
+  shards (mbt-2024, met-2024, met-2025 — met-2025 is a NEW out-of-scope year not seen in prior entries) + 19
+  out-of-scope equities VMs: NASDAQ 2023(×3)/2024(×4)/**2025(×4, NEW — first appearance of 2025 in this doc)** + NYSE
+  2023(×4)/2024(×5). The out-of-scope footprint is GROWING each cycle (12→18-19→27), not stabilizing, and has now spread
+  to a 3rd out-of-scope year (2025) beyond the ruling doc's original 2023/2024 observation. **Did NOT kill anything this
+  pass** (no process is currently live to kill; the reactive-kill stopgap only ever catches the process mid-run, and per
+  the 3-signal staleness rule + this doc's own repeated "operator sign-off needed" framing, individually killing the 19+
+  already-running out-of-scope VMs is a judgment call this session should not make unilaterally, even though I now have
+  the technical means to (the ambient `unified-trading-sa` GCP identity that ran `gcloud compute instances list` above
+  also holds `cloudscheduler.admin` + `compute.admin`, so pausing the Cloud Scheduler job and/or deleting the VMs are
+  both mechanically self-service per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` —
+  deliberately not exercised here because the gap is a SCOPE/AUTHORIZATION judgment call, not a permission gap that
+  doc's self-service rule covers). Filing a `/blocked` question now (see next entry) since three independent occurrences
+  (06:08Z, 09:00Z, this one) have each independently deferred the actual pause-or-fix decision without ever routing it
+  to a real operator answer — the passive doc-logging pattern was not surfacing this for a decision.
