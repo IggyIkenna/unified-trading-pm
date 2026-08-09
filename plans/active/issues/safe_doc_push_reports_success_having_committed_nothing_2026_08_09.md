@@ -94,10 +94,11 @@ failure mode `/codex/12-agent-workflow/commit-push-flip-rule.md` exists to preve
       (`git cat-file -e HEAD:<path>`). A path absent from HEAD must fall through to a real failure, never a success.
       Done-when: a test passes a new untracked file with staging forced to fail and asserts a NON-zero exit. —
       unified-trading-pm@963f8e670
-- [ ] [SCRIPT] P1. Make the success claim self-verifying end to end: after the commit step, assert
+- [x] ✅ [SCRIPT] P1. Make the success claim self-verifying end to end: after the commit step, assert
       `git log --oneline -1 -- <each named file>` is non-empty, and after the push assert
       `git branch -r --contains HEAD` includes the target branch. Report success ONLY on those verified facts, never on
-      an intermediate command's exit code. Done-when: a test with a stubbed no-op commit asserts a non-zero exit.
+      an intermediate command's exit code. Done-when: a test with a stubbed no-op commit asserts a non-zero exit. —
+      unified-trading-pm@e169367bf
 - [ ] [SCRIPT] P2. On the `index.lock` contention path specifically, distinguish "could not stage" from "nothing to
       stage" in the log line — the current wording ("nothing staged for the named files") reads as the benign case when
       it is actually a hard failure. Done-when: the two produce distinct messages and distinct exit codes.
@@ -118,3 +119,14 @@ failure mode `/codex/12-agent-workflow/commit-push-flip-rule.md` exists to preve
   pre-fix script and passes (non-zero exit, no false-success message) against the fix; a control case confirms the
   genuine already-landed-tracked-file short-circuit still works. Full existing suite
   (`test_safe_doc_push_failure_classification.bats`) still green. unified-trading-pm@963f8e670.
+- 2026-08-09 (slot 11) — Todo 2 shipped: added `verify_files_in_history()` (`git log --oneline -1 -- <path>`
+  non-empty per named file) and `verify_push_landed()` (`git branch -r --contains HEAD` lists `origin/${BRANCH}`),
+  gated on both instead of trusting an intermediate command's exit code alone. Applied to all four success
+  declarations: the pre-commit "already matches HEAD" fallback, the post-commit "nothing to commit" fallback, a
+  real `git commit` exit 0 (right after `committed=true`), and `git push` exit 0. A verified-false claim now exits
+  8 (documented in the script's EXIT CODES header) instead of printing a false ✅. New suite
+  `tests/test_safe_doc_push_self_verifies_end_to_end.bats`: a stubbed no-op `git commit` (exit 0, creates no real
+  commit) and a stubbed no-op `git push` (exit 0, doesn't update the remote-tracking ref) both now exit 8 instead
+  of falsely reporting success; a genuine end-to-end success still verifies and prints the branch-contains proof.
+  Full existing suite (`test_safe_doc_push_untracked_file_never_false_success.bats`,
+  `test_safe_doc_push_failure_classification.bats`) still green (12/12 total). unified-trading-pm@e169367bf.
