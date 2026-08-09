@@ -217,12 +217,15 @@ drift_direction: advance-code
       `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (CF-5 item). Done when: non-sports-asset_group
       writers route genuine fetch-failures to `attempted_failed`, not `empty_confirmed`, and emit typed
       `EmptyConfirmedReason` values at every write call site; a regression test covers both.
-- [ ] [REVIEW] P2. Land the already-committed bar-edge fallback-to-open fix (`instruments-service@20a92886`), currently
-      blocked from quickmerge only by a pre-existing IS quality-gates failure
-      (`test_sports_fixture_stamps_canonical_instrument_id`, repo-blocker RB-d3bb9020). Repo: instruments-service.
+- [ ] [REVIEW] P2. Land the bar-edge fallback-to-open fix — the source doc's own text claims it was committed as
+      `instruments-service@20a92886`, but that SHA does NOT resolve to a real commit in any local clone (verified
+      2026-08-09) — treat the "already committed" claim as unverified, not fact: re-derive whether the fix (raise
+      on unsupported timeframe instead of silently falling to the open edge, in `ccxt_adapter.py` and any sibling
+      adapter) actually exists on `live-defi-rollout` today; if not, (re)implement it. Repo: instruments-service.
       Source: `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (bar-edge-fallback item). Done when: IS
-      `quality-gates.sh` is confirmed green (or RB-d3bb9020's current status is re-verified); if green, the
-      already-committed fix is quickmerged; if still blocked, the checkbox is left open with a freshly-dated status note
+      `quality-gates.sh` is confirmed green (or RB-d3bb9020's current status is re-verified); the fix is confirmed
+      present with a REAL, resolvable commit SHA cited (or freshly implemented + committed); if still blocked, the
+      checkbox is left open with a freshly-dated status note
       (not silently re-committed).
 - [ ] [CODE] P3. Swap the hand-maintained MTDS `_instruments_metadata.py` venue-prefix-map mirror for a direct import of
       UAC's `VENUE_PREFIX_TO_PROTOCOL` (removing the duplicate mapping); also fix the stale comment in
