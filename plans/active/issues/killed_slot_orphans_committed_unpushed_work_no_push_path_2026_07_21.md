@@ -23,8 +23,8 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, self-healing, watchdog, git-drift, orphaned-work, recovery-gap, liveness]
 related:
   [
-    plans/active/ao_uniform_agent_liveness_contract_2026_07_20.md,
-    plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
+    /plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md,
+    /plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
