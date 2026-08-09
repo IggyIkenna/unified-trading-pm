@@ -105,11 +105,24 @@ context_scope:
       manifest shows `expected_unattempted` for every sampled ticker; `NASDAQ:EQUITY:HOOD-USD` 2026-07-20 `ohlcv_15m`
       sample = 49 rows, 0 NaN OHLCV. Full evidence: `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
       Progress Log, 2026-08-09 entry.
-- [ ] [UAC] P0. **Map the index perps** (`SPXUSDT`/`NAS100`/`SPYUSDT`/`XAUUSDT`) to their CME index-future + Databento
-      index canonical equivalents in unified-api-contracts, carrying the scale/multiplier (Binance SPX-perp is a SCALED
-      micro unit — sizing MUST use the multiplier for the ES hedge ratio). Repo: unified-api-contracts. Source:
+- [x] ✅ [UAC] P0. **Map the index perps** (`SPXUSDT`/`NAS100`/`SPYUSDT`/`XAUUSDT`) to their CME index-future +
+      Databento index canonical equivalents in unified-api-contracts, carrying the scale/multiplier (Binance SPX-perp is
+      a SCALED micro unit — sizing MUST use the multiplier for the ES hedge ratio). Repo: unified-api-contracts. Source:
       `cefi_consolidated_closeout_2026_07_18.md` Track 0 (line 158, cites source Phase 1c). **Done when**: all 4 index
-      perps have a canonical mapping + multiplier committed, `quality-gates.sh` green.
+      perps have a canonical mapping + multiplier committed, `quality-gates.sh` green. — **DONE 2026-08-09** —
+      unified-api-contracts@e973c62d: new `canonical/crosscutting/index_commodity_perp_hedge_link.py`
+      (`INDEX_COMMODITY_PERP_HEDGE_LINK` dict + `hedge_link_for()` resolver, mirrors `crypto_equity_link.py`'s shape),
+      wired into the package `__init__.py`, 12 new unit tests in `tests/unit/test_index_commodity_perp_hedge_link.py`.
+      `quality-gates.sh` green (basedpyright/ruff/tests all pass). **2 of the 4 requested symbols were stale, corrected
+      with live evidence (Binance `fapi/v1/exchangeInfo`, 2026-08-09)**: `SPXUSDT` is now the `SPX6900` meme coin
+      (`underlyingType=COIN`, `underlyingSubType=['Meme']`) — no longer tracks the S&P 500 (confirms, not just repeats,
+      the existing caveat already in `cefi_instrument_universe.py`); no `NAS100`/`NAS100USDT` symbol exists on Binance
+      at all. Shipped mapping: `SPY→ES` ($50/pt, S&P500), `QQQ→NQ` ($20/pt, Nasdaq-100 — substitute for the nonexistent
+      NAS100), `XAU→GC` (100 troy oz, Gold); `SPX`/`NAS100` recorded in `EXCLUDED_INDEX_COMMODITY_PERP_BASES` with the
+      evidenced reason (mirrors the "found/not-found, cite the evidence" pattern this batch's todo 7 already uses)
+      rather than silently mapped or silently dropped. `contract_size` values are published static CME contract specs,
+      not a live-computed hedge ratio (that stays in strategy-service). Hedge-root exchange/dataset/underlying resolved
+      via the existing `TRADFI_ROOTS` SSOT (`canonical/domain/derivatives/tradfi_roots.py`), not duplicated.
 - [ ] [SCRIPT] P1. **Backfill the 3 KRX stocks** (HYUNDAI/SAMSUNG/SK-Hynix cash-twins) **via guardrailed Yahoo**: 1d
       since 2019-01-01 + 1h trailing 730d + 15m trailing 89d (range=60d) + 1m 28-day-chunked. Repos: deployment-service,
       market-tick-data-service. Source: `cefi_consolidated_closeout_2026_07_18.md` Track 0 (line 168, cites source Phase
