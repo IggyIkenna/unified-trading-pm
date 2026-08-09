@@ -41,6 +41,7 @@ source: >-
   Drafted alongside prediction_satellite_ao_dispatch_batch8_2026_08_08.md, per task_template.md §4's
   finalize-plan-coverage rule — every AO-dispatched plan needs a companion gated finalize plan.
 assigned_role: data_engineering
+effort: high
 sequential: true
 drift_direction: advance-code
 context_scope:

@@ -5,20 +5,20 @@ title:
   — a routine na-eligibility-audit Progress Log marker (and a genuine cross-doc conflict finding) could not be recorded
   there
 summary: >-
-  `plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` is exactly
-  1000 lines (`wc -l`). `check_line_caps.sh`'s `PLAN_HARD_CAP=1000` check uses `-gt` (strictly greater than), so the
-  file itself is not currently failing the gate — but it cannot absorb even one more line without doing so at the next
-  commit that touches it. Confirmed live during a 2026-08-08 na-eligibility-audit (tradfi tranche) Phase 3 apply pass: a
-  21-line edit (a `related:` cross-reference + a dated Progress Log marker) pushed the file to 1021 and was rejected by
-  `check_line_caps.sh` in SCOPED mode as a NEW HARD violation; the small-marker-append exception (`check_line_caps.sh`'s
-  own 2026-08-02 operator-ruling carve-out) does NOT cover this case because it only applies when the file is ALREADY
-  over cap before the commit — a file sitting exactly AT the 1000-line boundary has zero headroom for even a 1-line
-  addition, and the carve-out's own `PRE_COMMIT_LINES -gt PLAN_HARD_CAP` check can never be true for a doc starting at
-  exactly 1000. This is the SAME failure class as
+  `plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` is
+  exactly 1000 lines (`wc -l`). `check_line_caps.sh`'s `PLAN_HARD_CAP=1000` check uses `-gt` (strictly greater than), so
+  the file itself is not currently failing the gate — but it cannot absorb even one more line without doing so at the
+  next commit that touches it. Confirmed live during a 2026-08-08 na-eligibility-audit (tradfi tranche) Phase 3 apply
+  pass: a 21-line edit (a `related:` cross-reference + a dated Progress Log marker) pushed the file to 1021 and was
+  rejected by `check_line_caps.sh` in SCOPED mode as a NEW HARD violation; the small-marker-append exception
+  (`check_line_caps.sh`'s own 2026-08-02 operator-ruling carve-out) does NOT cover this case because it only applies
+  when the file is ALREADY over cap before the commit — a file sitting exactly AT the 1000-line boundary has zero
+  headroom for even a 1-line addition, and the carve-out's own `PRE_COMMIT_LINES -gt PLAN_HARD_CAP` check can never be
+  true for a doc starting at exactly 1000. This is the SAME failure class as
   `/plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` (filed one day earlier for a
   different doc in a different tranche) — but that doc was ALSO at-cap; this is now the SECOND independent occurrence,
   suggesting a doc sitting exactly at the 1000-line boundary (not yet over) is not a rare edge case in this corpus.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi, cross-cutting]
 stage: [meta]
@@ -27,7 +27,7 @@ scope: [engineer]
 tags: [plan-hygiene, line-caps, progress-log, na-eligibility-audit, doc-maintenance]
 related:
   [
-    /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md,
     /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
     /plans/active/task_template.md,
@@ -56,7 +56,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/active/task_template.md,
     scripts/plan-hygiene/check_line_caps.sh,
   ]
@@ -66,13 +66,16 @@ superseded_by:
 
 # tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md is at the 1000-line hard cap
 
+> **ARCHIVED 2026-08-09** — obsolete-by-archival: the target doc was archived wholesale rather than trimmed (its own
+> sole open todo got extracted elsewhere the same day, leaving it 0-open-todos). See this doc's own Progress Log.
+
 ## What I found
 
-`plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` is exactly 1000
-lines. Its sole open todo (line 247, `[DESIGN] P2`, "RULED 2026-08-07 — YES, build it, MDPS-owned") sits well before its
-`## Progress Log` section (line 815-1000, ~185 lines, dated entries starting 2026-07-15) — unlike the prediction-tranche
-precedent below, the open item here is cleanly separated from the historical narrative, which should make a safe
-extraction considerably easier to verify.
+`plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` is
+exactly 1000 lines. Its sole open todo (line 247, `[DESIGN] P2`, "RULED 2026-08-07 — YES, build it, MDPS-owned") sits
+well before its `## Progress Log` section (line 815-1000, ~185 lines, dated entries starting 2026-07-15) — unlike the
+prediction-tranche precedent below, the open item here is cleanly separated from the historical narrative, which should
+make a safe extraction considerably easier to verify.
 
 **A genuine cross-doc conflict finding could not be recorded because of this cap.** The 2026-08-08 na-eligibility-audit
 Phase-1 classification pass found that
@@ -121,14 +124,15 @@ to confirm the doc is back under the soft cap. Once extracted, add the
 `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` cross-reference to the doc's `related:` list and a
 Progress Log entry recording the conflict finding above (both described in full here in the meantime).
 
-- [ ] [DOC] P2. Extract the oldest fully-closed dated Progress Log section(s) from
-      `plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` into a
-      dated `_history_2026_08.md` archive doc per the Recommended fix above, verifying the extraction doesn't remove
-      context the line-247 open todo depends on. Then add the
-      `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` cross-reference (`related:` list) and record this
-      doc's cross-doc conflict finding (see "What I found" above) as a Progress Log entry on the now-under-cap doc.
-      Done-when: `wc -l` on the source doc is back under 500 (the soft cap), `check_line_caps.sh` still passes, the open
-      todo's text is unchanged, and both the cross-reference and the conflict finding are recorded on the source doc.
+- [x] ✅ [DOC] P2. **OBSOLETE-BY-ARCHIVAL 2026-08-09** — the target doc's own sole open todo (line-247 `[DESIGN] P2`)
+      was extracted the same day to `/plans/active/tradfi_satellite_ao_dispatch_batch9_2026_08_09.md`, leaving 0 open
+      todos; the target doc was archived wholesale to
+      `/plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`
+      (cicd escalation agt-558c62, `check_archive_candidates.sh` ratchet) rather than trimmed in place — the
+      line-cap-relief extraction this todo called for no longer has a target (an archived doc isn't subject to the
+      active-corpus na-eligibility-audit re-read cost this issue was filed to avoid). The cross-doc conflict finding
+      above (against `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`) is preserved verbatim in this
+      still-open issue doc's own "What I found" section and in the target doc's now-archived Progress Log — not lost.
       Repo: unified-trading-pm.
 
 ## Progress Log
@@ -139,6 +143,12 @@ Progress Log entry recording the conflict finding above (both described in full 
   (KEEP-NA, valid, 1 open item) stands independently of this line-cap issue; only the Phase-0 incremental-skip
   optimization and the cross-doc conflict finding's visibility ON the source doc are lost until this is fixed.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **2026-08-09 (cicd escalation agt-558c62, ldr_qg_failure gate fix)**: target doc's sole remaining open todo got
+  extracted to `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md` (unrelated batch-dispatch work, same day), leaving it
+  0-open-todos and archive-eligible — archived wholesale instead of trimmed. This issue's own todo is now moot; flipped
+  obsolete-by-archival, status `resolved`. Gated finalize plan
+  (`tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08_finalize_2026_08_08.md`) unblocked to
+  archive this doc.
 
 ## na-eligibility-audit verdict
 

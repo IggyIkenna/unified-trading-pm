@@ -37,6 +37,7 @@ source: >-
   Per task_template.md §4's finalize-plan-coverage rule — every AO-dispatched plan needs a companion gated finalize
   plan. Authored as part of na-eligibility-audit round7 RECLASSIFY sweep (cefi tranche, batch 3), 2026-08-08.
 assigned_role: data_engineering
+effort: high
 sequential: true
 drift_direction: advance-code
 context_scope:

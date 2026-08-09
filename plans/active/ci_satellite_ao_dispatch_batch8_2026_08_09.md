@@ -34,6 +34,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
 assigned_role: infra
+effort: medium
 sequential: false
 drift_direction: none
 context_scope:

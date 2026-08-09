@@ -40,6 +40,7 @@ source: >-
   (batch4/5/6's finalize plans record the same): `gate_on_depends: true` already machine-holds every task here until
   batch 7's own todo is `done`.
 assigned_role: cicd
+effort: high
 sequential: true
 drift_direction: advance-code
 context_scope:

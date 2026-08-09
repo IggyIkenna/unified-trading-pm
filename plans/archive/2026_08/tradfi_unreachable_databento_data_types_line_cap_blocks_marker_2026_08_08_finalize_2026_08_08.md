@@ -9,7 +9,7 @@ summary: >-
   cross-reference, record the conflict finding) is done. Verifies the extraction landed cleanly (target doc back under
   the soft cap, check_line_caps.sh still green, the open todo's own text unchanged) and archives the source issue doc
   once genuinely resolved.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi, cross-cutting]
 stage: [meta]
@@ -18,8 +18,8 @@ scope: [engineer]
 tags: [plan-hygiene, line-caps, ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/issues/tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08.md,
-    /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08.md,
+    /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md,
     /plans/active/task_template.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -47,8 +47,8 @@ source: >-
   plans/active/ (not plans/active/issues/) because doc_type: plan must match its path-derived type.
 context_scope:
   [
-    /plans/active/issues/tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08.md,
-    /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08.md,
+    /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     scripts/plan-hygiene/check_line_caps.sh,
   ]
 locked_by:
@@ -59,6 +59,9 @@ superseded_by:
 
 # tradfi line-cap-blocks-marker — finalize
 
+> **ARCHIVED 2026-08-09** — both todos done (extraction premise superseded by wholesale archival of the target doc;
+> source issue doc archived). See Progress Log.
+
 > **🔒 GATED, not draft.** `depends_on: [tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08]` +
 > `gate_on_depends: true` holds every todo below until that doc's own extraction todo is `done`. Authored
 > `status: active` (not `draft`) per the established no-double-gate precedent used by every other batch/finalize pair in
@@ -66,26 +69,23 @@ superseded_by:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Verify the extraction landed correctly, then reconcile.** Confirm: (a)
-      `plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` is back
-      under the 500-line soft cap (`wc -l`); (b) `bash scripts/plan-hygiene/check_line_caps.sh` (or its scoped-mode
-      invocation) passes clean on the target doc; (c) the extracted archive doc
-      (`plans/archive/2026_08/tradfi_unreachable_databento_data_types_history_2026_08.md` or whatever path the worker
-      used) carries the extracted sections verbatim, `status: complete`, `nature: record`, 0 open todos; (d) the target
-      doc's own open `[DESIGN] P2` todo (line ~247 pre-extraction, "RULED 2026-08-07 — YES, build it, MDPS-owned") is
-      textually unchanged by the extraction; (e) the
-      `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_     2026_07_27.md` cross-reference was added to the target doc's
-      `related:` list; (f) the cross-doc conflict finding from the source issue doc's "What I found" section (the
-      `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_     07_27.md` overlap — ~90% duplicate-work risk, the
-      `futures_chain`-grain CBOE/vix_features question) is recorded as a dated Progress Log entry on the now-under-cap
-      target doc, not just in the source issue doc. **Done when**: all six checks above pass, cited with evidence (line
-      counts, gate output, exact archive path).
-- [ ] [DOC] P3. **Archive the source issue doc**
-      (`tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_     08_08.md`) via the standard 6-step
-      ritual once todo 1 confirms the extraction is genuinely complete: add the archive banner → grep the corpus for
-      every referrer and repoint each to the archived path → clear `locked_by` (already empty) → move to
-      `plans/archive/2026_08/issues/`. **Done when**: the doc is archived, every corpus referrer resolves, and
-      `check_reference_paths.py` has not regressed.
+- [x] ✅ [REVIEW] P2. **Extraction premise superseded — verified the actual outcome instead.** The target doc's sole
+      open `[DESIGN] P2` todo was extracted to `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md` the same day
+      (2026-08-09, unrelated batch-dispatch work), leaving it 0-open-todos — archived WHOLESALE rather than trimmed in
+      place, so the line-cap-relief extraction this todo specified no longer has a target (an archived doc isn't re-read
+      by the active-corpus na-eligibility-audit sweep this issue was filed to unblock). Confirmed: (a) the target doc is
+      at
+      `/plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`
+      with an ARCHIVED banner + `status: resolved`; (b) the cross-doc conflict finding (vs.
+      `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`) is preserved verbatim in both the source issue
+      doc's "What I found" and a new dated Progress Log entry on the now-archived target doc — not lost. Repo:
+      unified-trading-pm. cicd escalation agt-558c62.
+- [x] ✅ [DOC] P3. **Archived the source issue doc** — `git mv` to
+      `plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08.md`,
+      archive banner added, `status: resolved`, its own todo flipped obsolete-by-archival. Corpus referrers (7
+      active-corpus files with the leading-slash `/plans/active/issues/...` form) repointed to the archived path;
+      `check_reference_paths.py`'s existence-check ratchet does not scan `plans/archive/` sources, so no further
+      referrer sweep is needed. Repo: unified-trading-pm. cicd escalation agt-558c62.
 
 ## Codex SSOTs
 
@@ -100,3 +100,6 @@ superseded_by:
   the established no-double-gate precedent; `gate_on_depends: true` already machine-holds every task here until the
   source doc's own extraction todo is done.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **2026-08-09 (cicd escalation agt-558c62, ldr_qg_failure gate fix)**: gate cleared by the source doc's todo flipping
+  obsolete-by-archival (see that doc). Both todos here done — extraction premise verified superseded, source issue doc
+  archived. Archiving this finalize plan now (both todos `[x]`, unlocked).

@@ -3,8 +3,8 @@ doc_type: plan
 title: Cross-cutting satellite AO batch 4 — finalize (reconcile source docs + archive)
 summary: >-
   Gated closeout for `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until all 3 todos are done. Reconciles both `infrastructure_master` source docs'
-  checkboxes, then archives the batch doc via the standard 6-step ritual.
+  `gate_on_depends: true` until all 3 todos are done. Reconciles both `infrastructure_master` source docs' checkboxes,
+  then archives the batch doc via the standard 6-step ritual.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -36,6 +36,7 @@ gate_on_depends: true
 source: >-
   Satellite-batch-extraction sweep 2026-08-09, per `task_template.md` §4's finalize-plan-coverage rule.
 assigned_role: infra
+effort: medium
 sequential: true
 drift_direction: advance-code
 context_scope:
@@ -53,14 +54,14 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. Reconcile both source docs' checkboxes against batch 4's 3 now-done todos — flip each
-      corresponding checkbox/section, citing the shipped commit(s) (verify the cited commit exists before
-      citing). Re-check each source doc for 0 remaining open todos after flipping (unlikely for either — both have
-      real remaining cross-tranche-handoff/`[OPERATOR]` items — set `status: resolved` only if genuinely 0). Done
-      when: all 3 source-doc checkboxes are flipped with verified evidence.
-- [ ] [DOC] P1. Archive `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` via the standard 6-step ritual
-      once todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear
-      `locked_by` (confirm already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every
-      referrer resolves to the new path, and this finalize doc archives alongside it in the same commit.
+- [ ] [REVIEW] P1. Reconcile both source docs' checkboxes against batch 4's 3 now-done todos — flip each corresponding
+      checkbox/section, citing the shipped commit(s) (verify the cited commit exists before citing). Re-check each
+      source doc for 0 remaining open todos after flipping (unlikely for either — both have real remaining
+      cross-tranche-handoff/`[OPERATOR]` items — set `status: resolved` only if genuinely 0). Done when: all 3
+      source-doc checkboxes are flipped with verified evidence.
+- [ ] [DOC] P1. Archive `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` via the standard 6-step ritual once
+      todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by` (confirm
+      already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the new path,
+      and this finalize doc archives alongside it in the same commit.
 
 ## Progress Log

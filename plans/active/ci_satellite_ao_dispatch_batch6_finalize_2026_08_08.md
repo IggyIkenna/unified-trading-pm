@@ -47,6 +47,7 @@ source: >-
   here until the batch's own todos are `done`, including while the batch is still `draft` (via the derived
   `gate-upstream-open:<stem>` condition).
 assigned_role: cicd
+effort: high
 sequential: true
 drift_direction: advance-code
 context_scope:

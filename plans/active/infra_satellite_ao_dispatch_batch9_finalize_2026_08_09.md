@@ -34,6 +34,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.24
 assigned_role: infra
+effort: medium
 sequential: true
 drift_direction: advance-code
 depends_on: [infra_satellite_ao_dispatch_batch9_2026_08_09]

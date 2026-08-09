@@ -74,7 +74,7 @@ related:
     /plans/archive/tradfi_massive_dual_source_2026_05_28.md,
     /plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md,
     /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
-    /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
@@ -645,7 +645,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **❌ [SCRIPT] P1.** OBSOLETE. Build the S3 flat-files bulk-backfill ingester — Massive removed as a tradfi source
     - **❌ [SCRIPT] P1.** OBSOLETE (no-longer-massive-relevant). Fix `backfill_tradfi_source_column.py` walk prefix
     - +4 more (P2) — see file for the rest
-  - [`plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`](/plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md)
+  - [`plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`](/plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md)
     - **[DESIGN] P2.** Decide whether real aggregated `ohlcv_15m`/`ohlcv_24h` TradFi bars are wanted (not just alert
       silence)
     - **[VERIFY] P3.** Trace the orchestrator/sentinel classification layer for `attempted_failed` vs `empty_confirmed`

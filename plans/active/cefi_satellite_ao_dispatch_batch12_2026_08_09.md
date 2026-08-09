@@ -38,6 +38,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.9
 estimate_calibrated_ai_days: 0.72
 assigned_role: infra
+effort: medium
 sequential: false
 drift_direction: advance-code
 locked_by:

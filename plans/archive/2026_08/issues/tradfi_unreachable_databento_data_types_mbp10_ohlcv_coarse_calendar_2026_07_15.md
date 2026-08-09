@@ -33,7 +33,7 @@ summary:
   0% completion'') — yet `instruments-service/scripts/enumerate_expected_universe.py` seeds
   `expected_unattempted`/`attempted_failed` rows for these into the MTDS TICK manifest (`market-data-tick-tradfi-prd`),
   a cell that literal never has a chance to be satisfied from that bucket.'
-status: open
+status: resolved
 nature: notes
 asset_group: [tradfi]
 stage: [data]
@@ -92,6 +92,12 @@ context_scope:
 ---
 
 # TRADFI mbp_10 / ohlcv_15m / ohlcv_24h / corporate_action_confirmed / earnings_result — unreachable fetch paths
+
+> **ARCHIVED 2026-08-09** — every finding resolved/shipped (mbp_10 adapter fix, CBOE ohlcv_15m narrowing, YAHOO_FINANCE
+> phantom-venue removal + orphan-row cleanup, corporate_action_confirmed/earnings_result seeding stop + orphan cleanup,
+> CBOE Treasury-yield routing). The sole remaining `[DESIGN] P2` open item (MDPS ohlcv_1m→ohlcv_15m/24h aggregator) was
+> EXTRACTED 2026-08-09 to `/plans/active/tradfi_satellite_ao_dispatch_batch9_2026_08_09.md` — this doc carries no other
+> open `- [ ]` checkboxes (cicd escalation `agt-558c62`, check_archive_candidates.sh ratchet).
 
 > **mbp_10 RESOLVED (2026-07-15):** CME `mbp_10` UAC restriction is a confirmed-still-intentional operator MVP-scope
 > decision — not an open gap. `DP_RUN_MOSTLY_EMPTY` suppression shipped `deployment-service@ba40e4a` (known-dead
@@ -244,10 +250,10 @@ these 5 cells.
       `attempted_failed`; DP-FETCH-009's no-recency-window count separately explains why they keep paging today. Both
       apply. No code changes shipped (read-only trace). Source: `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`
       todo 9.
-- **[DESIGN] P2. EXTRACTED 2026-08-09 → `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md`.** RULED 2026-08-07 —
-      YES, build it, MDPS-owned (not a features-service resampler on `vix_features`
-      alone): aggregate `ohlcv_1m` up to `ohlcv_15m`/`ohlcv_24h` once, upstream of every consumer. Delta-one groups need
-      `ohlcv_24h`; reuse `candle_resampler.py`'s logic if it fits; general-purpose.
+- **[DESIGN] P2. EXTRACTED 2026-08-09 → `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md`.** RULED 2026-08-07 — YES,
+  build it, MDPS-owned (not a features-service resampler on `vix_features` alone): aggregate `ohlcv_1m` up to
+  `ohlcv_15m`/`ohlcv_24h` once, upstream of every consumer. Delta-one groups need `ohlcv_24h`; reuse
+  `candle_resampler.py`'s logic if it fits; general-purpose.
 - [x] ✅ [DATA] P2. `"YAHOO_FINANCE"` is declared as a literal TradFi venue (`VENUES_BY_ASSET_GROUP["tradfi"]`,
       `unified_api_contracts/registry/market_data_categories.py:329`) with `NO_ADAPTER_YET`
       (`registry/venue_adapter_keys.py:137`) and is expected for `["ohlcv_15m","ohlcv_24h"]`
@@ -999,3 +1005,8 @@ UAC) — no separate deploy needed here.
 - **na-eligibility-audit 2026-08-02** (tradfi tranche): **KEEP-NA, valid** — re-read after the 2026-07-31 CME
   billing-gating entry (audit-only, no finding); sole open todo is still the same `[DESIGN] P2` product-intent call.
 - **context-scout 2026-08-07**: context_scope refreshed. Operator RULED 2026-08-07 — see todo.
+- **2026-08-09 (cicd escalation agt-558c62, ldr_qg_failure gate fix)**: sole remaining open `[DESIGN] P2` todo (MDPS
+  ohlcv_1m→ohlcv_15m/24h aggregator) was extracted the same day to
+  `/plans/active/tradfi_satellite_ao_dispatch_batch9_2026_08_09.md` — this doc has 0 open todos, status flipped
+  `resolved`, archived per the 6-step ritual (`check_archive_candidates.sh` ratchet, baseline 0). Referrers fixed
+  corpus-wide across `plans/active/**`.

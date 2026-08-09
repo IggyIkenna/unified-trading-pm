@@ -30,6 +30,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.16
 assigned_role: backend_engineer
+effort: medium
 drift_direction: advance-process
 locked_by:
 locked_since:

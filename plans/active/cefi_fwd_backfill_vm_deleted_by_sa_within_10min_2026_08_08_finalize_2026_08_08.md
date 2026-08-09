@@ -46,6 +46,7 @@ source: >-
   per task_template.md finding U's test) and conflict-free against currently-active AO plans; this finalize doc closes
   the finalize-plan-coverage gate the reclassification itself triggered.
 assigned_role: infra
+effort: medium
 drift_direction: none
 context_scope:
   [

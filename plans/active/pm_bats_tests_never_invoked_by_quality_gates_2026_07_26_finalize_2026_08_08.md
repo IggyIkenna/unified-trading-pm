@@ -34,6 +34,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.3
 assigned_role: cicd
+effort: high
 sequential: true
 drift_direction: advance-code
 depends_on: [pm_bats_tests_never_invoked_by_quality_gates_2026_07_26]

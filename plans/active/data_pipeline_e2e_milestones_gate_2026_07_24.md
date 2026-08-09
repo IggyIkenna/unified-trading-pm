@@ -331,8 +331,8 @@ in deployment-api. Part (c) — CONFIRMED real gap: no mechanism excludes billin
       `plans/archive/issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md` with the bounded grep+classify
       todo. `pm@<commit-pending>`.
 - [x] [VERIFY] P2. ✅ **CHECKED 2026-07-24 — already correctly homed, no distribution action needed.** target:
-      `/plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. The
-      cited `- [ ] [VERIFY] P3.` todo (tracing how a `_DATABENTO_SUPPORTED_DATA_TYPES`-filtered-out data_type gets
+      `/plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`.
+      The cited `- [ ] [VERIFY] P3.` todo (tracing how a `_DATABENTO_SUPPORTED_DATA_TYPES`-filtered-out data_type gets
       recorded — `attempted_failed` vs. `empty_confirmed`) already exists in that file, already correctly formatted per
       task_template.md (tagged, scoped, states what closing it requires). This gate-doc item asked to actually RESOLVE
       the trace, not just place a todo — that's a genuine code investigation across `market-tick-data-service`'s

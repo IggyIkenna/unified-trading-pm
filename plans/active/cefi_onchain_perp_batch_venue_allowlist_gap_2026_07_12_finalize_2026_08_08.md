@@ -47,6 +47,7 @@ source: >-
   re-launch item; conflict-checked clean against currently-active AO plans. This finalize doc closes the
   finalize-plan-coverage gate the reclassification itself triggered.
 assigned_role: data_engineering
+effort: high
 drift_direction: none
 context_scope:
   [

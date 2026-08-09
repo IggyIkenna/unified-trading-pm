@@ -52,6 +52,7 @@ source: >-
   `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" + the shared
   conflict-check protocol in `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3.
 assigned_role: data_engineering
+effort: high
 sequential: false
 drift_direction: advance-code
 context_scope:
@@ -82,16 +83,16 @@ outcome) or **stays behind** (judgment call, operator-gated, dependency-blocked,
   `sports_taxonomy_p3_consumers_2026_08_08.md`'s "Catalogue, browser, dependency" section.
 - **`sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`** — sole open todo
   (`LC_TARBALL_FRESHNESS=enforce` proposal) already extracted verbatim into
-  `sports_satellite_ao_dispatch_batch10_2026_08_06.md` todo 3, whose finalize sibling already carries the
-  reconciliation step for this doc.
-- **`sports_features_layer_findings_sweep_2026_07_18.md`** (Part 1) — 2 open items: the T-12h/T-4h/T-2h
-  snapshot-trigger todo names `launch-sports-scheduler-vm.sh`, but 3 independent, more current active docs
+  `sports_satellite_ao_dispatch_batch10_2026_08_06.md` todo 3, whose finalize sibling already carries the reconciliation
+  step for this doc.
+- **`sports_features_layer_findings_sweep_2026_07_18.md`** (Part 1) — 2 open items: the T-12h/T-4h/T-2h snapshot-trigger
+  todo names `launch-sports-scheduler-vm.sh`, but 3 independent, more current active docs
   (`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`, `assigned_vm: planning`, ACTIVE;
   `sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`;
-  `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`) establish that `sports-scheduler` actually
-  runs as the Cloud Run Job `uts-prod-sports-scheduler` dispatched via `uts-prod-sports-scheduler-cron` (`*/5 * * * *`),
-  not a standalone VM — the todo's premise conflicts with the live architecture and that exact Cloud Run Job is under
-  active OOM investigation in `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` right now. Borderline
+  `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`) establish that `sports-scheduler` actually runs
+  as the Cloud Run Job `uts-prod-sports-scheduler` dispatched via `uts-prod-sports-scheduler-cron` (`*/5 * * * *`), not
+  a standalone VM — the todo's premise conflicts with the live architecture and that exact Cloud Run Job is under active
+  OOM investigation in `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` right now. Borderline
   (premise-uncertain + conflicts with an active investigation on the same subsystem) — not extracted per instruction.
   The 2nd item (add T-6h/T-2h as a MODEL horizon) is resolved by this doc's own `✅ OPERATOR RULING 2026-08-08` banner,
   implemented by `sports_taxonomy_p3_consumers_2026_08_08.md`.
@@ -112,11 +113,10 @@ outcome) or **stays behind** (judgment call, operator-gated, dependency-blocked,
 - **`sports_fixtures_browser_single_catalogue_source_2026_07_24.md`** — sole open todo (regen-cadence freshness
   either/or) resolved by a dated `✅ OPERATOR RULING 2026-08-08` banner, implemented by
   `sports_taxonomy_p3_consumers_2026_08_08.md` under its `[UI]` + `pw:L2` playwright gate.
-- **`sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`** — `locked_by: live-defi-rollout` with an explicit
-  "do not archive/unlock without an operator ruling" banner; both open todos (extend
-  `EXPECTED_BOOKMAKER_MARKET_SETS` to 28 unmapped leagues OR add a `tier_3_global` tier; decide+implement the `trades`
-  cluster-validation gap) are genuine either/or design forks with no evidence-based tiebreaker — no 2026-08-08 ruling
-  touches either.
+- **`sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`** — `locked_by: live-defi-rollout` with an explicit "do
+  not archive/unlock without an operator ruling" banner; both open todos (extend `EXPECTED_BOOKMAKER_MARKET_SETS` to 28
+  unmapped leagues OR add a `tier_3_global` tier; decide+implement the `trades` cluster-validation gap) are genuine
+  either/or design forks with no evidence-based tiebreaker — no 2026-08-08 ruling touches either.
 - **`sports_predictions_live_mode_activation_readiness_2026_07_21.md`** — 2 open todos: the `[REVIEW]` promote-workflow
   run is gated on the still-unshipped `sports_group_c_execution_backtest_harness_2026_07_21.md` (reclassified to
   `assigned_vm: planning` in today's earlier RECLASSIFY sweep but not yet shipped); the `[OPERATOR]` live-trading
@@ -133,30 +133,29 @@ outcome) or **stays behind** (judgment call, operator-gated, dependency-blocked,
       timeout (bare `requests`/`httpx` call with no `timeout=` kwarg, or a client constructed without a default), add
       one (a sane connect/read timeout in the 10-60s range, consistent with any timeout convention already used
       elsewhere in the adapter), and add a regression test asserting the timeout is set. If every call site already
-      declares an explicit timeout, close as a negative-result audit — state the file:line evidence inline. Do NOT
-      touch `PREFIX_IDLE_THRESHOLDS`/the watchdog's stale-heartbeat window — that is a separate, judgment-gated todo in
-      the source doc, explicitly deferred there pending this audit's finding. `quality-gates.sh --no-fix` green before
+      declares an explicit timeout, close as a negative-result audit — state the file:line evidence inline. Do NOT touch
+      `PREFIX_IDLE_THRESHOLDS`/the watchdog's stale-heartbeat window — that is a separate, judgment-gated todo in the
+      source doc, explicitly deferred there pending this audit's finding. `quality-gates.sh --no-fix` green before
       commit; ship via quickmerge. Source:
       `/plans/active/issues/mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` todo 2 (its own
       `na-eligibility-audit 2026-08-08` entry already flagged this exact split — "a good RECLASSIFY candidate on its
       own... not splitting this doc's todos across two `assigned_vm` values in this pass" — this batch is that split).
       Done-when: every real outbound `odds_api` HTTP call site has a stated, tested timeout, or the audit's negative
       result is cited with file:line evidence.
-- [ ] [REVIEW] P3. **Write the FSS-output ↔ ml-service-input ↔ strategy-service-input naming-parity test** — assert
-      that `features-service`'s `odds_features` exporter output, `ml-service`'s `SportsFeatureLoaderMixin` schema
-      validation, and `strategy-service`'s `SportsValueBettingEngine`/`SportsArbDutchingEngine`/
-      `sports_feature_subscriber.py` all read/write the SAME field names now that all 3 consumers have been migrated to
-      UAC's `SportsFeatureVector`/`OddsFeaturesMixin` as SSOT (verified live: todos 1-6 in the source plan below are
-      all `[x]`, shipped across `unified-api-contracts@689efa54`, `features-service@0ded2449`, `ml-service@07976ae`,
+- [ ] [REVIEW] P3. **Write the FSS-output ↔ ml-service-input ↔ strategy-service-input naming-parity test** — assert that
+      `features-service`'s `odds_features` exporter output, `ml-service`'s `SportsFeatureLoaderMixin` schema validation,
+      and `strategy-service`'s `SportsValueBettingEngine`/`SportsArbDutchingEngine`/ `sports_feature_subscriber.py` all
+      read/write the SAME field names now that all 3 consumers have been migrated to UAC's
+      `SportsFeatureVector`/`OddsFeaturesMixin` as SSOT (verified live: todos 1-6 in the source plan below are all
+      `[x]`, shipped across `unified-api-contracts@689efa54`, `features-service@0ded2449`, `ml-service@07976ae`,
       `strategy-service@4c55438c`, `ml-service@10e219f`). This is the original deliverable
       `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` asked for, blocked until the
-      migration landed — it has now landed.
-      `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s Conflict-gated section held this exact item back citing
-      "the still-unshipped 3-repo four-way naming migration" — re-verified this pass: that migration IS shipped
-      (source plan's own 2026-08-08 Progress Log entry independently flags the same staleness and recommends exactly
-      this extraction), so the prior conflict-gate no longer applies. Test asserts field-name parity across the 3 real
-      consumer boundaries against the live UAC schema, not a mock — fails loud on any drift. `quality-gates.sh --no-fix`
-      green on every touched repo before commit; ship via quickmerge. Source:
+      migration landed — it has now landed. `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s Conflict-gated
+      section held this exact item back citing "the still-unshipped 3-repo four-way naming migration" — re-verified this
+      pass: that migration IS shipped (source plan's own 2026-08-08 Progress Log entry independently flags the same
+      staleness and recommends exactly this extraction), so the prior conflict-gate no longer applies. Test asserts
+      field-name parity across the 3 real consumer boundaries against the live UAC schema, not a mock — fails loud on
+      any drift. `quality-gates.sh --no-fix` green on every touched repo before commit; ship via quickmerge. Source:
       `/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md` todo 9 (`[REVIEW] P3`). Done-when: a
       new, passing parity test exists in the repo(s) that would actually exercise this boundary, asserting the same
       field-name set across producer/loader/subscriber against the real `OddsFeaturesMixin` schema.

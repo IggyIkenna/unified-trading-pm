@@ -37,6 +37,7 @@ source: >-
   finalize-plan-coverage rule. Authored `status: active` (not `draft`) per the established no-double-gate finding:
   `gate_on_depends: true` already machine-holds every task here until batch 8's own todo is `done`.
 assigned_role: infra
+effort: medium
 sequential: true
 drift_direction: none
 context_scope:

@@ -47,6 +47,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 9
 estimate_calibrated_ai_days: 7.2
 assigned_role: backend_engineer
+effort: medium
 supersedes:
 superseded_by:
 resolved_by:

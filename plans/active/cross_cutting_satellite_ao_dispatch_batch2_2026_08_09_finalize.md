@@ -42,6 +42,7 @@ source: >-
   Satellite-batch-extraction sweep 2026-08-09, per `task_template.md` §4's finalize-plan-coverage rule — every
   AO-dispatched plan needs a companion gated finalize plan.
 assigned_role: data_engineering
+effort: high
 sequential: true
 drift_direction: advance-code
 context_scope:

@@ -40,6 +40,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.3
 assigned_role: cicd
+effort: high
 sequential: false
 drift_direction: advance-code
 context_scope:
@@ -76,16 +77,16 @@ source: >-
 - [ ] 1. [DOC] P2. **Sync 3 stale CI-infrastructure codex docs to the now-current dedicated-CI-VM state.** All three
       describe an infrastructure topology that changed materially in the last 3 weeks and is now stable enough to
       document for real (verify every fact against LIVE state before writing — do not copy the source doc's numbers
-      blind, it is itself several days old): (a) `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`
-      — full rewrite: self-hosted runners no longer live on the planning/orchestrator VM at all; they moved to a
-      dedicated CI VM (`i-042a6332509482556`, resized 2026-08-08 to `m8i.2xlarge` / 8 vCPU / 32 GB, volume
-      `vol-03880fe9bf1ea805b` at 12,000 IOPS / 312 MB/s) via the `POOL_TAG`-parameterized `setup-glue-runners.sh`
-      multi-tenancy mechanism (`unified-trading-pm@30872b269`, 2026-07-27) — this doc's relaunch/reinstall procedure
-      must target the CI VM, not the planning VM. (b) `/codex/07-security/self-hosted-runner-security-posture.md` —
-      update to describe the CURRENT threat model: the dedicated CI VM (not the shared orchestrator VM), the current
-      self-hosted repo set (re-derive live from `scripts/workflow-templates/self-hosted-qg-repos.txt` — 7 private repos
-      as of 2026-08-08: `agent-orchestrator`, `strategy-service`, `e2e-testing`, `features-service`,
-      `market-tick-data-service`, `execution-service`, `ml-service`), and document the RESOLVED 2026-08-05/07
+      blind, it is itself several days old): (a) `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md` —
+      full rewrite: self-hosted runners no longer live on the planning/orchestrator VM at all; they moved to a dedicated
+      CI VM (`i-042a6332509482556`, resized 2026-08-08 to `m8i.2xlarge` / 8 vCPU / 32 GB, volume `vol-03880fe9bf1ea805b`
+      at 12,000 IOPS / 312 MB/s) via the `POOL_TAG`-parameterized `setup-glue-runners.sh` multi-tenancy mechanism
+      (`unified-trading-pm@30872b269`, 2026-07-27) — this doc's relaunch/reinstall procedure must target the CI VM, not
+      the planning VM. (b) `/codex/07-security/self-hosted-runner-security-posture.md` — update to describe the CURRENT
+      threat model: the dedicated CI VM (not the shared orchestrator VM), the current self-hosted repo set (re-derive
+      live from `scripts/workflow-templates/self-hosted-qg-repos.txt` — 7 private repos as of 2026-08-08:
+      `agent-orchestrator`, `strategy-service`, `e2e-testing`, `features-service`, `market-tick-data-service`,
+      `execution-service`, `ml-service`), and document the RESOLVED 2026-08-05/07
       `unified-trading-pm`-public-with-self-hosted-runners incident as a standing invariant/lesson ("never register a
       self-hosted runner pool on a public repo" — verify the live grep pattern
       `grep -lE '^\s*runs-on: \[self-hosted' .github/workflows/*.yml | xargs grep -lE '^\s*(pull_request|pull_request_target):'`

@@ -26,6 +26,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.1
 assigned_role: data_engineering
+effort: high
 drift_direction: none
 depends_on: [solana_dex_pool_swaps_indexer_2026_08_08]
 gate_on_depends: true

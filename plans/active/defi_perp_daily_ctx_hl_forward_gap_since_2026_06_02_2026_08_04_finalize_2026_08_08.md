@@ -29,6 +29,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
 assigned_role: data_engineering
+effort: high
 drift_direction: advance-code
 depends_on: [defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04]
 gate_on_depends: true

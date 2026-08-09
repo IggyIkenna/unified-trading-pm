@@ -54,6 +54,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 4.2
 estimate_calibrated_ai_days: 3.4
 assigned_role: cicd
+effort: high
 sequential: false
 drift_direction: advance-code
 context_scope:

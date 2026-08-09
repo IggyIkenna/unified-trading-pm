@@ -54,7 +54,7 @@ context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md,
   ]
@@ -136,5 +136,5 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
   flipped the mbp_10/CME docs-fix checkbox, no new reference target.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged, 1 open todo): the sole
   remaining item is a genuine real-wall-clock observation window (up to 24h, needed to watch a RESOLVED/green bookend
-  post once the underlying sports/tradfi/cefi conditions actually clear) — DEPENDENCY_BLOCKED on time passing, not
-  agent effort; the explicit operator "run this locally" instruction still governs the doc's `assigned_vm: NA`.
+  post once the underlying sports/tradfi/cefi conditions actually clear) — DEPENDENCY_BLOCKED on time passing, not agent
+  effort; the explicit operator "run this locally" instruction still governs the doc's `assigned_vm: NA`.

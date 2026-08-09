@@ -35,6 +35,7 @@ gate_on_depends: true
 source: >-
   Satellite-batch-extraction sweep 2026-08-09, per `task_template.md` §4's finalize-plan-coverage rule.
 assigned_role: data_engineering
+effort: high
 sequential: true
 drift_direction: advance-code
 context_scope:
@@ -52,16 +53,15 @@ context_scope:
 ## Todos
 
 - [ ] [REVIEW] P1. Reconcile `features_service_e2e_pipeline_test_2026_05_26.md`'s checkboxes against batch 5's 2
-      now-done todos — flip each corresponding checkbox, citing the shipped commit(s)/evidence (verify before
-      citing). While there, correct the STALE `usdc_idle_yield_apy_bps` confirm-half flagged during the
-      extraction sweep (leave-as-0-floor is already the standing disposition per the doc's own 2026-08-08
-      round5-cross-cutting-audit note — the checkbox text just never caught up). Re-check for 0 remaining open
-      todos after flipping (unlikely — the doc has 2 other genuinely-gated open items); set `status: resolved`
-      only if genuinely 0. Done when: both checkboxes are flipped with verified evidence and the stale
-      confirm-half is corrected.
-- [ ] [DOC] P1. Archive `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` via the standard 6-step ritual
-      once todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear
-      `locked_by` (confirm already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every
-      referrer resolves to the new path, and this finalize doc archives alongside it in the same commit.
+      now-done todos — flip each corresponding checkbox, citing the shipped commit(s)/evidence (verify before citing).
+      While there, correct the STALE `usdc_idle_yield_apy_bps` confirm-half flagged during the extraction sweep
+      (leave-as-0-floor is already the standing disposition per the doc's own 2026-08-08 round5-cross-cutting-audit note
+      — the checkbox text just never caught up). Re-check for 0 remaining open todos after flipping (unlikely — the doc
+      has 2 other genuinely-gated open items); set `status: resolved` only if genuinely 0. Done when: both checkboxes
+      are flipped with verified evidence and the stale confirm-half is corrected.
+- [ ] [DOC] P1. Archive `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` via the standard 6-step ritual once
+      todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by` (confirm
+      already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the new path,
+      and this finalize doc archives alongside it in the same commit.
 
 ## Progress Log

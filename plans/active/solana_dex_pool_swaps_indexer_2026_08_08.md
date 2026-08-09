@@ -28,6 +28,7 @@ estimate_class: brand-new
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.0
 assigned_role: data_engineering
+effort: high
 drift_direction: advance-code
 depends_on: []
 sequential: true

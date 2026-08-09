@@ -44,6 +44,7 @@ estimate_class: research
 estimate_baseline_ai_days: 1.4
 estimate_calibrated_ai_days: 1.68
 assigned_role: backend_engineer
+effort: medium
 drift_direction: advance-code
 locked_by:
 locked_since:

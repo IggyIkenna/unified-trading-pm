@@ -32,6 +32,7 @@ estimate_class: research
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.8
 assigned_role: data_engineering
+effort: high
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-08
@@ -119,5 +120,5 @@ todos/plans or a documented reason it still can't be scoped.
   outcome is a checkable, bounded fact, not "figure out how big this is").
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — all 5 open todos are the scoping pass
   itself (exact date list, cell shapes, sizing, backfill-vs-relabel classification), none of which is a bounded fact
-  yet; the doc's own last todo already names the correct future action (fork into `assigned_vm: planning` child
-  plan(s) once the scoping numbers exist). No cheat-sheet precedent applies pre-scoping. Doc stays `assigned_vm: NA`.
+  yet; the doc's own last todo already names the correct future action (fork into `assigned_vm: planning` child plan(s)
+  once the scoping numbers exist). No cheat-sheet precedent applies pre-scoping. Doc stays `assigned_vm: NA`.
