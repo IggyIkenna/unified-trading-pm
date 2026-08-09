@@ -131,7 +131,16 @@ context_scope:
       as ready — this checkbox's ask was the DESIGN only; the actual partition-move APPLY (15,119 rows) is a separate,
       still-open, operator-gated action tracked by the cross-reference todo further down this file and by table row 7
       below ("DERIBIT combo PARTITION-MOVE — Operator-owned, explicitly out of scope").
-- [ ] [DATA] P2. Register PACIFICA-SOLANA (265) in the fail-hard quarantine set.
+- [x] ✅ [DATA] P2. Register PACIFICA-SOLANA (265) in the fail-hard quarantine set. **CLOSED 2026-08-09
+      (stale-check-cefi, staleness re-audit)**: DONE since `unified-api-contracts@989e9d16` (2026-07-21) — same commit
+      the SHIPPED-THIS-SESSION section a few lines above already documents ("quarantine model:
+      `is_quarantined_instrument_id` + `ResolutionEvidence` + registry (seeded with only PACIFICA-SOLANA)").
+      Live-verified today: `unified_api_contracts/canonical/quarantine.py`'s `QUARANTINE_REGISTRY` carries exactly one
+      entry, `"PACIFICA-SOLANA"` (`venue="PACIFICA-SOLANA"`, `instrument_stem="*"`, reason cites "265 objects,
+      permanently honest-raw"), matching this todo's ask verbatim. Five prior na-eligibility-audit passes (2026-07-30
+      through 2026-08-07) left this open/"could not confirm" despite the registration already existing in the same file
+      this doc's own text points to (`unified-api-contracts/unified_api_contracts/canonical/quarantine.py`) — a
+      grep-then-read gap, not new work.
 
 > **NOTE (2026-07-24, added at extraction time — verify before acting, do not assume stale-closed):** later DELTA
 > entries below (2026-07-22/23) show substantial forward progress that may already satisfy several of the todos above
@@ -790,7 +799,7 @@ schema were never re-measured this tick. **Nothing was mutated**: this was a pur
 
 **New tracked todo (do not lose this finding)**:
 
-- [ ] [SCRIPT] P0. Fix (or explicitly justify) `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`'s dry-run
+- [x] ✅ [SCRIPT] P0. Fix (or explicitly justify) `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`'s dry-run
       chain-drop blind spot: `_DRYRUN_COLS` excludes `"chain"`, so `_chain_merge_safety()` always reports `(0, 0)` in
       dry-run mode regardless of the real data — the STOP-ON-SURPRISE gate for this invariant only ever fires at
       `--apply` time. Either add `"chain"` to `_DRYRUN_COLS` (small perf cost, real safety value: a dry-run would then
@@ -798,7 +807,16 @@ schema were never re-measured this tick. **Nothing was mutated**: this was a pur
       dry-run is never mistaken for a proven-safe one. Re-run `investigate_chain_lossy_20260724.py` (scratchpad, this
       session — promote it to `scripts/` first per the one-off lifecycle rule if it earns its keep) against the FULL
       schema to get the actual current lossy-group count and inspect a sample before deciding `--keep-chain` vs. a
-      repair vs. a fixed dry-run + clean `--apply`.
+      repair vs. a fixed dry-run + clean `--apply`. **CLOSED 2026-08-09 (stale-check-cefi, staleness re-audit)**:
+      direct-code-verified `"chain"` IS present in `instruments-service`'s `_DRYRUN_COLS`
+      (`scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py`), and the v2 script
+      (`load_cols = None if     args.apply else v1._DRYRUN_COLS`) reuses v1's list via `importlib`, so the fix reaches
+      both entry points. The fixing commit (message "include chain in dry-run column projection so chain-drop safety
+      gate isn't a no-op") lives on `origin/live-defi-rollout` under current SHA `97801b5d` — the doc's own cited SHAs
+      `1284606a`/`654d694f` predate the 2026-08-05 `instruments-service` history rewrite (see the sibling
+      `.stale-pre-history-rewrite-*` checkout) and are no longer ancestors under their old hashes, which is why the
+      2026-08-07 marker's "sibling audit pass" citation read as unverifiable and was left open — the equivalent-content
+      commit genuinely is live.
 
 **Operator returned and said stop** (not the 6-hour window elapsing — an explicit interrupt). Per the autonomous skill's
 own instruction ("On operator 'stop': kill the loop/sleeper PID immediately and don't re-arm"), this session is ending
@@ -888,3 +906,14 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
   already resolved (citing instruments-service@1284606a/@654d694f + Surface C v2 apply GATE GREEN) — that evidence does
   not match this specific `_DRYRUN_COLS` script item on direct read, so left open rather than closed on an unverified
   citation; worth a follow-up re-check.
+- **stale-check-cefi 2026-08-09** (staleness re-check on already-KEEP-NA-marked docs, operator-requested): both items
+  the 2026-08-07 pass left open were in fact already done and never flipped. (1) PACIFICA-SOLANA quarantine registration
+  — done since `unified-api-contracts@989e9d16` (2026-07-21), same commit this doc's own "SHIPPED THIS SESSION" section
+  already cites; live-verified `QUARANTINE_REGISTRY` in
+  `unified-api-contracts/unified_api_contracts/canonical/quarantine.py` today. (2) the `_DRYRUN_COLS` chain-drop
+  blind-spot fix — the 2026-08-07 pass's instinct that the cited SHAs didn't check out was right (they don't, as old
+  hashes), but the underlying finding was wrong: `instruments-service` underwent a full history rewrite on 2026-08-05
+  (see the sibling `.stale-pre-history-rewrite-*` checkouts), which changed every pre-08-05 commit's SHA while
+  preserving content — the SAME fix exists today under a new hash (`97801b5d`, confirmed `git merge-base --is-ancestor`
+  of `origin/live-defi-rollout`), and direct code read confirms `"chain"` is in `_DRYRUN_COLS`. Both checkboxes flipped
+  above with evidence. Doc stays `assigned_vm: NA` overall — no other open items existed in this doc at this pass.
