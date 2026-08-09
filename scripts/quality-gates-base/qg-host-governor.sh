@@ -126,7 +126,14 @@ _qg_total_dir() { echo "${QG_TOTAL_GOVERNOR_DIR:-$(_qg_shared_root)/.benchmarks/
 # stops one repo from monopolising the flat cap; the flat cap stops the WHOLE host from
 # oversubscribing even if every repo's own sub-cap would individually allow it.
 _qg_repo_name() {
-    local root="${REPO_ROOT:-${PROJECT_ROOT:-}}"
+    # PROJECT_ROOT (set by qg-common.sh, sourced before this file in every base-*.sh)
+    # is the actual repo root. REPO_ROOT is this codebase's own, confusingly-named
+    # convention for ONE LEVEL ABOVE that — the .tabs/<slot> workspace directory — so
+    # preferring it here buckets every repo in a slot under the slot NUMBER (e.g. "2"),
+    # not the repo name, defeating the whole point of the per-repo sub-cap below (caught
+    # live 2026-08-09 via a 286s starvation on a bucket named "2" instead of
+    # "unified-trading-pm"). PROJECT_ROOT must win.
+    local root="${PROJECT_ROOT:-${REPO_ROOT:-}}"
     [[ -n "$root" ]] && basename "$root" || echo "unknown"
 }
 _qg_repo_instance_default_cap() {
