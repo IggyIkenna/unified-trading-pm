@@ -412,12 +412,25 @@ two plus a third, older prediction shape (see below) totaled 25,745 unrecognized
 named shapes. **Status as of 2026-08-03 (same day):** sports's writer fix + migration-tool extension are CODE-SHIPPED
 (`instruments-service@ba87cc32`) but the writer fix is not yet confirmed live in production (see "live writer" row
 above) and the ~172,595-object historical backlog has not yet been applied/copied; prediction's two shapes are
-recognized + migration-tool-extended (`instruments-service@aaa0866c`), dropping `unrecognized` from 25,745 to 12,463 —
+recognized + migration-tool-extended (`instruments-service@eca688ac`), dropping `unrecognized` from 25,745 to 12,463 —
 the residual 12,463 is a THIRD, even older prediction shape (`day=/market=/venue=`, predates the
 `canonical_question_group` scheme, needs an operator ruling before it can be migrated, not a mechanical rename). Full
 writeup + todos (writer fix, target-shape ruling, tool extension, content_mismatch resolution policy, the residual
 `market=` shape):
 [`../../plans/archive/2026_08/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md`](../../plans/archive/2026_08/issues/instrument_availability_hive_migration_unrecognized_shapes_and_content_mismatch_2026_08_03.md).
+
+**Prediction's two shapes — APPLIED 2026-08-09** (`sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo -004,
+`canonical-migration-prediction-iah-20260809-144755`, `instruments-service@eca688ac` tool, no code change): fresh
+apply-prod run over the same 13,282-candidate population — **13,280 copied-or-already-verified, 0 failed, 2
+content_mismatch** (both `disjoint_needs_review`, `canonical_question_group=OTHER`/`venue=KALSHI`/`day=2026-07-21` —
+the writer-cutover boundary day; real, non-overlapping Kalshi records on both sides, not a tool defect). Per-shape
+`unrecognized` count is 0 (both shapes fully classified as candidates by the extended tool, confirmed via a fresh
+dry-run — the 13,282 candidate count itself is unchanged from 2026-08-03, expected since copy-only never deletes the
+flat source). The residual `day=/market=/venue=` third shape (12,463 objects, todo 8 of the sibling doc) remains
+gated on its own separate operator ruling, unaffected by this todo. 2 disjoint pairs need an operator ruling
+(union vs. leave-as-is — NOT the same "superset wins" policy as this doc's own content_mismatch population, since
+neither side is a superset here): see
+[`../../plans/active/issues/prediction_iah_content_mismatch_disjoint_kalshi_other_2026_08_09.md`](../../plans/active/issues/prediction_iah_content_mismatch_disjoint_kalshi_other_2026_08_09.md).
 
 Full detail:
 [`../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/archive/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
