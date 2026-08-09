@@ -260,12 +260,26 @@ drift_direction: advance-code
       instruments-service. Source: `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (L627 item). Done
       when: the delete-list is spot-checked against the twin-verify parquet; `gcs_delete_object` runs on the confirmed
       TWIN-VERIFIED-SAFE set only; a post-delete scan shows 0 objects deleted without a verified twin.
-- [ ] [DATA] P1. Confirm or resume the KRAKEN-SPOT/KRAKEN-FUTURES 6-year instruments-service backfill (F1) — it was
+- [x] ✅ [DATA] P1. Confirm or resume the KRAKEN-SPOT/KRAKEN-FUTURES 6-year instruments-service backfill (F1) — it was
       reported RUNNING with an ETA of ~1h as of 2026-06-18/19 and the checkbox was never revisited; check the manifest
       for KRAKEN-SPOT/FUTURES coverage 2020-01-01→present before assuming it's still running. Repo: instruments-service.
       Source: `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (F1 item). Done when: a fresh manifest
       scan confirms KRAKEN-SPOT/FUTURES coverage reaches the present day (flip with that evidence), or, if the backfill
-      genuinely stalled, it is resumed to completion.
+      genuinely stalled, it is resumed to completion. — **CONFIRMED DONE, no resume needed** (fresh bounded manifest
+      scan, this session, slot 15). The original 2026-06-18 backfill
+      (`instruments-service --asset-group cefi --venues KRAKEN-SPOT KRAKEN-FUTURES --start-date 2020-01-01     --end-date 2026-06-18`,
+      per `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` L134-161) completed, and the daily
+      `cefi-fwd-daily-cron` VM has kept coverage current since. Live filtered read (row-group pushdown, no full-corpus
+      walk) of `gs://instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet` for
+      `venue IN (KRAKEN-SPOT, KRAKEN-FUTURES)`, independently reproduced twice (once via a research sub-agent, once
+      directly): both venues' manifest rows span 2019-03-30→**2026-08-09 (today)**, 2,690 distinct dates each, 0
+      `attempted_failed`. KRAKEN-SPOT: 2,409 `captured` / 277 `empty_confirmed` / 5 `expected_unattempted`.
+      KRAKEN-FUTURES: 2,453 `captured` / 277 `empty_confirmed` / 5 `expected_unattempted`. No missing calendar days in
+      2020-01-01..2026-08-09 for either venue. No live/zombie VM found under a "kraken" name in either cloud (the
+      original run was a monitored local CLI process, not a launched VM) — nothing to clean up. The only residual is 5
+      scattered `expected_unattempted` days per venue (2023-12-16/17/18/19, 2026-07-14) — not a stall pattern, not
+      required by this todo's done-when. — instruments-service (no code change; plan-flip only, per this batch's
+      precedent for verification-only items).
 - [ ] [CODE] P2. Unify TradFi's two disagreeing options encodings (`instrument_type=options_chain` vs.
       `data_type=options_chain` + blank `instrument_type`) and stamp `instrument_type` on the ~182k blank-type cells
       this produces — a pure typing/normalization fix, not a data-gap judgment call. Repo: instruments-service. Source:
@@ -283,20 +297,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                                  disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                                  future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                                  bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                                  prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                                  2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                                  hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                                  threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                                  loader, post-delete verification) and filed
-                                  `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                                  AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                                  actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                                  stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                                  via that issue doc, not this line.
-                                  verification actually complete.
+                                      disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                                      future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                                      bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                                      prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                                      2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                                      hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                                      threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                                      loader, post-delete verification) and filed
+                                      `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                                      AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                                      actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                                      stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                                      via that issue doc, not this line.
+                                      verification actually complete.
 
 - [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
@@ -469,3 +483,10 @@ drift_direction: advance-code
   cited commit already covers prediction/sports (see item body for the full finding + live-verification evidence against
   real prod catalogues/manifests for cefi/sports/prediction this session, tradfi via item 6 same-day, defi via its
   2026-06-26 prod catalogue regen). Checkbox flipped; no instruments-service commit, plan-flip only.
+- **2026-08-09 (F1 KRAKEN-SPOT/FUTURES backfill item, slot 15)**: fresh bounded manifest scan (row-group-pushdown
+  filtered read, no full-corpus walk) of
+  `gs://instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet` for
+  `venue IN (KRAKEN-SPOT, KRAKEN-FUTURES)` — reproduced independently twice — shows coverage reaching 2026-08-09
+  (today), 0 missing calendar days 2020-01-01..present, 0 `attempted_failed` for either venue. The original 2026-06-18
+  backfill completed; the daily `cefi-fwd-daily-cron` VM kept it current since. No live/zombie VM found. See the item
+  body for the full evidence. Checkbox flipped; no instruments-service commit, plan-flip only (verification-only item).
