@@ -59,13 +59,19 @@ context_scope:
 
 ## Todos
 
-- [ ] [CODE] P2. **Replace the taker/IOC fill-sim path in `e2e-testing/scripts/paper_trading/_ledgers.py`** with a
+- [x] ✅ [CODE] P2. **Replace the taker/IOC fill-sim path in `e2e-testing/scripts/paper_trading/_ledgers.py`** with a
       volume-weighted walk through the recorded live order-book depth (already pulled at $250k/$1M notionals) instead of
       filling the whole order at first-1m-open + flat slip. Repo: e2e-testing. Source:
       `crypto_alpha_research_2026_07_24.md` line 181 (`[CODE] P2.5`, "Taker = VWAP-walk the live depth"). **Done when**:
       the taker fill price for a simulated order is the volume-weighted average price walked through the recorded book
       depth, a unit test verifies it against a hand-computed VWAP for a synthetic order book, and `quality-gates.sh` is
-      green.
+      green. — **DONE, `e2e-testing@06c709e`**: added `_book_depth_levels`/`_vwap_walk` (mirrors `paper_engine.py`'s
+      live $250k/$1M-notional book pull); the taker branch in `simulate_fills` now VWAP-walks that depth, falling back
+      to the old open+flat-slip fill only when the live book fetch/walk fails; `_fillrow` skips the flat `TAKER_SLIP_BP`
+      when the price already reflects a real walk (avoids double-counting slippage). Unit test
+      `tests/unit/test_ledgers_taker_vwap.py` (5 cases) verifies `_vwap_walk` against hand-computed VWAPs for synthetic
+      order books (single-level, multi-level partial-fill, thin-book, empty-book). `quality-gates.sh` green (174
+      passed), sentinel `e9c6ce78f64142a2dfe9f3fb909eea9ad448cb33`.
 - [ ] [SCRIPT] P2. **Wire `depth_of_book_10` into the CeFi live event-log capture dispatcher**
       (market-tick-data-service) for the 5 already-capable venues (COINBASE-SPOT, BYBIT, DERIBIT, BINANCE-FUTURES,
       OKX-SWAP) so it lands under `gs://central-element-323112-events/live-events/warm/cefi/` alongside the 4 data_types
@@ -109,3 +115,13 @@ context_scope:
   one adjacent doc, `v2_engine_venue_buildout_2026_06_15.md` (`assigned_vm: NA`), discusses `depth_of_book_10` as an
   "honest-absent" input to a DIFFERENT derived-microstructure feature path — complementary, not duplicative (that doc's
   derived metrics would consume the raw capture this todo produces, not compete with it).
+- **2026-08-09** — Todo 1 shipped: `e2e-testing@06c709e`. Found the "recorded live order-book depth" precedent already
+  live in this same repo — `paper_engine.py`'s `slip()` function pulls Binance futures depth and walks it at $250k/$1M
+  notionals for its execution-realism model; `_ledgers.py`'s taker path had no equivalent, just a flat first-1m-open +
+  2bp slip. Added `_book_depth_levels` (the live depth pull, mirroring `paper_engine.py`) + `_vwap_walk` (the pure
+  walk-and-average math) to `_ledgers.py`; the taker branch now uses these, falling back to the old open+flat-slip model
+  only on fetch/walk failure. `_fillrow` gained a `real_slip` flag so the flat `TAKER_SLIP_BP` isn't double- counted
+  once the price already reflects a genuine book walk. Unit test `tests/unit/test_ledgers_taker_vwap.py` covers
+  `_vwap_walk` against 5 hand-computed synthetic order books (single-level, multi-level, thin-book, empty).
+  `quality-gates.sh` green, 174 passed. Todo 2 (this doc's `depth_of_book_10` wiring item) is untouched by this change —
+  no file overlap, per the doc's own conflict-check above.
