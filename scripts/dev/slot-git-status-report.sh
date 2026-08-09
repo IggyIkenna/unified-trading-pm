@@ -82,6 +82,18 @@ STASH_WARN_COUNT="${STASH_WARN_COUNT:-15}"
 STASH_WARN_AGE_DAYS="${STASH_WARN_AGE_DAYS:-14}"
 STASH_DETECTOR="$(dirname "${BASH_SOURCE[0]}")/stash-pile-detect.sh"
 
+# Token-near-expiry early warning
+# (git_status_reporter_stale_public_url_token_expiry_2026_07_24.md option (a) —
+# the reporter already resolves the bearer token to build the Authorization
+# header; this decodes that SAME token's `exp` claim and warns before it lapses
+# instead of after, since a lapsed token silences this whole host's git-health
+# view while looking like a frozen-but-fine dashboard. Toggle off with
+# TOKEN_EXPIRY_WATCHDOG=0. Does NOT raise the TTL — see the source doc: that just
+# delays and worsens the eventual outage.
+TOKEN_EXPIRY_WATCHDOG="${TOKEN_EXPIRY_WATCHDOG:-1}"
+TOKEN_EXPIRY_WARN_DAYS="${TOKEN_EXPIRY_WARN_DAYS:-3}"
+TOKEN_EXPIRY_STATE_DIR="${TOKEN_EXPIRY_STATE_DIR:-}"
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --workspace)          WORKSPACE_PATH="$2"; shift 2;;
@@ -146,6 +158,7 @@ if [[ ! -d "${TABS_DIR}" ]]; then
     log "[err] no .tabs/ dir under ${WORKSPACE_PATH}"
     exit 1
 fi
+TOKEN_EXPIRY_STATE_DIR="${TOKEN_EXPIRY_STATE_DIR:-${TABS_DIR}/.token-expiry-state}"
 
 # Cross-platform helpers.
 HOST_OS="$(uname -s)"
@@ -645,6 +658,80 @@ check_stash_pile_for_slot() {
     done
 }
 
+# Decode the `exp` (Unix epoch, UTC) claim from a JWT's second (payload) segment.
+# Prints the epoch on success; prints nothing and returns non-zero on any malformed/
+# undecodable input — callers MUST treat that as "can't tell, skip" rather than
+# "expired", so an unexpected token shape (e.g. a future non-JWT credential format)
+# never gets misread as an emergency and spams a false warning.
+decode_jwt_exp() {
+    local token="$1" payload_seg
+    payload_seg=$(printf '%s' "${token}" | cut -d. -f2)
+    [[ -n "${payload_seg}" ]] || return 1
+    python3 -c '
+import base64, json, sys
+seg = sys.argv[1]
+try:
+    padded = seg + "=" * (-len(seg) % 4)
+    claims = json.loads(base64.urlsafe_b64decode(padded))
+    exp = claims.get("exp")
+    if exp is None:
+        sys.exit(1)
+    print(int(exp))
+except Exception:
+    sys.exit(1)
+' "${payload_seg}" 2>/dev/null
+}
+
+# Token-near-expiry early warning
+# (git_status_reporter_stale_public_url_token_expiry_2026_07_24.md option (a) — the
+# smallest fix, needs no new credential surface). Reuses the token this reporter
+# already resolved to build its own Authorization header (resolve_token_for_slot),
+# decodes its `exp` claim, and fires ONE warning per state-transition into the
+# near-expiry window into the AO activity feed (via the slot message inbox — same
+# post_starve_ping mechanism + one-marker-per-episode dedup pattern the
+# FF-starvation/stash-pile watchdogs above already use), never every tick. Clears
+# on transition OUT of the window (a re-mint via remint-orch-token.sh, or this host
+# switching to a longer-lived token) so a fresh near-expiry episode re-warns. Never
+# raises the TTL itself — see the source doc: that just delays and worsens the
+# eventual outage.
+check_token_expiry_for_slot() {
+    local slot_id="$1"
+    [[ "${TOKEN_EXPIRY_WATCHDOG}" -eq 1 ]] || return 0
+    local token
+    token=$(resolve_token_for_slot "${slot_id}") || return 0
+    [[ -n "${token}" ]] || return 0   # loopback/anonymous — no bearer token to expire
+
+    local exp_epoch
+    exp_epoch=$(decode_jwt_exp "${token}") || return 0
+    [[ -n "${exp_epoch}" ]] || return 0
+
+    mkdir -p "${TOKEN_EXPIRY_STATE_DIR}" 2>/dev/null || true
+    local marker="${TOKEN_EXPIRY_STATE_DIR}/slot-${slot_id}.near-expiry"
+    local now_epoch remaining_secs warn_secs
+    now_epoch=$(date -u +%s)
+    remaining_secs=$(( exp_epoch - now_epoch ))
+    warn_secs=$(( TOKEN_EXPIRY_WARN_DAYS * 86400 ))
+
+    if [[ "${remaining_secs}" -le "${warn_secs}" ]]; then
+        if [[ ! -f "${marker}" ]]; then
+            local exp_iso payload
+            exp_iso=$(date -u -d "@${exp_epoch}" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+                || date -u -r "${exp_epoch}" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+                || echo "${exp_epoch}")
+            payload="orch_token near expiry: exp ${exp_iso} (~$(( remaining_secs / 3600 ))h remaining). Re-mint via scripts/dev/remint-orch-token.sh before it lapses — do not just raise the TTL (/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md)."
+            if post_starve_ping "${slot_id}" "orch_token" "${payload}" "${token}" "token-expiry-warn"; then
+                : > "${marker}" 2>/dev/null || true
+            fi
+        else
+            log_quiet "[token-expiry-dup] slot ${slot_id} — already signalled this episode"
+        fi
+    else
+        # Back outside the warn window (re-mint or a longer-lived token) → clear any
+        # prior marker so a future near-expiry episode re-warns.
+        [[ -f "${marker}" ]] && rm -f "${marker}" 2>/dev/null || true
+    fi
+}
+
 # Live heartbeat on .agent-claim (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md
 # candidate fix 1, unblocked by operator ruling 2026-08-08: "build a collision-warning mechanism"). The claim
 # file's own `expires_at` is a poor liveness signal on its own: an AO-dispatched worker's claim already gets
@@ -703,6 +790,7 @@ for slot_dir in "${TABS_DIR}"/*/; do
     refresh_agent_claim_heartbeat "${slot_id_str}" "${slot_dir}"
     check_starvation_for_slot "${slot_id_str}" "${slot_dir}"
     check_stash_pile_for_slot "${slot_id_str}" "${slot_dir}"
+    check_token_expiry_for_slot "${slot_id_str}"
 done
 
 # Slot 0 = the un-slotted main workspace checkout (the base copy the per-slot
