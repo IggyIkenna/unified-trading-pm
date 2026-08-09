@@ -31,7 +31,7 @@ related:
   ]
 created: "2026-08-09"
 author: slot-28
-priority: P2
+priority: P1
 parent_epic: tradfi_master
 source: >-
   Passive observation 2026-08-09T~03:40Z while monitoring `tradfi-bf-*` fleet state for an unrelated ES_OPT launch
@@ -90,13 +90,58 @@ The observed NASDAQ/NYSE 2023/2024 VMs match the shape of exactly the out-of-sco
 - Did not confirm whether the CME ES/ETH/MBT/MET shards observed in the same fleet snapshot are correctly scoped (they
   appear to be, per the ruling's own table, but not independently re-verified against their actual date windows here).
 
+## ROOT CAUSE CONFIRMED (2026-08-09 ~06:05Z) — `wave_launcher.py` hourly cron, exactly the failure mode the ruling named
+
+`ps aux` on the `planning` VM shows `scripts/wave_launcher.py` actively running (PID 2318657, started 06:00:xx,
+`WAVE_MAX_CONCURRENT=20`, invoked via a `/bin/sh -c cd deployment-service && ... python scripts/wave_launcher.py`
+wrapper — a scheduled/cron-style invocation, not an interactive session). Its own log
+(`/home/ubuntu/wave_launcher_cron.log` on `planning`) shows, this run:
+
+```
+CME year=2020 root=ES   args=--only-root ES --year 2020 --no-force-window --force   -> LAUNCH OK
+CME year=2022 root=ETH  args=--only-root ETH --year 2022 --no-force-window --force  -> LAUNCH OK
+CME year=2023 root=MET  args=--only-root MET --year 2023 --no-force-window --force  -> LAUNCH OK
+NASDAQ year=2023 ... --no-force-window --force  (in progress at time of this note)
+NYSE/CBOE year=2020..2025 ... --no-force-window --force  (queued in the same WAVE plan)
+```
+
+`gcloud compute instances list` immediately before/after confirms this **duplicated already-running CME shards**:
+`tradfi-bf-cme-ohlcv-1m-g01-es-es-2020-20260809-031341` (started 03:13) now has a sibling
+`...-es-es-2020-20260809-060222` (started 06:02) — same root, same year, both RUNNING simultaneously. Same pattern for
+`eth-eth-2022` and `met-met-2023`. This is the exact `wave_launcher.py` dedup key-mismatch bug already documented in
+`issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s "Known relaunch gotchas" section — it's not
+hypothetical, it's reproducing live, hourly, right now.
+
+**This also explains why the original NASDAQ/NYSE out-of-scope wave (this doc's original observation) exists at all**:
+it isn't a one-off relaunch by an unknown actor — `wave_launcher.py`'s own `WAVE:` plan for this run explicitly lists
+`NASDAQ year=2023`, `NYSE year=2023/2024`, and `CBOE year=2020..2025` as targets, run with `--force`. The scope ruling
+doc explicitly anticipated this: _"If a worker or an autonomous session (e.g. `wave_launcher.py`'s gap-driven dispatch)
+would otherwise pick up one of these cells, treat it as `BLOCKED-OPERATOR-DECISION` citing this doc, not as ready
+work."_ That guidance was never wired into `wave_launcher.py` itself or into its cron — the cron has continued
+dispatching the out-of-scope cells (and duplicating the in-scope ones) every cycle since the ruling was written the same
+day.
+
+**Compounding impact on other in-scope work**: this cron's repeated `--force` launches keep the shared `tradfi-bf-*`
+singleton lock (`launch-tradfi-backfill-vm.sh`'s `_check_singleton_lock`) continuously occupied, which is directly
+blocking `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2's operator-authorized ES_OPT launch (>2hrs blocked
+this session, lock count fluctuating 5-10 rather than converging to 0, because the cron keeps refreshing it). Unless
+this cron is paused or fixed, the singleton lock may never naturally clear.
+
 ## Action items
 
-- [ ] [INFRA] P2. **Determine whether the NASDAQ/NYSE 2023/2024 relaunch is authorized** (a scope-ruling amendment, an
-      operator override, or a genuine violation) and act accordingly (let it run if authorized; kill per the 3-signal
-      staleness check + operator sign-off if it's a genuine violation of the November-2026 gate). Repo:
-      unified-trading-pm (cross-check against any newer scope-ruling doc) + deployment-service (identify the
-      launcher/actor if a violation).
+- [ ] [INFRA] P1. **`BLOCKED-OPERATOR-DECISION`: pause or fix the `wave_launcher.py` cron on `planning`** (PID pattern
+      confirmed via `ps aux | grep wave_launcher`, log at `/home/ubuntu/wave_launcher_cron.log`) so it (a) respects the
+      2026-08-09 MVP-of-MVP scope ruling — skip CBOE/NASDAQ/NYSE/FX/commodity cells entirely until November 2026 rather
+      than dispatching them with `--force`, and (b) fixes the dedup key-mismatch bug so it stops duplicating
+      already-running CME shards. Options: (1) comment out / disable the cron entry until the code fix ships — fastest,
+      fully reversible, but pauses legitimate CME progress too; (2) patch `wave_launcher.py`'s cell-selection to consult
+      the scope-ruling doc's in-scope table before dispatch — correct fix, more code. Recommend (1) as an immediate
+      stopgap + (2) as the follow-up fix, but this needs operator/infra sign-off since the cron is shared infra outside
+      any one worker's task scope — not unilaterally touched by this session. Repo: deployment-service (fix) + whichever
+      host/repo owns the cron install script (stopgap).
+- [ ] [INFRA] P2. **Determine whether the NASDAQ/NYSE 2023/2024 relaunch (and the CME duplicates) should be individually
+      killed** once the cron itself is paused/fixed (3-signal staleness check + operator sign-off — don't blind-kill
+      live in-progress work). Repo: deployment-service.
 
 ## Progress Log
 
