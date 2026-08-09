@@ -46,6 +46,8 @@ context_scope:
   [
     /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
     market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py,
+    /plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md,
+    market-tick-data-service/scripts/audit_lighter_zksync_dual_write_collision_2026_08_08.py,
   ]
 ---
 
@@ -205,3 +207,6 @@ dates the backfill is still mid-processing, and could race a live write.
   ready to re-attempt. Parked via `POST /api/slots/18/skip-current-task` (`reason_code=GATED`, `park_now=true`) per
   `RULES.md`/`auto_park.py`'s "worker hitting an EXTERNAL gate" mechanism, rather than forcing the apply or busy-waiting
   ~4 days in-session. No code/data changed this pass.
+- **context-scout 2026-08-09**: populated context_scope (4 entries) -- no prior context-scout marker existed on this
+  doc; added the gating `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md` (todo 2's explicit BLOCKED-on
+  dependency) and the read-only audit script that produced the root-cause findings.

@@ -630,3 +630,8 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   unrelated to this session's work — filed `issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`. Archival
   deferred pending both new issues' resolution; the finalize plan's own gate (`depends_on` this doc) correctly stays
   closed until then.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate -- the two new gating
+  issue docs (`cefi_lighter_zksync_systemic_collision_2026_08_08.md`,
+  `cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`) are already machine-linked via this doc's own
+  `depends_on` frontmatter field rather than context_scope, and are each independently context-scouted in their own
+  right.

@@ -125,3 +125,4 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   lighter, targeted `read_availability_index(columns=, filters=[("venue","in",[...])])` row-group-pushdown read (the
   todo's own stated alternative — "a targeted IS/MTDS spot-check") which completed cleanly and answers the exact 3-venue
   question without a whole-corpus walk.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.

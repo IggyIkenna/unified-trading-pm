@@ -756,3 +756,4 @@ pairs stay honest-unresolved (reported, never guessed).
   judgment/operator-gated work, unchanged from the 2026-08-04 verdict. Secondary note for a future pass: the small P3
   `FORCE` default-value item (line 709) reads as an isolated, unclaimed RECLASSIFY candidate on its own — not actioned
   this run since it doesn't change the doc-level verdict.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
