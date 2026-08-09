@@ -52,6 +52,12 @@ cd "$PROJECT_ROOT"
 # thread caps matter MOST here. SSOT: codex/06-coding-standards/quality-gates.md
 # § "Resource governance under multi-slot load".
 source "${BASH_SOURCE[0]%/*}/qg-host-governor.sh"
+# TOTAL-INSTANCE gate (mirror of base-service.sh) — bounds ALL concurrent
+# quality-gates.sh processes host-wide, not just the heavy phases below. See
+# qg-host-governor.sh's header for the full rationale (scope gap found investigating
+# plans/active/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md).
+# Acquired for the WHOLE run; released from the EXIT trap below.
+qg_governor_acquire_total_instance
 export OMP_NUM_THREADS="${QG_THREAD_CAP:-2}" OPENBLAS_NUM_THREADS="${QG_THREAD_CAP:-2}" \
        MKL_NUM_THREADS="${QG_THREAD_CAP:-2}" NUMEXPR_NUM_THREADS="${QG_THREAD_CAP:-2}"
 export RUFF_CACHE_DIR="${RUFF_CACHE_DIR:-${TMPDIR:-/tmp}/qg-ruff-cache}"
@@ -75,8 +81,17 @@ _qg_content_hash() {
     } | sha256sum | awk '{print $1}'
 }
 
-# ── TRAP: set ci_status=FAILING on non-zero script exit ──────────────────────
-_qg_exit_handler() { local rc=$?; [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true; }
+# ── TRAP: release the host governor(s) + set ci_status=FAILING on non-zero exit ──
+# Covers every exit path (the happy-path heavy-phase release near the bottom of this
+# file only runs after TYPECHECK; a run that fails/aborts before that would otherwise
+# leak a token/reservation until the next acquirer's sweep — mirror of base-service.sh's
+# own trap fix). Idempotent: both release functions guard on their own held-state var.
+_qg_exit_handler() {
+    local rc=$?
+    if command -v qg_governor_release >/dev/null 2>&1; then qg_governor_release 2>/dev/null || true; fi
+    if command -v qg_governor_release_total_instance >/dev/null 2>&1; then qg_governor_release_total_instance 2>/dev/null || true; fi
+    [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true
+}
 trap '_qg_exit_handler' EXIT
 
 # ── SIGNAL TRAP: loud "killed" marker on a genuinely-CAUGHT kill signal ──

@@ -33,17 +33,36 @@
 #      duration, so queueing behind the shared token cannot fail an otherwise-green
 #      run purely for having queued (qg_host_governor_severe_contention_2026_07_13.md).
 #
+#   A2) TOTAL-INSTANCE gate (from base-service.sh, wraps the WHOLE run):
+#        qg_governor_acquire_total_instance   # once, right after sourcing this file
+#        ... BOOTSTRAP / LINT / CODEX COMPLIANCE / TESTS / TYPECHECK ...
+#        qg_governor_release_total_instance   # from the caller's EXIT trap
+#
+#      Closes the scope gap named in
+#      plans/active/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md
+#      (2026-08-09): (A) only brackets TESTS+TYPECHECK — everything else (dependency
+#      bootstrap, lint/autofix, the large CODEX COMPLIANCE phase) previously ran with
+#      NO concurrency bound at all, so a host could carry far more live
+#      quality-gates.sh processes than the heavy-phase K ever capped (12-19 observed
+#      against a live K<=6). This gate bounds TOTAL concurrent script instances
+#      host-wide, nesting around (A) rather than replacing it.
+#
 #   B) Wrapper CLI (wrap any command under one token):
 #        bash qg-host-governor.sh -- <command> [args...]
 #
 #   C) Introspection:
-#        bash qg-host-governor.sh --status   # K, dir, currently-held tokens
+#        bash qg-host-governor.sh --status   # K, dir, currently-held tokens (both gates)
 #
 # ENV
 #   QG_HOST_CONCURRENCY   override K (max concurrent heavy QG phases host-wide)
 #   QG_GOVERNOR_DIR       token dir (default ${TMPDIR:-/tmp}/qg-host-governor)
 #   QG_GOVERNOR_DISABLE   set to "true" to make acquire/release no-ops (CI / single-run)
 #   QG_GOVERNOR_NICE      nice increment applied to the QG tree (default 10)
+#   QG_TOTAL_INSTANCE_CAP override the total-instance gate's cap (default: physical
+#                         cores, floored at 4)
+#   QG_TOTAL_GOVERNOR_DIR total-instance token dir (default: host-shared dir, same
+#                         placement rule as the RAM ledger — see _qg_shared_root)
+#   QG_TOTAL_GOVERNOR_DISABLE  set to "true" to make the total-instance gate a no-op
 #   QG_HOST_RAM_ABORT_PCT       runtime-abort-monitor trip point, host-used % (default 80)
 #   QG_WATCHDOG_INTERVAL_SECONDS  poll interval for the runtime abort-monitor (default 15)
 #   QG_WATCHDOG_CONSECUTIVE_HITS  consecutive over-threshold samples before abort (default 2)
@@ -71,6 +90,25 @@ _qg_governor_default_k() {
 
 _qg_governor_k() { echo "${QG_HOST_CONCURRENCY:-$(_qg_governor_default_k)}"; }
 _qg_governor_dir() { echo "${QG_GOVERNOR_DIR:-${TMPDIR:-/tmp}/qg-host-governor}"; }
+
+# ── TOTAL-INSTANCE gate — bounds ALL concurrent quality-gates.sh PROCESSES, not just
+# the heavy TESTS+TYPECHECK phase K above governs (scope gap named in
+# plans/active/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md,
+# 2026-08-09: BOOTSTRAP/AUTO-FIX/LINT and the large CODEX-COMPLIANCE phase run fully
+# UNGATED, so a host can carry many more live script instances than the heavy-phase K
+# ever caps — 12-19 observed against a live K<=6). Default cap = physical cores (a
+# looser bound than the heavy-phase K, since most of a run's wall-clock is lighter than
+# pytest/basedpyright), floored at 4 for small hosts. Overridable via
+# QG_TOTAL_INSTANCE_CAP; separate lock dir from the heavy-phase token dir above so the
+# two gates never collide.
+_qg_total_default_cap() {
+    local cores; cores="$(_qg_physical_cores)"
+    local k="$cores"
+    (( k >= 4 )) || k=4
+    echo "$k"
+}
+_qg_total_k() { echo "${QG_TOTAL_INSTANCE_CAP:-$(_qg_total_default_cap)}"; }
+_qg_total_dir() { echo "${QG_TOTAL_GOVERNOR_DIR:-$(_qg_shared_root)/.benchmarks/qg-governor-total}"; }
 
 # ── HOST CAPACITY INTROSPECTION (Phase 2) ────────────────────────────────────
 # Reads the host's real capacity so the (Phase-3) admission gates can size
@@ -544,6 +582,72 @@ qg_governor_release() {
     _QG_GOV_FD=""
 }
 
+# Base FD for the total-instance token locks — well clear of the heavy-phase range
+# (200+1..200+K, K bounded by cores/4) and the ledger lock FD (220).
+_QG_TOTAL_FD_BASE=300
+
+# Acquire a TOTAL-INSTANCE token — gates the WHOLE quality-gates.sh run, held from
+# right after this file is sourced until the caller's EXIT trap releases it (see
+# base-service.sh's qg_governor_acquire_total_instance / _qg_exit_handler wiring),
+# unlike qg_governor_acquire above which brackets only the heavy TESTS+TYPECHECK
+# phase. Same flock/explicit-numeric-FD pattern (bash 3.2-safe), separate lock dir +
+# FD range so the two gates coexist — a run holds a total-instance token for its full
+# lifetime AND, later, a heavy-phase token/reservation nested inside it.
+qg_governor_acquire_total_instance() {
+    [[ "${QG_TOTAL_GOVERNOR_DISABLE:-}" == "true" ]] && return 0
+    command -v flock >/dev/null 2>&1 || { echo "[qg-governor] flock(1) absent — total-instance gate ungoverned" >&2; return 0; }
+    [[ -n "${_QG_TOTAL_FD:-}" ]] && return 0   # already holding (idempotent)
+
+    local k dir fd
+    k="$(_qg_total_k)"; dir="$(_qg_total_dir)"
+    mkdir -p "$dir" 2>/dev/null || { echo "[qg-governor] cannot create $dir — total-instance gate ungoverned" >&2; return 0; }
+
+    local waited=0
+    while true; do
+        local i
+        for (( i=1; i<=k; i++ )); do
+            fd=$(( _QG_TOTAL_FD_BASE + i ))
+            eval "exec ${fd}>\"\$dir/slot.\$i\"" 2>/dev/null || continue
+            if flock -n "$fd"; then
+                _QG_TOTAL_FD=$fd
+                QG_GOVERNOR_WAIT_SECONDS=$(( ${QG_GOVERNOR_WAIT_SECONDS:-0} + waited ))
+                [[ "$waited" -gt 0 ]] && echo "[qg-governor] total-instance token $i/$k acquired after ${waited}s wait" >&2
+                return 0
+            fi
+            eval "exec ${fd}>&-"   # slot busy — close and try next
+        done
+        sleep 2; waited=$(( waited + 2 ))
+        (( waited % 30 == 0 )) && echo "[qg-governor] all ${k} total-instance tokens busy — queued ${waited}s" >&2
+    done
+}
+
+# Release the held total-instance token (also auto-freed on process exit — flock
+# auto-drops on fd close). Idempotent, safe no-op if never acquired.
+qg_governor_release_total_instance() {
+    [[ -n "${_QG_TOTAL_FD:-}" ]] || return 0
+    flock -u "$_QG_TOTAL_FD" 2>/dev/null || true
+    eval "exec ${_QG_TOTAL_FD}>&-" 2>/dev/null || true
+    _QG_TOTAL_FD=""
+}
+
+# Shared by both status branches below — the total-instance gate is orthogonal to
+# MODE (token vs reservation), so it's probed the same way regardless.
+_qg_total_status_line() {
+    local k dir; k="$(_qg_total_k)"; dir="$(_qg_total_dir)"
+    if [[ ! -d "$dir" ]]; then
+        echo "  total-instance gate: K=${k}  dir=${dir}  tokens held now: 0/${k} (dir not yet created)"
+        return 0
+    fi
+    local held=0 i tfd="$_QG_GOV_PROBE_FD"
+    for (( i=1; i<=k; i++ )); do
+        [[ -e "$dir/slot.$i" ]] || continue
+        if ! ( eval "exec ${tfd}>\"\$dir/slot.\$i\"" && flock -n "$tfd" ) 2>/dev/null; then
+            held=$(( held + 1 ))
+        fi
+    done
+    echo "  total-instance gate: K=${k}  dir=${dir}  tokens held now: ${held}/${k}"
+}
+
 _qg_governor_status() {
     # Reservation mode: show live capacity, the dual-gate budgets, and current reservations.
     if [[ "${QG_GOVERNOR_MODE:-token}" == "reservation" ]]; then
@@ -565,6 +669,7 @@ _qg_governor_status() {
         else
             echo "  live reservations: none"
         fi
+        _qg_total_status_line
         return 0
     fi
     local k dir; k="$(_qg_governor_k)"; dir="$(_qg_governor_dir)"
@@ -582,6 +687,7 @@ _qg_governor_status() {
         done
         echo "  tokens held now: ${held}/${k}"
     fi
+    _qg_total_status_line
 }
 
 # ── CLI entrypoint (only when executed directly, not when sourced) ───────────

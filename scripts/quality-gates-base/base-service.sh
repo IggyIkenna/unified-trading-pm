@@ -68,6 +68,15 @@ cd "$PROJECT_ROOT"
 #     concurrently across ALL slots. Sourced here so qg_governor_acquire/release
 #     bracket the heavy phases below.
 source "${BASH_SOURCE[0]%/*}/qg-host-governor.sh"
+# (1a) TOTAL-INSTANCE gate — bounds ALL concurrent quality-gates.sh processes
+#     host-wide, not just the heavy phases (1) governs. Closes the scope gap found
+#     investigating plans/active/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md
+#     (2026-08-09): BOOTSTRAP/AUTO-FIX/LINT/CODEX-COMPLIANCE below previously ran
+#     with no concurrency bound at all, so the host could carry far more live
+#     script instances (12-19 observed) than the heavy-phase K ever capped (<=6
+#     live). Acquired for the WHOLE run; released from the EXIT trap below so
+#     every exit path (pass/fail/killed) frees it.
+qg_governor_acquire_total_instance
 # (2) Thread-pool caps — stop one repo's native BLAS/OMP pools (numpy/sklearn/
 #     lightgbm/xgboost) from fanning out across every core under multi-slot load
 #     (measured: ml-service spawned 100+ threads). With the governor's K-cap this
@@ -190,6 +199,7 @@ fi
 _qg_exit_handler() {
     local rc=$?
     if command -v qg_governor_release >/dev/null 2>&1; then qg_governor_release 2>/dev/null || true; fi
+    if command -v qg_governor_release_total_instance >/dev/null 2>&1; then qg_governor_release_total_instance 2>/dev/null || true; fi
     [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true
     [ -n "${_QG_RUNNING_MARKER:-}" ] && rm -f "$_QG_RUNNING_MARKER" 2>/dev/null || true
     return 0
