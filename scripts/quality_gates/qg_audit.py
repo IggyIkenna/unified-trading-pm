@@ -317,7 +317,7 @@ def write_output(audits: list[RepoAudit], output_path: Path, fmt: str, *, verbos
     }
 
     if fmt == "yaml":
-        try:
+        try:  # noqa: fallback-import — PyYAML is an optional extra, only needed for --format yaml output
             import yaml  # type: ignore[import-untyped]
 
             with open(output_path, "w", encoding="utf-8") as f:
