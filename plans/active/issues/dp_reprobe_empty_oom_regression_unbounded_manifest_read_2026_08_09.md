@@ -123,11 +123,39 @@ Mechanical, bounded fix — mirror the already-proven `daily_digest.py` pattern:
 
 ## Todos
 
-- [ ] [CODE] P1. Add an explicit `columns=` restriction to `reprobe_new_empty_confirmed.py`'s `read_manifest_index()`
-      call (line 419) mirroring `daily_digest.py`'s already-shipped fix (e2e-testing@5d7f53a/edd12c6). Verify peak RSS
-      drops safely under the 16Gi ceiling on a real per-AG index, then manually trigger `uts-prod-dp-reprobe-empty` to
-      confirm a completed (non-OOM) execution. Repo: e2e-testing.
-- [ ] [INFRA] P2. Check whether `uts-prod-dp-manifest-hygiene-changed` and `uts-prod-dp-manifest-hygiene-full` have the
+- [x] ✅ [CODE] P1. **DONE (code) 2026-08-09 (slot 15) — columns= restriction shipped, but this ALONE does NOT clear the
+      OOM; see the follow-up todo below.** Added an explicit `columns=` restriction to
+      `reprobe_new_empty_confirmed.py`'s `read_manifest_index()` call (line 419), mirroring `daily_digest.py`'s
+      already-shipped fix (e2e-testing@5d7f53a/edd12c6) —
+      `_MANIFEST_COLUMNS = [capture_status, venue, data_type,     chain, *_REASON_COLUMNS, *_DATE_COLUMNS]`, the exact
+      minimal set `_select_new_empties()` (the only consumer of the returned `df`) reads. Unit test added asserting the
+      call is made with this restricted set, not `columns=None` (mirrors `test_digest_requests_column_restricted_read`).
+      QG green, shipped e2e-testing@507717c. **Verified via BOTH a local bounded reproduction AND a live manual trigger
+      that the fix, while correct and necessary, is NOT SUFFICIENT — the real `defi` manifest has grown to 2.79GiB
+      compressed (vs the ~130MB figure cited when daily_digest.py's own fix was validated 8 days ago), and even the
+      column-restricted read now exceeds the 16Gi ceiling.** Full evidence in the Progress Log below. Repo: e2e-testing.
+- [ ] [INFRA] P1. **NEW, filed 2026-08-09 (slot 15) — the actual remaining OOM fix: bump `dp_reprobe_empty_job`'s Cloud
+      Run memory ceiling.** `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf:280-281`
+      (`module "dp_reprobe_empty_job"`) currently provisions `cpu="4" memory="16Gi"` — the same ceiling that was already
+      bumped once before (2026-07-26, from the original 4Gi) and is now insufficient again purely from organic manifest
+      growth (defi's compressed index is ~20x larger than 8 days ago), not a code regression. Cloud Run gen2 jobs
+      support `cpu=4` up to `memory=32Gi` — bump to `32Gi` (2x current, matching the doubling headroom the prior
+      4Gi→16Gi fix used) via Terraform, apply, then manually re-trigger `uts-prod-dp-reprobe-empty` to confirm a
+      completed (non-OOM) execution across all 5 asset_groups (not just `cefi`, which already passes at 16Gi). If 32Gi
+      still isn't enough, this is evidence the manifest-growth trend needs a structural fix (see the P2 alternative
+      below), not another mechanical bump. Repo: deployment-service.
+- [ ] [CODE] P2. **NEW, filed 2026-08-09 (slot 15) — structural alternative if the memory-ceiling bump above proves to
+      be a recurring treadmill.** The root cause underneath both this doc and `daily_digest.py`'s original fix is the
+      same: `_dp_common.read_manifest_index()` downloads the ENTIRE compressed parquet blob into memory
+      (`client.download_bytes(...)`) before doing a column-restricted decode — the column restriction only bounds the
+      DECODE step, not the download/buffer-retention step, so as the underlying manifest grows without bound, every
+      caller's memory floor grows with it regardless of how few columns each caller actually needs. A genuinely durable
+      fix would read via row-group/column pushdown directly against GCS (DuckDB's `read_parquet` over an `httpfs`/GCS
+      URL, or a range-read of only the needed row-groups) instead of materializing the full compressed file — the same
+      DuckDB-over-pandas precedent already used elsewhere per `/codex/05-infrastructure/manifest-consolidator-ssot.md`.
+      Out of scope to design/implement here — flagging as the next escalation if INFRA P1's ceiling bump doesn't hold
+      for long. Repo: e2e-testing.
+- [ ] [INFRA] P3. Check whether `uts-prod-dp-manifest-hygiene-changed` and `uts-prod-dp-manifest-hygiene-full` have the
       same unrestricted-columns gap in their own manifest-read call sites — not checked this session. Repo: e2e-testing.
 
 ## Progress Log
@@ -138,3 +166,50 @@ Mechanical, bounded fix — mirror the already-proven `daily_digest.py` pattern:
   regression, not the original under-provisioning bug; root-caused to a specific, unfixed call site via direct code
   read, cross-referenced against the already-proven sibling fix in daily_digest.py. Not fixing inline — outside this
   session's assigned todo (image rebuild, INFRA craft) and this fix needs its own measurement + test cycle (CODE craft).
+- **2026-08-09T18:36Z-19:00Z (slot 15, data_engineering, task `-95d84d2e8008`): shipped the columns= fix exactly as
+  scoped, then discovered via real measurement that it alone does not clear the OOM — manifest growth outpaced the
+  fix.** Sequence:
+  1. **Code fix**: added `_MANIFEST_COLUMNS` (the minimal set `_select_new_empties()` reads) and passed it to the
+     `read_manifest_index()` call at line 419, mirroring `daily_digest.py`'s proven pattern exactly. Added a unit test
+     (`test_reprobe_requests_column_restricted_read`) asserting the restricted columns list is what's actually
+     requested, not `None`. QG green (`quality-gates.sh` full pass). Shipped via quickmerge:
+     `e2e-testing@507717c63c746ef77bd029d5b752817a9f2c9e99`, verified ancestor-of-origin.
+  2. **Local RSS verification (per the todo's own step 2), bounded via `run-bounded-analysis.sh`'s RSS-poll fallback (no
+     systemd-run on this host)**: a real read of `defi`'s manifest index (the largest AG) with the new
+     `_MANIFEST_COLUMNS` restriction — first run capped at 16G, KILLED after exceeding cap
+     (`RSS 16807108K exceeded cap 16777216K`, ~16.03GiB and still rising, not yet plateaued); second run capped at 20G,
+     still climbing (~15.7GB at the 49s mark, RSS% 50.9 of host) before the harness's own 5-minute tool timeout cut it
+     off (exit 143 / SIGTERM, not the cap watchdog — confirmed via `ps`, not a `run-bounded-analysis.sh` kill message).
+     Both runs are consistent: the column-restricted read genuinely needs MORE than 16GiB for `defi` today.
+  3. **Root cause of the growth**: checked the REAL bucket `read_manifest_index()` actually resolves to for defi via
+     `resolve_bucket_name(kind="market-data", asset_group="defi")` — `market-data-tick-defi-prd-central-element-323112`
+     (NOT `instruments-store-defi-prd-...`, an easy wrong-bucket trap). `gcloud storage du --readable-sizes` on its
+     `_index/availability_index.parquet`: **2.79GiB compressed** — vs. the `~130MB` figure `daily_digest.py`'s own fix
+     comment cites from its 2026-08-01 validation, roughly a **20x** growth in 8 days. This is a genuine, organic
+     manifest-growth problem, not a fix-design flaw: `read_manifest_index()` downloads the FULL compressed blob into
+     memory (`client.download_bytes`) before doing any column-restricted decode, so the download/buffer-retention floor
+     scales with total manifest size regardless of how few columns a caller requests — see the new P2 structural todo
+     above.
+  4. **Live authoritative check (per the todo's own step 3)**: manually triggered a fresh execution,
+     `uts-prod-dp-reprobe-empty-sztdh` (confirmed running the just-shipped fix — the image digest is unchanged since the
+     2026-08-07 rebuild, and the fix landed in the SAME image via the script source, not a rebuild). `cefi` processed
+     cleanly (`0 new SOURCE_RETURNED_ZERO empties`, logged at 18:54:24Z, ~40s after boot — confirms the fix works
+     correctly for a small AG). Then went silent (matches the local repro's silent-during-read behavior) and **the
+     execution reached a definitive terminal FAILURE at 18:55:16Z**: `status.conditions[type=Completed, status=False]`,
+     message
+     `"Task uts-prod-dp-reprobe-empty-sztdh-task0 failed with exit code: 0 and message: The configured memory limit was reached."`
+     — the IDENTICAL failure this whole issue doc is about, still happening with the fix live, ~2 minutes into the
+     `defi` AG (the second of 5 in `ASSET_GROUPS` order). (Note: a `--format value(status.conditions[0].type,...)` query
+     kept returning a stale-looking "Waiting for execution to complete" — `gcloud`'s condition-list ordering isn't
+     stable; use `--format=json` and read `status.completionTime` + `failedCount` for an authoritative terminal check,
+     not `conditions[0]` positionally.)
+  5. **Verdict**: the columns= fix is real, correct, necessary progress (mirrors the proven pattern exactly as scoped,
+     ships a genuine memory reduction vs. the prior fully-unrestricted read, and unblocks `cefi` at minimum) — but is
+     **NOT sufficient alone** to clear this OOM anymore, because the underlying `defi` manifest has outgrown the 16Gi
+     ceiling even with column restriction. Flipping the P1 checkbox to reflect the code work shipped (todo's own
+     `[CODE]` scope is done), but the OOM itself is NOT resolved — filed two new follow-up todos: `[INFRA] P1` (the
+     fast, mechanical fix — bump the Cloud Run memory ceiling, same remediation class as the 2026-07-26 4Gi→16Gi bump)
+     and `[CODE] P2` (the structural fix if the ceiling bump proves to be a recurring treadmill — read via
+     row-group/column pushdown instead of downloading the full blob). DP-FETCH-006's self-healing reclassify is still
+     NOT running to completion on `defi`/`tradfi`/`sports`/`prediction` (whichever haven't been reached yet — `cefi`
+     confirmed OK) until one of those lands.
