@@ -391,11 +391,34 @@ drift_direction: advance-code
       figure — `verify_instrument_manifest_coverage.py` is the strongest structural/textual match found, but a future
       re-run of the discrepancy on a different venue should independently confirm the same tool before assuming this
       root cause generalizes verbatim.
-- [ ] [CODE] P1. Add a build-time exclusion filter to `build_instrument_catalogue.py`'s `build_catalogue_dataframe` so
-      `venue=ICE`, `venue=CBOE AND instrument_type IN (OPTION, SPOT_PAIR)`, and the 2 VIX-cash `INDEX` instrument ids
+- [x] ✅ [CODE] P1. Add a build-time exclusion filter to `build_instrument_catalogue.py`'s `build_catalogue_dataframe`
+      so `venue=ICE`, `venue=CBOE AND instrument_type IN (OPTION, SPOT_PAIR)`, and the 2 VIX-cash `INDEX` instrument ids
       are excluded from every future catalogue rebuild — mirrors an already-executed one-off purge, making it permanent.
       Repo: instruments-service. Source: `instruments_completion_tracker_2026_07_06.md` (Stage-1 catalogue-purge item).
-      Done when: the filter lands; a fresh `build_instrument_catalogue` run excludes those rows.
+      Done when: the filter lands; a fresh `build_instrument_catalogue` run excludes those rows. —
+      instruments-service@22a5f197. New `_is_retired_tradfi_catalogue_row()` predicate + 3 constants
+      (`_TRADFI_RETIRED_VENUES={ICE}` / `_TRADFI_RETIRED_CBOE_INSTRUMENT_TYPES={OPTION,SPOT_PAIR}` /
+      `_TRADFI_RETIRED_INSTRUMENT_IDS={CBOE:INDEX:VIX-USD, CBOE:INDEX:^VIX-USD}`), checked in the per-date snapshot row
+      loop right after the existing `_is_removed_venue` skip (same `continue`-before-day-count-accumulation placement,
+      so the purged rows can never skew the survivor CBOE COMBO/FUTURE rows' `_venue_last_full_day` liveness window
+      either). `instrument_type` is run through the same `_canonicalize_instrument_type` the final row emission uses, so
+      a differently-cased/aliased raw spelling still matches. **Live-verified before writing the filter** (bounded,
+      column-pruned read of `prod/snapshots/pre_g1_retirement_4leg_purge_2026_08_08.parquet`, 14MB, not a corpus walk):
+      ICE 16,147 rows (COMBO 15,082 + FUTURE 1,063 + INDEX 2, no instrument_type carve-out needed) + CBOE OPTION
+      33,258 + CBOE SPOT_PAIR 4,216 + 2 VIX-cash INDEX ids — sums to exactly 53,623, byte-identical to the purge's own
+      stated total. Found CBOE carries 10 OTHER (non-purged) INDEX rows, confirming the VIX-cash exclusion had to be an
+      exact-id denylist, not an instrument_type cut. 2 new regression tests
+      (`test_rollup_excludes_retired_tradfi_ice_venue_and_cboe_options_and_vix_cash`,
+      `test_is_retired_tradfi_catalogue_row_matches_exact_conditions`). **Incidental fix, same commit**: running the
+      full test file surfaced a pre-existing, unrelated failure —
+      `test_sports_enumerator_reads_rollup_catalogue_and_emits_expected_unattempted` was missing a stub for the
+      api_football fixture-calendar gate (`_build_af_fixture_calendar`, STEP-4 2026-07-13), so it silently depended on
+      live prod GCS truthset state; a real truthset artifact now evidences 2024-06-01/03 as genuine EPL off-season
+      no-fixture days, flipping the test's result. Confirmed pre-existing via `git stash` on clean `live-defi-rollout`
+      HEAD before fixing. Fixed via the same `monkeypatch` stub pattern the sibling understat-index test in the same
+      file already uses ("this GCS-free test file stays GCS-free"). Full `quality-gates.sh` green (121s, sentinel
+      `.qg_last_passed_sha=22a5f197ddf6f006de14cd2c7be81da0e7e1ecaa`); post-push ancestry independently verified on
+      `origin/live-defi-rollout`.
 - [ ] [SCRIPT] P1. Widen the systemic unregistered-handler audit to the adapter-factory layer: diff every DeFi
       protocol/adapter handler class registered in `factory.py` against `cli/main.py` + `deployment-service/scripts/vm/`
       invocation sites, classify each as built-but-unwired vs. genuinely-not-built (mirroring the already-fixed
