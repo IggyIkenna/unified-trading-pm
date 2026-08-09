@@ -93,7 +93,7 @@ child plans, none of which are in this run's 18-doc scope) and contributed nothi
       vs. run the campaign are different bounded units). The dispatched task's own `done_definition` was "checkbox
       flipped in plan + code shipped" — satisfied. The production run + manifest verification is tracked as a fresh
       follow-up todo below, not silently folded into this one.
-- [ ] [SCRIPT] P1. **Run the now-safe `--apply --venue KALSHI` operational re-walk for cqg batch re-classification.**
+- [x] ✅ [SCRIPT] P1. **Run the now-safe `--apply --venue KALSHI` operational re-walk for cqg batch re-classification.**
       The blocking script bug is already fixed (`market-tick-data-service@24db3f16` — `rebuild_prediction_manifest.py`
       now threads `venue` into `compute_object_atom` and routes `classify_kalshi_to_canonical_group(ticker=cid)` for
       KALSHI vs the tuple path for POLYMARKET, with 2 regression tests + the venue-aware routing verified against real
@@ -106,7 +106,26 @@ child plans, none of which are in this run's 18-doc scope) and contributed nothi
       re-walk" todo, 2026-06-23 section). Done when: the `--apply` run completes with a dry-run-confirmed non-OTHER cqg
       distribution for the reclassified KALSHI dates, and the doc's own note about the 116,192 `SOURCE_RETURNED_ZERO`
       rows lacking `available_from/to` (which stay `empty_confirmed`, unresolvable by this re-walk alone) is preserved
-      as a distinct residual, not silently folded into "done".
+      as a distinct residual, not silently folded into "done". **DONE 2026-08-09.** Evidence: apply VM
+      `mtds-prediction-kalshi-cqg-rewalk-20260809-101228` (n2-standard-8, SPOT, asia-northeast1-c) completed cleanly —
+      `[vm-exec] command exited rc=0`, `DEPLOYMENT_COMPLETED ... (exit_code=0)`, self-deleted per
+      `VM_SHUTDOWN_ON_COMPLETION=true`. Full run: `run_id=20260809T101545Z-cc1caa66`, `elapsed_s=17536.0` (~4.87hr,
+      launch ~10:12 UTC → completion 15:08:01 UTC), all 63 chunks (2021-06-30..2026-08-08) with
+      `unparseable/failed_unclassified/failed_zero_row: 0` on every chunk (chunk 61 alone had 5 `failed_envelope` — a
+      tiny residual, ~0.0002% of the run's 3,169,427 total objects, not blocking). Step (2)'s non-OTHER confirmation was
+      already satisfied by the beta-preview dry-run VM (`mtds-prediction-kalshi-cqg-beta-preview-20260809-091716`, 41+
+      real KALSHI cqg groups, only 2.5% OTHER) — corroborated by this apply run's `failed_unclassified: 0` across every
+      one of the 63 production chunks (a misclassification-to-OTHER regression would show as nonzero here). **Residual
+      update**: live `availability_index.parquet` spot-check (`venue=='KALSHI'`) shows 229,320 rows with
+      `capture_status=empty_confirmed` + `error_reason=SOURCE_RETURNED_ZERO` — grown from the cited 116,192 because that
+      figure was a narrower-scope pre-apply probe (~2025-05-01..2026-06-24 per
+      `archive/2026_08/prediction_cross_venue_arb_and_coverage_history_2026_08.md:620`), while this apply run's real
+      scope is the full 2021-06-30..2026-08-08 corpus (adds ~4 earlier years + the newer 2026-06-23..2026-08-08 live
+      window). This is expected growth from broader coverage, not a regression — all 229,320 rows remain correctly
+      `empty_confirmed` (not reclassified, not folded into "done"), tied to the SAME P0 lifecycle-gap (P0 43d, KALSHI
+      markets lacking `available_from/to`) this todo's own scope explicitly excludes. Verification script + raw output
+      preserved this session (scratchpad, not promoted — regenerable via `pandas.read_parquet` against the live manifest
+      path, one-line query).
 - [ ] [OPS] P2. **Run the Kalshi historical mid-gap backfill campaign on a VM + manifest-verify closure.** Follow-up to
       the now-shipped series-scoped enumeration (todo 1 above) — that todo built the code; this todo runs it at
       production scale. Launch
@@ -181,3 +200,30 @@ child plans, none of which are in this run's 18-doc scope) and contributed nothi
   for the reclassified dates, then flip this checkbox with both VM names + elapsed times as evidence — the 116,192
   `SOURCE_RETURNED_ZERO` residual (lacking `available_from/to`) stays `empty_confirmed`/unresolved by design, per this
   todo's own "done when" clause — not to be silently folded into "done".
+- 2026-08-09 (todo 2 SHIPPED — slot 26): apply VM `mtds-prediction-kalshi-cqg-rewalk-20260809-101228` completed cleanly
+  after ~4.87hr (`elapsed_s=17536.0`, launch ~10:12 UTC → `DEPLOYMENT_COMPLETED exit_code=0` at 15:08:01 UTC,
+  self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`). All 63 chunks (2021-06-30..2026-08-08) processed with
+  `unparseable/failed_unclassified/failed_zero_row: 0` throughout (chunk 61 alone: 5 `failed_envelope`, ~0.0002% of the
+  3,169,427 total objects — a tiny non-blocking residual). The parallel full-corpus dry-run validation VM
+  (`mtds-prediction-kalshi-cqg-rewalk-20260809-090742`, referenced in the prior note as still running) also completed
+  cleanly during this monitoring window: `rc=0`, all 63 chunks, zero real errors — independent corroboration the
+  reclassification logic is sound across the entire corpus. **cqg non-OTHER confirmation**: satisfied via the
+  beta-preview dry-run (41+ real groups, 2.5% OTHER, already recorded above) + this apply run's `failed_unclassified: 0`
+  on every one of 63 chunks (a misclassification-to-OTHER regression would surface here). **Residual reconciliation**
+  (the step this note exists to get right): live `availability_index.parquet` spot-check (`pandas.read_parquet` against
+  `gs://market-data-tick-pred-prd-central-element-323112/_index/availability_index.parquet`, filtered `venue=='KALSHI'`)
+  shows 416,240 KALSHI rows total — 151,791 `captured`, 247,783 `empty_confirmed` (of which 229,320 carry
+  `error_reason=SOURCE_RETURNED_ZERO`), 15,670 `attempted_failed`, 996 `expected_unattempted`. The 229,320
+  SOURCE_RETURNED_ZERO count is UP from the previously-cited 116,192 — traced this to the 116,192 figure being a
+  narrower pre-apply probe scoped to roughly `2025-05-01..2026-06-24`
+  (`archive/2026_08/prediction_cross_venue_arb_and_coverage_history_2026_08.md:620`), while this apply run's real scope
+  is the full `2021-06-30..2026-08-08` corpus — a wider range that necessarily surfaces more lifecycle-bound-less KALSHI
+  markets. This is expected growth from broader date coverage, NOT a regression or a cqg-classification defect —
+  confirmed by cross-checking that `availability_index.parquet` has no `cqg`/`canonical_question_group` column at all
+  (the per-chunk `captured_bundles`/`captured_cells` counters carry that classification, not this manifest; the 0
+  `failed_unclassified` count across all chunks is the correct proxy). All 229,320 rows remain correctly
+  `empty_confirmed` — not reclassified into a cqg group, not silently folded into "done" — because they lack
+  `available_from/to` lifecycle bounds, the SAME P0 lifecycle-gap (P0 43d) this todo's own scope explicitly excludes
+  ("unresolvable by this re-walk alone"). Verification scripts + raw pandas output kept in this session's scratchpad
+  only (not promoted — trivially regenerable, one `pandas.read_parquet` + `value_counts()` call against the live
+  manifest). Checkbox flipped this commit.
