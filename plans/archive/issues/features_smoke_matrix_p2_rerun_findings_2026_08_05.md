@@ -12,7 +12,7 @@ summary: >-
   work (process group fully reaped via killpg at the 600s bound, bounded wrapper never tripped, no host OOM). Only
   calendar achieves PASS; the other 7 families are blocked by pre-existing upstream/harness issues that are NOT
   regressions from the P0/P2 fixes. Each blocker is captured as an actionable todo below.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -67,6 +67,10 @@ context_scope:
     features-service/features_service/onchain/app/core/dependency_checker.py,
   ]
 ---
+
+> **✅ RESOLVED + ARCHIVED 2026-08-09** — all todos done. Last open item (commodity `-test-` bucket) was a false
+> premise, corrected 2026-08-09: `_test_bucket()` actually resolves `commodity-signals-batch-test-{pid}` for this flat
+> kind, and that bucket already exists live with real content — nothing needed provisioning.
 
 # Smoke-matrix P2 re-run: contract confirmed; 7/8 families blocked by pre-existing upstream/harness issues
 
@@ -204,11 +208,17 @@ byte-verified present: `PROTOCOL_DATA_SINK_BUCKET*` env wiring + `start_new_sess
       mirroring `e2e-testing@555ab37`'s verifier-side pattern. The CLI subprocess's own dependency check now tolerates
       the deliberately-absent consolidated index for `-test-` buckets, so the smoke can reach the verifier. (repo:
       e2e-testing)
-- [ ] [OPERATOR] P2. **infra** — provision the commodity `-test-` bucket.
-      `features-commodity-test-central-element-323112` does not exist (verified: only PROD
-      `commodity-signals-batch-central-element-323112` exists in the 103-bucket listing; the provisioned features test
-      set is calendar/cefi/defi/pred/sports/tradfi, no commodity). The commodity smoke's write 404s. Either provision
-      the folded-name bucket or repoint `_test_bucket()` to an existing one. (repo: deployment-service)
+- [x] ✅ [VERIFY] P2. **CORRECTED 2026-08-09 (operator ruling, recorded in
+      `features_smoke_matrix_p2_rerun_findings_2026_08_05.md`'s own Progress Log below) — the finding checked the wrong
+      bucket name.** `features-commodity-test-central-element-323112` genuinely doesn't exist, but that is NOT the name
+      `_test_bucket()` (`features-service/scripts/pipeline_e2e_check.py:635-651`) actually resolves for the COMMODITY
+      family — commodity is a flat, non-env-split kind (`cloud-providers.yaml:81`,
+      `features-commodity: "commodity-signals-batch-${GCP_PROJECT_ID}"`), so the function string-inserts `-test-` before
+      the project-id segment instead: `commodity-signals-batch-test-central-element-323112`. **That bucket already
+      exists** (live-verified: `_index/`, `cl/`, `ng/` prefixes present, prod twin's soft-delete policy 604800s) —
+      nothing to provision. Was `[OPERATOR]` P2 provision-vs-repoint; both options were moot against a false premise. If
+      the commodity smoke test is still 404ing as of a fresh run, the cause is something else — worth a fresh,
+      narrowly-scoped check, not a repeat of this same bucket-existence question.
 - [x] ✅ [SCRIPT] P3. **e2e-testing** — decide the per-cell timeout for cross_instrument `smoke_matrix.py` —
       e2e-testing@0b4d81e. **Decision: accept 600s as the honest bound.** Extracted the magic number to
       `SMOKE_PER_CELL_TIMEOUT` module-level constant with rationale comment. cross_instrument CEFI (HMM/sklearn fitting
