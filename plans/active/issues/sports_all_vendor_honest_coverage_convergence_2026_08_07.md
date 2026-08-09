@@ -935,3 +935,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   confused retry, plus an untracked-file path collision blocked the rebase) — verified content match against origin
   directly (`ahead=0/behind=0`) rather than trusting `safe-doc-push.sh`'s own success message, which has a blind spot
   when a file is already committed locally but unpushed.
+- **03:22Z** — smallchunk9 now IN chunk 26 (`date=2020-10-09`, the death-chunk itself), 29 total `CHUNK_FAILED` (3 new,
+  in-range/expected). `run.log`'s own text looked ~11min stale but the **separate heartbeat blob** (the authoritative
+  signal used to diagnose all 5 prior deaths) was 29s old — genuinely alive, run.log content lag is just a GCS
+  flush-buffering artifact, not a hang. FIXTURE_LINEUPS needed flat again (48,521→48,521, 1st flat tick since real
+  movement — not yet 2-consecutive, not concerning) but `run.log` shows live fresh fetches seconds old. Both healthy.
