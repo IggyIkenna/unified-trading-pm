@@ -275,18 +275,18 @@ human already made the call and the fleet still never executes it.
       longer appears anywhere in the block. Verify:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
       no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in `plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md`.**
-      Its checkbox reads (truncated): "[DATA][BLOCKED‑UPSTREAM-OUTAGE] P2. Re-launch the instruments-service
-      Transfermarkt PLAYER_VALUES backfill scoped" — the marker trips `_is_non_dispatchable`
-      (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its own line, so
-      `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is genuinely still
-      blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to the start of its
-      own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation line) so it reads
-      as a declared hold. If it is already resolved (several of these carry a dated `RULED`/`DESIGN DECIDED` note — read
-      the full todo before acting), rewrite the trigger phrase so the marker no longer appears anywhere in the block.
-      Verify:
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-23, infra).** Triage accidental exclusion in
+      `plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md`. Moot, not accidental: this finding pre-dates the
+      2026-08-09 (slot 3) `_is_declared` retighten. That same rewrite's docstring explicitly cites this exact shape
+      (`[DATA][BLOCKED-UPSTREAM-OUTAGE] P2. ...` — a marker sharing the leading tag-cluster bracket, no separating
+      space) as the regression the combined-bracket-scan fix was built for
+      (`ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md`). The target doc's line 129
+      was never rewritten and doesn't need to be — the detector now correctly reads the tag-cluster bracket as a
+      declaration. Verified:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+      shows `sports_satellite_ao_dispatch_batch9_2026_08_04.md` with a single excluded entry,
+      `{"description": "[DATA][BLOCKED-UPSTREAM-OUTAGE] P2. Re-launch the instruments-service Transfermarkt     PLAYER_VALUES backfill scoped", "declared": true}`
+      — no `"declared": false` entries remain for this doc. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
       `plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`.** Its checkbox reads
       (truncated): "[DOCS] P2. **RULED 2026-08-06 (operator), option A [WORKER REC]: one scoped retag pass between
@@ -551,3 +551,12 @@ human already made the call and the fleet still never executes it.
   `...or its remaining open item is a stated operator-hold.`. Confirmed via `dispatch_visibility_report --json`:
   `disk_open=5, backlog_open=5, excluded=[]` for that doc — all 5 open todos, including this one, are correctly
   dispatchable, no rewrite needed here.
+- **2026-08-09 (slot 23, infra)** — Fixed the `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo. Different flavor
+  from every prior fix: neither a checked-off sibling todo nor a doc-text rewrite — the DETECTOR itself already fixed
+  this exact shape. The target doc's line 129 (`[DATA][BLOCKED-UPSTREAM-OUTAGE] P2. ...`) is the literal regression case
+  the 2026-08-09 (slot 3) `_is_declared` retighten's combined-bracket scan was built to catch
+  (`ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md`, cited in that function's own
+  docstring). No edit was made to the target doc — none was needed. Verified via `dispatch_visibility_report --json`:
+  `sports_satellite_ao_dispatch_batch9_2026_08_04.md` now shows its sole excluded todo with `"declared": true` (was
+  `false` at issue-filing time) — genuinely still blocked (live Transfermarkt outage), correctly declared, no accidental
+  exclusion remains.
