@@ -58,15 +58,27 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 3 source docs' checkbox pointers with real evidence.** Batch 11's 10 todos draw from
-      3 source docs — for each landed todo, replace its citation-pointer line (added when this batch was drafted) with
-      the shipping commit + verification evidence, in: (1) `cefi_consolidated_closeout_2026_07_18.md` Track 0 (todos
-      1-5, lines 136/158/168/170/173 as of drafting); (2) `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
-      (todos 6-9, lines 175/795/820/823 as of drafting); (3) `cefi_ml_directional_continuous_live_2026_06_20.md` (todo
-      10, line 180 as of drafting — also re-check whether its now-unblocked P0 backtest-fidelity gate todo should be
-      flagged as a new candidate once this prerequisite lands). **Verify each cited commit is reachable on
-      `origin/live-defi-rollout` before citing it.** **Done when**: every landed todo's source-doc pointer is replaced
-      with a verified commit + evidence, and each source doc's remaining-open count is explicitly re-stated.
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-09 (slot-17, review).** Reconcile all 3 source docs' checkbox pointers with real
+      evidence. Batch 11's 10 todos draw from 3 source docs — for each landed todo, replace its citation-pointer line
+      (added when this batch was drafted) with the shipping commit + verification evidence, in: (1)
+      `cefi_consolidated_closeout_2026_07_18.md` Track 0 (todos 1-5, lines 136/158/168/170/173 as of drafting); (2)
+      `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` (todos 6-9, lines 175/795/820/823 as of drafting);
+      (3) `cefi_ml_directional_continuous_live_2026_06_20.md` (todo 10, line 180 as of drafting — also re-check whether
+      its now-unblocked P0 backtest-fidelity gate todo should be flagged as a new candidate once this prerequisite
+      lands). **Verify each cited commit is reachable on `origin/live-defi-rollout` before citing it.** **Done when**:
+      every landed todo's source-doc pointer is replaced with a verified commit + evidence, and each source doc's
+      remaining-open count is explicitly re-stated. — All 10 pointers replaced with real evidence
+      (`unified-trading-pm@<this-commit>`); all cited SHAs across `unified-api-contracts` (4 commits),
+      `market-tick-data-service`, and `e2e-testing` confirmed reachable on `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor` before citing. Remaining-open counts re-stated in each source doc's own Progress
+      Log (this same commit): `cefi_consolidated_closeout` Track 0 = 4/11 open;
+      `cryptovenue_equity_perps_and_tokenized_stocks` = 15/36 open doc-wide (unchanged — the reconciled items were
+      already checked at drafting time, this pass only replaced pointers with evidence). **Todo 10's re-check**: the
+      coverage measurement it gated came back NOT-COMPLETE (48.90%) — the P0 backtest-fidelity gate stays NOT
+      schedulable, no new AO-eligible candidate to flag (the blocking issue doc's own fix todos are the path forward).
+      Also fixed 2 adjacent defects found during verification: a mislabeled Progress Log section header in
+      `cryptovenue_equity_perps_and_tokenized_stocks` (todo 8's entry was headed "todo 6") and a broken cross-reference
+      in `cefi_ml_directional_continuous_live` (missing a `_2026` segment, pointed at a nonexistent file).
 - [ ] [DOC] P1. **Re-check any batch11 todo that did NOT land** (e.g. todo 7's oil-perp check resolves negative, or a
       todo hits a real blocker) for whether it should revert to a `- [ ]` open item in its source doc (if genuinely
       unresolved) or close via one of the `/done`-time disposition markers (`CANCELLED`, a permanent design-deferral
@@ -91,3 +103,7 @@ context_scope:
 
 - **2026-08-09** — drafted alongside batch11; authored `status: active` per the 2026-07-30 no-double-gate ruling,
   machine-held by `gate_on_depends: true` until batch11's todos are done.
+- **2026-08-09 (slot-17, review) — todo 1 DONE.** Batch11's 10 todos all confirmed landed with real evidence in
+  batch11's own Progress Log; reconciled all 3 source docs' EXTRACTED-pointer lines to the real shipping evidence (see
+  each todo's own entry above for the full detail). Todos 2 (disposition check) and 3 (archival) remain — both gated
+  behind this one per `sequential: true`.

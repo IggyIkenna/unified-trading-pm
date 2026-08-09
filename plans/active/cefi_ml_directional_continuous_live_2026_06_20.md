@@ -177,10 +177,12 @@ context_scope:
   >   a new todo below (a narrow, window-scoped honest-coverage check — NOT contingent on the unrelated full 2019-2026
   >   chronological backfill finishing).
 
-- **[DATA] P1. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 10 for AO
-  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Blocking prerequisite for the
-  grid-run schedule todo above: window-scoped honest-coverage measurement for OKX/BINANCE/BYBIT over
-  2024-01-01→present.)
+- [x] ✅ [DATA] P1. **DONE 2026-08-09, result NOT-COMPLETE** (dispatched via
+      `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 10, read-only measurement, no code shipped). Blocking
+      prerequisite for the grid-run schedule todo above: window-scoped honest-coverage measurement for OKX/BINANCE/BYBIT
+      over 2024-01-01→present. **Result: 48.90% overall reachable coverage — materially below complete.** Grid-run
+      schedulability verdict: still NOT schedulable. Full breakdown + evidence: this doc's Progress Log, "window-scoped
+      honest-coverage measurement RUN" entry below.
 
 ## Model-improvement backlog (deferred — not blocking the live loop)
 
@@ -287,8 +289,9 @@ This plan's own "Model-improvement backlog" section remains the owner until a su
   fidelity. **Recency check (last ~90d, >= 2026-05-11) is WORSE than the full-window average, not better: 24.70%
   overall** (OKX-SPOT 12.21%, BINANCE-SPOT 13.13%, BYBIT 18.66%) — backwards from what a live-capital gate needs (the
   most-recent data should be the best-covered, not the worst). Filed the specific gap as a blocking issue:
-  `issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_08_09.md`. **Grid-run schedulability verdict
-  unchanged: still NOT schedulable** — the operator's 2026-08-08 gating condition ("only schedule once coverage is
-  confirmed") is now answered with a confirmed NO, not an unconfirmed unknown; the blocking issue's fix todos are the
-  new path to schedulability. Full breakdown + evidence:
+  `/plans/active/issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md` (link fixed
+  2026-08-09, batch11-finalize reconciliation — was missing a `_2026` segment, a broken reference to a real file).
+  **Grid-run schedulability verdict unchanged: still NOT schedulable** — the operator's 2026-08-08 gating condition
+  ("only schedule once coverage is confirmed") is now answered with a confirmed NO, not an unconfirmed unknown; the
+  blocking issue's fix todos are the new path to schedulability. Full breakdown + evidence:
   `/plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 10 Progress Log entry (same commit).
