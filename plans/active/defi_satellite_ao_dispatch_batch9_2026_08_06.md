@@ -296,7 +296,7 @@ over all pending draft batches) that independently spot-verified every todo belo
       `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` (Follow-ups section). Repo:
       market-tick-data-service (read-only verification, no code changed). Source:
       `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` (todo 9(b-c)).
-- [ ] [UAC] P2. **Delete the orphaned AAVE_V3 `rewards` seed entry** at `defi_prediction_instrument_seeds.py:153` and
+- [x] ✅ [UAC] P2. **Delete the orphaned AAVE_V3 `rewards` seed entry** at `defi_prediction_instrument_seeds.py:153` and
       the `rewards` entries for all 10 AAVE_V3 chains in `defi_venue_capabilities.py`, completing the
       `bc397b93`-precedent cross-surface cleanup for the AAVE `rewards`/`collect-rewards` removal already shipped at
       `unified-api-contracts@5f441e0d`. Repo: unified-api-contracts. Source:
@@ -615,3 +615,10 @@ remaining items besides the over-cap-gated one above).
   removal from `asset_group=defi` — honest absence, not a regression. Issue doc
   `delta_one_get_available_instruments_unscoped_candle_data_types_2026_07_30.md` flipped to `status: resolved` +
   `resolved_by` set. No code shipped (log-citation closure only).
+- **2026-08-09 (slot 24, data_engineering, task `defi_satellite_ao_dispatch_batch9-014`)**: ✅ Removed the orphaned AAVE
+  `rewards` seed + venue-capability entries — `defi_prediction_instrument_seeds.py` no longer maps
+  `(AAVE_V3-ETHEREUM, rewards)`; `defi_venue_capabilities.py` no longer declares `rewards` for any AAVE_V3 chain (8 of
+  the 10 chains carried the key; SCROLL/ZKSYNC never did). Adjusted `test_mtds_venue_coverage.py`'s
+  `test_aavev3_ethereum_dts_share_reserve_universe` to drop the now-empty `rewards` leg of the shared-reserve-universe
+  assertion. `unified-api-contracts` full `quality-gates.sh` green post-removal (0 failures). Shipped:
+  unified-api-contracts@9e44d861.
