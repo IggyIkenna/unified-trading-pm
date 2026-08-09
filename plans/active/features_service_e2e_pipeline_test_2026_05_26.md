@@ -688,9 +688,9 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
 
 ### Open Track-1 todos (narrowed 2-strategy validation — the actual goal)
 
-- **[SCRIPT] P0. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md`.** Phase
-      A — features-onchain staked-basis slice e2e run. See the batch doc for the full scoped todo; do not
-      duplicate-dispatch from here. Repo: features-service.
+- **[SCRIPT] P0. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md`.** Phase A —
+  features-onchain staked-basis slice e2e run. See the batch doc for the full scoped todo; do not duplicate-dispatch
+  from here. Repo: features-service.
 - [ ] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol.** Run MDPS for ~2–3 days over
       the perp venues (read raw tick from `market-data-tick-cefi-prd`, write processed*candles to a `-test` bucket via
       `MDPS_OUTPUT_BUCKET*{CAT}`) → run delta_one `funding_oi`+`returns`(realized_vol_20)@1h → `-test` → read-back.
@@ -709,9 +709,9 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
 - [x] ✅ SUPERSEDED, do not dispatch (2026-07-27). **Perf/resource instrumentation.**
       `data_pipeline_check_mdps_features_2026_07_20.md` (active, finalize 2026-07-27) builds a strict superset:
       RX+rows/s+wall-clock benchmark, full-history projection, SPOT cost, across ALL asset_groups.
-- **[DATA] P2. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md`.** DEFERRED
-      fan-out — audit-then-backfill MDPS 1h `2026-04-14→04-30` (mtf 4h/24h) + BITGET-SPOT 4h/24h candles. See the
-      batch doc for the full scoped todo; do not duplicate-dispatch from here. Repo: MDPS.
+- **[DATA] P2. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md`.** DEFERRED fan-out —
+  audit-then-backfill MDPS 1h `2026-04-14→04-30` (mtf 4h/24h) + BITGET-SPOT 4h/24h candles. See the batch doc for the
+  full scoped todo; do not duplicate-dispatch from here. Repo: MDPS.
 - [ ] [VALIDATE] P2. **`usdc_idle_yield_apy_bps` stub** — confirm leave-as-0-floor (acked) vs wire `venue_funding_yield`
       upstream; folded with the per-service status-calibration audit. Repo: features-service onchain + delta_one.
 
@@ -766,3 +766,4 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
   superseded by concurrent work) before it is genuinely dispatch-ready; today's round5-cross-cutting-audit entry settled
   the `usdc_idle_yield_apy_bps` disposition question (leave-as-0-floor is standing) but the actual wiring half stays
   gated on a not-yet-shipped upstream feature (`venue_funding_yield`), so that item is not yet actionable either.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

@@ -62,24 +62,24 @@ context_scope:
 ### From `data_source_provenance_all_asset_groups_2026_06_01.md` (archived 2026-07-13 -- Data-source provenance enforced across all asset groups (source column + SOURCE_PRIORITY))
 
 - **[SCRIPT] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** Write
-      `backfill_defi_source_column.py` (copy tradfi template) to stamp the known historical source per data_type.
-      See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
+  `backfill_defi_source_column.py` (copy tradfi template) to stamp the known historical source per data_type. See the
+  batch doc for the full scoped todo; do not duplicate-dispatch from here.
 
 - [ ] [DATA] P1. Backfill the existing DeFi corpus — run now, parallel in-region VMs sharded by `day=` (see § Migration
       scope); fold into the defi canonicalisation migration (`defi_manifest_canonicalisation_2026_06_01.md`) if open,
       else run direct; manifest re-consolidation after. **(MIGRATED FROM:
       `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- **[MTDS] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`** (the
-      narrow remaining slice only — the captured write-path already ships `source="tardis"` for cefi; confirm
-      `record_empty_for_shard`/`record_failed_for_shard` likewise forward `source` in
-      market-data-processing-service `canonical_writer.py`). See the batch doc for the full scoped todo; do not
-      duplicate-dispatch from here. The historical-corpus backfill sub-item stays here (rides the cefi C-source
-      RIDER, see below). Repo: market-data-processing-service.
+- **[MTDS] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`** (the narrow
+  remaining slice only — the captured write-path already ships `source="tardis"` for cefi; confirm
+  `record_empty_for_shard`/`record_failed_for_shard` likewise forward `source` in market-data-processing-service
+  `canonical_writer.py`). See the batch doc for the full scoped todo; do not duplicate-dispatch from here. The
+  historical-corpus backfill sub-item stays here (rides the cefi C-source RIDER, see below). Repo:
+  market-data-processing-service.
 
-- **[TEST] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** CeFi
-      unit test: blank `source=` raises; `source="tardis"` persists; a future multi-source registry expansion
-      resolves by priority. See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
+- **[TEST] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** CeFi unit test:
+  blank `source=` raises; `source="tardis"` persists; a future multi-source registry expansion resolves by priority. See
+  the batch doc for the full scoped todo; do not duplicate-dispatch from here.
 
 - [ ] [DATA] P1. Backfill `source="tardis"` onto the existing cefi corpus — **fold into
       `cefi_manifest_canonicalisation_2026_06_01.md` C-source rider** (its single bundled walk owns the cefi `_index`;
@@ -129,10 +129,9 @@ context_scope:
       **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation
       ruling.)**
 
-- **[TEST] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.**
-      `available_at` parity across sources (batch = live) — a 2-source fixture (tradfi) asserts identical
-      `available_at` derivation per cell. See the batch doc for the full scoped todo; do not duplicate-dispatch
-      from here.
+- **[TEST] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** `available_at`
+  parity across sources (batch = live) — a 2-source fixture (tradfi) asserts identical `available_at` derivation per
+  cell. See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
 
 - [ ] [QG] P1. **(checker DONE, wiring REMAINING)** Checker generalised —
       `check_tradfi_source_explicit_at_record_captured.py` now flags only when a callsite's resolved
@@ -143,13 +142,13 @@ context_scope:
       promoted).** **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)**
 
-- **[MTDS] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** A12a —
-      wire the remaining 8 DeFi collect handlers (`lending_indices_handler`, `liquidations_handler`,
-      `liquidation_events_handler`, `bridge_events_handler`, `token_transfers_handler`, `aggregator_route_handler`,
-      `flash_loan_events_handler`, `solana_defi_handler`) — 15 of the original 23 already wired via
-      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (`market-tick-data-service@f7d6f5fd`);
-      `drift_v2_historical_handler` confirmed removed; `perp_funding_handler` confirmed intentionally not wired.
-      See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
+- **[MTDS] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** A12a — wire the
+  remaining 8 DeFi collect handlers (`lending_indices_handler`, `liquidations_handler`, `liquidation_events_handler`,
+  `bridge_events_handler`, `token_transfers_handler`, `aggregator_route_handler`, `flash_loan_events_handler`,
+  `solana_defi_handler`) — 15 of the original 23 already wired via
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (`market-tick-data-service@f7d6f5fd`);
+  `drift_v2_historical_handler` confirmed removed; `perp_funding_handler` confirmed intentionally not wired. See the
+  batch doc for the full scoped todo; do not duplicate-dispatch from here.
 
 - [ ] ❌ [DATA] P1. OBSOLETE/WONTFIX. ~~TradFi backfill UNBLOCKED (`MASSIVE_API_KEY` provided by operator 2026-06-01) —
       run the dual-source backfill per `tradfi_massive_dual_source_2026_05_28.md` Phase 5: stamp `source=databento` on
@@ -214,8 +213,9 @@ Scope exemptions (by design, not gaps): features-service / strategy / execution 
 - **context-scout 2026-08-03 (full re-scout pass)**: re-verified context_scope (6 entries, corrects the prior marker's
   stale count) -- unchanged; already covers the enforcement SSOT source + the preflight-chain codex doc the A12a todo
   needs.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-07-30 (unchanged):
-  P0 provenance enforcement whose `[DATA]` todos are prod corpus backfills explicitly folded into other plans'
-  single-walk windows (cross-plan sequencing is coordination judgment); genuinely AO-eligible slices exist
-  (`[SCRIPT]` backfill_defi_source_column, `[TEST]` unit tests, the A12a remaining-8-handler wiring) but
-  splitting them out of this coordination doc into a fresh batch is plan-authoring work this audit does not do.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-07-30 (unchanged): P0
+  provenance enforcement whose `[DATA]` todos are prod corpus backfills explicitly folded into other plans' single-walk
+  windows (cross-plan sequencing is coordination judgment); genuinely AO-eligible slices exist (`[SCRIPT]`
+  backfill_defi_source_column, `[TEST]` unit tests, the A12a remaining-8-handler wiring) but splitting them out of this
+  coordination doc into a fresh batch is plan-authoring work this audit does not do.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
