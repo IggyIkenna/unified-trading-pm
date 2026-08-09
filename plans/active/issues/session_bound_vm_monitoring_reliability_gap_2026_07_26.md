@@ -109,11 +109,15 @@ in the same way and at the same time when they're the same physical connection.
       is exactly how `af-backfill-` went unnoticed for ~9 days before the 2026-08-04 fix, and would recur for the next
       novel one-off backfill VM naming scheme) — is filed as the scoped follow-up build below.
 
-- [ ] [SCRIPT] P2. **EXTRACTED 2026-08-09 → `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1.** Build a
-      forward-registration CI guard so a NEW ad hoc/one-off backfill launcher can never launch a VM invisible to the
-      fleet monitor. Full scope (the 4-step `check_vm_launcher_prefix_registration.py` design) now lives in that batch
-      doc — tracked there going forward, not duplicated here; this checkbox flips once the batch's finalize plan
-      reconciles it.
+- [x] ✅ [SCRIPT] P2. **EXTRACTED 2026-08-09 → `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 — SHIPPED
+      `deployment-service@c8f1612b`.** Built the forward-registration CI guard
+      (`check_vm_launcher_prefix_registration.py`) so a NEW ad hoc/one-off backfill launcher can never launch a VM
+      invisible to the fleet monitor: derives each launcher's prefix, fails when uncovered by
+      `is_data_vm()`/unregistered in `LAUNCHER_FOR_VM_PREFIX`, wired into `quality-gates.sh`, baseline-ratcheted (39
+      pre-existing launchers grandfathered), `launcher_registry.py` docstring +
+      `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md` updated with the closed-loop registration
+      contract, 8 new unit tests (incl. a synthetic unregistered-launcher case) — all green. Reconciled by
+      `infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md` todo 1.
 - [ ] [DATA] P3. **Audit whether the `PREEMPTED` marker's shutdown-script grace period is survivable in practice** — the
       marker write (`gcloud storage cp` of a one-line file) didn't complete before this instance was reclaimed, which is
       the SAME mechanism `zombie_watchdog`/`exit_code_fleet_monitor` rely on to classify a gone VM as a benign
@@ -124,6 +128,11 @@ in the same way and at the same time when they're the same physical connection.
 
 ## Progress Log
 
+- **infra_satellite_ao_dispatch_batch10_finalize 2026-08-09 (slot 23, review)**: Reconciled the `[SCRIPT] P2`
+  forward-registration CI guard todo — flipped to `[x]` citing `deployment-service@c8f1612b`
+  (`infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1, shipped 2026-08-09). Confirmed this doc is NOT an
+  archival candidate: the `[DATA] P3` PREEMPTED-marker grace-period survivability audit remains open by design (a
+  genuine undecided design choice, untouched by this batch's scope) — `grep -cE '^- \[ \]'` = 1 after this flip.
 - **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:53c7ebb01b2b239b]: KEEP-NA-STALE (already-duplicated) —
   1 of 2 items. Todo 1 is already correctly self-annotated as EXTRACTED into
   `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (status: active, confirmed). Todo 2 (PREEMPTED marker

@@ -62,11 +62,12 @@ Machine-held via `depends_on` + `gate_on_depends: true` until all 3 of
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md`'s `[SCRIPT] P2`
-      todo.** Once batch10's todo 1 ships, flip that source doc's matching `- [ ]` checkbox to `[x]`, citing the batch10
-      commit SHA(s). Do NOT touch its `[DATA] P3` todo (the PREEMPTED-marker grace-period survivability audit) — that
-      stays open, `assigned_vm: NA`, a genuine undecided design choice not this batch's scope. Confirm the source doc is
-      NOT an archival candidate afterward (the `[DATA] P3` todo remains open by design). (repo: unified-trading-pm)
+- [x] ✅ [REVIEW] P2. **Reconcile `issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md`'s `[SCRIPT] P2`
+      todo.** — `unified-trading-pm` (this commit). Flipped that source doc's `[SCRIPT] P2` checkbox to `[x]`, citing
+      `deployment-service@c8f1612b` (batch10 todo 1). Left its `[DATA] P3` todo (the PREEMPTED-marker grace-period
+      survivability audit) untouched — genuine undecided design choice, not this batch's scope. Confirmed the source doc
+      is NOT an archival candidate: `[DATA] P3` remains open by design (1 open `- [ ]` left in that doc). (repo:
+      unified-trading-pm)
 - [ ] [REVIEW] P2. **Reconcile `issues/shared_host_home_filesystem_full_2026_07_26.md`'s 2 `[INFRA]` todos.** Once
       batch10's todos 2-3 ship, flip that source doc's matching `- [ ]` checkboxes (§ "Orphaned manifest-consolidator
       scratch on the orchestrator VM") to `[x]`, citing the batch10 commit SHA(s) for each. Do NOT touch its 2 older
@@ -90,5 +91,9 @@ Machine-held via `depends_on` + `gate_on_depends: true` until all 3 of
 
 ## Progress Log
 
+- **2026-08-09 (slot 23, review)** — Todo 1 shipped: flipped
+  `issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md`'s `[SCRIPT] P2` checkbox, citing
+  `deployment-service@c8f1612b`. Confirmed the source doc is not an archival candidate (its `[DATA] P3` item remains
+  genuinely open). Todos 2-3 remain open (different files, no conflict).
 - **2026-08-09** — Authored alongside `infra_satellite_ao_dispatch_batch10_2026_08_09.md` by a manual
   satellite-batch-extraction pass over the infra-tranche NA candidate doc set.
