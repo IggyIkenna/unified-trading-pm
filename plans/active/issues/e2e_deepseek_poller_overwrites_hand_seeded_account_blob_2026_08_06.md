@@ -94,10 +94,17 @@ context_scope:
       failing spec itself (which of the 7 hand-seeded columns currently mismatch) is unaffected by this finding and
       remains open below — this decision doesn't need that answer, but the eventual fix-implementer may still want it
       for the regression-test writeup.
-- [ ] 3. [INFRA] P3. Implement the chosen fix; the currently-known workaround this session used elsewhere
-      (`agent-orchestrator@<TBD — see deepseek_flash_ab_routing_test_2026_08_05.md's Progress Log>`) was to give NEW
-      TaskUsageRow fixture rows a distinct, non-colliding `account_id` — that pattern does NOT help pre-existing rows
-      like E2E-DONE that must legitimately share the real account_id for other specs (`backlog-detail.spec.ts`).
+- [x] 3. [INFRA] P3. ✅ **DONE 2026-08-09 (slot-26, backend_engineer) — `agent-orchestrator@d279c22`.** Implemented the
+      chosen fix (todo 2's option (a)): `server/server.py` now gates `deepseek_usage_poller_inst.start()` behind
+      `if not config.is_mock():`, the exact e2e-mode gate todo 2 specified. Both e2e backend launchers
+      (`run-e2e-backend.sh:26`, `run-e2e-backend-chat.sh:66`) export `ORCHESTRATOR_MODE=mock`, so the poller now never
+      ticks in any e2e context — the hand-seeded `deepseek-per-turn-metrics.spec.ts` fixture blob is no longer
+      overwritten. Shipped via this repo's own `quality-gates.sh` + `quickmerge` (Pass-1 green, 2871 tests). **Not yet
+      independently re-run against the live spec** — blocked by a separate, still-open infra gap
+      (`/plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md` todo 6: `run-e2e-backend*.sh` ship static,
+      non-slot-offset-aware backend-port fixtures, so dashboard login fails from any `.tabs/N` (N≠0) checkout) —
+      npm/dashboard e2e work is outside `backend_engineer` craft scope. Re-run this spec once that todo lands to close
+      the loop empirically.
 
 ## Progress Log
 
@@ -131,3 +138,13 @@ context_scope:
   `/codex/06-coding-standards/ui-testing-layers.md` § "agent-orchestrator e2e: background-poller vs. fixture-data
   interaction". Fix direction (todo 2 ✅) and implementation (todo 3) unchanged — blast-radius confirmation does not
   alter the decision.
+- **2026-08-09 (slot-26, backend_engineer, cross-referenced from
+  `/plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md` todo 5)**: Todo 3 ✅ implemented —
+  `agent-orchestrator@d279c22` adds `if not config.is_mock():` around `deepseek_usage_poller_inst.start()` in
+  `server/server.py`, mirroring the sibling `plan_regen.start()` gate. Confirmed both e2e launcher scripts export
+  `ORCHESTRATOR_MODE=mock`, so this is the exact fix todo 2 scoped, applied fleet-wide (not spec-specific). Live re-run
+  of `deepseek-per-turn-metrics.spec.ts` against this fix is deferred — blocked by a separate open infra todo (static,
+  non-slot-offset-aware `run-e2e-backend*.sh` port fixtures) tracked in the finalize plan above, not this doc; npm/e2e
+  verification is outside `backend_engineer` craft scope. All 3 todos in this doc are now checked; final archival
+  decision (checking whether `status: open` should flip and this doc should be archived) is left to that finalize plan's
+  own todo 3 (REVIEW-role, source-doc archival sweep) rather than done here, to avoid duplicating that gated ritual.
