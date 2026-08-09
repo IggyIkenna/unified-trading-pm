@@ -36,7 +36,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-last_updated: 2026-08-08
+last_updated: 2026-08-09
 locked_since:
 context_scope: [agent-orchestrator/server/routes/slots_worker.py, agent-orchestrator/server/state_store/cooldown.py]
 ---
@@ -164,21 +164,42 @@ own Tick history.
       Log entry below. Short version: the death IS genuine (process confirmed gone, not just detached from tmux), OOM
       and every AO-Python-code kill path are ruled out with hard evidence, and the fix shipped closes a real
       previously-unpatched gap but does not by itself explain the underlying death — see the new todo below.
-- [ ] [BACKEND] P1. **New leading hypothesis from the resolution above — does Claude Code's `/loop <N>s <task>` (a FIXED
-      interval; review.md's own boot prompt, `config.review_loop_seconds()` defaults to 900s) legitimately terminate the
-      underlying OS process between ticks, relying on some mechanism outside this repo to relaunch it into the SAME tmux
-      pane?** Every AO-Python-code-level kill mechanism is now conclusively ruled out (Progress Log below) — the
-      remaining candidate is CLI-level `/loop` behavior itself. Cheap, deterministic test: spawn a throwaway tmux
-      session running `claude ... --session-id <x>`, issue `/loop 60s <trivial no-op command>`, capture the pane's PID
-      right after the first tick completes and again after the second. If the PID changes (or the process disappears and
-      something external relaunches it) between ticks, that CONFIRMS the hypothesis and the fix is a `review.md`
-      boot-prompt change (e.g. the self-paced/dynamic `/loop` form — documented as using an external resume contract
-      rather than a fixed in-process sleep — or a different polling pattern proven not to exit the process). If the PID
-      is stable across ticks, this hypothesis is falsified and the next step is getting read access to
-      `dmesg`/`journalctl -k` from a worker sandbox (every session so far, review AND backend, has hit
-      `Operation not permitted` on both) to directly check for a kernel-level kill this repo's own userspace logging
-      can't see. Repo: agent-orchestrator (if a code-side fix) or unified-trading-pm (`agents/review.md`, if a
-      boot-prompt fix) — whoever picks this up should confirm which before assuming.
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-09 (slot 33, review→backend_engineer craft) — HYPOTHESIS FALSIFIED, empirically
+      tested exactly as specified.** Spawned a throwaway tmux session (`loop-hypothesis-test`, fresh `--session-id`,
+      same `exec claude --dangerously-skip-permissions` shape the orchestrator itself uses), issued
+      `/loop 60s reply with exactly the word: tick`, and captured the pane's PID every 10s across the full test (bounded
+      background monitor, `run_in_background`, ~2.5 min).
+  - **Mechanism found**: `/loop <N>s <task>` in this Claude Code version (2.1.202) is implemented via `CronCreate` — a
+    session-scoped cron job (`*/1 * * * *` for `60s`) that fires INSIDE the existing process. The pane's own output
+    confirms it verbatim:
+    `"Scheduled: every minute (job 97d7b0ca)... Session-only — it stops if this session ends, and auto-expires after 7 days."`
+    This is a fundamentally different mechanism than "tear down and relaunch" — it's an in-process timer, not an
+    external respawn.
+  - **PID result**: pane PID `1400154` (started `10:23:36`) was IDENTICAL across every 10s sample from spawn through
+    BOTH the first tick (`"tick"` reply + `Worked for 7s`, ~10:24:47) and the second tick
+    (`"Running scheduled task (Aug 9 10:25am)"` → `"tick"` reply, ~10:25:47) — zero PID changes, zero process restarts,
+    for the full observed lifetime. **Hypothesis FALSIFIED**: `/loop` does NOT terminate the underlying OS process
+    between ticks; no external relaunch mechanism exists to investigate on the `review.md` boot-prompt side. Test
+    session cleanly exited (`/bye`) and the tmux session removed — no orphan left behind.
+  - **Next step taken (per this todo's own fallback instruction)**: since the PID was stable, checked
+    `dmesg`/`journalctl -k` access from this worker sandbox. `dmesg` itself still refuses (`Operation not permitted`,
+    matches every prior session), but **`journalctl -k` WORKS from this slot's sandbox** — a capability gap this doc had
+    recorded as universal (`"every session so far, review AND backend, has hit Operation not permitted on both"`) turns
+    out to be `dmesg`-specific, not journald-wide. Queried `journalctl -k` for 4 independent, exact, just-confirmed
+    `orch-slot-1` `tmux_session_lost` timestamps (10:26:19Z, 10:14:20Z, 10:09:04Z, 09:54:19Z, via a live
+    `GET /api/activity?slot=1&type=tmux_session_lost`) — **zero kernel-log entries in any of the 4 windows**. This
+    further rules out a kernel-level cause (OOM killer, cgroup enforcement, hardware fault) for these SPECIFIC deaths —
+    a real kernel kill always logs via `journalctl -k`, and none did. Cross-referenced the most recent death (10:26:19Z)
+    against `journalctl -u orchestrator` for the same window and found the actual proximate AO-side trigger:
+    `AgentKeeper reaped 2 orphan agent record(s): [('agt-aa4070', 'dead-tmux-session'), ...]` at `10:26:16.429Z` — 2.6s
+    BEFORE the `tmux_session_lost` activity event — i.e. `reap_orphan_agents` (the already-identified first detector,
+    `agent-orchestrator@5a163e7`) fired first, confirming that fix's own diagnosis is still the correct proximate
+    mechanism; this new data point doesn't change that conclusion, it adds a 4th kernel-log-negative sample to the
+    "genuine death, not kernel-visible" evidence pile. New bounded follow-up todo added below capturing the
+    `journalctl -k` access finding for whoever continues the root-cause hunt — did NOT chase the underlying "why does
+    the process actually exit" question further myself; that's outside this todo's own scope (it only asked to
+    falsify/confirm the `/loop` hypothesis and take the ONE next step its own text names). Repo: unified-trading-pm
+    (this doc only — no code shipped, `/loop` behavior lives in the Claude Code CLI itself, not this repo).
 - [x] ✅ [DOCS] P3. Correct the ~00:22Z progress-log entry below (12-slot simultaneous burst) — review (msg 4361) showed
       it's a batch-processing artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick,
       NOT a tmux-server-level event as originally hypothesized; only the review-role entry in that burst was a real loss
@@ -199,6 +220,19 @@ own Tick history.
       `GET /api/state` now reports `server_started:2026-08-08T23:45:40Z` (after the commit); `git log` in the
       orchestrator checkout still confirms HEAD=e32d962. Someone/something with the right privilege restarted it. Todo 3
       (REVIEW re-verify) can now proceed.
+- [ ] [BACKEND] P2. **`journalctl -k` is readable from a worker sandbox (confirmed 2026-08-09, slot 33) — leverage it to
+      keep narrowing the still-unidentified root cause.** `dmesg` itself stays blocked (`Operation not permitted`), but
+      `journalctl -k --since <ts> --until <ts>` succeeds from an ordinary worker session (no `sudo`, no special grant
+      observed). 4 independent `orch-slot-1` `tmux_session_lost` timestamps checked this way all showed ZERO kernel-log
+      entries in their windows, further supporting "genuine death, kernel not involved" over "OOM/cgroup/ hardware kill"
+      — but 4 samples is not exhaustive. Whoever picks this up: (a) re-verify the access is durable (not a one-off
+      sandbox quirk — check from a couple of different slots/sessions), (b) if durable, wire a standing correlation
+      check (kernel-log window around each fresh `tmux_session_lost` for `orch-slot-1`) into whatever tooling/runbook
+      the ongoing investigation already uses, rather than each session re-deriving the `journalctl -k` command from
+      scratch, (c) also try `journalctl -k` (not just `-u orchestrator`) around a death for signal-related lines
+      (`SIGKILL`, `SIGTERM`, cgroup `oom-kill`, `Out of memory`) using a wider grep, since this session only eyeballed a
+      tail rather than pattern-matching. Repo: unified-trading-pm (this doc) or agent-orchestrator (if a durable check
+      gets code-ified).
 
 ## Progress log
 
@@ -635,3 +669,20 @@ own Tick history.
   slot-1's specific kill timestamps if this recurs — unlike raw CPU load (already shown decoupled above), SQLite
   write-lock stalls could plausibly cause a liveness probe to time out and misreport a session as dead even while the
   underlying tmux session is fine.
+- 2026-08-09 ~10:27Z (backend, slot 33, review→backend_engineer craft) — `/loop` PROCESS-TEARDOWN HYPOTHESIS FALSIFIED,
+  EMPIRICALLY. Ran the exact test the standing BACKEND P1 todo specified: throwaway tmux session, fresh `--session-id`,
+  `/loop 60s reply with exactly the word: tick`, PID sampled every 10s across 2 full ticks (~2.5 min). PID `1400154`
+  never changed. `/loop` in Claude Code 2.1.202 is a session-scoped `CronCreate` job firing inside the live process, not
+  a teardown/relaunch cycle — the pane's own output says so explicitly ("Session-only — it stops if this session ends").
+  This rules out the CLI-level `/loop` mechanism entirely; no `review.md` boot-prompt fix or agent-orchestrator code fix
+  is warranted from this angle. Per the todo's own fallback, checked `dmesg`/`journalctl -k` access from this sandbox:
+  `dmesg` still blocked, but **`journalctl -k` works** — a previously-undiscovered capability. Checked 4 fresh, exact
+  `orch-slot-1` `tmux_session_lost` timestamps (10:26:19Z, 10:14:20Z, 10:09:04Z, 09:54:19Z) against it: zero kernel-log
+  entries in any window, adding 4 more kernel-negative samples to the "genuine death, not kernel-visible" evidence
+  already established by `agent-orchestrator@5a163e7`'s live-PID-capture method. Cross-referenced the most recent death
+  against `journalctl -u orchestrator` and confirmed the already-identified `AgentKeeper reap_orphan_agents`
+  (`5a163e7`'s fix target) is still the correct proximate detector (fired 2.6s before the activity event, same shape as
+  previously documented). New `[BACKEND] P2` todo added above capturing the `journalctl -k` access finding for the next
+  investigator — did not chase the underlying "why does the process actually exit" question further, since that's
+  outside this todo's own stated scope. No code shipped (this doc only) — the falsified hypothesis needed no fix, and
+  the access finding is itself the deliverable for the next todo.
