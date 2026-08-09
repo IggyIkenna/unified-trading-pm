@@ -100,3 +100,8 @@ separate times during future reclassification passes.
 - 2026-08-08: Filed following the pre-compact ritual's Step 1 audit (chat-only finding from 2 sub-agent reports,
   converted to a tracked todo per the workspace's HARD RULE that every deferral must be a `- [ ]`, not prose).
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:3a10c7ffb2d96eae]:
+  KEEP-NA, valid — 0 open `- [ ]` todos (sole item already extracted + cited to
+  `ci_satellite_ao_dispatch_batch8_2026_08_09.md` todo 1, per today's `ag_closeout_audit_ci_parked_2026_08_09.md` Phase
+  0-1 delta: "archivable_after_planned_work"). Not archive-eligible yet — batch8 todo 1 hasn't executed. Nothing further
+  for this run to fix.

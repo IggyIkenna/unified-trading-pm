@@ -538,3 +538,14 @@ assembles a ci satellite batch once this doc's Progress Log stabilizes.
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — evolving incident log, OPERATOR OOM-dmesg, design tradeoff
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:8d49128a486bd493]: KEEP-NA,
+valid — 3 open items re-verified end-to-end. The RETRY_PER_TICK design-tradeoff item (line 231) blocks whole-doc
+RECLASSIFY on its own (genuine open tradeoff, "leave as-is" explicitly valid). Flagging the other 2 as
+`MISCLASSIFIED_LIKELY_AO_ELIGIBLE` for a closer look next round: the AWS Cost Explorer $ quantification item (line 176)
+has been marked "extraction-ready" since 2026-08-01 but never actually extracted across 7+ subsequent batches —
+re-verify the conflict-check is still clear and consider a satellite-batch pull rather than another citation-only
+confirm; the tmux_session_lost root-cause investigation (line 220, filed 2026-08-08) has concrete candidate steps
+(a/b/c) and may be bounded enough for extraction, though it concerns a now 10-day-stale incident. Neither promoted to
+RECLASSIFY this run (doc-level flip blocked by item 3; sub-item extraction is `/ag-closeout-audit`'s satellite-batch
+mechanism, not this skill's). No `assigned_vm` change.

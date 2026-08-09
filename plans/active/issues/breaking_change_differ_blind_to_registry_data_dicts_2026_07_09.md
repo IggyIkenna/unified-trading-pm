@@ -192,12 +192,13 @@ Close Layer 1 (make the gate fire) AND Layer 2 (give it teeth when it does):
       to `system-integration-tests` and resolve the `strict=False` xfail on
       `test_venue_to_tardis_matches_inverted_venue_mapping`. (repo: system-integration-tests) — shipped
       `unified-api-contracts@e34afc1d` (invariant test) + `system-integration-tests@67db4da` (wiring + xfail fix).
-- [x] ✅ [DESIGN] P2. **RESOLVED 2026-08-08 -- operator ruling: YES, add the consumer QG gate.** Decide whether provider
-      (UAC) registry-change promotes should fan out consumer QG (>= IS) as a gate; spec it or explicitly defer with
-      rationale. (repo: unified-trading-pm) -- was OUT OF SCOPE for the original closure; parked as Deferred **E8** /
-      operator question 1 in `ci_satellite_ao_dispatch_batch2_2026_07_29.md` (now archived). **operator ruling
-      2026-08-08**: yes -- a provider (UAC) registry-change promote MUST fan out and run consumer QG (at minimum
-      instruments-service, the confirmed consumer per this doc's own downstream-symptom cross-reference to
+- [x] ✅ [DESIGN] P2. **RESOLVED 2026-08-08 -- operator ruling (see `ci_satellite_ao_dispatch_batch2_2026_07_29.md`
+      Deferred E8, archived): YES, add the consumer QG gate.** Decide whether provider (UAC) registry-change promotes
+      should fan out consumer QG (>= IS) as a gate; spec it or explicitly defer with rationale. (repo:
+      unified-trading-pm) -- was OUT OF SCOPE for the original closure; parked as Deferred **E8** / operator question 1
+      in `ci_satellite_ao_dispatch_batch2_2026_07_29.md` (now archived). **operator ruling 2026-08-08**: yes -- a
+      provider (UAC) registry-change promote MUST fan out and run consumer QG (at minimum instruments-service, the
+      confirmed consumer per this doc's own downstream-symptom cross-reference to
       `/plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`) as a gate, not an
       explicitly-deferred no-op -- this closes the exact class of gap this doc exists to fix (a registry-data-dict
       change landing on `main` with nothing catching the downstream break before IS's own QG did, live). Design decision
@@ -266,3 +267,7 @@ no reclassification. No stale items, not an archive candidate (1 substantive ope
 sole open item (todo 5, `[DESIGN] P2` provider-promote fan-out policy) remains parked as
 `ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred E8, an explicit operator question, unruled. No new content
 since the 2026-08-06 marker beyond a context-scout re-verification.
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:92a5d83adf1312ab]: KEEP-NA,
+valid — re-verified the sole open item, still parked as Deferred E8, unruled. Independently re-confirmed by today's
+`ci_satellite_ao_dispatch_batch7_2026_08_09.md` fresh full read. No `assigned_vm` change.

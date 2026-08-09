@@ -278,3 +278,8 @@ victory (todo 2). Todo 1 (`[OPERATOR] P1`, deferred/conditional self-debounce) i
 hardening from this still-active incident's own investigating session — not defaulted-to-NA-and-never-assessed.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:4cf4337fae944d2c]: KEEP-NA,
+valid — confirms the 2026-08-07 verdict, unchanged since (only context-scout touch). Todo (a) is explicit `[OPERATOR]`,
+conditional/deferred; todo (the 60-min clean-window bar) is live-incident observation work, not yet confirmed cleared.
+No `assigned_vm` change.

@@ -195,3 +195,12 @@ citation-based role/gate blocker on the narrowed remaining scope is unaffected b
   source-doc flip/resolve step only, not archival — left for a future archival-sweep pass to ask about unlocking.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5): SUPERSEDED BY LIVE EVENT — written
+against a since-changed state; correcting rather than leaving stale. At classification time this doc had 1 open item
+(pnpm hardlink-dedup investigation) and I verdicted KEEP-NA valid; `ci_satellite_ao_dispatch_batch6_finalize` todo 1
+(slot 31) shipped that item concurrently and flipped `status: active` → `complete` (0 open checkboxes, 0 open prose
+work) before this commit landed. Current state: KEEP-NA correct as a terminal classification (not ARCHIVE) only because
+`locked_by: live-defi-rollout` blocks archival without an explicit `[unlock-plan]` decision — not this run's to clear
+autonomously, per the doc's own 2026-08-09 note above. No `assigned_vm` change; no incremental-skip body-hash recorded
+since the doc changed again after this marker was drafted — next run should re-hash fresh.

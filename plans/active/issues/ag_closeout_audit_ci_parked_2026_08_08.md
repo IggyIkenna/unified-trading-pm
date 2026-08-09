@@ -239,6 +239,15 @@ work). Not this audit's to reclassify or archive.
 **na-eligibility-audit 2026-08-08** (tranche `ci`): KEEP-NA, valid — confirmed independently: 0 open `- [ ]` todos, doc
 is a prose findings-report (not dispatchable content in its own right), `assigned_vm: NA` correct as-is.
 
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:88ad1cd737470366]: KEEP-NA,
+valid — re-confirmed: 0 open `- [ ]` todos, still a prose findings-report. Now superseded by
+`ag_closeout_audit_ci_parked_2026_08_09.md` (its `supersedes:` cites this doc, but this doc's own `superseded_by:` is
+still unset and it has not been archived) — the immediate predecessor in this same chain
+(`ag_closeout_audit_ci_parked_2026_08_07.md`) WAS archived once superseded, so this doc plausibly qualifies too, but the
+2026-08-08 marker above is an explicit standing ruling that report docs of this kind are "not this audit's to reclassify
+or archive" — respected here rather than re-litigated. Flagging for the next `ag_closeout_auditor` run or a human to
+complete the supersession (set `superseded_by:` + archive) if that reading is confirmed correct.
+
 ## Progress Log
 
 - **context-scout 2026-08-09**: populated context_scope (4 entries).

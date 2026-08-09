@@ -530,3 +530,7 @@ checkboxes. No `assigned_vm` change.
   already tracked by todo 1.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:39bc9a22662d6f04]: KEEP-NA,
+valid — both open items (track the ledger-coordination fork Phase 2-3; re-check the 4-doc chain once landed) remain
+gated on that external plan, consistent with the doc-chain family's established verdict. No `assigned_vm` change.

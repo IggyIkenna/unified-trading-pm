@@ -965,3 +965,8 @@ guard). Doc near the 1000L hard cap (952L) — keeping this entry minimal; next 
 doc's own note.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:8991b050d116400a]: KEEP-NA,
+valid — the sole open item (todo 2, whether other repos beyond features-service warrant the same `PYTEST_TIMEOUT` raise)
+remains an open-ended "consider whether" judgment call, unchanged since the 2026-08-04 verdict. Doc at 972L, still under
+the 1000L hard cap. No `assigned_vm` change.

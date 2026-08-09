@@ -772,3 +772,9 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — LOCAL/operator-driven banner, human-tracked design questions
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:1c5a6017d0616242]: KEEP-NA,
+valid — 10 open items now (was 9; today's new `[INFRA] P3` MAX_DURATION-drift finding, filed 2026-08-09 slot 22, is the
+same class as the other 9 — a real, well-specified engineering follow-on under the standing top-of-doc 2026-07-14
+"LOCAL/operator-driven, human-driven" ruling, not defaulted-and-never-assessed). No duplicate found in any active
+`assigned_vm: planning` sibling. No RECLASSIFY, no ARCHIVE.

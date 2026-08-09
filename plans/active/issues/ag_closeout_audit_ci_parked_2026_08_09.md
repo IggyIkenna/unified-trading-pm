@@ -28,7 +28,7 @@ related:
     /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
     /plans/active/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /plans/active/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md,
-    /plans/active/ci_satellite_ao_dispatch_batch7_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch7_2026_08_09.md,
     /plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -50,7 +50,7 @@ context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
-    /plans/active/ci_satellite_ao_dispatch_batch7_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch7_2026_08_09.md,
     /plans/active/issues/ag_closeout_audit_ci_parked_2026_08_08.md,
   ]
 ---
@@ -257,6 +257,10 @@ This doc is itself a findings-tracker produced by a DIFFERENT skill (`ag-closeou
 2026-08-07/08 predecessors: `assigned_vm: NA` is correct (a report, not dispatchable content in its own right); 0
 checkbox-style todos (all content is prose/informational + pointers to the 8 active batches, which carry the real
 dispatchable work). Not this audit's to reclassify or archive.
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:f693245b85215c47]: KEEP-NA,
+valid — confirmed independently: 0 open `- [ ]` todos, current (not-yet-superseded) prose findings-report,
+`assigned_vm: NA` correct as-is.
 
 ## Progress Log
 

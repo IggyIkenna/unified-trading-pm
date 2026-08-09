@@ -207,3 +207,8 @@ named-owner coordination. No `assigned_vm` change.
   "page-first, do NOT fix here" operator ruling (2026-07-21) still governs the file-ownership coordination posture. No
   `assigned_vm` change.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:c53f3136e574ad22]: KEEP-NA,
+valid — re-verified the sole open item (#3, cicd-events ledger `build_id`), still an explicit low-confidence judgment
+call. Independently re-confirmed by today's batch7 fresh full read ("0 extractable... explicit low-confidence judgment
+call"). No `assigned_vm` change.

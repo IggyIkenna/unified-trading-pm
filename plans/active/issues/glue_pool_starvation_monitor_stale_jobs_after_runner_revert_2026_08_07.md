@@ -263,4 +263,9 @@ every healthy tick forever) — that is a real, if modest, additional job
   edit in an over-cap file has no `check_line_caps.sh` carve-out). Set `archive_exempt: true`, kept `status: open`
   (terminal status without physical archival would itself fail `check_terminal_status_archived`). Un-set once the
   deadlock doc's operator decision lands and the archival can complete.
+
+- **na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:3e317fe1078c4dd1]:
+  KEEP-NA, valid — confirmed independently: 0 open `- [ ]` todos, `archive_exempt: true` with the line-cap-deadlock
+  reason still current (the referring doc's `check_line_caps.sh` deadlock is unresolved). Not archive-eligible until
+  that deadlock doc's operator decision lands, per the doc's own prior entry.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

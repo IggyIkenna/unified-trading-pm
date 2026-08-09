@@ -178,3 +178,7 @@ needed a brand new dispatch). Result: `validate / GCP Cloud Build — alerting-s
   `unified-trading-ci`; `python-quality-gates-v2.yml`'s remaining self-hosted reference is a safe, parameterized,
   intentional canary, not a stranded hardcoded pattern.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:5dc1e65cce36b844]: KEEP-NA,
+valid — the sole open item (todo 2, standing-check design decision) remains a genuine, un-scoped design call. No
+`assigned_vm` change.

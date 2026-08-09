@@ -525,3 +525,12 @@ today's evidence.
   remains.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:4f41d1675dd06a2d]: KEEP-NA,
+valid — 1 open item, newly added today by an earlier stale-recheck session (root-cause the residual 7-repo semver
+stall). Tagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE`: the classification half (check each of 7 repos' commit ranges, label
+correctly-quiet vs. genuine gap) is bounded/worker-determinable, but the "if a genuine gap is found and fixed" branch is
+open-ended (this doc's own history shows 2 prior "follow-up regression" cascades of real diagnostic
+
+- fleet-wide-fix scope from this same investigation area) — not confident enough to RECLASSIFY the whole doc on one
+  read; flag for next round once the classification-only sub-scope could be split out. No `assigned_vm` change.
