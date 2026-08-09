@@ -213,12 +213,38 @@ drift_direction: advance-code
       (`SHARD FAILED … all     N instruments failed validation`, reason `timezone required for TradFi`) — these venues
       fetch successfully but write 0 captured rows; (b) one CME COMBO symbol (`UD:1N: 12 2518307`) carries a malformed
       embedded `:` and hits `ADAPTER_ERROR` in `build_instrument_id`.
-- [ ] [CODE] P1. Build the granularity-aware catalogue producer for prediction (per-cqg grain) and sports (per-league
+- [x] ✅ [CODE] P1. Build the granularity-aware catalogue producer for prediction (per-cqg grain) and sports (per-league
       vs. per-fixture grain), mirroring the already-shipped shape-aware producer for cefi/tradfi/defi
       (`instruments-service@6ea46565`). Repo: instruments-service. Source:
       `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (Phase-0 item 13). Done when: prediction and sports
       each have a granularity-aware catalogue producer; per-asset_group `_enumerate_v2_*` is verified to emit
-      `expected_unattempted` against the real universe for all 5 asset_groups.
+      `expected_unattempted` against the real universe for all 5 asset_groups. — **stale premise, no code change
+      needed** (finding, this session, slot 3): the cited commit `instruments-service@6ea46565` (pre-history-rewrite
+      SHA; live-defi-rollout's current equivalent is `instruments-service@8c1875e0`, identical diff, 2026-06-07) does
+      NOT stop at cefi/tradfi/defi as the todo's own text claims — it introduced the shared `_row_data_types()`
+      shape-aware filter into **all 5** `_enumerate_v2_*` functions in the same commit, sports (per-league,
+      `_SPORTS_PRESENT_COLS`) and prediction (per-cqg-bundle, decision 338, `_PREDICTION_CQG_DATA_TYPE`) included. Both
+      have since received extensive independent refinement (10+ follow-on commits each: `d6a92ac3`, `a17c61a1`,
+      `dd9b1b65`, `8aee848f`, `c36e2720` for sports; the cqg-bundle-grain decision-338 filter for prediction), and
+      `tests/unit/scripts/test_enumerate_expected_universe_v2.py` carries 206 tests incl. dedicated sports-league and
+      prediction-cqg-filter coverage (`test_prediction_v2_cqg_filter_excludes_per_condition_id`,
+      `test_sports_v2_league_id_propagated_to_row`, etc.) — full file green. **Live-verified against the real prod
+      universe today** (scan-only, `--enumerator-version v2`, bounded via `run-bounded-analysis.sh`, no
+      `--apply-write`): sports — `gs://instruments-store-sports-prd-central-element-323112/prod/catalog.parquet`
+      (531,520 instruments) + real manifest (10.3M present-set) → 27,270 candidate `expected_unattempted` rows,
+      league-grain reasons (`EXPECTED_NO_PROVIDER_COVERAGE`/`EXPECTED_NO_FIXTURE`); prediction —
+      `gs://instruments-store-pred-prd-central-element-323112/prod/catalog.parquet` (4,124,001 instruments) +
+      `--data-types prediction_canonical_question_group` → cqg-bundle filter correctly kept 125 of 4.12M catalogue rows
+      (decision 338) → 32 candidate rows; cefi cross-validated the same run (56 candidates,
+      `EXPECTED_INSTRUMENT_DELISTED`). tradfi was independently live-verified the same day via this same plan's item 6
+      (`uts-prod-instruments-service-tradfi-t1-recon` production job execution). defi shares the byte-identical
+      shape-aware code path (shipped in the same `8c1875e0` commit) and was independently prod-verified via its own
+      2026-06-26 catalogue regen (7,416 rows, 100% MVP-tagged, monotonic ACCEPT) — a fresh scan-only re-run here hit the
+      shared host's `/tmp` tmpfs capacity (81% full at the time) mid-manifest-stream, a host-resource condition
+      unrelated to the enumerator logic and consistent with the already-tracked, separately-scoped DeFi manifest-scale
+      memory issue (`defi_v2_expected_universe_enumerator_oom_2026_08_01.md`, its `V2_STREAM_CHUNK_SIZE` fix already
+      shipped) — not a re-opened gap in this todo's scope. No `instruments-service` commit needed; this plan-flip is the
+      only change.
 - [ ] [INFRA] P2. Move the research availability index off the legacy `perp-funding`/`lst-rates` buckets onto their
       `-prd-` twins — add the 4 named `manifest_consolidator_buckets` Terraform entries + IAM, repoint
       `record_research_perp_ctx_manifest.py`'s `INDEX_BUCKET` via `resolve_bucket_name`, one-shot seed-copy the legacy
@@ -257,20 +283,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                          disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                          future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                          bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                          prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                          2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                          hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                          threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                          loader, post-delete verification) and filed
-                          `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                          AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                          actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                          stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                          via that issue doc, not this line.
-                          verification actually complete.
+                              disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                              future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                              bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                              prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                              2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                              hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                              threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                              loader, post-delete verification) and filed
+                              `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                              AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                              actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                              stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                              via that issue doc, not this line.
+                              verification actually complete.
 
 - [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
@@ -420,3 +446,7 @@ drift_direction: advance-code
   tests proving the oracle now returns `EXPECTED_UPSTREAM_OUT_OF_BOUNDS` in-window, leaves pre-2020/L0 cells alone, and
   doesn't shadow `EXPECTED_PRE_SOURCE_COVERAGE_START`. Full `quality-gates.sh` green (12,573 passed), ancestry-verified
   on `origin/live-defi-rollout`. Checkbox flipped.
+- **2026-08-09 (granularity-aware catalogue producer item, slot 3)**: stale premise, no code change — the todo's own
+  cited commit already covers prediction/sports (see item body for the full finding + live-verification evidence against
+  real prod catalogues/manifests for cefi/sports/prediction this session, tradfi via item 6 same-day, defi via its
+  2026-06-26 prod catalogue regen). Checkbox flipped; no instruments-service commit, plan-flip only.
