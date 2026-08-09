@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 316 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 312 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (33)
+### cefi (31)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -82,13 +82,6 @@ by hand._
   — Finalize twin for `cefi_satellite_ao_dispatch_batch13_2026_08_09.md`. Reconciling 2 source docs'
   (`crypto_alpha_research_2026_07_24.md`, `l2_book_microstructure_capture_2026_07_13.md`) checkbox pointers once
   batch13's 2 todos land, and…
-- [`cefi_satellite_ao_dispatch_batch15_2026_08_09`](./cefi_satellite_ao_dispatch_batch15_2026_08_09.md) — Fifteenth
-  AO-dispatch batch for cefi, drafted from the round-11 RECLASSIFY + satellite-extraction sweep (cefi + prediction
-  tranches, 2026-08-09). Both items are pulled verbatim from…
-- [`cefi_satellite_ao_dispatch_batch15_2026_08_09_finalize`](./cefi_satellite_ao_dispatch_batch15_2026_08_09_finalize.md)
-  — Finalize twin for `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`. Reconciling the single source doc's
-  (`ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`) checkbox pointers once
-  batch15's 2 todos…
 - [`cefi_satellite_ao_dispatch_batch9_2026_08_07`](./cefi_satellite_ao_dispatch_batch9_2026_08_07.md) — Ninth
   AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-07 (scheduled autonomous dispatch,
   tranche=cefi, slot 4, dispatch agt-ed7b44). Phase 0 re-derived the covering-plan set via…
@@ -618,7 +611,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (66)
+### cross-cutting (64)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -679,14 +672,6 @@ by hand._
   "asset-group-style" umbrella (alongside cefi/defi/tradfi/prediction/sports) for data-pipeline (+ a small
   strategy/execution-determinism angle, Track 24) work that genuinely spans multiple asset groups rather than belonging
   to one.…
-- [`cross_cutting_satellite_ao_dispatch_batch10_2026_08_09`](./cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md)
-  — Tenth AO-dispatch batch for the cross-cutting tranche, produced by the round11 2026-08-09 RECLASSIFY +
-  satellite-extraction sweep. Pulls 1 bounded item out of `data_pipeline_reconciliation_skill_2026_07_20.md`
-  (`manifest_master`, the…
-- [`cross_cutting_satellite_ao_dispatch_batch10_2026_08_09_finalize`](./cross_cutting_satellite_ao_dispatch_batch10_2026_08_09_finalize.md)
-  — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until its sole todo is done. Reconciles the source doc's checkbox, then archives the batch doc
-  via the…
 - [`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09`](./cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md)
   — Eleventh AO-dispatch batch for the cross-cutting tranche, produced by the round11 2026-08-09 RECLASSIFY +
   satellite-extraction sweep. Pulls 11 bounded items out of

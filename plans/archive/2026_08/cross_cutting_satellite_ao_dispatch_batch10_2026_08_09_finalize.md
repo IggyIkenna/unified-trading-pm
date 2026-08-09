@@ -5,7 +5,7 @@ summary: >-
   Gated closeout for `cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until its sole todo is done. Reconciles the source doc's checkbox, then archives the batch doc
   via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -14,7 +14,7 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, close-out, batch-10, satellite-docs, archival]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
   ]
 created: "2026-08-09"
@@ -41,12 +41,14 @@ sequential: true
 drift_direction: advance-docs
 context_scope:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
   ]
 ---
 
 # Cross-cutting satellite AO batch 10 — finalize
+
+> **ARCHIVED 2026-08-09** — both todos done (source doc reconciled; batch 10 archived). See Progress Log.
 
 > **Machine-gated on `cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md`** (`depends_on` +
 > `gate_on_depends: true`). `sequential: true` because archival (todo 2) must run after reconciliation (todo 1).
@@ -64,10 +66,17 @@ context_scope:
       `check_archive_candidates.sh` now that it sits at 0 open todos — standing reference surface, not archived per the
       instruction above) and trimmed a now-stale "Recommended NEXT" pointer to stay under the 1000-line hard cap. Source
       doc NOT archived, per instruction.
-- [ ] [DOC] P2. Archive `cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md` via the standard 6-step ritual once
-      todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by` (confirm
-      already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the new path,
-      and this finalize doc archives alongside it in the same commit.
+- [x] ✅ [DOC] P2. Archive `cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md` via the standard 6-step ritual
+      once todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by`
+      (confirm already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the
+      new path, and this finalize doc archives alongside it in the same commit. **2026-08-09, `unified-trading-pm`** —
+      no deferred prose to migrate; no new codex contract (a routine census result, already recorded in the source
+      `data_pipeline_reconciliation_skill_2026_07_20.md`'s Progress Log). Corpus referrer in
+      `data_pipeline_reconciliation_skill_2026_07_20.md` repointed to the archived path; `plans/active/INDEX.md`
+      regenerated via `scripts/plans/regenerate_active_plan_index.py`. `locked_by` confirmed empty on both docs. Both
+      `cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md` and this finalize doc `git mv`d to
+      `plans/archive/2026_08/` in a follow-up commit (this checkbox flip lands first, as a plain edit, per the
+      commit-ordering rule in `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
 
 ## Progress Log
 
@@ -75,3 +84,7 @@ context_scope:
   commit `d8c682dd5a8` (verified on origin via `git merge-base --is-ancestor`). Source doc stays `active` in
   `plans/active/`, not archived. Todo 2 (archival of the batch10 source plan) remains open — sequential, gated on this
   todo, not attempted here.
+- **2026-08-09 (cont.)**: Todo 2 done. Archived `cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md` (6-step
+  ritual: no deferred prose; archive banner added; no new codex contract to record; corpus referrer in
+  `data_pipeline_reconciliation_skill_2026_07_20.md` repointed; `INDEX.md` regenerated; `locked_by` confirmed empty).
+  This finalize doc archives alongside it in the same follow-up commit.

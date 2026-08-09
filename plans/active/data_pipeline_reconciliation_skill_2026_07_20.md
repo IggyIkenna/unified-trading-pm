@@ -982,7 +982,7 @@ orphan VM for the 4 blocked AGs.
   stale-citation finding is now independently re-verified (see the flipped checkbox for the evidence); this is a
   citation fix, not new work. (2) Extracted the "Measure the historical per-venue non-canonical row count for the 8 CeFi
   live-spot venues" item to
-  [`cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md)
+  [`cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md`](/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md)
   (+ gated finalize twin) — this is exactly the "future dedicated pass" the 2026-08-03 entry above anticipated. This
   doc's own checkbox for that item stays open here until the batch's finalize twin reconciles it.
 - **batch-10 measurement landed 2026-08-09**: historical per-venue non-canonical population for the 8 CeFi live-spot

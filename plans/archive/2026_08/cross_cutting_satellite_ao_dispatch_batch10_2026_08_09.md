@@ -16,7 +16,7 @@ summary: >-
   and corrected directly in the source doc in this same sweep, not extracted here. The source doc itself stays
   `assigned_vm: NA` (operator-designated standing reference surface,
   `autonomous_session_operator_decisions_2026_07_25.md` entry #10) — only this one item is dispatched.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -26,7 +26,7 @@ tags: [cross-cutting, ao-dispatch, close-out, batch-10, satellite-docs, manifest
 related:
   [
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch10_2026_08_09_finalize.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch10_2026_08_09_finalize.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"
@@ -60,7 +60,11 @@ drift_direction: advance-docs
 
 # Cross-cutting satellite AO batch 10 (manifest_master) — bounded-item extraction
 
-> **Status: active.** Single independent todo — no `sequential`/`gate_on_depends` needed.
+> **ARCHIVED 2026-08-09** — sole todo done; census result recorded in
+> `data_pipeline_reconciliation_skill_2026_07_20.md`'s Progress Log. Archived via its gated finalize twin
+> (`cross_cutting_satellite_ao_dispatch_batch10_2026_08_09_finalize.md`).
+
+> **Status: complete.** Single independent todo — no `sequential`/`gate_on_depends` needed.
 
 ## Todos
 
