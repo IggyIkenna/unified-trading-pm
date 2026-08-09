@@ -67,8 +67,8 @@ related:
 created: "2026-08-04"
 last_updated: "2026-08-07"
 parent_epic: manifest_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: research
 estimate_baseline_ai_days: 0.4
@@ -197,10 +197,10 @@ consider extracting it into an AO-dispatch batch once `bd153821` deploys.
 ## Todos
 
 - [ ] [DATA] P2. **Precondition CLEARED 2026-08-09 (see Progress Log) — the fix reached `main` via `f706456a` on
-      2026-08-06T08:29:26Z, not "not yet deployed" as the 2026-08-07 audit believed.** Re-run the bounded,
-      column-pruned `read_availability_index(..., filters=[("venue","==","kamino_lending")])` check for any
-      `venue=KAMINO_LENDING` rows captured in the now-bounded accumulation window 2026-08-05T17:42Z (last retire run)
-      through 2026-08-06T08:29Z (deploy landed) — a ~15h window, not open-ended. If any exist, re-run
+      2026-08-06T08:29:26Z, not "not yet deployed" as the 2026-08-07 audit believed.** Re-run the bounded, column-pruned
+      `read_availability_index(..., filters=[("venue","==","kamino_lending")])` check for any `venue=KAMINO_LENDING`
+      rows captured in the now-bounded accumulation window 2026-08-05T17:42Z (last retire run) through 2026-08-06T08:29Z
+      (deploy landed) — a ~15h window, not open-ended. If any exist, re-run
       `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` (already-proven, idempotent) to retire them. Done when:
       the check returns zero rows (either because none accumulated, or because the re-run retired them), with the row
       count cited here.
@@ -234,21 +234,36 @@ consider extracting it into an AO-dispatch batch once `bd153821` deploys.
     `assigned_vm: NA`, `status: open`.
 - **context-scout 2026-08-07**: populated context_scope (6 entries).
 - **stale-check-defi-tranche 2026-08-09**: correction, not a closure — the 2026-08-07 audit's "NOT yet on main" verdict
-  was itself a false negative caused by the verification METHOD, not a real deploy gap. `git merge-base --is-ancestor
-  bd153821 origin/main` still returns false today (2026-08-09), but that is because `ldr-to-main-promote` rewrites
-  commit SHAs on promotion (Option-B direct, non-fast-forward) — checking ancestry by the ORIGINAL pre-promotion SHA
-  against `origin/main` is the wrong test for this repo's promotion model. Content-based verification
+  was itself a false negative caused by the verification METHOD, not a real deploy gap.
+  `git merge-base --is-ancestor bd153821 origin/main` still returns false today (2026-08-09), but that is because
+  `ldr-to-main-promote` rewrites commit SHAs on promotion (Option-B direct, non-fast-forward) — checking ancestry by the
+  ORIGINAL pre-promotion SHA against `origin/main` is the wrong test for this repo's promotion model. Content-based
+  verification
   (`git log origin/main -S canonical_lending_venue -- market_tick_data_service/cli/handlers/_lending_grain.py`) finds
   the fix landed on `main` via `f706456a` ("chore(promote): LDR → main (Option-B direct)"), committed
   **2026-08-06T08:29:26Z** — a full day BEFORE the 2026-08-07 audit ran and concluded the deploy hadn't happened yet.
   `origin/main:market_tick_data_service/cli/handlers/_lending_grain.py` confirmed live-read to contain
-  `canonical_lending_venue()` today. **Net effect**: the todo's blocking precondition ("once bd153821 reaches
-  main") has been satisfied since 2026-08-06 — two days earlier than the corpus believed. The todo's SECOND half (the
-  actual bounded `read_availability_index` re-check for `venue=KAMINO_LENDING` rows accumulated 2026-08-05→deploy-day,
-  and a `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` re-run if any are found) is still genuinely NOT
-  done — no evidence of that check or script re-run anywhere in the corpus as of this pass — so the todo stays open,
-  just re-scoped: the accumulation window to check is now bounded (2026-08-05 17:42 UTC → 2026-08-06 08:29 UTC, ~15h),
-  not open-ended. **Process finding for the wider corpus**: any future "has fix X reached main" check in this workspace
+  `canonical_lending_venue()` today. **Net effect**: the todo's blocking precondition ("once bd153821 reaches main") has
+  been satisfied since 2026-08-06 — two days earlier than the corpus believed. The todo's SECOND half (the actual
+  bounded `read_availability_index` re-check for `venue=KAMINO_LENDING` rows accumulated 2026-08-05→deploy-day, and a
+  `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` re-run if any are found) is still genuinely NOT done — no
+  evidence of that check or script re-run anywhere in the corpus as of this pass — so the todo stays open, just
+  re-scoped: the accumulation window to check is now bounded (2026-08-05 17:42 UTC → 2026-08-06 08:29 UTC, ~15h), not
+  open-ended. **Process finding for the wider corpus**: any future "has fix X reached main" check in this workspace
   should verify by CONTENT (grep/`-S` pickaxe on `origin/main`) or via the `ci_status` Firestore-SSOT, never by
-  `git merge-base --is-ancestor <pre-promotion-sha> origin/main` alone — that check systematically false-negatives
-  under the `ldr_main` promotion model and produced this doc's incorrect blocker.
+  `git merge-base --is-ancestor <pre-promotion-sha> origin/main` alone — that check systematically false-negatives under
+  the `ldr_main` promotion model and produced this doc's incorrect blocker.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): **RECLASSIFY, `assigned_vm: NA -> planning`** (`execution_scope`
+  corrected `local-only -> orchestrator-agent`). The sole remaining todo now clears the whole-doc RECLASSIFY bar: the
+  precondition that made this ambiguous (has the code fix reached `main`) was resolved by the same-day
+  "stale-check-defi-tranche 2026-08-09" entry above (content-verified landed 2026-08-06T08:29:26Z via `f706456a`), and
+  what remains is a single bounded, column-pruned `read_availability_index` check over a fixed ~15h window with a stated
+  done-when (zero rows, count cited) plus an already-proven idempotent conditional remediation
+  (`retire_kamino_lending_legacy_venue_2026_08_05.py --apply` — verified by reading the script: it only flips
+  `capture_status` on manifest index rows, snapshots a pre-write backup + `.bak` first, never deletes a GCS object — no
+  `[OPERATOR]` gating needed under the delete-safety rule). Conflict-check clear: no active `assigned_vm: planning` doc
+  in `parent_epic: manifest_master` claims this remediation; `defi_satellite_ao_dispatch_batch10_2026_08_06.md`'s own
+  citation is a stale (2026-08-06) "archivable_now" list entry, not a dispatch;
+  `ag_closeout_audit_defi_parked_2026_08_07.md` Finding 6 recommended re-check (not extraction) and is itself superseded
+  by the 2026-08-09 precondition-clear above. Companion gated finalize plan authored:
+  `/plans/active/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md`.
