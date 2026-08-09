@@ -533,12 +533,36 @@ achieved by exclusion, not canonicalisation.**
       work was real, corrected to `01c3dbbab9`/`79c4a72737`/`b7e41849d6` (each verified to exist first). Checker fixed
       to fetch once on the miss path; **baseline ratcheted 8 -> 0**, verified 2,549 citations / 0 unresolvable.
 
-- [ ] [REVIEW] P2. **The weakened-test sweep counted assertions; it did not read them.** The 2026-08-08 fleet sweep
+- [x] ✅ [REVIEW] P2. **The weakened-test sweep counted assertions; it did not read them.** The 2026-08-08 fleet sweep
       screened 47 test-touching commits for NET assertion loss + added xfail/skip. That shape is blind to a commit which
       DELETES a strong assertion and ADDS a weak one — it nets zero and never surfaces. Treat the sweep's result as "no
       net coverage loss in the window", NOT "no weakening anywhere". Decide whether a semantic check is worth building
       (e.g. flag any commit where an `assert` line is replaced rather than added/removed) or record why counting is good
-      enough. **Done when**: the decision is recorded, or the semantic check exists.
+      enough. **Done when**: the decision is recorded, or the semantic check exists. **DECISION (2026-08-09, review) —
+      counting is good enough for now; do not build the diff-line semantic check.** Tested the natural cheap version of
+      the proposed check against real history (2 diff-scoped Python scripts, no persisted tooling): (1) naive "any
+      `assert` line removed + any `assert` line added in the same hunk" flagged 36 commits in `market-tick-data-service`
+      alone over a **3-day** window — spot-checking a sample showed virtually all were legitimate value/constant churn
+      (`assert len(shards) == 5` -> `== 6`, `BINANCE` -> `BINANCE-SPOT` venue renames), i.e. ~100% noise. (2) A smarter
+      version (flag only where the REMOVED line has a strong comparison (`==`/`!=`/`>`/`<`) and an ADDED line in the
+      same hunk matches a weak pattern (`is not None`/bare-truthy/`isinstance(...)`)) cut the naive count to 12/2 weeks
+      in MTDS + 6/2 weeks in instruments-service — but hand-verifying 3 of these against the real diff
+      (`d6d539a844:     tests/unit/test_odds_api_ws_connector.py`,
+      `ee49a76df1: tests/unit/test_phoenix_orderbook_handler.py`,
+      `e68059b266: tests/unit/scripts/test_migrate_instrument_availability_hive_2026_08_03.py`) showed **all 3 were
+      false positives**: the "removed strong assertion" was NOT semantically replaced by the "added weak assertion" —
+      each was a distinct, unrelated statement that happened to land in the same diff hunk (e.g. `d6d539a844`'s
+      `Decimal(pinnacle_h2h[...]) == Decimal("1.85")` is still present in the new code, byte-identical in strength, just
+      under a renamed variable — the flagged "replacement" `isinstance(markets, dict)` was actually a SEPARATE,
+      already-present assertion that also got touched in the same rename). Line-level diff heuristics cannot distinguish
+      "assertion A replaced by weaker assertion B" from "two unrelated assertions both edited in the same hunk" without
+      real per-statement AST alignment across old/new test-function bodies — that is a materially bigger build (AST
+      diff + statement correspondence + strength classification robust to variable renames) than this P2 finding's
+      evidenced risk justifies; no actual weakening instance was found in any sample, only mis-paired refactor noise.
+      Recommendation: leave the existing net-assertion-count sweep as-is; revisit with a proper AST-based checker only
+      if a real weakening is ever caught by manual review (evidence-triggered, not speculative). Scripts used (scratch,
+      not shipped): `assert_replace_scan.py` / `assert_weaken_scan2.py`, run against `market-tick-data-service` and
+      `instruments-service` over 2026-07-25..2026-08-09.
 - [ ] [DOCS] P2. **`/codex/02-data/sports-data-types-catalog.md`'s "Venue Axis" section venue list does not match the
       live `VENUES_BY_ASSET_GROUP["sports"]`** (found by `/docs-reconcile` 2026-08-08, direct-import verification
       against `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`). The doc claims "32
