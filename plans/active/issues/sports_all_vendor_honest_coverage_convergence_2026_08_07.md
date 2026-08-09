@@ -551,3 +551,11 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   time investigation finished `smallchunk10` had already entered `STOPPING` on its own. `smallchunk14` unaffected,
   healthy at chunk 12/451. No VM launched or killed by this tick. Flagging: if this shape recurs and does NOT
   self-resolve, escalate to the operator (real vendor-credit double-spend risk).
+- **22:03Z — Both fleets healthy, genuine forward progress confirmed on INJURIES (rule 1b).**
+  `af-backfill-20260809-222924` (INJURIES): real date progress 2020-06-16→2021-01-17 since launch, entity-scoped mode
+  correctly restricting to INJURIES only. `smallchunk14`: chunk 15/451 (`2020-08-15→2020-08-19`), **zero OOMs across the
+  entire run so far**, heartbeat fresh (~1.7min old) — 3 chunks from chunk 18. Census
+  (`census_all_af_entities_completion_2026_08_03.py`): INJURIES needed **62,709 → 60,733** (-1,976 in ~27min, ~4,391/hr)
+  — genuine movement, though at this rate full convergence is ~14h out (this is by far the largest remaining AF entity,
+  expect a long haul, not a quick tick-over- tick drop like FIXTURE_LINEUPS showed). STANDINGS (271) and TEAMS (96)
+  unchanged, as expected (not independently tracked unless they stall). No intervention needed.
