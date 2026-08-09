@@ -262,3 +262,11 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   is unpinned to PM's live default branch, so nothing short of PM's `main` actually advancing past `30ed07eff` moves
   this forward. Leaving todo 2 open/unchecked; skipping this task with `reason_code: GATED` again so it doesn't
   re-dispatch to the next heartbeat while the real blocker (PM's promote pipeline) remains unresolved elsewhere.
+- **2026-08-09 (infra worker, slot 23, todo 2 re-check)**: Re-verified from scratch —
+  `git merge-base --is-ancestor 30ed07eff origin/main` on `unified-trading-pm` still returns NO
+  (`origin/main..origin/live-defi-rollout` now 791 commits, up from slot 10's 769), and `unified-trading-library`'s
+  `origin/main` is still `v0.77.0-1-ge94be221` with no tag containing `609299ad`. The open auto-drain promote PR is
+  still the SAME #2706 slot 10 found (opened 2026-08-09T21:30:00Z, unchanged) — `QG slice (checks)` still `fail` on the
+  same run `31336986549`. Same blocker, same root cause
+  (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent (hand off, don't
+  chase serially). No new lever available. Skipping again with `reason_code: GATED`.
