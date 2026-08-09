@@ -705,3 +705,13 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   mechanism, not this skill's whole-doc reclassification — recording the match here so the next satellite-batch author
   (who already missed the sibling G1-retirement-purge extraction per the marker above) picks up both together. No
   `assigned_vm` change.
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:7b5881adce91dcba]:
+  **KEEP-NA-STALE (already-duplicated), re-confirmed, no changes needed.** All 4 open items re-read end-to-end via a
+  dedicated sub-agent hunter; count reconciled (4/4). The 2 items citing
+  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` as their live dispatch vehicle were independently verified against
+  that plan directly (not just its citation text) -- it is `status: active`, and today carries its own same-day "ES_OPT
+  watcher saga" Progress Log block with the identical "UNBLOCKED 2026-08-09" language, confirming the citation is
+  current, not stale. The residual 2-leg catalogue purge item remains genuinely gated on its own fresh operator
+  confirmation (distinct from the already-granted 4-leg go-ahead). One data-hygiene note (not actionable): the
+  ICE-Databento parquet GCS-cleanup checkbox was converted today to a plain "EXTRACTED 2026-08-09" bullet (no longer a
+  `- [ ]`), correctly explaining the 5->4 open-count drop since the 08-08 marker. Nothing to reclassify.

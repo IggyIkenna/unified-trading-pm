@@ -259,3 +259,10 @@ restated here.
   irreversible-if-wrong multi-bucket prod GCS delete in one todo still flags for plan-owner confirmation before AO
   dispatch even once the gate clears (2026-08-02 reasoning, not re-litigated). Doc stays NA.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:2279a6513fd11994]: **KEEP-NA,
+  valid -- confirmed unchanged.** Phase-0 flagged this doc as "changed since the 08-08 marker" (git-date fallback), but
+  `git diff <08-08-marker-sha>..HEAD` shows the intervening changes are an unrelated `effort: xhigh` frontmatter bump
+  (already hash-excluded by `strip_frontmatter()`) plus the context-scout line directly above -- zero todo/verdict
+  content changed. Reaffirming the 08-08 verdict without a fresh full re-read; see
+  `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying false-positive class
+  this run found and filed.

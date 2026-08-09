@@ -267,3 +267,9 @@ here.
   engineering work (only a single-day smoke has ever landed for the sibling P0 items, real multi-file risk) -- not
   overridden this pass. Doc stays NA.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:7c48960176cf7d5f]: **KEEP-NA,
+  valid -- confirmed unchanged.** Phase-0 flagged this doc as "changed since the 08-08 marker" (git-date fallback), but
+  `git diff <08-08-marker-sha>..HEAD` shows the ONLY intervening change is the context-scout line directly above -- zero
+  todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh full re-read; see
+  `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying false-positive class
+  this run found and filed.

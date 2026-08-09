@@ -114,7 +114,29 @@ in-scope relaunch this doc authorizes.
 (FX/commodity futures) and massively duplicated (up to 13 concurrent VMs per shard, see above). Disposition: killed, not
 resumed. See Progress Log below for the kill + scoped-relaunch record.
 
+## Todos
+
+- [ ] [SCRIPT] P2. Fix `wave_launcher.py`'s `running_cell_keys` dedup check so it matches the per-single-root CME
+      dispatch candidate keys it computes internally, instead of only matching a VM-name-parsed "root group" label —
+      currently causes CME launches to duplicate 3-13x per shard (measured: 167 stray VMs from one erroneous wave, per
+      "Disposition of currently-running infra" above). Any relaunch of the in-scope CME cells (ES, BTC/ETH futures)
+      needs this fixed first, or must bypass `wave_launcher.py` per the manual-check workaround already noted in "Known
+      relaunch gotchas" above. **(na-eligibility-audit 2026-08-09, tradfi tranche, dispatch agt-3df41f: converted from
+      prose-only "Known relaunch gotchas" text to a tracked checkbox — same finding, not new scope.)**
+
 ## Progress Log
 
 - 2026-08-09: doc created, scope ruling recorded. Sweep of tradfi plans/issues for regression risk against this scope in
   progress — see this doc's `related` list and the per-doc scope notes added to each.
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:6042e905158a4d47]: **KEEP-NA,
+  valid -- first audit, functioning correctly as an SSOT ruling doc.** A dedicated sub-agent hunter read this doc
+  end-to-end plus cross-referenced its live consumers (`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
+  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` -- both confirmed already citing this ruling correctly, same day).
+  Converted the "Known relaunch gotchas" wave_launcher.py dedup-bug prose into a tracked `- [ ]` checkbox above (same
+  finding, not new scope) -- kept KEEP-NA rather than RECLASSIFY despite it reading as a bounded code fix, because it
+  touches live-dispatch-critical-path machinery (`wave_launcher.py`'s VM-launch dedup) that this pass did not itself
+  directly read the code for; flagging as a RECLASSIFY candidate for a follow-up pass that reads `wave_launcher.py`
+  directly rather than promoting on secondhand evidence alone. Separately noted (not this doc's to verdict):
+  `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` reports a live, unresolved possible
+  violation of this doc's "year 2026 only" scope contending for the same account-wide Databento lock as the authorized
+  ES_OPT launch -- worth a prompt look by whoever owns tradfi triage today.

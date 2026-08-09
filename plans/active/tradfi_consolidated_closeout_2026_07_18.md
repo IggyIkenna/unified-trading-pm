@@ -998,3 +998,8 @@ operator activation.
   index) — a folding/archival judgment call, never autonomous. `depends_on` 3 still-active children
   (`tradfi_manifest_content_recovery_completion_2026_07_24`, `tradfi_backfill_throughput_followups_2026_07_24`,
   `tradfi_phase_d_terminal_gate_2026_07_24`) gates archival per PLAN_FORMAT.md regardless. `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:4adac7a23a03a549]: **KEEP-NA,
+  valid -- 0 native open todos confirmed; today's new MVP-of-MVP banner verified an accurate, correctly-scoped redirect
+  (narrows near-term dispatch only, doesn't rewrite this doc). FLAGGED not corrected (over-cap doc, append-only budget):
+  the "Aggregated source docs" digest entry for `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` says "0 open
+  todos" but that doc actually carries 3 -- see it directly. `assigned_vm` unchanged.
