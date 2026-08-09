@@ -63,6 +63,11 @@
 # terminal-status-archived, ...) -- fix the content; re-running cannot help. Added
 # 2026-08-08: exit 5 was previously returned for this case too, which told the next agent
 # to retry something that could never succeed (see commit_failure_is_retriable below).
+# 8 self-verification failed (added 2026-08-09,
+# safe_doc_push_reports_success_having_committed_nothing_2026_08_09.md, todo 2): a `git
+# commit`/`git push` call itself exited 0, but re-deriving the actual fact from git history
+# afterward (`git log --oneline -1 -- <file>`, `git branch -r --contains HEAD`) proved it did
+# NOT land -- never trust an intermediate command's exit code alone for the final claim.
 
 set -uo pipefail
 
@@ -172,6 +177,35 @@ files_exist_in_head() {
     git cat-file -e "HEAD:$_f" 2>/dev/null || return 1
   done
   return 0
+}
+
+# verify_files_in_history -- true only if EVERY named file has at least one commit reachable
+# from HEAD that touched it. safe_doc_push_reports_success_having_committed_nothing_2026_08_09
+# (todo 2): every success claim in this script -- the "already matches HEAD" fallback, the
+# "nothing to commit" fallback, AND a real `git commit` exit 0 -- was trusted on its own exit
+# code / message text alone. None of them re-derive the fact the caller actually cares about
+# ("is this file's content now reachable from HEAD's history?"). `files_exist_in_head` (added
+# by todo 1) checks the TREE, which is necessary but not sufficient end-to-end proof: it says
+# nothing about whether a partial `git add` (unchecked exit code, see the call site) staged
+# only SOME of several named files before a commit succeeded, silently landing a subset while
+# every file gets checked off. `git log --oneline -1 -- <path>` is the same query a human runs
+# to answer "did this land" -- non-empty is the actual verified fact, not an inference from an
+# intermediate command's return value.
+verify_files_in_history() {
+  local _f
+  for _f in "${FILES[@]}"; do
+    [[ -n "$(git log --oneline -1 -- "$_f" 2>/dev/null)" ]] || return 1
+  done
+  return 0
+}
+
+# verify_push_landed -- true only if origin/${BRANCH}'s local tracking ref actually contains
+# HEAD. A successful `git push` exit code says the network round-trip succeeded, not that the
+# remote-tracking ref this script (and every downstream reader, e.g. the server's M3 check)
+# relies on was actually updated -- `git branch -r --contains HEAD` re-derives that fact
+# directly instead of trusting the push command's own exit status.
+verify_push_landed() {
+  git branch -r --contains HEAD 2>/dev/null | sed 's/^[* ]*//' | grep -qx "origin/${BRANCH}"
 }
 
 # KNOWN_RENAME_SOURCES -- captured ONCE, right here, before the loop below (or any
@@ -456,19 +490,24 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       : # there is something to commit
     else
       echo "  nothing staged for the named files -- checking if content already matches HEAD"
-      if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
+      if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head && verify_files_in_history; then
         echo "✅ Named files already match HEAD (a concurrent session landed identical content) -- treating as success."
         final_ok=true
         break
       fi
-      echo "  at least one named file is absent from HEAD -- staging genuinely failed, not already-landed; retrying"
+      echo "  at least one named file is absent from HEAD or has no verifiable commit history -- staging genuinely failed, not already-landed; retrying"
     fi
 
     if ! locked_git_commit -q -m "$MSG" 2>/tmp/_sdp_commit_err; then
       if grep -qi "nothing to commit" /tmp/_sdp_commit_err; then
-        echo "✅ Nothing to commit -- already landed. Treating as success."
-        final_ok=true
-        break
+        if files_exist_in_head && verify_files_in_history; then
+          echo "✅ Nothing to commit -- already landed. Treating as success."
+          final_ok=true
+          break
+        fi
+        echo "  git reported 'nothing to commit' but at least one named file is not verifiably in HEAD's history -- NOT already-landed; retrying" >&2
+        backoff "$attempt"
+        continue
       fi
       if grep -qi "index.lock" /tmp/_sdp_commit_err; then
         echo "  index.lock contention (another process is writing this instant) -- short wait, retry"
@@ -501,12 +540,39 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       continue
     fi
     committed=true
+
+    if ! verify_files_in_history; then
+      {
+        echo
+        echo "❌ SELF-VERIFICATION FAILED: 'git commit' exited 0, but 'git log --oneline -1 -- <file>' is EMPTY for at least one named file."
+        echo "   The commit command's exit code cannot be trusted here -- at least one named file did not actually land in HEAD's history"
+        echo "   (e.g. a partial 'git add' silently staged only some of the named files before the commit succeeded)."
+        echo "   Named files: ${FILES[*]}"
+      } >&2
+      exit 8
+    fi
   fi
 
   if git push origin "HEAD:${BRANCH}" 2>/tmp/_sdp_push_err; then
-    echo "✅ Pushed $(git rev-parse --short HEAD) -> ${BRANCH}"
-    final_ok=true
-    break
+    if verify_push_landed; then
+      echo "✅ Pushed $(git rev-parse --short HEAD) -> ${BRANCH} (verified: origin/${BRANCH} contains HEAD)"
+      final_ok=true
+      break
+    fi
+    # A successful push updates the local remote-tracking ref itself in every normal case;
+    # re-fetch once before treating the mismatch as a genuine anomaly rather than a fluke.
+    git fetch -q origin "$BRANCH" 2>/dev/null || true
+    if verify_push_landed; then
+      echo "✅ Pushed $(git rev-parse --short HEAD) -> ${BRANCH} (verified after fetch)"
+      final_ok=true
+      break
+    fi
+    {
+      echo
+      echo "❌ SELF-VERIFICATION FAILED: 'git push' exited 0, but 'git branch -r --contains HEAD' does not list origin/${BRANCH}."
+      echo "   The push command's exit code cannot be trusted here -- treating as a genuine failure, not success."
+    } >&2
+    exit 8
   fi
 
   if grep -qiE "non-fast-forward|rejected|fetch first" /tmp/_sdp_push_err; then
