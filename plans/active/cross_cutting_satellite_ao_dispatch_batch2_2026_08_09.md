@@ -101,14 +101,16 @@ drift_direction: advance-code
       market-tick-data-service, deployment-service. Source: `instruments_foundation_phase0_cross_cutting_2026_07_24.md`
       (Phase-0 item 1). Done when: TradFi/sports/ prediction backfill VMs + roll-up jobs are click-through-able in
       `/deployments`, verified via `/api/deployments/inventory`, same evidence bar as cefi's cited GATE-G2 verification.
-- [ ] [BACKEND] P0. Surface the already-shipped Honest-Coverage v2 layered-coverage fields
+- [x] ✅ [BACKEND] P0. Surface the already-shipped Honest-Coverage v2 layered-coverage fields
       (`layer1_completeness_pct`/`instrument_gates_download`/`denominator_complete`, `schema_version==2`, producer
       already live) through deployment-api and deployment-ui — today there are 0 grep hits for those field names in
       either repo. Repo: deployment-api, deployment-ui. Source:
       `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (Phase-0 item 2). Done when: deployment-api exposes
       the 3 named fields per asset_group/venue; deployment-ui renders the two-layer number (Layer-2 visually gated on
       Layer-1); a synthetic-gap test fixture proves the correct layer drags down; `pw:L2 ✓` + a regression spec per the
-      playwright gate.
+      playwright gate. — deployment-api@5a345de22, deployment-ui@c55ed8256 (route is byte-for-byte passthrough, proven
+      by 2 new unit tests; UI gates Layer-2 headline+badge on Layer-1 completeness; Vitest synthetic-gap fixture +
+      `pw:L2` regression spec `data_status_coverage_labels.spec.ts` — 5/5 playwright specs green, verified directly).
 - [ ] [SCRIPT] P0. Build the captured∩expected KEY-OVERLAP verification-discipline gate (per-(instrument, day) overlap
       of captured vs. expected, never a raw VM-exit-code/row-count proxy) that would have caught the 2026-06-24 DeFi
       silent-stall class. Repo: instruments-service. Source: `instruments_foundation_phase0_cross_cutting_2026_07_24.md`
