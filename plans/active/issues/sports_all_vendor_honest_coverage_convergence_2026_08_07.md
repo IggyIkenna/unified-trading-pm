@@ -931,3 +931,10 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **00:06Z (2026-08-09)** — smallchunk9 healthy, chunk 17/451, still zero OOMs, fresh, entering chunk 18 next.
   FIXTURE_LINEUPS probe target still ~1h away (~01:00Z).
 - **00:38Z** — smallchunk9 chunk 18, 7 `CHUNK_FAILED` (expected), fresh. FIXTURE_LINEUPS probe target ~22min away.
+- **01:05Z — ✅ AF DAILY QUOTA RESET CONFIRMED.** Probed via `af-backfill-20260809-020527`
+  (`RESUME_ENTITY=FIXTURE_LINEUPS`). Launcher's own pre-flight check showed `remaining_daily_quota=149210` (was 0
+  yesterday); `run.log` confirmed zero `'reached the request limit'` errors, genuine `Fetched N lineup rows` across many
+  real fixtures, `VM_PROGRESS` advancing. Left running. Matches the Aug-6/7 precedent's UTC-midnight-reset pattern
+  almost exactly (~1h05m past midnight this time vs ~1h45m then). INJURIES (62,709 needed) queued next behind the
+  singleton lock once FIXTURE_LINEUPS completes or shows a genuine slowdown. smallchunk9 still healthy, chunk 18,
+  unaffected throughout.
