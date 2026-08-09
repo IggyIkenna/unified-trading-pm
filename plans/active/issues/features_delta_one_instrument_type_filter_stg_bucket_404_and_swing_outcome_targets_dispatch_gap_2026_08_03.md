@@ -388,3 +388,11 @@ from `calculators/__init__.py`'s module-level registry):
 > **2026-08-06 archive-candidate audit**: P3 verdict (a) accepted the sparse-data environment as a characteristic, but
 > Progress Log says a gap-tolerance relaxation 'should be scoped as its own follow-up' — deferred work with no tracked
 > todo.
+
+> **CORRECTED 2026-08-09 (plan_reconciler)**: the 2026-08-06 audit note above is factually wrong — the follow-up todo IS
+> tracked, immediately above (`- [ ] [DATA] P3. Scope a -test-/IS_TEST_RUN-aware relaxation...`). Separately,
+> `/plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` (todo 4, `[CODE] P3`) independently drafted an
+> AO-dispatchable todo for this identical fix, citing this doc's Progress Log but apparently unaware this tracked
+> version already existed — a duplicate-work risk. Recommend batch7's todo 4 be treated as the AO-dispatch execution
+> vehicle (correctly tagged `[CODE]`, properly scoped); once it ships, close this doc's copy by citation rather than
+> re-implementing.

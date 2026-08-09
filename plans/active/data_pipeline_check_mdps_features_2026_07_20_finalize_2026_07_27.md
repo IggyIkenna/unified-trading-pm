@@ -54,8 +54,10 @@ context_scope:
 
 # data_pipeline_check_mdps_features_2026_07_20 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **CORRECTED 2026-08-09 (plan_reconciler)**: this banner previously read "STATUS: `draft` — NOT dispatched", directly
+> contradicting the frontmatter's own `status: active`. This doc predates the 2026-07-30 ruling that finalize plans ship
+> `status: active` from the start, machine-gated via `depends_on` + `gate_on_depends: true` alone (no body banner needed
+> — see any batch8/9/10-era finalize plan for the current convention). Frontmatter is correct; banner removed.
 
 ## Todos
 
