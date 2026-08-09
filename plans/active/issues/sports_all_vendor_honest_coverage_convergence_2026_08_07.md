@@ -954,3 +954,5 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   cadence continues, worth spinning a continuation doc next time rather than compacting again.
 - **08:54Z** — smallchunk10 chunk 13/451, still zero OOMs, heartbeat live. FIXTURE_LINEUPS needed **39,749 → 38,691**
   (-1,058). Both healthy, no action.
+- **09:25Z** — smallchunk10 chunk 17/451, **still zero OOMs even approaching chunk 18** (cleanest run yet).
+  FIXTURE_LINEUPS needed **38,691 → 37,606** (-1,085). Both healthy, no action.
