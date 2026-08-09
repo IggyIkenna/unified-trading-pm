@@ -109,6 +109,20 @@ own Tick history.
       roles; (c) exempt `pane_state=="idle"` the same way `"working"` already is. Repo: agent-orchestrator. —
       agent-orchestrator@dd01255 (option (b), code-only fix, covers every chat-loop role uniformly regardless of pane
       state) + Progress Log entry below.
+- [ ] [BACKEND] P1. **Both prior fixes (`e32d962` debounce + `dd01255` heartbeat-exempt) confirmed live but the crash
+      rate is UNCHANGED (msg 4372)** — review traced `GET /api/activity?slot=1` across a fresh 87min window
+      (01:08-02:35Z, well after both fixes' restart) and found ~100% of review-role sessions still died via
+      `tmux_session_lost` with zero `context_recycle_requested` precursors, survival 47s-14m12s, no improving trend.
+      Most recent death (agt-2f893e) went STRAIGHT to `tmux_session_lost` with no preceding
+      `spawn_heartbeat_timeout_pane_working`/`spawn_retry_cap_reached` at all — meaning `dd01255`'s own gated code path
+      wasn't even implicated; the kill came from TmuxPruner's has-session debounce (`e32d962`'s target), which only
+      absorbs ONE miss 0.25s apart. Corroborates the host-memory-pressure hypothesis already cross-linked to
+      `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`: `orchestrator.service` cgroup at 19-23G/26G
+      mem + 9.1G/16G swap (peak 13.6G), system-wide swap 9.3Gi in use at time of report. Plausible the shared tmux
+      server itself stalls >0.25s under this load, defeating the debounce regardless of which slot-liveness logic gates
+      on it — a 3rd logic-only patch is unlikely to help without host memory relief first. Repo: agent-orchestrator +
+      cross-reference the host-memory doc for the actual remediation (memory bump / reduce concurrent slot count /
+      investigate the swap source).
 - [ ] [DOCS] P3. Correct the ~00:22Z progress-log entry below (12-slot simultaneous burst) — review (msg 4361) showed
       it's a batch-processing artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick,
       NOT a tmux-server-level event as originally hypothesized; only the review-role entry in that burst was a real loss
@@ -122,6 +136,14 @@ own Tick history.
       (REVIEW re-verify) can now proceed.
 
 ## Progress log
+
+- 2026-08-09 ~02:40Z (main agt-22de53, relaying review msg 4372 from agt-2f893e's successor session): Todo 3 re-verify
+  NOT resolved. Independently confirmed the ancestry claim: `dd01255` is a git-ancestor of the current root checkout
+  HEAD (`6b57503`), and the running process (`systemctl status`, active since matches the restart window) postdates both
+  fixes' commit times — so this is not another committed-but-not-loaded gap like the `e32d962` incident. Despite both
+  fixes being genuinely live, the crash rate is unchanged (~100% unexplained kills across a fresh 87min window). Added a
+  new [BACKEND] P1 todo capturing the host-memory-pressure pivot per review's recommendation — keeping todo 3 open, NOT
+  marking it resolved, since a 3rd liveness-logic patch is unlikely to help without host memory relief first.
 
 - 2026-08-09 (backend, slot 26, agent-orchestrator@dd01255): Fixed the second, distinct root cause (the "second,
   distinct root cause found" BACKEND P1 todo, review msg 4361) — picked option (b) from the 3 choices the todo left
