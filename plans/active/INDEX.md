@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 309 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 307 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -264,7 +264,7 @@ by hand._
   finalize companion for solana_dex_pool_swaps_indexer_2026_08_08.md — reconcile evidence back into the source scoping
   doc, re-check any deferred follow-up, then archive both docs per the standard 6-step ritual.
 
-### tradfi (27)
+### tradfi (25)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -323,13 +323,6 @@ by hand._
   **[draft]** — Housekeeping companion for `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` — gated via
   `depends_on` + `gate_on_depends: true` on that plan's own todos (Phase A2 + the still-open Phase C residue) being
   done, mirroring the…
-- [`tradfi_satellite_ao_dispatch_batch10_2026_08_09`](./tradfi_satellite_ao_dispatch_batch10_2026_08_09.md) —
-  Satellite-batch extraction from the round-9 combined RECLASSIFY + satellite-extraction sweep (2026-08-09), tradfi
-  tranche. Two items qualified: (1) the manual-launch FRED/CBOE-Treasury-INDEX/KRW/DXY backfill verify+launch step from…
-- [`tradfi_satellite_ao_dispatch_batch10_2026_08_09_finalize`](./tradfi_satellite_ao_dispatch_batch10_2026_08_09_finalize.md)
-  — Gated closeout for tradfi_satellite_ao_dispatch_batch10_2026_08_09.md — machine-held via depends_on +
-  gate_on_depends: true until both of that plan's todos are done. Reconciles the 2 source docs (flip/cite the item each
-  batch10 todo…
 - [`tradfi_satellite_ao_dispatch_batch6_2026_08_01`](./tradfi_satellite_ao_dispatch_batch6_2026_08_01.md) — Sixth
   AO-dispatch batch for tradfi, produced by a fresh `/ag-closeout-audit tradfi` pass on 2026-08-01 (autonomous mode,
   scheduled daily worker). Phase 0 rediscovered the covering set as 13 docs (up from the 11 a stale…
