@@ -521,3 +521,43 @@ take hours, not minutes.
   (`git log --oneline -5 -- scripts/vm/launch-tradfi-backfill-vm.sh` on `deployment-service`) — if not, QG may still be
   running or need a retry; the issue doc's action items track this, not required for THIS todo's own completion since
   the fix is already committed locally and the launch already ran successfully off it.
+
+### 2026-08-09T~03:51Z — slot 28, same session — all 5 ES_OPT VMs died, second real bug found; blocked again on the lock
+
+**Status: IN FLIGHT — todo #2 still `[ ]`.** All 5 re-launched ES_OPT VMs (2022-2026) eventually died — NOT the
+`--source` bug (fixed, confirmed working: real data was written, e.g. `venue=CME: 24180 rows written` for 2026 across
+several trading days before it too died) — a SEPARATE issue: each VM went silent (both its own log AND its GCS heartbeat
+sidecar froze at the same instant, suggesting the whole VM stalled, not just the process) ~15-23 min into a historical
+date's fetch, then was externally deleted. Best-fit hypothesis: `vm_zombie_watchdog.py`'s external `--min-age`-gated
+reaper (default 15 min) false-positive-classifying a legitimately slow-but-alive Databento fetch as dead — NOT the in-VM
+`STALL_TIMEOUT_SEC` (confirmed actual default 1800s/30min, never hit). Not yet confirmed against the watchdog's own
+audit trail — flagged as a P1 action item, not fixed this session. Full writeup + corrected hypothesis:
+`issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md` (pushed `PM@ea685dd0f`).
+
+**Also observed (unrelated to this todo, flagged separately, not acted on)**: a fresh ~25-VM `tradfi-bf-*` wave
+(NASDAQ/NYSE 2023/2024 equities + CME ES/ETH/MBT/MET) is now running, holding the singleton lock again. The NASDAQ/NYSE
+2023/2024 portion looks like it may violate the same-day scope ruling's "killed, not resumed" disposition for the legacy
+fleet — filed as a passive-observation flag, not investigated or acted on:
+`issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` (pushed `PM@4e7d14746`). This
+means the lock is held again regardless of the zombie-watchdog issue — both blockers need to clear/resolve before ES_OPT
+can be retried.
+
+**Code fix status**: `deployment-service@6b1057cc` (the `VM_TASK`/`VM_SOURCE` fix) is committed locally and PROVEN
+working (real data written), but has not yet landed via quickmerge — QG hit a timing-gate failure (1343s vs 600s limit)
+due to extreme shared-host contention (load avg 63-67, 8+ concurrent QG runs observed), then a retry timed out at the
+Bash tool's own 9m20s limit under the same contention. Not blocking THIS todo (the fix already works from the local
+commit), but should land properly once host load drops — tracked in the issue doc, not re-tracked here.
+
+- **NEXT ACTION (fresh session)**: (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check
+  `gcloud compute instances list --filter='name~"^tradfi-bf-"'` — if 0, the lock is clear: re-verify, then re-run
+  `bash deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` (the fix is already on disk in
+  every slot's `deployment-service` clone via `6b1057cc`, whether or not it's landed on origin yet — if a fresh slot's
+  clone predates that commit, cherry-pick or re-apply the fix from the issue doc's diff first). (3) Expect the SAME
+  zombie-watchdog death pattern to recur unless someone has fixed the P1 action item in the issue doc first — if it
+  recurs, that's expected, not a new problem; re-launch is still the right move (idempotent), just don't expect a full
+  5-year completion without that fix landing. (4) Check whether `deployment-service@6b1057cc` has shipped via quickmerge
+  yet (`git log --oneline -5 -- scripts/vm/launch-tradfi-backfill-vm.sh`); if not and host load looks sane (`uptime`,
+  want <20-ish), retry QG. (5) Separately, check whether either flagged issue
+  (`tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` or the zombie-watchdog P1 in the main
+  issue doc) has been resolved by someone else — if the scope violation is confirmed+resolved, the lock may clear
+  faster; if the zombie-watchdog is fixed, a retry should actually complete instead of dying again.
