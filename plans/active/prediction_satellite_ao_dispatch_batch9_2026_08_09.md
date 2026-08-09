@@ -141,7 +141,39 @@ child plans, none of which are in this run's 18-doc scope) and contributed nothi
       `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` (do not pause). Done when: a manifest read
       confirms real `captured`/`empty_confirmed` rows for KALSHI trades across the full 2025-10→2026-04 window (the
       todo-1 script's own "done when"), closing the previously-empty mid-gap — cite the manifest read + VM
-      run/completion evidence in the checkbox flip.
+      run/completion evidence in the checkbox flip. **NOT satisfied by the 2026-08-09 production run** (see Progress Log
+      below) — the run itself completed cleanly but the manifest shows 0 `captured` + 0 `empty_confirmed` rows; stays
+      unchecked pending todo 4 below.
+- [ ] [SCRIPT] P1. **Fix `kalshi_historical_gap_backfill.py`'s silent-drop-on-empty gap, then re-run the campaign.** The
+      2026-08-09 production run (`mtds-prediction-kalshihistgap-20260809-164319`, `elapsed_s=6514.7` / ~1.81hr,
+      `DEPLOYMENT_COMPLETED exit_code=0`) enumerated all 12,574 series and found 2,658 markets closing in the
+      2025-10→2026-04 window, but a manifest read of the per-VM shard it wrote
+      (`gs://market-data-tick-pred-prd-central-element-323112/_index/per_vm/mtds-prediction-kalshihistgap-20260809-164319.parquet`)
+      shows **only 3 rows total, all `capture_status=attempted_failed` / `error_reason=ClassifierConfidenceLow`** — 0
+      `captured`, 0 `empty_confirmed`. Root cause, confirmed by direct API probes during this session: the other
+      2,655/2,658 markets genuinely returned `200 {"cursor":"","trades":[]}` (verified honest, not a fetch failure —
+      only 7 `ADAPTER_FETCH_FAILED` events fired across the whole run) but `run()`'s `if annotated.empty: continue`
+      (kalshi_historical_gap_backfill.py) silently drops them with **zero manifest footprint** — no `record_empty` call
+      at all, so the manifest can't distinguish "checked, confirmed empty" from "never checked" (a real breach of the
+      honest-absence discipline, `/codex/02-data/honest-absence-downstream-handling.md`). The 3 markets that DID have
+      trades were then legitimately-but-unhelpfully classified `OTHER` by `classify_kalshi_to_canonical_group` (a real,
+      honest classifier gap for niche tickers like `KXATPMATCH-…`/`KXNCAAFGAME-…`/`KXNBAMENTION-…` — not itself a bug,
+      `classify_kalshi_to_canonical_group` is documented non-Optional with `OTHER` as a legitimate catch-all) and routed
+      to `record_failed`, so even the rare real trades never landed as `captured`. Fix requires TWO changes: (1)
+      instruments-service `KalshiReferenceDataAdapter.fetch_historical_trades` currently returns a bare `list[dict]`
+      with no HTTP-status/ response-received signal — it must additionally surface enough to build a
+      `unified_api_contracts.FetchEvidence` (`http_status`, `response_received`, `rows_in_response=0`,
+      `error_signal=""`) so the driver can prove `SOURCE_RETURNED_ZERO` honest absence per `record_empty`'s own gate
+      (raises `UnprovenHonestAbsenceError` without it — checked directly against the writer source this session, not
+      assumed); (2) `kalshi_historical_gap_backfill.py`'s `run()` must call
+      `writer.record_empty(row_key={date: <market close date>, venue: KALSHI, ...}, reason="SOURCE_RETURNED_ZERO",     fetch_evidence=…, pipeline_mode=PipelineMode.BATCH_KALSHI)`
+      for every market whose `fetch_and_annotate_market` returns empty, instead of silently `continue`-ing. After
+      shipping the fix, RE-RUN the full campaign (mirrors todo 3's own launcher:
+      `deployment-service/scripts/vm/launch-prediction-kalshi-historical-gap-backfill-vm.sh`, already fleet-hardened
+      this session — see the two infra fixes below). Done when: a fresh manifest read shows `captured` rows for the
+      (likely few) real-trade markets AND `empty_confirmed` rows (not silent absence) for the confirmed-empty majority,
+      covering the full 2025-10→2026-04 window — THEN todo 3 above can be checked off citing both this fix's SHA and the
+      re-run's manifest evidence.
 
 ## Not extracted this batch — items that stay behind
 
@@ -227,3 +259,34 @@ child plans, none of which are in this run's 18-doc scope) and contributed nothi
   ("unresolvable by this re-walk alone"). Verification scripts + raw pandas output kept in this session's scratchpad
   only (not promoted — trivially regenerable, one `pandas.read_parquet` + `value_counts()` call against the live
   manifest). Checkbox flipped this commit.
+- 2026-08-09 (todo 3 attempted — slot 28): local bounded smoke test (`--limit-series 5` then `300`, `--dry-run`) against
+  the LIVE Kalshi API confirmed `/series`, `/markets?status=closed`, `/historical/trades` all return correctly-shaped
+  200 responses with valid RSA-PSS auth (`kalshi-api-credentials` — `uts-prd-sa` already carries project-level
+  `secretmanager.secretAccessor`, no credential gap); the 300-series sample found 33 real in-window markets, proving
+  discovery works — no adapter fix needed (todo 3's own pre-flight step). Built a new one-off launcher
+  `deployment-service/scripts/vm/launch-prediction-kalshi-historical-gap-backfill-vm.sh` (Pattern A, compound
+  `VM_SERVICE=market_tick_data_service+instruments_service+chaos-drill` to stage all 3 needed tarballs,
+  direct-script-path invocation to sidestep an mtds-vs-e2e-testing `scripts/` package-name collision under `-m`). **3 VM
+  launch attempts, 2 real shared-infra bugs found + fixed along the way** (both scoped fixes, not workarounds): (1)
+  attempts 1-2 failed identically at `uv pip install` (`e2e-testing`'s pyproject declares
+  `execution-service`/`strategy-service` as hard deps, unresolvable via `--no-sources` when those tarballs aren't
+  staged) — `setup-data-pipeline-vm.sh`'s NODEPS routing only covered `strategy-paper`/`strategy-live`/`defi-paper`/
+  `synthetic-benchmark`, never `canonical-migration` with a narrower compound `VM_SERVICE`; fixed by routing
+  `e2e-testing` to NODEPS whenever its sibling dirs are genuinely absent, VM_TASK-agnostic
+  (`deployment-service@fe20aed8c`). (2) The fix's own republish then got silently clobbered by a concurrent agent's own
+  launcher run before this launcher's VM booted (`gcloud storage objects describe` showed the OLD content re- written
+  seconds after this session's own republish) — live-reproduced, dated confirmation of the shared-fleet race
+  `vm_launcher_setup_script_freshness_gap_2026_07_31.md` already tracked but couldn't previously confirm (Progress Log
+  entry added there); fixed in this launcher by calling
+  `LC_SETUP_SCRIPT_FRESHNESS=auto lc_verify_setup_script_freshness` directly (not via `lc_gcloud_create`, which lacks
+  SPOT support) immediately before `gcloud compute instances create`, narrowing the race window
+  (`deployment-service@b57336dd1`). 3rd attempt (`mtds-prediction-kalshihistgap-20260809-164319`) booted clean and ran
+  to completion: `DEPLOYMENT_COMPLETED exit_code=0`, `elapsed_s=6514.7` (~1.81hr), all 12,574 series enumerated, 2,658
+  markets found in-window. **Manifest verification then surfaced a real, separate correctness gap** (not an infra issue)
+  — see the new todo 4 above for the full root-cause + fix spec: the campaign's own per-VM manifest shard shows 0
+  captured + 0 empty_confirmed rows (only 3 `attempted_failed`/`ClassifierConfidenceLow` rows), because
+  `kalshi_historical_gap_ backfill.py` silently drops (no manifest row at all) every market whose trades fetch honestly
+  returned empty (2,655/2,658 of them) instead of recording `empty_confirmed` — todo 3's own "done when"
+  (captured/empty_confirmed rows proving the window is honestly covered) is genuinely NOT met by this run despite the
+  clean `exit_code=0`. Todo 3 stays UNCHECKED. Filed as todo 4 (P1) rather than a separate issue doc since it's a
+  direct, narrowly-scoped continuation of this exact todo's own script, not a cross-cutting finding.
