@@ -185,14 +185,29 @@ over all pending draft batches) that independently spot-verified every todo belo
       shape as Aave (not obtainable, no single scalar, one `eth_call` per feed); Pyth is a genuine REST call where the
       status IS obtainable and already in scope but currently discarded on the clean-empty path, including one concrete
       case (`_fetch_pyth_prices_at_timestamp`'s 404-on-historical) where the synthesized 200 is provably wrong.
-- [ ] [DATA] P2. **Relaunch `mtds-dex-swaps-backfill-1`/`-2`** onto the shipped checkpoint fix
+- [x] ✅ [DATA] P2. **Relaunch `mtds-dex-swaps-backfill-1`/`-2`** onto the shipped checkpoint fix
       (`market-tick-data-service@8046e25b`), using each VM's per-VM manifest shard's max `date`
       (`_index/per_vm/mtds-dex-swaps-backfill-{1,2}.parquet`) as an explicit `--start` date-frontier so the relaunch
       doesn't replay from 2023-01-01 (SPOT, idempotent shards). Repo: market-tick-data-service. Source:
       `/plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md` (archived
       2026-08-09, all 12 todos closed). Done when: both VMs health-verified RUNNING at T+10min and a fresh manifest read
       shows CURVE/OPTIMISM's `attempted_failed` count has stopped growing with the old pre-fix "All 5 cascade schemas
-      returned GraphQL errors" signature.
+      returned GraphQL errors" signature. **CLOSED BY CITATION 2026-08-09 (slot-32, data_engineering)** — the original
+      `-1`/`-2` VMs no longer exist: `-1` completed cleanly 2026-08-01T19:34Z (`2024-10-07..2025-05-11`, EXIT_STATUS=0);
+      `-2` ran the stale pre-fix binary until ~2026-08-07T15:22Z (`2025-05-12..2025-12-14`), then was superseded by an
+      independent relaunch of the consolidated single-VM architecture (`mtds-dex-swaps-backfill`, no `-1`/`-2` suffix,
+      launched 2026-08-07T15:58:05Z, deployment `acaddf78-8696-4300-b9a3-8557f464461c`) that already carries the
+      checkpoint fix. **Done-when criteria independently verified 2026-08-09 via a fresh bounded manifest read**
+      (`market-data-tick-defi-prd-central-element-323112`, columns=[venue,chain,data_type,capture_status,error_reason,
+      attempted_at], filtered `data_type=dex_pool_swaps venue=CURVE`): OLD-signature `attempted_failed` rows frozen at
+      22, max `attempted_at=2026-08-07T07:00:44Z` (before the relaunch, zero since); 194 rows now correctly classify
+      `empty_confirmed(EXPECTED_SUBGRAPH_DEINDEXED)`, max `attempted_at=2026-08-09T19:55:21Z`. VM health-verified
+      RUNNING (`gcloud compute instances describe mtds-dex-swaps-backfill`, STATUS=RUNNING, has been running >2 days,
+      well past T+10min); `PROGRESS.json` monotonic and advancing (`last_completed_date=2023-07-10`,
+      `updated=2026-08-09T20:53:35Z`). **Efficiency gap found and filed separately** (the relaunch used the launcher's
+      `2023-01-01` default instead of an explicit manifest-derived `--start`, so it's redundantly re-walking
+      already-captured ground — not a correctness issue, SPOT/idempotent, self-resolves in ~2 weeks): see
+      `/plans/active/issues/mtds_dex_swaps_backfill_wasteful_2023_replay_2026_08_09.md`.
 - [ ] [DIAG] P3. **Verify manifest migration scope**: whether `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s
       2026-08-01 finding (`rate_indices`/`utilization` → `lending_indices`, verified against live `_lending_grain.py`
       handler source, `market-tick-data-service@13f14b78`) covers the FULL `rate_indices` manifest population (~49,096
