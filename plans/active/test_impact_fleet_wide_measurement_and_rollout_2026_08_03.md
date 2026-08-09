@@ -481,3 +481,5 @@ the 2026-08-03 pass's own reasoning (`sequential: true` at the plan level + the 
 `assigned_vm: planning` flip-trigger, not a partial dispatch) — not re-litigating that citation; the `[REVIEW] P2`
 fleet-wide evidence-sufficiency item remains an explicit human/reviewer judgment call. No new RECLASSIFY or ARCHIVE
 signal.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

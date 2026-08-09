@@ -549,3 +549,4 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   still does not exist -- §4 frames it only as a "Recommendation," not yet scoped as its own buildable todo. Two
   independent same-day audits (this doc and the blocker doc itself) now converge on the identical conclusion. Gate
   correctly stays blocked, not prematurely. Nothing to reclassify.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

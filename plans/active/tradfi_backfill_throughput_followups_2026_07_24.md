@@ -720,3 +720,4 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   is an umbrella pointer bundling two separately-owned, still-open docs rather than worker-determinable work of its own,
   so flipping `assigned_vm` would dispatch a tracking pointer, not a bounded task.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

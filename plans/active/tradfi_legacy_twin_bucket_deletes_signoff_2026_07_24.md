@@ -258,3 +258,4 @@ restated here.
   delete gate remains unmet (twin-coverage 0% vs required 100%), and bundling a re-verify step with an
   irreversible-if-wrong multi-bucket prod GCS delete in one todo still flags for plan-owner confirmation before AO
   dispatch even once the gate clears (2026-08-02 reasoning, not re-litigated). Doc stays NA.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
