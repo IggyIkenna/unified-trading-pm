@@ -606,10 +606,13 @@ A large parallel fix wave landed after this doc was filed. Cross-referencing aga
 ## H. TRADFI — deferred (mid-edit by a parallel session at audit time)
 
 Not cleaned in this pass. Ready-to-run cleanup note (audit-trail to strip + outstanding items to re-verify once the
-sibling session commits) is captured separately. **Highest-value TRADFI item to re-verify:** the doc's "MVP Universe"
-(§6) doesn't match runtime — the real adapter fetch uses `TRADFI_DATABENTO_INSTRUMENTS` with **no MVP filter**, so the
-documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y genesis date unverified; `ETHA` misses
-`KNOWN_ETFS` → reclassifies as `EQUITY`; the CBOE per-day historical snapshot rewrite was explicitly deferred.
+sibling session commits) is captured separately. **Highest-value TRADFI item — RESOLVED 2026-07-30 (corrected
+2026-08-09, plan_reconciler agt-a3e83c):** the "MVP Universe" (§6)-vs-runtime mismatch (real adapter fetch used
+`TRADFI_DATABENTO_INSTRUMENTS` with no MVP filter) was fixed via `deployment-service@c847395e` ("wire tradfi mvp_mode
+via opt-in --mvp-mode flag on the forward-poll launcher") — see
+`plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`, no longer the top re-verify item. Still
+unverified: US2Y genesis date; `ETHA` misses `KNOWN_ETFS` → reclassifies as `EQUITY`; the CBOE per-day historical
+snapshot rewrite was explicitly deferred.
 
 ---
 

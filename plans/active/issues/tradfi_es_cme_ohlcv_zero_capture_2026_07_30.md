@@ -383,7 +383,13 @@ root-cause fix.
 
 - [ ] [DATA] P3. Write and run a dedicated script to backfill the 28,307+111 pre-existing blank-instrument_id manifest
       rows in market-data-tick-tradfi-prd _index (derive canonical bundle ID via _resolve_chain_bundle_manifest_id and
-      rewrite the rows).
+      rewrite the rows). **Safety note (plan_reconciler 2026-08-09, agt-a3e83c)**: this is a bulk rewrite of ~28,418
+      rows in a PROD manifest index with no dry-run/justification stated — before `--apply`, dry-run first (report the
+      full candidate set + derived IDs without writing), spot-verify a sample of derived bundle IDs against real GCS
+      objects, and use the same snapshot-before-write CAS pattern established elsewhere in this doc family (e.g. the
+      sibling `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md` todo 1). Not `[OPERATOR]`-gated — the
+      derivation function (`_resolve_chain_bundle_manifest_id`) is already proven/shipped, this is a mechanical rewrite,
+      not a design decision — but the dry-run-first step above is a hard prerequisite before any write.
 
 > **2026-08-06 archive-candidate audit**: The P2 fix (market-tick-data-service@65beaeaf) covers NEW captures only; the
 > P3 todo verified none of the 3 existing migration scripts can reconcile the pre-existing blank-instrument_id rows and

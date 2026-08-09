@@ -21,8 +21,8 @@ scope: [engineer]
 tags: [instrument-id, canonicalization, tradfi, combo, spread, bug-fix, p1]
 related:
   [
-    ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
-    issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md,
   ]
 created: 2026-07-08

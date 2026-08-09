@@ -46,7 +46,8 @@ context_scope:
     deployment-api/deployment_api/services/data_status/mtds.py,
   ]
 execution_scope: local-only
-model_tier: opus-required
+model_tier: sonnet-doable # corrected 2026-08-09 (plan_reconciler agt-a3e83c) — opus-required is ZERO categories per
+# CLAUDE.md's 2026-07-23/08-04/08-07 rulings; this doc predates all three and cited no deliberate one-off override.
 thinking_tier: high
 estimate_class: design
 estimate_baseline_ai_days: 3
@@ -471,29 +472,31 @@ longer has its own download button.
       (`mtds.py:143-215,182-196,618-623`) onto the `reference_scope`-based model — either drop it from
       `PREDICTION_DATA_TYPE_META` entirely (per UAC's own "not separate" disclaimer) or route its presence-tracking
       through the genesis/day-scope catalogue mechanism instead.
-- [x] ✅ [VERIFY] P2. **NOT closed here — genuinely contested, actively being investigated concurrently as of
-      2026-07-29/30, left open rather than force a premature verdict.** Two independent investigations this session
-      reached DIFFERENT conclusions: one found `corporate_action_confirmed`/`earnings_result` (POLYGON) registered with
-      no real MTDS capture code (real writer in features-service's calendar module) produced a real orphan population,
-      independently fixed via `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s corporate_action/ earnings cleanup
-      (`instruments-service@03f71c81`, `market-tick-data-service@c24db4cf`); a second, independently more thorough pass
-      found `enumerate_expected_universe.py`'s own code comment states **"TRADFI IS DELIBERATELY NOT GATED"** (unlike
-      CeFi) — meaning corporate_action_confirmed/earnings_result seeded as `empty_confirmed` placeholders under the real
-      trading venues may be operator-ratified design, not a conflation bug — and found `FRED` was being actively added
-      to `VENUES_BY_ASSET_GROUP["tradfi"]` in `unified-api-contracts` on 2026-07-29 (same day), i.e. genuinely live,
-      in-flight ground truth, not settled fact. Audit whether the same MTDS/reference-data conflation risk exists
-      anywhere else — e.g. the TradFi `POLYGON`/`FRED` reference-data-in-the-wrong-registry smell noted at
-      `market_data_categories.py:1279-1286`. Whoever picks this up next: re-verify current live state of
-      `VENUES_BY_ASSET_GROUP["tradfi"]` + `enumerate_expected_universe.py`'s gating comment before recording a final
-      verdict, since both were observed changing during this exact session. **DONE (na-eligibility-audit 2026-08-03)** —
-      `instruments_satellite_ao_dispatch_batch1_2026_07_27.md`:186 (todo 4) is this exact item and explicitly says both
-      in-flux threads left open here "have both since settled, verified 2026-08-02": (1) `market_data_categories.py`'s
-      `VENUE_DATA_TYPE_CAPABILITIES["POLYGON"]` fixed (`unified-api-contracts@e34afc1d`, removed as stale dead code);
-      (2) `FRED` confirmed correctly placed, not a conflation instance (real adapter + matching capability entry). A
-      definitive verdict is recorded and a new spot found while auditing "anywhere else" (`data_availability.py`'s
-      `VENUE_DATA_AVAILABILITY["POLYGON"]`, NOT dead code, still surfaced into `ui-reference-data.json`) was filed as
-      its own follow-up doc (`archive/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`) rather than
-      fixed inline — matching this todo's own "this todo is the audit, not the fix" done-when.
+- [x] ✅ [VERIFY] P2. **RESOLVED 2026-08-03 (see below) — originally contested 2026-07-29/30, corrected lead-in
+      2026-08-09 (plan_reconciler agt-a3e83c; this line previously read "NOT closed here" even though the checkbox and
+      the tail of this same item already record the 2026-08-03 resolution).** Two independent investigations this
+      session reached DIFFERENT conclusions: one found `corporate_action_confirmed`/`earnings_result` (POLYGON)
+      registered with no real MTDS capture code (real writer in features-service's calendar module) produced a real
+      orphan population, independently fixed via `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s corporate_action/
+      earnings cleanup (`instruments-service@03f71c81`, `market-tick-data-service@c24db4cf`); a second, independently
+      more thorough pass found `enumerate_expected_universe.py`'s own code comment states **"TRADFI IS DELIBERATELY NOT
+      GATED"** (unlike CeFi) — meaning corporate_action_confirmed/earnings_result seeded as `empty_confirmed`
+      placeholders under the real trading venues may be operator-ratified design, not a conflation bug — and found
+      `FRED` was being actively added to `VENUES_BY_ASSET_GROUP["tradfi"]` in `unified-api-contracts` on 2026-07-29
+      (same day), i.e. genuinely live, in-flight ground truth, not settled fact. Audit whether the same
+      MTDS/reference-data conflation risk exists anywhere else — e.g. the TradFi `POLYGON`/`FRED`
+      reference-data-in-the-wrong-registry smell noted at `market_data_categories.py:1279-1286`. Whoever picks this up
+      next: re-verify current live state of `VENUES_BY_ASSET_GROUP["tradfi"]` + `enumerate_expected_universe.py`'s
+      gating comment before recording a final verdict, since both were observed changing during this exact session.
+      **DONE (na-eligibility-audit 2026-08-03)** — `instruments_satellite_ao_dispatch_batch1_2026_07_27.md`:186 (todo 4)
+      is this exact item and explicitly says both in-flux threads left open here "have both since settled, verified
+      2026-08-02": (1) `market_data_categories.py`'s `VENUE_DATA_TYPE_CAPABILITIES["POLYGON"]` fixed
+      (`unified-api-contracts@e34afc1d`, removed as stale dead code); (2) `FRED` confirmed correctly placed, not a
+      conflation instance (real adapter + matching capability entry). A definitive verdict is recorded and a new spot
+      found while auditing "anywhere else" (`data_availability.py`'s `VENUE_DATA_AVAILABILITY["POLYGON"]`, NOT dead
+      code, still surfaced into `ui-reference-data.json`) was filed as its own follow-up doc
+      (`archive/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`) rather than fixed inline —
+      matching this todo's own "this todo is the audit, not the fix" done-when.
 - [x] ✅ [VERIFY] P1. **CLOSED 2026-07-27 (instruments_satellite_ao_dispatch_batch1_2026_07_27.md todo 1) — read-only,
       no code change.** Raw-parquet spot-check the 5 additional CeFi venues flagged by the pre-audit's registry read as
       likely hitting the same multi-type blank-collapse: `OKX-FUTURES`, bare `BYBIT`, `BINANCE-FUTURES`,
@@ -502,8 +505,10 @@ longer has its own download button.
       `KRAKEN-FUTURES`) never had the bug. Full evidence in the batch doc.
 - [ ] [CODE] P1. Backfill historical CeFi/TradFi manifest rows with the corrected per-instrument_type split — the
       2026-07-07 writer fix only affects NEW writes going forward; every pre-fix DERIBIT/CME/etc. row is still
-      blended+blank until reprocessed. Likely a candidate for the generic reprocessing utility proposed in
-      `manifest_reprocessing_generic_utility_2026_07_07.md` rather than a new one-off script.
+      blended+blank until reprocessed. Use the shipped generic reprocessing utility
+      (`unified_trading_library/manifest_reprocess.py`, `unified-trading-library@abeebede`/`4b6a13cf`) rather than a new
+      one-off script (**corrected 2026-08-09, plan_reconciler agt-a3e83c** — the utility is built and shipped, not
+      merely "proposed"; see `plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md`).
 
 ## Progress Log
 

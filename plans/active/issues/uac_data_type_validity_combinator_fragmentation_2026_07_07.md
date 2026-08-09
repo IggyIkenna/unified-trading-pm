@@ -37,7 +37,9 @@ assigned_vm: planning
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
-model_tier: opus-required
+model_tier: sonnet-doable # corrected 2026-08-09 (plan_reconciler agt-a3e83c) — opus-required is ZERO categories per
+# CLAUDE.md's 2026-07-23/08-04/08-07 rulings; this doc is assigned_vm: planning (live AO-dispatch target) so the
+# stale tag had a real cost impact (would spawn Opus, ~5-10x, on next dispatch).
 thinking_tier: high
 estimate_class: design
 estimate_baseline_ai_days: 3
@@ -275,8 +277,8 @@ just belongs on a different layer than instrument_type does, and conflating the 
       (+gas_fees), puffer (+lst_rates). Audit function defi_actual_data_types_not_declared_valid() now returns only 2
       undeclared pairs — AAVE-ETHEREUM/oracle_prices and MAKER-ETHEREUM/lst_rates — both over-claiming cases where the
       genesis date should be rolled back (oracle_prices on legacy governance venue, lst_rates on a CDP protocol).
-      Operator decision still needed: which of the now-reconciled pairs to wire a real capture path for vs. retire the
-      aspirational genesis date; see Progress Log 2026-08-05 for structured analysis.)
+      Operator decision tracked separately as the P2 `[OPERATOR]` todo above (not dangling — corrected 2026-08-09,
+      plan_reconciler agt-a3e83c); see Progress Log 2026-08-05 for structured analysis.)
 
 ## Progress Log
 

@@ -568,11 +568,12 @@ its own checklist.
 
 #### P2
 
-3. **canonical_id_builder_retrofit_checklist** — 9 of 12 unchecked
-   `plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md` Explicit follow-up checklist for the 2026-07-08
-   one-builder architecture decision. Retrofit ~48 DeFi adapters' ad hoc f-string instrument_key construction through
-   the shared builder (blocked on resolving 7 non-canonical TYPE tokens — real crash-risk enum gap), a Betfair
-   `/`-delimiter bug, both Prediction adapters storing bare unwrapped ids.
+3. **canonical_id_builder_retrofit_checklist** — 9 of 12 unchecked as of this 2026-07-10 snapshot (moved since — now at
+   `/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md`, corrected 2026-08-09, plan_reconciler
+   agt-a3e83c) Explicit follow-up checklist for the 2026-07-08 one-builder architecture decision. Retrofit ~48 DeFi
+   adapters' ad hoc f-string instrument_key construction through the shared builder (blocked on resolving 7
+   non-canonical TYPE tokens — real crash-risk enum gap), a Betfair `/`-delimiter bug, both Prediction adapters storing
+   bare unwrapped ids.
 
 4. **prediction_canonical_identity_migration** — 4 of 8 unchecked
    `plans/active/prediction_canonical_identity_migration_2026_07_08.md` Genuine distinct follow-up (not a duplicate)
