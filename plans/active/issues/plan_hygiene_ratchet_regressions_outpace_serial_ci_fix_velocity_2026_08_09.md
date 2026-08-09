@@ -70,6 +70,23 @@ words: "this branch is churning faster than one CI worker can chase serially").
 
 ## Todos
 
+- [ ] [BACKEND] P3. **New facet found 2026-08-09 (context_scout_auditor, dispatch agt-264560, slot 16): the same
+      zero-baseline-grace `--only` design also hard-blocks LOCAL pre-commit, not just CI.** A routine, fully-unrelated
+      context_scope-maintenance sweep (touching ~270 docs, no todo/status/effort-tier content changed) hit
+      `check_plan_operator_ruling_evidence.py --only` and `check_effort_signal_ratchet.py --only` failing on ANY staged
+      file that already carried pre-existing corpus debt, with no baseline exemption in `--only` mode (by design — see
+      each script's own `--only` docstring). Measured: 39 files failed operator-ruling-evidence (an established,
+      pre-2026-07-30 gap), 117 files failed effort-signal-ratchet (same 217->250 population this doc's slot-14 entry
+      already found) — 156 of ~425 touched docs (37%), all pre-existing content, none touched by this session. Had to
+      exclude all 156 from the commit and defer (git-restore back to HEAD) since fixing them requires per-doc judgment
+      outside a context-scout worker's mandate. This confirms Todo option (c) below from the opposite direction: it's
+      not just that CI re-triggers race fresh regressions, it's that ANY agent's local commit touching a large corpus
+      slice — for a reason having nothing to do with these ratchets — is structurally blocked by pre-existing debt the
+      `--only` design was explicitly built to NOT grandfather. Repo: unified-trading-pm
+      (`scripts/quality_gates/check_plan_operator_ruling_evidence.py`,
+      `scripts/plan-hygiene/check_effort_signal_ratchet.py`). Done-when: same structural fix as the P2 todo below
+      resolves this facet too (a grandfather/baseline mode for `--only`, or moving these two checks to periodic/batched
+      sweep, would both fix it) — track under the same resolution, don't design a separate fix.
 - [ ] [BACKEND] P2. Consider one or more structural fixes so ratchet regressions don't outrace serial fixing on a
       high-churn branch: (a) debounce/coalesce the CI re-trigger (e.g. the hourly `ldr-ci-monitor`) so a fix push
       doesn't immediately race a fresh concurrent regression; (b) batch multiple ratchet-fix commits into a single CI
@@ -100,3 +117,8 @@ words: "this branch is churning faster than one CI worker can chase serially").
   effort-tier judgment call is audit-scope work (see `/na-eligibility-audit`/`/ag-closeout-audit`-shaped skills), not a
   one-shot CI-wall fix. Handing off again per the existing "B" ruling above rather than re-asking the same
   already-answered question.
+- 2026-08-09 (context_scout_auditor, dispatch agt-264560, slot 16): Independently hit the same two ratchets from the
+  LOCAL pre-commit angle (not CI) while running the daily `/context-scout` context_scope-maintenance sweep — added todo
+  P3 above with the measurement (156/425 touched docs blocked, all pre-existing content). Worked around by excluding the
+  156 affected docs from this session's commits rather than attempting per-doc fixes (outside this role's mandate); they
+  remain untouched, tracked here for whoever picks up the structural fix.
