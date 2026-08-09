@@ -319,15 +319,39 @@ context_scope:
   (funding-rate drift is a separate, already-tracked concern — the doc's own DYNAMIC-universe-ranking follow-up).
   Result: all 12 pairs remain TRADEABLE, NET +0.00 to +0.82pp vs. the 06-20 floor. Full table + evidence:
   `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log, 2026-08-09 entry (same commit).
-- **2026-08-09** — todo 9 (Binance listing/history-length vs regime-window cross-reference) DISPATCHED + DONE: read-only
-  research, no code shipped. Live-queried Binance `fapi/v1/exchangeInfo` (`onboardDate`) +
-  `fapi/v1/klines?interval=1d&startTime=0` (first real daily candle) for XAU/XAG/COPPER/SPX/SPY/NDX, cross-referenced
-  against the source doc's own ~11-12mo NET-basis regime window (2025-07-01→2026-06-30). **XAU/XAG/COPPER/SPY** are real
-  perps with only 23-55% overlap with that window (each listed partway through it) — their SLIM/NEGATIVE verdicts are
-  regime-conditional, not proven permanent (the same table's CL -20% backwardation reading is this doc's own proof that
-  commodity regimes flip). **SPX**'s nominal 100% coverage is a false signal: Binance `SPXUSDT` is confirmed live to be
-  the SPX6900 meme coin (`underlyingType=COIN`/`Meme`), not an S&P-500 instrument — matches batch11 todo 2's independent
-  finding, restated here because it undermines this todo's own coverage metric for that row. **NDX** has no Binance perp
-  at all (confirmed via a full `exchangeInfo` symbol-list grep) and never had a NET-basis row in the source doc to begin
-  with. No universe/backtest change made, per this todo's explicit scope. Full per-symbol table + evidence:
-  `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log, 2026-08-09 entry (same commit).
+- **2026-08-09 (slot 6) — Barchart-removal todo: research DONE, implementation DEFERRED (not started, nothing to
+  revert).** Picked up after an unrelated task (N1b, different plan) got cancelled mid-flight and this task was freshly
+  dispatched. A read-only research agent mapped every "Barchart" hit across `unified-api-contracts` +
+  `market-tick-data-service` before any edit — preserving the findings here so a fresh session doesn't need to re-run it
+  (session ended via `/pre-compact` before implementation; the remaining work spans 5 locations across 2 repos, each
+  needing individual verification + 2× QG/quickmerge — genuinely not a "few minutes" finish). **Real deletion targets**
+  (confirmed live, non-comment code):
+  1. `unified-api-contracts/unified_api_contracts/external/defi/schemas.py:349-380` — `BARCHART_OHLCV_15M_SCHEMA`
+     constant (verified **zero** other references anywhere in the workspace via
+     `grep -rln "BARCHART_OHLCV_15M_SCHEMA\|barchart_ohlcv_15m"` — safe to delete outright), plus its
+     `DEFI_SCHEMA_MAP["barchart_ohlcv_15m"]` entry (line ~419) and `__all__` export (line ~442).
+  2. `unified_api_contracts/provider_api_versions.yaml:37-40` AND the duplicate at
+     `unified_api_contracts/config/provider_api_versions.yaml:55-60` — live `barchart:` YAML registry blocks
+     (`api_version`/`spec_url`/`last_verified`/`status`), both need the same edit.
+  3. `market-tick-data-service/tests/market_interface/unit/test_barchart_and_yahoo_adapters.py:1` — stale module
+     docstring `"""Tests for BarchartAdapter and YahooFinanceAdapter."""` referencing a class that doesn't exist
+     (confirmed: the file's actual contents are 100% `YahooFinanceAdapter` tests, zero `BarchartAdapter` code) — reword
+     the docstring (or rename the file), nothing functional to delete. **Confirmed NOT to touch** (checked precisely, do
+     not blindly grep-and-delete): (a) `market_data_categories.py:850`
+     `TRADFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES = frozenset({"BARCHART", "YAHOO_FINANCE"})` is a LIVE, correct
+     data-quality exception list — 9,119 real legacy manifest rows still carry the `BARCHART` venue label
+     (operator-ruled quarantine-with-tracking, 2026-07-20) and this frozenset is what stops them re-flagging as fresh
+     drift every census run; deleting it would BREAK that census, not clean anything up. (b) `registry/endpoints.py:371`
+     — the "barchart -> unified_api_contracts.barchart" comment is stale/misleading (confirmed zero literal `"barchart"`
+     key in the actual `module_map` dict via targeted grep) but is a harmless comment, not code — optional cleanup, not
+     required for "Done when: no Barchart code/test references remain" (arguably the comment itself IS a reference;
+     judgment call for whoever picks this up). (c) Every other hit in both repos (grep list: see the agent's full
+     report, or re-run `grep -rin barchart unified_api_contracts/ market_tick_data_service/ --include='*.py'` in each
+     repo) is a "RETIRED"/historical-provenance comment, correctly kept per CLAUDE.md's own "Barchart RETIRED" framing.
+     **Also flagged, not yet checked**: `deployment-ui` may have Barchart source-name labels in UI dropdowns — the agent
+     noted this as "worth a manual spot-check" but didn't confirm; check before calling the todo's "no Barchart
+     references remain" done-when fully satisfied (todo's own repo scope is
+     `unified-api-contracts, market-tick-data-service` only, so this is an FYI, not blocking). No cross-repo Python
+     `import` of a Barchart symbol exists anywhere (checked). Next session: implement items 1-3 above, run QG in both
+     repos, quickmerge, flip the plan's own Barchart todo. `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
+     Progress Log, 2026-08-09 entry (same commit).
