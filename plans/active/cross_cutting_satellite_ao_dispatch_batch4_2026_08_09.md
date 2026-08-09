@@ -78,7 +78,7 @@ drift_direction: advance-code
       other 5 asset-group consolidated-closeout docs were already split. Repo: unified-trading-pm. Source:
       `issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md` (line-cap-split item). Done when: the parent doc is
       back under ~700 lines with a forked child covering the trimmed content, and the parent's `depends_on`/child
-      pointer is wired per `task_template.md` finding I. — unified-trading-pm@(pending). Parent trimmed 1007→716 lines
+      pointer is wired per `task_template.md` finding I. — unified-trading-pm@28d6b07a4. Parent trimmed 1007→716 lines
       (had grown past the 1000L hard cap since this todo was authored). Forked Tracks 14/18-22 (still-open,
       observability/self-monitoring-themed) to `cross_cutting_closeout_observability_and_monitoring_2026_08_09.md`;
       forked Track 15 (closed) + the full Progress Log through 2026-08-08 to
