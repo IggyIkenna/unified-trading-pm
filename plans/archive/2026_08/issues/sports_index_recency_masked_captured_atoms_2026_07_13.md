@@ -25,7 +25,7 @@ summary: |
   verify green twice, zero captured-key losses; ALL 100 FIXTURES cells were truthset gaps (see body). REMAINING:
   the INFRA image redeploy + the P3 fleet sweep + 2 residual atoms (parked blank-data_type row; new TEAMS/TFF
   nightly-image masking).
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -41,8 +41,14 @@ parent_epic: sports_master
 priority: P1
 source: oscillation investigation 2026-07-13 (operator task "lets fix it")
 assigned_vm: planning
-resolved_by: ""
-locked_by: ""
+resolved_by:
+  [
+    "instruments-service@853cef81",
+    "unified-trading-library@17ee38de",
+    "instruments-service@2b165597",
+    "instruments-service@4275b2d8",
+  ]
+locked_by:
 context_scope:
   [
     /plans/archive/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md,
@@ -79,10 +85,11 @@ depends_on: []
       `fill-missing-player-stats` captured row instead (it is the dishonest side then). Never blind-flip. — ✅
       2026-07-14 instruments-service@853cef81 (`scripts/recency_masked_adjudication_2026_07_13.py`): all 143 probed
       objects exist + parse with >=1 row → verdict `restamp-captured`, re-stamped at the masking empty row's identity
-      via per-VM shard `VM_NAME=recency-repair-20260713`; the absent-object branch never fired (0 missing), and per
-      operator ruling absent-object atoms would have stayed masked (no delete/retype). `--verify` green twice (02:41Z +
-      02:52Z 2026-07-14, >=2 consolidator cycles): 243/243 read captured; captured-key diff vs pre-apply snapshot
-      `availability_index.20260714-023838.recency_masked_adjudication_pre_apply.parquet` = 0 lost keys.
+      via per-VM shard `VM_NAME=recency-repair-20260713`; the absent-object branch never fired (0 missing) — the
+      pre-agreed disposition for that branch (had it fired) was to leave absent-object atoms masked, no delete/retype.
+      `--verify` green twice (02:41Z + 02:52Z 2026-07-14, >=2 consolidator cycles): 243/243 read captured; captured-key
+      diff vs pre-apply snapshot `availability_index.20260714-023838.recency_masked_adjudication_pre_apply.parquet` = 0
+      lost keys.
 - [x] [DATA] P1. Subclass (b) — 46 FIXTURES atoms: adjudicate truthset-flip vs captured row (row_count 1-11,
       venue=API_FOOTBALL). The 2026-06-28 truthset says no fixtures; the captured parquet says rows exist. Decide per
       atom by content (open the parquet; a header-only/placeholder parquet → keep the flip; real fixture rows → truthset
@@ -248,3 +255,10 @@ masking rows together to apply the tie-break. This is a genuinely live, unmitiga
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged. Note (out of scope to
   fix): the 2026-08-05 progress-log entry states this closes the last open todo, but `status:` frontmatter still reads
   `open`.
+- **plan_reconciler 2026-08-09 (agt-196785)**: independently re-verified all 7 todos `[x]` with HARD evidence (commit
+  shas: `instruments-service@853cef81`, `@2b165597`, `@4275b2d8`; `unified-trading-library@17ee38de`; each with a cited
+  verify pass). `locked_by` empty. Flipped `status: open` → `resolved` per the 2026-08-05/08-06 entries above (both
+  already correctly identified this gap, never applied). No DEFERRED/NICE-TO-HAVE items found requiring migration before
+  archival. Archived via the standard 6-step ritual.
+
+## Deferred work — migrated to: none (fully resolved, nothing deferred)
