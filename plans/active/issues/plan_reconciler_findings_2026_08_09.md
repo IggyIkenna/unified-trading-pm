@@ -245,4 +245,34 @@ balanced (Phase 5.9(a) ledger check).
 
 ## Plans not reached
 
-(populated if applicable)
+(populated if applicable — none yet; this run is still in progress, see § "In-flight verification" below)
+
+## In-flight verification (checkpoint note — this run is NOT finished as of this commit)
+
+**Session context checkpoint 2026-08-09 ~04:03 UTC**: this run has 7 commits pushed to `plan_reconciler/agt-0c9e3f` so
+far (all contradiction/doc-drift/hygiene fixes + STEP 6 routing complete) and 1 background verification still IN FLIGHT:
+
+- **What**: `npx playwright test --project=chromium tests/smoke/` (full suite, 450 tests) running in `deployment-ui`,
+  launched ~2026-08-09T03:52Z, to gate the 3 missed-flip candidates in
+  `data_status_tab_and_downloads_remediation_2026_06_16.md` lines ~166-195 (venue-filter frontend, duplicate
+  available-dates panel collapse, pagination visible-count selector) — all 3 are independently confirmed code-shipped
+  (`deployment-ui@80c547d`) with their sole cited blocker confirmed already resolved (`deployment-ui@067f7cd`,
+  2026-07-29); the doc's own 2026-08-07 na-eligibility-audit note says the only remaining gate is "a fresh `pw:L2`
+  full-suite green" — this run is that fresh re-verification.
+- **Where**: log at this session's scratchpad (`playwright_smoke_run.log`, NOT durable — regenerable by re-running the
+  command above; do not treat its absence in a future session as a problem, just re-run it).
+- **Resumption instructions for whoever picks this up next** (a fresh session, or me after a context compact):
+  1. Check if the process is still running (`ps aux | grep playwright` in `deployment-ui`, or just re-run the command
+     fresh — it's idempotent and takes ~35-40 min for the full suite at `workers: 1`).
+  2. If it already finished: check the exit code. Clean `exit 0` → flip all 3 todos in
+     `data_status_tab_and_downloads_remediation_2026_06_16.md` (lines ~166-195) citing `deployment-ui@80c547d` +
+     `deployment-ui@067f7cd` + this fresh full-suite pass as evidence (per `## Contradictions`/`## Flips verified`
+     format), commit `docs(plans): flip 3 data-status UI todos — pw:L2 fresh full-suite green [agt-0c9e3f]`, push, and
+     append to `## Flips verified` above.
+  3. If it failed: do NOT flip — read which spec(s) failed, determine if it's a NEW regression (file it) or an unrelated
+     pre-existing flake (note it, still don't flip without a clean run).
+  4. Either way, this doc's own `## Coverage`/`## Plans not reached` sections and STEP 7 (final flush + PR) are still
+     owed after this resolves — this run is not done at this checkpoint, just durably saved.
+- **Why this doesn't block anything else**: this is the ONLY item this run was still waiting on; everything else (all
+  fixes, all 3 blocked-questions, the zero-checkbox sweep) is already committed + pushed.
+  `git rev-list --count origin/plan_reconciler/agt-0c9e3f..HEAD` = 0 as of this checkpoint.
