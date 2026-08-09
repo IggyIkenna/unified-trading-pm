@@ -37,7 +37,7 @@ summary: >-
   dying partway through. A ~300-330s (5-5.5min) fixed kill window is suggestive of a session/sandbox-level background-
   process lifetime cap rather than a `unified-trading-system` codebase bug — see the updated "what I could not confirm"
   section.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [meta]
@@ -64,7 +64,7 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: worsening-slowly
-resolved_by:
+resolved_by: mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06_finalize_2026_08_08
 locked_by:
 depends_on: []
 context_scope:
@@ -77,6 +77,10 @@ context_scope:
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED** (sole open todo `[x]`, unlocked; content verified complete, not just checkbox
+> count). Archived by `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06_finalize_2026_08_08`'s
+> finalize-plan gate.
 
 # pipeline_e2e_check.py's local process is silently killed mid-run — reproducible 2/2
 
@@ -281,3 +285,24 @@ proven this run.
   `pipeline_e2e_check.py` RSS logging or this OOM issue. Companion finalize plan:
   `/plans/active/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06_finalize_2026_08_08.md`.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **2026-08-09 (slot 9, data_engineering craft, archival)**: Executing finalize-plan todo 2 (archive this doc). Step 1
+  of the 6-step ritual first: the "## Suggested follow-up" section's 3 prose bullets (strace/py-spy signal capture,
+  systemd `KillUserProcesses` check, host-wide pkill-guard rollout) were flagged as an unconverted prose-deferral by
+  `plan_reconciler_findings_2026_08_06.md`'s zero-checkbox hunter (deferred there for a 12h grace window that has long
+  since passed). Re-assessed rather than mechanically converting: all 3 were diagnostic steps aimed at the ORIGINAL
+  ~300-330s mystery kill: that mystery is now resolved by the confirmed root-cause chain already on record above — the
+  driver-VM move (`launch-pipeline-e2e-check-driver-vm.sh`) eliminated the shared-host-scoped kill entirely (a
+  2026-08-08 run survived 29 minutes, ~5-6x past the old cutoff, before hitting a DIFFERENT, measured failure: genuine
+  OOM, rc=137/SIGKILL, on a dedicated single-tenant VM — which itself rules out both of the first 2 bullets' hypotheses,
+  since neither a shared-host `pkill` sweep nor a session/cgroup teardown policy applies to a single-tenant VM the
+  process has to itself). The 3rd bullet (host-wide pkill-guard rollout) is a general infra-hardening suggestion
+  unrelated to this issue's actual (now-fixed) root cause; RULES.md §1 already documents the guard's existence and
+  enables it where installed — rolling it out further is a separate, already-tracked infra concern, not a follow-up this
+  issue's resolution owes. Concluding all 3 bullets are MOOT (superseded by the resolution path actually taken), not
+  silently dropped — declining to convert them to new todos. Cross-referenced this determination back into
+  `plan_reconciler_findings_2026_08_06.md`'s own open `[DOC] P2` item (same commit) rather than leaving that item
+  pointing at a still-open conversion recommendation. Codex-alignment check (ritual step 3): no new durable contract —
+  the RSS self-logging fix is a narrow instrumentation addition already covered by the existing "bound memory before
+  running heavy scripts" guardrail (RULES.md §1); nothing to migrate to codex. Archiving now: banner added above,
+  `status: resolved`, `resolved_by` set; corpus referrers fixed in the same commit set (`git mv` to
+  `plans/archive/2026_08/issues/`).

@@ -37,7 +37,7 @@ tags:
 related:
   [
     plans/active/issues/mtds_pipeline_check_enumerate_shards_masks_cefi_sports_mvp_2026_08_06.md,
-    plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
+    /plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
     plans/audit/results/data_pipeline_e2e_check_mtds_2026_08_05.md,
   ]
 created: 2026-08-07
@@ -63,20 +63,20 @@ generated_at: 2026-08-07T04:41:00+00:00
 
 > **Provenance note**: this is `cefi_mtds_smoke_tester`'s SECOND run, first using the new
 > `launch-pipeline-e2e-check-driver-vm.sh` (added specifically after 2026-08-05's shared-host OOM-kill — see
-> `plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`). The fix worked: no
-> host-level kill this run. All 10 driver VMs reached a genuine terminal state. 5 of 10 completed their full assigned
-> matrix and wrote a real `write_report()` output (DEFI-combined, TRADFI-combined, PREDICTION-combined, TRADFI-live,
-> PREDICTION-live, SPORTS-live — 6 actually); the other 4 (CEFI-combined, SPORTS-combined, CEFI-live, DEFI-live) hit the
-> script's own `--wall-clock-timeout-sec 3600` safety backstop (`exit_code=3`, a deliberate `os._exit(3)` via SIGALRM,
-> not a crash) before finishing their much larger CEFI/SPORTS/DEFI candidate matrices — real infrastructure work
-> happened (VMs launched, shards processed) but `write_report()` never ran for those 4, so this doc's tables for them
-> are hand-assembled from the real GCS VM logs (`vm-logs/<vm>/run.log`), per this skill's own "ground truth is the VM
-> run.log" principle. The GCS report-mirror path (`pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-06/`)
-> is NOT reusable across these 10 invocations — confirmed the known collision (each asset-group's driver VM has its own
-> empty local disk, so `write_report()`'s same-day MERGE logic only works within ONE process/VM, not across this 10-VM
-> fan-out; the GCS copy is simply whichever invocation finished last) — every real number below comes from a VM's own
-> run.log or a same-run local report snapshot captured immediately after that specific VM went terminal, before the next
-> one could overwrite the shared GCS path.
+> `/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`). The fix
+> worked: no host-level kill this run. All 10 driver VMs reached a genuine terminal state. 5 of 10 completed their full
+> assigned matrix and wrote a real `write_report()` output (DEFI-combined, TRADFI-combined, PREDICTION-combined,
+> TRADFI-live, PREDICTION-live, SPORTS-live — 6 actually); the other 4 (CEFI-combined, SPORTS-combined, CEFI-live,
+> DEFI-live) hit the script's own `--wall-clock-timeout-sec 3600` safety backstop (`exit_code=3`, a deliberate
+> `os._exit(3)` via SIGALRM, not a crash) before finishing their much larger CEFI/SPORTS/DEFI candidate matrices — real
+> infrastructure work happened (VMs launched, shards processed) but `write_report()` never ran for those 4, so this
+> doc's tables for them are hand-assembled from the real GCS VM logs (`vm-logs/<vm>/run.log`), per this skill's own
+> "ground truth is the VM run.log" principle. The GCS report-mirror path
+> (`pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-06/`) is NOT reusable across these 10 invocations —
+> confirmed the known collision (each asset-group's driver VM has its own empty local disk, so `write_report()`'s
+> same-day MERGE logic only works within ONE process/VM, not across this 10-VM fan-out; the GCS copy is simply whichever
+> invocation finished last) — every real number below comes from a VM's own run.log or a same-run local report snapshot
+> captured immediately after that specific VM went terminal, before the next one could overwrite the shared GCS path.
 
 **Legs attempted:** force, skip, live, canonical (10 driver VMs: 5 asset_groups × {combined, live-only supplement}).
 **Day:** 2026-08-06 (auto-day substituted per cell — the corpus is sparse; see per-cell notes). **Launched:**
@@ -185,8 +185,8 @@ objects**. No provisioning needed.
    reproducible ~300-330s mark. `deployment-service/scripts/vm/launch-pipeline-e2e-check-driver-vm.sh` (added
    2026-08-06/07 in direct response to that incident) gives the driver its own dedicated `e2-highmem-4` VM instead of
    competing for the shared AO host's memory pool — confirms the root-cause diagnosis in
-   `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` was correct (RSS pressure / resource
-   contention, not a code bug in the checker itself).
+   `/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` was correct
+   (RSS pressure / resource contention, not a code bug in the checker itself).
 
 2. **NEW finding — combining `--require-captured` with the `live` leg in ONE invocation incorrectly gates live-leg cell
    selection by the same "genuinely captured on some day" filter as force/skip.** The skill's own §4 documents the live

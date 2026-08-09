@@ -148,13 +148,13 @@ context_scope:
 
 ## Cross-tranche notes (informational — out of cefi scope, not drafted here)
 
-- **`issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`** — classified this run:
-  `exclude_cross_cutting`. Genuinely multi-AG (asset_group lists all 5 AGs, parent_epic `infrastructure_master`); all
-  remaining work needs root/VM-level host access ("no new privileges" blocked dmesg/journalctl; systemd/loginctl
-  policies need root). The defi tranche's own 2026-08-06 parked-findings doc independently lands the same verdict and
-  recommends a future cross-cutting round/operator re-scope a bounded VM-backed repro todo (strace/py-spy/setsid) — that
-  recommendation belongs to cross-cutting/ao, not this batch. Its zero-checkbox prose-only shape was registered in the
-  monthly zero-checkbox sweep. Not cefi-owned; no cefi write.
+- **`/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`** — classified
+  this run: `exclude_cross_cutting`. Genuinely multi-AG (asset_group lists all 5 AGs, parent_epic
+  `infrastructure_master`); all remaining work needs root/VM-level host access ("no new privileges" blocked
+  dmesg/journalctl; systemd/loginctl policies need root). The defi tranche's own 2026-08-06 parked-findings doc
+  independently lands the same verdict and recommends a future cross-cutting round/operator re-scope a bounded VM-backed
+  repro todo (strace/py-spy/setsid) — that recommendation belongs to cross-cutting/ao, not this batch. Its zero-checkbox
+  prose-only shape was registered in the monthly zero-checkbox sweep. Not cefi-owned; no cefi write.
 
 ## Deferred — BLOCKED-OPERATOR-DECISION (conflict/operator-gated, carried — 5th consecutive re-check)
 

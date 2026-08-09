@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [pipeline-e2e-check, data_pipeline_e2e_check_mtds, cefi, tardis-contention, oom]
 related:
   [
-    /plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
+    /plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
     /plans/archive/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md,
   ]
 created: 2026-08-08
@@ -62,7 +62,7 @@ All 5 asset-group `-test-` buckets confirmed present via object-level probe (nev
 (`rc=137`, explicit bash `Killed`) after 29 minutes, having only processed 8 TRADFI shards (NASDAQ, NYSE, CME×2, FX×2) —
 **never reached cefi**. This is despite running on its own dedicated `e2-highmem-4` (32GB) VM, specifically sized
 against the 2026-08-06 shared-host OOM incident's measured 21.9GB peak. New evidence recorded on
-`/plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`
+`/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`
 (unified-trading-pm@bac60585e) — likely a distinct, real memory-growth bug in the driver's polling loop (circumstantial
 suspect: the `firestore dual-write heartbeat ... failed` warning fires on every single heartbeat, never once succeeding,
 for the whole 29min run — worth checking if that retry path leaks).
@@ -144,7 +144,7 @@ pending a Phase-1 retry outside the current Tardis-contention window.
 ## Infra findings this run (both documented + shipped)
 
 1. **Driver OOM on unscoped sweep** — `unified-trading-pm@bac60585e`, appended to
-   `/plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`.
+   `/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`.
 2. **Tardis-contention verification + new checker-resilience follow-up** — `unified-trading-pm@476cbd294`, closed the
    standing P3 verification gap on
    `/plans/archive/issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md` and added a new P1

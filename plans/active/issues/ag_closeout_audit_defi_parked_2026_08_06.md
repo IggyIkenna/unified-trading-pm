@@ -13,8 +13,8 @@ summary: >-
   themselves, not orphans); 10 were deep-classified via a Phase-1 Workflow (10 agents, one per doc). All 10 verdicted
   `exclude_cross_cutting` — 9 are genuinely multi-AG content already claimed by sibling tranches' ACTIVE covering docs
   (cefi batch6/7/8, tradfi batch7, sports batch10, instruments batch1, infra batch1, cross-cutting closeout), 1
-  (`issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`, filed this morning) is orphaned
-  EVERYWHERE — no covering plan in any tranche claims it — but is cross-cutting-owned (parent_epic
+  (`/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`, filed this
+  morning) is orphaned EVERYWHERE — no covering plan in any tranche claims it — but is cross-cutting-owned (parent_epic
   infrastructure_master, 5-AG tag) and not AO-eligible as scoped (root-cause investigation needing VM-level/root
   access). The linkage-gate (`check_ag_closeout_linkage.py`) flags 9 defi docs; all 9 are accounted: 7 named in
   batch9/batch10 Deferred sections (deferred ≠ orphaned), 2 covered by batch9's own active todos (swaps-backfill-1/2
@@ -68,7 +68,7 @@ resolved_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
+    /plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md,
     /plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md,
     /plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -94,7 +94,7 @@ the sibling workers' Phase 0s).
 
 ## New findings this run
 
-### 1. `plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` — orphaned EVERYWHERE, cross-cutting-owned (operator-gated investigation, re-scopable)
+### 1. `/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` — orphaned EVERYWHERE, cross-cutting-owned (operator-gated investigation, re-scopable)
 
 **Verdict**: orphaned_never_touched in every tranche's covering set; `exclude_cross_cutting` for defi (owner =
 cross-cutting via `parent_epic: infrastructure_master`, asset_group `[cefi, defi, tradfi, sports, prediction]`).

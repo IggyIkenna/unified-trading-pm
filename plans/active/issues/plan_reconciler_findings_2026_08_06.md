@@ -54,12 +54,17 @@ docs in grace (modified <12h ago) — READ-ONLY
 
 ## Filed
 
-- [ ] [DOC] P2. **Zero-checkbox conversion deferred**:
+- [x] ✅ [DOC] P2. **Zero-checkbox conversion deferred**:
       `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` has 3 concrete prose follow-ups
       (strace/setsid repro, host cgroup-reaper check, host-wide pkill-guard rollout) in its "Suggested follow-up"
       section — should be converted to canonical `- [ ]` todos per the zero-checkbox sweep standing rule. **Deferred**:
       doc is in 12h grace window (created today 2026-08-06, mtime ~04:10 UTC). Source: zero-checkbox hunter (agt-041a96
-      run).
+      run). — **2026-08-09 (slot 9)**: re-assessed at archival time rather than converted. The source doc's original
+      ~300-330s mystery kill is now resolved (driver-VM move + a measured OOM root-cause on the follow-up run); all 3
+      prose bullets were diagnostic steps aimed at that now-resolved mystery and are moot under the resolution path
+      actually taken (see the source doc's own 2026-08-09 archival Progress Log entry for the full reasoning). Declined
+      to convert to new todos — not silently dropped, disposition recorded on both docs. Source doc archived to
+      `/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`.
 
 ## Archive candidates (operator review)
 

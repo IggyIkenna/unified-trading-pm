@@ -64,20 +64,20 @@ the residual (non-resolved) items from that same report.
 
 ## Phase 1 — 12 never-cited candidates classified (Workflow `wf_085c5035-f5f`, 12 agents, 0 errors)
 
-| #   | Doc                                                                                    | Verdict                                                                                         |
-| --- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| 1   | `ag_closeout_audit_rollout_2026_07_25.md`                                              | exclude_cross_cutting (spans 5 AGs + cross-cutting; this skill's own rollout tracker)           |
-| 2   | `adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`        | exclude_cross_cutting (spans all 5 AGs)                                                         |
-| 3   | `ag_closeout_audit_defi_parked_2026_08_06.md`                                          | orphaned_never_touched, 0 AO-eligible (both items belong to other tranches — see Finding 2)     |
-| 4   | `ag_closeout_audit_defi_parked_2026_08_07.md`                                          | orphaned_never_touched, 2 AO-eligible (see Finding 1)                                           |
-| 5   | `backfill_smoke_write_path_canonical_audit_2026_07_20.md`                              | exclude_cross_cutting (spans all 5 AGs; defi explicitly out of that audit's own examined scope) |
-| 6   | `defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md`                        | orphaned_never_touched, 1 AO-eligible but time-gated (see Finding 3)                            |
-| 7   | `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`                | exclude_cross_cutting (4 AGs + sports content; instruments_master epic)                         |
-| 8   | `instruments_remaining_work_audit_2026_07_10.md`                                       | exclude_cross_cutting (spans 5 AGs + cross-cutting; discoverability index, not a work tracker)  |
-| 9   | `mdps_features_deadcode_consolidation_2026_07_20.md`                                   | exclude_cross_cutting (spans all 5 AGs; shared VM-launcher infra)                               |
-| 10  | `ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md` | exclude_cross_cutting (spans all 5 AGs; deployment-service infra)                               |
-| 11  | `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`                | exclude_cross_cutting (spans all 5 AGs; shared-host process-lifetime issue)                     |
-| 12  | `phantom_audit_estate_coverage_gap_2026_07_10.md`                                      | exclude_cross_cutting (4 AGs; cefi is the flagship example, not defi)                           |
+| #   | Doc                                                                                                   | Verdict                                                                                         |
+| --- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 1   | `ag_closeout_audit_rollout_2026_07_25.md`                                                             | exclude_cross_cutting (spans 5 AGs + cross-cutting; this skill's own rollout tracker)           |
+| 2   | `adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`                       | exclude_cross_cutting (spans all 5 AGs)                                                         |
+| 3   | `ag_closeout_audit_defi_parked_2026_08_06.md`                                                         | orphaned_never_touched, 0 AO-eligible (both items belong to other tranches — see Finding 2)     |
+| 4   | `ag_closeout_audit_defi_parked_2026_08_07.md`                                                         | orphaned_never_touched, 2 AO-eligible (see Finding 1)                                           |
+| 5   | `backfill_smoke_write_path_canonical_audit_2026_07_20.md`                                             | exclude_cross_cutting (spans all 5 AGs; defi explicitly out of that audit's own examined scope) |
+| 6   | `defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md`                                       | orphaned_never_touched, 1 AO-eligible but time-gated (see Finding 3)                            |
+| 7   | `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`                               | exclude_cross_cutting (4 AGs + sports content; instruments_master epic)                         |
+| 8   | `instruments_remaining_work_audit_2026_07_10.md`                                                      | exclude_cross_cutting (spans 5 AGs + cross-cutting; discoverability index, not a work tracker)  |
+| 9   | `mdps_features_deadcode_consolidation_2026_07_20.md`                                                  | exclude_cross_cutting (spans all 5 AGs; shared VM-launcher infra)                               |
+| 10  | `ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`                | exclude_cross_cutting (spans all 5 AGs; deployment-service infra)                               |
+| 11  | `/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` | exclude_cross_cutting (spans all 5 AGs; shared-host process-lifetime issue)                     |
+| 12  | `phantom_audit_estate_coverage_gap_2026_07_10.md`                                                     | exclude_cross_cutting (4 AGs; cefi is the flagship example, not defi)                           |
 
 **Net**: 9/12 exclude_cross_cutting (all confirmed legitimate multi-AG spans — orthogonality check raised zero new
 mistags; 2 carry an explicit `tag_concern` note that only reconfirms legitimacy, not a defect). 3/12
@@ -115,9 +115,9 @@ Re-verified against current live state (not just re-reading yesterday's text):
 Both of this doc's 2 recorded findings remain genuinely open, re-verified today, but **neither belongs to defi** under
 the primary-owner rule:
 
-1. `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` — still `status: open`; needs VM-level/root
-   access this sandboxed session lacks; owner is cross-cutting (`asset_group: [cefi, defi, tradfi, sports, prediction]`,
-   `parent_epic: infrastructure_master`), not defi.
+1. `/plans/archive/2026_08/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md` — still
+   `status: open`; needs VM-level/root access this sandboxed session lacks; owner is cross-cutting
+   (`asset_group: [cefi, defi, tradfi, sports, prediction]`, `parent_epic: infrastructure_master`), not defi.
 2. Stale "0 open todos" claims for `phantom_audit_estate_coverage_gap_2026_07_10.md` in
    `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` (line 316) and
    `tradfi_consolidated_closeout_2026_07_18.md` (line 860) — re-verified today, still factually inaccurate (the doc
