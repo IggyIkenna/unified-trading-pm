@@ -71,7 +71,7 @@ words: "this branch is churning faster than one CI worker can chase serially").
 
 ## Todos
 
-- [ ] [BACKEND] P3. **New facet found 2026-08-09 (context_scout_auditor, dispatch agt-264560, slot 16): the same
+- [x] ✅ [BACKEND] P3. **New facet found 2026-08-09 (context_scout_auditor, dispatch agt-264560, slot 16): the same
       zero-baseline-grace `--only` design also hard-blocks LOCAL pre-commit, not just CI.** A routine, fully-unrelated
       context_scope-maintenance sweep (touching ~270 docs, no todo/status/effort-tier content changed) hit
       `check_plan_operator_ruling_evidence.py --only` and `check_effort_signal_ratchet.py --only` failing on ANY staged
@@ -87,7 +87,15 @@ words: "this branch is churning faster than one CI worker can chase serially").
       (`scripts/quality_gates/check_plan_operator_ruling_evidence.py`,
       `scripts/plan-hygiene/check_effort_signal_ratchet.py`). Done-when: same structural fix as the P2 todo below
       resolves this facet too (a grandfather/baseline mode for `--only`, or moving these two checks to periodic/batched
-      sweep, would both fix it) — track under the same resolution, don't design a separate fix.
+      sweep, would both fix it) — track under the same resolution, don't design a separate fix. — DONE 2026-08-09
+      (unified-trading-pm@ad65d14da): `check_effort_signal_ratchet.py --only` already had this fix shipped by the
+      2026-08-09 slot-18 dispatch (found on pickup — see Progress Log). Applied the same grandfather-at-HEAD pattern to
+      `check_plan_operator_ruling_evidence.py --only`: each staged file's violations are now diffed against its own
+      committed HEAD version (`git show HEAD:<path>`, matched by (phrase, context) identity) — a citation already
+      unsourced at HEAD is skipped, a brand-new one still flags. Also deleted ~20 lines of provably-dead code in
+      `main()` (an argparse-`--only` branch that could never execute since the early `if "--only" in sys.argv` check
+      always short-circuits first). 9 new unit tests (real throwaway-git-repo fixture, since this is `git show`
+      integration behavior), `quality-gates.sh` green (1890 tests passed).
 - [x] [BACKEND] P2. ✅ Consider one or more structural fixes so ratchet regressions don't outrace serial fixing on a
       high-churn branch — `unified-trading-pm@36eb05954` (see Progress Log entry below for the exact commit and what
       shipped: option (c)'s diff-scoping applied to `check_reference_paths.py`, mirroring the already-proven
@@ -113,20 +121,20 @@ words: "this branch is churning faster than one CI worker can chase serially").
       its own `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above.
 
       **PARTIALLY ADDRESSED 2026-08-09 (slot-28, backend_engineer, unified-trading-pm@8bc27fe8f) — via
-          `codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md` (now archived), a sibling finding of the
-          same symptom filed independently before this doc's todo was written.** The "diffing against any git ref cannot
-          express wall-clock drift" claim above is correct for git-ref diff-scoping (`--diff-base <ref>`, the pattern the
-          P2 todo above uses) but does NOT apply to the different mechanism actually shipped: the ratchet now diffs the
-          current violating PATH SET against a persisted baseline SNAPSHOT (`codex_doc_freshness_baseline.yaml`'s
-          `baseline_files:`, previously written but never consulted) — a stored point-in-time list, not a git ref — which
-          DOES express "did wall-clock decay make THIS SPECIFIC doc newly-stale since the last snapshot", the exact
-          question the claim above says can't be asked. This resolves the concrete symptom both docs independently
-          reported (chaotic multi-session re-baselining on an unbisectable count, 25→26→27 same day) — a session hitting
-          the gate now sees the exact NEW doc(s) named, not a vague delta, and a doc already known-stale at baseline time
-          drifting further stale no longer counts as a fresh regression. It does NOT resolve the broader policy question
-          this todo raises (should a genuinely brand-new stale doc, with zero commits touching it, still be allowed to
-          block an unrelated PR at all, vs. moving to a periodic/batched sweep) — that residual call is still open and
-          still needs the `[OPERATOR]`-tagged decision this todo asks for; do not treat this note as closing it.
+              `codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md` (now archived), a sibling finding of the
+              same symptom filed independently before this doc's todo was written.** The "diffing against any git ref cannot
+              express wall-clock drift" claim above is correct for git-ref diff-scoping (`--diff-base <ref>`, the pattern the
+              P2 todo above uses) but does NOT apply to the different mechanism actually shipped: the ratchet now diffs the
+              current violating PATH SET against a persisted baseline SNAPSHOT (`codex_doc_freshness_baseline.yaml`'s
+              `baseline_files:`, previously written but never consulted) — a stored point-in-time list, not a git ref — which
+              DOES express "did wall-clock decay make THIS SPECIFIC doc newly-stale since the last snapshot", the exact
+              question the claim above says can't be asked. This resolves the concrete symptom both docs independently
+              reported (chaotic multi-session re-baselining on an unbisectable count, 25→26→27 same day) — a session hitting
+              the gate now sees the exact NEW doc(s) named, not a vague delta, and a doc already known-stale at baseline time
+              drifting further stale no longer counts as a fresh regression. It does NOT resolve the broader policy question
+              this todo raises (should a genuinely brand-new stale doc, with zero commits touching it, still be allowed to
+              block an unrelated PR at all, vs. moving to a periodic/batched sweep) — that residual call is still open and
+              still needs the `[OPERATOR]`-tagged decision this todo asks for; do not treat this note as closing it.
 
 - [ ] [BACKEND] P3. `check_todo_regression.sh` needs a DIFFERENT fix shape than the diff-base pattern above — it already
       compares two snapshots (PR-head vs `origin/live-defi-rollout`), but the SECOND side is a live MOVING target
