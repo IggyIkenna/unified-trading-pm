@@ -217,18 +217,26 @@ human already made the call and the fleet still never executes it.
       `uv run python3 scripts/quality_gates/check_ao_dispatch_visibility_gate.py`: exit 0,
       `1 accidental exclusions     (baseline 0, buffer 5)` — within the existing ratchet buffer, no `--update-baseline`
       needed. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in
-      `plans/active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md`.** Its checkbox reads (truncated): "[DOC]
-      P2. Re-run this finalize plan's parent-reconciliation once any of the 4 remaining `BLOCKED‑*` items on" — the
-      marker trips `_is_non_dispatchable` (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its
-      own line, so `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is genuinely
-      still blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to the start
-      of its own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation line) so it
-      reads as a declared hold. If it is already resolved (several of these carry a dated `RULED`/`DESIGN DECIDED` note
-      — read the full todo before acting), rewrite the trigger phrase so the marker no longer appears anywhere in the
-      block. Verify:
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-20, infra).** Triage accidental exclusion in
+      `plans/active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md`. Moot, not accidental: the flagged
+      checkbox's own literal text is `` `BLOCKED-*` `` (a wildcard placeholder referencing the class of markers named
+      later in the same sentence) — this never matched `_BLOCKED_TOKEN_RE`
+      (`BLOCKED-(CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-(OUTAGE|DESIGN)|PLAYWRIGHT|JURISDICTION)\b`) to begin
+      with, since `*` is not one of the alternation's literal tokens; direct-checked the full continuation block (lines
+      174-201) for any of the 6 real tokens spelled out — zero matches. Separately confirmed the underlying condition:
+      the parent doc (`infra_capture_and_devops_leftovers_2026_07_06.md`) now has exactly ONE open checkbox left
+      (rate-limit-probe VM, correctly declared `BLOCKED-UPSTREAM-DESIGN` on its own line per a prior sibling fix in this
+      same issue doc) — the other 3 of the originally-named 4 items (MANTLE, Live-ODDS quota decision, ASTER) have all
+      since cleared/flipped `[x]` (most recently ASTER, 2026-08-09 slot-6). So the finalize todo's "re-run once any of
+      the 4 clears" trigger has fired again since its last 2026-08-02 re-run, but the parent's remaining item is still
+      genuinely blocked (design-spec gap, `rate_limit_probe_vm_authorized_no_design_spec_2026_08_09.md`), so per this
+      finalize doc's own banner ("do not re-attempt archival until the parent's remaining items all clear") the archival
+      ritual correctly still does not fire — leaving that substantive re-run/archival-readiness question to a future
+      dispatch of this doc's own P2 todo (out of this triage task's narrower scope). Verified via
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+      and the actual gate `python3 scripts/quality_gates/check_ao_dispatch_visibility_gate.py --json`: neither lists
+      `infra_capture_and_devops_leftovers_finalize_2026_07_25.md` under any exclusion —
+      `disk_open=1, backlog_open=1, excluded=[]`. (repo: unified-trading-pm)
 - [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-27, infra).** Triage accidental exclusion in
       `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md`. Moot, not accidental: the flagged todo (the
       `[TEST] P2` E2E login helper contract repair) was independently completed and checked off
