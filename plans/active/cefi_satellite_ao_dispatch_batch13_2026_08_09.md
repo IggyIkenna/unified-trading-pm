@@ -72,19 +72,19 @@ context_scope:
       `tests/unit/test_ledgers_taker_vwap.py` (5 cases) verifies `_vwap_walk` against hand-computed VWAPs for synthetic
       order books (single-level, multi-level partial-fill, thin-book, empty-book). `quality-gates.sh` green (174
       passed), sentinel `e9c6ce78f64142a2dfe9f3fb909eea9ad448cb33`.
-- [ ] [SCRIPT] P2. **Wire `depth_of_book_10` into the CeFi live event-log capture dispatcher**
-      (market-tick-data-service) for the 5 already-capable venues (COINBASE-SPOT, BYBIT, DERIBIT, BINANCE-FUTURES,
-      OKX-SWAP) so it lands under `gs://central-element-323112-events/live-events/warm/cefi/` alongside the 4 data_types
-      already wired there (`book_snapshot_5`, `derivative_ticker`, `liquidations`, `trades`) — locate how those 4 are
-      enumerated in the live capture dispatcher/connector registry and mirror the pattern for `depth_of_book_10` (the WS
-      connectors themselves already shipped, `market-tick-data-service@15f5657b` — this is purely the live-capture
-      wiring gap, not an operator question: the source doc's own 2026-08-08 finding confirmed the pipeline is live and
-      healthy, `depth_of_book_10` was simply never wired into the new event-log-based dispatcher). Repo:
-      market-tick-data-service. Source: `l2_book_microstructure_capture_2026_07_13.md` todo 7 (line 232). **Done when**:
-      `depth_of_book_10` appears as a 5th data_type under that GCS prefix after the next capture cycle (a
-      maintenance-window restart of the live-capture process to pick up the change is fine per CLAUDE.md's
-      pre-live-trading carve-out, not an operator-scheduling gate), and a live manifest read confirms `depth_of_book_10`
-      rows landing for at least the 5 capable venues.
+- [ ] [SCRIPT] P2. BLOCKED-ON:cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09 **Wire
+      `depth_of_book_10` into the CeFi live event-log capture dispatcher** (market-tick-data-service) for the 5
+      already-capable venues (COINBASE-SPOT, BYBIT, DERIBIT, BINANCE-FUTURES, OKX-SWAP) so it lands under
+      `gs://central-element-323112-events/live-events/warm/cefi/` alongside the 4 data_types already wired there
+      (`book_snapshot_5`, `derivative_ticker`, `liquidations`, `trades`) — locate how those 4 are enumerated in the live
+      capture dispatcher/connector registry and mirror the pattern for `depth_of_book_10` (the WS connectors themselves
+      already shipped, `market-tick-data-service@15f5657b` — this is purely the live-capture wiring gap, not an operator
+      question: the source doc's own 2026-08-08 finding confirmed the pipeline is live and healthy, `depth_of_book_10`
+      was simply never wired into the new event-log-based dispatcher). Repo: market-tick-data-service. Source:
+      `l2_book_microstructure_capture_2026_07_13.md` todo 7 (line 232). **Done when**: `depth_of_book_10` appears as a
+      5th data_type under that GCS prefix after the next capture cycle (a maintenance-window restart of the live-capture
+      process to pick up the change is fine per CLAUDE.md's pre-live-trading carve-out, not an operator-scheduling
+      gate), and a live manifest read confirms `depth_of_book_10` rows landing for at least the 5 capable venues.
 
 ## Codex SSOTs
 
