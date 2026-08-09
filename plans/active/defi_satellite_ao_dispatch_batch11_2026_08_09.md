@@ -82,16 +82,34 @@ item here.
 
 ## Todos
 
-- [ ] [DATA] P1. **Delete the lending-indices legacy bucket (C0f) + resolve the TF-state drift
-      (`market_data_defi_lending_indices_prd` still declared) + the bare `features-onchain` vs asset-group bucket.** Run
-      a FRESH `gcs_bucket_soft_delete_retention_seconds(bucket)` check on the target bucket and cite the actual returned
-      value; if ≥604800s (7 days), execute the delete via the sanctioned UTL helpers per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a (finding T — reversibility-verified, no
-      `[OPERATOR]` gate needed) — no operator step required. If the fresh check returns below the threshold or errors,
-      stop and re-file this specific sub-item as `[OPERATOR]`-gated rather than proceeding. Repos: deployment-service,
-      market-tick-data-service. Source: `defi_consolidated_closeout_2026_07_18.md`, Track 2 ("Retagged from `[OPERATOR]`
-      (2026-07-28 gate-cleanup pass)" item). Done when: the bucket delete is executed (or explicitly re-gated) with the
-      cited soft-delete value, and the TF-drift + bare-bucket references are resolved.
+- [x] ✅ [DATA] P1. **Delete the lending-indices legacy bucket (C0f) + resolve the TF-state drift
+      (`market_data_defi_lending_indices_prd` still declared) + the bare `features-onchain` vs asset-group bucket.**
+      (2026-08-09, live-verify-and-close, no new infra mutation). **Already resolved historically; verified live, not
+      re-executed.** All three sub-items were closed in a prior session
+      (`bucket_estate_consolidation_to_sub100_2026_07_13.md` Item C, STATUS: COMPLETE 2026-07-15) that never got its
+      resolution reflected back into the closeout doc's checkbox — this RECLASSIFY sweep re-surfaced a stale
+      `[OPERATOR]` tag pointing at already-finished work. Fresh live verification 2026-08-09T07:58Z: (1)
+      `gcloud storage buckets describe gs://lending-indices-central-element-323112` → 404;
+      `gs://     lending-indices-prd-central-element-323112` → 404 (both deleted 2026-07-15 per the archived plan's Item
+      C). (2) No `resource "google_storage_bucket"` block for `market_data_defi_lending_indices_prd` anywhere in
+      `deployment-service/terraform/gcp/` (only a historical removal-comment at `main.tf:319`, "REMOVED 2026-07-14");
+      fetched the live GCS-backed terraform state directly
+      (`gs://uts-terraform-state-central-element-323112/terraform/     state/{default,prod}/default.tfstate`, 48 + 313
+      resources) — zero `lending` hits in either, confirming no orphaned state entry (no `terraform state rm` needed).
+      (3) `gs://features-onchain-central-element-323112` (bare) → 404 (deleted 2026-07-15 per
+      `features_onchain_bare_bucket_not_asset_group_migratable_2026_07_15.md`'s Option-A resolution, content relocated
+      to `gs://onchain-research-central-element-323112`, confirmed live); its would-be asset-group siblings
+      `features-onchain-{cefi,defi}` are ALSO 404 — folded further into the canonical `features-{cefi,defi}-prd` buckets
+      (both confirmed live) by the Wave-3 fold, a stronger consolidation than this todo's own text anticipated. No code
+      change needed — swept live service repos for hardcoded `"lending-indices-{PROJECT_ID}"` string literals; all 5
+      hits are dated one-off historical migration scripts (`market-tick-data-service/scripts/defi_*_2026_06_01.py`,
+      `instruments-service/scripts/     {canonicalize_lending_indices_data_type_2026_05_16,reconcile_lending_indices_phantom}.py`,
+      `deployment-api/scripts/cleanup_ghost_venue_manifest_rows.py`), none a live/scheduled code path — out of this
+      todo's named scope (lending-indices bucket / TF drift / bare features-onchain bucket), not touched. Repos:
+      deployment-service, market-tick-data-service. Source: `defi_consolidated_closeout_2026_07_18.md`, Track 2
+      ("Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)" item). Done when: the bucket delete is executed (or
+      explicitly re-gated) with the cited soft-delete value, and the TF-drift + bare-bucket references are resolved —
+      satisfied by live-verified prior completion.
 - [ ] [DATA] P2. **Wire a real source for `liquidation_events`** (MVP scope, 2026-08-08 operator ruling) — distinct from
       the already-migrated `liquidations` data_type (protocol-level liquidation event SUMMARIES). Determine the real
       on-chain source (Aave/Compound/Morpho liquidation-call event logs via existing RPC/subgraph access already used
@@ -256,3 +274,13 @@ item here.
   conflict-clear todos extracted from 6 of the 14 defi source docs this run read end-to-end; the other 8 yielded zero
   extractable items (see "Not extracted" above). Conflict-check run against `batch9`/`batch10` (both active) +
   `defi_consolidated_closeout_2026_07_18.md` — zero collisions found.
+- 2026-08-09 (slot 33, data_engineering worker): Todo 1 (lending-indices bucket + TF-drift + bare features-onchain
+  bucket) closed on live re-verification, not new execution — all 3 sub-items were already resolved 2026-07-15/19 in
+  prior sessions whose completion never propagated back into the closeout doc's checkbox, so this RECLASSIFY-derived
+  extraction was re-surfacing already-finished work. `gcloud storage buckets describe` confirms 404 for
+  `lending-indices-central-element-323112`, `lending-indices-prd-central-element-323112`, and
+  `features-onchain-central-element-323112` (bare); direct read of the live GCS-backed terraform state (`prod` + default
+  workspaces, 313 + 48 resources) confirms zero orphaned `lending` state entries and no `.tf` resource block declares
+  `market_data_defi_lending_indices_prd`. No code shipped — swept live repos for hardcoded legacy-bucket string literals
+  and found only dead one-off historical migration scripts (out of scope, not touched). Full evidence in the flipped
+  checkbox above.
