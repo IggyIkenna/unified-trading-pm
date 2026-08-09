@@ -75,12 +75,23 @@ drift_direction: advance-code
       `data_source_provenance_enforcement_2026_07_24.md` (backfill-script item). Shipped 2026-08-09 (slot-5) — checkbox
       was not flipped at ship time; flipped here (slot-24) after confirming the commit already satisfies every stated
       done-when criterion, no re-implementation needed.
-- [ ] [MTDS] P1. Confirm `record_empty_for_shard`/`record_failed_for_shard` in market-data-processing-service's
+- [x] ✅ [MTDS] P1. Confirm `record_empty_for_shard`/`record_failed_for_shard` in market-data-processing-service's
       `canonical_writer.py` forward a `source` parameter the same way the already-shipped captured-write-path does —
-      thread it through if either function currently drops it. Repo: market-data-processing-service. Source:
-      `data_source_provenance_enforcement_2026_07_24.md` (empty/failed-path source-forwarding item). Done when: both
-      functions accept and forward `source`, verified against the already-shipped captured-path pattern in the same
-      file, with a regression test.
+      thread it through if either function currently drops it. Confirmed both helpers (the actual implementations live
+      in `canonical_writer_manifest.py`, which `canonical_writer.py` re-exports as a facade) previously dropped `source`
+      entirely on the `ManifestWriter.record_empty`/`record_failed` calls inside their shared `_emit_status_for_shard`
+      helper, even though `write_candle_parquet`'s captured path already resolved + passed `source=candle_source` via
+      `resolve_candle_source_from_pipeline_mode`. Fixed by computing the same resolution inside `_emit_status_for_shard`
+      (same shared helper, same `asset_group`/`source_data_type`/`pipeline_mode` inputs already available at every call
+      site) and forwarding `source=`/`asset_group=` to both UTL calls — no caller-facing signature change needed since
+      all call sites already pass those three params. Added 3 regression tests: source threads through on both
+      `record_empty_for_shard` and `record_failed_for_shard` for a registered multi-source cell
+      (cefi/trades/BATCH_TARDIS → "tardis", matching the existing captured-path fixture), and resolves to `None` (not a
+      raise/fabricated vendor) for an unregistered/live-mode cell, mirroring
+      `resolve_candle_source_from_pipeline_mode`'s own contract. Repo: market-data-processing-service@c8bece4e8. Source:
+      `data_source_provenance_enforcement_2026_07_24.md` (empty/failed-path source-forwarding item). Evidence: full
+      `quality-gates.sh` green (143s, sentinel c8bece4e8), quickmerge landed + verified ancestor of
+      `origin/live-defi-rollout`.
 - [ ] [TEST] P1. Add a CeFi unit test asserting: (a) a cefi manifest cell without `source=` raises; (b)
       `source='tardis'` persists correctly; (c) a future `['<alt>', 'tardis']` `SOURCE_PRIORITY` registry expansion
       resolves two sources by priority order. Repo: market-tick-data-service. Source:
