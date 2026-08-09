@@ -26,21 +26,32 @@
 # safe-doc-push.sh, which never ran this check at all (unified-trading-pm PR #2670,
 # 2026-08-09) — the exact same fast-path-blind-to-full-gate pattern as the other checks
 # migrated here today.
+#
+# CANCELLED/SUPERSEDED disposition (2026-08-09): task_template.md's `/done`-time disposition
+# markers document converting a dead/re-scoped `- [ ] <brief>` line into a bold, non-checkbox
+# bullet (`- **[TAG] P<n>. CANCELLED — SUPERSEDED <date> (<who>, per <ref>).**`) — a legitimate
+# closure, not a deletion. Count that pattern alongside checkbox lines so following the
+# documented convention doesn't false-positive as a todo loss. Fix for
+# todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md.
 
 set -euo pipefail
 ORIGIN="origin/live-defi-rollout"
+CANCELLED_RE='^- \*\*\[[A-Z]+\] P[0-9]+\. CANCELLED'
 
 _check_one() {
   # $1 = file path (may be staged working-tree path or corpus-glob path), $2 = repo-relative path
   local f="$1" rel="$2"
-  local cur_total gh_total
-  cur_total=$(grep -cE "^- \[[ xX]\]" "$f" 2>/dev/null || true)
+  local cur_checkbox cur_cancelled cur_total gh_total
+  cur_checkbox=$(grep -cE "^- \[[ xX]\]" "$f" 2>/dev/null || true)
+  cur_cancelled=$(grep -cE "$CANCELLED_RE" "$f" 2>/dev/null || true)
   gh_total=$(git show "${ORIGIN}:${rel}" 2>/dev/null | grep -cE "^- \[[ xX]\]" || true)
-  cur_total="${cur_total:-0}"
+  cur_checkbox="${cur_checkbox:-0}"
+  cur_cancelled="${cur_cancelled:-0}"
   gh_total="${gh_total:-0}"
+  cur_total=$(( cur_checkbox + cur_cancelled ))
   if [ "$gh_total" -gt 0 ] && [ "$cur_total" -lt "$gh_total" ]; then
     local lost=$(( gh_total - cur_total ))
-    echo "LOSS  $(basename "$f")  origin=${gh_total}  current=${cur_total}  lost=${lost} (TOTAL todos open+done — a flip is conserved; a drop = deletion/collapse)"
+    echo "LOSS  $(basename "$f")  origin=${gh_total}  current=${cur_total}  lost=${lost} (TOTAL todos open+done — a flip or a CANCELLED/SUPERSEDED conversion is conserved; a drop = deletion/collapse)"
     return 1
   fi
   return 0
