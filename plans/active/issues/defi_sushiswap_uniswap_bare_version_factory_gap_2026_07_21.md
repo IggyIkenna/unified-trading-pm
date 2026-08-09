@@ -188,8 +188,11 @@ original audit and this measurement, not a discrepancy in method; both counts de
 - [ ] [SCRIPT] P1. **Execute the 2026-08-08 ruling** — wire RPC `factory()` lookup for the 206,107 bare
       SUSHISWAP/UNISWAP rows, register the missing `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` UAC venues, then
       migrate + purge the historical objects/manifest to canonical venue+chain naming. **Execution tracked at
-      `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s own `[SCRIPT] P1` todo (same source,
-      2026-08-08 ruling section) — work the fix there, not a second copy here; close both together once it ships.**
+      `/plans/active/defi_satellite_ao_dispatch_batch11_2026_08_09.md` (`[SCRIPT] P1`, `assigned_vm: planning`, active —
+      updated 2026-08-09; the intermediate hop at
+      `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s own `[SCRIPT] P1` todo was itself further
+      extracted there the same day) — work the fix at batch11, not a second copy here; close all three together once it
+      ships.**
 
 ## Progress Log
 
@@ -230,3 +233,8 @@ original audit and this measurement, not a discrepancy in method; both counts de
   commits in instruments-service/market-tick-data-service/unified-api-contracts since 2026-08-08), so this is a citation
   fix, not a completion claim.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA-STALE (already-duplicated), not reclassified — the sole
+  open item's execution moved one more hop since the "stale-check-defi-tranche 2026-08-09" entry above: the intermediate
+  `defi_track01...md` copy was itself extracted 2026-08-09 into `defi_satellite_ao_dispatch_batch11_2026_08_09.md`
+  (`[SCRIPT] P1`, active). Updated the todo's pointer to cite batch11 directly as the live dispatch path. Doc stays
+  `assigned_vm: NA`.

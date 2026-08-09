@@ -196,3 +196,6 @@ vault-share-price collector) end-to-end:
   batch10 executes its own copy of the same fix. Correct owner is batch10; this doc's checkbox stays as the citation
   anchor per this corpus's own convention. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA-STALE (already-duplicated) re-confirmed — batch10's own
+  citation todo (lines 154-158) still active and unshipped; also independently re-confirmed by
+  `defi_satellite_ao_dispatch_batch11_2026_08_09.md`'s same-day conflict-check. Doc stays `assigned_vm: NA`.

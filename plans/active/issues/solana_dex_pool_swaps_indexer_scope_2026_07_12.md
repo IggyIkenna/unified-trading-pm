@@ -155,3 +155,7 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
   finalize companion included). This scoping doc's own work is done; the real dispatchable build lives in that new plan
   pair, not here. Not archived this pass. Nothing to reclassify.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA-STALE (already-duplicated) — the doc's 1 open checkbox
+  ([DOCS] P3, archive-once-complete) is the exact same closing action already tracked, verbatim, as todo 2 of the active
+  `solana_dex_pool_swaps_indexer_2026_08_08_finalize.md` (gated on the implementation plan, currently 2/5 todos done).
+  Flipping `assigned_vm` here would dispatch a duplicate of that finalize todo. Doc stays `assigned_vm: NA`.
