@@ -963,3 +963,5 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
 fix landed/archived since); todos 2-3 remain genuinely open (design-scope + operator-ruled-but-unimplemented cooldown
 guard). Doc near the 1000L hard cap (952L) — keeping this entry minimal; next touch should consider splitting per the
 doc's own note.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

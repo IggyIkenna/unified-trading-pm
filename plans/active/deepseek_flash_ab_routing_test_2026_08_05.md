@@ -398,13 +398,15 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       `_done_one_off` now computes + records usage (bracketed by `AgentRow.registered_at`); `task_role_group()` built
       against `ESCALATION_FAMILY_ROLES`/`PLAN_HEALTH_FAMILY_ROLES`, NOT the raw `lifecycle` string (which would
       misclassify backend_engineer/infra/quant_dev/ui_developer as "cicd" — they share `lifecycle: one_shot`);
-      `data_engineering` groups as "planning" per operator ruling (matches its real backlog dispatch mechanism, not its
-      role file's `scheduled` label). New `role_group` query param on `GET /api/backlog/usage/windows` + second filter
-      row in `TaskUsageWindows.tsx`. New backend pytest + Playwright spec (`task-usage-role-group-filter.spec.ts`).
-      Fixed a real pre-existing Playwright locator bug found along the way (`.panel, {hasText}` ambiguity vs the
-      Accounts panel's own cross-reference hint text); filed a separate, deeper pre-existing e2e-fixture issue as a
-      follow-up rather than fixing it here (see Progress Log). QG green (2499 backend / 225 frontend). Landed
-      `agent-orchestrator@de73f93`, deployed live and verified — see Progress Log for full detail and live numbers.
+      `data_engineering` groups as "planning" per the same operator ruling (this doc,
+      `deepseek_flash_ab_routing_test_2026_08_05.md`, todo 20 above — matches its real backlog dispatch mechanism, not
+      its role file's `scheduled` label). New `role_group` query param on `GET /api/backlog/usage/windows` + second
+      filter row in `TaskUsageWindows.tsx`. New backend pytest + Playwright spec
+      (`task-usage-role-group-filter.spec.ts`). Fixed a real pre-existing Playwright locator bug found along the way
+      (`.panel, {hasText}` ambiguity vs the Accounts panel's own cross-reference hint text); filed a separate, deeper
+      pre-existing e2e-fixture issue as a follow-up rather than fixing it here (see Progress Log). QG green (2499
+      backend / 225 frontend). Landed `agent-orchestrator@de73f93`, deployed live and verified — see Progress Log for
+      full detail and live numbers.
 
 - [x] 24. ✅ [BACKEND] P1. **Task Token Usage role-group filters (todo 23) were reading zero for CI/CD, conflict
       resolver, and every scheduled role — two real bugs, not "no completions yet" as todo 23's own final Progress Log

@@ -490,3 +490,4 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   terms ("sector-identity", "MICRO-AUD", "tradfi_roots.py", "Surface A-D") -- zero hits in all three. Recommend the next
   `/ag-closeout-audit` tradfi pass draft it explicitly, carrying both caveats above. Todo 1 and todo 3 unchanged
   (DEPENDENCY_BLOCKED / OPERATOR_QUESTION respectively, per the 2026-08-07 reasoning, not re-litigated).
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

@@ -73,13 +73,13 @@ context_scope:
       signature-index output for the Drift V2 program address as the original script did (no regression), plus a second
       test exercising it against a different (ORCA) program address. — market-tick-data-service@e1425abf. **Finding**:
       `build_drift_v2_sig_index.py` (and its test suite) no longer exist — deleted 2026-07-16 by the DRIFT/PACIFICA
-      removal operator ruling (`2e674d1f`), 3+ weeks before this plan was authored; the scoping doc predates that
-      removal (2026-07-12) so its "existing file" premise went stale. Recovered the deleted script via
-      `git show 2e674d1f~1:...` as the design reference and extracted its generalized core (program_id now a parameter,
-      not hardcoded) into new `market_tick_data_service/scripts/_sig_index_walker.py`, with 22 unit tests (parametrized
-      over the old Drift V2 program address for regression + the ORCA Whirlpool address) in
-      `tests/unit/scripts/test_sig_index_walker.py` — Drift's address is used only as an inert string constant, no Drift
-      capability restored. `quality-gates.sh` green.
+      removal operator ruling (`2e674d1f`; recorded in `/codex/04-architecture/solana-defi-coverage.md`), 3+ weeks
+      before this plan was authored; the scoping doc predates that removal (2026-07-12) so its "existing file" premise
+      went stale. Recovered the deleted script via `git show 2e674d1f~1:...` as the design reference and extracted its
+      generalized core (program_id now a parameter, not hardcoded) into new
+      `market_tick_data_service/scripts/_sig_index_walker.py`, with 22 unit tests (parametrized over the old Drift V2
+      program address for regression + the ORCA Whirlpool address) in `tests/unit/scripts/test_sig_index_walker.py` —
+      Drift's address is used only as an inert string constant, no Drift capability restored. `quality-gates.sh` green.
 - [x] ✅ [DATA] P1. **Build the per-signature transaction fetch + Whirlpool (ORCA) swap-instruction decoder.** For each
       indexed ORCA signature (from the generalized walker above), fetch the full transaction via Helius
       `getTransaction`, decode the Whirlpool swap instruction's account + data layout into

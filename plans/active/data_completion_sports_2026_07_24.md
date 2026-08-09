@@ -913,3 +913,4 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
   plan-authoring call for the operator, not this pass's to execute.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 4 open items: 1 operator question, 3 dispatch-cleared but parked
   pending plan-authoring (not this pass's to execute).
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

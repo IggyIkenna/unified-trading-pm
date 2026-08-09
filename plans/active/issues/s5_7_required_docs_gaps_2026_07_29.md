@@ -117,21 +117,21 @@ the dispatch-scope-eligibility ruling):
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — but with a real conflict found, not
-  a clean RECLASSIFY. Re-read end-to-end; `grep -cE '^- \[ \]'` = 1, matching (the market-data-processing-service
-  `DEPLOYMENT_GUIDE.md`/`TESTING.md` fill item). Today's operator ruling (item 76) is a strong candidate for closing
-  the "scoping judgment" gate this todo previously cited — but conflict-checking against the active
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — but with a real conflict found, not a
+  clean RECLASSIFY. Re-read end-to-end; `grep -cE '^- \[ \]'` = 1, matching (the market-data-processing-service
+  `DEPLOYMENT_GUIDE.md`/`TESTING.md` fill item). Today's operator ruling (item 76) is a strong candidate for closing the
+  "scoping judgment" gate this todo previously cited — but conflict-checking against the active
   `codex_vs_repo_docs_ssot_audit_2026_06_01.md` (`assigned_vm: planning`, `status: active`) surfaced a direct
   contradiction: that plan's own refreshed 2026-07-27 registry classifies market-data-processing-service's
   `DEPLOYMENT_GUIDE.md` and `TESTING.md` as **DELETE** ("stub → FEMI" / "stub, `pytest` direct → TESTING_GUIDE") —
-  meaning real content for these two S5.1 filenames may already live under different names
-  (`DEPLOYMENT_GUIDE_FEMI.md`, `TESTING_GUIDE.md`), the SAME "naming/structure drift vs the fixed S5.1 filename set"
-  pattern this doc's own text already flagged for instruments-service. If so, the correct fix here may be S5.11
-  redirect stubs (the exact precedent the operator just set for instruments-service in item 77), not net-new content —
-  but that determination needs a real per-file content check this pass didn't run, and flipping `assigned_vm` on a
-  todo that may conflict with an already-dispatched plan's DELETE classification would risk two active plans giving
-  contradictory instructions for the same 2 files. Per "Conflict → don't flip" — leaving this open, flagging the
-  conflict clearly rather than forcing either resolution. `assigned_vm: NA` stays correct pending reconciliation.
+  meaning real content for these two S5.1 filenames may already live under different names (`DEPLOYMENT_GUIDE_FEMI.md`,
+  `TESTING_GUIDE.md`), the SAME "naming/structure drift vs the fixed S5.1 filename set" pattern this doc's own text
+  already flagged for instruments-service. If so, the correct fix here may be S5.11 redirect stubs (the exact precedent
+  the operator just set for instruments-service in item 77), not net-new content — but that determination needs a real
+  per-file content check this pass didn't run, and flipping `assigned_vm` on a todo that may conflict with an
+  already-dispatched plan's DELETE classification would risk two active plans giving contradictory instructions for the
+  same 2 files. Per "Conflict → don't flip" — leaving this open, flagging the conflict clearly rather than forcing
+  either resolution. `assigned_vm: NA` stays correct pending reconciliation.
 - **2026-08-08 (operator Q&A round5, infra tranche, items 76/77)**: Operator ruled both open scoping questions in one
   session — (76) tier S5.1 by repo type: yes; (77) instruments-service reorg vs S5.1 filenames: thin redirect stubs.
   Flipped both todos above to done with the ruling + evidence. The remaining open todo ("fill the genuine
@@ -152,3 +152,5 @@ the dispatch-scope-eligibility ruling):
   scoping-judgment recommendation (tiering S5.1's required-doc set by repo type), not an implementation fix, so no
   source target applies. No changes.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (2 entries), unchanged.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).

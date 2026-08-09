@@ -215,3 +215,7 @@ reasoning above.
   not handle `_XPERP` infix — 104/139 OKX-FUTURES contracts fall through to passthrough or generate a non-existent
   subscribe instId; parity test (`market-tick-data-service@d964dce4`) tests wrong wire format for AAPL. New `[DATA] P1`
   (needs `[OPERATOR]` decision on xperp-vs-linear disambiguation) added above.
+
+## Progress Log (context-scout)
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

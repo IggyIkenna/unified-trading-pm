@@ -310,3 +310,4 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
     `# Delete-when: after --apply verified + 0 cefi attempted_failed rows carry error_reason=="Tardis HTTP 400"` — both
     conditions are now met, so deleted `scripts/reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py` and its
     dedicated unit test (which only exercised this script's own `reclassify()`, with no other callsite).
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

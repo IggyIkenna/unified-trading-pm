@@ -160,7 +160,8 @@ candidate for that tranche's next pass, not just a retag-only finding.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged): verified the target doc's
   frontmatter directly today — `asset_group: [ao]` (retag done), `assigned_vm: NA` (the RECLASSIFY → `planning` this
   todo calls for is still not done) — the sole open todo's Done-when remains unmet.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
-  the sole open todo is a cross-tranche `asset_group` retag handoff (real owner `ao`, physical-write owner `ci` per
-  the tranche-ownership resolver); the retag half landed, the fold-in/dispatch half is explicitly the owning
-  tranche's write, not this doc's.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged): the
+  sole open todo is a cross-tranche `asset_group` retag handoff (real owner `ao`, physical-write owner `ci` per the
+  tranche-ownership resolver); the retag half landed, the fold-in/dispatch half is explicitly the owning tranche's
+  write, not this doc's.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

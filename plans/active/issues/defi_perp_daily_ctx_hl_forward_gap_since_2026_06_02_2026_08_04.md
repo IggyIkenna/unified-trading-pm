@@ -160,8 +160,8 @@ is the open question below.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning` (was `NA`),
   `execution_scope: orchestrator-agent`. Both open todos are bounded/worker-determinable: the operator's
   round5-na-digest-defi ruling (item 73, same day) named the exact approach and the `[CODE] P2` todo below already
-  carries the full scoping (write path, schema, wiring point, Done-when criterion) — this is exactly the invitation
-  the same-day filer left ("a future `/na-eligibility-audit` pass may reclassify it"). The `[DIAG] P3` todo is a small,
+  carries the full scoping (write path, schema, wiring point, Done-when criterion) — this is exactly the invitation the
+  same-day filer left ("a future `/na-eligibility-audit` pass may reclassify it"). The `[DIAG] P3` todo is a small,
   independently bounded follow-up check. Conflict-check clear: no active `assigned_vm: planning` plan in
   `parent_epic: defi_master` claims this work; `defi_satellite_ao_dispatch_batch9/batch10` (still active) don't
   reference this doc; the consolidated-closeout doesn't cite it either. Gated finalize companion authored:
@@ -183,3 +183,6 @@ is the open question below.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — both open todos remain unresolved design/judgment
   decisions (no predetermined fix approach); todo 2 sequenced after todo 1.
+- **context-scout 2026-08-09**: re-scouted; context_scope refreshed to 5 entries (added the gated finalize companion
+  `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md`, authored during the
+  2026-08-08 RECLASSIFY sweep, since the prior 2026-08-05 marker's 4-entry list).

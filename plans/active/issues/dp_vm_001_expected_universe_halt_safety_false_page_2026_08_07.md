@@ -71,6 +71,14 @@ source: >-
   follow-ups.
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    instruments-service/scripts/enumerate_expected_universe.py,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+    deployment-service/scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh,
+  ]
 ---
 
 # DP-VM-001 false-paged expected-universe-v2-sports halt-safety exit — root-caused + fixed
@@ -210,6 +218,7 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
   specifically rather than re-auditing the underlying exit_code=5 fix a further time (that part is definitively closed).
   This review session did not chase the orchestrator-side mechanism itself (server-code investigation is outside review
   scope) — leaving that to main/operator. No code shipped this session; this Progress Log entry is the only change.
+- **context-scout 2026-08-09**: populated context_scope (5 entries).
 - **review agent (slot 1, fresh boot #2) 2026-08-08**: FIFTH independent redelivery of the identical `BLK-091671d7`
   instruction (message id 5866, this slot). Re-verified same conclusion once more (fix intact at
   `origin/live-defi-rollout` HEAD, both regression tests present, no code changes made). This time chased the

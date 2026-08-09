@@ -36,6 +36,13 @@ source:
     document the prod terraform drift first observed by slot-11 on 2026-08-06; read-only plan run, no apply.",
   ]
 depends_on: []
+context_scope:
+  [
+    deployment-service/terraform/gcp,
+    deployment-service/terraform/gcp/client_reporting_scheduler.tf,
+    deployment-service/terraform/gcp/t1_batch_scheduler.tf,
+    /plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md,
+  ]
 ---
 
 # Prod terraform drift — 36 add / 18 change / 3 destroy pending apply
@@ -126,3 +133,4 @@ the IaC config; the third is a Cloud Run job module removal.
   `[OPERATOR]`-tagged with the doc's own text stating "Do NOT delegate to AO — this is a prod infra apply with
   destructive changes" (3 terraform destroys against live prod state, including a live Cloud Run job with 2890 prior
   executions).
+- **context-scout 2026-08-09**: populated context_scope (4 entries).

@@ -57,8 +57,8 @@ locked_since:
 context_scope:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/sports_taxonomy_p3_consumers_2026_08_08.md,
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
     instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py,
     instruments-service/instruments_service/reference_data/sports_dependency.py,
   ]
@@ -358,3 +358,6 @@ it's titled after never consults the manifest) is unchanged today.
   "Catalogue, browser, dependency" section's third todo names this doc verbatim as what it resolves. Never-re-litigate +
   conflict-check both point the same way: do NOT flip to `planning` (would duplicate the already-active implementing
   plan in the same `parent_epic`). Citation-only, no reclassification.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries) — swapped in
+  `sports_taxonomy_p3_consumers_2026_08_08.md` (the doc named verbatim as what resolves this issue) in place of the
+  batch2 finalize companion.

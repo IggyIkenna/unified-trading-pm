@@ -36,6 +36,12 @@ locked_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/06-coding-standards/model-tier-selection.md,
+    cursor-configs/skills/context-scout/SKILL.md,
+    /plans/archive/2026_08/issues/context_scope_consumption_enforcement_2026_07_30.md,
+  ]
 ---
 
 ## What I found
@@ -81,3 +87,5 @@ properly (likely via `/plan-brainstorm`) before authoring any implementation wor
 
 - **2026-08-08 (slot-22, infra craft)**: filed at archival of the consumption-enforcement doc, migrating its
   design-question-3 prose into a tracked todo per the archival ritual's "never let a deferral evaporate" step.
+- **context-scout 2026-08-09**: populated context_scope (3 entries) — mirrors this doc's own "Codex SSOTs" section (a
+  genuinely code-free design/proposal doc, no source paths).

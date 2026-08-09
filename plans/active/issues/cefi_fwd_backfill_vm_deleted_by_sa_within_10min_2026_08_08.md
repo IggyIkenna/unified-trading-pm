@@ -47,6 +47,14 @@ assigned_role: infra
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/scripts/vm/launch-cefi-forward-poll.sh,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
+    /plans/active/issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md,
+  ]
 ---
 
 # cefi-fwd-20260808-110409 deleted within 10-13 min — 0 data written
@@ -402,3 +410,4 @@ before launch.
   likely legitimate Tardis data gaps (exchange outage or no recording); corpus recompute will honest-skip them. 06-18 is
   partial (OKX=0, KRA=0).** GCS probe gate MET — proceeding to corpus recompute + `funding_window()` verification to
   flip contamination plan -011.
+- **context-scout 2026-08-09**: populated context_scope (5 entries).

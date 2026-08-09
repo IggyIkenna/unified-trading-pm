@@ -95,3 +95,4 @@ Live, directly-observed during routine blocked-queue sweeps:
   `auto_unpark__plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-0d5981dddb99` confirmed set. Verified the
   separate `BLK-op-...-182a19732410` [OPERATOR] item remains correctly tracked and unaffected — the park only stops the
   wasteful [INFRA]-todo redispatch, not the actual decision-tracking.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (2 entries), still accurate.

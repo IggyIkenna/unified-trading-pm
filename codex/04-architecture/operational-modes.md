@@ -63,10 +63,10 @@ implements_in: plans/archive/2026_07/master_to_live_defi_2026_05_23.md
 
 The workspace has ONE operating-mode SSOT:
 `unified_api_contracts.internal.modes.OperationalMode { LIVE, MANUAL, BACKTEST, PAPER }`. Everything else (the additive
-`ExecutionTarget` / `ExecutionTrigger` enums, the `decompose()` helper, the `paper_target_registry`) is derived from or
-composes with this single enum. Anti-patterns (`paper_trade: bool` field in execution-service, parallel
-`TestingStage.LIVE_TESTNET` enum) are deleted; sports `_PAPER_VENUE_KEYS` was relocated (not deleted) — see item 2
-below.
+`ExecutionTarget` / `ExecutionTrigger` enums, the `decompose()` helper, `PAPER_EXECUTION_TARGETS`/`get_paper_target()`)
+is derived from or composes with this single enum. Anti-patterns (`paper_trade: bool` field in execution-service,
+parallel `TestingStage.LIVE_TESTNET` enum) are deleted; sports `_PAPER_VENUE_KEYS` was relocated (not deleted) — see
+item 2 below.
 
 ## Closed-set 4-cell mode matrix
 
@@ -193,7 +193,7 @@ that overlapped with `OperationalMode`. Deprecated 2026-05-09:
   differs.
 - [`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md) — execution layer is the only seam.
 - [`/codex/05-infrastructure/per-venue-paper-policy.md`](/codex/05-infrastructure/per-venue-paper-policy.md) — the
-  `paper_target_registry` SSOT.
+  `PAPER_EXECUTION_TARGETS` / `get_paper_target()` SSOT.
 - [`/codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md`](/codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md)
   — per-archetype 4-state taxonomy.
 - [`/codex/14-customer-journeys/dart/mode-toggle.md`](/codex/14-customer-journeys/dart/mode-toggle.md) — DART operator

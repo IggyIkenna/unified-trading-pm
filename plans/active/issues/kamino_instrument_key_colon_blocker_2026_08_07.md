@@ -31,6 +31,13 @@ resolved_by: ""
 locked_by: ""
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md,
+    /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
+    unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py,
+    instruments-service/instruments_service/reference_data/adapters/defi/kamino.py,
+  ]
 ---
 
 ## Finding
@@ -75,3 +82,5 @@ Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batc
   GCS-path-changing instrument-key format decision (options (a)/(b)/(c) above, each with different migration
   implications for existing manifest rows) — a textbook OPERATOR_QUESTION, not a worker-determinable outcome. Doc stays
   `assigned_vm: NA`.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

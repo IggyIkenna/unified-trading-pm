@@ -180,3 +180,4 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
   `unified-api-contracts@06c54fee`, `deployment-service@eff55ae7`), so no new commits were needed. Flipped the matching
   checkbox in `ao_satellite_ao_dispatch_batch6_2026_08_04.md` with the same evidence. Remaining open todos (2, 3) are
   the slot-8/slot-4 items, still conditionally gated per the batch6 Deferred section — untouched by this run.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

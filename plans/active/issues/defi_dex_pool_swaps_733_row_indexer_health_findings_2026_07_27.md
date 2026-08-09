@@ -663,6 +663,35 @@ absorb the actual remediation work.
 
 ## Progress Log
 
+- **2026-08-09T~02:20-03:15Z+ (slot 22, data_engineering, task
+  `defi_dex_pool_swaps_733_row_indexer_health_findings-c4893c5446f8`) — IN PROGRESS, not yet shipped; commit built +
+  preserved, quality-gates.sh still confirming green under heavy host contention.** Diffed all 3 candidates
+  byte-for-byte: `_dex_swaps_queries.py` + `_dex_swaps_stalled_head.py` are IDENTICAL across all 3 (confirming slot-9's
+  2 known bugs — missing re-export comment with no import, and the `_execute_subgraph_query` tuple-unpack bug — are
+  present in ALL 3, not just the `531a07d8` lineage). `3f11a8d6` and `8c5421ea` are ALSO byte-identical to each other in
+  `dex_swaps_handler.py`/tests (both already include the `record_vm_progress` VM checkpoint wiring + the tuple-return
+  `_execute_subgraph_query` signature that `531a07d8` predates); `3f11a8d6`'s parent was only 18 commits behind current
+  LDR (vs 124 for `8c5421ea`, 221 for `531a07d8`) so cherry-picked it as base. Fixed slot-9's 2 known bugs, PLUS found a
+  3RD missing re-export (`_is_subgraph_head_stale`, imported directly by `tests/unit/test_dex_swaps_handler.py` —
+  collection still failed after fixing only the first 2), PLUS a genuine `[5.94]`-adjacent codex-compliance gap (new
+  broad `except Exception:` in `_dex_swaps_stalled_head.py` — this repo's `CODEX_MAX_VIOLATIONS=0` has zero tolerance;
+  added logging + a `BE_EXCLUDE_GLOBS`/`QUALITY_GATE_BYPASS_AUDIT.md` entry matching this repo's established pattern for
+  justified best-effort probes), PLUS a real function-size violation (`_collect_one_shard` grew to 52L against the 50L
+  cap — extracted a `_record_indexer_empty` helper, back to 48L). Final commit `market-tick-data-service@9a4403c8`
+  (rebased onto LDR tip `707cb7ef` mid-session after a 3-commit drift); **pushed to
+  `wip-preserve/orchestrator-slot-22-9a4403c8` as loss-prevention insurance** (same pattern as the other 2 candidates)
+  since it was still local-only ahead of a `/pre-compact` checkpoint. `quality-gates.sh` needed 16+ attempts to get a
+  real signal — every earlier attempt was externally killed with no error trace; root-caused to `[4/6] TYPE CHECK`
+  hitting the bare 120s `PYRIGHT_TIMEOUT` default under this session's heavy host contention (`exit=143`) — this is an
+  ALREADY-TRACKED, extensively-documented fleet-wide class, see
+  `/plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md` (added a corroborating entry
+  there rather than filing new). Targeted `pytest tests/unit/test_dex_swaps_handler.py` (50/50 passed) + `ruff check` +
+  `basedpyright` on touched files are all independently clean — the fix itself is code-complete and verified; only the
+  full-suite `quality-gates.sh` sentinel is still pending a clean run to unblock `quickmerge`. **Whoever resumes this**:
+  check `git log market-tick-data-service` for whether `9a4403c8` (or its descendant) already landed on
+  `live-defi-rollout` before doing anything — if not, re-run `PYRIGHT_TIMEOUT=600 bash scripts/quality-gates.sh` from
+  the `wip-preserve/orchestrator-slot-22-9a4403c8` branch, ship via quickmerge, then flip the P2 "Land the stranded MTDS
+  commit" todo above with the landed SHA.
 - **2026-08-08T~22:45Z (slot 9, data_engineering, task `defi_dex_pool_swaps_733_row_indexer_health_findings-004`) — task
   CANCELLED mid-session by the msg-4352 review finding above; work NOT shipped, but 2 real bugs found in candidate 1
   (`531a07d8` lineage) are worth carrying into whoever does the 3-way diff.** Before the cancellation landed, this
@@ -781,3 +810,5 @@ absorb the actual remediation work.
   `origin/slot5-stalled-head-test`, no action needed there. Updated the todo above with all 3 candidates and review's
   finding that `RB-04b8981e` no longer appears in the live open repo-blockers list (possible landing-blocker clear) —
   actual diff/pick/land work left for whoever picks up the todo next, not attempted by main.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate — the new candidate
+  commits noted above live on branches/refs, not new source files.

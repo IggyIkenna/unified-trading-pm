@@ -97,3 +97,4 @@ reaching the point where a compact would be needed.
   confirmed insufficient (per-slot-only). Task parked via `POST /api/backlog/defi_compute_gcp_migration-009/park` —
   condition `auto_unpark__defi_compute_gcp_migration-009` confirmed set in the response. Slot 13's stuck session
   released via a follow-up `reassign kill_worker:true` for slot hygiene (task already parked so it won't re-dispatch).
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.

@@ -374,3 +374,4 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
   `repair_tradfi_instrument_type_counts_2026_07_17.py`); (c) `cefi_consolidated_closeout_2026_07_18.md` does not
   reference this doc. Clear. Companion finalize plan:
   `plans/active/backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md`.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

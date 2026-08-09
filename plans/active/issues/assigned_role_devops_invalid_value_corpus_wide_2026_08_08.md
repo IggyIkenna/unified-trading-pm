@@ -99,3 +99,4 @@ separate times during future reclassification passes.
   `infrastructure_master`-group items pulled into batch 7, so it got its own batch per the parent_epic-grouping rule).
 - 2026-08-08: Filed following the pre-compact ritual's Step 1 audit (chat-only finding from 2 sub-agent reports,
   converted to a tracked todo per the workspace's HARD RULE that every deferral must be a `- [ ]`, not prose).
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.

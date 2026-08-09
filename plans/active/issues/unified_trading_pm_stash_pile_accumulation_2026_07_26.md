@@ -275,3 +275,5 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
 
   Confirm each with `git stash list` (should print nothing) before moving to the next checkout. Total: 188 entries
   across `.tabs/1-4` + the root clone (the root was missed by every prior audit pass until this one).
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

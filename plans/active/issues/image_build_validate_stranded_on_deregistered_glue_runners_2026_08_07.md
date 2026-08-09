@@ -175,3 +175,4 @@ needed a brand new dispatch). Result: `validate / GCP Cloud Build — alerting-s
   5). Finding: none found — see the flipped checkbox above for the full grep evidence. No code fix needed in
   `unified-trading-ci`; `python-quality-gates-v2.yml`'s remaining self-hosted reference is a safe, parameterized,
   intentional canary, not a stranded hardcoded pattern.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).

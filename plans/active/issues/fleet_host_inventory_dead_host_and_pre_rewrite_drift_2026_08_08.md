@@ -39,6 +39,12 @@ source:
   "review (agent-orchestrator loop tick, msg 4113, ~2026-08-08T12:58:58Z); main independently corroborated slot 3 state
   via /api/state before filing"
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+  ]
 ---
 
 # Fleet host inventory gaps — dead host + pre-rewrite repo drift
@@ -80,3 +86,7 @@ unique to lose), so the fix is a clean re-clone/reset of these 5 repos on this s
 - [ ] [DEVOPS] P2. Clean-reset the 5 drift-violating repos on ip-172-31-5-118 slot 0 (see table above) onto current
       post-history-rewrite `live-defi-rollout` — confirmed no committed work sits on the stale base, so this is a
       re-clone/reset, not a merge. Confirm drift-violation clears afterward (ahead=0/behind=0 or normal small drift).
+
+## Progress Log
+
+- **context-scout 2026-08-09**: populated context_scope (3 entries).

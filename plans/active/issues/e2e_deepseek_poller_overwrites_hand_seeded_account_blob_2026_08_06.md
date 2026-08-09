@@ -155,3 +155,4 @@ context_scope:
   source doc that has reached zero open todos, and repoint any referrer") — a live, dispatched, in-chain reconciliation
   step, not a forgotten completion. Set `archive_exempt: true` rather than duplicate-archive here. Un-set once that
   finalize plan's archival todo actually runs (it will naturally pick this doc up).
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

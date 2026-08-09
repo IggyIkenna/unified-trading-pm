@@ -167,3 +167,4 @@ auto-resolve. Finding 2 is a tag correction, not a todo.
   skill dispatches from real todos, not an `/ag-closeout-audit` finding ledger. Superseded by the 2026-08-08
   `ag_closeout_audit_defi_parked_2026_08_08.md` run's own "Finding 1" re-verification (findings 1/5 archived, finding 3
   item 1 done, finding 6 still correctly NA-gated). No action.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

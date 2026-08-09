@@ -670,3 +670,4 @@ the todos already promised.
   ~18mo pre-resolver coverage gap needing research, 273 mistagged DERIBIT/COMBO rows needing root-cause investigation,
   an unscoped drilldown-mockup update), all judgment/research-class with no stated done-when. Reaffirms 3 prior
   2026-07-30 passes.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

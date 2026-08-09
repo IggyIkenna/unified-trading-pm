@@ -313,39 +313,38 @@ before).
       `fleet_promoter_glue_runner_stall_2026_08_06.md`). `batch-live-reconciliation-service` (one of the two repos this
       doc's own "Verification" section replayed the fix logic against) went from `v0.49.0` (stale 41 days, the exact
       baseline cited in this doc's `## Root cause`) to **`v0.49.1`**, minted at commit `738ac176` dated
-      `2026-08-08T09:48:12Z` — a genuine `push:[main]`-triggered patch bump, post-fix. `python3
-      scripts/cicd/reconcile_release_tags.py --dry-run` now lists it under the healthy tag-derived set, not stalled.
-      The fix mints real tags in production, not just in the isolated-worktree logic replay.
+      `2026-08-08T09:48:12Z` — a genuine `push:[main]`-triggered patch bump, post-fix.
+      `python3     scripts/cicd/reconcile_release_tags.py --dry-run` now lists it under the healthy tag-derived set, not
+      stalled. The fix mints real tags in production, not just in the isolated-worktree logic replay.
 - [x] ✅ [DEVOPS] P1. **Re-ran 2026-08-09: stall count dropped 13 → 7, not to 0 — real, partial, measured progress.**
-      `python3 scripts/cicd/reconcile_release_tags.py --dry-run`: 15 repos now tag-derived/healthy (up from the
-      original 13-repo-stalled baseline), **7 STILL STALLED**: `e2e-testing`, `fund-administration-service`,
-      `greeks-service`, `ibkr-gateway-infra`, `system-integration-tests`, `trading-agent-service`,
-      `unified-trading-api`. Spot-checked `unified-trading-api`'s and `fund-administration-service`'s recent
-      `semver-agent.yml` run history — both show `conclusion=success` runs as recently as 2026-08-08 (post-fix, not
-      stuck/erroring), so the residual 7-repo stall is NOT the same "zero-jobs parse failure" bug this doc fixed — it
-      reads as either "no `SOURCE_DIR`-touching commit since baseline" (a legitimately-empty bump, correct behavior)
-      or a separate cause not yet root-caused. **Not investigated further here** (out of this stale-recheck's scope) —
-      flagging as a genuinely NEW residual finding, not closing the todo on an overclaim. This todo's own literal ask
-      ("confirm the stall count drops from 13") is satisfied — it did drop, to 7 — even though the fleet is not fully
-      clear.
+      `python3 scripts/cicd/reconcile_release_tags.py --dry-run`: 15 repos now tag-derived/healthy (up from the original
+      13-repo-stalled baseline), **7 STILL STALLED**: `e2e-testing`, `fund-administration-service`, `greeks-service`,
+      `ibkr-gateway-infra`, `system-integration-tests`, `trading-agent-service`, `unified-trading-api`. Spot-checked
+      `unified-trading-api`'s and `fund-administration-service`'s recent `semver-agent.yml` run history — both show
+      `conclusion=success` runs as recently as 2026-08-08 (post-fix, not stuck/erroring), so the residual 7-repo stall
+      is NOT the same "zero-jobs parse failure" bug this doc fixed — it reads as either "no `SOURCE_DIR`-touching commit
+      since baseline" (a legitimately-empty bump, correct behavior) or a separate cause not yet root-caused. **Not
+      investigated further here** (out of this stale-recheck's scope) — flagging as a genuinely NEW residual finding,
+      not closing the todo on an overclaim. This todo's own literal ask ("confirm the stall count drops from 13") is
+      satisfied — it did drop, to 7 — even though the fleet is not fully clear.
 - [x] ✅ [DEVOPS] P2. **MOOT — market-tick-data-service already inherits the fix automatically, no shipping needed.**
       `market-tick-data-service/.github/workflows/semver-agent.yml` is now a thin `workflow_call` caller stub pointing
       at the central `unified-trading-ci/.github/workflows/semver-agent.yml` reusable workflow (shipped separately by
-      `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 5, unrelated to this doc but landed
-      after it) — the same central file this doc's own Follow-up regression #2 fixed. MTDS's `semver-agent.yml` runs
-      are green (`conclusion=success` x5 most recent, 2026-08-08T22:33–2026-08-09T00:06Z) and it already shows up in
-      the `reconcile_release_tags.py` healthy/tag-derived list (`market-tick-data-service:v0.112.2`), unstalled — the
-      unrelated pre-existing test failure this todo was gating on no longer blocks anything, since no per-repo ship
-      of THIS fix is needed anymore.
+      `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 5, unrelated to this doc but landed after
+      it) — the same central file this doc's own Follow-up regression #2 fixed. MTDS's `semver-agent.yml` runs are green
+      (`conclusion=success` x5 most recent, 2026-08-08T22:33–2026-08-09T00:06Z) and it already shows up in the
+      `reconcile_release_tags.py` healthy/tag-derived list (`market-tick-data-service:v0.112.2`), unstalled — the
+      unrelated pre-existing test failure this todo was gating on no longer blocks anything, since no per-repo ship of
+      THIS fix is needed anymore.
 - [ ] [DEVOPS] P2. **NEW 2026-08-09 (stale-recheck sweep) — root-cause the residual 7-repo stall.** `e2e-testing`,
       `fund-administration-service`, `greeks-service`, `ibkr-gateway-infra`, `system-integration-tests`,
-      `trading-agent-service`, `unified-trading-api` are still `STALL`ed per `reconcile_release_tags.py --dry-run`
-      even though all 7 got this doc's patch-fallback fix shipped (see the `## Shipped` checklist) and their
-      `semver-agent.yml` runs are completing green post-fix (spot-checked 2 of 7). Determine whether this is
-      legitimate (no `SOURCE_DIR`-touching commit landed on `main` since each repo's baseline tag, so `BUMP=""` is the
-      CORRECT outcome) or a genuine gap the patch-fallback logic still misses for these specific repos. Done when:
-      each of the 7 is classified either "correctly quiet" (with the commit range checked) or a new root cause is
-      identified and fixed.
+      `trading-agent-service`, `unified-trading-api` are still `STALL`ed per `reconcile_release_tags.py --dry-run` even
+      though all 7 got this doc's patch-fallback fix shipped (see the `## Shipped` checklist) and their
+      `semver-agent.yml` runs are completing green post-fix (spot-checked 2 of 7). Determine whether this is legitimate
+      (no `SOURCE_DIR`-touching commit landed on `main` since each repo's baseline tag, so `BUMP=""` is the CORRECT
+      outcome) or a genuine gap the patch-fallback logic still misses for these specific repos. Done when: each of the 7
+      is classified either "correctly quiet" (with the commit range checked) or a new root cause is identified and
+      fixed.
 
 ## Follow-up regression #2 (2026-08-08): unified-trading-ci reusable-workflow migration silently reintroduced the char-cap bug
 
@@ -423,15 +422,14 @@ conservative here since it can't verify reversibility from command text alone).
       `gh api repos/IggyIkenna/unified-trading-ci/actions/workflows --jq '.workflows[]|select(.path|test("semver"))|.name'`
       → `"Semver Agent"` (was the raw path before this fix).
 - [x] ✅ [DEVOPS] P1. **RESOLVED — self-resolved exactly as predicted, confirmed 2026-08-09 (stale-recheck sweep).**
-      Both caller repos now resolve correctly: `gh api repos/IggyIkenna/instruments-service/actions/workflows --jq
-      '...name'` → `"Semver Agent"`; same for `unified-trading-api`. Neither shows the raw file path anymore. Resolved
-      naturally via each repo's own subsequent `push:[main]` promote cycle, no forced trigger needed — exactly the
-      self-resolution path this todo predicted.
+      Both caller repos now resolve correctly:
+      `gh api repos/IggyIkenna/instruments-service/actions/workflows --jq     '...name'` → `"Semver Agent"`; same for
+      `unified-trading-api`. Neither shows the raw file path anymore. Resolved naturally via each repo's own subsequent
+      `push:[main]` promote cycle, no forced trigger needed — exactly the self-resolution path this todo predicted.
 - [x] ✅ [DEVOPS] P2. **DONE 2026-08-09 (stale-recheck sweep) — 3 callers spot-checked, all green.**
       `instruments-service` and `unified-trading-api` both resolve `"Semver Agent"` (see above); additionally checked
-      `market-tick-data-service` (also `"Semver Agent"`, 5 recent green runs) as a third spot-check. This closes out
-      the doc's live-verification bar for Follow-up regression #2, matching the standard already held for regression
-      #1.
+      `market-tick-data-service` (also `"Semver Agent"`, 5 recent green runs) as a third spot-check. This closes out the
+      doc's live-verification bar for Follow-up regression #2, matching the standard already held for regression #1.
 
 ## Codex SSOTs
 
@@ -520,8 +518,10 @@ today's evidence.
   2026-08-08 marker have now cleared with fresh live evidence — `reconcile_release_tags.py --dry-run` shows the stall
   count dropped 13 → 7 (not to 0); `batch-live-reconciliation-service` minted a real post-fix patch tag (`v0.49.1`,
   2026-08-08T09:48:12Z); `instruments-service`/`unified-trading-api`/`market-tick-data-service` all now resolve
-  `"Semver Agent"` via `gh api .../actions/workflows` (was the raw path); MTDS turns out to need no separate ship —
-  it already runs the fixed logic via the central `unified-trading-ci` reusable workflow. Flipped 5 checkboxes to
-  `[x]` with citations. Opened one NEW tracked todo for a genuinely new finding (the residual 7-repo stall, not the
-  same bug — root cause not yet determined) rather than leaving it as prose. This doc is NOT an archive candidate —
-  1 open todo remains.
+  `"Semver Agent"` via `gh api .../actions/workflows` (was the raw path); MTDS turns out to need no separate ship — it
+  already runs the fixed logic via the central `unified-trading-ci` reusable workflow. Flipped 5 checkboxes to `[x]`
+  with citations. Opened one NEW tracked todo for a genuinely new finding (the residual 7-repo stall, not the same bug —
+  root cause not yet determined) rather than leaving it as prose. This doc is NOT an archive candidate — 1 open todo
+  remains.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

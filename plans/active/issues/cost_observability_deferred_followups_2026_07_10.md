@@ -139,3 +139,4 @@ context_scope:
   here would only dispatch a duplicate of what batch2 already covers once approved. Doc stays NA as a whole. No citation
   fix yet (batch2 hasn't shipped/been approved) — revisit once it has to close the 4 P3 checkboxes with a citation
   instead of leaving them open.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

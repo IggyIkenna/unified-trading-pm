@@ -372,15 +372,15 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       (`can't compare offset-naive and offset-aware` in `build_task_usage_snapshot`); Class-A `/done` avoids it via
       `ss.to_utc`. Non-blocking (post-commit), tracked as follow-up P2 below. Provenance: agt-e33f21.
 - [x] ✅ [CICD] P2. **DONE 2026-08-06 15:03Z — stale-check re-verified 2026-08-09, never flipped here.** Fixed
-      orchestrator one-shot `/done` 500 in `_done_one_off`
-      (`agent-orchestrator/server/routes/slots_worker.py` ~L1620): `assigned_at=agent_registered_at` is read NAIVE from
-      the DB; `build_task_usage_snapshot` compares it against timezone-AWARE transcript timestamps →
-      `TypeError: can't compare offset-naive and offset-aware datetimes` on EVERY one-shot `/done` with transcript
-      usage. Fix shipped `agent-orchestrator@5d1a8a6` ("fix(ao): to_utc() agent.registered_at in _done_one_off — fixes
-      crashed one-off task-usage recording"), just ~3 hours after this todo was found (12:01Z finding vs. 15:03Z fix) —
-      current code confirms `agent_registered_at = ss.to_utc(agent.registered_at)` live at the exact call site, with an
-      inline comment documenting this precise bug (`ao_task_token_usage_role_group_filters_zero_2026_08_06`). The
-      2026-08-07 na-eligibility-audit pass on this doc already flagged this as a "RECLASSIFY-candidate... looks
+      orchestrator one-shot `/done` 500 in `_done_one_off` (`agent-orchestrator/server/routes/slots_worker.py` ~L1620):
+      `assigned_at=agent_registered_at` is read NAIVE from the DB; `build_task_usage_snapshot` compares it against
+      timezone-AWARE transcript timestamps → `TypeError: can't compare offset-naive and offset-aware datetimes` on EVERY
+      one-shot `/done` with transcript usage. Fix shipped `agent-orchestrator@5d1a8a6` ("fix(ao): to_utc()
+      agent.registered_at in _done_one_off — fixes crashed one-off task-usage recording"), just ~3 hours after this todo
+      was found (12:01Z finding vs. 15:03Z fix) — current code confirms
+      `agent_registered_at = ss.to_utc(agent.registered_at)` live at the exact call site, with an inline comment
+      documenting this precise bug (`ao_task_token_usage_role_group_filters_zero_2026_08_06`). The 2026-08-07
+      na-eligibility-audit pass on this doc already flagged this as a "RECLASSIFY-candidate... looks
       worker-determinable" but didn't check whether it was already shipped — it was, by an unrelated commit, the same
       day it was found. Provenance: agt-e33f21 (found 2026-08-06 12:01Z).
 - [x] ✅ [OPERATOR] P2. **DONE 2026-08-07 — operator ran
@@ -669,6 +669,10 @@ process itself in this pass).
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:9a08c134e9db9df1]: KEEP-NA, valid — the `_done_one_off`
+  500 fix flagged as a RECLASSIFY-candidate in the 2026-08-07 pass was closed by this doc's own "stale-check re-verify
+  2026-08-09" entry below (already shipped 2026-08-06, confirmed live). 3 open items remain, all live-CI-infrastructure
+  follow-ups on an active, still-recurring fleet-wide promotion-stall pattern (confirmed recurring again 2026-08-07).
 - **stale-check re-verify 2026-08-09 (infra tranche, KEEP-NA staleness re-check)**: flipped the `_done_one_off` 500 fix
   todo `[x]` — genuinely shipped 2026-08-06T15:03Z (`agent-orchestrator@5d1a8a6`, ~3 hours after the bug was found in
   this same doc), confirmed live in current `slots_worker.py` (`agent_registered_at = ss.to_utc(agent.registered_at)`).

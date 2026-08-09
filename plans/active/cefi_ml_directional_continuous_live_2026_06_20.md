@@ -268,3 +268,5 @@ This plan's own "Model-improvement backlog" section remains the owner until a su
   `[DATA] P1` prerequisite todo was filed for that check itself but the grid-run gate above it stays judgment-adjacent
   pending that check's result), and live-capital wallet keys/kill-switch arming is a reaffirmed PERMANENT human-only
   hard-stop. No cheat-sheet precedent from today applies (not a delete, not IAM, not a script-flag gap).
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

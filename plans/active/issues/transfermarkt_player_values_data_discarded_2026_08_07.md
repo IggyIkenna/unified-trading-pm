@@ -134,3 +134,4 @@ possibly a rename that ripples into UAC/manifest data_type naming.
 
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — genuine operator-gated schema/scope decision, no bounded
   worker-determinable outcome. Added the `[OPERATOR] P1` todo above so the pending decision is tracked, not just prose.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

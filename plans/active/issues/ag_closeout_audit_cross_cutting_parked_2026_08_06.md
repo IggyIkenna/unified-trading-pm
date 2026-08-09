@@ -283,7 +283,7 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — verified all 4 open findings' targets directly today: findings
   1/2/3/5 target docs all still carry their original mistagged `asset_group` (fresh grep confirms `[cross-cutting]` /
   `[defi, cross-cutting]`, unretagged) — all 4 todos remain genuinely open, owning-tranche work.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
-  4 open findings (1/2/3/5) are all cross-tranche `asset_group` retag handoffs to `ui`/`infrastructure`/`ci`,
-  explicitly scoped "owning-tranche fix, leave to X tranche's own audit" -- not this tranche's write by
-  construction.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged): 4
+  open findings (1/2/3/5) are all cross-tranche `asset_group` retag handoffs to `ui`/`infrastructure`/`ci`, explicitly
+  scoped "owning-tranche fix, leave to X tranche's own audit" -- not this tranche's write by construction.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

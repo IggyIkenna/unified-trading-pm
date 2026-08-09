@@ -782,3 +782,4 @@ have moved; use the section index above to locate it.
   `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`'s "ML" section, which names this doc's open todo verbatim.
   Neither item is dispatchable from this doc without duplicating an already-active plan in the same `parent_epic` — no
   reclassification, citation-only.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

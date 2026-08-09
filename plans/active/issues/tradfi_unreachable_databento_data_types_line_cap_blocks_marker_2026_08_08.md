@@ -138,6 +138,7 @@ Progress Log entry recording the conflict finding above (both described in full 
   not a rushed side-effect of an unrelated marker write. The source doc's na-eligibility-audit verdict this pass
   (KEEP-NA, valid, 1 open item) stands independently of this line-cap issue; only the Phase-0 incremental-skip
   optimization and the cross-doc conflict finding's visibility ON the source doc are lost until this is fixed.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
 
 ## na-eligibility-audit verdict
 

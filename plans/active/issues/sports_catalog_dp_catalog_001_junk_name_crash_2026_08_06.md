@@ -228,3 +228,4 @@ observability hook whoever picks up the follow-up needs.
   `instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md`'s remaining open todo; that doc's own
   broader ~19-foreign-commit provenance-range question (a `ci` tranche concern, not sports-specific) remains genuinely
   open and is left untouched here.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

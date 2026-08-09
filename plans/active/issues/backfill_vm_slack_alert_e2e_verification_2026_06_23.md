@@ -294,3 +294,4 @@ for these messages to close the verification loop.
   supersedes the stale 2026-06-23 spot-check ask and independently confirms the Gap-4 render fix works end-to-end in
   production. **All todos in this doc are now `[x]`.** Not archived this pass (`locked_by: live-defi-rollout` requires
   an explicit `[unlock-plan]` decision, not taken autonomously) — left for the next archive-candidates sweep to pick up.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

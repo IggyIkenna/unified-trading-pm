@@ -243,3 +243,21 @@ and just burn more contended compute.
   `- [ ]` todos under a new `## Todos` heading (per `task_template.md` §3), prose kept verbatim. The 2026-08-04
   na-eligibility-audit entry above correctly recorded `grep -cE '^- \[ \]'` = 0 as of that date — left unedited as an
   accurate point-in-time record; it is now stale (3 open todos exist) as of this fix.
+
+- **2026-08-09T03:20Z (slot-29, infra craft)**: fresh, far more severe corroborating evidence for todo #2 above ("is the
+  shared host undersized for combined peak demand") from an unrelated task
+  (`cefi_track2_backfill_vm_preempted_no_recovery-99a54eb412aa`, a one-file bash-script fix in deployment-service). 9
+  consecutive interactive-slot `quality-gates.sh` runs against a correct, already-verified commit were killed before
+  writing a sentinel, over ~90 minutes, while `uptime` climbed 40→69 (4 physical cores) and `ps` showed up to 19
+  concurrent `quality-gates.sh` processes host-wide (vs the documented ≤2 rule) with swap usage 14GB+. Root cause for
+  most kills: the `qg-host-governor`'s own RAM self-abort watchdog (`_qg_watchdog_pressure_hit`, default abort at <20%
+  available) tripping legitimately — confirmed via its `killed.<pid>` marker files. A few earlier kills were even more
+  severe: trivial backgrounded `sleep` commands with near-zero footprint were also killed within seconds, suggesting the
+  shared `orchestrator.service` systemd cgroup (confirmed via `/proc/self/cgroup` + `memory.max`/`memory.current`,
+  ~26GiB cap) may itself have been at/near its ceiling independent of what system-wide `free -h` reported as "available"
+  — a plausible answer to this doc's open question about whether the host is undersized for combined interactive-slot +
+  CI demand (the interactive-slot side alone, no CI glue-runner involved this time, was enough to saturate it). Did not
+  close todo #2 (that needs the glue-runner side traced too, which this incident didn't touch) — leaving it open with
+  this as supporting evidence. Eventually shipped via the operator-approved `scripts/**` direct-push carve-out rather
+  than continuing to retry QG, per operator ruling that repeated retries under active contention may themselves feed the
+  loop (msg 6203, full detail in `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s own Progress Log).

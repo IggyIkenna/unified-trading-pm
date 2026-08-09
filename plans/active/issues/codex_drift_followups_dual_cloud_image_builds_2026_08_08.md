@@ -121,3 +121,12 @@ access from this worktree).
       a worker worktree) or whether AWS read-verification should route through a different identity/process entirely —
       current gap: this worker's ambient identity lacks it, and the documented AO self-service identity
       (`uts-orchestrator-epic-role`) isn't reachable from this worktree (no EC2 metadata service).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:8ba083853016bd9a]: KEEP-NA, valid — first verdict for
+  this doc. Findings 1/2/3/5 (all `[INFRA]`-tagged) already extracted verbatim into
+  `infra_satellite_ao_dispatch_batch9_2026_08_09.md` (status: draft, not yet active — falls short of the KEEP-NA-STALE
+  bar, which requires an ACTIVE extracting doc). Finding 4 (AWS IAM identity scope for `ikenna-worker`) is a genuine
+  `[OPERATOR]` decision, correctly not extracted. Recommend a forward-pointer citation once batch9 activates.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (1 entry), still accurate.

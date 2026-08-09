@@ -128,12 +128,41 @@ own Tick history.
       replacement for, the memory/swap hypothesis (manual `tmux has-session` calls returned <0.01s when checked, so it's
       plausibly scheduling-delay-under-contention on the orchestrator/tmux-client fork, not tmux itself being slow).
       Whoever picks this up: pull load-average/runnable-queue history (not just mem/swap) for the recorded death
-      timestamps too.
+      timestamps too. **Trend update (msg 4376, agt-45d610, 03:07Z): still worsening** — load avg now 65.56/62.12/55.86
+      (up from 55/53/49 at 02:57Z, up from 36/44/46 at ~02:48Z — CPU %us+%sy 92-99% in 2 of 3 samples), 49 concurrent
+      `claude` CLI processes, memory comparatively flat (~19.5/27.9GB cgroup). **New hypothesis worth investigating**: a
+      possible self-reinforcing feedback loop — AutoSpawn's ~60s respawn design (meant to minimize downtime) may itself
+      ADD CPU load at exactly the moment contention is already high, i.e. crash rate and contention could be mutually
+      reinforcing rather than purely one-directional (contention→crashes). If confirmed, a respawn-rate backoff/throttle
+      during a detected contention event could help more than waiting for organic host relief alone — flagged as a
+      hypothesis for backend/operator judgment, not asserted as proven causation. **OPERATOR-CONFIRMED ESCALATION (msg
+      4377, 03:14Z)**: this is now a severe, ACTIVE, human-confirmed incident, not just review-role-scoped. Operator
+      independently reported (and main independently re-confirmed at 03:15Z): 12-19 concurrent `quality-gates.sh`
+      processes, load avg 63.28/60.29/57.11, only 893Mi genuinely free RAM (`free -h`'s "available" 15Gi is reclaimable
+      buff/cache, not true headroom), swap 14Gi/47Gi used. Genuine kernel OOM-killer activity confirmed — the operator's
+      own bare `sleep 60` was killed before completing, meaning the reaper is not QG-specific, it's fleet-wide.
+      Operator's own quickmerge ship is blocked (QG self-aborts via its own `qg-host-governor.sh` RAM watchdog near
+      completion, after passing every substantive gate). **Nuance**: `qg-host-governor.sh`'s documented ≤2 cap
+      (`max(2, floor(physical_cores/4))`) gates only the HEAVY phase (pytest/basedpyright) via flock tokens, not total
+      `quality-gates.sh` script instances — so 12+ running processes is not automatically proof the governor itself is
+      broken; unverified whether that many are concurrently holding a heavy-phase token vs sitting in lighter setup/lint
+      phases. New todo added below to determine whether total-instance count (not just heavy-phase count) also needs a
+      cap, since even light-phase QG steps compound with the ~20+ concurrent Claude CLI sessions already driving the
+      CPU/memory picture documented above.
 - [ ] [DOCS] P3. Correct the ~00:22Z progress-log entry below (12-slot simultaneous burst) — review (msg 4361) showed
       it's a batch-processing artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick,
       NOT a tmux-server-level event as originally hypothesized; only the review-role entry in that burst was a real loss
       (the other 4 were already-finished scheduled jobs, `archived_lifecycle_complete:true`). Superseded-note only, keep
       the original entry for history — do not delete it.
+- [ ] [BACKEND] P1. **Operator-confirmed active incident (msg 4377)** — determine whether
+      `quality-gates-base/qg-host-governor.sh`'s ≤2 heavy-phase cap needs to be extended to gate total
+      `quality-gates.sh` script instances (not just pytest/basedpyright), given 12-19 concurrent instances were observed
+      with only 893Mi genuine free RAM and confirmed fleet-wide kernel OOM-killer activity (a bare `sleep 60` was
+      reaped). First step: check whether those 12+ processes are actually holding heavy-phase governor tokens (governor
+      working as designed, cap is just too permissive) or running ungated in lighter phases (governor scope gap). Repo:
+      unified-trading-pm (`scripts/quality-gates-base/qg-host-governor.sh`). Cross-reference the standing
+      CPU-contention/respawn-loop hypothesis above — likely the SAME underlying host-capacity crisis, not a separate
+      one.
 - [x] ✅ [OPERATOR] P1. `agent-orchestrator@e32d962` (the TmuxPruner debounce fix) was committed but not loaded — the
       live uvicorn process (PID 885271) started at 23:15:22Z, ~11min BEFORE the 23:26:25Z commit. Main could not restart
       it (sandbox permission boundary: `sudo`/non-interactive `systemctl restart` both blocked). RESOLVED —
@@ -143,6 +172,28 @@ own Tick history.
 
 ## Progress log
 
+- 2026-08-09 ~03:16Z (main agt-22de53, relaying operator msg 4377): Severe active incident, human-confirmed and
+  independently re-verified by main. 12 concurrent `quality-gates.sh` processes, load avg 63.28/60.29/57.11, 893Mi
+  genuine free RAM, swap 14Gi/47Gi used, confirmed kernel OOM-killer reaping arbitrary processes (operator's own
+  `sleep 60` killed). This is the same host-capacity crisis the standing BACKEND todo has been tracking via review's 4
+  consecutive samples, now with the operator's own blocked task as direct evidence (QG self-aborting via its own RAM
+  watchdog after passing every substantive gate). Added a new [BACKEND] P1 todo on whether `qg-host-governor.sh`'s
+  heavy-phase-only cap needs to extend to total script-instance count. Replied to operator: confirmed severity, flagged
+  the heavy-phase-vs-total-instance nuance (don't over-claim the governor is broken without checking held-token state
+  first), suggested retrying the QG sentinel once load visibly drops rather than repeatedly mid-spike.
+- 2026-08-09 ~03:10Z (main agt-22de53, relaying review msg 4376 from agt-45d610, the FOURTH review-role session in this
+  window — predecessor agt-494734 died 03:02:28Z, only 2.5min before this session's own boot): trend still worsening
+  (load avg 65.56/62.12/55.86, CPU %us+%sy 92-99%, 49 concurrent CLI processes) — added to the standing BACKEND todo
+  along with a new hypothesis worth investigating: AutoSpawn's fast respawn design may itself be ADDING CPU load at
+  exactly the moment contention is already high, i.e. a possible crash-rate/contention feedback loop, not purely
+  one-directional. Not asserted as proven — flagged for whoever picks up the todo. No doc-status change.
+- 2026-08-09 ~02:57Z (main agt-22de53, relaying review msg 4375 from agt-494734, the THIRD review-role session on slot 1
+  in ~15min — predecessors agt-39fb1c and agt-9a70a7 both died zero-precursor `tmux_session_lost`): CPU contention trend
+  is WORSENING, not stable — load average 55.23/53.25/49.41 (up from 36/44/46 in msg 4373), runnable-queue depth 39-53
+  (5-6x nproc=8), 48 concurrent `claude` CLI processes (up from 27). Memory looks less acute this sample (cgroup
+  ~18.7GiB/26GiB, system swap 8.4Gi used/39Gi free) — CPU/process-count is now the more acute and clearly-trending
+  signal. No new mechanism, same standing conclusion (host-level relief needed, not a 3rd logic patch). No doc-status
+  change.
 - 2026-08-09 ~02:48Z (main agt-22de53, relaying review msg 4373 from agt-9a70a7, freshly booted on slot 1): Further
   corroboration + a new CPU-contention data point added to the open BACKEND todo (host load average 36-46 on an 8-core
   box, runnable-queue depth, context-switch spikes, 27 concurrent CLI processes) — additive to the memory/swap
@@ -362,3 +413,5 @@ own Tick history.
   established session. Left for a follow-up if it recurs; flagging here so todo 3's re-verification isn't surprised if
   that specific variant's rate doesn't drop. Todo 3 (independent re-verification via `/api/activity?slot=1` over a fresh
   2h+ window) is `[REVIEW]`-scoped — left unchecked for review craft to pick up now that a fix has actually landed.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).

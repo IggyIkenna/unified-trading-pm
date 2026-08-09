@@ -40,6 +40,13 @@ source:
   "2026-08-08: identified during P2.2 citadel_satellite_ao_dispatch_batch1 — FILL_COMPLETED schema break between
   execution-service@08808415 and strategy-service@f1a98416"
 resolved_by:
+context_scope:
+  [
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
+    strategy-service/strategy_service/position/core/fill_event_consumer.py,
+    strategy-service/strategy_service/adapters/fill_subscriber.py,
+  ]
 ---
 
 # P1 ISSUE — FILL_COMPLETED event schema break broke strategy-service fill consumer
@@ -137,3 +144,4 @@ key rename; this fix covers the position-tracking consumer path.
   P1 live-trading data-correctness call (confirm whether a live strategy-service instance ran against the broken
   execution-service window, and if so audit FillDB/reconcile position state) -- a real-money live-trading
   judgment/investigation call, not a bounded mechanical fix.
+- **context-scout 2026-08-09**: populated context_scope (4 entries).

@@ -37,6 +37,13 @@ resolved_by:
 locked_by:
 source: "slot-21 infra worker, 2026-08-08 -- building/wiring check_ao_dispatch_visibility_gate.py"
 depends_on: [ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08]
+context_scope:
+  [
+    agent-orchestrator/server/dispatch_visibility_report.py,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    /plans/archive/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md,
+    /plans/active/issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md,
+  ]
 ---
 
 # AO dispatch-visibility gate — 27 accidental exclusions, per-doc triage
@@ -486,3 +493,5 @@ human already made the call and the fleet still never executes it.
   **Triage impact**: the ~10 newly-visible accidental exclusions are not yet enumerated as todos in this doc. Re-run
   `python -m server.dispatch_visibility_report --pm-path <pm> --json` for the current per-doc list before continuing —
   do not work from this doc's existing 25-item enumeration alone, it predates the rule change.
+
+- **context-scout 2026-08-09**: populated context_scope (4 entries).

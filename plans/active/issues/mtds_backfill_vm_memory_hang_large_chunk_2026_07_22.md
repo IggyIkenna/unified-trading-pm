@@ -694,3 +694,5 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
       **Done when**: the upload call's failure mode is identified (e.g. a swallowed exception, a once-per-VM-lifetime
       guard misfiring, a stale path) and fixed, with a regression check that `PROGRESS.json` keeps advancing across ≥20
       consecutive chunks on a fresh run. Repo: deployment-service.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

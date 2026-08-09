@@ -654,3 +654,4 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   meta-tracking over dozens of prose findings spanning 5 asset groups, several explicitly §E operator-decision
   territory; converting it to bounded AO todos itself needs human triage. Reaffirms 3 prior 2026-07-30 passes (cefi x2,
   sports).
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

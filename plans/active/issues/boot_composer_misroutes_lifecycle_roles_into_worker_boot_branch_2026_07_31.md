@@ -267,3 +267,4 @@ cefi-specific** — same defect now reproduced on a second tranche.
   `mark_done()` (lines 55-71) still unconditionally sets `status="done"`/`done_sha=sha` with no empty-`sha` guard (the
   `[SCRIPT] P1` data-integrity fix). Standing corpus ruling (AO dispatch/state machinery stays human-reviewed) still
   applies.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

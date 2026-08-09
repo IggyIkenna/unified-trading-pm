@@ -79,6 +79,7 @@ source: >-
   RECLASSIFY-non-qualifying NA docs), mirroring `/ag-closeout-audit`'s satellite-batch pattern per operator instruction
   — pulled bounded, worker-determinable items out of otherwise-gated docs rather than flipping whole docs.
 assigned_role: data_engineering
+effort: max
 sequential: false
 drift_direction: advance-code
 ---
@@ -100,14 +101,16 @@ drift_direction: advance-code
       market-tick-data-service, deployment-service. Source: `instruments_foundation_phase0_cross_cutting_2026_07_24.md`
       (Phase-0 item 1). Done when: TradFi/sports/ prediction backfill VMs + roll-up jobs are click-through-able in
       `/deployments`, verified via `/api/deployments/inventory`, same evidence bar as cefi's cited GATE-G2 verification.
-- [ ] [BACKEND] P0. Surface the already-shipped Honest-Coverage v2 layered-coverage fields
+- [x] ✅ [BACKEND] P0. Surface the already-shipped Honest-Coverage v2 layered-coverage fields
       (`layer1_completeness_pct`/`instrument_gates_download`/`denominator_complete`, `schema_version==2`, producer
       already live) through deployment-api and deployment-ui — today there are 0 grep hits for those field names in
       either repo. Repo: deployment-api, deployment-ui. Source:
       `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (Phase-0 item 2). Done when: deployment-api exposes
       the 3 named fields per asset_group/venue; deployment-ui renders the two-layer number (Layer-2 visually gated on
       Layer-1); a synthetic-gap test fixture proves the correct layer drags down; `pw:L2 ✓` + a regression spec per the
-      playwright gate.
+      playwright gate. — deployment-api@5a345de22, deployment-ui@c55ed8256 (route is byte-for-byte passthrough, proven
+      by 2 new unit tests; UI gates Layer-2 headline+badge on Layer-1 completeness; Vitest synthetic-gap fixture +
+      `pw:L2` regression spec `data_status_coverage_labels.spec.ts` — 5/5 playwright specs green, verified directly).
 - [ ] [SCRIPT] P0. Build the captured∩expected KEY-OVERLAP verification-discipline gate (per-(instrument, day) overlap
       of captured vs. expected, never a raw VM-exit-code/row-count proxy) that would have caught the 2026-06-24 DeFi
       silent-stall class. Repo: instruments-service. Source: `instruments_foundation_phase0_cross_cutting_2026_07_24.md`
@@ -219,14 +222,13 @@ drift_direction: advance-code
       `EmptyConfirmedReason` values at every write call site; a regression test covers both.
 - [ ] [REVIEW] P2. Land the bar-edge fallback-to-open fix — the source doc's own text claims it was committed as
       `instruments-service@20a92886`, but that SHA does NOT resolve to a real commit in any local clone (verified
-      2026-08-09) — treat the "already committed" claim as unverified, not fact: re-derive whether the fix (raise
-      on unsupported timeframe instead of silently falling to the open edge, in `ccxt_adapter.py` and any sibling
-      adapter) actually exists on `live-defi-rollout` today; if not, (re)implement it. Repo: instruments-service.
-      Source: `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (bar-edge-fallback item). Done when: IS
+      2026-08-09) — treat the "already committed" claim as unverified, not fact: re-derive whether the fix (raise on
+      unsupported timeframe instead of silently falling to the open edge, in `ccxt_adapter.py` and any sibling adapter)
+      actually exists on `live-defi-rollout` today; if not, (re)implement it. Repo: instruments-service. Source:
+      `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (bar-edge-fallback item). Done when: IS
       `quality-gates.sh` is confirmed green (or RB-d3bb9020's current status is re-verified); the fix is confirmed
       present with a REAL, resolvable commit SHA cited (or freshly implemented + committed); if still blocked, the
-      checkbox is left open with a freshly-dated status note
-      (not silently re-committed).
+      checkbox is left open with a freshly-dated status note (not silently re-committed).
 - [ ] [CODE] P3. Swap the hand-maintained MTDS `_instruments_metadata.py` venue-prefix-map mirror for a direct import of
       UAC's `VENUE_PREFIX_TO_PROTOCOL` (removing the duplicate mapping); also fix the stale comment in
       `unified-trading-system-ui/lib/types/defi.ts` naming the already-deleted `CANONICAL_VENUE_TO_ADAPTER`. Repo:
@@ -265,3 +267,12 @@ drift_direction: advance-code
   conflict found and resolved (a `_bucket_for` prediction-bucket fix already shipped via `instruments-service@0975de10`
   — left for the existing `batch1_finalize` reconciliation rather than re-extracted); 1 item dropped on a confirmed
   conflict with an already-open todo in `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`.
+- **2026-08-09 (item 2, in progress — slot 18)**: deployment-ui landed (`deployment-ui@c55ed8256` — TS types +
+  `HonestCoverageCard.tsx` Layer-2-gated-on-Layer-1 rendering + Vitest synthetic-gap fixture + extended `pw:L2`
+  playwright regression spec `data_status_coverage_labels.spec.ts`, all 5 specs green). deployment-api change is a
+  test-only commit (route is byte-for-byte passthrough, confirmed by reading `_live_coverage_honest.py` — no code change
+  needed for pass-through, only proof) committed locally (`5a345de...` pre-quickmerge, subject to sentinel-SHA change
+  once QG/quickmerge run) but not yet shipped — its `quality-gates.sh` run queued for several minutes behind the
+  shared-host CPU governor (`qg-governor` WAIT_CPU, still incrementing/alive, not stalled). Checkbox intentionally left
+  unflipped until BOTH repos ship, per this batch's own done_definition. Next: once QG passes, `quickmerge`
+  deployment-api, verify ancestry, flip this item's checkbox with both SHAs, `/done`.

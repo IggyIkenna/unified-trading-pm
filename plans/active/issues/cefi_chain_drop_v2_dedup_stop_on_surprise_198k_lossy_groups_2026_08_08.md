@@ -529,19 +529,35 @@ verification step; todo 5 (pre-cutoff re-run) should now also re-measure the 58,
       the per-day candle-timeframe counts, so this population is almost certainly the same
       `timeframe`-missing-from-`PIN_ATOM` false positive, not a second confirmation of a writer bug — pending
       re-measurement in todo 5 below.
-- [ ] [DATA] P1. **Re-run the v2 dry-run** (`complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`, DRY mode, same VM
-      category `cefi-dedup-apply` as the original 2026-08-08 run) on a fresh `canonical-migration-cefi-dedup-apply-*` VM
-      to confirm the fixed `PIN_ATOM` (Finding 14) drops the corpus-wide lossy-group count from 198,250 back toward the
-      historical ~28-group baseline, using the REAL 7-blob load (main index + 6 per-VM shards) this slot's local
+- [x] ✅ [DATA] P1. **Re-run the v2 dry-run** (`complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`, DRY mode, same
+      VM category `cefi-dedup-apply` as the original 2026-08-08 run) on a fresh `canonical-migration-cefi-dedup-apply-*`
+      VM to confirm the fixed `PIN_ATOM` (Finding 14) drops the corpus-wide lossy-group count from 198,250 back toward
+      the historical ~28-group baseline, using the REAL 7-blob load (main index + 6 per-VM shards) this slot's local
       verification could not reproduce. Zero mutation expected (dry mode) — no `--apply` in this todo. If the count does
       NOT drop to ~28 (or a newly-understood small baseline), diagnose the residual before considering this closed.
-      (repo: instruments-service)
+      (repo: instruments-service). **CONFIRMED FIXED**: `canonical-migration-cefi-dedup-apply-20260809-034037` (SPOT,
+      e2-standard-8, asia-northeast1-c, dry mode), pulling `instruments-service@4f313782`, loaded the real 7-blob set
+      (main index + 6 per-VM shards) and ran clean: `LOSSY(captured w/ differing count)=5 [MUST be 0]` — down from
+      198,250, below the ~28-group historical baseline and well within `_CHAIN_LOSSY_TOLERANCE_MAX=50`. Exited `rc=0`,
+      `DEPLOYMENT_COMPLETED exit_code=0`, self-deleted (`VM_SHUTDOWN_ON_COMPLETION`). Zero mutation (dry mode, confirmed
+      via `DRY-RUN (default) — no write` in the log). Full log:
+      `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-dedup-apply-20260809-034037/run.log`.
 - [ ] [DATA] P2. **After todo 4's dry-run confirms the fix, also re-run
       `instruments-service/scripts/apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py`'s dry-run (or
       `characterize_cefi_pre_2025_11_manifest_same_spelling_duplicate_rows_2026_08_09.py` if it still exists and can be
       confirmed to use `v1._effective_dedup_key`) to confirm the pre-cutoff same-spelling lossy-group count (58,682 per
       Finding 13, likely inflated by the same `timeframe` omission per Finding 14) also drops toward a small baseline.**
       (repo: instruments-service, market-tick-data-service)
+- [ ] [DATA] P3. The `_CHAIN_LOSSY_TOLERANCE_MAX` tolerance comment in
+      `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py` (near `_chain_merge_safety`) describes the tolerated
+      residual as "BITFINEX-SPOT + BYBIT-SPOT blank id/underlying/chain book_snapshot_5+trades market-wide-aggregate
+      near-duplicate re-captures" (2026-07-24 baseline), but the post-fix 2026-08-09 dry-run's actual 5-group residual
+      is DERIBIT `volatility_index` (BTC/ETH, 2026-07-13) + HYPERLIQUID `perp_funding` (blank id, late-Jul/early-Aug
+      dates) — a different venue/data_type composition entirely. Still well within tolerance (5 << 50), not blocking,
+      but the comment is now stale and should describe the actual current residual (or note it drifts and isn't meant to
+      be an exhaustive enumeration). See
+      `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-dedup-apply-20260809-034037/run.log`
+      for the full 10-row detail table. (repo: instruments-service)
 
 ## Progress Log
 
@@ -616,3 +632,28 @@ verification step; todo 5 (pre-cutoff re-run) should now also re-measure the 58,
   reproducing the destructive 8→1). Shipping via quickmerge now (shared-host QG capacity-gated — 2 full runs already at
   the host's own cap when this pass started); will launch the `cefi-dedup-apply` dry-run VM per todo 4 immediately after
   the fix lands on origin.
+- **2026-08-09T03:36Z (slot-5, data_engineering, continuing todo 4)** — Shipped. Two corrections to the record above:
+  (1) QG-capacity discipline: initially hand-polled host process counts for ~40min (imprecise + wasteful) before finding
+  `quality-gates.sh` already has a built-in host concurrency governor (`qg-host-governor.sh`, flock-based token bucket,
+  K=max(2,floor(cores/4)) host-wide, queue-wait excluded from `MAX_DURATION`) — just invoking the script normally queues
+  safely with no manual pre-checking needed; used that going forward. (2) **`ccd47ba9` was NOT actually false** — it
+  landed on origin (`git pull --rebase --autostash`) between my 02:16Z check and shipping, same commit slot-11 had made
+  locally, delayed by the identical host-contention QG timeout every slot hit this session. Resolved a real merge
+  conflict against it: kept `ccd47ba9`'s `PIN_ATOM` change as-is, layered my `_DRYRUN_COLS` extension on top (genuinely
+  missing from `ccd47ba9`), and cleaned up a docstring redundancy + mis-citation (their inline comment said "Finding
+  13", corrected to "Finding 14" — the actual finding that root-caused this). Shipped at `instruments-service@4f313782`
+  (verified ancestor of `origin/live-defi-rollout`). Proceeding to launch the `cefi-dedup-apply` dry-run VM for todo 4
+  now that the fix is confirmed live.
+- **2026-08-09T03:49Z (slot-5, data_engineering, todo 4 closed)** — Launched
+  `canonical-migration-cefi-dedup-apply-20260809-034037` (SPOT, e2-standard-8, asia-northeast1-c, dry mode; first launch
+  attempt hit this agent's own 2-minute tool timeout before instance creation — no VM was actually created, confirmed
+  via `gcloud compute instances list`, clean retry succeeded). Verified STARTED (`LAUNCH_PARAMS.json` written) and
+  PROGRESSING (`run.log` growing, loaded the real 7-blob set) before treating it as more than a fire-and-forget launch.
+  **Result: CONFIRMED FIXED.** `LOSSY(captured w/ differing count)=5` (down from 198,250), below the ~28-group
+  historical baseline, within `_CHAIN_LOSSY_TOLERANCE_MAX=50`. Terminal state: `rc=0`,
+  `DEPLOYMENT_COMPLETED exit_code=0`, self-deleted cleanly. Confirmed zero mutation (dry mode). Flagged one small
+  non-blocking finding as a new P3 todo above: the tolerance comment's description of the tolerated residual
+  (BITFINEX-SPOT/BYBIT-SPOT) is now stale — the actual post-fix residual is DERIBIT `volatility_index` + HYPERLIQUID
+  `perp_funding`, a different population. Todo 4 closed. Todo 5 (pre-cutoff re-verification, 58,682-group figure) is now
+  unblocked/eligible for dispatch — left as `- [ ]` for the next worker per the one-task-per-session discipline, not
+  absorbed into this session.

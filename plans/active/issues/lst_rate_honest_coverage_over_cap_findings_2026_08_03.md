@@ -187,3 +187,5 @@ for the compact pointer back to this doc.
   P2→P3 and decoupled (pure SOFT-cap hygiene now). Updated `defi_satellite_ao_dispatch_batch10_2026_08_06.md` todo #160
   to reflect Todo 2 is done and only the (optional, decoupled) extraction remains. Doc stays `assigned_vm: NA` — Todo 1
   still open, not yet archival-eligible.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

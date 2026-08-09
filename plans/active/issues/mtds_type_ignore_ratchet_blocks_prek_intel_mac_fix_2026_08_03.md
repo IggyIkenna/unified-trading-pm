@@ -98,14 +98,14 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
 
 ## Todos
 
-- [x] ✅ [SCRIPT] P2. Root-cause the exact `# type: ignore` occurrence that pushed the count to 659, and either fix it with
-      an exact rule code or get the baseline properly raised. **DONE (staleness-recheck 2026-08-09)** —
+- [x] ✅ [SCRIPT] P2. Root-cause the exact `# type: ignore` occurrence that pushed the count to 659, and either fix it
+      with an exact rule code or get the baseline properly raised. **DONE (staleness-recheck 2026-08-09)** —
       `market-tick-data-service@b16c9f69` (2026-08-07 20:04:46 UTC, same day as this doc's 2026-08-07 KEEP-NA marker)
       ratcheted `_MTDS_TYPE_IGNORE_BASELINE` in `scripts/quality-gates.sh` from 660 down to 658, with the shipped code
       comment explicitly citing this issue's own methodology ("mirroring the issue doc's own
-      `grep -rn "# type: ignore" ...` methodology"). Live-reverified: `grep -rn "# type: ignore" --include='*.py' . | grep
-      -v .venv | wc -l` on the current tree returns exactly **658**, matching the frozen baseline exactly — the ratchet
-      no longer blocks quickmerge.
+      `grep -rn "# type: ignore" ...` methodology"). Live-reverified:
+      `grep -rn "# type: ignore" --include='*.py' . | grep     -v .venv | wc -l` on the current tree returns exactly
+      **658**, matching the frozen baseline exactly — the ratchet no longer blocks quickmerge.
 - [x] ✅ [SCRIPT] P2. Once unblocked, ship the already-verified prek Intel-Mac uv.sources fix in
       `market-tick-data-service/pyproject.toml`+`uv.lock` (already sitting correct in the working tree, just
       uncommitted) via the exact quickmerge command in "Recommended next step" above. — **SHIPPED
@@ -144,3 +144,4 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
   `market-tick-data-service@b16c9f69` ratcheted `_MTDS_TYPE_IGNORE_BASELINE` 660→658 same-day as the 2026-08-07 marker,
   live-reverified current repo count is exactly 658 (matches baseline, no longer blocking). 1 open todo remains (todo 3,
   the `--no-fix`-vs-quickmerge-re-gate fatality inconsistency — no evidence found of anyone investigating it).
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

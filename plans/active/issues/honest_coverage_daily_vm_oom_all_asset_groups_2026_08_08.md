@@ -237,3 +237,4 @@ doc + today's `data_pipeline_reconciliation_cefi_2026_08_09.md` report rather th
 - **cefi_reconciliation_auditor 2026-08-09 (dispatch agt-91ada6, slot 4)**: re-confirmed condition still live, 3rd
   identical OOM (see update above). No status change — still `open`, still NA-appropriate (same `[OPERATOR]`-gated todo
   2 blocking), still no fix applied. Escalating visibility given now 4 missed cycles, not 2.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

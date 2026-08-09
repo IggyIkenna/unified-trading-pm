@@ -467,3 +467,4 @@ context_scope:
   patterns/conventions." Chose side-table over a manifest-schema field (see the updated todo above for full reasoning).
   Flipped `assigned_vm: NA` -> `planning` -- the design fork blocking this doc is now resolved, the remaining work is a
   concrete, bounded implementation. Not implemented this session.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

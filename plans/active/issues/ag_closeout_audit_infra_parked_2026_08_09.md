@@ -181,14 +181,20 @@ shipped draft artifact, not an unresolved item) — **balanced**.
       — 4 todos: UV-version-pin centralization (6 files) + 3 conflict-clear fixes extracted from
       `codex_drift_followups_dual_cloud_image_builds_2026_08_08.md`. Flip to `status: active` to dispatch; its finalize
       twin is already `status: active` and correctly gated either way.
-- [ ] [DOCS] P3. **Flip the stale checkbox on
-      `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`'s item 1 once its real current
-      state is confirmed** (finding 21/7, carried) — the doc has moved past the 2026-08-08 report's "done-but-unflipped"
-      read to a further "BLOCKED AGAIN 2026-08-07 dispatch #7" entry; needs the defi tranche's own domain read to state
-      accurately, not infra's file to write.
+- [x] ✅ [DOCS] P3. **STALE — already flipped, this finding was itself reading stale prose.** Direct read of
+      `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` (na-eligibility-audit infra
+      tranche, 2026-08-09) confirms its `[DATA] P1` item is `- [x]` — closed by that doc's own "stale-check re-verify
+      2026-08-09" Progress Log entry (`market-tick-data-service@eb380b71b`, the 09:17Z dispatch-#7 failure superseded
+      same-day by a 17:26Z successful relaunch). That entry explicitly supersedes this finding's "BLOCKED AGAIN" read,
+      which was accurate when finding 21/7 was first written but predates the same-day flip. Item 2 (`[DATA] P2`, update
+      the sibling dispatch doc's stale numbers) remains genuinely open in that doc; not this todo's scope.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:cb055f139fa75091]: KEEP-NA, stale-items — closed todo 5
+  above (the "evolved further" read was itself stale; the target doc's item was independently confirmed already `[x]`
+  via direct read, `market-tick-data-service@eb380b71b`). Doc stays NA on the 4 remaining items (findings 12/13
+  tooling/design, 7th day; finding 22 low-confidence retag; the batch9 operator-review ask).
 - **2026-08-09** — `/ag-closeout-audit infra` run (autonomous mode, scheduled daily run, slot 22, dispatch agt-3b6f6b).
   Phase 0: re-derived covering set (9→11 covering docs across the run as batch9 was added and the gate doc archived out;
   50→49 members; 13→11 never-cited). Iterative-drain step 1: re-checked

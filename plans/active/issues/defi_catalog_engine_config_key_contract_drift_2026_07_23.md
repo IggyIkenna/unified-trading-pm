@@ -823,3 +823,4 @@ auto-generated section's own owner script, rather than hand-editing the table) â
   since the 2026-08-06 audit (context-scout metadata only, per git log). Sole open checkbox (P0 human design decision
   for 5 broken archetypes, 66 rows, held `xfail(strict=True)`) remains a textbook trading-parameter/design-judgment
   call, not a bounded worker task. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

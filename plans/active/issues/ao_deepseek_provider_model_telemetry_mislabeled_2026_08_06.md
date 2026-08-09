@@ -152,3 +152,4 @@ and nothing on the server side catches the mismatch.
   `"deepseek-flash"` once eb6a763 lands. `utils.ts` `modelBadgeClass`/`MODEL_RANK` reference
   `RoleModel = "opus"|"sonnet"|"haiku"` which is the role-registry type (static per role config), not slot telemetry.
   Zero `model === "sonnet"` conditional comparisons in dashboard TS. No code changes needed; todo -002 closed.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

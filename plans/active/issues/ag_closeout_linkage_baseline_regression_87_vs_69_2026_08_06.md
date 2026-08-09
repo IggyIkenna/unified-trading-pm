@@ -222,3 +222,4 @@ the triage given their concentration.
   (still an unruled feature-investment question, not this run's to decide).
 - **na-eligibility-audit 2026-08-08 (cross-cutting tranche)**: KEEP-NA, valid — reaffirms 2026-08-06/07 (unchanged):
   sole open item (Todo 3, P3) is an open build-or-not investment question with no stated done-when.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

@@ -8,8 +8,8 @@ summary: >-
   content) built by grepping the corpus for every `ao round-5 apply (session )?item N` citation, so each citing site can
   point to one discoverable /plans/ doc instead of nothing. Built while resolving a `ldr_qg_failure` escalation
   (`check_plan_operator_ruling_evidence.py` ratchet regression, see
-  `plan_operator_ruling_evidence_blocks_quickmerge_under_race_2026_08_08.md`) — filed as a real fix (option 1 in that
-  issue), not a re-baseline.
+  `/plans/archive/2026_08/issues/plan_operator_ruling_evidence_blocks_quickmerge_under_race_2026_08_08.md`) — filed as a
+  real fix (option 1 in that issue), not a re-baseline.
 status: open
 nature: issue
 asset_group: [meta]
@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [operator-decisions, round5, index, plan-operator-ruling-evidence, governance]
 related:
   [
-    /plans/active/issues/plan_operator_ruling_evidence_blocks_quickmerge_under_race_2026_08_08.md,
+    /plans/archive/2026_08/issues/plan_operator_ruling_evidence_blocks_quickmerge_under_race_2026_08_08.md,
     /plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
   ]
 created: 2026-08-08
@@ -81,5 +81,10 @@ docs, not an isolated unverifiable claim (contrast the incident that motivated t
 
 - **2026-08-08 (cicd escalation `agt-9bdc09`, `ldr_qg_failure` on unified-trading-pm live-defi-rollout)**: created to
   give the 17 round-5 citations above a real, discoverable `/plans/…` reference each, per option 1 of
-  `plan_operator_ruling_evidence_blocks_quickmerge_under_race_2026_08_08.md` (fix the corpus, do not re-baseline the
-  ratchet up).
+  `/plans/archive/2026_08/issues/plan_operator_ruling_evidence_blocks_quickmerge_under_race_2026_08_08.md` (fix the
+  corpus, do not re-baseline the ratchet up).
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:71bc7bdf7a4fad1d]: KEEP-NA, valid — sole open item
+  (replace this grep-derived index with a primary transcript if one is ever exported) has no owner/trigger driving it
+  into existence, not worker-determinable today. Doc is load-bearing (cited by the plan-operator-ruling-evidence fix);
+  repointed the referrer citation above — the target doc archived today (`plans/archive/2026_08/issues/...`, resolved:
+  ratchet fix verified via gate run 31262418685).

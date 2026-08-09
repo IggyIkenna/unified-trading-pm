@@ -284,3 +284,4 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
   2026-08-06: go-ahead to run --apply" text vs. `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`'s
   still-operator-gated framing of the identical residual-91-CBOE+312-DBEQ item) — a worker picking up that todo needs
   this pointer before running `--apply`.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

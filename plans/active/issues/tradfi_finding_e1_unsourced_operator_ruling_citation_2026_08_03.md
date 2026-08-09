@@ -155,3 +155,4 @@ worse than just fixing the citation once the source is confirmed or the decision
   unruled." Both original todos closed per that answer; the archived audit doc's false citation corrected
   (`unified-trading-pm`, same commit as this entry); a new `[OPERATOR]` todo filed above for the still-genuinely-open
   architecture question. This doc itself is NOT archived -- the new todo keeps it open.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

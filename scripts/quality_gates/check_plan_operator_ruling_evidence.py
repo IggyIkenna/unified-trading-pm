@@ -67,6 +67,10 @@ import yaml
 
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "plan_operator_ruling_evidence_baseline.yaml"
 
+# unified-trading-pm repo root — baseline paths are stored relative to this so the file is
+# byte-identical no matter which slot/host regenerates it.
+_PM_ROOT = Path(__file__).resolve().parents[2]
+
 _FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?\n)---\s*\n", re.DOTALL)
 _CHECKED_RE = re.compile(r"^\s*-\s*\[[xX]\]\s")
 _UNCHECKED_OR_CHECKED_RE = re.compile(r"^\s*-\s*\[[ xX]\]\s")
@@ -216,7 +220,14 @@ def _write_baseline(baseline_path: Path, violations: list[RulingViolation]) -> N
         "source": "plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md",
         "baseline_violations": [
             {
-                "path": str(v.citation.path),
+                # Repo-root-relative, NOT absolute (2026-08-09). Storing resolved absolute paths
+                # made this file specific to whichever clone last regenerated it -- a run from a
+                # different slot/host rewrote all N entries, so a real ratchet-DOWN was
+                # indistinguishable from path churn in review. That is precisely the noise that
+                # invites the "just re-baseline it" reflex which took this ratchet 58 -> 76.
+                # See plans/active/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md.
+                # Only `unsourced_ruling_baseline` is ever read back; this list is a human record.
+                "path": str(v.citation.path.resolve().relative_to(_PM_ROOT)),
                 "line": v.citation.line_no,
                 "phrase": v.citation.phrase,
                 "context": v.citation.context[:80],
@@ -354,8 +365,21 @@ def main() -> int:
     )
 
     if baseline_write:
+        # A RAISE must be loud. This ratchet went 58 -> 76 in a single day through silent
+        # --baseline-write calls, absorbing 18 real violations; nothing printed, so nothing was
+        # defended in a commit message and the debt became invisible. Mirrors the warning
+        # check_ao_dispatch_visibility_gate.py already emits on its own axes.
+        # SSOT: plans/active/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md
+        previous = _load_baseline(baseline_path)
         _write_baseline(baseline_path, violations)
         print(f"✅ Wrote baseline ({len(violations)}) to {baseline_path}")
+        if len(violations) > previous:
+            print(
+                f"WARNING: unsourced_ruling_baseline RAISED {previous} -> {len(violations)} -- a shrinking ratchet\n"
+                "  must only go DOWN. Verify this is a reviewed, justified raise and say why in the commit message;\n"
+                "  the correct default is to fix or file the new violations instead.",
+                file=sys.stderr,
+            )
         return 0
 
     baseline = _load_baseline(baseline_path)

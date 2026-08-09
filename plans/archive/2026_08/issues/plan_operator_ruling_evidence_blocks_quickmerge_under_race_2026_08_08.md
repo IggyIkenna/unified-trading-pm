@@ -19,7 +19,7 @@ summary: >-
   cannot land via quickmerge whenever it loses even one push-race during its run — reproduced twice in a row this
   session (commits 910b8f554 and ad30b8181/b887138, both otherwise-clean docs-only changes to
   /codex/06-coding-standards/data-catalogue-schema.md + /codex/02-data/service-shard-status-catalogue.md).
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -43,13 +43,14 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: 2026-08-08
+last_updated: "2026-08-09"
 parent_epic: plan_hygiene_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
 assigned_role: plan_reconciler
 drift_direction: advance-process
-resolved_by:
+resolved_by: "unified-trading-pm (na_eligibility_auditor, infra tranche, dispatch agt-aedcde, 2026-08-09)"
 locked_by:
 source:
   "docs_reconciler one-shot session (slot 16, 2026-08-08) — confirmed via two consecutive real (non-race) quickmerge
@@ -57,6 +58,11 @@ source:
   scripts/quality_gates/check_plan_operator_ruling_evidence.py runs before/after (83 then 84 vs baseline 76)"
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED** (status: resolved, 0 open todos, unlocked). Root cause (option 1: unsourced
+> `'operator ruling'` citations) fixed 2026-08-08 (84→73, below baseline 76, verified via `quality-gates-v2` gate run
+> 31262418685). No codex-contract or CLAUDE.md change needed — the underlying ratchet/fix-don't-rebaseline rule was
+> already documented. Archived by `/na-eligibility-audit infra` (dispatch agt-aedcde).
 
 # plan-operator-ruling-evidence regression blocks quickmerge under push-race contention
 

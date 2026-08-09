@@ -518,3 +518,4 @@ plan + verifying the `done_sha`, never from the row's status alone.
   explanation fully accounts for the unresolved bucket — this is bookkeeping noise from normal plan-archival lifecycle,
   not a silent blindspot.** No bulk-mutation performed (per the todo's own instruction); this is a report-only finding,
   no code shipped, no backlog rows touched.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

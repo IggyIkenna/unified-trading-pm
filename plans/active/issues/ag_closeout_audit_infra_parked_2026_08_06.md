@@ -277,3 +277,4 @@ findings since each produced either a durable entry here or a shipped fix).
   false-complete, the exact anti-pattern this doc's own finding-15 was filed to catch. The 2 `[DOCS] P3`
   tooling-suggestion items (12/13) are genuine open design calls, also correctly left open. Doc stays `assigned_vm: NA`
   (its remaining content is real operator-judgment work, not a mis-default).
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

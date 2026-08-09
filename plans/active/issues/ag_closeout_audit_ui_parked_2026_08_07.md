@@ -36,6 +36,12 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
+    /plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md,
+  ]
 ---
 
 # ag-closeout-audit ui parked findings — 2026-08-07
@@ -147,3 +153,4 @@ mechanism for surfacing batch2 candidates — not another `/ag-closeout-audit` p
 - **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — a point-in-time ag-closeout-audit findings record,
   not a dispatchable work item; all 3 findings are already actioned (2 folded into the tracked corpus-wide `ui` retag
   todo, 1 is this same day's result summary) and content is current as of today.
+- **context-scout 2026-08-09**: populated context_scope (3 entries).

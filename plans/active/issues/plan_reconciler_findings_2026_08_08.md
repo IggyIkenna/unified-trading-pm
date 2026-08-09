@@ -287,3 +287,7 @@ ever applied after an explicit operator ruling — filed here, not edited:
 
 None in the non-grace actionable set (333 active/issue docs + 28 epics) — every one was assigned to and read by at least
 one hunter this run. The 262 grace-protected docs were correctly excluded per the HARD LIMIT, not "not reached."
+
+## Progress Log
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

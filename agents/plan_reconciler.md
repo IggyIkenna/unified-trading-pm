@@ -216,8 +216,11 @@ git checkout -b plan_reconciler/$DISPATCH_ID
 ```
 
 Then START YOUR RUN-FINDINGS DOC — the single human-readable presentation of this run (also your progress JOURNAL).
-Create `plans/active/issues/plan_reconciler_findings_<TODAY>.md` (TODAY = `date +%F`) with frontmatter (title / created
-/ author: plan_reconciler / source: `<dispatch_id>` / locked_by) and sections you APPEND to as you go:
+Create `plans/active/issues/plan_reconciler_findings_<TRANCHE>_<TODAY>.md` (TODAY = `date +%F`; TRANCHE = `$TRANCHE` if
+set, else `all` for an unsharded run) — **required** even for an unsharded run, so the bare filename never races with a
+sharded tranche worker running the same day (up to 10 sibling tranche workers can dispatch same-day per the 2026-08-06
+sharded-cadence ruling; a shared bare filename is a one-writer-per-file violation). With frontmatter (title / created /
+author: plan_reconciler / source: `<dispatch_id>` / locked_by) and sections you APPEND to as you go:
 `## Flips verified`, `## Contradictions`, `## Doc-drift`, `## Hygiene fixes`, `## Filed`,
 `## Archive candidates (operator review)`, `## Refuted (dropped by verify)`, `## Coverage (hunters / batches / docs)`,
 `## Plans not reached`. SIZE ROUTING: this doc is the home for a SUBSTANTIVE run; if the run turns out TRIVIAL (zero
@@ -331,8 +334,8 @@ conflict/question surfaces as a Slack alert in the dashboard and you keep going.
 operator can one-tap it. Do this for each genuinely-undecidable contradiction / doc-drift / coverage-gap as you confirm
 it, not in a batch at the end. (b) **FILE (durable)** — each item ALSO becomes a tracked `- [ ]` todo: append it to the
 most relevant existing plan OR keep it in your run-findings doc (STEP 2b already IS an `issues/` doc, at a predictable
-`plans/active/issues/plan_reconciler_findings_<date>.md` path — discoverable without a separate pointer). A doc-drift
-item routes to the standing governance-doc-drift surface.
+`plans/active/issues/plan_reconciler_findings_<tranche>_<date>.md` path — discoverable without a separate pointer). A
+doc-drift item routes to the standing governance-doc-drift surface.
 
 **Plans → codex updates are IN SCOPE but NEVER autonomous**: when a codex-alignment finding says the SSOT is the stale
 side, you FILE + ALERT it (options + recommendation) and STOP — the operator rules, and a follow-up (or the next run,

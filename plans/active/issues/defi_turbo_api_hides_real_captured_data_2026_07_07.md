@@ -406,3 +406,4 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
   (`.../defi_venue_capabilities.py`) — 0 grep hits each. Reclassified the sole open todo `[CODE]` -> `[SCRIPT]` P1
   (deterministic UAC registration, no remaining judgment call). Flipped `assigned_vm: NA` -> `assigned_vm: planning` —
   this was the doc's only open todo.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

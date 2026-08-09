@@ -277,3 +277,5 @@ understanding the root cause to be valuable.
   answered (recoverability: reliable via stash if not dropped/gc'd; final-version recovery confirmed in controlled
   setting; partial-version risk noted for multi-edit scenarios). Full todo 1 closure still requires a live reproduction
   opportunity per the original constraint.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.

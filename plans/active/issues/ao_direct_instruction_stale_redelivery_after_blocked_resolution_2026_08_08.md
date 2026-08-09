@@ -48,6 +48,13 @@ source: >-
   to file this doc via slot 11 was itself lost to a busy-slot dispatch race, then filed this doc directly.
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/state_store/activity.py,
+    agent-orchestrator/server/routes/slots_ops.py,
+    agent-orchestrator/server/models/worker_api.py,
+    /plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md,
+  ]
 ---
 
 # AO direct-instruction dispatch redelivers a stale message after its underlying blocked-question/escalation resolves
@@ -269,3 +276,4 @@ stale-redelivery problem this doc is primarily about.
   with an ack in between showing the acked row never reaches the fresh session. Did not redeploy the live orchestrator
   to chase full live-HTTP verification (out of scope / unjustified blast radius for a single small feature) — added a
   new P3 follow-up todo to close that leg once the normal promote/redeploy cycle picks this commit up.
+- **context-scout 2026-08-09**: populated context_scope (4 entries).

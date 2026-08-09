@@ -95,3 +95,4 @@ that the failure mode on this task isn't limited to the exact `forced_compact`->
   without attempting `skip-current-task` first, since that lever was already confirmed insufficient (per-slot-only) on
   the solana case. Task parked via `POST /api/backlog/citadel_satellite_ao_dispatch_batch1-004/park` — condition
   `auto_unpark__citadel_satellite_ao_dispatch_batch1-004` confirmed set in the response.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

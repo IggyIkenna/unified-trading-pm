@@ -223,3 +223,5 @@ someone checks.
   reconciling against this doc's own later Progress Log first (out of scope for this pass). Doc stays `assigned_vm: NA`.
   Flagging for the next `/ag-closeout-audit cefi` or `/na-eligibility-audit` pass to reconcile once batch10's own state
   is re-read.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
