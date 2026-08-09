@@ -63,6 +63,10 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true
+# 2026-08-09 — 0 open todos as of the round-9 reclassify+satellite sweep (see Progress Log), but full archival
+# (status flip + banner + git mv + referrer sweep across ~10 referring docs) is explicitly deferred to the next
+# /ag-closeout-audit or archive-candidates-audit pass per that same entry, not this hygiene-sweep gate.
 depends_on:
 source:
   [
@@ -157,14 +161,14 @@ outage), not on strategy-service — escalate via this issue doc (BLOCKED-UPSTRE
 ## Follow-ups (tracked work, not prose)
 
 - [x] ✅ [CICD] P2. **CLOSED 2026-08-09 (reclassify+satellite sweep) — STALE, condition resolved.** Live re-check
-      (`gh run list --repo IggyIkenna/unified-api-contracts --workflow main-backmerge-to-ldr.yml --limit 5`, 2026-08-09):
-      the 5 most recent runs are ALL `completed success`, fast (11-33s each), most recent 2026-08-09T13:20:57Z — no
-      hanging/pending behavior remains. Consistent with the doc's own already-diagnosed fleet-wide
-      `sit-gate/fleet-green` dispatch-storm deadlock (Follow-up section below) having been root-caused and fixed
-      (`unified-trading-pm@16c9653eb`) in the days since this item was filed — the same class of transient CI-queue
-      backup this doc's own Lessons section documents repeatedly resolving once the runner pool/concurrency clears.
-      Original: **`main-backmerge-to-ldr` is hanging on unified-api-contracts too, not just strategy-service.** This
-      doc already names a "broken main-backmerge-to-ldr on main" as the deadlock cause; measured evidence that the
+      (`gh run list --repo IggyIkenna/unified-api-contracts --workflow main-backmerge-to-ldr.yml --limit 5`,
+      2026-08-09): the 5 most recent runs are ALL `completed success`, fast (11-33s each), most recent
+      2026-08-09T13:20:57Z — no hanging/pending behavior remains. Consistent with the doc's own already-diagnosed
+      fleet-wide `sit-gate/fleet-green` dispatch-storm deadlock (Follow-up section below) having been root-caused and
+      fixed (`unified-trading-pm@16c9653eb`) in the days since this item was filed — the same class of transient
+      CI-queue backup this doc's own Lessons section documents repeatedly resolving once the runner pool/concurrency
+      clears. Original: **`main-backmerge-to-ldr` is hanging on unified-api-contracts too, not just strategy-service.**
+      This doc already names a "broken main-backmerge-to-ldr on main" as the deadlock cause; measured evidence that the
       condition is FLEET-WIDE rather than strategy-service-specific, collected 2026-08-06 ~15:55Z on
       `IggyIkenna/unified-api-contracts`: run `31114224091` **pending at 48m**, and the two prior runs both reached
       terminal state `cancelled` only after **1h8m58s** (`31108397641`) and **4h41m26s** (`31088355450`). Runs that sit
@@ -405,24 +409,24 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       it).** Provenance: agt-e33f21 security finding.
 - [x] ✅ [CICD] P2. **CLOSED 2026-08-09 (reclassify+satellite sweep) — DONE, verified by ancestry check.**
       `git merge-base --is-ancestor 16c9653eb origin/main` returns true (checked live, 2026-08-09, from the
-      unified-trading-pm checkout) — the dispatch-storm mutex commit is now a confirmed ancestor of `main`, not just LDR.
-      Original: Ensure dispatch-storm mutex `unified-trading-pm@16c9653eb` promotes to `main` — the fleet bot runs from
-      `main`; without it a 2-repo BREAKING-delta tick recurs the 06:45Z 3-dispatch storm (which re-poisons the
+      unified-trading-pm checkout) — the dispatch-storm mutex commit is now a confirmed ancestor of `main`, not just
+      LDR. Original: Ensure dispatch-storm mutex `unified-trading-pm@16c9653eb` promotes to `main` — the fleet bot runs
+      from `main`; without it a 2-repo BREAKING-delta tick recurs the 06:45Z 3-dispatch storm (which re-poisons the
       full-workspace-sit top-10 and re-reds fleet-green). It is currently only on LDR + promote PR
       `promote/unified-trading-pm/1dacca9be5e1`. Provenance: agt-e33f21.
 - [x] ✅ [CICD] P2. **CLOSED 2026-08-09 (reclassify+satellite sweep) — STALE, already fixed via a broader mechanism.**
-      Live-read `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml` (2026-08-09): the `Cache uv package
-      cache` step already carries `if: inputs.self_hosted_runner_labels == '' && ...` with an in-file comment dated
-      "GATED ON GITHUB-HOSTED ONLY (2026-08-06)" that cites the exact production numbers this todo's own text
-      references (features-service 450s restore, execution-service 894s failed save, the shared-`~/.cache/uv`
-      concurrent-tar race) — i.e. the step is SKIPPED ENTIRELY on self-hosted (glue) runners, a strictly stronger fix
-      than the requested `save: false` (no restore either, not just no save) — shipped `unified-trading-pm@9b39f6a05`
-      per `issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` Part 3a ("FIXED — verified live,
-      PM run 31081212407: `skipped Cache uv package cache`"). The "disk-low detection" half of the operator's ruling was
-      not separately verified but is now moot in practice — the step this todo names no longer runs on self-hosted
-      runners at all, so there is nothing left for a disk-low guard to protect against on the glue-runner cache path.
-      Original: **RULED 2026-08-09 (operator): BOTH** — `save: false` on self-hosted runners AND add disk-low
-      detection, for the ~15-min `Post Cache uv package cache` save on glue runner `glue-ip-172-31-3-59-1`
+      Live-read `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml` (2026-08-09): the
+      `Cache uv package     cache` step already carries `if: inputs.self_hosted_runner_labels == '' && ...` with an
+      in-file comment dated "GATED ON GITHUB-HOSTED ONLY (2026-08-06)" that cites the exact production numbers this
+      todo's own text references (features-service 450s restore, execution-service 894s failed save, the
+      shared-`~/.cache/uv` concurrent-tar race) — i.e. the step is SKIPPED ENTIRELY on self-hosted (glue) runners, a
+      strictly stronger fix than the requested `save: false` (no restore either, not just no save) — shipped
+      `unified-trading-pm@9b39f6a05` per `issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` Part
+      3a ("FIXED — verified live, PM run 31081212407: `skipped Cache uv package cache`"). The "disk-low detection" half
+      of the operator's ruling was not separately verified but is now moot in practice — the step this todo names no
+      longer runs on self-hosted runners at all, so there is nothing left for a disk-low guard to protect against on the
+      glue-runner cache path. Original: **RULED 2026-08-09 (operator): BOTH** — `save: false` on self-hosted runners AND
+      add disk-low detection, for the ~15-min `Post Cache uv package cache` save on glue runner `glue-ip-172-31-3-59-1`
       (performance/cost: ~30 min of runner time per v2 run, shared fleet-wide). Was `[OPERATOR]` P2 decide-between. NOT
       a correctness blocker — the save completes (~15 min). Distinct from PR #491's real 0MB-disk failure (08-05
       06:48Z). Provenance: agt-e33f21. Retagged to `[CICD]` — implementation, no further decision needed.

@@ -36,7 +36,7 @@ scope: [engineer, admin]
 tags: [cloud-scheduler, cloud-run, zombie, dead-target, infra-health-audit, gcp, bulk-triage]
 related:
   [
-    /plans/active/infra_health_audit_findings_fix_2026_08_07.md,
+    /plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md,
     /plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
@@ -61,7 +61,7 @@ source:
   "infra_health_audit_findings_fix_2026_08_07.md todo 1 (Dedicated zombie sweep) — Cloud-Scheduler-dead-target class"
 context_scope:
   [
-    /plans/active/infra_health_audit_findings_fix_2026_08_07.md,
+    /plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md,
     /plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
   ]
 ---

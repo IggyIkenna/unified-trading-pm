@@ -406,3 +406,42 @@ words: "this branch is churning faster than one CI worker can chase serially").
   attempting a fix-and-retrigger cycle myself — continuing to wait for a future green promote cycle. Cross-referencing
   from `semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md` todo 2, which is blocked on this exact
   condition.
+- **2026-08-09 (cicd agt-433520, slot 4, `ldr_qg_failure` on `unified-trading-pm` `live-defi-rollout`, `#0`, 10th
+  dispatch into this lineage)**: originating context (repo-blocker `RB-b76ac836`, declared by slot 24) diagnosed the
+  wall as evidence-backed-completion sub-rule B still red — STALE by the time I picked this up: re-ran the check fresh
+  at HEAD, it now passes cleanly (`✅ Evidence-backed-completion check passed ... sub-rule B at/below baseline`). The
+  LIVE `QG slice (checks)` failure (run `31333505879`, 20:08:54Z) is 4 DIFFERENT hard failures from
+  `run_hygiene_sweep.sh --ci`, none of them evidence-backed-completion — same "each retrigger lands on a fresh
+  regression" signature this doc already documents 9x over. Triaged each on its merits rather than assuming all 4 are
+  ambient churn: (1) **`Reference path convention`** — genuine, small, fixed: 2 docs
+  (`asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md`,
+  `infra_health_audit_alert_coverage_gaps_2026_08_07.md`) still cited the OLD `plans/active/...` path (no leading slash
+  here deliberately, to avoid re-triggering this same check) of `infra_health_audit_findings_fix_2026_08_07.md` after it
+  was archived to `plans/archive/2026_08/...` — repointed all 3 citations (frontmatter `related:`/`context_scope:` + one
+  prose mention), re-verified `0 NEW violation(s)` locally. (2) **`Archive candidates`** — 4 flagged docs, individually
+  reviewed (not a blind bulk archive): 2 already carried a legitimate `archive_exempt: true` but in YAML block-scalar
+  form (`archive_exempt:\n  true # ...`) that the checker's `^archive_exempt:[[:space:]]*true` regex — same-line only —
+  never matched, a real false-positive bug (script fix out of scope for this dispatch; reformatted both docs'
+  frontmatter to single-line `archive_exempt: true` as the minimal doc-level fix); 1
+  (`sports_odds_feature_naming_canonicalization_2026_07_21.md`) had 0 open checkboxes but an explicit prior-session note
+  that archival is premature (extraction to `sports_satellite_ao_dispatch_batch11_2026_08_09.md` still in flight) —
+  added a real `- [ ]` tracked todo so the checker's checkbox-count method reflects that, instead of re-litigating the
+  deferral; 1 (`strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md`) had its own most-recent
+  Progress Log entry already recommending archival but deferring the full ritual (~10-doc referrer sweep) to a future
+  `/ag-closeout-audit` pass — added `archive_exempt: true` citing that entry, matching the check's own documented
+  exemption category (b). Did NOT perform full `git mv` archival on either of the latter 2 — the referrer-sweep scope
+  (10-25 files) is exactly the audit-scale work this doc's precedent says not to attempt in a one-shot CI-wall dispatch.
+  (3) **`assigned_vm:NA corpus size`** — 33 new NA docs / 97 new open todos vs `origin/main`, spread across ~30 distinct
+  2026-08-09-dated docs from many different concurrent sessions — textbook ambient churn, not a single-session
+  regression; confirms `origin/main` sitting 688 commits behind LDR (up from the 568 the slot-18 entry above measured)
+  makes this diff-scoped check's baseline increasingly meaningless as the promote-stall (see that same entry) drags on.
+  Declining to chase, same as every prior dispatch into this specific check. (4)
+  **`No prettier proseWrap continuation-padding`** — NOT diff-scoped (unlike the 3 above, which
+  backend_engineer/slot-7/slot-18 already converted) — full-corpus baseline, 4706 violating lines vs baseline 4472
+  (+234), spread across dozens of files (plans, codex, audit-instruction docs) with no way to attribute to a single
+  cause. Same audit-scale shape as na-corpus; declining to bulk-fix. This IS one of the "8 distinct ratchet checks" the
+  slot-18 entry above already named as newly-observed and not yet diff-scoped — confirms it's still live and
+  unconverted. Shipping the 2 genuine fixes (`unified-trading-pm@<pending, see this dispatch's plan-flip commit>`);
+  na-corpus and prosewrap remain the live blockers on this wall as of this tick, same systemic pattern as every prior
+  dispatch. Reinforcing the P3 backlog todos above (prosewrap needs the same diff-base conversion as the other 3;
+  na-corpus's real fix is the stalled LDR→main promotion clearing, not a per-dispatch chase).
