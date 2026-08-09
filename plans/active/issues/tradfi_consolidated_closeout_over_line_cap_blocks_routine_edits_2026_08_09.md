@@ -56,13 +56,15 @@ depends_on: []
 
 ## Todos
 
-- [ ] [DOCS] P2. **Split or condense `tradfi_consolidated_closeout_2026_07_18.md`** below the 1000-line hard cap (1005L
-      currently) so routine content edits (MVP-cell table updates, status corrections) can land again. Options: (a)
-      split into a smaller "current status" doc + an archived/appendix doc for historical Progress Log entries (the
-      established pattern for other over-cap plans in this corpus), or (b) condense verbose Progress Log entries the way
-      `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`'s own saga section was condensed 2026-08-08 (see that doc's
-      "Condensed 2026-08-08T21:53Z" note for the precedent). Repo: unified-trading-pm. **Done when**: the file is under
-      1000 lines and `check_line_caps.sh <file>` passes.
+- [x] ✅ [DOCS] P2. **Split or condense `tradfi_consolidated_closeout_2026_07_18.md`** below the 1000-line hard cap
+      (1005L currently) so routine content edits (MVP-cell table updates, status corrections) can land again —
+      `unified-trading-pm@<pending>`. Applied option (a): the parent's "## Progress Log" section (14 entries, 2026-07-30
+      through 2026-08-08, 139 lines) moved **verbatim** — nothing summarized, rewritten, or dropped — to
+      `tradfi_consolidated_closeout_history_2026_07_25.md`'s new "Progress Log entries — 2026-07-30 through 2026-08-08
+      (moved 2026-08-09, line-cap remediation)" section, same pattern as the 2026-07-24/2026-07-25 trims already applied
+      to this doc. Parent left with a short pointer note in its place. **Verified**: parent now 879 lines (was 1005),
+      `bash scripts/plan-hygiene/check_line_caps.sh plans/active/tradfi_consolidated_closeout_2026_07_18.md` exits 0
+      (SOFT warning only, no HARD violation).
 - [ ] [DATA] P3. **Once the cap is cleared, land the accurate "S&P index options" MVP-cell row** (the corrected text is
       already drafted — see `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`'s third
       finding for the exact content: 2020-2024 ~94.8-100% covered, 2025 confirmed 0% gap, 2026 73% partial — replacing
@@ -79,3 +81,9 @@ depends_on: []
   mid-session. Worked around it by landing the same finding in the two other docs the change also touched, leaving this
   doc's own row stale. Not investigated/fixed further this session (out of scope for the task in progress) — todos above
   are the concrete next steps, not attempted here.
+- **2026-08-09, slot-33 (backend_engineer)**: closed todo 1. Moved `tradfi_consolidated_closeout_2026_07_18.md`'s "##
+  Progress Log" section (14 entries, 2026-07-30 through 2026-08-08, 139 lines) verbatim to
+  `tradfi_consolidated_closeout_history_2026_07_25.md`, left a pointer in its place — option (a) from the todo, matching
+  the established 2026-07-24/2026-07-25 split precedent. Parent doc 1005L → 879L; `check_line_caps.sh` now exits 0 on
+  it. Todos 2 and 3 remain open (out of this task's scope — a P3 content-landing todo and a P3 tooling-improvement todo,
+  both separate follow-ups).

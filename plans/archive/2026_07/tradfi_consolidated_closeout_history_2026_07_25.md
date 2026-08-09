@@ -238,3 +238,146 @@ of the current evidence as sufficient (Child 3).
 > `tradfi_consolidated_closeout_2026_07_18.md`'s own "State as of the 2026-07-25 fork" paragraph (added by this same
 > extraction) for the current bottom line, and `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` for the
 > still-open Phase A2 + Phase C work.
+
+## Progress Log entries — 2026-07-30 through 2026-08-08 (moved 2026-08-09, line-cap remediation)
+
+> Moved verbatim from `tradfi_consolidated_closeout_2026_07_18.md`'s "## Progress Log" section during the 2026-08-09
+> line-cap remediation (parent had grown to 1005 lines, over the 1000-line hard cap enforced by `check_line_caps.sh`) —
+> nothing summarized, rewritten, or dropped, per
+> `/plans/active/issues/tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md` todo 1.
+
+- **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA, valid -- 6th consecutive pass, 0
+  checkboxes confirmed genuine (not a prose-trap), 1 stale digest fixed (see corrected `canonical_id_p1` entry below).**
+  Also backfilling: `/ag-closeout-audit tradfi` 2026-08-08 (slot 6) drafted
+  `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` (17 orphans found, 3 drafted) but its creation was never narrated
+  here (only frontmatter touched) -- full detail lives in that plan's own Progress Log, not reproduced here.
+- **`/ag-closeout-audit tradfi` 2026-08-06 (slot 3, dispatch agt-7d91ed, sharded scheduled `ag_closeout_auditor` worker,
+  operator away)**: fresh full pass (Phase 0 via `generate_ag_closeout_audit_candidates.py`, extended with a direct dump
+  for the full member list). 54 real tradfi-primary candidates classified via a 54-agent Workflow against the 11-doc
+  covering set: 1 excluded (genuine mistag, `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` is 100% defi/cefi),
+  15 archivable now, 2 archivable-after-planned-work, 36 orphaned (11 partial, 25 never-touched) — up from batch6's 12,
+  mostly newly-surfaced findings (2 issue docs postdate batch6's 2026-08-01 cutoff; several others' latest dated
+  Progress Log section moved since). Phase 3 re-verified batch6's own Deferred items first (batch5's MDPS
+  `continuous_future` re-test DID ship 2026-08-03, but the result — 20.8%, up from 18.9% — did NOT clear
+  `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`'s blocker, so it correctly stays deferred), then
+  conflict-checked the 36 orphans: 4 cleared (from 5 source docs — 2 combined into one todo touching the same file) and
+  are drafted as `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` (+ gated finalize), `status: draft` pending
+  operator review — including `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s 0%-twin-coverage root-cause
+  investigation, which batch6_finalize's own todo 2 explicitly anticipated as "a batch7 todo." The other 32 orphans stay
+  deferred across 5 categories in batch7's own Deferred/Flagged sections (too-large-or-risky, operator-gated,
+  self-dispatched-already/stale-tag, already-drafted-elsewhere-pending-promotion, cross-tranche-owned) — see that plan
+  for the full per-doc accounting. **Standing-state note**: `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` has sat
+  `status: draft`, unreviewed, for 5 days as of this pass — flagging for operator attention, not re-drafting its
+  content.
+- **2026-08-04 (slot-16, review — `tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md` todo 2
+  reconciliation)**: reconciled this closeout doc's own native content against the parent extraction's 9 completed todos
+  (verified by slot-13, 2026-08-04, in the finalize plan's todo 1). Changes in this commit: (a) MVP-cell table — all 6
+  rows updated with fresh IS + MTDS availability-index evidence from
+  `plans/audit/results/tradfi_mvp_cell_wiring_and_pipeline_verification_2026_08_04.md`; Paper/live wiring column now
+  definitively reads "NOT PROVEN — TradFi is batch-only" (per
+  `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md:82`); 0 remaining "NOT VERIFIED IN THIS PASS" cells. (b)
+  `[DATA] P2` MVP-cell-wiring-proof checkbox flipped `[x]` with evidence citation. (c) Phase A2+C digest updated — A2
+  and Phase C item-level notes reconciled against parent-extraction todos 2-9 (all 8 now completed); KRX name-column
+  note updated (name column already landed live via daily regen, both sub-items confirmed done). (d) 3
+  deliberately-deferred native todos re-checked 2026-08-04: (#1) adapter smoke findings — still 0 tradfi-scoped open
+  items, checkbox-flip candidate; (#2) live defects — evidence-reconciliation done, defect-fixing still conflict-gated
+  (no gate cleared); (#3) BLOCKED-INFRA Certify tradfi Layer-1 — still blocked (catalogue rebuild+promote "FINAL STEP"
+  in `tradfi_backfill_throughput_followups_2026_07_24.md` still pending, live-verified 2026-08-04). (e) Split-notice
+  digest's catalogue-migration line — already corrected by the 2026-07-31 sweep; live re-verified catalogue commit
+  `instruments-service@52d8b3ef` still on LDR, claim accurate.
+- **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped the IS-SSOT codex doc for the 2 other live
+  sibling children (Phase-D gate + registry/coverage) so the umbrella's reading list covers all 3 forked-child
+  companions plus the 3 domain codex SSOTs.
+- **`/ag-closeout-audit tradfi` 2026-08-01 (slot 2, dispatch agt-d7b683, scheduled `ag_closeout_auditor` worker,
+  operator away)**: fresh full pass. Phase 0 fixed a same-session tooling gap
+  (`generate_ag_closeout_audit_candidates.py` wasn't resolving this doc's own `depends_on:` for finalize-less forks —
+  see this doc's own `depends_on:` fix above) that corrected the covering-plan count 11→13 and the real candidate count
+  67→65. Phase 1 ran a 65-agent Workflow classifying every tradfi-primary candidate against the 13-doc covering set: 31
+  excluded (genuinely multi-AG, confirmed by content not just tag), 3 archivable now, 19 archivable-after-planned-work,
+  12 orphaned (5 partial, 7 never-touched). Phase 3 conflict-check cleared 4 of the 12 for a fresh batch —
+  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` (+ gated finalize), `status: draft` pending operator review. The
+  other 8 orphans stay deferred (3 too-large-or-risky unchanged + 1 newly-scoped, 3 operator-gated unchanged, 1 whose
+  precondition changed since batch5 and needs fresh investigation before any todo —
+  `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s delete gate now measures 0% twin-coverage, not the 100% it
+  needs). One further genuine orphan (`mtds_is_full_adapter_smoketest_findings_2026_07_07.md`, 4 TradFi bugs never
+  promoted to checkboxes) is flagged but not batched — that doc is genuinely 5-AG-shared
+  (`parent_epic: instruments_master`), so per the primary-owner rule its write belongs to whichever tranche actually
+  owns it. See `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`'s own summary + Deferred sections for full detail.
+- **AO-dispatch-readiness sweep 2026-07-31 (slot 14, via
+  `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 10 — the 2 remaining categories:
+  stale checkboxes, missing definition-of-done)**: `sports_consolidated_closeout`'s Track Y method applied to the 2
+  categories this file's own todo (below, `[x]` closed 2026-07-25) left owed after closing for A2+Phase C content only.
+  **Real-checkbox sweep**: `grep -n '^- \[ \]\|^- \[x\]'` finds exactly 2 native todos in this file (line ~250
+  `[DATA] P2` MVP-cell-wiring-proof, line ~324 `[REVIEW] P2` the audit-pass todo itself) — both carry a stated
+  definition-of-done, neither is stale (the P2 correctly cross-references its live tracking location; the REVIEW todo's
+  own `[x]` closure text is accurate for its stated A2+Phase C scope). **Missing-dod sweep: clean, 0 findings.**
+  **Stale-checkbox-class sweep (the digest bullets, not real checkboxes, per this file's own bold-no-brackets
+  convention)**: live re-derived 4 digest sections against their cited child docs' actual `- [ ]` counts — found + fixed
+  3 stale entries: (1) Split-notice digest's `tradfi_manifest_content_recovery_ completion_2026_07_24.md` line
+  (previously flagged stale by an earlier pass but never actually corrected — this pass replaced the "8 open, catalogue
+  NOT yet executed" text with the true 3-open/all-done state); (2) same digest's
+  `tradfi_backfill_throughput_followups_2026_07_24.md` line (6→1, T+1 job shipped+archived, not previously flagged); (3)
+  the separate "Aggregated source docs § Child plans" digest for the SAME 3 children, which cited yet a THIRD,
+  even-more-stale set of counts (11/11/2) naming the ORIGINAL 2026-07-24 P0s that are now done — corrected to match.
+  Also re-derived the Phase A2+C fork's own digest for `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (11→14
+  open; 3 genuinely new todos landed since 2026-07-25 plus the child's own copy of this same audit-pass todo) —
+  corrected with a count-drift note rather than a full item-by-item rewrite (all 11 originally-named items are still
+  open and still accurately described; only the total was stale). `tradfi_phase_d_terminal_gate_2026_07_24.md`'s digest
+  (2 open) was independently re-verified accurate, no correction needed. Evidence: live grep counts run 2026-07-31
+  against each child's current `plans/active/*.md`. No new stale entries found beyond these 4; not an exhaustive
+  re-verification of every one of the ~40 docs referenced in the Aggregated source docs section (out of this todo's
+  1h-class scope) — the 4 corrected here were the highest-risk (most recently active, most-cited) digests.
+- **na-eligibility-audit 2026-07-31** (tradfi tranche, dispatch agt-6d6eaf): **KEEP-NA-STALE, re-verified — citation
+  still accurate, no change needed.** This is this doc's correct owning tranche (per the note below). Independently
+  re-checked the sole open checkbox's duplicate claim against current state, not a rubber-stamp: the extracting doc
+  (`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still `status: active` /
+  `assigned_vm: planning`, and its own near-verbatim copy of this todo is still unchecked. Only one commit has touched
+  this file since the 2026-07-30 marker (`39d663e92`, 2026-07-31 — an unrelated cross-reference path fix), so nothing
+  material changed. `assigned_vm` stays unchanged; no backlog impact.
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — sole remaining native
+  checkbox is already duplicated near-verbatim in the active
+  `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`; citation added above, zero
+  `assigned_vm`/backlog impact. NOTE: this doc's real `asset_group` is `[tradfi]`, not `infra` — a residual scope-leak
+  from this session's pre-fix Phase 0 population (see
+  `na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md`'s own Progress Log for the full
+  accounting); classified here for completeness, no other state changed, the `tradfi` tranche's own future audit owns
+  this doc going forward.
+- **Operator-ruling closeout sweep 2026-07-30**: grepped this file for every `RULED`/`Operator-ruled`/`operator ruling`
+  instance. Found the `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` digest entry (Aggregated source docs §
+  TradFi-specific residuals) was STALE — it described a "remaining open" `[CODE] P1` implementation todo that had
+  already shipped. Verified live: the issue doc itself shows all 4 todos `[x]`, and
+  `git -C deployment-service log --oneline -1 c847395e` resolves to
+  `feat(vm): wire tradfi mvp_mode via opt-in --mvp-mode flag on the forward-poll launcher` — corrected the digest entry
+  above to reflect 0 open todos. The other 2 live rulings in this file (ES CME futures manifest-verify + ES_OPT launch,
+  both "Operator-ruled 2026-07-29") are pointers to concrete `[DATA] P0` todos tracked in
+  `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (confirmed still genuinely open there, not this file's own
+  checkbox to flip, and out of this pass's assigned-file scope) — left as-is, already accurate.
+- **na-eligibility-audit 2026-08-01** (tradfi tranche): **KEEP-NA-STALE, re-verified — citation still accurate.** Sole
+  native open checkbox (MVP-cell-wiring-proof, line ~262) re-read; count matches tranche-inventory tool (1).
+  Independently re-confirmed the extracting doc
+  (`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still `status: active` with its own
+  near-verbatim copy still unchecked. The only touches since the 2026-07-31 marker were the 2026-08-01
+  `/ag-closeout-audit tradfi` pass (batch6 drafting + a `depends_on:` fix, neither affecting this todo) and a
+  context-scout backfill — nothing material changed. `assigned_vm` stays unchanged.
+- **na-eligibility-audit 2026-08-02** (tradfi tranche, dispatch agt-6397c9): **KEEP-NA-STALE, re-verified — citation
+  still accurate (4th consecutive confirmation).** Full end-to-end read via an independent sub-agent classification (892
+  lines: frontmatter, Split notice, Ground-truth verdict, MVP table, the one native todo, Progress Log, Phase A2+C fork,
+  Plan-quality review, Codex SSOTs, Aggregated source docs digest); sole native checkbox count reconciled (1/1) —
+  confirmed the "digest bullets" throughout the Aggregated source docs section are deliberately bold-not-bracket
+  formatted and correctly NOT counted as this doc's own open checkboxes. Independently re-confirmed the extracting doc
+  (`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`) is still
+  `status: active`/`assigned_vm: planning` with its own copy still unchecked. Nothing here is RECLASSIFY-eligible — the
+  sole native todo is correctly NA because the real dispatchable copy already lives on an active planning doc.
+  `assigned_vm` stays unchanged.
+- **context-scout 2026-08-03**: re-verified context_scope (6 entries) — still accurate, no changes needed.
+- **archive_candidates_content_verification 2026-08-06 (slot 9, review)**: `archive_exempt: true` — this is an umbrella
+  coordination index (`nature: process`) serving as a standing reference hub for the TradFi consolidated close-out. All
+  2/2 native checkboxes are done, but the doc's "Aggregated source docs" section is actively maintained as the single
+  entry-point digest of ~50+ tradfi-touching plans/issues with live open-todo counts. It has 3 active child plans with
+  open work (`depends_on`). Archiving it would orphan the coordination index for the multi-phase tradfi close-out.
+
+- **na-eligibility-audit 2026-08-07** (tradfi tranche): **KEEP-NA, valid -- re-verified, unchanged.** 0 real open
+  checkboxes (confirmed via literal-pattern grep: 12 `[x]`, 0 `- [ ]`; the 3 raw `[ ]` substring hits are prose
+  describing the pattern, not checkboxes). `archive_exempt: true` is set in frontmatter (2026-08-06 ruling) and
+  correctly NOT re-litigated here -- this doc is a standing coordination-index/reference hub for the tradfi close-out
+  with 3 active child plans depending on it, not an ARCHIVE candidate despite having 0 native open todos. Doc stays NA.
