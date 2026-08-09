@@ -188,15 +188,24 @@ their own. This batch extracts exactly those sub-items, leaving each source doc'
       not a new gap this todo introduces). Operator follow-up (one command, one-time):
       `bash unified-trading-pm/scripts/dev/install-cleanup-stale-manifest-consolidate-tmp-cron.sh` from the root PM
       clone.
-- [ ] [INFRA] P3. **Add a free-space alert for the orchestrator VM root.** Both the 2026-06-28 full-disk wedge (which is
-      why `setup-tab-worktrees.sh` carries a slot cap at all) and the 2026-08-08 175G `manifest-consolidate-*` find (see
-      the todo above) were caught by a human looking at the disk, not a monitor. Add a standing free-space alert on the
-      orchestrator VM's root filesystem, suggested threshold: page under 60G free (mirror the pattern + severity
+- [x] ✅ [INFRA] P3. **Add a free-space alert for the orchestrator VM root.** Both the 2026-06-28 full-disk wedge (which
+      is why `setup-tab-worktrees.sh` carries a slot cap at all) and the 2026-08-08 175G `manifest-consolidate-*` find
+      (see the todo above) were caught by a human looking at the disk, not a monitor. Add a standing free-space alert on
+      the orchestrator VM's root filesystem, suggested threshold: page under 60G free (mirror the pattern + severity
       conventions already established in `/codex/05-infrastructure/data-pipeline-alerts.md`). Done when: the alert
       exists (wired into whatever alerting channel the orchestrator VM's other standing monitors use) and has fired at
       least once in a test/synthetic trigger. Source: `issues/shared_host_home_filesystem_full_2026_07_26.md` §
       "Orphaned manifest-consolidator scratch on the orchestrator VM" (`[INFRA] P3` todo, filed 2026-08-08). (repo:
-      agent-orchestrator)
+      agent-orchestrator) — `agent-orchestrator@bb85164`. Shipped `DiskSpaceCanary` (`server/disk_space_canary.py`),
+      mirroring `SnapshotRecencyCanary`'s skeleton (pure `assess()`, state-transition-deduped `_maybe_alert()` via
+      `dedup_state.disk_space_breach_path()`, a daemon-thread wrapper). Wired into `server.py` startup/shutdown
+      alongside every other standing canary — pages `#agent-orchestrator-alerts` (the channel every other AO standing
+      monitor uses, per `notify_disk_space_low`/`_resolved`) via a `_persist_to_gcs` CRITICAL alert. Default threshold
+      60G free (per this todo's own suggestion), 300s cadence (matches the dashboard's vm-resources push interval).
+      Fired via a mocked-probe synthetic trigger (20 new unit tests in `tests/test_disk_space_canary.py`, incl. the
+      literal breach→resolve two-tick Gate — never the live host root). Registered in
+      `/codex/04-architecture/agent-orchestrator-alerting.md`'s Slack-routing table + self-monitoring detector registry
+      (owner/cadence/verifier). Full `quality-gates.sh` green (3021 tests + basedpyright + dashboard vitest).
 
 ## Operator approval gate
 
@@ -243,3 +252,5 @@ independently conflict-checked against the full active corpus with zero competin
   (`feat(infra): TTL reaper for abandoned manifest-consolidator scratch on shared hosts`, verified on
   `origin/live-defi-rollout`, commit body matches this todo's description exactly) — the underlying work was genuinely
   shipped, only the citation was mistyped. Both instances corrected to `699f53832`.
+- **2026-08-09 (slot 14, infra)** — Todo 3 shipped: `agent-orchestrator@bb85164`. All 3 todos now done — this plan is
+  archival-eligible, gated on its paired finalize plan (`infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`).
