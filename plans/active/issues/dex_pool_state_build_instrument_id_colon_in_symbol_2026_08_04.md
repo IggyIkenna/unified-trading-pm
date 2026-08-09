@@ -82,8 +82,9 @@ The colon check was added 2026-07-20 as a loud-fail guard against the CeFi doubl
 group — a symbol with `:` reaching the builder without prior resolution.
 
 **UNISWAP_V4/ETHEREUM is the largest bucket (17 rows) and the most recent** (through 2026-07-09). The subgraph itself is
-healthy (confirmed by live probe in `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`), so this is NOT
-a subgraph-availability issue — it's a symbol-resolution issue in the MTDS handler.
+healthy (confirmed by live probe in
+`/plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`, archived 2026-08-09),
+so this is NOT a subgraph-availability issue — it's a symbol-resolution issue in the MTDS handler.
 
 ## Recommended decision
 

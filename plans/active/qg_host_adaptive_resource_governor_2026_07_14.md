@@ -372,11 +372,14 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       queue-wait) and 864s (24s queue-wait) work-time, both over the then-current 800s budget (itself only bumped
       2026-08-06 from 600s). Bumped `MAX_DURATION` 800→1000 in market-tick-data-service/scripts/quality-gates.sh (same
       ad-hoc per-repo pattern as the two prior bumps in that file's history comment) to unblock landing
-      `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`'s P2 todo — same underlying tension as the
-      `PYRIGHT_TIMEOUT` finding: raising one gate's timeout (needed to let TYPE CHECK finish under contention instead of
-      being killed) mechanically pushes total wall time into a SEPARATE completion-budget gate. Whoever owns this plan:
-      consider whether `MAX_DURATION` should scale with `PYRIGHT_TIMEOUT`/repo size the same way the P3 finding above
-      proposes, rather than each repo's `quality-gates.sh` accumulating manual bumps independently.
+      `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`'s P2 todo (shipped 2026-08-09,
+      `market-tick-data-service@5d633923`; source doc now archived at
+      `/plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`) — same
+      underlying tension as the `PYRIGHT_TIMEOUT` finding: raising one gate's timeout (needed to let TYPE CHECK finish
+      under contention instead of being killed) mechanically pushes total wall time into a SEPARATE completion-budget
+      gate. Whoever owns this plan: consider whether `MAX_DURATION` should scale with `PYRIGHT_TIMEOUT`/repo size the
+      same way the P3 finding above proposes, rather than each repo's `quality-gates.sh` accumulating manual bumps
+      independently.
 - [ ] [INFRA] P2. NEW FINDING (2026-07-27, slot 5): pytest-xdist's SINGLE worker (`PYTEST_WORKERS` default is already 1,
       not a multi-worker coordination bug) can itself die under sustained severe host load, crashing the whole run with
       `xdist.dsession: RuntimeError: Unexpectedly no active workers available` (an `INTERNALERROR`, not a test assertion

@@ -41,7 +41,7 @@ context_scope:
   [
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_07.md,
     /plans/active/issues/defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md,
-    /plans/active/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md,
+    /plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md,
     /plans/active/issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -104,9 +104,11 @@ Re-verified against current live state (not just re-reading yesterday's text):
 1. **`defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md`** — `[DIAG] P3`: investigate raising the per-date
    subprocess timeout from 1800s for DeFi years with 10K+ instruments. Bounded, target file
    (`market-data-processing-service/.../process_handler.py`) named.
-2. **`defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`** — item 3: retry-fixable historical
-   `attempted_failed` residue backfill for now-healthy dex-swap pairs. Bounded SPOT backfill re-run, checkable via
-   manifest.
+2. **`defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`** (ARCHIVED 2026-08-09, all 12 todos closed —
+   `/plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`) — item 3:
+   retry-fixable historical `attempted_failed` residue backfill for now-healthy dex-swap pairs. Bounded SPOT backfill
+   re-run, checkable via manifest. Re-verify this parked item is still open before dispatching — the source doc's own
+   item 3 todo may already be closed.
 
 ## Finding 2 — orphaned_never_touched, 0 AO-eligible for defi: `ag_closeout_audit_defi_parked_2026_08_06.md`
 

@@ -36,7 +36,7 @@ context_scope:
   [
     /plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md,
     /plans/active/issues/defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md,
-    /plans/active/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md,
+    /plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md,
     /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
     /plans/active/defi_satellite_ao_dispatch_batch10_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -110,18 +110,20 @@ Batch9's citation is a COMPLETED todo that only filed this doc; neither open tod
 
 **Recommendation**: Both AO-eligible. Include in next scheduled batch (batch11). Standard SPOT VM + DIAG pattern.
 
-## Finding 4 — partially covered: `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`
+## Finding 4 — RESOLVED 2026-08-09: `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md` (now archived)
 
-**Category**: orphaned_partial_coverage (batch9 covers item 1 but not items 2-3)
+**Category**: orphaned_partial_coverage (batch9 covers item 1 but not items 2-3) — **source doc fully closed, all 12
+todos done**, archived to
+`/plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`.
 
-**What**: Unclaimed items:
+**What was unclaimed at audit time** (now resolved):
 
-- Item 2: Land stranded `market-tick-data-service@531a07d8` (STALLED_HEAD runtime detection) — blocked on pre-existing
-  QG failures → **not AO-eligible until QG clears**
-- Item 3: Retry-fixable historical `attempted_failed` residue for now-healthy pairs → AO-eligible (bounded backfill
-  re-runs, checkable via manifest)
-
-**Recommendation**: Extract item 3 into next batch (SPOT backfill re-run). Item 2 stays blocked until QG clears.
+- Item 2: Land stranded `market-tick-data-service` STALLED_HEAD runtime detection — SHIPPED 2026-08-09 as
+  `market-tick-data-service@5d633923` (QG cleared after fixing several genuine repo-specific gate failures; see the
+  archived doc's Progress Log for the full landing narrative).
+- Item 3: Retry-fixable historical `attempted_failed` residue for now-healthy pairs — status not re-verified by this
+  edit; re-check the archived doc's own todo list before assuming it's still open (it was closed alongside the other 11
+  by the time of archival).
 
 ## Finding 5 — partially covered: `defi_hyperliquid_residual_manifest_rows_2026_08_04.md`
 

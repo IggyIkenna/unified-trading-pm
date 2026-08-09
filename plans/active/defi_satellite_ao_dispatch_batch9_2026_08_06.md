@@ -189,9 +189,10 @@ over all pending draft batches) that independently spot-verified every todo belo
       (`market-tick-data-service@8046e25b`), using each VM's per-VM manifest shard's max `date`
       (`_index/per_vm/mtds-dex-swaps-backfill-{1,2}.parquet`) as an explicit `--start` date-frontier so the relaunch
       doesn't replay from 2023-01-01 (SPOT, idempotent shards). Repo: market-tick-data-service. Source:
-      `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`. Done when: both VMs health-verified RUNNING
-      at T+10min and a fresh manifest read shows CURVE/OPTIMISM's `attempted_failed` count has stopped growing with the
-      old pre-fix "All 5 cascade schemas returned GraphQL errors" signature.
+      `/plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md` (archived
+      2026-08-09, all 12 todos closed). Done when: both VMs health-verified RUNNING at T+10min and a fresh manifest read
+      shows CURVE/OPTIMISM's `attempted_failed` count has stopped growing with the old pre-fix "All 5 cascade schemas
+      returned GraphQL errors" signature.
 - [ ] [DIAG] P3. **Verify manifest migration scope**: whether `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s
       2026-08-01 finding (`rate_indices`/`utilization` → `lending_indices`, verified against live `_lending_grain.py`
       handler source, `market-tick-data-service@13f14b78`) covers the FULL `rate_indices` manifest population (~49,096

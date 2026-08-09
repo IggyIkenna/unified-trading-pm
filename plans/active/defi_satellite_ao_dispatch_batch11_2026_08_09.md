@@ -227,8 +227,9 @@ item here.
   `plans/active/issues/ag_closeout_audit_defi_parked_2026_08_08.md` — audit-report docs, 0 own `- [ ]` checkboxes
   (findings tables only); the batch11 candidates they themselves name (e.g.
   `defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md`,
-  `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`) live in OTHER docs outside this run's 18-doc
-  scope, not extracted here.
+  `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`, since archived 2026-08-09 — all 12 todos closed,
+  `/plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`) live in OTHER docs
+  outside this run's 18-doc scope, not extracted here.
 - `plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` — a dispatch-tracking narrative doc
   (status table + prose), 0 real `- [ ]` checkboxes to extract.
 - `plans/active/issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` — sole open item (Todo 5, "append F10 to

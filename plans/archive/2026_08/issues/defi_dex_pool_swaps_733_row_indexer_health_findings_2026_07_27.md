@@ -22,7 +22,7 @@ summary: >-
   on that date as one of its 5 comparison subgraphs). (3) TRADER_JOE_V2/AVALANCHE and all 5 smaller-count pairs are
   currently live-healthy — real swap data returned on direct probe — so their historical `attempted_failed` rows are
   retry-fixable, not a code bug.
-status: open
+status: resolved
 nature: record
 asset_group: [defi]
 stage: [data]
@@ -55,7 +55,9 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: >-
+  All 12 todos closed. Final todo (frozen-indexer-head MTDS fix) shipped 2026-08-09, market-tick-data-service@5d633923,
+  verified ancestor of origin/live-defi-rollout.
 context_scope:
   [
     /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
@@ -66,6 +68,11 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-09** — all 12 todos closed. The final open item (landing the stranded MTDS frozen-indexer-head fix,
+> previously duplicated across 3 candidate commits) shipped as `market-tick-data-service@5d633923`, verified ancestor of
+> `origin/live-defi-rollout`. Original path:
+> `plans/active/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`.
 
 ## What I found
 
