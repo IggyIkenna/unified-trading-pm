@@ -16,7 +16,7 @@ summary: >-
   unconditional setup_events() call in main() (unconditional, not gated behind --apply like the sibling
   relabel_solana_dex_pools_fake_history.py precedent, since the crash hit during a dry-run). Regression test added
   exercising both fixes.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -40,7 +40,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: interactive session (/autonomous), 2026-08-09
 source: ["defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md, dex_pools dry-run launch, 2026-08-09"]
 drift_direction: advance-code
 context_scope:
@@ -120,27 +120,36 @@ in the canonical filename's symbol segment and the written parquet's own `symbol
   `write_defi_rows`/`_safe_build_instrument_id` (used by every LIVE DeFi capture writer, not just this migration) were
   deliberately NOT touched, to keep blast radius contained to the historical-fold task. If colon-embedded symbols can
   also reach a LIVE capture path (not established here — this investigation only confirmed the 2 known bad values are
-  historical, static, and file-count-bounded), that would need its own separate finding scoped to the live writer.
-- **Not yet re-validated against the real worklist** — the fix is QG-green + unit-tested, but the dry-run that
-  originally surfaced this crashed before completing normally; a fresh dry-run against the real 30-shard `dex_pools`
-  worklist should confirm `shards_ok == 30` (not 15) before the real `--apply` launch.
-- **`--apply` launch itself still pending** — `dex_pools` is the last of the three legacy data_type folds; once applied
-  and verified, the manifest consolidator cron can resume and a fresh honest-coverage rollup can run (this epic's stated
-  end state), pending the still-running `canonical-migration-defi-rebuild-20260806-223130` VM reaching its own terminal
-  state.
+  historical, static, and file-count-bounded), that would need its own separate finding scoped to the live writer — not
+  raised here, not observed anywhere else this session.
+- **Nothing else open** — the fix was re-validated against the real worklist (dry-run: 30/30 shards, was 15/30 before
+  the fix) and the real `--apply` run completed cleanly (30/30 shards, `written=148,758` + `skipped_existing=585` =
+  149,343 total instruments, matching the dry-run's prediction exactly, `missing_source=0`, `exit_code=0`). `dex_pools`
+  was the last of the three legacy data_type folds (`rate_indices`/`dex_swaps`/`dex_pools`) — all three are now
+  genuinely complete. The manifest consolidator cron resume + fresh honest-coverage rollup (this epic's stated end
+  state) remain gated on the still-running `canonical-migration-defi-rebuild-20260806-223130` VM reaching its own
+  terminal state — tracked in the parent tracker doc, not this issue.
 
 ## Todos
 
 - [x] [CODE] P1. Generalise colon-symbol sanitisation to all shards + add unconditional `setup_events()` —
       `market-tick-data-service@07e03736b`, QG-green, regression test passing.
-- [ ] [SCRIPT] P1. Re-run a dry-run `--only dex_pools` launch and confirm `shards_ok == 30` (full worklist, no failures)
-      before the real `--apply` launch.
-- [ ] [SCRIPT] P1. Launch the real `--apply --only dex_pools` VM once the dry-run above confirms clean, then verify
-      genuine completion (exit_code=0, `shards_ok` == worklist size) the same way `dex_swaps` was verified.
+- [x] [SCRIPT] P1. Re-run a dry-run `--only dex_pools` launch and confirm `shards_ok == 30` (full worklist, no failures)
+      before the real `--apply` launch — confirmed 30/30, `written=149,343`, `exit_code=0`, VM
+      `backfill-defi-legacy-datatype-fold-20260809-082914`.
+- [x] [SCRIPT] P1. Launch the real `--apply --only dex_pools` VM once the dry-run above confirms clean, then verify
+      genuine completion — confirmed 30/30, `written=148,758` + `skipped_existing=585`, `missing_source=0`,
+      `exit_code=0`, `DEPLOYMENT_COMPLETED`, VM `backfill-defi-legacy-datatype-fold-20260809-090149` (self-deleted,
+      404-confirmed).
 
 ## Progress Log
 
 - **2026-08-09 (interactive session, `/autonomous`)**: dry-run launch surfaced both bugs; root-caused via a bounded
   (single-day/single-venue prefix, column-projected, 32-way-parallel) GCS scan rather than guessing or doing a broader
-  corpus walk. Both fixes applied + QG-verified + regression-tested, shipped `market-tick-data-service@07e03736b`. A
-  fresh dry-run re-validation against the real worklist is next.
+  corpus walk. Both fixes applied + QG-verified + regression-tested, shipped `market-tick-data-service@07e03736b`.
+  Re-validated: fresh dry-run confirmed 30/30 shards clean (was 15/30). Real `--apply` launched immediately after and
+  completed cleanly: 30/30 shards, `written=148,758`/`skipped_existing=585` (149,343 total, exactly matching the
+  dry-run's prediction), `missing_source=0`, `exit_code=0`. `dex_pools` was the last of the three legacy data_type folds
+  — `rate_indices`/`dex_swaps`/`dex_pools` are ALL now genuinely complete. Closing this issue; the remaining epic-level
+  end state (consolidator cron resume + fresh rollup, gated on the still-running rebuild VM) is tracked in the parent
+  tracker doc.
