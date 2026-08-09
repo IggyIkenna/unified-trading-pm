@@ -171,3 +171,5 @@ items. Item 1 is an open-ended design question ("consider whether... could roll 
 mechanism. Item 2 is a standing conditional runbook, not a pending action — confirmed still being actively exercised
 live (a 2026-08-06 tradfi-tranche auditor hit the same drift gate, followed this doc's own step-3 diagnostic, and
 correctly used the docs-only carve-out rather than fixing code). No `assigned_vm` change.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

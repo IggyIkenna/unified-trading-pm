@@ -212,3 +212,4 @@ sweep here.
   labels — added automatically by the wrapper). Also fixed a pre-existing duplicate `lc_verify_tarball_freshness` call
   in `launch-scenario-runner-vm.sh`. QG green (all gates passed, 227s). Shipped: deployment-service@6998cc228. Remaining
   ~136 launchers need a dedicated migration plan (follow-up todo added above).
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

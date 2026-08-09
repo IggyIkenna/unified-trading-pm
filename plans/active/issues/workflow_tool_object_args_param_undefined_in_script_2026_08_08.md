@@ -49,7 +49,13 @@ locked_since:
 resolved_by:
 source: >-
   /ag-closeout-audit sports tranche run, 2026-08-08 (agt-b4c4ab, slot-13) — Phase 1 Workflow launch, first attempt.
-context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md]
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    /cursor-configs/skills/plan-reconcile/SKILL.md,
+    /cursor-configs/skills/docs-reconcile/SKILL.md,
+  ]
 ---
 
 # Workflow tool `args` object param undefined inside script (one repro, 2026-08-08)
@@ -121,3 +127,4 @@ by accident — exactly the kind of trap this ritual exists to pre-empt for the 
   tooling/observability than any other craft role, matching the precedent `634dabc01` set for an analogous
   not-data-pipeline-work retag). Issue doc under `plans/active/issues/` — exempt from the finalize-plan-coverage rule,
   no companion finalize doc needed.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
