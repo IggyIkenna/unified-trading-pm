@@ -239,14 +239,19 @@ this as its own follow-up if the defi check above confirms live impact.
       still-live risk (its script never bumps attempted_at/written_at at all). Live manifest today shows zero residual
       affected rows, but only because unrelated 2026-08-05/08-09 canonicalization migrations have since overwritten the
       whole population — not proof either shard merged. Both scripts remain unpatched.
-- [ ] [SCRIPT] P2. **Stamp fresh attempted_at/written_at in BOTH defi-relevant scripts' apply paths** (expanded scope
-      per the verification above — this originally named only the generic script, but a SECOND, independently-broken
-      script was found): 1. `reconcile_correct_legacy_blank_misflips_2026_05_13.py` (generic, ~line 301-303) — currently
-      sets `attempted_at = None`. 2. `reconcile_correct_legacy_blank_misflips_defi_2026_05_13.py` (Wave-3 defi-specific,
-      ~line 377-384) — currently doesn't touch `attempted_at`/`written_at` at all. Neither needs the
-      column-pruning/full-column-refetch half of the cefi fix (both read the full unfiltered manifest already) — only
-      the timestamp-stamp half applies. Mirror `instruments-service@159c0ebe0`'s timestamp logic. Add regression tests
-      analogous to `test_apply_flips_bumps_timestamps_past_original_row` for both scripts. — instruments-service
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 — `instruments-service@7be93d5d`.** Stamped fresh `attempted_at`/`written_at` in
+      BOTH defi-relevant scripts' apply paths, mirroring `instruments-service@159c0ebe0`'s timestamp logic (only the
+      timestamp-stamp half — neither script needed the column-pruning/full-column-refetch half, both already read the
+      full unfiltered manifest). `reconcile_correct_legacy_blank_misflips_2026_05_13.py` (generic): replaced the
+      `attempted_at = None` clear with a fresh `datetime.now(UTC).isoformat()` stamp on both `attempted_at` and
+      `written_at`; also extracted a `_download_manifest()` helper (mirrors both sibling correctors' own seam) since
+      this script had zero test coverage before this change and the inline `storage.Client()` chain wasn't
+      monkeypatchable. `reconcile_correct_legacy_blank_misflips_defi_2026_05_13.py` (Wave-3 defi-specific): added the
+      same fresh-stamp on both fields (previously touched neither). Regression tests:
+      `test_apply_flips_bumps_timestamps_past_original_row` in a new
+      `tests/unit/test_reconcile_correct_legacy_blank_misflips_2026_05_13.py` (plus baseline apply-flow/idempotency/
+      env-guard coverage for a script that had none) and the same-named test added to the existing Wave-3 defi test
+      file. `quality-gates.sh` green (5330 passed, 88.96% coverage). — instruments-service
 - [ ] [DATA] P3. **Audit other per-VM-shard-writing correction scripts workspace-wide for the same tie-break defect**
       (any script that mutates `capture_status` on an existing row without bumping `attempted_at`/`written_at`). —
       cross-cutting
@@ -269,3 +274,9 @@ this as its own follow-up if the defi check above confirms live impact.
   an independent variant of the same defect, confirmed run live 2026-05-15. Expanded todo 2's scope to cover both
   scripts. No code changes in this session (todo 1 was verification-only; todo 2's fix is separately tagged
   `[SCRIPT] P2` and out of this task's scope).
+- **slot-15 worker 2026-08-09** (task `corrector_scripts_dedup_tiebreak_timestamp_bug-c823410f6918`): shipped todo 2
+  (`instruments-service@7be93d5d`). Both scripts now stamp a fresh `attempted_at`/`written_at` on every corrected row
+  instead of clearing/leaving them untouched. Regression tests added for both (the generic script had none before this —
+  its download step wasn't monkeypatchable, so a `_download_manifest()` helper was extracted first, mirroring the
+  pattern both sibling correctors already used). `quality-gates.sh` green. Todo 3 (cross-workspace audit for the same
+  defect pattern) is still open, out of this task's scope.
