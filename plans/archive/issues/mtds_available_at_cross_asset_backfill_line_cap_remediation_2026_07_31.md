@@ -13,7 +13,7 @@ summary: >-
   issue's own finding, prediction's todos all read `[x]` except the still-open apply/resume pair (gated on the same
   pause/apply/resume protocol as tradfi); tradfi is likewise all done except apply/resume — so most of the plan's
   historical Progress Log entries document already-CLOSED lanes and are archival candidates, not live work.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi, prediction]
 stage: [data]
@@ -33,7 +33,7 @@ parent_epic: manifest_master
 assigned_vm: planning
 locked_by:
 priority: P3
-resolved_by:
+resolved_by: plan_reconciler agt-a3e83c, 2026-08-09 — both todos done (todo 2 MOOT, split target archived 2026-08-05)
 source: >-
   Deferred from plans/active/issues/dp_consolidator_scheduler_paused_tradfi_recurrence_2026_07_31.md's "Recommended
   decision" § follow-up 2 (2026-07-31) per the archival-ritual requirement that a DEFERRED prose item be migrated into a
@@ -53,6 +53,12 @@ context_scope:
 ---
 
 # mtds_available_at_cross_asset_backfill_2026_07_13.md line-cap remediation
+
+> **🟢 ARCHIVED 2026-08-09 (plan_reconciler agt-a3e83c) — both todos done, unlocked.** Todo 1 (the split) shipped
+> 2026-08-01. Todo 2 (cross-plan apply/resume sequencing) is MOOT — the split target,
+> `mtds_available_at_cross_asset_backfill_2026_07_13.md`, itself reached full completion (16/16 apply/resume pairs) and
+> was archived 2026-08-05 before the sequencing restructure was ever picked up; no live apply/resume pair remains to
+> sequence.
 
 ## What I found
 
@@ -112,13 +118,14 @@ running against it) — check the plan's own status before starting.
       from the trimmed plan), leaving the still-open apply+resume todos (and any other still-open lane) in the active
       plan, landing it back under the 1000-line hard cap. Verify no todo is currently `locked_by`/mid-dispatch before
       splitting. (repo: unified-trading-pm) — ✅ 2026-08-01 (slot-11, cicd): see Progress Log for full evidence.
-- [ ] [PLAN] P2. While splitting (todo above), add explicit per-todo sequencing between each asset group's "Apply
-      `rebuild_{prediction,tradfi}_manifest.py`" and "Resume the {prediction,tradfi} consolidator cron" todos via the
-      **cross-plan `depends_on` + `gate_on_depends: true` split** (see 2026-07-31 Progress Log entry below — the
-      `prereqs.completed_tasks`-on-a-single-todo mechanism this todo originally suggested is NOT a valid authoring
-      mechanism; do not attempt it) so the resume todo cannot dispatch before its apply sibling is done. Verify by
-      confirming `mtds_available_at_cross_asset_backfill-006`-equivalent (post-split) does not appear
-      `queued`/dispatchable while its apply counterpart is open. (repo: unified-trading-pm)
+- [x] ✅ [PLAN] P2. **MOOT — corrected 2026-08-09 (plan_reconciler agt-a3e83c).** Was going to add explicit per-todo
+      sequencing (cross-plan `depends_on` + `gate_on_depends: true`) between each asset group's "Apply
+      `rebuild_{prediction,tradfi}_manifest.py`" and "Resume the {prediction,tradfi} consolidator cron" todos on the
+      split target, `plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`. That target plan reached full
+      completion (all 16 apply/resume pairs done) and was archived 2026-08-05
+      (`plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md`, `status: complete`) without ever
+      needing the proposed restructure — no live apply/resume pair remains to sequence. No fix applied; the need
+      evaporated.
 
 ## Progress Log
 

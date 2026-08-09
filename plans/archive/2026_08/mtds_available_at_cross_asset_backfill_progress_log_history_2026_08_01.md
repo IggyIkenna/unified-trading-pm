@@ -35,7 +35,7 @@ superseded_by:
 depends_on: []
 source: >-
   Line-cap remediation per
-  plans/active/issues/mtds_available_at_cross_asset_backfill_line_cap_remediation_2026_07_31.md's `[PLAN] P3` todo.
+  /plans/archive/issues/mtds_available_at_cross_asset_backfill_line_cap_remediation_2026_07_31.md's `[PLAN] P3` todo.
 ---
 
 # Cross-asset-group available_at manifest backfill — Progress Log history

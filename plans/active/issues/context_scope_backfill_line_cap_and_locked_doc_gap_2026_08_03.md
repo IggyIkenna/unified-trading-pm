@@ -91,9 +91,9 @@ across every future incremental inventory run.
 
 - [x] ✅ [SCRIPT] P2. **DONE 2026-08-03 (slot-12).** Trim or split each of the 6 exactly-1000L docs, then re-apply their
       pre-computed `context_scope` (below).** Preferred approach per this corpus's own precedent
-      (`mtds_available_at_cross_asset_backfill_line_cap_remediation_2026_07_31.md`, cited by one of this session's own
-      scouting agents as the sanctioned pattern): extract a completed/historical Progress Log section into
-      `plans/archive/` (status: complete / nature: record docs are unbounded by the cap by design — see
+      (`/plans/archive/issues/mtds_available_at_cross_asset_backfill_line_cap_remediation_2026_07_31.md`, cited by one
+      of this session's own scouting agents as the sanctioned pattern): extract a completed/historical Progress Log
+      section into `plans/archive/` (status: complete / nature: record docs are unbounded by the cap by design — see
       `check_line_caps.sh`'s own policy comment), leaving the live doc under 1000L with its open todos intact. Do NOT
       delete content to force a fit — only extract genuinely-closed history. Verify with
       `bash scripts/plan-hygiene/check_line_caps.sh <path>` (scoped mode) before re-adding `context_scope`. Docs:
