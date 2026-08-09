@@ -136,8 +136,9 @@ context_scope:
   dispatched" contradicting `status: active`; corrected to reflect the no-double-gate precedent (active, machine-held by
   `gate_on_depends`). (2) Todo 3's "3 A3-relocated sibling docs" framing was stale — 1
   (`prediction_perps_kalshi_polymarket_parked`) was already archived at this doc's own 2026-07-26 drafting; corrected to
-  2 genuinely-active docs. (3) Noted both "batch5 candidate" deferrals above (fixture-pairing manifest walk + POLYMARKET
-  re-enum/book_snapshot_5 backfill) are still unclaimed as of today —
-  `plans/archive/2026_07/ prediction_satellite_ao_dispatch_batch5_2026_07_26.md` predates their 2026-08-07 promotion and
-  batches 6-9 never picked them up. Routed to the operator (not fixed in-place — which batch/plan they land in is a
-  planning decision); see `plans/active/issues/plan_reconciler_findings_prediction_2026_08_09.md`.
+  2 genuinely-active docs. (3) Flagged both "batch5 candidate" deferrals above (fixture-pairing manifest walk +
+  POLYMARKET re-enum/book_snapshot_5 backfill) as still unclaimed —
+  `plans/archive/2026_07/prediction_satellite_ao_dispatch_batch5_2026_07_26.md` predates their 2026-08-07 promotion and
+  batches 6-9 never picked them up. **RESOLVED same session**: routed to the operator as `BLK-0d9d2799`; ruled option A
+  (fold into a new batch10) — drafted `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` (+finalize) to carry
+  both.

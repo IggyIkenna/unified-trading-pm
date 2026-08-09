@@ -160,11 +160,16 @@ HARD RULE) — both routed via BLK-8f289fba.
 
 ## Filed
 
-- **BLK-0d9d2799** — where should 2 fully-shipped, gate-cleared prediction data items (combined `_index` manifest
-  canonicalisation walk; POLYMARKET re-enum + `book_snapshot_5` backfill) land? Both promoted ready 2026-08-07,
-  unclaimed by any batch 6-9. Recommendation: A (fold into a future batch10).
-- **BLK-8f289fba** — 2 codex-alignment findings needing an operator ruling before any SSOT edit (see Contradictions
-  #10-#11). Recommendation: B (park for a dedicated codex-alignment pass).
+- **BLK-0d9d2799 — ANSWERED + APPLIED (STEP 8).** Where should 2 fully-shipped, gate-cleared prediction data items
+  (combined `_index` manifest canonicalisation walk; POLYMARKET re-enum + `book_snapshot_5` backfill) land? Operator
+  ruled option A (fold into batch10) same session. Drafted `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` (+
+  finalize pair) per the established AO-dispatch-batch pattern: Deferral (a) folded in as `[OPERATOR]` (it remains a
+  permanent human-only hard-stop per batch4's own 2026-07-28 ruling — this todo authorizes re-measuring + a walk-plan +
+  handoff, not the `--apply` itself), Deferral (b) as a genuine bounded `[DATA]` todo. Conflict-checked clean against
+  the corpus per the codex protocol before drafting. Closed the loop in
+  `prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s Progress Log.
+- **BLK-8f289fba — still open** as of this doc's last edit. 2 codex-alignment findings needing an operator ruling before
+  any SSOT edit (see Contradictions #10-#11). Recommendation: B (park for a dedicated codex-alignment pass).
 
 ## Archive candidates (operator review)
 
