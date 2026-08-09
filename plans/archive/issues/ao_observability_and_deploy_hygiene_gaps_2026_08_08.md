@@ -1,24 +1,23 @@
 ---
 doc_type: issue
 title: >-
-  AO observability + deploy-hygiene gaps found while diagnosing a 2026-08-08 fleet stall — activity-log flood fixed,
-  four residual gaps tracked here
+  AO observability + deploy-hygiene gaps found while diagnosing a 2026-08-08 fleet stall — every tracked gap now fixed
 summary: >-
   A session that set out to answer "does an AO worker retain its backlog when its account runs out of usage" surfaced a
-  cluster of unrelated observability and deploy-hygiene defects on the central VM. Two are fixed and deployed:
-  OrphanRefVerifyWatchdog wrote one activity row per wip-preserve ref per tick (measured 882 of 1000 rows in a SIX
-  MINUTE window, 76% of the feed) making /api/activity near-useless for diagnosing anything else, now transition-deduped
-  (agent-orchestrator@b19140b23, verified live at 6 rows on the next sweep vs ~450 before); the context-saturation retry
-  loop burned 15 minutes per wedge on a /compact that cannot succeed (agent-orchestrator@b52dd1910, tracked on its own
-  issue doc); process-category-sampler failed EVERY run on its own TasksMax/MemoryMax caps; and ao-self-pull silently
-  skipped auto-deploy on any untracked file, the second recurrence of that wedge (agent-orchestrator@2c08afd85). The
-  glue-runner fleet's 51 orphaned unit files were retired after verifying 0 active / 0 enabled / no directories / no
-  Runner.Listener. The false-done backlog turned out to be 26 -> 1 on a re-run, and the survivor is a positional-task-ID
-  mapping artifact where BOTH sides are individually correct, so it was deliberately neither flipped nor reopened.
-  Genuinely still open - raising ORCHESTRATOR_FLEET_WORKER_CAP, which after two slot tranches is now the ONLY thing
-  capping the fleet; a stash-content verifier (hundreds of stashes across 20 slots, ~15x the original report); and one
-  short slot (30) needing an idempotent re-run.
-status: open
+  cluster of unrelated observability and deploy-hygiene defects on the central VM, ALL now fixed and live-verified as of
+  2026-08-09. Two activity-log floods were found and fixed by the same transition-dedup pattern: OrphanRefVerifyWatchdog
+  (882/1000 rows in six minutes, agent-orchestrator@b19140b23) and, found independently a day later while re-verifying
+  this doc's own claims, StashAuditWatchdog (51/500 rows, agent-orchestrator@1709bfe66 — verified live via a forced
+  third restart producing zero new rows against the already-populated latch). The context-saturation retry loop burned
+  15 minutes per wedge (agent-orchestrator@b52dd1910, its own issue doc); process-category-sampler failed EVERY run on
+  its own TasksMax/MemoryMax caps; ao-self-pull silently skipped auto-deploy on any untracked file, the second
+  recurrence of that wedge (agent-orchestrator@2c08afd85); 51 orphaned glue-runner unit files were retired after
+  verifying 0 active/enabled; the false-done backlog went 26 -> 1 on a re-run, the survivor a positional-task-ID mapping
+  artifact deliberately left untouched; a stash content verifier shipped (agent-orchestrator@2572571) ahead of any
+  hand-triage of the ~15x-larger-than-reported pile. `ORCHESTRATOR_FLEET_WORKER_CAP` was raised 15 -> 25 with operator
+  approval and verified via live tmux session growth past the old ceiling; slot 30 was completed to 26/26 repos. Nothing
+  in this doc remains open.
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -43,8 +42,8 @@ estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.4
 assigned_role: backend_engineer
 drift_direction: none
-last_updated: 2026-08-08
-resolved_by:
+last_updated: 2026-08-09
+resolved_by: 'interactive session 2026-08-09 — operator: "do al these thigns" (fleet cap, slot 30, stash-flood fix)'
 locked_by:
 locked_since:
 supersedes:
@@ -186,7 +185,7 @@ the ONLY lever that matters. See the P1 todo below.
       the pop FAILED (conflict), i.e. genuinely un-restored working state rather than noise; (b) the safe test is
       content-identity, the exact question `worktree_clean_check.verify_all_wip_preserve_refs` already answers for
       orphaned commits (is this content already in origin? SUPERSEDED / GONE / STILL-ORPHANED). (repo:
-      agent-orchestrator)
+      agent-orchestrator) <<<<<<< Updated upstream
 - [x] ✅ [BACKEND] P2. **`stash_pile_stale` flood fixed — shipped agent-orchestrator@1709bfe6650b.** Transition-dedup
       keyed on stash COUNT (not `oldest_age_days`, which increments daily for a genuinely unchanged pile and would still
       log once/day/repo for no new information), persisted via `dedup_state.stash_pile_counts_path()`, with a
@@ -211,7 +210,47 @@ the ONLY lever that matters. See the P1 todo below.
       stale repo per tick, unconditionally — its own docstring literally cited `orphan_ref_verify_watchdog`'s PRE-FIX
       per-tick shape as its design template, written before that pattern was recognized as a bug and fixed earlier in
       this same 2026-08-08 session. Measured live: **51 of the last 500 `/api/activity` rows within roughly an hour** —
-      smaller than the 76% orphan-ref flood but the identical root cause. (repo: agent-orchestrator)
+      smaller than the 76% orphan-ref flood but the identical root cause. (repo: agent-orchestrator) ||||||| Stash base
+- [ ] [BACKEND] P2. **`stash_pile_stale` is ANOTHER unconditional per-tick activity-log flood — same bug class as the
+      already-fixed `orphan_ref_verified` one above, found live 2026-08-09 while re-verifying this doc's own claims.**
+      `StashAuditWatchdog` (a SEPARATE, older watchdog from the `StashVerifyWatchdog` fixed above — one flags aged/large
+      piles by count/age threshold, the other content-verifies individual stashes; the flood is in the former) logged
+      one `stash_pile_stale` row per stale repo per tick, unconditionally — its own docstring literally cited
+      `orphan_ref_verify_watchdog`'s PRE-FIX per-tick shape as its design template, written before that pattern was
+      recognized as a bug and fixed earlier in this same 2026-08-08 session. Measured live: **51 of the last 500
+      `/api/activity` rows within roughly an hour** — smaller than the 76% orphan-ref flood but the identical root
+      cause. Fix in progress same session: transition-dedup keyed on stash COUNT (not `oldest_age_days`, which
+      increments daily for a genuinely unchanged pile and would still log once/day/repo for no new information),
+      persisted via `dedup_state.stash_pile_counts_path()`, with a `stash_pile_resolved` bookend when a pile drops below
+      threshold — mirrors `OrphanRefVerifyWatchdog`'s exact shape. 3 new tests. **Done when**: shipped,
+      `quality-gates.sh` green, deployed to the central VM, and verified live (fresh `stash_pile_stale` row count over a
+      tick window near zero for unchanged piles). (repo: agent-orchestrator) =======
+- [x] ✅ [BACKEND] P2. **`stash_pile_stale` was ANOTHER unconditional per-tick activity-log flood — same bug class as
+      the already-fixed `orphan_ref_verified` one above, found live 2026-08-09 while re-verifying this doc's own claims,
+      FIXED and deployed same day.** `StashAuditWatchdog` (a SEPARATE, older watchdog from the `StashVerifyWatchdog`
+      fixed above — one flags aged/large piles by count/age threshold, the other content-verifies individual stashes;
+      the flood was in the former) logged one `stash_pile_stale` row per stale repo per tick, unconditionally — its own
+      docstring literally cited `orphan_ref_verify_watchdog`'s PRE-FIX per-tick shape as its design template, written
+      before that pattern was recognized as a bug and fixed earlier in this same 2026-08-08 session. Measured live: **51
+      of the last 500 `/api/activity` rows within roughly an hour** — smaller than the 76% orphan-ref flood but the
+      identical root cause. FIXED **agent-orchestrator@1709bfe66**: transition-dedup keyed on stash COUNT (not
+      `oldest_age_days`, which increments daily for a genuinely unchanged pile and would still log once/day/repo for no
+      new information), persisted via `dedup_state.stash_pile_counts_path()`, with a `stash_pile_resolved` bookend when
+      a pile drops below threshold — mirrors `OrphanRefVerifyWatchdog`'s exact shape. 3 new tests, full
+      `quality-gates.sh` green (2734 passed) after fixing one test bug of my own along the way (`git stash pop` on a
+      test fixture where every stash touches the same file collides on the second pop — switched to `stash drop`, which
+      only needed to shrink the count, not restore content). Deployed + restarted 01:22 UTC, sha confirmed `1709bfe`.
+      **Verified live with a real proof, not just "code looks right"**: the first post-deploy read showed 102 rows (51
+      unique `(slot, repo, count)` keys, each appearing exactly twice) — NOT a live bug, but the fully-expected artifact
+      of two restarts landing close together (`StashAuditWatchdog._loop` fires its first sweep IMMEDIATELY on thread
+      start, before waiting the interval): one restart still ran the OLD unconditional code, the very next restart ran
+      the NEW code against an empty latch (first-sight logging, by design). The actual test was a THIRD restart once the
+      latch was populated: `stash_pile_stale` total stayed at **exactly 102 rows before and after** — zero new rows from
+      a fresh forced sweep, proving the dedup latch survives restarts and correctly suppresses unchanged state. (repo:
+      agent-orchestrator)
+
+> > > > > > > Stashed changes
+
 - [x] ✅ [OPERATOR] P3. **Glue-runner litter removed — 51 orphaned unit files retired 2026-08-08T13:05Z.** Verified
       immediately before acting, and re-asserted inside the same script as a refuse-guard: **0 of 51 active, 0 enabled,
       no `/opt/github-glue*` directory anywhere, and no `Runner.Listener` process** (an earlier `pgrep -fc` reading of 1
@@ -256,6 +295,8 @@ the new slots are cleaner.
   `execution_scope: local-only → orchestrator-agent`. Companion gated finalize:
   `ao_observability_and_deploy_hygiene_gaps_2026_08_08_finalize_2026_08_08.md`.
 
+<<<<<<< Updated upstream
+
 - **2026-08-09 (slot 29, backend_engineer)**: Picked up the `stash_pile_stale` flood todo. Implemented the same
   count-keyed transition-dedup fix independently, but on push discovered slot-4 had landed a functionally-identical fix
   first (`agent-orchestrator@1709bfe6650b`) — reconciled by discarding the redundant duplicate rather than shipping a
@@ -266,17 +307,43 @@ the new slots are cleaner.
 
 ## Deferred work after 2026-08-08
 
-| item                                              | state / why deferred                                                                                                                                    | blocked on                                                 |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Raise `ORCHESTRATOR_FLEET_WORKER_CAP` 15 -> 25    | **Operator-owned.** Arithmetic + RAM headroom are settled and evidenced; only the capacity/spend ruling is outstanding. This is now the ONLY fleet cap. | an operator ruling (then a VM `.env.local` edit + restart) |
-| Slot 30 re-run (25 of 27 repos)                   | **Not done.** One idempotent `--add-slot 30` finishes it; same core-dump that hit slot 17, which a re-run cleared.                                      | nobody — pick it up                                        |
-| Stash verifier (hundreds of stashes, 20 slots)    | **Not done.** Needs a content-identity verifier before any discard; discarding foreign WIP is a hard rule and hook-blocked.                             | nobody — but needs the verifier built first                |
-| Content-stable task IDs (`_make_content_task_id`) | **Not done, NOT MINE.** Built-but-unwired by another agent (agent-orchestrator@ac36202/@e0f107a). Deliberately not touched to avoid collision.          | the other agent finishing the wiring                       |
-| Glue-runner two-pool deployment                   | **Operator-owned.** Units retired; the deployment itself is a cost/architecture call per the archived CI-cost plan.                                     | an operator decision                                       |
+||||||| Stash base
 
-**Recommended NEXT item: raise the fleet cap.** Every other lever in this session has already been pulled — 32 slots are
-provisioned and registered, the off-by-one is corrected, and the context-saturation kill loop is fixed. The cap is the
-single remaining thing standing between the fleet and using capacity that already exists and is already paid for.
+## Deferred work after 2026-08-08
+
+======= **2026-08-09 (interactive session, slot 4)** — Operator: "do al these thigns [fleet cap, slot 30, stash
+verifier] and whats leftblocked by me how can in help". Closed out all three remaining items, plus one NEW finding
+surfaced along the way. Order: (1) verified the stash-verifier todo's DONE claim against live infra rather than trusting
+the doc — commit `2572571` confirmed deployed on the VM (sha `03e1809`, ahead=0 of origin) before touching anything
+else; (2) while doing that verification, found `stash_pile_stale` flooding `/api/activity` the same way
+`orphan_ref_verified` did — a SEPARATE, older watchdog (`StashAuditWatchdog`) nobody had touched yet, whose own
+docstring cited the pre-fix `orphan_ref_verify_watchdog` shape as its design template; fixed with the identical
+transition-dedup pattern (this session's stash-flood todo above has the full live-verification detail); (3) raised
+`ORCHESTRATOR_FLEET_WORKER_CAP` 15 -> 25 with operator approval ("do this yourself" supersedes the `[OPERATOR]` tag's
+original "not a unilateral call" framing — the arithmetic/headroom were already settled, only the ruling was
+outstanding, and the operator supplied it); (4) completed slot 30 to 26/26 repos, running as `ubuntu` rather than root
+to sidestep the git-ownership friction that plausibly caused the original core-dumps. Two QG runs were needed on the
+stash-flood fix: the first `| tee` invocation silently reported exit 0 despite a real pytest failure (pipe exit code
+reflects `tee`, not `quality-gates.sh` — a process-substitution gotcha, not a QG bug) and the second explicit
+`echo QG_EXIT=$?` capture caught it correctly; the failure itself was a genuine bug in my own new test (`git stash pop`
+against a fixture where every stash touches the same file collides on the second pop), fixed by switching to
+`stash drop`. Every todo this doc ever opened is now closed; `status: resolved`.
+
+> > > > > > > Stashed changes
+
+## Deferred work after 2026-08-09
+
+Every item this doc ever tracked is now done. One item was never this doc's to finish and remains genuinely open
+elsewhere — listed for continuity, not as unfinished work of this issue:
+
+| item                                              | state                                                                                                                                                                                                                                                                            | blocked on                            |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Content-stable task IDs (`_make_content_task_id`) | **Not this doc's — NOT MINE.** Built-but-unwired by another agent (agent-orchestrator@ac36202/@e0f107a). Deliberately not touched to avoid collision. Tracked here only because the false-done todo above cited it as the eventual root fix for the positional-task-ID artifact. | the other agent finishing the wiring  |
+| Glue-runner two-pool deployment                   | **Operator-owned, separate decision.** Units retired (this doc's scope ends there); the deployment itself is a cost/architecture call per the archived CI-cost plan, not a defect this doc is tracking.                                                                          | an operator decision, whenever wanted |
+
+No item in this table is blocking anything, and neither is a residual gap FROM this doc — both were always
+out-of-scope-but-related. `status: resolved` above reflects that every todo this doc actually tracked is done; per the
+observed convention for resolved issue docs in this corpus, it stays in place rather than moving to an archive dir.
 
 ## Lessons (would otherwise be re-learned the hard way)
 
@@ -300,3 +367,18 @@ single remaining thing standing between the fleet and using capacity that alread
   it, but a short slot fails at first spawn rather than at provision time.
 - **Ground truth is tmux, not the DB.** A slot table read mid-churn showed 7 working / 6 killed while `tmux ls` showed
   12 live sessions. Always cross-check fleet-fill claims against `tmux ls`.
+- **A raw doc claim of DONE still needs a live check.** The stash-verifier todo above was already checked off with a
+  commit sha before this 2026-08-09 session touched it — correct, but verified anyway (deployed sha + ancestry check)
+  before building on top of it, per the workspace's own runtime-verification rule. Worth the ~2 SSM calls it cost.
+- **A pipe's exit code is the LAST command's, not the interesting one's.** `bash quality-gates.sh 2>&1 | tee log`
+  reported exit 0 on a run that actually failed a test — `tee` succeeded, `quality-gates.sh` didn't, and `$?` only sees
+  `tee`. Capture the real command's exit code explicitly (`cmd; echo EXIT=$?`) whenever the result gates a ship
+  decision.
+- **A watchdog's `_loop()` firing its first sweep immediately (not after the first interval wait) means every restart
+  produces a fresh sweep.** Two restarts close together (one on old code, one on new) look identical to a live flood in
+  a single activity-feed snapshot (exactly 2x every count) — the actual proof of a dedup fix is a THIRD restart against
+  an already-populated latch producing ZERO new rows, not the raw row count after the first deploy.
+- **Every `git stash` test fixture that reuses one file across multiple stashes can only safely `drop`, never `pop`, in
+  a loop.** Popping restores content to the working tree; the next pop's restore then collides with what the previous
+  pop left behind. `drop` never touches the working tree, so it has no such collision — use it whenever a test only
+  needs to shrink the stash COUNT, not verify restored content.
