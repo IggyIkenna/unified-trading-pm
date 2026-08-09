@@ -231,7 +231,7 @@ context_scope:
         was found as a side-discovery while working that item, and that checkbox was already correctly flipped `[x] ✅`
         in the 2026-08-02 baseline pass. No separate doc-side action exists to take.
   - **All 29 of 29 items now reconciled (2026-08-09).**
-- [ ] [REVIEW] P1. **Re-check the 6 conflict-gated Deferred items (D1-D6) and the 2 time-gated ones (D29-D30).** Each
+- [x] ✅ [REVIEW] P1. **Re-check the 6 conflict-gated Deferred items (D1-D6) and the 2 time-gated ones (D29-D30).** Each
       names the specific competing claim it collided with, so this is a few greps and reads, not fresh investigation. D1
       is discharged by todo 1 above. For D2-D6: has the competing side shipped, been superseded, or been ruled on? In
       particular D3's five held `scripts/quickmerge.sh` claims are now unblocked as a FILE (batch-1 todo 1 has landed) —
@@ -241,7 +241,59 @@ context_scope:
       reconciliation, not fresh drafting; note each as ready-for-batch-2 instead. Do NOT re-ask an operator question
       that was already escalated; just record that the re-check happened and it is still unanswered. **Done when**: each
       of D1-D6 and D29-D30 has either (a) a note that it is ready for batch-2 extraction because its blocker cleared, or
-      (b) a re-verified confirmation the conflict/date is still open.
+      (b) a re-verified confirmation the conflict/date is still open. **DONE 2026-08-09** — all 8 re-checked (D1 already
+      discharged; D2/D6/D30 confirmed still open; D3 partially unblocked; D4/D5/D29 now fully discharged).
+  - **Per-item findings (2026-08-09, this session):**
+    - **D1** — already discharged per todo 1 above (the 3 checkers wired into PM `scripts/quality-gates.sh` in one
+      commit). No new action.
+    - **D2** — `post_cutover_silent_assumption_sweep_2026_07_23.md` F4's `digest-drift-sweep` non-convergence sub-item.
+      The FILE conflict with todo 3 (`scripts/quality-gates.sh`) has cleared (batch-1 fully landed), but the item itself
+      is still an open-ended root-cause investigation, not a bounded fix — confirmed via
+      `digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md` (`status: open`, na-eligibility-audit 2026-08-06
+      "KEEP-NA, valid — open-ended investigation… no bounded fix identified") and the 2026-08-08 na- eligibility-audit
+      round7 note that the F4 item "bundles a plausibly-bounded sub-part… with a genuinely open-ended sub-part… not
+      split out or reclassified here." The escalated operator question "(3) who owns `digest-drift-sweep.yml` edits" has
+      no recorded answer anywhere in the corpus. **Still open — not ready-for-batch-2** (the mechanism analysis itself
+      remains un-owned).
+    - **D3** — the file conflict (batch-1 todo 1 owning `scripts/quickmerge.sh`) has CLEARED (batch-1 fully landed
+      2026-08-09). 4 of the 5 held claims are ready for batch-2 re-extraction in the doc's own listed order; sub-item
+      (2) (STAGE 1.6 dormancy-aware dep gate) is already DONE (na-eligibility-audit 2026-08-01,
+      `unified-trading-pm@b3abf1bd5`) and should be dropped from the re-extraction list, matching the doc's own existing
+      note. Sub-item (3)'s parked question (the MTDS `DEPLOYMENT_ENV` race's reproducer) is still unanswered —
+      re-verified via `mtds_deployment_env_race_survives_single_worker_2026_07_23.md` (`status: open`,
+      na-eligibility-audit 2026-08-06 "non-deterministic race, substance-unbounded, prior verdicts stand"). Sub-item (5)
+      (quickmerge sentinel-race fix 1/fix 3) remains operator-gated, unimplemented — see D30. The escalated operator
+      question "(2) `scripts/quickmerge.sh` extraction order (6 competing claims)" has no single recorded ruling, but 3
+      of the 6 original claims (D1, D4, D5) have organically resolved via separate batches without needing one — noting
+      this, not re-asking it.
+    - **D4** — delete `scripts/dev/hooks/pre-push-strict-quickmerge.sh` + repoint referrers. **Now fully DISCHARGED**:
+      landed 2026-08-09 via `ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md` todo 1
+      (`unified-trading-pm@b02ba28c7`, verified ancestor), source doc
+      `provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` flipped `status: resolved` and archived.
+      No batch-2 action needed.
+    - **D5** — `check_strict_quickmerge.py` dirty-deps carve-out trailer. **Already fully DISCHARGED** (pre-dates this
+      session): operator ruled Option 2 (2026-07-29), shipped `unified-trading-pm@bbe9a9871` (2026-07-30), source doc
+      `check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` is `status: resolved` and archived. No
+      batch-2 action needed.
+    - **D6** — disable/fix the 4 F4 vacuous crons + diagnose `digest-drift-sweep`. The file conflict with todo 10
+      (`sit-debounce-trigger.yml`) has cleared (batch-1 landed), and the "disable 4 named no-op crons" sub-part is a
+      bounded, deterministic task ready for batch-2 extraction — but re-verified via
+      `post_cutover_silent_assumption_sweep_2026_07_23.md` that no per-cron disable-vs-fix ruling has ever been made
+      (todo still `[ ]`), and the bundled `digest-drift-sweep` diagnosis sub-part stays unbounded (same root cause as
+      D2). **Ready for batch-2 extraction as a bounded item, split from the unbounded digest-drift-sweep half** — not
+      drafted here per this todo's scope.
+    - **D29** — two-week billing-ledger re-pull vs the Phase-0 baseline (earliest ~2026-07-31, now past). **Now fully
+      DISCHARGED** — actually completed 2026-08-09 (today, a parallel slot-28 session), per
+      `github_actions_operator_gated_followups_2026_07_17.md`'s Phase-5 entry: fleet
+      $35.51/day (Jul1-15 baseline) →
+      $12.72/day (Aug1-8), -64.2%, landing the ~$300-400/mo target. No batch-2
+      action needed.
+    - **D30** — re-observe the 27-consecutive-loss quickmerge retry storm under similarly heavy multi-slot contention
+      before closing `quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md`. Re-verified: doc
+      still `status: open`, fix 1 (content-hash QG fast-path) and fix 3 (serialized PM-doc-push queue) remain
+      unimplemented and operator-gated ("do NOT dispatch blind: quickmerge is high-blast-radius shared ship infra"); no
+      re-observation event under heavy contention has been logged anywhere in the corpus since the 2026-07-22
+      partial-progress note first raised it. **Still open, unchanged.**
 - [ ] [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch1_2026_07_26.md`** via the standard 6-step ritual (CLAUDE.md §
       plan archival): migrate any still-unresolved Deferred item to a tracked todo elsewhere (todo 3 above should have
       resolved or re-confirmed D1-D6/D29-D30 — verify none silently vanishes, and confirm the 27 operator-gated /
@@ -263,6 +315,20 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-09 (this session, slot 18) — todo 3 done.** Re-checked all 6 conflict-gated Deferred items (D1-D6) and the 2
+  time-gated ones (D29-D30) — **DONE, checkbox flipped `[x]`**. D1 already discharged (todo 1). D4 (delete
+  `pre-push-strict-quickmerge.sh`) and D5 (`check_strict_quickmerge.py` dirty-deps carve-out) are now fully DISCHARGED —
+  both landed and their source docs archived (D4 today via a parallel batch4-finalize session,
+  `unified-trading-pm@b02ba28c7`; D5 pre-dates this session, `unified-trading-pm@bbe9a9871`). D29 (two-week
+  billing-ledger re-pull) is now fully DISCHARGED — actually completed today by a parallel slot-28 session: fleet
+  $35.51/day → $12.72/day, -64.2%. D3's file conflict has cleared (batch-1 fully landed) — 4 of its 5 held
+  `scripts/quickmerge.sh` claims are ready for batch-2 re-extraction (1 of the 5 was already done pre-session). D2 and
+  D6 both re-verified still open: the underlying `digest-drift-sweep` non-convergence root-cause investigation remains
+  unbounded/un-owned in both (no operator ruling on file for "who owns digest-drift-sweep.yml edits"); D6's bounded
+  sub-part (disable 4 named no-op crons) is separable and ready for batch-2 extraction on its own. D30 re-verified still
+  open — no re-observation under heavy multi-slot contention has occurred; fixes 1/3 remain operator-gated and
+  unimplemented. Per this todo's own scope, no follow-up todos were drafted — findings recorded inline on the todo for
+  batch-2/archival (todo 4) to consume. Full per-item findings on the todo itself.
 - **2026-08-09 (this session)** — Todo 2 advanced from 3/29 to 29/29 discharged items — **DONE, checkbox flipped
   `[x]`**. Dispatched 10 parallel read-only research agents, one per source-doc group, each verifying its assigned
   batch-1 claims against the actual source doc and checking cited-commit ancestry via `git merge-base --is-ancestor`.
