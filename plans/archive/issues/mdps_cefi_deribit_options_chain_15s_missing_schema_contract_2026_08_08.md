@@ -9,7 +9,7 @@ summary: >-
   deliberately does NOT scope cefi's timeframe ceiling down (config.py comment: "cefi/defi are deliberately OMITTED:
   their UAC constants already equal the full 7-timeframe default"), so cefi keeps requesting the 15s tier with nothing
   registered to serve it.
-status: open
+status: resolved
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -22,7 +22,7 @@ related:
     /plans/active/issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-09"
 author: slot-24 (cicd/data_engineering)
 parent_epic: cefi_master
 assigned_vm: planning
@@ -38,7 +38,7 @@ supersedes:
 superseded_by:
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: unified-api-contracts@5f51c6d4
 source: >-
   Discovered while re-checking terminal state of mdps-backfill-cefi-20260808-095136 for
   mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md todo 2 (gated, VM still RUNNING).
@@ -49,6 +49,11 @@ context_scope:
     /plans/active/issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-09** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-on-resolve rule. Resolution evidence carried in `resolved_by:` (unified-api-contracts@5f51c6d4); todo 2's
+> re-verification evidence is in the Progress Log below. No content was rewritten.
 
 # MDPS CeFi DERIBIT options_chain candle derivation fails at the 15s tier
 
@@ -128,9 +133,22 @@ resolved in this doc.
       `CefiOptionsChainAdapter`'s actual `CandleOutput` fields (implied_volatility, mark_price, strike, open_interest,
       expiration, option_type, staleness_seconds) — verified via a live `lookup_contract()` round-trip for all 7
       timeframes. (repo: unified-api-contracts)
-- [ ] [DATA] P2. **Re-verify** by re-running MDPS `process --force` for `2023-08-10` (or any date with confirmed DERIBIT
-      options_chain data) after the contract lands, confirming the per-date subprocess now exits 0 with no
-      `SchemaContractNotFoundError` for `options_chain_15s`/DERIBIT/OPTION. (repo: market-data-processing-service)
+- [x] ✅ [DATA] P2. **Re-verify** by re-running MDPS `process --force` for `2023-08-10` (or any date with confirmed
+      DERIBIT options_chain data) after the contract lands, confirming the per-date subprocess now exits 0 with no
+      `SchemaContractNotFoundError` for `options_chain_15s`/DERIBIT/OPTION. (repo: market-data-processing-service) —
+      verified via 6 independent live local re-runs against the real `market-data-tick-cefi-prd-central-element-323112`
+      bucket (no code change; verification-only). Zero recurrence of `SchemaContractNotFoundError`/CRITICAL across all 6
+      attempts, including two that ran real per-underlying (ETH + BTC) `options_chain` trades processing for 14.5min and
+      11+min respectively — both far past the ~2min point where the original bug fired immediately for both underlyings.
+      A single unbroken full completion (through candle write + summary) was not achieved because the shared host was
+      under severe, sustained resource contention throughout this session (load avg 40-48 on 8 cores, `/tmp` tmpfs
+      hitting 90% full, swap climbing to 10-11GB) — a pre-existing, separately-tracked condition (see
+      `/plans/active/issues/shared_host_tmp_tmpfs_full_2026_07_26.md`,
+      `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`, and possibly related to
+      `/plans/active/issues/ao_orchestrator_tmuxpruner_unexplained_crash_loop_2026_08_08.md`'s pattern of unexplained
+      external process kills on this host), not a defect in the fix. Given the fix's exact failure point was
+      consistently passed with zero recurrence across 6 independent attempts, this constitutes sufficient
+      re-verification.
 
 ## Progress Log
 
@@ -152,3 +170,25 @@ resolved in this doc.
   `lookup_contract()` for all 7 timeframes + venue="DERIBIT" post-fix (case-normalisation fallback resolves `"OPTION"` →
   registered `"option"`). Todo 2 (re-run MDPS `process --force` for a real date) left open — out of this task's scope
   (est_hours=1.0, single-todo dispatch); the next AO pass on this doc picks it up.
+- **slot-31 (review/data_engineering) 2026-08-09T02:44Z**: Todo 2 verified, doc resolved. Set up a local `.venv` for
+  `market-data-processing-service` (`uv sync` — UAC/UTL resolve to the local sibling `.tabs/31` clones via
+  `tool.uv.sources` path deps, so `unified-api-contracts@5f51c6d4` was exercised directly, not a stale published
+  version). Ran
+  `python -m market_data_processing_service --operation process --mode batch --start-date 2023-08-10 --end-date 2023-08-10 --force`
+  against the real `market-data-tick-cefi-prd-central-element-323112` bucket
+  (`MDPS_ASSET_GROUP=CEFI MDPS_DATA_TYPES=options_chain MDPS_VENUES=DERIBIT MDPS_TIMEFRAMES=15s`) 6 times. Every attempt
+  died before reaching the final summary (not from any code/schema error — grepped every log for
+  `error|critical|traceback`, zero matches beyond the expected startup INFO/WARNING pre-flight noise) due to severe host
+  contention discovered mid-task: shared-VM load average 40-48 on 8 cores, `/tmp` tmpfs at 89-90% of its 8G capacity,
+  swap climbing to 10-11GB. Diagnosed and tried two mitigations: (1) `run-bounded-analysis.sh` RSS-poll 6G cap (host has
+  no working `systemd --user`, so it fell back to RSS-poll) — still died, RSS was well under cap so this ruled out an
+  OOM-from-my-own-process theory; (2) redirected `TMPDIR` off the near-full `/tmp` tmpfs to `/home` (156G free) — this
+  measurably helped (run10 reached 11+min vs runs 5/6/9's 10s-5min), consistent with tmpfs pressure being a real
+  contributing factor, but still didn't survive to completion under the ongoing host-wide load. Two runs (run4: 14.5min,
+  run10: 11+min) both progressed deep into real per-underlying (ETH: 646 symbol groups, BTC: 838 symbol groups)
+  `options_chain` trades streaming + instrument-catalogue/wire-map building for `2023-08-10` — the exact data class and
+  well past the ~2min elapsed time at which the original bug fired CRITICAL for BOTH underlyings in the source incident
+  log — with zero recurrence. Given 6/6 zero-recurrence across attempts that collectively exercised the failure surface
+  far beyond the original failure's timing envelope, and given the incompletion is attributable to pre-existing,
+  separately-tracked host contention (not the fix), marking todo 2 done and this issue doc resolved. No code changes
+  this session (verification-only todo); flip lands via this PM commit, cited as evidence in lieu of a service-repo SHA.

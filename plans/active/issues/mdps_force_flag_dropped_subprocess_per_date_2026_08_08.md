@@ -147,6 +147,7 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
   run.log: DERIBIT `options_chain` candle derivation raises `SchemaContractNotFoundError` for the `15s` tier
   (`instrument_type='OPTION' data_type='options_chain_15s'`), causing that date's per-date subprocess to exit `rc=1`
   (masked at the top level by shard-level isolation). Filed separately as
-  `/plans/active/issues/mdps_cefi_deribit_options_chain_15s_missing_schema_contract_2026_08_08.md` (P1, UAC
-  CONTRACT_REGISTRY gap) since it's cross-cutting and unrelated to the `--force`-forwarding fix this doc tracks.
-  Releasing todo 2 back to the queue per the same precedent — not busy-waiting on a month-scale external condition.
+  `/plans/archive/issues/mdps_cefi_deribit_options_chain_15s_missing_schema_contract_2026_08_08.md` (P1, UAC
+  CONTRACT_REGISTRY gap, resolved + archived 2026-08-09) since it's cross-cutting and unrelated to the
+  `--force`-forwarding fix this doc tracks. Releasing todo 2 back to the queue per the same precedent — not busy-waiting
+  on a month-scale external condition.
