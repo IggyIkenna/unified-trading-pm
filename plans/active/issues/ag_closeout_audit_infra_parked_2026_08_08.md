@@ -39,7 +39,7 @@ related:
     /plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
     /plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06.md,
     /plans/archive/2026_08/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md,
-    /plans/active/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,

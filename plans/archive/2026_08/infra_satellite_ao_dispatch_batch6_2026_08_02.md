@@ -13,7 +13,7 @@ summary: >-
   and 2 are fully non-batchable (both already carry an explicit `/na-eligibility-audit` KEEP-NA verdict from 2026-07-30
   on their own sole todo). Both extracted todos touch different files and were checked for file-level collision against
   all 11 existing infra batch/finalize/closeout plans plus a corpus-wide grep — zero found.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, ag-closeout-audit, satellite-docs, batch-6, plan-hygiene, meta-fold-in]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md,
     /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
@@ -48,7 +48,7 @@ context_scope:
   [
     /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
     scripts/quality-gates-base/base-service.sh,
-    /plans/active/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -64,6 +64,12 @@ source: >-
 ---
 
 # Infra satellite docs — AO dispatch batch 6
+
+> **ARCHIVED 2026-08-09 (slot 14) — both todos `[x]`, finalize-pair ritual complete.** Both source-doc reconciliations
+> (`issues/docs_reconcile_autonomous_sweep_2026_07_30.md`'s P2-E, `issues/host_root_disk_full_transient_2026_07_13.md`'s
+> `[INFRA] P2`) were verified 2026-08-08 by the finalize plan; neither source doc archived (both keep other
+> operator/judgment-gated remainder work). See
+> `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md` for the finalize-side record.
 
 ## Why this plan exists
 

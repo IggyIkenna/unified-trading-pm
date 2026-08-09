@@ -11,8 +11,7 @@ summary: >-
   remainder work at `assigned_vm: NA` (the codex-freshness P0-A decision + dead-doctrine-ref judgment calls in the
   first; the cron-install operator-gated sub-item in the second) — so this plan's main job is to flip accurately and
   confirm neither is prematurely archived, then run the standard ritual on the batch pair itself.
-status: active
-archive_exempt: true
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -21,7 +20,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, ag-closeout-audit, finalize, batch-6, plan-hygiene]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
     /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -44,7 +43,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 supersedes:
@@ -55,6 +54,8 @@ source: >-
 ---
 
 # Infra satellite AO batch 6 — finalize
+
+> **ARCHIVED 2026-08-09 (slot 14) — all 3 todos `[x]`, 6-step archival ritual complete for the batch pair.**
 
 Machine-held via `depends_on` + `gate_on_depends: true` until both of
 `infra_satellite_ao_dispatch_batch6_2026_08_02.md`'s todos are done — this plan can never dispatch early, regardless of

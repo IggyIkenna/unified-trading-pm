@@ -37,7 +37,7 @@ related:
     /plans/archive/issues/ag_closeout_audit_infra_parked_2026_07_31.md,
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md,
-    /plans/active/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
     /plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
