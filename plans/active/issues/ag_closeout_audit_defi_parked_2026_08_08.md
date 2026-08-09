@@ -197,3 +197,7 @@ this doc. ✓
   belonging to other tranches' write remit, 1 clean orthogonality note). No action for na-eligibility-audit here — this
   doc's own domain is `/ag-closeout-audit`'s orphan-detection tracking, not a todo list this skill dispatches from.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 0 checkboxes -- the most current defi
+  ag-closeout-audit parked-findings doc (created 2026-08-08, self-edited 2026-08-09). Confirmed via repo-wide search
+  that no 2026-08-09 successor doc exists yet. Still carries live, unclaimed batch11-candidate pointers. Findings
+  ledger, not a task doc. Doc stays `assigned_vm: NA`.

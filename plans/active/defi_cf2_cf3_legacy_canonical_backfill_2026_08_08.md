@@ -122,3 +122,9 @@ todos/plans or a documented reason it still can't be scoped.
   itself (exact date list, cell shapes, sizing, backfill-vs-relabel classification), none of which is a bounded fact
   yet; the doc's own last todo already names the correct future action (fork into `assigned_vm: planning` child plan(s)
   once the scoping numbers exist). No cheat-sheet precedent applies pre-scoping. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- Freshly-authored (2026-08-08) scoping-only plan
+  responding to an explicit operator ruling. All 6 open todos are the scoping pass itself (re-run CF-audit, determine
+  path shapes, size the work, confirm writer/reader conflict, THEN split into dispatch-ready child plans) -- todo 5
+  requires a judgment call sequenced after 1-4 land real numbers, so the whole doc doesn't clear the RECLASSIFY bar yet.
+  Corroborated same-day by `defi_satellite_ao_dispatch_batch11_2026_08_09.md`'s fresh extraction pass, which examined
+  this doc and found zero extractable items. Doc stays `assigned_vm: NA`.

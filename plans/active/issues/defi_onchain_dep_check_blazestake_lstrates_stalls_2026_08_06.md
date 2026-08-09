@@ -263,3 +263,7 @@ BLAZESTAKE still blocking — Option A still needed).
   constraint means it can't be split from item 3's conflict. Recommend: batch9/batch10 owners reconcile their stale park
   text against this doc's live self-resolution next round, then re-run this classification. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- Sole open checkbox (root-cause `lending_indices`
+  capture stoppage) reads AO-dispatchable on its own text, but this doc's own round7 (2026-08-08) entry ruled it
+  CONFLICT-DEFERRED -- held by the active `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s operator-ruling-pending
+  park. Not re-litigated. Doc stays `assigned_vm: NA`.

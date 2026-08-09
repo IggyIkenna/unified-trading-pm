@@ -84,3 +84,7 @@ Discovered during `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 1 (batc
   `assigned_vm: NA`.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- Pure findings-plus-options doc, zero tracked
+  checkboxes but 1 real prose-only open item (this corpus's confirmed trap): UAC's colon-guard hard-rejects kamino.py's
+  SOLANA_VAULT compound symbol. 3 explicit options laid out, each with different GCS-path/manifest-migration
+  implications -- doc's own text: "operator ruling required" before any implementation. Doc stays `assigned_vm: NA`.

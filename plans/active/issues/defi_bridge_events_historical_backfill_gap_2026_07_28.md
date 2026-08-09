@@ -178,3 +178,7 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
   this backfill run — closing it here; the plan checkbox was flipped in
   `defi_satellite_ao_dispatch_batch10_2026_08_06.md`.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 0 open checkboxes -- sole recommended-decision
+  item marked `[x]` done, 2026-08-07 entry confirms the backfill VM launched SPOT, health-verified, zero
+  UPSTREAM_INSTRUMENTS_CATALOG_STALE errors. No prose-only remaining-work trap found on a full read. Doc stays
+  `assigned_vm: NA`.

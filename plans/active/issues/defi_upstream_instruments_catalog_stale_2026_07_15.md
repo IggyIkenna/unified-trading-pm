@@ -542,3 +542,7 @@ mode-threading residual and `[DESIGN] P3` completion-signal items remain genuine
   IS-catalogue-completion-signal retry-sweep) remains a lower-priority design task with no concrete done-when; every
   other item already resolved with evidence. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- Sole open checkbox (`[DESIGN] P3`,
+  IS-catalogue-completion-signal retry-sweep) is an explicit lower-priority nice-to-have with no concrete done-when and
+  unresolved ownership ("whichever owns the IS catalogue backfill scheduling"). Multiple prior audits
+  (2026-07-30/08-04/08-07) reached KEEP-NA on this same basis. Doc stays `assigned_vm: NA`.

@@ -375,11 +375,11 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       stale — per `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` Todo 3 (2026-08-07,
       `defi_satellite_ao_dispatch_batch10-009`), both `-1` and `-2` had COMPLETED by 2026-08-07 ("No sibling VMs running
       at launch time — both `-1` and `-2` had completed"); `-3` was separately found FAILED (`exit_code=137`,
-      2026-07-27, silent 6+ day stall — never relaunched until then) and was relaunched 2026-08-07
-      (SPOT, SHARD_INDEX=6, `--start 2025-12-15 --end 2026-07-21`), health-verified RUNNING at T+10min (95,236 swap rows
-      in the first shard). Not independently re-verified live in this pass whether `-3` has since reached its window end
-      (~2 days elapsed since relaunch) — this todo stays open pending that confirmation, but the accurate current state
-      is "2 of 3 shards done, 1 relaunched and healthy as of 2026-08-07," not the stale "-1/-2 still running" text above.
+      2026-07-27, silent 6+ day stall — never relaunched until then) and was relaunched 2026-08-07 (SPOT, SHARD_INDEX=6,
+      `--start 2025-12-15 --end 2026-07-21`), health-verified RUNNING at T+10min (95,236 swap rows in the first shard).
+      Not independently re-verified live in this pass whether `-3` has since reached its window end (~2 days elapsed
+      since relaunch) — this todo stays open pending that confirmation, but the accurate current state is "2 of 3 shards
+      done, 1 relaunched and healthy as of 2026-08-07," not the stale "-1/-2 still running" text above.
 
 ## Phase 6 — Interest PnL on honest data (the payoff; see pnl_interest_accrual doc)
 
@@ -741,6 +741,11 @@ action (operator-approved). Otherwise, check the dex-swaps 3-VM fleet's progress
   agent)**: `strategy-service/strategy_service/engine/backtest/index_ratio_accrual.py` + its test — the pure Aave
   index-ratio helper, NOT applicable to csb any more (E4 ruled LENDING drops entirely for csb), its remaining use is the
   recursive-staking borrow leg (E3), an explicit bigger follow-on. Leave held, do not rebuild.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid — gate + 3 open items re-verified live (CEX-spot
+  backfill operator-held per standing caution; lst_yields FEATURE run operator-invocation-only per script markers;
+  DEX-swaps fill in-flight VM, not yet confirmed at window end). BIG FINDING flagged, not fixed here (read-only scope):
+  doc measured 1009L via `check_line_caps.sh`, over the 1000L hard cap again (regression from an inline "Status update
+  2026-08-09" correction) — next marker-writer must use the marker-only carve-out. Doc stays `assigned_vm: NA`.
 
 ## Lessons (avoid re-learning)
 

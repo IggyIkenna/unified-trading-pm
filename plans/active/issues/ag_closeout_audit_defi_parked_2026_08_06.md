@@ -179,3 +179,7 @@ operator ruling.
   `orphaned_never_touched, 0 AO-eligible for defi` — both belong to the cross-cutting/cefi/tradfi tranches under the
   primary-owner rule, not a defi reclassify target). No action.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 0 checkboxes -- a scheduled /ag-closeout-audit
+  run report (findings ledger, not a task list). 2 findings: 1 orphaned-elsewhere item (cross-cutting-owned), 1
+  informational note about sibling-tranche false-0-open-todos claims. Nothing to reclassify. Doc stays
+  `assigned_vm: NA`.

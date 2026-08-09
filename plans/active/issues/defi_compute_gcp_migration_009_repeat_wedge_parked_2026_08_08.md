@@ -98,3 +98,7 @@ reaching the point where a compact would be needed.
   condition `auto_unpark__defi_compute_gcp_migration-009` confirmed set in the response. Slot 13's stuck session
   released via a follow-up `reassign kill_worker:true` for slot hygiene (task already parked so it won't re-dispatch).
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- Live-incident doc: task wedged/crash-looped on 3
+  distinct AO slots within ~35min, durably parked per the standing 3rd-distinct-slot mitigation rule. All 3 open
+  checkboxes sequentially gated on `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md`'s external root-cause
+  investigation, confirmed still open/in-flight (mtime 2026-08-09 05:46). Doc stays `assigned_vm: NA`.

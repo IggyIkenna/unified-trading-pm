@@ -151,3 +151,6 @@ this is inference from timing + the workspace's own documented operational contr
   rebuild VM has since completed (ETA from 2026-08-07 was 4-5+ more days; only ~2 days have elapsed) — todo 2 stays open
   pending that. Doc stays `assigned_vm: NA` (2 of 3 items still genuinely open).
 - **context-scout 2026-08-09**: populated context_scope (4 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 2 open todos, both non-worker-determinable today:
+  todo 1 DEPENDENCY_BLOCKED on the in-flight canonical-migration-defi-rebuild VM's multi-day completion (~2 of 4-5+ days
+  elapsed); todo 2 an explicit OPERATOR_QUESTION on CONSOLIDATOR_DOWN alert-routing design. Doc stays `assigned_vm: NA`.

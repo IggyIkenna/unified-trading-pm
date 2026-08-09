@@ -957,3 +957,7 @@ should flip `defi_onchain_v10_universe_v2_seed_or_backfill_progressed→true` on
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — gate_on_depends on data_completion_defi_2026_07_15
   re-verified still open today.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 960-line doc, only 1 open todo remains (re-run
+  the `mvp_backfill_defi_onchain_v10` G2 gate for `lending_indices`) after an extensive incident history (adapter
+  wiring, 3x VM relaunches, a GraphQL schema-drift fix, a tarball-staleness audit, a zombie-watchdog fix, a 13-round
+  redispatch storm). Doc stays `assigned_vm: NA`.

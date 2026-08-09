@@ -577,3 +577,7 @@ files.
   cross-repo re-verify, the OPERATOR-NOTIFY big finding) remains unruled and cross-repo. Net: whole-doc flip is not
   clean this round. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 579-line audit doc, 6 prior na-eligibility-audit
+  rounds all landed KEEP-NA valid, re-confirmed today. 2 open checkboxes: a deliberate citation-tracker held open until
+  `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 6 lands (verified active/planning, real
+  citation), plus one other gated item. Doc stays `assigned_vm: NA`.

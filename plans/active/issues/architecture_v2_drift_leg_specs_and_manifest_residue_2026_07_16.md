@@ -249,3 +249,8 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
   structural-skew investigation the doc's own "Secondary finding" says likely needs its own plan. Doc stays
   `assigned_vm: NA`.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 1 open checkbox (`[ENGINEER] P1`) bundling 3
+  sub-parts: an undecided strategy-domain judgment call (delete vs re-leg
+  `CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod`), a mechanical UI resync gated on that decision landing first,
+  and a separate generator item. Doc's own words: "a strategy-domain call, not a registry-cleanup call." Doc stays
+  `assigned_vm: NA`.

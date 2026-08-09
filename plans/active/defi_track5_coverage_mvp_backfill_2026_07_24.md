@@ -136,24 +136,21 @@ context_scope:
 - [ ] [DATA] P1. **Run `/data-pipeline-check-is` and `/data-pipeline-check-mtds` 3x each across the defi backfill**
       (gate-audit §11: pre-backfill baseline, mid-backfill spot-check, post-backfill final gate per skill — 0 dated runs
       of either on record for defi today). Cite each run's report path + date. (repos: instruments-service,
-      market-tick-data-service) **UNPARKED 2026-08-08 (operator ruling): `--day 2026-07-01` for the
-      baseline/mid/final checkpoints.** Resolves the `BLK-d355f03a` blocked question from
+      market-tick-data-service) **UNPARKED 2026-08-08 (operator ruling): `--day 2026-07-01` for the baseline/mid/final
+      checkpoints.** Resolves the `BLK-d355f03a` blocked question from
       `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch5_2026_07_27.md` (both skills' SKILL.md § 0 forbid
       synthesizing `--day` without operator input — now supplied). Exact commands for whoever runs the 3x-each
-      cadence:
-      - Baseline: `/data-pipeline-check-is --day 2026-07-01` + `/data-pipeline-check-mtds --day 2026-07-01`
-      - Mid-backfill spot-check: `/data-pipeline-check-is --day 2026-07-01` + `/data-pipeline-check-mtds --day 2026-07-01`
-        (re-run once the MVP backfill above is genuinely mid-flight — cite the report path + date of that run, not a
-        duplicate of the baseline run under a different label)
-      - Post-backfill final gate: same command, run once the MVP backfill is complete
-      **2026-08-08 apply-pass attempt**: invoked `/data-pipeline-check-is --day 2026-07-01` from this session — the
-      skill loaded and its own §1a states this check must run via a dedicated VM driver
-      (`launch-pipeline-e2e-check-driver-vm.sh`, real GCS-bucket provisioning + a full MVP `(asset_group, venue)`
-      matrix sweep, explicitly "never run inline on the shared host", multi-minute-plus real VM spend). Did NOT
-      launch that VM this session — out of proportion to run to completion synchronously alongside this apply
-      session's other 8 items, and the skill is designed for VM-launch + poll, not an inline quick check. The
-      `--day` blocker is genuinely cleared now; whoever runs the 3x-each cadence next can go straight to execution
-      with the commands above.
+      cadence: - Baseline: `/data-pipeline-check-is --day 2026-07-01` + `/data-pipeline-check-mtds --day 2026-07-01` -
+      Mid-backfill spot-check: `/data-pipeline-check-is --day 2026-07-01` + `/data-pipeline-check-mtds --day 2026-07-01`
+      (re-run once the MVP backfill above is genuinely mid-flight — cite the report path + date of that run, not a
+      duplicate of the baseline run under a different label) - Post-backfill final gate: same command, run once the MVP
+      backfill is complete **2026-08-08 apply-pass attempt**: invoked `/data-pipeline-check-is --day 2026-07-01` from
+      this session — the skill loaded and its own §1a states this check must run via a dedicated VM driver
+      (`launch-pipeline-e2e-check-driver-vm.sh`, real GCS-bucket provisioning + a full MVP `(asset_group, venue)` matrix
+      sweep, explicitly "never run inline on the shared host", multi-minute-plus real VM spend). Did NOT launch that VM
+      this session — out of proportion to run to completion synchronously alongside this apply session's other 8 items,
+      and the skill is designed for VM-launch + poll, not an inline quick check. The `--day` blocker is genuinely
+      cleared now; whoever runs the 3x-each cadence next can go straight to execution with the commands above.
 
 ## MVP universe — proven-wired vs. merely-declared (gate-audit §14, 2026-07-24: no such section existed; this track is the closest source)
 
@@ -170,11 +167,11 @@ the parent plan's Track 7 culled-venue ruling.
 ## Progress Log
 
 - **round5-na-digest-defi 2026-08-08 (apply pass, item 66)**: operator supplied `--day 2026-07-01` for the
-  baseline/mid/final pipeline-check cadence, unparking the `BLK-d355f03a` blocked question. Attempted to actually
-  invoke `/data-pipeline-check-is --day 2026-07-01` this session; the skill's own §1a requires launching a dedicated
-  VM driver for a real, multi-minute-plus, real-VM-spend full MVP matrix sweep — did not launch that VM this
-  session (out of scope to run to completion synchronously alongside this session's other 8 items). Recorded the
-  exact commands + confirmed date in the todo above for the next runner. Doc unchanged otherwise.
+  baseline/mid/final pipeline-check cadence, unparking the `BLK-d355f03a` blocked question. Attempted to actually invoke
+  `/data-pipeline-check-is --day 2026-07-01` this session; the skill's own §1a requires launching a dedicated VM driver
+  for a real, multi-minute-plus, real-VM-spend full MVP matrix sweep — did not launch that VM this session (out of scope
+  to run to completion synchronously alongside this session's other 8 items). Recorded the exact commands + confirmed
+  date in the todo above for the next runner. Doc unchanged otherwise.
 - **na-eligibility-audit 2026-08-01**: KEEP-NA-STALE-ITEMS — re-verified live: parent
   `defi_consolidated_closeout_2026_07_18.md` still `depends_on` + `gate_on_depends: true`, still active/unlocked, still
   18 open todos — gate citation still holds, doc stays KEEP-NA overall. Closed 1 stale item this pass (async fan-out —
@@ -189,3 +186,7 @@ the parent plan's Track 7 culled-venue ruling.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — gate_on_depends on
   defi_consolidated_closeout_2026_07_18 re-verified still open (13 todos) today; genuine prerequisite, not stale.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 192-line doc forked from
+  `defi_consolidated_closeout_2026_07_18.md` Track 5. Explicit `depends_on`+`gate_on_depends: true` on the parent,
+  personally confirmed still open (14 items, same-batch read). 4 open todos; whole-doc KEEP-NA on the gate citation. Doc
+  stays `assigned_vm: NA`.

@@ -170,3 +170,7 @@ auto-resolve. Finding 2 is a tag correction, not a todo.
   `ag_closeout_audit_defi_parked_2026_08_08.md` run's own "Finding 1" re-verification (findings 1/5 archived, finding 3
   item 1 done, finding 6 still correctly NA-gated). No action.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 0 checkboxes -- another scheduled
+  /ag-closeout-audit report, 6 findings about OTHER docs' orphaned/partial coverage. Cross-checked against the
+  2026-08-08 sibling doc, which re-verified live state: findings 1+5 now resolved+archived, finding 3 item 1 done,
+  others still open. Findings ledger, not a task doc. Doc stays `assigned_vm: NA`.
