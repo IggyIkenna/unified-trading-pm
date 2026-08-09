@@ -33,6 +33,10 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+sequential: true # todo 2 (VM launch) explicitly requires todo 1's driver ("once the driver lands and is
+# unit-tested") — added 2026-08-09 (slot-11) after this doc's todo 2 was dispatched with no driver yet built
+# (grep confirmed zero SportsEnsembleTrainingRunner references in ml-service); without sequential ordering
+# both P1 todos are same-priority and dispatchable to any worker regardless of the real dependency.
 ---
 
 ## What I found
@@ -104,3 +108,8 @@ the VM-scale run:
   path (details above). Shipped the mechanical sub-fix (model_2b/model_2c grid configs, ml-service@0a7d842) and filed
   this doc for the actual driver-build + VM-run work, since attempting either inside this single dispatched task would
   mean either fabricating a measured delta or building + running a multi-day ML pipeline unreviewed.
+- 2026-08-09 (slot-11): dispatched todo 2 ("launch it on a dedicated VM") directly — re-confirmed via
+  `grep -rln "SportsEnsembleTrainingRunner" ml-service/` (zero hits) that todo 1's driver still does not exist, so todo
+  2's own precondition is unmet. Added `sequential: true` to this doc's frontmatter so the backlog won't dispatch todo 2
+  again until todo 1 is checked `done` (`PLAN_FORMAT.md` § sequential — strict N-waits-for-N-1 ordering). Skipping this
+  task with `reason_code: GATED`; no code change to ml-service in this session.
