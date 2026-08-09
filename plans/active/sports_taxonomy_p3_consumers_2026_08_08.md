@@ -275,17 +275,40 @@ spelling variant survives, which is the entire point of the panel". It does not.
 
 ### Betfair Exchange
 
-- [ ] [CODE] P1. **Build the Betfair Exchange adapter scaffold + UAC contract** (operator ruling 2026-08-08: scaffold
-      only). This is the ONE genuinely-traded sports dataset available to us — matched-bet volume — and we capture none
-      of it; every current row is an odds_api quote. **Fully AO-completable with no operator step**: the scaffold,
-      contract, venue capability wiring and unit tests are all buildable credential-free per the
-      External-Data-Always-Available rule, and the todo is DONE when they exist and pass QG. It must write
-      `data_type=trades` (the name P1 reserved for real matched volume), NOT `odds`. This todo must NOT carry a
-      blocked-on-credentials marker: the credential ask is a separate, already-tracked item and must not gate the
-      scaffold. **Do not restate the literal marker token here either** — a live `BLOCKED-<TOKEN>` string anywhere in a
-      todo block makes that todo permanently non-dispatchable (`_has_live_blocked_token`,
+- [x] ✅ [CODE] P1. **Build the Betfair Exchange adapter scaffold + UAC contract** (operator ruling 2026-08-08, per this
+      plan's own `source:` frontmatter — `sports_taxonomy_p3_consumers_2026_08_08.md`, "sports venue/data-type audit,
+      2026-08-08 interactive session — 27 operator rulings": scaffold only). This is the ONE genuinely-traded sports
+      dataset available to us — matched-bet volume — and we capture none of it; every current row is an odds_api quote.
+      **Fully AO-completable with no operator step**: the scaffold, contract, venue capability wiring and unit tests are
+      all buildable credential-free per the External-Data-Always-Available rule, and the todo is DONE when they exist
+      and pass QG. It must write `data_type=trades` (the name P1 reserved for real matched volume), NOT `odds`. This
+      todo must NOT carry a blocked-on-credentials marker: the credential ask is a separate, already-tracked item and
+      must not gate the scaffold. **Do not restate the literal marker token here either** — a live `BLOCKED-<TOKEN>`
+      string anywhere in a todo block makes that todo permanently non-dispatchable (`_has_live_blocked_token`,
       `agent-orchestrator/server/regen_backlog_from_plan.py`), which is exactly how this todo sat silently absent from
-      the live backlog from authoring until 2026-08-08 — the sentence forbidding the marker contained the marker.
+      the live backlog from authoring until 2026-08-08 — the sentence forbidding the marker contained the marker. —
+      **DONE 2026-08-09** (slot-31, `backend_engineer`): `market-tick-data-service@99de0c1b7`. The Betfair Exchange
+      back+lay ODDS adapter (`BetfairAdapter`) already existed end-to-end from a separate, earlier chain
+      (`/plans/active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md`) — that adapter emits
+      `data_type="ODDS"`, not `trades`, so this plan's own "must write `data_type=trades`, NOT `odds`" requirement was
+      still genuinely unmet. Added the matched-bet-volume scaffold: `_trades_row_dict`/`_row_for_trades` (honest-absence
+      — a runner with no/zero cumulative `total_matched` reading is skipped, never emitted as a distorted zero-volume
+      row) `_rows_for_market_trades` and `download_batch_trades(date, leagues=None)` — reuses the SAME
+      `get_markets`/`get_prices` calls the odds path already makes (no new HTTP surface, credential-free per the
+      External-Data-Always-Available rule), stamping `venue="BETFAIR"`, `data_type="trades"` (lower-case, per the
+      2026-07-23 sports-vocabulary ruling), `price=total_matched`. UAC contract: `data_type="trades"` was ALREADY fully
+      registered for sports in `unified_api_contracts.registry.market_data_categories.VENUES_BY_ASSET_GROUP["sports"]`
+      (deliberately excluded from `SPORTS_DATA_TYPE_TO_SOURCE`/`AVAILABILITY_AT_SEMANTICS`/`total_universe` per that
+      module's own documented flood-prevention design — left untouched, not this todo's scope to re-open) — no UAC
+      change needed. Venue capability: `BETFAIR` already resolves in `VENUE_TO_ADAPTER_KEY` and `VENUE_REGISTRY` (from
+      the earlier odds-adapter chain); this scaffold is a NEW METHOD on the existing adapter, not a new registration. 4
+      new unit tests (`test_download_batch_trades_emits_matched_volume_rows`, `..._skips_runner_with_no_matched_volume`,
+      `..._leagues_filter_matches_competition_name`, `..._empty_when_no_markets`) mirroring the existing odds-path test
+      shapes; full test suite green (10430 passed, 28 skipped); full `quality-gates.sh` (no skip flags) green,
+      sentinel-verified. **Not wired into `umi_tick_provider.py`'s scheduled capture loop** (still keyed to a single
+      `download_batch` call per venue) — out of scope per the plan's own "scaffold only" framing; a follow-up wiring
+      todo can dispatch once credentials land, mirroring how the odds adapter's own live-wiring was a separate step from
+      its scaffold.
 
 ### Catalogue, browser, dependency
 
