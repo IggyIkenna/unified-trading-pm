@@ -100,25 +100,37 @@ drift_direction: advance-code
       report that as a finding rather than fabricating a passing test.
 
       **Confirmed live for `("cefi", "trades")` — 6 registered sources, `source_required()` returns `True`.** Added
-          `tests/unit/test_cefi_manifest_source_provenance.py` exercising the REAL UAC/UTL gate end-to-end (not mocked),
-          mirroring `unified-trading-library/tests/unit/test_manifest_writer_source.py`'s fixture pattern: (a) omitting
-          `source=` on a `("cefi", "trades")` write raises `MissingSourceError`; (b) `source="tardis"` persists on
-          `writer._records[-1].source`; (c) a synthetic `monkeypatch.setitem(SOURCE_PRIORITY, ...)` key with
-          `["aster", "tardis"]` proves `select_primary_available_source` resolves by priority order (index-0 wins when both
-          available; the sole available source wins by elimination otherwise) — synthetic so the assertion doesn't couple
-          to whichever real cell happens to be 2-source today. All 3 tests green; full repo QG green (10,236 passed).
-          Repo: market-tick-data-service@78a8c93b. Also fixed, same commit series: a `check-import-patterns.py` deep-import
-          violation in the new test file (`unified_trading_library.events` → top-level `unified_trading_library`), and a
-          stale QG STEP 5.95 `_MTDS_TYPE_IGNORE_BASELINE` ratchet (658→662, verified pre-existing drift via
-          `git grep` at HEAD~2 — not introduced by this session; 232 unrelated commits landed since the 2026-08-05
-          catch-up, 0 bare/broad `# type: ignore`, same legitimate-catch-up shape as the prior re-measurement).
+              `tests/unit/test_cefi_manifest_source_provenance.py` exercising the REAL UAC/UTL gate end-to-end (not mocked),
+              mirroring `unified-trading-library/tests/unit/test_manifest_writer_source.py`'s fixture pattern: (a) omitting
+              `source=` on a `("cefi", "trades")` write raises `MissingSourceError`; (b) `source="tardis"` persists on
+              `writer._records[-1].source`; (c) a synthetic `monkeypatch.setitem(SOURCE_PRIORITY, ...)` key with
+              `["aster", "tardis"]` proves `select_primary_available_source` resolves by priority order (index-0 wins when both
+              available; the sole available source wins by elimination otherwise) — synthetic so the assertion doesn't couple
+              to whichever real cell happens to be 2-source today. All 3 tests green; full repo QG green (10,236 passed).
+              Repo: market-tick-data-service@78a8c93b. Also fixed, same commit series: a `check-import-patterns.py` deep-import
+              violation in the new test file (`unified_trading_library.events` → top-level `unified_trading_library`), and a
+              stale QG STEP 5.95 `_MTDS_TYPE_IGNORE_BASELINE` ratchet (658→662, verified pre-existing drift via
+              `git grep` at HEAD~2 — not introduced by this session; 232 unrelated commits landed since the 2026-08-05
+              catch-up, 0 bare/broad `# type: ignore`, same legitimate-catch-up shape as the prior re-measurement).
 
-- [ ] [TEST] P1. Add an `available_at`-parity fixture test: a 2-source fixture (TradFi is the one live 2-source pair
+- [x] ✅ [TEST] P1. Add an `available_at`-parity fixture test: a 2-source fixture (TradFi is the one live 2-source pair
       today) asserts identical `available_at` derivation per cell regardless of which registered source wrote it, so
       adding/swapping a source never shifts the lookahead window. Repo: market-tick-data-service or
       market-data-processing-service. Source: `data_source_provenance_enforcement_2026_07_24.md` (`available_at`-parity
       item). Done when: the fixture test asserts identical `available_at` derivation from the `SOURCE_PRIORITY` top
       entry across both sources for the same cell.
+
+      Confirmed `tradfi/ohlcv_15m` is the registered 2-source cell (`SOURCE_PRIORITY` top entry `databento`, second
+          `yahoo`). Both adapters derive `available_at` via the same source-blind UTL helper,
+          `compute_bar_close_boundary(last_tick_ts, timeframe)` (`unified_trading_library/availability_stamping.py:540`) —
+          it takes no `source` parameter, so `available_at == t_close` is purely a function of `(tick_ts, timeframe)`.
+          Added `test_tradfi_available_at_source_parity.py`: drives the REAL `_convert_ohlcv_open_edge_to_close` (databento)
+          and `YahooFinanceAdapter._convert_ohlcv_df_to_records` (yahoo) with the same tick across 3 parametrized cases
+          (mid-bar, day-boundary, non-grid-aligned) and asserts byte-identical close-edge/`available_at`, plus a
+          `get_primary_source("tradfi", "ohlcv_15m") == "databento"` pin on the fixture's premise. 4 tests, all green. Repo:
+          market-tick-data-service@63ce1e05. Evidence: full `quality-gates.sh` green (sentinel 406d6b52, verified ancestor
+          of `origin/live-defi-rollout` post-quickmerge).
+
 - [ ] [MTDS] P1. A12a — wire the `assert_defi_catalog_fresh(...)` preflight into the 8 still-unwired DeFi collect
       handlers: `lending_indices_handler`, `liquidations_handler`, `liquidation_events_handler`,
       `bridge_events_handler`, `token_transfers_handler`, `aggregator_route_handler`, `flash_loan_events_handler`,
@@ -198,3 +210,8 @@ drift_direction: advance-code
   full evidence. Along the way, fixed a `check-import-patterns.py` violation and caught up a stale QG ratchet baseline
   (`_MTDS_TYPE_IGNORE_BASELINE` 658→662, verified pre-existing via `git grep` at the prior HEAD, not introduced this
   session) that was blocking Pass-1 QG for any commit to this repo, not just this one.
+- **2026-08-09 (data_engineering worker, slot 30)**: Dispatched the `available_at`-parity fixture test todo. Confirmed
+  `tradfi/ohlcv_15m` is the registered 2-source cell and that `available_at` derivation (`compute_bar_close_boundary`)
+  is source-blind by construction — added a real (non-mocked) end-to-end fixture at `market-tick-data-service@63ce1e05`
+  driving both live adapters against the same tick, plus a `SOURCE_PRIORITY` premise pin — see the flipped checkbox
+  above for full evidence.
