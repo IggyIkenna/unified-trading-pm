@@ -104,14 +104,23 @@ locked_since:
       corroborating, not duplicate, evidence).
 
       **Net**: no false-done claims found in any of the four source docs; every commit P1 or its sources cite resolves
-              to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
-              capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
-              (unrelated, already-tracked) chains finish.
+                  to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
+                  capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
+                  (unrelated, already-tracked) chains finish.
 
-- [ ] [REVIEW] P1. **Check whether reconciling left any source doc at zero open todos**, and if so run the same 6-step
-      archival ritual on it — a finalize that closes only its own plan while leaving a now-fully-done source doc live is
-      the exact omission that caused a real `run_hygiene_sweep.sh --ci` hard-fail (10 violations). **Done when**: each
-      source doc is either still open with todos, or archived.
+- [x] ✅ [REVIEW] P1. **Check whether reconciling left any source doc at zero open todos**, and if so run the same
+      6-step archival ritual on it — a finalize that closes only its own plan while leaving a now-fully-done source doc
+      live is the exact omission that caused a real `run_hygiene_sweep.sh --ci` hard-fail (10 violations). **Done
+      when**: each source doc is either still open with todos, or archived. — **VERIFIED 2026-08-09 (slot 9, review)**,
+      counted `- [     ]` open todos directly in each of the four source docs (not trusted from the prior todo's prose):
+      `sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` — 0 open, `status: resolved` — but this doc was
+      **already archived to `plans/archive/issues/` on 2026-08-08**, before P1 was authored (confirmed by its own path +
+      the prior todo's citation), so there is no live doc left to archive here.
+      `sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md` — 2 open todos remain (§ U residual-league
+      decisions), `status: open`. `mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md` — 1 open todo remains (the
+      `[OPERATOR] P2` credential ask), `status: open`. `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` — 4
+      open todos remain (its own live operational chain), `status: open`. **Net**: reconciling did not leave any
+      currently-live source doc at zero open todos — none qualifies for the 6-step archival ritual right now.
 - [ ] [REVIEW] P1. **Confirm capture is STILL live, not merely restored once.** P1's Block A proves a single day; this
       re-checks that raw sports capture has continued writing for the full window since, and that the new staleness
       guard actually fires on a synthetic frozen-source day. A guard that was never observed firing is not a guard.
