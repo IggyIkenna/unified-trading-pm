@@ -165,3 +165,9 @@ underlying pattern: liveness-by-log-silence is not liveness).
 - **2026-08-09, slot-28**: Discovered + root-caused + fixed live while executing batch6 todo #2. Fix committed
   `deployment-service@6b1057cc`; re-launch in progress, VMs surviving past the previous failure window at time of
   filing.
+- **2026-08-09T~04:41Z, slot-28**: Fix landed on `live-defi-rollout` (`deployment-service@c99ab99b8`, rebased SHA of the
+  same content — ancestry-verified on origin). QG hit the 600s timing gate 3× standalone (1343s, timeout, 708s) before
+  passing clean at 496s once shared-host load dropped (peaked at load-avg 63-67 with 8+ concurrent QG runs fleet-wide,
+  well past the "≤2 full QGs at once" norm — a fleet-wide contention issue, not specific to this change). Quickmerge's
+  own internal re-gate also hit the same wall once (626s) before a clean run finally shipped. No content changes were
+  needed across any of these attempts — every failure was purely the resource-drift timing gate under contention.
