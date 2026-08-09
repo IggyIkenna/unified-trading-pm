@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [agent-orchestrator, context, compaction, main-agent, review-agent, worker-lifecycle]
 related:
   [
-    /plans/active/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
+    /plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
     /plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]
@@ -47,7 +47,7 @@ context_scope:
   [
     agent-orchestrator/server/context_lifecycle.py,
     agent-orchestrator/server/worker_liveness/__init__.py,
-    /plans/active/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
+    /plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
   ]
 ---
 
@@ -80,44 +80,44 @@ changing policy: the gate's real open-rate is currently unknown, not known-bad.
 - **`context_pressure` is hardcoded for main.** `_read_pct` returns `(pct, "low")` for the slot-less main agent because
   pressure lives on `SlotRow`. The Tier-2 `pressure == "thrashing"` immediate-recycle trigger is therefore structurally
   unreachable for main — it can only ever recycle on compaction-count or 24h age.
-- **main's terminal wedge-recovery is downstream of a force that may never fire.** `_rearm_if_force_ineffective`
-  returns at its first branch when `state.forced_at is None`. The kill-session + clear-`claude_session_id` recovery for
-  a wedged MAIN therefore only ever arms AFTER a force actually submitted. If the idle gate never opens, main's
-  last-resort net is unreachable.
+- **main's terminal wedge-recovery is downstream of a force that may never fire.** `_rearm_if_force_ineffective` returns
+  at its first branch when `state.forced_at is None`. The kill-session + clear-`claude_session_id` recovery for a wedged
+  MAIN therefore only ever arms AFTER a force actually submitted. If the idle gate never opens, main's last-resort net
+  is unreachable.
 - **Guidance and recycle are one-shot per episode.** `guidance_sent_at` / `recycle_sent_at` are re-armed only by an
   observed compaction, and `_TargetState` is in-memory (reset on orchestrator restart, which also restarts the 24h
   recycle clock).
 
 ## Why this is not simply "extend the worker force to main"
 
-The 2026-08-05 ruling deliberately kept main/review cooperative-first, with a stated rationale: *"never compact
-mid-work — a single pane-snapshot 'looks idle' is untrustworthy on a days-long loop"*. main holds fleet state a worker
-does not. Reversing that is an operator call (todo 5), not a worker's — so the AO-dispatchable todos here gather the
-evidence and fix the two unambiguous structural defects, leaving the policy reversal explicitly gated.
+The 2026-08-05 ruling deliberately kept main/review cooperative-first, with a stated rationale: _"never compact mid-work
+— a single pane-snapshot 'looks idle' is untrustworthy on a days-long loop"_. main holds fleet state a worker does not.
+Reversing that is an operator call (todo 5), not a worker's — so the AO-dispatchable todos here gather the evidence and
+fix the two unambiguous structural defects, leaving the policy reversal explicitly gated.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Instrument the gate: emit a `context_force_idle_gate_blocked` activity event (details:
-      `role`, `session`, `pct`, and WHICH signal refused — `classify_pane` verdict / `pane_input_pending` /
-      child-process count) on every tick where a main/review target is past
-      `context_compact_force_after_seconds` but `_maybe_force_compact` declines. Done-when: the event is visible in
-      `GET /api/activity` for a real main tick, with the blocking signal populated.
+- [ ] [BACKEND] P1. Instrument the gate: emit a `context_force_idle_gate_blocked` activity event (details: `role`,
+      `session`, `pct`, and WHICH signal refused — `classify_pane` verdict / `pane_input_pending` / child-process count)
+      on every tick where a main/review target is past `context_compact_force_after_seconds` but `_maybe_force_compact`
+      declines. Done-when: the event is visible in `GET /api/activity` for a real main tick, with the blocking signal
+      populated.
 - [ ] [BACKEND] P1. Measure for >=6h with the instrumentation live: how many ticks had main/review deadline-past, how
       many times the gate OPENED, and the dominant blocking signal. Record the counts in this doc's Progress Log.
       Done-when: the Progress Log carries open-vs-blocked counts for both roles.
-- [ ] [BACKEND] P1. Make main's terminal wedge-recovery reachable when no force ever fired. `_rearm_if_force_ineffective`
-      returns early on `state.forced_at is None`, so the kill + `claude_session_id` clear + keeper respawn path cannot
-      arm for a main that the idle gate never let through. Add a saturation-based entry (main above
-      `resume_fresh_context_pct` with no `context_compact_observed` for a sustained window) that reaches the SAME
-      recovery. Done-when: a unit test in `tests/test_context_lifecycle.py` proves recovery arms for a main target
-      whose `forced_at` was never set.
+- [ ] [BACKEND] P1. Make main's terminal wedge-recovery reachable when no force ever fired.
+      `_rearm_if_force_ineffective` returns early on `state.forced_at is None`, so the kill + `claude_session_id`
+      clear + keeper respawn path cannot arm for a main that the idle gate never let through. Add a saturation-based
+      entry (main above `resume_fresh_context_pct` with no `context_compact_observed` for a sustained window) that
+      reaches the SAME recovery. Done-when: a unit test in `tests/test_context_lifecycle.py` proves recovery arms for a
+      main target whose `forced_at` was never set.
 - [ ] [BACKEND] P2. Give main a real `context_pressure` instead of the hardcoded `"low"` in `_read_pct`, so the Tier-2
       `pressure == "thrashing"` immediate-recycle trigger is reachable for main at all. Derive it the same way the
       SlotRow value is derived. Done-when: a unit test proves a thrashing main recycles without waiting for
       compaction-count or the 24h age clock.
 - [ ] [BACKEND] P2. Re-arm Tier-1 guidance on a timer as well as on an observed compaction: today `guidance_sent_at`
-      clears only when a compaction is detected, so a main that silently ignores one nudge is never nudged again for
-      the rest of the episode. Done-when: a unit test proves a second guidance message is enqueued after a configurable
+      clears only when a compaction is detected, so a main that silently ignores one nudge is never nudged again for the
+      rest of the episode. Done-when: a unit test proves a second guidance message is enqueued after a configurable
       unacked interval with no compaction observed.
 - [ ] [OPERATOR] P1. Ruling, with todo 2's measured evidence in hand: extend the worker-style unconditional force to
       main/review, or keep them idle-gated. This reverses the stated 2026-08-05 rationale ("never compact mid-work" for

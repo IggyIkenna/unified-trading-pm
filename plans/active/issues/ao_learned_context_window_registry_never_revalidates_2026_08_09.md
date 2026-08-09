@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [agent-orchestrator, context, measurement, context-probe]
 related:
   [
-    /plans/active/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
+    /plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
     /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
   ]
 created: 2026-08-09
@@ -45,7 +45,7 @@ context_scope:
   [
     agent-orchestrator/server/context_probe.py,
     agent-orchestrator/server/model_tier.py,
-    /plans/active/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
+    /plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
   ]
 ---
 

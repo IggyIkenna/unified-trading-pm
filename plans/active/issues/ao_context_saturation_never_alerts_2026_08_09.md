@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [agent-orchestrator, context, compaction, alerting, observability]
 related:
   [
-    /plans/active/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
+    /plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
     /plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
   ]

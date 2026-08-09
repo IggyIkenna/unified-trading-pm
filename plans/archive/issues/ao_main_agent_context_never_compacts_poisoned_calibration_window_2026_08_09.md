@@ -9,8 +9,8 @@ summary: >-
   whose third branch is a HEURISTIC (a mid-spinner token readout over an ASSUMED 1M window). claude-sonnet-5 ended up
   with calibrated_window=2,614,639 against a ~937K reality, so main's real 99% measured 26% and no threshold fired. It
   hit main and spared the fleet because workers keep a self-reported SlotRow floor and main, having no SlotRow, had only
-  the poisoned probe. Code fix shipped; live validation and the codex update remain.
-status: open
+  the poisoned probe. Code fix shipped, verified LIVE, and the calibration-source contract folded into the codex SSOT.
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -36,11 +36,13 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: backend_engineer
 drift_direction: fix-regression
 resolved_by:
+  "slot-3, 2026-08-09 (all 4 todos closed: fix confirmed live @agent-orchestrator@a272e95, learned-window registry
+  audited clean, per-session divergence documented as expected, calibration-source contract + main AgentRow floor folded
+  into /codex/04-architecture/agent-orchestrator-worker-liveness.md)"
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
-archive_exempt: true
 source: >-
   Operator observation 2026-08-09 ("why is the AO main agent 99% context without getting pre-compact and compact run
   yet"), root-caused in an interactive session (slot 4) against the live VM via read-only SSM.
@@ -55,6 +57,14 @@ context_scope:
 ---
 
 # MAIN ran to 99% with the compaction safety net silently disarmed
+
+> **🟢 RESOLVED 2026-08-09** — all four todos closed. Fix confirmed LIVE on the orchestrator VM
+> (`agent-orchestrator@a272e95`, post-dates fix commit `bd7ff0a`); learned-window registry audited clean (no other
+> poisoned `calibrated_window` entry); main's ~696K-vs-937K per-session window divergence documented as expected,
+> already floored by `_main_pct()`; the calibration-source contract (only CLI-rendered percentages may calibrate) and
+> main's `AgentRow` floor folded into `/codex/04-architecture/agent-orchestrator-worker-liveness.md` §
+> "Calibration-source contract: only CLI-rendered percentages may calibrate a learned window". Full detail in the
+> Progress Log below.
 
 ## Live evidence (orchestrator VM, 2026-08-09, read-only SSM)
 
@@ -169,6 +179,11 @@ post-fix reports 68%. Tests: `tests/test_context_probe.py::test_the_measured_poi
   so a flip-verification check can't see the `[ ] → [x]` transition there), so this commit ships the flip alone and a
   separate immediate follow-up commit performs the actual archival ritual (terminal status, banner, `git mv`, referrer
   fix) and removes this flag.
+
+- **2026-08-09 (slot 3, backend_engineer)** — Archival ritual (this is that separate follow-up commit): flipped
+  `status: resolved` + filled `resolved_by`, removed the temporary `archive_exempt: true`, added the 🟢 RESOLVED banner,
+  `git mv`'d to `plans/archive/issues/`, and fixed every corpus referrer (4 files, 7 hits — `related:`/`context_scope:`
+  path citations only, no fact needed migrating to codex since the codex update already landed in the prior commit).
 
 - **2026-08-09 (slot 22, backend_engineer)** — Closed the "confirm live" todo. This session's slot worktree turned out
   to already be running ON the orchestrator VM (`i-0c9b283b31d6b5ca7`), so verification was direct (no SSM round-trip
