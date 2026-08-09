@@ -351,3 +351,12 @@ transcript available in that session's Progress Log entry on
   correct by this clean success under `LC_SETUP_SCRIPT_FRESHNESS=enforce`. **Next**: launching the `features-sports-prd`
   target VM (same script, `enforce` mode carried forward) to complete the other half of todo 1's scope before the report
   can be consolidated and the todo checked off.
+
+- **2026-08-09 (slot-16, data_engineering)**: launched the `features-sports-prd` target VM
+  (`sports-schema-census-features-sports-20260809-225453`, asia-northeast1-c, SPOT e2-standard-4) with
+  `LC_SETUP_SCRIPT_FRESHNESS=enforce` carried forward from the instruments-store fix. `lc_verify_tarball_freshness`
+  re-verified `unified-api-contracts` fresh before launch; instance came up RUNNING. Bounded watchdog armed
+  (`watch_sports_census_vm_features.sh`, ≤27min, ≤9 rounds × 180s). Report will land at
+  `gs://features-sports-prd-central-element-323112/_index/audit/sports_reference_schema_census_sports-schema-census-features-sports-20260809-225453.parquet`
+  once complete. Both halves of todo 1's scope will be done once this run terminates successfully — then the two reports
+  get consolidated and todo 1 checked off.
