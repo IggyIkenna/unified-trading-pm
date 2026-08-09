@@ -294,13 +294,33 @@ spelling variant survives, which is the entire point of the panel". It does not.
       the ruling cited above. 2 new Vitest cases (both states) + `pw:L2 ✓`
       `deployment-ui/tests/e2e/data-status-fixtures-browser-as-of-freshness.spec.ts`. Both repos' `quality-gates.sh`
       green, both SHAs verified ancestors of `origin/live-defi-rollout`.
-- [ ] [REVIEW] P1. **`sports_dependency.py::_build_fixture_league_map_from_gcs` — enumerate callers and use cases FIRST,
-      then decide** (operator ruling 2026-08-08). Named use cases to check: the fixtures catalogue as a sports auxiliary
-      to the instruments catalogue, and dependency checks from downstream services (which already have the manifest, so
-      the need may be redundant). **If zero real use cases → DELETE the path** (no shims). If use cases extend beyond
-      MVP to all API-Football leagues, note that UAC already holds most of the mapping fixtures for prediction, features
-      and the outside-MVP set — reuse it rather than rebuilding. Resolves
-      `/plans/active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`.
+- [x] ✅ [REVIEW] P1. **`sports_dependency.py::_build_fixture_league_map_from_gcs` — enumerate callers and use cases
+      FIRST, then decide** (operator ruling 2026-08-08, see
+      `/plans/active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`'s ruling banner). Named use
+      cases to check: the fixtures catalogue as a sports auxiliary to the instruments catalogue, and dependency checks
+      from downstream services (which already have the manifest, so the need may be redundant). **If zero real use cases
+      → DELETE the path** (no shims). If use cases extend beyond MVP to all API-Football leagues, note that UAC already
+      holds most of the mapping fixtures for prediction, features and the outside-MVP set — reuse it rather than
+      rebuilding. Resolves `/plans/active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`. —
+      **Correction first**: the function actually lives in `instruments_service/engine/orchestrator/sports_fixtures.py`
+      (the todo title's `sports_dependency.py` is a mis-citation — that file's own `check_api_football_dependency()` is
+      a separate, already-resolved function, unrelated to this one). Enumerated real callers (not test mocks):
+      `_resolve_fixture_ids` (`sports_reference_fixtures.py`) calls it whenever `fixture_ids_override is not None`; that
+      path is reached live from `process.py::_enrichment_only_fast_path` (imported + called there) plus 3 more real
+      orchestrator call sites passing `fixture_ids_override` (`process_preflight.py:718`, `process_fetch.py:288`,
+      `process_zero_records.py:312`, `process_enrichment.py:157`) — **NOT dead code**, so the "zero real use cases →
+      DELETE" branch does not apply. Neither of the ruling's two hypothesized use cases is actually what it's for,
+      though — real use is a THIRD one: core wiring inside the per-fixture reference-data write path (builds the
+      AF-fixture-id→canonical-league map `_write_per_fixture_entities` needs whenever fixture IDs are already known,
+      e.g. from URDI or a zero-records recovery pass, so the API-fetch branch isn't re-run). On the "reuse UAC's
+      mapping" branch: **already done** — confirmed live on `origin/live-defi-rollout` (instruments-service,
+      ahead=0/behind=0) that the function's af_league_id→canonical fallback map is built from
+      `get_expected_leagues_for_source("api_football")` (94 leagues), not the narrow `get_prediction_leagues()` (33) the
+      source issue doc's still-open finding described — fixed 2026-07-14 by an UNRELATED commit
+      (`instruments-service@aeaf4c0d`, "GW enrichment manifest write path" fix) that happened to touch the same
+      function; no later commit reverted it (checked full `git log -S`). Net: no code change needed — both decision-rule
+      branches are already satisfied by existing code. This also resolves the cited issue doc's own last-open todo
+      (flipped there too, same evidence).
 
 ## Codex SSOTs
 
