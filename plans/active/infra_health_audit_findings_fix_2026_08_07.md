@@ -156,10 +156,22 @@ drift_direction: advance-code
       `gcloud compute instances delete mtds-dex-swaps-backfill-2     --zone=asia-northeast1-c` (2026-08-07T15:2xZ) —
       justification: confirmed-finished worker VM, non-preemptible on-demand billing with zero further useful work
       possible, not a data-delete (no GCS/manifest content touched).
-- [ ] [SCRIPT] P1. **Fix or decommission `vm-serial-capture-prd`** — dead 19 days (`ContainerMissing`, image deleted),
-      Cloud Scheduler still firing 4x/day into the void. Determine whether serial-capture is still needed; if yes,
-      rebuild+republish the image and verify a real execution succeeds; if no, pause/delete the scheduler + job rather
-      than leaving it firing forever.
+- [x] [SCRIPT] P1. ✅ **Fixed `vm-serial-capture-prd`** — still a genuinely needed function (no successor found; it's
+      the periodic GCE serial-console capture for `LONG_LIVED_LIVE`/`SCHEDULED_RECURRING` VMs, distinct from the
+      already-working `vm-log-archival-prd` cron — live in `cloud_run_job_registry.py`'s `_SINGLETON_JOBS`, UTL helper
+      `vm_serial_rolling_uri` actively tested; unlike `market-data-query-service` this one has NO co-location/successor
+      migration). Root cause: `deployment-service/terraform/gcp/vm_serial_capture_scheduler.tf`'s `image:` field pointed
+      at Artifact Registry repo `unified-trading-library/deployment-service:latest` — that repo has **zero**
+      `deployment-service` images (confirmed via `gcloud artifacts docker images list`), a copy-paste bug (confusing the
+      source-repo name for an AR docker-repo path). The correct, actively-published repo is `unified-trading-system`
+      (confirmed via the working sibling `vm-log-archival-prd`, which uses that path). Fixed the `image:` line +
+      documented the gotcha inline; `ENV=prod tofu.sh apply -target=google_cloud_run_v2_job.vm_serial_capture` applied
+      the 1-line diff (plan showed exactly 0 add/1 change/0 destroy). **Verified live**: `gcloud run jobs describe`
+      shows `Ready: True` (ContainerMissing cleared); manually triggered execution `vm-serial-capture-prd-mjghx`
+      **succeeded** — 5 VMs captured, 0 errors, exit(0), real objects written to
+      `gs://deployment-scripts-central-element-323112/log-archive/serial-rolling/20260807/...`. Shipped
+      `deployment-service@a1936e72` via quickmerge (QG green: `ALL QUALITY GATES PASSED`, sentinel
+      `22f35fa32c7bbcd45429482a1818af53900ad5cb` == HEAD at push).
 - [x] [SCRIPT] P1. **Fix the 3 dead `europe-west1` jobs** (`tardis-data-loader`, `check-missing-cloud-storage`,
       `gen-inst-defs`) — 100% failure for 50 days on a stale `gcr.io/...` path orphaned by the AR migration. ✅ All 3
       verdicted OBSOLETE (superseded, not fixed) — zero references to any of the 3 job/image/pubsub-trigger names in any
