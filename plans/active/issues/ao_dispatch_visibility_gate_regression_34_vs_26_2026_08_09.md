@@ -148,8 +148,19 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
       the named prereqs have since landed before deciding declare-vs-remove),
       `infra_capture_and_devops_leftovers_finalize_2026_07_25.md`, `infra_satellite_ao_dispatch_batch1_2026_07_26.md`.
       Repo: unified-trading-pm.
-- [ ] [DOCS] P2. Fix the 1 prediction-tranche accidental exclusion (2 markers in the same doc):
-      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`. Same remedy as above. Repo: unified-trading-pm.
+- [x] ✅ [DOCS] P2. Fix the 1 prediction-tranche accidental exclusion (2 markers in the same doc):
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`. Same remedy as above. Repo: unified-trading-pm. **Done —
+      already moot, resolved by another slot before this todo was picked up (2026-08-09).** Commit `84f363ff6`
+      (`unified-trading-pm@84f363ff6`, "docs(plans): reclassify prek_stash_restore_race NA->planning" — an unrelated
+      commit message, but its diff also carried this fix) had already rewritten both markers before this task
+      dispatched: the Betfair back+lay todo's two `BLOCKED-CREDENTIALS` mid-paragraph mentions →
+      "credential-blocked"/"credential-blocked at the time", and the Kalshi todo's `BLOCKED-OPERATOR-DECISION`
+      mid-paragraph mention → "was operator-decision-gated as of 2026-07-31" — neither was a genuinely-live block (both
+      resolved: the Betfair session-token gap cleared 2026-08-05 per that todo's own "RESOLVED" note, the Kalshi
+      order-placement question RULED 2026-08-06). Confirmed via `check_ao_dispatch_visibility_gate.py --json`: this
+      doc's only remaining `excluded` entry is the `[SCRIPT] P1. DEFERRED-BY-DESIGN.` Phase-5 todo, which is
+      `declared: true` (marker opens its own checkbox line) — zero accidental exclusions in this doc; corpus-wide
+      `accidental_exclusions` measures 0 (down from 34 at filing).
 - [x] ✅ [DOCS] P2. Fix the 5 sports-tranche (non-issues) accidental exclusions:
       `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md`,
       `sports_satellite_ao_dispatch_batch5_2026_07_26.md`, `sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md`.
@@ -201,3 +212,9 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
   defi/infra/prediction/`issues/`-tranche todos below: the same fleet-wide-0 state likely means those are ALSO moot by
   now — worth a fresh `--json` re-check before doing any manual doc surgery, rather than assuming the original
   per-tranche breakdown from filing time still holds.
+- **cicd-worker slot 15, 2026-08-09**: picked up the prediction-tranche todo
+  (`prediction_satellite_ao_dispatch_batch6_2026_07_29.md`). Found it already moot — `unified-trading-pm@84f363ff6` (an
+  unrelated-titled commit, "reclassify prek_stash_restore_race NA->planning") had already rewritten both flagged markers
+  before this task dispatched. Verified live via `check_ao_dispatch_visibility_gate.py --json`: corpus-wide
+  `accidental_exclusions` is now 0 (down from 34 at filing); this doc's only excluded todo is `declared: true`. No new
+  doc edit needed for the marker fix itself — flipped this todo's checkbox citing the evidence.
