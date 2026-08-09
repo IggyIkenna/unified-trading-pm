@@ -145,6 +145,23 @@ per `task_template.md`'s dispatch-scope bar) rather than fixed by this session, 
       lightweight AST-based scan instead of a raw regex) so a generated-code template string (like
       `audit_dead_code.py`'s) can never trip it — only worth doing once the P1 above is clear, since right now the false
       positive is masked by 21 real hits anyway. Repo: unified-trading-pm (`scripts/quality-gates-base/`).
+- [ ] [BACKEND] P1. **NEW FACET, 2026-08-09 (slot 18): the check produced a FALSE-NEGATIVE green once, on a tree that
+      demonstrably still had all 21 violations.** A `bash scripts/quality-gates.sh` run on commit `204bb3c0bd89` (the
+      exact SHA `.qg_last_passed_sha` recorded as fully green) printed `✅ No broad except Exception` and exited 0 — but
+      `git show 204bb3c0bd89:<any of the 12 flagged files>` confirms every one of the 21 real occurrences was PRESENT in
+      that exact tree (verified directly, table-by-table, all 13 non-false-positive files unchanged from this doc's
+      original inventory). Immediately re-running the identical
+      `rg "except Exception:" --type py --glob     "!tests/**" scripts/` command by hand on the SAME tree finds all 21
+      hits without issue — so this isn't a corpus change between the two checks, it's the SAME content producing
+      different verdicts from (nominally) the same command. No caching mechanism explains it (only `bandit`/`pip-audit`
+      have `qg_cache_hit`/`qg_cache_store` calls; the broad-except check and the whole codex-compliance section have
+      none; the green-content-sentinel fast path only skips TESTS/TYPECHECK, not codex-compliance, per its own guard
+      flags). Root cause NOT identified this session — flagging as its own P1 since a corpus-wide zero-tolerance CI gate
+      that can silently false-negative is a more serious problem than the 21 violations themselves (a gate nobody can
+      trust to actually catch a NEW broad except is worse than no gate — it gives false confidence). Whoever picks up
+      the P1 fix-the-21 todo above should first try to reproduce this (rerun `quality-gates.sh` 2-3x on an unchanged
+      tree, compare outputs) before assuming the check is reliable once the corpus is clean. Repo: unified-trading-pm
+      (`scripts/quality-gates-base/base-library.sh`).
 
 ## Progress Log
 
@@ -155,3 +172,16 @@ per `task_template.md`'s dispatch-scope bar) rather than fixed by this session, 
   are out-of-scope for this session's primary task (genuine per-file review work, not a quick fix) — filed as its own
   `[BACKEND]` todo per findings-triage. Declared repo-blocker `qg_red` for `unified-trading-pm` so this session's own
   unrelated shippable work doesn't spin waiting/retrying on a wall it can't clear alone.
+- **2026-08-09 (slot-18, resolution + new finding)**: `RB-a1b3b316` resolved green ~1h50m after declaring (repo-health
+  watcher reporter path). Re-verified against the exact resolved-green SHA (`204bb3c0bd89` — `.qg_last_passed_sha`'s
+  recorded value) before trusting the signal, per RULES.md § 4b's own caveat: found ALL 21 violations still present in
+  that exact tree's content (`git show <sha>:<file>` for every one of the 13 non-false-positive files listed above,
+  unchanged from this doc's original inventory). Yet `bash scripts/quality-gates.sh` on that same SHA printed
+  `✅ No broad except Exception` and exited 0. Immediately re-running the raw `rg` command by hand on identical content
+  finds all 21 hits. This is a NEW, more serious finding than the original 21-violation debt — added as its own P1 todo
+  above (a gate that can silently false-negative undermines trust in the whole zero-tolerance ratchet more than the debt
+  itself does). Did not block this session's own ship: my 3 local commits (which don't add or remove any broad-except
+  occurrence — my own drive-by fix to `measure_agent_fleet_tokens.py` became a no-op once rebased onto `204bb3c0bd89`,
+  which already carried an equivalent independent fix) shipped clean via `quickmerge --agent`:
+  `unified-trading-pm@b12d43618` + `@3fffb345b`, both verified `git merge-base --is-ancestor` of
+  `origin/live-defi-rollout`.

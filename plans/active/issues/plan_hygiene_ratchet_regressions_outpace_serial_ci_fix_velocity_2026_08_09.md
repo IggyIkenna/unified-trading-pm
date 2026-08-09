@@ -92,16 +92,15 @@ words: "this branch is churning faster than one CI worker can chase serially").
       shipped: option (c)'s diff-scoping applied to `check_reference_paths.py`, mirroring the already-proven
       `check_archive_candidates.sh --diff-base` pattern, plus a latent fail-unsafe bug fixed in that same pattern for
       the periodic cron path). Follow-up P2/P3 todos below track the checks this dispatch did NOT convert.
-- [ ] [BACKEND] P2. **CODE DONE, NOT YET SHIPPED (2026-08-09, slot 18) — see Progress Log entry below.** Extend the SAME
-      `--diff-base <ref>` pattern (proven twice now: `check_archive_candidates.sh` 2026-08-06,
-      `check_reference_paths.py` 2026-08-09 above) to `check_effort_signal_ratchet.py` and `check_na_corpus_ratchet.py`
-      — both are structurally identical in shape (a corpus-wide scan producing a total count compared against a static
-      baseline), so the same "compare the violation/candidate SET at HEAD vs the set at `<ref>`, fail only on what's
-      new" refactor applies directly. Wire the result into `run_hygiene_sweep.sh`'s shared `DIFF_BASE_REF` guard
-      (already computed once, resolvability-checked) the same way the two existing diff-scoped checks consume it — do
-      not duplicate the `[ -n "$CI_MODE" ]`-only guard shape, that was the latent bug this dispatch fixed. Repo:
-      unified-trading-pm (`scripts/plan-hygiene/`). Blocked on an unrelated repo-wide QG red
-      (`pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md`) — flip to `[x]` once pushed.
+- [x] [BACKEND] P2. ✅ Extend the SAME `--diff-base <ref>` pattern (proven twice now: `check_archive_candidates.sh`
+      2026-08-06, `check_reference_paths.py` 2026-08-09 above) to `check_effort_signal_ratchet.py` and
+      `check_na_corpus_ratchet.py` — both are structurally identical in shape (a corpus-wide scan producing a total
+      count compared against a static baseline), so the same "compare the violation/candidate SET at HEAD vs the set at
+      `<ref>`, fail only on what's new" refactor applies directly. Wire the result into `run_hygiene_sweep.sh`'s shared
+      `DIFF_BASE_REF` guard (already computed once, resolvability-checked) the same way the two existing diff-scoped
+      checks consume it — do not duplicate the `[ -n "$CI_MODE" ]`-only guard shape, that was the latent bug this
+      dispatch fixed. Repo: unified-trading-pm (`scripts/plan-hygiene/`). Shipped `unified-trading-pm@b12d43618` (+
+      `@3fffb345b` for this doc's own updates), verified ancestor of `origin/live-defi-rollout`.
 - [ ] [BACKEND] P3. `check_codex_doc_freshness.py` (`scripts/quality_gates/`, wired directly into `quality-gates.sh`'s
       post-gates, not `run_hygiene_sweep.sh`) is fundamentally NOT diff-scopable the way the checks above are — its
       violations are pure TIME decay (`last_reviewed` aging past a threshold), so a doc can flip stale↔fresh between two
@@ -363,3 +362,21 @@ words: "this branch is churning faster than one CI worker can chase serially").
   resolves green. The remaining P3 todos above (`check_codex_doc_freshness.py` — needs an operator/main policy call, not
   a unilateral backend change; `check_todo_regression.sh` — needs a differently-shaped merge-base-aware fix) are NOT
   addressed by this dispatch, exactly as scoped.
+- **2026-08-09 (slot 18, resolution)**: `RB-a1b3b316` resolved green (repo-health watcher reporter path, ~1h50m after
+  declaring) — the underlying `ldr_qg_failure` escalation (`agt-433520`) had been actively chased by slot 4 (28
+  attempts, 5 re-escalations on `root_key agt-3dc7e9` before this) and, independently of this dispatch's own fix todo,
+  someone else's commit narrowed `measure_agent_fleet_tokens.py`'s 2 occurrences too (slightly different exception
+  types, `TypeError` vs my `AttributeError` on the timestamp-parse branch — functionally equivalent, took theirs on
+  rebase rather than re-litigate). Re-verified directly against `origin/live-defi-rollout` tip before trusting the green
+  signal (per the resolution-message caveat in RULES.md § 4b): confirmed `bash scripts/quality-gates.sh` exits 0 on the
+  rebased HEAD, "No broad except Exception" shows ✅. Rebased my 3 local commits onto the fresh tip (1 conflict, on the
+  shared finops file — resolved by taking upstream's version, making my own now-redundant fix commit empty and
+  auto-dropped by the rebase), then shipped clean via `quickmerge --agent`: `unified-trading-pm@b12d43618` (the
+  diff-base code) + `unified-trading-pm@3fffb345b` (this doc + the qg_red issue doc), both verified
+  `git merge-base --is-ancestor` of `origin/live-defi-rollout`. Re-verified precisely (not just assumed): all 21 real
+  broad-except occurrences from `pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md`'s inventory are STILL
+  live at HEAD — the repo-blocker's green signal did not mean the corpus got fixed. Worse: confirmed the check itself
+  produced a false-negative green on the exact SHA `.qg_last_passed_sha` recorded as clean (content verified via
+  `git show`, all 21 violations present) — a new, more serious P1 finding logged in that doc rather than here (same
+  subject as its existing todo, not a new doc). This P2 todo itself is now fully done and shipped regardless — my own
+  code adds/removes zero broad-except occurrences.
