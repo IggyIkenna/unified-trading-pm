@@ -117,7 +117,7 @@ staying on `IggyIkenna` Pro; `june_2026_vintage_audit_findings_2026_07_27.md` §
 [issues/managed_by_label_launcher_standardization_2026_07_13.md](/plans/archive/issues/managed_by_label_launcher_standardization_2026_07_13.md)
 (ARCHIVED 2026-08-03, RESOLVED — deployment-service@db67173 + deployment-api@95a7a19; generic VM/Cloud-Run launcher
 "managed-by" label convention adopted, deployment-api echoes it as `managed_by`) ·
-[issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md](/plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md)
+[issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md](/plans/archive/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md)
 (fleet-wide VM-launcher billing-waste audit + pre-flight gate design) ·
 [issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md](/plans/active/issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md)
 (3rd occurrence of green-CI-stale-traffic; drift check + canary-deploy alert shipped, Slack routing open — added

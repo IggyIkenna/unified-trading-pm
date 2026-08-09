@@ -10,7 +10,7 @@ summary: >-
   a future backfill wave from re-attempting a shard `classify_venue_error()` already FAIL-classified, or one that's
   failed identically across N consecutive waves. Both are tracked here per
   `data_pipeline_e2e_milestones_gate_2026_07_24.md` §4.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -54,6 +54,11 @@ context_scope:
 
 # First live run of the VM billing-waste audit + pre-flight gate design
 
+> **ARCHIVED (2026-08-09) — both todos done.** Todo 1: first live `/vm-preemption-billing-waste-audit` run, DONE
+> 2026-07-25 (see Progress Log). Todo 2: the known-dead-shard pre-flight gate design + implementation, DONE 2026-08-09 —
+> `market-tick-data-service@b66e68c0` (`known_dead_shard_gate.py`, wired into the venue-fetch pre-flight check,
+> regression test proves skip-on-next-wave).
+
 ## Todos
 
 - [x] [SCRIPT] P1. Run `/vm-preemption-billing-waste-audit` for the first time against both clouds' live fleets with a
@@ -64,7 +69,8 @@ context_scope:
       new billing-waste finding (`tradfi-bf-*`) and an alerting gap. AWS side remains IAM-blocked
       (`ec2:DescribeSpotInstanceRequests` — re-confirmed 2026-07-25, `uts-orchestrator-epic-role` still lacks the
       permission) — noted gap per this todo's own carve-out, not treated as a blocker.**
-- [ ] [BACKEND] P2. **DESIGN DECIDED 2026-08-08 (operator ruling, ao round-5 apply item 17): "Let Claude pick based on
+- [x] ✅ [BACKEND] P2. **DESIGN DECIDED 2026-08-08 (operator ruling, ao round-5 apply item 17 —
+      `/plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md` row 17): "Let Claude pick based on
       existing patterns/conventions."** Mechanism: **side-table**, not a manifest-schema field. Reasoning: the canonical
       availability manifest is a fleet-wide contract with the shard-atom-identical-across-
       writer/manifest/status/gate/UI invariant (`/codex/02-data/availability-manifest-and-data-status.md`) and a
@@ -80,7 +86,22 @@ context_scope:
       the current default (silent infinite retry via `record_failed()`). Definition-of-done: the side-table schema is
       designed (shard atom key + `error_reason` + first-seen/last-seen wave + `attempt_count`), at least one launcher
       family wired to check it before dispatching a shard, and a regression test proving a marked shard is skipped on
-      the next wave.
+      the next wave. **DONE 2026-08-09 — `market-tick-data-service@b66e68c0`.** New
+      `market_tick_data_service/engine/orchestrator/known_dead_shard_gate.py`: GCS-persisted JSON side-table
+      (`MissTracker`-style load/persist) keyed on `shard_atom_key(venue, date, data_type[, instrument_id])` — matches
+      the manifest row_key granularity per shard-level-failure-isolation.md. `KnownDeadShardGate.record_attempt()` marks
+      a shard dead on a hard `ErrorAction.FAIL` classification OR after `CONSECUTIVE_WAVE_FAIL_THRESHOLD=3` waves of the
+      identical `error_reason`. Write side: `sentinels.py`'s Tier-2 failure branch records every attempted_failed
+      shard's `classify_venue_error()` verdict into the gate (loaded once per date-run in `__init__.py`, persisted after
+      the sentinel pass). Read side: `_apply_preflight_skip_filter` (relocated from `venue_fetch.py`, which was already
+      at the 900-line QG file-size cap, into the new module) drops a known-dead shard before `_process_venue` dispatches
+      it — covers every launcher family that funnels through this shared pre-flight check (`tradfi-bf-*`,
+      `mtds-backfill-tradfi-pipelinecheck`, `mtds-dex-swaps-backfill`, `cefi-aster`, `cefi-hyperliquid`,
+      `cefi-queue-heavy-binancefutu-x17`). Regression test
+      `tests/unit/test_known_dead_shard_gate.py::test_marked_shard_skipped_on_next_wave` proves a shard marked dead on
+      wave N is skipped by the pre-flight filter on wave N+1. Verified: full MTDS pytest suite green (10343 passed, 0
+      failed, incl. all new tests) and full `quality-gates.sh` green (`ALL QUALITY GATES PASSED`, sentinel matches
+      commit `ca8d73a9`) before shipping via quickmerge.
 
 ## Progress Log
 

@@ -32,7 +32,7 @@ referenced_by:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 owner:
-last_reviewed: 2026-08-04
+last_reviewed: 2026-08-09
 code_refs:
 type: infrastructure
 execution:
@@ -124,9 +124,20 @@ evidence nothing was wrong.
 
 - It does not invent a new retry-classification taxonomy — `classify_venue_error()` is the SSOT for retriable vs.
   non-retriable; this contract only says "consult it and act on stale FAIL verdicts," not "reclassify anything."
-- It does not (yet) wire an automated pre-flight gate that blocks a future wave from re-attempting a known-dead shard —
-  that's a separate, larger design (see the gate doc's point 4, last todo). Until it ships, this is a MANUAL audit
-  contract: run the skill, read the findings, escalate.
+
+**Update 2026-08-09 — the automated pre-flight gate now exists.** A shard `classify_venue_error()` FAIL-classifies (or
+that hits `CONSECUTIVE_WAVE_FAIL_THRESHOLD` waves of the identical `error_reason`) is written to a GCS-persisted
+side-table (`market_tick_data_service/engine/orchestrator/known_dead_shard_gate.py`, `KnownDeadShardGate`) instead of
+silently re-attempted forever via `record_failed()`'s default. Write side wired into `sentinels.py`'s Tier-2 failure
+branch; read side wired into `_apply_preflight_skip_filter`, which every launcher family funneling through
+`venue_fetch.py`'s `_process_venue` pre-flight check consults before dispatching a shard (currently MTDS only —
+`tradfi-bf-*`, `mtds-backfill-tradfi-pipelinecheck`, `mtds-dex-swaps-backfill`, `cefi-aster`, `cefi-hyperliquid`,
+`cefi-queue-heavy-binancefutu-x17`; other services' launcher families are NOT yet wired). Design rationale (side-table
+over a manifest-schema field) + full schema:
+`/plans/archive/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`. This contract's own
+manual-audit posture (run the skill, read the findings, escalate) is UNCHANGED and still the right tool for launcher
+families the automated gate doesn't cover yet, or for the preemption-scan half of this contract (§1), which the gate
+does not touch.
 
 ## Related skill
 

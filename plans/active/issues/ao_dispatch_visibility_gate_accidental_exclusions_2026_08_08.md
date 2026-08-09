@@ -90,7 +90,7 @@ the classify-and-file step that issue's own "Done when" calls for instead).
 - `plans/active/issues/sports_odds_markets_outcomes_settlements_arbitrage_expected_since_2024_zero_captured_2026_07_24.md`
   (disk_open=1)
 - `plans/active/issues/upbit_cefi_data_gap_may_2026_2026_08_04.md` (disk_open=1)
-- `plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md` (disk_open=1)
+- `plans/archive/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md` (disk_open=1)
 
 Most of these are explained by one of the 27 findings below (their sole open todo IS the accidental exclusion); a few
 are genuinely, correctly all-DEFERRED/all-BLOCKED docs and need no action.
@@ -399,7 +399,7 @@ human already made the call and the fleet still never executes it.
       dispatchable) since the operator decision remains outstanding. Fleet-wide accidental count: 26→25 (repo:
       unified-trading-pm).
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
-      `plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`.** Its checkbox reads
+      `plans/archive/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`.** Its checkbox reads
       (truncated): "[BACKEND] P2. **DESIGN DECIDED 2026-08-08 (operator ruling, ao round-5 apply item 17): "Let Claude
       pick based on" — the marker trips `_is_non_dispatchable` (`agent-orchestrator/server/regen_backlog_from_plan.py`)
       but does not open its own line, so `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared:
