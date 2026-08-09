@@ -319,10 +319,13 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       slot hosting a typed one-shot, not just review slots. Release points added so a finished/torn-down typed slot
       returns to the free-slot pool: `_done_one_off`, `reset_slot_worker_state`, and the pruner's slot-loss branch (+
       the existing `_typed_occupant_liveness` stale-clear). 5 new regression tests.
-- [ ] [DATA] P3. Observability gap surfaced by the root-cause: the exact process that kills per-slot tmux sessions
-      around orchestrator restarts is invisible — no `kill_session` call, watchdog reclaim, or systemd signal is logged,
-      only the pruner's later `has_session()` detection (which fired 589× on 08-04). Instrument the session-teardown
-      paths so a future recurrence is attributable from journalctl/syslog alone. (repo: agent-orchestrator)
+- [ ] [DATA] P2. **Bumped from P3 2026-08-09** (see the bump-todo below): reaped-stale rate is climbing day over day
+      (1/08-06 -> 4/08-07 -> 18/08-08 -> 46/08-09) and the mid-run-session-death re-check todo above is blocked on this
+      instrumentation for a causal (not just correlational) answer. Observability gap surfaced by the root-cause: the
+      exact process that kills per-slot tmux sessions around orchestrator restarts is invisible — no `kill_session`
+      call, watchdog reclaim, or systemd signal is logged, only the pruner's later `has_session()` detection (which
+      fired 589× on 08-04). Instrument the session-teardown paths so a future recurrence is attributable from
+      journalctl/syslog alone. (repo: agent-orchestrator)
 - [x] ✅ [DATA] P2. Verify the capacity QUEUE end-to-end on live traffic (agent-orchestrator@5087f30, deployed
       2026-08-06 15:04 UTC): confirm (a) a real no-capacity dispatch now records `status="queued"` rather than
       `no_capacity` in `/api/scheduled-jobs/recent`, (b) the AutoSpawn drain dispatches it when headroom returns and
@@ -372,29 +375,33 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       (repo: agent-orchestrator)
 
       **RE-CHECKED 2026-08-09 (slot 11, data_engineering) — INCONCLUSIVE, still NOT closed.** Queried the live
-          SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
-          2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
-          below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
-          pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
-          rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
-          survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
-          both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
-          original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
-          per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
-          08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
-          also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
-          week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
-          rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
-          above for a causal read. New follow-up filed directly below given the climbing raw rate.
-          (repo: agent-orchestrator)
+              SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
+              2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
+              below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
+              pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
+              rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
+              survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
+              both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
+              original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
+              per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
+              08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
+              also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
+              week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
+              rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
+              above for a causal read. New follow-up filed directly below given the climbing raw rate.
+              (repo: agent-orchestrator)
 
-- [ ] [DATA] P2. **Bump the observability-enabler todo above (session-teardown instrumentation, was P3) given the 08-09
-      re-check's climbing reaped-stale rate** — without it, the "regression vs. new mechanism vs. volume artifact"
+- [x] ✅ [DATA] P2. **Bump the observability-enabler todo above (session-teardown instrumentation, was P3) given the
+      08-09 re-check's climbing reaped-stale rate** — without it, the "regression vs. new mechanism vs. volume artifact"
       question for the mid-run-session-death todo above cannot be causally resolved, and the raw reaped-stale count is
       now growing (1/08-06 -> 4/08-07 -> 18/08-08 -> 46/08-09 in the live snapshot). Once shipped, re-run this todo's
       before/after query (`SELECT ... FROM agents WHERE agent_kind='cicd' AND     exit_reason='reaped-stale'` bucketed
       by `registered_at` vs the fix commit, cross-referenced against the newly captured checkout SHA at reap time) and
-      post the delta. (repo: agent-orchestrator)
+      post the delta. (repo: agent-orchestrator) — This todo is priority-metadata-only (no code to ship): bumped the
+      session-teardown-instrumentation todo above from `[DATA] P3` to `[DATA] P2` with the climbing-rate justification
+      inline. The instrumentation code itself remains a separate, still-open P2 todo (unchanged done-when: instrument
+      session-teardown paths so a future recurrence is attributable from journalctl/syslog alone) — this todo's own job
+      (re-prioritize it) is complete.
 - [x] ✅ [DOC] P2. Give the scheduled-task dispatch mechanism a CODEX home — it currently has none. Grep-confirmed
       2026-08-06: no `codex/` doc describes the scheduled-job dispatch status model at all, so the whole contract lives
       only in THIS issue doc, which archives. That inverts the SSOT rule (durable fact -> codex; a plan/issue merely
@@ -856,3 +863,8 @@ gates promotion to `main`, not the fix's correctness.
   avoid double-dispatch). The underlying dedup/one-worker guarantee holds (confirmed above), but the per-attempt STATUS
   LABEL is misleading for those no-op refires — logged as "queued" when nothing is actually pending. See the new todo
   directly above this entry.
+
+- **slot-31 2026-08-09 (bump-todo)**: bumped the session-teardown-instrumentation observability-enabler todo from
+  `[DATA] P3` to `[DATA] P2` per the 08-09 re-check's climbing reaped-stale rate (1/08-06 -> 4/08-07 -> 18/08-08 ->
+  46/08-09). Priority-metadata-only — no code shipped, none needed for this todo's own job. The instrumentation
+  implementation itself remains open at its new P2 priority.
