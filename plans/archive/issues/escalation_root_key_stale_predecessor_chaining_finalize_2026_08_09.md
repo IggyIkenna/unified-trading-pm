@@ -6,7 +6,7 @@ summary: >-
   round9 cross-cutting sweep RECLASSIFY, 2026-08-09) — machine-held via `depends_on` + `gate_on_depends: true` until
   both of that doc's optional maintenance todos are done. Reconciles/archives the source doc once both todos land (or
   are explicitly declined as genuinely not worth doing, since both are marked "Optional").
-status: open
+status: complete
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, close-out, satellite-docs, archival, escalation]
 related:
   [
-    /plans/active/issues/escalation_root_key_stale_predecessor_chaining_2026_08_09.md,
+    /plans/archive/issues/escalation_root_key_stale_predecessor_chaining_2026_08_09.md,
     /plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md,
   ]
 created: "2026-08-09"
@@ -44,34 +44,52 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/issues/escalation_root_key_stale_predecessor_chaining_2026_08_09.md,
+    /plans/archive/issues/escalation_root_key_stale_predecessor_chaining_2026_08_09.md,
     agent-orchestrator/server/escalation.py,
   ]
 ---
 
 # Escalation root_key stale-predecessor chaining — finalize
 
-> **Machine-gated on `escalation_root_key_stale_predecessor_chaining_2026_08_09.md`** (`depends_on` +
-> `gate_on_depends: true`). `sequential: true` because archival (todo 2) must run after reconciliation (todo 1).
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** Both todos below were already done by an earlier (main-agent) session on
+> 2026-08-09 — code fix `agent-orchestrator@884a9bfe1`, historical-reconcile sweep run (0 corrected, verified correct),
+> `reescalations` exposure shipped `agent-orchestrator@454dad285` — but that session's own archival of the SOURCE doc
+> used a `git commit --only` that dropped the rename's delete side, leaving a stale pre-fix duplicate sitting live at
+> the active path (`assigned_vm: planning`, 2 open todos) while the true resolved content correctly landed at
+> `plans/archive/issues/escalation_root_key_stale_predecessor_chaining_2026_08_09.md` — the exact
+> `check_ create_only_archive_commits` defect class, independently caught by 2 separate `/plan-reconcile` tranche sweeps
+> the same day (`plan_reconciler_findings_cefi_2026_08_09.md`, `plan_reconciler_findings_tradfi_2026_08_09.md`) but
+> never converted into a fix. This session removed the stale active-path duplicate (`git rm`, content already fully
+> captured in the archived copy) and synced + archived this finalize doc to match, closing the loop. Successor: none.
+>
+> **Machine-gated on `escalation_root_key_stale_predecessor_chaining_2026_08_09.md` (historical).** `depends_on` +
+> `gate_on_depends: true` held todo 2 until todo 1 (already done pre-archival) was reflected here.
 
 ## Todos
 
-- [ ] [REVIEW] P3. Reconcile the source doc's 2 optional todos: run the one-off
-      `reconcile_stale_unresolved_escalations(window_hours=<large>, limit=<large>)` sweep to correct `agt-3dc7e9` and
-      any other similarly-stale `unresolved` rows in the historical record (cosmetic — no future chaining risk
-      post-fix), and expose `reescalations` on `GET /api/escalations/active` alongside `attempts`. Both are explicitly
-      "Optional" in the source doc — if either is judged genuinely not worth doing (e.g. the historical-record cleanup
-      has zero remaining stale rows once checked), record that determination with evidence rather than silently
-      skipping. Flip each checkbox in the source doc citing the shipped commit(s)/evidence, or the explicit
-      not-worth-doing determination. Done when: both todos in the source doc are `[x]` (either shipped or explicitly
-      declined with evidence) and the doc reads 0 open todos.
-- [ ] [DOC] P3. Archive `escalation_root_key_stale_predecessor_chaining_2026_08_09.md` via the standard 6-step ritual
-      once todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by`
-      (confirm already empty). Done when: the doc is moved to `plans/archive/2026_08/`, every referrer resolves to the
-      new path, and this finalize doc archives alongside it in the same commit.
+- [x] ✅ [REVIEW] P3. Reconcile the source doc's 2 optional todos — already done in the earlier main-agent session that
+      fixed + archived the source doc (see archive-banner note above for both commits + the sweep result); this finalize
+      doc's own todo just never got flipped to match because that session's archival commit was the create-only one that
+      silently dropped the source doc's real state from view at the active path. Verified against
+      `plans/archive/issues/escalation_root_key_stale_predecessor_chaining_2026_08_09.md` directly: `status: resolved`,
+      both todos `[x]`, 0 open todos remaining.
+- [x] ✅ [DOC] P3. Archive `escalation_root_key_stale_predecessor_chaining_2026_08_09.md` — already effectively archived
+      (correct content at `plans/archive/issues/`); this session's fix was removing the stale duplicate left at the
+      active path by the original create-only commit, and archiving this finalize doc alongside it in the same commit.
+      `locked_by` confirmed empty on both docs. No corpus referrer pointed at the stale active-path duplicate with a
+      formal `/plans/active/...` citation (the 2 mentions in `plan_reconciler_findings_cefi_2026_08_09.md` /
+      `plan_reconciler_findings_tradfi_2026_08_09.md` are bare-filename prose describing the finding, not path citations
+      — left as an accurate historical record of what was found that day).
 
 ## Progress Log
 
 - **2026-08-09**: Finalize twin authored alongside the source doc's RECLASSIFY flip (round9 cross-cutting sweep) — the
   source doc carries 2 open todos, past `check_finalize_plan_coverage.py`'s single-open-todo carve-out, so a gated
   finalize plan is required per `task_template.md`.
+- **2026-08-09 (slot-18)**: found while verifying `run_hygiene_sweep.sh` green for an unrelated cefi archival task —
+  `check_create_only_archive_commits` flagged this doc's source pair. Diagnosed: the source doc's real archival already
+  happened correctly (content-complete at `plans/archive/issues/`), only the create-only commit's dropped delete side +
+  this finalize doc's un-synced todos remained. Removed the stale active-path duplicate, flipped both todos here with
+  evidence, added the archive banner, and archived this doc alongside — same commit, per the
+  `cefi_satellite_ao_dispatch_batch14_2026_08_09_finalize.md` bundling precedent (no valid intermediate committed state
+  otherwise, per `check_archive_candidates.sh`/`check_terminal_status_archived.py`).
