@@ -78,7 +78,30 @@ depends_on: []
 
 ## Contradictions
 
-(populated as verified)
+1. **[FIXED] `deployment_registry_firestore_migration_2026_07_14.md` — frontmatter/body self-contradiction on dispatch
+   state (P0).** Frontmatter `assigned_vm: planning`/`execution_scope: orchestrator-agent` directly contradicted the
+   body's own opening banner ("This is the non-dispatched design/index doc", `assigned_vm: NA`,
+   `execution_scope: local-only`). Verified: the doc's own 2026-07-30 na-eligibility-audit Progress Log entry documents
+   the flip ("RECLASSIFY... flipped `assigned_vm: NA -> planning`") for a real AO todo the doc briefly carried (now
+   `[x]`) — frontmatter is the current/correct value, body banner was never updated since 2026-07-14. Fixed the banner
+   to state the doc's dispatch state is live-tracked, not fixed NA. Evidence: hunter-B1 finding F0, independently
+   re-verified by reading the full doc myself. unified-trading-pm (this branch, pending final push sha).
+2. **[FIXED] Same doc — "fully autonomous, no human in the loop" contradicted its own demonstrated human-escalation path
+   (P1).** Banner + "Migration invariants" section both asserted zero-human-in-the-loop, but the doc's own Todo text and
+   2026-07-30 Progress Log show this was already exercised for real: GO/NO-GO criterion 1 FAILed and the response was to
+   file a tracked human follow-up (`deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`),
+   not auto-remediate. Fixed both locations to state "autonomous on the happy path; a GO/NO-GO failure routes to a human
+   follow-up." Evidence: hunter-B1 finding F5, re-verified directly.
+3. **[FIXED] Same doc — Phase-index table's P3 halt-reason stale ("measured EMPTY 2026-07-17") vs the doc's own later
+   measurements (P2).** The table cell still framed the ongoing halt as "registry is empty," but the SAME doc's
+   2026-07-30 Progress Log entries show 192-193 Firestore docs exist (just 0% overlap with live GCE VMs) — same halt
+   verdict, materially different current reason. Fixed the cell to state both the historical trigger and the current
+   (evolving) GO/NO-GO-criterion-1 reason without hardcoding a re-stale-prone count (points to P3's own doc for the
+   current number instead, per CLAUDE.md "prefer deleting a derivable restated fact"). Evidence: hunter-B1 finding
+   F-empty.
+4. **[FIXED, cosmetic] Same doc — dangling sentence fragment (P3).** "...GCS-write-drop/delete step. stays `draft`
+   behind it." was missing its subject; from context (P5's own status elsewhere in the doc) the intended subject is
+   "P5." Evidence: hunter-B1 finding F-frag.
 
 ## Doc-drift
 
@@ -86,7 +109,11 @@ depends_on: []
 
 ## Hygiene fixes
 
-(populated as verified)
+1. **`deployment_registry_firestore_migration_2026_07_14.md`** — added explicit `effort: max` (was silently relying on
+   the todo-count-derived default despite `assigned_vm: planning`; caught by the pre-commit
+   `check_effort_signal_ratchet` hard gate when staging this doc's other fixes, and independently already flagged by
+   this run's own STEP-1 corpus-wide hygiene sweep as 1 of ~9 ui-tranche docs in the silently-flagged set). Matches the
+   convention of every sibling `ui_satellite_ao_dispatch_batch*` doc in this tranche (`effort: max`).
 
 ## Filed
 

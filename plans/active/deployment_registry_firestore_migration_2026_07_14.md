@@ -28,7 +28,7 @@ related:
   - /plans/archive/2026_06/ci_status_firestore_side_store_2026_06_10.md
   - /codex/05-infrastructure/deployment-observability.md
 created: "2026-07-14"
-last_updated: "2026-07-14"
+last_updated: "2026-08-03"
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -37,6 +37,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 16
 estimate_calibrated_ai_days: 13
 assigned_role: infra
+effort: max
 drift_direction: advance-code
 depends_on:
 archive_exempt: true # intentionally NOT archived here — reserved for deployment_registry_firestore_p5_verify_2026_07_14.md's own final todo (see Progress Log 2026-07-30)
@@ -57,12 +58,17 @@ context_scope:
 
 # Deployment registry → Firestore migration (OVERVIEW + phase index)
 
-> **This is the non-dispatched design/index doc** (`assigned_vm: NA`, `execution_scope: local-only`). The dispatchable
-> work lives in the six phase-plans below (`assigned_vm: planning`), run as a **draft-gated chain**: only **P0 is
-> `active`** (dispatches now); **P1–P5 are `draft`** (NOT ingested) and each phase's LAST todo flips the next phase
-> `draft`→`active` once its work completes — so no downstream phase can be worked out of order (`gate_on_depends` alone
-> proved leaky). Fully autonomous — no operator gates; the irreversible GCS deletion is made safe by
-> snapshot-before-delete (recoverable), so no human sits in the loop.
+> **Primarily a design/index doc** — this doc's own `assigned_vm`/`execution_scope` track its ACTUAL current dispatch
+> state (not a fixed `NA`; flipped `NA`→`planning` 2026-07-30 when it briefly carried one real AO todo, now `[x]` — see
+> Progress Log), separate from the phase-plans' own dispatch state below. The bulk of the dispatchable work lives in the
+> six phase-plans below (`assigned_vm: planning`), run as a **draft-gated chain**: only **P0 is `active`** (dispatches
+> now); **P1–P5 are `draft`** (NOT ingested) and each phase's LAST todo flips the next phase `draft`→`active` once its
+> work completes — so no downstream phase can be worked out of order (`gate_on_depends` alone proved leaky).
+> **Autonomous on the happy path** — the irreversible GCS deletion is made safe by snapshot-before-delete (recoverable);
+> but a measured GO/NO-GO failure routes to a tracked human follow-up rather than silent auto-proceed (already exercised
+> 2026-07-30: criterion 1 FAIL →
+> `/plans/archive/2026_08/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`) — not
+> a strict zero-human-in-the-loop guarantee.
 
 ## Problem
 
@@ -114,14 +120,14 @@ heartbeat
 > initial-draft snapshot; the chain has actually progressed to P3. Corrected below (was: P1/P2/P4 all shown `draft`,
 > `related:` links pointing at `plans/active/...` with no `../archive/` prefix).
 
-| Phase  | Plan                                                                                                              | Role             | Model / effort     | Status                                                                                                                                                                                       | Gate                                        |
-| ------ | ----------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| **P0** | [p0 — unblock (reaper + graceful complete)](deployment_registry_firestore_p0_unblock_2026_07_14.md)               | infra            | Sonnet / high      | **active** — reallocated back to AO 2026-07-24 (9 todos then open, 1 `[REVIEW]` P2 todo still open as of 2026-07-25); success criteria (`active/` ≈ running-VM count) not yet fully verified | none — dispatched immediately               |
-| **P1** | [p1 — Firestore writer + dual-write](../archive/2026_07/deployment_registry_firestore_p1_dualwrite_2026_07_14.md) | infra            | **Opus** / high    | **complete (archived)**                                                                                                                                                                      | activated by P0's last todo · `sequential`  |
-| **P2** | [p2 — reader migration + decouple](../archive/2026_07/deployment_registry_firestore_p2_readers_2026_07_14.md)     | backend-engineer | **Opus** / **max** | **complete (archived)**                                                                                                                                                                      | activated by P1 (∥ P4) · `sequential`       |
-| **P3** | [p3 — cutover + GCS decommission](deployment_registry_firestore_p3_cutover_2026_07_14.md)                         | backend-engineer | **Opus** / high    | **active** — self-halted on a real data-loss guard (prod Firestore `deployments` measured EMPTY 2026-07-17; GCS delete blocked pending an operator GO/NO-GO)                                 | activated by P2 · `sequential` (autonomous) |
-| **P4** | [p4 — DynamoDB (AWS-ready)](../archive/2026_07/deployment_registry_firestore_p4_dynamodb_2026_07_14.md)           | infra            | Sonnet / high      | **complete (archived)**                                                                                                                                                                      | activated by P1 (∥ P2/P3)                   |
-| **P5** | [p5 — verify at scale + codex](deployment_registry_firestore_p5_verify_2026_07_14.md)                             | review           | Sonnet / high      | **draft** — blocked on P3; scope now narrower than originally written (P4's DynamoDB half of the codex-sync mandate is already done via P4's own archival codex-sync)                        | activated by P3 or P4 (last to finish)      |
+| Phase  | Plan                                                                                                              | Role             | Model / effort     | Status                                                                                                                                                                                                                                                                                              | Gate                                        |
+| ------ | ----------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| **P0** | [p0 — unblock (reaper + graceful complete)](deployment_registry_firestore_p0_unblock_2026_07_14.md)               | infra            | Sonnet / high      | **active** — reallocated back to AO 2026-07-24 (9 todos then open, 1 `[REVIEW]` P2 todo still open as of 2026-07-25); success criteria (`active/` ≈ running-VM count) not yet fully verified                                                                                                        | none — dispatched immediately               |
+| **P1** | [p1 — Firestore writer + dual-write](../archive/2026_07/deployment_registry_firestore_p1_dualwrite_2026_07_14.md) | infra            | **Opus** / high    | **complete (archived)**                                                                                                                                                                                                                                                                             | activated by P0's last todo · `sequential`  |
+| **P2** | [p2 — reader migration + decouple](../archive/2026_07/deployment_registry_firestore_p2_readers_2026_07_14.md)     | backend-engineer | **Opus** / **max** | **complete (archived)**                                                                                                                                                                                                                                                                             | activated by P1 (∥ P4) · `sequential`       |
+| **P3** | [p3 — cutover + GCS decommission](deployment_registry_firestore_p3_cutover_2026_07_14.md)                         | backend-engineer | **Opus** / high    | **active** — self-halted on a real data-loss guard (prod Firestore `deployments` measured EMPTY at halt time, 2026-07-17; now has entries but GO/NO-GO criterion 1 — Firestore↔live-fleet overlap — still fails per P3's own latest remeasurement; GCS delete blocked pending an operator GO/NO-GO) | activated by P2 · `sequential` (autonomous) |
+| **P4** | [p4 — DynamoDB (AWS-ready)](../archive/2026_07/deployment_registry_firestore_p4_dynamodb_2026_07_14.md)           | infra            | Sonnet / high      | **complete (archived)**                                                                                                                                                                                                                                                                             | activated by P1 (∥ P2/P3)                   |
+| **P5** | [p5 — verify at scale + codex](deployment_registry_firestore_p5_verify_2026_07_14.md)                             | review           | Sonnet / high      | **draft** — blocked on P3; scope now narrower than originally written (P4's DynamoDB half of the codex-sync mandate is already done via P4's own archival codex-sync)                                                                                                                               | activated by P3 or P4 (last to finish)      |
 
 ## Todos
 
@@ -153,16 +159,17 @@ heartbeat
       `unified-trading-pm@157be4812f4253585cbb96aa365e64fc7d1fad9b`,
       `/plans/archive/2026_08/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`.
       **P3's HALT stays correctly in force** — per this todo's own instruction, re-opened to a human/tracked follow-up
-      rather than proceeding to any GCS-write-drop/delete step. stays `draft` behind it. **If any of the 4 measured
-      criteria fails, re-open to a human** — do not proceed to P3's drop-GCS-write / snapshot-then-delete todos
+      rather than proceeding to any GCS-write-drop/delete step. **P5** stays `draft` behind it. **If any of the 4
+      measured criteria fails, re-open to a human** — do not proceed to P3's drop-GCS-write / snapshot-then-delete todos
       regardless.
 
 ## Migration invariants (hold across every phase)
 
 - Never a flag-day — dual-write outlives the last reader; every reader cutover is Firestore-first with a LOUD GCS
   fallback.
-- Irreversible steps (drop-GCS-write, delete-blobs) are made recoverable by snapshot-before-delete — no human gate; the
-  pipeline is fully autonomous.
+- Irreversible steps (drop-GCS-write, delete-blobs) are made recoverable by snapshot-before-delete — autonomous on the
+  happy path; a measured GO/NO-GO failure routes to a tracked human follow-up instead (see banner above), not a strict
+  no-human-ever guarantee.
 - Firestore/DynamoDB SDKs are lazy-imported (QG bans top-level `google.cloud`/`boto3` + `try/except ImportError`); flags
   are typed `UnifiedCloudConfig` fields (no `os.getenv`); GCS deletes via UTL `gcs_delete_object` (no gsutil); UTC
   datetimes; `quality-gates.sh`-green before every commit.
