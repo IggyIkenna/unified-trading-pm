@@ -148,8 +148,8 @@ the sibling doc's own decision thread — todo 1 needed no A/B/C fold-in at all 
       done and unlocked — this doc has 7 active corpus referrers that a genuine archival needs to repoint in the same
       commit, out of scope for a plain checkbox-reconciliation pass:
       `plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`,
-      `plans/active/cefi_satellite_ao_dispatch_batch12_2026_08_09.md`,
-      `plans/active/issues/ag_closeout_audit_defi_parked_2026_08_08.md`,
+      `plans/archive/2026_08/cefi_satellite_ao_dispatch_batch12_2026_08_09.md` (repointed 2026-08-09 — batch12 itself
+      archived via its finalize plan's todo 3), `plans/active/issues/ag_closeout_audit_defi_parked_2026_08_08.md`,
       `plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md`,
       `plans/archive/2026_08/cefi_satellite_ao_dispatch_batch15_2026_08_09.md` (repointed 2026-08-09 — batch15 itself
       archived via its finalize plan's todo 2),

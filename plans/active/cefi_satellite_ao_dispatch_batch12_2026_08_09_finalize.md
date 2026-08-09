@@ -38,6 +38,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true
 depends_on: [cefi_satellite_ao_dispatch_batch12_2026_08_09]
 gate_on_depends: true
 source: >-
@@ -92,12 +93,22 @@ context_scope:
       batch13 citation-reconciliation candidate. S3-b unchanged (no new ruling found on the dual-entrypoint design
       question). Both dated notes live in the source doc's own Progress Log (see this doc's Progress Log below for the
       summary + pointer).
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch12_2026_08_09.md`** via the standard 6-step ritual: add the
-      archive banner → confirm no new durable contract needs codex-alignment → grep the corpus for every referrer of
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch12_2026_08_09.md`** via the standard 6-step ritual: add
+      the archive banner → confirm no new durable contract needs codex-alignment → grep the corpus for every referrer of
       `cefi_satellite_ao_dispatch_batch12_2026_08_09` and repoint each to the archived path → clear `locked_by` (already
       empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus referrer resolves to
       the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside it in the same
-      commit.
+      commit. — **DONE 2026-08-09 (slot-27, infra)**: 2 stale codex refs to the deleted
+      `launch-prediction-features-vm.sh` fixed (`/codex/05-infrastructure/vm-launcher-runbook.md`,
+      `/codex/05-infrastructure/vm-tarball-deployment.md`); the doc's active-corpus referrers repointed
+      (`issues/cefi_content_migration_shard24_recurring_wedge_needs_diagnosis_2026_08_09.md`'s `related:` entry,
+      `issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`'s referrer-list bare
+      path); `plans/active/INDEX.md` regenerated to drop both entries. No new deferred item to migrate — batch12's own
+      Progress Log's two forward-pointers (the `features-cross-instrument-service` cleanup, the S1-b
+      citation-reconciliation) were already real tracked `- [ ]` todos in their respective source docs, not prose. Both
+      this doc and `cefi_satellite_ao_dispatch_batch12_2026_08_09.md` moved to `plans/archive/2026_08/` in the immediate
+      follow-up commit (per the flip-then-mv two-commit rule — `archive_exempt: true` bridges this commit). `locked_by`
+      confirmed empty on both docs pre-move.
 
 ## Codex SSOTs
 
@@ -122,3 +133,9 @@ context_scope:
   the dated note live on the source doc's todo 2 + Progress Log directly. **S3-b — unchanged, still genuinely blocked**:
   grepped the corpus for any newer ruling on the sports dual-entrypoint design question — none found, the
   `launch-features-sports-backfill-vm.sh` DEPRECATION NOTE is unchanged since 2026-05-08.
+- **2026-08-09 (slot-27, infra)** — todo 3 done (see the todo's own `DONE` note above). Codex-alignment check found 2
+  genuinely stale refs to the now-deleted `launch-prediction-features-vm.sh` (batch12 todo 1,
+  `deployment-service@4150c6c2`) and fixed both. `archive_exempt: true` added to this doc's frontmatter as the
+  flip-then-mv bridge (per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "archive_exempt is
+  the sanctioned bridge") — this commit is the flip-only half; the immediately following commit does the `git mv` +
+  drops the exempt flag.

@@ -391,9 +391,11 @@ Forward-poll VMs run continuously (no end date). Self-delete on shutdown.
 - **Duration**: 1-2 hours for parallel, 4-8 hours for serial
 - **Failures**: Footystats API gaps → check manifest `empty_confirmed` entries first.
 
-### `launch-prediction-features-vm.sh`
+### `launch-features-vm.sh --feature-family cross_instrument --asset-group PREDICTION`
 
-- **When**: Backfill prediction market features.
+- **When**: Backfill prediction market features. Formerly `launch-prediction-features-vm.sh` — DELETED 2026-08-09
+  (`deployment-service@4150c6c2`; the old script packaged the removed `features-cross-instrument-service` repo and could
+  never succeed). `launcher_registry.py`'s `"prediction-features-"` self-heal key now maps to `launch-features-vm.sh`.
 - **Required**: `--start-date` `--end-date`
 - **Duration**: ~30-60 min
 - **Failures**: Polymarket/Kalshi API rate limit → check API key in Secret Manager.
