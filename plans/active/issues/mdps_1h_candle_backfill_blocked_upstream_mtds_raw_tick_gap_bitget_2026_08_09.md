@@ -142,6 +142,45 @@ DOES show `expected_unattempted` (i.e. was already in-scope, just not yet attemp
 manifest signature and needs its own check against when BITGET-FUTURES `trades` specifically entered the capture
 schedule, separate from BITGET-SPOT's venue-mapping/MVP-scope timeline above.
 
+## BITGET-FUTURES trades 2026-04-14..04-19 determination (2026-08-09, slot 17)
+
+**Verdict: (a) — genuine backfillable MTDS capture gap, NOT honest pre-listing absence.**
+
+Evidence (`read_availability_index_safe` on `market-data-tick-cefi-prd-central-element-323112`, filtered
+`venue=BITGET-FUTURES data_type=trades date=2026-04-13..2026-04-21`, bounded per-day/venue/data_type row-group
+pushdown):
+
+1. **Long-established majors show the same gap as long-tail alts.** BTC-USDT@LIN, ETH-USDT@LIN, SOL-USDT@LIN,
+   XRP-USDT@LIN, DOGE-USDT@LIN — instruments that plainly traded on Bitget Futures long before 2026 — all show
+   `capture_status=expected_unattempted` for 2026-04-13 AND 2026-04-19 (`attempted_at=2026-07-15T01:32:56Z`, a stale
+   scope-materialization timestamp, not a real fetch attempt). A genuine pre-listing/honest-absence signature (the
+   BITGET-SPOT pattern resolved above) would show the SAME majors' listing dates clustering near the gap boundary, not a
+   uniform gap across majors-and-alts alike.
+2. **The 04-19/04-20 boundary does not align with any onboarding event.** Per the BITGET-SPOT determination above,
+   BITGET's Tardis venue mapping landed 2026-05-01 and MVP-scope inclusion 2026-06-23 — both postdate the ENTIRE
+   2026-04-13..04-21 window equally, so neither explains why 04-20 is captured and 04-14..04-19 is not. All of this
+   window's real data was written by RETROACTIVE historical-backfill runs (`attempted_at` values from 2026-06-24,
+   2026-07-15/21/25/27/28) — i.e. software-onboarding-date is irrelevant to which historical calendar dates got
+   targeted; the gap is simply that no backfill run's `--start`/`--end` scope ever included 2026-04-14..04-19 for this
+   venue+data_type (04-20 was apparently the first date some earlier scoped run's window began at).
+3. **`error_reason=SOURCE_RETURNED_ZERO` appears on a subset of the gap-window `expected_unattempted` rows** (287/2777),
+   an `EmptyConfirmedReason` value that should only ever pair with `capture_status=empty_confirmed` — a stale/
+   reclassified-status artifact consistent with a genuine (if partial/inconsistent) prior capture attempt, not a clean
+   "never in scope" signature.
+
+**Resolution — already in-flight via existing infra, no new VM launch needed or appropriate:**
+`cefi-queue-heavy-binancefutu-x17-20260809-083733` (RUNNING, launched 2026-08-09T08:37 UTC by an earlier session) is a
+broad chronological CeFi Tardis catch-up sweep — `VM_START_DATE=2019-01-01 VM_END_DATE=2026-08-08`, `VM_VENUE` includes
+`BITGET-FUTURES` (and `BITGET-SPOT`), `VM_DATA_TYPES=trades;book_snapshot_5`. Its `run.log` (tailed 2026-08-09T14:33
+UTC) shows it processing dates in ascending chronological order, currently at `date=2020-06-02` — it has NOT yet reached
+2026-04, and per `/codex/05-infrastructure/vm-launcher-runbook.md`'s **Tardis hard cap of 1 concurrent VM (both
+clouds)**, launching a second Tardis-consuming VM right now would violate that cap (confirmed independently: slot 31
+already parked a different task today citing this exact VM as the reason it can't launch its own Tardis VM). Once this
+sweep's chronological progress reaches 2026-04-14..04-19, BITGET-FUTURES trades for that window will be captured as part
+of its normal run — no separately-scoped backfill VM is warranted while this one is live and already covers the exact
+venue/data_type/date-range in its declared scope. Todo 3 (MDPS candle re-run) should verify this window is `captured` in
+the raw-tick manifest before re-running, rather than assuming a fixed completion date.
+
 ## Todo
 
 - [x] ✅ [DATA] P2. **Determine whether BITGET-SPOT's total 2026-04-14..04-30 raw-tick absence is a genuine MTDS capture
@@ -149,11 +188,15 @@ schedule, separate from BITGET-SPOT's venue-mapping/MVP-scope timeline above.
       was added to the CeFi capture scope). Repo: market-tick-data-service. — RESOLVED (b): intentional pre-onboarding
       absence, see "BITGET-SPOT determination" above. No MTDS backfill needed for BITGET-SPOT in this window; the
       manifest's total absence is honest-absence, not a defect.
-- [ ] [DATA] P2. **BITGET-FUTURES trades 2026-04-14..04-19 only** (BITGET-SPOT portion resolved above — no action):
+- [x] ✅ [DATA] P2. **BITGET-FUTURES trades 2026-04-14..04-19 only** (BITGET-SPOT portion resolved above — no action):
       determine whether this `expected_unattempted` gap is a genuine backfillable capture gap, and if so run the MTDS
       raw-tick backfill for BITGET-FUTURES trades 2026-04-14..04-19 using the same MTDS backfill tooling this workspace
       already uses for CeFi raw-tick catch-up (mirrors `launch-mtds-cefi-backfill.sh` per
-      `features_service_e2e_pipeline_test_2026_05_26.md` Phase 0.5 provenance). Repo: market-tick-data-service.
+      `features_service_e2e_pipeline_test_2026_05_26.md` Phase 0.5 provenance). Repo: market-tick-data-service. —
+      RESOLVED (a): genuine backfillable gap, see "BITGET-FUTURES trades 2026-04-14..04-19 determination" above. NOT
+      separately launching an MTDS backfill VM — the running `cefi-queue-heavy-binancefutu-x17-20260809-083733` sweep
+      already covers this exact venue/data_type/date-range in its declared scope, and the Tardis 1-concurrent-VM cap is
+      already held by it; a second VM would violate that cap for no benefit.
 - [ ] [DATA] P3. **Once the BITGET-FUTURES raw ticks land, re-run the scoped MDPS candle backfill** for the
       BITGET-FUTURES 04-14..04-19 residual (same pattern as this session's `mdps-backfill-cefi-20260809-123352`) to
       close the remaining candle gap. BITGET-SPOT candle backfill is NOT needed (see resolved todo above — the
