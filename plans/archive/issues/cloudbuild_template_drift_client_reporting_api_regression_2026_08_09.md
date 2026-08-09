@@ -44,7 +44,7 @@ assigned_role: devops
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: client-reporting-api@9b28914 (slot-17) + unified-trading-pm@51808a4a6e (slot-17), see Progress Log
 last_updated: 2026-08-09
 locked_since:
 ---
@@ -90,11 +90,12 @@ guessing.
 
 ## Todos
 
-- [ ] [DEVOPS] P2. Diagnose the dropped `quality-gates::set -e` / `CLOUD_MOCK_MODE=true` docker-run step in
+- [x] ✅ [DEVOPS] P2. Diagnose the dropped `quality-gates::set -e` / `CLOUD_MOCK_MODE=true` docker-run step in
       `client-reporting-api/cloudbuild.yaml` vs `configs/cloudbuild-api-template.yaml` — forward-port into the template
       if universal, or `--update-baseline` if genuinely repo-specific (with a Progress Log reason). Repo:
       unified-trading-pm (`scripts/quality_gates/check_cloudbuild_template_drift.py`,
-      `configs/cloudbuild-api-template.yaml`), client-reporting-api (`cloudbuild.yaml`).
+      `configs/cloudbuild-api-template.yaml`), client-reporting-api (`cloudbuild.yaml`). —
+      unified-trading-pm@51808a4a6e + client-reporting-api@9b28914 (slot-17), see Progress Log.
 
 ## Progress log
 
@@ -102,3 +103,13 @@ guessing.
   this). Declared a `qg_red` repo-blocker for `unified-trading-pm` per RULES.md § 4b rather than chasing a fix myself
   (outside this dispatch's craft/scope — needs Cloud Build domain judgment on template-vs-repo intent). Filed here so
   the fix is tracked, not just observed.
+- 2026-08-09 (devops worker, slot 13, dispatched to the [DEVOPS] P2 todo): decision was already made and shipped by
+  slot-17 before this dispatch landed — answer was (a), universal: `unified-trading-pm@51808a4a6e` forward-ported the
+  `_RUN_INIMAGE_QG` guard into `configs/cloudbuild-api-template.yaml`'s `quality-gates` step, and
+  `client-reporting-api@9b28914` forward-ported the same guard into its own `cloudbuild.yaml` (superseding an
+  intermediate `client-reporting-api@b75b798` revert of an earlier accidental drift of the same guard). Both commits
+  confirmed on `origin/live-defi-rollout` via `git merge-base --is-ancestor` from this slot's fresh-pulled clones.
+  Re-ran `python3 scripts/quality_gates/check_cloudbuild_template_drift.py` live:
+  `client-reporting-api (cloudbuild-api-template.yaml): 3 (== baseline)` — `[OK]`, drift cleared, no baseline re-ratchet
+  needed (was option (a), not (b)). No further code change required; closing this todo and archiving per the 6-step
+  ritual (0 open todos, unlocked).
