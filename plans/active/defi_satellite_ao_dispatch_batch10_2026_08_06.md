@@ -245,7 +245,10 @@ sizing/scoping pass across 5 protocols before it is worker-determinable; batch9 
   `issues/defi_code_codex_drift_2026_05_27.md`, `issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md`,
   `issues/defi_dex_pool_glued_pair_id_backfill_gap_2026_08_03.md`,
   `issues/defi_gmx_expected_skeleton_rows_still_enumerated_2026_08_04.md`,
-  `issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md`,
+  ~~`issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md`~~ (REMOVED from this list
+  2026-08-09 by plan_reconciler — NOT actually archivable: the doc's own 2026-08-07 entry found the fix commit
+  `market-tick-data-service@bd153821` is not yet on `main`, a live unverified data-correctness gap; already
+  independently caught by `ag_closeout_audit_defi_parked_2026_08_07.md` Finding 6),
   `issues/defi_manifest_column_fill_regression_from_gmx_purge_forced_full_merge_2026_08_04.md`,
   `issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md`,
   `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`,

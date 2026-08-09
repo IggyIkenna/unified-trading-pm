@@ -54,8 +54,12 @@ context_scope:
 
 # defi_pipeline_e2e_and_coverage_validation_2026_06_20 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **status: active — gated on `defi_pipeline_e2e_and_coverage_validation_2026_06_20`'s todos via `depends_on` +
+> `gate_on_depends: true`; the dispatcher will not release these until that plan is fully done.** (The gated plan itself
+> may stay `status: active` with open todos of its own — this finalize plan needs no separate `draft`/`active` flip,
+> `gate_on_depends` holds it correctly either way per the "no double gate" finding in
+> `cursor-configs/skills/ag-closeout-audit/SKILL.md`. Corrected 2026-08-09 — verified by plan_reconciler against
+> `defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md`'s established-correct phrasing.)
 
 ## Todos
 
