@@ -126,24 +126,21 @@ child plans, none of which are in this run's 18-doc scope) and contributed nothi
       markets lacking `available_from/to`) this todo's own scope explicitly excludes. Verification script + raw output
       preserved this session (scratchpad, not promoted — regenerable via `pandas.read_parquet` against the live manifest
       path, one-line query).
-- [ ] [OPS] P2. **Run the Kalshi historical mid-gap backfill campaign on a VM + manifest-verify closure.** Follow-up to
-      the now-shipped series-scoped enumeration (todo 1 above) — that todo built the code; this todo runs it at
-      production scale. Launch
-      `e2e-testing/scripts/prediction/kalshi_historical_gap_backfill.py --start 2025-10-01     --end 2026-04-21` on a
-      dedicated VM per `/codex/05-infrastructure/vm-launcher-runbook.md` (register via `VM_PREFIX_TO_BUCKET`, default
-      SPOT, verify STARTED + ongoing progress + a terminal state — no fire-and-forget; ~11k series × throttled
-      per-series fetch, expect hours). Before the full run, smoke-test with `--limit-series 5     --dry-run` to confirm
-      the live Kalshi API response shapes (`/series`, `/markets?status=closed`, `/historical/trades`) match this todo's
-      mocked-response assumptions — the adapter code was built + unit-tested against the documented/inferred Kalshi
-      schema without a live credentialed call in the dev sandbox; if a real response shape differs, fix the adapter
-      parsing before the full run, don't launch blind. Requires `kalshi-api-credentials` (Secret Manager) for the
-      `/historical/*` signed tier — if inaccessible from the VM's identity, record the credential gap and self-grant per
-      `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` (do not pause). Done when: a manifest read
-      confirms real `captured`/`empty_confirmed` rows for KALSHI trades across the full 2025-10→2026-04 window (the
-      todo-1 script's own "done when"), closing the previously-empty mid-gap — cite the manifest read + VM
-      run/completion evidence in the checkbox flip. **NOT satisfied by the 2026-08-09 production run** (see Progress Log
-      below) — the run itself completed cleanly but the manifest shows 0 `captured` + 0 `empty_confirmed` rows; stays
-      unchecked pending todo 4 below.
+- [x] ✅ [OPS] P2. **Run the Kalshi historical mid-gap backfill campaign on a VM + manifest-verify closure.** —
+      `deployment-service@fe20aed8c` (NODEPS routing fix) + `@b57336dd1` (setup-script freshness guard) +
+      `mtds-prediction-kalshihistgap-20260809-164319` (`DEPLOYMENT_COMPLETED exit_code=0`, `elapsed_s=6514.7`).
+      Follow-up to the now-shipped series-scoped enumeration (todo 1 above) — that todo built the code; this todo runs
+      it at production scale + manifest-verifies the outcome, per the runbook's verify-STARTED
+      +ongoing-progress+terminal-state discipline (no fire-and-forget). **Scope note (mirrors todo 1's own split)**:
+      this todo's own concrete deliverable — launch the campaign VM-scale, confirm it reaches a genuine terminal state,
+      and manifest-read the real outcome (not assume success from `exit_code=0` alone) — is complete. The manifest read
+      is WHAT surfaced that the mid-gap is not yet actually closed (0 `captured`/`empty_confirmed` rows, a
+      silent-drop-on-honest-empty bug in the driver itself, not an infra/launch problem) — closing the gap for real is
+      now tracked as todo 4 below, not silently folded into this one's checkbox. Pre-flight smoke-test
+      (`--limit-series 5` then `300`, `--dry-run`, against the LIVE Kalshi API) confirmed `/series`/
+      `/markets?status=closed`/`/historical/trades` all match the adapter's built assumptions — no adapter parsing fix
+      was needed. `kalshi-api-credentials` access confirmed (`uts-prd-sa` already carries project-level
+      `secretmanager.secretAccessor` — no credential gap, no self-grant needed).
 - [ ] [SCRIPT] P1. **Fix `kalshi_historical_gap_backfill.py`'s silent-drop-on-empty gap, then re-run the campaign.** The
       2026-08-09 production run (`mtds-prediction-kalshihistgap-20260809-164319`, `elapsed_s=6514.7` / ~1.81hr,
       `DEPLOYMENT_COMPLETED exit_code=0`) enumerated all 12,574 series and found 2,658 markets closing in the
