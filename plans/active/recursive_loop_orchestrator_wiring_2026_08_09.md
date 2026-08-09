@@ -182,13 +182,13 @@ Progress Log) confirmed, with exact file:line citations:
       fires on a poll tick, or (b) the audit's finding (no suitable poller exists) is recorded verbatim with the exact
       grep evidence, and a follow-up todo is filed. **(b) — no suitable poller exists**, evidence in Progress Log;
       follow-up `[DESIGN]` todo filed on `/plans/active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`.
-- [ ] [BACKEND] P2. Remove the two `_ALLOWED_EMPTY_ARCHETYPES` entries for `CARRY_RECURSIVE_BORROW_LENDING_ONLY`
+- [x] ✅ [BACKEND] P2. Remove the two `_ALLOWED_EMPTY_ARCHETYPES` entries for `CARRY_RECURSIVE_BORROW_LENDING_ONLY`
       (`:104-108`) and `CARRY_BASIS_PERP_INV` (`:109-112`) in
       `strategy-service/tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py` now that
       both produce real non-empty `on_tick()` output — this test's own `"on_tick returned [] -- engine no-op'd"` failure
       path (`:423-425`) should now correctly exercise both archetypes for real instead of silently exempting them. Repo:
       strategy-service. Done-when: the full `test_all_catalogued_archetypes_construct_and_fire.py` suite passes green
-      with both entries removed, and `quality-gates.sh` is green across strategy-service.
+      with both entries removed, and `quality-gates.sh` is green across strategy-service. — strategy-service@d6c86f44
 
 ## Progress Log
 
@@ -288,3 +288,15 @@ Progress Log) confirmed, with exact file:line citations:
   - Follow-up `[DESIGN]` todo filed on `/plans/active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md` per
     this todo's own instruction (do not freehand-design scheduler infra in this bounded todo). No code shipped this
     dispatch — audit-only outcome, plan-doc-only commit.
+- **2026-08-09 (slot 10, backend_engineer)**: Todo 8 (final todo) shipped — found the removal already committed locally
+  but unshipped: a prior slot-10 session had already committed `d6c86f44` ("remove
+  CARRY_RECURSIVE_BORROW_LENDING_ONLY/CARRY_BASIS_PERP_INV allow-list exemptions") on this slot's strategy-service clone
+  but never ran it through quickmerge, leaving it 1 commit ahead of `origin/live-defi-rollout` with a stale QG sentinel.
+  Re-ran `quality-gates.sh` fresh on that exact HEAD (full run, no skip flags, green — sentinel now matches `d6c86f44`),
+  then shipped via `quickmerge --agent --files` and verified the SHA is an ancestor of `origin/live-defi-rollout`. No
+  new code changes — the diff itself (9 lines removed from `test_all_catalogued_archetypes_construct_and_fire.py`) was
+  already correct from the prior session. All 8 todos on this plan are now complete — archival is tracked as its own
+  gated todo in the companion finalize plan (`recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`), which
+  unblocks now that `depends_on`/`gate_on_depends` clears. strategy-service@d6c86f44. (This plan-flip itself was lost
+  once already when the prior session died mid-commit; redone on resume — no new code shipped this turn, only the PM doc
+  flip.)
