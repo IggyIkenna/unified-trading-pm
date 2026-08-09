@@ -245,9 +245,14 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
   - Source: `issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` ([SCRIPT] P2) — never cited
     by any covering doc.
 
-- [ ] [VERIFY] P0. **Time-gated billing/capacity re-measurement sweep — 4 items in
-      `github_actions_operator_gated_followups_2026_07_17.md`, all now unblocked, combined into one todo per the
-      same-file-contention note above.** Record all 4 findings as ONE dated Progress Log entry in the source doc:
+- [x] ✅ [VERIFY] P0. **DONE 2026-08-09 (slot-28, review→cicd craft)** — Time-gated billing/capacity re-measurement
+      sweep — 4 items in `github_actions_operator_gated_followups_2026_07_17.md`, all now unblocked, combined into one
+      todo per the same-file-contention note above.** Recorded all 4 findings as ONE dated Progress Log entry in the
+      source doc (2026-08-09 entry, end of Progress Log) + flipped all 4 source checkboxes. Live Enhanced-Billing pull
+      (`github-billing-token` from GCP Secret Manager,
+      `GET /users/IggyIkenna/settings/billing/usage?year=2026&month={7,8}`, 2241 `product=actions` line items,
+      `netAmount` per-item — never `/timing.total_ms`; token never printed, shredded from the shell env post-pull) + a
+      real `gh api .../actions/runs/{id}/jobs` pull for the QG-minutes measurement.
   1. **Phase-5 two-week billing ledger re-pull vs the Phase-0 baseline** (batch1 Deferred D29 — gate was "earliest
      ~2026-07-31"; today IS 2026-07-31). Method + exact commands are already in the doc's 2026-07-23 billing entry —
      re-run verbatim. Target check: fleet ~$1,000/mo → ~$300-400/mo, and whether the +47% non-PM-repo rise masking PM's
@@ -390,3 +395,35 @@ One question, quote/location/options/recommendation, not resolved autonomously:
   (`github_actions_operator_gated_followups_2026_07_17.md`), the still-open sibling batch1, this batch's own gated
   finalize, the umbrella pipeline codex SSOT, and the `/ag-closeout-audit` methodology this batch was produced by;
   dispatch-batch-coordinator shape (each done todo already cites its own separate source doc inline).
+
+- **2026-08-09 (slot-28, review→cicd craft)** — Completed todo 9 (the 4-item billing/capacity sweep), the last open todo
+  in this batch. Pulled live GitHub Enhanced-Billing usage (`github-billing-token` from GCP Secret Manager,
+  `GET /users/IggyIkenna/settings/billing/usage?year=2026&month={7,8}`, 2241 `product=actions` line items across both
+  months, `netAmount` field per item — never `/timing.total_ms`, per the doc's own documented trap; token loaded into a
+  shell var, never echoed/printed, unset after use).
+  1. **Phase-5 two-week+ re-pull vs Phase-0 baseline**: Jul1-15 baseline fleet $35.51/day (PM $16.89/day, non-PM
+     $18.61/day) vs Aug1-8 (8 clean days, well past the 2-week mark) fleet $12.72/day (PM
+     $6.86/day, non-PM
+     $5.85/day). Fleet -64.2% (~$1065/mo→~$382/mo, **lands the ~$300-400/mo target**), PM -59.4%,
+     non-PM -68.5% — the 2026-07-23 checkpoint's +47% non-PM-masking finding has fully reversed (non-PM now falling
+     faster than PM).
+  2. **Representative QG run billed minutes + skip rates**: pulled
+     `gh api repos/IggyIkenna/features-service/actions/ runs/{id}/jobs` for a real `pull_request`-triggered run
+     (31298538159) — content-sentinel 1min + QG-slice(tests) 5min + QG-slice(checks) 3min + rollup 1min = **~10 billed
+     min/run** (vs. the doc's own 2026-07-27 ~14min/run figure — consistent, run-to-run variance). Identical-tree
+     sentinel skip rate: grepped 20 real job logs per repo for the actual `content-sentinel HIT`-vs-`MISS` STDOUT line
+     (disambiguated from the always-both-present source-echo dump by occurrence count, not a simple string-presence
+     check, which false-positived 20/20 on the first pass) — PM 1/20 (~5%), features-service 0/20 (its run mix is
+     dominated by promote-PRs, which always touch code by construction, so 0% is the expected honest reading there, not
+     a measurement gap).
+  3. **Enhanced-Billing per-repo re-pull, agent-orchestrator (first-flipped canary, 2026-07-27)**: `Actions Linux`
+     $13.87/day (Jul20-26, pre-flip) → $3.78/day (Aug1-8, post-flip), **-73%**, `Actions storage` unchanged at
+     $0, no
+     new billed SKU line added (self-hosted glue jobs bill $0 as designed). Residual $3.78/day is the
+     still-hosted `quality-gates-v2` pytest/lint job, explicitly out of this phase's scope (security ADR: no self-hosted
+     runner may carry a `pull_request` trigger) — not a gap in the flip.
+  4. **Enhanced-Billing FULL FLEET re-pull vs Jul23-26 baseline**: $37.35/day → $12.72/day (Aug1-8), **-65.9%** (non-PM
+     $23.09/day→$5.85/day, -74.7%) — this is the number the plan's original "~$1,000/mo→~$300-400/mo" target was about,
+     and it has now moved into the target band. All 4 measurements recorded as one dated entry in the source doc
+     (`github_actions_operator_gated_followups_2026_07_17.md`, 2026-08-09 Progress Log entry) + all 4 source checkboxes
+     flipped there. This batch's only open todo is now done — `finalize` gate should re-check.

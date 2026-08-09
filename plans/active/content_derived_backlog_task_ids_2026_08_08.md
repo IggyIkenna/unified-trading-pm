@@ -185,12 +185,23 @@ Both were established by reading the code, and both are silent — neither raise
       `_prune_stale`'s cancel path, `/skip-current-task`'s release). With this ordering honored, **no
       id-alias/back-compat column is needed**. Done-when: a test proves a `dispatched` row is never renamed by the
       migration and is renamed correctly once it goes terminal. (repo: agent-orchestrator) — agent-orchestrator@6b57503
-- [ ] [BACKEND] P2. **Do NOT rewrite `activity_log` or `compactions` rows in place.** Rewriting a past audit entry to an
-      id it did not happen under is itself the audit-integrity violation this whole effort exists to prevent. Instead
-      append a `backlog_task_id_migrated {old_id, new_id}` activity row per rename so old→new stays resolvable.
-      **Also**: `activity_log.task_id` carries synthetic non-task labels (`plan_health.py:1008` writes
-      `doc_drift:<key>`) — any walker assuming every non-null value is a real backlog id WILL corrupt those rows. (repo:
-      agent-orchestrator)
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-09 (slot-6, content_derived_backlog_task_ids-012)** — **Do NOT rewrite
+      `activity_log` or `compactions` rows in place.** Rewriting a past audit entry to an id it did not happen under is
+      itself the audit-integrity violation this whole effort exists to prevent. Instead append a
+      `backlog_task_id_migrated {old_id, new_id}` activity row per rename so old→new stays resolvable. **Also**:
+      `activity_log.task_id` carries synthetic non-task labels (`plan_health.py:1008` writes `doc_drift:<key>`) — any
+      walker assuming every non-null value is a real backlog id WILL corrupt those rows. (repo: agent-orchestrator) —
+      **Found + fixed a real parity gap**: of the three deferred-rename transition points, `done_slot` and
+      `/skip-current-task` already appended `backlog_task_id_migrated` via `ss.log_activity` — `_prune_stale`'s cancel
+      path (raw `sqlite3.Connection`, no ORM Session) did not. Added a best-effort raw `INSERT INTO     activity_log`
+      there (degrades silently on a legacy DB missing the table, mirroring the existing `blocked_queue` delete precedent
+      in the same function), with a new `trigger: "prune_stale_cancel"` label. Recorded the append-only design
+      decision + the `activity_log.task_id`/`compactions.task_id` synthetic-label hazard directly in
+      `content_id_migration.py`'s module docstring (the invariant every future bulk-apply script must inherit: an EXACT
+      dict-key lookup against the checked-in map, never a fuzzy/substring task-id detector). Added regression coverage
+      asserting the new activity row's `old_id`/`new_id`/`trigger` fields, and that the hazard-1
+      "not-cancelled-this-tick" no-op case still logs nothing. QG: 2889 passed, 2 skipped, basedpyright clean, ruff
+      clean. Evidence: agent-orchestrator@7eb0203 (verified ancestor of origin/live-defi-rollout before this flip).
 - [ ] [BACKEND] P2. **Cover the derived-identifier namespaces in the map.** An old id surviving as a SUBSTRING of a
       still-live key is silently orphaned: `BLK-op-{task_id}` (`bootstrap.py:854, :889`), `{task_id}--ruling`
       (`regen_backlog_from_plan.py:2631`), `auto_unpark__{task_id}` (`auto_park.py:92-96`), `task:{task_id}` cooldown

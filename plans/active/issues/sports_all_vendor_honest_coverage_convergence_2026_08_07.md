@@ -952,3 +952,5 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **08:24Z** — smallchunk10 chunk 7/451, zero OOMs, heartbeat live. FIXTURE_LINEUPS needed **41,381 → 39,749** (-1,632).
   Both healthy, no action. Did another compaction pass (969→951 lines) — this doc keeps needing one ~every 2h; if that
   cadence continues, worth spinning a continuation doc next time rather than compacting again.
+- **08:54Z** — smallchunk10 chunk 13/451, still zero OOMs, heartbeat live. FIXTURE_LINEUPS needed **39,749 → 38,691**
+  (-1,058). Both healthy, no action.

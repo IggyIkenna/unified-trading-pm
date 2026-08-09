@@ -107,6 +107,16 @@ Massive-historical). 7 todos across 4 docs are genuine and now gated `BLOCKED-OP
   (same task as the instruments_tradfi_g1_g5 pair above, tracked here too since batch6 is the live AO-dispatch surface;
   its own Progress Log recorded a watcher session actively polling the singleton lock and launching as of
   2026-08-07T~04:46Z — if that watcher is still running, it will now fail every attempt until billing is restored).
+  **RETAGGED 2026-08-09 (was stale — flagged by two separate sessions as needing this fix, now applied): this specific
+  gate is LIFTED.** `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (same day, same
+  author) recorded a live Databento API verification (`metadata.list_datasets` + a real `ES.FUT ohlcv-1m` pull, both
+  succeeded) that lifted this gate specifically for its in-scope list — which includes S&P 500 futures+options. Live
+  evidence since: 2 real `tradfi-bf-es-opt-*` launches on 2026-08-09 both fetched genuine Databento data (confirmed via
+  manifest — 1,407/1,728 distinct trading dates already carry real OHLCV bars, see
+  `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`). The account-level suspension this
+  doc as a whole describes may still be real for OUT-of-scope Databento calls; this retag narrowly resolves only the
+  batch6/ES_OPT entry per the scope-ruling doc's own explicit carve-out — not a claim that the broader billing issue is
+  resolved.
 
 **Explicitly left ungated** (read, judged not a live-fetch dependency):
 `tradfi_backfill_throughput_followups_2026_07_24.md` (OOM-remediation umbrella pointer — its one real open leg is a

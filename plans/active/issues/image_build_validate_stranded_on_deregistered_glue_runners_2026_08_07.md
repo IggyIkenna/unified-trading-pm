@@ -30,7 +30,10 @@ status:
   open # the blocking P0 fix landed + is live-verified (see "Fix applied"); 2 non-blocking P2/P3 follow-up
   # sweep/hardening todos remain open below
 nature: issue
-asset_group: [cross-cutting, ci]
+asset_group:
+  [ci] # corrected 2026-08-09 (/ag-closeout-audit ci) -- was [cross-cutting, ci]; content is a GitHub Actions
+  # self-hosted-runner/workflow-strand incident blocking LDR->main promotion, squarely ci-tranche (CI/CD pipeline
+  # mechanics) -- already flagged as a mistag by the 2026-08-08 cross-cutting tranche run, never retagged until now
 stage: [meta]
 repos: [unified-trading-ci, alerting-service, unified-trading-pm]
 scope: [engineer, admin]

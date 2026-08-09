@@ -161,7 +161,7 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       credential blocker below is unrelated to and independent of this investigation. (repo: market-tick-data-service,
       deployment-service, read-only investigation, no code changed)
 - [ ] [DATA] P1. **RETAGGED 2026-08-07 (autonomous session, sports_all_vendor_honest_coverage_convergence_2026_08_07) —
-      `BLOCKED-CREDENTIALS` is now STALE, clearing it.** The credit top-up landed 2026-08-03 (per the resolved
+      the credential block is now STALE, clearing it.** The credit top-up landed 2026-08-03 (per the resolved
       `plans/archive/issues/odds_api_key_quota_exhausted_4_days_after_provisioning_2026_08_02.md`); live-reverified
       again today (curl against `/v4/sports`, `unified-trading-sa` identity): `x-requests-remaining: 14475834`,
       `x-requests-used: 524166` (sums to 15,000,000 = 5M/month + 10M top-up, consistent with the 2026-08-03
@@ -174,7 +174,7 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       already-dense one. **What's left, concretely, unchanged from the 2026-07-31 analysis below**: launch
       `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --start 2020-06-06 --end <today>`, no
       `--force`, single VM, verify it actually reaches a clean terminal state this time (every prior attempt didn't).
-      ~~BLOCKED-CREDENTIALS 2026-08-02 (slot 14, data_engineering, task `-004`) — the-odds-api.com account is OUT OF
+      ~~Credential-blocked 2026-08-02 (slot 14, data_engineering, task `-004`) — the-odds-api.com account is OUT OF
       USAGE CREDITS (a NEW, DIFFERENT blocker than the July `DEACTIVATED_KEY` one below; see the 2026-08-02 Progress Log
       entry for full detail).~~ Live-verified via direct curl: `x-requests-used: 5000772` against the 5,000,000/month
       subscription (`x-requests-remaining: -772`), `error_code=OUT_OF_USAGE_CREDITS` on the `/v4/historical/...`
@@ -182,7 +182,7 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       this quota). This is an operator-gated billing decision (wait for the monthly reset vs. purchase additional
       credits) — do NOT relaunch any backfill VM or run further real-fetch profiling until it clears; every further
       historical call will just 401 and add noise. **Operator decision 2026-08-02 (answering `BLK-6728ec9a`): Option B —
-      purchase additional credits / upgrade the plan now.** Stayed `BLOCKED-CREDENTIALS` until the operator confirms the
+      purchase additional credits / upgrade the plan now.** Stayed credential-blocked until the operator confirms the
       top-up has landed (re-verify live via the same curl check before relaunching anything — do not assume the purchase
       is instant); **confirmed landed + re-verified live 2026-08-07, see retag above.** **UNBLOCKED 2026-07-31 (slot 16)
       — the fix-approach ruling this todo was waiting on is RESOLVED; the code fix shipped 2026-07-30 and this retag was
@@ -306,10 +306,10 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       `date >=     2020-06-06`, diff against the full calendar range) to confirm 0 missing days, then close this doc.
       Note for whoever runs it: the current 595 decompose into 168 contiguous ranges (not the 27 previously quoted — 27
       was the count of multi-day ranges only), and 23 of the 595 are NOT explained by the sentinel skip, so a clean
-      sweep needs those diagnosed separately. **RETAGGED 2026-08-07 — same as P1 above, `BLOCKED-CREDENTIALS` cleared
+      sweep needs those diagnosed separately. **RETAGGED 2026-08-07 — same as P1 above, the credential block cleared
       (10M top-up landed 2026-08-03, live-reverified today at `x-requests-remaining: 14475834`); this VERIFY still
       genuinely depends on P1's backfill actually running first, so it stays unchecked, just no longer mistagged as
-      credential-blocked.** ~~BLOCKED-CREDENTIALS 2026-08-02 (slot 13) — re-verified live, unchanged: this VERIFY cannot
+      credential-blocked.** ~~Credential-blocked 2026-08-02 (slot 13) — re-verified live, unchanged: this VERIFY cannot
       pass while P1 is blocked on the-odds-api.com quota exhaustion~~ (`x-requests-remaining: -772` on
       `/v4/historical/...`, `401 OUT_OF_USAGE_CREDITS`; `/v4/sports` still 200, key itself valid — same operator-gated
       billing decision as P1's own marker above). 300 calendar days still missing per the last census (slot 16,

@@ -66,7 +66,7 @@ finding in `cursor-configs/skills/ag-closeout-audit/SKILL.md`.)
       this is a verification pass, not new investigation). Repo: unified-trading-pm. Done when: every one of the 17
       source docs listed in batch9's todos either shows the item closed in its own text, or a citation note pointing
       back at the batch9 todo that closed it, with no orphaned "still looks open" gap.
-- [ ] [DOC] P2. **Re-check the Deferred items**: (a) the 2 conflict-parked BLOCKED-OPERATOR-DECISION items
+- [ ] [DOC] P2. **Re-check the Deferred items**: (a) the 2 conflict-parked operator-decision-gated items
       (`defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`'s stall diagnosis,
       `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md`'s split-vs-alternative — gated on
       `over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`'s own `[OPERATOR]` ruling) — has either operator

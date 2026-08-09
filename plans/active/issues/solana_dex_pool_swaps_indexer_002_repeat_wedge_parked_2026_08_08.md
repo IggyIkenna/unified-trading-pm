@@ -93,10 +93,11 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
       existing auto-park threshold logic in `auto_park.py` for BLOCKED/PARKED/GATED declines, per
       `ao_dispatch_cooldown_and_park_2026_07_20`) rather than relying on a human/main-agent to notice the pattern and
       call `/api/backlog/{task_id}/park` manually as was done here. Repo: agent-orchestrator.
-- [ ] [OPERATOR] P2. Decide whether to `unpark` (`POST /api/backlog/solana_dex_pool_swaps_indexer-002/unpark`) once todo
-      1's root cause is fixed, or whether the underlying indexer task itself needs rescoping/splitting first (check
-      `/plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md` for whether this is a long-running/heavy
-      task that may need a smaller unit size regardless of the wedge root cause).
+- [x] ✅ [OPERATOR] P2. **MOOT 2026-08-09 (operator, interactive session)** — no unpark decision needed. The underlying
+      indexer task already shipped: the ~18:15Z pre-park race (Progress Log below) landed
+      `market-tick-data-service@3619f9e2` (ORCA Whirlpool fetch+decoder, 24 tests, QG green), and
+      `/plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md` item 2 is already checked off. There is nothing left
+      to redispatch — `unpark` would just release a parked-but-already-complete task back into rotation for no reason.
 - [ ] [REVIEW] P3. Once unparked and re-dispatched, independently verify via
       `GET /api/activity?task=solana_dex_pool_swaps_indexer-002` (or per-slot) that it completes a full boot->work->done
       cycle without re-wedging. Repo: unified-trading-pm (verification + checkbox flip only).

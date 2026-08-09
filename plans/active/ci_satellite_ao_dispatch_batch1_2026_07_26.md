@@ -586,16 +586,19 @@ concurrent workers do not collide on this file.
       mid-gap, never duplicated). Left in place per the operator-gated AR-delete rule. Quality gates green (168s);
       shipped via quickmerge, verified ancestor of `origin/live-defi-rollout`. Source:
       `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([INFRA] P2).
-- [ ] [VERIFY] P1. **Re-measure the billed notify/glue cost — the 3-5 day window has long passed.** The mover flip
-      landed 2026-07-17; the source doc's own table says the earliest useful measurement was ~2026-07-20/22, and it is
-      now 2026-07-26, so this is actionable, not calendar-blocked. Run `scripts/cicd/measure-billed-notify-cost.sh`
-      (promoted out of a scratchpad precisely so this is repeatable) and confirm the moved workflows bill ~$0 and the VM
-      absorbed the load (slice `MemoryCurrent` < 8G, orchestrator load unaffected). Honour the doc's own measurement
-      traps: skipped jobs are not billed, a throttled API call silently counts as 0, `/timing.billable.total_ms`
-      UNDER-reports (`billable: {}` with no `UBUNTU` key is the real zero) — so COUNT JOBS, never ms. If the billing
-      token is unavailable, record that the measurement is credentials-blocked rather than estimating. **Done when**: a
-      dated per-workflow billed-job-count table is recorded in the source doc, or the credential block is recorded.
-      **Explicitly NOT the two-week Phase-5 re-pull** (still calendar-gated, `## Deferred` D29). Source:
+- [x] ✅ [VERIFY] P1. DONE 2026-08-09 (slot 31) — **measured; the deeper premise (self-hosted glue absorbing load) is
+      moot — it was retired.** `DAYS=23 scripts/cicd/measure-billed-notify-cost.sh` (unified-trading-pm, since
+      2026-07-17): `sit-debounce-trigger`=778, `branch-health`=447, `escalate-to-orchestrator`=356, `ci-health`=275,
+      `cloud-build-failure-watcher`=97, `cascade-qg-ordering`=63, `ruleset-drift-alert`=3, others=0;
+      `DEDUP_BILLED_23D=2019`
+      (~$12/23d dedup-only subtotal). **Superseding finding**: confirmed live on this VM
+      (`ip-172-31-5-118`) `github-glue-runner.slice` is `inactive`, `MemoryCurrent=[not set]`, zero glue units loaded,
+      no `/opt/github-glue*` dir — the self-hosted deployment was retired (51 orphaned units archived
+      2026-08-08T13:05Z, per `/plans/archive/issues/ao_observability_and_deploy_hygiene_gaps_2026_08_08.md`), and PM's
+      workflows were separately reverted to `ubuntu-latest` (`/plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`
+      todo 24, PM now public so GH-hosted billing is unmetered — $0
+      for a different reason than self-hosting). Not credentials-blocked; the VM-load check is moot, not unreachable.
+      Re-measure fresh only if the glue deployment is ever actually completed. Source:
       `github_actions_operator_gated_followups_2026_07_17.md` ([VERIFY] P0, `measure-billed-notify-cost.sh`).
 - [x] ✅ [VERIFY] P2. DONE 2026-07-26 (slot 6) — **CONFIRMED FIRING.**
       `gh run list -R IggyIkenna/unified-trading-pm     --workflow=ldr-docs-gate.yml --limit 20` shows 20 consecutive

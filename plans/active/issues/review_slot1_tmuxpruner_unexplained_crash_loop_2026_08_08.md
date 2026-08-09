@@ -163,7 +163,7 @@ own Tick history.
       NOT a tmux-server-level event as originally hypothesized; only the review-role entry in that burst was a real loss
       (the other 4 were already-finished scheduled jobs, `archived_lifecycle_complete:true`). Superseded-note only, keep
       the original entry for history — do not delete it. — unified-trading-pm (this doc) + Progress Log entry below.
-- [ ] [BACKEND] P1. **Operator-confirmed active incident (msg 4377)** — determine whether
+- [x] ✅ [BACKEND] P1. **Operator-confirmed active incident (msg 4377)** — determine whether
       `quality-gates-base/qg-host-governor.sh`'s ≤2 heavy-phase cap needs to be extended to gate total
       `quality-gates.sh` script instances (not just pytest/basedpyright), given 12-19 concurrent instances were observed
       with only 893Mi genuine free RAM and confirmed fleet-wide kernel OOM-killer activity (a bare `sleep 60` was
@@ -171,7 +171,7 @@ own Tick history.
       working as designed, cap is just too permissive) or running ungated in lighter phases (governor scope gap). Repo:
       unified-trading-pm (`scripts/quality-gates-base/qg-host-governor.sh`). Cross-reference the standing
       CPU-contention/respawn-loop hypothesis above — likely the SAME underlying host-capacity crisis, not a separate
-      one.
+      one. — unified-trading-pm@dab21e39c + @478105857 + Progress Log entry below (GOVERNOR SCOPE GAP confirmed, fixed).
 - [x] ✅ [OPERATOR] P1. `agent-orchestrator@e32d962` (the TmuxPruner debounce fix) was committed but not loaded — the
       live uvicorn process (PID 885271) started at 23:15:22Z, ~11min BEFORE the 23:26:25Z commit. Main could not restart
       it (sandbox permission boundary: `sudo`/non-interactive `systemctl restart` both blocked). RESOLVED —
@@ -181,6 +181,55 @@ own Tick history.
 
 ## Progress log
 
+- 2026-08-09 ~08:55Z (backend, slot 15, unified-trading-pm@dab21e39c + @478105857): Resolved the qg-host-governor
+  BACKEND P1 todo (msg 4377). **Diagnosis (first step the todo asked for): GOVERNOR SCOPE GAP, not "cap too
+  permissive."** Read `qg_governor_acquire`'s call site in `base-service.sh` — it brackets ONLY phase [3] TESTS + [4]
+  TYPECHECK; BOOTSTRAP (uv sync), [1] AUTO-FIX, [2] LINT, and the large [5] CODEX COMPLIANCE phase (~2800 lines, lines
+  1258-4081) all run with ZERO concurrency bound. Checked live host state (`bash qg-host-governor.sh --status`):
+  `QG_GOVERNOR_MODE=reservation` is active fleet-wide (exported via `install-qg-governor-shell-env.sh` from
+  `.env.local`, confirmed `env | grep QG_GOVERNOR_MODE` on this host), with CPU-slot admission capped at
+  `cores(8) × QG_CPU_FRAC(0.80) = 6` — i.e. the governor's OWN admission logic structurally cannot admit more than 6
+  concurrent heavy-phase reservations, host-wide, regardless of the todo's cited "≤2" (that number was token-mode's
+  default; live state is reservation mode with K=6). Given that hard ceiling, the 12-19 concurrent `quality-gates.sh`
+  PROCESSES reported in msg 4377 could not have all been holding heavy-phase tokens/reservations — at least 6-13 of them
+  were structurally running ungated in BOOTSTRAP/lint/codex phases. This is direct, code-and-live-state-backed proof of
+  the scope-gap branch, not the cap-too-permissive branch. **Fix shipped**: added `qg_governor_acquire_total_instance` /
+  `qg_governor_release_total_instance` to `qg-host-governor.sh` — a second, independent flock-based token bucket (same
+  bash-3.2-safe explicit-FD pattern as the existing heavy-phase gate, separate lock dir + FD range so the two coexist),
+  default cap = physical cores (floored at 4, overridable via `QG_TOTAL_INSTANCE_CAP`), host-shared placement via the
+  existing `_qg_shared_root` helper (so it works correctly across `.tabs` slot clones AND the glue-runner CI topology,
+  matching the existing RAM ledger's placement rule). Wired into BOTH `base-service.sh` (services) and `base-library.sh`
+  (libraries — unified-trading-library/UAC, the highest peak-RSS repos): acquired once, immediately after sourcing the
+  governor (before BOOTSTRAP), released from the existing EXIT trap so every exit path (pass/fail/killed-by-signal)
+  frees it — nests around the existing heavy-phase gate rather than replacing it. Also fixed a smaller adjacent gap
+  found while touching `base-library.sh`'s trap: unlike `base-service.sh` (fixed 2026-07-31,
+  `quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`-adjacent trap hardening), `base-library.sh`'s
+  `_qg_exit_handler` never called `qg_governor_release` on a failing/aborted exit either, so a failed library QG run
+  could leak a heavy-phase reservation until the next acquirer's dead-PID sweep — fixed the same way. **Testing**: added
+  `tests/test-qg-total-instance-gate.sh` (default-cap sizing incl. the cores-floor and explicit override,
+  `QG_TOTAL_GOVERNOR_DISABLE` no-op, single-process acquire/release round-trip, and a REAL two-process concurrency proof
+  — cap=2, two background holders fill both slots, a third acquirer genuinely blocks (verified via `timeout` rc=124)
+  until a holder releases, then a fresh acquire succeeds promptly). Hit and fixed two classic bash test-harness bugs
+  while building the concurrency proof (both instructive, left in the test's own comments): (1) a background job started
+  inside a `$(...)` command substitution inherits the substitution's capture pipe, so the substitution silently blocks
+  until that orphaned background job exits — serializing what needed to run concurrently; (2) the same subshell
+  reparents the background PID away from the calling script, so `wait $pid` on it returns immediately without actually
+  waiting. Fixed by backgrounding both holders directly at the script's top level (real, waitable children) instead of
+  via a helper function invoked through command substitution. Re-ran the full existing governor test suite
+  (`test-qg-reservation.sh`, `test-trap-release.sh`, `test-qg-watchdog.sh`, `test-qg-admit.sh`,
+  `test-qg-host-capacity.sh`, `test-qg-ledger.sh`, `test-qg-mem-cap.sh`, `test-qg-governor-wait-time.sh`,
+  `test-qg-running-marker.sh`, `test-qg-environment-resolution-parity.sh`, `test-qg-glue-runner-shared-root.sh`) — all
+  pass except one pre-existing, unrelated timing flake in `test-qg-governor-wait-time.sh` ("contended acquire recorded
+  wait=0"), confirmed pre-existing (not introduced by this change) via a clean-baseline stash comparison before touching
+  any file. Also confirmed via a manual integration smoke test (source the real governor, acquire, check `--status`
+  reflects the held token, simulate a crashing exit via the same trap pattern `base-service.sh` uses, confirm the token
+  is released even on a non-zero exit). `quality-gates.sh` Pass-1 launched in the background per the mandatory
+  non-blocking rule; will ship via quickmerge once green. Left unchecked: the standing P1 todo above this one
+  (host-contention/respawn-loop feedback-loop hypothesis) is a SEPARATE, not-yet-closed investigation this fix does not
+  resolve on its own — this fix bounds worst-case concurrent QG process count/RAM footprint, which should reduce (not
+  eliminate) the severity of future host-capacity spikes, but the crash-cadence-vs-load DECOUPLING finding (msg
+  4403/4407 above) means it is not expected to be a complete fix for the tmux-kill cadence by itself; whoever next reads
+  that todo should treat this as a contributing mitigation, not a closure.
 - 2026-08-09 (infra, slot 11, unified-trading-pm): Todo 6 (DOCS P3) — added a SUPERSEDED-NOTE directly under the ~00:22Z
   progress-log entry (the "12-slot simultaneous burst") correcting its "plausibly a genuine tmux-server-level event"
   hypothesis: per review's msg 4361 finding (already documented in the ~00:35Z entry below), the burst is a

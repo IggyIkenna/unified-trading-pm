@@ -145,42 +145,46 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **RECURRENCE CONFIRMED LIVE (2026-08-09, later same day)** — raised P2→P1. Fix `wave_launcher.py`'s
-      `running_cell_keys` dedup check so it matches the per-single-root CME dispatch candidate keys it computes
-      internally, instead of only matching a VM-name-parsed "root group" label — currently causes CME launches to
-      duplicate 3-13x per shard (measured: 167 stray VMs from one erroneous wave, per "Disposition of currently-running
-      infra" above). **Confirmed still happening after the kill+scope-ruling landed**: observed
-      `tradfi-bf-cme-ohlcv-1m-     g01-es-es-2020-*`, `-eth-eth-2022-*`, and `-met-met-2023-*` each running as TWO
-      separate VMs ~3 hours apart for the identical shard. Any relaunch of the in-scope CME cells (ES, BTC/ETH futures)
-      needs this fixed first, or must bypass `wave_launcher.py` per the manual-check workaround already noted in "Known
-      relaunch gotchas" above. **(na-eligibility-audit 2026-08-09, tradfi tranche, dispatch agt-3df41f: converted from
-      prose-only "Known relaunch gotchas" text to a tracked checkbox — same finding, not new scope.)**
-- [ ] [DATA] P1. **NEW FINDING (2026-08-09)** — `tradfi-bf-nyse-ohlcv-1m-2023-d01-*` was observed RUNNING live, i.e. an
-      autonomous dispatch (likely `wave_launcher.py`'s gap-driven scan, which is scope-blind — it only reads "is this
-      cell a manifest gap", not this doc's ruling) launched NYSE equities for **2023**, directly violating the "equities
-      = 2026 ONLY" scope above. Needs a live decision: kill it (wastes whatever progress it's made) or let it finish
-      (it's not wrong data, just out-of-priority-order right now) — either way, this confirms `wave_launcher.py` itself
-      needs a scope-awareness gate reading this doc (or an equivalent config), not just the dedup-key fix above, or
-      every future gap-scan will keep re-violating this ruling. Repo: deployment-service (`scripts/wave_launcher.py`).
-- [ ] [SCRIPT] P1. **NEW (2026-08-09 macro/USD backdrop addition)** — write a new DXY backfill launcher script
-      (`launch-tradfi-bf-ice-ohlcv-24h.sh` or similar), templated off `launch-tradfi-bf-fx-ohlcv-24h.sh` /
-      `launch-tradfi-bf-cboe-indices-ohlcv-24h.sh`: source `_tradfi-ohlcv-launcher-lib.sh`, `VM_VENUE=ICE`, `ohlcv_24h`,
-      no `--source` flag (Yahoo, not Databento). No launcher exists today — see "Known relaunch gotchas". Repo:
-      deployment-service.
-- [ ] [SCRIPT] P2. **NEW (2026-08-09)** — add `("ICE", "INDEX", "DXY")` to `extra_mvp_cells` in UAC's
+- [ ] [SCRIPT] P1. **RECURRENCE CONFIRMED LIVE A SECOND TIME (2026-08-09, later same day)** — still not fixed. Fix
+      `wave_launcher.py`'s `running_cell_keys` dedup check so it matches the per-single-root CME dispatch candidate keys
+      it computes internally, instead of only matching a VM-name-parsed "root group" label — currently causes CME
+      launches to duplicate 3-13x per shard (measured: 167 stray VMs from one erroneous wave, per "Disposition of
+      currently-running infra" above). **Confirmed AGAIN live** (instrument-scope-diff session, 2026-08-09):
+      `-eth-eth-     2022-*` and `-met-met-2023-*` were each observed running as TWO separate VMs ~3h apart for the
+      identical shard — killed the newer (redundant) instance of each pair as a stopgap
+      (`gcloud compute instances delete`, `asia-northeast1-c`), keeping the earlier-started original. **This is a
+      stopgap, not a fix** — the root cause in `wave_launcher.py` is still unaddressed and will keep recurring on every
+      future gap-scan wave; not attempted this session (out of scope for the instrument-scope-diff task), still the
+      top-priority follow-up.
+- [x] ✅ [DATA] P1. **NEW FINDING (2026-08-09)** — `tradfi-bf-nyse-ohlcv-1m-2023-d01-*` was observed RUNNING live,
+      violating the "equities = 2026 ONLY" scope. **Resolved itself** — by the instrument-scope-diff session
+      (2026-08-09, several hours later), this VM was no longer running (self-deleted on completion or reaped; not
+      independently confirmed which). No action needed on this specific instance, but the underlying gap —
+      `wave_launcher.py`'s gap-driven scan is scope-blind, it only reads "is this cell a manifest gap," not this doc's
+      ruling — is UNCHANGED and will produce the same class of violation again on the next scan. Repo:
+      deployment-service (`scripts/wave_launcher.py`).
+- [x] ✅ [SCRIPT] P1. **NEW (2026-08-09 macro/USD backdrop addition)** — write a new DXY backfill launcher script,
+      templated off `launch-tradfi-bf-fx-ohlcv-24h.sh` / `launch-tradfi-bf-cboe-indices-ohlcv-24h.sh`: source
+      `_tradfi-ohlcv-launcher-lib.sh`, `VM_VENUE=ICE`, `ohlcv_24h`, no `--source` flag (Yahoo, not Databento). **Shipped
+      `deployment-service@bd561d917`** — `scripts/vm/launch-tradfi-bf-ice-ohlcv-24h.sh` + registry entries in
+      `launcher_registry.py`/`vm_prefix_registry.py` (preemption relaunch + bucket classification) + regression test in
+      `test_launcher_registry.py`. Dry-run verified. QG green.
+- [x] ✅ [SCRIPT] P2. **NEW (2026-08-09)** — add `("ICE", "INDEX", "DXY")` to `extra_mvp_cells` in UAC's
       `unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py` so DXY counts toward the tradfi MVP
-      completeness denominator (`is_mvp()` currently returns `False` for it — registered + fetched, but not MVP-tagged).
-      Repo: unified-api-contracts.
+      completeness denominator. **Shipped `unified-api-contracts@e6c66c382`** — `MVP_SCOPE_CONFIG_VERSION` bumped to 23,
+      3 new/updated tests in `test_mvp_scope.py` (`test_ice_index_dxy_is_mvp`, `test_ice_other_cells_not_swept_in`,
+      `test_extra_mvp_cells_exact_membership` updated to 8-triple). QG green.
 - [ ] [DATA] P1. **NEW (2026-08-09)** — before launching anything: check the manifest for actual FRED coverage (the FRED
       macro backfill reportedly ran 2026-07-30 per
       `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` — this may already be a verify-only task).
       Then launch/verify full-history backfills for the CBOE Treasury yield-curve INDEX and KRW/USD (existing launchers,
       manual invocation per "Known relaunch gotchas"), and DXY once its launcher exists (todo above).
-- [ ] [DOCS] P2. **NEW (2026-08-09)** — propagate this scope update to: `/codex/02-data/mvp-scope-canonical.md`
-      (document the existing `extra_mvp_cells` — CBOE Treasury INDEX, FX KRW — and add DXY once the UAC todo above
-      ships), `/codex/02-data/cross-asset-canonical-target-ssot.md` (missing DXY canonical-id row), and
-      `/codex/09-strategy/mvp-universe-per-asset-group.md` (stale "fixed-income... post-cutover, out of MVP" claim — now
-      wrong). Repo: unified-trading-pm.
+- [x] ✅ [DOCS] P2. **NEW (2026-08-09)** — propagate this scope update to `/codex/02-data/mvp-scope-canonical.md`,
+      `/codex/02-data/cross-asset-canonical-target-ssot.md`, and `/codex/09-strategy/mvp-universe-per-asset-group.md`.
+      **Shipped `unified-trading-pm@d5d0b75cc` / `@22d0a07d0` / `@ecddf76ad`**. The closeout doc
+      (`tradfi_consolidated_closeout_2026_07_18.md`) was deliberately NOT touched further — already over its 1000L hard
+      cap from prior growth, no scoped-append exception applies to a content addition; its existing banner pointing at
+      this doc is sufficient.
 - [ ] [SCRIPT] P2. **NEW (2026-08-09)** — add `("ICE", "ohlcv_24h")` to `_TRADFI_MVP_SHARDS` in
       `market-tick-data-service/scripts/pipeline_e2e_check.py:330-338` so the MTDS `--mvp-only` smoke test exercises DXY
       (Treasury-INDEX/CME and KRWUSD/FX cells are already covered in that hand-listed set). Repo:
@@ -221,3 +225,19 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
   line. Added these 4 cells to "In scope", corrected the out-of-scope section, and filed 6 new tracked todos (launcher
   script, UAC MVP-tag, backfill launch/verify, codex doc propagation, MTDS smoke-test entry, features-service
   corp-actions ticker list).
+- **2026-08-09 (same session, follow-through — shipped)**: 4 of the 6 todos filed above shipped this session:
+  `deployment-service@bd561d917` (new DXY launcher + registry entries + test), `unified-api-contracts@e6c66c382` (DXY
+  MVP-tag, config v23), `unified-trading-pm@d5d0b75cc`/`@22d0a07d0`/`@ecddf76ad` (3 codex docs), and the
+  `data-pipeline-check-mtds` skill doc's own duplicate hand-list (`unified-trading-pm@86f6618df`) — a 4th mirror of the
+  same `_TRADFI_MVP_SHARDS` hand-list found while checking whether MTDS/MDPS/features/reconciliation track scope
+  dynamically (most do; this skill doc and MTDS's own smoke test are the two genuine hand-lists that needed the same
+  edit). The MTDS `_TRADFI_MVP_SHARDS` code change and the features-service `_DEFAULT_TICKERS` change are written and
+  QG'd; their quickmerges were in flight when this entry was written — check their own commits for final SHAs before
+  assuming undone. Also converted the FRED backfill's day-by-day API-call-waste finding from prose to a tracked todo
+  (`unified-trading-pm@5f813f854`) per operator pushback that "harmless duplication" undersold it. Separately,
+  live-fleet-reconcile found the wave_launcher.py dedup bug recurring a SECOND time (killed the 2 redundant duplicate
+  VMs as a stopgap, root cause still unfixed — see that todo above) and confirmed the out-of-scope NYSE-2023 VM had
+  already resolved itself. ForexFactory econ-calendar scraper
+  (`tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`) checked per operator question: still
+  `status: draft`, not in the catalogue, blocked on an unresolved Cloudflare-bypass design decision — left as-is,
+  already correctly tracked.

@@ -41,8 +41,8 @@ related:
 created: 2026-08-08
 author: data_engineering worker slot-19
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.4
@@ -143,3 +143,7 @@ explicitly expired-with-signal.
   Worth checking entry count/ordering effects, not just age, when doing the `[BACKEND]` code read. No action taken on
   the task itself — still correctly parked, no autonomous unlock, no re-filing.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **na-corpus-hygiene 2026-08-09**: RECLASSIFY — `assigned_vm: NA → planning`, `execution_scope → orchestrator-agent`.
+  Both todos are bounded: todo 1 is a checkable code-read (cite the exact `blocked_queue` removal condition), todo 2 is
+  a scoped follow-on fix/notification-path conditioned on todo 1's finding, per
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` §5 — no design/judgment call, no `locked_by`.

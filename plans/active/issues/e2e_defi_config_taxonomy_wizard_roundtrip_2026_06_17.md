@@ -115,7 +115,7 @@ CARRY_BASIS_PERP(drift-perp). No off-taxonomy venue/instrument_type except D3 be
       Hyperliquid"), one day before this doc's own creation. There is no longer a tested strategy shape that models a
       Solana-DEX-spot basis, so the "wizard can't build what the backtest models" gap has nothing left to be a gap
       about. No fix needed; not re-opening the Orca/Raydium cell-registration question absent a live motivating case.
-- [ ] [SCRIPT] P3. **D4 — `recursive_borrow_paper_smoke.py` is a non-instantiating stub** (`INFRA_GAP`/
+- [ ] [SCRIPT][BLOCKED-CREDENTIALS] P3. **D4 — `recursive_borrow_paper_smoke.py` is a non-instantiating stub** (`INFRA_GAP`/
       `NotImplementedError`, BLOCKED-CREDENTIALS) — references cell
       `CARRY_RECURSIVE_BORROW_LENDING_ONLY@aave_v3-ethereum-wsteth-weth-emode` but never builds an engine + never
       asserts that specific aave e-mode cell against the matrix. When the credentials/infra land, make it a real

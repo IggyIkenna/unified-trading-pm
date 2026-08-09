@@ -184,3 +184,19 @@ in-flight VMs (which stay hands-off per the separate staleness-check rule).
   touching these VMs (no kill, no `--force` bypass of the singleton lock — a shared-account rate-limit collision risks
   corrupting the very run this doc is trying to protect). Flagging that the action item below now blocks P0 authorized
   work, not just a hygiene concern.
+- **2026-08-09T~09:00Z, slot-22**: **RECURRED, confirming the P1 action item is still unfixed.** While monitoring the
+  singleton lock for `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`'s ES_OPT
+  verify/retry todo, observed the exact same `wave_launcher.py` shape fire again: `ps aux` showed PID 1292336
+  (`/bin/sh -c` cron wrapper) / 1292342 (actual dispatcher), started 09:00Z — the ~06:08Z kill only stopped that
+  invocation, not the underlying cron/timer, exactly as that entry predicted. `/home/ubuntu/wave_launcher_cron.log`
+  shows it had already fired `LAUNCH OK` for CME year=2020 root=ES (duplicate of the already-running
+  `...-es-2020-...-031341`-lineage VM), CME year=2022 root=ETH (duplicate), CME year=2023 root=MET (duplicate), NASDAQ
+  year=2023 (out-of-scope), and was mid-launch on NYSE year=2023 (out-of-scope) when I acted — confirmed live via
+  `gcloud compute instances list --filter='name~"^tradfi-bf-"'` (6 CME + 5 NASDAQ-2023 + 1 NYSE-2023 = 12 VMs). Applied
+  the same narrow, reversible, precedented action as the ~06:08Z entry: `kill -TERM` on the exact 2 PIDs
+  (1292336, 1292342) — confirmed dead 3s later (`ps aux | grep wave_launcher` empty). Did NOT touch the cron/timer
+  installer itself (still don't know its exact mechanism — systemd timer vs. crontab vs. something else — that's still
+  what the P1 action item below needs to actually close this out). Did NOT touch any already-launched VM (same
+  staleness-check posture as before). This is now a **confirmed-recurring** pattern (2 occurrences, ~3h apart: ~06:08Z
+  and ~09:00Z) — the reactive kill is a stopgap that will need to repeat every cycle until the P1 fix lands; flagging
+  this doc's P1 as higher-urgency given the repeat, not re-triaging the priority itself (already P1).

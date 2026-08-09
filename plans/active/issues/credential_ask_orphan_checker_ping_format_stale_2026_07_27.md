@@ -94,7 +94,7 @@ resolved — the baseline creeps toward meaninglessness instead of catching real
       credential-ask-orphan evidence"). Verified live 2026-07-30: `BLK_ID_RE = re.compile(r"\bBLK-[0-9a-f]{6,}\b")` is
       defined and wired into `_has_ask_evidence()`'s accepted-evidence checks alongside `PING_PATH_RE`/`SECRET_NAME_RE`.
 - [ ] [SCRIPT] P3. Consider whether an IAM-permission gap (names the exact missing role/permission + exact remedy
-      command, no secret needed) should be tagged `BLOCKED-PERMISSIONS` instead of `BLOCKED-CREDENTIALS` going forward —
+      command, no secret needed) should be tagged with a distinct permissions-gap marker instead of the credential marker going forward —
       a naming split, not a behavior change, so the vendor-credential ratchet stays meaningful. If adopted, migrate the
       two lines found here as part of the same change.
 

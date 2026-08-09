@@ -154,11 +154,15 @@ This is the first fresh `/ag-closeout-audit tradfi` pass since batch5 (2026-07-2
       finding O: shards simply re-run on preemption). Done when: the VM(s) are STARTED (<60s) + confirmed RUNNING at
       T+10min, per async-wait-and-poll-discipline (no fire-and-forget). (2) Once launched and complete, run the same
       manifest-count-only check used for ES futures (mirrors the NASDAQ/NYSE precedent,
-      `data_completion_tradfi_2026_07_15.md`) scoped to venue=CME × root∈{ES,EW,EW1,EW2,EW4,E1A,E2A,E3A,E4A, E5A,EOM} ×
-      data_type=ohlcv_1m, and record the result as a line item in
-      `plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell table, "S&P index options" row. Repos:
-      deployment-service, unified-trading-pm. **Done when**: the VM(s) ran to completion, the manifest-count check
-      result is recorded with real query + counts, and the MVP-cell table row is updated. Source:
+      `data_completion_tradfi_2026_07_15.md`) scoped to venue=CME × data_type=ohlcv_1m × instrument_type=options_chain ×
+      **`underlying in (SP500, ES)`** — **CORRECTED 2026-08-09 (see 2026-08-09T~08:38Z Progress Log entry below)**: the
+      original `root∈{ES,EW,EW1,...,EOM}` instrument_id filter was wrong (matches zero real rows — the writer keys every
+      ES_OPT variant to one aggregate `underlying=SP500` chain shard, not per-root ids) and would have returned 0
+      forever; fixed in `es-opt-backfill-watcher.sh` (`deployment-service@be6d4669`). Record the result as a line item
+      in `plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell table, "S&P index options" row. Repos:
+      deployment-service, unified-trading-pm. **Done when**: the VM(s) ran to completion across all target years (2025
+      is currently the one confirmed 0%-coverage gap — see 2026-08-09T~08:38Z entry — not just "ran once"), the
+      manifest-count check result is recorded with real query + counts, and the MVP-cell table row is updated. Source:
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
 
 - [ ] [DATA] P3. **Investigate the 2 anomalous Sundays in the CME instrument-definitions manifest.** `2024-06-02` and
@@ -626,3 +630,57 @@ existing lesson #7.
   (recipe near the top of this saga, remember the CURRENT task id, not a stale one). Direct check:
   `gcloud compute instances list --filter='name~"^tradfi-bf-"'` — trend is DOWN, likely to clear soon if it keeps going,
   but don't assume the exact rate holds.
+
+### 2026-08-09T~08:38-09:20Z — slot 22, fresh session (task `tradfi_year_shard_backfill_launcher_missing_source_self_deletes-7b183e5e4109`) — manifest query was broken (false 0-row absence), true gap is much narrower than assumed
+
+**PID 1059819 (previous session's watcher) was DEAD at boot** (`kill -0` failed). Instead of re-arming it, found a
+DIFFERENT slot (21) already running its own wait-for-lock-then-launch watcher (`wait_and_launch_es_opt.sh`,
+`run_in_background`, 90-min bound, started ~08:37Z) — did NOT start a competing watcher (dual-watcher double-launch
+race, lesson #5 above); left the launch responsibility to slot 21 and focused on a different, real bug instead.
+
+**Found and fixed: the manifest count-check query (this todo's own "Done when" criteria, `es-opt-backfill-watcher.sh`
+Phase 4) was broken and would return 0 rows forever.** It filtered `instrument_id in [CME:OPTION:ES, EW, EW1, ..., EOM]`
+— an 11-item list confirmed (via grep) to appear nowhere else in the codebase, not a real registry. The writer
+(`partitioned_writer.py:71`, `_tradfi_chain_partition_dims`) actually keys every ES_OPT variant to ONE aggregate chain
+shard, `underlying=SP500` / `instrument_id=CME:OPTION:SP500` (`reader.py:362-368`). My first manifest query attempt hit
+exactly this false-0 trap before I caught it via a broader unfiltered probe. Fixed: `deployment-service@be6d4669` (QG
+green ~280s, landed + ancestry-verified on origin). Todo text above corrected to describe the right filter.
+
+**Re-ran the CORRECTED query against a fresh manifest pull — true state is far better than "all 5 died" implies:**
+
+| Year | Distinct dates | Dates with real data | Coverage |
+| ---- | -------------- | -------------------- | -------- |
+| 2020 | 267            | 253                  | 94.8%    |
+| 2021 | 252            | 252                  | 100.0%   |
+| 2022 | 251            | 251                  | 100.0%   |
+| 2023 | 250            | 250                  | 100.0%   |
+| 2024 | 253            | 252                  | 99.6%    |
+| 2025 | 251            | **0**                | **0.0%** |
+| 2026 | 204            | 149                  | 73.0%    |
+
+1,407/1,728 distinct dates (81.4%) already have real data, 7.39M total OHLCV bars. Cross-checked `attempted_at`
+timestamps: most of 2021-2024's coverage predates today entirely (not from either of today's 2 failed `es-opt` launches)
+— most likely incidental capture from the concurrent in-scope `tradfi-bf-cme-ohlcv-1m-g01-es-*` root campaign (same
+Databento CME "ES" fetch appears to pull the options chain alongside the futures). Today's own `es-opt` VMs DID land
+real data before dying — confirmed 2026-01-08 shows 24,169 rows written at 03:31:34Z, matching this doc's own
+02:36-03:16Z entry's "24180 rows written" claim. **The real remaining gap is 2025 (complete 0%, confirmed never captured
+by any mechanism) + finishing 2026 (73%→100%) — not a from-scratch 5-year backfill.**
+
+**Also**: `wave_launcher.py`'s out-of-scope cron recurred a 2nd time (~09:00Z, ~3h after the first kill) while I was
+checking singleton-lock state — killed again by exact PID (same narrow action as the ~06:08Z entry above), tracked in
+`issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`, not duplicated here. Lock was NOT
+clear at any point I checked (5-12 VMs throughout this session).
+
+Did not flip todo #2's checkbox (backfill hasn't genuinely completed — 2025 is still 0%) or update the closeout plan's
+row yet — that's the next fresh session's job once a retry actually lands 2025/2026 progress. Full findings + Progress
+Log entry: `issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`.
+
+- **NEXT ACTION (fresh session)**: check todo #2's checkbox first. If `[ ]`: (1) check singleton lock
+  (`gcloud compute instances list --filter='name~"^tradfi-bf-"'`) and whether slot 21's watcher (or any other) already
+  launched ES_OPT — if VMs named `tradfi-bf-es-opt-*` exist, monitor for completion, THEN re-run the **corrected**
+  manifest query (`underlying in (SP500, ES)`, NOT the old 11-id filter) and expect to see 2025/2026 move, not the other
+  years. (2) If no watcher appears to be running and the lock is clear, launch it yourself. (3) Watch for
+  `wave_launcher.py` recurring again (~hourly-ish cadence observed, 2 occurrences so far) — kill by exact PID if seen,
+  don't touch the cron installer itself (still unidentified — that's the scope-violation doc's own P1). (4) Once 2025
+  shows real coverage and 2026 is materially higher, update the closeout plan's "S&P index options" row and flip this
+  todo.

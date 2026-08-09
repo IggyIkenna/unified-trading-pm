@@ -354,6 +354,14 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
     `ml-predictions-store` twins are ALL already-gone (404) — only the single flat `ml-models-store` bucket remains,
     fully proven safe, ready for an operator to run `gcloud storage rm -r gs://ml-models-store`. Full disposition +
     evidence recorded inline on the todo.
+    > **Correction 2026-08-09 (operator, interactive session)**: reason (1)'s "applies unconditionally... regardless of
+    > how well-proven" overstates the codex rule. `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a
+    > (extended 2026-07-28 to whole-bucket destroys) DOES let an agent execute a hard-stop-#1 delete autonomously once a
+    > FRESH `gcs_bucket_soft_delete_retention_seconds()` check on `ml-models-store` clears ≥604800s — that check was
+    > never run here, so "categorically human-only" is the wrong framing; "human-only unless/until §3a's fresh retention
+    > check is run and clears it" is correct. This doesn't change the practical outcome this session (reason (2)'s IAM
+    > gap independently blocks execution regardless), but the next agent to pick this up should run the §3a check before
+    > assuming human-only, not after.
   - **Bash/tooling note**: this session hit a transient shared-host `/tmp` tmpfs exhaustion (2GB tmpfs, other concurrent
     agents' sessions) that blocked all Bash calls for a stretch — recovered on its own; no workaround was needed beyond
     waiting + continuing read-only (Read-tool) investigation in the meantime. Flagging in case it recurs for another
@@ -403,9 +411,9 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
   recon-bucket P0 remains OPERATOR_QUESTION-blocked (kind-vs-prefix decision); ml-models-store delete P1 remains
   OPERATOR_QUESTION (fully-proven-safe disposition, but a human-only hard stop per
   `gcs-and-manifest-delete-safety-protocol.md` §3 — agent execution is categorically excluded, not just judgment-gated).
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
-  2 open todos remain -- the recon-bucket item's operator-gate is now cleared (per its own 2026-08-08
-  round5-cross-cutting-audit correction) but its remaining scope (multi-repo producer-chain stand-up) is
-  explicitly out-of-scope-for-this-plan; the `ml-models-store` prod-bucket delete stays a human-only hard stop
-  per `gcs-and-manifest-delete-safety-protocol.md` §3 regardless of how well-proven the disposition is --
-  whole doc stays NA.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged): 2
+  open todos remain -- the recon-bucket item's operator-gate is now cleared (per its own 2026-08-08
+  round5-cross-cutting-audit correction) but its remaining scope (multi-repo producer-chain stand-up) is explicitly
+  out-of-scope-for-this-plan; the `ml-models-store` prod-bucket delete stays a human-only hard stop per
+  `gcs-and-manifest-delete-safety-protocol.md` §3 regardless of how well-proven the disposition is -- whole doc stays
+  NA.

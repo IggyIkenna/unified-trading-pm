@@ -69,10 +69,10 @@ context_scope:
       with a verified commit + evidence, and each source doc's remaining-open count is explicitly re-stated.
 - [ ] [DOC] P1. **Re-check any batch11 todo that did NOT land** (e.g. todo 7's oil-perp check resolves negative, or a
       todo hits a real blocker) for whether it should revert to a `- [ ]` open item in its source doc (if genuinely
-      unresolved) or close via one of the `/done`-time disposition markers (`CANCELLED`, `DEFERRED-BY-DESIGN`,
-      `BLOCKED-ON:`) per `task_template.md` §3 — never leave a citation pointer dangling at a todo that never actually
-      shipped. **Done when**: every one of the 10 todos has either a reconciled-evidence pointer (todo 1 above) or an
-      explicit disposition in its source doc.
+      unresolved) or close via one of the `/done`-time disposition markers (`CANCELLED`, a permanent design-deferral
+      marker, `BLOCKED-ON:`) per `task_template.md` §3 — never leave a citation pointer dangling at a todo that never
+      actually shipped. **Done when**: every one of the 10 todos has either a reconciled-evidence pointer (todo 1 above)
+      or an explicit disposition in its source doc.
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch11_2026_08_09.md`** via the standard 6-step ritual: confirm
       no separate migration is needed for informational content → add the archive banner → run the codex-alignment check
       (this batch creates no new durable contract) → grep the corpus for every referrer of

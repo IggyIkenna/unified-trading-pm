@@ -12,7 +12,10 @@ summary: >-
   duplicated here.
 status: active
 nature: process
-asset_group: [ci, cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-09 (/ag-closeout-audit ci) -- was [ci, cross-cutting]; batch-extraction docs are single-
+  # tranche by construction (per SKILL.md's own authoring discipline), content is a ci-tranche satellite batch, no
+  # cross-AG scope
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

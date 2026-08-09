@@ -80,8 +80,19 @@ that the failure mode on this task isn't limited to the exact `forced_compact`->
       TmuxPruner/keeper kill root cause, check specifically whether `citadel_satellite_ao_dispatch_batch1-004` (and
       `solana_dex_pool_swaps_indexer-002`) share a workload characteristic (prompt size, tool-call pattern, repo state,
       worktree size) that makes them disproportionately likely to trigger it vs. other tasks. Repo: agent-orchestrator.
-- [ ] [OPERATOR] P2. Decide whether to `unpark` (`POST /api/backlog/citadel_satellite_ao_dispatch_batch1-004/unpark`)
-      once todo 1's root cause is fixed, or whether the underlying dispatch-batch task itself needs rescoping first.
+- [ ] [OPERATOR] P2. **CHECKED 2026-08-09 (operator, interactive session) — LEAN UNPARK, best odds of the 3 sibling
+      parked tasks, not a guarantee.** `agent-orchestrator@dd01255` (cited by one prior sub-agent pass) does NOT apply
+      here — it fixes chat-loop-role (review/main) liveness, not standard worker dispatch. The relevant fix is
+      `agent-orchestrator@e32d962` (TmuxPruner has-session debounce), confirmed live — and unlike
+      `defi_compute_gcp_migration-009`, occurrences 1+2 in the table above ARE the exact classic
+      `forced_precompact`→`forced_compact`→silent signature that fix targets. Occurrence 3 (slot 3,
+      `slot_resume_skipped`, no forced_compact) is a different, still-unexplained variant, so this isn't a clean "root
+      cause fixed" — but 2 of 4 failures matching a now-live fix is meaningfully better evidence than
+      `defi_compute_gcp_migration-009`'s 3/3 unfixed-signature record. **I can't call
+      `POST /api/backlog/citadel_satellite_ao_dispatch_batch1-004/unpark` from this interactive session — no write
+      access to the orchestrator API from this checkout.** Operator: trigger the unpark via the dashboard directly if
+      you agree with this read; if it re-wedges, that itself is useful evidence the residual (occurrence-3-shaped)
+      mechanism is still live.
 - [ ] [REVIEW] P3. Once unparked and re-dispatched, independently verify via `GET /api/activity` (filtered client-side
       by `task_id`, the `task=` query param does not actually filter server-side — confirmed 2026-08-08) that it
       completes a full boot->work->done cycle without re-wedging. Repo: unified-trading-pm (verification + checkbox flip

@@ -58,7 +58,7 @@ context_scope:
       (upstream mojibake trace+fix) lands, flip that doc's P3 todo with the cited evidence, re-verify the P2
       promotion-verification todo's status, and archive the doc if nothing else is open. Source:
       `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md`. Done when: the doc's checkboxes reflect the shipped
-      fix, and the doc is archived (or its remaining open item is a stated BLOCKED-OPERATOR hold).
+      fix, and the doc is archived (or its remaining open item is a stated operator-hold).
 - [ ] [CONFIG] P2. Reconcile `sports_features_layer_findings_sweep_2026_07_18.md` §E — once batch-10 todo 2 (trigger
       tiers + scheduler relaunch) lands, flip the §E [CONFIG] P2 checkbox with the manifest-verification evidence; §E
       [MODEL] P2 + §F [AUDIT] P2 remain parked (operator/conflict-gated). Source:

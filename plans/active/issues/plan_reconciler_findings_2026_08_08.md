@@ -171,9 +171,27 @@ the operator, not resolved by this run.
       *) is ENABLED with lastAttemptTime=2026-08-08T00:30:03Z (ran this morning) — so the ALL-capture-STOPPED claim is
       also wrong for dex_swaps specifically. uts-prod-mtds-collect-dex-pools-cron (daily, schedule=15 0 * * *) IS PAUSED
       though, matching the stopped claim for dex_pools. Net: capture is PARTIALLY live (daily dex_swaps cron only;
-      dex_pools and both 5-min forward-fill jobs are paused). Not verified: whether daily-only cadence is the
-      intended/correct state per whatever Track-8 migration is referenced, or a regression from an intended 5-min design
-      — that judgment stays with the operator.
+      dex_pools and both 5-min forward-fill jobs are paused). **Resolved 2026-08-09 (operator-directed research,
+      interactive session)**: dex_pools/dex_swaps is BATCH-BY-DESIGN (poll-based), not genuine live/websocket capture —
+      confirmed at the code level. `dex_swaps_handler.py`/ `dex_pools_handler.py` issue one-shot GraphQL POSTs to a
+      subgraph gateway per invocation, no persistent socket anywhere. A `WSFeedConnector`-named abstraction exists
+      (`live/connectors/dex_swap_uniswap_v3_ws.py`) but its own header explicitly documents choosing subgraph-polling
+      (15-30s interval) over a raw `eth_subscribe` websocket, specifically to keep the "Live = batch" invariant (same
+      code path, only `pipeline_mode` differs) — only 1 of 22 registered (protocol×chain) venues has even been upgraded
+      to this poller; the rest are `NotImplementedError` placeholders. Codex confirms by design: `live_websocket` as a
+      mode is RETIRED workspace-wide; `dex_pool_state`/`dex_pool_swaps` resolve to source `onchain_subgraph` (a pull
+      source). **"5-min forward-fill" mechanically means**: boot an ephemeral VM that re-runs the SAME batch handler in
+      `--mode live` every 5 min (`defi_forward_poll_scheduler.tf`'s own comment: "near-real-time without per-block
+      streaming infra") — gap-filling/refresh polling, never a subscription. **The specific paused/enabled asymmetry is
+      NOT a regression** — it's a documented, deliberate operator pause:
+      `defi_track01_per_instrument_and_canon_id_2026_07_24.md:66-75` records the operator (2026-07-18) explicitly
+      stopping ALL DeFi forward-poll VMs + pausing every `defi-fwd-*-prd`/daily-collect cron for the Track 0-1
+      per-instrument re-architecture, and `defi_consolidated_closeout_history_2026_07_18.md:1937` names `dex_pools`
+      specifically (not `dex_swaps`) as still mid-migrating — exactly matching why dex_pools' daily cron stayed paused
+      while dex_swaps' was safe to re-enable. Net: the architecture question is answered (batch-by-design, correct); the
+      remaining call is narrower — is daily-only cadence (vs. resuming the 5-min forward-fill polling) the intended
+      state to leave things in until Track 1/2/3 land, which is an operator preference, not a data-correctness question
+      anymore.
 
 ### Codex-drift — 9 findings, routed per "codex updates are in-scope but never autonomous"
 

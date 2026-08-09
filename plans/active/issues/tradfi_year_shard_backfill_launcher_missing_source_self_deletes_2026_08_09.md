@@ -135,15 +135,73 @@ path. If confirmed, this is a genuine **false-positive zombie classification**: 
 `issues/protected_live_peer_liveness_misclassifies_dead_session_stranded_wip_2026_08_08.md` (a different subsystem, same
 underlying pattern: liveness-by-log-silence is not liveness).
 
+## Third finding (2026-08-09T~08:38-09:15Z, slot-22) — manifest count-check query was itself broken (false 0-row absence), true current coverage is far better than "all 5 died" implies
+
+**The done-criteria query baked into `es-opt-backfill-watcher.sh` (and restated in both this doc's own action item below
+and `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2) was wrong and would have returned 0 rows forever,
+regardless of real capture state.** It filtered
+`instrument_id in [CME:OPTION:ES, EW, EW1, EW2, EW4, E1A, E2A, E3A, E4A, E5A, EOM]` — an 11-item list that greps to ZERO
+hits anywhere else in the codebase (confirmed: not a real UAC/IS registry, just an unverified assumption by whoever
+first wrote the query). The writer (`market_tick_data_service/engine/orchestrator/partitioned_writer.py:71`,
+`_tradfi_chain_partition_dims`) actually resolves ES and every E-mini options variant to ONE aggregate chain shard keyed
+`underlying=SP500` / `instrument_id=CME:OPTION:SP500` (`reader.py:362-368` docstring: "pass either the exchange code
+(ES) or the product root (SP500) — both resolve to underlying=SP500"). This is the same false-absence trap CLAUDE.md's
+reconciliation guidance warns about ("probe the vocabulary the WRITER actually emits").
+
+**Fixed**: `deployment-service@be6d4669` — corrected the filter to `underlying in (SP500, ES)`, added per-date dedup
+(the manifest can carry multiple capture attempts per date — an earlier zero-row attempt superseded by a later real
+one). QG green, landed + ancestry-verified on `origin/live-defi-rollout`.
+
+**Re-ran the corrected query against a fresh manifest pull (2026-08-09T~08:41Z)** — true current state is dramatically
+better than "all 5 died, 0 progress" implies:
+
+| Year | Distinct dates | Dates with real data | Coverage |
+| ---- | -------------- | -------------------- | -------- |
+| 2020 | 267            | 253                  | 94.8%    |
+| 2021 | 252            | 252                  | 100.0%   |
+| 2022 | 251            | 251                  | 100.0%   |
+| 2023 | 250            | 250                  | 100.0%   |
+| 2024 | 253            | 252                  | 99.6%    |
+| 2025 | 251            | **0**                | **0.0%** |
+| 2026 | 204            | 149                  | 73.0%    |
+
+Total: 1,407 of 1,728 distinct dates (81.4%) already carry real data, 7,391,527 total OHLCV bars. **2020-2024 are
+essentially already complete** — most of this was NOT written by the `tradfi-bf-es-opt-*` launcher's two failed attempts
+today (which only ran 21-40 min each before dying, per the second finding above); cross-checking `attempted_at`
+timestamps shows the bulk of 2021-2024's real data was written well before today, and today's own `tradfi-bf-es-opt-*`
+VMs (03:08-03:51Z insert/delete window, confirmed via `gcloud compute operations list`) landed some of the 2026 gain
+directly (e.g. **2026-01-08 shows 24,169 rows written at 2026-08-09T03:31:34Z** — matches this doc's own second-finding
+claim of "venue=CME: 24180 rows written" exactly). Separately, the general in-scope `tradfi-bf-cme-ohlcv-1m-g01-es-*`
+root campaign (part of the MVP-of-MVP-authorized CME full-history futures backfill, unrelated launcher) appears to
+incidentally capture the SP500 options chain alongside the ES futures fetch — this is most likely why 2020's coverage
+(94.8%) is already high despite no dedicated `es-opt` launch ever targeting 2020 (the issue's launcher only
+default-years to 2022-2026 per `cme-expiry-calendars.sh`).
+
+**The real, narrow remaining gap is: 2025 (complete 0% — genuinely never captured, by any mechanism) and finishing 2026
+(73%→100%).** Not a full 5-year re-run. Whoever next retries the dedicated launcher should expect years 2022-2024 to
+mostly skip-refetch (if the launcher's freshness-check honors already-captured dates — separately flagged as uncertain
+by this doc's own known-gap section on `VM_FORCE_WINDOW` not being wired into the `mtds-backfill` branch) and should
+watch specifically for 2025 and 2026 progress, not treat a repeat all-5-years launch as starting from zero.
+
+**Also observed live, same session**: the `wave_launcher.py` out-of-scope cron
+(`issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`) recurred again at ~09:00Z
+(confirmed 2nd occurrence, ~3h after the first kill) — killed again by exact PID (same narrow precedented action),
+tracked in that doc, not duplicated here. It was actively re-growing the singleton lock this task's retry depends on.
+
 ## Action items
 
-- [ ] [DATA] P1. **Verify the ES_OPT backfill eventually completes across all 5 years and write real data** — all 5 died
-      mid-fetch on some date (see second finding above); 2026 got furthest (several real days written) before it too
-      died. Once the singleton lock is next clear, retry the failed year-shards (idempotent, per this task's own safety
-      framing) — but note retrying alone will likely hit the SAME reaper again until the next action item is fixed. Then
-      run the manifest count-check (venue=CME × ohlcv_1m × instrument_type=options_chain × the 11 canonical ES_OPT
-      instrument_ids) per `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2's own done-criteria. Repo:
-      unified-trading-pm (progress tracked in that plan, not duplicated here).
+- [ ] [DATA] P1. **NARROWED 2026-08-09 (see third finding above) — remaining gap is 2025 (0%) + finishing 2026 (73%),
+      NOT all 5 years.** The manifest count-check query itself was broken (false 0-row absence, fixed
+      `deployment-service@be6d4669`) — 2020-2024 are already 94.8-100% complete via a combination of earlier captures
+      and the concurrent in-scope CME root campaign's incidental options capture, confirmed via the corrected query
+      against a live manifest pull. Once the singleton lock is next clear (currently held, `wave_launcher.py`
+      out-of-scope cron recurring on top of the in-scope CME campaign — see
+      `issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`), retry the launcher
+      (idempotent) — but expect 2022-2024 to mostly skip-refetch and watch specifically for 2025/2026 progress, not a
+      full 5-year restart. Retrying alone will likely still hit the zombie-watchdog reaper again (next action item,
+      unfixed) for whichever year is actively fetching when the lock clears. Re-run the CORRECTED manifest count-check
+      (`underlying in (SP500, ES)`, not the old 11-id filter) after any retry to measure the actual delta. Repo:
+      unified-trading-pm (progress tracked in `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`, not duplicated here).
 - [ ] [INFRA] P1. **Confirm + fix the zombie-watchdog false-positive on a legitimately-slow ES_OPT fetch** (see
       corrected hypothesis above) — first CONFIRM `vm_zombie_watchdog.py` is the actual actor (check its own audit trail
       / logs for a kill event matching one of these VM names + timestamps, don't just trust the timing match), then
@@ -185,3 +243,20 @@ underlying pattern: liveness-by-log-silence is not liveness).
   (`||||||| Stash base` / `Updated upstream` vs `Stashed changes`) — both fixes were functionally identical, resolved
   cleanly, all tests green (including this doc's own regression test class + the sibling's), shipped together:
   `deployment-service@391ff7f5` (parents: `c99ab99b8`, `acf965d9`). Ancestry-verified on `origin/live-defi-rollout`.
+- **2026-08-09T~08:38-09:20Z, slot-22, task
+  `tradfi_year_shard_backfill_launcher_missing_source_self_deletes-7b183e5e4109`**: worked the P1 verify/retry action
+  item. Found and fixed a genuine second bug (see third finding above): the manifest count-check query everyone
+  downstream was relying on (this doc's own action item text, `es-opt-backfill-watcher.sh`, batch6 todo#2's
+  done-criteria) filtered on a fabricated 11-instrument_id list that matches zero real rows — always returns 0,
+  regardless of true state. Fixed `deployment-service@be6d4669` (QG green 277-284s, landed + ancestry-verified on
+  origin). Re-ran the corrected query: true coverage is 2020-2024 ~complete (94.8-100%), 2025 a genuine 0% gap, 2026 73%
+  (partial year). Did NOT retry the launcher myself this session — slot 21 was already running its own
+  wait-for-lock-then-launch watcher (`wait_and_launch_es_opt.sh`, 90-min bound) when I checked; duplicating it would
+  risk the documented dual-watcher double-launch race (batch6 plan's lesson #5), so I left that to them and focused on
+  the query-correctness fix + accurate baseline instead. Singleton lock was NOT clear at any point I checked this
+  session (5-12 `tradfi-bf-*` VMs throughout) — also killed a 2nd live recurrence of the `wave_launcher.py` out-of-scope
+  cron (~09:00Z, same PID-kill pattern as the ~06:08Z entry in the scope-violation doc) since it was actively re-growing
+  the lock my task depends on. Did not flip this action item's checkbox — the literal ask ("eventually completes across
+  all 5 years") is not yet true (2025 is still 0%), and I didn't personally trigger or observe a fresh retry completing.
+  Leaving open with the corrected, narrower scope documented for whoever picks this up next (retry should now target
+  2025+2026 specifically, not assume a from-scratch 5-year run).
