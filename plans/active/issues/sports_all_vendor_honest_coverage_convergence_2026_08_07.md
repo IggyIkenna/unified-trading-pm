@@ -946,17 +946,9 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   non-historically-dangerous chunk). Relaunched as **`mtds-backfill-odds-smallchunk10-20260809`** (timestamp-suffixed
   this time, per the naming lesson from the last incident). Full detail:
   `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`.
-- **07:54Z — smallchunk10 launch confirmed genuine** (retried once the unrelated concurrent session's dirty
-  `deployment-service` file resolved on its own) — chunk 1/451, correct 5-day chunking, skip-fasting cleanly, real boot
-  banner. FIXTURE_LINEUPS needed **43,518 → 41,381** (-2,137, fast real progress), heartbeat live. Both healthy.
-- **08:24Z** — smallchunk10 chunk 7/451, zero OOMs, heartbeat live. FIXTURE_LINEUPS needed **41,381 → 39,749** (-1,632).
-  Both healthy, no action. Did another compaction pass (969→951 lines) — this doc keeps needing one ~every 2h; if that
-  cadence continues, worth spinning a continuation doc next time rather than compacting again.
-- **08:54Z** — smallchunk10 chunk 13/451, still zero OOMs, heartbeat live. FIXTURE_LINEUPS needed **39,749 → 38,691**
-  (-1,058). Both healthy, no action.
-- **09:25Z** — smallchunk10 chunk 17/451, **still zero OOMs even approaching chunk 18** (cleanest run yet).
-  FIXTURE_LINEUPS needed **38,691 → 37,606** (-1,085). Both healthy, no action.
-- **09:53Z** — smallchunk10 entered chunk 18, streak ended, 6 `CHUNK_FAILED` (in-range/expected). FIXTURE_LINEUPS needed
-  **37,606 → 36,476** (-1,130). Both healthy, no action.
-- **10:21Z** — smallchunk10 still chunk 18, 11 `CHUNK_FAILED` (in-range), heartbeat live. FIXTURE_LINEUPS needed
-  **36,476 → 34,003** (-2,473, accelerating). Both healthy, no action.
+- **07:54Z-10:21Z (compacted).** smallchunk10 launch confirmed genuine, climbed cleanly chunk 1→17/451 with **zero
+  OOMs** (cleanest run yet) before the streak ended at chunk 18 as expected (21 `CHUNK_FAILED` by 10:21Z, in-range).
+  FIXTURE_LINEUPS dropped steadily across 6 re-census points, 43,518→34,003 (rate held/accelerated,
+  ~1,000-2,500/interval), heartbeat live throughout both fleets. No incidents this stretch.
+- **10:49Z** — smallchunk10 still chunk 18, 21 `CHUNK_FAILED` (in-range), heartbeat live. FIXTURE_LINEUPS needed
+  **34,003 → 32,547** (-1,456). Both healthy. Did a compaction pass (962→952 lines).
