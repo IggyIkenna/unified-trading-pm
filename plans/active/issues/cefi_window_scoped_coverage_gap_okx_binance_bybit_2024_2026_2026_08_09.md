@@ -143,13 +143,15 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
       for a broken auth path, changed API contract, or misrouted request. Repo: market-tick-data-service. **Done when**:
       root cause identified + fixed (or filed separately if genuinely large), and a sample re-attempt for each venue
       captures successfully.
-- [ ] [DATA] P1. **Confirm whether `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s chronological
-      2019→present backfill is actually scoped to close this `trades`/`book_snapshot_5` gap for these 6 venues once it
-      reaches 2024-2026**, or whether it needs a targeted supplement for exactly this venue×data_type×window slice
-      (don't rely on the from-2019 backfill reaching 2024 organically — per item 1 above, this may be a live-capture
-      issue the historical backfill would never touch). Repo: instruments-service (read-only research + doc update).
-      **Done when**: the cross-reference is confirmed one way or the other and recorded in that plan's Progress Log; if
-      not covered, a targeted backfill todo is filed there (not duplicated here).
+- [x] ✅ [DATA] P1. **DONE 2026-08-09 (slot-12, data_engineering)** — Confirmed: **scope matches (all 6 venues + both
+      data_types are in the backfill's `heavy|trades;book_snapshot_5` bucket), timing does not** (chronological walk
+      from 2019-01-01 is only ~1.5-17% through its ~2769-day span after 8 relaunches over 13 days — reaching 2024-2026
+      is not realistic on the P0 gate's timeline, and per item 1 the trailing-90d regression is likely a separate
+      ongoing live-capture issue a historical backfill can't fix regardless). Recorded in
+      `/plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s Progress Log (2026-08-09 entry) and
+      filed a targeted `[INFRA] P1` supplement-backfill todo there (2024-01-01→present, these 6 venues ×
+      `trades`/`book_snapshot_5`, N=1-Tardis-cap-aware sequencing) — not duplicated here. Repo: unified-trading-pm
+      (doc-only; no code change, per this todo's scope).
 - [ ] [DATA] P2. **Backfill/re-attempt `trades` + `book_snapshot_5` for OKX-SPOT and BYBIT specifically** (the two
       worst-performing venues, 27-32% and 11-16% coverage respectively for these data_types) over 2024-01-01→present,
       once items 1 and 3 above determine whether this is a live-capture fix, a historical backfill, or both. Repos:
@@ -160,3 +162,9 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
 
 - **2026-08-09** — filed from cefi_satellite_ao_dispatch_batch11 todo 10's window-scoped honest-coverage measurement. No
   fix applied yet — this is the findings-closure filing per RULES.md §4.5.
+- **2026-08-09 (slot-12, data_engineering)** — Completed item 3 (cross-reference confirmation). Read
+  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` + its companion preemption issue
+  (`issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`, full 8-relaunch history through 2026-08-09).
+  Venue+data_type scope matches exactly; reaching the 2024-2026 window organically does not on any near-term timeline.
+  Filed the targeted supplement todo in the track2 plan (not here, per that todo's own instruction). See item 3's flip
+  above for the full verdict.
