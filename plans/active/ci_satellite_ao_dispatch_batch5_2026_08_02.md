@@ -171,9 +171,9 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       `vm_name='planning'`), within the operator's 50-70% band, no re-escalation warranted (caveat: pipeline data for
       this VM only starts 2026-08-08, so the window is ~29.5h, not multi-day — recorded honestly). Sub-item 2: recorded
       as MOOT — pointer to `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md` per the instruction to skip
-      re-scoping. Evidence: `unified-trading-pm@<SHA>` (source-doc checkbox flip + Progress Log entry). **Two remaining
-      `github_actions_operator_gated_followups_2026_07_17.md` items, combined into ONE todo per the same-file-contention
-      note above.** Record BOTH findings as ONE dated Progress Log entry in that doc:
+      re-scoping. Evidence: `unified-trading-pm@b3d2deacb` (source-doc checkbox flip + Progress Log entry). **Two
+      remaining `github_actions_operator_gated_followups_2026_07_17.md` items, combined into ONE todo per the
+      same-file-contention note above.** Record BOTH findings as ONE dated Progress Log entry in that doc:
   1. **BigQuery `resource_samples` utilization verification** (`[VERIFY] P2`, ~line 632; batch4 Deferred **D4-3**). The
      runner resize landed 2026-07-27; measure the rolling average utilization over a sustained window from the durable
      BigQuery `resource_samples` pipeline (NOT a point-in-time SSM check) and report it against the operator's
