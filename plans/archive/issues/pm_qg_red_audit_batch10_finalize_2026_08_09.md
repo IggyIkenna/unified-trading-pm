@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [quality-gates, plan-hygiene, sha-evidence, citation-drift, filename-convention]
 related:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch10_finalize_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch10_finalize_2026_08_09.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/issues/quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md,
   ]

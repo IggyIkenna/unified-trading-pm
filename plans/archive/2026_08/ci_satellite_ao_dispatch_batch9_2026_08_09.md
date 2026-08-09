@@ -21,7 +21,7 @@ related:
   [
     /plans/active/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
-    /plans/active/ci_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     /plans/epics/infrastructure_master.md,
     /plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md,

@@ -8,7 +8,7 @@ summary: >-
   observability_master` rather than `infrastructure_master` — the same parent_epic-grouping split precedent
   batch7/batch8 established. See batch 9's own Progress Log for the full disposition of the source finding doc's other
   13 items; not duplicated here.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -18,7 +18,7 @@ tags: [ci, ao-dispatch, close-out, batch-10, satellite-docs, plan-hygiene, dangl
 related:
   [
     /plans/active/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
-    /plans/active/ci_satellite_ao_dispatch_batch10_finalize_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch10_finalize_2026_08_09.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/monitoring_control_plane_master_2026_06_10.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
@@ -55,6 +55,16 @@ source: >-
 ---
 
 # CI satellite AO batch 10 (observability_master group)
+
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** Sole todo done + its source-doc checkbox reconciled by
+> `ci_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`'s own sole todo (`unified-trading-pm@cb35394451`). Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "archive immediately" HARD RULE and the
+> `ci_satellite_ao_dispatch_batch9_2026_08_09.md` / `..._batch9_finalize_2026_08_09.md` precedent for this exact
+> batch-N/finalize shape (archived together earlier the same day). The checkbox-flip commit shipped separately from this
+> git-mv archival commit per that same codex doc's "never combine" rule (see
+> `issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`) — the `archive_exempt: true`
+> bridge used on the finalize doc's flip commit is dropped there as moot now that both docs are leaving `plans/active/`.
+> Successor: none.
 
 > **Why this is a separate doc from batch 9.** Both batches come out of the same 2026-08-09 round-9 pass over the same
 > source finding doc. This item's own target doc frontmatter names a different `parent_epic` (`observability_master`,
@@ -113,5 +123,9 @@ source: >-
   overlap found.
 - **2026-08-09 (slot 31)**: Todo 1 done — see its own flip for full evidence. Source finding checkbox in
   `issues/plan_reconciler_ci_late_findings_2026_08_06.md` also flipped in the same commit (the finalize doc's own todo
-  would otherwise duplicate this; it will just cite the already-landed commit). Batch-10 itself is not archived by this
-  task — no archival step is scoped to either this doc or its finalize twin.
+  would otherwise duplicate this; it will just cite the already-landed commit).
+- **2026-08-09 (slot 12)**: Correction to the note above — "no archival step is scoped" was written before the same-day
+  `ci_satellite_ao_dispatch_batch9_2026_08_09.md` precedent established that a batch/finalize pair DOES archive together
+  once the finalize plan's own todo closes. `ci_satellite_ao_dispatch_batch10_finalize_2026_08_09.md` reconciled the
+  source-doc checkbox (`unified-trading-pm@cb35394451`); this doc and its finalize twin now archive together in this
+  follow-up commit, per the 6-step ritual in `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.

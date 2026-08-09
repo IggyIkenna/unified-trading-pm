@@ -23,7 +23,7 @@ related:
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
-    /plans/active/ci_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch10_2026_08_09.md,
   ]
 created: 2026-08-06
 parent_epic: infrastructure_master
