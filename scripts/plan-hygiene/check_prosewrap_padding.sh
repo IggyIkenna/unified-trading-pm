@@ -121,10 +121,21 @@ if [ "${1:-}" = "--only" ]; then
     case "$f" in
       */plans/archive/*|plans/archive/*) continue ;;
     esac
-    cur_sigs="$(_detect_hits "$f" | sed -E 's/^[0-9]+://' | sort -u)"
+    # Normalize away the over-indent(NN) exact-depth number before comparing (2026-08-09,
+    # prosewrap_padding_precommit_gate_blocks_already_affected_files_2026_08_09.md, rec. (A)):
+    # prettier-autostage's mandatory reformat is a non-idempotent, MONOTONIC reflow for a
+    # paragraph nested 2+ deep in a checkbox list item — every pass shifts the SAME
+    # already-corrupted line's indent further (e.g. 10->14->18->...), which produced a
+    # "new" signature every single commit even with zero worker-authored content change,
+    # blocking ordinary docs(plans) commits fleet-wide. Comparing by TEXT (detector-type +
+    # matched content, indent number stripped) instead of the exact depth means a line whose
+    # underlying text already violated at HEAD (at any depth) is recognized as pre-existing
+    # debt -- covered by the full-sweep ratchet, not this commit's problem -- while a line
+    # whose TEXT is genuinely new (the worker's own edit) still flags correctly.
+    cur_sigs="$(_detect_hits "$f" | sed -E 's/^[0-9]+://; s/^over-indent\([0-9]+\):/over-indent:/' | sort -u)"
     rel="$(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
     rel="${rel#"$PM_DIR"/}"
-    head_sigs="$(git -C "$PM_DIR" show "HEAD:$rel" 2>/dev/null | _detect_hits | sed -E 's/^[0-9]+://' | sort -u)"
+    head_sigs="$(git -C "$PM_DIR" show "HEAD:$rel" 2>/dev/null | _detect_hits | sed -E 's/^[0-9]+://; s/^over-indent\([0-9]+\):/over-indent:/' | sort -u)"
     new_sigs=""
     if [ -n "$cur_sigs" ]; then
       new_sigs="$(comm -23 <(printf '%s\n' "$cur_sigs") <(printf '%s\n' "$head_sigs") 2>/dev/null || true)"
