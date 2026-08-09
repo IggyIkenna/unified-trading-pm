@@ -1005,6 +1005,70 @@ if [ -f "$WS_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: Dispatch-listener orphan scanner (batch-1 todo 1) — baselined ratchet ──
+# SSOT: plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md todo 1 +
+# plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md F1/F3.
+# A repository_dispatch POST returns 204 whether or not any workflow is actually
+# subscribed to the dispatched event_type — this statically catches the "nobody
+# subscribed" case (dispatched event_type with no listener in the resolved target
+# repo). Current baseline 38 — ratchet down as orphan dispatch sites get fixed.
+DISPATCH_LISTENERS_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_dispatch_listeners.py"
+if [ -f "$DISPATCH_LISTENERS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running dispatch-listener orphan scanner (ratchet mode)..."
+    if python3 "$DISPATCH_LISTENERS_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Dispatch-listener orphan scanner passed (at-or-below baseline)"
+    else
+        echo "❌ Dispatch-listener orphan regression — a dispatched event_type has no listener in its resolved target repo." >&2
+        echo "   Either add the missing listener, delete the dead dispatch call, OR" >&2
+        echo "   if intentional/tracked debt, re-baseline with: python3 ${DISPATCH_LISTENERS_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
+        _post_gate_fail "dispatch-listeners"
+    fi
+fi
+
+# ── Post-gates: Cloud Build template-vs-consumer drift ratchet (batch-1 todo 1) ──
+# SSOT: plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md todo 1 +
+# plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md.
+# A consumer's committed cloudbuild.yaml can carry content its mapped
+# configs/cloudbuild-*-template.yaml render does NOT — the next
+# rollout-cloudbuild.py --apply on that repo would either be refused (would-drop-
+# content guard) or, if the guard is ever bypassed, silently regress it. Baseline
+# is per-repo (scripts/quality_gates/cloudbuild_template_drift_baseline.yaml) —
+# ratchet down as templates are forward-ported / consumers reconciled.
+CLOUDBUILD_TEMPLATE_DRIFT_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_cloudbuild_template_drift.py"
+if [ -f "$CLOUDBUILD_TEMPLATE_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running Cloud Build template-vs-consumer drift ratchet..."
+    if python3 "$CLOUDBUILD_TEMPLATE_DRIFT_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Cloud Build template-vs-consumer drift ratchet passed (at-or-below baseline)"
+    else
+        echo "❌ Cloud Build template drift regression — a consumer's cloudbuild.yaml carries content its template does not." >&2
+        echo "   Forward-port the fix into the template, OR" >&2
+        echo "   if intentional per-repo customization, re-baseline with: python3 ${CLOUDBUILD_TEMPLATE_DRIFT_CHECKER} --update-baseline" >&2
+        _post_gate_fail "cloudbuild-template-drift"
+    fi
+fi
+
+# ── Post-gates: Swallowed-credential-fetch idiom ratchet (batch-1 todo 1) — baselined ratchet ──
+# SSOT: plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md todo 1 +
+# plans/active/issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md.
+# Bans the discarded-stderr-then-truthy-fallback idiom around a credential fetch
+# in any repo's scripts/ dir (without a `# noqa: swallowed-credential-fetch`
+# marker) — that idiom degrades a real credential failure to an empty string
+# instead of failing loud. Baseline is
+# per-repo (scripts/quality_gates/no_swallowed_credential_fetch_baseline.yaml) —
+# ratchet down as swallow sites are fixed.
+SWALLOWED_CREDENTIAL_FETCH_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_no_swallowed_credential_fetch.py"
+if [ -f "$SWALLOWED_CREDENTIAL_FETCH_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running swallowed-credential-fetch idiom ratchet..."
+    if python3 "$SWALLOWED_CREDENTIAL_FETCH_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Swallowed-credential-fetch idiom ratchet passed (at-or-below baseline)"
+    else
+        echo "❌ Swallowed-credential-fetch regression — a NEW discarded-stderr-then-truthy-fallback-wrapped credential fetch landed." >&2
+        echo "   Surface the real error (log it, exit non-zero) instead, OR add # noqa: swallowed-credential-fetch with a reason, OR" >&2
+        echo "   if intentional debt, re-baseline with: python3 ${SWALLOWED_CREDENTIAL_FETCH_CHECKER} --workspace-root \$WORKSPACE_ROOT --update-baseline" >&2
+        _post_gate_fail "swallowed-credential-fetch"
+    fi
+fi
+
 # ── WS-0 accumulate-and-report: fail ONCE with every failed post-gate (no serial masking) ──
 if [ ${#POST_GATE_FAILURES[@]} -gt 0 ]; then
     echo "" >&2
