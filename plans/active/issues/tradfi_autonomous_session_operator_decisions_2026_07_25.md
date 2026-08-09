@@ -372,7 +372,15 @@ matches what already happened — no further action needed.
       was that this lands 49 todos on the fleet at once alongside batch3's 9 — if that's not what was intended, say so
       and I'll narrow to just `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` + its finalize per Option B instead.
       Propagation not yet executed (flip each of the 8 plans' `status: draft` → `active` frontmatter) — ready to
-      execute. - **Item 7 — RULED: Option A** (matches worker rec) — add the stated safe-idempotent justification to
+      execute. **STALE SCOPE (verified live by plan_reconciler agt-1a9b86, 2026-08-09): 6 of the named 8 plans have
+      since dispatched, completed, and archived on their own** (`tradfi_satellite_ao_dispatch_batch1_2026_07_25.md` +
+      `_finalize`, `…batch2_2026_07_25.md` + `_finalize`, `tradfi_consolidated_native_ao_extract_2026_07_25.md` +
+      `_finalize` are all `status: complete` under `plans/archive/2026_07/`) — flipping those 6 is now moot. Propagation
+      genuinely still open ONLY for the remaining 2: `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` +
+      `…_finalize.md` (14 open todos combined, still `status: draft` in `plans/active/` as of 2026-08-09) — flipping
+      THESE two to `active` is the real remaining scope; left un-actioned here since triggering new AO dispatch is
+      outside a plan-reconciliation pass's remit — routed to the operator/main-agent to execute or re-confirm. - **Item
+      7 — RULED: Option A** (matches worker rec) — add the stated safe-idempotent justification to
       `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147`'s CME backfill-shard launch sub-item (cite
       `/codex/05-infrastructure/spot-vms-for-backfill.md`, SPOT default + idempotent-shard-reruns, name the launcher + a
       shard-count bound) rather than requiring an `[OPERATOR]` tag. Propagation not yet executed — ready to execute. -

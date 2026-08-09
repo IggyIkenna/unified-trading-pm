@@ -37,7 +37,6 @@ assigned_vm: planning
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
-model_tier: opus-required
 thinking_tier: high
 estimate_class: design
 estimate_baseline_ai_days: 3
@@ -422,8 +421,13 @@ just belongs on a different layer than instrument_type does, and conflating the 
       (COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/KAMINO/AAVE_V3/ALCHEMY-*) whether to wire a real MTDS capture handler or
       roll back the aspirational genesis date (clear roll-back candidates: AAVE-ETHEREUM/oracle_prices,
       MAKER-ETHEREUM/lst_rates)
+- [ ] [CODE] P3. Retire `deployment-api`'s `PREDICTION_DATA_TYPE_META` now that the UAC-side POLYMARKET/KALSHI
+      `market_metadata`/`fills` completeness gap is closed (`unified-api-contracts@6e791b05`) — added here per CLAUDE.md
+      HARD RULE ("every follow-up is a `- [ ]` todo, never prose"; finding 5's deferral was previously prose-only,
+      flagged by the 2026-08-06 archive-candidate audit below but never converted — verified by plan_reconciler
+      agt-1a9b86, 2026-08-09).
 
 > **2026-08-06 archive-candidate audit**: The DESIGN P2 31-pair todo is marked [x] but its own evidence and the
 > 2026-08-05 Progress Log state 'Operator decision still needed: which of the now-reconciled pairs to wire a real
 > capture path for vs. retire the aspirational genesis date'; the deployment-api PREDICTION_DATA_TYPE_META retirement
-> (finding 5) is also deferred as 'a separate follow-up' with no tracked todo.
+> (finding 5) is also deferred as 'a separate follow-up' — now tracked above as a todo (2026-08-09).
