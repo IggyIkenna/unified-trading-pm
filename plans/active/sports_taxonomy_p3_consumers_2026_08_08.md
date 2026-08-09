@@ -139,10 +139,26 @@ spelling variant survives, which is the entire point of the panel". It does not.
       `unified-api-contracts@b9a0be80` (OPERATOR_GROUP_VENUES hierarchy — BETFAIR_EX_UK/EU/SB_UK → BETFAIR). Any arb
       whose legs are all one operator must never enter the series. If the historical 13 days contain such rows,
       recompute or flag them — do not carry a known-wrong population forward as a baseline.
-- [ ] [REVIEW] P1. **Recompute the arb-decay/alpha-gate baseline on the corrected population** if the bugfix plan's
+- [x] ✅ [REVIEW] P1. **Recompute the arb-decay/alpha-gate baseline on the corrected population** if the bugfix plan's
       blast-radius count comes back non-zero (that plan files this as a follow-up; this todo is its landing site).
       Operator ratified the decay spec as-written on 2026-08-08 — per-leg decay against a shared t=0, gate on p25, edge
-      in both absolute bps and as a fraction of signal-time edge, window capped at `hedge_deadline_ms`.
+      in both absolute bps and as a fraction of signal-time edge, window capped at `hedge_deadline_ms`. — **No recompute
+      needed; condition (non-zero blast radius) was never met.** The bugfix plan
+      (`/plans/archive/2026_08/sports_arb_operator_group_and_commission_bugfix_2026_08_08.md`, todo 8) and its finalize
+      twin (`_finalize.md`, todo 3) both measured the blast radius at **zero**: same-operator-group arbs = 0, SMARKETS
+      arbs = 0, over the full paper-trade/backtest record. Two structural reasons, re-verified live in this session (not
+      just re-read from the archived doc): (1) `strategy-service`'s dutching backtest
+      (`engine/strategies/v2/arbitrage_structural/sports_arb_dutching.py`) never calls
+      `arb_legs_are_independent()`/`_expected_commission_pct()` at all — confirmed via grep, those symbols appear only
+      in `adapters/sports/arbitrage_detector.py`; (2) the paper-trade path
+      (`adapters/sports_feature_subscriber.py::_build_market_from_feature_vector`) still builds every market from a
+      single FSS feature vector's one `bookmaker_key` (line 123), so all legs share one bookmaker and
+      `arb_legs_are_independent` returns `False` unconditionally — no arb signal is ever emitted through the buggy path.
+      All 6 fix commits (`e080ef74`, `b9a0be80`, `0fd51983`, `1a96c482`, `968237b8`, `446c2cb3`) confirmed present on
+      `origin/live-defi-rollout` via `git log`. Since the historical arb-decay/alpha-gate baseline was never built from
+      any operator-group-violating or SMARKETS-commission-blind rows, it needs no recomputation. This todo and the
+      finalize doc's todo 3 are the same landing site — recorded here so the P3 plan carries its own closure evidence
+      rather than only a cross-reference.
 
 ### ML
 
@@ -291,3 +307,17 @@ spelling variant survives, which is the entire point of the panel". It does not.
   into a 1h P1 task. Whoever picks up the first todo should apply the operator-group guard (`arb_config.py`'s
   `arb_legs_are_independent`, already correct) to the new series AS PART of building it, which would satisfy both todos
   in one pass — or a future dispatch of this second todo should re-check whether the first has landed since this note.
+
+- **2026-08-09 (slot 17, review)** — Closed the Arbitrage section's third todo ("Recompute the arb-decay/alpha-gate
+  baseline on the corrected population"). This todo was conditional on the bugfix plan's blast-radius count coming back
+  non-zero; it never did. Both `sports_arb_operator_group_and_commission_bugfix_2026_08_08.md` (todo 8) and its finalize
+  twin (todo 3) measured the blast radius at zero (same-operator-group arbs = 0, SMARKETS arbs = 0) and archived that
+  finding 2026-08-08. Re-verified live rather than trusting the archived doc alone: grepped `strategy-service` and
+  confirmed the dutching backtest (`sports_arb_dutching.py`) still never calls
+  `arb_legs_are_independent()`/`_expected_commission_pct()`, and the paper-trade path
+  (`sports_feature_subscriber.py::_build_market_from_feature_vector`) still builds every market from one FSS vector's
+  single `bookmaker_key`, so `arb_legs_are_independent` is structurally unreachable/always-False on that path — same
+  structural reasons the archived finding cites, unchanged since 2026-08-08. All 6 fix commits confirmed present on
+  `origin/live-defi-rollout` via `git log`. No recompute possible or needed since the historical baseline never
+  contained the bug's population. No code shipped — this is a pure documentation closure, mirroring the finalize doc's
+  own precedent that "a measured zero is a result, not a skip."
