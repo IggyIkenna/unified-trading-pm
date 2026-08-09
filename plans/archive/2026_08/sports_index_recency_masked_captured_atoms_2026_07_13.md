@@ -25,7 +25,7 @@ summary: |
   verify green twice, zero captured-key losses; ALL 100 FIXTURES cells were truthset gaps (see body). REMAINING:
   the INFRA image redeploy + the P3 fleet sweep + 2 residual atoms (parked blank-data_type row; new TEAMS/TFF
   nightly-image masking).
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -41,7 +41,7 @@ parent_epic: sports_master
 priority: P1
 source: oscillation investigation 2026-07-13 (operator task "lets fix it")
 assigned_vm: planning
-resolved_by: ""
+resolved_by: plan_reconciler (agt-8da8df) 2026-08-09
 locked_by:
 context_scope:
   [
@@ -58,6 +58,12 @@ depends_on: []
 ---
 
 # Sports index — 189 recency-masked captured atoms (2026-07-13 oscillation residue)
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. All 7 tracked todos done + a fresh 2026-08-05 fleet-wide re-verification; resolved
+and archived by plan_reconciler 2026-08-09 (`agt-8da8df`, sports tranche). See Progress Log for the
+resurrection-after-first-archive note.
 
 ## Context (fixed part, same day)
 
@@ -248,7 +254,20 @@ masking rows together to apply the tie-break. This is a genuinely live, unmitiga
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged. Note (out of scope to
   fix): the 2026-08-05 progress-log entry states this closes the last open todo, but `status:` frontmatter still reads
   `open`.
-- **plan_reconciler 2026-08-09** (sports tranche, `agt-8da8df`): re-normalizing `locked_by: ""` (false-trips
-  `check-locked-plan-deletion.sh`'s naive parser) to truly-blank `locked_by:` as a standalone commit, ahead of the
-  status-flip + archive in the next commit — see that commit for the full resolution + a resurrection-after-first-
-  archive finding.
+- **plan_reconciler 2026-08-09** (sports tranche, `agt-8da8df`): confirmed all 7 todos done + the 2026-08-05 fleet-wide
+  guard-coverage verdict via a fresh live grep-then-READ (`_manifest_captured_leagues_for_data_type` +
+  `_AfManifestHooks._manifest_index_guarded_captured_leagues` both present and wired in
+  `instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py` at current HEAD). Flipped
+  `status: open` → `resolved`. **Also found + noting for the record**: this doc was ALREADY archived once, by
+  `unified-trading-pm@f44dfadd4` (2026-08-08 01:02:55Z, slot-11, `agt-2add8d`) to
+  `plans/archive/2026_08/sports_index_recency_masked_captured_atoms_2026_07_13.md` — but the archive copy is gone and
+  this doc was back at the active path (pre-archive content, `status: open`) by the time of this run, with no trace of
+  the archive-era commit in this path's `git log`. The same commit also archived a sibling doc
+  (`dex_pool_state_build_instrument_id_colon_in_symbol_2026_08_04.md`), which is ALSO back at its active path right now
+  — same pattern, not sports-tranche, not fixed here. Root cause not fully diagnosed (out of scope for this pass); filed
+  as `plans/active/issues/plan_archive_resurrected_by_concurrent_merge_2026_08_09.md` for the workspace
+  git/quickmerge-process owner. Re-archiving now with an immediate verify-at-HEAD + solo push to minimize the same race
+  window. Commit message carries `[unlock-plan]` for `check-locked-plan-deletion.sh`'s naive pre-image read of
+  `locked_by: ""` (the same false-positive-lock parser bug `ad137ae4e` diagnosed and fixed once already) — this doc
+  was never genuinely locked by a human; `[unlock-plan]` here works around the parser artifact, it is not an actual
+  unlock of anyone's claim.
