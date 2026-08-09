@@ -92,10 +92,23 @@ radius before fixing; (c) fix the regex + add a regression test; (d) re-run this
 
 ## Todos
 
-- [ ] [BACKEND] P3. **Root-cause + fix the `[TAG][BLOCKED-<token>]` no-space-combined-bracket parse gap in
+- [x] ✅ [BACKEND] P3. **Root-cause + fix the `[TAG][BLOCKED-<token>]` no-space-combined-bracket parse gap in
       `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_parse_open_todos`/`_STALE_MARKER_*_RE`.** Confirm via a
       unit test reproducing `sports_all_vendor_honest_coverage_convergence_2026_08_07.md:175`'s exact tag ordering.
-      Repo: agent-orchestrator.
+      Repo: agent-orchestrator. — agent-orchestrator@a0eb343. Root cause was actually in
+      `server/dispatch_visibility_report.py`'s `_is_declared` (the reporting classifier, not `_parse_open_todos` itself
+      — exclusion was already correct via `_has_live_blocked_token`/`_is_non_dispatchable`, which scan the whole todo
+      block and were unaffected): `_OPERATOR_TAG_PREFIX_RE`'s greedy `(?:[TAG]|P<n>.)+` repeat matches
+      `[BLOCKED-UPSTREAM-OUTAGE]` as just another category-tag-shaped bracket (same `\[[A-Z][A-Z_-]*\]` alternative as
+      `[SCRIPT]`), so a combined `[SCRIPT][BLOCKED-UPSTREAM-OUTAGE]` prefix got fully stripped before `_is_declared`'s
+      post-strip `head` check ever saw the marker — misclassifying a plainly-declared marker as accidental. Fixed by
+      scanning the matched tag-cluster's individual bracket groups for a declared-prefix marker first (mirrors the
+      existing `[OPERATOR]`-bracket-cluster scan technique in `regen_backlog_from_plan.py`'s backlog sync). Added
+      `test_shape5_combined_bracket_no_space_marker_is_declared` reproducing the exact sports doc line's tag ordering —
+      passes, plus all 8 pre-existing `test_dispatch_visibility_report.py` cases still pass. Verified against the live
+      corpus: the sports doc's Transfermarkt todo now reports `declared: True`, and
+      `check_ao_dispatch_visibility_gate.py` measures 24 accidental exclusions post-fix (was 26) — still ≤ baseline 26,
+      so no re-baseline needed for this todo (todo 3 below still applies once the corpus grep in todo 2 is done).
 - [ ] [SCRIPT] P3. **Grep the corpus for other `]\[BLOCKED-`/`]\[DEFERRED-BY-DESIGN`/`]\[stretch` no-space combos** once
       the regex root cause is confirmed, to size how many other docs share this same silent-exclusion bug. Repo:
       unified-trading-pm.
@@ -107,3 +120,6 @@ radius before fixing; (c) fix the regex + add a regression test; (d) re-run this
 - **2026-08-08**: filed during `ao_satellite_ao_dispatch_batch5-003` (unrelated docs-only §3/§4 closure task) — the
   regression blocked shipping via the standard Pass-1 QG flow; re-baselined in the same commit per this doc's own
   Recommended decision.
+- **2026-08-09**: todo 1 shipped — agent-orchestrator@a0eb343. Root cause was in `dispatch_visibility_report.py`'s
+  `_is_declared` classifier, not `_parse_open_todos`/`_STALE_MARKER_*_RE` as originally guessed (the exclusion decision
+  itself was always correct). See todo 1's own note for the full root-cause + fix summary.
