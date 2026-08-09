@@ -232,15 +232,27 @@ Two more structural gaps found while working around the reset issue above by mov
 of the reset issue. Filed here rather than a separate doc since all three are one theme: the QG/git tooling assumes a
 single canonical clone per repo and behaves incorrectly under multi-clone (worktree) use.
 
-- [ ] 4. [INFRA] P2. **AUTHORIZED 2026-08-08 (operator ruling, ao round-5 apply item 16): "Authorize all 3."**
-      **`check_backfill_vm_disk_provisioning.py` (deployment-service) resolves its target dir via
-      `Path(__file__).resolve().parents[2]`, invoked through a HARDCODED absolute path baked into `base-service.sh`**
-      (`python3 "${WORKSPACE_ROOT}/deployment-service/scripts/quality_gates/check_backfill_vm_disk_provisioning.py"`),
-      so `__file__` always resolves inside the real MAIN clone regardless of which worktree/PROJECT_ROOT invoked
-      `quality-gates.sh`. Proven earlier this session: moving a foreign untracked launcher out of MAIN flipped the check
-      from FAIL to PASS even though the check was invoked from an unrelated worktree. Net effect: a worktree cannot get
-      a clean QG verdict while ANY other concurrent agent has a disk-provisioning violation sitting untracked/dirty in
-      the shared MAIN clone — worktree isolation does not isolate this one check.
+- [x] 4. [INFRA] P2. ✅ **Already shipped before the 2026-08-08 authorization — checkbox was stale (found 2026-08-09,
+      slot-26).** This exact bug (`check_backfill_vm_disk_provisioning.py` resolving `WORKSPACE_ROOT`/`__file__` against
+      the shared MAIN clone instead of the calling worktree) was independently root-caused, fixed, and archived as
+      `plans/archive/issues/qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md` — the
+      confirmed mechanism (per that doc's own live repro) requires a STALE/pre-exported `WORKSPACE_ROOT` in the invoking
+      shell; the default unset path already derived correctly per-invocation. Two fixes landed: (1)
+      `unified-trading-pm@e70a0d18e` — a fail-loud worktree-identity guard in `qg-common.sh` that hard-exits on a
+      `PROJECT_ROOT`/`WORKSPACE_ROOT` mismatch against the invoking `git rev-parse --show-toplevel`; (2)
+      `deployment-service@ae767cb` (2026-07-28, tracked in the follow-up
+      `plans/archive/issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md`) — converted
+      `deployment-service/scripts/quality-gates.sh`'s `WORKSPACE_ROOT=` line from the vulnerable
+      `${WORKSPACE_ROOT:-...}` inheritance form to the safe fresh-derivation form
+      (`WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"`, no `:-` fallback), confirmed live today at
+      `deployment-service/scripts/quality-gates.sh:135` — this unconditionally overwrites any pre-exported value, so the
+      vulnerability class no longer exists regardless of shell state. **Re-verified live 2026-08-09** (slot-26,
+      `.tabs/26/deployment-service`): exported a stale `WORKSPACE_ROOT=/home/ubuntu/unified-trading-system-repos` (the
+      exact MAIN-adjacent value the original incident needed) before emulating line 135's derivation — the script's own
+      fresh assignment ignored the stale export and correctly resolved to `.tabs/26` (this slot's own worktree), so the
+      invoked check path stayed
+      `.tabs/26/deployment-service/scripts/quality_gates/check_backfill_vm_disk_provisioning.py`, never MAIN's copy. No
+      further action needed.
 - [ ] 5. [INFRA] P2. **AUTHORIZED 2026-08-08 (operator ruling, ao round-5 apply item 16): "Authorize all 3."**
       **`PROJECT_ROOT` override (needed to satisfy the PM `test_repo_in_manifest` integration test in a worktree whose
       directory name doesn't match a registered repo) appears to redirect MORE than just that one identity check — it
@@ -287,3 +299,12 @@ single canonical clone per repo and behaves incorrectly under multi-clone (workt
   findings-triage "in your file → fix in same commit"). Opened new todo 9 (P3) for a residual, non-urgent open question:
   whether the STAGE-5 guard's test coverage handles the high-fan-out recurrence reported 2026-08-06 in
   `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`.
+- **2026-08-09 (slot-26, todo 4 dispatch — closed, stale checkbox).** Dispatched task was the 2026-08-08-authorized todo
+  4 (`check_backfill_vm_disk_provisioning.py` resolving via the shared MAIN clone instead of the calling worktree).
+  Found the exact root cause + fix already shipped and archived
+  (`qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md` +
+  `qg_workspace_root_template_drift_12_repos_2026_07_24.md`): `unified-trading-pm@e70a0d18e` (worktree-identity guard in
+  `qg-common.sh`) + `deployment-service@ae767cb` (fresh-derivation `WORKSPACE_ROOT=` line, no `:-` inheritance).
+  Re-verified live in this slot by emulating a stale MAIN-pointing `WORKSPACE_ROOT` export against the current
+  `deployment-service/scripts/quality-gates.sh:135` — resolution stayed correctly scoped to `.tabs/26`. Flipped todo 4
+  with the evidence; no code change needed (same pattern as todo 8's stale-checkbox closure above).
