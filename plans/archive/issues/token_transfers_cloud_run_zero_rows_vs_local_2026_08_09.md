@@ -9,7 +9,7 @@ summary: >-
   outside the container with the same key/params returned 7,518 real ETHEREUM rows — a genuine Cloud-Run-vs-direct-call
   discrepancy. Separately, ARBITRUM/BASE/OPTIMISM use Ethereum-mainnet token addresses that can never resolve on those
   chains.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -29,11 +29,15 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
 assigned_role: data_engineering
-resolved_by:
+resolved_by: slot-14
 locked_by:
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🗄️ ARCHIVED 2026-08-09** — both todos are `[x]`, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately.
 
 # token_transfers: Cloud Run executions consistently return 0 rows; direct code-level test does not
 
@@ -95,13 +99,30 @@ even though the wiring itself is correct and the manifest is not lying.
       exactly. Repo: market-tick-data-service. Done when: a Cloud Run execution of
       `uts-prod-mtds-collect-token-transfers` writes at least one `capture_status=captured` row with `row_count>0` — ✅
       met, execution `-t7577`, 2026-08-09 16:25:37 UTC. Evidence: cloudbuild=555599fb-368d-4cb9-94df-232a4ab58b96
-- [ ] [DATA] P2. Fix `token_transfers_handler._FALLBACK_DEFI_TOKENS` (and the equivalent instruments-manifest path in
+- [x] ✅ [DATA] P2. Fix `token_transfers_handler._FALLBACK_DEFI_TOKENS` (and the equivalent instruments-manifest path in
       `_resolve_token_list`) to use chain-specific ERC-20 contract addresses for ARBITRUM/BASE/OPTIMISM instead of
       reusing the Ethereum-mainnet addresses — confirmed via a real `alchemy_getAssetTransfers` full-history
-      (`fromBlock=0x0`) query per chain returning 0 for the current addresses. Repo: market-tick-data-service. Done
-      when: each non-ETHEREUM chain's `WETH`/`USDC`/`USDT` addresses resolve to that chain's real canonical contract
-      (verify against a block explorer or a canonical address registry) and a live run records a `captured` row with
-      `row_count>0` for at least one non-ETHEREUM chain.
+      (`fromBlock=0x0`) query per chain returning 0 for the current addresses. Repo: market-tick-data-service —
+      market-tick-data-service@9a4f4862. **Fix**: added `_CHAIN_TOKEN_ADDRESSES` (WETH/USDC/USDT per chain, addresses
+      cross-checked against Circle's official native-USDC docs, Arbitrum's own bridge docs, the OP-stack predeploys spec
+      — WETH matches UAC's existing `WETH_ADDRESSES` registry in `unified_api_contracts` exactly — and
+      Arbiscan/Basescan/Optimistic-Etherscan for USDT) and remapped the per-token address by symbol for non-ETHEREUM
+      chains in `_fetch_transfers_for_chain`, so the fix applies regardless of whether the token dict came from
+      `_resolve_token_list`'s manifest path or its fallback (the manifest path is currently always a miss —
+      instruments-service never publishes an `ALCHEMY` `spot_asset` catalogue — so both paths converge on this one remap
+      point). 36/36 unit tests pass (1 new: `test_uses_chain_specific_address_not_ethereum_address`, asserting the
+      Alchemy call is made with the chain-specific address, not the Ethereum one carried by `token_map`). **Live
+      verification**: built the fix into a fresh image (Cloud Build `b5c79987-30f5-4925-a359-847fb5cf2e88`, SUCCESS,
+      manual `gcloud builds submit` since the repo's own auto-trigger only fires on `main` push — LDR→main promotion
+      hasn't landed yet), pushed `:latest` (matching Terraform's `local.mtds_image`), executed
+      `uts-prod-mtds-collect-token-transfers-w9b9r` live — `token_transfers for 2026-08-08: 16518 rows total` (up from
+      the 7518 ETHEREUM-only baseline in the first checkbox's evidence). Manifest confirms per-chain `captured` rows
+      with real counts for all 3 non-ETHEREUM chains, not just one:
+      `ALCHEMY/ARBITRUM=3000, ALCHEMY/BASE=3000, ALCHEMY/OPTIMISM=3000` (each capped at 3 tokens × `maxCount=1000`),
+      alongside `ALCHEMY/ETHEREUM=7518` — read directly from
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/per_vm/local-1-482e.parquet`. Done when: ✅ met —
+      exceeds the "at least one non-ETHEREUM chain" bar (all three). Evidence:
+      cloudbuild=b5c79987-30f5-4925-a359-847fb5cf2e88
 
 ## Evidence
 
