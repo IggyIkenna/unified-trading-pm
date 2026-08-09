@@ -202,3 +202,43 @@ the VM-scale run:
   a re-launch is needed. Filed the `--asset-group` default-"ALL" footgun as todo 3 below (P3, ml-service) — didn't fix
   it inline since it's outside this doc's scope and every current production caller already passes an explicit value,
   but a future new operation added to this same CLI will hit it again otherwise.
+
+  **~3h later, all 5 terminal — all aborted honest-absence with a THIRD, real data-correctness bug (not a launch-command
+  mistake this time).** Every `run.log` showed the identical pattern across all three (train/val/test) feature-group
+  loads: `CLVTargetBuilder: built 6 targets from N rows (0.0% non-null)`, ending in
+  `sports-ensemble-train for <model_id>: no data available, run aborted` — real rows loaded (121376/8897/31540), but the
+  CLV target itself was 100% NaN for every model. Root-caused: `odds_features_exporter.py` (features-service)
+  deliberately **drops** `odds_closing_home/draw/away` from the `odds_features` group before export (leakage prevention
+  — "a T-24h model must never see the closing line"); those columns only exist in the separate, PIT-unrestricted
+  `odds_targets` export. `SportsEnsembleTrainingRunner._load_season_features_and_targets` (this doc's own todo-1 driver)
+  only loaded `grid_config.feature_groups=["derived_features","odds_features"]` and fed that straight into
+  `CLVTargetBuilder.build()`, so every `_safe_col()` closing-odds lookup silently returned NaN. This is NOT a new
+  problem — `ml_service/training/app/core/training_targets.py::merge_clv_target_columns()` already exists specifically
+  to solve it (built for `training_orchestrator`'s legacy CLV path per
+  `sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md` +
+  `sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md`) — it queries `odds_targets` via a SEPARATE
+  override call and merges just the CLV/closing/opening columns back in, explicitly documented as "NOT by adding
+  `odds_targets` to `SPORTS_FEATURE_GROUPS`" (that would leak the closing line into every sports model's INPUT features,
+  not just CLV). The new driver simply never called it. **First attempted fix was WRONG**: initially added
+  `"odds_targets"` directly to the 5 grids' `feature_groups` lists in `config_loader.py` — reverted after reading
+  `merge_clv_target_columns`'s own docstring, which explains exactly why that specific fix leaks the closing line into
+  every sports model's input features. **Real fix**: wired
+  `merge_clv_target_columns(features, feature_provider, start, end)` into the runner's
+  `_load_season_features_and_targets`, right after the main load and before `CLVTargetBuilder.build()` —
+  `strip_target_leakage` (unchanged, already called after) already covers stripping these exact merged columns back out
+  via `_FT_REALIZED_COLUMNS`, so the leakage guard holds end-to-end. Added 2 new regression unit tests proving targets
+  are non-null ONLY when the merge runs (`TestSportsEnsembleTrainingRunnerClvTargetMerge`); updated the 4 existing
+  `TestSportsEnsembleTrainingRunnerRun` tests' `query_features` mocks for the extra per-season call the merge now makes.
+  13/13 unit tests pass. Full `quality-gates.sh` green. Shipped **ml-service@68a4b82**. Refreshed the ml-training
+  tarball (`create-code-tarballs.sh --ml-training`; manifest now pins `68a4b82`) and relaunched all 5 VMs a third time
+  (same launch shape as the second attempt — `--mode batch --asset-group SPORTS`, `n2-highmem-16`, `asia-northeast1-c`):
+  - `ml-train-sports-model-2a-20260809-230045` (model_2a)
+  - `ml-train-sports-model-2b-20260809-230054` (model_2b)
+  - `ml-train-sports-model-2c-20260809-230104` (model_2c)
+  - `ml-train-sports-model-2d-20260809-230113` (model_2d)
+  - `ml-train-sports-model-2e-20260809-230123` (model_2e)
+
+  If this session ends before these 5 report, the next worker should check these VM names (not the 191045/193036
+  batches, both already gone) the same way — `gcloud compute instances describe` (gone = terminal) +
+  `gs://deployment-scripts-central-element-323112/vm-logs/<name>/run.log` for the result line — before assuming a
+  re-launch is needed.
