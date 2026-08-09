@@ -52,13 +52,14 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. Reconcile `features_service_e2e_pipeline_test_2026_05_26.md`'s checkboxes against batch 5's 2
-      now-done todos — flip each corresponding checkbox, citing the shipped commit(s)/evidence (verify before citing).
-      While there, correct the STALE `usdc_idle_yield_apy_bps` confirm-half flagged during the extraction sweep
-      (leave-as-0-floor is already the standing disposition per the doc's own 2026-08-08 round5-cross-cutting-audit note
-      — the checkbox text just never caught up). Re-check for 0 remaining open todos after flipping (unlikely — the doc
-      has 2 other genuinely-gated open items); set `status: resolved` only if genuinely 0. Done when: both checkboxes
-      are flipped with verified evidence and the stale confirm-half is corrected.
+- [x] ✅ [REVIEW] P1. Reconciled `features_service_e2e_pipeline_test_2026_05_26.md`'s checkboxes against batch 5's 2
+      now-done todos — flipped both corresponding "Open Track-1 todos" checkboxes (Phase A staked-basis e2e; DEFERRED
+      fan-out MDPS 1h/BITGET-SPOT audit) with verified evidence cited (dry-run + `IS_TEST_RUN` write results,
+      deployment-service@8f1feb4eb9e4, the 3 issue docs), and updated the matching 2026-07-27 banner items 1 + 6 to
+      match. Corrected the STALE `usdc_idle_yield_apy_bps` checkbox — confirm-half was already RESOLVED per the doc's
+      own 2026-08-08 round5-cross-cutting-audit note, checkbox text now scopes it to the genuinely-open wiring half
+      only. Re-checked remaining open todos: 2 remain (Phase B MDPS top-up P0; the yield-stub wiring half P2) — NOT 0,
+      so `status` stays `active` per the gate. — unified-trading-pm (this commit).
 - [ ] [DOC] P1. Archive `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` via the standard 6-step ritual once
       todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by` (confirm
       already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the new path,
