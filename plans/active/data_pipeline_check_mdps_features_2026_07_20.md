@@ -768,8 +768,8 @@ on every computed day; handled gracefully.
       Real compute throughput for CEFI/TRADFI/DEFI families once their gate/upstream clears: CEFI needs an operator
       go-ahead (billing-waste gate `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`) —
       the shipped `(delta_one,CEFI)` timeout override makes a single fresh VM viable when ungated; TRADFI:volatility
-      needs the options/futures raw-tick backfill, DEFI:onchain the 5 onchain raw-tick data_types (both open below). Do
-      NOT launch CEFI without operator go-ahead; do NOT re-run TRADFI/DEFI before the named gap closes. Repo:
+      needs the options/futures raw-tick backfill, DEFI:onchain the 5 onchain raw-tick data_types (both open below).
+      **CEFI's go-ahead cleared 08-02** (`BLK-ddb925b1`) — TRADFI/DEFI still gate, per the Progress Log. Repo:
       features-service. — **2026-08-05 (slot-8)**: CEFI gate DONE (benchmark ran 08-02, real number 8.38 s/inst-day);
       TRADFI:volatility stg-bucket infra blocker FIXED + shipped `features-service@cc5c52b8`; commodity test-bucket +
       DEFI:onchain benchmark still pending — see Progress Log +
