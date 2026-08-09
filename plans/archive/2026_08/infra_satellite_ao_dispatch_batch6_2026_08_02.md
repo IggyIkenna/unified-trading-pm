@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, ag-closeout-audit, satellite-docs, batch-6, plan-hygiene, meta-fold-in]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md,
     /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
@@ -40,6 +40,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 assigned_role: infra
+thinking_tier: medium # 2026-08-09 agt-a398c9 — infra role's own default, made explicit; see BLK-e02c6622
 sequential: false
 drift_direction: advance-code
 locked_by:
@@ -48,7 +49,7 @@ context_scope:
   [
     /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
     scripts/quality-gates-base/base-service.sh,
-    /plans/active/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]

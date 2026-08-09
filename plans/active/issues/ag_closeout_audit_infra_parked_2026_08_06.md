@@ -33,7 +33,7 @@ related:
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch5_2026_08_01.md,
-    /plans/active/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_2026_08_02.md,
     /plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/active/issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md,
     /plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
