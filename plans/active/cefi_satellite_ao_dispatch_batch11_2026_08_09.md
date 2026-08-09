@@ -123,10 +123,27 @@ context_scope:
       rather than silently mapped or silently dropped. `contract_size` values are published static CME contract specs,
       not a live-computed hedge ratio (that stays in strategy-service). Hedge-root exchange/dataset/underlying resolved
       via the existing `TRADFI_ROOTS` SSOT (`canonical/domain/derivatives/tradfi_roots.py`), not duplicated.
-- [ ] [SCRIPT] P1. **Backfill the 3 KRX stocks** (HYUNDAI/SAMSUNG/SK-Hynix cash-twins) **via guardrailed Yahoo**: 1d
+- [x] ✅ [SCRIPT] P1. **Backfill the 3 KRX stocks** (HYUNDAI/SAMSUNG/SK-Hynix cash-twins) **via guardrailed Yahoo**: 1d
       since 2019-01-01 + 1h trailing 730d + 15m trailing 89d (range=60d) + 1m 28-day-chunked. Repos: deployment-service,
       market-tick-data-service. Source: `cefi_consolidated_closeout_2026_07_18.md` Track 0 (line 168, cites source Phase
-      5). **Done when**: the manifest shows captured, non-NaN rows for all 4 windows across all 3 symbols.
+      5). **Done when**: the manifest shows captured, non-NaN rows for all 4 windows across all 3 symbols. —
+      **NARROWED + DONE 2026-08-09** — the 1h/15m/1m legs directly conflict with a RESOLVED, still-live operator
+      decision this todo's source predates:
+      `/plans/archive/issues/krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md` (2026-07-12, "Yahoo doesn't
+      reliably serve intraday granularity over long historical backfill windows, so build-the-adapter was rejected" —
+      `unified-api-contracts@a2751f36` narrowed `expected_coverage.py`'s KRX entry to `["ohlcv_24h"]`; confirmed still
+      true in live code 2026-08-09, `route_yahoo_tradfi`/`fetch_yahoo_equities` have no KRX intraday path by design).
+      batch11's own conflict-check only grepped `plans/active/`, missing this archived, governing decision. The
+      achievable 1d/`ohlcv_24h` leg is verified ~98% complete since 2019-01-02 across all 3 symbols (2943 captured /
+      ~2997 total canonical-instrument-id shards), spot-checked against a REAL GCS parquet object (not just the manifest
+      label — its `row_count` field is separately bugged, see below):
+      `.../day=2020-01-06/.../venue=KRX/.../KRX:EQUITY:005930-USD.parquet` → 1 non-NaN row (open=47801.95,
+      close=47887.77, volume=10009778). Remaining 42 unattempted + 12 attempted_failed are all within 2026-08-03..08-06
+      (recent-date Yahoo publication lag, not a structural gap). 2 adjacent, non-blocking manifest-integrity defects
+      found + filed as follow-up todos in the same issue doc: (1) `row_count=0` wrongly recorded on most `captured` KRX
+      ohlcv_24h shards despite real underlying data; (2) an orphaned, non-canonical `KRX:EQUITY:{code}.KS-USD` duplicate
+      shard-atom (~8261 rows, 0 real captures) alongside the canonical `KRX:EQUITY:{code}-USD` form. Full evidence: see
+      the issue doc's Progress Log.
 - [ ] [UAC] P1. **Measure the exact Databento lookback-floor boundary per level** (L0/L1/L2/L3) live and update
       `LEVEL_MAX_LOOKBACK_DAYS`/`earliest_allowed_start`/`assert_lookback_allowed` in unified-api-contracts to the
       measured values. Repo: unified-api-contracts. Source: `cefi_consolidated_closeout_2026_07_18.md` Track 0 (line
@@ -216,3 +233,11 @@ context_scope:
   that the chain (backfilled 2026-06-24, propagated nightly since) is fully complete — catalogue, manifest, and a sample
   capture all confirmed. No new backfill/rollup/enumerator run was needed. Full evidence in
   `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log (2026-08-09 entry, same commit).
+- **2026-08-09** — todo 3 (KRX 4-window Yahoo backfill) DISPATCHED + NARROWED + DONE: found the 1h/15m/1m legs conflict
+  with a resolved, still-live 2026-07-12 operator decision this todo's source predates (Yahoo intraday KRX adapter build
+  explicitly rejected; registry narrowed to `ohlcv_24h`-only) — batch11's own conflict-check only grepped
+  `plans/active/`, missing the archived governing decision. Applied that ruling as precedent rather than treating this
+  as fresh ambiguity. The achievable 1d leg verified ~98% complete with real non-NaN GCS data (not just the manifest
+  label — its `row_count` field is separately bugged). 2 adjacent manifest-integrity defects found + filed as follow-up
+  todos. Full evidence + the follow-up todos:
+  `/plans/active/issues/krx_batch11_todo3_intraday_conflicts_with_2026_07_12_ruling_2026_08_09.md`.
