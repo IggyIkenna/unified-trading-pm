@@ -78,15 +78,19 @@ findings.
 
 ## Todos
 
-- [ ] [CODE] P1. **Polymarket instruments-service top-2000-by-volume cap (highest-priority remaining finding — LIVE code
-      path).** `instruments_service/reference_data/adapters/prediction/polymarket/adapter.py` `get_instruments`
+- [x] ✅ [CODE] P1. **Polymarket instruments-service top-2000-by-volume cap (highest-priority remaining finding — LIVE
+      code path).** `instruments_service/reference_data/adapters/prediction/polymarket/adapter.py` `get_instruments`
       live-mode loop + `markets.py` (`_MAX_PAGES_ACTIVE=20`, `_PAGE_LIMIT=100` → hard 2000-market ceiling,
       `order=volume24hr desc` on the underlying Gamma `/markets` call). Unlike the Kalshi sibling adapter, there is no
       comment/mitigation acknowledging this boundary and no supplemental fetch for markets outside the top 2000. Repo:
       instruments-service. Done when: either `_MAX_PAGES_ACTIVE` is raised to a safety-net value and the loop continues
       until a genuinely short page (true exhaustion, not a hard page-count ceiling), or a Kalshi-style
       category/series-scoped supplemental fetch recovers markets outside the top 2000; a regression test proves
-      a >2000-market universe is no longer silently truncated.
+      a >2000-market universe is no longer silently truncated. — instruments-service@57c71bd4f: raised
+      `_MAX_PAGES_ACTIVE` 20→10000 (safety-net, mirrors `clob.py`'s `_CLOB_MAX_PAGES=10000` pattern) so the loop is
+      exhaustion-driven; added a for/else cap-exhaustion warning (mirrors AsterAdapter); regression test
+      `test_get_instruments_beyond_2000_market_hard_ceiling_not_truncated` proves a 2537-market/26-page universe is no
+      longer truncated.
 - [ ] [CODE] P1. **Betfair `listMarketCatalogue` sorted-by-start-time top-1000 cap (LIVE, real risk).**
       `instruments_service/reference_data/adapters/sports/adapters/betfair.py` `_fetch_markets_raw` (`maxResults=1000`,
       `sort: "FIRST_TO_START"`, effectively "all markets" filter). Betfair's API hard-caps `maxResults` at 1000 with NO
