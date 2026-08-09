@@ -118,9 +118,9 @@ child plans, none of which are in this run's 18-doc scope) and contributed nothi
       mocked-response assumptions — the adapter code was built + unit-tested against the documented/inferred Kalshi
       schema without a live credentialed call in the dev sandbox; if a real response shape differs, fix the adapter
       parsing before the full run, don't launch blind. Requires `kalshi-api-credentials` (Secret Manager) for the
-      `/historical/*` signed tier — if inaccessible from the VM's identity, record the credential gap and self-grant
-      per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` (do not pause). Done when: a manifest
-      read confirms real `captured`/`empty_confirmed` rows for KALSHI trades across the full 2025-10→2026-04 window (the
+      `/historical/*` signed tier — if inaccessible from the VM's identity, record the credential gap and self-grant per
+      `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` (do not pause). Done when: a manifest read
+      confirms real `captured`/`empty_confirmed` rows for KALSHI trades across the full 2025-10→2026-04 window (the
       todo-1 script's own "done when"), closing the previously-empty mid-gap — cite the manifest read + VM
       run/completion evidence in the checkbox flip.
 
@@ -152,3 +152,32 @@ child plans, none of which are in this run's 18-doc scope) and contributed nothi
   ancestors of `origin/live-defi-rollout`. Added a fresh follow-up todo (P2 OPS) for the actual VM-scale production run
   - manifest verification — the code build and the production campaign are different bounded units; this todo's own
     code-ship scope is complete, the campaign is tracked separately, not silently folded in.
+- 2026-08-09 (todo 2 IN PROGRESS — slot 26): probed GCS to find the real Kalshi tick-parquet date windows (per todo 2's
+  own step (1)): deep-corpus seed **2021-06-30 → 2025-11-25** (`pipeline_mode=batch_kalshi`) + recent/live window
+  **2026-06-23 → today** (`batch_kalshi`/`live_kalshi`); confirmed empty gap 2025-11-26..2026-06-22 (matches the
+  2025-10→2026-04 mid-gap todo 1 targets, plus a few extra empty weeks either side). **Local-host attempt FAILED
+  repeatedly** (4 separate SIGTERM kills — unwrapped, 6G-capped, 10G-capped, foreground-with-590s-timeout — all died at
+  the SAME point: right after the CF-11 honest-absence reemit loads the full ~2.68M-row consolidated `_index` and starts
+  its `iterrows()` pass; root cause is genuine shared-host memory pressure, not a script bug or Bash-tool timeout — the
+  planning-vm was running ~26 concurrent agent slots at 12-28GB/30GB used during these attempts). **Resolution: built a
+  dedicated one-off VM launcher** `deployment-service/scripts/vm/launch-prediction-kalshi-cqg-rewalk-vm.sh` (Pattern A /
+  `VM_TASK=canonical-migration`, mirrors `launch-cefi-mvp-reclassify-vm.sh`) and ran the operation on GCE instead
+  (matches `/codex/05-infrastructure/vm-launcher-runbook.md`'s "genuinely corpus-scale → dedicated VM" guidance). Two
+  VMs confirmed the dry-run step cleanly: `mtds-prediction-kalshi-cqg-beta-preview-20260809-091716` (small window
+  2026-08-01..08, `--beta-manifest-out`, completed in 1529s/exit 0) — direct inspection of the projected parquet shows
+  **41+ real KALSHI cqg groups, only 8/323 (2.5%) OTHER** (`BTC_UP_DOWN_DAILY`, `CPI_PRINT_PER_MONTH`,
+  `SPORTS_MLB_MATCH`, `FED_RATE_DECISION_PER_FOMC`, etc. all present) — confirming the venue-aware classifier fix works
+  at real production scale, satisfying step (2). A second VM (`mtds-prediction-kalshi-cqg-rewalk-20260809-090742`, full
+  range 2021-06-30..2026-08-08, `--chunk-days 30`) ran as extra full-corpus validation — reached chunk 44+/~62 with
+  `failed_unclassified: 0` on every single chunk before this progress note was written (still running independently; not
+  required for step (2), which was already satisfied by the beta-preview VM). **Production `--apply` VM launched**:
+  `mtds-prediction-kalshi-cqg-rewalk-20260809-101228` (n2-standard-8, SPOT, same full range + `--chunk-days 30`, no
+  `--dry-run`) — in progress as of this note, ETA ~45-90 min based on the dry-run's observed chunk rate. **Also found +
+  fixed as a side effect** (not a plan-scope bug, just this slot's stale venv state): `market-tick-data-service/.venv`
+  had corrupted `pycryptodome`/`rlp` installs (missing `__init__.py`/leftover `.tmp*` dirs) and `deployment-service` had
+  no `.venv` at all — both fixed via `uv sync --frozen [--reinstall]`; unrelated to this task's code, purely local
+  environment drift. **Remaining before this todo can be checked off**: confirm `--apply` VM completes cleanly,
+  spot-verify the LIVE `availability_index.parquet` (not just the beta-preview projection) shows non-OTHER KALSHI cqg
+  for the reclassified dates, then flip this checkbox with both VM names + elapsed times as evidence — the 116,192
+  `SOURCE_RETURNED_ZERO` residual (lacking `available_from/to`) stays `empty_confirmed`/unresolved by design, per this
+  todo's own "done when" clause — not to be silently folded into "done".
