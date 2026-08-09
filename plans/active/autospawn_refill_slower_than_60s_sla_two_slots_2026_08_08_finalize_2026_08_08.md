@@ -14,13 +14,14 @@ scope: [engineer, admin]
 tags: [ao, agent-orchestrator, autospawn, close-out, archival, plan-hygiene]
 related:
   [
-    /plans/active/issues/autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08.md,
+    /plans/archive/2026_08/issues/autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08.md,
     /plans/epics/orchestrator_master.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+    /plans/active/issues/autospawn_refill_sla_data_points_1_2_and_live_recheck_followup_2026_08_09.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-09"
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -31,11 +32,12 @@ estimate_calibrated_ai_days: 0.16
 assigned_role: infra
 effort: medium
 drift_direction: advance-code
+archive_exempt: true # flip-only commit bridge (plan-completion-and-archival-discipline.md) — dropped in the immediately following git-mv archival commit
 locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08.md,
+    /plans/archive/2026_08/issues/autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /plans/PLAN_FORMAT.md,
@@ -78,13 +80,26 @@ source: >-
       only data point 3 (the 5-slot batch). Verdict: root-cause claim for data point 3 is evidence-backed, not asserted;
       the parent doc's own honest caveat about points 1/2 stands. No code change required for this verification-only
       todo.
-- [ ] [DOCS] P3. **Archive the parent doc per the 6-step ritual, and only then.** Confirm zero open `- [ ]` todos
+- [x] ✅ [DOCS] P3. **Archive the parent doc per the 6-step ritual, and only then.** Confirm zero open `- [ ]` todos
       remain; add the archival banner + set `status: complete`; grep the corpus for
       `autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08` and repoint every referrer; clear any lock if set.
       Then physically move the parent doc under `plans/archive/2026_08/`. **Done when**:
       `bash     scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py` shows
       no NEW dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans for this
-      doc. Repo: unified-trading-pm.
+      doc. Repo: unified-trading-pm. — **unified-trading-pm@c5aa14cb9**. Confirmed zero open todos on the parent doc
+      (its sole `[BACKEND]` todo already `[x]`, independently re-verified by this plan's own todo 1). Step 1 of the
+      ritual (migrate deferred items, never prose) was NOT already satisfied — the parent doc carried two live caveats
+      (data points 1/2 not independently explained; production live-recheck not performed) stated only in Progress Log
+      prose, so filed a real tracked follow-up first:
+      `/plans/active/issues/autospawn_refill_sla_data_points_1_2_and_live_recheck_followup_2026_08_09.md`
+      (`unified-trading-pm@19c19c6db`). Then added the `🟢 ARCHIVED` banner + `status: resolved` + `resolved_by` to the
+      parent doc and `git mv`'d it to `plans/archive/2026_08/issues/` (rename verified via `git log --stat` — both the
+      delete and the add landed in one commit, not the create-only hazard). Referrer sweep: corpus-wide grep for the old
+      path found only `plans/active/INDEX.md` (auto-generated, regenerated below) and this finalize plan's own
+      `related:` (repointed to the archive path in this same commit); the one archived-doc referrer
+      (`plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md`) is a frozen historical snapshot, left
+      as-is by convention. No codex-alignment update needed — the durable contract (the `_do_spawns_concurrently()` fix)
+      already lives in code, not in this issue doc.
 
 ## Codex SSOTs
 
@@ -106,3 +121,9 @@ source: >-
   independent agent (main, via `journalctl`), not just self-asserted. Verdict: evidence-backed for data point 3; the
   parent doc's own caveat about points 1/2 (not independently explained) stands and is carried forward, not dropped.
   Todo 2 (archival) remains — the parent doc's todo is done so this finalize plan is now unblocked for it.
+- **2026-08-09 (slot 25, infra)**: Todo 2 (archival) done. Filed a tracked follow-up issue doc for the two prose caveats
+  first (`unified-trading-pm@19c19c6db`), then archived the parent doc per the 6-step ritual
+  (`unified-trading-pm@c5aa14cb9`). Both of this finalize plan's own todos are now done and it carries no lock —
+  archiving it too in the immediately following commit (`archive_exempt: true` set on THIS commit as the sanctioned
+  flip-only bridge, per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s `archive_exempt` ruling
+  — dropped again once the `git mv` lands).
