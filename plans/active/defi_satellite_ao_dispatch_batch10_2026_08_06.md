@@ -138,8 +138,8 @@ same day) before being drafted here.
 - [x] ✅ [CODE] P2. **Thread the real HTTP status through the direct `async_post_to_subgraph` callers**
       (`dex_swaps_handler.py`, `liquidations_handler.py` — re-verify current file state at pickup), establishing the
       widen-return-signature pattern other subgraph-HTTP helpers can reuse. Repo: market-tick-data-service. Source:
-      `issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md` (item 4). Done when: both callers return the
-      real HTTP status, existing tests pass, and `quality-gates.sh --no-fix` is green. —
+      `/plans/archive/2026_08/issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md` (item 4). Done when:
+      both callers return the real HTTP status, existing tests pass, and `quality-gates.sh --no-fix` is green. —
       market-tick-data-service@17aed396 · QG green (233s) · async_post_to_subgraph returns tuple[dict, int]; dex_swaps +
       liquidations callers thread http_status through all return paths; tests assert status propagation.
 - [x] ✅ [CODE] P1. **Ship the operator-approved BLAZESTAKE known-outage exemption** in `dependency_checker.py`'s

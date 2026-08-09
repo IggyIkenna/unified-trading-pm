@@ -176,15 +176,15 @@ over all pending draft batches) that independently spot-verified every todo belo
       `_aave_oracle_collection.py` and (b) the Chainlink/Pyth on-chain legs of `oracle_prices_handler.py` — read-only
       research, no code change; if not obtainable for a family, propose the alternative signal (e.g. RPC-level error
       code) instead of guessing. Repo: market-tick-data-service. Source:
-      `defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md`. Done when: a written finding exists for each of the
-      two families stating obtainable/not-obtainable, with either the concrete field name or a proposed alternative
-      signal cited. **CLOSED BY CITATION (2026-08-08)** — both findings written in the source doc: (a) Aave/Alchemy
-      checkbox 2 (`defi_clean_path_fetch_evidence_fidelity_scope-001` dispatch, slot-29) — not obtainable on success,
-      partially on failure, no single scalar (6 independent per-reserve RPC calls). (b) Chainlink/Pyth checkbox 3
-      (`defi_clean_path_fetch_evidence_fidelity_scope-002` dispatch, slot-2) — Chainlink same shape as Aave (not
-      obtainable, no single scalar, one `eth_call` per feed); Pyth is a genuine REST call where the status IS obtainable
-      and already in scope but currently discarded on the clean-empty path, including one concrete case
-      (`_fetch_pyth_prices_at_timestamp`'s 404-on-historical) where the synthesized 200 is provably wrong.
+      `/plans/archive/2026_08/issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md`. Done when: a written
+      finding exists for each of the two families stating obtainable/not-obtainable, with either the concrete field name
+      or a proposed alternative signal cited. **CLOSED BY CITATION (2026-08-08)** — both findings written in the source
+      doc: (a) Aave/Alchemy checkbox 2 (`defi_clean_path_fetch_evidence_fidelity_scope-001` dispatch, slot-29) — not
+      obtainable on success, partially on failure, no single scalar (6 independent per-reserve RPC calls). (b)
+      Chainlink/Pyth checkbox 3 (`defi_clean_path_fetch_evidence_fidelity_scope-002` dispatch, slot-2) — Chainlink same
+      shape as Aave (not obtainable, no single scalar, one `eth_call` per feed); Pyth is a genuine REST call where the
+      status IS obtainable and already in scope but currently discarded on the clean-empty path, including one concrete
+      case (`_fetch_pyth_prices_at_timestamp`'s 404-on-historical) where the synthesized 200 is provably wrong.
 - [ ] [DATA] P2. **Relaunch `mtds-dex-swaps-backfill-1`/`-2`** onto the shipped checkpoint fix
       (`market-tick-data-service@8046e25b`), using each VM's per-VM manifest shard's max `date`
       (`_index/per_vm/mtds-dex-swaps-backfill-{1,2}.parquet`) as an explicit `--start` date-frontier so the relaunch

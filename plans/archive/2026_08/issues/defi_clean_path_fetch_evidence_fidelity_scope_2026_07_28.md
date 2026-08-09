@@ -11,7 +11,7 @@ summary: >-
   (governance_adapter.py) additionally swallows a genuine fetch error into an empty list — a correctness gap the "danger
   class already closed" framing assumed didn't exist. This doc captures the discovered scope + files it as a properly
   scoped follow-up rather than absorbing it into the single P1 dispatch todo.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [defi] # corrected 2026-07-29 (/ag-closeout-audit defi, Phase 0.3 Orthogonality HARD CHECK) -- was
@@ -31,9 +31,9 @@ related:
   ]
 created: "2026-07-28"
 author: unknown
-last_updated: "2026-08-02"
+last_updated: "2026-08-09"
 source: sports_consolidated_native_ao_extract-010/cross_cutting_satellite_ao_dispatch_batch2-011 dispatch (slot-11)
-resolved_by:
+resolved_by: slot-6 (data_engineering), 2026-08-09
 locked_by:
 parent_epic: infrastructure_master
 assigned_vm: planning
@@ -52,6 +52,11 @@ context_scope:
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/honest_coverage.py,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-09** — fully resolved, all 6 todos closed. Two of the closed DIAG items (checkboxes 2-3)
+> described genuine follow-ups only in prose; migrated to real `- [ ]` todos in
+> `/plans/active/issues/defi_oracle_family_empty_path_exception_classification_2026_08_09.md` before archiving, per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` step 1.
 
 # DeFi clean-path fetch-evidence fidelity — scoping correction
 
