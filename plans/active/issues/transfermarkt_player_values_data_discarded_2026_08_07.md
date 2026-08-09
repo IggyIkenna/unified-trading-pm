@@ -125,7 +125,7 @@ possibly a rename that ripples into UAC/manifest data_type naming.
 
 ## Todos
 
-- [ ] [CODE] P1. **RULED 2026-08-09 (operator): Option 1 — persist the full per-player `market_value_eur` list**, not
+- [x] ✅ [CODE] P1. **RULED 2026-08-09 (operator): Option 1 — persist the full per-player `market_value_eur` list**, not
       just the team-level aggregate. Was `[OPERATOR]` P1 pick-a-disposition. Implementation: in
       `instruments_service/engine/orchestrator/transfermarkt.py:530-541`, stop dropping the `players` list — persist
       each player's `market_value_eur` (drop only genuinely unhelpful nested bio-text fields, per option 1's original
@@ -134,10 +134,48 @@ possibly a rename that ripples into UAC/manifest data_type naming.
       incremental cost once the per-player schema change lands, and gives a fast team-level aggregate without re-summing
       player rows every read. **Done when**: both fields land in the written schema, a fresh snapshot shows non-null
       `market_value_eur` per player and non-null `total_market_value_eur` per team, and a regression test locks in that
-      neither is dropped in future refactors of this write path.
+      neither is dropped in future refactors of this write path. — CODE + regression test shipped:
+      instruments-service@3e87e99f + a47f4880 (2026-08-09, slot 32). See Progress Log for the root-cause correction +
+      implementation detail. Live-snapshot half of done-when tracked separately below (not yet exercised against a real
+      fetch).
+- [ ] [DATA] P3. Verify `market_value_eur` (per player) and `total_market_value_eur` (per team) are genuinely non-null
+      in a live/triggered Transfermarkt PLAYER_VALUES snapshot — the code fix above ships correct persistence logic but
+      has not yet been exercised against a real fetch (Transfermarkt only re-fetches on transfer-window trigger dates or
+      `force=True`). **Done when**: a fresh `player_values.parquet` snapshot (read via
+      `gs://instruments-store-sports-prd-central-element-323112/sports_reference/snapshots/entity=player_values/`) shows
+      non-null `total_market_value_eur` and a non-empty, JSON-parseable `players` column with non-null
+      `market_value_eur` entries for at least one captured league. (repo: instruments-service, read-only verification —
+      no new code expected unless this surfaces a live-data surprise.)
 
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — genuine operator-gated schema/scope decision, no bounded
   worker-determinable outcome. Added the `[OPERATOR] P1` todo above so the pending decision is tracked, not just prose.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **2026-08-09 (slot 32, data_engineering): implemented Option 1 — real root cause was one layer deeper than this doc's
+  original finding, correcting the implementation plan before shipping.** The doc's finding read the drop as happening
+  in the orchestrator's flatten step (`transfermarkt.py:530-541`'s `flat.pop("players", None)`), but that pop was
+  already a no-op: `adapter.get_teams()` returns `list[CanonicalTeam]` — a frozen cross-source schema
+  (`team_id, name, short_name, country, founded, logo_url, venue`) with NO `players`/`squad_size`/
+  `total_market_value_eur` fields at all — so `row.get("players")` was always `None` upstream of the pop, which is why
+  `short_name`/`country`/`founded`/`venue` were ALSO 0/438 non-null (the doc's own "worth checking" note at the end of
+  `## Finding`). The actual normalization drop happens in `normalize_transfermarkt_team_from_squad()`
+  (`unified-api-contracts`), which discards everything except `team_id`/`name`. Found UAC already ships a fully-tested,
+  unused-in-production companion — `normalize_player_values(squad, league_id) -> list[PlayerValue]`
+  (`external/transfermarkt/normalize.py`) — built for exactly this per-player-value extraction but never wired up;
+  reusing its sibling data model (`TransfermarktTeamSquad`) rather than reinventing persistence. **Fix**: added
+  `TransfermarktAdapter.get_team_squads()` (raw `TransfermarktTeamSquad`, market values intact — `get_teams()` kept
+  unchanged/still used, both now share a `_fetch_squads()` core) and `_flatten_transfermarkt_squad()` in the
+  orchestrator, which JSON-encodes the per-player list (drops only `player_image_url`, the genuinely-bio-text field) and
+  persists `total_market_value_eur` as a scalar column — the same JSON-nested-column convention `process_write.py`
+  already uses for `InstrumentRecord.legs` (parquet-safe, avoids nested list<struct> schema risk). Verified via a direct
+  interpreter smoke-test (non-null `market_value_eur` per player + `total_market_value_eur` survive the flatten,
+  `player_image_url` dropped) and a new regression test file
+  (`tests/unit/test_transfermarkt_player_values_persisted.py`, 8 cases) plus fixed 3 pre-existing tests in
+  `test_orchestrator_data_fetchers.py` whose mocks stubbed the now-unused `get_teams()` call site (full
+  `quality-gates.sh` caught this — the shard-level try/except was silently swallowing the resulting
+  `TypeError: object MagicMock can't be used in 'await' expression` as an ordinary per-league failure, so a narrower
+  test run missed it). Did NOT live-verify against a real fetch (Transfermarkt only re-fetches on transfer-window
+  trigger dates; a forced live fetch would spend real API quota purely for verification) — the "fresh snapshot" half of
+  Done-when is confirmed by the next live/triggered fetch, not this session. instruments-service@3e87e99f (fix) +
+  a47f4880 (test-fixture fix). QG: `.qg_last_passed_sha=a47f4880`.
