@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, ag-closeout-audit, quality-gates, linkage, orphan-detection, ratchet-regression]
 related:
   [
-    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
     /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,
@@ -62,7 +62,7 @@ context_scope:
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,
     /scripts/plan-hygiene/ag_closeout_linkage_baseline.yaml,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
   ]
 ---
 

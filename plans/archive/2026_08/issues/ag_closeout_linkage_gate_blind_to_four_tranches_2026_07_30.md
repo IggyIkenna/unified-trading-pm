@@ -15,7 +15,7 @@ summary: >-
   `ag-closeout-audit`'s own SKILL.md § Phase 0.1 documents. Measured this run: the gate reports "0 orphan(s) (baseline
   0)" while 29 of 119 cross-cutting-tagged docs (24%) have zero citation in ANY covering plan. The skill's claim that
   this check "remains the safety net" is therefore false for 4 of the 9 tranches it is invoked for.
-status: open # transient — flips to resolved in the immediately-following archival commit (see Progress Log)
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -41,12 +41,11 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: advance-code
-archive_exempt: true # transient, one commit only — see Progress Log "Recovery note"
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by: unified-trading-pm@<pending — see this commit>
+resolved_by: unified-trading-pm@12582549d
 source: >-
   /ag-closeout-audit cross-cutting run, 2026-07-30 (scheduled ag_closeout_auditor tranche dispatch) — found while
   running the Phase 0.3 Orthogonality HARD CHECK, whose prescribed "re-run check_ag_closeout_linkage.py after every

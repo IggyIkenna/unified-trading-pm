@@ -31,7 +31,7 @@ related:
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -63,7 +63,7 @@ context_scope:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
-    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
   ]
 ---
 
@@ -222,14 +222,14 @@ member, not just a retag.
       `ao_consolidated_closeout_2026_07_25.md`'s membership (already named there per 2 independent prior audits).
       **DONE, WITH A CORRECTION (na-eligibility-audit 2026-08-03)** — the doc's `asset_group` is now corrected
       (2026-08-02, operator-ruled per the Q&A recorded in
-      `/plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`, commit
+      `/plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`, commit
       `unified-trading-pm@5432f2c06`), but to `[ci]`, not `[ao]` as this todo proposed: comment reads "content is
       workflow-template-parity QG drift during the Phase-7 self-hosted-runner rollout, squarely ci-tranche... not
       generic cross-AG content." That also means the "fold into `ao_consolidated_closeout_2026_07_25.md`" clause is moot
       — the doc's real home is the `ci` tranche (`ci_consolidated_closeout_2026_07_25.md`, itself also archived
       `status: complete`), not `ao`. The underlying goal (fix the wrong cross-cutting tag) is achieved; this todo's
       specific proposed target tranche was superseded by the operator ruling (see
-      `/plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` cited above).
+      `/plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` cited above).
 - [x] ✅ [DOCS] P3. ~~Retag `plans/active/tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`'s
       `asset_group` `[cross-cutting]` → `[tradfi]` (finding 6)~~ — **DONE (na-eligibility-audit 2026-08-07)**. Verified
       directly: the target doc's `asset_group` is now `[tradfi]` (inline comment: "corrected 2026-08-02
