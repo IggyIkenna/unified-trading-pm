@@ -227,6 +227,34 @@ to the already-tolerated BITFINEX-SPOT/BYBIT-SPOT residual (Finding 5's third po
 ASTER/HYPERLIQUID/EXTENDED-STARKNET chain-instability mechanism — do not assume the same root cause for that sample
 without separately checking it.
 
+## Update 2026-08-09 (slot 3) — the SAME shape confirmed PRE-2025-11-01 too, at even larger scale (98,188 groups)
+
+**Note re: Finding 11 above** — Finding 11's root-cause (WS-reconnect `chain` instability via `WsInstrumentBuffer`) is
+specific to LIVE-capture writes. The pre-cutoff population below was very likely captured via BATCH backfills, not the
+live WS path, so Finding 11's mechanism may NOT explain it — flagged as an open question in the new todo, not assumed.
+
+While building the scoped pre-2025-11-01 equivalent for
+`issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md` todo 2
+(`instruments-service/scripts/apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py`), an added safety check
+(mirroring this doc's `_chain_merge_safety`-style invariant, but computed over the FULL pre-cutoff corpus rather than
+just the characterized 6,575 spelling-variant groups) surfaced: **98,188 PIN_ATOM-key groups pre-2025-11-01 hold >=2
+CAPTURED rows with DIFFERING row_count under the IDENTICAL instrument_id spelling** (not a spelling variant — literal
+duplicate rows for one shard). `drop_set_captured=502,746` if naively collapsed — the script's STOP-ON-SURPRISE gate
+correctly refused, zero mutation occurred (`canonical-migration-cefi-dedup-apply-scoped-20260809-001849`, dry mode).
+
+This is the SAME shape as the ASTER/HYPERLIQUID/EXTENDED-STARKNET population above (same-key, same-spelling, differing
+row_count — "writer appended a new row instead of updating the existing one"), now confirmed present BEFORE the cutoff
+too, at a scale (98,188 groups) ~15x the small, already-characterized-safe 6,575-group spelling-variant residual
+`issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md` todo 1 found. This population was NEVER
+characterized by that todo — its characterization script only checked for >1 DISTINCT SPELLING under a key, never >1 row
+with the SAME spelling but differing row_count — so it never surfaced.
+
+**Scope upgrade**: this now looks like a corpus-wide (pre- AND post-cutoff), long-standing manifest-writer defect, not a
+recent/new-venue-specific one. The `apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py` script is being
+tightened to operate ONLY on the narrow, already-characterized 6,575-group spelling-variant population (never touching
+this newly-found population), so `issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md` todo 2 can still
+close safely — this population is added to THIS doc's scope, not absorbed into that todo.
+
 ## Todos
 
 - [x] [DATA] P1. ✅ **Root-cause whether ASTER/HYPERLIQUID/EXTENDED-STARKNET manifest writes are appending a NEW row per
@@ -245,6 +273,14 @@ without separately checking it.
       EXTENDED-STARKNET from a per-venue UAC constant at capture time instead of `tick.chain` (venue-invariant for a
       perp-DEX venue, removes the reconnect-reset instability at the source) rather than widening
       `_CHAIN_LOSSY_TOLERANCE_MAX`. (repo: instruments-service, market-tick-data-service)
+- [ ] [DATA] P1. **Characterize the pre-2025-11-01 same-spelling multi-captured-row population (98,188 groups,
+      `drop_set_captured=502,746`)** — same shape as the ASTER/HYPERLIQUID/EXTENDED-STARKNET post-cutoff population,
+      confirmed present pre-cutoff too via `apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py`'s dry-run
+      (`canonical-migration-cefi-dedup-apply-scoped-20260809-001849`, 2026-08-09). Determine venue/date/data_type
+      breakdown (mirror `characterize_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`'s methodology) to
+      confirm whether this is the SAME root cause as the post-cutoff population (Finding 11's WS-reconnect `chain`
+      instability — likely NOT, since pre-cutoff data was probably batch-captured, not live-WS) or a distinct one,
+      before any collapse is attempted. (repo: market-tick-data-service)
 
 ## Progress Log
 
@@ -256,3 +292,9 @@ without separately checking it.
   handling + ASTER's historical additive-write-path scripts). See Finding 11. No code change shipped this pass (todo 1
   is read-only root-cause; todo 2 owns the fix). No live GCS per-row write-history pull performed — flagged as a gap in
   Finding 11's caveat, not blocking given the code-level evidence.
+- **2026-08-09 (slot 3)** — While building the scoped pre-2025-11-01 equivalent script, an added safety check surfaced
+  the SAME "duplicate-row, same-spelling, differing row_count" shape PRE-cutoff too: 98,188 groups,
+  `drop_set_captured=502,746` — ~15x the small, already-characterized-safe 6,575-group spelling-variant residual. Zero
+  mutation occurred (dry-run, STOP-ON-SURPRISE fired). Added as a todo above; the scoped script is being tightened to
+  exclude this population entirely so it doesn't block the narrow, already-safe todo it exists to close. See
+  `issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md` Progress Log for the parallel entry.

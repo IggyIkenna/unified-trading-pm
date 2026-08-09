@@ -151,3 +151,35 @@ rows and stale parquet columns remain from an era predating this session's scope
   clean up. Feeds directly into todo 2 (scoped Surface-C dedup apply for this range) — that todo should confirm this
   characterization holds at `--apply` time and can likely treat the `captured`+`attempted_failed` pairs as the standard
   best-status-wins collapse `_dedup_blob` already implements, rather than needing new merge logic.
+
+- **2026-08-08 (slot 3, continued)** — Started todo 2 by launching a fresh dry-run of the FULL
+  `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py` (`canonical-migration-cefi-dedup-apply-20260808-233932`,
+  drain not needed for dry mode). It correctly STOP-ON-SURPRISE'd on an UNRELATED, much larger population: 198,250
+  chain-lossy groups (vs. the 28-group tolerance from 2026-07-24), dominated by ASTER/HYPERLIQUID/EXTENDED-STARKNET, ALL
+  post-2025-11-01 — **zero mutation occurred**. Filed as its own big finding:
+  `/plans/active/issues/cefi_chain_drop_v2_dedup_stop_on_surprise_198k_lossy_groups_2026_08_08.md`
+  (`unified-trading-pm@61327a2d6`) — that population needs independent root-cause investigation and is explicitly OUT OF
+  SCOPE for this todo. **Pivoted todo 2 to the "scoped equivalent" the todo text already allows**: wrote
+  `instruments-service/scripts/apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py`, which reuses v1's
+  resolver + `_dedup_blob`/`_snapshot`/`_load`/`_write` verbatim (same pattern as v2) but restricts the collapse to
+  `date < 2025-11-01` rows only — the on/after-cutoff rows (including the entire ASTER/HYPERLIQUID/EXTENDED-STARKNET
+  blocked population) are never loaded into the collapse pass at all, so this apply cannot touch that population.
+  STOP-ON-SURPRISE bands sized to the todo-1 characterization (groups_duplicate ∈ [1000, 20000];
+  multi_captured_lossy_groups MUST be 0 — todo-1's sample found zero of the shape that blew up post-cutoff). Next: run
+  the scoped script's dry-run on a `cefi-dedup-apply`-category VM, verify bands hold, then a drained `--apply`, then
+  re-run `verify_cefi_canonical_4surface_2026_07_20.py`.
+
+- **2026-08-09 (slot 3)** — Shipped the scoped script (`instruments-service@87a5d72a`) + a new `cefi-dedup-apply-scoped`
+  VM launcher category (`deployment-service@149aca1a`). Its own dry-run
+  (`canonical-migration-cefi-dedup-apply-scoped-20260809-001849`) correctly STOP-ON-SURPRISE'd: `groups_duplicate`
+  matched the characterization exactly (6,575, confirming the grouping logic reproduces todo 1), BUT the added safety
+  check found the collapse pass was ALSO touching a second, much larger, unreviewed population — 98,188 groups with >=2
+  CAPTURED rows sharing the IDENTICAL spelling but DIFFERING row_count (not a spelling variant at all — literal
+  duplicate rows). This is the SAME shape as the post-cutoff ASTER/HYPERLIQUID/EXTENDED-STARKNET population, now
+  confirmed pre-cutoff too — filed as a todo on
+  `/plans/active/issues/cefi_chain_drop_v2_dedup_stop_on_surprise_198k_lossy_groups_2026_08_08.md`
+  (`unified-trading-pm@<next-sha>`), out of scope for THIS todo. **Zero mutation occurred** (dry-run + the gate would
+  have refused `--apply` too). Root cause of the scope leak: `_collapse_pre_cutoff` ran `v1._dedup_blob` over the WHOLE
+  pre-cutoff dataframe rather than restricting it to the todo-1-characterized 6,575 spelling-variant groups
+  specifically. Fixing now: scope the collapse to touch ONLY rows belonging to those 6,575 groups, leaving every other
+  pre-cutoff row (including the newly-found 98,188-group population) completely untouched.
