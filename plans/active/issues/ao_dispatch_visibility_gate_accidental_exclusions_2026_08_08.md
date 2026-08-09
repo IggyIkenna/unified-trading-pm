@@ -412,18 +412,15 @@ human already made the call and the fleet still never executes it.
       `"declared": true` (was `false`); still correctly excluded (`disk_open=1, backlog_open=0` — genuinely blocked, not
       dispatchable) since the operator decision remains outstanding. Fleet-wide accidental count: 26→25 (repo:
       unified-trading-pm).
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in
-      `plans/archive/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`.** Its checkbox reads
-      (truncated): "[BACKEND] P2. **DESIGN DECIDED 2026-08-08 (operator ruling, ao round-5 apply item 17): "Let Claude
-      pick based on" — the marker trips `_is_non_dispatchable` (`agent-orchestrator/server/regen_backlog_from_plan.py`)
-      but does not open its own line, so `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared:
-      false). If it is genuinely still blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a
-      permanent-deferral tag) to the start of its own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or
-      a dedicated continuation line) so it reads as a declared hold. If it is already resolved (several of these carry a
-      dated `RULED`/`DESIGN DECIDED` note — read the full todo before acting), rewrite the trigger phrase so the marker
-      no longer appears anywhere in the block. Verify:
-      `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-25, infra).** Triage accidental exclusion in
+      `plans/archive/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`. Moot, not accidental:
+      the flagged todo (the `[BACKEND] P2` side-table pre-flight-gate design item) is already checked
+      `[x] ✅ DONE 2026-08-09 — market-tick-data-service@b66e68c0` in the doc, both of the doc's todos are done, and the
+      whole doc is already archived (`status: resolved`, banner "ARCHIVED (2026-08-09) — both todos done") at
+      `plans/archive/issues/`. No open todo remains on disk for the gate to misclassify. Verified:
+      `cd agent-orchestrator && uv run python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
+      returns zero hits for `vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md` (no entry at all —
+      doc has no open todos to report on). (repo: unified-trading-pm)
 
 ## Progress Log
 
@@ -582,3 +579,16 @@ human already made the call and the fleet still never executes it.
   prior `DEFERRED-BY-DESIGN` marker used to hold it pre-gate lives only in Progress Log prose now, not the live checkbox
   block), and today is 2026-08-09 — the gate has cleared on its own. Confirmed via `dispatch_visibility_report --json`:
   `disk_open=1, backlog_open=1, excluded=[]` — correctly dispatchable, no rewrite needed.
+- **2026-08-09 (slot 20, infra)** — Fixed the `infra_capture_and_devops_leftovers_finalize_2026_07_25.md` todo. Moot,
+  not accidental: the flagged checkbox's own literal text is `` `BLOCKED-*` `` (a wildcard placeholder), which never
+  matched `_BLOCKED_TOKEN_RE` to begin with — zero real tokens present in the block. Confirmed via
+  `dispatch_visibility_report --json` and the actual gate: `disk_open=1, backlog_open=1, excluded=[]`.
+- **2026-08-09 (slot 25, infra)** — Fixed the `vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`
+  todo. Same "moot, not accidental" pattern as the batch1/batch4/batch6/cefi/defi/infra_satellite/prediction/sports
+  fixes above: the flagged `[BACKEND] P2` side-table pre-flight-gate design todo is already checked
+  `[x] ✅ DONE 2026-08-09 — market-tick-data-service@b66e68c0`, both of the doc's todos are done, and the whole doc is
+  already archived (`status: resolved`) at `plans/archive/issues/`. Confirmed via `dispatch_visibility_report --json`:
+  zero hits for this doc (no open todos left to misclassify). This closes out every enumerated finding in this issue
+  doc's original 27-item list (the ~10 newly-visible accidental exclusions from the 2026-08-09 slot-3 rule-tightening
+  note above are a separate, not-yet-enumerated population — re-run the live report before assuming this doc's job is
+  fully done).
