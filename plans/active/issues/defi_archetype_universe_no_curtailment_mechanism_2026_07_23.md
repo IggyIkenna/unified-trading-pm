@@ -498,7 +498,7 @@ run SEQUENTIALLY, not in parallel:
       as "currently partial…deferred," independently reconfirmed (no `instrument_type=index`/`spot` shard exists for
       DERIBIT); the 5 `databento_pending` placeholder rows — self-documented pending in the catalog already. **New
       finding, not fixed (documented, not silently papered over):** `CARRY_BASIS_DATED_INV`'s catalog sets a
-      `direction:     "SHORT_BASIS"` key that `CarryBasisDatedEngine.on_tick()` never reads at all (grepped the engine —
+      `direction: "SHORT_BASIS"` key that `CarryBasisDatedEngine.on_tick()` never reads at all (grepped the engine —
       zero references) — both archetypes share the identical engine class and currently behave IDENTICALLY; whether
       `SHORT_BASIS` should invert entry logic, restrict entries to backwardation only, or something else is a real
       product/design decision this build did not make unilaterally (same reasoning as Phase 1's dated-expiry- resolution
@@ -527,7 +527,7 @@ run SEQUENTIALLY, not in parallel:
       (`lst_venue_registry_gap_and_cron_crash_loop_2026_07_22.md`, same day as this doc) because it is an ERC-4626
       yield-bearing vault share, not a genuine staking-derivative redemption rate; its real, current data home is
       `vault_share_price_handler.py`'s `vault_share_price` feature group (a DIFFERENT corpus from `lst_yields`), already
-      consumed by DEFI_LP_VAULT's own `ethena`/`sUSDe` catalog row (`catalog_yield_defi.py::     build_defi_lp_vault()`)
+      consumed by DEFI_LP_VAULT's own `ethena`/`sUSDe` catalog row (`catalog_yield_defi.py:: build_defi_lp_vault()`)
       — no proxying attempted, held out with a static, typed `paper_universe.py` skip reason
       (`missing_lst_yields_coverage:staking_protocol=ethena`, visible in `skipped_specs.json`). Shipped the other 5 rows
       (lido/rocketpool/etherfi/jito/marinade): `_load_yield_staking_simple_ticks()` +

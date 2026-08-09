@@ -332,11 +332,11 @@ Two independent gates because Group A and Group B are at different stages:
       stale per CLAUDE.md's retag-on-resolve rule.
 
       > **🟥 Note (2026-07-31, slot-14)**: even once this todo removes `unified-trading-sa`'s `storage.objectAdmin`,
-                                                                                                                                                                                                                                                                                                                                                                                                                      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
-                                                                                                                                                                                                                                                                                                                                                                                                                      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
-                                                                                                                                                                                                                                                                                                                                                                                                                      > (or any other role) without going through terraform at all. See
-                                                                                                                                                                                                                                                                                                                                                                                                                      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
-                                                                                                                                                                                                                                                                                                                                                                                                                      > actually complete until that doc's P1/P2 also land.
+      > that SA still live-holds `roles/resourcemanager.projectIamAdmin` + `roles/iam.serviceAccountAdmin` (undeclared
+      > in any terraform in this repo) — both self-escalation-capable, i.e. it could re-grant itself storage access
+      > (or any other role) without going through terraform at all. See
+      > `issues/unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md` — a full de-privilege of this SA is not
+      > actually complete until that doc's P1/P2 also land.
 
 > **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
 > today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
@@ -475,9 +475,9 @@ Two independent gates because Group A and Group B are at different stages:
       shortcut around scoping it. **Applied + live-verified**:
       `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf` `google_project_iam_member.uts_migration_objectadmin`
       (full rationale in its own comment block),
-      `ENV=prod     ./tofu.sh apply -target=google_project_iam_member.uts_migration_objectadmin` — scoped apply (did NOT
+      `ENV=prod ./tofu.sh apply -target=google_project_iam_member.uts_migration_objectadmin` — scoped apply (did NOT
       touch the ~24 unrelated pending changes already sitting in this shared prod state;
-      `Plan: 1 to add, 0 to change, 0 to     destroy` before applying). Live-verified via a real IAM policy read (ADC
+      `Plan: 1 to add, 0 to change, 0 to destroy` before applying). Live-verified via a real IAM policy read (ADC
       token + `cloudresourcemanager.googleapis.com:getIamPolicy`, not just `tofu` state): `uts-migration-sa` now holds
       `roles/storage.objectAdmin` in addition to its existing `objectViewer` + P2.2b's 7 non-storage roles. **INERT
       today** — `launch-bucket-rsync-vm.sh` does not pass `--service-account` at all (confirmed by reading the launcher
@@ -529,7 +529,7 @@ Two independent gates because Group A and Group B are at different stages:
       terraform-declared) and `uts-test-sa` (live-granted 2026-08-01, was terraform-UNdeclared — now added in this same
       commit, closing that drift) already hold a non-tier-conditioned `storage.objectAdmin` grant on
       `deployment-scripts-<project>` — so a single
-      `--service-account="$(lc_tier_service_account "$DEPLOYMENT_ENV"     "$PROJECT")"` covers BOTH its env-tiered Group
+      `--service-account="$(lc_tier_service_account "$DEPLOYMENT_ENV" "$PROJECT")"` covers BOTH its env-tiered Group
       A/B migration-target writes AND its `CODE_BUCKET` (mapping-TSV + standard VM observability) writes; no second
       `--service-account` needed. Wired. `launch-features-cross-cutting.sh` — read
       `unified_trading_library/feature_service_base/live_aggregator.py`'s `CrossCuttingFeaturesRunner` in full: it is
@@ -597,7 +597,7 @@ Two independent gates because Group A and Group B are at different stages:
       `quality-gates.sh` green (224s, `.qg_last_passed_sha=557247c`); all 3 commits verified reachable on
       `origin/live-defi-rollout` via `git merge-base --is-ancestor`. Repo-wide grep for both launcher filenames in
       `deployment-service` now returns zero hits; the `scripts/vm/launch-ec2-vm.sh` AWS-side
-      `_register     "gcs-migration-bundle"` entry was investigated and deliberately left alone — it is a separate AWS
+      `_register "gcs-migration-bundle"` entry was investigated and deliberately left alone — it is a separate AWS
       EC2 task-name→instance-profile registry with no test coupling to either deleted GCP launcher's filename, so
       removing it was out of this todo's verified scope (not proven dead).
 - [x] ✅ [INFRA] P2.2e. **DONE 2026-08-04 (operator-forced cutover; slot-13 infra closeout).** The operator forced the
@@ -618,7 +618,7 @@ Two independent gates because Group A and Group B are at different stages:
       permanently retired 2026-07-13; `uts-test-sa` is the ratified non-prod-tier subject). Uses
       `Bucket.test_iam_permissions()` (no real writes) via impersonation of each tier SA from the ambient identity.
       **Live-ran it this session**
-      (`RUN_INTEGRATION=true GCP_PROJECT_ID=central-element-323112 pytest     tests/integration/test_bucket_iam_tier_isolation.py -v`):
+      (`RUN_INTEGRATION=true GCP_PROJECT_ID=central-element-323112 pytest tests/integration/test_bucket_iam_tier_isolation.py -v`):
       all 5 tests initially SKIPPED (ambient `unified-trading-sa` lacked `roles/iam.serviceAccountTokenCreator` on the 3
       target SAs) — self-granted that role narrowly on `uts-prd-sa`/`uts-test-sa`/`uts-migration-sa` per the
       self-service ambient-identity rule (same pattern as the P2.2c/coldstart-doc precedent), re-ran after IAM

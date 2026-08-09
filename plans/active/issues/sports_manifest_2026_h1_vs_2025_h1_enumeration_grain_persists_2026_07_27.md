@@ -202,7 +202,7 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       separate follow-up (see below). (repo: deployment-service) — deployment-service@1d8ede9. `timestamp()`/
       `formatdate()` aren't allowed inside a variable's own `default` (Terraform requires plan-time-constant variable
       defaults — confirmed via an isolated sandbox `terraform validate`), so the rolling computation moved into
-      `local.expected_universe_start_date = coalesce(var.expected_universe_start_date, formatdate("YYYY-MM-DD",     timeadd(timestamp(), "-2880h")))`;
+      `local.expected_universe_start_date = coalesce(var.expected_universe_start_date, formatdate("YYYY-MM-DD", timeadd(timestamp(), "-2880h")))`;
       `var.expected_universe_start_date` now defaults to `null` and stays available as an explicit override (e.g. for
       job (2)'s gated historical backfill). Verified in the sandbox: applying the expression on 2026-08-03 computed
       `2026-04-05`, exactly matching `date -u -d "-120 days"`. `terraform fmt -check` clean; full
@@ -517,7 +517,7 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
 
 - [x] ✅ [DATA] P2. Launch + verify chunk 3/7 (2022-01-01..2022-12-31) of the job (2) historical `expected_unattempted`
       backfill: invoke the child launcher directly
-      (`deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh     --apply-write sports`,
+      (`deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh --apply-write sports`,
       `ENUM_START_DATE=2022-01-01 ENUM_END_DATE=2022-12-31`) in a harness-kill-proof tmux window
       (`tmux new-window -t orch-slot-<N> -n backfill bash`), not a bare backgrounded shell. Retry the SAME chunk until
       it reaches EXIT_STATUS=0 — if a run exits EXIT_STATUS=5 (`would-write X > max_writes_per_run`), that is the

@@ -201,7 +201,7 @@ flip and is corrected here (slot-14).
       completed 2026-07-30 (slot-7, data_engineering), verified 2026-08-05 (slot-10): (a) bounded per-venue scoping: 10
       of 14 prefixes had real data (FANTOM/CELO/SOLANA/BITCOIN had zero); (b) copy + manifest-verify: 12,424 legacy rows
       migrated to `venue=ALCHEMY` twins
-      (`{'written': 11724, 'skipped_existing': 14743, 'missing_source': 0,     'manifest_rows_added': 12424}`); 5-part
+      (`{'written': 11724, 'skipped_existing': 14743, 'missing_source': 0, 'manifest_rows_added': 12424}`); 5-part
       delete-safety proof staged (not executed — prod delete stays `[OPERATOR]`/human-only); the one live legacy-scheme
       reader fixed. Shipped: market-tick-data-service@8016c7e4 (migration script + per_vm_shards memory fix) +
       features-service@48f77f2a (legacy reader fix). Source doc archived:
@@ -225,7 +225,7 @@ flip and is corrected here (slot-14).
       todo 1)
 
 - [x] ✅ [DATA] P2. Confirm-to-completion the already-launched `lst_yields` historical feature backfill
-      (`features_service.     onchain.cli.main --mode batch --asset-group DEFI --feature-group lst_yields --start-date 2021-08-17 --end-date     <today>`,
+      (`features_service. onchain.cli.main --mode batch --asset-group DEFI --feature-group lst_yields --start-date 2021-08-17 --end-date <today>`,
       launched 2026-07-28 slot-6 as a chunked 60-monthly-subrange supervisor run) — verify against `gcloud storage ls`
       on `onchain/by_date/*/feature_group=lst_yields/` that day-partitions now span materially more than the 15 days
       recorded at launch time, targeting near-full per-token-genesis coverage, and confirm a corresponding drop in the
@@ -244,25 +244,25 @@ flip and is corrected here (slot-14).
       operator-decision item)
 
       **Shipped**: `unified-api-contracts@17b1cf21` (registration + `DEFI_PERPETUAL_PERP_DAILY_CTX` SchemaContract +
-                                                                                                                                                                                                                  `NEEDS_CANDLE_PROCESSING["perp_daily_ctx"]=False`), `features-service@c678f0fd` (real `ManifestWriter.add()` call
-                                                                                                                                                                                                                  in `perp_funding_corpus.py`'s `perp_daily_ctx` write path + 2 new unit tests). **MTDS HL mark-price backfill
-                                                                                                                                                                                                                  script** (`scripts/backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py`) confirmed still present but
-                                                                                                                                                                                                                  DELIBERATELY NOT touched — its target bucket (`perp-funding-{project}`) is confirmed deleted (404), so any manifest
-                                                                                                                                                                                                                  write there would target a dead path; its writer-half of this todo is moot (nothing to add a manifest call to that
-                                                                                                                                                                                                                  would ever run). **Historical backfill**: `unified-trading-pm/scripts/migration/
-                                                                                                                                                                                                                  register_perp_daily_ctx_manifest_backfill_2026_08_04.py` (one-off, committed for audit trail) discovered +
-                                                                                                                                                                                                                  registered 1,158 `(day, venue)` manifest rows covering 169,461 real underlying objects — HYPERLIQUID 1,109 days
-                                                                                                                                                                                                                  (2023-05-20..2026-06-01, zero gaps; the issue doc's "1,109 objects" sanity-check figure turned out to be counting
-                                                                                                                                                                                                                  shard-DAYS, not the ~230-per-day per-coin files — reconciled exactly, see the script's own docstring) + the 7 CeFi
-                                                                                                                                                                                                                  Tardis venues' 2026-05-16..22 window (49 rows). Dry-run then `--apply` both run against prod
-                                                                                                                                                                                                                  (`market-data-tick-defi-prd-central-element-323112`); verified via a direct per-VM-shard read
-                                                                                                                                                                                                                  (`_index/per_vm/local-64151-459f.parquet`) showing all 1,158 rows `capture_status=captured` with correct
-                                                                                                                                                                                                                  `row_count`s. Manifest consolidator run attempted same session — hit a transient network `IncompleteRead` on the
-                                                                                                                                                                                                                  ~1.7GB canonical index and fell back to a shards-only computation it did NOT persist (canonical index confirmed
-                                                                                                                                                                                                                  UNCHANGED via blob metadata, `last_modified` predates the consolidator run — no data loss); the per-VM-shard
-                                                                                                                                                                                                                  reader fallback already surfaces the captured rows to any caller regardless, per the established
-                                                                                                                                                                                                                  `defi_fold_manifest_registration_pending_2026_07_21.md` precedent. A future consolidator run (standing cron or a
-                                                                                                                                                                                                                  follow-up session) will complete the merge normally.
+      `NEEDS_CANDLE_PROCESSING["perp_daily_ctx"]=False`), `features-service@c678f0fd` (real `ManifestWriter.add()` call
+      in `perp_funding_corpus.py`'s `perp_daily_ctx` write path + 2 new unit tests). **MTDS HL mark-price backfill
+      script** (`scripts/backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py`) confirmed still present but
+      DELIBERATELY NOT touched — its target bucket (`perp-funding-{project}`) is confirmed deleted (404), so any manifest
+      write there would target a dead path; its writer-half of this todo is moot (nothing to add a manifest call to that
+      would ever run). **Historical backfill**: `unified-trading-pm/scripts/migration/
+      register_perp_daily_ctx_manifest_backfill_2026_08_04.py` (one-off, committed for audit trail) discovered +
+      registered 1,158 `(day, venue)` manifest rows covering 169,461 real underlying objects — HYPERLIQUID 1,109 days
+      (2023-05-20..2026-06-01, zero gaps; the issue doc's "1,109 objects" sanity-check figure turned out to be counting
+      shard-DAYS, not the ~230-per-day per-coin files — reconciled exactly, see the script's own docstring) + the 7 CeFi
+      Tardis venues' 2026-05-16..22 window (49 rows). Dry-run then `--apply` both run against prod
+      (`market-data-tick-defi-prd-central-element-323112`); verified via a direct per-VM-shard read
+      (`_index/per_vm/local-64151-459f.parquet`) showing all 1,158 rows `capture_status=captured` with correct
+      `row_count`s. Manifest consolidator run attempted same session — hit a transient network `IncompleteRead` on the
+      ~1.7GB canonical index and fell back to a shards-only computation it did NOT persist (canonical index confirmed
+      UNCHANGED via blob metadata, `last_modified` predates the consolidator run — no data loss); the per-VM-shard
+      reader fallback already surfaces the captured rows to any caller regardless, per the established
+      `defi_fold_manifest_registration_pending_2026_07_21.md` precedent. A future consolidator run (standing cron or a
+      follow-up session) will complete the merge normally.
 
 - [x] ✅ [CODE] P2. Wire real capture for AAVE-PLASMA and FLUID-PLASMA: (1) add `CHAIN_CONFIGS[9745]` Alchemy RPC
       template to unified-api-contracts' `capability_declarations/_defi_chain_data.py`; (2) add Aave V3 Plasma
@@ -308,7 +308,7 @@ flip and is corrected here (slot-14).
       output rows with different `chain` values — the content-conflation bug is fixed. **Stage 5 (manifest/data-status)
       — NOT VULNERABLE.** Two independent manifest surfaces checked: (1)
       `features_service/onchain/app/core/feature_writer.py:73` — emission-policy
-      `row_key={"feature_group": group,     "date": date}` is keyed at the (feature_group, date) grain, no
+      `row_key={"feature_group": group, "date": date}` is keyed at the (feature_group, date) grain, no
       `pool_address`/`instrument_id`/`chain` dimension; (2)
       `market_data_processing_service/app/core/canonical_writer_stamping.py:505` — `chain=row_key.get("chain", "")` is
       explicitly chain-aware. Neither manifest surface can confuse two chains' data for the same bare instrument_id.

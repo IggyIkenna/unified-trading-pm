@@ -65,7 +65,7 @@ or their MTDS-related constants).
       fixed by deployment-ui@2340c68 (slot-8, 2026-07-26): deleted the obsolete DailyCosts test block (coverage now
       lives in `cost-observability.spec.ts`) + added `role="button"` to `CostObservability`'s InfoTip. Freshly
       re-verified this session (deployment-ui HEAD e98c575):
-      `npx playwright test --project=chromium tests/smoke/accessibility_audit.spec.ts     tests/smoke/daily_costs_and_vm_detail.spec.ts tests/smoke/cost-observability.spec.ts`
+      `npx playwright test --project=chromium tests/smoke/accessibility_audit.spec.ts tests/smoke/daily_costs_and_vm_detail.spec.ts tests/smoke/cost-observability.spec.ts`
       — 33/33 passed. No new code change needed; this todo closes on the pre-existing fix + fresh verification.
 - [x] ✅ [UI] P2. Fix `mobile_responsive.spec.ts`'s strict-mode locator (scope to one of the two matching buttons, or
       update the test's intent if both are now expected). **RESOLVED** — also already fixed by the same

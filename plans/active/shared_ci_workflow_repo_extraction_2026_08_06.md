@@ -260,7 +260,7 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
       the manifest; this session did not create it, just relied on it as the Path-B reference base
       (`ensure_repo_worktree` requires this sibling to exist before it will provision ANY slot's `--reference` clone — a
       genuine prerequisite, not something this session's slot loop needed to create itself). Evidence:
-      `git -C     .tabs/<N>/unified-trading-ci config user.name` shows the correct `ikennaigboaka [slot-<N>·laptop]`
+      `git -C .tabs/<N>/unified-trading-ci config user.name` shows the correct `ikennaigboaka [slot-<N>·laptop]`
       identity and `branch --show-current` shows `live-defi-rollout` for all 11 slots.
 - [x] ✅ 7c. [OPERATOR] P0. **DONE 2026-08-07 — Harsh completed this on his own machine (operator-confirmed: "already
       did it").** Original text preserved below for context. **Harsh's laptop — genuinely manual, cannot be actioned
@@ -271,25 +271,25 @@ public repo lets PM's own visibility become a non-issue for CI ever again.
       or wherever his workspace root actually is git clone git@github.com:IggyIkenna/unified-trading-ci.git
 
       # 2. Pull PM's latest on at least one clone first, so his local workspace-manifest.json has the new repo entry
-                                                                                                                                                                                                      #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
-                                                                                                                                                                                                      cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
+      #    (any existing slot's unified-trading-pm, or the top-level one, works — pick whichever he normally updates from)
+      cd unified-trading-pm && git pull --ff-only origin live-defi-rollout && cd ..
 
-                                                                                                                                                                                                      # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
-                                                                                                                                                                                                      cd unified-trading-pm
-                                                                                                                                                                                                      bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
-                                                                                                                                                                                                      bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
-                                                                                                                                                                                                      bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
-                                                                                                                                                                                                      # ...etc for however many slots Harsh has
+      # 3. Backfill EVERY existing slot (repeat for each of Harsh's slot numbers — check with --list first)
+      cd unified-trading-pm
+      bash scripts/dev/setup-tab-worktrees.sh --list                    # see which slot numbers exist
+      bash scripts/dev/setup-tab-worktrees.sh --add-slot 1               # repeat per existing slot number
+      bash scripts/dev/setup-tab-worktrees.sh --add-slot 2
+      # ...etc for however many slots Harsh has
 
-                                                                                                                                                                                                      # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
-                                                                                                                                                                                                      for n in 1 2 3; do   # substitute his real slot numbers
-                                                                                                                                                                                                        d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
-                                                                                                                                                                                                        echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
-                                                                                                                                                                                                      done
-                                                                                                                                                                                                      # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
-                                                                                                                                                                                                      # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
-                                                                                                                                                                                                      #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
-                                                                                                                                                                                                      #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+      # 4. Sanity check — every slot should now show the repo, on live-defi-rollout, with a pre-push hook
+      for n in 1 2 3; do   # substitute his real slot numbers
+      d="/Users/harsh/Code/unified-trading-system-repos/.tabs/$n/unified-trading-ci"
+      echo "slot $n: $(git -C "$d" branch --show-current) hook=$([ -x "$d/.git/hooks/pre-push" ] && echo OK || echo MISSING)"
+      done
+      # If any slot shows "MISSING" or is stuck on `main` instead of `live-defi-rollout` (can happen if a slot was
+      # mid-provisioning when this branch didn't exist yet — see todo 7a's note on slots 1/3 above), fix by hand:
+      #   cd <that-slot>/unified-trading-ci && git fetch origin live-defi-rollout && git checkout live-defi-rollout
+      #   cp ../unified-trading-pm/scripts/hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
                                                                                                                                                                                                       ```
                                                                                                                                                                                                       Evidence: paste the sanity-check output back into this plan's Progress Log once run.
 

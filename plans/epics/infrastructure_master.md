@@ -422,7 +422,7 @@ without the cleanup-script output attached.
       checkbox section in any commit that touches an entity registry. Symlinks propagate to all repo-mirrors. Body:
       "When you add or remove a venue / data_type / canonical-group / chain / instrument-type from any UAC
       `*_BY_ASSET_GROUP` registry or canonical lifecycle SSOT, you MUST: (a) run
-      `instruments-service/scripts/reconcile_manifest_after_entity_change.py --add|--remove --asset-group=X     --entity-type=Y --entity-key=Z`
+      `instruments-service/scripts/reconcile_manifest_after_entity_change.py --add|--remove --asset-group=X --entity-type=Y --entity-key=Z`
       (NEW script — Phase 3 below); (b) attach the script's audit-CSV output to the PR description; (c) the audit must
       show ZERO orphan rows (rows whose entity is no longer in the registry but the manifest still has captured/empty
       rows for it). Reviewers reject PRs that don't include this output."
@@ -438,7 +438,7 @@ without the cleanup-script output attached.
       writegate Phase 3.D.5 Wave 3 v2 enumerator** for the `--add` path. — IS@af302bcb QG green. --remove path fully
       implemented; --add stubs NotImplementedError (BLOCKED-ON writegate Phase 3.D.5). 2026-05-27 slot-7.
 - [ ] [HUMAN+AGENT] P1. **Retroactive audit of 90-day commit history.** Walk
-      `git log origin/live-defi-rollout --since='90 days' -p -- unified-api-contracts/.../canonical/crosscutting/     unified-api-contracts/.../canonical/domain/`;
+      `git log origin/live-defi-rollout --since='90 days' -p -- unified-api-contracts/.../canonical/crosscutting/ unified-api-contracts/.../canonical/domain/`;
       for every commit that adds/removes an entity, run the Phase 3 script in audit-only mode; collect every orphan row.
       Output: a single audit report under `unified-trading-pm/audits/entity_lifecycle/retroactive_90d_2026_05_08.csv`.
 - [ ] [HUMAN+AGENT] P1. **Retroactive bulk reconciler run for stragglers** identified by the audit above. Operator
@@ -642,7 +642,7 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
 - [ ] [INFRA] P2. **Fleet per-repo local-QG debt sweep** (**MIGRATED FROM:** `uv_lockfile_determinism_2026_06_02.md`,
       archived 2026-06-07). The bash-3.2 governor fix unmasked each repo's accumulated stage-5+ local-QG debt (codex /
       cloudbuild-schema / size-import baselines) that the crash had been hiding. Walk every repo's
-      `quality-gates.sh     --no-fix` locally and clear the surfaced debt. **Overlaps `utl_full_quality_gates_green`**
+      `quality-gates.sh --no-fix` locally and clear the surfaced debt. **Overlaps `utl_full_quality_gates_green`**
       (the T0 QG-green effort) — coordinate the per-repo greening there; most repos already proved green on LDR
       (2026-06-07 fleet drain), so this is the residual local-only tail.
 - [ ] [INFRA] P3. **VM-side QG-memory baseline** (**MIGRATED FROM:**
@@ -670,7 +670,7 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
 - [x] ✅ [SCRIPT] P3. **VM startup `gsutil -m cp` wheel-cache step deadlocks → boot-hang (make non-blocking / drop
       `-m`).** **MIGRATED FROM:** `plans/active/issues/running_vm_fleet_status_2026_05_27.md` § C (archived 2026-06-07).
       The VM startup script's final "Caching compiled wheels to GCS" step runs
-      `gsutil -m -q cp /tmp/wheel-cache/*.whl     gs://…/wheels/…`; the snap-bundled `gsutil -m` (multiprocessing)
+      `gsutil -m -q cp /tmp/wheel-cache/*.whl gs://…/wheels/…`; the snap-bundled `gsutil -m` (multiprocessing)
       deadlocked (parent gsutil alive, defunct `[python3]` zombie workers) and the **startup script blocks on it** →
       `market_tick_data_service` never launches (observed on bybit-2024 / hyperliquid-2025 / kraken-2024 — never
       self-recovers). Also violates the workspace rule that per-object GCS ops use `gcs_copy_object` (REST), not

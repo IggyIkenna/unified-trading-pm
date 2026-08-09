@@ -92,7 +92,7 @@ context_scope:
       correctly once the CQG cluster rows exist again (output
       `gs://central-element-323112-honest-coverage/{date}/coverage.json`); verify the daily scheduler actually fires
       (`measure_honest_coverage.py` header says `last_executed: NEVER`; the Cloud Scheduler `honest-coverage-daily`
-      create was pending — `gcloud scheduler jobs describe honest-coverage-daily     --location=asia-northeast1`).
+      create was pending — `gcloud scheduler jobs describe honest-coverage-daily --location=asia-northeast1`).
       (repos: instruments-service, deployment-service)
 - [x] ✅ [BACKEND] P1. **DONE 2026-08-07 — pointer target closed.** The sole remaining open item in
       `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`'s P0 section (the pw:L2 VERIFY gate) is now done — 5/5

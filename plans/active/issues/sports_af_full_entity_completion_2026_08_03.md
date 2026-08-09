@@ -197,7 +197,7 @@ not urgent enough to block this campaign.
 - [x] ✅ [SCRIPT] P1. **Launch FIXTURE_STATS all-leagues backfill** — CONFIRMED RUNNING 2026-08-03: VM
       `af-backfill-20260803-233053` (launched by `unified-trading-sa`, `purpose=api-football-backfill`,
       `managed-by=deployment-service`), metadata confirms
-      `entity=FIXTURE_STATS source=API_FOOTBALL     start_date=2020-06-06`. FIXTURE_EVENTS pass-3 singleton lock had
+      `entity=FIXTURE_STATS source=API_FOOTBALL start_date=2020-06-06`. FIXTURE_EVENTS pass-3 singleton lock had
       cleared (it is the only `af-backfill-*`/ `af-audit-*` VM RUNNING — the prior three are TERMINATED). `run.log`
       shows healthy per-fixture progress (`[[VM_PROGRESS]] last_completed_date=2020-06-13→2020-06-14`, manifest writes,
       correct rate-limit backoff handling). No duplicate VM launched — a second concurrent AF-consuming VM would violate
@@ -236,13 +236,13 @@ not urgent enough to block this campaign.
       (`priority=999`+`priority_override=true`+ a false synthetic `prereqs.prerequisites` condition) via a single
       authenticated POST — **no backlog.yaml filesystem access needed at all**, worker-callable. Called it:
       `condition=auto_unpark__sports_af_full_entity_completion-003`, confirmed via `GET /api/backlog/parked`
-      (`parked:     true`, `priority_override` implied by presence in that list). This task will not be offered to ANY
+      (`parked: true`, `priority_override` implied by presence in that list). This task will not be offered to ANY
       slot again until that condition is flipped true. **Unpark criteria** (for whoever does it — operator via dashboard
       "Dispatch now", or a worker instructed to check): re-run
       `instruments-service/scripts/census_fixture_stats_lineups_widening_volume_2026_07_31.py`, confirm FIXTURE_STATS
       non-MVP captured count is at/near the full ~68k needed (it was 125/68,284 = 0.18% at park time, 2026-08-04T01:40Z)
       — once genuinely converging,
-      `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-003     {"value": true, "set_by": "operator"}`
+      `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-003 {"value": true, "set_by": "operator"}`
       (or `POST /api/backlog/sports_af_full_entity_completion-003/unpark`). **Residual gap, not fixed here**:
       FIXTURE_STATS itself has no dedicated recurring-retry todo of its own — every relaunch to date happened only as a
       side-effect of this task's repeated redispatch. Now that this task is parked, nothing will proactively relaunch

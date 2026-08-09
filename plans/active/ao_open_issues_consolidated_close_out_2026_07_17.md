@@ -526,7 +526,7 @@ NOT AO and are deliberately out of scope here.
       ✅ **DONE via `ao_failover_multi_vm_readiness_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** Its entire
       premise is cross-HOST re-routing ("a host e.g. harsh-pc goes offline and its soft-pinned tasks never dispatch"),
       but multi-VM dispatch was **deprecated 2026-06-27** in favour of the single central VM + role-based dispatch
-      (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; `assigned_vm` ∈ `{planning,     NA}`).
+      (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; `assigned_vm` ∈ `{planning, NA}`).
       Live state agrees: failover is stopped, has never fired, and `fleet_registry_entries: 0` — it has no registry data
       to act on even if enabled. Per CLAUDE.md ("**Delete deprecated code** — no shims"), the honest resolution may be
       to DELETE the module + its config knobs rather than fix the paused-slot bug above. **Decide before doing the P2
@@ -603,7 +603,7 @@ NOT AO and are deliberately out of scope here.
       plan_reconciler has NEVER ONCE COMPLETED A RUN since it was first installed.** Evidence: 5 reconcile-mode
       dispatches exist in `activity_log` for all time (07-15 `agt-2d8441`, 07-17 `agt-55b581`, 07-18 `agt-c02414`, 07-19
       `agt-722a19`, 07-20 `agt-99684d`); **0 of the 5 posted a `plan_health_result`**,
-      `git ls-remote origin     'plan_reconciler/*'` returns **0 branches**, and there are **0 PRs** — i.e. zero work
+      `git ls-remote origin 'plan_reconciler/*'` returns **0 branches**, and there are **0 PRs** — i.e. zero work
       product against a contract (`agents/plan_reconciler.md` §258/§334) that REQUIRES pushing
       `plan_reconciler/$DISPATCH_ID` and POSTing a result even when it finds nothing. The timer itself is HEALTHY
       (`is-active`, `LastTrigger=2026-07-20 01:02:01`, `NextElapse=2026-07-21 01:04:31`) — arming it was never the

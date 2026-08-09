@@ -91,7 +91,7 @@ source:
       batch, park explicitly, or close as moot).
 
       **PRE-SCREEN 2026-08-06 (`/plan-reconcile ao`, operator present) — 5 of the 12 need no ruling; measured at HEAD,
-                                      not recalled.** The list was assembled 2026-07-30 and has decayed since. Current state:
+      not recalled.** The list was assembled 2026-07-30 and has decayed since. Current state:
 
                                       | Doc                                                    | State at HEAD                     | Ruling needed? |
                                       | ------------------------------------------------------ | --------------------------------- | -------------- |
@@ -108,14 +108,14 @@ source:
                                       | `long_lived_vm_logs_not_backed_up_2026_07_02`           | active, 3 open `[SCRIPT] P2/P3`   | **Likely mis-tagged** |
                                       | `wip_preserve_refs_silently_unrecovered_2026_07_29`     | **ARCHIVED 2026-08-07**, 0 open / 5 done | **No — complete** |
 
-                                      **Correction to this todo's own framing**: it asserts each of the 12 "is a genuine design/judgment fork with no
-                                      evidence-based tiebreaker". That is no longer true, and for at least one doc was probably never true.
-                                      `long_lived_vm_logs_not_backed_up_2026_07_02`'s three open items are bounded implementation todos naming
-                                      concrete files (`launcher_common.sh`, `aws_ec2_launch_lib.sh`, `test_vm_launcher_scripts.py`) with stated
-                                      done-whens — that is dispatch-eligible work under the workspace's own bounded-outcome bar, not an operator
-                                      decision. `unified_trading_pm_stash_pile_accumulation_2026_07_26`'s two items are operator *actions* (agents are
-                                      barred from `git stash drop` on foreign WIP), which is a different category again from a judgment call. Whoever
-                                      picks this up should re-classify per-doc rather than inheriting the blanket "all 12 are judgment forks" label.
+      **Correction to this todo's own framing**: it asserts each of the 12 "is a genuine design/judgment fork with no
+      evidence-based tiebreaker". That is no longer true, and for at least one doc was probably never true.
+      `long_lived_vm_logs_not_backed_up_2026_07_02`'s three open items are bounded implementation todos naming
+      concrete files (`launcher_common.sh`, `aws_ec2_launch_lib.sh`, `test_vm_launcher_scripts.py`) with stated
+      done-whens — that is dispatch-eligible work under the workspace's own bounded-outcome bar, not an operator
+      decision. `unified_trading_pm_stash_pile_accumulation_2026_07_26`'s two items are operator *actions* (agents are
+      barred from `git stash drop` on foreign WIP), which is a different category again from a judgment call. Whoever
+      picks this up should re-classify per-doc rather than inheriting the blanket "all 12 are judgment forks" label.
 
 - [x] ✅ [REVIEW] P2. **Re-triage the 8 "conflict-gated" docs against current state** before drafting `batch3` — per the
       skill's own iterative-drain methodology, check whether the competing claim each collided with (in

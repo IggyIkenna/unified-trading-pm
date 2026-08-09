@@ -539,7 +539,7 @@ pairs stay honest-unresolved (reported, never guessed).
       `cefi-queue-*` + on-chain `cefi-*` VMs, both clouds), consolidate the manifest, snapshot the cefi bucket + index
       before any content-rewrite/rename cutover; re-enable writers only after apply + verify. HARD RULE: no GCS cutover
       with writers live. (repo: deployment-service) — Fresh-measured 7 live on-chain writers
-      (`cefi-{aster,hyperliquid}-     {year}-20260727-022558`, Tardis `cefi-queue-*` = 0, AWS = 0); drained
+      (`cefi-{aster,hyperliquid}- {year}-20260727-022558`, Tardis `cefi-queue-*` = 0, AWS = 0); drained
       02:36:24Z-02:37:35Z; consolidator cron paused + one manual consolidation pass run; main index snapshotted
       (`_index/backups/availability_index.pre_d4_cutover_20260727T023846Z.parquet`). **Writers re-enabled + verified
       actually capturing** (not just instance RUNNING — confirmed fresh `collect-onchain-perp-batch` processes + log

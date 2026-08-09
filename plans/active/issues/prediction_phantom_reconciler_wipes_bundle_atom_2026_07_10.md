@@ -238,7 +238,7 @@ stranded in `plans/archive/` where the backlog regen (active-plans-only) would n
       carrying `error_reason=phantom_captured_no_parquet_at_canonical_path` are now only **51** (down 99.6% from this
       todo's cited 13,292 — a prior rebuild/reconcile pass already recovered the vast majority independently of this
       specific todo). Ran
-      `reconcile_phantom_manifest_rows_all.py --asset-group prediction --unphantom-only       --dry-run` live against
+      `reconcile_phantom_manifest_rows_all.py --asset-group prediction --unphantom-only --dry-run` live against
       the 51: re-validated 51/51 — **0 unphantomed** ("Still phantom: 51 ... Unphantomed: 0 ... Manifest is clean"),
       i.e. all 51 genuinely have no parquet at ANY UAC candidate path (including the
       `live_kalshi`/`live_polymarket_clob`/`live_polymarket_gamma_api` union this todo's remediation step 5 added).
@@ -280,7 +280,7 @@ stranded in `plans/archive/` where the backlog regen (active-plans-only) would n
       `batch_ibkr`/`ibkr` per the venue override), an untouched sibling instance of this exact defect, out of scope for
       this P2's prediction-only fix (rule-11 cross-AG verification not yet run for those asset_groups). Verify + fix at
       the source, then backstamp affected historical rows following this todo's
-      `restamp_prediction_kalshi_scaffold_     provenance_2026_08_03.py` precedent. — instruments-service@2b165597 + QG
+      `restamp_prediction_kalshi_scaffold_ provenance_2026_08_03.py` precedent. — instruments-service@2b165597 + QG
       green (5207 passed), generalized `if ag == "prediction" and venue` → `if venue` so ALL _VENUE_OVERRIDES venues
       resolve correctly. Affected: tradfi (IBKR/ECB/OFR/YAHOO/EIA), cefi (HYPERLIQUID/ASTER/EXTENDED_STARKNET), defi
       (CHAINLINK/PYTH/AAVE/SOLANA_RPC/HELIUS). 6 new unit tests + 5 regenerated golden fixtures. Backstamp of historical

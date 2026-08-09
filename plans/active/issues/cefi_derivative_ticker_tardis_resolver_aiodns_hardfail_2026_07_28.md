@@ -310,7 +310,7 @@ and the residual-KeyError defense-in-depth path.
       cases for the `**kwargs` passthrough. Shipped via quickmerge, landed on `live-defi-rollout`.
 - [x] ✅ [DATA] P2. **DONE 2026-07-28 (data_pipeline_failure escalation, agt-27e235) —
       `market-tick-data-service@6c6fab03` (verified ancestor of `origin/live-defi-rollout`).** Traced the HYPERLIQUID
-      `(429, None, 'null', None,     {'Content-Type'...` fresh signature to `hyperliquid_s3.py::_fetch_funding_via_rest`
+      `(429, None, 'null', None, {'Content-Type'...` fresh signature to `hyperliquid_s3.py::_fetch_funding_via_rest`
       -- a LEAKED/UNCLASSIFIED raw-response repr (the SDK's `ClientError` never formats a message), not a
       rate-limit-exhaustion dead end. See Root cause #2 above. `quality-gates.sh` green (7337 passed, 0 failed).
 - [x] ✅ [DATA] P2. **DONE 2026-07-28 (data_pipeline_failure escalation, agt-27e235) — same commit
@@ -378,7 +378,7 @@ and the residual-KeyError defense-in-depth path.
       (RUNNING, `VM_OPERATION=live_websocket`, `VM_ASSET_GROUP=CEFI`) created 2026-08-02T14:25:51Z — its serial console
       log shows `Extracted mtds-code` at boot (2026-08-02T14:27:29Z), i.e. a ONE-TIME code install at launch (per the
       documented VM-tarball-deployment model —
-      `market-tick-data-service/scripts/vm/launch-mtds-live-cefi-     consolidated.sh` does have a
+      `market-tick-data-service/scripts/vm/launch-mtds-live-cefi- consolidated.sh` does have a
       `lc_verify_tarball_freshness` pre-launch guard, but whatever it let through at that boot did not include the fix,
       going by this VM's own output). This VM has been running continuously for ~34h at investigation time and its own
       writes exactly explain the fresh slice (first fresh row 2026-08-02 16:58:46Z, ~2.5h after this VM's boot —

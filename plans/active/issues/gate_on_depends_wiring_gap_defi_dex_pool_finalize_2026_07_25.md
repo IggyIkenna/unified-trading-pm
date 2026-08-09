@@ -338,7 +338,7 @@ distinct plan pair.
       separate slot dispatches) that `GET /api/backlog/<finalize-task>/blockers` reports `"ready (no blockers)"` while
       the real upstream tasks are still non-`done` in the live backlog. Repo: agent-orchestrator. **Done when**: root
       cause identified (e.g. wiring only running once at ingestion vs. every regen tick, or a
-      `gated_plans`/`file_to_ids` ordering race), fixed, and a regression test proves a `gate_on_depends:     true`
+      `gated_plans`/`file_to_ids` ordering race), fixed, and a regression test proves a `gate_on_depends: true`
       plan's tasks carry the upstream ids in `prereqs.completed_tasks` immediately after a regen tick that ingests both
       plans together (the same-tick-ingestion shape, not just the already-covered empty-upstream cases).
 - [x] [BACKEND] P2. **Add a standing dispatch-time re-check** as a second line of defense: even without the root-cause
@@ -357,7 +357,7 @@ distinct plan pair.
       parent plan_ref while the finalize plan's own tasks exist normally — so `_wire_gate_on_depends_prereqs` has
       nothing to attach as an unmet prerequisite and the gate reads satisfied by omission. Both repro cases share a
       candidate trigger already flagged in the Progress Log: the parent's one remaining open todo has a `**bold**`
-      phrase immediately after the `P<n>.` tag (`- [ ] [DATA] P3. **Prove force +     skip...**`) — worth checking
+      phrase immediately after the `P<n>.` tag (`- [ ] [DATA] P3. **Prove force + skip...**`) — worth checking
       whether `regen_backlog_from_plan.py`'s todo-derivation regex mishandles a bold span directly after the priority
       tag, causing that specific todo to never derive into a backlog row at all. Repo: agent-orchestrator. **Done
       when**: root cause identified and fixed, and a regression test reproduces one of the two recorded repro shapes (a
@@ -586,7 +586,7 @@ depends_on: [defi_dex_pool_symbol_fix_backfill_purge_2026_07_25]
 gate_on_depends: true
 ```
 
-The indented prose line (`  gate_on_depends: true until all 5 of that plan's todos are done, so this never...`), once
+The indented prose line (` gate_on_depends: true until all 5 of that plan's todos are done, so this never...`), once
 `.strip()`-ped, matches `^gate_on_depends\s*:\s*(.+)$` — and since it appears BEFORE the real field a few lines down,
 the scanner matched it FIRST, extracted
 `"true until all 5 of that plan's todos are done, so this never dispatches early. Reconciles the"` as the value,
@@ -765,7 +765,7 @@ defi_expected_unattempted_backlog_1m_2026_07_03_finalize-002   queued
 Zero backlog rows exist for the upstream `[SCRIPT]` todo itself — only the finalize plan's own 2 tasks are present. Same
 "zero-derived-parent-row" pattern as the 10th/11th+ bounces above. **New data point for the still-open root-cause item 3
 (the suspected markdown-bold-after-`P<n>.`-tag derivation edge case)**: the undispatched todo here is BOTH (a) an
-indented `  * [ ]` sub-bullet nested under a parent `- [x]` checkbox (not a top-level `- [ ]` line — a shape not
+indented ` * [ ]` sub-bullet nested under a parent `- [x]` checkbox (not a top-level `- [ ]` line — a shape not
 previously recorded in this doc's repro list) AND (b) carries `**bold**` immediately after its `P2.` tag
 (`* [ ] [SCRIPT] P2. **Add \`a_token\`/\`debt_token\`
 aliases...**`) — both suspected trigger shapes present at once. Worth the `backend_engineer`checking whether`regen_backlog_from_plan.py`'s todo-derivation regex requires a top-level (unindented) `-

@@ -90,11 +90,11 @@ item here.
       resolution reflected back into the closeout doc's checkbox — this RECLASSIFY sweep re-surfaced a stale
       `[OPERATOR]` tag pointing at already-finished work. Fresh live verification 2026-08-09T07:58Z: (1)
       `gcloud storage buckets describe gs://lending-indices-central-element-323112` → 404;
-      `gs://     lending-indices-prd-central-element-323112` → 404 (both deleted 2026-07-15 per the archived plan's Item
+      `gs:// lending-indices-prd-central-element-323112` → 404 (both deleted 2026-07-15 per the archived plan's Item
       C). (2) No `resource "google_storage_bucket"` block for `market_data_defi_lending_indices_prd` anywhere in
       `deployment-service/terraform/gcp/` (only a historical removal-comment at `main.tf:319`, "REMOVED 2026-07-14");
       fetched the live GCS-backed terraform state directly
-      (`gs://uts-terraform-state-central-element-323112/terraform/     state/{default,prod}/default.tfstate`, 48 + 313
+      (`gs://uts-terraform-state-central-element-323112/terraform/ state/{default,prod}/default.tfstate`, 48 + 313
       resources) — zero `lending` hits in either, confirming no orphaned state entry (no `terraform state rm` needed).
       (3) `gs://features-onchain-central-element-323112` (bare) → 404 (deleted 2026-07-15 per
       `features_onchain_bare_bucket_not_asset_group_migratable_2026_07_15.md`'s Option-A resolution, content relocated
@@ -103,7 +103,7 @@ item here.
       (both confirmed live) by the Wave-3 fold, a stronger consolidation than this todo's own text anticipated. No code
       change needed — swept live service repos for hardcoded `"lending-indices-{PROJECT_ID}"` string literals; all 5
       hits are dated one-off historical migration scripts (`market-tick-data-service/scripts/defi_*_2026_06_01.py`,
-      `instruments-service/scripts/     {canonicalize_lending_indices_data_type_2026_05_16,reconcile_lending_indices_phantom}.py`,
+      `instruments-service/scripts/ {canonicalize_lending_indices_data_type_2026_05_16,reconcile_lending_indices_phantom}.py`,
       `deployment-api/scripts/cleanup_ghost_venue_manifest_rows.py`), none a live/scheduled code path — out of this
       todo's named scope (lending-indices bucket / TF drift / bare features-onchain bucket), not touched. Repos:
       deployment-service, market-tick-data-service. Source: `defi_consolidated_closeout_2026_07_18.md`, Track 2
@@ -273,48 +273,48 @@ item here.
       `gcs_bucket_soft_delete_retention_seconds()` value ≥604800s before purging (or re-gate `[OPERATOR]` if below), per
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. (3) The UNISWAP- ETHEREUM bare-row cohort (13,420
       rows per the original 206,107-row estimate's residual) was NOT enumerated or RPC-resolved this session — repeat
-      the `resolve_dex_pool_factory_addresses_2026_08_09.py --venue UNISWAP --chain     ETHEREUM --write-report` step
+      the `resolve_dex_pool_factory_addresses_2026_08_09.py --venue UNISWAP --chain ETHEREUM --write-report` step
       first, then fold its migrate+purge into this same todo's scope once resolved. Repos: instruments-service,
       unified-api-contracts, market-tick-data-service. Source: this plan's todo above (split 2026-08-09). Done when:
       both cohorts' historical objects/manifest rows are migrated to their resolved canonical venue+chain path and
       non-canonical originals are purged with the cited soft-delete value ≥604800s.
 
       **2026-08-09 (slot 16) — sub-item (3) CLOSED (no real cohort exists); sub-items (1)-(2) script written +
-                              dry-run-validated, NOT applied. Not flipping — scope incomplete.** (3) Ran
-                              `resolve_dex_pool_factory_addresses_2026_08_09.py --venue UNISWAP --chain ETHEREUM` as instructed: the
-                              instruments-service defi lifecycle catalogue has **zero bare `UNISWAP` rows on any chain** — UNISWAP is already
-                              fully version-split (`UNISWAP_V2`/`UNISWAP_V3`/`UNISWAP_V4`, 24,555 rows total across ETHEREUM/ARBITRUM/BASE/
-                              OPTIMISM/POLYGON). Cross-checked directly against the MTDS raw manifest (`market-data-tick-defi-prd-...`
-                              `availability_index.parquet`, bounded pushdown read): `venue=UNISWAP, chain=ETHEREUM` has exactly 7,625 rows, ALL
-                              `capture_status=empty_confirmed` / `error_reason=EXPECTED_INSTRUMENT_NOT_LISTED`, blank `instrument_id`, dated
-                              `2018-01-01..2018-11-01` (pre-Uniswap-V2-mainnet-launch honest-absence scaffolding, not real captured pool data —
-                              the `13,420` figure this todo's text cites is from the 2026-07-21 source doc and is stale/pre-cleanup; the current
-                              live count is 7,625 and none of it is a genuine factory-resolution gap). **Nothing to migrate for UNISWAP** — this
-                              sub-item is closed on a negative finding, not deferred.
-                              (1)-(2) Wrote + dry-run-validated `market-tick-data-service/scripts/one_offs/relabel_retire_sushiswap_v2_arbitrum_venue_2026_08_09.py`
-                              (`market-tick-data-service@107e1f18c`) — mirrors the proven `relabel_retire_blazestake_venue_2026_08_06.py`
-                              two-phase pattern (Phase A: per-object copy+relabel with `venue`/`instrument_id` content-column rewrite,
-                              registered via `ManifestWriter`; Phase B: row-group-at-a-time retirement of the legacy rows in
-                              `_index/availability_index.parquet`), generalized for this corpus's multiple `instrument_type`/`data_type` combos
-                              (read off each object's own GCS path rather than hardcoded, unlike BLAZESTAKE's single `lst_rates`/`lst`
-                              pairing). Dry-run validated against real prod GCS+manifest data: 195 objects correctly identified + path/filename
-                              transforms verified correct across 3 known-captured legacy days (`dex_pool_state` files with the embedded
-                              `SUSHISWAP-ARBITRUM:POOL:...` filename tag correctly swapped to `SUSHISWAP_V2-ARBITRUM:POOL:...`;
-                              `dex_pool_swaps`' pool-address-keyed files and the `_migrated_sushiswap_*` marker correctly left filename-unchanged,
-                              only the `venue=` path segment moves). One real finding from the dry-run pass: the discovery step's first draft
-                              (mirroring BLAZESTAKE's full-local-download pattern) hit `OSError: No space left on device` — the manifest is
-                              2.87GB and this shared host's `/tmp` tmpfs had only 860MB free; fixed by switching discovery to a bounded
-                              pushdown read (`pyarrow.dataset` + `GcsFileSystem`, column+filter pushed to the scan, no full local download) —
-                              worth flagging for whoever revisits `relabel_retire_blazestake_venue_2026_08_06.py`-style scripts in the future,
-                              the same OOM/disk-space class STEP 0.56 warns about applies to `tempfile.mktemp()`-based manifest downloads too,
-                              not just in-memory loads. **NOT applied to prod this session** — the real target is 618,655 manifest rows
-                              (486,290 `captured` + 112,687 `empty_confirmed` + 18,133 `expected_unattempted` + 1,545 `attempted_failed`)
-                              across ~2,200 distinct captured days; per `/codex/05-infrastructure/vm-launcher-runbook.md` this is VM-scale
-                              heavy I/O, not an interactive-session operation. **Next steps for whoever resumes**: launch the script with
-                              `--apply` on a dedicated VM (day-batched via `--limit-days` if chunking is needed, mirroring the odds_api
-                              backfill's chunk-size lessons in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`), verify canonical
-                              twins land + the manifest retirement completes cleanly, THEN this checkbox is flippable (UNISWAP sub-item is
-                              already closed, no further action needed there).
+      dry-run-validated, NOT applied. Not flipping — scope incomplete.** (3) Ran
+      `resolve_dex_pool_factory_addresses_2026_08_09.py --venue UNISWAP --chain ETHEREUM` as instructed: the
+      instruments-service defi lifecycle catalogue has **zero bare `UNISWAP` rows on any chain** — UNISWAP is already
+      fully version-split (`UNISWAP_V2`/`UNISWAP_V3`/`UNISWAP_V4`, 24,555 rows total across ETHEREUM/ARBITRUM/BASE/
+      OPTIMISM/POLYGON). Cross-checked directly against the MTDS raw manifest (`market-data-tick-defi-prd-...`
+      `availability_index.parquet`, bounded pushdown read): `venue=UNISWAP, chain=ETHEREUM` has exactly 7,625 rows, ALL
+      `capture_status=empty_confirmed` / `error_reason=EXPECTED_INSTRUMENT_NOT_LISTED`, blank `instrument_id`, dated
+      `2018-01-01..2018-11-01` (pre-Uniswap-V2-mainnet-launch honest-absence scaffolding, not real captured pool data —
+      the `13,420` figure this todo's text cites is from the 2026-07-21 source doc and is stale/pre-cleanup; the current
+      live count is 7,625 and none of it is a genuine factory-resolution gap). **Nothing to migrate for UNISWAP** — this
+      sub-item is closed on a negative finding, not deferred.
+      (1)-(2) Wrote + dry-run-validated `market-tick-data-service/scripts/one_offs/relabel_retire_sushiswap_v2_arbitrum_venue_2026_08_09.py`
+      (`market-tick-data-service@107e1f18c`) — mirrors the proven `relabel_retire_blazestake_venue_2026_08_06.py`
+      two-phase pattern (Phase A: per-object copy+relabel with `venue`/`instrument_id` content-column rewrite,
+      registered via `ManifestWriter`; Phase B: row-group-at-a-time retirement of the legacy rows in
+      `_index/availability_index.parquet`), generalized for this corpus's multiple `instrument_type`/`data_type` combos
+      (read off each object's own GCS path rather than hardcoded, unlike BLAZESTAKE's single `lst_rates`/`lst`
+      pairing). Dry-run validated against real prod GCS+manifest data: 195 objects correctly identified + path/filename
+      transforms verified correct across 3 known-captured legacy days (`dex_pool_state` files with the embedded
+      `SUSHISWAP-ARBITRUM:POOL:...` filename tag correctly swapped to `SUSHISWAP_V2-ARBITRUM:POOL:...`;
+      `dex_pool_swaps`' pool-address-keyed files and the `_migrated_sushiswap_*` marker correctly left filename-unchanged,
+      only the `venue=` path segment moves). One real finding from the dry-run pass: the discovery step's first draft
+      (mirroring BLAZESTAKE's full-local-download pattern) hit `OSError: No space left on device` — the manifest is
+      2.87GB and this shared host's `/tmp` tmpfs had only 860MB free; fixed by switching discovery to a bounded
+      pushdown read (`pyarrow.dataset` + `GcsFileSystem`, column+filter pushed to the scan, no full local download) —
+      worth flagging for whoever revisits `relabel_retire_blazestake_venue_2026_08_06.py`-style scripts in the future,
+      the same OOM/disk-space class STEP 0.56 warns about applies to `tempfile.mktemp()`-based manifest downloads too,
+      not just in-memory loads. **NOT applied to prod this session** — the real target is 618,655 manifest rows
+      (486,290 `captured` + 112,687 `empty_confirmed` + 18,133 `expected_unattempted` + 1,545 `attempted_failed`)
+      across ~2,200 distinct captured days; per `/codex/05-infrastructure/vm-launcher-runbook.md` this is VM-scale
+      heavy I/O, not an interactive-session operation. **Next steps for whoever resumes**: launch the script with
+      `--apply` on a dedicated VM (day-batched via `--limit-days` if chunking is needed, mirroring the odds_api
+      backfill's chunk-size lessons in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`), verify canonical
+      twins land + the manifest retirement completes cleanly, THEN this checkbox is flippable (UNISWAP sub-item is
+      already closed, no further action needed there).
 
 - [x] ✅ [SERVICE] P1. **Verify current shipped state, then ship the already-coded+tested BALANCER/ORCA/RAYDIUM
       token-symbol-resolution diff** if it hasn't landed since 2026-08-03 — first check via `git log` whether
@@ -341,7 +341,7 @@ item here.
       deployed instruments-service image**, and if so, run the deploy-gated re-enum+re-rollup.** The fix (26 new DeFi
       venues registered in the UAC validation allowlist, e.g. RENZO-ETHEREUM) is shipped on LDR but the re-enum/
       re-rollup was explicitly noted as
-      `DEPLOY-GATED: after ship → LDR→main → IS-image rebuild → then     is-daily-enum-defi re-enum + lifecycle-catalogue-full-defi re-rollup + verify`.
+      `DEPLOY-GATED: after ship → LDR→main → IS-image rebuild → then is-daily-enum-defi re-enum + lifecycle-catalogue-full-defi re-rollup + verify`.
       Check the live IS Cloud Run revision's deployed commit/digest against `origin/main`; if it carries the fix,
       trigger `is-daily-enum-defi` + `lifecycle-catalogue-full-defi` and verify the 26 new venues now enumerate; if the
       image is still stale, record that finding and stop (no redeploy authorization needed for a check-only todo, but do
@@ -375,7 +375,7 @@ item here.
       `superseded_by_` (currently ~1,404 rows — live-reverify the count at execution time, do NOT assume it's still
       exactly 1,404), and rewrites each to `capture_status=empty_confirmed` via the standard manifest recorder's
       honest-absence path. Use a bounded pushdown read (`pyarrow.fs.GcsFileSystem` +
-      `dataset.scanner(columns=...,     filter=...)`, NOT a full `to_table()` — the 2.6GB defi `_index` OOMs on a full
+      `dataset.scanner(columns=..., filter=...)`, NOT a full `to_table()` — the 2.6GB defi `_index` OOMs on a full
       read). Repo: deployment-service (or wherever the manifest-mutation script family for this consolidator lives —
       mirror the existing script's repo). Source:
       `issues/defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md` item 4. Done when: (1) a bounded pushdown

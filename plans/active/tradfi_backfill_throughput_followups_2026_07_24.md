@@ -131,7 +131,7 @@ source:
       operationally green. Tick once the un-forced nightly path exits 0 with all 7 venues attempted — i.e. after the
       `schema_version` P0 and the yfinance P1 land.** **RESOLVED — RE-VERIFIED LIVE 2026-07-25.** Queried the job's
       execution history directly
-      (`gcloud run jobs executions list     --job=uts-prod-market-tick-data-service-tradfi-databento-t1-recon --region=asia-northeast1     --project=central-element-323112`):
+      (`gcloud run jobs executions list --job=uts-prod-market-tick-data-service-tradfi-databento-t1-recon --region=asia-northeast1 --project=central-element-323112`):
       the un-forced SCHEDULED nightly invocation (`35 0 * * *` cron) has completed `SUCCEEDED_COUNT=1` for 4 consecutive
       nights (2026-07-21, 07-22, 07-23, 07-24) plus one in-flight at query time (07-25). Read the full Cloud Logging
       output for the 2026-07-24T00:35Z execution (`uts-prod-market-tick-data-service-tradfi-databento-t1-recoqwggf`):

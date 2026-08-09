@@ -414,12 +414,12 @@ no agent "hacks fake buckets/paths/columns to fit stale docs and regresses."
 - [ ] [CODE] P0. `pipeline_mode` reader/writer alignment (cross-AG, coordinate w/ slot-2).
 
       Make the `pipeline_mode`-aware path the PRIMARY in `build_*_partition_path` consumers (not just a
-                                                              `candidate_parquet_paths` fallback) so live reads find migrated data.
+      `candidate_parquet_paths` fallback) so live reads find migrated data.
 
-                                                              Targets: MTDS reader, MDPS cloud_data_provider, features-onchain data_loader, any direct
-                                                              `build_*_partition_path` caller. (`manifest_reader_fallback` Level-0 already probes `pipeline_mode=` → readers
-                                                              using it are safe; this closes
-                                                              base-builder callers.)
+      Targets: MTDS reader, MDPS cloud_data_provider, features-onchain data_loader, any direct
+      `build_*_partition_path` caller. (`manifest_reader_fallback` Level-0 already probes `pipeline_mode=` → readers
+      using it are safe; this closes
+      base-builder callers.)
 
 ## 🎬 NEXT-AGENT EXECUTION HANDOFF — non-DeFi migration + deletion (slot-3 → next, 2026-06-02)
 

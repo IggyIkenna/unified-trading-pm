@@ -230,7 +230,7 @@ removal + casing normalization remain before backfill-resume.
       manifest-rebuild pass (physical paths are already lowercase). — **Verified 2026-07-28 (slot 9, data_engineering),
       both already shipped by prior sessions, no code change needed this turn:** (2) confirmed via live grep of
       `unified_api_contracts/canonical/crosscutting/_source_priority_data.py` —
-      `SOURCE_PRIORITY["tradfi",     "trades"/"tbbo"]` is `["databento"]` only,
+      `SOURCE_PRIORITY["tradfi", "trades"/"tbbo"]` is `["databento"]` only,
       `SOURCE_MODE_CAPABILITY`/`EMISSION_LATENCY_MS_BY_SOURCE` carry zero active `"massive"` entries (comment-only
       historical notes), `_umi_massive.py` deleted, `main.py`'s `massive-futures-backfill` operation removed —
       `unified-api-contracts` routing strip is complete (the 1.47M-object GCS purge itself correctly stays

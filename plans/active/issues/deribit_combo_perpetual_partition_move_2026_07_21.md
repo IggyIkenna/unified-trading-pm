@@ -424,62 +424,62 @@ backlog remains an unretried capture gap (normal backfill re-attempt, not a code
       **Verdict: (b) — a genuine manifest-consolidation correctness bug, NOT an intentional purge.**
 
       **Direct proof of timing + scope**: the pre-apply snapshot (taken by the script itself at 2026-07-24T23:23:32Z,
-                                                                                                      seconds before its own write) has EXACTLY 662 `instrument_type=combo` rows, 100% `venue=DERIBIT`, 100%
-                                                                                                      `capture_status=empty_confirmed` (zero real tick data — honest-absence bookkeeping only, matching this doc's own
-                                                                                                      §2b baseline exactly). The current live manifest (2026-08-03) has 0 combo rows, any venue, any status. Per this
-                                                                                                      doc's own `cefi_4surface_migration_execution_log_2026_07_24.md` history, the ONLY write to
-                                                                                                      `availability_index.parquet` in the entire 2026-07-21→2026-08-03 window is this one Surface C v2 `--apply` run
-                                                                                                      (Finding 7, `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`) — so the drop is bounded to this
-                                                                                                      exact event, not a slow drift.
+      seconds before its own write) has EXACTLY 662 `instrument_type=combo` rows, 100% `venue=DERIBIT`, 100%
+      `capture_status=empty_confirmed` (zero real tick data — honest-absence bookkeeping only, matching this doc's own
+      §2b baseline exactly). The current live manifest (2026-08-03) has 0 combo rows, any venue, any status. Per this
+      doc's own `cefi_4surface_migration_execution_log_2026_07_24.md` history, the ONLY write to
+      `availability_index.parquet` in the entire 2026-07-21→2026-08-03 window is this one Surface C v2 `--apply` run
+      (Finding 7, `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`) — so the drop is bounded to this
+      exact event, not a slow drift.
 
-                                                                                                      **This was NOT the intentional part of that apply.** The apply's own run.log shows exactly one COMBO-labeled,
-                                                                                                      reviewed, ruled drop: `[v2 P3b] DERIBIT-COMBO (purge): rows=196 captured=0 purged=196 renamed=0` — the SEPARATE,
-                                                                                                      operator-ruled `venue=DERIBIT-COMBO` purge (`combo_mask = venue.str.upper() == "DERIBIT-COMBO"` in
-                                                                                                      `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`, confirmed by direct code read — scoped to the VENUE
-                                                                                                      label only, never touches bare `venue=DERIBIT` rows regardless of `instrument_type`). Our 662 bare-DERIBIT
-                                                                                                      combo rows appear in NEITHER this stat NOR the run's only other named drop counters
-                                                                                                      (`dropped_orphan=2015` corpus-wide, `okx_noise_drop=7`) — they were never a reviewed/logged target of this
-                                                                                                      migration; they were silently swept into one of the run's two large, itype-unbroken-down bulk counters:
-                                                                                                      `eu-dropped=261630` or `de-dup-collapsed=1267269` (`by status: {expected_unattempted: 562590,
-                                                                                                      empty_confirmed: 549447, attempted_failed: 155170, captured: 62}`).
+      **This was NOT the intentional part of that apply.** The apply's own run.log shows exactly one COMBO-labeled,
+      reviewed, ruled drop: `[v2 P3b] DERIBIT-COMBO (purge): rows=196 captured=0 purged=196 renamed=0` — the SEPARATE,
+      operator-ruled `venue=DERIBIT-COMBO` purge (`combo_mask = venue.str.upper() == "DERIBIT-COMBO"` in
+      `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`, confirmed by direct code read — scoped to the VENUE
+      label only, never touches bare `venue=DERIBIT` rows regardless of `instrument_type`). Our 662 bare-DERIBIT
+      combo rows appear in NEITHER this stat NOR the run's only other named drop counters
+      (`dropped_orphan=2015` corpus-wide, `okx_noise_drop=7`) — they were never a reviewed/logged target of this
+      migration; they were silently swept into one of the run's two large, itype-unbroken-down bulk counters:
+      `eu-dropped=261630` or `de-dup-collapsed=1267269` (`by status: {expected_unattempted: 562590,
+      empty_confirmed: 549447, attempted_failed: 155170, captured: 62}`).
 
-                                                                                                      **Code-level narrowing (rules out 2 of 3 candidate mechanisms, does not fully pin the 3rd to one line):**
-                                                                                                      `_reconcile_eu_duplicates` filters strictly to `capture_status == "expected_unattempted"` — our rows were
-                                                                                                      `empty_confirmed`, so eu-reconcile structurally cannot be the mechanism. The per-tuple orphan-drop path
-                                                                                                      (`_classify_tuple`) short-circuits any ALREADY-canonical id (`if kind == "canonical": return cur,
-                                                                                                      "already_canon"`) straight to `relabel` (keep), never `drop` — and these rows already carried canonical
-                                                                                                      `DERIBIT:COMBO:...` ids pre-apply, so the orphan-drop path is also structurally ruled out. That leaves
-                                                                                                      `_dedup_blob`'s per-blob duplicate-collapse (`drop_duplicates` on the effective key, keep-best-`_STATUS_RANK`)
-                                                                                                      as the only remaining candidate in this script — its own key (`PIN_ATOM` = date+venue+data_type+
-                                                                                                      instrument_type+instrument_id+pipeline_mode) DOES include `instrument_type`, so it should only collapse
-                                                                                                      same-itype duplicates, not cross-itype (i.e. NOT colliding against the separately-tracked 15,119 mispartitioned
-                                                                                                      perpetual/future rows for the same symbols — verified those are still present, see the sibling todo above).
-                                                                                                      The aggregate log has no per-`instrument_type` breakdown of which rows lost a collapse, so the exact
-                                                                                                      colliding sibling per group could not be confirmed without a live, corpus-wide re-run of the classification
-                                                                                                      pipeline — correctly out of scope/budget for this root-cause todo (heavy, would need the memory-bounding
-                                                                                                      guardrail); flagged below as a residual open question only if the exact line-level mechanism ever becomes
-                                                                                                      load-bearing.
+      **Code-level narrowing (rules out 2 of 3 candidate mechanisms, does not fully pin the 3rd to one line):**
+      `_reconcile_eu_duplicates` filters strictly to `capture_status == "expected_unattempted"` — our rows were
+      `empty_confirmed`, so eu-reconcile structurally cannot be the mechanism. The per-tuple orphan-drop path
+      (`_classify_tuple`) short-circuits any ALREADY-canonical id (`if kind == "canonical": return cur,
+      "already_canon"`) straight to `relabel` (keep), never `drop` — and these rows already carried canonical
+      `DERIBIT:COMBO:...` ids pre-apply, so the orphan-drop path is also structurally ruled out. That leaves
+      `_dedup_blob`'s per-blob duplicate-collapse (`drop_duplicates` on the effective key, keep-best-`_STATUS_RANK`)
+      as the only remaining candidate in this script — its own key (`PIN_ATOM` = date+venue+data_type+
+      instrument_type+instrument_id+pipeline_mode) DOES include `instrument_type`, so it should only collapse
+      same-itype duplicates, not cross-itype (i.e. NOT colliding against the separately-tracked 15,119 mispartitioned
+      perpetual/future rows for the same symbols — verified those are still present, see the sibling todo above).
+      The aggregate log has no per-`instrument_type` breakdown of which rows lost a collapse, so the exact
+      colliding sibling per group could not be confirmed without a live, corpus-wide re-run of the classification
+      pipeline — correctly out of scope/budget for this root-cause todo (heavy, would need the memory-bounding
+      guardrail); flagged below as a residual open question only if the exact line-level mechanism ever becomes
+      load-bearing.
 
-                                                                                                      **Independently confirmed contributing correctness gap (verified live against the current catalogue, not
-                                                                                                      assumed):** `unified-api-contracts@11adf279` (2026-07-21, the SAME day as this doc's §2b baseline) removed
-                                                                                                      `"COMBO"` from `CeFiMvpRule.instrument_types` entirely (`MVP_SCOPE_CONFIG_VERSION` 19→20), on the commit's own
-                                                                                                      stated premise **"DERIBIT-COMBO was the only CeFi consumer of 'COMBO'"** — empirically FALSE per this doc's own
-                                                                                                      §2 census (662 + 15,119 rows, 100% catalogue-cross-check-confirmed `instrument_type=COMBO` for BARE
-                                                                                                      `venue=DERIBIT`, not `DERIBIT-COMBO`). Verified live this session: `prod/catalog.parquet` still declares
-                                                                                                      **70,128** bare-`DERIBIT` `instrument_type=COMBO` rows, but **100% now carry `mvp=False`**. The dedup script
-                                                                                                      itself never reads the `mvp` column (`_load_catalog` projects only
-                                                                                                      `venue/instrument_type/raw_symbol/instrument_id/canonical_instrument_id`), so this is NOT the direct drop
-                                                                                                      mechanism traced above — but it is a real, independent, confirmed SSOT contradiction with two compounding
-                                                                                                      consequences: (1) these bookkeeping rows will not self-heal on any future MVP-scope-driven
-                                                                                                      expected-universe/expected_unattempted materialization while `mvp=False` persists, and (2) this doc's own
-                                                                                                      PENDING §9 `[DATA] P2.` 15,119-row partition-MOVE (once operator-approved) would land real CAPTURED combo data
-                                                                                                      that STILL reads as non-MVP even after being correctly repartitioned — undermining coverage/expected-universe
-                                                                                                      tracking for the exact population this whole doc exists to fix, not just the historical 662-row bookkeeping
-                                                                                                      loss. Flagging as its own decision below (do NOT unilaterally revert part of a 2026-07-21 explicit operator
-                                                                                                      ruling without operator awareness — filed a `/blocked` question this session, see Progress Log).
+      **Independently confirmed contributing correctness gap (verified live against the current catalogue, not
+      assumed):** `unified-api-contracts@11adf279` (2026-07-21, the SAME day as this doc's §2b baseline) removed
+      `"COMBO"` from `CeFiMvpRule.instrument_types` entirely (`MVP_SCOPE_CONFIG_VERSION` 19→20), on the commit's own
+      stated premise **"DERIBIT-COMBO was the only CeFi consumer of 'COMBO'"** — empirically FALSE per this doc's own
+      §2 census (662 + 15,119 rows, 100% catalogue-cross-check-confirmed `instrument_type=COMBO` for BARE
+      `venue=DERIBIT`, not `DERIBIT-COMBO`). Verified live this session: `prod/catalog.parquet` still declares
+      **70,128** bare-`DERIBIT` `instrument_type=COMBO` rows, but **100% now carry `mvp=False`**. The dedup script
+      itself never reads the `mvp` column (`_load_catalog` projects only
+      `venue/instrument_type/raw_symbol/instrument_id/canonical_instrument_id`), so this is NOT the direct drop
+      mechanism traced above — but it is a real, independent, confirmed SSOT contradiction with two compounding
+      consequences: (1) these bookkeeping rows will not self-heal on any future MVP-scope-driven
+      expected-universe/expected_unattempted materialization while `mvp=False` persists, and (2) this doc's own
+      PENDING §9 `[DATA] P2.` 15,119-row partition-MOVE (once operator-approved) would land real CAPTURED combo data
+      that STILL reads as non-MVP even after being correctly repartitioned — undermining coverage/expected-universe
+      tracking for the exact population this whole doc exists to fix, not just the historical 662-row bookkeeping
+      loss. Flagging as its own decision below (do NOT unilaterally revert part of a 2026-07-21 explicit operator
+      ruling without operator awareness — filed a `/blocked` question this session, see Progress Log).
 
-                                                                                                      **No CAPTURED tick data was lost** (the apply's own `[INVARIANT] CAPTURED rows in the v2 drop set: 0` gate is
-                                                                                                      real and correctly enforced) — this is a bookkeeping/tracking-fidelity regression, not a data-loss incident.
+      **No CAPTURED tick data was lost** (the apply's own `[INVARIANT] CAPTURED rows in the v2 drop set: 0` gate is
+      real and correctly enforced) — this is a bookkeeping/tracking-fidelity regression, not a data-loss incident.
 
 - [x] ✅ [OPERATOR] P2. **RULED 2026-08-03** — operator approved re-adding `"COMBO"` to
       `unified_api_contracts.canonical.crosscutting._mvp_scope_rules.CeFiMvpRule.instrument_types` for BARE

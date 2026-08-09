@@ -213,7 +213,7 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       own 2026-07-30 entries already diagnosed twice for #1026/#1027; NOT counted as post-fix evidence (self-corrected
       before drawing a conclusion from it). **Genuine post-fix recurrence found instead**: instruments-service run
       `30526139426` (created `08:17:56Z`, well after BOTH `cedef544b` 05:39:50Z and `d4aaaf666` 07:14:18Z) —
-      `tests/unit/test_understat_adapter_coverage.py::     TestUnderstatFetchErrorTracking::test_get_fixtures_resets_error_count`
+      `tests/unit/test_understat_adapter_coverage.py:: TestUnderstatFetchErrorTracking::test_get_fixtures_resets_error_count`
       hit `Failed: Timeout (>150.0s)`. Isolated local re-run: **1.42s** (fully mocked `aiohttp.ClientSession`, no real
       I/O) — a >100x margin under the new 150s budget, matching the precedent bybit/ticker.yaml case's profile far more
       closely than the first (discarded) candidate did. **Verdict: the fix does NOT close this flake class, it only
@@ -258,7 +258,7 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       1.17s (well-mocked adapter — only `_ensure_canonical_fixtures_for_override`'s GCS existence probe is genuinely
       unmocked in that test, a candidate real-I/O surface distinct from todo 4's `_throttle()` real-sleep mechanism, not
       yet confirmed as the actual trigger). Unlike todo 4's two recurrences, this is NOT the
-      `test_understat_adapter_     coverage.py` test the 66c9f23c fix targeted — so todo 4's fix is confirmed still
+      `test_understat_adapter_ coverage.py` test the 66c9f23c fix targeted — so todo 4's fix is confirmed still
       effective for ITS test; this is a genuinely new instance. **Not yet root-caused** — this pass (cicd escalation,
       `ldr_qg_failure` on PR #1038) found the PR had already self-merged (`21:15:57Z`, an independent already-green
       check on the same head SHA) before the failing `pull_request`-triggered run even completed, and LDR
@@ -272,16 +272,16 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       this one test) remains genuinely open." This occurrence supplies the first real evidence FOR that broader claim:
       `cicd` escalation `agt-dcbfa1`, instruments-service promotion PR #1039 (LDR→main), failing run `30584685103`
       (`QG slice (tests)` job, started `21:46:09Z`) —
-      `TestUnderstatFetchErrorTracking::test_get_fixtures_     resets_error_count` — the EXACT test todo 4 root-caused
+      `TestUnderstatFetchErrorTracking::test_get_fixtures_ resets_error_count` — the EXACT test todo 4 root-caused
       and fixed via the `_throttle` no-op mock (instruments-service@66c9f23c, confirmed present on this run's head SHA
       `85ca0b73`) — timed out AGAIN (153.53s), in the SAME job as a SECOND, DIFFERENT test in the same file
-      (`TestUnderstatGetFixtures::test_get_fixtures_with_     matches`, 278.67s, well past even the 150s budget).
+      (`TestUnderstatGetFixtures::test_get_fixtures_with_ matches`, 278.67s, well past even the 150s budget).
       Investigated a candidate mechanism (both share the generic `get_fixtures()` call path: 6 real per-league
       `_make_session()` calls each, each constructing a real un-mocked
       `aiohttp.TCPConnector(resolver=aiohttp.resolver.ThreadedResolver())` before the mocked
       `aiohttp.ClientSession(...)` discards it) but RULED IT OUT as distinguishing: several sibling tests in the same
       file
-      (`test_get_fixtures_no_matches`/`test_get_fixtures_season_detection_pre_august`/`test_get_fixtures_invalid_year_     falls_back`/`test_get_fixtures_invalid_month_falls_back`)
+      (`test_get_fixtures_no_matches`/`test_get_fixtures_season_detection_pre_august`/`test_get_fixtures_invalid_year_ falls_back`/`test_get_fixtures_invalid_month_falls_back`)
       share the exact identical pattern and did NOT fail this run — so it cannot be what separates these 2 failures from
       the many passes (`1 failed, 5104 passed` originally, corrected to 2 failed same run). With todo 4's real-timer
       mechanism confirmed already closed (mock verified present in the file) and no per-test anti-pattern distinguishing
@@ -345,7 +345,7 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       directly REFUTES the assumption several entries above made explicitly (e.g. the 2026-08-01 ~00:15Z/00:49Z entries:
       "canceling a queued run on an already-saturated single-runner pool doesn't help and risks adding load"):
       `gh run cancel` on both wedged runs, then a fresh `gh workflow run quality-gates-v2.yml --ref live-defi-rollout`,
-      produced a run whose `content sentinel` + `QG slice     (tests)` jobs completed normally (9m37s to a real
+      produced a run whose `content sentinel` + `QG slice (tests)` jobs completed normally (9m37s to a real
       pytest-timeout verdict — same `test_cross_timeframe_sanity.py` test todo 7 already tracks) instead of wedging
       again. **Done when**: (a) confirm this holds on a second wedge instance (not yet a proven general fix, N=1), and
       (b) decide whether a wedge past some threshold (e.g. 60-90min with zero step progress) should be auto-detected +

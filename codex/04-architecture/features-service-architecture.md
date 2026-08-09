@@ -356,7 +356,7 @@ Doubles dep resolution + version drift; ONE flat list in `features-service/pypro
 `from features_service.<X> import ...`. | | Duplicate `LookaheadBiasError` / `BaseCalculator` per family | Use UTL lifts
 (Phase 5). Per-family inlines deleted in same commit as the UTL lift. | | Manual `/health` route in any family | Use the
 top-level aggregator. Family declares `_data_freshness` callback only. | | Family code that branches on
-`--mode batch                    | live` for logic | Live = batch. Mode switching is at the I/O seam (BroadcastSink vs
+`--mode batch | live` for logic | Live = batch. Mode switching is at the I/O seam (BroadcastSink vs
 ManifestWriter). | | New family without `feature_family` UAC enum + registry entry | Add to `FeatureFamily` +
 `FEATURE_GROUP_TO_FAMILY` first; sub-package is downstream of the schema. |
 

@@ -455,7 +455,7 @@ verified complete**.
       (`system-integration-tests@28b2efc9`, 2026-06-07). Fresh full `bash scripts/quality-gates.sh` on
       system-integration-tests confirmed green (`✅ ALL QUALITY GATES PASSED`, sentinel `66ea65dc`). Full evidence +
       rationale in the batch-1 plan's flip. system-integration-tests: full `scripts/quality-gates.sh` exits 1 on a
-      PRE-EXISTING `Manifest import     alignment` violation — `pyproject.toml` declares `alerting-service` +
+      PRE-EXISTING `Manifest import alignment` violation — `pyproject.toml` declares `alerting-service` +
       `client-reporting-api` but neither is imported anywhere in the repo. Either import them in a smoke test or drop
       the two declarations (coordinate with the already-dirty foreign `uv.lock` in this worktree — do not stomp). Also a
       standing non-fatal coverage-floor ❌ (`MIN_COVERAGE=2<70`, no `.coverage-floor-exception.md`) needs a

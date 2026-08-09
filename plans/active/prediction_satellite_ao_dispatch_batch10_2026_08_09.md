@@ -112,12 +112,12 @@ assumed from the Phase-1 agents' own grep alone).
       CODE fix (`instruments-service@e0f7aaad`, `prediction.py:95`'s ticker-extraction bug) has been live 9+ days; every
       Kalshi row captured 2026-07-12 through the fix's ship date fell to `canonical_question_group=OTHER` due to the
       now-fixed bug. This was explicitly declassified from "operator/architect call" via
-      `round5-cefi-question-     resolution 2026-08-08`, citing `/codex/02-data/data-pipeline-correctness-hard-rule.md`
+      `round5-cefi-question- resolution 2026-08-08`, citing `/codex/02-data/data-pipeline-correctness-hard-rule.md`
       ("fixed in FULL, no deadline deferrals") — accepting forward-only correctness for an already-diagnosed,
       already-measured mis-bucketing is the incomplete-fix pattern that rule exists to prevent — plus `task_template.md`
       finding T/U's self-service reversibility path: a fresh same-run check (2026-08-08, re-verify before executing
       since this is a NEW run) of
-      `gcloud storage buckets describe gs://market-data-tick-pred-prd-central-element-323112     --format="value(softDeletePolicy.retentionDurationSeconds)"`
+      `gcloud storage buckets describe gs://market-data-tick-pred-prd-central-element-323112 --format="value(softDeletePolicy.retentionDurationSeconds)"`
       must show `>= 604800`. Work: (1) **first re-measure the real affected date range and row count from the live
       manifest** — do not trust the ~30-day/~9,500-rows/day estimate in the source doc blindly, it may have drifted
       since 2026-08-08; (2) **backup the affected manifest partition(s) before any mutation** (this is a content-patch
@@ -150,8 +150,8 @@ assumed from the Phase-1 agents' own grep alone).
       same 2026-08-07 operator ruling (option A) applied to the sibling market-tick-data-service finding: prediction
       markets get market/price data from the canonical manifest/GCS-objects batch path, not a live-polling REST
       interface. Delete
-      `KalshiAdapter.{parse_market,parse_trade,parse_order_book,normalize_market,normalize_odds,     _load_tickers_from_gcs}` +
-      `PolymarketAdapter.{get_markets,get_prices,_convert_gamma_market,     _build_order_book_record,parse_market,parse_token,parse_order_book,normalize_market,normalize_odds,     _load_condition_ids_from_gcs}`
+      `KalshiAdapter.{parse_market,parse_trade,parse_order_book,normalize_market,normalize_odds, _load_tickers_from_gcs}` +
+      `PolymarketAdapter.{get_markets,get_prices,_convert_gamma_market, _build_order_book_record,parse_market,parse_token,parse_order_book,normalize_market,normalize_odds, _load_condition_ids_from_gcs}`
       and their dedicated tests. Grepped the full 15-doc covering set for
       `_load_tickers_from_gcs`/`_load_condition_ids_from_gcs` immediately before drafting: zero hits anywhere. Repo:
       market-tick-data-service. Source: `issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md` (its

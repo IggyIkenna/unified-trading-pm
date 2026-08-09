@@ -314,7 +314,7 @@ real bookmaker venues (BOVADA/PINNACLE/LADBROKES_UK/…), i.e. the fully consuma
       Macarthur FC ko 2026-01-01T08:00Z). Their `bm_minutes_to_kickoff` clusters at **~1144.5-1146.4 / ~1264.5-1266.4**
       (12-18) and **~964.7-967 / ~1204.7-1206.7** (12-31) — all squarely inside the **615-minute dead zone (765-1380
       min) between `TIER1_HORIZONS`' T-12h window `[675,765]` and T-24h window `[1380,1500]`**
-      (`bucket_assignment_     adapter.py` `TIER1_HORIZONS`/`_HORIZON_CAPS` — 8 narrow accept-windows totaling ~235 of
+      (`bucket_assignment_ adapter.py` `TIER1_HORIZONS`/`_HORIZON_CAPS` — 8 narrow accept-windows totaling ~235 of
       the 1440 pre-match minutes, by design). Control date 2025-12-20 (working, 83.6% raw-bucketable) has **114 distinct
       `fetch_utc` values** spread across the day vs these 2 dates' single noon snapshot — with many more
       snapshots-per-fixture, far more land inside SOME target's narrow cap by chance. So the "REAL BUG" framing holds
@@ -325,7 +325,7 @@ real bookmaker venues (BOVADA/PINNACLE/LADBROKES_UK/…), i.e. the fully consuma
       buckets (`market-data-tick-sports-prd-...` `odds_horizon_bucket` data_type, and `features-sports-prd-...`) for
       `A_LEAGUE`/`SOCCER_AUSTRALIA_ALEAGUE` on all 3 dates — **no row of ANY capture_status exists** (not `captured`,
       not `attempted_failed`, not `empty_confirmed`); the shard is simply unregistered.
-      `scripts/reprocess_sports_     odds.py` only writes `attempted_failed` to the manifest `if not dry_run:` (script
+      `scripts/reprocess_sports_ odds.py` only writes `attempted_failed` to the manifest `if not dry_run:` (script
       L958/L980) and its own docstring's usage example (L40) is a `--dry-run` invocation — so the `attempted_failed`
       state quoted in this doc's §B2 repro log was very likely a **dry-run diagnostic that was never persisted**, not a
       live manifest row. There is therefore currently nothing live to relabel for EITHER date — see the P2 item below.
@@ -571,12 +571,12 @@ a credential ask.
 
 - [x] ✅ [CODE] P1. **DONE 2026-07-31 — was ALREADY DONE, since 2026-04-11.** This finding's own "no `/v4/historical`
       support anywhere in the codebase" claim was WRONG even when written (2026-07-18) —
-      `git log -S     "historical/sports"` on
+      `git log -S "historical/sports"` on
       `market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py` shows the historical-endpoint
       calls (`_discover_fixtures` + `_run_league_fetch_loop`, both hitting `/v4/historical/sports/{sport}/odds`) landed
       in commit `76c920ba` (2026-04-11), 3+ months before this finding — and it's wired into production via
       `market_tick_data_service/adapters/umi_tick_provider.py:658` (`download_batch(date=date, data_types=data_types)`),
-      not orphaned code. `sports_satellite_ao_dispatch_batch8_     2026_07_30.md`'s own triage repeated the same wrong
+      not orphaned code. `sports_satellite_ao_dispatch_batch8_ 2026_07_30.md`'s own triage repeated the same wrong
       "confirmed still absent... 2026-07-30" claim — a grep that somehow missed this file, propagated forward rather
       than caught. **Cost-per-snapshot, genuinely not previously measured (only formula-derived:
       `_CREDITS_PER_CALL = 60` = "10 × 3 markets × 2 implicit regions") — now EMPIRICALLY measured**: one real

@@ -100,7 +100,7 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
       after the repo's `promotion_model` flipped to `ldr_terminal` on 2026-08-05 (the fleet promoter's exact-match
       filter skips posting it for any non-`ldr_main` repo, forever) — so #817 sat `mergeStateStatus: BLOCKED` even with
       `quality-gates-v2` fully green. Root-caused + fixed via
-      `pin_branch_protection_rulesets.py --repo     agent-orchestrator --apply` (dry-run verified first); full detail
+      `pin_branch_protection_rulesets.py --repo agent-orchestrator --apply` (dry-run verified first); full detail
       tracked in `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s own new todo (that doc owns the
       `ldr_terminal` gap, not duplicated here). #817 then merged cleanly (`mergeStateStatus: CLEAN`, no admin bypass) at
       2026-08-07T06:26:50Z. PR #814 needed one more step: its branch predated the #817 fix, so its own copy of the

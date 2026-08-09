@@ -385,7 +385,7 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       originally deployed with, so "deployed via an immutable `@sha256` pin" and "deployed via a `:<sha>` tag that
       happens to still resolve to this digest" are OBSERVATIONALLY IDENTICAL from this join; claiming the stronger
       `pinned` would be unprovable, so both read as the one honest `ok` ("traceable to a commit"). `DRIFT_HAND` reuses
-      the deployer-identity signal already computed for Deploy timeline (`deployer != "Cloud     Build"`), not a
+      the deployer-identity signal already computed for Deploy timeline (`deployer != "Cloud Build"`), not a
       separate provenance check. Deployer identity already lands from `revision.creator` (shipped with Deploy timeline,
       `72a0108`).
 
@@ -476,7 +476,7 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       gate green (1099 tests). Original audit for reference: every filter already reads `useSearchParams()` via one
       `setParam` helper, and the module docstring states the intent ("ALL filters are URL-backed … so alert deep-links
       and shareable filtered views work"). Taken params:
-      `umbrella / cloud / status / asset_group / kind /     launched_by / region / detail` — this was the first consumer
+      `umbrella / cloud / status / asset_group / kind / launched_by / region / detail` — this was the first consumer
       of an existing-but-unused capability.
 - [x] [UI] P2. ✅ **Console deep-links — `deployment-ui@74c0a7d` (2026-07-27).** Wrote the missing Artifact Registry /
       ECR link builder (`artifactConsoleUrl(cloud, registry, repo)` in `ArtifactPipeline.tsx`, following
@@ -485,7 +485,7 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       (parses the joined `artifact` ref, e.g. `"unified-trading-system/deployment-api"`, since that view carries no
       separate registry/repo fields — `runningArtifactConsoleUrl()`). The AR location (`asia-northeast1`) and AWS
       account (`427895769566`) were confirmed against the LIVE `unified-trading-system` AR repo via
-      `gcloud artifacts     repositories list`, not assumed. The What's running row's expanded detail also gained the
+      `gcloud artifacts repositories list`, not assumed. The What's running row's expanded detail also gained the
       second half of the operator's original cross-link ask — a "View hosts on this commit in Deployments ↗" link using
       the new `?git_commit=` filter above, so a version row now deep-links BOTH to its registry console and to exactly
       the hosts running it. New coverage: 2 Vitest + 2 `pw:L2` cases (console-link href assertions for both GCP/AR and
@@ -512,7 +512,7 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       already survives as a global until `_launch_with_tee()` runs later in the same script execution — no code change
       was needed there, only the read. The actual edit is ONE additive block inside `_launch_with_tee()`, next to the
       existing `VM_NAME`/`VM_TASK` exports. All 7 binding conditions verified satisfied: (1)
-      `if [[ -n … ]]; then export     …; fi` form, placed mid-block (not the function's last statement) — safe under
+      `if [[ -n … ]]; then export …; fi` form, placed mid-block (not the function's last statement) — safe under
       `set -euo pipefail`. (2) `IMAGE_DIGEST` left untouched — only `GIT_COMMIT` is set. (3) A missing/`"unknown"` SHA
       degrades silently to no export (same absence as today) — never aborts a boot. (4) Plain `export GIT_COMMIT=`, not
       `extras`. (5) The semantics are documented inline (manifest `commit_sha` at boot, not a running-bytes

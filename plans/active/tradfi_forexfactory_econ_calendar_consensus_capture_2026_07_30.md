@@ -151,7 +151,7 @@ surfacing of this data (a separate, later consumer-side concern).
       CI/testing Chromium build) + headed mode + a residential IP — Cloudflare weighs IP reputation as a distinct signal
       from browser fingerprint quality, so a GCP datacenter IP fails regardless of tooling. New
       `calendar/adapters/forexfactory_adapter.py` (nodriver-based) +
-      `calendar/engine/calculators/     forexfactory_calculator.py` + `calendar/cli/handlers/forexfactory_handler.py`
+      `calendar/engine/calculators/ forexfactory_calculator.py` + `calendar/cli/handlers/forexfactory_handler.py`
       (`--operation forexfactory`, registered in `ServiceBootstrap` in the SAME commit — the orphan-registration mistake
       this todo warned about was NOT repeated). **Premise correction vs. this todo's own text below**: the page does NOT
       need HTML-table parsing at all — it embeds a clean, structured JSON state (`window.calendarComponentStates`) with

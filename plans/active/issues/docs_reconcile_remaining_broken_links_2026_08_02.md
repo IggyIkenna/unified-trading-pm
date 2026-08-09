@@ -178,7 +178,7 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
 - [ ] [SCRIPT] P3. `check_codex_doc_freshness.py`'s ratchet (`scripts/quality_gates/check_codex_doc_freshness.py`)
       compares `len(violations) > baseline` — a pure COUNT comparison, not a set comparison. Verified during this sweep:
       on 2026-08-02, 4 docs newly lost their `last_reviewed` field/went stale
-      (`cross-reference-path-     convention.md`, `local-tmux-precompact-watcher.md`, `lst-exchange-rate-surfaces.md`,
+      (`cross-reference-path- convention.md`, `local-tmux-precompact-watcher.md`, `lst-exchange-rate-surfaces.md`,
       `plan-priority-tier-and-dispatch-ordering.md`) while 4 DIFFERENT docs got genuinely fixed
       (`claude-code-settings-symlink.md`, `gcs-object-operations.md`, `issue-doc-lifecycle.md`,
       `manifest-consolidator-ssot.md`) — net count unchanged (24=24), so the gate reported "✅ At baseline" the whole

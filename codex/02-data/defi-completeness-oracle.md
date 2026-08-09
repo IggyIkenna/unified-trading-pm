@@ -79,8 +79,8 @@ Semantics (aligned with the honest-coverage v2 fail-CLOSED rule):
 
 - `enumerated == expected == 0` ⟹ status `undefined` (never green — matches the empty-denominator guard).
 - `enumerated == expected > 0` ⟹ status `complete` (100%; we saw every on-chain instrument).
-- `enumerated <  expected` ⟹ status `gap` (`missing_delta = expected − enumerated` — named, quantified).
-- `enumerated >  expected` ⟹ status `over_enumerated` (stray; catalogue holds ghosts — investigate).
+- `enumerated < expected` ⟹ status `gap` (`missing_delta = expected − enumerated` — named, quantified).
+- `enumerated > expected` ⟹ status `over_enumerated` (stray; catalogue holds ghosts — investigate).
 - probe throws / subgraph indexing-behind / RPC down ⟹ status `probe_failed` → `undefined` (fail-CLOSED, never 100%).
 
 A DeFi `(protocol, chain)` is **NOT** certified `denominator_complete` until its Tier-B probe returns `complete`.

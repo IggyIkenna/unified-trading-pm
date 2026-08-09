@@ -562,7 +562,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       this batch).
 - [x] 36. ✅ [SCRIPT] P1. **Wire the `--layer {raw-tick,candles}` flag + §3h into `SKILL.md`** (default `raw-tick`,
       orthogonal to `--asset-group`): add the `## Layers` note + the §0 flag line, the
-      `### 3h. MDPS candle-layer     reconciliation` subsection (candle shard atom, GCS-object-driven inversion,
+      `### 3h. MDPS candle-layer reconciliation` subsection (candle shard atom, GCS-object-driven inversion,
       oracle-exempt Option-A template, S4-UNAVAILABLE, migration_pending suppression, genuine defects), the SSOT-table
       row, the `(asset_group × layer)` §6 loop, and the "Extending to a new LAYER" note. — `unified-trading-pm` (this
       batch).
@@ -599,7 +599,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
 - [x] 41. ✅ [DATA] P1. **Ran the MDPS candle audit per-AG against the Option-A target** —
       `/data-pipeline-reconciliation --asset-group <ag> --layer candles`, sequenced defi → prediction → cefi → tradfi. 4
       reports (+ JSON siblings) at
-      `plans/audit/results/data_pipeline_reconciliation_candles_{defi,prediction,cefi,     tradfi}_2026_07_25.md` (the
+      `plans/audit/results/data_pipeline_reconciliation_candles_{defi,prediction,cefi, tradfi}_2026_07_25.md` (the
       pre-existing same-named 2026-07-23 docs were NOT this skill — they were the candle-path migration's own P8
       verification via the migration script's dry-run classifier; this is the first real run of the reconciliation skill
       itself against the candle layer, re-pointed at the UAC oracle per todo 39). Confirmed (a) driven off GCS objects +
@@ -668,7 +668,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       `/codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md` — small-scale hygiene, not
       backfill-critical, matches the P2 precedent of the two sibling census docs). Full per-AG results recorded in
       `reference-cefi.md` H7-refinement + H8, `reference-tradfi.md` H7, `reference-sports.md` H11,
-      `reference-     prediction.md` H6 — `unified-trading-pm@a2a84b66c` (docs) + this commit (results + new issue doc).
+      `reference- prediction.md` H6 — `unified-trading-pm@a2a84b66c` (docs) + this commit (results + new issue doc).
       AGs, not just a "mechanism exists" claim.
 - [x] 46. ✅ [INFRA] P2. **Diagnosed + fixed a stale local venv, not a code bug** — `deployment_api.routes`/`.services`
       failed to import (pinned `fastapi==0.136.3`/`starlette==1.1.0` installed, lacking `iter_route_contexts` that

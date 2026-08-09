@@ -82,7 +82,7 @@ source: >-
       remain; add the archival banner + set `status: complete`; grep the corpus for
       `autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08` and repoint every referrer; clear any lock if set.
       Then physically move the parent doc under `plans/archive/2026_08/`. **Done when**:
-      `bash     scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py` shows
+      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py` shows
       no NEW dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans for this
       doc. Repo: unified-trading-pm.
 

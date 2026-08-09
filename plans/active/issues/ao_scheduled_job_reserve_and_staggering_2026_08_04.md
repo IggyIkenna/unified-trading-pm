@@ -239,7 +239,7 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       never rebooted (`last -x reboot`: up since 07-29, no 08-04 boot); `tmux_session_lost` fires 500-750×/day on every
       day (589 on 08-04, 752 on 08-03, 463 on 08-02, 309 on 08-05, all 16 slots) so the 5 events are routine churn, not
       a host/service teardown. Orchestrator restarted 14:00:05 via ao-self-pull (ao-self-pull.log
-      `running process     predates HEAD — restarting stale process`; syslog stop 14:00:05.97 → shutdown snapshot
+      `running process predates HEAD — restarting stale process`; syslog stop 14:00:05.97 → shutdown snapshot
       14:00:11-18 → startup 14:00:23-26); KillMode=process preserved the tmux server (systemd "left-over process 3191830
       (tmux: server) ... Ignoring" at 14:00:18 — SAME PID as the 13:45 restart, so no cgroup/server teardown). The 5
       dead sessions were one-shot/scheduled/review agents dispatched 13:46-13:52 (na_eligibility slots 8/9, cicd slots
@@ -416,7 +416,7 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       would hard-block every provision rather than degrade. (c) **4 slots added** (17-20, `--operator planning`, 27
       repos each; slot 17 needed one re-run after a `git clone --reference` core-dump, memory was not the cause at 23G
       free). Orchestrator restarted → `seed_worker_slots_from_tabs: registered 19 worker slot(s)`. **Verified live**:
-      `AutoSpawn fleet cap: configured=15 CLAMPED to 12 by slot arithmetic (configured_slots=19 - reserve=7 [ci=3 +     scheduled=4])`.
+      `AutoSpawn fleet cap: configured=15 CLAMPED to 12 by slot arithmetic (configured_slots=19 - reserve=7 [ci=3 + scheduled=4])`.
       Reserves shift automatically with the fleet (they are the highest-numbered N slots): CI/data- pipeline now 18-20,
       scheduled now 14-17, backlog pool 2-13. Disk 54% / 318G free after. Operator ruling 2026-08-08. Evidence:
       `quality-gates.sh` green — 2684 python (2 new), basedpyright 0/0, tsc clean, 262 vitest. (repo:

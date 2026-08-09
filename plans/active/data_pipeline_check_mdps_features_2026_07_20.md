@@ -148,7 +148,7 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       correctly blocked the downstream quickmerge until UTL was clean).**
 - [x] 3. ✅ [SCRIPT] P1. MDPS driver — `market-data-processing-service@75ebf8b` (2000 lines, QG green). Enumerates
       cefi/defi/tradfi via `mdps_mvp_universe` + sports/prediction via
-      `DATA_TYPES_BY_ASSET_GROUP ∩     needs_candle_processing`; per-timeframe verify; SELF-CONTAINED skip (MDPS reads
+      `DATA_TYPES_BY_ASSET_GROUP ∩ needs_candle_processing`; per-timeframe verify; SELF-CONTAINED skip (MDPS reads
       freshness from the bucket it writes, so `--output-bucket` routes both to `-test-`); live leg = honest
       `skipped/live_not_wired`. **TWO INDEPENDENT VERDICTS** (corrected mid-session): force/skip target the writer's
       REAL MEASURED template so the mechanism is provable today, while a separate canonical leg reports
@@ -218,14 +218,14 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `features-service@02155a55` (4 new regression tests covering `BASE-QUOTE@LIN`, `@INV`, `@LIN-{expiry}`, and the
       venue-prefixed form). **Proved live on a real VM**: force-leg on `features-e2e-cefi-20260727-063401-025349`
       (day-window 2026-07-19..2026-07-20) now shows
-      `universe_filter [technical_indicators]: retained 552/588; excluded     36 (unknown_quote=3)` — up from 0/588
+      `universe_filter [technical_indicators]: retained 552/588; excluded 36 (unknown_quote=3)` — up from 0/588
       pre-fix. Separately discovered + fixed an unrelated infra gap while launching that VM: the `features-service` code
-      tarball VMs pull (`gs://deployment-scripts-{project}/code/     features-service-code.tar.gz`) was 5+ hours stale
+      tarball VMs pull (`gs://deployment-scripts-{project}/code/ features-service-code.tar.gz`) was 5+ hours stale
       (built 01:29 UTC, hours before the 06:18 UTC fix push), so the first post-fix VM run still failed on the OLD code
       — root-caused via the tarball manifest's `commit_sha`, fixed by manually rebuilding via
-      `deployment-service/scripts/vm/create-code-tarballs.sh --include features-service     --force`. Full detail + the
+      `deployment-service/scripts/vm/create-code-tarballs.sh --include features-service --force`. Full detail + the
       tarball-staleness finding:
-      `issues/features_universe_filter_settlement_suffix_and_vm_     tarball_staleness_2026_07_27.md`.
+      `issues/features_universe_filter_settlement_suffix_and_vm_ tarball_staleness_2026_07_27.md`.
 - [x] ✅ 9b. **DONE 2026-07-27 (slot-7)** — [DATA] P0. The full-matrix run — CLAIMING closure (per slot-3's own
       disposition below: "check if slot-7's run finished; then decide whether the day-19 CEFI proof suffices or the 4
       CEFI cells need a same-day (07-05) re-run before flipping 9b" — slot-7's day=2026-07-05 run DID finish, all 16
@@ -390,7 +390,7 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       post-backfill reminder pointed at the DANGEROUS `rebuild_manifest_from_canonical_paths()` (the exact
       whole-bucket-wipe bug this plan's own todo 11a fixed) — repointed to the safe additive
       `merge_manifest_from_canonical_paths()`. **Launched** the real fleet:
-      `launch-mdps-sharded-backfill.sh defi     --env prod` — 5 SPOT VMs, year-sharded 2022-2026
+      `launch-mdps-sharded-backfill.sh defi --env prod` — 5 SPOT VMs, year-sharded 2022-2026
       (run-ts=20260728-044648), e2-standard-8. All 5 verified STARTED (RUNNING <60s). Ground-truthed via `run.log` at
       T+~7min (not just VM status): 4/5 shards actively processing — DeFi instrument universes loaded (2979-10367/year),
       dependency checks passing, fresh GCS heartbeats every ~30s. Shard 2026 looked stalled (4+min silent after
@@ -705,7 +705,7 @@ on every computed day; handled gracefully.
       `features-service/scripts/pipeline_e2e_check.py` (measured ~244s/shard-day means the 2400s default caps out around
       9-10 benchmark-days) — `features-service@3cf2b674`. Set to 10800s (~48% margin over the 30-day-benchmark
       prediction of ~7320s), mirroring the same measured-completion methodology as the existing
-      `("volatility",     "TRADFI")` and `("delta_one", "CEFI")` overrides.
+      `("volatility", "TRADFI")` and `("delta_one", "CEFI")` overrides.
 - [x] [DATA] P2. ✅ Both gaps ALREADY have their own dedicated, deeper root-cause docs from other slots — filing a 3rd
       "consolidated" doc would duplicate rather than add value. Appended a 2026-07-27 live-reproduction corroboration
       note to each instead: `/plans/archive/issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`
@@ -739,7 +739,7 @@ on every computed day; handled gracefully.
       the check now finds REAL manifest rows on every day MTDS actually wrote (previously: permanently "not run" on 100%
       of days). Gate still cannot pass on any tested day, but for a DIFFERENT, newly-surfaced reason unrelated to the
       bucket bug: POLYMARKET_PERP's deliberate, already-tracked DNS outage
-      (`issues/cefi_perp_funding_kalshi_polymarket_residual_     and_capture_gap_2026_07_30.md`) trips
+      (`issues/cefi_perp_funding_kalshi_polymarket_residual_ and_capture_gap_2026_07_30.md`) trips
       `_check_mtds_manifest`'s any-attempted_failed-fails-whole-dependency rule even on days HYPERLIQUID/KALSHI_PERP
       both captured. — **2026-08-01 (slot-10)**: venue-scoped known-outage tolerance SHIPPED
       (`features-service@a0d4e6e4` + `unified-trading-library@b6714ed3`): `_check_mtds_manifest` now excludes ONLY
@@ -817,7 +817,7 @@ go-ahead.
 - [x] ✅ [DATA] P2. **DONE 2026-07-29 (slot-13).** `PREDICTION:delta_one` real number recovered directly from
       `features-e2e-prediction-20260728-142821-0f2a85`'s GCS run.log (driver died to the known session-teardown mode
       before writing its report — same recovery as todos 8/10): **3,239 real feature-writes**
-      (`Wrote 2/2 daily     partitions for KALSHI:PREDICTION_MARKET:…`) over 14:41:02→23:08:49 UTC (8h27m). Dense-window
+      (`Wrote 2/2 daily partitions for KALSHI:PREDICTION_MARKET:…`) over 14:41:02→23:08:49 UTC (8h27m). Dense-window
       pure-compute ≈ 2.2 s/instrument-write (≈1.1 s/instrument-day, 2-day auto-day window); but end-to-end is
       skip-tax-dominated ≈9.4 s of wall-clock per real write — the ephemeral KALSHI universe × all history is ~99.9%
       no-upstream-MDPS-data skips (423 MB run.log). **Projection**: PREDICTION full-history cost is dominated by the

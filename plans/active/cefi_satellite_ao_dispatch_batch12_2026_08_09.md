@@ -79,7 +79,7 @@ context_scope:
       `--provisioning-model=SPOT`, uses a 50GB boot disk that escapes the disk QG, and has no live-collision guard) and
       repoint `launcher_registry.py`'s `"prediction-features-"` self-heal binding (currently line 191) from
       `launch-prediction-features-vm.sh` to
-      `launch-features-vm.sh --feature-family cross_instrument --asset-group     PREDICTION` (confirmed live/working:
+      `launch-features-vm.sh --feature-family cross_instrument --asset-group PREDICTION` (confirmed live/working:
       `launch-features-vm.sh` supports `--provisioning-model=SPOT` and both `cross_instrument`/`PREDICTION` are valid
       enum values per its own usage text). **Safe-idempotent, no `[OPERATOR]` tag needed**: the current launcher cannot
       succeed under any input today, so deleting it and repointing self-heal to a working launcher strictly reduces

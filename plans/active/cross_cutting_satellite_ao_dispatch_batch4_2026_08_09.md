@@ -90,7 +90,7 @@ drift_direction: advance-code
       `check_archive_candidates`, `check_prosewrap_padding` — confirmed not caused by this change).
 - [ ] [DOC] P3. Document the `gcloud config set account` host-wide-mutation hazard in
       `/codex/05-infrastructure/per-tab-worktrees.md` § "Multi-agent safety" (or a new subsection), regardless of which
-      code-fix direction eventually lands for the underlying clobbering bug: state that `gcloud config set     account`
+      code-fix direction eventually lands for the underlying clobbering bug: state that `gcloud config set account`
       mutates shared host state (not session-scoped), that a worker switching identity should prefer a per-invocation
       `--account=`/`CLOUDSDK_CORE_ACCOUNT` override where tooling allows it, and that any other concurrent slot may
       change the ambient identity at any time. Repo: unified-trading-pm. Source:

@@ -239,7 +239,7 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       JWT_SECRET/USERS_JSON/MODE/TELEGRAM keys (verified 2026-06-12); `auth._load_internal_secret()` then falls back to
       an EPHEMERAL generated secret, so `/api/escalate` + the central→worker proxy 401 every caller on a fresh VM (prod
       vm-0 works only because it is hand-wired). Operator ask: append the fleet
-      `ORCHESTRATOR_INTERNAL_SECRET=<value     from prod vm-0's .env.local>` line to the `ORCHESTRATOR_ENV_LOCAL` secret
+      `ORCHESTRATOR_INTERNAL_SECRET=<value from prod vm-0's .env.local>` line to the `ORCHESTRATOR_ENV_LOCAL` secret
       in BOTH AWS SM + GCP SM — bootstrap already propagates the whole secret to .env.local, so no code change is needed
       (bootstrap now loud-warns when the key is absent). Found 2026-06-12 escalation e2e. Repo: agent-orchestrator (+
       operator SM update). **CREDENTIAL APPROVAL REQUEST** filed: `ikenna_orchestrator/pings/slot_1.md` (operator:
@@ -284,8 +284,8 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       direction is SM ← vm-0, NOT apply-to-host). Agent-side secret writes are permission-blocked by design.
 
       **STAGED 2026-08-08 (operator ruling, ao round-5 apply session item 22): "Operator will run it - give exact
-                  staged commands."** Verified against the live `refresh_env_from_sm.sh` (its own `fetch_blob()`/usage header)
-                  before writing this, not guessed. Run entirely on vm-0 (`i-0c9b283b31d6b5ca7`, EIP 13.113.200.22) as one pass:
+      staged commands."** Verified against the live `refresh_env_from_sm.sh` (its own `fetch_blob()`/usage header)
+      before writing this, not guessed. Run entirely on vm-0 (`i-0c9b283b31d6b5ca7`, EIP 13.113.200.22) as one pass:
                   ```bash
                   cd "${WORKSPACE_ROOT}/agent-orchestrator"
                   # 1. Fetch the current SM blob (same two-cloud fallback refresh_env_from_sm.sh itself uses):
@@ -306,8 +306,8 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
                   # 4. Verify (dry-run, no writes) -- expect ALL keys including JWT to report "keep" now that SM matches vm-0:
                   bash scripts/refresh_env_from_sm.sh
                   ```
-                  The `trap` removes the temp file on exit regardless of success/failure. Step 4's dry-run output is the
-                  done-when check: 7x keep / "in sync", zero REPLACE lines. Repo: agent-orchestrator (+ operator SM write).
+      The `trap` removes the temp file on exit regardless of success/failure. Step 4's dry-run output is the
+      done-when check: 7x keep / "in sync", zero REPLACE lines. Repo: agent-orchestrator (+ operator SM write).
 
 **Operator-concerns verification session (2026-06-12 PM, on the live vm-e2e-test):** three concerns checked +
 e2e-tested; two new live bugs found + fixed in the process (agent-orchestrator@094f691 + @1a0bea0, both deployed to the
@@ -449,7 +449,7 @@ deployed to the VM + verified). Remaining live-run findings:
       applied on snapshots/ + backups/ prefixes; test-VM instance-profile list+put probed OK. Live proof: restarted
       vm-e2e-test backend with the env → `POST /api/snapshot` landed
       `s3://…/snapshots/vm-e2e-test/2026-06-12/state_20260612T084615Z.json`, and
-      `restore_from_gcs.sh --json-only     --dry-run` on the VM picked exactly that object via S3 + vm_id scoping. NOTE:
+      `restore_from_gcs.sh --json-only --dry-run` on the VM picked exactly that object via S3 + vm_id scoping. NOTE:
       prod vm-0 still writes flat keys until it picks up @88c53e2 on its normal update cadence (restore script reads
       both layouts; no forced prod restart). Was: **State-DB DR backup is silently OFF on every fleet VM — bootstrap
       never sets the snapshot bucket envs**; the deleted creds-bucket `config/backlog.yaml` seed was NOT part of the DR

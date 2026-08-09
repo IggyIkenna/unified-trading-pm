@@ -740,7 +740,7 @@ realized +26–40% ann during spikes, 0 most ticks; SPX ~5.5%).
       (ARM/ASML/BABA/TSM/NVO/SONY/NOK + COIN/MSTR/PLTR/… + ETFs EWT/EWY/ROBO/SLX/URNM/UVXY); SNDK's `definition` schema
       lags (recent WDC spinoff) but `ohlcv-1m` returns 750 rows/day → genuinely covered for the data we fetch.
       **SOURCE_PRIORITY is keyed by (asset_group,data_type), NOT per-ticker** —
-      `("tradfi","trades"/"tbbo"/"ohlcv_1m"/"ohlcv_15m"/"options_chain"/     "futures_chain")=["massive","databento"]`
+      `("tradfi","trades"/"tbbo"/"ohlcv_1m"/"ohlcv_15m"/"options_chain"/ "futures_chain")=["massive","databento"]`
       ALREADY → every new equity inherits massive(primary)+databento(fallback) with zero per-ticker wiring; `ohlcv_1s`
       stays databento-only (massive flat-files have no 1s schema). FIXED the symmetric subset-bug on the massive side:
       `massive.py::_curated_equity_symbols()` also fetched only sp500+etf → now includes nasdaq+nyse-perp so BOTH
@@ -748,7 +748,7 @@ realized +26–40% ann during spikes, 0 most ticks; SPX ~5.5%).
 - [x] ✅ [UAC] P0. **MVP-marking (B2): the Binance tradfi-perp cash twins are now MVP-scoped.** The tradfi MVP rule
       (`mvp_scope.py`) gated MVP to CME×{FUTURE,OPTION}×{ES,NQ,VX} ONLY — equities/ETFs were `present` in the catalogue
       but `mvp=False`. Added an **equity-basis carve-out**: (NASDAQ/NYSE/ARCA × EQUITY/ETF ×
-      `TRADFI_EQUITY_PERP_BASIS_     UNIVERSE`) [92 cash twins of the Binance equity/ETF perps] → MVP, AND extended the
+      `TRADFI_EQUITY_PERP_BASIS_ UNIVERSE`) [92 cash twins of the Binance equity/ETF perps] → MVP, AND extended the
       futures underliers with the commodity roots backing Binance perps (GC/SI/PL/PA/NG/CL/HG ←
       XAU/XAG/XPT/XPD/NATGAS/CL/COPPER). Precise gating: a non-Binance SP500 name (ADI) + non-perp commodity (ZC corn)
       stay non-MVP. The catalogue `_add_mvp_column` calls `is_mvp("tradfi",…)` per row → on next
@@ -757,7 +757,7 @@ realized +26–40% ann during spikes, 0 most ticks; SPX ~5.5%).
 - [x] ✅ [SCRIPT] P0. **Propagation ops (B1/B3/B4) — run on real infra to completion.** The code (above) is the enabler;
       the chain is wired: (1) IS instruments backfill (`launch-instruments-backfill-vm.sh --asset-group TRADFI`) writes
       per-day InstrumentRecords for the new equities (databento/massive now fetch them) → (2)
-      `build_instrument_     catalogue` rolls up + tags `mvp=True` → (3) `enumerate_expected_universe.py` v2 tradfi
+      `build_instrument_ catalogue` rolls up + tags `mvp=True` → (3) `enumerate_expected_universe.py` v2 tradfi
       enumerator reads the catalogue, seeds the new equities as `expected_unattempted` at venue=NASDAQ/NYSE grain → (4)
       MTDS wave-launcher reads the manifest `expected_unattempted` gaps + captures. **Run + verify**: catalogue has new
       MVP tickers; manifest shows them `expected_unattempted`; a sample equity captures non-NaN OHLCV. Repo:

@@ -163,7 +163,7 @@ and the catalogue has **no `margin_type` field**. Deribit inverse is the only co
       `market-tick-data-service@a89e4114057e` (the `cefi_catalog_reader.py` margin-gate wiring) and, originally
       committed in slot 8's worktree as `2f480da24764` then **rewritten by an autostash-rebase during push** to the
       final landed commit `features-service@48911e87f50809167a973b6ece6bb693612480d3`
-      (`feat(delta_one): wire real     venue-volume observations into the perp collapse`, 2026-07-31, confirmed on
+      (`feat(delta_one): wire real venue-volume observations into the perp collapse`, 2026-07-31, confirmed on
       origin/live-defi-rollout) — the `batch_handler.py` `feature_perp_representative` wiring. Both carry a
       `Quickmerge: agent` trailer, but NEITHER repo's `.qg_last_passed_sha` sentinel matches HEAD — so this is NOT a
       same-SHA `quickmerge --agent` retry. Recovery path, from slot 8 itself (still live, still holding both commits) or

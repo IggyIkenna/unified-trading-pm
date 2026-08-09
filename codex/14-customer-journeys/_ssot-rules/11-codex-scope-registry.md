@@ -109,7 +109,7 @@ scope: [engineer, admin]
 Validator tolerates:
 
 - Array form: `scope: [engineer, admin]`
-- Flow-list form: `scope:\n  - engineer\n  - admin`
+- Flow-list form: `scope:\n - engineer\n - admin`
 - Empty array: `scope: []` — explicit opt-out (no audience sees it; internal-only by repo access)
 
 Validator rejects:

@@ -114,10 +114,10 @@ context_scope:
       from source at any time, which is a stronger reversibility argument than soft-delete alone (though not what §3a's
       check itself tests for). Confirmed real, populated corpus in scope (not already-resolved): `gcloud storage ls -r`
       on a sample day (`sports_features/by_date/day=2021-01-01/**`) shows real
-      `league={id}/feature_group=derived_features/     features.parquet` objects across multiple leagues — this is NOT
+      `league={id}/feature_group=derived_features/ features.parquet` objects across multiple leagues — this is NOT
       an empty/moot target. **Step 1 (live-probe, SAFE, READ-ONLY)**: run a GCS creation-time census across
       `features-sports-prd-central-element-323112`'s
-      `sports_features/by_date/day={D}/league={L}/     feature_group=derived_features/` corpus for Jun-Dec 2020 +
+      `sports_features/by_date/day={D}/league={L}/ feature_group=derived_features/` corpus for Jun-Dec 2020 +
       2021-2026 to establish the CURRENT pre-/post- `2026-07-19` object-count split directly (do not trust the parent
       doc's contradictory checkbox state). **Step 2 — now agent-executable, no operator sign-off needed** (re-query the
       bucket's soft-delete retention fresh immediately before running, not from this citation): snapshot the delete
@@ -148,7 +148,7 @@ context_scope:
       below.** ⛔ **CORRECTED 2026-07-27 (slot-9, `data_engineering`) — 2 of the source todo's premises are WRONG,
       proven by fresh same-day evidence that already exists elsewhere in this doc family; both are DROPPED from scope
       rather than executed:** **(a) UNIBET_UK/UNIBET_EU→UNIBET is NOT a casing/alias fold** —
-      `unified_api_contracts.registry.     market_data_categories.SPORTS_VENUE_FOLD`'s own docstring (shipped
+      `unified_api_contracts.registry. market_data_categories.SPORTS_VENUE_FOLD`'s own docstring (shipped
       2026-07-27, same day) documents this was originally added to the fold then REMOVED same-day after live content
       comparison proved UNIBET_UK/UNIBET_EU are genuinely distinct bookmaker feeds from bare UNIBET (a shared
       (day,league,fixture,market) — 2022-10-17, ALLSVENSKAN, IFK Goteborg vs Malmo FF — shows DIFFERENT simultaneous
@@ -156,7 +156,7 @@ context_scope:
       UNIBET's own captured population). Folding would silently conflate two distinct bookmakers' live data on every
       future capture. `SPORTS_VENUE_FOLD` now contains ONLY `{"ladbrokes_uk": "LADBROKES", "sport888": "BET888SPORT"}` —
       confirmed by direct read 2026-07-27. **(b) SMARKETS is NOT stale/deleted-venue residue** —
-      `plans/active/issues/     sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` measured SMARKETS at
+      `plans/active/issues/ sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` measured SMARKETS at
       **1,113,644-1,652,384 row_count** (two independent live manifest census passes, 2026-07-27) across 480-6,958
       shards through 2026-07-26 — i.e. actively captured production data, not a small residual.
       `/codex/01-domain/sports-instruments.md` §"VENUE COUNT CORRECTED 2026-07-24" independently lists SMARKETS among
@@ -288,7 +288,7 @@ context_scope:
       exactly 139,620 rows — identical in count to sibling phantom venues BETFAIR(bare) and ONEXBET (139,620 each; all
       three sum to `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`'s cited 418,860 structurally-false rows),
       because all three shared the identical (league,date) cartesian scope under the same never-captures mechanism. The
-      `source=api_football` mislabel is a SEPARATE, stacked bug: `SOURCE_PRIORITY[     ("sports","TRADES")]` was missing
+      `source=api_football` mislabel is a SEPARATE, stacked bug: `SOURCE_PRIORITY[ ("sports","TRADES")]` was missing
       from UAC's `_source_priority_data.py`, so `derive_pipeline_mode_for_row()` fell through to
       `_ASSET_GROUP_FALLBACKS["sports"] = BATCH_API_FOOTBALL`, silently shadowing the sentinel caller's real intended
       default (`BATCH_ODDS_API`) and mis-stamping every sports TRADES sentinel row — including these — as
@@ -467,22 +467,22 @@ context_scope:
       genuine. Report: `plans/audit/results/data_pipeline_e2e_check_features_2025_12_18.md`.
 
       Cross-day diagnostic (VM `run.log` ground truth, all 3 dates): 11-12/17 sports reference entities read real rows
-                                                                                                                                                                                                                                                                                                                                                                                              from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
-                                                                                                                                                                                                                                                                                                                                                                                              404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
-                                                                                                                                                                                                                                                                                                                                                                                              of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
-                                                                                                                                                                                                                                                                                                                                                                                              correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
-                                                                                                                                                                                                                                                                                                                                                                                              compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
-                                                                                                                                                                                                                                                                                                                                                                                              count > 0) rather than a blanket `empty_confirmed`.
+      from PROD via the now-working source-bucket override; `entity=fixtures`/`fixtures_schedule` specifically still
+      404s on the never-provisioned `-stg-` bucket via `gcs_read_reference_fixtures` (a narrower, entity-scoped residue
+      of the same gap — noted for whoever next touches the issue doc above), so `derived_features`/`fixture_features`
+      correctly record `EMPTY ... confirmed empty` for that one input while the rest of the family's feature groups
+      compute for real — this is why every checkpoint's shard-level verdict is a genuine `captured` pass (real parquet
+      count > 0) rather than a blanket `empty_confirmed`.
 
-                                                                                                                                                                                                                                                                                                                                                                                              **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
-                                                                                                                                                                                                                                                                                                                                                                                              the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
-                                                                                                                                                                                                                                                                                                                                                                                              never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
-                                                                                                                                                                                                                                                                                                                                                                                              report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
-                                                                                                                                                                                                                                                                                                                                                                                              defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
-                                                                                                                                                                                                                                                                                                                                                                                              instance's result was independently verified correct, not corrupted by it): filed
-                                                                                                                                                                                                                                                                                                                                                                                              `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
-                                                                                                                                                                                                                                                                                                                                                                                              todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
-                                                                                                                                                                                                                                                                                                                                                                                              day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
+      **Session note**: this task's worker session crashed mid-flight after the first (sequential) round of runs;
+      the resumed session found the repo tree hard-reset to origin (losing 2 already-completed report files that were
+      never committed) — re-ran all 3 checkpoints a second time in parallel to recover, this time committing each
+      report immediately on completion. That parallel re-run also reproduced + explains a separate, real tooling
+      defect (two same-cell/different-day launches racing to an identical VM name within the same UTC second — this
+      instance's result was independently verified correct, not corrupted by it): filed
+      `plans/archive/issues/features_pipeline_e2e_check_vm_name_collision_same_second_2026_08_01.md` (both
+      todos now resolved — VM-name hash widened to include the day across all 4 sibling drivers, and the
+      day-window-agnostic `_find_inflight_duplicate_vm()` dedup narrowed to the same day).
 
 - [x] ✅ [DATA] P1. **Track K (reconciliation) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `/data-pipeline-reconciliation` against sports.** DONE 2026-08-01 (slot 8, dispatched sub-agent) — 3 dated reports
@@ -609,7 +609,7 @@ context_scope:
       in-region, always") for both the exhaustive census and the delete. **Action**: launch a Tier-2 SPOT VM
       (`deployment-service/scripts/vm/` — grep `VM_PREFIX_TO_BUCKET` first; reuse/extend an existing `launch-*.sh`
       rather than hand-rolling a new name) to (1) walk the full
-      `sports_features/by_date/day={D}/*/     feature_group=derived_features/` prefix for the in-scope date range, (2)
+      `sports_features/by_date/day={D}/*/ feature_group=derived_features/` prefix for the in-scope date range, (2)
       snapshot the exact delete list, (3) fresh-re-check `gcs_bucket_soft_delete_retention_seconds` immediately before
       deleting (do not reuse this or the 07-27 citation), (4) delete every object still pre-`2026-07-19` (excluding
       pre-floor 2017-2019/pre-06-06-2020 dates, handled elsewhere), (5) re-census confirming 0 remain. (repo:

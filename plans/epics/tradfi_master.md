@@ -483,7 +483,7 @@ reads `is_trading_day` from instruments (no hardcoded holidays); all 12 affected
       pre-VIX-source-layering; that framing is stale per the CLAUDE.md "VIX 15m source layering" SSOT.
 
 - [ ] [SCRIPT] P2. **TradFi 5,212 legacy-blank apply-flips run** —
-      `reconcile_legacy_blank_to_typed_reason     --asset-group tradfi --apply-flips` on a VM. Scan-only (Gate 3 run
+      `reconcile_legacy_blank_to_typed_reason --asset-group tradfi --apply-flips` on a VM. Scan-only (Gate 3 run
       2026-05-17) confirmed upgrade logic correct (0 uncertain cases): 5,099 rows
       `empty_confirmed/SOURCE_RETURNED_ZERO → attempted_failed/LegacyBlankErrorReasonError` + 113 rows
       `SOURCE_RETURNED_ZERO → EXPECTED_PARTIAL_HALF_DAY`. Safe to apply. Use `launch-manifest-recon-all-vm.sh` with
@@ -583,9 +583,9 @@ volume.
 
 - [x] [SCRIPT] P0. **UAC `MarketSession` + `SessionPhase` enums + `VENUE_SESSION_SCHEDULE` SSOT.** Closed sets:
       `MarketSession ∈ {REGULAR, PRE_MARKET, POST_MARKET, OVERNIGHT, HALTED, CLOSED}`;
-      `SessionPhase ∈ {OPEN_AUCTION,     CONTINUOUS, CLOSE_AUCTION, AFTER_HOURS_AUCTION, NONE}`.
-      `VENUE_SESSION_SCHEDULE: dict[VenueKey,     list[SessionWindow]]` where `SessionWindow` carries
-      `(session, phase, weekday_mask, start_time, end_time,     tz)`. Lives at
+      `SessionPhase ∈ {OPEN_AUCTION, CONTINUOUS, CLOSE_AUCTION, AFTER_HOURS_AUCTION, NONE}`.
+      `VENUE_SESSION_SCHEDULE: dict[VenueKey, list[SessionWindow]]` where `SessionWindow` carries
+      `(session, phase, weekday_mask, start_time, end_time, tz)`. Lives at
       `unified_api_contracts/canonical/crosscutting/market_session.py`. **COMPLETED 2026-05-13**: UAC@37f6dfd — shipped
       module with 5 venue schedules (CME / NYSE / NASDAQ / ICE / CBOE) + `classify_session()` cascade helper + 33 unit
       tests. Half-day / holiday calendars + ICE Brent (London) DEFERRED per operator direction (per-venue iteration).

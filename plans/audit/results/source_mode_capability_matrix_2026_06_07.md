@@ -105,7 +105,7 @@ flat_file, internal}. Confidence: **C**=confirmed (vendor doc / code) · **H**=h
 - [ ] **R1 — Tardis replay correction (ratify)**: the M2 seed encodes Tardis as "live, NOT replay." Vendor docs
       (docs.tardis.dev) show Tardis **IS** intraday-replay-capable via the HTTP API at **T-6min** (CSV is next-day; the
       replay API is not). Confirm I update `SOURCE_MODE_CAPABILITY[tardis] = {batch, live, replay}` (was
-      `{batch,     live}`) — this materially improves CeFi continuity (replay-fill from Tardis vs "replay from the
+      `{batch, live}`) — this materially improves CeFi continuity (replay-fill from Tardis vs "replay from the
       exchange"). Caveat to accept: the last ~6 min of a gap needs direct-exchange ws.
 - [ ] **R2 — paid-tier cost calls** (you flagged massive-vs-databento on cost): (a) **massive/Polygon real-time** — do
       we pay for the real-time tier, or accept Starter 15-min-delayed live (fine for batch + replay, not for sub-15-min

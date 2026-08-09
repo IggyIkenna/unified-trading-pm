@@ -133,7 +133,7 @@ group doesn't consume that data_type.
       `batch_handler.py`'s CLI args into `DataLoader.__init__`. Repo: features-service. Done when: a DEFI
       `--feature-group funding_oi` launch's `get_available_instruments()` no longer includes `dex_pool_swaps`-only
       instruments, verified by a new unit test; `--feature-group ALL` still produces the same union as today (no
-      regression); `bash     scripts/quality-gates.sh` green. — features-service@f932908b (already shipped on LDR):
+      regression); `bash scripts/quality-gates.sh` green. — features-service@f932908b (already shipped on LDR):
       `DataLoader.__init__` accepts `feature_groups: list[str] | None = None`, scopes `candle_data_types` to just the
       passed group(s) (unioning over `DEFAULT_FEATURE_GROUPS` only when `None`); `batch_handler.py` now resolves
       `groups_to_process` BEFORE `_initialize_services` and threads it through to `DataLoader(feature_groups=...)`.

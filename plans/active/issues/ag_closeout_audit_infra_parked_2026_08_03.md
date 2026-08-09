@@ -266,7 +266,7 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
 
 - [x] ✅ [OPERATOR] P1. **FIXED 2026-08-06 (governance sweep) — root cause identified, not just re-applied.** The
       previous "flip" attempts landed the value on a continuation line with a trailing inline YAML comment
-      (`assigned_vm:\n  planning # ...`), which reads as blank to whatever parses this corpus's single-line frontmatter
+      (`assigned_vm:\n planning # ...`), which reads as blank to whatever parses this corpus's single-line frontmatter
       convention — that's WHY it kept silently reverting to blank across multiple "fix" attempts. Corrected to a plain
       single-line `assigned_vm: planning` (matching every other doc in the corpus); `execution_scope` fixed the same
       way. Verified live: `grep '^assigned_vm:' infra_satellite_ao_dispatch_batch3_2026_07_30.md` now returns
@@ -275,7 +275,7 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
 - [x] ✅ [OPERATOR] P1. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — RESOLVED 2026-08-07,
       operator accepted the loss.** `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`
       is now archived (`plans/archive/issues/...`) with `status: resolved` and
-      `resolved_by: "RESOLVED 2026-08-07     (operator ruling) -- unrecovered loss, accepted, no further investigation. Both the source directory and the     stash-backup bundle are confirmed genuinely absent; the operator declined recovery."`
+      `resolved_by: "RESOLVED 2026-08-07 (operator ruling) -- unrecovered loss, accepted, no further investigation. Both the source directory and the stash-backup bundle are confirmed genuinely absent; the operator declined recovery."`
       (source: `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`, now archived) — the
       exact outcome this todo asked for was recorded on that doc, and the delete todo was correctly not flipped blind
       (the doc's own RESOLVED banner explicitly states "unrecovered loss, accepted" rather than silently marking done).

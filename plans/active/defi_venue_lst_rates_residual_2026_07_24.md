@@ -71,7 +71,7 @@ context_scope:
 
 - [x] ✅ [DATA] P3. **DONE 2026-07-26 (slot-2) — stale premise, root cause found + fixed elsewhere.** The dedicated
       `lst-rates-central-element-323112` bucket this todo names no longer exists — verified live
-      (`gcloud storage     buckets describe` → 404) — it was migrated into the shared `market-data-tick-defi` bucket and
+      (`gcloud storage buckets describe` → 404) — it was migrated into the shared `market-data-tick-defi` bucket and
       deleted 2026-07-13/ 14 (`defi_dedicated_bucket_shared_migration_2026_07_13.md`, all todos `[x]`), and the 5 LST
       venues' `lst_rates` capability-registry entries were fixed 2026-07-07/10
       (`defi_turbo_api_hides_real_captured_data_2026_07_07.md`) — verified live: `ANKR-ETHEREUM`/`MANTLE-ETHEREUM`/
@@ -81,7 +81,7 @@ context_scope:
       DeFi sub-bucket that ever existed (incl. `lst-rates`) has been consolidated into the single shared bucket, not
       permanently multi-bucket-folded; there is nothing left to fold. **Found + fixed the actual live residual bug
       instead**: `DEFI_NON_PROTOCOL_VENUE_PREFIXES` in
-      `deployment-api/services/data_status/{rollup_cache,     breakdowns_domain}.py` matched on venue PREFIX
+      `deployment-api/services/data_status/{rollup_cache, breakdowns_domain}.py` matched on venue PREFIX
       (`v.split("-",1)[0]`), which silently stripped `ANKR-ETHEREUM` (a real, capability-registered LST protocol with
       genuinely captured data) — plus every `ALCHEMY-<chain>` venue and `COINBASE-ETHEREUM` — from the rollup venue
       list + per-chain breakdown, just for sharing a prefix with the bare noise strings
@@ -91,7 +91,7 @@ context_scope:
 - [x] ✅ [DATA] P3 (VAULT half only). **DONE 2026-07-26 (slot-2) — `VAULT` half of this todo was already resolved,
       SUSHISWAP half stays open.** `VAULT` is NOT present in `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES` (grep-
       verified 0 matches) — already excluded, guarded by a passing regression test
-      (`unified-api-contracts/tests/unit/test_mtds_venue_coverage.py::TestNewlyCapabilitiedDefiVenues::     test_vault_is_not_in_all_defi_venues`,
+      (`unified-api-contracts/tests/unit/test_mtds_venue_coverage.py::TestNewlyCapabilitiedDefiVenues:: test_vault_is_not_in_all_defi_venues`,
       live-run confirmed green). The residual 1,113 `VAULT`-labeled captured rows (pre-attribution-window
       `vault_share_price` rows the writer's per-vault `_VAULTS` protocol lookup never covered) are correctly
       uncounted/invisible today, not incorrectly excluded — reattributing them to a real protocol would need a new

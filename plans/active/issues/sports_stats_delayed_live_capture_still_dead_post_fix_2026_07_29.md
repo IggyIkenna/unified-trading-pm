@@ -456,25 +456,25 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       Repo: deployment-service.
 
       **DONE 2026-07-30 — deployment-service@a172915.** `FirstSuccessPoller` (`sports_latency_observation.py`) now
-              accepts `bucket`/`key`/`storage` (mirrors `PeriodicTierState`'s exact adapter shape — `default_state_storage()`
-              promoted from module-private to shared-public for this reuse); loads persisted `_pending` on construction,
-              persists after every real mutation in `register_from_event()` (only when at least one entity was actually
-              registered) and `poll()` (only when something was removed/updated) — best-effort, `except Exception` (broadened
-              from the initially-narrower `(OSError, ValueError)` after discovering it could crash the live dispatch path on a
-              transient storage failure; persistence must never block a real trigger fire). `SportsTriggerScheduler.__init__`
-              wires it via a new `_build_first_success_poller()` (same `state_bucket or resolve_state_bucket()` + full-failure
-              fallback-to-in-memory-only shape as the existing `_build_periodic_state()`). **The regression test asked for is
-              exactly `test_first_success_poller_survives_fresh_instance_across_one_shot_restart`** (registers on instance A,
-              discards it, constructs a brand-new instance B against the same bucket/storage, asserts B's `.pending` already
-              contains the entry with no `register_from_event` call) — plus persist-on-register, persist-on-poll-removal,
-              malformed-state-starts-fresh, and no-bucket-stays-in-memory-only (back-compat) tests, 5 new tests total in
-              `tests/unit/test_sports_latency_observation.py`. Found + fixed a real test-isolation gap while wiring this in:
-              the shared `_make_scheduler_with_recorder()` test helper (used by ~10 pre-existing tests) never overrode
-              `state_bucket`, so every test sharing the default `resolve_state_bucket()` bucket name was reading/writing the
-              SAME `CLOUD_MOCK_MODE=true` mock-storage-backed state file — invisible before this change because no prior code
-              path actually persisted real content there; now scoped to a per-test-unique bucket
-              (`f"deployment-scripts-test-{uuid.uuid4().hex}"`), fixing a latent cross-test-pollution risk for
-              `PeriodicTierState` too, not just this new code. Full `quality-gates.sh` green (2967 passed).
+      accepts `bucket`/`key`/`storage` (mirrors `PeriodicTierState`'s exact adapter shape — `default_state_storage()`
+      promoted from module-private to shared-public for this reuse); loads persisted `_pending` on construction,
+      persists after every real mutation in `register_from_event()` (only when at least one entity was actually
+      registered) and `poll()` (only when something was removed/updated) — best-effort, `except Exception` (broadened
+      from the initially-narrower `(OSError, ValueError)` after discovering it could crash the live dispatch path on a
+      transient storage failure; persistence must never block a real trigger fire). `SportsTriggerScheduler.__init__`
+      wires it via a new `_build_first_success_poller()` (same `state_bucket or resolve_state_bucket()` + full-failure
+      fallback-to-in-memory-only shape as the existing `_build_periodic_state()`). **The regression test asked for is
+      exactly `test_first_success_poller_survives_fresh_instance_across_one_shot_restart`** (registers on instance A,
+      discards it, constructs a brand-new instance B against the same bucket/storage, asserts B's `.pending` already
+      contains the entry with no `register_from_event` call) — plus persist-on-register, persist-on-poll-removal,
+      malformed-state-starts-fresh, and no-bucket-stays-in-memory-only (back-compat) tests, 5 new tests total in
+      `tests/unit/test_sports_latency_observation.py`. Found + fixed a real test-isolation gap while wiring this in:
+      the shared `_make_scheduler_with_recorder()` test helper (used by ~10 pre-existing tests) never overrode
+      `state_bucket`, so every test sharing the default `resolve_state_bucket()` bucket name was reading/writing the
+      SAME `CLOUD_MOCK_MODE=true` mock-storage-backed state file — invisible before this change because no prior code
+      path actually persisted real content there; now scoped to a per-test-unique bucket
+      (`f"deployment-scripts-test-{uuid.uuid4().hex}"`), fixing a latent cross-test-pollution risk for
+      `PeriodicTierState` too, not just this new code. Full `quality-gates.sh` green (2967 passed).
 
 - [ ] [VERIFY] P2. **New, opened 2026-07-31 by the VERIFY P1 todo above.** Both structural fixes (venue-adapter-key
       registry sentinels + `active_venues` enrichment-provider exclusion) are confirmed deployed and working (zero

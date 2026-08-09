@@ -77,20 +77,20 @@ context_scope:
       archive the source doc** — even after this todo and batch-9's 2 todos all land, that doc still retains 2
       deliberately-non-extracted open items (see its own 2026-08-09 Progress Log entry), so it correctly stays
       `status: open` with `assigned_vm: NA`. **Re-pull before editing** —
-      `ci_satellite_ao_dispatch_batch9_finalize_     2026_08_09.md` may edit the same source doc concurrently. **Done
+      `ci_satellite_ao_dispatch_batch9_finalize_ 2026_08_09.md` may edit the same source doc concurrently. **Done
       when**: the checkbox is flipped with verified evidence, the doc's `status` is unchanged (`open`), and PM's
       `quality-gates.sh` is green.
 
       **Done, 2026-08-09 (slot 12).** Re-pulled `origin/live-defi-rollout` before editing (no concurrent edit from
-                  `batch9_finalize` present). The source doc's P1 finding 1 checkbox was already flipped to `[x]` — landed by slot
-                  31 in commit `a6c253eadabd4225910cfb659f39562fe6b0b927` ("repoint 6 stale plans/active/ refs in
-                  monitoring_control_plane_master to archive paths (ci_satellite_ao_dispatch_batch10 todo 1)"), the same commit
-                  that shipped batch-10 todo 1. Verified `a6c253eadabd4225910cfb659f39562fe6b0b927` is an ancestor of
-                  `origin/live-defi-rollout` via `git merge-base --is-ancestor` before citing it here. No further edit was needed
-                  in the source doc itself — this todo's own remaining job was reconciling the evidence back into THIS finalize
-                  plan. Source doc's `status` confirmed unchanged (`open`, `assigned_vm: NA`). PM `quality-gates.sh` green.
-                  Evidence: unified-trading-pm@a6c253eadabd4225910cfb659f39562fe6b0b927 (source-doc checkbox flip, pre-existing) +
-                  this commit (finalize-plan reconciliation).
+      `batch9_finalize` present). The source doc's P1 finding 1 checkbox was already flipped to `[x]` — landed by slot
+      31 in commit `a6c253eadabd4225910cfb659f39562fe6b0b927` ("repoint 6 stale plans/active/ refs in
+      monitoring_control_plane_master to archive paths (ci_satellite_ao_dispatch_batch10 todo 1)"), the same commit
+      that shipped batch-10 todo 1. Verified `a6c253eadabd4225910cfb659f39562fe6b0b927` is an ancestor of
+      `origin/live-defi-rollout` via `git merge-base --is-ancestor` before citing it here. No further edit was needed
+      in the source doc itself — this todo's own remaining job was reconciling the evidence back into THIS finalize
+      plan. Source doc's `status` confirmed unchanged (`open`, `assigned_vm: NA`). PM `quality-gates.sh` green.
+      Evidence: unified-trading-pm@a6c253eadabd4225910cfb659f39562fe6b0b927 (source-doc checkbox flip, pre-existing) +
+      this commit (finalize-plan reconciliation).
 
 ## Codex SSOTs
 

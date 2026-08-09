@@ -308,7 +308,7 @@ unchanged:
       from this line (NOT done here): `manifest_consolidator.py` (1,360) audit + `__init__.py` 2,279 facade-verify —
       tracked by the P3 tail item below. Repo: unified-trading-library.
 - [x] ✅ [REFACTOR] P2. **DONE — verified 2026-07-27**:
-      `find market_tick_data_service -name "*.py" -exec wc -l {} \; |     awk '$1>900'` returns ZERO files fleet-wide in
+      `find market_tick_data_service -name "*.py" -exec wc -l {} \; | awk '$1>900'` returns ZERO files fleet-wide in
       MTDS. All 11 named files were split (e.g. `lending_indices.py` →
       `lending_indices_{handler,rpc,morpho,parsers,subgraph}.py`; `dex_pools.py`/`dex_swaps.py`/`oracle_prices.py`/
       `gas_fee.py`/`perp_funding.py` likewise decomposed into per-concern handler modules, all <900L);
@@ -367,7 +367,7 @@ unchanged:
       anywhere in the workspace. RETARGETED 2026-07-30: this check previously demanded imports come FROM
       `unified_domain_client`... fix retargets this check to the real invariant: domain-client symbols must come from
       `unified_trading_library`." The live gate (line 1532) now greps
-      `from unified_trading_library|from     unified_domain_client` as the accepted pattern set — matches the fix this
+      `from unified_trading_library|from unified_domain_client` as the accepted pattern set — matches the fix this
       todo asked for. This item was one of the 4 bundled into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` §
       Deferred item 2 (G1); all 4 confirmed done via `infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md`'s re-check
       (see that doc, now archived). Was: **STALE + self-contradictory (confirmed 2026-06-12)** — it demanded
@@ -395,7 +395,7 @@ unchanged:
       `test_quote_maintenance.py` (+236L) and `test_router_and_handlers.py` (+67L) — 873 insertions across 6 files.
       **Independently re-verified 2026-08-02** (na-eligibility-audit, infra tranche), not taken on the finding's word:
       `git show --stat 89fbf99d` in the execution-service checkout,
-      `git merge-base --is-ancestor 89fbf99d     origin/live-defi-rollout` → ancestor confirmed, and the live wiring +
+      `git merge-base --is-ancestor 89fbf99d origin/live-defi-rollout` → ancestor confirmed, and the live wiring +
       test file re-read on disk. This closes finding 1 of
       `/plans/archive/issues/ag_closeout_audit_infra_parked_2026_07_31.md`, carried forward unreconciled by three
       consecutive `/ag-closeout-audit infra` runs (07-31, 08-01, 08-02) because that skill is scoped out of
@@ -409,7 +409,7 @@ unchanged:
       execution-service code wire-in — this todo is the PLAN reference only. **REHOME CHECK 2026-07-27**: no
       `infra_*_satellite_ao_dispatch_batch2*` plan exists yet — staying open here (corrected framing) rather than
       pointing at a plan that doesn't exist; rehome into batch2 once drafted. Was:
-      `execution_service/engine/     delta_proxy_repricer.py` is unreferenced (zero imports repo-wide, 2026-06-12 sweep)
+      `execution_service/engine/ delta_proxy_repricer.py` is unreferenced (zero imports repo-wide, 2026-06-12 sweep)
       — dead-code delete candidate per the delete-deprecated rule; needs a quick operator/architect confirm it isn't a
       planned consumer's WIP. Repo: execution-service.
 - [x] ✅ [CODE] P2. **deployment-api 16→6 (2026-06-12)** — deployment-api@94e4feb: wave-4b agent cleared 10 classes

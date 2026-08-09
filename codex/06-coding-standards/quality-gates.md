@@ -1846,7 +1846,7 @@ When a library's `reportUnknown*` strict rules surface a large residual (UTL: 96
    sibling `_*_sdk_protocols.py` with `__all__` (the `__all__` suppresses `reportUnusedClass` cleanly — do NOT add a
    `reportUnusedClass = "none"` global override).
 3. **Exemptions are NARROW + per-line + exact-rule only.** A genuinely stub-limited boundary (pyarrow stubs carry
-   `Unknown` param types; GCP proto-generated methods) may take a single `# pyright: ignore[exactRule]  # <dep> reason`.
+   `Unknown` param types; GCP proto-generated methods) may take a single `# pyright: ignore[exactRule] # <dep> reason`.
    **Banned:** blanket file-level `# pyright: reportX=false`, broad `# type: ignore` (no rule code), or a global
    pyproject `"none"` downgrade — these "institutionalise the downgrade." Net-new broad/blanket suppressions must be 0.
    **Sanctioned exception (DEFAULT-RULED 2026-08-06, market-tick-data-service only):**

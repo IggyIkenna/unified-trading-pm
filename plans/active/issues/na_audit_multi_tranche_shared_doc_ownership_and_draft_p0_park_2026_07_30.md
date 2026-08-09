@@ -260,7 +260,7 @@ scope on every run. Fix belongs with Finding 3's script todo.
       dispatched by another named route, and this todo cites the resulting SHA. -- CLOSED (na-eligibility-audit
       2026-08-03): Option A executed. Directly confirmed live: `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
       is `status: active` + `assigned_vm: planning`; its todo 1 shows
-      `[x] ✅ [CODE] P0. DONE 2026-07-30 —     instruments-service@94f3ee11` (repointed 2026-08-06 — original sha
+      `[x] ✅ [CODE] P0. DONE 2026-07-30 — instruments-service@94f3ee11` (repointed 2026-08-06 — original sha
       orphaned by the 2026-08-05 history rewrite; content verified identical) (the CQG mis-bucketing fix); the
       batch4/batch6 duplicate (todo 7) was resolved via that doc's own
       `## Deferred — duplicate extraction, sole owner is batch4 todo 3` section, citing an explicit 2026-07-30 operator
@@ -272,7 +272,7 @@ scope on every run. Fix belongs with Finding 3's script todo.
       corpus still carries the legacy form. **Done when**: the SKILL.md text names one format and the skip filter is
       documented as accepting both. (repo: unified-trading-pm) **Scope extended 2026-08-02 (cross-cutting run): (a) a
       THIRD live shape exists** —
-      `### 2026-07-30 (`/na-eligibility-audit`, tranche=cross-cutting, autonomous) — KEEP-NA     verdict` as a heading,
+      `### 2026-07-30 (`/na-eligibility-audit`, tranche=cross-cutting, autonomous) — KEEP-NA verdict` as a heading,
       found in `issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` and normalized to the
       name-then-date form by that run; whatever filter lands must tolerate the heading shape too, or re-normalize the
       stragglers. **(b) also exclude `plans/active/task_template.md` from the NA inventory population** per Finding 5 —

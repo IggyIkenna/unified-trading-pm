@@ -6,7 +6,7 @@ summary: >-
   round9 cross-cutting sweep RECLASSIFY, 2026-08-09) — machine-held via `depends_on` + `gate_on_depends: true` until
   both of that doc's optional maintenance todos are done. Reconciles/archives the source doc once both todos land (or
   are explicitly declined as genuinely not worth doing, since both are marked "Optional").
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, close-out, satellite-docs, archival, escalation]
 related:
   [
-    /plans/active/issues/escalation_root_key_stale_predecessor_chaining_2026_08_09.md,
+    /plans/archive/issues/escalation_root_key_stale_predecessor_chaining_2026_08_09.md,
     /plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md,
   ]
 created: "2026-08-09"
@@ -44,34 +44,38 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/issues/escalation_root_key_stale_predecessor_chaining_2026_08_09.md,
+    /plans/archive/issues/escalation_root_key_stale_predecessor_chaining_2026_08_09.md,
     agent-orchestrator/server/escalation.py,
   ]
 ---
 
 # Escalation root_key stale-predecessor chaining — finalize
 
-> **Machine-gated on `escalation_root_key_stale_predecessor_chaining_2026_08_09.md`** (`depends_on` +
-> `gate_on_depends: true`). `sequential: true` because archival (todo 2) must run after reconciliation (todo 1).
+> **✅ RESOLVED 2026-08-09 — moot at authoring time.** The source doc this finalize plan gates on had ALREADY been
+> resolved + archived (`unified-trading-pm@c538cb6c96`, both P3 todos shipped with evidence) before the round9
+> cross-cutting sweep authored this finalize twin — that sweep's `git commit-tree` ran against a base tree that
+> predated the archival, resurrecting a stale pre-resolution duplicate at the active path and authoring this gate
+> against it. See `plans/archive/issues/escalation_root_key_stale_predecessor_chaining_2026_08_09.md`'s Progress Log
+> for the full reconciliation. Both todos below are satisfied by that already-shipped resolution; nothing left to do.
 
 ## Todos
 
-- [ ] [REVIEW] P3. Reconcile the source doc's 2 optional todos: run the one-off
-      `reconcile_stale_unresolved_escalations(window_hours=<large>, limit=<large>)` sweep to correct `agt-3dc7e9` and
-      any other similarly-stale `unresolved` rows in the historical record (cosmetic — no future chaining risk
-      post-fix), and expose `reescalations` on `GET /api/escalations/active` alongside `attempts`. Both are explicitly
-      "Optional" in the source doc — if either is judged genuinely not worth doing (e.g. the historical-record cleanup
-      has zero remaining stale rows once checked), record that determination with evidence rather than silently
-      skipping. Flip each checkbox in the source doc citing the shipped commit(s)/evidence, or the explicit
-      not-worth-doing determination. Done when: both todos in the source doc are `[x]` (either shipped or explicitly
-      declined with evidence) and the doc reads 0 open todos.
-- [ ] [DOC] P3. Archive `escalation_root_key_stale_predecessor_chaining_2026_08_09.md` via the standard 6-step ritual
-      once todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by`
-      (confirm already empty). Done when: the doc is moved to `plans/archive/2026_08/`, every referrer resolves to the
-      new path, and this finalize doc archives alongside it in the same commit.
+- [x] ✅ [REVIEW] P3. Reconcile the source doc's 2 optional todos: **already done** — the archived source doc shows
+      both shipped with evidence (`agent-orchestrator@884a9bfe1` root_key staleness-bound fix; historical-reconcile
+      sweep run, 0 corrected, verified correct; `agent-orchestrator@454dad285` `reescalations` API/dashboard exposure).
+      No further action; the stale duplicate this finalize doc was gated on never carried this resolution because it
+      was resurrected from a pre-resolution base tree (see banner above).
+- [x] ✅ [DOC] P3. Archive `escalation_root_key_stale_predecessor_chaining_2026_08_09.md`: **already done**
+      (`unified-trading-pm@c538cb6c96`, lives at `plans/archive/2026_08/`). The resurrected active-path duplicate this
+      finalize doc pointed at has been removed (`git rm`) and every corpus referrer repointed to the archive path.
+      This finalize doc archives alongside it in this same commit, per its own done-when.
 
 ## Progress Log
 
 - **2026-08-09**: Finalize twin authored alongside the source doc's RECLASSIFY flip (round9 cross-cutting sweep) — the
   source doc carries 2 open todos, past `check_finalize_plan_coverage.py`'s single-open-todo carve-out, so a gated
   finalize plan is required per `task_template.md`.
+- **2026-08-09 (cicd, RB-b76ac836 ldr_qg_failure triage)**: discovered this finalize twin was gated on a resurrected
+  stale duplicate (see banner above) rather than the real, already-resolved source doc — the round9 sweep's
+  `git commit-tree` base tree predated the archival commit. Both todos were already satisfied by the real resolution;
+  flipped both `[x]` and archiving this doc now, closing the loose thread.

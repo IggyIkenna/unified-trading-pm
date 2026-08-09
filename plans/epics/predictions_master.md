@@ -471,7 +471,7 @@ routing table above — do NOT pick work from them directly.
       `InstrumentRecord.available_from_datetime` / `available_to_datetime` stamped in 98bb167)
 - [x] [SCRIPT] P0. `_extract_prediction_shard` / `_compute_prediction_shards` (orchestrator.py:2497–2524) call
       classifier; emit
-      `(asset_group=prediction, venue, data_type=prediction_canonical_question_group,     canonical_question_group, market_id, day)`
+      `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, market_id, day)`
       shard atom. [AUDIT 2026-05-07: FRESH — actionable] (instruments-service@b904785 — replaced with
       `_extract_prediction_canonical_group(row)` calling `classify_polymarket_to_canonical_group` /
       `classify_kalshi_to_canonical_group` from UAC; per-market_id manifest row deferred to Phase 2 along with the
@@ -632,7 +632,7 @@ legacy per-base_asset). Migration must run AFTER writegate Phase 2.A placeholder
 - [x] [CODE] P0. Implement (or verify shipped) `arb_calculator` in FSS: cross-bookmaker arb %, eligible pairs, duration.
       [AUDIT 2026-05-07: FRESH — actionable; verify shipped status against features-sports-service catalog] (SHIPPED
       features-service@719c45a9:
-      `feat(sports/arb): implement arb_calculator — cross-bookmaker arb %, eligible pairs,     duration`; verified
+      `feat(sports/arb): implement arb_calculator — cross-bookmaker arb %, eligible pairs, duration`; verified
       reachable on origin/live-defi-rollout.)
 - [ ] [ANALYSIS] P1. Persist model + metrics to ml-models registry; tag `model_family=sports_arb_v1`. [AUDIT 2026-05-07:
       BLOCKED-ON predictions_master:walk-forward run]

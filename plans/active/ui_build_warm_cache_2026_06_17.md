@@ -86,7 +86,7 @@ context_scope:
       — a `pnpm-workspace.yaml` missing `packages:` broke local/agent `pnpm install` under pnpm 9.x (CI stayed green
       only because it pins pnpm 10.x); the reporting session's coverage numbers came from a broken/stale install, not
       genuinely uncovered components. Fixed + verified green
-      (`Statements 72.32%|Branches 64.5%|Functions     68.79%|Lines 74.49%`, all ≥ threshold) — see the issue doc (now
+      (`Statements 72.32%|Branches 64.5%|Functions 68.79%|Lines 74.49%`, all ≥ threshold) — see the issue doc (now
       archived) for the full writeup. `deployment-ui`'s gate is unblocked; the deployment-ui copy of `setup.sh` is STILL
       not in sync with the template's pre-warm-cache step —
       `cp unified-trading-pm/scripts/setup.sh deployment-ui/scripts/setup.sh` + commit + ship is the remaining open work

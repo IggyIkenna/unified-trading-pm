@@ -160,7 +160,7 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
       this todo is expected to sit open for a long time — that is the intended shape, not staleness.
 - [x] [SCRIPT] P2. **§3 — DONE 2026-08-08.** Survivor: `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`
       (`status: resolved`, real fix `agent-orchestrator@e761cb1`). Added the missing
-      `superseded_by:     [ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26]` to the duplicate's frontmatter
+      `superseded_by: [ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26]` to the duplicate's frontmatter
       (it already had `status: resolved` + `resolved_by:` prose but no machine-readable pointer), and folded its two
       extra root-cause candidates into the survivor's body for the historical record. Both docs already archived — no
       move needed. Source: this doc §3. — unified-trading-pm (this commit)

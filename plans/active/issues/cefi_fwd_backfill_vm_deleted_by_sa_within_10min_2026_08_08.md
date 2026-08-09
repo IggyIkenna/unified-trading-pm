@@ -170,7 +170,7 @@ before launch.
       compute SA or `uts-prd-sa`, never `unified-trading-sa` + `agent-name/claude_code`). 3. **The actual deleter,
       confirmed from the audit log's `requestMetadata.callerSuppliedUserAgent`:** both `v1.compute.instances.delete`
       calls (11:14:58 first / 11:17:12 last — again one operation, not two) were issued via the **`gcloud` CLI**
-      (`google-cloud-sdk gcloud/569.0.0 ... agent-name/claude_code        command/gcloud.compute.instances.delete`),
+      (`google-cloud-sdk gcloud/569.0.0 ... agent-name/claude_code command/gcloud.compute.instances.delete`),
       authenticated as `unified-trading-sa`, from IP `13.113.200.22` (the `planning` orchestrator VM's own EIP). This is
       a **Claude Code agent session running `gcloud compute instances delete` directly**, not any automated safety
       mechanism. **This is a recurring pattern, not a one-off**: the IDENTICAL signature (same SA, same IP, same
@@ -208,7 +208,7 @@ before launch.
       recompute). Do NOT flip `-011` done on VM-STOPPED alone — measure GCS coverage. **GCS spot-check prefix** (for
       mid-run progress only, NOT the final gate): bucket=`market-data-tick-cefi-prd-central-element-323112` (via
       `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="cefi")`),
-      prefix=`raw_tick_data/by_date/     day={day:%Y-%m-%d}/pipeline_mode=batch_tardis/asset_group=cefi/venue={venue}/instrument_type=perpetual/     data_type=derivative_ticker/`.
+      prefix=`raw_tick_data/by_date/ day={day:%Y-%m-%d}/pipeline_mode=batch_tardis/asset_group=cefi/venue={venue}/instrument_type=perpetual/ data_type=derivative_ticker/`.
       Use the `probe_cefi_perp_funding_raw_coverage.py` script for the final gate only. **Frontier at 2026-08-09T13:45Z
       (25h elapsed)**: all 6 venues complete through 2026-06-22; 06-23 in-progress (OKX-SWAP at 146/~340). **Updated
       frontier (~28h elapsed)**: 06-23 complete (OKX-SWAP 346); 06-24 in-progress (BIN=563, BYB=484, OKX=224/~344,

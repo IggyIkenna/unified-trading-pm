@@ -136,7 +136,7 @@ vault-share-price collector) end-to-end:
       `vault_share_price_handler.py`'s git-blame introduction (commit `9475e66b`, 2026-05-03T15:01:01Z) — so these are
       NOT legacy/orphaned rows from a prior collector generation; they are being written by the CURRENT RPC handler
       right now. Root cause (verified live against the UAC registry, not assumed):
-      `SOURCE_PRIORITY[('defi',     'vault_share_price')] = ['onchain_subgraph']` is the ONLY registered external source
+      `SOURCE_PRIORITY[('defi', 'vault_share_price')] = ['onchain_subgraph']` is the ONLY registered external source
       for this cell (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py:312`),
       so `default_source()`/`source_required()`
       (`unified_api_contracts.canonical.crosscutting._source_priority_provenance`) auto-stamp
@@ -147,7 +147,7 @@ vault-share-price collector) end-to-end:
 - [x] 2. [DATA] P2. **DONE 2026-07-28 (slot-4), same scan as todo 1.** Blast radius: 7,476 total `vault_share_price`
       rows in the manifest; **185 desync rows (2.5%)**, spread EVENLY across **5 venues** (37 rows each) — ETHENA, FRAX,
       MAKER, MORPHOVAULTS, YEARN_V3 — all sharing the identical
-      `(pipeline_mode=batch_onchain_rpc,     source=onchain_subgraph)` pair. All 5 venues are written by the same
+      `(pipeline_mode=batch_onchain_rpc, source=onchain_subgraph)` pair. All 5 venues are written by the same
       `vault_share_price_handler.py` (the vault registry's 5 protocol groups), confirming this is a
       handler-wide/cell-wide structural artifact, not a YEARN_V3-specific bug.
 - [x] 3. [CODE] P2. Fix `vault_share_price_handler.py` to pass an explicit `source=` on every `record_captured` /

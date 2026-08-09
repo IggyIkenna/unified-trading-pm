@@ -82,7 +82,7 @@ operator instruction), verified via AWS SSM — no smoke-test-only claims.
       needed the third repo too). `uv sync --frozen` succeeded clean (full venv incl. scipy/pandas/scikit-learn/etc.).
       **Real bug found + fixed in the checked-in SSOT** (not just live-patched): `resource-history-sampler.service`
       crashed at import
-      (`FileNotFoundError: No usable temporary directory found in ['/tmp', '/var/tmp', '/usr/tmp',     <WorkingDirectory>]`)
+      (`FileNotFoundError: No usable temporary directory found in ['/tmp', '/var/tmp', '/usr/tmp', <WorkingDirectory>]`)
       — `ProtectSystem=strict` makes the whole filesystem read-only except `ReadWritePaths=.../data`, and nothing in the
       unit granted a writable `/tmp`; some import in this venv's (heavier than the AO box's own) dependency chain
       touches `tempfile` at import time. The AO box's own, byte-identical unit doesn't hit this (confirmed via a live
@@ -99,7 +99,7 @@ operator instruction), verified via AWS SSM — no smoke-test-only claims.
       **Live-verified end-to-end**: `resource-history-sampler.service` active, real 5s samples flowing (e.g.
       `ram_percent: 10.6, swap_percent: 0.0, disk_percent: 59.6` at 2026-08-06T06:09 UTC — swap now showing correctly
       post-todo-1); manually triggered `resource-history-backup.service` exited clean and logged
-      `Resource-history log     uploaded to s3://uts-orchestrator-state-427895769566/snapshots/ci-escalation-runner-vm-1/2026-08-06/resource_history.jsonl`
+      `Resource-history log uploaded to s3://uts-orchestrator-state-427895769566/snapshots/ci-escalation-runner-vm-1/2026-08-06/resource_history.jsonl`
       (IAM-role credentials, no manual key needed — same `uts-orchestrator-epic` profile both VMs share). Both units
       `enabled` (survive reboot). — done 2026-08-06, this session. Fix commit: (this plan's own commit, see below — the
       unit file lives in `agent-orchestrator`, shipped alongside this plan doc).

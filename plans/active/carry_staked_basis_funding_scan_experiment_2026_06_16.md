@@ -76,8 +76,8 @@ peripheral-script rule.
 ## Net-carry model
 
     net_carry(coin, venue) = annualised_short_perp_funding(coin, venue)
-                           + staking_apy(coin)   IF venue_accepts_collateral(venue, coin's LST)
-                           + 0                    otherwise (plain long-spot / short-perp, funding only)
+    + staking_apy(coin)   IF venue_accepts_collateral(venue, coin's LST)
+    + 0                    otherwise (plain long-spot / short-perp, funding only)
 
 - Rank by **net carry** (best of staking+funding; funding-only where venue constraints necessitate — operator
   2026-06-16). Per coin, pick the venue maximising net carry.

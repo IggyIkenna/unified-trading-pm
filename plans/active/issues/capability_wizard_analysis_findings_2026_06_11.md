@@ -456,7 +456,7 @@ from VENUE_CATEGORY_MAP / DEFI_VENUE_TO_PROTOCOL), but TWO other functions also 
 `extract_archetypes_and_families` iterates `cell.venue_ids` from `ARCHETYPE_CAPABILITY_REGISTRY` (which includes `ibkr`
 in 8 archetype cells); (b) `extract_leg_structures` iterates `leg.eligible_venue_ids` from `ARCHETYPE_LEG_STRUCTURES`
 (which includes `ibkr` in 4 leg seeds). Both call their own local `add_node()` with no broker guard. Evidence:
-`capability-orphan-report.txt` showed `broker_classed_venues: 1  BROKER-AS-VENUE: venue:ibkr` after the initial manifest
+`capability-orphan-report.txt` showed `broker_classed_venues: 1 BROKER-AS-VENUE: venue:ibkr` after the initial manifest
 regeneration. Fix: added `is_broker()` guard to both `add_node()` functions. broker_classed_venues 1→0. Cite:
 `_capability_extract.py:88-97` (arch function), `_capability_extract.py:203-212` (legs function).
 
@@ -721,7 +721,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       `plans/archive/2026_06/engine_findings_remediation_2026_06_15.md` shipped the owner decision + consolidation:
       canonical netting home = UTL `unified_trading_library/risk/net_delta.py` (strategy-service still owns the
       position/risk orchestration that calls it) —
-      `UTL@b819cd1c + execution-service@b7c63335 +     strategy-service@bdac6595`. No longer BLOCKED-OPERATOR-DECISION.
+      `UTL@b819cd1c + execution-service@b7c63335 + strategy-service@bdac6595`. No longer BLOCKED-OPERATOR-DECISION.
 - [x] ✅ [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit`≠`DERIBIT`) blocks emission.
       LOGIC-FREEZE. Target: strategy-service. — **DONE strategy-service@dac939d6.** FREEZE STATUS: verified lifted —
       `epics/strategy_master.md` no longer carries any freeze/no-changes-to-engine language (checked directly, zero

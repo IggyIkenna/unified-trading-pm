@@ -20,7 +20,7 @@ summary: >-
   `/plans/active/issues/...` for `/plans/archive/2026_08/issues/...` within the same line, always produces `git diff
   --numstat` = `1 1` — one deleted line, one added line, never zero — because git diffs at line granularity, not
   character granularity). Live-verified: `sed -i 's#...#...#' cross_cutting_consolidated_closeout_2026_07_25.md` then
-  `git diff --numstat -- <file>` → `1  1  ...` (confirmed, not assumed). No documented exception in either script covers
+  `git diff --numstat -- <file>` → `1 1 ...` (confirmed, not assumed). No documented exception in either script covers
   "fix a stale outbound link in an over-cap file with a genuinely tiny (net-zero-length) edit." The archival ritual's
   own SSOT anticipates exactly this shape of conflict ("if the hook still blocks the staged move, that is the gate
   mis-scoping... fix the scoping, do not shrink a finished doc to appease it") but names no concrete fix.
@@ -128,7 +128,7 @@ force it through or damage another agent's active doc.
       — a sneaky same-line prose addition alongside the path fix, and a file newly crossing the cap in the same commit,
       both still correctly fail `HARD`. **Deliberately NOT done in this same pass: completing the deferred archival of
       `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`.** That doc's own
-      `archive_exempt:     true` banner (set 2026-08-09) names this exact fix as the unblocking condition, but
+      `archive_exempt: true` banner (set 2026-08-09) names this exact fix as the unblocking condition, but
       completing the archival for real also requires a corpus-wide referrer-path fixup across **11 active-corpus files**
       (`cross_cutting_consolidated_closeout_2026_07_25.md` — the one that triggered this deadlock — plus
       `ao_satellite_ao_dispatch_batch12_2026_08_09.md`, `ag_closeout_audit_cross_cutting_parked_2026_08_07.md`,

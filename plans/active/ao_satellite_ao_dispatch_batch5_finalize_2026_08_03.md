@@ -96,7 +96,7 @@ source: >-
 - [ ] [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** At minimum
       re-check all 10 source docs named in todo 2 above for whether their OTHER (non-batched) items are also closed —
       several (e.g. `orchestrator_db_pool_exhaustion_state_poll_stall`,
-      `reaper_kills_inflight_detached_     quickmerge_false_done`) have additional open items NOT covered by this batch
+      `reaper_kills_inflight_detached_ quickmerge_false_done`) have additional open items NOT covered by this batch
       and must NOT be archived if so. Run the standard 6-step archival ritual (migrate any DEFERRED item → banner →
       codex-alignment check → fix every referrer's path corpus-wide → clear the lock) on any doc that IS fully done.
       **Done when**: `grep -rl <slug> plans/ codex/` returns only the archived copy's own path for each archived doc,

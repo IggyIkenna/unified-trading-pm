@@ -503,7 +503,7 @@ verify `hasCompletedOnboarding:true` in `$CLAUDE_CONFIG_DIR/.claude.json` | | Ne
 env var not set OR shell didn't source the env file | `source ~/.claude-accounts/<id>.env` before running `claude` | |
 Token works locally but not in cron/systemd | Env vars not inherited | Source env file in cron command OR systemd
 `EnvironmentFile=` | | Two emails seem to share quota | Aliases on same orgId (not distinct subs) | Check
-`claude auth status                                                                                                                                             | grep orgId`;
+`claude auth status | grep orgId`;
 remove the alias from roster |
 
 ## Composes with

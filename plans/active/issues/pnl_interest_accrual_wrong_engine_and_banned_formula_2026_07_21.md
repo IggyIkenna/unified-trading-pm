@@ -500,7 +500,7 @@ unwired since the earlier pass (`index_ratio_accrual.py` + its test) are now com
       this build changed. - **Fix**: added a new `emit_lending_leg: bool = True` parameter to both shared producers (+
       the `emit_paper_run_attribution` thin bridge) — default `True` preserves the exact pre-existing 3-row/3-factor
       shape for every caller that doesn't pass it (every archetype above). Wired
-      `emit_lending_leg = (archetype !=       CARRY_STAKED_BASIS)` at the ONE call site in
+      `emit_lending_leg = (archetype != CARRY_STAKED_BASIS)` at the ONE call site in
       `paper_run_handler.py::run_paper`'s generic branch (shared by attribution + passive) and the equivalent passive
       re-derivation loop in `batch_rerun.py` (which does not call attribution at all — pre-existing, confirmed unrelated
       to this fix). The row is DROPPED entirely when `False` (removed from the `day_accruals`/`day_rows` list before

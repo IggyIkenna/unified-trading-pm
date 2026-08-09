@@ -509,19 +509,19 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       +2.28→+2.26, trims maxDD −6.3→−5.0%). NOTE: the trend leg **subsumes** the old de-risk overlay + 12% short (does
       their 2026 job + fixes 2023 + keeps the Sharpe they cost) — make those light DD-insurance, NOT core sleeves;
       stacking all three over-hedges (−0.18 full Sharpe). Repo: strategy-service. **DESIGN LOCKED 2026-06-22 + BUILD
-      DISPATCHED**: dedicated `TSMOM_BTC_CTA` archetype (not a `RULES_DIRECTIONAL_     CONTINUOUS` reuse — the factory
+      DISPATCHED**: dedicated `TSMOM_BTC_CTA` archetype (not a `RULES_DIRECTIONAL_ CONTINUOUS` reuse — the factory
       routes by archetype + clean per-leg PnL attribution). 11-step change set mapped: UAC (enum +
       `ARCHETYPE_TO_FAMILY`→RULES*DIRECTIONAL + `archetype_leg_spec_seeds`) → strategy-service (new
       `rules_directional/tsmom_btc_cta.py` `TsmomBtcCtaEngine` reading
-      `btc_trailing_return*{1,3,6,12}m`+`btc*realized*     vol`features, sign-averaged + vol-scaled +
-      lagged;`factory`registry;`archetype*defaults` Kelly→`V1_ARCHETYPES*     IN_SCOPE`;
+      `btc_trailing_return*{1,3,6,12}m`+`btc*realized* vol`features, sign-averaged + vol-scaled +
+      lagged;`factory`registry;`archetype*defaults` Kelly→`V1_ARCHETYPES* IN_SCOPE`;
       `catalog_directional.build_tsmom_btc_cta`slot`TSMOM_BTC_CTA@binance-btc-tsmom-1d-usdt-v1-prod`;
       `catalog.\_BUILDERS_BY_ARCHETYPE`; `archetype_slots_cefi`; `paper_universe` `\_ENGINE_DRIVABLE`+`E2E_UNIVERSE`;
       unit test). **Sub-deps (own todos): P2.11.16 features-service BTC-trend features (GATES the live paper run — null
       signals until written); P2.11.17 UI archetype mirror (playwright-gated).** Then the live ε=0 paper run. **STATUS
       2026-06-22 — CODE BUILT + TEST-GREEN, ship BLOCKED on transient fleet-wide version-lag (NOT the archetype). UAC
       edits now STASHED to unblock an unrelated features-service quickmerge (the dirty UAC clone tripped the dirty-deps
-      pre-flight) — recover with `git     -C .tabs/1/unified-api-contracts stash     pop`(stash msg "TSMOM_BTC_CTA
+      pre-flight) — recover with `git -C .tabs/1/unified-api-contracts stash pop`(stash msg "TSMOM_BTC_CTA
       archetype + WS-mapping fix — blocked on UAC version-lag"); strategy-service edits remain UNCOMMITTED in its
       clone.** The UAC
       files:`enums.py`+`archetype_leg_spec_seeds.py`+`tests/unit/test_archetype_leg_spec.py`(52→53) +`tests/test_ws_cassette_coexistence.py`(added
@@ -535,8 +535,8 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       **0.40.0** (the manifest-update workflow hasn't synced the bump — the documented VERSION_SPLIT promotion-lag, here
       hard-blocking the consumer's local QG).`--skip-version-alignment`is human-only. **TO COMPLETE (once the PM
       manifest syncs to UAC 0.40.0, or a human aligns it)**:
-      re-run`cd     unified-api-contracts && bash scripts/quality-gates.sh --no-fix` → quickmerge UAC
-      (`enums.py     archetype_leg_spec_seeds.py tests/unit/test_archetype_leg_spec.py`) + a separate `fix(tests):`
+      re-run`cd unified-api-contracts && bash scripts/quality-gates.sh --no-fix` → quickmerge UAC
+      (`enums.py archetype_leg_spec_seeds.py tests/unit/test_archetype_leg_spec.py`) + a separate `fix(tests):`
       commit for the WS mappings → then quickmerge strategy-service (it depends on the UAC enum, so promote UAC first).
       The agent's first pass left it unshipped + had ONE hallucinated WS-test edit (invented connectors) which was
       dropped; the real WS mappings were re-added.
@@ -557,8 +557,8 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       (toHaveLength 19) + tests/unit/wizard/parity-gates.test.ts (58 archetypes) — both fail on TSMOM removal.** 15
       files (`lib/architecture-v2/enums.ts`+`coverage.ts`+`archetypes.ts`, `lib/help/help-tree-generated.ts`,
       `lib/mocks/fixtures/trading-data.ts`, `lib/registry/ui-reference-data.json`,
-      `components/briefings/     strategy-coverage-matrix.tsx`, `components/marketing/strategy-family-catalogue.tsx`,
-      `public/     capability-verdict-matrix.json` + 6 test files). tsc clean, 286 Vitest pass, `quality-gates.sh`
+      `components/briefings/ strategy-coverage-matrix.tsx`, `components/marketing/strategy-family-catalogue.tsx`,
+      `public/ capability-verdict-matrix.json` + 6 test files). tsc clean, 286 Vitest pass, `quality-gates.sh`
       exit 0. The playwright SMOKE gate (`tests/smoke/`) self-starts `PORT=3100 pnpm dev:mock` (120s boot) — the earlier
       BLOCKED-PLAYWRIGHT was just not waiting for boot; ran green here. Repo: unified-trading-system-ui.
 - **[CODE] P2.11.20.** Complete TSMOM_BTC_CTA capability wiring — add it to the UAC archetype_capability_manifest (found

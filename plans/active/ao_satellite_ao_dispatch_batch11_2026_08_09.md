@@ -86,7 +86,7 @@ batch performs.
 
 - [ ] [SCRIPT] P2. **Fix `scripts/plan-hygiene/fix_frontmatter.py`'s `get_first_paragraph_after_heading()` hard
       truncation.** Current behavior (verified by reading the function body):
-      `if len(result) > 200: result =     result[:197] + "..."` — a raw character-count cutoff with no
+      `if len(result) > 200: result = result[:197] + "..."` — a raw character-count cutoff with no
       word/sentence-boundary awareness, which produces a genuinely unusable, mid-word-cut `summary:` whenever a doc's
       auto-backfilled first paragraph exceeds 200 chars (confirmed root cause of 12-of-14 exactly-200-char truncations
       found live in `docs_reconcile_operator_decisions_2026_08_02.md` BLOCKED-OPERATOR-DECISION 3). Recommended fix

@@ -150,13 +150,13 @@ stale-redelivery problem this doc is primarily about.
       `redelivery_count` up to 17/30).
 - [x] [INFRA] P2. **DONE 2026-08-09 (slot-25, infra craft)** — `agent-orchestrator@af129dd`. Implemented the recommended
       shape: `POST /api/slots/{slot_id}/messages/{message_id}/ack` (new `ss.ack_message`,
-      `server/state_store/     activity.py`) stamps `answered_at` immediately, idempotent, no-op-not-error on an
+      `server/state_store/ activity.py`) stamps `answered_at` immediately, idempotent, no-op-not-error on an
       unknown/cross-slot id. `BootResponse`/`HeartbeatResponse`/`ProgressResponse` gain `message_ids: list[int]` —
       positionally aligned with the existing `messages: list[str]` (a NEW parallel field, not a breaking type change on
       `messages` itself, since many live worker sessions across the fleet already parse it as a bare string list and
       this table's rows are handed to a fresh session on every respawn, so a breaking change couldn't roll out
-      atomically). `GET     /api/slots/{id}/messages`'s `IncomingMessage` also gains `id`. Bonus shipped too:
-      `SendMessageRequest.     supersedes_message_id` auto-acks the row it replaces via
+      atomically). `GET /api/slots/{id}/messages`'s `IncomingMessage` also gains `id`. Bonus shipped too:
+      `SendMessageRequest. supersedes_message_id` auto-acks the row it replaces via
       `enqueue_message(..., supersedes_message_id=...)`. Updated `unified-trading-pm/agents/worker.md` (new "ACK a
       one-shot instruction..." HARD RULE section) and `review.md` (cross-reference for per-task worker-loop dispatches)
       so a session that confirms an ask is already fulfilled/moot calls the ack endpoint before continuing. Did NOT also

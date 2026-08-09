@@ -134,7 +134,7 @@ human already made the call and the fleet still never executes it.
       rewrite needed. (repo: unified-trading-pm)
 - [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-23).** Triage accidental exclusion in
       `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`. Moot, not accidental: the flagged todo
-      (`[VERIFY]     P1. Re-measure the billed notify/glue cost`) was independently completed and checked off `[x]` by
+      (`[VERIFY] P1. Re-measure the billed notify/glue cost`) was independently completed and checked off `[x]` by
       slot 31 on 2026-08-09, and the whole doc — every todo now done — was archived to
       `plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md` (`status: complete`, 0 remaining `- [ ]`).
       No open todo remains on disk for the gate to misclassify, so no rewrite needed. Verified:
@@ -179,9 +179,9 @@ human already made the call and the fleet still never executes it.
       `plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md`. Already fixed by another session, not hand-fixed
       here: the flagged todo's trigger phrase (`...batch5_2026_07_27.md`'s earlier BLOCKED-OPERATOR-DECISION
       classification of this same...`) was rewritten to `...previously operator-decision-gated classification of this
-      same...`in`unified-trading-pm@84f363ff6`(slot-2, laptop, 2026-08-09 10:07 UTC+1) — an incidental fix bundled     inside an unrelated 20-file sweep titled "reclassify prek_stash_restore_race NA->planning". No live    `BLOCKED-<TOKEN>`/permanent-deferral marker remains anywhere in the block; the todo was never actually re-blocked     after the 2026-07-28 operator ruling this doc itself describes. Verified:     `cd
+      same...`in`unified-trading-pm@84f363ff6`(slot-2, laptop, 2026-08-09 10:07 UTC+1) — an incidental fix bundled inside an unrelated 20-file sweep titled "reclassify prek_stash_restore_race NA->planning". No live `BLOCKED-<TOKEN>`/permanent-deferral marker remains anywhere in the block; the todo was never actually re-blocked after the 2026-07-28 operator ruling this doc itself describes. Verified: `cd
       agent-orchestrator && uv run python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm
-      --json`    shows`defi_satellite_ao_dispatch_batch6_2026_07_30.md`with`disk_open=1, backlog_open=1, excluded=[]` —
+      --json` shows`defi_satellite_ao_dispatch_batch6_2026_07_30.md`with`disk_open=1, backlog_open=1, excluded=[]` —
       the todo is correctly dispatchable, no rewrite needed. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md`.** Its checkbox reads (truncated): "[DOC]

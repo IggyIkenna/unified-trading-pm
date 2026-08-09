@@ -118,7 +118,7 @@ only). This is the same audit methodology, one layer down: `market_interface/fac
 - [x] ✅ [SCRIPT] P1. Register `CoinbaseCbEthAdapter` in `market_interface/factory.py`'s `VENUE_REGISTRY` under
       `"coinbase_cbeth"` (the bare `"coinbase"` key is already taken by the CEFI spot `CoinbaseAdapter`) + add it to the
       `.adapters.defi` import block. Repo: market-tick-data-service. Done when:
-      `get_adapter("coinbase_cbeth",     chain="ethereum")` resolves to a `CoinbaseCbEthAdapter` instance; a regression
+      `get_adapter("coinbase_cbeth", chain="ethereum")` resolves to a `CoinbaseCbEthAdapter` instance; a regression
       test pins it. — market-tick-data-service (this session, slot-30, un-shipped at file time — see plan Progress Log
       for the SHA). `test_defi_coinbase_cbeth` (`TestGetAdapter`) + `test_registry_has_coinbase_cbeth`
       (`TestVenueRegistry`) added to `tests/market_interface/unit/test_factory_and_venue_registry.py`; full local suite

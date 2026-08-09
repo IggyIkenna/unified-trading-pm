@@ -175,7 +175,7 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
 - [x] ✅ [OPERATOR] P1. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — RESOLVED 2026-08-07,
       operator accepted the loss.** `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`
       is now archived with `status: resolved` and
-      `resolved_by: "RESOLVED 2026-08-07 (operator ruling)     -- unrecovered loss, accepted, no further investigation..."`
+      `resolved_by: "RESOLVED 2026-08-07 (operator ruling) -- unrecovered loss, accepted, no further investigation..."`
       (full text in `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`, now archived —
       both the source directory and the stash-backup bundle are confirmed genuinely absent, the operator declined
       recovery). Original text preserved below for record. Was: **Investigate the missing stash-backup bundle** (finding

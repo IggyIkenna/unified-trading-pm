@@ -420,8 +420,8 @@ Closes the sports-vocab gap (36 sports feature_groups in `EXPECTED_FEATURE_GROUP
 - [x] [AGENT] P0. **`unified_trading_library/manifest_freshness.py::ManifestFreshnessCache(ttl_seconds=60)`**. **SHIPPED
       2026-05-07 UTL@d7902f6**: 17 unit tests including the canonical concurrent-write race scenario.
 - [x] [AGENT] P0. **Public API**: re-export from `unified_trading_library`. **SHIPPED 2026-05-07 UTL@d7902f6**:
-      top-level facade `from unified_trading_library import ManifestFreshnessCache,     DEFAULT_TTL_SECONDS`.
-- [x] [AGENT] P1. **UTL `assert_no_lookahead_for_feature_group(feature_group, inputs_df,     target_ts)` helper**.
+      top-level facade `from unified_trading_library import ManifestFreshnessCache, DEFAULT_TTL_SECONDS`.
+- [x] [AGENT] P1. **UTL `assert_no_lookahead_for_feature_group(feature_group, inputs_df, target_ts)` helper**.
       **SHIPPED UTL@4354276c**: reads UAC `FEATURE_REQUIRED_INPUTS[fg]`, computes max_horizon, raises
       `LookaheadBiasError` if any input row has `available_at > target_ts - horizon`. 9 unit tests.
 
@@ -604,7 +604,7 @@ respectively).
 
 - [ ] [AGENT] P1. **Replace pandas outer-merge with DuckDB**. `_merge_features` (`gcs_feature_reader.py:185-232`): build
       an in-process DuckDB connection, register each per-day per-group DataFrame as a view, run
-      `SELECT * FROM g0 FULL OUTER JOIN g1 USING     (timestamp, instrument_id) FULL OUTER JOIN g2 ...`. DuckDB query
+      `SELECT * FROM g0 FULL OUTER JOIN g1 USING (timestamp, instrument_id) FULL OUTER JOIN g2 ...`. DuckDB query
       planner picks join order; lower memory peak; faster for 4+ groups.
 - [ ] [AGENT] P1. Drop the manual `_dedupe_columns` logic — DuckDB join uses `USING` so no `_x` / `_y` suffixes.
 - [ ] [AGENT] P1. **Tests**: identical-output test against pandas merge baseline on a fixture with 4 feature_groups and

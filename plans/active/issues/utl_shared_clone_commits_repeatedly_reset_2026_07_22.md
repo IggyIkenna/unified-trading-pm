@@ -185,7 +185,7 @@ clean+reset-away tree are indistinguishable without checking `git log` against t
       `cascade_dep_branch()` (`scripts/quickmerge.sh:471-490` as of `8ca436599`) into a standalone repro script against
       a scratch bare-origin + clone (not the real fleet clones — isolated, disposable). The guard's ahead-check
       (`git rev-list --count origin/$branch_name..refs/heads/$branch_name`) and the subsequent
-      `git checkout -B     "$branch_name" "origin/$branch_name"` are TWO SEPARATE, non-atomic git subprocess calls with
+      `git checkout -B "$branch_name" "origin/$branch_name"` are TWO SEPARATE, non-atomic git subprocess calls with
       no lock between them. Injected a delay between the two (simulating shared-host process-scheduling contention —
       this fleet's host has documented recurring contention, e.g. `shared_host_home_filesystem_full_2026_07_26.md`, load
       14.93 on a 30-vCPU box observed elsewhere in this same session) and, during that gap, committed a NEW commit on

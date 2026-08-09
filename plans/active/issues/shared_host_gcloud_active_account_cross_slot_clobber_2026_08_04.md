@@ -117,7 +117,7 @@ Two independent fix directions, either or both:
 
 - [ ] [INFRA] P2. Stop launcher scripts (and any script invoking `gcloud`) from depending on the ambient/global active
       account at all — pin the identity PER-INVOCATION instead, e.g.
-      `gcloud --account=unified-trading-sa@... compute     instances create ...` (gcloud supports a per-command
+      `gcloud --account=unified-trading-sa@... compute instances create ...` (gcloud supports a per-command
       `--account` flag that overrides the active config without mutating shared state) or
       `CLOUDSDK_CORE_ACCOUNT=unified-trading-sa@...` exported only within the launcher's own subshell. Audit
       `deployment-service/scripts/vm/lib/launcher_common.sh` and the `launch-*.sh` family for any bare `gcloud`

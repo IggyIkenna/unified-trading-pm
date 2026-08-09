@@ -244,7 +244,7 @@ Two secondary findings:
       with the real REST base_url `https://mainnet.zkln.elliot.ai/api/v1` + `SOURCE_PRIORITY`/`SOURCE_MODE_CAPABILITY`/
       emission-latency closed-set entries + 6 tests); the closed-set cascade was resolved fully, not guessed. Lock test
       `unified-trading-library@83350199` asserts
-      `derive_pipeline_mode_for_row("LIGHTER-ZKSYNC","cefi","ohlcv_1m",     source="lighter_api") is BATCH_LIGHTER_API`.
+      `derive_pipeline_mode_for_row("LIGHTER-ZKSYNC","cefi","ohlcv_1m", source="lighter_api") is BATCH_LIGHTER_API`.
       (c) The `--force` re-stamp is DONE as a **re-path + manifest backfill** migration
       `market-tick-data-service@c1da2200` (`scripts/restamp_lighter_ohlcv_batch_tardis_to_lighter_api_2026_07_18.py`,
       DRY-RUN→canary→full apply on real infra): scope measured = **475 objects** (5 instruments
@@ -280,7 +280,7 @@ Two secondary findings:
       attended step.
 - [x] [VERIFY] P2. ✅ **ROOT-CAUSED (2026-07-19, workflow + adversarial verify against real requester-pays S3, AWS acct
       427895769566).** The field-name-mismatch hypothesis is **REFUTED** — real fills are
-      `[address, {coin,px,sz,side,     time,hash,…}]` (legacy `node_fills/hourly`) / `{…, events:[[address,fill],…]}`
+      `[address, {coin,px,sz,side, time,hash,…}]` (legacy `node_fills/hourly`) / `{…, events:[[address,fill],…]}`
       (live `node_fills_by_block/hourly`), EXACTLY what the CURRENT parsers read (verified end-to-end:
       `_parse_node_fills(20250726/12)`→12,198 BTC rows, `_parse_node_fills_by_block(20250727/8)`→1,206 BTC rows). REAL
       cause = a PREFIX bug in the pre-2026-07-13 code (`fetch_trades` built `node_fills/hourly/{date}/{hour}/` — a
@@ -293,7 +293,7 @@ Two secondary findings:
 - [x] [FIX] P2. ✅ **HEALED (2026-07-19).** The `live_hyperliquid` template gap was already fixed
       (`possible_manifest.py` emits the `live_hyperliquid` prefix), so the false-flagged shards just needed the reverse
       re-validation pass:
-      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi     --unphantom-only --venues HYPERLIQUID`
+      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --unphantom-only --venues HYPERLIQUID`
       flipped **1,277** cefi HYPERLIQUID phantom rows (derivative_ticker 522 / book_snapshot_5 382 / trades 373) back to
       `captured` — VERIFIED on real infra: 0 `phantom_captured_no_parquet` HL rows remain, cefi index row-count stable
       (9,914,467, no regression). defi index re-checked = already clean (0 phantoms). **Deferred (tracked below):** the

@@ -147,7 +147,7 @@ context_scope:
 - [x] ✅ [DEVOPS] P1. Re-roll + ship `execution-service`'s workflow templates — `execution-service@e3870664` (via
       `rollout-workflow-templates.sh --repo execution-service`, shipped via quickmerge, verified on origin ancestor).
       Fresh `quality-gates.sh` re-run confirmed `✅ ALL QUALITY GATES PASSED (140s)`,
-      `✅ workflow-yaml: 14 workflows     parse`. This also picked up the unrelated `quality-gates-v2.yml.tmpl` drift
+      `✅ workflow-yaml: 14 workflows parse`. This also picked up the unrelated `quality-gates-v2.yml.tmpl` drift
       (`ci_trigger_branch` field, `billing_kill` output removal, `d597eb759`) from the same template sync. Unblocked
       LDR→main promotion PR execution-service#557; dispatched `ldr-to-main-promote-fleet` scoped to
       `only_repo=execution-service` to fast-path the re-gate instead of waiting for the next `*/5` scheduled tick — PR

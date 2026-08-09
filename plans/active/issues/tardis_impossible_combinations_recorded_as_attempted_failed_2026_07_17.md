@@ -157,14 +157,14 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
       likely reading the wrong one, which silently degrades the data_type dimension of the 3-condition gate to a no-op
       (fail-open-safe, not a correctness bug, but an incomplete implementation of this todo's own spec).** — **DONE**:
       `market-tick-data-service@ca5be7d8` (2026-08-09). **Confirmed live** (unauthenticated
-      `GET     https://api.tardis.dev/v1/exchanges/bybit`, real response, 2026-08-09): `availableSymbols[]` entries
+      `GET https://api.tardis.dev/v1/exchanges/bybit`, real response, 2026-08-09): `availableSymbols[]` entries
       carry ONLY `id`/`type`/`availableSince`/`availableTo` — **never** `dataTypes` (checked the union of keys across
       all 1,812 entries) — while `datasets.symbols[]` entries carry all four fields
       (`id`/`type`/`dataTypes`/`availableSince`/ `availableTo`), e.g. `AAVEUSDT`:
-      `{"dataTypes": ["trades","incremental_book_L2","quotes","book_snapshot_5",     "book_snapshot_25","derivative_ticker","liquidations","book_ticker"], "availableSince":"2021-05-13T00:00:00.000Z",     "availableTo":"2026-08-09T00:00:00.000Z"}`.
+      `{"dataTypes": ["trades","incremental_book_L2","quotes","book_snapshot_5", "book_snapshot_25","derivative_ticker","liquidations","book_ticker"], "availableSince":"2021-05-13T00:00:00.000Z", "availableTo":"2026-08-09T00:00:00.000Z"}`.
       This matches finding (2) exactly (`TardisAvailableSymbol` genuinely has no `dataTypes` field) and confirms the
       suspected bug: `_fetch_vendor_catalog` was reading `dataTypes` off an array that never carries it, so
-      `entry.data_types` was always an empty frozenset and the `data_type not in     entry.data_types` check in
+      `entry.data_types` was always an empty frozenset and the `data_type not in entry.data_types` check in
       `is_allowed_by_vendor_catalog` never fired (silently a no-op, exactly as predicted). **Fix**: pointed the fetch at
       `exchange_info["datasets"]["symbols"]` instead of `availableSymbols[]` (the
       `availableSince`/`availableTo`/symbol-presence dimensions were already correct per this todo's own note — no

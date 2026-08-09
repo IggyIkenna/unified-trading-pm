@@ -131,9 +131,9 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       `POST /api/data-status/rollup-run?services=ml-service` (authenticated via `unified-trading-sa`'s existing
       `roles/run.invoker` grant on the dedicated rollup service) returned in 27.8s with
       `{"status":"partial","exit_code_live":1}`, and Cloud Logging for that exact window
-      (`resource.labels.service_name=     "uts-prod-data-status-rollup-svc"`, `timestamp>="2026-08-02T21:02:00Z"`)
+      (`resource.labels.service_name= "uts-prod-data-status-rollup-svc"`, `timestamp>="2026-08-02T21:02:00Z"`)
       showed the real, LOUD error:
-      `ERROR manifest rollup failed for service=ml-service: Unknown kind 'ml-models-store' for cloud 'gcp'. Valid     kinds: [..., 'ml-store', ...]`.
+      `ERROR manifest rollup failed for service=ml-service: Unknown kind 'ml-models-store' for cloud 'gcp'. Valid kinds: [..., 'ml-store', ...]`.
       Root cause: `deployment_api/services/data_status_drilldown/_core.py`'s `SERVICE_TO_KIND["ml-service"]` still
       pointed at the legacy `"ml-models-store"` alias, which UTL's `bucket_naming._KIND_ALIASES` REMOVED in the
       2026-07-19 alias sunset (`bucket_naming.py`'s own comment: "ALIAS SUNSET 2026-07-19: all five ml aliases REMOVED —
@@ -157,7 +157,7 @@ worth closing the same way (isolate + surface the real error) rather than leavin
 - [x] ✅ [CODE] P2. NEW regression found while diagnosing the above (not present in the 2026-07-26 baseline table, where
       instruments-service + market-data-processing-service both succeeded same-cycle): `instruments-service`'s manifest
       rollup step now fails every cycle with
-      `Unable to allocate 2.55 GiB for an array with shape (29, ~11.8M) and data     type object` (its coverage step
+      `Unable to allocate 2.55 GiB for an array with shape (29, ~11.8M) and data type object` (its coverage step
       still succeeds — a genuine per-service partial failure, correctly isolated, not silent);
       `market-data-processing-service`'s manifest AND coverage BOTH now hit the 420s child-process timeout every cycle
       (previously only `market-tick-data-service` was the known/accepted MTDS gap — MDPS timing out is new). Both read
@@ -169,8 +169,8 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       honest-failure (not silent-placeholder) path for both. **NEW EVIDENCE (2026-08-02, slot 15)**: while diagnosing
       the ml-service bug above, `gcloud logging read` on `uts-prod-data-status-rollup-svc` for the last ~4h surfaced
       recurring PLATFORM-level (not per-service-child) memory events —
-      `ERROR Memory limit of 32768 MiB exceeded with     ~33000 MiB used` and
-      `the container instance was found to be using too much memory and was terminated ...     likely to cause a new container instance to be used for the next request`,
+      `ERROR Memory limit of 32768 MiB exceeded with ~33000 MiB used` and
+      `the container instance was found to be using too much memory and was terminated ... likely to cause a new container instance to be used for the next request`,
       roughly every 1-2 `*/20` cron cycles (e.g. 18:20, 19:00, 19:40, 20:20 UTC). This means the WHOLE container
       (parent + any in-flight isolated child), not just an individual service's `_CHILD_RLIMIT_AS_BYTES`-capped child,
       is periodically hitting the 32Gi container ceiling and being platform-killed mid-sweep — the per-service child
@@ -184,19 +184,19 @@ worth closing the same way (isolate + surface the real error) rather than leavin
       needs its own bound.
 
       **RESOLVED 2026-08-02 (slot 10)**: `deployment-api@34a596b`. Took the documented alternative to raising the
-                                                                                                                                                                                                                                                                                                                                  ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
-                                                                                                                                                                                                                                                                                                                                  means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
-                                                                                                                                                                                                                                                                                                                                  accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
-                                                                                                                                                                                                                                                                                                                                  `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
-                                                                                                                                                                                                                                                                                                                                  `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
-                                                                                                                                                                                                                                                                                                                                  `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
-                                                                                                                                                                                                                                                                                                                                  observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
-                                                                                                                                                                                                                                                                                                                                  `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
-                                                                                                                                                                                                                                                                                                                                  AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
-                                                                                                                                                                                                                                                                                                                                  isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
-                                                                                                                                                                                                                                                                                                                                  isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
-                                                                                                                                                                                                                                                                                                                                  "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
-                                                                                                                                                                                                                                                                                                                                  records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
+      ceilings/optimizing compute (out of scope for this todo — the whole-container 32Gi platform-kill evidence above
+      means the real fix is a capacity/architecture decision, not a quick patch): recorded both new failure modes as
+      accepted structural gaps in the code comment right next to the existing MTDS gap (`_CHILD_RLIMIT_AS_BYTES` /
+      `_CHILD_JOIN_TIMEOUT_S` block in `data_status_rollup_worker.py`), and added 2 regression tests to
+      `tests/unit/test_rollup_worker.py` asserting both fail LOUDLY, not silently: (1)
+      `test_memory_error_on_manifest_is_caught_not_silent` — a `MemoryError` matching instruments-service's exact
+      observed message is caught per-service and surfaces as `manifest_error`, never a false `manifest_ok=True`; (2)
+      `test_mdps_style_full_timeout_is_loud_and_does_not_block_next_service` — a service timing out on BOTH manifest
+      AND coverage fires a `SERVICE_FAILED` log_event and does not prevent the next queued service from running (same
+      isolation contract as the original MTDS gap). No production code change was needed — the existing per-service
+      isolation (added for MTDS) already generically handles any child failure mode this way; these tests close the
+      "guard the honest-failure path" half of this todo's done-when, and the comment update closes the "explicitly
+      records these as structural gaps" half. 35/35 tests pass (`tests/unit/test_rollup_worker.py`), full QG green.
 
 - [x] ✅ [INFRA] P3. The `data-status-rollup-worker` `GcsEventSink` (the
       `log_event(SERVICE_PROCESSED/SERVICE_FAILED, ...)` calls in `run_rollup`) has not written a new dated prefix under

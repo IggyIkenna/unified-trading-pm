@@ -125,7 +125,7 @@ restated here.
       0 of 34,385 `B_legacy_duplicate` rows pass the 5-part proof, per `sports_legacy_duplicate_triage_2026_07_22.md` —
       sports deletes stay blocked on that separately, independent of this tradfi/defi/pred gate). **New dispatch shape
       (no operator sign-off needed once both checks below clear):** (1) re-run
-      `cleanup_legacy_twins.py --asset-group tradfi --report-uri _index/audit/orphan_sweep_tradfi.parquet     --dry-run`
+      `cleanup_legacy_twins.py --asset-group tradfi --report-uri _index/audit/orphan_sweep_tradfi.parquet --dry-run`
       (or read its already-landed output if the todo above already ran it this session) and re-confirm Part 5's
       twin-coverage is still 100% (content-verified, not path-assumed) for the tradfi/defi/pred candidate rows; (2) run
       a FRESH, same-run `gcs_bucket_soft_delete_retention_seconds(bucket)` check against each of the three target

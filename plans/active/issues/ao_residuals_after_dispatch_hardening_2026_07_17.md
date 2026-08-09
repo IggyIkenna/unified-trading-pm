@@ -116,7 +116,7 @@ source:
       sequencing. Do not duplicate work here; the epic is the live tracking home. This checkbox stays open pending that
       epic's own todo, not re-derived independently.
 - [x] [BACKEND] P2. ✅ **RESOLVED 2026-07-23 — the doc's own gate command was run on the live VM and PASSES.**
-      `sudo -u ubuntu env -u ORCHESTRATOR_DB_PATH -u ORCHESTRATOR_STATE_JSON .venv/bin/python -c "from server     import config; print(config.db_path())"`
+      `sudo -u ubuntu env -u ORCHESTRATOR_DB_PATH -u ORCHESTRATOR_STATE_JSON .venv/bin/python -c "from server import config; print(config.db_path())"`
       → `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/state.db`, and that path holds the LIVE
       data (`tasks=68 agents=78 slots=17`), not an empty DB — which is precisely the failure mode this todo described (a
       probe reporting zeroes that looks like a healthy answer). The one-concept-two-places condition is gone at the

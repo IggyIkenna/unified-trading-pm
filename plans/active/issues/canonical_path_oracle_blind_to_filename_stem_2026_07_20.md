@@ -277,7 +277,7 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       `is_canonical_instrument_id` directly. 2. **Fresh sampled census (Tier-1, in-session, no VM, no corpus walk)** —
       bounded pyarrow predicate-pushdown read of the consolidated `_index/availability_index.parquet` for
       `market-data-tick-cefi-prd-…` over `date` window `2026-07-20..2026-07-27` (column-projected:
-      `date, venue, instrument_type, data_type,        instrument_id, capture_status, pipeline_mode, chain, quote_asset, margin_type`):
+      `date, venue, instrument_type, data_type, instrument_id, capture_status, pipeline_mode, chain, quote_asset, margin_type`):
       **2,012 `captured` rows**, 2,011 with a non-blank `instrument_id`. Ran `is_canonical_instrument_id` (the ID_FORM
       leg, direct on the manifest column) over all of them: **1,532/2,011 = 76.18% canonical by id-form** in this window
       — a SAMPLED, date-windowed number, NOT the corpus-wide re-measurement of § 1's historical 20.82%/~811,200 figure

@@ -164,11 +164,11 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       its own bug — it read `meta.updated` (an attribute that does not exist on the real `BlobMetadata` dataclass; only
       `meta.last_modified` does), so `getattr(meta, "updated", None)` always returned `None` and the staleness check
       silently no-op'd, serving the frozen 2026-07-05 blob indefinitely. **Already fixed** by `deployment-api@3847d6f`
-      (2026-07-08, `fix(data-status): rollup staleness gate never        fires — meta.updated doesn't exist`) — landed
+      (2026-07-08, `fix(data-status): rollup staleness gate never fires — meta.updated doesn't exist`) — landed
       BEFORE this 2026-07-10 sub-agent session started, which is why the on-demand path (used by the 2026-07-10
       re-verification pass, and independently re-confirmed here via `svc.get_manifest_status(...)` with the rollup
       correctly falling through:
-      `INFO rollup for        market-tick-data-service is stale (415964s > 1800s threshold) — falling through to on-demand`)
+      `INFO rollup for market-tick-data-service is stale (415964s > 1800s threshold) — falling through to on-demand`)
       already returns correct data. The underlying rollup-worker infra outage is still open (noted as such in 3847d6f's
       own commit message) — `/turbo`'s DEFAULT unfiltered response is now CORRECT but SLOW (~3-4 min cold, one full GCS
       manifest read) until the Cloud Run Job is restarted; that's a separate ops ticket, not a data-correctness bug. 2.
@@ -235,7 +235,7 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       needed there is NOT "confirm polling then flip," per the original text — see why).
 - [x] [CODE] P1. **New 2026-07-12 (§A2 finding 113), split from the todo above.** `EULER_V2-ARBITRUM`'s
       `defi_venues.py:457` phase-dict comment is STILL factually wrong:
-      `# EULER_V2-ARBITRUM + FLUID-ARBITRUM: no UAC     subgraph_id registered → 0 captured rows.` — but real Goldsky
+      `# EULER_V2-ARBITRUM + FLUID-ARBITRUM: no UAC subgraph_id registered → 0 captured rows.` — but real Goldsky
       `SUBGRAPH_IDS` have been registered for EULER_V2-ARBITRUM and verified GREEN since 2026-06-02
       (`capability_declarations/_defi.py:211-221`). The real reason EULER_V2-ARBITRUM stays `pipeline` (unlike
       EULER_V2-ETHEREUM, now `live`) has nothing to do with subgraph registration: the instruments-service `euler_v2.py`
@@ -261,7 +261,7 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       incidentally in `unified-api-contracts@92b1d1a8` alongside the RADIANT-ETHEREUM/VENUS/BENQI D10 capability
       backfill — but that same commit's own comment confirms "the prod manifest shows ZERO real
       captured/attempted_failed rows for ANY data_type on ANY of these 4 venues, ever"
-      (`defi_venue_capabilities.py:        139-140`). The capability-gate declaration existing does not mean capture has
+      (`defi_venue_capabilities.py: 139-140`). The capability-gate declaration existing does not mean capture has
       ever run. 3. **NEW — stalled upstream subgraph (~38 days behind), found 2026-07-10.** The same `92b1d1a8` comment
       block records a live probe: "the EULER_V2 Goldsky subgraph IS reachable but its indexed HEAD is ~271K blocks (~38
       days) behind current Ethereum mainnet — a dead/stalled upstream that should be re-verified before any future phase
@@ -271,7 +271,7 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
       than measured.** Live-queried both Goldsky endpoints
       (`api.goldsky.com/api/public/project_cm4iagnemt1wp01xn4gh1agft/subgraphs/euler-v2-{mainnet,arbitrum}/latest/gn`)
       with the standard `_meta` health-check query — both return
-      `HTTP 404 "Subgraph not found. Have you deleted     this subgraph recently?"`, confirmed on retry (not transient)
+      `HTTP 404 "Subgraph not found. Have you deleted this subgraph recently?"`, confirmed on retry (not transient)
       and via an alternate version-pinned path. This is NOT "still 38 days behind" — the subgraph no longer exists at
       this endpoint at all. Per this todo's own gate ("do NOT wire capture if it is still stalled"), gaps 1+2
       (capability `mtds_operations` repoint, capture trigger) are NOT actioned — nothing to wire against. No code

@@ -156,7 +156,7 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
       root-cause section's own cited example) has been GitHub-hosted, ephemeral-per-job `ubuntu-latest` since 2026-08-07
       and structurally cannot poison the shared config. **The exposure is NOT closed fleet-wide, only for PM**:
       `self-hosted-qg-repos.txt` lists 7 repos still self-hosted on this same VM for billing reasons --
-      `agent-orchestrator, strategy-service, e2e-testing, features-service, market-tick-data-service,     execution-service, ml-service`
+      `agent-orchestrator, strategy-service, e2e-testing, features-service, market-tick-data-service, execution-service, ml-service`
       -- and `agent-orchestrator` itself is one of them, meaning AO's own CI can still run self-hosted on the exact host
       its worker slots live on. None of those 7 repos are checked out in this workspace (PM-scoped session), so whether
       any of THEIR workflows call `google-github-actions/auth` on a self-hosted job (the actual poisoning trigger) is
@@ -174,7 +174,7 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
       CI job on the host, then confirming an AO worker's `gcloud`/`gsutil` call (via the pinned credential file, not
       ambient resolution) still succeeds. **Part 2 (CI-workflow-side audit, repos outside this session's scope):** for
       each of the 7 repos still on `self-hosted-qg-repos.txt`
-      (`agent-orchestrator, strategy-service, e2e-testing, features-service, market-tick-data-service,     execution-service, ml-service`),
+      (`agent-orchestrator, strategy-service, e2e-testing, features-service, market-tick-data-service, execution-service, ml-service`),
       grep for `google-github-actions/auth` combined with a self-hosted `runs-on:` on the SAME job (the exact pattern
       PM's own since-reverted `cloud-build-router.yml` had) -- `agent-orchestrator` itself is the highest-priority
       check, being the same repo as the host it would poison. Any match found needs the 2026-07-18 fix's

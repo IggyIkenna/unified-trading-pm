@@ -151,7 +151,7 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
       `_record_status` drops it), fix lands in UTL first; (2) the cefi chain-bundle `record_captured_from_counts`
       callsite passes no `asset_group=` → blank source (item (n)). Verify by reading ACTUAL prod rows — **RED on any
       blank `source` on a captured cell**. Grep callsites:
-      `rg "record_captured\(" market-tick-data-service/ --include="*.py" -A8 | rg     "source="`. SSOT:
+      `rg "record_captured\(" market-tick-data-service/ --include="*.py" -A8 | rg "source="`. SSOT:
       `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; manifest-schema home: `manifest_master` item
       (i).
 

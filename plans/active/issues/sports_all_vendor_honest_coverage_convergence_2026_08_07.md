@@ -198,7 +198,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       `_record_weather_empty`, `_record_weather_failed`, end-of-function EXPECTED_NO_FIXTURE loop) writes ONLY for those
       33 leagues; non-Prediction league rows persist as `expected_unattempted` indefinitely. The -215 net reduction came
       from 215 Prediction-league rows resolved by this run. The 350 rows on 2026-07-28 are for non-Prediction leagues —
-      untouched by design. Fix path: `type_weather_eu_no_provider_coverage_2026_06_27.py     --apply` (already exists
+      untouched by design. Fix path: `type_weather_eu_no_provider_coverage_2026_06_27.py --apply` (already exists
       for this exact pattern). See Progress Log 2026-08-07 (slot 7).
 - [x] ✅ [SCRIPT] P2. **Launched SFI full backfill** — `sfi-backfill-20260807-123519` confirmed RUNNING
       (`launch-sfi-backfill-vm.sh --entity SFI_PROGRESSIVE_STATS 2020-06-06 2026-08-07`), targeting 205,363

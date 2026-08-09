@@ -137,7 +137,7 @@ re-triggers AutoSpawn's spawn-in-txn on restart).
       passed/1 skipped) (see that doc for execution).
 - [x] [BACKEND] P2. Determine root cause: connection LEAK vs. concurrency-over-pool. — DONE 2026-08-08 (slot 31).
       `agent-orchestrator@54b86a9`
-      (`test(db): prove pool-exhaustion + release-safe recovery for pool exhaustion     issue`): confirmed by direct
+      (`test(db): prove pool-exhaustion + release-safe recovery for pool exhaustion issue`): confirmed by direct
       source read that all 4 named hot-path handlers (`server/routes/state.py::get_state` →
       `server/state_store/slots.py::list_slots`, `server/routes/agents.py::agent_poll`,
       `server/routes/git_health.py::post_slot_git_status`/`get_slot_git_status`) route through

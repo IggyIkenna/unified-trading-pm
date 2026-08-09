@@ -135,7 +135,7 @@ the highest-priority open question.
       32GB) was SIGKILL'd (`rc=137`) within ~15s of the sanity-check log line, before `_purge_manifest_rows()`'s own
       first log line ever printed — confirming the crash happened during the initial full-table decode. Relaunched with
       `MACHINE_TYPE=e2-highmem-8` (64GB) — `canonical-migration-defi-gas-fees-legacy-purge-20260806-162248` got PAST the
-      crash point cleanly (`[attempt 1] index generation=...: 12425 TARGET-signature row(s) (of 75184124     total)` —
+      crash point cleanly (`[attempt 1] index generation=...: 12425 TARGET-signature row(s) (of 75184124 total)` —
       the exact line that never printed before). Machine-size fix confirmed effective for the OOM specifically (see next
       todo for what happened after).
 - [x] ✅ [DIAG] P1. **ROOT-CAUSED + code-fixed 2026-08-06 by a separate (infra-craft) dispatch — CONFIRMED 2026-08-07,

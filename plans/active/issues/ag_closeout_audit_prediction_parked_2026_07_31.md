@@ -166,7 +166,7 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
       `unified-trading-pm@be7269449` ("fix(plan-hygiene): resolve closeout doc's own depends_on for finalize-less
       forks"), shipped by the `ag-closeout-audit` tradfi-tranche run (not prediction's), same shared cross-tranche
       script per the primary-owner rule — found and verified stale-unchecked here by the 2026-08-04
-      `/ag-closeout-audit     prediction` run. Verified live 2026-08-04**: `--tranche prediction --json`'s
+      `/ag-closeout-audit prediction` run. Verified live 2026-08-04**: `--tranche prediction --json`'s
       `covering_paths` now returns 11 entries INCLUDING all 4 Phase A-E children
       (`prediction_phase_ab_residuals_2026_07_24.md`/`_c_data_status_ui_`/`_d_formal_smoke_and_backfill_`/`_e_football_arb_live_`,
       all 2026-07-24) structurally, not via incidental text citation (was 7 entries on 2026-07-31, pre-fix). The named

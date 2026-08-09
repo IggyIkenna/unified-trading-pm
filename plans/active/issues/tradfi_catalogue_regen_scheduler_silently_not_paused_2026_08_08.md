@@ -125,7 +125,7 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
       API, or did the 2026-06-25 session pause it manually out-of-band via a mechanism that didn't persist — e.g. a
       `gcloud` command that failed silently, or a subsequent Terraform apply/redeploy that reset it to its
       Terraform-declared default state). `gcloud logging read` for
-      `resource.type="cloud_scheduler_job"     resource.labels.job_id="lifecycle-catalogue-regen-tradfi-daily"` over a
+      `resource.type="cloud_scheduler_job" resource.labels.job_id="lifecycle-catalogue-regen-tradfi-daily"` over a
       longer window (90d) would show the actual pause/resume history if Cloud Audit Logs retention covers it. This
       determines whether the root cause is "the pause never took" or "something later silently re-enabled it" —
       different fixes (a script bug vs. a deploy-time reset gap in whatever pauses schedulers).

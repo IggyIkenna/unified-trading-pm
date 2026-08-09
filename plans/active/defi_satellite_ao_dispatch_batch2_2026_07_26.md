@@ -249,7 +249,7 @@ context_scope:
       **Confirmed**: `catalog.py` exports `build_carry_basis_perp_inv` as a plain (non-underscore) name — no underscore
       alias existed for it (unlike the other two builders), so the test's import line was changed from
       `_build_carry_recursive_staked as _build_carry_recursive_borrow_perp_hedged` to
-      `build_carry_basis_perp_inv as     _build_carry_recursive_borrow_perp_hedged`. Directly verified the real catalog:
+      `build_carry_basis_perp_inv as _build_carry_recursive_borrow_perp_hedged`. Directly verified the real catalog:
       10 rows, all correctly slot-labeled `CARRY_BASIS_PERP_INV@...` (was silently `CARRY_RECURSIVE_STAKED@...` before).
       The `>=5` row-count assertion needed no change (10>=5). 40/40 tests pass (`pytest -m "not requires_credentials"`);
       full `quality-gates.sh --no-fix` green (126s, sentinel written). Shipped `strategy-service@628a0a32`.
@@ -265,7 +265,7 @@ context_scope:
       isn't what it looked like — `curve_adapter.py`'s REST call (`_safe_fetch_curve_rest_pools`) only returns
       pool-discovery metadata, never swap history; the adapter's actual swap-fetch method (`_download_swaps`) is 100%
       The-Graph-decentralized-network dependent (the SAME dead subgraph mechanism) with a literal
-      `return []  # ... omitted for brevity` REST fallback stub; the REST discovery path is also hardcoded to Ethereum
+      `return [] # ... omitted for brevity` REST fallback stub; the REST discovery path is also hardcoded to Ethereum
       (`venue="CURVE-ETHEREUM"` regardless of `self.chain`); and `dex_swaps_handler.py`'s `_collect_protocol_chain`
       pipeline is subgraph-only end-to-end with no existing non-subgraph integration seam. No follow-up implementation
       todo opened — recommended a smaller external-API research step (does Curve's public REST API expose swap-level

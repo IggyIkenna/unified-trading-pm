@@ -98,7 +98,7 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
 
 - [x] ✅ Diagnose why `admin@odum.internal` (and likely other demo personas) redirect to
       `https://uat.odum-research.com/login` instead of logging in locally under
-      `NEXT_PUBLIC_MOCK_API=true     NEXT_PUBLIC_AUTH_PROVIDER=demo` (`pnpm dev:mock`) — check the "standing internal
+      `NEXT_PUBLIC_MOCK_API=true NEXT_PUBLIC_AUTH_PROVIDER=demo` (`pnpm dev:mock`) — check the "standing internal
       email" redirect branch in `app/(public)/login/page.tsx` against `isDemoPersonaEmail()` (`lib/auth/personas.ts`)
       for a classification bug. (repo: unified-trading-system-ui) — unified-trading-system-ui@15e4b4bc (verified
       ancestor of origin/live-defi-rollout). Actual root cause differed from the classification-bug hypothesis:
@@ -108,7 +108,7 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
 - [x] ✅ Once (1) is fixed, restore/repair the `?persona=<id>` (or equivalent) fast-path login helper contract that
       `tests/e2e/user-management.spec.ts`, `tests/e2e/admin-flow.spec.ts`-style specs, and every other
       `loginAsAdmin`/`loginAsClient`-based E2E spec assume, and re-verify
-      `npx playwright test --project=chromium     tests/e2e/user-management.spec.ts` exits 0 as the regression check.
+      `npx playwright test --project=chromium tests/e2e/user-management.spec.ts` exits 0 as the regression check.
       (repo: unified-trading-system-ui) — unified-trading-system-ui@15e4b4bc (verified ancestor of
       origin/live-defi-rollout). `?persona=<id>` fast-path restored in `app/(public)/login/page.tsx`; verified via
       Playwright that `?persona=admin` now logs in locally. Full-suite green is blocked by two separate pre-existing

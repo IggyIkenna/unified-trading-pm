@@ -290,7 +290,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       pid-role-logging todo above and, likely, every prior faulthandler-dump attempt in this doc's history).** Evidence:
       full-lifetime raw-JSON log dump for revision `00373-7wt` (current live, `15:39:42Z`-created) shows ONLY
       `run.googleapis.com/varlog/system` (platform events, incl. Cloud Run's own externally-observed "Uncaught signal:
-      6" line) and `run.googleapis.com/     requests` (structured, no textPayload) — zero `stdout`/`stderr` entries.
+      6" line) and `run.googleapis.com/ requests` (structured, no textPayload) — zero `stdout`/`stderr` entries.
       Same for the last 20+ revisions spanning 7+ hours. Ruled out a platform-wide outage: `market-data-query-service`
       (same project/region) has fresh `stderr` entries as recent as `16:43:03Z`. Prime candidate: the
       `--execution-environment gen1` pin (`acdd4c8`) — gen1 uses a different gVisor sandbox/log-capture path than gen2,
@@ -301,7 +301,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       gen1 is NOT the cause, check for a stray `--no-cpu-throttling`/ buffering flag change, a Python-level `sys.stdout`
       redirect/replace in app startup code, or a Cloud Logging exclusion-filter/sink change scoped to this specific
       service around the same window. Done-when: `stdout`/`stderr` entries resume appearing for this service in Cloud
-      Logging, confirmed via a fresh `gcloud logging read     logName:"stdout"` after the fix deploys. (repo:
+      Logging, confirmed via a fresh `gcloud logging read logName:"stdout"` after the fix deploys. (repo:
       deployment-api) — **2026-07-31 (slot 4, backend_engineer)**: step (1) done with live data — **gen1 pin is NOT a
       day-one trigger.** `acdd4c8` first went live on `00333-p62` (`2026-07-30T06:26:01Z`); stderr kept working for
       **~26h** after that (confirmed real entries on 5 gen1-pinned revisions spanning that window, last one
@@ -351,7 +351,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       start and listen on the port defined provided by the PORT=8080 environment variable within the allocated
       timeout."_ `gcloud logging read` on `varlog/system` for `00388-9mt` shows a clean, repeating cycle every ~30-32s:
       `Starting new instance` → (~30s later) `Container called exit(0)` +
-      `Default STARTUP TCP probe failed... The     instance was not started` — i.e. the container itself voluntarily
+      `Default STARTUP TCP probe failed... The instance was not started` — i.e. the container itself voluntarily
       exits cleanly (not a crash/OOM/SIGKILL) before ever binding port 8080, and Cloud Run just keeps retrying with
       fresh instances. **Ruled out as an artifact of my own test method**: the revision's `startupProbe`
       (`timeoutSeconds=240`) is IDENTICAL to the known-good `00374-4pd`'s, so this isn't a probe-config regression, and
@@ -363,7 +363,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       does start and DOES emit the expected structured JSON stdout**
       (`{"severity": "INFO", "message": "Serving UI static files from /app/ui/dist", ...}` — direct proof `e8ce86a`'s
       formatter itself works) before hitting an UNRELATED local-only crash 2s into the FastAPI lifespan
-      (`google.auth.exceptions.DefaultCredentialsError` inside `fastapi_uei_lifespan`'s `log_event("STARTED",     ...)`
+      (`google.auth.exceptions.DefaultCredentialsError` inside `fastapi_uei_lifespan`'s `log_event("STARTED", ...)`
       → `PubSubEventSink.write_event` → `pubsub_v1.PublisherClient()` — this call has zero local ADC available in this
       sandbox, whereas real Cloud Run supplies SA credentials via the metadata server; confirmed this exact
       `fastapi_uei_lifespan` wiring predates `e8ce86a` by months (`git log -S`, commit `0cd1c78`) and works fine in prod
@@ -371,7 +371,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       repro diverges from prod at a DIFFERENT point than the real bug, not what the real bug is). **Net: the real Cloud
       Run startup failure mechanism is NOT YET IDENTIFIED** — filed as its own blocking `[BACKEND]` P1 follow-up below
       rather than guessing further. This REVIEW todo stays open: its own literal ask (confirm stdout resumes under real
-      traffic) cannot be attempted until that blocker ships. Stray revision `uts-shared-deployment-api-     00388-9mt`
+      traffic) cannot be attempted until that blocker ships. Stray revision `uts-shared-deployment-api- 00388-9mt`
       left in place (never received traffic, Cloud Run already refuses to route to it — same cannot-delete-cleanly
       situation this todo already flags for `00382-cat`; not a safety issue, just build cruft). No code shipped this
       entry (investigation only — the fix ships under the new todo below).
@@ -412,7 +412,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       **IDENTICAL image digest** to `00374-4pd` (`sha256:71a09bfb...`, confirmed via `spec.containers[0].image`) plus
       byte-identical `spec.serviceAccountName`/env vars/secret refs (confirmed via full `revisions describe` diff — zero
       difference). Yet both failed the STARTUP TCP probe with the exact same `Starting new instance` →
-      `Container called     exit(0)` (~32s) → `STARTUP TCP probe failed` signature as `00388-9mt`. Since the image and
+      `Container called exit(0)` (~32s) → `STARTUP TCP probe failed` signature as `00388-9mt`. Since the image and
       full revision template are byte-identical to the currently-serving-fine `00374-4pd`, **the failure cannot be in
       application code or revision config at all** — angle (2) is answered by this: a non-`e8ce86a` container (in this
       case, literally the SAME already-proven container) also fails under current conditions. Independently reproduced
@@ -592,7 +592,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       deployment-api@1e065f4.** (repo: deployment-api)
 
 - [x] ✅ [REVIEW] P2. **NEW, opened 2026-07-31 (slot 13, backend_engineer) — monitor whether `deployment-api@ec1f635`'s
-      catalogue-lifecycle concurrency guard actually drops the `"Container terminated on     signal 9"` (SIGKILL/OOM)
+      catalogue-lifecycle concurrency guard actually drops the `"Container terminated on signal 9"` (SIGKILL/OOM)
       rate.** The fix (a `threading.Semaphore` capping concurrent uncached new-listings/upcoming-expiries builds at 2,
       mirroring the drilldown endpoint's existing guard) targets the most evidence-consistent mechanism found this
       session (unguarded 5-way per-AG `ThreadPoolExecutor` fan-out matching this repo's own documented 2026-07-17

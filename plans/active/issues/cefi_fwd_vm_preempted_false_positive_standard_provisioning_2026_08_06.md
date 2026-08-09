@@ -174,7 +174,7 @@ exposed to this class before the veto shipped.
       shows an `UPDATE_TIME` after this fix's merge commit. **Live-checked 2026-08-08**: fix commit
       `deployment-service@5bd0017b` landed `2026-08-06T10:53:59+01:00`; the `deployment-api` image has since been
       rebuilt repeatedly (5 builds on 2026-08-08 alone), latest `sha256:fc6deaf8` tagged `latest`,
-      `UPDATE_TIME     2026-08-08T07:23:26` — well after the fix commit.
+      `UPDATE_TIME 2026-08-08T07:23:26` — well after the fix commit.
       `gcloud run jobs describe uts-prod-dp-exit-code-monitor` confirms the job references `deployment-api:latest`, and
       Cloud Run Jobs pull the tag fresh per execution, so the live monitor already runs the fixed code. This was never
       actually an operator-only action — `deployment-api` rebuilds on a routine, frequent cadence (multiple builds/day

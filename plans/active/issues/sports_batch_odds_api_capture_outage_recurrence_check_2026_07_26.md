@@ -311,32 +311,32 @@ write a manifest row of any kind — not even `attempted_failed`).
       GCS walk) at the intended granularity, and this todo cites the launcher/dispatch evidence.
 
       **ag-closeout-audit sports 2026-08-09 — doc-hygiene note, do not launch a second VM:** this todo's two windows
-                                  (2026-06-27..07-15, 2026-07-16..07-25) both fall inside the broader 2020-06-06→present range that
-                                  `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` already launched via the single guard-respecting
-                                  `mtds-backfill-odds-*` chain (live as of 2026-08-09T04:13Z at chunk 26/451 — see that doc for current state).
-                                  **Do not launch a separate VM for this todo's windows** — that would race the guard/duplicate the fetch. What's
-                                  still genuinely unverified once the broad chain converges: whether it restores the T-minus horizon-grid
-                                  granularity this todo cares about (8-point pre-match grid) or only day-level presence — re-check that
-                                  specifically before flipping this checkbox, don't assume day-level coverage implies granularity is fixed.
+      (2026-06-27..07-15, 2026-07-16..07-25) both fall inside the broader 2020-06-06→present range that
+      `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` already launched via the single guard-respecting
+      `mtds-backfill-odds-*` chain (live as of 2026-08-09T04:13Z at chunk 26/451 — see that doc for current state).
+      **Do not launch a separate VM for this todo's windows** — that would race the guard/duplicate the fetch. What's
+      still genuinely unverified once the broad chain converges: whether it restores the T-minus horizon-grid
+      granularity this todo cares about (8-point pre-match grid) or only day-level presence — re-check that
+      specifically before flipping this checkbox, don't assume day-level coverage implies granularity is fixed.
 
-                              **AO-dispatch re-verification, 2026-08-09T09:2XZ (this session)**: this todo's own opening line ("NOT YET
-                                  LAUNCHED") is now stale/misleading — a launch covering both windows already exists (the broad chain above), it
-                                  is just not a launch scoped narrowly to this todo. Live-reverified before touching anything (per rule 4a, never
-                                  trust a doc timestamp over a fresh check): `gcloud compute instances list` shows
-                                  `mtds-backfill-odds-smallchunk10-20260809` RUNNING; its GCS heartbeat blob
-                                  (`gs://deployment-scripts-central-element-323112/vm-heartbeat/mtds-backfill-odds-smallchunk10-20260809.txt`)
-                                  updated `2026-08-09T09:17:13Z` against a check at `09:17:26Z` (13s old — genuinely alive, not a stale/frozen
-                                  blob); `run.log` tail confirms real, current work (`Chunk 16/451 league=K_LEAGUE_1: 2020-08-20 → 2020-08-24`,
-                                  fresh skip-fast + fetch lines timestamped `09:16:3Xs`). **No VM launched this session** — the existing chain
-                                  is healthy and already covers this todo's target range; launching a second one would race/duplicate per the
-                                  guidance above. **Not done**: at chunk 16/451 the chain is still deep in 2020 — the 2026-06-27..07-25 windows
-                                  this todo actually cares about are ~430 chunks away, and the horizon-grid granularity re-check (see done-when
-                                  above) genuinely cannot happen until the chain reaches and clears them. This todo is correctly left unchecked;
-                                  it will need re-dispatch once `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` reports convergence
-                                  into the 2026-06/07 range, not before. Re-dispatching this exact todo for a pure re-verification tick before
-                                  then (as has now happened repeatedly across multiple sessions/days with no new information each time) is not a
-                                  productive use of an AO worker — the campaign is already being actively babysat tick-by-tick in that doc's own
-                                  Progress Log by a separate ongoing session.
+      **AO-dispatch re-verification, 2026-08-09T09:2XZ (this session)**: this todo's own opening line ("NOT YET
+      LAUNCHED") is now stale/misleading — a launch covering both windows already exists (the broad chain above), it
+      is just not a launch scoped narrowly to this todo. Live-reverified before touching anything (per rule 4a, never
+      trust a doc timestamp over a fresh check): `gcloud compute instances list` shows
+      `mtds-backfill-odds-smallchunk10-20260809` RUNNING; its GCS heartbeat blob
+      (`gs://deployment-scripts-central-element-323112/vm-heartbeat/mtds-backfill-odds-smallchunk10-20260809.txt`)
+      updated `2026-08-09T09:17:13Z` against a check at `09:17:26Z` (13s old — genuinely alive, not a stale/frozen
+      blob); `run.log` tail confirms real, current work (`Chunk 16/451 league=K_LEAGUE_1: 2020-08-20 → 2020-08-24`,
+      fresh skip-fast + fetch lines timestamped `09:16:3Xs`). **No VM launched this session** — the existing chain
+      is healthy and already covers this todo's target range; launching a second one would race/duplicate per the
+      guidance above. **Not done**: at chunk 16/451 the chain is still deep in 2020 — the 2026-06-27..07-25 windows
+      this todo actually cares about are ~430 chunks away, and the horizon-grid granularity re-check (see done-when
+      above) genuinely cannot happen until the chain reaches and clears them. This todo is correctly left unchecked;
+      it will need re-dispatch once `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` reports convergence
+      into the 2026-06/07 range, not before. Re-dispatching this exact todo for a pure re-verification tick before
+      then (as has now happened repeatedly across multiple sessions/days with no new information each time) is not a
+      productive use of an AO worker — the campaign is already being actively babysat tick-by-tick in that doc's own
+      Progress Log by a separate ongoing session.
 
 - [x] [DATA] P1. Verify DeFi's same-day capture was/wasn't also blocked, once
       `market-data-tick-defi-prd-central-element-323112`'s manifest consolidator is confirmed healthy (see the

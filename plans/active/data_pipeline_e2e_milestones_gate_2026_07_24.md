@@ -206,7 +206,7 @@ manually marking it dead.
 
 - [x] [DOC] P1. ✅ **ALREADY DONE (prior session, verified 2026-07-24)** — target:
       `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`. Confirmed present with full codex-ssot
-      frontmatter (`authoritative_for: [VM preemption + attempted_failed billing-waste monitoring     contract]`) and
+      frontmatter (`authoritative_for: [VM preemption + attempted_failed billing-waste monitoring contract]`) and
       all the specified content (PROGRESS-checkpoint summary, transient-vs-genuine classification via
       `classify_venue_error()`, monitoring cadence).
 - [x] [SCRIPT] P1. ✅ **ALREADY DONE (prior session, verified 2026-07-24)** — target: new skill
@@ -379,7 +379,7 @@ low-severity miss (a 0-open-todo doc).
 - [x] [DOC] P1. ✅ **DONE 2026-07-24 (digest bullet + a new fix-it todo added — the target's own 3 dangling refs are NOT
       yet fixed)** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`. Added a digest bullet for
       `defi_track01_per_instrument_and_canon_id_2026_07_24.md` under Aggregated source docs, plus a new
-      `- [ ] [DOC]     P1.` todo to actually apply it into `defi_consolidated_closeout_aggregated_sources_2026_07_24.md`
+      `- [ ] [DOC] P1.` todo to actually apply it into `defi_consolidated_closeout_aggregated_sources_2026_07_24.md`
       and fix that file's 3 dangling "tracked under X below" references (verified 2026-07-24: still unresolved there as
       of this correction). `pm@<commit-pending>`.
 - [x] [DOC] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`. Added

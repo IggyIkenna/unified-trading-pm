@@ -195,7 +195,7 @@ is authorized by this run.
   ENFORCE. This run follows the taxonomy/task (REFUSE) and flags the contradiction (critique (c)).
 - **[B1] etf vs equity** — parked; `etf` kept distinct (223,915 UPPER + 10,873 lower rows measured). Not resolved.
 - **[B2] combo top-level id shape** — parked; 63,319 catalogue COMBO rows carry unsettled leg-id grammar
-  (`ICE:COMBO:G   FMX0020-G   FMQ0025`, `CBOE:COMBO:VX/N5:1:S - VX/V5:1:B`). Not migrated.
+  (`ICE:COMBO:G FMX0020-G FMQ0025`, `CBOE:COMBO:VX/N5:1:S - VX/V5:1:B`). Not migrated.
 - **[B4] retired-vendor barchart** — parked; `venue=BARCHART` 9,119 + `batch_barchart` pipeline_mode 4,655 + source
   `barchart` 4,655. Reported (F7), not migrated.
 

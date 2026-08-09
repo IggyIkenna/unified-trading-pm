@@ -636,7 +636,7 @@ Solana) | — | | `MARKET_MAKING_EVENT_SETTLED` | GBP | USD, EUR | Sports books 
 | USDC | — | Polymarket/Kalshi native | | `MARKET_MAKING_*` (4 CeFi variants) | USDT or USD | USDC | — | | `DEFI_LP_*` |
 USDC | USDT, ETH | DeFi protocols primary in USDC | | `EVENT_DRIVEN` | USDT | USDC | — | | All `VOL_*` (CeFi options) |
 USDT | USDC, USD | LEAPS/TERM_STRUCTURE/DISPERSION:
-`USDT                                                                              | USD` | | `STAT_ARB_PAIRS_FIXED` /
+`USDT | USD` | | `STAT_ARB_PAIRS_FIXED` /
 `CROSS_SECTIONAL` | USD | USDT | — | | `PORTFOLIO_*` | USD | any | Portfolio layer converts each sub-strategy NAV to
 reporting currency | | `ML_DIRECTIONAL_CONTINUOUS` | USDT or ETH or USD | any | Doc states "BANKROLL in share_class
 currency (e.g., USDT, ETH, USD)" — currency-agnostic | | `ML_DIRECTIONAL_EVENT_SETTLED` | USD or GBP or EUR | USDC | — |

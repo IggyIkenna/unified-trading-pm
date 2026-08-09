@@ -115,12 +115,12 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       the inverse of the one this §2 item's own dispatch text described.
 
       **DONE (na-eligibility-audit 2026-08-03)** — the doc has since genuinely closed: the reverted root-cause todo was
-                                                                                          completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
-                                                                                          `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
-                                                                                          todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
-                                                                                          (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
-                                                                                          that the 2026-07-28 completion superseded — it is no longer true"). Now at
-                                                                                          `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
+      completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
+      `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
+      todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
+      (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
+      that the 2026-07-28 completion superseded — it is no longer true"). Now at
+      `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
 
 - [x] ✅ [PLAN] P2. `plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` — ARCHIVED
       2026-07-27 — unified-trading-pm@(this commit). All 3 stale items re-verified against current code (`understat.py`,
@@ -155,7 +155,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       fixed. **Gap 3** (operator Slack spot-check) is un-actionable by an agent. **Gap 4's code is shipped + verified
       real** (`alerting-service@ceed827` confirmed ancestor of `main`, `deployment-service@d2ddb23`), but the
       "currently-running revision is built from that image" claim is NOT independently confirmed (no live
-      `gcloud run     services describe` check run this session). Flipped Gap 1 only; left Gaps 2-4 open with corrected
+      `gcloud run services describe` check run this session). Flipped Gap 1 only; left Gaps 2-4 open with corrected
       annotations. Doc stays open in `plans/active/issues/`. **Flagging per findings-triage HARD RULE.**
 - [x] ✅ [PLAN] P2. `plans/active/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` — ARCHIVED
       2026-07-27 — unified-trading-pm@1cfe7ad15. 5th checkbox flipped citing verified evidence: build `2ea305e9` (full
@@ -847,7 +847,7 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
 
 - [x] [VALIDATE] P3. ✅ **DISPOSITIONED 2026-07-28** —
       `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`. **3 UI todos**: confirmed genuinely still
-      blocked, not stale. Ran a fresh full `npx playwright test     --project=chromium tests/smoke/` (deployment-ui HEAD
+      blocked, not stale. Ran a fresh full `npx playwright test --project=chromium tests/smoke/` (deployment-ui HEAD
       `dfa5d0e`): 410/423 passed, 0 failures touching any of the 3 items (venue-filter/de-dupe-panel/pagination), and
       the plan's previously-cited `prediction_v9_breakdown.spec.ts` blocker is independently confirmed fixed
       (deployment-ui@`687d4ce`, 2026-06-16). But 13 NEW, unrelated failures (Fleet Git-Health nav entry apparently

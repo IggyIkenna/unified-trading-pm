@@ -241,7 +241,7 @@ code-fix task). A data_engineering slot with a full session budget should:
       `attempted_failed` 78→59, `phantom_captured_no_parquet_at_canonical_path` count now 0. Safe-by-construction (this
       mode can only flip phantom→captured, never the reverse). Probed the single `RuntimeError` row separately
       (date=2026-01-13, blank league_id — `--unphantom` only re-validates
-      `error_reason ==     'phantom_captured_no_parquet_at_canonical_path'`, so it wasn't touched by the above): listed
+      `error_reason == 'phantom_captured_no_parquet_at_canonical_path'`, so it wasn't touched by the above): listed
       `sports_reference/by_date/day=2026-01-13/entity=footystats_odds/` directly — 0 blobs, confirming this row is a
       genuine capture failure (no parquet anywhere for that day), correctly tagged `attempted_failed`, NOT a phantom —
       nothing to reconcile; it's eligible for the normal backfill retry cadence like any other real failure. No

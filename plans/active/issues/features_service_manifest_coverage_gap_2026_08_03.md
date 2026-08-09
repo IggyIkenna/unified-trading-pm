@@ -141,7 +141,7 @@ not something an AO worker should guess at.
       `capture_status=captured` in the per-VM shard
       `gs://features-defi-prd-central-element-323112/_index/per_vm/feature-orphan-backfill-onchain.parquet`. Awaits the
       manifest consolidator to merge into the canonical index; a re-run of
-      `feature_orphan_sweep.py     --feature-family onchain` after that should read `orphan_class_E=0`.
+      `feature_orphan_sweep.py --feature-family onchain` after that should read `orphan_class_E=0`.
 - [x] 2. ✅ [SCRIPT] P1. **Backfill `record_captured` manifest rows for sports/sports's 67,077 real orphan objects** —
       same pattern as todo 1, reading
       `gs://deployment-scripts-central-element-323112/feature-orphan-sweep/20260803-104314/feat-orph-spt-sports-20260803-104314/orphan_sweep_sports_sports.parquet`.

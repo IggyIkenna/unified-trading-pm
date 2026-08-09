@@ -309,7 +309,7 @@ READ-SIDE — every downstream consumer handles each of the four states per poli
       (real data with no manifest row) AND `phantom_count==0`. Assert the bucket prefix taxonomy reports **0 `unknown`
       prefixes** (every top-level prefix labelled {service-data, manifest-infra, logs, run-artifact, terraform,
       tarball}); assert the sizing rollup parquet `\_index/audit/data_sizing*<ag>.parquet`was produced (bytes +
-      object-count per `(asset_group, data_type, venue,     pipeline_mode)`). **Class (E) → `record_captured`backfill,
+      object-count per `(asset_group, data_type, venue, pipeline_mode)`). **Class (E) → `record_captured`backfill,
       NEVER delete** (it is the "v10 hole"); non-data paths (VM logs, terraform, tarballs) are understood + NEVER
       deleted. Green: both counts 0, 0`unknown` prefixes, sizing published, every AG.
 

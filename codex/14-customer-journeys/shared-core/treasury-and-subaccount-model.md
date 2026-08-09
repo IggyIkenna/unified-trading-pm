@@ -227,6 +227,6 @@ Phase 0–4 landed on `live-defi-rollout`; Phase 5 docs + Phase 6 staging deploy
 - [ ] **Real POD integration** — subscription approval AML/KYC gate + NAV strike resolution currently stub through mock
       providers. Wire the real POD fund-administration API once POD's endpoints are confirmed.
 - [ ] **fund-administration-service GitHub repo creation + staging deploy** — local-only until Phase 6.
-      `gh repo     create IggyIkenna/fund-administration-service --private --source ./fund-administration-service`, push
+      `gh repo create IggyIkenna/fund-administration-service --private --source ./fund-administration-service`, push
       `live-defi-rollout`, propagate PM workflow templates via
       `bash unified-trading-pm/scripts/propagation/rollout-workflow-templates.sh`, then deploy to staging Cloud Run.

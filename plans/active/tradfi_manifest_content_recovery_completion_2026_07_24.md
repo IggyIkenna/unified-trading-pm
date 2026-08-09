@@ -110,7 +110,7 @@ context_scope:
 
 - [x] ✅ [BACKEND] P0. **IS catalogue adapter converged to `-USD@LIN` — instruments-service@287d1607.** For resolvable
       FUTURE/OPTION, `instrument_key` is now built via the shared
-      `build_instrument_id(canonical_venue, itype, product_root, expiry_date=…, strike=…, option_right=…,     margin_marker="LIN", quote_asset="USD")`
+      `build_instrument_id(canonical_venue, itype, product_root, expiry_date=…, strike=…, option_right=…, margin_marker="LIN", quote_asset="USD")`
       — byte-identical to the MTDS write path (same `EXCHANGE_CODE_TO_NAME` root translation). `canonical_instrument_id`
       set BYTE-EQUAL to `instrument_key`; the old colon/month-only additive `_build_canonical_instrument_id` DELETED.
       Unresolved product-root (OSI `O:SPX…`, unknown roots) falls back to the sanitized-raw shape — no crash, no
@@ -176,7 +176,7 @@ context_scope:
 > stamped `FUTURE` — must re-stamp from the classifier, not trust the column), (3) null-id bundle atoms (by design).
 
 - [x] ✅ [DATA] P0. **Shared primitive SHIPPED — `unified-api-contracts@3bd4ec29`.**
-      `canonicalize_raw_tradfi_id(raw,     venue, instrument_type)` + `assert_tradfi_derivative_ids_canonical` +
+      `canonicalize_raw_tradfi_id(raw, venue, instrument_type)` + `assert_tradfi_derivative_ids_canonical` +
       `CanonResult`/`CanonStatus` + `TARGET_TRADFI_DERIVATIVE_ID_RE` in `internal/reference/tradfi_id_canonicalizer.py`
       (top-level re-exported). Re-derives type via `classify_databento_symbol` (lazy-imported — circular-import
       avoidance) + builds via `build_instrument_id(margin_marker="LIN", quote_asset="USD")` with the 4
@@ -214,8 +214,8 @@ context_scope:
 - [x] ✅ [DATA] P0. **Migrate the live manifest (Surface B) — RE-VERIFIED LIVE 2026-07-25.**
       `market-tick-data-service/scripts/migrate_tradfi_manifest_usd_lin_2026_07_18.py --in-place-cas --apply` on
       `canonical-migration-tradfi-manifest-cas-20260722-075028` SUCCEEDED on attempt 4/8 (`run.log`:
-      `IN-PLACE CAS APPLY COMPLETE: 6262988 rows rewritten in place ..., 1989 derivative rows corrected,     4898 bundle underlyings translated, 1751779 CASH rows migrated to -USD, 48920 simple enum re-stamps, 0     QUARANTINE_COMBO rows re-stamped. Raw derivative rows remaining: 35499 (quarantine-only, by design)`,
-      `CAS FINAL     rc=0`). Fresh live read of `_index/availability_index.parquet` (2026-07-25, 5,902,157 rows)
+      `IN-PLACE CAS APPLY COMPLETE: 6262988 rows rewritten in place ..., 1989 derivative rows corrected, 4898 bundle underlyings translated, 1751779 CASH rows migrated to -USD, 48920 simple enum re-stamps, 0 QUARANTINE_COMBO rows re-stamped. Raw derivative rows remaining: 35499 (quarantine-only, by design)`,
+      `CAS FINAL rc=0`). Fresh live read of `_index/availability_index.parquet` (2026-07-25, 5,902,157 rows)
       confirms this landed and held: FUTURE/OPTION `instrument_id` canonical (regex
       `^[A-Z0-9-]+:(FUTURE|OPTION):[A-Z0-9]+-USD@LIN-\d{8}(-\d+(\.\d+)?-[CP])?$`) 363,954/403,467 (90.2%); EQUITY/ETF
       carrying `-USD` suffix 3,189,939/3,225,484 (98.9%). **Residual non-canonical is NOT this todo's scope** — it is

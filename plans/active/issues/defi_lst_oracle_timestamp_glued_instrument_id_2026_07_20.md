@@ -371,7 +371,7 @@ not a new whole-corpus walk) once this fix ships, to reclassify them via the now
 
 - [x] ✅ [DATA] P2. **DISPROVEN 2026-08-01 (slot-11) — the single-day rebuild is a NO-OP; folds into the closeout plan's
       `:401` P0 phantom-row purge instead.** Dry-ran
-      `rebuild_defi_manifest.py --start-date 2026-07-22     --end-date 2026-07-22 --dry-run`, then confirmed via direct
+      `rebuild_defi_manifest.py --start-date 2026-07-22 --end-date 2026-07-22 --dry-run`, then confirmed via direct
       GCS listing: all 10 remaining glued liquidations markers (AAVE_V3 ×4, COMPOUND_V3 ×4, FLUID ×1, SPARK ×1 — 2 of
       the original 12 already cleared on their own) are ALREADY retired to
       `_migrated_aave_v3_ARBITRUM_20260723_013349.parquet` etc., with NO per-instrument twins (genuine 0-row empty

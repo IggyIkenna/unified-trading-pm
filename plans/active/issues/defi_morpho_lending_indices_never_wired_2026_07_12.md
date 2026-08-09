@@ -155,13 +155,13 @@ venue is exactly the class of gap the plan's "Definition of 100%" section calls 
       the `/snap/bin/gcloud` every prior session in this doc hit (snap-confine `cap_dac_override` failure); ran the
       launcher directly (`PATH="$HOME/google-cloud-sdk/bin:$PATH"`) instead of hand-rolling `compute_v1`. Dry-run
       confirmed clean, then real launch:
-      `bash scripts/vm/launch-mtds-lending-indices-backfill-vm.sh     --lending-protocols morpho 2026-03-26 2026-07-15`
+      `bash scripts/vm/launch-mtds-lending-indices-backfill-vm.sh --lending-protocols morpho 2026-03-26 2026-07-15`
       → VM `mtds-lending-indices-20260715-113442` (zone `asia-northeast1-c`, SPOT/preemptible, e2-standard-4, `RUNNING`
       at creation, IP 34.104.219.68). Tarball freshness guard passed (all 4 tarballs current, no stale-code repeat of
       the earlier launch/publish race). **T+10min real-progress verification (11:44Z, not just RUNNING status)**:
       `gcloud compute instances describe` confirms still `RUNNING`; GCS run.log (2,673 lines) shows genuine forward
       per-day iteration — started at 2026-03-26, already at **2026-03-28** (2 days advanced in ~10 min), real per-market
-      `Downloading Morpho data     for <pool_address> on 2026-03-28` calls hitting The Graph subgraph, mix of real rows
+      `Downloading Morpho data for <pool_address> on 2026-03-28` calls hitting The Graph subgraph, mix of real rows
       and honest `Fetched 0 rate snapshots` (data-dependent, not a code failure — same pattern this doc's own 2026-07-14
       entry already validated as genuine subgraph non-indexing for inactive markets). At this rate (~5s/day) the
       remaining ~109 days would take roughly a further ~9-10min of wall time if throughput holds — will need a later

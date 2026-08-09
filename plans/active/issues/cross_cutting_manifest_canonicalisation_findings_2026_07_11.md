@@ -226,7 +226,7 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
       cefi)~~. **cefi's own legacy-bucket delete is DONE (corrected 2026-08-02, see the cefi table row above) — dropped
       from this todo's AG list.** **STALE (na-eligibility-audit 2026-08-03)** — the cefi CF-audit adjudication half is
       ALSO done, not "unaffected and still open" as the 2026-08-02 correction claimed:
-      `cross_cutting_satellite_ao_dispatch_batch1_     2026_07_26.md`:465 (DONE 2026-08-01, slot-6, data_engineering)
+      `cross_cutting_satellite_ao_dispatch_batch1_ 2026_07_26.md`:465 (DONE 2026-08-01, slot-6, data_engineering)
       ran a fresh `cf_manifest_audit.py` against the live `market-data-tick-cefi-prd-central-element-323112` manifest
       and confirmed CF-1/CF-3/CF-4/CF-5/Era-B all GREEN for cefi (`market-tick-data-service@c2ae82e0`, 9,662,116 rows,
       independently re-verified post-apply) — this is exactly the named CF-4/CF-5/Era-B adjudication this todo asked for
@@ -243,7 +243,7 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
       current existence, fresh (not assumed — the doc's own table already flagged tradfi as suspect-already-deleted):
       `gcloud storage buckets describe gs://market-data-tick-{defi,tradfi,sports}` → **all 3 return a clean `404` (not a
       permission-denied ambiguity)**, and a project-level
-      `gcloud asset search-all-resources --scope=projects/central-element-323112     --asset-types=storage.googleapis.com/Bucket --query="name:market-data-tick-"`
+      `gcloud asset search-all-resources --scope=projects/central-element-323112 --asset-types=storage.googleapis.com/Bucket --query="name:market-data-tick-"`
       cross-check lists only the canonical `-{ag}-{env}-central-element-323112` shaped buckets — **none of the 3 legacy
       bare names exist in this project.** Nothing to delete; this todo's "still pending" framing was stale (matches the
       tradfi discrepancy already flagged in this doc's own table: tradfi's flat bucket was independently confirmed

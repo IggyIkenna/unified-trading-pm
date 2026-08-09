@@ -356,7 +356,7 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       10:55Z (all slices); the 11:00Z fleet tick closed #498 (ref deleted) + opened **#499** (ref
       `promote/strategy-service/308bdfd31bbb` @ 308bdfd3, created 11:01:10Z). Resolved #499 take-LDR: merge main
       `19565cd3` → `git checkout --ours pyproject.toml` (both floors) → commit `dd11550a`
-      (`fix(promote): resolve LDR->main promote conflict ... take LDR floors unified-api-contracts>=0.96.0,     aiohttp>=3.14.3`),
+      (`fix(promote): resolve LDR->main promote conflict ... take LDR floors unified-api-contracts>=0.96.0, aiohttp>=3.14.3`),
       tree == 308bdfd3 verified, pushed to the promote ref. #499 MERGEABLE; fleet-green posted on `dd11550a` (identical
       bot signal, SIT run 31094524862 SUCCESS, desc "full-workspace-sit @ 10:45:34Z"); auto-merge ARMED (SQUASH). **v2
       PR run 31095759328 QUEUED on dd11550a — MUST COMPLETE, do NOT cancel**; on SUCCESS #499 auto-merges → verify main

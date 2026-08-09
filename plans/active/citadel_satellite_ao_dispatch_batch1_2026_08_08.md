@@ -153,7 +153,7 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       fills, artifact written, byte-deterministic rerun, rate-matched leg exactly 0, order leg +10bps signed alpha, all
       assertions PASS. Closed the CRA-reading gap: added `build_execution_alpha_attribution` +
       `emit_execution_alpha_attribution` (reshapes `ExecutionAlphaRow` →
-      `PnLAttributionRow(factor=SLIPPAGE,     layer=EXECUTION)`, wired into the CLI via the UTL
+      `PnLAttributionRow(factor=SLIPPAGE, layer=EXECUTION)`, wired into the CLI via the UTL
       `emit_attribution_parquet` SSOT — same sink/schema
       `client-reporting-api/core/attribution_reader.read_attribution_rows` already scans generically, so **no
       client-reporting-api code change was needed** (explains its absence from this plan's `repos:` list — not an
@@ -214,7 +214,7 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
       `reversion_zscore_60m`/`reversion_zscore_240m` in the `anomaly` calculator + `registry_specs.yaml`, GREEN QG, on
       origin LDR). This todo covers the two BOUNDED remaining pieces: (a) backfill the `returns` + `anomaly` feature
       groups for cefi/BTC so the columns land in GCS (shared VM run with the P2.11.16 todo above — `features-service`
-      CLI `--operation calculate --mode batch --asset-group cefi --feature-group     anomaly`, at scale via
+      CLI `--operation calculate --mode batch --asset-group cefi --feature-group anomaly`, at scale via
       `deployment-service/scripts/vm/launch-features-backfill-vm.sh`, no-fire-and-forget: T+10min verify + manifest-row
       check); (b) run `features-status --check-drift` and record the result. No `[OPERATOR]` tag needed: same
       already-established read+compute+write backfill-VM pattern as the P2.11.16 todo above, no delete, no `--apply`

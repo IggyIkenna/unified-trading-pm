@@ -123,7 +123,7 @@ context_scope:
       catalogue entry, so that half is closed via `unified-trading-pm@1ea317100`.
 - [x] ✅ [DATA] P1. Add a LIGHTER-ZKSYNC market-index → symbol map so the ~11,283 numeric-stem objects resolve. **CLOSED
       2026-08-06 (na-eligibility-audit)**: done 2026-07-28 per this doc's own Deferred-work table row 6 — the dry-run +
-      apply completed via the existing migration script, `already_canonical=12,908, would_rename=0,     would_merge=0`.
+      apply completed via the existing migration script, `already_canonical=12,908, would_rename=0, would_merge=0`.
       Code: `market-tick-data-service@feeb8a6e` (dtype fix in `do_merge()`). Evidence was already recorded in this file
       but never reflected back onto this checkbox.
 - [x] ✅ [DATA] P2. Design the COMBO-in-perp-partition move for DERIBIT. **CLOSED 2026-08-04 (na-eligibility-audit)**:
@@ -814,7 +814,7 @@ schema were never re-measured this tick. **Nothing was mutated**: this was a pur
       repair vs. a fixed dry-run + clean `--apply`. **CLOSED 2026-08-09 (stale-check-cefi, staleness re-audit)**:
       direct-code-verified `"chain"` IS present in `instruments-service`'s `_DRYRUN_COLS`
       (`scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py`), and the v2 script
-      (`load_cols = None if     args.apply else v1._DRYRUN_COLS`) reuses v1's list via `importlib`, so the fix reaches
+      (`load_cols = None if args.apply else v1._DRYRUN_COLS`) reuses v1's list via `importlib`, so the fix reaches
       both entry points. The fixing commit (message "include chain in dry-run column projection so chain-drop safety
       gate isn't a no-op") lives on `origin/live-defi-rollout` under current SHA `97801b5d` — the doc's own cited SHAs
       `1284606a`/`654d694f` predate the 2026-08-05 `instruments-service` history rewrite (see the sibling

@@ -282,15 +282,15 @@ context_scope:
       features-service)
 
       **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
-                                                                                                                                                                                                                                                                      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
-                                                                                                                                                                                                                                                                      **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
-                                                                                                                                                                                                                                                                      `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
-                                                                                                                                                                                                                                                                      2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
-                                                                                                                                                                                                                                                                      either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
-                                                                                                                                                                                                                                                                      launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
-                                                                                                                                                                                                                                                                      operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
-                                                                                                                                                                                                                                                                      availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
-                                                                                                                                                                                                                                                                      see its own Progress Log.
+      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+      **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+      `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+      2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+      either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+      launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+      operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+      availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+      see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
@@ -445,7 +445,7 @@ context_scope:
       same 100% bar; DeFi is the sole exception (genuinely mixed per-instrument_type, tracked separately in
       `defi_consolidated_closeout_2026_07_18.md`). **Narrowed 2026-07-25
       (`prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 2) to the case-insensitive standard the RULED C2a
-      ruling actually mandates** (`/codex/02-data/reconciliation-     finding-taxonomy.md` §5.1 — UPPERCASE target,
+      ruling actually mandates** (`/codex/02-data/reconciliation- finding-taxonomy.md` §5.1 — UPPERCASE target,
       `migration_pending`, compared case-INSENSITIVELY, no casing finding during the migration window) — **still open,
       see 2026-07-27 Progress Log entry**: a fresh read found 176 genuinely-malformed (non-casing) rows, not 0.
 - [ ] [DIAG] P2. **NEW 2026-07-27 — prediction manifest blank/null `instrument_type` rows are ACTIVELY GROWING, not
@@ -456,7 +456,7 @@ context_scope:
       population is dead historical residue, not active, while the blank population is evidence of an ONGOING writer
       defect still stamping blank `instrument_type` on ~10 prediction rows/day. **Done when**: the writer/cron path
       responsible for the blank stamps is identified by name (file:line) with a live-vs-historical verdict — candidates
-      include the per-CID writer path near `engine/orchestrator/manifest_finalize.     _finalize_prediction_bundles`
+      include the per-CID writer path near `engine/orchestrator/manifest_finalize. _finalize_prediction_bundles`
       (already known from the tick-18 finding above to mis-stamp `instrument_type` on bundle rows, though that finding
       was lowercase `"prediction"`, not blank) or a different live/per-CID path — and either a fix ships and is verified
       against the next day's count, or the ~10/day gap is recorded as accepted with a stated reason. Repo:

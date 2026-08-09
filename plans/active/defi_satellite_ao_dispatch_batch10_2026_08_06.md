@@ -125,7 +125,7 @@ same day) before being drafted here.
       (`mtds-dex-swaps-backfill` running 2026-08-07, 63k+ rows/shard).
 - [x] ✅ [DATA] P2. **Run and verify a production bridge-events historical backfill**: now that the `mode=` threading
       precondition has shipped (`market-tick-data-service@c38e1b3f`, `bridge_events_handler.py:265`), run
-      `--operation collect-bridge-events --mode batch --start-date 2021-11-11 --end-date <run-date> --asset-group     defi`,
+      `--operation collect-bridge-events --mode batch --start-date 2021-11-11 --end-date <run-date> --asset-group defi`,
       confirming it captures ACROSS rows from 2021-11-11 (genesis) and STARGATE rows from 2022-03-17 (genesis) with zero
       `UPSTREAM_INSTRUMENTS_CATALOG_STALE` failures on historical dates. **Safe-idempotent justification: standard
       multi-year capture backfill, SPOT, skip-if-captured, no GCS delete.** Repo: market-tick-data-service. Source:

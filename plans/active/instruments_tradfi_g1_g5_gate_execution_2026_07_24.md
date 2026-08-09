@@ -343,7 +343,7 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
           it to consume the new 2Y/3M points is a features-track todo (not blocking the instrument-definition add).**
           Provenance: operator 2026-06-25.
     - [x] ✅ [SCRIPT] P1. **G1.g MVP tags on the tradfi MVP universe** (VX futures + basis tickers). — **VERIFIED DONE
-          2026-07-26**: already fixed — `unified_api_contracts/canonical/crosscutting/     _mvp_scope_rules.py`'s tradfi
+          2026-07-26**: already fixed — `unified_api_contracts/canonical/crosscutting/ _mvp_scope_rules.py`'s tradfi
           `underliers` set already includes VX + the 7 basis-commodity roots (GC/SI/PL/PA/NG/CL/HG), each with dated
           operator-ruling comments (2026-06-24/2026-07-21/22). Live-queried the catalogue: VX (82 rows) and all 7 basis
           roots (78-156 rows each) show `mvp=True` at 100%. No code change needed.

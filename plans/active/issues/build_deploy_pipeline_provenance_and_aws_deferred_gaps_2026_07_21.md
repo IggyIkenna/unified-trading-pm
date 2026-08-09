@@ -139,7 +139,7 @@ acting. (The artifact-pipeline page does not depend on this — it reads the Clo
 - [x] ✅ [DEVOPS] P2. **#7 — SHIPPED 2026-08-07, `deployment-service@61cf93f44`.** Fixed `lc_aws_code_bucket()` + the
       log-upload trap block in `aws_ec2_launch_lib.sh`, plus the same hardcoded wrong bucket name duplicated in all 6
       AWS launcher heredocs
-      (`launch-{cefi-sharded-backfill,defi-backfill-vm,features-backfill-vm,     instruments-backfill-vm,mtds-backfill-vm,mdps-backfill-vm}-aws.sh`)
+      (`launch-{cefi-sharded-backfill,defi-backfill-vm,features-backfill-vm, instruments-backfill-vm,mtds-backfill-vm,mdps-backfill-vm}-aws.sh`)
       — all now point at `uts-prod-deployment-state`, matching `create-code-tarballs.sh`'s real uploader target. Wider
       than the originally-cited 2 line numbers: the same wrong bucket was duplicated 6 more times in launcher heredocs,
       not caught by the original finding. **Not verified by a real AWS tarball VM launch** — same AWS-deferred

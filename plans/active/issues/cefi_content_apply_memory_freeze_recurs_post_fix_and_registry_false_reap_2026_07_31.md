@@ -140,7 +140,7 @@ depend on.
 - [x] ✅ [BACKEND] P2. Widen `DeploymentsRegistry.get()`'s except clause
       (`unified-trading-library/unified_trading_library/deployment_registry.py:447-450`) to also degrade-to-None on a
       real `NotFound`/`Forbidden`/404, mirroring `_read_true_exit_code`'s already-shipped idiom exactly
-      (`except     Exception as exc: exc_name = type(exc).__name__; if exc_name in ("NotFound", "Forbidden") or "404" in     str(exc): pass (fall through to archive scan); else: raise`).
+      (`except Exception as exc: exc_name = type(exc).__name__; if exc_name in ("NotFound", "Forbidden") or "404" in str(exc): pass (fall through to archive scan); else: raise`).
       Add a regression test using a fake storage client that raises `google.api_core.exceptions.NotFound` (not
       `FileNotFoundError`) for a missing active blob, asserting `.get()` still falls through to the archive scan instead
       of crashing. **Done when**: the test reproduces this exact crash pre-fix, passes post-fix, QG green. This is a
@@ -170,7 +170,7 @@ depend on.
       `test_main_exit_code_mode_census_unavailable_no_false_vm_not_running_reap`. QG Pass-1 GREEN (220s, sentinel
       `4ee514e`), SHA verified on `origin/live-defi-rollout`. Sibling: deployment-api's
       `sync_service.reap_stale_deployments` + `routes.vm_deployments.reconcile_vm_deployments` share the same empty-set
-      bug — filed `deployment_api_reaper_empty_set_over_reap_sibling_2026_08_06.md` (P2, `assigned_vm:     planning`).
+      bug — filed `deployment_api_reaper_empty_set_over_reap_sibling_2026_08_06.md` (P2, `assigned_vm: planning`).
 - [ ] [SCRIPT] P3. Corroborating evidence only — no new action needed beyond what
       `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`'s existing P2 todo ("Investigate shard 16's fast-OOM
       anomaly... single anomalously large/malformed file") already covers. When that investigation resumes, this VM's

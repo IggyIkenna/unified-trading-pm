@@ -121,7 +121,7 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       getting roughly half of new DeepSeek dispatches (not starved). **Checked 2026-08-05, ~20 min post-deploy: NOT YET
       landed** — `?model=deepseek-v4-pro` shows 377 lifetime tasks; `?model=deepseek-v4-flash` still shows only the 9
       PRE-EXISTING uncontrolled-substitution rows, and a direct `task_usage` query for
-      `account_id=     'deepseek-v4-flash'` returned zero rows. Expected (no fresh DeepSeek spawn decision had fired yet
+      `account_id= 'deepseek-v4-flash'` returned zero rows. Expected (no fresh DeepSeek spawn decision had fired yet
       at check time) — genuinely time-gated, not a bug; re-check on next session, don't re-poll before then.
       **Re-checked ~35min post-deploy: still zero.** Important distinction from a routing bug: zero rows under BOTH the
       new `deepseek-v4-flash` account AND `deepseek-v4-pro` (checked `completed_at > deploy time` for pro too) — if pro
@@ -299,9 +299,9 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       top-up tracking + human-usage-outside-AO residual**, implementing todo 19(b)'s operator ruling (this doc,
       `deepseek_flash_ab_routing_test_2026_08_05.md`, todo 19(b) above). New `deepseek_topups` table (operator-recorded
       real top-up events, audit-trail-only, never overwritten) + a nullable `slot_id` on `deepseek_message_usage`
-      (backfills naturally as the poller re-sweeps); `compute_deepseek_wallet_     reconciliation()` splits attributed
+      (backfills naturally as the poller re-sweeps); `compute_deepseek_wallet_ reconciliation()` splits attributed
       spend by `slot_id` (0=orchestrator, `config.review_slot_ids()`=review, everything else=worker) and computes
-      `real_total_spend = known_topups − current_balance`, `residual =     real_total_spend − attributed_total` —
+      `real_total_spend = known_topups − current_balance`, `residual = real_total_spend − attributed_total` —
       deliberately `None` (not a misleading 0) until at least one top-up is recorded. New `DeepSeekWalletPanel.tsx`
       (table + a top-up-entry form) mounted on the dashboard next to each `TaskUsageWindowsPanel`. 6 backend pytest + 7
       frontend vitest + 2 Playwright e2e (one caught a real autoflush-off bug: the POST route's same-session re-read
@@ -380,13 +380,13 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       has never fired, anywhere, per `activity_log`) — the auto-heal path itself is unit-tested (63+37 new test lines in
       `72ac00d`) but not yet live-proven end-to-end; low risk, not blocking. **Verification catch worth recording**: a
       naive fleet-wide scan (`git rev-parse --git-dir` over every dotted sibling across all 16 slots) initially found
-      ~80 matches — every slot's `*.stale-pre-history-rewrite-     20260805T112618Z/` backup directories (real, 42MB,
+      ~80 matches — every slot's `*.stale-pre-history-rewrite- 20260805T112618Z/` backup directories (real, 42MB,
       functional repos with full history, deliberately kept alongside a 2026-08-05 git-history-rewrite maintenance op) —
       which looked like a serious false-positive/data- -loss risk in the shipped fix. Root cause of THAT scare: the scan
       ran via SSM as `root`, which doesn't own those files (`ubuntu:ubuntu`) — hit git's own "dubious ownership"
       protection, an ownership-mismatch artifact of the diagnostic method, not a defect in the repos or the fix. Re-ran
       identically as `ubuntu` (`orchestrator.service`'s actual `User=`/`Group=`, confirmed via `systemctl show`) —
-      `git rev-parse --git-dir` resolves clean, `git     status`/`git log` both work, real history intact. So
+      `git rev-parse --git-dir` resolves clean, `git status`/`git log` both work, real history intact. So
       `_is_dead_quarantine_artifact()`'s discrimination is confirmed CORRECT in the context that actually matters (the
       orchestrator's own process, running as `ubuntu`): it will NOT touch these history-rewrite backups. No code change
       from this catch — it disproved a real-looking but ultimately spurious risk; recorded here so a future
@@ -429,7 +429,7 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       **Bug 2, found while re-verifying bug 1's fix covered every role**: a SEPARATE, narrower gap in the "direct-boot"
       lazy-`AgentRow`-creation branch (`boot_slot`, for a plan_health-family role booted straight against
       `/api/slots/{N}/boot` instead of through `/api/plan-health/dispatch` — the path
-      `ag_closeout_auditor_one_shot_     complete_no_agentrow_2026_07_26` added) — its `register_agent(...)` call was
+      `ag_closeout_auditor_one_shot_ complete_no_agentrow_2026_07_26` added) — its `register_agent(...)` call was
       the ONE call site in the codebase that omitted `claude_session_id`, unlike every other one
       (escalation.py/plan_health.py/main_agent_keeper.py). No crash from this one — `_compute_done_task_usage`'s
       `if claude_session_id is None: return None` guard makes it a silent skip — but permanently zero usage for any role

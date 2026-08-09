@@ -130,7 +130,7 @@ Neither explains the May-25+ gap.
       auto-detects `full_access` mode, and UPBIT (along with BINANCE-SPOT, COINBASE-SPOT) is included in the next
       backfill VM launch — no code change needed. **Alternative**: set the env/config override
       `TARDIS_ACCESS_MODE=full_access` to bypass the secret check. **Launch scope** (slot-15):
-      `VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash     launch-cefi-sharded-backfill.sh`.
+      `VENUES="UPBIT" YEARS="2022 2023 2024 2025 2026" LAUNCH_GROUPS="heavy" bash launch-cefi-sharded-backfill.sh`.
       **[OPERATOR] action**: obtain Tardis full-access API key and create the secret (or set override). After operator
       action, relaunch and verify ≥3 recent days of objects in GCS. (No evidence citation: the todo is OPEN — the
       previous `unified-trading-pm@<pending-commit>` placeholder was removed with the 2026-08-06 reopen.)

@@ -129,11 +129,11 @@ findings.
       first page. Full quality-gates.sh green (10286+ tests passed).
 - [x] ✅ [SCRIPT] P2. **Graph `skip`-based pagination loops in market-tick-data-service treat a skip-cap GraphQL error
       identically to "no more data."** 9 call sites across
-      `market_interface/adapters/defi/{curve_adapter,balancer_adapter,uniswapv2_adapter,     uniswap_v3_adapter,uniswapv4_adapter}.py`
+      `market_interface/adapters/defi/{curve_adapter,balancer_adapter,uniswapv2_adapter, uniswap_v3_adapter,uniswapv4_adapter}.py`
       (swaps + hourly-data + position-data queries, all `first: 1000, skip` loops bounded by The Graph's hard ~5000-skip
       ceiling). Each loops correctly but never distinguishes a genuine short/empty page from a page-fetch call that
       errored at the skip-cap boundary — the page-fetch helper swallows the error as falsy and the
-      `while True: if not     raw: break` loop treats it exactly like honest exhaustion. Repo: market-tick-data-service.
+      `while True: if not raw: break` loop treats it exactly like honest exhaustion. Repo: market-tick-data-service.
       Done when: each of the 9 call sites detects a GraphQL/HTTP error response distinctly from a genuinely empty page
       and logs/routes it as an incomplete fetch (mirroring the `for/else` cap-exhaustion pattern already shipped for
       Kalshi/Polymarket this session) rather than silently treating it as "done." — market-tick-data-service@60c61bbb
@@ -152,8 +152,8 @@ findings.
       in `uniswap_v3_adapter.py` while adding this test coverage.
 - [x] ✅ [SCRIPT] P2. **Instruments-service `first: 100` lending-market discovery caps, no guard.** Three files,
       ascending real-world risk: `compound_v3.py` (`markets(first: 100)` — lowest risk, Comet deployments are inherently
-      few per chain), `spark.py` (`markets(first: 100, where:     {isActive:true})` — an Aave V3 fork), `aave_v3.py`
-      (`_RESERVES_QUERY_TEMPLATE`, `first: 100,     where: {isActive: true})`). All three currently sit well under 100
+      few per chain), `spark.py` (`markets(first: 100, where: {isActive:true})` — an Aave V3 fork), `aave_v3.py`
+      (`_RESERVES_QUERY_TEMPLATE`, `first: 100, where: {isActive: true})`). All three currently sit well under 100
       real reserves/markets per chain, but none has a runtime count-check or comment acknowledging the boundary the way
       Kalshi's historical-mode cap does. Repo: instruments-service. Done when: each gains either a `skip` pagination
       loop (mirrors this session's `uniswap_v2.py`/`morpho.py` fixes) OR, if a live schema check confirms `skip` isn't
@@ -213,7 +213,7 @@ findings.
       warning-only mitigation in place.
 - [ ] [REVIEW] P3. **Sports adapters with no pagination keywords found — confirm no hidden vendor-side default page
       cap.**
-      `instruments_service/reference_data/adapters/sports/adapters/{api_football,     base,footystats,understat,soccerfootball_info,transfermarkt,open_meteo,api_football_reference}.py`
+      `instruments_service/reference_data/adapters/sports/adapters/{api_football, base,footystats,understat,soccerfootball_info,transfermarkt,open_meteo,api_football_reference}.py`
       have zero grep hits for `page`/`offset`/`cursor`/`has_more`/`MAX_` — each call appears naturally bounded by its
       query scope (one date's fixtures, one team's squad), but the audit did NOT exhaustively verify each vendor's API
       docs for a hidden default page size on a list-style endpoint called with no explicit `limit`/`page` param

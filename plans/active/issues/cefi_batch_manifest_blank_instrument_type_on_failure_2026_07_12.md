@@ -127,7 +127,7 @@ finding) — this is a self-contained, in-craft code fix.
       `download_batch` now resolves `canonical_venue` via `self._resolve_canonical_venue(exchange, canonical_venue)`
       before calling `_run_per_symbol_batch` (so DERIBIT-COMBO doesn't collapse onto bare DERIBIT), and
       `_run_per_symbol_batch` adds
-      `"instrument_type": TardisAdapter._classify_row_instrument_type(sym,     canonical_venue).value` to every
+      `"instrument_type": TardisAdapter._classify_row_instrument_type(sym, canonical_venue).value` to every
       `PerSymbolTask.row_key`. Two regression tests added in
       `tests/unit/test_tardis_batch_download_failure_instrument_type.py`: a mocked per-symbol failure on BITGET-FUTURES
       asserts `record_failed`'s `row_key["instrument_type"] == "PERPETUAL"` (not blank), and a DERIBIT-COMBO

@@ -575,7 +575,7 @@ achieved by exclusion, not canonicalisation.**
       version (flag only where the REMOVED line has a strong comparison (`==`/`!=`/`>`/`<`) and an ADDED line in the
       same hunk matches a weak pattern (`is not None`/bare-truthy/`isinstance(...)`)) cut the naive count to 12/2 weeks
       in MTDS + 6/2 weeks in instruments-service — but hand-verifying 3 of these against the real diff
-      (`d6d539a844:     tests/unit/test_odds_api_ws_connector.py`,
+      (`d6d539a844: tests/unit/test_odds_api_ws_connector.py`,
       `ee49a76df1: tests/unit/test_phoenix_orderbook_handler.py`,
       `e68059b266: tests/unit/scripts/test_migrate_instrument_availability_hive_2026_08_03.py`) showed **all 3 were
       false positives**: the "removed strong assertion" was NOT semantically replaced by the "added weak assertion" —
@@ -597,7 +597,7 @@ achieved by exclusion, not canonicalisation.**
       canonical members" and names `BETFAIR_EX_AU`, `WILLIAM_HILL`, `BWIN`, `MYBOOKIEAG`, `LOWVIG`, `WYNNBET`, `FOXBET`,
       `MARATHONBET`, `1XBET`, `SUPABETS`, plus an open-ended "and additional regional books" tail; the live registry
       (verified via
-      `.venv/bin/python -c "from unified_api_contracts.registry.market_data_categories import     VENUES_BY_ASSET_GROUP; print(sorted(VENUES_BY_ASSET_GROUP['sports']))"`)
+      `.venv/bin/python -c "from unified_api_contracts.registry.market_data_categories import VENUES_BY_ASSET_GROUP; print(sorted(VENUES_BY_ASSET_GROUP['sports']))"`)
       has **31** members and includes `BETFAIR_SB_UK`, `WILLIAMHILL` (no underscore), `BETOPENLY`, `BETRIVERS`,
       `BETVICTOR`, `CASUMO`, `LADBROKES`, `LIVESCOREBET`, `NOVIG`, `ONEXBET`, `PADDYPOWER`, `PROPHETX`, `SKYBET`,
       `VIRGINBET`, bare `UNIBET` — none of which the doc names — while omitting several the doc DOES name

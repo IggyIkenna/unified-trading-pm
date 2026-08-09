@@ -80,7 +80,7 @@ drift_direction: advance-code
       `resolve_instruments_store_kind`→`instruments-store-pred`). Teach the status path to use
       `_get_instruments_bucket_for_asset_group` (the same resolver the write path already uses) so prediction status
       renders. Display-only gap — the backfill WRITE path already works. Done when:
-      `--operation status --asset-group     prediction` runs without raising and renders coverage. Repo:
+      `--operation status --asset-group prediction` runs without raising and renders coverage. Repo:
       instruments-service.
 - [ ] [CODE] P2. **DeFi venue-grain — align the ADAPTER/writer shard key to the decided PROTOCOL-CHAIN grain.** Source:
       same doc. The `_index` reconcile (already DONE) fixed the STORED data to the decided PROTOCOL-CHAIN grain

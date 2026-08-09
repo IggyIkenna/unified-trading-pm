@@ -69,7 +69,7 @@ verification dispatch happened to run on `main` and surfaced it. Did not investi
       gmx_v2 venue removal") and codex `block-list.md` carries `### BL-12: DeFi perp liquidation capture — no venue`;
       both id sets (`BL-1`..`BL-10`, `BL-12`, 11 total) match exactly. Runtime-verified for real (not just git-evidence,
       per the 2026-08-06 audit's own caveat that this was git-suggestive-but-unverified):
-      `npx vitest run     __tests__/scripts/block-list-parity.test.ts` in `unified-trading-system-ui` → **4/4 passed**
+      `npx vitest run __tests__/scripts/block-list-parity.test.ts` in `unified-trading-system-ui` → **4/4 passed**
       live.
 
 ## Progress Log

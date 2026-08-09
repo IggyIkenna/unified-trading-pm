@@ -129,7 +129,7 @@ Key code surfaces:
 - [ ] (a) **35 DefiErrorCode coverage**: all 35 codes (13 Aave-family + 7 `RECURSIVE_*` + 8 `HL_*` + 2 `ORACLE_*` + 5
       `CCTP_*`; **count the enum, don't trust this number** — it grows) present in UAC
       `unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode`. Count members:
-      `awk '/class DefiErrorCode/{f=1;next} f&&/^class /{exit} f&&/^    [A-Z_]+ =/{c++} END{print c}' unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/defi.py`
+      `awk '/class DefiErrorCode/{f=1;next} f&&/^class /{exit} f&&/^ [A-Z_]+ =/{c++} END{print c}' unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/defi.py`
 
 - [ ] (b) **CHAIN_RPC_TEMPLATES coverage**: every supported chain has an entry. Read:
       `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py`
@@ -398,7 +398,7 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       `UNISWAPV3`/`AERODROMEV3`/`PANCAKESWAPV3`/`SUSHISWAPV3`/`CAMELOTV3`/`TRADER_JOEV2`/`VELODROMEV2` vs objects + UAC
       `UNISWAP_V3`/`AERODROME_V3`/… (underscore before the version). This silently breaks any index↔object join (a
       coverage-vs-objects walk falsely reports 74% "phantom"). **Check**:
-      `set(index.venue) == set(object-path venue) ==     flat(UAC ALL_DEFI_VENUES)` per bucket. **Fix = MIGRATE the
+      `set(index.venue) == set(object-path venue) == flat(UAC ALL_DEFI_VENUES)` per bucket. **Fix = MIGRATE the
       index venue values to the UAC/object canonical — do NOT normalise venue names in read-path code** (a runtime
       band-aid causes downstream issues; the data must be canonical at rest). Same applies to chain strings.
 
@@ -531,7 +531,7 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       **silent lie** that the data is genuinely empty when the fetch actually **failed** (timeout / DNS / RPC / auth). A
       transient network failure then pollutes the manifest as honest-empty, corrupting coverage + downstream
       preflight. - **Find every site**:
-      `rg -U "except\b[^\n]*:\s*\n(\s*[^\n]*\n)?\s*return (\[\]|None|\{\}|pd\.DataFrame\(\))"       instruments-service/ market-tick-data-service/ features-service/ --include="*.py" -g '!*test*'`
+      `rg -U "except\b[^\n]*:\s*\n(\s*[^\n]*\n)?\s*return (\[\]|None|\{\}|pd\.DataFrame\(\))" instruments-service/ market-tick-data-service/ features-service/ --include="*.py" -g '!*test*'`
       — plus read each adapter's outermost fetch try/except. - **For each**: confirm the failure path reaches
       `record_failed` (`attempted_failed`), not `record_empty`. A swallow that returns empty → caller's `error` var
       stays None → `record_empty` is the bug. Fix = **re-raise** (or return a typed failure sentinel) so the caller's

@@ -151,7 +151,7 @@ per `task_template.md`'s dispatch-scope bar) rather than fixed by this session, 
       `git show 204bb3c0bd89:<any of the 12 flagged files>` confirms every one of the 21 real occurrences was PRESENT in
       that exact tree (verified directly, table-by-table, all 13 non-false-positive files unchanged from this doc's
       original inventory). Immediately re-running the identical
-      `rg "except Exception:" --type py --glob     "!tests/**" scripts/` command by hand on the SAME tree finds all 21
+      `rg "except Exception:" --type py --glob "!tests/**" scripts/` command by hand on the SAME tree finds all 21
       hits without issue — so this isn't a corpus change between the two checks, it's the SAME content producing
       different verdicts from (nominally) the same command. No caching mechanism explains it (only `bandit`/`pip-audit`
       have `qg_cache_hit`/`qg_cache_store` calls; the broad-except check and the whole codex-compliance section have

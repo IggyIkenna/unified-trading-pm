@@ -159,47 +159,47 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
       — fixed. Repo: unified-trading-pm.
 
       **Root cause, refined during reproduction**: the fix sketch's own hypothesis (mid-flight `git diff --cached
-                                          --name-status -M` re-detection right before `git restore --staged .`) turned out to be insufficient on its own —
-                                          empirically, when the CONCURRENT commit forcing reconciliation also touches the rename source's CONTENT (the
-                                          realistic collision shape, not just an unrelated file elsewhere), `git`'s own autostash pop can no longer
-                                          cleanly re-apply the staged rename as one `R100` unit: it comes back as a staged ADD of the destination plus an
-                                          **UNSTAGED** delete of the source, which a `git diff --cached -M` re-detection step (staged-state only) cannot
-                                          see at all. Confirmed by reproduction in a sandboxed origin+2-clone setup (bare repo, clone A stages the rename
-                                          while behind, clone B lands a concurrent edit to the SAME source file, forcing clone A's merge-pull into the
-                                          rebase+autostash fallback) — the unpatched script reliably produced `git ls-tree -r HEAD` showing the doc at
-                                          BOTH paths, reproducing the doc's own observed symptom exactly.
+      --name-status -M` re-detection right before `git restore --staged .`) turned out to be insufficient on its own —
+      empirically, when the CONCURRENT commit forcing reconciliation also touches the rename source's CONTENT (the
+      realistic collision shape, not just an unrelated file elsewhere), `git`'s own autostash pop can no longer
+      cleanly re-apply the staged rename as one `R100` unit: it comes back as a staged ADD of the destination plus an
+      **UNSTAGED** delete of the source, which a `git diff --cached -M` re-detection step (staged-state only) cannot
+      see at all. Confirmed by reproduction in a sandboxed origin+2-clone setup (bare repo, clone A stages the rename
+      while behind, clone B lands a concurrent edit to the SAME source file, forcing clone A's merge-pull into the
+      rebase+autostash fallback) — the unpatched script reliably produced `git ls-tree -r HEAD` showing the doc at
+      BOTH paths, reproducing the doc's own observed symptom exactly.
 
-                                          **Fix actually shipped** (more robust than the sketch): capture the rename mapping (`git diff --cached
-                                          --name-status -M`, filtered to renames whose destination is one of the caller's named `--files`) **ONCE, at
-                                          script start**, before any fetch/pull/rebase touches the tree — the only point the staged rename is guaranteed
-                                          unambiguous. A new `reassert_renames()` then unconditionally re-stages (`git add -- <source>`) the deletion of
-                                          every captured source path that is still missing from disk, right before every commit attempt — regardless of
-                                          whether the index shows it as a clean rename, an unstaged delete, or nothing at all, since the source's absence
-                                          from disk (not its index shape) is the one thing that survives every reconcile step. Also relaxed the pre-flight
-                                          `[[ ! -e "$f" ]]` existence check to accept a named path that is tracked (index OR `HEAD:<path>`) but absent from
-                                          disk, so a caller can optionally name BOTH rename halves explicitly.
+      **Fix actually shipped** (more robust than the sketch): capture the rename mapping (`git diff --cached
+      --name-status -M`, filtered to renames whose destination is one of the caller's named `--files`) **ONCE, at
+      script start**, before any fetch/pull/rebase touches the tree — the only point the staged rename is guaranteed
+      unambiguous. A new `reassert_renames()` then unconditionally re-stages (`git add -- <source>`) the deletion of
+      every captured source path that is still missing from disk, right before every commit attempt — regardless of
+      whether the index shows it as a clean rename, an unstaged delete, or nothing at all, since the source's absence
+      from disk (not its index shape) is the one thing that survives every reconcile step. Also relaxed the pre-flight
+      `[[ ! -e "$f" ]]` existence check to accept a named path that is tracked (index OR `HEAD:<path>`) but absent from
+      disk, so a caller can optionally name BOTH rename halves explicitly.
 
-                                          **Verification** (done-when: an archival `git mv` + a forced retry yields `git ls-tree -r HEAD` showing the doc
-                                          at exactly ONE path) — 6 sandboxed scenarios, all against a fresh bare-repo + clone setup, none reusing state
-                                          across runs:
-                                          1. Original bug reproduction (unpatched script) — confirmed corruption (doc at both paths).
-                                          2. Same scenario, patched script — `git ls-tree -r HEAD` shows exactly ONE path (`X_renamed.md`), and `git show
-                                             HEAD` displays it as a clean `rename from`/`rename to` diff.
-                                          3. No-collision rename (plain fast-forward, `autostash_rebase_reconcile` never invoked) — still correct (the
-                                             once-at-start capture + unconditional reassert covers this path too, not just the reconcile-triggered one).
-                                          4. Plain non-rename edit — regression check, unaffected (`KNOWN_RENAME_SOURCES` empty, no spurious reassert
-                                             output).
-                                          5. Caller explicitly names BOTH rename halves (exercises the relaxed existence check) — single final path,
-                                             correct.
-                                          6. Foreign staged content mid-run (a concurrent process's own `git add`) combined with a rename — foreign path
-                                             correctly isolated (left untracked, not committed) AND the rename still lands at a single path; separately,
-                                             a post-commit push-race retry (commit already made, rebase replays the already-correct commit onto a moved
-                                             origin tip) confirmed no corruption there either (as expected — `git restore --staged .` only resets the
-                                             index, never an already-baked commit's tree).
+      **Verification** (done-when: an archival `git mv` + a forced retry yields `git ls-tree -r HEAD` showing the doc
+      at exactly ONE path) — 6 sandboxed scenarios, all against a fresh bare-repo + clone setup, none reusing state
+      across runs:
+      1. Original bug reproduction (unpatched script) — confirmed corruption (doc at both paths).
+      2. Same scenario, patched script — `git ls-tree -r HEAD` shows exactly ONE path (`X_renamed.md`), and `git show
+      HEAD` displays it as a clean `rename from`/`rename to` diff.
+      3. No-collision rename (plain fast-forward, `autostash_rebase_reconcile` never invoked) — still correct (the
+      once-at-start capture + unconditional reassert covers this path too, not just the reconcile-triggered one).
+      4. Plain non-rename edit — regression check, unaffected (`KNOWN_RENAME_SOURCES` empty, no spurious reassert
+      output).
+      5. Caller explicitly names BOTH rename halves (exercises the relaxed existence check) — single final path,
+      correct.
+      6. Foreign staged content mid-run (a concurrent process's own `git add`) combined with a rename — foreign path
+      correctly isolated (left untracked, not committed) AND the rename still lands at a single path; separately,
+      a post-commit push-race retry (commit already made, rebase replays the already-correct commit onto a moved
+      origin tip) confirmed no corruption there either (as expected — `git restore --staged .` only resets the
+      index, never an already-baked commit's tree).
 
-                                          `bash -n` + `shellcheck -S error` clean. Shipped via the repo's own `quality-gates.sh` → `quickmerge --agent`
-                                          flow (this is a `scripts/dev/*.sh` CODE change, not a docs-only edit — the `safe-doc-push.sh` fast path itself
-                                          does not apply to shipping safe-doc-push.sh's own source).
+      `bash -n` + `shellcheck -S error` clean. Shipped via the repo's own `quality-gates.sh` → `quickmerge --agent`
+      flow (this is a `scripts/dev/*.sh` CODE change, not a docs-only edit — the `safe-doc-push.sh` fast path itself
+      does not apply to shipping safe-doc-push.sh's own source).
 
 - [x] ✅ [SCRIPT] P1. **DONE 2026-08-08 (slot-14, infra craft)** — `unified-trading-pm@f75e752d8`. **UNBLOCKED
       2026-08-08 (operator ruling, ao round-5 apply item 15, via

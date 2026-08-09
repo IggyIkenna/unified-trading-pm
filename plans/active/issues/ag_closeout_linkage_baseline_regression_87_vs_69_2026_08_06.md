@@ -140,11 +140,11 @@ family, which is exactly the failure mode this gate exists to catch.
 ## Todos
 
 - [x] ✅ [SCRIPT] P2. Re-run `check_ag_closeout_linkage.py` and, for each of the 87 orphans, check
-      `git log --follow     --diff-filter=A -- <path>` (or `git cat-file -e <baseline-commit>:<path>`) to split the list
+      `git log --follow --diff-filter=A -- <path>` (or `git cat-file -e <baseline-commit>:<path>`) to split the list
       into "pre-existing (was already uncounted in the 69, e.g. a per-tranche accounting quirk)" vs. "genuinely new
       since 2026-07-31". **Done when**: a definitive count of genuinely-new orphans is recorded here, replacing this
       todo's placeholder reasoning. **RE-MEASURED 2026-08-06 (/plan-reconcile ao)** —
-      `python3     scripts/plan-hygiene/check_ag_closeout_linkage.py` = **72 orphan(s) (baseline 69)** (see banner
+      `python3 scripts/plan-hygiene/check_ag_closeout_linkage.py` = **72 orphan(s) (baseline 69)** (see banner
       above). Closing this as the practical fulfillment of "re-measure," not the literal per-doc git-log
       pre-existing-vs-genuinely-new split: given the population's measured churn rate (69→87→72 inside one day, driven
       by concurrent audits landing continuously), a fixed genuinely-new-vs-pre-existing classification would be stale

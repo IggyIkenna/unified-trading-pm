@@ -88,7 +88,7 @@ specific to any one task.
       (confirmed via `.tabs/1`/`.tabs/2` slot dirs present under `unified-trading-system-repos/`, i.e. this session runs
       on the exact host the finding describes): none of the 3 named directories exist anymore (`ls` on all 3 absolute
       paths → "No such file or directory") and `df -h` now reports `145G total, 87G used, 59G avail, 60% use` (vs the
-      `290G     290G 448K 100%` reported 2026-07-26) — the crisis has resolved and the specific delete target is already
+      `290G 290G 448K 100%` reported 2026-07-26) — the crisis has resolved and the specific delete target is already
       gone (cleaned by the operator or another agent in the interim; not executed by this session). **Classification
       note**: this was never actually a GCS delete-safety-protocol case — it's a LOCAL filesystem recursive-delete,
       gated by a different, unconditional guardrail (`agent-orchestrator/scripts/hooks/block_destructive_commands.py`,

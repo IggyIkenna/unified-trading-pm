@@ -521,7 +521,7 @@ codex, or a future staging re-entry gets a dead pipeline.
       double-escaped `$$VERSION` every other reference in the file correctly uses. Cloud Build's substitution validator
       does a RAW TEXT scan of the whole resolved build config — including comments — for `$IDENTIFIER` tokens, so a bare
       `$VERSION` anywhere trips
-      `invalid value for 'build.substitutions': key in the template     "VERSION" is not a valid built-in substitution`
+      `invalid value for 'build.substitutions': key in the template "VERSION" is not a valid built-in substitution`
       before a single build step runs (the `cloud-build-failure-watcher` "silent config-rejection" class — no repo/sha
       substitutions, GitHub shows nothing). Confirmed via `gcloud builds list --filter=status=FAILURE`: recurring
       roughly hourly since 2026-07-23T23:58, ~13+ instances. Fixed by escaping the 4 offending comment lines to

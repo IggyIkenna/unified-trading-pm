@@ -168,7 +168,7 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       `FundStructureKind`, cited to `sma-vs-pooled.md`) confirmed populated with
       `share_classes`/`subscription_cadence`/`redemption_cadence`/`rebalance_cadence`/`supports_daily_withdraw_deposit`
       per entry; PROP honestly omitted. Pre-existing test
-      `tests/unit/test_capability_manifest.py::     test_offered_fund_structures_backfilled` (asserts
+      `tests/unit/test_capability_manifest.py:: test_offered_fund_structures_backfilled` (asserts
       `len(OFFERED_FUND_STRUCTURES) == 2`) read directly — real, not stubbed. The companion doc-drift fixes also
       confirmed landed via `unified-trading-pm@53d45aa43` (already on `origin/live-defi-rollout`, same commit that
       recorded the original push-blocked state): `capability-wizard.md`'s status table now cites `5e7d0685` (not the
@@ -320,7 +320,7 @@ flips an edge's `status`; capability-regression gate green.
       operational evidence" default). New pw:L2 spec `tests/smoke/wizard-readiness-badge.spec.ts` proves both a
       live-proven archetype (`ARBITRAGE_PRICE_DISPERSION`) and a backtest-only sibling in the SAME family
       (`LIQUIDATION_CAPTURE`) render correctly on the same stage. **pw:L2 ✓**
-      (`npx playwright test --project=chromium     tests/smoke/wizard-readiness-badge.spec.ts` green). tsc/ESLint/Vitest
+      (`npx playwright test --project=chromium tests/smoke/wizard-readiness-badge.spec.ts` green). tsc/ESLint/Vitest
       (3286 tests) + full `quality-gates.sh` all green. Also fixed one adjacent pre-existing stale count assertion found
       while running the full smoke suite (venue count drifted 195→225 in `tests/smoke/wizard.spec.ts`); the remaining
       ~65 unrelated pre-existing smoke failures seen in that run were NOT individually triaged — filed as
@@ -425,7 +425,7 @@ context; recommended owner strategy-service PBM):
       **RE-SCOPED + DONE 2026-07-28 (slot-3)**: re-verified against current code first (the 2026-07-27 slot-13
       recurring-pattern note above applies here too). strategy-service's `margin_health.py` (`_snapshot_for_venue` →
       `_haircut_adjusted_collateral_usd`) ALREADY builds a real, live, haircut-adjusted
-      `MarginHealthSnapshot.     collateral_usd` per CeFi perp venue, reading `get_collateral_haircut()` from UAC's
+      `MarginHealthSnapshot. collateral_usd` per CeFi perp venue, reading `get_collateral_haircut()` from UAC's
       F28-canonical `venue_collateral.py` — the functional runtime-consumer ask was met by the sibling
       margin-traceability work above (built after this todo was written 2026-06-11/12), just not via the literal
       `COLLATERAL_REGISTRY` module this todo names. **The real residual gap**: `COLLATERAL_REGISTRY` (architecture_v2)
@@ -551,9 +551,9 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       `unified-trading-pm@1e97a608f`, manifest regenerated `unified-api-contracts@c4f42fbc`) explicitly predicted it
       would also resolve this todo. Verified rather than re-diagnosed: regenerated `capability-unlock-report.json` from
       the already-committed, already-fresh `capability-manifest.json`
-      (`generate_capability_unlock_report.py     --output-dir <scratch>`, scratch dir — no repo files mutated) and
-      confirmed the `ARBITRAGE_PRICE_DISPERSION     --supports--> venue:deribit` edge now carries
-      `reason="UAC lacks funding_arb flag distinct from price-arb (gap     #2)."` (status stays `partial`, correctly — a
+      (`generate_capability_unlock_report.py --output-dir <scratch>`, scratch dir — no repo files mutated) and
+      confirmed the `ARBITRAGE_PRICE_DISPERSION --supports--> venue:deribit` edge now carries
+      `reason="UAC lacks funding_arb flag distinct from price-arb (gap #2)."` (status stays `partial`, correctly — a
       real, narrower capability gap, not a venue-integration gap). Deribit sits in TWO `ARBITRAGE_PRICE_DISPERSION`
       cells in `archetype_capability_manifest.json` — CEFI/perp (this reason) and CEFI/option
       (`"vol_arb not a separate capability; multi-leg vol-arb algo pending."`), both PARTIAL;
@@ -573,8 +573,8 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       current UAC HEAD `f909e112` via `git merge-base --is-ancestor`) explicitly predicted it would also resolve this
       todo. Verified rather than re-diagnosed: regenerated `capability-unlock-report.json` from the already-committed,
       already-fresh `capability-manifest.json`
-      (`generate_capability_unlock_report.py --output-dir <scratch>     --dry-run`, scratch dir — no repo files mutated)
-      and confirmed the `ARBITRAGE_PRICE_DISPERSION --supports-->     venue:ibkr` edge now carries
+      (`generate_capability_unlock_report.py --output-dir <scratch> --dry-run`, scratch dir — no repo files mutated)
+      and confirmed the `ARBITRAGE_PRICE_DISPERSION --supports--> venue:ibkr` edge now carries
       `reason="IBKR smart-router absorbs most intra-TradFi spot arb."` (status stays `partial`, correctly — IBKR is a
       real, narrower smart-router capability, not a missing venue integration). Traced to source:
       `archetype_capability_manifest.json`'s single `(TRADFI, spot)` cell lists BOTH `ibkr` and `cme` as `venue_ids`
@@ -618,7 +618,7 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       `openapi/capability-manifest.json`, `openapi/capability-unlock-report.json`, and
       `openapi/prospectus/ARBITRAGE_PRICE_DISPERSION.md`'s TRADFI/dated_future row). Confirmed via `git show c92cf034`:
       the `trades_instrument→instrument_type:dated_future` edge in `capability-unlock-report.json` now carries
-      `reason="Cross-venue routing policy IS declared in UAC (cross_venue_routing_policy.py: cme_wti_ice_brent_spread,     gap #10 registry closed) but execution-service/strategy-service do not yet consume     CROSS_VENUE_ROUTING_POLICIES — routing policy not wired into the SOR."`
+      `reason="Cross-venue routing policy IS declared in UAC (cross_venue_routing_policy.py: cme_wti_ice_brent_spread, gap #10 registry closed) but execution-service/strategy-service do not yet consume CROSS_VENUE_ROUTING_POLICIES — routing policy not wired into the SOR."`
       (status stays `partial`, correctly — the UAC-declaration half of gap #10 is closed but the SOR-wiring half is a
       real, still-open gap, same classifier-keyword quirk noted on the sibling todos, not fixed here). This checkbox was
       simply never flipped when the shared root-cause fix landed (the fixing todo's own scope note said it left the
@@ -692,7 +692,7 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       (auto-emitted by generate_capability_unlock_report.py) — **unified-api-contracts@f8515eb7** (already shipped, on
       `origin/live-defi-rollout`): that single-cell fix (source `archetype_capability_manifest.json` cell) propagated to
       ALL THREE derived edges (`venue:cme`, `venue:ibkr`, `venue:ice`) simultaneously — confirmed via
-      `git show     f8515eb7 -- openapi/capability-unlock-report.json`, whose diff shows the same corrected `reason`
+      `git show f8515eb7 -- openapi/capability-unlock-report.json`, whose diff shows the same corrected `reason`
       string landing on all three `to_node_id` blocks in one commit. Independently re-verified both halves for the
       `ibkr` edge specifically (not just trusted the sibling's claim): (1) UAC's `CROSS_VENUE_ROUTING_POLICIES`
       (`unified_api_contracts/internal/architecture_v2/cross_venue_routing_policy.py`) declares four IBKR-leg policies
@@ -739,7 +739,7 @@ a silent `available`↔`blocked` flip (reuses the Wave-2 #5 edge-status-hash dif
       from the bundled capability manifest (never trusts a client-cached snapshot) and persists via a pluggable store
       (`lib/wizard/session-store.ts`, mirrors `lib/onboarding/doc-store.ts`'s local-disk/GCS dispatch pattern) — local
       disk under `.local-dev-cache/wizard-sessions/` in dev/mock (the literal directory `--sessions-dir` reads),
-      `gs://odum-${env}-     wizard-sessions/` in staging/prod. `lib/wizard/session.ts` mirrors `wizard_session.py`'s
+      `gs://odum-${env}- wizard-sessions/` in staging/prod. `lib/wizard/session.ts` mirrors `wizard_session.py`'s
       `edge_key`/ `archetype_claim_statuses`/canonical-JSON hashing exactly (verified byte-for-byte: a session saved by
       the route replays through the REAL `replay_wizard_sessions.py` with `edge_hash_match: true`). Found + fixed in the
       same commit: `WizardSession.archetype_id` (Python) reads `config["archetype_id"]`, a `ScenarioConfigRef`-era key

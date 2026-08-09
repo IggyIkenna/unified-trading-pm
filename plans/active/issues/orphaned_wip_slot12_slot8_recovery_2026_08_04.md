@@ -93,7 +93,7 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
       did not self-resolve it post-boot (see Progress Log). The key difference: bd0e231f has never had a successful QG,
       so it MUST get a fresh `bash scripts/quality-gates.sh` green run against the reconciled commit (that IS the
       missing `.qg_last_passed_sha` sentinel), then quickmerge. Verify it's a real orphan first
-      (`git merge-base --is-ancestor     bd0e231f origin/live-defi-rollout` → not-ancestor) before landing. (repo:
+      (`git merge-base --is-ancestor bd0e231f origin/live-defi-rollout` → not-ancestor) before landing. (repo:
       market-tick-data-service) — **MOOT — already covered by `market-tick-data-service@b0909a5e`** (ancestor-verified
       on `origin/live-defi-rollout`; `bd0e231f` confirmed NOT an ancestor). Both commits touch the IDENTICAL 2 files,
       fix the IDENTICAL root cause in the same function (per-group manifest write loop), by the IDENTICAL technique
@@ -106,7 +106,7 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
       origin, so crash risk is already mitigated and this is genuinely low-priority (hence P3). Review agt-8fee2f
       verified it (msg #3648); main could NOT independently re-check (not in main's orchestrator-host clone). Locate the
       commit (wip-preserve ref or slot-4's worktree), confirm it's a real orphan
-      (`git merge-base --is-ancestor     036c568 origin/live-defi-rollout` → not-ancestor), reconcile onto LDR tip, QG
+      (`git merge-base --is-ancestor 036c568 origin/live-defi-rollout` → not-ancestor), reconcile onto LDR tip, QG
       green, quickmerge. Done-when: the 429-avoidance change is an ancestor of origin/live-defi-rollout (or, if it turns
       out already-superseded/landed, close with that note). (repo: market-data-processing-service)
 

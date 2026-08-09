@@ -99,9 +99,9 @@ context_scope:
       role file's own declared pre-boot reads) independently reproduces in at least 2 other craft-role files, with LIVE
       `boot_read_unconfirmed` events, one as recent as 90 minutes before this update:** -
       `agents/na_eligibility_auditor.md` — STEP 0 (around line 104) says only "read
-      `unified-trading-pm/agents/       RULES.md` before any action", no `worker.md` mention. Live hits: slot 7 @
+      `unified-trading-pm/agents/ RULES.md` before any action", no `worker.md` mention. Live hits: slot 7 @
       `2026-08-01T08:11:52Z` and slot 9 @ `2026-08-01T08:49:07Z`, both
-      `provided: ["RULES.md", "na_eligibility_auditor.md"]`, `missing:       [".../agents/worker.md"]`. -
+      `provided: ["RULES.md", "na_eligibility_auditor.md"]`, `missing: [".../agents/worker.md"]`. -
       `agents/ag_closeout_auditor.md` — STEP 0 (around line 96) has the identical gap. Live hit: slot 12 @
       `2026-08-01T11:35:12Z`, `provided: ["RULES.md", "ag_closeout_auditor.md"]`, same `missing`. Fix: audit EVERY file
       in `unified-trading-pm/agents/*.md` whose `slot_role` is not literally `"worker"` (i.e. every craft/audit role:

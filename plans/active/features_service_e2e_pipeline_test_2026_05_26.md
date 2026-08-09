@@ -189,7 +189,7 @@ resolves the minimum window each family/feature needs and backfills exactly that
 - [x] ✅ [SCRIPT] P0. **Lookback resolver.** For the feature_groups under test, resolve the required input window from
       the SSOT: per-group `lookback_candles` in each family's `feature_definitions.yaml` + the
       `(asset_group, data_type)` set from `unified_api_contracts ... FEATURE_REQUIRED_INPUTS`. Output:
-      `{family → {data_types, min_lookback_days,     candle_interval}}`. Default floor = **1 day × 1m candles** when a
+      `{family → {data_types, min_lookback_days, candle_interval}}`. Default floor = **1 day × 1m candles** when a
       group declares no/short lookback; max over the group's lookback otherwise. (Note the known SSOT gap: `InputReq`
       carries no `lookback_candles`, and onchain/ volatility/sports omit it in yaml — fall back to a documented
       per-family default + log it; unifying lookback into the SSOT stays a `features_and_ml_master` Phase 1A follow-up,
@@ -247,7 +247,7 @@ resolves the minimum window each family/feature needs and backfills exactly that
       `_get_source_bucket`). 2 regression tests (never-empty + env-wired passthrough). — features-service@ea357010
 - [x] ✅ [VALIDATE] P0. Real GCS run (2026-05-03, `-test` bucket): BITGET-FUTURES:PERPETUAL:ADAUSDT **wrote 1/1
       partition, "Processing completed successfully"**, no IndexError. Read-back: 5,760 rows / 86 feature cols,
-      `rsi_14 ∈     [4.04, 98.59]`, full-day timestamps. QG: all content STEPS green (basedpyright/ruff/tests); only the
+      `rsi_14 ∈ [4.04, 98.59]`, full-day timestamps. QG: all content STEPS green (basedpyright/ruff/tests); only the
       `<300s` perf budget flaked (310–362s under concurrent machine load) — environmental, not a code failure. —
       features-service@ea357010
 
@@ -459,7 +459,7 @@ resolves the minimum window each family/feature needs and backfills exactly that
 - ✅ The e2e driver runs to completion on real GCS for the golden window, per family, with parquet + manifest written to
   `-test` buckets and read back with assertions passing.
   - **What ran:**
-    `python -m features_service.<family> --operation compute --mode batch --asset-group CEFI     --feature-group ALL --start-date <golden> --end-date <golden>` +
+    `python -m features_service.<family> --operation compute --mode batch --asset-group CEFI --feature-group ALL --start-date <golden> --end-date <golden>` +
     `scripts/e2e/run_pipeline_e2e.py`, on vm-ml / operator host with ADC to `central-element-323112`.
   - **Verification:** `read_availability_index(<test-feature-bucket>)` shows `features-service` `captured` rows; sampled
     `-test` parquet read back with non-null features in range.
@@ -512,7 +512,7 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
       of `-test`. mtf's writer path doesn't honor `PROTOCOL_DATA_SINK_BUCKET*{AG}`the way
       delta_one's`FeatureWriter.\_get_sink_bucket`does. Provenance: e2e -test re-run 2026-05-26. — **FIXED**
       features-service@72b8a81d: added`\_resolve_sink_bucket`+`\_ensure_sink_for`(rebinds auto-created sink per
-      asset_group via`get_data_sink(bucket=...,     routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket`
+      asset_group via`get_data_sink(bucket=..., routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket`
       uses the same resolver so parquet + manifest share one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean.
 - [x] ✅ [AGENT] P2. **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`,
       `tf_rr_*`) + `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no

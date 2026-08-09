@@ -187,7 +187,7 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
       `DEBT_TOKEN` counterpart or collapses both under a generic `LENDING` bucket. This single trace answers whether the
       `instrument_type` field mislabel is cosmetic (key already correct, UI doesn't care) or a real UI-visible gap. —
       **DONE 2026-07-08.** Answer: visible, not cosmetic, but not broken/blank either — it collapses.
-      `GET     /instruments-for-shard` (`deployment-api/deployment_api/routes/data_status/_query_meta.py:305-374`) and
+      `GET /instruments-for-shard` (`deployment-api/deployment_api/routes/data_status/_query_meta.py:305-374`) and
       `_build_instrument_type_breakdown` (`deployment_api/services/data_status/breakdowns_core.py:385,391`) group
       directly on the raw `instrument_type` manifest column — never parse the `instrument_id` key. Read
       `gs://instruments-store-defi-prd-central-element-323112/_index/availability_index.parquet` directly (214,726

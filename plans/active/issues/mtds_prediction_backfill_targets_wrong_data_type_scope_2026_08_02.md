@@ -147,7 +147,7 @@ scope fact.
 ## Todos
 
 - [x] ✅ [DATA] P1. Read `rebuild_prediction_manifest.py`'s object-to-cell classification/emit logic for
-      `data_type in     {trades, book_snapshot_5}` — 2026-08-02 (slot-14): confirmed via code read
+      `data_type in {trades, book_snapshot_5}` — 2026-08-02 (slot-14): confirmed via code read
       (`_rebuild_prediction_emit.py:52`, `_BundleProjectionCollector` docstring) that the script is hardcoded to only
       emit `prediction_canonical_question_group` cells by design, not a bug. See "Recommended decision" above.
 - [x] ✅ [PLAN] P1. Redefine `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s `-001`/`-006` done-when criterion
@@ -158,7 +158,7 @@ scope fact.
       `scripts/mtds_available_at_backfill_resume_prediction_2026_07_30.py`, maintenance window released. See Progress
       Log below.
 - [ ] [DATA] P3. Check whether any real downstream consumer reads `available_at` for
-      `data_type in {trades,     book_snapshot_5}` on prediction-venue data before deciding whether a separately-scoped
+      `data_type in {trades, book_snapshot_5}` on prediction-venue data before deciding whether a separately-scoped
       backfill for those data_types is needed at all, or whether this is permanently out of scope. (repo:
       market-tick-data-service)
 

@@ -546,26 +546,26 @@ traffic to count until the migration is finished. What is certain is that their 
       recheck (mentioned in the original finding) also still needs doing.
 
       **operator ruling 2026-08-08**: will do it later — leave BOTH sub-parts blocked for now, do not execute either
-                                                                              autonomously. Preparing the exact ready-to-run steps below so both are a single click/paste next time the
-                                                                              operator is available; nothing below was applied this session.
+      autonomously. Preparing the exact ready-to-run steps below so both are a single click/paste next time the
+      operator is available; nothing below was applied this session.
 
-                                                                              **Sub-part (2) — the exact click-through (unchanged from above, restated for a fast pickup):**
-                                                                              `github.com/IggyIkenna/unified-trading-pm` → **Settings → Actions → General** → scroll to **"Fork pull request
-                                                                              workflows"** → select **"Require approval for all outside collaborators."** → Save. Verified live 2026-08-08
-                                                                              this is STILL the current exposure (re-checked `gh api repos/IggyIkenna/unified-trading-pm/actions/permissions`
-                                                                              → `{"enabled":true,"allowed_actions":"all","sha_pinning_required":false}` — `allowed_actions` unchanged from the
-                                                                              2026-08-06 finding, and the fork-PR-approval setting itself is still web-UI-only, no API surface found).
+      **Sub-part (2) — the exact click-through (unchanged from above, restated for a fast pickup):**
+      `github.com/IggyIkenna/unified-trading-pm` → **Settings → Actions → General** → scroll to **"Fork pull request
+      workflows"** → select **"Require approval for all outside collaborators."** → Save. Verified live 2026-08-08
+      this is STILL the current exposure (re-checked `gh api repos/IggyIkenna/unified-trading-pm/actions/permissions`
+      → `{"enabled":true,"allowed_actions":"all","sha_pinning_required":false}` — `allowed_actions` unchanged from the
+      2026-08-06 finding, and the fork-PR-approval setting itself is still web-UI-only, no API surface found).
 
-                                                                              **Sub-part (1) — the allow-list, now actually enumerated (2026-08-08) so the command below is ready-to-paste,
-                                                                              not a placeholder:** scanned every `uses:` line across `.github/workflows/*.yml` +
-                                                                              `scripts/workflow-templates/*.yml*` (the fleet template sources). Local composite-action refs (`./...`) need no
-                                                                              allow-list entry — only externally-hosted actions do. Full external set, 12 actions:
-                                                                              `actions/cache`, `actions/checkout`, `actions/create-github-app-token`, `actions/download-artifact`,
-                                                                              `actions/github-script`, `actions/setup-python`, `actions/upload-artifact`, `astral-sh/setup-uv`,
-                                                                              `aws-actions/configure-aws-credentials`, `google-github-actions/auth`, `google-github-actions/setup-gcloud`, plus
-                                                                              the org's own reusable-workflow refs `IggyIkenna/unified-trading-ci` and `IggyIkenna/unified-trading-pm` (PM
-                                                                              calling its own reusable `python-quality-gates-v2.yml`). Ready-to-run (NOT executed this session — operator
-                                                                              deferred both sub-parts):
+      **Sub-part (1) — the allow-list, now actually enumerated (2026-08-08) so the command below is ready-to-paste,
+      not a placeholder:** scanned every `uses:` line across `.github/workflows/*.yml` +
+      `scripts/workflow-templates/*.yml*` (the fleet template sources). Local composite-action refs (`./...`) need no
+      allow-list entry — only externally-hosted actions do. Full external set, 12 actions:
+      `actions/cache`, `actions/checkout`, `actions/create-github-app-token`, `actions/download-artifact`,
+      `actions/github-script`, `actions/setup-python`, `actions/upload-artifact`, `astral-sh/setup-uv`,
+      `aws-actions/configure-aws-credentials`, `google-github-actions/auth`, `google-github-actions/setup-gcloud`, plus
+      the org's own reusable-workflow refs `IggyIkenna/unified-trading-ci` and `IggyIkenna/unified-trading-pm` (PM
+      calling its own reusable `python-quality-gates-v2.yml`). Ready-to-run (NOT executed this session — operator
+      deferred both sub-parts):
 
                                                                               ```bash
                                                                               gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions \
@@ -582,14 +582,14 @@ traffic to count until the migration is finished. What is certain is that their 
                                                                                 -f 'patterns_allowed[]=IggyIkenna/unified-trading-pm@*'
                                                                               ```
 
-                                                                              `github_owned_allowed=true` covers every `actions/*` action (checkout/cache/setup-python/upload-download-artifact
-                                                                              /create-github-app-token/github-script — all GitHub-owned) without needing individual patterns;
-                                                                              `verified_actions=true` is intentionally NOT set (none of the 12 are in GitHub's "verified creator" program, so it
-                                                                              would add nothing) — the 6 explicit `patterns_allowed` entries above cover every remaining non-GitHub-owned action
-                                                                              actually in use. **Before running**: re-derive the `uses:` scan fresh (a workflow may have added a new action
-                                                                              since 2026-08-08) — `grep -rhoE "uses:\s*[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+" .github/workflows/*.yml
-                                                                              scripts/workflow-templates/*.yml* | sed 's/uses:\s*//' | sort -u` — and diff against the 12 above before
-                                                                              applying, so a newly-added action isn't silently locked out mid-CI-run.
+      `github_owned_allowed=true` covers every `actions/*` action (checkout/cache/setup-python/upload-download-artifact
+      /create-github-app-token/github-script — all GitHub-owned) without needing individual patterns;
+      `verified_actions=true` is intentionally NOT set (none of the 12 are in GitHub's "verified creator" program, so it
+      would add nothing) — the 6 explicit `patterns_allowed` entries above cover every remaining non-GitHub-owned action
+      actually in use. **Before running**: re-derive the `uses:` scan fresh (a workflow may have added a new action
+      since 2026-08-08) — `grep -rhoE "uses:\s*[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+" .github/workflows/*.yml
+      scripts/workflow-templates/*.yml* | sed 's/uses:\s*//' | sort -u` — and diff against the 12 above before
+      applying, so a newly-added action isn't silently locked out mid-CI-run.
 
 - [x] ✅ [INFRA] P0. **Fix the 6 failing plan-hygiene ratchets.** PM's LDR→main promotion is blocked and re-fails every
       ~15 min. Not I/O — the `checks` slice fails in 2m44s on content. Exact list in Finding 4. **DONE — closed
@@ -649,13 +649,13 @@ traffic to count until the migration is finished. What is certain is that their 
       condition. **Pre-flight**: confirmed zero busy runners (`gh api .../actions/runners`, all 7 private repos) and
       zero in-progress workflow runs before stopping — no live job was interrupted. **Execution**:
       `aws ec2 stop-instances` → waited `instance-stopped` →
-      `aws ec2 modify-instance-attribute     --instance-type m8i.2xlarge` →
-      `aws ec2 modify-volume --volume-id vol-03880fe9bf1ea805b --iops 12000     --throughput 312` (from 6,000/500) →
+      `aws ec2 modify-instance-attribute --instance-type m8i.2xlarge` →
+      `aws ec2 modify-volume --volume-id vol-03880fe9bf1ea805b --iops 12000 --throughput 312` (from 6,000/500) →
       `aws ec2 start-instances` → waited `instance-status-ok`. **Post-verify**: `nproc`=8, `free -h` shows 30Gi total
       RAM (unchanged), all 9 `github-glue-runner*` systemd units survived the reboot and are `active running`
       (`Restart=always`/`enabled` self-recovered), all 3 monitoring units (`ci-vm-resource-watchdog.timer`,
       `resource-history-sampler.service`, `resource-history-backup.timer`) `active`, and GitHub's own API confirms every
-      runner `status: online,     busy: false` post-boot (checked
+      runner `status: online, busy: false` post-boot (checked
       `agent-orchestrator`/`execution-service`/`strategy-service`). No follow-up needed; the standing
       `ci-vm-resource-watchdog.timer` (shipped same session, see
       `/plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`) continues watching the

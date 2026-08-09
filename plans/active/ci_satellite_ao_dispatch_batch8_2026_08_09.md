@@ -77,7 +77,7 @@ source: >-
       and pick the best fit (mirror the judgment already used on the 2 docs fixed before the source issue was even
       filed: `infra` for host/VM-adjacent content, `cicd` for CI/CD-pipeline content) — never default every match to the
       same value. **Re-derive the live population fresh**
-      (`grep -l '^assigned_role: devops$' plans/active/*.md     plans/active/issues/*.md`) rather than trusting a static
+      (`grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md`) rather than trusting a static
       count — the corpus changes daily and already grew from 10 named docs at the source issue's filing time
       (2026-08-08) to 12 confirmed live as of this batch's own authoring (2026-08-09):
       `agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`,

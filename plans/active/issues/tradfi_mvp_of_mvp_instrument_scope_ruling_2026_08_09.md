@@ -150,7 +150,7 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
       dispatch candidate keys it computes internally, instead of only matching a VM-name-parsed "root group" label —
       currently causes CME launches to duplicate 3-13x per shard (measured: 167 stray VMs from one erroneous wave, per
       "Disposition of currently-running infra" above). **Confirmed AGAIN live** (instrument-scope-diff session,
-      2026-08-09): `-eth-eth-     2022-*` and `-met-met-2023-*` were each observed running as TWO separate VMs ~3h
+      2026-08-09): `-eth-eth- 2022-*` and `-met-met-2023-*` were each observed running as TWO separate VMs ~3h
       apart for the identical shard — killed the newer (redundant) instance of each pair as a stopgap
       (`gcloud compute instances delete`, `asia-northeast1-c`), keeping the earlier-started original.
       **FIXED 2026-08-09 (round-9 combined RECLASSIFY + satellite-extraction sweep, found already-shipped by a

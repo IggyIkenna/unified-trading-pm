@@ -181,7 +181,7 @@ context_scope:
 - [x] ✅ [DATA] P2. **DONE 2026-08-07 (slot-9)** — Dispatched DERIBIT 2019 light backfill. Heavy VM
       `cefi-deribit-2019-heavy-20260807-123219` confirmed completed (no longer in fleet). Tardis slot free (0
       Tardis-consuming VMs via metadata filter VM_TARDIS_CONSUMER=1). Launched `cefi-deribit-2019-light-20260807-194407`
-      with `YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=light     VENUES=DERIBIT`; VM RUNNING at 35.194.123.82
+      with `YEARS=2019 START_DATE=2019-03-30 LAUNCH_GROUPS=light VENUES=DERIBIT`; VM RUNNING at 35.194.123.82
       (asia-northeast1-c). Covers `derivative_ticker;options_chain;futures_chain` 2019-03-30..2019-12-31. Machine
       n2-highmem-16 (128GB, registry floor). VM_TARDIS_CONSUMER=1 stamped; shuts down on completion.
 - [ ] [INFRA] P3. Resolve the BINANCE-DELIVERY zombie venue (remove from VENUES_BY_ASSET_GROUP["cefi"] or operator

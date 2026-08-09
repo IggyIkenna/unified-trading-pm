@@ -106,7 +106,7 @@ context_scope:
       corpus-wide — grep for `sports_group_c_execution_backtest_harness_2026_07_21` and repoint each hit (including
       `sports_predictions_live_mode_activation_readiness_2026_07_21.md`'s `related:` list and prerequisites section) to
       the archived path (leading-slash, repo-root-relative); (5) clear the lock if any was set (confirm rather than
-      assume — none is expected here); (6) run `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci     --no-regen` and
+      assume — none is expected here); (6) run `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` and
       `check_reference_paths.py` to confirm no new dangling reference above baseline. Then physically move the parent
       plan under `plans/archive/2026_08/`. **Done when**: the hygiene sweep is 0 hard and
       `regenerate_active_plan_inventory.py` reports 0 orphans for this doc. Repo: unified-trading-pm.

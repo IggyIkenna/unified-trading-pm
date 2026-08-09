@@ -100,7 +100,7 @@ P3.
       widen `_fetch_pyth_prices`/`_fetch_pyth_prices_at_timestamp`'s return signature to also carry the resolved
       `http_status` (200 on the normal empty-after-filter path, 404 on the Hermes no-data-at-timestamp case), and thread
       it into `_emit_pyth_manifest`'s `record_zero_rows` call via
-      `build_fetch_evidence(http_status=...,     source="pyth_hermes")` instead of falling through to the generic
+      `build_fetch_evidence(http_status=..., source="pyth_hermes")` instead of falling through to the generic
       synthesized 200. **Done when**: a test proves a simulated Hermes 404 (no data at timestamp) records
       `http_status == 404` on the clean-empty path, and a genuine empty-after-filter 200 response still records
       `http_status == 200`; existing behavior otherwise unchanged.

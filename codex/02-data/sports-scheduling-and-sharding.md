@@ -636,7 +636,7 @@ adapter-output dict coercion (**shipped `7f2cbf0`**) + 4 per-league shard unifor
 `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` + `sfi_league_mapping.parquet`. Adds
 UAC `LeagueDefinition.expected_team_count_per_season` + `get_expected_team_count_for_league`; emits
 `ADAPTER_FETCH_ANOMALY` when
-`                                                   | got - expected | /expected > 10%`without blocking manifest writes.
+` | got - expected | /expected > 10%`without blocking manifest writes.
 22 todos / 4 tracks / 4 repos. **Authored 2026-04-22`e5d941e1`\*\* |
 
 ### 12.3 Open — manifest + UI hygiene (gated on 12.2)

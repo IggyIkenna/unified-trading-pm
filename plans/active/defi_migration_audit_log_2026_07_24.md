@@ -650,7 +650,7 @@ the related ship-hygiene item.)
       (lines 102-136): a **WORKTREE-IDENTITY GUARD** shipped 2026-07-24
       (`qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md`, a related but distinct
       sibling-worktree incident) now hard-fails (`exit 1`) the instant `PROJECT_ROOT` disagrees with
-      `git rev-parse     --show-toplevel` for the invoking cwd — exactly the PROJECT_ROOT/rootdir mis-resolution class
+      `git rev-parse --show-toplevel` for the invoking cwd — exactly the PROJECT_ROOT/rootdir mis-resolution class
       this finding's "Owner" note names as the suspected cause. `base-service.sh:61` `cd "$PROJECT_ROOT"` runs pytest
       from that now-guarded cwd, so pytest's own upward rootdir search would find the REPO's own `pyproject.toml`
       (`testpaths=["tests"]`) first, not PM's — the silent "collected 6 items, exits 0" hollow-pass this finding

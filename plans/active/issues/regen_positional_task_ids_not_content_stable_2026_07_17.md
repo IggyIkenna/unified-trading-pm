@@ -185,7 +185,7 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
       rewrite (removing the underlying position-shift cause fixes both bug classes at once) rather than patched
       separately.
 - [ ] [BACKEND] P2. **New gap found 2026-07-27 (via
-      `backlog_brief_cross_wired_adjacent_collision_group_todos_2026_07_     27.md`): a `dispatched` row has NO
+      `backlog_brief_cross_wired_adjacent_collision_group_todos_2026_07_ 27.md`): a `dispatched` row has NO
       equivalent protection to the `done`-row sibling-reset guard, and the in-flight worker is never notified.** This
       doc's existing analysis only covered `done` rows losing audit history; it did not consider a `dispatched` row (an
       ACTIVELY-WORKING agent). `sync_backlog_to_db` (`server/bootstrap.py:354-374`) silently resets ANY non-`done` row's

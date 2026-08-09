@@ -269,7 +269,7 @@ before).
       `unified-trading-pm@79c4a72737`) deleted the per-repo `.github/workflows/semver-agent.yml` files this checkbox was
       about to check and replaced them with thin `workflow_call` stubs pointing at a single central
       `unified-trading-ci/.github/workflows/semver-agent.yml` (this deletion +
-      `scripts/workflow-templates/     semver-agent.yml.tmpl` retirement happened almost simultaneously with the
+      `scripts/workflow-templates/ semver-agent.yml.tmpl` retirement happened almost simultaneously with the
       char-cap fix below landing on the template, `unified-trading-pm@6603a5beb5` — the migration used a stale
       pre-char-cap-fix copy of the logic, silently reintroducing this exact bug in the new central location). Per-repo
       "did the name resolve" checks are now moot in their original form (there is no longer a per-repo `run:` block to
@@ -285,7 +285,7 @@ before).
       end-to-end run (actual `push:[main]` trigger → actual tag mint) is BLOCKED — see the next todo — so verified the
       fix's actual DECISION LOGIC instead, against real repository state, using the EXACT rendered script content that
       ships to each repo. Method: for each of the 2 target-cluster repos, created an isolated
-      `git worktree     --detach` pinned exactly at `origin/main` HEAD (no contamination of the primary checkout —
+      `git worktree --detach` pinned exactly at `origin/main` HEAD (no contamination of the primary checkout —
       confirmed `git status --porcelain` clean before/after), overlaid the fixed `semver-agent.yml` (the exact content
       shipped to LDR) on top, extracted the "Compute next semver via diff analysis" step's `run:` block verbatim,
       substituted only the `${{ github.* }}`/`${{ secrets.GH_PAT }}` GH-Actions-context expressions with their real
@@ -296,7 +296,7 @@ before).
       resolved (`git describe --tags`), 10 squash commits scanned (all `chore(promote)`, message-blind as expected),
       differ correctly found `old_export_count==new_export_count==63` (`is_breaking: false`) — and the NEW fallback
       fired:
-      `"No feat:/fix:/breaking commit labels visible (squash-promote) and no net-new export, but 49 file(s) under       instruments_service/ changed since baseline → defaulting to PATCH (internal change)."`
+      `"No feat:/fix:/breaking commit labels visible (squash-promote) and no net-new export, but 49 file(s) under instruments_service/ changed since baseline → defaulting to PATCH (internal change)."`
       → **`Resolved bump category: patch`** (was `""`/skip before this fix — confirmed via the earlier live
       `31170013899` run log in `## Root cause` above). - `batch-live-reconciliation-service` (41d cluster,
       `origin/main`=`448af64`): baseline `0.49.0` correctly resolved, 97 squash commits scanned, differ found
@@ -314,7 +314,7 @@ before).
       doc's own "Verification" section replayed the fix logic against) went from `v0.49.0` (stale 41 days, the exact
       baseline cited in this doc's `## Root cause`) to **`v0.49.1`**, minted at commit `738ac176` dated
       `2026-08-08T09:48:12Z` — a genuine `push:[main]`-triggered patch bump, post-fix.
-      `python3     scripts/cicd/reconcile_release_tags.py --dry-run` now lists it under the healthy tag-derived set, not
+      `python3 scripts/cicd/reconcile_release_tags.py --dry-run` now lists it under the healthy tag-derived set, not
       stalled. The fix mints real tags in production, not just in the isolated-worktree logic replay.
 - [x] ✅ [DEVOPS] P1. **Re-ran 2026-08-09: stall count dropped 13 → 7, not to 0 — real, partial, measured progress.**
       `python3 scripts/cicd/reconcile_release_tags.py --dry-run`: 15 repos now tag-derived/healthy (up from the original
@@ -423,7 +423,7 @@ conservative here since it can't verify reversibility from command text alone).
       → `"Semver Agent"` (was the raw path before this fix).
 - [x] ✅ [DEVOPS] P1. **RESOLVED — self-resolved exactly as predicted, confirmed 2026-08-09 (stale-recheck sweep).**
       Both caller repos now resolve correctly:
-      `gh api repos/IggyIkenna/instruments-service/actions/workflows --jq     '...name'` → `"Semver Agent"`; same for
+      `gh api repos/IggyIkenna/instruments-service/actions/workflows --jq '...name'` → `"Semver Agent"`; same for
       `unified-trading-api`. Neither shows the raw file path anymore. Resolved naturally via each repo's own subsequent
       `push:[main]` promote cycle, no forced trigger needed — exactly the self-resolution path this todo predicted.
 - [x] ✅ [DEVOPS] P2. **DONE 2026-08-09 (stale-recheck sweep) — 3 callers spot-checked, all green.**

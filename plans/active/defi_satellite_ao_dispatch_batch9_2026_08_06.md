@@ -92,7 +92,7 @@ over all pending draft batches) that independently spot-verified every todo belo
 - [x] ✅ [DATA] P2. **Retrofit the 8 remaining ad hoc `instrument_key` f-string sites** (`ankr.py:86`, `mantle.py:86`,
       `maker.py:101`, `stakewise.py:90`, `swell.py:86`, `stader.py:85` [all `:LST:`], `kamino.py:199`
       [`:SOLANA_VAULT:`], `pendle.py:274` [`:YIELD_BEARING:`]) to route through
-      `build_instrument_id(...,     passthrough=True)` per the already-shipped todo-2 pattern (16 sites, byte-identical
+      `build_instrument_id(..., passthrough=True)` per the already-shipped todo-2 pattern (16 sites, byte-identical
       output), and confirm whether A_TOKEN/DEBT_TOKEN/YIELD_BEARING/STAKING/SPOT_ASSET/POOL are also silently dropped by
       the already-fixed P0 type-filter-empty bug. Repo: instruments-service. Source:
       `canonical_id_builder_retrofit_checklist_2026_07_08.md`. Done when: all 8 sites verified byte-identical
@@ -139,7 +139,7 @@ over all pending draft batches) that independently spot-verified every todo belo
       `market-tick-data-service@eb380b71b` (`blob.download_as_bytes(timeout=900)` streaming in `_purge_manifest_rows`,
       replacing `_download_index_chunked` range-request that hung 47 min on dispatch #6's VM) is QG-green on
       `live-defi-rollout`. Command:
-      `MACHINE_TYPE=e2-highmem-8 bash scripts/vm/launch-canonical-migration-vm.sh     defi-gas-fees-legacy-purge <date> <date> full`
+      `MACHINE_TYPE=e2-highmem-8 bash scripts/vm/launch-canonical-migration-vm.sh defi-gas-fees-legacy-purge <date> <date> full`
       in deployment-service (SPOT per backfill HARD RULE — script is CAS-idempotent so preemption restart is safe).
       Pre-flight: (a) re-verify 0 GCS objects for all 10 TARGET_VENUES (fresh check); (b) confirm zombie watchdog
       `20260807-075242` RUNNING (90-min idle threshold). Launch discipline: STARTED<60s + >=1 progress/hr + terminal
@@ -274,7 +274,7 @@ over all pending draft batches) that independently spot-verified every todo belo
       `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s corroborating manifest-backfill evidence confirm the
       HYPERLIQUID perp_daily_ctx/perp_mark_price data this script was meant to preserve was migrated into the shared
       canonical bucket by a different script. Both of this script's hardcoded buckets
-      (`LEGACY_BUCKET     ='perp-funding-central-element-323112'`,
+      (`LEGACY_BUCKET ='perp-funding-central-element-323112'`,
       `CANONICAL_BUCKET='perp-funding-prd-central-element-323112'`) are now confirmed deleted, so the script cannot run
       either way — delete it (its own stated Delete-when condition is satisfied in spirit: superseded by the
       shared-bucket migration) or update its lifecycle marker to record the supersession. Repo: e2e-testing. Source:

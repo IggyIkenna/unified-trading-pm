@@ -217,7 +217,7 @@ per-tick files). This issue doc is the problem-record; the plan is the executabl
       implementation gap is tracked in the new todo below (verified NOT fully landed as of 2026-07-29).
 - [ ] [CODE] P2. **Finish the warm-GCS-parts durable sink — the compaction leg never landed.** Verified live 2026-07-29:
       the warm tier is real and receiving data (Terraform-applied `deployment-service@c540cd03` 2026-06-29 — 52
-      `warm-sink-persist-*` Cloud Storage subscriptions, confirmed live via `gcloud pubsub     subscriptions list`;
+      `warm-sink-persist-*` Cloud Storage subscriptions, confirmed live via `gcloud pubsub subscriptions list`;
       `gs://central-element-323112-events/live-events/warm/prediction/{book_snapshot_5,trades}/` confirms real data
       landing) — but the daily cold-compaction Cloud Run Job (`live-event-log-compactor`,
       `deployment-service/deployment_service/jobs/live_event_log_compactor.py` +

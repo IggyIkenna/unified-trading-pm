@@ -699,7 +699,7 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
 
 - [ ] [SCRIPT] P3. **Root-cause + fix `mtds_chunk_loop.sh`'s `PROGRESS.json` GCS upload call** — confirmed silently
       stopped firing after chunk 17 on `mtds-backfill-odds-smallchunk2-20260807` while `run.log`'s own
-      `PROGRESS:     chunk=N` lines kept advancing normally through at least chunk 21 (2026-08-07T23:47Z finding above).
+      `PROGRESS: chunk=N` lines kept advancing normally through at least chunk 21 (2026-08-07T23:47Z finding above).
       Monitoring-only impact today (no data loss — `run.log` is the reliable cross-check per this doc's own rule-1b
       guidance), but a future session trusting `PROGRESS.json` alone would misdiagnose a healthy VM as stalled. Tracked
       as an explicit todo (`na-eligibility-audit` 2026-08-08) rather than left as a prose "worth a look next time" note.

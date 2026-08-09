@@ -101,7 +101,7 @@ failure (75 orphans vs 69 baseline).
       `/plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md`, verified with
       `check_reference_paths.py --only`. Via `ci_satellite_ao_dispatch_batch9_2026_08_09.md` todo 1 —
       unified-trading-pm@a52672b6d (verified ancestor of `origin/live-defi-rollout` via
-      `git merge-base     --is-ancestor`, 2026-08-09; batch9's own progress-log cited a bogus, non-resolving SHA
+      `git merge-base --is-ancestor`, 2026-08-09; batch9's own progress-log cited a bogus, non-resolving SHA
       `89925f0c6` for this todo — corrected there in the same pass).
 
 ---
@@ -110,11 +110,11 @@ failure (75 orphans vs 69 baseline).
 
 - [x] [DOC] P2. ✅ — Updated `plans/epics/infrastructure_master.md:595-597` index entry for
       `mtds_retry_safe_default_audit_2026_07_14` from `status: active` to
-      `status: complete (archived 2026-08-06 — 5/5 todos done; fleet-wide STEP 5.104 lint in base-service.sh is the     durable pin)`,
+      `status: complete (archived 2026-08-06 — 5/5 todos done; fleet-wide STEP 5.104 lint in base-service.sh is the durable pin)`,
       matching the sibling `cicd_mvp_ldr_to_main_pipeline_2026_06_30` entry's established format (L536). Epic stays
       under its 2000-line hard cap. Via `ci_satellite_ao_dispatch_batch9_2026_08_09.md` todo 2 —
       unified-trading-pm@930f7393e (verified ancestor of `origin/live-defi-rollout` via
-      `git merge-base     --is-ancestor`, 2026-08-09).
+      `git merge-base --is-ancestor`, 2026-08-09).
 - [x] [DOC] P2. ✅ **Moot — target doc never existed in git history.** `ag_closeout_audit_ci_parked_2026_08_06.md` —
       confirmed via `git log --all --diff-filter=A` (this doc's own 2026-08-09 Progress Log entry, slot-22): the corpus
       only ever had `_2026_08_07`/`_08`/`_09` daily-rotating snapshots. Nothing to convert.

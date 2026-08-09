@@ -103,14 +103,14 @@ caught, and per CLAUDE.md's data-pipeline-correctness HARD RULE this is heartbea
 Relaunch the tradfi live producer and verify it sticks (infra craft, AO-eligible — bounded, deterministic outcome):
 
 - [x] ✅ [INFRA] P0. **Relaunched `mtds-live-tradfi-cme-trades-20260809-163443`** (slot-33) via
-      `launch-mtds-live.sh --asset-group tradfi --shard-spec tradfi:CME:trades --instrument-ids     "CME:FUTURES:ES;CME:FUTURES:NQ;CME:FUTURES:CL;CME:FUTURES:GC"`
+      `launch-mtds-live.sh --asset-group tradfi --shard-spec tradfi:CME:trades --instrument-ids "CME:FUTURES:ES;CME:FUTURES:NQ;CME:FUTURES:CL;CME:FUTURES:GC"`
       (the same 4-instrument set as the last verified- working launch, `data_completion_tradfi_2026_07_15.md`). The
       launcher's `lc_verify_tarball_freshness` guard found 3 stale tarballs
       (market-tick-data-service/unified-trading-library/deployment-service) and auto-rebuilt all 3 from clean origin/LDR
       before creating the VM, so the producer is running fresh code, not a stale bake. **Verified (T+7min,
       2026-08-09T16:43 UTC)**: STARTED — `RUNNING` in `gcloud compute instances create`'s own output, well under 60s;
       `vm-heartbeat/mtds-live-tradfi-cme-trades-20260809-163443.txt` fresh + updating every ~60s; `run.log` shows
-      `authenticated session_id='2103453387'` (databento Live WS) + `PIPELINE_HEARTBEAT ag=TRADFI     task=mtds-live`
+      `authenticated session_id='2103453387'` (databento Live WS) + `PIPELINE_HEARTBEAT ag=TRADFI task=mtds-live`
       firing every minute; `_index/per_vm/<vm>.parquet` growing (1→4 entries) with all 4 CME instruments (ES/NQ/CL/GC)
       correctly registered. **Capture status is `empty_confirmed` (row_count=0), NOT `captured`, as of this check** —
       this is honest-absence, not a bug: 2026-08-09 16:43 UTC is a **Sunday**, and CME Globex is closed until **22:00

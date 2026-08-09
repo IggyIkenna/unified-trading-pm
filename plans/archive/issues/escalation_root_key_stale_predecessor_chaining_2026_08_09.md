@@ -187,3 +187,12 @@ Shipped together with the sibling false-resolution fix in the same commit: `agen
   `reescalations` API/dashboard exposure (`agent-orchestrator@454dad285`). Both todos flipped `[x]` above with full
   evidence. `agt-3dc7e9`'s own stale unresolved label remains uncorrected (cosmetic, self-corrects on the next
   LDR-green+reconcile coincidence) — the only genuinely open thread this doc still carries.
+- **2026-08-09 (cicd, RB-b76ac836 ldr_qg_failure triage)**: found a resurrected duplicate at
+  `plans/active/issues/escalation_root_key_stale_predecessor_chaining_2026_08_09.md`, created by
+  `unified-trading-pm@31935945` (round9 cross-cutting sweep, `git commit-tree` against a base tree that predated this
+  archival) with pre-resolution content (`status: open`, both todos unchecked), then further hand-edited by
+  `unified-trading-pm@07a81a0c38` (finalize-twin filename typo fix) and `unified-trading-pm@45461114` (cross-reference
+  footnote) — both sessions unaware this doc had already been resolved+archived here. Neither later edit added anything
+  beyond bookkeeping already superseded by this doc's resolved state, so no content merge was needed. Deleted the stale
+  duplicate (`check_create_only_archive_commits` gate) and closed out its now-moot finalize twin,
+  `escalation_root_key_stale_predecessor_chaining_finalize_2026_08_09.md` (archived alongside, same commit).

@@ -292,7 +292,7 @@ upstream limitation, NOT a silent placeholder).
 - [ ] [INFRA] P1. **B1 — instrument catalogue regen + un-pause (aggregation/dedup; "has this instrument ever existed" +
       available-from/to)**: `instruments-service/scripts/build_instrument_catalogue.py` +
       `reference_data/catalogue/catalogue_builder.py` EXIST; Cloud Run jobs
-      `lifecycle-catalogue-regen-{cefi,defi,tradfi,     sports,prediction}` exist but the `*-daily` SCHEDULERS are
+      `lifecycle-catalogue-regen-{cefi,defi,tradfi, sports,prediction}` exist but the `*-daily` SCHEDULERS are
       **PAUSED** + last ran ~2026-06-11/15 (STALE, pre-backfill). AFTER B0 (instrument backfill no-missing): re-run the
       regen jobs per AG → verify the catalogue reflects the full deduped instrument lifecycle
       (genesis/first-seen/last-seen per instrument) → decide cadence + un-pause the daily schedulers (or keep manual).

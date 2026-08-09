@@ -761,7 +761,7 @@ instruments in one `instruments.parquet` with `available_from/to`).
       originally missing)**: (a) **migration for ALREADY-WRITTEN data — CHECKED 2026-07-23, CLEAN: zero production
       shards corrupted, because zero were ever written.** `uts-prod-mtds-collect-solana-defi-cron` is `PAUSED`
       (confirmed via
-      `gcloud scheduler jobs describe uts-prod-mtds-collect-solana-defi-cron     --location=asia-northeast1`, part of
+      `gcloud scheduler jobs describe uts-prod-mtds-collect-solana-defi-cron --location=asia-northeast1`, part of
       the already-tracked, deliberate 4-collector pause since 2026-06-08 — Track 8 above) and a systematic GCS sample
       (every 3 days, 2026-06-05 through 2026-07-23, both ORCA and RAYDIUM, correctly-derived
       `pipeline_mode=batch_onchain_subgraph`) found ZERO `data_type=dex_pool_state` objects for either venue in that
@@ -805,7 +805,7 @@ instruments in one `instruments.parquet` with `available_from/to`).
       pools sharing a token pair can never collide on it), correcting the plan's "same gap in a MORE severe form"
       framing — the real gap here is READABILITY (opaque address-named files instead of human-readable symbols), not
       correctness. **Cron status, re-verified live**:
-      `gcloud scheduler jobs describe     uts-prod-mtds-collect-dex-pools-cron --location=asia-northeast1` →
+      `gcloud scheduler jobs describe uts-prod-mtds-collect-dex-pools-cron --location=asia-northeast1` →
       `state: PAUSED` (still registered in `market_tick_data_service/cli/main.py:554` +
       `deployment-service/terraform/gcp/defi_collection_scheduler.tf`, not retired). **Explicit resolution (this is the
       "explicit retire decision" the plan's own phrasing allows for): no code fix required before this cron is safe to
@@ -855,17 +855,17 @@ instruments in one `instruments.parquet` with `available_from/to`).
       market-tick-data-service)
 
       **RE-VERIFIED 2026-07-24 (this pass) — the `--apply` handoff is still NOT unblocked; NOT 0 glued ids.** The 9
-                                                                                                                                                                                                                                                                                                                                                                                                      ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
-                                                                                                                                                                                                                                                                                                                                                                                                      `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
-                                                                                                                                                                                                                                                                                                                                                                                                      manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
-                                                                                                                                                                                                                                                                                                                                                                                                      rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
-                                                                                                                                                                                                                                                                                                                                                                                                      the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
-                                                                                                                                                                                                                                                                                                                                                                                                      docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
-                                                                                                                                                                                                                                                                                                                                                                                                      the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
-                                                                                                                                                                                                                                                                                                                                                                                                      supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
-                                                                                                                                                                                                                                                                                                                                                                                                      `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
-                                                                                                                                                                                                                                                                                                                                                                                                      (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
-                                                                                                                                                                                                                                                                                                                                                                                                      unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
+      ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
+      `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
+      manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
+      rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
+      the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
+      docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
+      the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
+      supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
+      `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
+      (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
+      unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
 
 - [x] ✅ [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
       `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — **VERIFIED

@@ -140,14 +140,14 @@ without knowing what it is). No further action was taken on `deployment-api` —
       now finds `./deployment_api/services/data_status/mtds_meta.py` — confirms hypothesis (a): pure host-local checkout
       staleness, not a genuine upstream rename. No baseline change was needed. Verified via a fresh full
       `bash scripts/quality-gates.sh` run from `execution-service`:
-      `[5.83/6] ADAPTER CONTRACT-CALL REGRESSION     RATCHET` now reads
+      `[5.83/6] ADAPTER CONTRACT-CALL REGRESSION RATCHET` now reads
       `[check_adapter_contract_regression] OK — 328 baselined file(s) at or above minimum.`, exit code 0. The deferred
       `execution-service` fix (`execution_service/trade_execution/adapters/ibkr_tradfi.py::close()`) then shipped clean
       via quickmerge — `execution-service@4485e0bd`.
 - [x] ✅ 2. [INFRA] P2. N/A — `mtds_meta.py` was never actually renamed/removed upstream (see todo 1); this conditional
       baseline-regeneration step does not apply.
 - [ ] 3. [INFRA] P3. Consider whether STEP 5.83 should validate against a canonical/fresh state (e.g.
-      `git show     origin/<branch>:<path>` for sibling repos) rather than each shipping repo's local, possibly-stale
+      `git show origin/<branch>:<path>` for sibling repos) rather than each shipping repo's local, possibly-stale
       sibling checkouts on a shared multi-tenant host — so one host's checkout drift doesn't block shipping from every
       OTHER repo on that same host. Cross-reference
       `/plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md`

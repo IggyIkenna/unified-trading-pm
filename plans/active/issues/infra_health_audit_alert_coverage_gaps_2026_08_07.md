@@ -6,7 +6,7 @@ title:
   failures have zero AlertCode coverage"
 summary: >-
   Cross-referenced all 11 non-excluded findings from the 2026-08-07 3-agent infra health audit
-  (`/plans/active/infra_health_audit_findings_fix_2026_08_07.md` todo 2) against `#data-pipeline-alerts` Slack history
+  (`/plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md` todo 2) against `#data-pipeline-alerts` Slack history
   (8-day + 8h pulls via `scripts/dev/slack-read-channel.py`) and both
   `codex/05-infrastructure/data-pipeline-alerts.registry.yaml` and
   `unified-api-contracts/.../crosscutting/alerting/{codes,rules}.py`. Zero of the 11 fired a Slack alert. Three clean,
@@ -54,7 +54,7 @@ tags:
   [alerting, cloud-run, monitoring, observability, slack, aws, iam, gcs, rate-limit, data-pipeline, infra-health-audit]
 related:
   [
-    /plans/active/infra_health_audit_findings_fix_2026_08_07.md,
+    /plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/archive/issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md,
     /plans/active/issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26.md,

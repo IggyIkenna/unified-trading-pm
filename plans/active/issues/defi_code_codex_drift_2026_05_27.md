@@ -134,7 +134,7 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       (`mtds_is_full_adapter_smoketest_findings_2026_07_07.md` P1), not a registry gap — flipping phase now would
       recreate the phantom-capacity dishonest-coverage class the data-pipeline-correctness HARD RULE bans. Shipped
       `unified-api-contracts@f0032d171b89ff38aafcea0d9d28882ccca2b991`
-      (`fix(defi,cefi): D10 defi lending capability     entries + DERIBIT-COMBO test coverage`, 2026-07-10, confirmed on
+      (`fix(defi,cefi): D10 defi lending capability entries + DERIBIT-COMBO test coverage`, 2026-07-10, confirmed on
       origin/live-defi-rollout; corrects the earlier `5626079e` citation, which does not resolve to a real commit —
       likely a mistyped/stale short sha). Full evidence trail in this doc's Progress Log. **The 3 inverse venues
       (SOLAYER/PICASSO/CAMBRIAN: capability-without-venue) are RESOLVED — fully removed 2026-06-02 (operator decision,
@@ -180,7 +180,7 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
           market-tick-data-service@55d88025 (delete script + Phase 4/5 close-out). D15 is fully RESOLVED end-to-end.
 
 - [x] ✅ [CODE] P3. D7 — **SHIPPED** MTDS@d3e02228
-      (`fix(mev): remove banned bloxroute relays + stale .bak from     mev_events_handler`): the 2 bloxroute URLs are
+      (`fix(mev): remove banned bloxroute relays + stale .bak from mev_events_handler`): the 2 bloxroute URLs are
       gone from `mev_events_handler.py` `MEV_BOOST_RELAYS` (Flashbots / agnostic / ultra_sound retained, comment cites
       this finding) and `mev_events_handler.py.bak` is deleted — verified on `origin/live-defi-rollout`. Usage audit
       found **nil active downstream consumption** of bloxroute/`mev_events` relay data (bloxroute already removed as the

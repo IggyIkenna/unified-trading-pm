@@ -188,7 +188,7 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
 ## Phase 3 — Re-run the orphan-detector to verify total coverage
 
 - [x] [REVIEW] P1. **DONE 2026-07-27 — see Progress Log for the full run.** Ran a scoped version of
-      `/ag-closeout-audit     all`, not the original done-when's literal baseline-count comparison: a full per-doc
+      `/ag-closeout-audit all`, not the original done-when's literal baseline-count comparison: a full per-doc
       re-read of the whole ~672-doc corpus was judged infeasible in one session (consistent with this plan's own prior
       two deferrals of this exact item), so built a cheap citation-based pre-filter first
       (`generate_ag_closeout_audit_candidates.py`, shipped `unified-trading-pm@ea3456087`) narrowing 770
@@ -214,7 +214,7 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       `na-eligibility-audit` skill build, since shipped `unified-trading-pm@f355c0b2a`) blocked the tree-wide QG scan;
       fixed 2 mechanical issues (line-length, import-at-top) without touching that agent's logic or staging its file.
       The archival also broke 26 structured referrer links across 8 consolidated-closeout/sources hub docs
-      (`run_validators.py --scope     all` catches this; `check_reference_paths.py` did not — different validators,
+      (`run_validators.py --scope all` catches this; `check_reference_paths.py` did not — different validators,
       different scope) — all repointed to the new archive paths in the same commit. **Real defect found + fixed
       post-land**: `bec54efeb` landed with the delete-side of all 35 renames silently dropped (repeated stash-restore
       cycles across 10 retry attempts on this one commit — an exceptionally busy branch that night — eventually lost the
@@ -331,7 +331,7 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
 - [x] [SCRIPT] P3. **DONE 2026-07-27 (`unified-trading-pm@665a49d21`).** Grep-checked all 77 reclassified docs against
       their tranche's consolidated-closeout hub: 50 already mentioned somewhere, 27 genuinely NOT — confirming this
       finding's own predicted bug class actually recurred. Root cause split two ways: 1
-      (`mdps_odds_horizon_bucket_     reprocess_launch_prep`) needed no fix, already claimed+resolved+archived by a real
+      (`mdps_odds_horizon_bucket_ reprocess_launch_prep`) needed no fix, already claimed+resolved+archived by a real
       AO worker mid-session; the other 26 got a discoverability-only append (no existing content touched) to their
       tranche's hub — cefi (2), defi (5), sports (4), cross-cutting (4), meta/infrastructure (11, routed to
       `infra_consolidated_closeout` per `ag_closeout_audit_scope_widening_triage_2026_07_26.md`'s own precedent for that

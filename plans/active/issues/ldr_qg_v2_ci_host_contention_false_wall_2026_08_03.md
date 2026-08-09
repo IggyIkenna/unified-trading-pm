@@ -140,7 +140,7 @@ green one).
 - [ ] [INFRA] P2. **Determine whether the CI glue-runner's `quality-gates.sh` invocation shares the `qg-host-governor`
       reservation ledger with interactive agent-orchestrator slots.** Trace whether the glue-runner's QG invocation
       calls `qg_governor_acquire()` (`scripts/quality-gates-base/qg-host-governor.sh`) the same way an interactive slot
-      does, or bypasses the ledger entirely — this doc's finding 4 above observed `0s     governor queue-wait` on a CI
+      does, or bypasses the ledger entirely — this doc's finding 4 above observed `0s governor queue-wait` on a CI
       leg despite the host being severely loaded (`uptime` 26-32 on 8 cores), suggesting a bypass. Done-when: a stated
       YES/NO on whether the glue-runner participates in the same reservation ledger, with the code path cited
       (function + file); if NO, file a follow-up todo to wire it in.

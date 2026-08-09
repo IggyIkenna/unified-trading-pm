@@ -330,7 +330,7 @@ job's per-category input adapters for the reconciliation-derived categories, per
       escalates"); initial `assigned_vm` default for freshly auto-filed finding issue docs = **`planning`**
       (auto-dispatch to AO by default, not `NA`). Both policy calls now settled — wire these two constants into the §3
       dedup/escalation logic and the §"Issue-doc creation + dedup" frontmatter template (§2.7's
-      `assigned_vm:     planning (or NA if...)` line above) when building todo 1's `trading-analyst` skill. (repo:
+      `assigned_vm: planning (or NA if...)` line above) when building todo 1's `trading-analyst` skill. (repo:
       `unified-trading-pm`)
 
 ## Codex SSOTs

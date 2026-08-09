@@ -167,13 +167,13 @@ context_scope:
       `CanonicalParquetReader.read_shard()` for the 5 capable venues (+ per-venue instrument_type map — DERIBIT covers
       PERPETUAL+FUTURE, the rest PERPETUAL/SPOT only), converts rows to `BookInput`, calls
       `compute_book_microstructure`, writes via
-      `record_captured(source="mtds_microstructure",     pipeline_mode=PipelineMode.BATCH_MTDS_MICROSTRUCTURE)` with
+      `record_captured(source="mtds_microstructure", pipeline_mode=PipelineMode.BATCH_MTDS_MICROSTRUCTURE)` with
       shard isolation (no `raise` in the per-venue/ per-instrument loop, `classify_venue_error`+`ADAPTER_FETCH_FAILED`).
       Honest gap (no manifest write) when no `depth_of_book_10` shard exists for a (venue, instrument_type, day) — never
       a fabricated `record_failed`/`empty`. **Known documented limitation**: the live `depth_of_book_10` WS connectors
       (all 5 venues, verified directly) write no per-row capture timestamp column, so `as_of` is stamped as the shard's
       day at 12:00 UTC (day-representative, not per-row-precise) — see the handler's module docstring. Wired as
-      `--operation collect-book-microstructure --mode     batch` in `cli/main.py`. 18 new unit tests (row parsing,
+      `--operation collect-book-microstructure --mode batch` in `cli/main.py`. 18 new unit tests (row parsing,
       shard-isolation, honest-gap routing), full `quality-gates.sh` green (sentinel-verified). Also flipped
       `queue_position`'s `data_type_capability.py` rows to `live_capable=True` for the 5 capable venues
       (`unified-api-contracts@4b945423`), mirroring `depth_of_book_10`'s own split — updated

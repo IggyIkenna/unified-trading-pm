@@ -112,7 +112,7 @@ re-applied by hand again.
       operator ruling during `/plan-reconcile ao`.** The sibling doc
       `/plans/archive/issues/p1_2_backlog_hand_park_did_not_persist_2026_07_31.md:169` recorded the park as applied and
       holding on 2026-08-05 (slot 8) citing a live `/api/backlog` read
-      (`priority: 999, status: queued,     dispatched_to: null`); this doc's checkbox was simply never reconciled
+      (`priority: 999, status: queued, dispatched_to: null`); this doc's checkbox was simply never reconciled
       against it. This run's own read-only `check-ao-backlog-status.sh` pass confirmed task `-011` is
       `status=queued dispatched_to=None` (that script prints `tier`, not `priority`, so it neither confirms nor refutes
       the 999 override — the operator ruled to trust the sibling doc's direct read).

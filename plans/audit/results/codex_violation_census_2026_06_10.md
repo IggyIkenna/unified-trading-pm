@@ -105,35 +105,35 @@ No failing check-classes.
   - `deployment_api/app_config.py:146: from .utils.cache import cache`
   - `deployment_api/lifespan.py:131: from .utils.cache import cache`
 - ❌ Any types (including dict[str, Any]) — use Pydantic models or specific types
-  - `deployment_api/routes/_code_builds_aws.py:    deep_link: Any = logs.get("deepLink")`
+  - `deployment_api/routes/_code_builds_aws.py: deep_link: Any = logs.get("deepLink")`
 - ❌ Raw response.json() — parse through Pydantic model_validate()
-  - `deployment_api/routes/data_status.py:        body = response.json()  # pyright: ignore[reportAny]`
+  - `deployment_api/routes/data_status.py: body = response.json() # pyright: ignore[reportAny]`
 - ❌ Empty string fallback — fail fast
 - ❌ Empty dict/list fallback — fail fast
-  - `tests/unit/test_honest_coverage_route.py:        """Storage call uses central-element-323112-honest-coverage and date/coverage.json."""`
-  - `tests/unit/test_honest_coverage_route.py:        assert bucket == "central-element-323112-honest-coverage"`
-  - `tests/unit/test_audit_log_compliance.py:        audit_bucket_name = "trading-audit-records-prd-central-element-323112"`
+  - `tests/unit/test_honest_coverage_route.py: """Storage call uses central-element-323112-honest-coverage and date/coverage.json."""`
+  - `tests/unit/test_honest_coverage_route.py: assert bucket == "central-element-323112-honest-coverage"`
+  - `tests/unit/test_audit_log_compliance.py: audit_bucket_name = "trading-audit-records-prd-central-element-323112"`
 - ❌ Hardcoded prod project ID in tests — use 'test-project'
-  - `deployment_api/scripts/data_status_rollup_worker.py:        --project=central-element-323112 \\`
-  - `deployment_api/scripts/data_status_rollup_worker.py:        --bucket=central-element-323112-data-status-rollups`
-  - `deployment_api/routes/vm_deployments.py:    project_id = _cfg.gcp_project_id or "central-element-323112"`
+  - `deployment_api/scripts/data_status_rollup_worker.py: --project=central-element-323112 \\`
+  - `deployment_api/scripts/data_status_rollup_worker.py: --bucket=central-element-323112-data-status-rollups`
+  - `deployment_api/routes/vm_deployments.py: project_id = _cfg.gcp_project_id or "central-element-323112"`
 - ❌ Hardcoded project ID in production — use config.gcp_project_id
-  - `deployment_api/routes/ml_experiment_launch.py:                env={**_process_env, "GCP_PROJECT_ID": project_id},`
-  - `deployment_api/routes/execution_backtest_launch.py:                env={**_process_env, "GCP_PROJECT_ID": project_id},`
-  - `deployment_api/routes/strategy_backtest_launch.py:                env={**_process_env, "GCP_PROJECT_ID": project_id},`
+  - `deployment_api/routes/ml_experiment_launch.py: env={**_process_env, "GCP_PROJECT_ID": project_id},`
+  - `deployment_api/routes/execution_backtest_launch.py: env={**_process_env, "GCP_PROJECT_ID": project_id},`
+  - `deployment_api/routes/strategy_backtest_launch.py: env={**_process_env, "GCP_PROJECT_ID": project_id},`
 - ❌ Use GCP_PROJECT_ID not GCP_PROJECT_ID (except config.py backward compat)
 - ❌ Schema provenance: local BaseModel/TypedDict/dataclass found (should import from UAC or UIC)
   - `deployment-api:deployment_api/types/shard_detail.py:ShardCoord`
   - `deployment-api:deployment_api/types/shard_detail.py:ShardDetailResponse`
   - `deployment-api:deployment_api/types/shard_detail.py:ShardDownloadUrls`
 - ❌ Deep unified lib imports — use top-level
-  - `deployment_api/routes/config.py:    from unified_api_contracts.registry.data_status_axis_matrix import (`
-  - `deployment_api/utils/path_combinatorics.py:        from unified_api_contracts.registry.market_data_categories import (`
-  - `deployment_api/utils/path_combinatorics.py:        from unified_api_contracts.registry.market_data_categories import (`
+  - `deployment_api/routes/config.py: from unified_api_contracts.registry.data_status_axis_matrix import (`
+  - `deployment_api/utils/path_combinatorics.py: from unified_api_contracts.registry.market_data_categories import (`
+  - `deployment_api/utils/path_combinatorics.py: from unified_api_contracts.registry.market_data_categories import (`
 - ❌ Direct cloud SDK imports found (route through unified-cloud-interface instead):
-  - `deployment_api/health_routes.py:        from google.cloud import pubsub_v1  # pyright: ignore[reportMissingModuleSource]`
-  - `deployment_api/health_routes.py:        from google.cloud import secretmanager  # pyright: ignore[reportMissingModuleSource]`
-  - `deployment_api/health_routes.py:        from google.cloud import pubsub_v1  # pyright: ignore[reportMissingModuleSource]`
+  - `deployment_api/health_routes.py: from google.cloud import pubsub_v1 # pyright: ignore[reportMissingModuleSource]`
+  - `deployment_api/health_routes.py: from google.cloud import secretmanager # pyright: ignore[reportMissingModuleSource]`
+  - `deployment_api/health_routes.py: from google.cloud import pubsub_v1 # pyright: ignore[reportMissingModuleSource]`
 - ❌ Files exceed 900 lines:
   - `./deployment_api/routes/deployments.py: 968 L`
   - `./deployment_api/routes/data_status.py: 2550 L`
@@ -144,13 +144,13 @@ No failing check-classes.
   - `./deployment_api/services/data_analytics_service.py:338:DataAnalyticsService.analyze_data_patterns(): 57L`
 - ❌ Unit tests call real cloud APIs — use MagicMock(spec=StorageClient) instead
   - `tests/unit/test_storage_facade_aws_path.py:- deployment_api.utils.storage_client.get_storage_client() MUST return S3StorageClient`
-  - `tests/unit/test_storage_facade_aws_path.py:            client = _get_storage_client()`
-  - `tests/unit/test_storage_facade_aws_path.py:            _get_storage_client()`
+  - `tests/unit/test_storage_facade_aws_path.py: client = _get_storage_client()`
+  - `tests/unit/test_storage_facade_aws_path.py: _get_storage_client()`
 - ❌ Backward-compat pattern found — eliminate re-export stubs, aliases, and compat shims
 - ❌ See: cursor-rules/core/no-backward-compat-shims.mdc
-  - `deployment_api/types/shard_detail.py:    ``category`` is preserved for backward-compat with existing callers.`
+  - `deployment_api/types/shard_detail.py: ``category`` is preserved for backward-compat with existing callers.`
   - `deployment_api/services/shard_detail.py:# tries canonical first; ghost is a backward-compat fallback.`
-  - `deployment_api/services/shard_detail.py:      backward-compat fallback for old GCS parquets written before 2026-05-23.`
+  - `deployment_api/services/shard_detail.py: backward-compat fallback for old GCS parquets written before 2026-05-23.`
 - ❌ Pydantic BaseModel subclasses found in service source — domain data contracts must live in UIC
   domain/<service-name>/
 - ❌ See: unified-trading-pm/plans/archive/SCHEMA_CONTRACTS_AUDIT.md Section 3b
@@ -171,9 +171,9 @@ No failing check-classes.
   - `deployment_api/routes/monitor_live.py`
   - `deployment_api/routes/monitor_scheduled.py`
 - ❌ STEP 5.12b: Hardcoded cloud URIs found (use UCI StorageClient — download_bytes/upload_bytes/list_blobs):
-  - `deployment_api/services/shard_detail.py:733:    if not gs_uri.startswith("gs://"):`
-  - `deployment_api/services/shard_detail.py:735:    bucket_key = gs_uri[len("gs://") :]`
-  - `deployment_api/services/data_query_service.py:573:        if not gs_uri.startswith("gs://"):`
+  - `deployment_api/services/shard_detail.py:733: if not gs_uri.startswith("gs://"):`
+  - `deployment_api/services/shard_detail.py:735: bucket_key = gs_uri[len("gs://") :]`
+  - `deployment_api/services/data_query_service.py:573: if not gs_uri.startswith("gs://"):`
 
 ### deployment-service — budget `8`, current violations **1**
 
@@ -196,18 +196,18 @@ No failing check-classes.
   - `execution_service/isolation_policy.py:45: from unified_api_contracts.internal.domain.deployment_service import IsolationPolicy`
   - `execution_service/isolation_policy.py:46: from unified_trading_library import get_env_var, get_isolation_policy`
 - ❌ Raw response.json() — parse through Pydantic model_validate()
-  - `execution_service/providers/rpc_fallback.py:        payload_obj: object = cast(object, response.json())`
-  - `execution_service/providers/rpc_fallback.py:                return self._parse_rpc_result(cast(object, response.json()), provider_id)`
-  - `execution_service/providers/solana_rpc_client.py:        payload_obj: object = cast(object, response.json())`
+  - `execution_service/providers/rpc_fallback.py: payload_obj: object = cast(object, response.json())`
+  - `execution_service/providers/rpc_fallback.py: return self._parse_rpc_result(cast(object, response.json()), provider_id)`
+  - `execution_service/providers/solana_rpc_client.py: payload_obj: object = cast(object, response.json())`
 - ❌ Empty string fallback — fail fast
 - ❌ Empty dict/list fallback — fail fast
   - `tests/defi_execution/integration/conftest.py:_GCP_PROJECT_ID = "central-element-323112"`
-  - `tests/sports_execution/unit/test_kalshi_adapter.py:        to be set in GCP Secret Manager (central-element-323112).`
-  - `tests/sports_execution/unit/exchanges/test_polymarket_clob_adapter.py:        to be set in GCP Secret Manager (central-element-323112).`
+  - `tests/sports_execution/unit/test_kalshi_adapter.py: to be set in GCP Secret Manager (central-element-323112).`
+  - `tests/sports_execution/unit/exchanges/test_polymarket_clob_adapter.py: to be set in GCP Secret Manager (central-element-323112).`
 - ❌ Hardcoded prod project ID in tests — use 'test-project'
-  - `execution_service/cli/defi_arbitrage_dispersion_decision_trace.py:    cefi_bucket = cfg.market_data_source_bucket_cefi or "market-data-tick-cefi-central-element-323112"`
-  - `execution_service/providers/l2_depth_provider.py:        provider = L2DepthProvider(mode=L2DepthMode.BATCH, project_id="central-element-323112")`
-  - `execution_service/providers/l2_depth_provider.py:        project_id: str = "central-element-323112",`
+  - `execution_service/cli/defi_arbitrage_dispersion_decision_trace.py: cefi_bucket = cfg.market_data_source_bucket_cefi or "market-data-tick-cefi-central-element-323112"`
+  - `execution_service/providers/l2_depth_provider.py: provider = L2DepthProvider(mode=L2DepthMode.BATCH, project_id="central-element-323112")`
+  - `execution_service/providers/l2_depth_provider.py: project_id: str = "central-element-323112",`
 - ❌ Hardcoded project ID in production — use config.gcp_project_id
 - ❌ Domain clients must come from unified_domain_client, not unified_trading_library
   - `execution_service/engine/backtest/engine/setup.py:from unified_trading_library import VENUE_CATEGORY_MAP, InstrumentsDomainClient`
@@ -218,13 +218,13 @@ No failing check-classes.
 - ❌ setup_events()/setup_service() called without sink= in production code
   - `execution_service/compliance/mifid_reporter.py:caller's ServiceBootstrap / run_lifecycle handles `setup_events()` and the`
   - `execution_service/compliance/mifid_reporter.py:into this module never invoke `setup_events()` directly — they rely on the`
-  - `execution_service/services/rate_impact_engine.py:        Note: ``setup_events()`` is called by ``ServiceBootstrap(...)`` at`
+  - `execution_service/services/rate_impact_engine.py: Note: ``setup_events()`` is called by ``ServiceBootstrap(...)`` at`
 - ❌ Deep unified lib imports — use top-level
   - `execution_service/venues/uniswap.py:from unified_api_contracts.registry.dex_router_addresses import (`
   - `execution_service/custody/withdrawal_signing.py:from unified_trading_library.cloud_interface import get_secret_client`
   - `execution_service/custody/cloud_kms.py:from unified_trading_library.cloud_interface import get_secret_client`
 - ❌ Direct cloud SDK imports found (route through unified-cloud-interface instead):
-  - `execution_service/custody/cloud_kms.py:            from google.cloud import (`
+  - `execution_service/custody/cloud_kms.py: from google.cloud import (`
 - ❌ Files exceed 900 lines:
   - `./execution_service/trade_execution/adapters/kraken_rest_adapter.py: 1299 L`
   - `./execution_service/data/gcs_data_loading.py: 1012 L`
@@ -238,7 +238,7 @@ No failing check-classes.
   - `lxml 5.4.0: PYSEC-2026-87 — lxml is a library for processing XML and HTML in the Python language. Prior to 6.1.0, using either of the two parsers in`
 - ❌ Unit tests call real cloud APIs — use MagicMock(spec=StorageClient) instead
   - `tests/unit/conftest.py:(169.254.169.254) is unreachable. get_storage_client() inside persist_audit_log()`
-  - `tests/unit/test_cov_save_operations.py:        # via unified_trading_library.get_storage_client() — mock that path too.`
+  - `tests/unit/test_cov_save_operations.py: # via unified_trading_library.get_storage_client() — mock that path too.`
 - ❌ Backward-compat pattern found — eliminate re-export stubs, aliases, and compat shims
 - ❌ See: cursor-rules/core/no-backward-compat-shims.mdc
   - `execution_service/engine/backtest/passive_aggressive_hybrid.py:# Default config for backward compatibility with tests that import constants`
@@ -287,8 +287,8 @@ No failing check-classes.
 - ❌ os.getenv()/os.environ — use UnifiedCloudConfig for config, get_secret_client() for secrets
 - ❌ Use 'uv pip install' not 'pip install'
   - `./Dockerfile:RUN pip install --no-cache-dir uv`
-  - `⚠️  broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md`
-  - `instruments_service/reference_data/utils/block_resolver.py:    except Exception:`
+  - `⚠️ broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md`
+  - `instruments_service/reference_data/utils/block_resolver.py: except Exception:`
 - ❌ Function/class/method size exceeded:
   - `./instruments_service/engine/urdi_reference_provider.py:68:fetch_instruments_for_all_venues(): 246L`
 
@@ -310,7 +310,7 @@ No failing check-classes.
   - `market_data_processing_service/app/adapters/base_adapter.py:from unified_api_contracts.registry.market_data_categories import (`
   - `market_data_processing_service/app/core/live_aggregator.py:from unified_api_contracts.events.streaming import (`
 - ❌ STEP 5.23: Deep UAC import detected. Use facade: from unified_api_contracts.{domain} import X
-  - `market_data_processing_service/app/core/canonical_writer.py:    from unified_api_contracts.canonical.domain.sports.league_data import (`
+  - `market_data_processing_service/app/core/canonical_writer.py: from unified_api_contracts.canonical.domain.sports.league_data import (`
 - ❌ STEP 5.63: setup_events() entry-points missing run_lifecycle/ServiceBootstrap pairing — wrap main() in 'with
   run_lifecycle(service_name=...) as run:' (from unified_trading_library):
   - `market_data_processing_service/cli/handlers/live_mode_handler.py`
@@ -330,23 +330,23 @@ No failing check-classes.
   - `market_tick_data_service/market_interface/clients/extended_base_client.py:240: from unified_trading_library import get_secret_client`
   - `market_tick_data_service/market_interface/clients/extended_base_client.py:274: from unified_trading_library import get_secret_client`
 - ❌ Raw response.json() — parse through Pydantic model_validate()
-  - `market_tick_data_service/market_interface/adapters/tradfi/massive_tradfi_rest_connector.py:        return response.json()`
-  - `market_tick_data_service/market_interface/adapters/tradfi/massive_tradfi_rest_connector.py:            data = response.json()`
+  - `market_tick_data_service/market_interface/adapters/tradfi/massive_tradfi_rest_connector.py: return response.json()`
+  - `market_tick_data_service/market_interface/adapters/tradfi/massive_tradfi_rest_connector.py: data = response.json()`
 - ❌ Empty string fallback — fail fast
 - ❌ Empty dict/list fallback — fail fast
-  - `tests/unit/scripts/test_audit_canonical_form.py:        m.probe_paths("gs://market-data-tick-defi-prd-central-element-323112", 50, fails)`
-  - `tests/unit/scripts/test_migrate_defi_full_v9_canonical.py:            "dex-pools-prd-central-element-323112",`
+  - `tests/unit/scripts/test_audit_canonical_form.py: m.probe_paths("gs://market-data-tick-defi-prd-central-element-323112", 50, fails)`
+  - `tests/unit/scripts/test_migrate_defi_full_v9_canonical.py: "dex-pools-prd-central-element-323112",`
 - ❌ Hardcoded prod project ID in tests — use 'test-project'
 - ❌ setup_events()/setup_service() called without sink= in production code
-  - `market_tick_data_service/scripts/_rebuild_prediction_cf11.py:    # entry point never called ``setup_events()`` (true for a standalone migration-script run;`
+  - `market_tick_data_service/scripts/_rebuild_prediction_cf11.py: # entry point never called ``setup_events()`` (true for a standalone migration-script run;`
 - ❌ Tests skip due to missing credential file — use google.auth.default() + @pytest.mark.integration instead
-  - `tests/unit/test_drift_solana_ws_connector.py:        pytest.skip("Live network test; opt-in via -m requires_credentials")`
-  - `tests/unit/test_orca_defi_ws_connector.py:        pytest.skip("Live network test; opt-in via -m requires_credentials")`
-  - `tests/unit/test_phoenix_ws_connector.py:        pytest.skip("Live network test; opt-in via -m requires_credentials")`
+  - `tests/unit/test_drift_solana_ws_connector.py: pytest.skip("Live network test; opt-in via -m requires_credentials")`
+  - `tests/unit/test_orca_defi_ws_connector.py: pytest.skip("Live network test; opt-in via -m requires_credentials")`
+  - `tests/unit/test_phoenix_ws_connector.py: pytest.skip("Live network test; opt-in via -m requires_credentials")`
 - ❌ Deep unified lib imports — use top-level
-  - `market_tick_data_service/scripts/migrate_cefi_flat_to_v9_canonical.py:    from unified_api_contracts.canonical.partition_paths import candidate_parquet_paths`
-  - `market_tick_data_service/scripts/migrate_tradfi_to_v9_canonical.py:    from unified_api_contracts.canonical.partition_paths import candidate_parquet_paths`
-  - `market_tick_data_service/scripts/migrate_prediction_to_pred_prd_v9.py:    from unified_api_contracts.canonical.partition_paths import candidate_parquet_paths`
+  - `market_tick_data_service/scripts/migrate_cefi_flat_to_v9_canonical.py: from unified_api_contracts.canonical.partition_paths import candidate_parquet_paths`
+  - `market_tick_data_service/scripts/migrate_tradfi_to_v9_canonical.py: from unified_api_contracts.canonical.partition_paths import candidate_parquet_paths`
+  - `market_tick_data_service/scripts/migrate_prediction_to_pred_prd_v9.py: from unified_api_contracts.canonical.partition_paths import candidate_parquet_paths`
 - ❌ Files exceed 900 lines:
   - `./market_tick_data_service/live/websocket_runner.py: 912 L`
   - `./market_tick_data_service/cli/handlers/solana_lst_archival.py: 988 L`
@@ -356,16 +356,16 @@ No failing check-classes.
   - `./market_tick_data_service/live/websocket_runner.py:772:LiveWebsocketRunner._record_empty_window(): 54L`
   - `./market_tick_data_service/live/websocket_runner.py:827:LiveWebsocketRunner._flush_instrument_window(): 58L`
 - ❌ Unit tests call real cloud APIs — use MagicMock(spec=StorageClient) instead
-  - `tests/unit/test_rebuild_prediction_manifest_cf11.py:    _index/availability_index.parquet via get_storage_client().download_bytes()."""`
-  - `tests/unit/test_rebuild_tradfi_manifest_cf11.py:    _index/availability_index.parquet via get_storage_client().download_bytes()."""`
-  - `tests/unit/test_rebuild_prediction_manifest_force.py:    of _index/availability_index.parquet via get_storage_client().download_bytes().`
+  - `tests/unit/test_rebuild_prediction_manifest_cf11.py: _index/availability_index.parquet via get_storage_client().download_bytes()."""`
+  - `tests/unit/test_rebuild_tradfi_manifest_cf11.py: _index/availability_index.parquet via get_storage_client().download_bytes()."""`
+  - `tests/unit/test_rebuild_prediction_manifest_force.py: of _index/availability_index.parquet via get_storage_client().download_bytes().`
 - ❌ Backward-compat pattern found — eliminate re-export stubs, aliases, and compat shims
 - ❌ See: cursor-rules/core/no-backward-compat-shims.mdc
-  - `market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py:                        # backward compat with existing VM metadata configs.`
+  - `market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py: # backward compat with existing VM metadata configs.`
 - ❌ STEP 5.23: Deep UAC import detected. Use facade: from unified_api_contracts.{domain} import X
-  - `market_tick_data_service/scripts/migrate_cefi_flat_to_v9_canonical.py:    from unified_api_contracts.canonical.partition_paths import candidate_parquet_paths`
-  - `market_tick_data_service/scripts/migrate_tradfi_to_v9_canonical.py:    from unified_api_contracts.canonical.partition_paths import candidate_parquet_paths`
-  - `market_tick_data_service/scripts/migrate_prediction_to_pred_prd_v9.py:    from unified_api_contracts.canonical.partition_paths import candidate_parquet_paths`
+  - `market_tick_data_service/scripts/migrate_cefi_flat_to_v9_canonical.py: from unified_api_contracts.canonical.partition_paths import candidate_parquet_paths`
+  - `market_tick_data_service/scripts/migrate_tradfi_to_v9_canonical.py: from unified_api_contracts.canonical.partition_paths import candidate_parquet_paths`
+  - `market_tick_data_service/scripts/migrate_prediction_to_pred_prd_v9.py: from unified_api_contracts.canonical.partition_paths import candidate_parquet_paths`
 - ❌ STEP 5.63: setup_events() entry-points missing run_lifecycle/ServiceBootstrap pairing — wrap main() in 'with
   run_lifecycle(service_name=...) as run:' (from unified_trading_library):
   - `market_tick_data_service/scripts/_rebuild_prediction_cf11.py`
@@ -376,13 +376,13 @@ No failing check-classes.
 - ❌ Baseline: unified-trading-pm/scripts/quality_gates/no_fallback_imports_baseline.yaml (NEVER raise a count)
 - ❌ Recheck: .venv/bin/python unified-trading-pm/scripts/quality_gates/check_no_fallback_imports.py --workspace-root
   /home/ubuntu/unified-trading-system-repos --scope market-tick-data-service
-  - `⚠️  STEP 5.95: below the DTZ/TID251 baseline — ratchet ruff_rule_ratchet_baseline.yaml DOWN (re-run --update-baseline)`
+  - `⚠️ STEP 5.95: below the DTZ/TID251 baseline — ratchet ruff_rule_ratchet_baseline.yaml DOWN (re-run --update-baseline)`
 
 ### ml-service — budget `5`, current violations **3**
 
 - ❌ Any types (including dict[str, Any]) — use Pydantic models or specific types
-  - `ml_service/inference/app/core/manifest_inference_guard.py:        status_values: list[Any] = day_rows["capture_status"].tolist()`
-  - `ml_service/training/app/core/manifest_gap_handler.py:        row_data: Any = row  # pandas Series with Any-typed values`
+  - `ml_service/inference/app/core/manifest_inference_guard.py: status_values: list[Any] = day_rows["capture_status"].tolist()`
+  - `ml_service/training/app/core/manifest_gap_handler.py: row_data: Any = row # pandas Series with Any-typed values`
 - ❌ Schema provenance: local BaseModel/TypedDict/dataclass found (should import from UAC or UIC)
   - `ml-service:ml_service/training/config.py:TrainingConfig`
   - `ml-service:ml_service/inference/types.py:CLIArgsDict`
@@ -390,7 +390,7 @@ No failing check-classes.
 - ❌ Function/class/method size exceeded:
   - `./ml_service/training/cli/main.py:42:_add_ml_training_args(): 243L`
   - `/home/ubuntu/unified-trading-system-repos/unified-trading-pm/scripts/quality-gates-base/qg-common.sh: line 159: File: "/home/ubuntu/.cache/qg/ml-service/pip_audit_deps_hash"`
-  - `ID: 52414f81324671cb Namelen: 255     Type: ext2/ext3`
+  - `ID: 52414f81324671cb Namelen: 255 Type: ext2/ext3`
 - ❌ STEP 5.63: setup_events() entry-points missing run_lifecycle/ServiceBootstrap pairing — wrap main() in 'with
   run_lifecycle(service_name=...) as run:' (from unified_trading_library):
   - `ml_service/training/cli/handlers/__init__.py`
@@ -421,9 +421,9 @@ No failing check-classes.
   - `strategy_service/api/registry_router.py:class ArchetypeEntry(BaseModel):`
 - ❌ STEP 5.37: Inline HF/LTV/margin thresholds found — use UAC LIQUIDATION_PARAMS_REGISTRY (see workspace audit
   C2/C4/C1):
-  - `strategy_service/risk/v2/greek_model.py:    return long_notional * Decimal("0.5") + short_notional * Decimal("1.5")`
-  - `strategy_service/engine/strategies/v2/vol_trading/analog_execution_gate.py:    kelly_boost: Decimal = Decimal("1.2")`
-  - `strategy_service/engine/core/components/risk_monitor.py:            liquidation_threshold = cast(`
+  - `strategy_service/risk/v2/greek_model.py: return long_notional * Decimal("0.5") + short_notional * Decimal("1.5")`
+  - `strategy_service/engine/strategies/v2/vol_trading/analog_execution_gate.py: kelly_boost: Decimal = Decimal("1.2")`
+  - `strategy_service/engine/core/components/risk_monitor.py: liquidation_threshold = cast(`
 - ❌ STEP 5.63: setup_events() entry-points missing run_lifecycle/ServiceBootstrap pairing — wrap main() in 'with
   run_lifecycle(service_name=...) as run:' (from unified_trading_library):
   - `strategy_service/risk/pre_crash_checkpoint.py`

@@ -174,7 +174,7 @@ same CLI path would hit the identical wall.
       mechanical fix, and P3/non-blocking per this doc's own priority. Left open for whoever picks up the design call.
 - [x] ✅ [CODE] P2. Add a SPORTS branch to `cloud_feature_provider.py`'s feature dispatcher (mirroring
       `_query_defi_features`'s non-instrument-id pattern) that reads
-      `sports_features/by_date/day={D}/     feature_group={G}/` by fixture/league instead of by `instrument_ids`. This
+      `sports_features/by_date/day={D}/ feature_group={G}/` by fixture/league instead of by `instrument_ids`. This
       is the real blocker for the CLV retrain (and any other sports target). (repo: ml-service) — **DONE 2026-07-26**
       (slot-6, `data_engineering`): `ml-service@7cccb236`. On closer inspection a SPORTS branch already existed in
       `query_features()` (since 2026-05-01) but was UNREACHABLE — the asset-group dispatch derived from

@@ -219,7 +219,7 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
       `mtds-live-cefi-consolidated-*` — confirmed genuine stale-tarball case per the VM-delete guardrail (heartbeat
       64s-fresh = alive, not a stale/dead-VM situation; old instance `-20260731-211041` booted before the tarball fix,
       unpinned, no `TARBALL_PINS.json`), then launched the replacement via `--force` (bypasses the singleton lock; never
-      deletes-first). New instance `mtds-live-cefi-consolidated-20260801-151833` booted clean (`VM SETUP     COMPLETE`,
+      deletes-first). New instance `mtds-live-cefi-consolidated-20260801-151833` booted clean (`VM SETUP COMPLETE`,
       all 17 shards started, exit 0) and was left running ~15h alongside the old instance before this session resumed (a
       long suspension, not a stuck boot — heartbeat daemon stayed alive throughout, status field just never updates past
       "starting", a separate cosmetic bug worth a P3 note but not investigated further here). **Verified via the per-VM
@@ -317,7 +317,7 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
       production perpetual universe (from `fapi.asterdex.com/fapi/v1/exchangeInfo`) reproduces the incident exactly —
       4/6 SUBSCRIBE acks, ZERO data frames in 15s. Binary-searched the boundary live: **200 subscribed streams on one
       connection is fine; 205 gets the connection closed with WS close code `3003` / reason
-      `"subscribed channels     exceeds limit"`** — an independent, PER-CONNECTION cumulative cap (matches Binance's own
+      `"subscribed channels exceeds limit"`** — an independent, PER-CONNECTION cumulative cap (matches Binance's own
       documented combined-stream "200 streams per connection" limit, which ASTER inherits byte-for-byte as a
       Binance-API-compatible venue) — separate from the ~4.1KB per-FRAME size cap `593bd425` fixed. The connector's
       chunked SUBSCRIBE frames all land on the SAME one connection, so the connection hits this 200-stream cap and gets

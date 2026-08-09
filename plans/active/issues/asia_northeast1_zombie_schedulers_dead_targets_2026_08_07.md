@@ -36,7 +36,7 @@ scope: [engineer, admin]
 tags: [cloud-scheduler, cloud-run, zombie, dead-target, infra-health-audit, gcp, bulk-triage]
 related:
   [
-    /plans/active/infra_health_audit_findings_fix_2026_08_07.md,
+    /plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md,
     /plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
@@ -61,7 +61,7 @@ source:
   "infra_health_audit_findings_fix_2026_08_07.md todo 1 (Dedicated zombie sweep) — Cloud-Scheduler-dead-target class"
 context_scope:
   [
-    /plans/active/infra_health_audit_findings_fix_2026_08_07.md,
+    /plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md,
     /plans/active/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
   ]
 ---
@@ -167,9 +167,9 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
       (asia-northeast1) vs. the europe-west1 `client-reporting-daily-snapshot` twin — RE-ENABLE asia-northeast1, PAUSE
       europe-west1. **Already executed live this session** via `gcloud scheduler jobs resume/pause`; re-verified fresh
       just now:
-      `gcloud scheduler jobs describe uts-prod-client-reporting-daily-snapshot --location=asia-northeast1     --project=central-element-323112 --format='value(state)'`
+      `gcloud scheduler jobs describe uts-prod-client-reporting-daily-snapshot --location=asia-northeast1 --project=central-element-323112 --format='value(state)'`
       → `ENABLED`;
-      `gcloud scheduler jobs describe client-reporting-daily-snapshot --location=europe-west1     --project=central-element-323112 --format='value(state)'`
+      `gcloud scheduler jobs describe client-reporting-daily-snapshot --location=europe-west1 --project=central-element-323112 --format='value(state)'`
       → `PAUSED`. Both confirmed live-verified, DONE.
 - [ ] [OPERATOR] P2. **STANDING-ACTION — repoint candidate (1) RULED, Terraform retirement not yet executed.**
       `uts-prod-client-reporting-hourly-update` (asia-northeast1): RETIRE it — `client-reporting-hourly` (via Cloud Run

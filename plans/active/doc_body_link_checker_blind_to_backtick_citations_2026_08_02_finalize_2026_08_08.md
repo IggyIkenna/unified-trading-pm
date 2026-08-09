@@ -77,7 +77,7 @@ source: >-
       `infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`, `tradfi_phase_d_terminal_gate_2026_07_24.md`, plus
       any new ones found live); clear any lock if set (confirm rather than assume). Then physically move the parent doc
       under `plans/archive/2026_08/`. **Done when**:
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci     --no-regen` is 0 hard, `check_reference_paths.py` shows
+      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py` shows
       no NEW dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans for this
       doc. Repo: unified-trading-pm.
 

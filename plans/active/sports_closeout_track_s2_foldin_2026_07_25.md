@@ -192,25 +192,25 @@ context_scope:
       the todo's own "if genuinely different, do not purge" branch.
 
       **UPDATE 2026-08-03 — items 1+2 resolved, figures now authoritative (see
-                                                                          `sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md` Progress Log for full methodology):**
+      `sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md` Progress Log for full methodology):**
 
-                                                                          **Item 1 (re-baseline, `instruments-service@7409c5b1` dry-run):** Operator ruled the full 383-league registry is
-                                                                          authoritative for the "not in registry" wipe (not MVP-96). Fixed-script dry-run against the live
-                                                                          `availability_index.parquet` (11,853,040 rows): **11,403 non-canonical rows / 755 unique league_ids** under the
-                                                                          full 383-league registry, football-data-types-only (top data_types: MATCHES 3665, FIXTURES 3332, INJURIES 1644,
-                                                                          ODDS 1044, PREDICTIONS 804, STANDINGS 614 — all football, zero `trades`/`odds_horizon_bucket`, confirming the
-                                                                          `_FOOTBALL_DATA_TYPES` scope-bug fix holds). Supersedes the 2026-07-27 manual census's 17,767/734 figure for the
-                                                                          same cut.
+      **Item 1 (re-baseline, `instruments-service@7409c5b1` dry-run):** Operator ruled the full 383-league registry is
+      authoritative for the "not in registry" wipe (not MVP-96). Fixed-script dry-run against the live
+      `availability_index.parquet` (11,853,040 rows): **11,403 non-canonical rows / 755 unique league_ids** under the
+      full 383-league registry, football-data-types-only (top data_types: MATCHES 3665, FIXTURES 3332, INJURIES 1644,
+      ODDS 1044, PREDICTIONS 804, STANDINGS 614 — all football, zero `trades`/`odds_horizon_bucket`, confirming the
+      `_FOOTBALL_DATA_TYPES` scope-bug fix holds). Supersedes the 2026-07-27 manual census's 17,767/734 figure for the
+      same cut.
 
-                                                                          **Item 2 (§U reconciliation, `instruments-service@153063e4`):** The G1 script's `_FOOTBALL_DATA_TYPES` frozenset
-                                                                          does NOT include `FIXTURES_SCHEDULE` or `FIXTURES_OUTCOMES` — §U's ENTIRE population is drawn from
-                                                                          `FIXTURES_SCHEDULE` raw content, so the two populations are **DISJOINT BY CONSTRUCTION**. A scoped walk of the
-                                                                          raw `fixtures_schedule` corpus restricted to the 363 non-registry `FIXTURES_SCHEDULE` league_ids found **7,573
-                                                                          non-registry blank-`round` rows across 296 distinct leagues** — the honest 2026-08-03 equivalent of §U's original
-                                                                          10,869/489 figure (smaller because the registry grew 94→383 leagues since §U's 2026-07-19 measurement, plus the
-                                                                          intervening §T/§W backfills and the 2026-07-23 pre-floor wipe). 60 of the 2,111 scoped blobs (all
-                                                                          `day=2026-04-14`) hit the already-tracked wrong-schema contamination from
-                                                                          `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` — known residue, not a new defect.
+      **Item 2 (§U reconciliation, `instruments-service@153063e4`):** The G1 script's `_FOOTBALL_DATA_TYPES` frozenset
+      does NOT include `FIXTURES_SCHEDULE` or `FIXTURES_OUTCOMES` — §U's ENTIRE population is drawn from
+      `FIXTURES_SCHEDULE` raw content, so the two populations are **DISJOINT BY CONSTRUCTION**. A scoped walk of the
+      raw `fixtures_schedule` corpus restricted to the 363 non-registry `FIXTURES_SCHEDULE` league_ids found **7,573
+      non-registry blank-`round` rows across 296 distinct leagues** — the honest 2026-08-03 equivalent of §U's original
+      10,869/489 figure (smaller because the registry grew 94→383 leagues since §U's 2026-07-19 measurement, plus the
+      intervening §T/§W backfills and the 2026-07-23 pre-floor wipe). 60 of the 2,111 scoped blobs (all
+      `day=2026-04-14`) hit the already-tracked wrong-schema contamination from
+      `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` — known residue, not a new defect.
 
 - [x] ✅ [DIAG] P1. **Sports P2a sub-item (b) — G2 2015-2017 zero-captured diagnosis — DONE 2026-07-27, read-only, no
       fix implemented.** **FINDING: subscription-tier limit (high confidence), not a backfill bug.** This question was
@@ -220,7 +220,7 @@ context_scope:
       live against current code this session: 1. **`empty_confirmed` cannot mask a fetch error by construction** —
       `instruments-service/instruments_service/reference_data/adapters/sports/adapters/api_football.py:1001-1116`.
       API-Football signals plan/quota/auth/param errors INSIDE the 200-OK JSON envelope
-      (`{"errors": {"plan": "..."},        "response": []}`), never via HTTP status. `_raise_on_api_errors()`
+      (`{"errors": {"plan": "..."}, "response": []}`), never via HTTP status. `_raise_on_api_errors()`
       (line 1034) raises `ApiFootballResponseError` whenever `errors` is a non-empty dict/list; `_extract_response()`
       (line 1101) calls it BEFORE returning rows, routing any error to `attempted_failed` via the `RuntimeError` branch
       in `_fetch_one_venue`. A clean `empty_confirmed` for these rows can therefore only mean the vendor was actually
@@ -246,7 +246,7 @@ context_scope:
       math and never inspects `response.subscription`, even though `/status` is called routinely in production for quota
       purposes (`data_completion_sports_2026_07_24.md:486-497`). Per this todo's explicit scope (diagnosis-only, no
       fix), this residual gap is noted but not closed here — a follow-up live
-      `curl -H "x-apisports-key: <KEY>"     https://v3.football.api-sports.io/status` from a credentialed VM, inspecting
+      `curl -H "x-apisports-key: <KEY>" https://v3.football.api-sports.io/status` from a credentialed VM, inspecting
       `response.subscription`, would fully vendor-confirm rather than strongly infer. The
       subscription-tier-limit-vs-backfill-bug fork this todo exists to resolve is answered: **subscription-tier limit**
       — any future fix-path decision (e.g., whether to upgrade the API-Football plan) should proceed on that basis. No
@@ -308,7 +308,7 @@ context_scope:
       **Done when**: P2a/P2b/P2c are all confirmed done AND the gate re-run passes. — **2026-07-31T15:15Z (slot 14,
       review): re-dispatched, still genuinely blocked — P2c (features history backfill, todo above) is still `[ ]`, so
       the done-when clause is not met.** Same root cause as the P0 VERIFY todo below
-      (`blocked_prerequisites_     marker_not_in_non_dispatchable_regex_2026_07_28.md`): `regen_backlog_from_plan.py`'s
+      (`blocked_prerequisites_ marker_not_in_non_dispatchable_regex_2026_07_28.md`): `regen_backlog_from_plan.py`'s
       `_NON_DISPATCHABLE_RE` doesn't recognize the `BLOCKED-PREREQUISITES` token, so this same-plan-dependency todo
       keeps re-dispatching despite the plan's own banner intent. Not re-tagging to an operator/credential marker
       (inaccurate — this is a genuine same-corpus todo dependency, not an external gate). No code shipped, no gate
@@ -384,7 +384,7 @@ context_scope:
       depends_on-gated plan needs an operator plan-destination decision; task-level `backlog.yaml` prereqs need
       backlog-file access this worker slot does not have). Logged as a disposition entry against the tracking issue
       doc's open audit todo rather than silently re-bouncing an 8th time. Do NOT fetch the
-      `api_football × ODDS     eu=89,073` slice if it resurfaces — impossible-not-fetchable denominator pollution
+      `api_football × ODDS eu=89,073` slice if it resurfaces — impossible-not-fetchable denominator pollution
       pending a purge/retype pass, not real work. (repo: instruments-service). **Done when**: P2a(c) (sibling
       plan)/P2b's odds_api backfill/P2c all confirmed landed AND the full gate re-run passes corpus-wide with a fresh
       census.

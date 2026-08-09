@@ -160,7 +160,7 @@ someone checks.
       image (`sha256:fc6deaf8`, tag `latest`) shows `UPDATE_TIME 2026-08-08T07:23:26` — 7 days after the fix commit, and
       `deployment-api` has rebuilt repeatedly since (5 builds visible on 2026-08-08 alone, confirming this is a
       routine/frequent cadence, not something that needed a human-triggered one-off).
-      `gcloud run jobs describe     uts-prod-dp-exit-code-monitor` confirms it references `deployment-api:latest`, and
+      `gcloud run jobs describe uts-prod-dp-exit-code-monitor` confirms it references `deployment-api:latest`, and
       Cloud Run Jobs resolve the tag fresh per execution. The original `[OPERATOR]` tag reflected "I couldn't find the
       redeploy command," not a genuine business/judgment gate — the redeploy happens automatically via the standard
       build pipeline; no operator action was ever structurally required here. (Test-pass confirmation half of the

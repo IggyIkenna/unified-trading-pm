@@ -257,7 +257,7 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
 - [x] ✅ 24. [INFRA] P1. **Revert `unified-trading-pm`'s own self-hosted workflows to `ubuntu-latest` — DONE
       2026-08-07.** `unified-trading-pm@c8cd56251e`. (a) Removed `unified-trading-pm` from
       `scripts/workflow-templates/self-hosted-qg-repos.txt`;
-      `rollout-workflow-templates.sh --dry-run --repo     unified-trading-pm` showed 0 diffs (PM's own
+      `rollout-workflow-templates.sh --dry-run --repo unified-trading-pm` showed 0 diffs (PM's own
       `quality-gates-v2.yml`/`python-quality-gates-v2.yml` are NOT template-rendered targets of that script — they're
       hand-maintained locally, confirmed by the file's own comment "PM's local `uses: ./...` self-call fell outside that
       script's scope"), so `self_hosted_runner_labels` was hand- edited to `""` instead. (b) ~40 bespoke files reverted
@@ -271,12 +271,12 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
       fleet-health-watchdog files were never touched — confirmed still `ubuntu-latest`. **Real gap found in
       `hosted-baseline.sh`'s own `restore --all`**: its mechanical-flip classifier only inspects the FIRST commit that
       ever introduced a self-hosted `runs-on` line — 3 files (`readiness-verifier.yml`, `ruleset-drift-alert.yml`,
-      `reconcile-release-tags.yml`) had their `actions/setup-     python` / Firestore-install steps deleted in a LATER
+      `reconcile-release-tags.yml`) had their `actions/setup- python` / Firestore-install steps deleted in a LATER
       commit, so the tool's own `restore --all` silently produced a broken (Python/deps-less) `ubuntu-latest` workflow
       for all 3 — caught via a fleet-wide grep for python/uv/ gcloud usage lacking any matching setup step, fixed by
       hand from each file's true first-flip-commit parent (`git log --reverse -G'runs-on:\[self-hosted'`). Evidence:
-      `grep -rn 'runs-on:.*self-hosted'     unified-trading-pm/.github/workflows/` shows zero real routing lines left
-      (only historical comments); `QG slice     (tests)` green on `ubuntu-latest` for the post-revert commit
+      `grep -rn 'runs-on:.*self-hosted' unified-trading-pm/.github/workflows/` shows zero real routing lines left
+      (only historical comments); `QG slice (tests)` green on `ubuntu-latest` for the post-revert commit
       (`workflow_dispatch` run 31174345746 — the only failing leg, `QG slice (checks)`, is the pre-existing unrelated
       plan-hygiene ratchet failure). PM's 8 self-hosted runners deregistered from GitHub + systemd units
       stopped/disabled on the CI VM, confirmed `inactive` with no re-registration; other 7 private repos' pools
@@ -333,7 +333,7 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
       No live recurring trigger exists for any of these 4 `agent-audit.yml` files today, so their runner choice costs
       nothing regardless of value. - **Useful side-finding, not a gap**: this traced through to confirming the MAIN
       `quality-gates-v2.yml` gate's real heavy execution (`qg-slices` job in `python-quality-gates-v2.yml`) is
-      controlled by a `with:       self_hosted_runner_labels` input — NOT the caller file's own local `runs-on:` lines
+      controlled by a `with: self_hosted_runner_labels` input — NOT the caller file's own local `runs-on:` lines
       (those govern only that file's auxiliary jobs, e.g. the escalation/notify ones this plan's todo 1-4 work fixed).
       That input is templated by the SAME pre-existing `get_qg_runner_labels()` off the SAME `self-hosted-qg-repos.txt`
       this plan edited, via the SAME `rollout-workflow-templates.sh` rollout already run — spot-checked and confirmed

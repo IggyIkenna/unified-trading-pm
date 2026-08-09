@@ -89,7 +89,7 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
 1. `cd market-tick-data-service && grep -rn '# type: ignore' --include='*.py' . | wc -l` vs the ratchet's own counting
    method (check `scripts/quality-gates-base/base-service.sh` STEP 5.95 for its exact grep/count logic) to find the
    actual 659th occurrence.
-2. Either fix it properly (exact-rule `# type: ignore[code]  # <dep> reason`) or, if it's a legitimate necessary broad
+2. Either fix it properly (exact-rule `# type: ignore[code] # <dep> reason`) or, if it's a legitimate necessary broad
    ignore, get the baseline bumped by whoever owns that ratchet's ownership process (grep the STEP 5.95 script/doc for
    how baselines get raised — likely NOT a silent self-service bump, given "freeze-and-shrink" ratchets in this
    workspace are explicitly one-directional).
@@ -104,7 +104,7 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
       ratcheted `_MTDS_TYPE_IGNORE_BASELINE` in `scripts/quality-gates.sh` from 660 down to 658, with the shipped code
       comment explicitly citing this issue's own methodology ("mirroring the issue doc's own
       `grep -rn "# type: ignore" ...` methodology"). Live-reverified:
-      `grep -rn "# type: ignore" --include='*.py' . | grep     -v .venv | wc -l` on the current tree returns exactly
+      `grep -rn "# type: ignore" --include='*.py' . | grep -v .venv | wc -l` on the current tree returns exactly
       **658**, matching the frozen baseline exactly — the ratchet no longer blocks quickmerge.
 - [x] ✅ [SCRIPT] P2. Once unblocked, ship the already-verified prek Intel-Mac uv.sources fix in
       `market-tick-data-service/pyproject.toml`+`uv.lock` (already sitting correct in the working tree, just

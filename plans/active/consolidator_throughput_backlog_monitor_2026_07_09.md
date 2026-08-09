@@ -252,7 +252,7 @@ context_scope:
 - [x] [BACKEND] P1. ✅ **Consolidator writes `_index/latest.json` every run — SHIPPED 2026-07-11.** `main()` in
       `manifest_consolidator.py` publishes the authoritative run summary each cycle (incl. no-op / failure, so
       `last_run_at` always reflects liveness):
-      `{last_run_at, verdict(produced|empty|failed), shards_changed,     rows_in/out/added, duration_ms, ...}` from the
+      `{last_run_at, verdict(produced|empty|failed), shards_changed, rows_in/out/added, duration_ms, ...}` from the
       `ConsolidationReport`. Best-effort (`_write_latest_run_summary` mirrors `_write_stall_state` — a write failure
       logs + never crashes the cycle). One shared module → a dead consolidator starts reporting the instant it's fired,
       no per-job change. — `unified-trading-library@111592eb` + 3 unit tests (`_run_verdict`, shape, swallow-error).

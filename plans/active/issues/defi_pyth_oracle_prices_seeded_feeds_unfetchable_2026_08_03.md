@@ -225,12 +225,12 @@ Two genuinely different directions, not mutually exclusive with the naming recon
       `instruments-service` via squash-promote (`chore(promote): LDR → main`, 2026-08-03T20:00Z, per the 004d6499
       promote commit) — reconfirmed BY CONTENT (not SHA ancestry; the repo underwent a history rewrite 2026-08-05,
       invalidating any `git merge-base` check):
-      `git show origin/main:instruments_service/reference_data/     adapters/defi/pyth.py` shows all 3 Hermes feed-ids
+      `git show origin/main:instruments_service/reference_data/ adapters/defi/pyth.py` shows all 3 Hermes feed-ids
       present (`BTC/USD`/`ETH/USD`/`INF/USD`, `0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43` /
       `0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace` /
       `0xf51570985c642c49c2d6e50156390fdba80bb6d5f7fa389d2f012ced4f7d208f`, matching the `PYTH_PRICE_FEEDS`
       restoration). CI reconfirmed green:
-      `gh run list --branch main --repo IggyIkenna/instruments-service --workflow     quality-gates-v2.yml --limit 5` —
+      `gh run list --branch main --repo IggyIkenna/instruments-service --workflow quality-gates-v2.yml --limit 5` —
       5/5 most recent runs `completed success` (2026-08-07T20:19Z..23:02Z), so the 2026-08-06 01:35Z CI-red note below
       is stale/self-resolved and no longer blocking promotion. The remaining action is a mechanical ops-check, not an
       operator judgment call — reclassified below.
@@ -239,7 +239,7 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   `6fbaae90`/content-equivalent PYTH_PRICE_FEEDS fix, not a stale pre-fix image) — a mechanical ops-check, not a
   redeploy-authorization judgment call (the code question above is closed). Read the active Cloud Run revision's
   deployed image digest/commit label
-  (`gcloud run services describe     instruments-service --region <region> --format=...` or the equivalent per
+  (`gcloud run services describe instruments-service --region <region> --format=...` or the equivalent per
   `/codex/05-infrastructure/deployment-observability.md`) and compare against `origin/main` HEAD; if stale, confirm
   whether the daily `instruments-service-daily-trigger` Workflow already picked up a newer revision on its own (Cloud
   Run auto-deploy vs manual-trigger-only) before concluding a redeploy is still needed. **Done when**: a dated Progress

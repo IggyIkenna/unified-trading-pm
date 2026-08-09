@@ -154,16 +154,16 @@ gap; no new action taken on the default itself (existing P2 todos below already 
       no design work needed.
 
       **Resolution (2026-08-02, slot-15, data_engineering craft): landed — `deployment-service@d98f164`.** The
-                                                          stash lived in slot-10's own worktree (`.tabs/10/deployment-service`), not slot-15's, so a direct
-                                                          `git stash pop` wasn't possible cross-slot; instead read the stash diff read-only via `git stash show -p`
-                                                          on the slot-10 clone (no writes to another agent's worktree) and reapplied the equivalent
-                                                          `sports-features-purge` → `(features-service unified-api-contracts unified-trading-library
-                                                          deployment-service)` override at the current line location in slot-15's fresh-pulled clone (the file had
-                                                          moved ~400 lines since the stash was captured; surrounding context matched exactly). `bash -n` clean;
-                                                          `quality-gates.sh` full run green (243s, sentinel `.qg_last_passed_sha=d98f1643e9d57d367ade53f3f805159c1a0bbeab`);
-                                                          shipped via `quickmerge --agent --files 'scripts/vm/launch-canonical-migration-vm.sh'`; verified
-                                                          `d98f164` is an ancestor of `origin/live-defi-rollout`. The slot-10 stash itself was left untouched
-                                                          (read-only inspection only) — safe to drop independently since its content is now landed via this commit.
+      stash lived in slot-10's own worktree (`.tabs/10/deployment-service`), not slot-15's, so a direct
+      `git stash pop` wasn't possible cross-slot; instead read the stash diff read-only via `git stash show -p`
+      on the slot-10 clone (no writes to another agent's worktree) and reapplied the equivalent
+      `sports-features-purge` → `(features-service unified-api-contracts unified-trading-library
+      deployment-service)` override at the current line location in slot-15's fresh-pulled clone (the file had
+      moved ~400 lines since the stash was captured; surrounding context matched exactly). `bash -n` clean;
+      `quality-gates.sh` full run green (243s, sentinel `.qg_last_passed_sha=d98f1643e9d57d367ade53f3f805159c1a0bbeab`);
+      shipped via `quickmerge --agent --files 'scripts/vm/launch-canonical-migration-vm.sh'`; verified
+      `d98f164` is an ancestor of `origin/live-defi-rollout`. The slot-10 stash itself was left untouched
+      (read-only inspection only) — safe to drop independently since its content is now landed via this commit.
 
 - [x] ✅ [DATA] P1 (bumped from P2, 2026-07-27T~13:15Z — 3rd independent occurrence same day, see corroborating finding
       above). Consider defaulting `LC_TARBALL_FRESHNESS=enforce` (or auto-rebuilding the affected repo's tarball) as
@@ -172,53 +172,53 @@ gap; no new action taken on the default itself (existing P2 todos below already 
       `create-code-tarballs.sh`, and whichever CI hook (if any) should trigger the rebuild.
 
       **Resolution (2026-07-27, slot-8): investigated, decided AGAINST a blanket default flip — evidence below,
-                                                                                                                                                                                                                                                                                                                                                                                                              follow-up todos filed instead of shipping an unvetted change.** `lc_verify_tarball_freshness()` already has an
-                                                                                                                                                                                                                                                                                                                                                                                                              `auto` mode (republish-then-continue, added in the original 2026-07-12 guard) that in principle closes exactly
-                                                                                                                                                                                                                                                                                                                                                                                                              this gap without `enforce`'s launch-blocking downside. Tried flipping the shared function's default
-                                                                                                                                                                                                                                                                                                                                                                                                              `LC_TARBALL_FRESHNESS:-warn` → `:-auto` in `deployment-service/scripts/vm/lib/launcher_common.sh` and ran the
-                                                                                                                                                                                                                                                                                                                                                                                                              full `quality-gates.sh` to measure blast radius before shipping (per the "not the right moment... without a
-                                                                                                                                                                                                                                                                                                                                                                                                              chance to verify blast radius first" caution already on this doc). Result: **24 existing unit tests broke**,
-                                                                                                                                                                                                                                                                                                                                                                                                              spanning THREE unrelated launcher categories — `TestCanonicalMigrationVmRelaunch` (8),
-                                                                                                                                                                                                                                                                                                                                                                                                              `TestCanonicalMigrationStallDetection` (4) and `TestCandleApplyCategory` (4) (all
-                                                                                                                                                                                                                                                                                                                                                                                                              `launch-canonical-migration-vm.sh`), plus `TestDefiLaunchersSpotPreemptionContract` (7, the two DeFi backfill
-                                                                                                                                                                                                                                                                                                                                                                                                              launchers — confirming the breakage is NOT confined to the two launchers this doc's corroborating findings
-                                                                                                                                                                                                                                                                                                                                                                                                              actually implicate). Root cause of the breakage: most of these tests mock `gcloud` for the `compute instances
-                                                                                                                                                                                                                                                                                                                                                                                                              create` call but do NOT mock a manifest `commit_sha` matching the real local repo HEAD, so under the OLD
-                                                                                                                                                                                                                                                                                                                                                                                                              default (`warn`) the mismatch was silently non-blocking; under `auto` the guard now attempts a REAL
-                                                                                                                                                                                                                                                                                                                                                                                                              `create-code-tarballs.sh --include <repo>` subprocess, which has no valid target to tar/upload inside the test
-                                                                                                                                                                                                                                                                                                                                                                                                              sandbox and fails, and `auto` mode (correctly) aborts the launch on a failed republish — turning 24 previously-
-                                                                                                                                                                                                                                                                                                                                                                                                              green tests into hard failures. **This is real, measured evidence the blast-radius concern was correct**, not
-                                                                                                                                                                                                                                                                                                                                                                                                              just caution: even scoping the flip to ONLY the two launchers this doc names (`launch-features-vm.sh`,
-                                                                                                                                                                                                                                                                                                                                                                                                              `launch-canonical-migration-vm.sh`) would still break the 16 canonical-migration-vm.sh tests above — closing
-                                                                                                                                                                                                                                                                                                                                                                                                              that gap safely needs a companion pass hardening every affected test's `gcloud` mock (return a manifest
-                                                                                                                                                                                                                                                                                                                                                                                                              `commit_sha` equal to the real HEAD, or explicitly pin `LC_TARBALL_FRESHNESS=warn`/`off` where the test is
-                                                                                                                                                                                                                                                                                                                                                                                                              deliberately exercising unrelated behavior) BEFORE any default changes, which is materially larger than this
-                                                                                                                                                                                                                                                                                                                                                                                                              todo's `est_hours: 1.0` scope and touches test suites for launchers this doc doesn't otherwise own. Reverted
-                                                                                                                                                                                                                                                                                                                                                                                                              the trial change cleanly (`git checkout --` on both files; tree confirmed clean). Filed two properly-scoped
-                                                                                                                                                                                                                                                                                                                                                                                                              follow-ups below instead of leaving this as unactioned prose.
+      follow-up todos filed instead of shipping an unvetted change.** `lc_verify_tarball_freshness()` already has an
+      `auto` mode (republish-then-continue, added in the original 2026-07-12 guard) that in principle closes exactly
+      this gap without `enforce`'s launch-blocking downside. Tried flipping the shared function's default
+      `LC_TARBALL_FRESHNESS:-warn` → `:-auto` in `deployment-service/scripts/vm/lib/launcher_common.sh` and ran the
+      full `quality-gates.sh` to measure blast radius before shipping (per the "not the right moment... without a
+      chance to verify blast radius first" caution already on this doc). Result: **24 existing unit tests broke**,
+      spanning THREE unrelated launcher categories — `TestCanonicalMigrationVmRelaunch` (8),
+      `TestCanonicalMigrationStallDetection` (4) and `TestCandleApplyCategory` (4) (all
+      `launch-canonical-migration-vm.sh`), plus `TestDefiLaunchersSpotPreemptionContract` (7, the two DeFi backfill
+      launchers — confirming the breakage is NOT confined to the two launchers this doc's corroborating findings
+      actually implicate). Root cause of the breakage: most of these tests mock `gcloud` for the `compute instances
+      create` call but do NOT mock a manifest `commit_sha` matching the real local repo HEAD, so under the OLD
+      default (`warn`) the mismatch was silently non-blocking; under `auto` the guard now attempts a REAL
+      `create-code-tarballs.sh --include <repo>` subprocess, which has no valid target to tar/upload inside the test
+      sandbox and fails, and `auto` mode (correctly) aborts the launch on a failed republish — turning 24 previously-
+      green tests into hard failures. **This is real, measured evidence the blast-radius concern was correct**, not
+      just caution: even scoping the flip to ONLY the two launchers this doc names (`launch-features-vm.sh`,
+      `launch-canonical-migration-vm.sh`) would still break the 16 canonical-migration-vm.sh tests above — closing
+      that gap safely needs a companion pass hardening every affected test's `gcloud` mock (return a manifest
+      `commit_sha` equal to the real HEAD, or explicitly pin `LC_TARBALL_FRESHNESS=warn`/`off` where the test is
+      deliberately exercising unrelated behavior) BEFORE any default changes, which is materially larger than this
+      todo's `est_hours: 1.0` scope and touches test suites for launchers this doc doesn't otherwise own. Reverted
+      the trial change cleanly (`git checkout --` on both files; tree confirmed clean). Filed two properly-scoped
+      follow-ups below instead of leaving this as unactioned prose.
 
 - [x] ✅ [DATA] P1 — features-service@a9429cba. Investigate the remaining `unknown_quote=3` residual on CEFI (post-fix)
       — likely a handful of genuinely non-standard symbols, not a suffix-parsing bug, but not yet confirmed which 3
       instruments or why.
 
       **Resolution (2026-07-27, slot-14): NOT unmapped/non-standard symbols — a real, fixed bug.** Root cause:
-                                                                                                                                                                                                                                                                                                                                                                                              `mvp_universe_filter.py::_extract_base_asset()` matched against the bare fleet-default
-                                                                                                                                                                                                                                                                                                                                                                                              `CEFI_ACCEPTED_QUOTE_ASSETS` (USDT/USDC/USD) instead of UAC's venue-aware `accepted_quotes_for_venue()`. UAC
-                                                                                                                                                                                                                                                                                                                                                                                              already declares a per-venue quote extension (`_CEFI_VENUE_QUOTE_EXTENSIONS`, `cefi_instrument_universe.py`):
-                                                                                                                                                                                                                                                                                                                                                                                              `BITFINEX-FUTURES` → BTC, for Bitfinex's genuine BTC-margined inverse perps. MTDS capture already honours this
-                                                                                                                                                                                                                                                                                                                                                                                              extension (`_passes_asset_filter`), but the features-service universe filter did not — so an instrument MTDS
-                                                                                                                                                                                                                                                                                                                                                                                              correctly captured was then dropped downstream as `unknown_quote`. The exact 3: `BITFINEX-FUTURES:PERPETUAL:
-                                                                                                                                                                                                                                                                                                                                                                                              ETH-BTC@LIN`, `LTC-BTC@LIN`, `XRP-BTC@LIN` (bases ETH/LTC/XRP are all in `CEFI_BASE_ASSET_UNIVERSE`). A 4th
-                                                                                                                                                                                                                                                                                                                                                                                              BTC-margined leg in the same Bitfinex family, `XAUTF0:BTCF0` (base XAUT), is NOT part of this residual — XAUT is
-                                                                                                                                                                                                                                                                                                                                                                                              not in `CEFI_BASE_ASSET_UNIVERSE`, so MTDS never captures it and it never reaches this filter as a candidate;
-                                                                                                                                                                                                                                                                                                                                                                                              confirmed via direct repro that it now correctly excludes via `base_not_in_universe` (not `unknown_quote`) once
-                                                                                                                                                                                                                                                                                                                                                                                              the quote gate recognises BTC. Fix: threaded `venue` through `_extract_base_asset` (cached per-venue sorted-quote
-                                                                                                                                                                                                                                                                                                                                                                                              lookup via `functools.cache` on `accepted_quotes_for_venue`) at all 4 call sites in `mvp_universe_filter.py`
-                                                                                                                                                                                                                                                                                                                                                                                              (base-asset gate, options gate, both `_collapse_to_perp_representative` passes). Verified the `BITFINEX-FUTURES`
-                                                                                                                                                                                                                                                                                                                                                                                              extension does NOT leak to `BITFINEX-SPOT` (a genuine ETH/BTC spot cross-pair still correctly excluded). 5 new
-                                                                                                                                                                                                                                                                                                                                                                                              regression tests added to `tests/delta_one/unit/test_mvp_universe_filter.py` (venue-aware extraction + leak-check
-                                                                                                                                                                                                                                                                                                                                                                                              + the 3-instrument keep + the XAUT non-leak); full suite (51→56 tests) green; `quality-gates.sh` clean on the
-                                                                                                                                                                                                                                                                                                                                                                                              shipped commit.
+      `mvp_universe_filter.py::_extract_base_asset()` matched against the bare fleet-default
+      `CEFI_ACCEPTED_QUOTE_ASSETS` (USDT/USDC/USD) instead of UAC's venue-aware `accepted_quotes_for_venue()`. UAC
+      already declares a per-venue quote extension (`_CEFI_VENUE_QUOTE_EXTENSIONS`, `cefi_instrument_universe.py`):
+      `BITFINEX-FUTURES` → BTC, for Bitfinex's genuine BTC-margined inverse perps. MTDS capture already honours this
+      extension (`_passes_asset_filter`), but the features-service universe filter did not — so an instrument MTDS
+      correctly captured was then dropped downstream as `unknown_quote`. The exact 3: `BITFINEX-FUTURES:PERPETUAL:
+      ETH-BTC@LIN`, `LTC-BTC@LIN`, `XRP-BTC@LIN` (bases ETH/LTC/XRP are all in `CEFI_BASE_ASSET_UNIVERSE`). A 4th
+      BTC-margined leg in the same Bitfinex family, `XAUTF0:BTCF0` (base XAUT), is NOT part of this residual — XAUT is
+      not in `CEFI_BASE_ASSET_UNIVERSE`, so MTDS never captures it and it never reaches this filter as a candidate;
+      confirmed via direct repro that it now correctly excludes via `base_not_in_universe` (not `unknown_quote`) once
+      the quote gate recognises BTC. Fix: threaded `venue` through `_extract_base_asset` (cached per-venue sorted-quote
+      lookup via `functools.cache` on `accepted_quotes_for_venue`) at all 4 call sites in `mvp_universe_filter.py`
+      (base-asset gate, options gate, both `_collapse_to_perp_representative` passes). Verified the `BITFINEX-FUTURES`
+      extension does NOT leak to `BITFINEX-SPOT` (a genuine ETH/BTC spot cross-pair still correctly excluded). 5 new
+      regression tests added to `tests/delta_one/unit/test_mvp_universe_filter.py` (venue-aware extraction + leak-check
+      + the 3-instrument keep + the XAUT non-leak); full suite (51→56 tests) green; `quality-gates.sh` clean on the
+      shipped commit.
 
 - [x] ✅ [DATA] P2 — deployment-service@2349b67. Harden the `lc_verify_tarball_freshness`-adjacent unit tests in
       `deployment-service/tests/unit/test_vm_launcher_scripts.py` so a future `LC_TARBALL_FRESHNESS` default change is
@@ -231,35 +231,35 @@ gap; no new action taken on the default itself (existing P2 todos below already 
       cleanup.
 
       **Resolution (2026-08-03, slot-9, data_engineering craft): pinned `LC_TARBALL_FRESHNESS=off` (option (b)) in
-                                                      every launcher-invoking helper across all 4 named classes.** Root confirmed: each class's mocked `gcloud()`
-                                                      shell function no-ops the `storage cp` tarball-manifest read too (it only intercepts `compute instances create`
-                                                      and, in some classes, `storage cp -`), so `lc_verify_tarball_freshness` always reads an empty `actual_sha` —
-                                                      "cannot verify" — for every repo on every invocation. Under today's `warn` default that's a silent
-                                                      stderr-only continue (never touches asserted stdout), which is exactly why these 24 tests have stayed green
-                                                      despite never pinning the var; under a future `auto`/`enforce` default the same "cannot verify" reads as
-                                                      *stale*, either aborting the launch (`enforce`) or shelling out to a real, unmocked
-                                                      `create-code-tarballs.sh --include <repo>` subprocess (`auto`) — reproducing the exact 24-test breakage the P1
-                                                      resolution above already measured when the flip was trialed. Fix: added `"LC_TARBALL_FRESHNESS": "off"` to each
-                                                      class's `_run`/`_created_metadata` env-building helper (`TestCanonicalMigrationVmRelaunch._run`,
-                                                      `TestCanonicalMigrationStallDetection._created_metadata`, `TestDefiLaunchersSpotPreemptionContract._run`,
-                                                      `TestCandleApplyCategory._run`) plus 3 standalone `defi-curve-optimism-reclassify` tests in
-                                                      `TestCanonicalMigrationVmRelaunch` that build their own inline `env={**os.environ}` rather than going through
-                                                      `_run` — all env dicts merge `env_extra`/explicit overrides AFTER the pin, so a future test that genuinely wants
-                                                      to exercise freshness behavior can still override it. `off` (not `warn`) chosen deliberately: it fully
-                                                      short-circuits the guard (verified via the existing `TestTarballFreshnessGuard.test_off_mode_short_circuits`
-                                                      coverage) with zero dependency on the mocked-gcloud manifest-read gap, so these tests are now stable
-                                                      regardless of what the shared function's default becomes. `TestCanonicalMigrationStallDetection`'s
-                                                      watchdog-only tests (`_run_watchdog`, invoking `vm-exec-with-gcs-tee.sh` directly, never
-                                                      `launch-canonical-migration-vm.sh`) were confirmed out of scope — they never reach
-                                                      `lc_verify_tarball_freshness` at all. Verified: `quality-gates.sh` full run green twice (once pre-commit on
-                                                      the dirty tree, once post-commit per the commit-before-QG ordering rule — sentinel
-                                                      `.qg_last_passed_sha=2349b67a8cda4d81d14038d04b964e806fa226ba` matches HEAD exactly), `3017 passed, 5 skipped,
-                                                      0 failed`; shipped via `quickmerge --agent --files 'tests/unit/test_vm_launcher_scripts.py'`; confirmed
-                                                      `2349b67` is an ancestor of `origin/live-defi-rollout`. The next `[SCRIPT]` todo below (the actual
-                                                      `warn`→`auto` default flip) remains blocked on its OWN stated full-completion scope ("not just the 24 named,
-                                                      any other test that invokes a launcher without `--dry-run`/an explicit `LC_TARBALL_FRESHNESS` pin") — this
-                                                      resolution covers exactly the 4 classes / ~24 tests this todo itself named, not a corpus-wide sweep of the
-                                                      2900+ line test file.
+      every launcher-invoking helper across all 4 named classes.** Root confirmed: each class's mocked `gcloud()`
+      shell function no-ops the `storage cp` tarball-manifest read too (it only intercepts `compute instances create`
+      and, in some classes, `storage cp -`), so `lc_verify_tarball_freshness` always reads an empty `actual_sha` —
+      "cannot verify" — for every repo on every invocation. Under today's `warn` default that's a silent
+      stderr-only continue (never touches asserted stdout), which is exactly why these 24 tests have stayed green
+      despite never pinning the var; under a future `auto`/`enforce` default the same "cannot verify" reads as
+      *stale*, either aborting the launch (`enforce`) or shelling out to a real, unmocked
+      `create-code-tarballs.sh --include <repo>` subprocess (`auto`) — reproducing the exact 24-test breakage the P1
+      resolution above already measured when the flip was trialed. Fix: added `"LC_TARBALL_FRESHNESS": "off"` to each
+      class's `_run`/`_created_metadata` env-building helper (`TestCanonicalMigrationVmRelaunch._run`,
+      `TestCanonicalMigrationStallDetection._created_metadata`, `TestDefiLaunchersSpotPreemptionContract._run`,
+      `TestCandleApplyCategory._run`) plus 3 standalone `defi-curve-optimism-reclassify` tests in
+      `TestCanonicalMigrationVmRelaunch` that build their own inline `env={**os.environ}` rather than going through
+      `_run` — all env dicts merge `env_extra`/explicit overrides AFTER the pin, so a future test that genuinely wants
+      to exercise freshness behavior can still override it. `off` (not `warn`) chosen deliberately: it fully
+      short-circuits the guard (verified via the existing `TestTarballFreshnessGuard.test_off_mode_short_circuits`
+      coverage) with zero dependency on the mocked-gcloud manifest-read gap, so these tests are now stable
+      regardless of what the shared function's default becomes. `TestCanonicalMigrationStallDetection`'s
+      watchdog-only tests (`_run_watchdog`, invoking `vm-exec-with-gcs-tee.sh` directly, never
+      `launch-canonical-migration-vm.sh`) were confirmed out of scope — they never reach
+      `lc_verify_tarball_freshness` at all. Verified: `quality-gates.sh` full run green twice (once pre-commit on
+      the dirty tree, once post-commit per the commit-before-QG ordering rule — sentinel
+      `.qg_last_passed_sha=2349b67a8cda4d81d14038d04b964e806fa226ba` matches HEAD exactly), `3017 passed, 5 skipped,
+      0 failed`; shipped via `quickmerge --agent --files 'tests/unit/test_vm_launcher_scripts.py'`; confirmed
+      `2349b67` is an ancestor of `origin/live-defi-rollout`. The next `[SCRIPT]` todo below (the actual
+      `warn`→`auto` default flip) remains blocked on its OWN stated full-completion scope ("not just the 24 named,
+      any other test that invokes a launcher without `--dry-run`/an explicit `LC_TARBALL_FRESHNESS` pin") — this
+      resolution covers exactly the 4 classes / ~24 tests this todo itself named, not a corpus-wide sweep of the
+      2900+ line test file.
 
 - [x] ✅ [SCRIPT] P2. **DONE 2026-08-06 (slot-8)** — `deployment-service@c1e0481`. Flipped `LC_TARBALL_FRESHNESS`
       default `warn` → `auto` in `launcher_common.sh`. Hardened the 4 remaining test gaps (`TestCefiContentApply`,
@@ -293,59 +293,59 @@ gap; no new action taken on the default itself (existing P2 todos below already 
           auto-republishing before the workload starts.
 
           **Checked 2026-07-31 (slot 12): still genuinely blocked — confirmed against live code, not just this doc's
-                                                                          checkbox.** `deployment-service/scripts/vm/lib/launcher_common.sh:672` still defaults
-                                                                          `LC_TARBALL_FRESHNESS:-warn` (unflipped). Grepped `tests/unit/test_vm_launcher_scripts.py`'s 4 named classes
-                                                                          (`TestCanonicalMigrationVmRelaunch`, `TestCanonicalMigrationStallDetection`,
-                                                                          `TestDefiLaunchersSpotPreemptionContract`, `TestCandleApplyCategory`) for `LC_TARBALL_FRESHNESS`/`commit_sha` —
-                                                                          zero hits across all 24 tests, confirming the hardening todo above
-                                                                          (`features_universe_filter_settlement_suffix_and_vm_tarball_staleness-005`, backlog status `queued`,
-                                                                          `dispatched_to: null` as of this check) has NOT landed yet. Flipping the default now would reproduce the exact
-                                                                          24-test breakage the P1 resolution above already measured. **Dispatch note**: this doc has no
-                                                                          `depends_on`/`sequential` wiring between the two todos (correctly, per CLAUDE.md — the rest of this doc's
-                                                                          todos are independent and a whole-doc `sequential: true` would wrongly serialise them too), so the intra-doc
-                                                                          "once the prior todo is FULLY complete" gate is prose-only, not structural — the dispatcher offered this
-                                                                          SCRIPT todo (`-013`) to slot 12 despite `-005` still sitting unclaimed in queue. Not a backend defect worth its
-                                                                          own issue doc (self-contained, low-blast-radius authoring pattern — the answer is "read this note before
-                                                                          touching this todo," not a code fix); skipping this dispatch (`reason_code=BLOCKED`) rather than flip the
-                                                                          default. Whoever picks up `-005` next should land that first; this todo becomes genuinely actionable
-                                                                          immediately after.
+          checkbox.** `deployment-service/scripts/vm/lib/launcher_common.sh:672` still defaults
+          `LC_TARBALL_FRESHNESS:-warn` (unflipped). Grepped `tests/unit/test_vm_launcher_scripts.py`'s 4 named classes
+          (`TestCanonicalMigrationVmRelaunch`, `TestCanonicalMigrationStallDetection`,
+          `TestDefiLaunchersSpotPreemptionContract`, `TestCandleApplyCategory`) for `LC_TARBALL_FRESHNESS`/`commit_sha` —
+          zero hits across all 24 tests, confirming the hardening todo above
+          (`features_universe_filter_settlement_suffix_and_vm_tarball_staleness-005`, backlog status `queued`,
+          `dispatched_to: null` as of this check) has NOT landed yet. Flipping the default now would reproduce the exact
+          24-test breakage the P1 resolution above already measured. **Dispatch note**: this doc has no
+          `depends_on`/`sequential` wiring between the two todos (correctly, per CLAUDE.md — the rest of this doc's
+          todos are independent and a whole-doc `sequential: true` would wrongly serialise them too), so the intra-doc
+          "once the prior todo is FULLY complete" gate is prose-only, not structural — the dispatcher offered this
+          SCRIPT todo (`-013`) to slot 12 despite `-005` still sitting unclaimed in queue. Not a backend defect worth its
+          own issue doc (self-contained, low-blast-radius authoring pattern — the answer is "read this note before
+          touching this todo," not a code fix); skipping this dispatch (`reason_code=BLOCKED`) rather than flip the
+          default. Whoever picks up `-005` next should land that first; this todo becomes genuinely actionable
+          immediately after.
 
-                                                                      **Re-checked 2026-08-02 (slot-13, review craft): still genuinely blocked, unchanged from slot-12's finding.**
-                                                                          `launcher_common.sh:787` still defaults `LC_TARBALL_FRESHNESS:-warn`. Grepped the 4 named test classes
-                                                                          (`TestCanonicalMigrationVmRelaunch`, `TestCanonicalMigrationStallDetection`, `TestCandleApplyCategory`,
-                                                                          `TestDefiLaunchersSpotPreemptionContract`) for `LC_TARBALL_FRESHNESS`/`commit_sha` individually — zero hits
-                                                                          in all 4 (the 8 corpus-wide hits that now exist are pre-existing, scoped to the dedicated
-                                                                          `lc_verify_tarball_freshness` unit-test class itself, not the 4 launcher-invoking classes this todo's gate
-                                                                          names). `-005` (the hardening todo) confirmed still `status: queued`, `dispatched_to: None` in the live
-                                                                          backlog — untouched since slot-12's check. Declining via `/skip-current-task` with `reason_code: "GATED"`
-                                                                          (slot-12 used `BLOCKED`; either engages the fleet cooldown/auto-park escalation per
-                                                                          `dispatch_cooldown_auto_park_skip_threshold`, `GATED` is the closer semantic match for "waiting on a sibling
-                                                                          todo") rather than a plain decline, so a repeat re-dispatch before `-005` lands cools down / eventually
-                                                                          auto-parks instead of bouncing to a fresh slot every time.
+          **Re-checked 2026-08-02 (slot-13, review craft): still genuinely blocked, unchanged from slot-12's finding.**
+          `launcher_common.sh:787` still defaults `LC_TARBALL_FRESHNESS:-warn`. Grepped the 4 named test classes
+          (`TestCanonicalMigrationVmRelaunch`, `TestCanonicalMigrationStallDetection`, `TestCandleApplyCategory`,
+          `TestDefiLaunchersSpotPreemptionContract`) for `LC_TARBALL_FRESHNESS`/`commit_sha` individually — zero hits
+          in all 4 (the 8 corpus-wide hits that now exist are pre-existing, scoped to the dedicated
+          `lc_verify_tarball_freshness` unit-test class itself, not the 4 launcher-invoking classes this todo's gate
+          names). `-005` (the hardening todo) confirmed still `status: queued`, `dispatched_to: None` in the live
+          backlog — untouched since slot-12's check. Declining via `/skip-current-task` with `reason_code: "GATED"`
+          (slot-12 used `BLOCKED`; either engages the fleet cooldown/auto-park escalation per
+          `dispatch_cooldown_auto_park_skip_threshold`, `GATED` is the closer semantic match for "waiting on a sibling
+          todo") rather than a plain decline, so a repeat re-dispatch before `-005` lands cools down / eventually
+          auto-parks instead of bouncing to a fresh slot every time.
 
-                                                                      **Re-checked 2026-08-02 (slot 15, cicd-role worker): still genuinely blocked, byte-identical to slot-13's
-                                                                          finding above.** `launcher_common.sh:787` still defaults `LC_TARBALL_FRESHNESS:-warn`; all 4 named test
-                                                                          classes still show 0 hits for `LC_TARBALL_FRESHNESS`/`commit_sha`; live `/api/backlog` confirms `-005` is
-                                                                          still `status: queued`, unclaimed. Nothing to add beyond re-confirming no drift. Skipping via
-                                                                          `reason_code: "GATED"`, same as the prior check.
+          **Re-checked 2026-08-02 (slot 15, cicd-role worker): still genuinely blocked, byte-identical to slot-13's
+          finding above.** `launcher_common.sh:787` still defaults `LC_TARBALL_FRESHNESS:-warn`; all 4 named test
+          classes still show 0 hits for `LC_TARBALL_FRESHNESS`/`commit_sha`; live `/api/backlog` confirms `-005` is
+          still `status: queued`, unclaimed. Nothing to add beyond re-confirming no drift. Skipping via
+          `reason_code: "GATED"`, same as the prior check.
 
-                                                                      **Fresh live corroboration, 2026-08-02T19:2xZ (slot-2, data_engineering, dispatched
-                                                                          `cefi_delta_one_benchmark_vm_operator_approved-001`, not this doc's own todo).** Hit this exact bug class
-                                                                          again, independently, on `launch-features-vm.sh` (same launcher family). Fixed a real
-                                                                          `_resolve_mdps_bucket` bug in `features-service` (ambient `DEPLOYMENT_ENV=staging` leaking into an MDPS
-                                                                          candle dependency-check read, resolving a never-provisioned `-stg-` bucket — `features-service@529ec90e`),
-                                                                          shipped + verified on `origin/live-defi-rollout`, then launched a fresh CEFI:delta_one VM to verify —
-                                                                          **it hit the byte-identical pre-fix failure**, because `gs://deployment-scripts-.../code/features-service-
-                                                                          code.manifest.json` still pinned `commit_sha=06a98496...` from a build at `15:01:45Z`, hours before the fix
-                                                                          landed, and `LC_TARBALL_FRESHNESS:-warn` let the launch proceed onto it anyway (no loud block, no
-                                                                          auto-republish). Manually ran `create-code-tarballs.sh --include features-service` to work around it (same
-                                                                          manual-rebuild workaround this doc's own Finding 2 used 2026-07-27) — confirmed effective, a second VM then
-                                                                          passed the dependency check and is now genuinely computing. Net: **this is the SAME unflipped default,
-                                                                          6 days later, causing the same class of wasted VM launch + real debugging time** (a `_resolve_mdps_bucket`
-                                                                          fix that provably worked, launched onto stale code, looked like the fix itself was wrong for several
-                                                                          minutes before the tarball-manifest timestamp check revealed the real cause). Not touching `-005`/`-013`
-                                                                          themselves (out of scope for the dispatched task) — logging as evidence the priority on this already-ruled
-                                                                          fix is real and current, not stale.
+          **Fresh live corroboration, 2026-08-02T19:2xZ (slot-2, data_engineering, dispatched
+          `cefi_delta_one_benchmark_vm_operator_approved-001`, not this doc's own todo).** Hit this exact bug class
+          again, independently, on `launch-features-vm.sh` (same launcher family). Fixed a real
+          `_resolve_mdps_bucket` bug in `features-service` (ambient `DEPLOYMENT_ENV=staging` leaking into an MDPS
+          candle dependency-check read, resolving a never-provisioned `-stg-` bucket — `features-service@529ec90e`),
+          shipped + verified on `origin/live-defi-rollout`, then launched a fresh CEFI:delta_one VM to verify —
+          **it hit the byte-identical pre-fix failure**, because `gs://deployment-scripts-.../code/features-service-
+          code.manifest.json` still pinned `commit_sha=06a98496...` from a build at `15:01:45Z`, hours before the fix
+          landed, and `LC_TARBALL_FRESHNESS:-warn` let the launch proceed onto it anyway (no loud block, no
+          auto-republish). Manually ran `create-code-tarballs.sh --include features-service` to work around it (same
+          manual-rebuild workaround this doc's own Finding 2 used 2026-07-27) — confirmed effective, a second VM then
+          passed the dependency check and is now genuinely computing. Net: **this is the SAME unflipped default,
+          6 days later, causing the same class of wasted VM launch + real debugging time** (a `_resolve_mdps_bucket`
+          fix that provably worked, launched onto stale code, looked like the fix itself was wrong for several
+          minutes before the tarball-manifest timestamp check revealed the real cause). Not touching `-005`/`-013`
+          themselves (out of scope for the dispatched task) — logging as evidence the priority on this already-ruled
+          fix is real and current, not stale.
 
 ## Progress Log
 

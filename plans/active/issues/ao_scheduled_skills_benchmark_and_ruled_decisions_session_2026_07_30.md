@@ -99,11 +99,11 @@ items.
       change against a THROWAWAY local state) and correctly stopped short — but THIS follow-up agent was explicitly
       authorized to push through and apply for real. Unknown whether it: (a) never got past the safe verification step,
       (b) wrote real state but didn't apply anything live yet, or (c) applied something. Check, in order:
-      `aws     s3 ls s3://uts-terraform-state-427895769566/ --recursive | grep -i codebuild` for a real state object; if
+      `aws s3 ls s3://uts-terraform-state-427895769566/ --recursive | grep -i codebuild` for a real state object; if
       one exists, `terraform plan` against it (real backend this time) and read the plan before trusting it; check
       `deployment-service` git log for any new commits from this agent; check the 18 CodeBuild projects' `lastModified`
       timestamps and the live IAM policy
-      (`aws iam get-role-policy --role-name     unified-trading-codebuild-role --policy-name codebuild-permissions`)
+      (`aws iam get-role-policy --role-name unified-trading-codebuild-role --policy-name codebuild-permissions`)
       against what they were before this session (previously verified unchanged as of the EARLIER pass: all
       `lastModified` 2026-07-03). Live CI for 18 repos depends on this not being half-mutated. -- CLOSED
       (na-eligibility-audit 2026-08-01): `aws_codebuild_terraform_import_pending_2026_07_22.md`'s 2026-07-30 banner
@@ -154,7 +154,7 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       remains open, separately tracked in `docs_reconcile_autonomous_sweep_2026_07_30.md`'s P1-C section; the P3-8
       target path no longer exists to verify.
 - [x] [DOC] P2. **freshness-cliff**: staggered real re-review of the 144 codex docs sharing
-      `last_reviewed:     2026-05-17` (all tip stale simultaneously 2026-08-15 — 16 days out at time of writing, so this
+      `last_reviewed: 2026-05-17` (all tip stale simultaneously 2026-08-15 — 16 days out at time of writing, so this
       has a real deadline). Full instructions + the 4-shard partition scheme in the workflow script. -- CLOSED
       (na-eligibility-audit 2026-08-01): direct corpus check `grep -rl 'last_reviewed: 2026-05-17' codex/` returns zero
       matches today, and current `last_reviewed` dates across codex/ show a spread (2026-05-18/20/22/23, 2026-06-25,
@@ -228,7 +228,7 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       `agt-434d0a` (`context_scout_auditor:context_scout`) genuinely active on `orch-slot-4`, doing real work
       (investigating why 57% of the corpus needed rescouting — not stalled/looping). Both done-when conditions are now
       met: timer `active (waiting)` with a real next-trigger, AND a fresh corpus
-      `grep -rl '^context_scope:'     plans/ codex/` returns **681** (was 0 on 2026-08-02) — all 5 scheduled skills
+      `grep -rl '^context_scope:' plans/ codex/` returns **681** (was 0 on 2026-08-02) — all 5 scheduled skills
       (plan-reconciler, docs-reconciler, ag-closeout-auditor, na-eligibility-auditor, context-scout) are now confirmed
       installed + active on the orchestrator VM. Note: the "zero docs carry `context_scope`" premise in this todo's
       original text was already stale by fix time — ad-hoc/manual `/context-scout` runs on 2026-07-31/08-01 (see
@@ -239,7 +239,7 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
 - [ ] [SCRIPT] P2. **New finding from the context-scout fix above**: the orchestrator VM's shared PM checkout
       (`/home/ubuntu/unified-trading-system-repos/unified-trading-pm`, the exact path passed as `pm_repo_path` to every
       scheduled dispatch) was found **404 commits behind `origin/live-defi-rollout`** at fix time
-      (`git rev-list --left-right --count HEAD...origin/live-defi-rollout` → `0  404`), with uncommitted changes already
+      (`git rev-list --left-right --count HEAD...origin/live-defi-rollout` → `0 404`), with uncommitted changes already
       present (`M plans/active/tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md`, one untracked new
       issue doc) from other concurrently-dispatched workers. Unclear whether each scheduled skill's own SKILL.md does a
       `git pull --ff-only` before reading/writing this checkout (in which case this is transient and self-healing) or

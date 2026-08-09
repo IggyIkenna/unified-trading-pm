@@ -145,7 +145,7 @@ context_scope:
       uppercased venue) — NOT guessed: the live writer stamps `venue=""` for sports (provider → data_type per
       `writers.py:115`), `venue=POLYMARKET` for prediction. The deployment-service + deployment-api copies are SYMLINKS
       to this one PM file (no separate quickmerge needed). Verified
-      `reference_genesis(sports,"")`/`(prediction,     "POLYMARKET")` + every real venue now resolve non-None /
+      `reference_genesis(sports,"")`/`(prediction, "POLYMARKET")` + every real venue now resolve non-None /
       `is_reference_venue_day_in_scope == True` (negative control stays out_of_scope). PM PR #382 (v2-gated auto-merge).
       No `kalshi` IS rows live yet → KALSHI added when it lands.
 - [x] ✅ [DESIGN] P1. **instruments-service manifest carries `instrument_type` (per-type counts)** (audit §K) —
@@ -283,7 +283,7 @@ context_scope:
 
 - [x] ✅ [CONFIG] P1. **Extend `CEFI_BASE_ASSET_UNIVERSE`** (audit §G) — DONE unified-api-contracts@f4f7f8e (operator
       2026-06-16 "add the rest"): added `EIGEN` (EigenLayer rewards dust) +
-      `AAVE, ALGO, AXS, CHZ, COMP, DASH, ENJ, EOS,     FIL, GALA, ICP, MANA, SAND, THETA, XLM, ZEC` to the frozenset
+      `AAVE, ALGO, AXS, CHZ, COMP, DASH, ENJ, EOS, FIL, GALA, ICP, MANA, SAND, THETA, XLM, ZEC` to the frozenset
       (~28→~45); regression test `tests/test_cefi_universe_coverage.py`; QG green. All three adapters
       (tardis/hyperliquid/aster) import it. — unified-api-contracts
 - [x] [DATA] P1. ✅ **DONE — EIGEN + added bases already re-captured (verified 2026-07-18).** Read the live cefi

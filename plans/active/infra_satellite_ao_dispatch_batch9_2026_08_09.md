@@ -127,14 +127,14 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
       unified-trading-pm itself. NOTE: `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml` is a
       point-in-time snapshot (per `hosted-baseline.sh`'s own header) — the truly-live copy of this reusable workflow
       lives in the separate `unified-trading-ci` repo and still has the old literal; out of this plan's
-      `repos:     [unified-trading-pm]` scope, filed as a follow-up issue doc (see Progress Log). Original text: Add a
+      `repos: [unified-trading-pm]` scope, filed as a follow-up issue doc (see Progress Log). Original text: Add a
       single canonical `UV_VERSION` constant (natural home: `scripts/workspace/resolve-canonical-versions.py`, alongside
       its existing dependency-version resolution logic, or `canonical-dependency-manifest.json` if that's a better fit
       for how `resolve-canonical-versions.py` already reads its other pins — worker's call, consistent with how the
       existing `uv_sources` mechanism is structured) and update all 6 hardcoded `"0.10.8"` sites to read from it instead
       of a literal: `scripts/setup.sh` (2 call sites: the `pip install "uv==$UV_VERSION"` fallback path and the
       curl-install path), `scripts/workspace/workspace-bootstrap.sh` (`REQUIRED_UV`),
-      `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml` (the `pip install     "uv==..."` step —
+      `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml` (the `pip install "uv==..."` step —
       a GHA workflow YAML, so this site reads the constant via whatever mechanism the other 5 use, e.g. a shared
       env/step output, not a Python import), `scripts/quality-gates-base/base-service.sh` (3 sites: the
       install-fallback, the drift-check comparison, the drift-warning message),
@@ -158,7 +158,7 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
       Build triggers.** These look like a pre-rename leftover from before the repo became `unified-api-contracts` — a
       separate `unified-api-contracts-live-defi-rollout` trigger already exists and covers current naming. Confirm via
       each trigger's GitHub repo binding
-      (`gcloud builds triggers describe <name> --project=central-element-323112     --region=asia-northeast1`) whether
+      (`gcloud builds triggers describe <name> --project=central-element-323112 --region=asia-northeast1`) whether
       either still fires on real pushes; if confirmed dead, delete both (`gcloud builds triggers delete`). Done when:
       both triggers are either confirmed-live (leave as-is, note why) or confirmed-dead-and-deleted, with the
       verification command output cited as evidence. Source:
@@ -167,7 +167,7 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
 - [ ] [INFRA] P3. **Decide + fix `deployed_versions`/`deployed_versions_aws` manifest provenance.** Both
       `cloud-build-router.yml` and `cloud-build-router-aws.yml` write-intend these `workspace-manifest.json` fields on a
       successful build, but live state (verified 2026-08-08) shows `deployed_versions` present-but-empty
-      (`{"dev": {},     "staging": {}, "prod": {}}`) and `deployed_versions_aws` entirely absent — either the write path
+      (`{"dev": {}, "staging": {}, "prod": {}}`) and `deployed_versions_aws` entirely absent — either the write path
       is broken or was never fully wired. Either (a) fix the write path so both fields actually populate on a successful
       build (the workflows already contain the intended `jq` write logic per the grep evidence in the source doc — trace
       why it isn't landing, e.g. a `[skip ci]`-triggered commit not actually pushing, a stale manifest read before the

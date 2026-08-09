@@ -238,7 +238,7 @@ workspace-wide gate that "handles" missing data — by design.
 
 ### Class 1 — In-flight shard failure with no manifest marker ("phantom gap")
 
-**What it looks like**: The adapter logs `WARNING in-flight key=<venue>/<sym>/<date>/<dt>  failed: <error>` (or
+**What it looks like**: The adapter logs `WARNING in-flight key=<venue>/<sym>/<date>/<dt> failed: <error>` (or
 equivalent) but exits without calling `record_empty()` or `record_failed()`. The manifest has **no row** for that
 `(venue, data_type, day)` cell — the failure is invisible to downstream consumers and honest-coverage metrics.
 

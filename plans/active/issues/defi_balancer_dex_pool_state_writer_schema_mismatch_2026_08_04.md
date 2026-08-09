@@ -154,7 +154,7 @@ is a human decision wearing a todo's clothes" dispatch-scope bar. It also touche
       schema-match unit tests: the MTDS-side tests assert the exact output columns
       (`tvl_usd`/`volume_usd`/`fees_usd`/`fee_rate_bps`, legacy `swap_volume`/`swap_fees`/`total_shares` absent);
       additionally added
-      `strategy-service/tests/unit/engine/core/test_canonical_dex_pool_provider.py::     test_balancer_fee_accrual_nonzero_on_fixed_writer_schema`,
+      `strategy-service/tests/unit/engine/core/test_canonical_dex_pool_provider.py:: test_balancer_fee_accrual_nonzero_on_fixed_writer_schema`,
       which feeds a realistic post-fix BALANCER row (same pool address this doc's DIAG sampled) through the REAL
       `CanonicalDexPoolProvider.pool_for_day` and asserts `fee_apy_bps > 0.0` — the closest available proxy to the live
       acceptance bar in a network-free unit test.

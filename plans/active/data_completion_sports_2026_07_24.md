@@ -772,7 +772,7 @@ machine-size default bumped e2-std-2→8 (deployment-service@af6761d). SFI-progr
       2026-08-03)** — `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s corresponding todo: launcher confirmed
       re-pointed at `features_service.sports.scripts.compute_sfi_progressive_only`; SPORTS tarball rebuilt (all 5
       fresh); relaunched via
-      `RECOMPUTE_FORCE=true launch-sfi-progressive-features-backfill-vm.sh --force 2020-01-01     2026-07-25` on
+      `RECOMPUTE_FORCE=true launch-sfi-progressive-features-backfill-vm.sh --force 2020-01-01 2026-07-25` on
       `features-sfi-progressive-20260725-163937` — run.log shows zero `MissingFeatureFamilyError`/ERROR lines,
       `captured_days=2087 failed_days=0`, `DEPLOYMENT_COMPLETED ... exit_code=0`.
 

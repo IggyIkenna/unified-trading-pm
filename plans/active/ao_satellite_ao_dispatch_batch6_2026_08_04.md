@@ -200,7 +200,7 @@ evidence-backed, zero-risk housekeeping action, not new work.
       3rd items, combined — the 3rd explicitly extends the 1st's guard). Repo: agent-orchestrator. —
       **agent-orchestrator@6166269** (2026-08-08, "fix(prompts): route review/main/monitor to register/poll shape even
       with slot_id" — shipped by slot-32, ancestor-verified on `origin/live-defi-rollout`;
-      `_REGISTER_POLL_ROLES =     {"review", "main", "monitor"}` now guards both the STEP 0 and STEP 2/3 branches in
+      `_REGISTER_POLL_ROLES = {"review", "main", "monitor"}` now guards both the STEP 0 and STEP 2/3 branches in
       `_compose()`, with `test_register_poll_role_gets_slotless_shape_even_with_slot_id` covering
       `{review, main, monitor}` and `test_one_shot_lifecycle_role_unaffected_by_register_poll_guard` confirming
       `ag_closeout_auditor` — the one-shot lifecycle-role extension already shipped separately at
@@ -226,7 +226,7 @@ evidence-backed, zero-risk housekeeping action, not new work.
 - [x] [DOC] P2. **Add a 4th conflict-check surface to the shared AO-dispatch protocol.** ✅ unified-trading-pm@c2083029d
       — added surface "(d) any `status: draft` `{ag}_satellite_ao_dispatch_batch{N}_*.md` for the same tranche, from
       EITHER `/ag-closeout-audit` or `/na-eligibility-audit`'s prior runs (not just the current run) — grep its
-      `Source:`/`## Deferred`/`## Already     covered` citations for the candidate doc's path before finalizing a
+      `Source:`/`## Deferred`/`## Already covered` citations for the candidate doc's path before finalizing a
       RECLASSIFY or drafting a new extraction" to
       `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3; wired both
       `na-eligibility-audit/SKILL.md` (its Phase 2) and `ag-closeout-audit/SKILL.md` (its own Phase 3 conflict-check
@@ -241,7 +241,7 @@ evidence-backed, zero-risk housekeeping action, not new work.
       held), then content-diffed each against current LDR tip instead of blind-cherry-picking: -
       `unified-trading-library c927ec58` (point_in_time.py docstring `lst_staking_yields`→`lst_yields`) — byte-identical
       file-change already on LDR as `unified-trading-library@60c840f2` ("... (rescue orphaned slot-12 WIP)" +
-      `Quickmerge:       agent` trailer — a prior rescue attempt landed this exact patch under a fresh SHA). -
+      `Quickmerge: agent` trailer — a prior rescue attempt landed this exact patch under a fresh SHA). -
       `unified-api-contracts 06c8e90b` (AAVE-PLASMA phase pipeline→live) — same outcome (`"AAVE-PLASMA": "live"` in
       `defi_venues.py`) already on LDR as `unified-api-contracts@06c54fee` ("feat(defi): flip AAVE-PLASMA venue phase
       pipeline to live", dated 2026-08-01, independently authored). - `deployment-service 0e62096f` (fastapi/starlette

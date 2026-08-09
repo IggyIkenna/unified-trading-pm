@@ -70,7 +70,7 @@ source: >-
       `tests/test_worker_liveness_watchdog.py` (+138); diff-read confirms `_reconcile_unacked_dispatches` now requires
       `_pane_is_dead(sess)` (fail-closed on exception) before releasing, matching the commit message's claim. Re-ran the
       3 named tests directly
-      (`.venv/bin/python -m pytest tests/test_worker_liveness_watchdog.py -k     "test_reconcile_unacked_silent_but_alive_owner_keeps_lease or test_reconcile_unacked_dead_owner_still_released or     test_reconcile_unacked_no_session_still_released"`)
+      (`.venv/bin/python -m pytest tests/test_worker_liveness_watchdog.py -k "test_reconcile_unacked_silent_but_alive_owner_keeps_lease or test_reconcile_unacked_dead_owner_still_released or test_reconcile_unacked_no_session_still_released"`)
       — 3 passed, including the todo's own stated done-when check
       (`test_reconcile_unacked_silent_but_alive_owner_keeps_lease`, the silent-but-alive-owner simulation). Full
       `tests/test_worker_liveness_watchdog.py` also re-run clean (96 passed, 0 failed — no regression in the touched
@@ -85,7 +85,7 @@ source: >-
       `agent-orchestrator@7911083` with full root-cause + test evidence, and added a matching Progress Log entry. Both
       commits independently re-verified this pass: `04a11439d` is on `origin/live-defi-rollout` and touches exactly the
       source issue doc (+ the batch4 plan); `agent-orchestrator@7911083`
-      (`fix(dispatch): require positive liveness     re-check before releasing an un-ACKed task`) is also on
+      (`fix(dispatch): require positive liveness re-check before releasing an un-ACKed task`) is also on
       `origin/live-defi-rollout`, touching `server/worker_liveness_watchdog.py` (+42/-4) and
       `tests/test_worker_liveness_watchdog.py` (+138) — matches the cited diff exactly. No further flip needed.
 - [x] [INFRA] P0. **Confirm the file-adjacency caution against `batch3_2026_07_31.md`'s todo 2 was actually respected**

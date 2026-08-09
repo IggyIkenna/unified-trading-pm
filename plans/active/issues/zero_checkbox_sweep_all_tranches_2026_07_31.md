@@ -177,7 +177,7 @@ them as a finding; the population definition is deliberately left unchanged.
       the 2026-08-02 note below, and the second clause (naming) landed hours later the same day —
       `unified-trading-pm@d872efb3a` added the "Standing register" line at
       `cursor-configs/skills/plan-reconcile/SKILL.md:371`, citing this doc by name. Verified live:
-      `grep -rn     "zero_checkbox_sweep_all_tranches" cursor-configs/skills/` returns a hit. (repo:
+      `grep -rn "zero_checkbox_sweep_all_tranches" cursor-configs/skills/` returns a hit. (repo:
       `unified-trading-pm`)
 - [ ] [DOC] P3. **Re-run the sweep and update the "Last executed" row** at the next monthly pass; if the non-exempt
       unclassified count is 0, record that and leave this doc open as the standing register (it is deliberately NOT

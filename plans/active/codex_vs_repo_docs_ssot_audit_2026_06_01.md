@@ -240,7 +240,7 @@ from scope).
       extracts markdown pipe-tables from BOTH the live codex corpus and each repo doc, canonicalizes cell content
       (whitespace/pipe-alignment-blind via a `\x1f` join, case-preserving, separator row dropped), and flags an EXACT
       whole-table match against a codex table that clears a significance floor (`_MIN_TABLE_ROWS=3` /
-      `_MIN_TABLE_CHARS     =100`). The floor is the false-positive control the todo called out: calibrated against the
+      `_MIN_TABLE_CHARS =100`). The floor is the false-positive control the todo called out: calibrated against the
       live corpus (2358 codex tables) it drops the 88 trivial 2-row idiom-shaped tables that get legitimately echoed,
       while still indexing >2200 real tables. Exact-match (not fuzzy) keeps the FP rate at the same bar as the other two
       rules — a fuzzy pass is noted as future work in the docstring. Ratchets against the same
@@ -530,7 +530,7 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
       UAC-owned). `CONTRIBUTING.md` → LDR + `quickmerge --agent` + `quality-gates.sh` flow (dead `.cursorrules`/
       `unified-trading-deployment-v2` refs dropped). `.github/BRANCH_PROTECTION.md` → `quality-gates-v2` + ratcheted
       `MIN_COVERAGE` (was 35/65). `docs/SETUP_GUIDE.md` `--mode instruments`/`instruments-query` →
-      `--operation instruments     --mode batch` / `--operation status`. `docs/SPORTS_INSTRUMENTS.md`
+      `--operation instruments --mode batch` / `--operation status`. `docs/SPORTS_INSTRUMENTS.md`
       `features-sports-{project}` → canonical `features-sports-{env}-{project}` (VERIFIED stale vs codex
       bucket-isolation-model L178, not env-agnostic). DELETED `scripts/README.md` (documented only the nonexistent
       `run_quality_gates.py`) + `.github/BRANCH_PROTECTION_SETUP.md` (dead manual how-to). **Grep-then-READ
@@ -559,7 +559,7 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
       stale `--cov-fail-under=35` (real floor is `MIN_COVERAGE=88` in `scripts/quality-gates.sh`). Confirmed via grep no
       other repo doc/script referenced the old `make ci-local`/`make test` targets. Full-suite QG re-gate hit a
       pre-existing, unrelated intermittent failure
-      (`test_orchestrator_sports_pipeline.py::     TestGwFalseEmptyWritePath20260714::test_skip_as_present_league_not_demoted_to_empty`)
+      (`test_orchestrator_sports_pipeline.py:: TestGwFalseEmptyWritePath20260714::test_skip_as_present_league_not_demoted_to_empty`)
       only reproducible under `--cov` instrumentation — root cause: the test never mocked `read_availability_index`/
       `_read_per_league_entity_df`, so it made a REAL unmocked GCS call that pytest-socket's `--allow-hosts` blocked,
       which the code's fail-safe `except Exception` path (correctly) treats as "cannot prove captured status" and skips
@@ -583,7 +583,7 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
       `/codex/04-architecture/capital-structure-and-regulatory.md`
       (`authoritative_for: per-category custody, regulatory posture, and onboarding structure`) already own the entities
       incl. Odum UK/Cayman; `/codex/04-architecture/custody-providers.md` is
-      `authoritative_for: custody provider     protocol` only — declaring it a second entity SSOT would VIOLATE this
+      `authoritative_for: custody provider protocol` only — declaring it a second entity SSOT would VIOLATE this
       plan's no-duplicate-SSOT principle. (b) The remaining `Elysium` codex refs are the **client POD**
       (`elysium-managed-sla`, `pod-elysium-client-onboarding`), NOT the removed data provider — custody-providers.md's
       sole Elysium ref is a legit link to the client-pod onboarding doc. Nothing to scrub.
@@ -815,7 +815,7 @@ genuine-UI, out of scope.
       3 frames GUI login as First-Time / One-Time); the one residual is whether the IBGA path is truly zero-touch or
       still needs that one-time GUI bootstrap (`DEPLOYMENT_GUIDE` L58/L189 + `FIRST_TIME_LOGIN.md` say a first-login IS
       required on first start / re-provision). **UNPARK**: owner answers (a)+(b) → set `ibkr-owner-decision-made=true`,
-      restore priority 50 + `priority_override:     false`, reload → apply the FIX-STALE rewrite reconciling all 4 ibkr
+      restore priority 50 + `priority_override: false`, reload → apply the FIX-STALE rewrite reconciling all 4 ibkr
       docs per their call. Do NOT proceed before that.
 
 ### deployment-service refreshed registry (2026-07-27) — supersedes the stale Appendix-A `(~52)` entry

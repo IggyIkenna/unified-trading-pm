@@ -129,10 +129,10 @@ child plans, none of which are in this run's 18-doc scope) and contributed nothi
 - [ ] [OPS] P2. **Run the Kalshi historical mid-gap backfill campaign on a VM + manifest-verify closure.** Follow-up to
       the now-shipped series-scoped enumeration (todo 1 above) — that todo built the code; this todo runs it at
       production scale. Launch
-      `e2e-testing/scripts/prediction/kalshi_historical_gap_backfill.py --start 2025-10-01     --end 2026-04-21` on a
+      `e2e-testing/scripts/prediction/kalshi_historical_gap_backfill.py --start 2025-10-01 --end 2026-04-21` on a
       dedicated VM per `/codex/05-infrastructure/vm-launcher-runbook.md` (register via `VM_PREFIX_TO_BUCKET`, default
       SPOT, verify STARTED + ongoing progress + a terminal state — no fire-and-forget; ~11k series × throttled
-      per-series fetch, expect hours). Before the full run, smoke-test with `--limit-series 5     --dry-run` to confirm
+      per-series fetch, expect hours). Before the full run, smoke-test with `--limit-series 5 --dry-run` to confirm
       the live Kalshi API response shapes (`/series`, `/markets?status=closed`, `/historical/trades`) match this todo's
       mocked-response assumptions — the adapter code was built + unit-tested against the documented/inferred Kalshi
       schema without a live credentialed call in the dev sandbox; if a real response shape differs, fix the adapter

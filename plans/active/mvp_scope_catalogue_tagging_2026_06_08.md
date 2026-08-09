@@ -131,7 +131,7 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
 - [x] ✅ [DESIGN] P1. **`mvp_scope` rule schema FINALISED in UAC** — **unified-api-contracts@d6e0775f**: typed frozen
       dataclasses per AG (CeFi/DeFi/TradFi/Sports/Prediction) + everything-or-nothing grain + `FeaturesModelsMvpStub`
       for the per-registry sections. Concrete MVP membership has conservative defaults +
-      `# TODO(mvp-scope): operator     sign-off` markers (config edit, no data touch — not a blocker).
+      `# TODO(mvp-scope): operator sign-off` markers (config edit, no data touch — not a blocker).
 - [x] ✅ [CODE] P1. **UAC `is_mvp(...)` predicate + `mvp_scope` config + tests** — **unified-api-contracts@d6e0775f**:
       `is_mvp(asset_group, venue, instrument_type, data_type, *, base_ccy, league, market_group, source)` pure
       rule-only; exported `from unified_api_contracts import is_mvp, MVP_SCOPE`; 56 tests (non-MVP venue excluded, all
@@ -151,7 +151,7 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       spec per the playwright gate. **DONE (2026-06-17 /autonomous) — deployment-ui@2279e57 | pw:L2 ✓ (217/217 smoke
       green, Node 22) | regression: tests/smoke/venue_year_coverage.spec.ts**: `VenueCoverageTable` gains a
       `mvp|could_exist|all` scope pill toggle (default **MVP**, accent-green active) wired to
-      `getVenueYearCoverage(ags,     scope)` → `?scope=` on the venue-year-coverage endpoint (re-fetches on toggle via
+      `getVenueYearCoverage(ags, scope)` → `?scope=` on the venue-year-coverage endpoint (re-fetches on toggle via
       the `load()` dep). Regression spec adds: scope pills render + MVP active by default; clicking a pill moves the
       active state (drives the re-fetch). tsc + eslint + full `tests/smoke/` chromium = green.
 - [ ] [CODE] P2. **Features/strategy/model MVP sections** — extend `mvp_scope` + apply the same predicate to the feature

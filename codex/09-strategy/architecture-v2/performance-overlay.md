@@ -201,7 +201,7 @@ typically expose per-venue; paper + live do).
 
 - Backtest → `pnl_timeseries/(odum-paper, instance_id, regime=backtest)`
 - Paper → `pnl_timeseries/(odum-paper, instance_id, regime=paper)`
-- Live → `pnl_timeseries/(odum-live,  instance_id, regime=live)`
+- Live → `pnl_timeseries/(odum-live, instance_id, regime=live)`
 
 All materialised by `position-balance-monitor-service` from execution-service fills.
 

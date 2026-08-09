@@ -294,7 +294,7 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       remaining local callers (their only callers were `main-backmerge-to-ldr.yml`/`staging-backmerge-to-ldr.yml`/
       `semver-agent.yml`, all now thin stubs whose logic — including the `notify-slack.yml` call — moved into
       `unified-trading-ci`). Deleted and independently verified via
-      `git show origin/live-defi-rollout:     .github/workflows/notify-slack.yml` (absent) in each: agent-orchestrator,
+      `git show origin/live-defi-rollout: .github/workflows/notify-slack.yml` (absent) in each: agent-orchestrator,
       alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-ui,
       e2e-testing, execution-service, features-service, fund-administration-service, greeks-service, ibkr-gateway-infra,
       instruments-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service,
@@ -319,7 +319,7 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       `notify-slack.yml`, `staging-lock-check.yml`, and `quality-gates-v2.yml.tmpl` still process (the 2 correctly-kept
       tier-1 templates plus the 2 from the separate, earlier `shared_ci_workflow_repo_extraction_2026_08_06.md`
       migration). Shipped `unified-trading-pm@79c4a72737`, independently verified via
-      `git show origin/live-defi-rollout:     scripts/workflow-templates/main-backmerge-to-ldr.yml` (path does not
+      `git show origin/live-defi-rollout: scripts/workflow-templates/main-backmerge-to-ldr.yml` (path does not
       exist) and the header comment no longer listing the 4 it used to.
 - [x] ✅ 8. [INFRA] P2. **Fleet-wide dangling-reference re-sweep — DONE 2026-08-08.** Ran
       `grep -rln "uses:.*unified-trading-pm/.github/"` (plus a broader path-substring sweep, not just `uses:` lines, and
@@ -383,7 +383,7 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       `unified-api-contracts` (needed 3 attempts total), `unified-trading-library` (needed 3 attempts total), and
       `unified-trading-system-ui` — every one recovered via `git log --all --oneline --grep=...` + `git cherry-pick`,
       re-verified independently after each retry. Deleted the now-redundant
-      `scripts/workflow-templates/     staging-lock-check.yml` template source and updated
+      `scripts/workflow-templates/ staging-lock-check.yml` template source and updated
       `rollout-workflow-templates.sh`'s header comment + stale usage examples (dry-run verified: only
       `image-build-gate.yml`, `notify-slack.yml`, `quality-gates-v2.yml.tmpl` still process). Shipped:
       `unified-trading-ci@686bca7` (hosted reusable workflow, final content after the debug session),

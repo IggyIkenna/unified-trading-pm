@@ -195,7 +195,7 @@ primary; mirrors the pre-existing `aster`-in-`derivative_ticker` registration). 
       with no real feed. The other three pairs (ASTER book_snapshot_5, ASTER liquidations, HYPERLIQUID book_snapshot_5)
       STAY — they are real feeds per uac@3652f99f."** Matches escalation option A (`[WORKER REC]`) exactly — the
       narrowest of the three offered options. Shipped: removed `hyperliquid` from `("cefi", "liquidations")` in
-      `_source_priority_data.py` ONLY; the other three pairs (`("cefi",     "book_snapshot")` keeps
+      `_source_priority_data.py` ONLY; the other three pairs (`("cefi", "book_snapshot")` keeps
       `aster`+`hyperliquid`, `("cefi", "liquidations")` keeps `aster`) are untouched, plus a code comment on the
       remaining aster/HL entries recording this ruling. Verified no `VENUE_DATA_TYPE_CAPABILITIES` entry claims HL
       liquidations (`HYPERLIQUID` capability dict has `trades`/`book_snapshot_5`/`derivative_ticker` only — no

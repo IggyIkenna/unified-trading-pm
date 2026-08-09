@@ -131,7 +131,7 @@ this cron is paused or fixed, the singleton lock may never naturally clear.
 
 - [x] ✅ [INFRA] P1. **`BLOCKED-OPERATOR-DECISION`: pause or fix the `wave_launcher.py` cron on `planning`** — STOPGAP
       (option 1) confirmed LIVE 2026-08-09 ~13:06Z:
-      `gcloud scheduler jobs describe uts-prod-tradfi-wave-launcher-cron     --location=asia-northeast1` reads
+      `gcloud scheduler jobs describe uts-prod-tradfi-wave-launcher-cron --location=asia-northeast1` reads
       `state: PAUSED` (job at `deployment-service/terraform/gcp/wave_launcher_scheduler.tf`). No audit-log entry was
       retrievable to attribute who/when paused it, and the follow-up code fix (option 2 — patch cell-selection to
       consult the scope-ruling table) is still NOT shipped, so this is the reversible stopgap only, not the durable fix
