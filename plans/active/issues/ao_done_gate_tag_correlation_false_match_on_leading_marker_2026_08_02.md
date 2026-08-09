@@ -116,12 +116,13 @@ false-positive surface). Recommend, in order:
 
 ## Todos
 
-- [ ] [INFRA] P2. NEW FINDING (2026-08-09, slot 22): `_brief_is_checked_by_tag_in_text` still fails CLOSED (correctly,
-      by current design, but too conservatively) when a plan doc has **multiple genuinely different,
-      independently-completed** `- [x] [TAG] P<n>.` lines sharing the same tag+priority — `matches` has `len > 1`, so
-      the function returns `False` unconditionally at `return len(matches) == 1 and ...` without ever reaching the
-      2026-08-02 `_shares_distinguishing_content` hardening (that check only fires when `hits == 1`). Confirmed live:
-      `/done` on `defi_dex_pool_swaps_733_row_indexer_health_findings-c4893c5446f8` (task
+- [x] ✅ [INFRA] P2. **DONE 2026-08-09 (slot-9) — `agent-orchestrator@ddac3a4`.** NEW FINDING (2026-08-09, slot 22):
+      `_brief_is_checked_by_tag_in_text` still fails CLOSED (correctly, by current design, but too conservatively) when
+      a plan doc has **multiple genuinely different, independently-completed** `- [x] [TAG] P<n>.` lines sharing the
+      same tag+priority — `matches` has `len > 1`, so the function returns `False` unconditionally at
+      `return len(matches) == 1 and ...` without ever reaching the 2026-08-02 `_shares_distinguishing_content` hardening
+      (that check only fires when `hits == 1`). Confirmed live: `/done` on
+      `defi_dex_pool_swaps_733_row_indexer_health_findings-c4893c5446f8` (task
       `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`'s final P2 todo, a genuine self-archival flip
       bundled with the `git mv` per the standard 6-step ritual) 409'd with `cross_repo_pm_file_touched_no_checkbox_flip`
       even though the checkbox WAS genuinely flipped (`market-tick-data-service@5d633923` landed, verified ancestor of
@@ -205,3 +206,18 @@ false-positive surface). Recommend, in order:
   `3080fec` (code — main never pushes code); filed the landing as the tracked `[INFRA]` todo above for a worker to pick
   up.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **2026-08-09 (slot 19, infra)**: Dispatched on the NEW FINDING todo (the `len(matches) > 1` fail-closed gap). Before
+  implementing, checked git history first per the pre-task plan/issue conflict-check discipline — found the fix already
+  shipped ~1.5h earlier, un-flipped: `agent-orchestrator@ddac3a4` (slot-9, 2026-08-09T10:27:35Z) implements exactly the
+  proposed fix (`_brief_is_checked_by_tag_in_text` now applies `_shares_distinguishing_content` against EACH candidate
+  when `len(matches) > 1` and accepts only on exactly one content-match), with its commit message explicitly citing
+  `Fixes: ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md (NEW FINDING 2026-08-09) todo 1`, and
+  ships 2 new regression tests (`test_done_accepts_cross_repo_when_tag_correlation_disambiguates_among_multiple_hits` —
+  the exact 3-hits-1-content-match accept case;
+  `test_done_rejects_cross_repo_when_tag_correlation_still_ambiguous_among_multiple_hits` — the 2-content-matches
+  fail-closed sibling). A later, separate commit (`agent-orchestrator@2dccb9f`, slot-24, 2026-08-09T11:03:28Z) adds a
+  further ordinal-position fallback for a DIFFERENT, adjacent ambiguity case — out of this todo's scope, tracked by its
+  own finding `ao_m3_verify_tag_priority_ambiguity_blocks_self_archived_flip_2026_08_09.md`. Verified fresh:
+  `.venv/bin/python -m pytest tests/test_done_gate_plan_flip_hard_reject.py -q` → 38 passed (full suite, current HEAD).
+  No code change needed — flipping the checkbox to reflect already-shipped work (the cross-repo flip that slot-9's
+  session evidently didn't complete). No other in-scope changes this turn.
