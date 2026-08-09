@@ -486,14 +486,31 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       fi
     fi
 
-    git add -- "${FILES[@]}"
+    if ! git add -- "${FILES[@]}" 2>/tmp/_sdp_add_err; then
+      # safe_doc_push_reports_success_having_committed_nothing_2026_08_09 (todo 3): `git add`'s
+      # own exit code was never checked, so an index.lock failure here (the exact incident
+      # mechanism -- a peer session's autostash sweep holding the lock) silently produced an
+      # empty `git diff --cached`, which fell straight into the SAME "nothing staged ...
+      # checking if content already matches HEAD" wording used for the genuinely benign
+      # no-op-edit case. That phrasing reads as "probably fine" when it is actually a hard
+      # failure to stage at all -- distinguish it here, before ever reaching that branch.
+      if grep -qi "index.lock" /tmp/_sdp_add_err; then
+        echo "  ❌ could not stage named files -- index.lock contention on 'git add' (another process is writing this instant). This is a HARD FAILURE, not the benign 'nothing to stage' case -- short wait, retry"
+        sleep 2
+        continue
+      fi
+      echo "  ❌ could not stage named files -- 'git add' failed for a non-lock reason:" >&2
+      cat /tmp/_sdp_add_err >&2
+      backoff "$attempt"
+      continue
+    fi
     unstage_foreign_paths
     reassert_renames
 
     if ! git diff --cached --quiet -- "${FILES[@]}"; then
       : # there is something to commit
     else
-      echo "  nothing staged for the named files -- checking if content already matches HEAD"
+      echo "  nothing to stage for the named files (staging completed cleanly, no diff) -- checking if content already matches HEAD"
       if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
         if verify_committed && verify_pushed; then
           echo "✅ Named files already match HEAD (a concurrent session landed identical content) -- treating as success."
