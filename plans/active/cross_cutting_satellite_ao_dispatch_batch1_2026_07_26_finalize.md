@@ -55,19 +55,24 @@ context_scope:
 
 # Cross-cutting satellite AO batch 1 — finalize
 
-> **Machine-gated on BOTH `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (16 todos) AND
-> `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (15 todos)** (`depends_on` + `gate_on_depends: true`) —
-> the dispatcher will not queue any todo below until all 31 tasks across both parts are `done`. `sequential: true`
-> because todo 2 (deferred re-check) needs todo 1's reconciliation done first, and todo 4 (archival) must run last.
+> **Machine-gated on BOTH `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` AND
+> `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`** (`depends_on` + `gate_on_depends: true`) — the
+> dispatcher will not queue any todo below until every task across both parts is `done` (a hardcoded total has been
+> wrong twice already as both docs grew post-authoring — 31 → 37 [2026-07-30] → still-growing [confirmed 2026-08-09,
+> plan_reconciler agt-733350] — check the live checkbox count directly, never trust a number written here).
+> `sequential: true` because todo 2 (deferred re-check) needs todo 1's reconciliation done first, and todo 4 (archival)
+> must run last.
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all distinct source docs' checkboxes across both batch parts.** For each of the 31
-      now-done todos (across batch1 + batch1b): flip the corresponding checkbox/section in its named source doc (each
-      todo's text ends with "Source: `<doc>.md`"), citing the batch commit(s) that shipped it — verify the actual
-      shipped commit exists before citing it. For each source doc: after flipping, re-check whether it now has 0 open
-      todos remaining (checkbox AND prose-form). Only flip a doc's `status` to `resolved` if it genuinely reaches 0 open
-      todos. **Done when**: all 31 source-doc checkboxes/sections are flipped with verified evidence.
+- [ ] [REVIEW] P1. **Reconcile all distinct source docs' checkboxes across both batch parts.** For every now-done todo
+      across batch1 + batch1b (count deliberately not restated here — a hardcoded count re-stales on the next bump; was
+      "31", corrected to "37" 2026-07-30, corrected again 2026-08-09 by plan_reconciler agt-733350 since the live count
+      had already grown past that too): flip the corresponding checkbox/section in its named source doc (each todo's
+      text ends with "Source: `<doc>.md`"), citing the batch commit(s) that shipped it — verify the actual shipped
+      commit exists before citing it. For each source doc: after flipping, re-check whether it now has 0 open todos
+      remaining (checkbox AND prose-form). Only flip a doc's `status` to `resolved` if it genuinely reaches 0 open
+      todos. **Done when**: every source-doc checkbox/section across both batch parts is flipped with verified evidence.
 - [ ] [REVIEW] P1. **Re-check the 4 conflict-gated + 13 operator-gated + 2 time-gated Deferred items** (all in
       `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s own Deferred sections — batch1b defers to that same
       doc, not a duplicate), now that time has passed and batch1/1b's own todos have landed. For each of the 19 Deferred
@@ -75,10 +80,10 @@ context_scope:
       todo in a follow-up `batch2`; if still genuinely unresolved, leave it explicitly deferred, do not re-surface an
       already-asked operator question a second time. **Done when**: each of the 19 Deferred items has either (a) a note
       that it's ready for `batch2` extraction, or (b) an explicit re-verified confirmation the gate is still open.
-- [ ] [DOC] P2. **Action the 6 remaining mistags + 2 archivable_now docs found during Phase 0/1** (was 7 mistags;
-      `shared_host_tmp_tmpfs_exhaustion_2026_07_26.md` resolved + archived to
-      `plans/archive/issues/shared_host_tmp_tmpfs_exhaustion_2026_07_26.md` in the 2026-07-26 terminal-status sweep — no
-      retag needed, drop it from this list). **CORRECTED 2026-07-27 (`/plan-vintage-audit` archival pass)**: 2 of the
+- [ ] [DOC] P2. **Action the 3 remaining mistags (corrected 2026-08-09, was stale "6" — see body) + 2 archivable_now
+      docs found during Phase 0/1** (was 7 mistags; `shared_host_tmp_tmpfs_exhaustion_2026_07_26.md` resolved + archived
+      to `plans/archive/issues/shared_host_tmp_tmpfs_exhaustion_2026_07_26.md` in the 2026-07-26 terminal-status sweep —
+      no retag needed, drop it from this list). **CORRECTED 2026-07-27 (`/plan-vintage-audit` archival pass)**: 2 of the
       named docs are now MOOT — `empty_reprobe_disagreement_2026_06_22.md` and
       `live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` are both fully archived (
       `/plans/archive/issues/empty_reprobe_disagreement_2026_06_22.md`,
@@ -105,11 +110,12 @@ context_scope:
       `.venv/bin/python scripts/plan-hygiene/regenerate_active_plan_inventory.py` (the duplicate is currently inflating
       the inventory by one doc and one phantom open todo). (was: "Archive `plans/active/bucket_estate_fold_design…` and
       `plans/active/issues/gcs_data_access_audit_log_cost…` (both `archivable_now`) via the standard 6-step ritual.")
-      **Done when**: all 6 retags are applied with `check_ag_closeout_linkage.py` passing 0 new orphans,
+      **Done when**: all 3 retags are applied with `check_ag_closeout_linkage.py` passing 0 new orphans,
       `bucket_estate_fold_design_2026_07_13.md` is archived with every corpus referrer fixed, and only the archive copy
       of `gcs_data_access_audit_log_cost_2026_07_24.md` remains with the inventory regenerated.
-- [ ] [DOC] P1. **Archive both `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` and
-      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`** via the standard 6-step ritual (per CLAUDE.md's
+- [ ] [DOC] P1. **Archive both cross-cutting satellite batch1 docs (batch1 + batch1b) — see below for exact filenames.**
+      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` and
+      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`, via the standard 6-step ritual (per CLAUDE.md's
       plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above should have
       already resolved or re-confirmed all 19 — verify none silently vanish) → add the archive banner to both → run the
       codex-alignment check (no new durable contract from this batch, confirm still true) → grep the corpus for every

@@ -180,45 +180,22 @@ numbering.)**
       `--today` / `--cloud` / `--deployment-env`. Empty/unavailable catalogue → WARNING + empty matrix (0 atoms → exit
       1), never silent skip. QG-green 74s (sentinel `be37c75660585e9b88f494f6a8e942afdbe0d048`). Completes the 4-AG
       runner set alongside -001 (prediction, slot-4@1ca3672) + -002 (cefi, slot-9@ceb09fd).
-- [ ] [VERIFY] P2. **BLOCKED-PREREQUISITES (2026-07-06, slot-6 planning — BOUNCE #4).** Once Plan 2
-      (`tradfi_v9_stage1_finish_2026_07_06`) tasks 2-11 land and `catalog.parquet` is written to
-      `gs://instruments-store-tradfi-prd-central-element-323112/prd/`, re-run `run_live_verify_tradfi.py` and publish
-      the fresh matrix + smoke set. Attach output as evidence. (repo: e2e-testing; PREREQ:
-      `tradfi_v9_stage1_finish_2026_07_06` tasks 2-11 done). **Task 10 self-park precedent applied** (see
-      `tradfi_v9_stage1_finish_2026_07_06.md` task 10 — slot-7 in-checkbox BLOCKED-PREREQUISITES marker): after 4
-      bounces (slot-9 BLK-2a8ba36d, slot-8 BLK-8a12c73b, slot-4 BLK-7fc2ba40, slot-6 BLK-XX this session), the /blocked
-      escalation path is exhausted — this in-checkbox marker filters -004 from priority-only regen dispatch until an
-      operator/admin clears it. **Un-block sequence**: (a) Plan 2 task 3 (straggler VM close), (b) Plan 2 task 4 (E5
-      `rebuild_tradfi_manifest.py`), (c) Plan 2 tasks 2/5/6/7 chain, (d) either the operator writes `catalog.parquet` to
-      the `prd/` prefix expected by this task OR the task text is amended to reference the actual `prod/` prefix
-      (verified live 2026-07-06: `prod/catalog.parquet` = 10,561,159 bytes; `prd/catalog.parquet` = 404 NotFound), (e)
-      operator clears this BLOCKED- marker → -004 re-dispatches. **na-eligibility-audit 2026-08-03**: the cited
-      prerequisite plan `tradfi_v9_stage1_finish_2026_07_06` is now fully resolved + archived (2026-07-24, all 11 of its
-      own todos `[x]`; the 2 remaining forked out verbatim to `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`
-      and `tradfi_consolidated_closeout_2026_07_18.md`) — so tasks 2-11 have landed. `catalog.parquet` does now exist
-      and is actively read/written elsewhere
-      (`/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md:353`,
-      `tradfi_manifest_content_recovery_completion_2026_07_24.md:577`), but at `prod/catalog.parquet`, NOT the `prd/`
-      prefix this task's own text expects — unresolved per option (d) above. No doc in the active corpus records
-      `run_live_verify_tradfi.py` actually having been re-run/published since;
-      `instruments_remaining_work_audit_2026_07_10.md` item 11 (2026-07-10 vintage, predates the plan's 2026-07-24
-      resolution) still lists this as the sole remaining item. Not closing: the prerequisite plan landed but the actual
-      re-run + prd/prod path reconciliation has not been done or evidenced.
+- [ ] [VERIFY] P2. **Re-run `run_live_verify_tradfi.py` against
+      `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (NOT `prd/` — confirmed
+      non-canonical leaked short form, see below) and publish the fresh matrix + smoke set as evidence. repo:
+      e2e-testing. Done when: -004 is `[x]` with a fresh matrix/smoke-set citation.**
 
-      **round5-cross-cutting-audit 2026-08-08: option (d) resolved — amend the task text, do NOT wait for the operator
-          to write to `prd/`.** `/codex/02-data/non-canonical-path-inventory.md:211` independently confirms this exact
-          pattern for the sibling defi/pred instruments-store buckets: `prd/` is the NON-canonical leaked short
-          `DEPLOYMENT_ENV_SHORT` form; the intended/canonical prefix is the LONG env form `prod/` (confirmed by the actual
-          writer, `instruments-service/scripts/build_instrument_catalogue.py:32-33`). No operator input needed — the task
-          text should reference `prod/catalog.parquet` (already present, 10.5MB), clearing the BLOCKED-PREREQUISITES
-          marker for a re-run.
-
-      **RECLASSIFIED 2026-08-08 (na-eligibility-audit round7)**: `assigned_vm` flipped `NA` → `planning` — the
-      BLOCKED-PREREQUISITES marker is cleared per the round5 finding above (no operator input needed). **AMENDED
-      task**: re-run `run_live_verify_tradfi.py` against
-      `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (NOT `prd/`) and publish the
-      fresh matrix + smoke set as evidence, closing this todo. Done when: -004 is `[x]` with a fresh
-      matrix/smoke-set citation.
+      **Corrected 2026-08-09 (plan_reconciler agt-733350)**: this checkbox's own text previously opened with a
+                  `BLOCKED-PREREQUISITES` marker, which never actually gated dispatch —
+                  `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_BLOCKED_TOKEN_RE` does not recognize `PREREQUISITES`
+                  as a token — and is moot regardless: the prerequisite plan (`tradfi_v9_stage1_finish_2026_07_06`) resolved +
+                  archived 2026-07-24 (all 11 todos `[x]`), and round5-cross-cutting-audit (2026-08-08) confirmed
+                  `/codex/02-data/non-canonical-path-inventory.md:211`'s pattern applies here too: `prd/` is the non-canonical
+                  leaked short `DEPLOYMENT_ENV_SHORT` form; `prod/` (verified live, 10,561,159 bytes) is the canonical prefix the
+                  actual writer (`instruments-service/scripts/build_instrument_catalogue.py:32-33`) uses. `assigned_vm` was
+                  reclassified `NA` → `planning` 2026-08-08 (na-eligibility-audit round7) on this basis — no operator input
+                  needed, this is now a bounded worker-determinable task. No doc in the active corpus records
+                  `run_live_verify_tradfi.py` actually having been re-run/published since; still genuinely open.
 
 ## Evidence
 
@@ -321,12 +298,12 @@ numbering.)**
   call.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY, `assigned_vm: NA` → `planning` — today's
   round5-cross-cutting-audit entry on the sole open `-004` todo resolved the prd/-vs-prod/ operator call the 2026-08-06
-  marker cited (`/codex/02-data/non-canonical-path-inventory.md:211`: `prd/` is the non-canonical leaked short-env
-  form, `prod/` — already populated, 10.5MB — is canonical; no operator input needed). Bounded, worker-determinable:
-  amend one path reference + re-run one existing script + publish output as evidence. Conflict-check (parent_epic
-  `batch_live_symmetry_master`): no active `assigned_vm: planning` plan in the same epic, no sibling batch/finalize
-  doc, and no other active doc targets `run_live_verify_tradfi.py` or this tradfi catalogue path — clear.
-  `execution_scope` was already `orchestrator-agent` (a pre-existing pairing mismatch with `assigned_vm: NA`, now
-  resolved); `assigned_role: data_engineering` unchanged (validated against `agents/data_engineering.md`). No
-  finalize twin authored — `doc_type: issue` is structurally exempt from the finalize-plan-coverage rule (precedent:
+  marker cited (`/codex/02-data/non-canonical-path-inventory.md:211`: `prd/` is the non-canonical leaked short-env form,
+  `prod/` — already populated, 10.5MB — is canonical; no operator input needed). Bounded, worker-determinable: amend one
+  path reference + re-run one existing script + publish output as evidence. Conflict-check (parent_epic
+  `batch_live_symmetry_master`): no active `assigned_vm: planning` plan in the same epic, no sibling batch/finalize doc,
+  and no other active doc targets `run_live_verify_tradfi.py` or this tradfi catalogue path — clear. `execution_scope`
+  was already `orchestrator-agent` (a pre-existing pairing mismatch with `assigned_vm: NA`, now resolved);
+  `assigned_role: data_engineering` unchanged (validated against `agents/data_engineering.md`). No finalize twin
+  authored — `doc_type: issue` is structurally exempt from the finalize-plan-coverage rule (precedent:
   `governance_sweep_deferred_followups_2026_08_06.md`'s 7 reclassified issue docs).
