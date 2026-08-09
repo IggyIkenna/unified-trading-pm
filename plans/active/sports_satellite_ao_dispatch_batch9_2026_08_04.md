@@ -53,7 +53,7 @@ related:
     /plans/archive/issues/sports_enrichment_closer_holiday_and_today_false_gaps_2026_08_03.md,
     /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
-    /plans/active/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
+    /plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
     /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
   ]
@@ -366,13 +366,14 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       (`deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf`) produces the same
       zero-`expected_unattempted`-before-window artifact for cefi/defi/tradfi/prediction that was confirmed for sports.
       Read-only: one column-projected manifest read per asset_group. Source:
-      `sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`. Done when: for each of
-      cefi/defi/tradfi/prediction, the per-data_type cell-seeding ratio + the zero-vs-nonzero split is measured and
-      reported, with no manifest writes.
+      `/plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`. Done
+      when: for each of cefi/defi/tradfi/prediction, the per-data_type cell-seeding ratio + the zero-vs-nonzero split is
+      measured and reported, with no manifest writes.
 - [ ] [DIAG] P3. Investigate the FIXTURES/FIXTURES_OUTCOMES/ODDS-specific distinct `league_id` growth (88→924, 88→926,
       51→384 respectively, vs the ~4x baseline other sports data_types show) to classify it as genuine coverage
       expansion vs a duplicate/near-duplicate league_id seeding artifact isolated to those 3 data_types. Read-only
-      manifest query only. Source: `sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`. Done
+      manifest query only. Source:
+      `/plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`. Done
       when: a per-data_type verdict (genuine-expansion / seeding-artifact / mixed) is reached and documented for each of
       the 3 outlier data_types.
 - [x] ✅ [SCRIPT] P1. Extend UAC `EXPECTED_BOOKMAKER_MARKET_SETS` / `LEAGUE_ID_TO_TIER`

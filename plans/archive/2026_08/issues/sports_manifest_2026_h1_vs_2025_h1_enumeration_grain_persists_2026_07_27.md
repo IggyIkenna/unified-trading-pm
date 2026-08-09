@@ -33,8 +33,7 @@ summary: >-
   coverage for pre-2026-02-20 dates purely because those dates never got the could-exist universe seeded. This is a
   SPORTS-SCOPED re-verification only — cefi/defi/tradfi/prediction use the SAME scheduler + the SAME static-default
   pattern (`expected_universe_v2_asset_groups` in the same .tf file) and were NOT re-measured here.
-status: open
-archive_exempt: true
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -76,14 +75,17 @@ source: >-
 depends_on: []
 ---
 
-> **🟡 IN-FLIGHT 2026-08-08 ~03:01 UTC — slot-3 running in tmux `orch-slot-3:backfill` (harness-kill-proof). Rolling
-> boundary 2026-04-10 (7 chunks: 2020-06-06..2026-04-09). Chunk 1/7 VM `expected-universe-v2-sports-20260808-030132`
-> RUNNING (2020-06-06..2020-12-31). Prior state: chunk 1 previously EXIT_STATUS=0, chunk 2 partial (~8M rows across 2
-> prior-session VMs 024458+025019 both EXIT_STATUS=5), chunks 3-7 not started. LC_TARBALL_FRESHNESS=warn (UTL tarball
-> slightly stale but benign — all critical fixes in DS+IS tarballs which are current). Resume:
-> `tmux capture-pane -t "orch-slot-3:backfill" -p -S -20` or
-> `gcloud compute instances list --filter='name~"expected-universe-v2-sports"'`. If tmux window gone: re-run
-> `tmux new-window -t orch-slot-3 -n backfill && tmux send-keys -t orch-slot-3:backfill "cd /home/ubuntu/unified-trading-system-repos/.tabs/3/deployment-service && LC_TARBALL_FRESHNESS=warn bash scripts/vm/launch-expected-universe-v2-historical-backfill-vm.sh sports 2>&1 | tee /tmp/backfill-slot3.log" Enter`.**
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED** (all todos `[x]`, unlocked; status flipped from `open` to `resolved` — content
+> verified complete, not just checkbox count). Job (1) (rolling `today-120d` recurring window) and job (2) (2020-06-06
+> historical floor backfill, all 7 chunks) both shipped and verified live. Post-run ratio re-check confirms the
+> boundary-window artifact this doc exists to track is resolved: overall H1 cell-seeding ratio moved **3.13x → 0.95x**.
+> The two remaining ≥5x raw outliers in the re-check (`FIXTURES` legacy atom, `trades` lowercase token) are BOTH traced
+> to separate, already-tracked, still-open issues
+> (`/plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md`,
+> `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md`) — not a residual of this doc's own bug. Archived by the
+> worker (slot 27) that flipped the final todo, per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "archive the moment a plan is genuinely done"
+> rule.
 
 # Sports manifest 2026-vs-2025 cell-seeding ratio still 2.2x-16.6x — driven by the v2 enumerator's static bounded window, not Cause A
 

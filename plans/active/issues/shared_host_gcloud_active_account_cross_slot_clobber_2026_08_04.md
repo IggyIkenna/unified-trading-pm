@@ -29,7 +29,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/active/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
+    /plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-04
@@ -139,8 +139,8 @@ Two independent fix directions, either or both:
 ## Progress Log
 
 - **data_engineering worker (slot 14) 2026-08-04**: filed while executing
-  `sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md` job (2)'s launch-and-verify todo. Worked
-  around live by re-running
+  `/plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md` job (2)'s
+  launch-and-verify todo. Worked around live by re-running
   `gcloud config set account unified-trading-sa@central-element-323112.iam.gserviceaccount.com` each time the clobber
   was detected (via the launcher's own error-surfacing fix, deployment-service@b64e4a7) and relaunching the (idempotent,
   safe-to-resume) backfill script. Did not implement either fix above — out of this todo's scope, filed here per the

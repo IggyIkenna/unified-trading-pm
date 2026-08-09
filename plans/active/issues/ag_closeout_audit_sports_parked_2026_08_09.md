@@ -196,9 +196,11 @@ launcher category + run a real dry-run census — the actual delete stays operat
 
 ## Parked — self-progressing (not a gap; already covered by its own live dispatch) (1 doc)
 
-- **`sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`** — `assigned_vm: planning`, actively
-  worked under its own steam (continuous Progress Log entries through 2026-08-08). A new batch todo here would duplicate
-  its own already-live dispatch. Re-check on a future run if its Progress Log goes stale.
+- **`/plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`** —
+  `assigned_vm: planning`, actively worked under its own steam (continuous Progress Log entries through 2026-08-08). A
+  new batch todo here would duplicate its own already-live dispatch. Re-check on a future run if its Progress Log goes
+  stale. **Update 2026-08-09: this doc completed its final todo and was archived same-day (all todos `[x]`, ratio
+  confirmed resolved 3.13x→0.95x) — no further re-check needed.**
 
 ## Parked — not this tranche's write (2 docs, reported for the record; the fix belongs to a different tranche)
 

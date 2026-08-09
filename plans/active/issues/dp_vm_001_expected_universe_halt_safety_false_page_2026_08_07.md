@@ -52,7 +52,7 @@ related:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
-    /plans/active/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
+    /plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
     /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
   ]
 created: 2026-08-07
@@ -236,9 +236,8 @@ Evidence: `deployment-service@27fd5779` on `live-defi-rollout`
 - **round-9 RECLASSIFY+satellite sweep 2026-08-09 (sports tranche)**: KEEP-NA, valid — re-verified the 2 open P3
   follow-ups unchanged from the 2026-08-08 na-eligibility-audit verdict (the `[CODE]` one is a genuine design
   generalization call, not bounded; the `[DOC]` runbook-callout one reads individually bounded). Not extracted into a
-  sports satellite batch this pass: `parent_epic: observability_master` (asset_group `[meta, sports]` is secondary —
-  the finding is a generic DP-alerting exit-code carve-out, not sports-data-pipeline work), so per the primary-owner
-  rule already established in `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s "Genuinely human-only /
-  multi-tranche index" section, writing this doc's extraction is the `observability_master`/infra tranche's call, not
-  sports'. Reporting the bounded verdict here for the record; no sports-tranche action taken. Doc stays `assigned_vm:
-  NA`.
+  sports satellite batch this pass: `parent_epic: observability_master` (asset_group `[meta, sports]` is secondary — the
+  finding is a generic DP-alerting exit-code carve-out, not sports-data-pipeline work), so per the primary-owner rule
+  already established in `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s "Genuinely human-only / multi-tranche
+  index" section, writing this doc's extraction is the `observability_master`/infra tranche's call, not sports'.
+  Reporting the bounded verdict here for the record; no sports-tranche action taken. Doc stays `assigned_vm: NA`.
