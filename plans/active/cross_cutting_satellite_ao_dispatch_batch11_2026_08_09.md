@@ -184,12 +184,32 @@ drift_direction: advance-code
       reference. Low-risk display/classification fix (the MVP tag is unused downstream today). Done when: a fresh
       catalogue build tags at least one MVP-qualifying league `mvp=True`. Repo: instruments-service
       (`build_instrument_catalogue.py`).
-- [ ] [SCRIPT] P2. **Diagnose the SFI backfill mid-processing hang + add a request timeout + per-date isolation.**
-      Source: same doc. The SFI backfill log froze ~4min post-launch with no crash (SFI key confirmed working). Check
-      for an SFI-API request timeout / manifest-write stall as the cause; add a bounded request timeout + per-date
-      isolation so a single hung request can't freeze the whole chunk, then relaunch the SFI chunks. Done when: a
-      relaunched SFI backfill either completes or fails loud+isolated (never silently hangs), verified via a fresh run.
-      Repo: market-tick-data-service (collector) + deployment-service (launcher).
+- [x] ✅ [SCRIPT] P2. **Diagnose the SFI backfill mid-processing hang + add a request timeout + per-date isolation —
+      STALE PREMISE, already shipped (verification via 3 real production runs).** Source: same doc. The described
+      2026-06-19 hang was already root-caused and fixed well before this batch was authored (2026-07-24 source doc /
+      2026-08-09 extraction): (1) bounded per-request HTTP timeouts (`sock_connect=15s`, `sock_read=60s`, `total=120s`)
+      landed `instruments-service@0261e4259` (2026-06-19) in
+      `reference_data/adapters/sports/adapters/base.py::_make_session()` — the docstring there names this exact incident
+      as root cause; (2) per-match `asyncio.wait_for(..., timeout=30.0)` +
+      `asyncio.wait_for(get_match_descriptors_for_date, timeout=60.0)` with per-match try/except shard isolation landed
+      `instruments-service@367afc6e0` (2026-06-24) in `engine/orchestrator/sfi.py::_fetch_sfi_data`; (3) the launcher's
+      `--chunks` ban (SFI's RapidAPI key is per-account, N>1 chunks multiply 429s) landed `deployment-service@51cbacd9d`
+      (2026-06-19); (4) a VM-level silent-stall watchdog (`STALL_PROGRESS_REGEX=league`, `vm-exec-with-gcs-tee.sh`
+      kills+dumps the worker if no matching log line lands within `STALL_TIMEOUT_SEC`) landed
+      `deployment-service@a8ee104e5` (2026-06-22). **Verified via a fresh run — not a newly-launched VM, but 3 real
+      recent production SFI backfill VMs already run since**: `sfi-backfill-20260806-140815`,
+      `sfi-backfill-20260807-101503`, `sfi-backfill-20260807-123519` (GCS logs at
+      `gs://deployment-scripts-central-element-323112/vm-logs/<name>/run.log`) — all three completed cleanly
+      (`exit_code=0`, monotonic `[[VM_PROGRESS]]` advancement, no `WORKER_STALLED` breadcrumb) despite hitting real
+      transient errors mid-run (a 429 storm on the GCS manifest-cache write in the first; 10 JSON-truncation errors from
+      the SFI API in the third) — each error was caught, classified, and recorded via the existing per-match shard
+      isolation without ever stalling the run. Done-when clause ("relaunched SFI backfill either completes or fails
+      loud+isolated, never silently hangs, verified via a fresh run") is satisfied — no code change needed in either
+      named repo. **Distinct finding surfaced during this verification (NOT this todo — a low-frequency data-quality
+      gap, not a hang)**: `/plans/active/issues/sfi_progressive_stats_json_truncation_2026_08_09.md` (10/2254
+      date-completions in one run hit an unretried `json.JSONDecodeError`-shaped truncation; already honestly recorded
+      via shard-level `record_failed`, filed as a P3 follow-up). Repo: instruments-service (verified, no change needed)
+      / deployment-service (verified, no change needed).
 - [ ] [SCRIPT] P2. **Apply the parallelization pattern to the sfi/sports collector's per-date sequential loop within the
       RapidAPI rate budget.** Source: same doc. The sfi/sports collector's per-date loop is needlessly serial on top of
       being rate-limited; apply the same parallelization pattern already used elsewhere, with concurrency capped so it
@@ -236,6 +256,16 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- **2026-08-09**: SFI mid-processing-hang todo (P2) flipped — STALE PREMISE, the described 2026-06-19 hang was already
+  fixed via bounded HTTP timeouts (`instruments-service@0261e4259`, 2026-06-19), per-match `asyncio.wait_for` shard
+  isolation (`instruments-service@367afc6e0`, 2026-06-24), the `--chunks` ban for SFI's shared-key rate limit
+  (`deployment-service@51cbacd9d`, 2026-06-19), and a VM-level silent-stall watchdog (`deployment-service@a8ee104e5`,
+  2026-06-22) — all landing weeks before this batch's 2026-07-24 source doc. Verified via 3 real recent production SFI
+  backfill runs (`sfi-backfill-20260806-140815`,`-20260807-101503`,`-20260807-123519`) — all completed cleanly
+  (`exit_code=0`) despite hitting real transient errors (a 429 storm, 10 JSON-truncation errors) mid-run, each correctly
+  shard-isolated without stalling. No code change needed in either named repo. Distinct low-frequency data-quality
+  finding (JSON truncation on ~0.4% of date-completions in one run, NOT a hang) filed as
+  `/plans/active/issues/sfi_progressive_stats_json_truncation_2026_08_09.md`.
 - **2026-08-09**: EXTENDED-STARKNET perp backfill todo (P2) flipped — ran the IS listing refresh + catalogue rollup then
   launched 13 sharded SPOT VMs (`cefi-extended-starknet-*`) covering the full 2024-10-01→2026-08-08 window; all
   completed and self-deleted within ~45min. Bounded, targeted per-VM-shard verification (677 files, ~17MB, not a
