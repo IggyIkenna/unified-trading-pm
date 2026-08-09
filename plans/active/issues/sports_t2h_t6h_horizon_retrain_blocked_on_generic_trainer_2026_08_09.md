@@ -81,7 +81,15 @@ doesn't reflect the actual production training pipeline, which is worse than rep
       grid yet, tracked by the P1 todo below).
 - [ ] [CODE] P1. Once the trainer is generalized, run the actual retrain for `model_2a`/`model_2b`/`model_2c` (existing,
       never-yet-trained-end-to-end boundaries) plus the new `model_2d`/`model_2e` (T-6h/T-2h), and report the measured
-      coverage + performance delta this plan's todo asks for. (repo: ml-service)
+      coverage + performance delta this plan's todo asks for. (repo: ml-service) — PARTIAL, ml-service@0a7d842: added
+      the missing `SPORTS_MODEL_2B_GRID`/`SPORTS_MODEL_2C_GRID` (model_2b/model_2c had no grid entry, so
+      `SPORTS_MODEL_ID_TO_GRID` couldn't resolve them even after the trainer generalization). The actual "run + measure
+      a delta" work is bigger than a config change — see
+      `/plans/active/issues/sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md`: the trainer has zero
+      CLI/orchestrator wiring, zero test coverage, and no artifact-persistence path, so a real driver has to be built
+      (and unit-tested) before any horizon can actually be trained end-to-end; the multi-year real-data run after that
+      belongs on a VM per the heavy-I/O rule, not a worker dispatch. Split into two new AO todos there — this P1 stays
+      open until both land.
 
 ## Progress Log
 
@@ -90,3 +98,8 @@ doesn't reflect the actual production training pipeline, which is worse than rep
   "measure the delta" ask unmet with a fabricated number.
 - 2026-08-09 (slot-13): shipped the P0 trainer-generalization todo (ml-service@4b43762) — QG green, verified on origin.
   P1 (actual retrain + measured delta run) remains open and is now unblocked.
+- 2026-08-09 (slot-19): closed the model_2b/model_2c grid-config gap (ml-service@0a7d842). Investigating the rest of P1
+  found the sports ensemble trainer has no driver/CLI wiring and no test coverage at all (never invoked outside its own
+  module) — filed `sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md` with the concrete follow-on
+  todos (build + test-cover a driver, then run it on a VM) rather than fabricate a measured delta with no actual
+  training pipeline behind it.
