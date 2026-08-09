@@ -104,9 +104,9 @@ locked_since:
       corroborating, not duplicate, evidence).
 
       **Net**: no false-done claims found in any of the four source docs; every commit P1 or its sources cite resolves
-                  to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
-                  capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
-                  (unrelated, already-tracked) chains finish.
+                      to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
+                      capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
+                      (unrelated, already-tracked) chains finish.
 
 - [x] ✅ [REVIEW] P1. **Check whether reconciling left any source doc at zero open todos**, and if so run the same
       6-step archival ritual on it — a finalize that closes only its own plan while leaving a now-fully-done source doc
@@ -121,10 +121,30 @@ locked_since:
       `[OPERATOR] P2` credential ask), `status: open`. `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` — 4
       open todos remain (its own live operational chain), `status: open`. **Net**: reconciling did not leave any
       currently-live source doc at zero open todos — none qualifies for the 6-step archival ritual right now.
-- [ ] [REVIEW] P1. **Confirm capture is STILL live, not merely restored once.** P1's Block A proves a single day; this
-      re-checks that raw sports capture has continued writing for the full window since, and that the new staleness
-      guard actually fires on a synthetic frozen-source day. A guard that was never observed firing is not a guard.
-      **Done when**: continued capture is evidenced across the elapsed window and the guard is demonstrated firing.
+- [x] ✅ [REVIEW] P1. **Confirm capture is STILL live, not merely restored once.** P1's Block A proves a single day;
+      this re-checks that raw sports capture has continued writing for the full window since, and that the new staleness
+      guard actually fires on a synthetic frozen-source day. A guard that was never observed firing is not a guard. —
+      **VERIFIED + BUG FOUND + FIXED 2026-08-09 (slot 32, review)**. (1) **Capture still live**: manifest
+      (`instruments-store-sports-prd-...`) shows real non-empty `capture_status=captured` trades rows continuing every
+      day since P1's single-day proof — 2026-08-05 (17 shards/592 rows), 06 (17/592), 07 (225/9154, P1's day), 08
+      (1237/75570), 09-partial (397/36019 so far) — plus GCS parquet object counts climbing the same days (225 → 1237 →
+      397-so-far). Not the outage's silent-zero pattern. (2) **Staleness guard: DOES fire, but was BROKEN — firing
+      unconditionally regardless of true capture health, not "never observed firing."** Live Cloud Run logs
+      (`uts-prod-market-data-processing-service-t1-recon`) show it firing twice, 2026-08-09T01:03:16Z and 03:03:26Z:
+      `SPORTS staleness guard: refusing derived output for sports/2026-08-08 — MTDS manifest has no     capture_status=captured row for SPORTS/2026-08-08 ...`
+      — despite 2026-08-08 having 1237 real captured trades rows (confirmed above). Root cause:
+      `check_sports_raw_source_captured` (Block A todo-3, `market-data-processing-service@41cdb702d`) resolved the
+      bucket via `_resolve_upstream_bucket("SPORTS")`, which returns the RAW `market-data-tick-sports-*` bucket — but
+      SPORTS' canonical availability manifest lives in the SEPARATE `instruments-store-sports-*` bucket (documented
+      carve-out, `market-tick-data-service`'s `_manifest_bucket.py::_resolve_manifest_bucket`, since the 2026-06-07
+      sports-manifest-canonicalisation fix). The raw-tick bucket's own manifest index has only 5 stale `empty_confirmed`
+      placeholder rows for trades — it NEVER carries real captured rows for SPORTS — so the guard was unconditionally
+      refusing odds_snapshot/odds_movement/odds_horizon_bucket derivation, live in production, since it shipped
+      2026-08-08. All 9 original unit tests mocked `_resolve_upstream_bucket` directly and never caught this. **Fixed**:
+      `market-data-processing-service@631fc4594` — guard now resolves `instruments-store-sports` directly (mirrors the
+      MTDS carve-out pattern); added a regression test asserting the correct bucket kind/asset_group. QG: ✅ ALL QUALITY
+      GATES PASSED, 10/10 unit tests green (was 9, +1 regression). Verified `631fc4594` is an ancestor of
+      `origin/live-defi-rollout`.
 - [ ] [REVIEW] P1. **Re-verify the already-archived exchange/fixed-odds fork pair still resolves.** Both
       `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` and its finalize sibling were marked `superseded` and
       **archived to `plans/archive/2026_08/` on 2026-08-08** in the same commit that authored this chain — the parent

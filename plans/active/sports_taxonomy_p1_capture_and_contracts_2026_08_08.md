@@ -717,3 +717,14 @@ redo, which is exactly why it was split out.
   enumerated in the enforcement surface, and (2) the P4 C3 pre-launch corpus disposition (10,345 objects) is settled by
   this doc's standing supersession of the 2018 coverage-window-extension option, not a fresh decision — P4 cites this
   doc rather than re-litigating.
+- **2026-08-09 (slot 32, review)** — **Correction to Block A todo-3 (staleness guard,
+  `market-data-processing-service@41cdb702d`)**: the finalize plan's re-verification found the guard was reading the
+  WRONG manifest bucket (`_resolve_upstream_bucket("SPORTS")` → raw `market-data-tick-sports-*`, which never carries
+  real captured rows for SPORTS — the canonical manifest lives in `instruments-store-sports-*`, a documented MTDS
+  carve-out). This made the guard unconditionally refuse SPORTS derived output regardless of actual capture health, live
+  since 2026-08-08 (2 confirmed false blocks, 2026-08-09 01:03/03:03Z, against a day with 1237 real captured rows). All
+  9 original unit tests mocked the bucket resolver directly, masking it. Fixed:
+  `market-data-processing-service@631fc4594` (resolves `instruments-store-sports` directly) + 1 new regression test
+  (10/10 green). The todo-3 checkbox itself stays `[x]` — a staleness guard now correctly exists and fires — this note
+  documents the correction for traceability. Full detail:
+  `sports_taxonomy_p1_capture_and_contracts_2026_08_08_finalize.md` item 3.
