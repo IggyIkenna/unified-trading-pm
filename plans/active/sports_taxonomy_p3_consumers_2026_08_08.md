@@ -206,7 +206,14 @@ spelling variant survives, which is the entire point of the panel". It does not.
       `['T-10m','T-1h','T-24h']`; both new horizons already have data (T-2h 14,209 shards, T-6h 14,217) and ~2.7x the
       fixture coverage of T-24h, both safely pre-match. Retrain the sports models against the changed feature set and
       report the coverage and performance delta — do not assume it is an improvement, measure it. Resolves the open todo
-      in `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md`.
+      in `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md`. **Partial progress 2026-08-09
+      (slot-11)**: horizon-declaration half SHIPPED — `SPORTS_MODEL_CONFIGS` (`model_2d`/`model_3d` @ T-6h,
+      `model_2e`/`model_3e` @ T-2h) + matching grid configs — `ml-service@8af9324`; `FEATURE_HORIZONS`/`MODEL_HORIZONS`
+      now emit T-6h/T-2h feature rows — `features-service@3394de8`. Retrain + measured delta remains OPEN — blocked on
+      the sports ensemble trainer being hardcoded to `model_2a` only (no models have ever trained end-to-end at
+      T-1h/T-10m either); see
+      `/plans/active/issues/sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` for the
+      generalize-then-retrain follow-up todos. Checkbox stays unflipped until the retrain half lands.
 - [ ] [CODE] P1. **Switch `verify_ml_readiness.py` to the precedented aggregate >=95% pass bar** (operator ruling
       2026-08-08), replacing the strict per-day gate that fails near-empty FIFA-international-break days on an exact
       68.6% floor which is honest absence, not a defect. Prerequisite: the P1/P2 zombie-tick fixes in
