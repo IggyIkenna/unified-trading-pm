@@ -98,9 +98,16 @@ standard "check `git status`, check `git stash list`" recovery ritual actively c
       proof the test would have caught the original bug), and (2) three sequential locked-commit calls in one process
       complete without a self-deadlock, directly answering this todo's own "does not deadlock when quickmerge invokes
       prek twice (up to 15x) in one run" requirement. QG green, landed + ancestry-verified on origin.
-- [ ] [BACKEND] P2. **Make the loss loud** — have the wrapper checksum each unstaged file before the stash and compare
-      after the restore, failing the run when a file changed underneath it. Even without a fix, a loud failure beats
-      silent reversion.
+- [x] [BACKEND] P2. ✅ **Make the loss loud** — `unified-trading-pm@f8a307bad`. Both `locked_git_commit`
+      (safe-doc-push.sh) and the main commit-retry loop (quickmerge.sh) now checksum (`git hash-object`) every
+      already-unstaged file right before their `git commit` call — exactly the set prek's own stash captures — and
+      compare after the call returns. A changed checksum on a file neither script touched is the silent-revert
+      signature; both scripts now hard-stop with an actionable message (citing this issue doc) instead of reporting a
+      clean tree. No auto-fix/auto-restore attempted (we don't know which version is "right", and must never overwrite
+      foreign WIP either way). Verified: 2 new regression tests added to
+      `scripts/quality-gates-base/tests/test-quickmerge-commit-lock.sh` extracting the real `_prek_race_snapshot`/
+      `_prek_race_check` functions — one asserts detection on a synthesized silent-revert, one asserts no false positive
+      on an untouched unstaged file (both pass; full 6/6 suite green). Full `quality-gates.sh` Pass-1 green.
 - [ ] [DOCS] P2. **Add the scratchpad-backup rule to the multi-agent safety SSOT** — "back up uncommitted WIP to the
       scratchpad BEFORE running any git-touching command in a shared checkout, and verify the backup before trusting
       it." That is what saved the work here, and it is not currently written down anywhere.
