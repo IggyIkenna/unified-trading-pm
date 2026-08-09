@@ -53,15 +53,25 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. Reconcile `data_pipeline_reconciliation_skill_2026_07_20.md`'s checkbox against batch 10's sole
+- [x] ✅ [REVIEW] P2. Reconcile `data_pipeline_reconciliation_skill_2026_07_20.md`'s checkbox against batch 10's sole
       now-done todo — flip the corresponding checkbox, citing the shipped commit/evidence (verify before citing). **Do
       NOT archive the source doc** even if it reaches 0 open todos — it is an operator-designated standing reference
       surface (`autonomous_session_operator_decisions_2026_07_25.md` entry #10, option A), explicitly kept
       `status: active` in `plans/active/` regardless of open-todo count. Done when: the source doc's checkbox is flipped
-      with verified evidence.
+      with verified evidence. **2026-08-09, `unified-trading-pm@d4aee94e5f`** — flipped the "Measure the historical
+      per-venue non-canonical row count..." checkbox, citing batch10's landing commit `d8c682dd5a8` (verified on
+      origin). Also added `archive_exempt: true` to the source doc's frontmatter (required by
+      `check_archive_candidates.sh` now that it sits at 0 open todos — standing reference surface, not archived per the
+      instruction above) and trimmed a now-stale "Recommended NEXT" pointer to stay under the 1000-line hard cap. Source
+      doc NOT archived, per instruction.
 - [ ] [DOC] P2. Archive `cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md` via the standard 6-step ritual once
       todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by` (confirm
       already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the new path,
       and this finalize doc archives alongside it in the same commit.
 
 ## Progress Log
+
+- **2026-08-09**: Todo 1 done — `unified-trading-pm@d4aee94e5f`. Source doc's checkbox flipped citing batch10's landing
+  commit `d8c682dd5a8` (verified on origin via `git merge-base --is-ancestor`). Source doc stays `active` in
+  `plans/active/`, not archived. Todo 2 (archival of the batch10 source plan) remains open — sequential, gated on this
+  todo, not attempted here.
