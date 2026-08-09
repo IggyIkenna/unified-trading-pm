@@ -107,10 +107,17 @@ risks papering over a real broken tool-chain reference with a cosmetically-consi
 
 ## Todos
 
-- [ ] [ENGINEER] P2. Determine the current, correct home + item-count of the production-readiness checklist (see options
-      A/B above), then fix all 5 citing locations (`deployment-service/CONTRIBUTING.md`,
-      `deployment-service/audit/CURRENT_AUDIT.md`, `codex/README.md`, `/codex/06-coding-standards/README.md` ×2) to
-      agree with each other and with the real backing file.
+- [x] ✅ [ENGINEER] P2. **DONE 2026-08-08 (ao round-5 apply session, item 13).** Determine the current, correct home +
+      item-count of the production-readiness checklist (see options A/B above), then fix all 5 citing locations
+      (`deployment-service/CONTRIBUTING.md`, `deployment-service/audit/CURRENT_AUDIT.md`, `codex/README.md`,
+      `/codex/06-coding-standards/README.md` ×2) to agree with each other and with the real backing file. Evidence:
+      `deployment-service@e780ab83` ("feat: add canonical production-readiness checklist (item 13, ao round-5)",
+      verified ancestor of `origin/live-defi-rollout`) created the canonical 112-item
+      `deployment-service/configs/checklist.template.yaml` (reconciled from the two prior `_checklist-template*.yaml`
+      files); `/codex/06-coding-standards/README.md:546` now reads "The 112-item checklist in
+      `deployment-service/configs/checklist.template.yaml` (reconciled 2026-08-08 from the two prior ..." and the stale
+      "51-point"/"37-item" mentions are gone. The other 3 citing docs (`CONTRIBUTING.md`, `CURRENT_AUDIT.md`,
+      `codex/README.md`) only ever cited the bare path, not a stale count, and that path now resolves.
 
 ## Progress Log
 
