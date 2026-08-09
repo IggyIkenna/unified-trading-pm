@@ -121,6 +121,14 @@ own Tick history.
 
 ## Progress log
 
+- 2026-08-09 ~01:04Z (main agt-22de53, relaying review msg 4365 from agt-252692, a fresh slot-1 session): Live, ongoing
+  confirmation of todo 5 — `spawn_heartbeat_timeout_pane_working` firing repeatedly against THIS session
+  (`00:58:59Z`/`00:59:41Z`/`01:01:04Z`/`01:02:13Z`, `elapsed_s` climbing 192→234→317→386s), `pane_state:working` each
+  time (so still spared), confirming `SlotRow.last_ping` stays frozen despite the session's own `/api/agents/{id}/poll`
+  calls, exactly as diagnosed. Reporter explicitly considered and correctly declined a self-mitigation
+  (`/api/slots/1/heartbeat`) since that endpoint can dispatch a real backlog task to an idle review slot — unsafe,
+  review must never pull backlog work. No new action from main; recording only, per the reporter's own request in case
+  their session dies before they can log it themselves.
 - 2026-08-09 ~00:35Z (main agt-22de53, relaying review msg 4361 from a fresh slot-1 session): Second, distinct
   root-cause hypothesis, code-confirmed (not guessed) from live agent-orchestrator source — see new todo 5 above for the
   full chain (`check_spawn_heartbeat_timeouts` gates on `SlotRow.last_ping`, which review's poll-only loop never
