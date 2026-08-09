@@ -5,12 +5,11 @@ summary: >-
   orch-agent-main sat at 99% context for hours while every threshold in context_lifecycle stayed silent: a 4.3h
   /api/activity window held 132 context-lifecycle events for role=worker and exactly 1 for role=main. Root cause:
   context_probe.observe() accepts pane_pct as an EXACT calibration source and latches tokens/(pct/100) into
-  calibrated_window — monotonic, top-precedence, never re-validated — but its callers passed
-  derive_context_used_pct(), whose third branch is a HEURISTIC (a mid-spinner token readout over an ASSUMED 1M
-  window). claude-sonnet-5 ended up with calibrated_window=2,614,639 against a ~937K reality, so main's real 99%
-  measured 26% and no threshold fired. It hit main and spared the fleet because workers keep a self-reported SlotRow
-  floor and main, having no SlotRow, had only the poisoned probe. Code fix shipped; live validation and the codex
-  update remain.
+  calibrated_window — monotonic, top-precedence, never re-validated — but its callers passed derive_context_used_pct(),
+  whose third branch is a HEURISTIC (a mid-spinner token readout over an ASSUMED 1M window). claude-sonnet-5 ended up
+  with calibrated_window=2,614,639 against a ~937K reality, so main's real 99% measured 26% and no threshold fired. It
+  hit main and spared the fleet because workers keep a self-reported SlotRow floor and main, having no SlotRow, had only
+  the poisoned probe. Code fix shipped; live validation and the codex update remain.
 status: open
 nature: issue
 asset_group: [ao]
@@ -62,9 +61,9 @@ context_scope:
 
 | role   | context-lifecycle events                                             |
 | ------ | -------------------------------------------------------------------- |
-| worker | **132** (`forced_precompact` / `forced_compact` firing at pct=60-65)  |
-| review | **0**                                                                 |
-| main   | **1** (a single client-side `context_compact_observed` at 12:31:44Z)  |
+| worker | **132** (`forced_precompact` / `forced_compact` firing at pct=60-65) |
+| review | **0**                                                                |
+| main   | **1** (a single client-side `context_compact_observed` at 12:31:44Z) |
 
 `proactive_compact_guidance` = **0** across every role for the whole window.
 
@@ -91,10 +90,10 @@ Both call sites fed it `derive_context_used_pct()`, which has three branches:
 Branch 3 calibrates the window against an assumption about the window. Arithmetic confirms it exactly:
 `2,614,639 × 0.26 = 679,806` — a `pane_pct=26` recorded when the session held ~679,806 tokens.
 
-**Why main and not the fleet.** `_read_pct` gave workers `max(SlotRow.context_used_pct, probe)` — their self-reported
-DB value still carried the truth, so their forces kept firing at 60% throughout. main is the only target with no
-`SlotRow`, and it had no self-reported floor at all: only the poisoned probe. Its `AgentRow.context_used_pct = 99` —
-the CLI's own figure, which main reports every tick — was never consulted by the policy.
+**Why main and not the fleet.** `_read_pct` gave workers `max(SlotRow.context_used_pct, probe)` — their self-reported DB
+value still carried the truth, so their forces kept firing at 60% throughout. main is the only target with no `SlotRow`,
+and it had no self-reported floor at all: only the poisoned probe. Its `AgentRow.context_used_pct = 99` — the CLI's own
+figure, which main reports every tick — was never consulted by the policy.
 
 ## Fix (shipped, agent-orchestrator → LDR)
 
@@ -111,10 +110,25 @@ post-fix reports 68%. Tests: `tests/test_context_probe.py::test_the_measured_poi
 
 ## Remaining todos
 
-- [ ] [BACKEND] P0. Confirm the fix is LIVE on the orchestrator VM, not merely merged: the running uvicorn process must
-      be on a revision containing `derive_calibration_pct`. Done-when: `_calibration_is_plausible` is importable from
-      the VM's running checkout AND a fresh `/api/activity` window shows `proactive_compact_guidance` or
-      `forced_precompact` for `role=main`.
+- [x] ✅ [BACKEND] P0. Confirm the fix is LIVE on the orchestrator VM, not merely merged: the running uvicorn process
+      must be on a revision containing `derive_calibration_pct`. Done-when: `_calibration_is_plausible` is importable
+      from the VM's running checkout AND a fresh `/api/activity` window shows `proactive_compact_guidance` or
+      `forced_precompact` for `role=main`. — **CONFIRMED LIVE 2026-08-09 (slot 22, backend_engineer)**, verified
+      directly on the orchestrator VM (this session's slot host resolves to `i-0c9b283b31d6b5ca7` — no SSM needed). (1)
+      The real serving process (`pid=4182514`, `uvicorn server.server:app`, cwd
+      `/home/ubuntu/unified-trading-system-repos/agent-orchestrator` — the root clone, NOT a slot worktree) is on HEAD
+      `a272e95`, which contains fix commit `bd7ff0a` as an ancestor; process start time 2026-08-09T16:30:30Z is AFTER
+      the fix commit's 2026-08-09T15:43:21Z landing. Ran
+      `./.venv/bin/python3 -c "from server.context_probe import     _calibration_is_plausible; from server.worker_liveness import derive_calibration_pct"`
+      against that exact repo + venv — import succeeded (both symbols resolve). (2) `GET /api/activity?limit=4000`
+      (fresh window 2026-08-09T12:41Z → 17:08Z) — filtering on `details.role == "main"` (the role lives inside
+      `details`, not a top-level field) found TWO `proactive_compact_guidance` events for `role=main`: one at 15:15:34Z
+      (pct=69, before the running process's 16:30:30Z start — from the earlier out-of-band cache purge the Progress Log
+      below already records) and, decisively, one AFTER the current process started: **16:47:56Z, pct=60**, each
+      followed by a `context_compact_observed` (60→15% at 16:51:53Z; the earlier one 70→7% at 15:21:42Z) proving
+      guidance actually drove a real compaction, not just a fired-and-ignored signal. The post-restart 16:47:56Z firing
+      is the decisive evidence — it happened 17 minutes into the fixed process's own lifetime, not a leftover from
+      before the deploy.
 - [ ] [BACKEND] P0. Audit the live `learned_context_windows.json` for any OTHER poisoned entry the same way
       claude-sonnet-5 was poisoned (compare each `calibrated_window` against that model's `model_tier` prior and
       watermark; anything past 1.5x is suspect). The claude-sonnet-5 entry was purged out-of-band on 2026-08-09.
@@ -125,13 +139,20 @@ post-fix reports 68%. Tests: `tests/test_context_probe.py::test_the_measured_poi
       rather than per-model. Done-when: the finding is recorded and either the model is corrected or the divergence is
       documented as expected in `/codex/04-architecture/agent-orchestrator-worker-liveness.md`.
 - [ ] [DOCS] P1. Post-phase codex audit: fold the calibration-source contract (only CLI-rendered percentages may
-      calibrate) and main's AgentRow floor into
-      `/codex/04-architecture/agent-orchestrator-worker-liveness.md`. Done-when: the SSOT states both rules and cites
-      this incident.
+      calibrate) and main's AgentRow floor into `/codex/04-architecture/agent-orchestrator-worker-liveness.md`.
+      Done-when: the SSOT states both rules and cites this incident.
 
 ## Progress Log
 
 - 2026-08-09 — Root-caused via read-only SSM against the live VM. Purged the poisoned `claude-sonnet-5`
-  `calibrated_window=2,614,639` (the sidecar is documented as safe to lose; it re-converges from transcript reads);
-  main immediately re-measured at 69%, above the 60% guidance threshold. Submitted `/compact` to `orch-agent-main` via
-  the same verified-submit helper the backend's own forced path uses. Code fix authored, QG-green and shipped.
+  `calibrated_window=2,614,639` (the sidecar is documented as safe to lose; it re-converges from transcript reads); main
+  immediately re-measured at 69%, above the 60% guidance threshold. Submitted `/compact` to `orch-agent-main` via the
+  same verified-submit helper the backend's own forced path uses. Code fix authored, QG-green and shipped.
+
+- **2026-08-09 (slot 22, backend_engineer)** — Closed the "confirm live" todo. This session's slot worktree turned out
+  to already be running ON the orchestrator VM (`i-0c9b283b31d6b5ca7`), so verification was direct (no SSM round-trip
+  needed): confirmed the real uvicorn process serves from the root `agent-orchestrator` clone at HEAD `a272e95`
+  (post-dates fix commit `bd7ff0a`), test-imported `_calibration_is_plausible`/`derive_calibration_pct` against that
+  exact process's venv (succeeded), and found a `role=main` `proactive_compact_guidance` firing at 16:47:56Z (pct=60) —
+  17 minutes into the current process's own lifetime, so unambiguously post-deploy — followed by a
+  `context_compact_observed` showing 60%→15%. Full detail on the todo line above.
