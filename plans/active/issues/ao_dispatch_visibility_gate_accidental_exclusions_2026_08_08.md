@@ -195,18 +195,28 @@ human already made the call and the fleet still never executes it.
       Verify:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
       no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in `plans/active/infra_capture_and_devops_leftovers_2026_07_06.md`.**
-      Its checkbox reads (truncated): "[INFRA] P1. **RULED 2026-08-06 (operator): AUTHORIZED — proceed with the
-      disposable-IP probe.** The" — the marker trips `_is_non_dispatchable`
-      (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its own line, so
-      `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is genuinely still
-      blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to the start of its
-      own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation line) so it reads
-      as a declared hold. If it is already resolved (several of these carry a dated `RULED`/`DESIGN DECIDED` note — read
-      the full todo before acting), rewrite the trigger phrase so the marker no longer appears anywhere in the block.
-      Verify:
-      `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-3, infra).** Triage accidental exclusion in
+      `plans/active/infra_capture_and_devops_leftovers_2026_07_06.md`. Genuinely still blocked, AND a live gap worse
+      than "accidental" — the checkbox's actual current blocker (a 2026-08-09 slot-9 finding,
+      `BLOCKED-DESIGN-SPEC,     checked 2026-08-09 (slot 9, infra)` at line 348) used a token not in
+      `_BLOCKED_TOKEN_RE`'s alternation (`DESIGN-SPEC` is not
+      `CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-(OUTAGE|DESIGN)|PLAYWRIGHT|JURISDICTION`) — so this todo was
+      not merely mis-classified as accidental, it was **fully dispatchable to AO right now** (`excluded: []`) despite
+      the operator's own 2026-08-09 ruling to "leave this checkbox open, do NOT invent a probe design." Fix: retagged
+      the checkbox's own head (right after `[INFRA] P1.`) with `BLOCKED-UPSTREAM-DESIGN` — an ALREADY-recognized token
+      whose documented shape ("blocked until an upstream design decision lands") is exactly this situation (the probe's
+      target/request-pattern/provisioning/teardown spec is missing, not an operator sign-off) — rather than proposing a
+      new token unilaterally (the parent issue's own precedent,
+      `blocked_     prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md`, explicitly reserves adding new
+      tokens for a real decision, not a mechanical retag). Also reworded the stale "AO-dispatchable now" head-banner
+      claim and the line-348 continuation note to point back at the new head marker instead of restating an unrecognized
+      one. Verified end-to-end via
+      `cd agent-orchestrator && uv run python3 -m server.dispatch_visibility_report --pm-path     ../unified-trading-pm --json`:
+      this doc now shows `disk_open=1, backlog_open=0, excluded=[{"declared": true}]` (was `backlog_open=1, excluded=[]`
+      — i.e. genuinely dispatchable moments earlier). Also ran the actual QG gate,
+      `uv run python3 scripts/quality_gates/check_ao_dispatch_visibility_gate.py`: exit 0,
+      `1 accidental exclusions     (baseline 0, buffer 5)` — within the existing ratchet buffer, no `--update-baseline`
+      needed. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/infra_capture_and_devops_leftovers_finalize_2026_07_25.md`.** Its checkbox reads (truncated): "[DOC]
       P2. Re-run this finalize plan's parent-reconciliation once any of the 4 remaining `BLOCKED‑*` items on" — the
@@ -500,3 +510,16 @@ human already made the call and the fleet still never executes it.
   an incidental fix bundled inside an unrelated 20-file doc sweep. Confirmed via `dispatch_visibility_report --json`:
   `disk_open=1, backlog_open=1, excluded=[]` for that doc — its sole open todo is correctly dispatchable, no rewrite
   needed here.
+- **2026-08-09 (slot 3, infra)** — Fixed the `infra_capture_and_devops_leftovers_2026_07_06.md` todo. Different from
+  every "moot" fix above — this one was a live, worse-than-accidental gap: the doc's sole open todo (the disposable-IP
+  rate-limit probe) carries a genuine, current block (slot-9's 2026-08-09 finding that the probe design spec itself is
+  missing, `/plans/active/issues/rate_limit_probe_vm_authorized_no_design_spec_2026_08_09.md`), but the marker used to
+  express it, `BLOCKED-DESIGN-SPEC`, is not a token `_BLOCKED_TOKEN_RE` recognizes — so the todo was not merely
+  mis-classified as accidental, it was **fully dispatchable to AO** (`excluded: []`) despite the operator's explicit
+  ruling to leave it open and not invent a design. Retagged the checkbox head with `BLOCKED-UPSTREAM-DESIGN` — already
+  in the recognized alternation, and its documented intent ("blocked until an upstream design decision lands") is an
+  exact semantic match — rather than proposing a new token unilaterally. Verified via
+  `dispatch_visibility_report --json`: `disk_open=1, backlog_open=0, excluded=[{"declared": true}]` (was
+  `backlog_open=1, excluded=[]`). Also ran the real QG gate (`check_ao_dispatch_visibility_gate.py`): exit 0, fleet-wide
+  `1 accidental exclusion (baseline 0, buffer 5)` — comfortably within the ratchet buffer, no `--update-baseline`
+  needed. unified-trading-pm@(pending).
