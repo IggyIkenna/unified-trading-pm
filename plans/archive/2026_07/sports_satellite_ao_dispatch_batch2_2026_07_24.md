@@ -51,11 +51,11 @@ related:
     /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
     /plans/active/data_completion_sports_2026_07_24.md,
     /plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md,
-    /plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md,
+    /plans/archive/2026_08/sports_prelaunch_cf5_verify_residual_2026_07_24.md,
     /plans/active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md,
     /plans/active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md,
     /plans/archive/issues/sports_legacy_duplicate_triage_2026_07_22.md,
-    /plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md,
+    /plans/archive/2026_08/sports_index_recency_masked_captured_atoms_2026_07_13.md,
     /plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
     /plans/archive/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md,
     /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
@@ -88,7 +88,7 @@ source: >-
   sports_closeout_batch1_ao_ready_2026_07_24.md pattern for the master closeout plan.
 context_scope:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
@@ -681,7 +681,7 @@ context_scope:
       confirms the container image is `...instruments-service:latest` (mutable tag, not pinned); 3 most-recent
       executions (2026-07-22/23/24, all 01:30Z) completed successfully. No redeploy needed. Both this todo and the
       original redeploy todo marked resolved in
-      `plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`.
+      `plans/archive/2026_08/sports_index_recency_masked_captured_atoms_2026_07_13.md`.
 
 ### From `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`
 
@@ -914,10 +914,10 @@ context_scope:
       `issues/sports_league_id_namespace_migration_2026_07_20.md`.
 - [x] ✅ **League_id casing migration — steps 1-4 executed + verified; residual purge is human-only, not blocking.**
       market-tick-data-service@{75f226e8,fb51d86c} + unified-trading-pm@{2705cb4fd,b5bf80d53}. **Casing corrected**
-      (operator ruling: lower-case, not the upper-case the executor originally shipped) and re-shipped clean. Along the
-      way: fixed a `gsutil`-credential blocker for tarball republish (`deployment-service@3ba14ff`, routes via ADC);
-      found + fixed a TOCTOU manifest-swap revert (`unified-trading-library@14301571`), re-applied and verified stable
-      across 5 consolidator cycles; confirmed the coverage-registry refresh has no drift
+      (decided: lower-case, not the upper-case the executor originally shipped) and re-shipped clean. Along the way:
+      fixed a `gsutil`-credential blocker for tarball republish (`deployment-service@3ba14ff`, routes via ADC); found +
+      fixed a TOCTOU manifest-swap revert (`unified-trading-library@14301571`), re-applied and verified stable across 5
+      consolidator cycles; confirmed the coverage-registry refresh has no drift
       (`is_bookmaker_league_covered("BETFAIR_EX_EU","EPL")` = True as required). **Step 3 (MDPS `odds_horizon_bucket`
       reprocess) EXECUTED + VERIFIED**: 4 sharded SPOT VMs, all completed cleanly — 166,751 shards / ~5.4M bucketed rows
       written; manifest-verified stable across 2 consolidator cycles (408,815 rows / 130 distinct league_ids, no TOCTOU

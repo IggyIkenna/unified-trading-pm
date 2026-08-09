@@ -33,7 +33,7 @@ related:
   [
     plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     plans/active/issues/legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md,
-    plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md,
+    plans/archive/2026_08/sports_index_recency_masked_captured_atoms_2026_07_13.md,
     plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/02-data/availability-manifest-and-data-status.md,
@@ -373,9 +373,9 @@ session.
 - [x] ✅ [CODE] P0. Fix the `flush()`-debounce silent no-op + add post-write read-back verification in
       `write_sports_instruments_legacy_gap_manifest_2026_07_13.py` (`close()` + `_per_vm_shard_rowcount` ERROR guard).
       Repo: market-tick-data-service.
-- [x] ✅ [DATA] P0. ~~**OPERATOR RULING — are the UAC sports coverage floors correct?**~~ **RULED 2026-07-15: option (b)
-      — THE FLOORS WERE WRONG. "Amend floors to reality."** Executed in full: floors amended to the earliest date we
-      hold REAL objects, evidence-derived per source — `unified-api-contracts@c280e1ff` (+ blast radius
+- [x] ✅ [DATA] P0. ~~**OPERATOR DECISION NEEDED — are the UAC sports coverage floors correct?**~~ **RULED 2026-07-15:
+      option (b) — THE FLOORS WERE WRONG. "Amend floors to reality."** Executed in full: floors amended to the earliest
+      date we hold REAL objects, evidence-derived per source — `unified-api-contracts@c280e1ff` (+ blast radius
       `instruments-service@83e9bb23`). footystats 2019-01-01→**2018-01-01**; transfermarkt 2019-01-01→**2018-01-01**;
       open_meteo 2019-03-02→**2018-01-01**; the four api_football per-fixture 2020-06-06 overrides **DELETED** (measured
       earliest real = 2018-01-01 = the source-wide floor, so they were redundant AND contradicted the dict's own "later
@@ -388,12 +388,12 @@ session.
 - [x] ✅ [DATA] P0. **Redefine the L6-legacy-only gate** in `cf_manifest_audit_2026_06_01.py` to exclude
       `instrument_count=0` cells from the legacy-only diff, so it measures GENUINE data loss instead of a permanent
       by-design RED. Without this, E8 can never green. Repo: unified-trading-pm. **DONE 2026-07-15 —
-      `unified-trading-pm@10ad5d69a`** (operator RULING 1: _"Redefine to real-data-only."_). Implemented exactly the
-      proposed criterion below: `_split_backed_cells()` partitions legacy captured cells by per-cell **MAX**
-      `instrument_count` (MAX, not per-row — Gotcha-#2), the gate diffs only the ic>0 REAL set against canonical, and
-      the ic=0 phantoms are emitted on their own `L6-phantom-residual` INFO line (VISIBLE, not suppressed —
-      honest-absence discipline). Null ic is NOT treated as real-data evidence; a legacy index lacking the column falls
-      back to all-cells-real (conservative — the gate may read RED, it can never under-report data loss). 13 unit tests
+      `unified-trading-pm@10ad5d69a`** (decision 1: _"Redefine to real-data-only."_). Implemented exactly the proposed
+      criterion below: `_split_backed_cells()` partitions legacy captured cells by per-cell **MAX** `instrument_count`
+      (MAX, not per-row — Gotcha-#2), the gate diffs only the ic>0 REAL set against canonical, and the ic=0 phantoms are
+      emitted on their own `L6-phantom-residual` INFO line (VISIBLE, not suppressed — honest-absence discipline). Null
+      ic is NOT treated as real-data evidence; a legacy index lacking the column falls back to all-cells-real
+      (conservative — the gate may read RED, it can never under-report data loss). 13 unit tests
       (`tests/unit/test_cf_manifest_audit_l6_gate.py`) cover the split/MAX-semantics/null/missing-column + the
       RED-on-stranded-real vs GREEN-on-phantom-only decision. `audit()` exceeded the codex function-size cap once the
       block landed → extracted to `_legacy_diff()`. QG green (EXIT=0, 1267 passed, sentinel==HEAD). **Measured on BOTH
@@ -427,7 +427,7 @@ session.
       2026-07-25** (confirmed not investigated by the 2026-07-23 RE-TRIAGE below either) — tracked in
       `/plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s residual-todos digest
       (this doc's entry) so it stays visible after this doc archives.
-- [x] ✅ [DATA] P2. ~~**Operator ruling on the 2,769 copied objects** (ODDS `footystats_odds` 2018 tree) now in
+- [x] ✅ [DATA] P2. ~~**Decision needed on the 2,769 copied objects** (ODDS `footystats_odds` 2018 tree) now in
       canonical without manifest rows — leave (manifest-invisible) or remove.~~ **RESOLVED 2026-07-15 by the floors
       ruling — they were given proper manifest rows, not removed.** Under the amended footystats floor (2018-01-01)
       those objects are legitimate canonical data, so the correct fix was to make them VISIBLE rather than delete them.

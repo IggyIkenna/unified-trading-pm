@@ -42,7 +42,7 @@ priority: P1
 source: oscillation investigation 2026-07-13 (operator task "lets fix it")
 assigned_vm: planning
 resolved_by: ""
-locked_by: ""
+locked_by:
 context_scope:
   [
     /plans/archive/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md,
@@ -79,9 +79,9 @@ depends_on: []
       `fill-missing-player-stats` captured row instead (it is the dishonest side then). Never blind-flip. — ✅
       2026-07-14 instruments-service@853cef81 (`scripts/recency_masked_adjudication_2026_07_13.py`): all 143 probed
       objects exist + parse with >=1 row → verdict `restamp-captured`, re-stamped at the masking empty row's identity
-      via per-VM shard `VM_NAME=recency-repair-20260713`; the absent-object branch never fired (0 missing), and per
-      operator ruling absent-object atoms would have stayed masked (no delete/retype). `--verify` green twice (02:41Z +
-      02:52Z 2026-07-14, >=2 consolidator cycles): 243/243 read captured; captured-key diff vs pre-apply snapshot
+      via per-VM shard `VM_NAME=recency-repair-20260713`; the absent-object branch never fired (0 missing), so the
+      delete-or-retype contingency stated above was never exercised. `--verify` green twice (02:41Z + 02:52Z
+      2026-07-14, >=2 consolidator cycles): 243/243 read captured; captured-key diff vs pre-apply snapshot
       `availability_index.20260714-023838.recency_masked_adjudication_pre_apply.parquet` = 0 lost keys.
 - [x] [DATA] P1. Subclass (b) — 46 FIXTURES atoms: adjudicate truthset-flip vs captured row (row_count 1-11,
       venue=API_FOOTBALL). The 2026-06-28 truthset says no fixtures; the captured parquet says rows exist. Decide per
@@ -248,3 +248,7 @@ masking rows together to apply the tie-break. This is a genuinely live, unmitiga
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged. Note (out of scope to
   fix): the 2026-08-05 progress-log entry states this closes the last open todo, but `status:` frontmatter still reads
   `open`.
+- **plan_reconciler 2026-08-09** (sports tranche, `agt-8da8df`): re-normalizing `locked_by: ""` (false-trips
+  `check-locked-plan-deletion.sh`'s naive parser) to truly-blank `locked_by:` as a standalone commit, ahead of the
+  status-flip + archive in the next commit — see that commit for the full resolution + a resurrection-after-first-
+  archive finding.

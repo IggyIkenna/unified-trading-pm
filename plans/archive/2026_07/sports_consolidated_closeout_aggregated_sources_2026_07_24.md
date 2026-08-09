@@ -133,7 +133,7 @@ drift_direction: advance-code
     - **[DATA] P2.** Enrichment completed clean at ~30-34% honest, ~70k unattempted/entity = API-Football daily-cap
   - [`plans/archive/2026_07/data_completion_sports_history_2026_07_24.md`](/plans/archive/2026_07/data_completion_sports_history_2026_07_24.md)
     — 0 open todos (shipped-history fork from `data_completion_sports_2026_07_24.md`; record-only, status: complete).
-  - [`plans/active/sports_live_availability_and_source_latency_2026_07_24.md`](/plans/active/sports_live_availability_and_source_latency_2026_07_24.md)
+  - [`plans/active/sports_live_availability_and_source_latency_2026_07_24.md`](/plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md)
     (2 open, added to this index 2026-07-24 — was missing): Live-ODDS quota/book-set decision
     (BLOCKED-OPERATOR-DECISION)
     - re-pin the 5 `source_data_latency.py` p95-lag constants from empirical `latency_observations` data (the ~2-week
@@ -194,7 +194,7 @@ drift_direction: advance-code
     - **[OPERATOR] P3.** Final explicit go-ahead to flip sports (and prediction) live
   - [`plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`](/plans/archive/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md)
     — `status: resolved`, 0 open todos.
-  - [`plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md`](/plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md)
+  - [`plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md`](/plans/archive/2026_08/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md)
     (8 open, all P3 — design-spec questions, not yet implementable):
     - **[DESIGN] P3.** Define the decay-window STATISTIC precisely
     - **[DESIGN] P3.** Define the WINDOW boundaries (signal-time to first-leg/last-leg fill)
@@ -254,7 +254,7 @@ drift_direction: advance-code
   - [`plans/active/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md`](/plans/archive/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md)
     (1 open):
     - **[SCRIPT] P2.** Thread `date` through every T1 call site of `create_sports_reference_adapter()`
-  - [`plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md`](/plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md)
+  - [`plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md`](/plans/archive/2026_08/sports_prelaunch_cf5_verify_residual_2026_07_24.md)
     (2 open, both P1):
     - **[DATA] P1.** Sports CF-5 oracle relabel = zero — root-caused + fixed (code), preserved to a wip branch
     - **[DATA] P1.** Sports pre-launch-window corpus decision (C3, 10,345 objects — operator-gated)
@@ -263,7 +263,7 @@ drift_direction: advance-code
     - **2. [OPERATOR] P1.** Disposition ruling needed on the 83,541 pre-floor `FIXTURES_SCHEDULE` rows — DONE
     - **3. [DATA] P2.** Once ruled, run the delete-safety protocol's 5-part proof + execute the wipe — DONE
     - **4. [REVIEW] P2.** Re-run `migration_orphan_sweep_sports.py --bucket reference --dry-run` after the wipe — DONE
-  - [`plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`](/plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md)
+  - [`plans/archive/2026_08/sports_index_recency_masked_captured_atoms_2026_07_13.md`](/plans/archive/2026_08/sports_index_recency_masked_captured_atoms_2026_07_13.md)
     (4 open):
     - **[INFRA] P1.** Redeploy the `expected-universe-v2-sports` Cloud Run job image
     - **[CODE] P1.** Extend the "never emit empty_confirmed over a captured atom" guard to regular sports instruments
@@ -366,7 +366,7 @@ drift_direction: advance-code
     - **4. [DATA] P2.** Only after todos 1-3 land AND verify live: re-scope the gated delete of old non-canonical
   - [`plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`](/plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md)
     — 0 open todos.
-  - [`plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`](/plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md)
+  - [`plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`](/plans/archive/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md)
     — 0 open todos.
   - [`plans/active/issues/sports_source_mdps_instruments_service_not_leakage_2026_07_16.md`](/plans/archive/issues/sports_source_mdps_instruments_service_not_leakage_2026_07_16.md)
     — `status: resolved`, 0 open todos.
@@ -382,7 +382,7 @@ drift_direction: advance-code
   closeout, listed here only for discoverability)**:
   `/plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`,
   `/plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`,
-  `/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`,
+  `/plans/archive/issues/candle_feature_canonical_path_divergence_2026_07_20.md`,
   `/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md`,
   `/plans/active/issues/estate_orphan_assessment_2026_07_21.md`,
   `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md`,
@@ -399,7 +399,7 @@ drift_direction: advance-code
   `/plans/archive/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`,
   `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`,
   `/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md`,
-  `/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`,
+  `/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md`,
   `/plans/active/data_pipeline_check_mdps_features_2026_07_20.md`,
   `/plans/archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md` (ARCHIVED 2026-07-27),
   `/plans/archive/issues/understat_bulk_download_backfill_2026_06_29.md` (retagged `[sports]` 2026-07-25, was a
