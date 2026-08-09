@@ -150,18 +150,12 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       scoped issue doc exists describing the root-cause candidates and fix options for the residual. — **DONE 2026-08-09
       (slot-20): 0 blank-reason cells remain**, already resolved by prior shipped typing work. See
       `plans/archive/issues/sports_odds_predictions_golden_window_empty_confirmed_residual_2026_08_09.md`.
-- [ ] [DATA] P2. Apply the already-tool-extended historical migration for prediction's two confirmed-historical-only
-      legacy `instrument_availability` shapes (`canonical_question_group={G}/day={D}/venue={V}/...` +
-      `market_lifecycle`'s `day={D}/group={G}/venue={V}/...`, ~13,282 objects per the 2026-08-03 dry-run;
-      `instruments-service@aaa0866c` already recognizes + maps both to the canonical trailing-key target). Run a fresh
-      `migrate_instrument_availability_hive_2026_08_03.py --asset-group prediction` dry-run to confirm current counts,
-      then `--apply-prod --confirm-prod-write` to copy-and-verify (never delete source, mirrors the already-proven
-      cefi/defi/tradfi apply pattern), and update `/codex/02-data/canonical-cutover-register.md` §6b's prediction
-      residual row to reflect the applied state. Source:
-      `instrument_availability_league_and_question_group_partition_shapes_2026_08_03.md`. Done when: fresh dry-run +
-      apply-prod run completes with 0 failed, prediction's `unrecognized` count for these two specific shapes (excluding
-      the still-pending third `market=` shape gated on the sibling doc's todo 8) drops to 0, and
-      `canonical-cutover-register.md` §6b is updated with the result.
+- [x] ✅ [DATA] P2. Apply the already-tool-extended historical migration for prediction's two confirmed-historical-only
+      legacy `instrument_availability` shapes — **DONE 2026-08-09 (slot-22)**. Fresh dry-run confirmed 13,282 flat
+      candidates (matching the 2026-08-03 sizing); `--apply-prod --confirm-prod-write` copy-and-verify completed **0
+      failed** (13,280 `already_present_verified` + 2 `content_mismatch`, left in place per the existing
+      content_mismatch policy). `canonical-cutover-register.md` §6b updated with the applied result. Evidence:
+      `unified-trading-pm@<see commit>`.
 - [x] ✅ [DIAG] P1. Root-cause the sports-prd manifest consolidator's frozen canonical rows_out — FALSE ALARM, confirmed
       2026-08-06 (slot 5). **Root cause**: `dedup_dropped` is DERIVED arithmetic, not an independent measurement —
       `manifest_consolidator.py:1028` (`dedup_dropped=rows_in - rows_out`). When all incoming shard rows match existing
