@@ -99,9 +99,10 @@ failure mode `/codex/12-agent-workflow/commit-push-flip-rule.md` exists to preve
       `git branch -r --contains HEAD` includes the target branch. Report success ONLY on those verified facts, never on
       an intermediate command's exit code. Done-when: a test with a stubbed no-op commit asserts a non-zero exit. —
       unified-trading-pm@2f482ce00
-- [ ] [SCRIPT] P2. On the `index.lock` contention path specifically, distinguish "could not stage" from "nothing to
+- [x] ✅ [SCRIPT] P2. On the `index.lock` contention path specifically, distinguish "could not stage" from "nothing to
       stage" in the log line — the current wording ("nothing staged for the named files") reads as the benign case when
-      it is actually a hard failure. Done-when: the two produce distinct messages and distinct exit codes.
+      it is actually a hard failure. Done-when: the two produce distinct messages and distinct exit codes. —
+      unified-trading-pm@7d0bd2cb3
 - [ ] [SCRIPT] P2. Add a documented escape hatch for a checkout under sustained foreign write, since retrying in place
       cannot converge: land from a separate clone (what unblocked this incident) or fail loudly with that instruction.
       Done-when: the script prints the recovery path after N failed attempts instead of looping.
@@ -129,3 +130,16 @@ failure mode `/codex/12-agent-workflow/commit-push-flip-rule.md` exists to preve
   commit+push happy path still reports verified success. Full existing suite
   (`test_safe_doc_push_failure_classification.bats`, `test_safe_doc_push_untracked_file_never_false_success.bats`) still
   green — 11/11 passing. unified-trading-pm@2f482ce00.
+- 2026-08-09 (slot 3) — Todo 3 shipped: `git add -- "${FILES[@]}"`'s exit code was never checked, so an index.lock
+  failure there (the actual incident mechanism) silently fell into the same "nothing staged for the named files —
+  checking if content already matches HEAD" wording used for the genuinely benign no-op-edit case. `git add`'s exit code
+  is now checked explicitly: an index.lock failure emits a distinct "❌ could not stage named files ... HARD FAILURE"
+  message and retries immediately, never reaching the ambiguous branch — which is now only reached, and reworded to
+  "nothing to stage for the named files (staging completed cleanly, no diff)", when `git add` itself actually succeeded.
+  New regression suite `tests/test_safe_doc_push_could_not_stage_vs_nothing_to_stage.bats` (3 tests): a persistent
+  index.lock on a brand-new file reports the hard-failure message and a non-zero exit (never the old ambiguous wording);
+  a genuinely already-landed tracked file reports the benign message and exit 0; a third test asserts the two exit codes
+  differ within one run. Full existing suite (`test_safe_doc_push_untracked_file_never_false_success.bats`,
+  `test_safe_doc_push_self_verifying_success.bats`, `test_safe_doc_push_failure_classification.bats`) still green —
+  14/14 passing (bats-core 1.12.0 installed to scratchpad for local verification; not present on PATH by default in this
+  environment). unified-trading-pm@7d0bd2cb3.
