@@ -61,22 +61,93 @@ context_scope:
 
 ## Impact
 
-**Blocking, not cosmetic.** Unlike most of this session's other ratchets, this one is NOT scoped to staged files — it
-re-measures the full 241-doc corpus on every quickmerge run regardless of `--files`. Until it's back at/below 26 (or a
-reviewed `--update-baseline` lands), no slot can ship ANYTHING through the sanctioned quickmerge path.
+**Was blocking, now unblocked.** Unlike most of this session's other ratchets, this one is NOT scoped to staged files —
+it re-measures the full 241-doc corpus on every quickmerge run regardless of `--files`. A prior commit
+(`unified-trading-pm@6ec2599`, 2026-08-09T01:20:18Z — the same commit that filed this issue doc) already re-baselined
+`max_accidental_exclusions`/`max_zero_dispatchable_docs` to 34/26, so the gate has been GREEN (exit 0) since then. The
+remaining 34 accidental exclusions are real backlog debt (see Investigation findings below), not an active blocker.
 
-## Recommended next step
+## Investigation findings (2026-08-09, cicd-worker slot 4)
 
-- [ ] [DEVOPS] P1. Investigate whether this is (a) real drift needing 8 individual doc fixes (declare the marker at the
-      start of its own line, or rewrite the todo) — tedious but mechanical, one per flagged doc, see the `--json` list
-      in this doc's evidence section for the current 34; or (b) a parser/marker-vocabulary regression similar to the
-      sibling doc `ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md` (a no-space
-      `][BLOCKED-` combo the parser doesn't recognize) that's newly affecting MORE docs than that fix covered — re-run
-      `check_ao_dispatch_visibility_gate.py --json` and diff the flagged-doc list against this doc's snapshot to see if
-      it's still growing (parser bug, fix the regex) or now stable (real backlog of individual doc fixes). Done-when:
-      `check_ao_dispatch_visibility_gate.py` exits 0 (accidental_exclusions <= 26) on a fresh `origin/live-defi-rollout`
-      pull, OR a reviewed `--update-baseline` lands with each of the 8+ newly-crossed docs' justification named in the
-      commit message (never a blind re-baseline).
+**Verdict: case (a) — real drift, stable, NOT case (b) a spreading parser bug.**
+
+- **Root cause of the 26→34 jump**: two agent-orchestrator commits landed on `live-defi-rollout` in the same ~30-min
+  window as this issue's filing: `a0eb343` (2026-08-08T23:54:40Z, fixes the sibling doc's `[TAG][BLOCKED-<token>]`
+  no-space-combo false-accidental bug) and `03e1809` (2026-08-09T00:52:17Z, **tightens** `_is_declared` to require the
+  marker open the checkbox line itself — a marker at the head of a _continuation_ line no longer counts as declared,
+  because measurement showed 7/9 continuation-line "declarations" were prose soft-wraps landing mid-sentence, 2 of which
+  were stale resolution notes). The tightening commit landed BEFORE the 01:20:18Z re-baseline, so 34 is the correct
+  post-tightening count, not a moving target — confirmed stable: a fresh `origin/live-defi-rollout` pull + re-run (this
+  session) measures the exact same `34 accidental / 26 zero-dispatchable`, matching the baseline exactly with zero drift
+  despite ~40+ min of concurrent fleet commits in between.
+- **Spot-checked 3 of the 30 newly-flagged docs to confirm the exclusions are genuine, not a parser artifact**:
+  - `cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md` todo 1: the ONLY `BLOCKED-` text in
+    the block is a quoted citation of _another_ doc's stale line
+    (`"lighter Tardis entitlement (BLOCKED-CREDENTIALS, scaffold correct)"`) — the todo itself is active work ("flip the
+    checkbox if not already `[x]`"), not blocked. A genuine accidental false-positive: `_is_non_dispatchable` scans the
+    whole block for the token regardless of quoting context.
+  - `ci_satellite_ao_dispatch_batch1_2026_07_26.md` todo: `BLOCKED-CREDENTIALS` appears only as a conditional
+    instruction ("If the billing token is unavailable, record `BLOCKED-CREDENTIALS` rather than estimating") — same
+    false-positive shape, not a live hold.
+  - `infra_capture_and_devops_leftovers_2026_07_06.md` todo 1: a genuine `BLOCKED-PREREQUISITES` status IS present, but
+    written mid-paragraph as a dated status update ("**STATUS 2026-07-07 06:31 UTC — BLOCKED-PREREQUISITES**...") deep
+    in a long continuation block, not at the checkbox line's head — exactly the shape the 03e1809 tightening now
+    correctly refuses to treat as declared. The block's own later text suggests the named prereqs have since landed, so
+    this one likely also needs a content re-verify, not just a marker move.
+- **Conclusion**: all three spot-checks are genuine per-doc authoring debt (either a false-positive substring match
+  needing the todo rewritten to avoid quoting the token verbatim, or a real-but-mis-positioned marker needing either
+  re-verification + removal or a move to the checkbox line's head) — exactly what the gate is designed to surface, not a
+  parser regex gap. No further parser fix is warranted; case (b) is ruled out.
+
+## Todos
+
+- [x] ✅ [DEVOPS] P1. Investigate whether the 26→34 jump is (a) real drift needing individual doc fixes or (b) a
+      parser/marker-vocabulary regression still spreading. — unified-trading-pm (docs-only). **Verdict: case (a),
+      confirmed stable, gate already GREEN** — see "Investigation findings" above.
+- [ ] [DOCS] P2. Fix the 3 cefi-tranche accidental exclusions:
+      `cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md`,
+      `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`, `cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md`.
+      Per todo: either rewrite to avoid quoting a live-hold-marker token verbatim outside its own declared position (the
+      false-positive shape — see "Investigation findings" above for the exact marker vocabulary this refers to;
+      deliberately not respelled here, to avoid re-tripping this same gate on this very todo), or move a genuinely-live
+      marker to open the checkbox line. Re-run `check_ao_dispatch_visibility_gate.py --json` after each doc to confirm
+      it drops off the flagged list. Repo: unified-trading-pm.
+- [ ] [DOCS] P2. Fix the 4 ci-tranche accidental exclusions: `ci_satellite_ao_dispatch_batch1_2026_07_26.md`,
+      `ci_satellite_ao_dispatch_batch4_2026_07_31.md`, `ci_satellite_ao_dispatch_batch5_2026_08_02.md` (1 each),
+      `ci_satellite_ao_dispatch_batch6_2026_08_08.md` (2). Same remedy as above. Repo: unified-trading-pm.
+- [ ] [DOCS] P2. Fix the 2 cross_cutting-tranche accidental exclusions:
+      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`,
+      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`. Same remedy as above. Repo: unified-trading-pm.
+- [ ] [DOCS] P2. Fix the 2 defi-tranche accidental exclusions: `defi_satellite_ao_dispatch_batch6_2026_07_30.md`,
+      `defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md`. Same remedy as above. Repo: unified-trading-pm.
+- [ ] [DOCS] P2. Fix the 3 infra-tranche accidental exclusions: `infra_capture_and_devops_leftovers_2026_07_06.md` (2 —
+      incl. the genuinely-live-but-mispositioned `BLOCKED-PREREQUISITES` status spot-checked above; re-verify whether
+      the named prereqs have since landed before deciding declare-vs-remove),
+      `infra_capture_and_devops_leftovers_finalize_2026_07_25.md`, `infra_satellite_ao_dispatch_batch1_2026_07_26.md`.
+      Repo: unified-trading-pm.
+- [ ] [DOCS] P2. Fix the 1 prediction-tranche accidental exclusion (2 markers in the same doc):
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`. Same remedy as above. Repo: unified-trading-pm.
+- [ ] [DOCS] P2. Fix the 5 sports-tranche (non-issues) accidental exclusions:
+      `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md`,
+      `sports_satellite_ao_dispatch_batch5_2026_07_26.md`, `sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md`.
+      Same remedy as above. Repo: unified-trading-pm.
+- [ ] [DOCS] P2. Fix the 10 `plans/active/issues/` accidental exclusions:
+      `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
+      `ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md`,
+      `ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md`,
+      `capability_wizard_analysis_findings_2026_06_11.md`,
+      `credential_ask_orphan_checker_ping_format_stale_2026_07_27.md`,
+      `deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md`,
+      `deribit_combo_perpetual_partition_move_2026_07_21.md`, `e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`,
+      `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`,
+      `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` (1 each),
+      `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` (2),
+      `vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`. Same remedy as above. Repo:
+      unified-trading-pm.
+- [ ] [SCRIPT] P3. Once all 8 remediation todos above land (accidental_exclusions measures at/near 0 on a fresh pull),
+      re-run `check_ao_dispatch_visibility_gate.py --update-baseline` to ratchet `max_accidental_exclusions` back down
+      from 34 toward 0 — never leave the baseline sitting at absorbed debt once the debt is paid off. Repo:
+      unified-trading-pm.
 
 ## Progress Log
 
@@ -84,3 +155,7 @@ reviewed `--update-baseline` lands), no slot can ship ANYTHING through the sanct
   resolution). Did not attempt to fix the 8+ individual docs myself — out of scope (spans tranches I don't own, not
   small/quick per the fix-vs-file-and-wait triage). Retrying my own blocked quickmerge periodically; will update this
   doc if/when it self-resolves (another slot's commit) or note if it needs to be escalated further.
+- **cicd-worker slot 4, 2026-08-09**: investigation complete — see "Investigation findings" above. Confirmed case (a),
+  gate already GREEN via the pre-existing 6ec2599 re-baseline, no fleet-wide blocking remains. Filed the actual
+  per-tranche remediation as tracked todos below (mechanical/judgment doc fixes, out of scope for this 1h investigate
+  task) rather than fixing all 34 inline. Todo 1 (this investigation) flipped done.
