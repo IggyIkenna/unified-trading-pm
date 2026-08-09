@@ -1,26 +1,26 @@
 ---
 doc_type: issue
 title:
-  "MTDS sports-odds backfill VMs die repeatedly (8x so far) — total silence for ~16-24 min then correctly killed by the
+  "MTDS sports-odds backfill VMs die repeatedly (9x so far) — total silence for ~16-24 min then correctly killed by the
   vm-zombie-watchdog, root cause of the silence itself unconfirmed"
 summary: >-
-  EIGHT consecutive `mtds-backfill-odds-*` VMs (`smallchunk2`, `smallchunk3`, `smallchunk4`, `smallchunk5`,
-  `smallchunk8`, `smallchunk10`, `smallchunk12`, `smallchunk13`) died mid-run with the identical signature: `run.log`
-  and the heartbeat blob both go completely silent (no new lines, no heartbeat refresh) for ~16-24 minutes, then `gcloud
-  compute operations list` shows a `delete` operation. Neither death has a terminal `exit_code=` line, a `Traceback`, a
-  `CHUNK_FAILED`, or any other error marker in the persisted `run.log` — just an ordinary mid-work log line (a
-  `RESOURCE_SAMPLE` with unremarkable RSS, ~15-25% of the OOM-observed peak) followed by silence. Confirmed via
-  `deployment-service/scripts/vm/vm_zombie_watchdog.py` (`gs://deployment-scripts-{project}/vm-heartbeat/{vm}.txt`) that
-  the heartbeat blob itself also stopped updating in the same window — this is NOT a false-positive watchdog read of a
-  still-alive VM (the codebase's documented 2026-07-18 precedent for API-Football VMs), it looks like the watchdog
-  correctly caught a genuine hang and killed it as designed. What's still unconfirmed: WHY the underlying Python process
-  (or its wrapping `mtds_chunk_loop.sh`) stops emitting ANY output — no OOM kernel message, no Python exception, nothing
-  — for that specific ~16-21-minute window. Death chunks are now 18, 18, 26, 26, 26 — **chunk 26 / date≈2020-10-09 has
-  now recurred a THIRD time** (`smallchunk8` died at exactly `date=2020-10-09`, same as `smallchunk2`'s "2020-10-09+"),
-  re-strengthening a per-chunk-content correlation that had been downgraded after `smallchunk5` cleared chunk 26 cleanly
-  once — worth a closer look if a 4th chunk-26 death occurs. No data loss in any case — the manifest's per-VM shard
-  writes are durable regardless of which VM instance wrote them, and a relaunch with `RESUME_FORCE=false` correctly
-  skip-fasts through already-captured ground.
+  NINE consecutive `mtds-backfill-odds-*` VMs (`smallchunk2`, `smallchunk3`, `smallchunk4`, `smallchunk5`,
+  `smallchunk8`, `smallchunk10`, `smallchunk12`, `smallchunk13`, `smallchunk14`) died mid-run with the identical
+  signature: `run.log` and the heartbeat blob both go completely silent (no new lines, no heartbeat refresh) for ~16-24
+  minutes, then `gcloud compute operations list` shows a `delete` operation. Neither death has a terminal `exit_code=`
+  line, a `Traceback`, a `CHUNK_FAILED`, or any other error marker in the persisted `run.log` — just an ordinary
+  mid-work log line (a `RESOURCE_SAMPLE` with unremarkable RSS, ~15-25% of the OOM-observed peak) followed by silence.
+  Confirmed via `deployment-service/scripts/vm/vm_zombie_watchdog.py`
+  (`gs://deployment-scripts-{project}/vm-heartbeat/{vm}.txt`) that the heartbeat blob itself also stopped updating in
+  the same window — this is NOT a false-positive watchdog read of a still-alive VM (the codebase's documented 2026-07-18
+  precedent for API-Football VMs), it looks like the watchdog correctly caught a genuine hang and killed it as designed.
+  What's still unconfirmed: WHY the underlying Python process (or its wrapping `mtds_chunk_loop.sh`) stops emitting ANY
+  output — no OOM kernel message, no Python exception, nothing — for that specific ~16-21-minute window. Death chunks
+  are now 18, 18, 26, 26, 26 — **chunk 26 / date≈2020-10-09 has now recurred a THIRD time** (`smallchunk8` died at
+  exactly `date=2020-10-09`, same as `smallchunk2`'s "2020-10-09+"), re-strengthening a per-chunk-content correlation
+  that had been downgraded after `smallchunk5` cleared chunk 26 cleanly once — worth a closer look if a 4th chunk-26
+  death occurs. No data loss in any case — the manifest's per-VM shard writes are durable regardless of which VM
+  instance wrote them, and a relaunch with `RESUME_FORCE=false` correctly skip-fasts through already-captured ground.
 status: open
 nature: issue
 asset_group: [sports]
@@ -58,7 +58,7 @@ context_scope:
   ]
 ---
 
-## Timeline (eight occurrences now)
+## Timeline (nine occurrences now)
 
 | VM                                         | Last real log line                                                             | Heartbeat blob last update                                               | Delete op timestamp       | Silent gap |
 | ------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------- | ---------- |
@@ -70,6 +70,7 @@ context_scope:
 | `mtds-backfill-odds-smallchunk10-20260809` | `2026-08-09T12:50Z` (mid-chunk-26)                                             | `~12:50Z` (confirmed silent alongside run.log)                           | `13:07:57Z`               | ~18 min    |
 | `mtds-backfill-odds-smallchunk12-20260809` | `2026-08-09T17:43:08Z` (mid-chunk-18, RSS=15.9GiB)                             | `17:43:30Z` (confirmed via `gcloud storage ls -L`)                       | `18:02:08Z`               | ~19 min    |
 | `mtds-backfill-odds-smallchunk13-20260809` | `2026-08-09T20:08:14Z` (mid-chunk-18, SERIE_A, RSS=17.8GiB)                    | `20:08:26Z` (confirmed via `gcloud storage ls -L`)                       | `20:26:02Z`               | ~17.6 min  |
+| `mtds-backfill-odds-smallchunk14-20260809` | `2026-08-09T22:56:06Z` (mid-chunk-18, LIGUE_1, RSS=17.3GiB)                    | `22:56:26Z` (confirmed via `gcloud storage ls -L`)                       | `23:13:38Z`               | ~17.3 min  |
 
 **New pattern confirmation from occurrence 4**: this one died at **chunk 26**, not chunk 18 — the second time chunk 26
 specifically has been the death site (smallchunk2 also died there), further weakening any "chunk 18 is special" framing.
@@ -401,3 +402,14 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   `agt-adfeaf` has now been dispatched to at least 3 separate sessions (15:39Z entry above, slot 5's doc, this entry)
   for what appears to be the same underlying WARN finding — worth a look by whoever owns escalation dispatch/dedup if it
   recurs.
+
+- **2026-08-09T23:19Z (autonomous session) — NINTH occurrence, `smallchunk14`, clean 3-signal evidence, chunk 18 yet
+  again — now the overwhelming majority death site (5/9).** All 3 signals (run.log, heartbeat blob,
+  `WATCHDOG_TRACE.log`) went silent together `22:56:06Z`-`22:56:26Z`; VM deleted `23:13:38Z` (~17.3 min gap, standard
+  `1060025368044-compute@...` watchdog account — matches the established pattern exactly). Died mid-chunk-18, LIGUE_1,
+  RSS 17.3GiB (not OOM range). Updated death-chunk tally: 18, 18, 26, 26, 26, 26, 18, 18, **18** — 5 of 9 occurrences
+  now at chunk 18 vs 4 at chunk 26, a clear majority forming. Relaunched immediately as
+  `mtds-backfill-odds-smallchunk15-20260810` (timestamp-suffixed, new date since this landed just past UTC midnight) —
+  confirmed genuinely created and RUNNING via the launcher's own output (tarball fresh, guard passed); boot-health
+  verification via run.log pending as of this entry (background poll in progress, not yet trusted on exit_code alone).
+  Todo 1's blocker (no working SSH to catch a live hang) remains unchanged.
