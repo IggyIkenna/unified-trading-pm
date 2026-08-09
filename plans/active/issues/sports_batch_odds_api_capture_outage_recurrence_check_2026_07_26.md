@@ -302,6 +302,16 @@ write a manifest row of any kind — not even `attempted_failed`).
       features), not just the single already-captured daily snapshot. **Done when**: both windows show full historical
       coverage in the manifest (verified via `read_capture_status_counts`/`read_availability_index`, manifest-only, no
       GCS walk) at the intended granularity, and this todo cites the launcher/dispatch evidence.
+
+      **ag-closeout-audit sports 2026-08-09 — doc-hygiene note, do not launch a second VM:** this todo's two windows
+          (2026-06-27..07-15, 2026-07-16..07-25) both fall inside the broader 2020-06-06→present range that
+          `sports_all_vendor_honest_coverage_convergence_2026_08_07.md` already launched via the single guard-respecting
+          `mtds-backfill-odds-*` chain (live as of 2026-08-09T04:13Z at chunk 26/451 — see that doc for current state).
+          **Do not launch a separate VM for this todo's windows** — that would race the guard/duplicate the fetch. What's
+          still genuinely unverified once the broad chain converges: whether it restores the T-minus horizon-grid
+          granularity this todo cares about (8-point pre-match grid) or only day-level presence — re-check that
+          specifically before flipping this checkbox, don't assume day-level coverage implies granularity is fixed.
+
 - [x] [DATA] P1. Verify DeFi's same-day capture was/wasn't also blocked, once
       `market-data-tick-defi-prd-central-element-323112`'s manifest consolidator is confirmed healthy (see the
       ManifestConsolidatorStaleError above — this itself may need its own issue doc if it's still stale; worker should
