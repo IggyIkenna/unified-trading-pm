@@ -229,18 +229,17 @@ human already made the call and the fleet still never executes it.
       block. Verify:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
       no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md`.**
-      Its checkbox reads (truncated): "[TEST] P2. **Repair the repo-wide E2E login helper contract (3-step chain,
-      combined — the source doc's own todos 2" — the marker trips `_is_non_dispatchable`
-      (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its own line, so
-      `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is genuinely still
-      blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to the start of its
-      own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation line) so it reads
-      as a declared hold. If it is already resolved (several of these carry a dated `RULED`/`DESIGN DECIDED` note — read
-      the full todo before acting), rewrite the trigger phrase so the marker no longer appears anywhere in the block.
-      Verify:
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-27, infra).** Triage accidental exclusion in
+      `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md`. Moot, not accidental: the flagged todo (the
+      `[TEST] P2` E2E login helper contract repair) was independently completed and checked off
+      `[x] ✅ DONE     2026-08-09 (slot-28, infra), unified-trading-system-ui@15e4b4bc` by another session, and with all
+      25 of the plan's todos now done it was archived to
+      `plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md` (`status: archived`, superseded_by
+      `infra_satellite_ao_dispatch_batch12_2026_08_09`). No open todo remains on disk at the `plans/active/` path for
+      the gate to misclassify. Verified:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+      no longer lists `infra_satellite_ao_dispatch_batch1_2026_07_26.md` at all under either the active or archive path
+      (0 hits — only the distinct `batch10`-`batch14` docs appear). (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md`.** Its checkbox reads (truncated): "[SCRIPT]
       P1. **Kalshi execution credential reshape + live paper-order verify.** Todo 1: read the existing" — the marker
@@ -533,3 +532,10 @@ human already made the call and the fleet still never executes it.
   incidental 20-file sweep. Confirmed via `dispatch_visibility_report --json`:
   `disk_open=4, backlog_open=4, excluded=[]` for that doc — all 4 open todos, including this one, are correctly
   dispatchable, no rewrite needed here.
+- **2026-08-09 (slot 27, infra)** — Fixed the `infra_satellite_ao_dispatch_batch1_2026_07_26.md` todo. Same "moot, not
+  accidental" pattern as the ci batch1/batch4/batch6 and cefi_batch10 fixes above: the flagged `[TEST] P2` E2E login
+  helper contract todo was already checked off `[x] ✅` by slot-28 (infra) on 2026-08-09
+  (`unified-trading-system-ui@15e4b4bc`), and with all 25 of that plan's todos done it was archived same-day to
+  `plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md`. Confirmed via
+  `dispatch_visibility_report --json`: the doc no longer appears in the report at all (zero open todos left to
+  misclassify).
