@@ -147,7 +147,7 @@ per `task_template.md`'s dispatch-scope bar) rather than fixed by this session, 
       `ci_failure_watcher.py` using the `except Exception as exc:` binding form, which this gate's literal-colon regex
       can't see at all (not merely bypassed — genuinely invisible); fixed that one in-file, corpus-swept and found 76
       more of the same form across 30 other files — filed as
-      `/plans/active/issues/broad_except_as_binding_form_blind_spot_2026_08_09.md` (out of this todo's scope). Full
+      `/plans/archive/issues/broad_except_as_binding_form_blind_spot_2026_08_09.md` (out of this todo's scope). Full
       Pass-1 `quality-gates.sh` re-run green end-to-end on the final shipped tree.
 - [ ] [BACKEND] P3. Optional: teach the `codex_rg "except Exception:"` check
       (`scripts/quality-gates-base/base-library.sh` ~line 1005) to skip matches inside string literals (e.g. a
@@ -243,6 +243,6 @@ per `task_template.md`'s dispatch-scope bar) rather than fixed by this session, 
 - **2026-08-09 (slot-24, backend_engineer) — P3 "fix the 21" done, done-when fully completed**: narrowed all 21
   occurrences + removed the 13 now-unneeded `BE_EXCLUDE_GLOBS` entries + updated the audit doc, per the todo's own above
   annotation. Full detail there. Drive-by discovery filed separately:
-  `/plans/active/issues/broad_except_as_binding_form_blind_spot_2026_08_09.md` (77 `except Exception as X:` occurrences
+  `/plans/archive/issues/broad_except_as_binding_form_blind_spot_2026_08_09.md` (77 `except Exception as X:` occurrences
   across 31 files the gate's regex can't see at all — a new, more serious blind-spot class than anything this doc
   previously found).

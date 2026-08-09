@@ -15,8 +15,7 @@ summary: >-
   across 31 files, none excluded, none narrowed, none visible to the gate. Fixed the one instance found in-file
   (ci_failure_watcher.py, same Firestore best-effort-write pattern as the literal-colon sibling in
   promotion_lag_monitor.py); the other 76 are out of scope for this session and filed here.
-status: open
-archive_exempt: true
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -39,7 +38,7 @@ drift_direction: advance-code
 sequential: false
 locked_by:
 context_scope: [/QUALITY_GATE_BYPASS_AUDIT.md, scripts/quality-gates-base/base-service.sh, scripts/quality-gates.sh]
-resolved_by:
+resolved_by: slot-8 (backend_engineer), 2026-08-09
 source: >-
   Discovered 2026-08-09 (slot-24) as a drive-by while fixing the 21 literal `except Exception:` occurrences
   `pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md` tracks — cross-referencing that doc's inventory
@@ -47,6 +46,13 @@ source: >-
   form, which led to the corpus-wide sweep below.
 depends_on: []
 ---
+
+> **🗄️ ARCHIVED 2026-08-09** — `status: resolved` with all 3 todos done, unlocked; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md).
+> Todo 3 (the final remaining item) shipped `unified-trading-pm@9c8ca82963`, narrowing all remaining
+> `except Exception as X:`/bare `except Exception:` sites across the corpus; both ratchet baselines confirmed back at
+> baseline. Flip committed separately (`unified-trading-pm@0499d07d73`, via the `archive_exempt: true` sanctioned
+> bridge) before this archival move, per RULES.md's flip-then-mv separation rule.
 
 # `except Exception as X:` is invisible to the broad-except QG gate — 77 occurrences across 31 files
 
