@@ -21,7 +21,7 @@ tags: [cross-cutting, ao-dispatch, close-out, batch-7, satellite-docs, agent-ope
 related:
   [
     /plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md,
-    /plans/active/issues/qg_v2_green_false_resolution_historical_sample_audit_unverified_dp_gaps_2026_08_09.md,
+    /plans/archive/2026_08/qg_v2_green_false_resolution_historical_sample_audit_unverified_dp_gaps_2026_08_09.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"
@@ -54,7 +54,8 @@ drift_direction: advance-code
 
 > **🟢 ARCHIVED 2026-08-09 — COMPLETE (sole todo `[x]`, unlocked).** Successor: none — this batch's finding is carried
 > forward by
-> [`qg_v2_green_false_resolution_historical_sample_audit_unverified_dp_gaps_2026_08_09.md`](/plans/active/issues/qg_v2_green_false_resolution_historical_sample_audit_unverified_dp_gaps_2026_08_09.md).
+> [`qg_v2_green_false_resolution_historical_sample_audit_unverified_dp_gaps_2026_08_09.md`](/plans/archive/2026_08/qg_v2_green_false_resolution_historical_sample_audit_unverified_dp_gaps_2026_08_09.md)
+> — now itself archived (both todos done, 2026-08-09).
 
 > **Status: active.** Single-todo batch — exempt from the finalize-twin requirement per
 > `check_finalize_plan_coverage.py`'s single-open-todo carve-out; archival folds into this todo's own done-when.

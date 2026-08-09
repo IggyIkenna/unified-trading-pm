@@ -16,7 +16,7 @@ summary: >-
   rows), and DP-VM-002 across 23 distinct one-off VM names (23 rows) — both page-only alert tiers with zero
   auto-recovery. This doc's todos ask a worker to verify current backfill/capture completeness for exactly these 40
   named entities (not a fresh corpus-wide audit).
-status: open
+status: resolved # (was: open) 2026-08-09 — both todos done, archived
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -45,12 +45,18 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-09
 locked_since:
-archive_exempt: true
 source: >-
   `cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md`'s `[BACKEND] P2` "bounded historical-sample audit" todo,
   extracted 2026-08-09 from `escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md` once its
   code-fix prerequisite (`agent-orchestrator@884a9bfe1`) landed.
 ---
+
+> **🟢 ARCHIVED 2026-08-09.** Both todos done: todo 1 (17 DP-FETCH-009 asset_group/data_type pairs) found 11 confirmed
+> live gaps and escalated via `/blocked` per CLAUDE.md's data-correctness NOTIFY-OPERATOR rule; todo 2 (23 DP-VM-002
+> VMs) found 0 confirmed still-missing (1 genuinely unconfirmed — `fs-backfill-20260807-095916`/FootyStats — noted in
+> the Progress Log for a targeted follow-up if desired) plus a possible `exit_code_fleet_monitor.py` LIVE-VM-exemption
+> inconsistency, also noted there for whoever owns that detector next. Superseded by nothing — the 11 confirmed gaps'
+> follow-up work is tracked via the operator's `/blocked` decision on todo 1's escalation, not by this doc.
 
 # Historical-sample audit of qg_v2_green false-closures: 40 entities never independently verified
 
