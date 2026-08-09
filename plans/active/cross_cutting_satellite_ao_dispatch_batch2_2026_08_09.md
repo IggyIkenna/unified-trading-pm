@@ -283,20 +283,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                              disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                              future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                              bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                              prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                              2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                              hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                              threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                              loader, post-delete verification) and filed
-                              `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                              AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                              actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                              stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                              via that issue doc, not this line.
-                              verification actually complete.
+                                  disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                                  future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                                  bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                                  prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                                  2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                                  hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                                  threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                                  loader, post-delete verification) and filed
+                                  `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                                  AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                                  actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                                  stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                                  via that issue doc, not this line.
+                                  verification actually complete.
 
 - [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
@@ -326,13 +326,32 @@ drift_direction: advance-code
       `instruments_completion_tracker_2026_07_06.md` (Stage-2 ASTER genesis item). Done when: the fix excludes synthetic
       placeholder rows before deriving `available_from_datetime`; a regression test asserts ASTER genesis no longer
       stamps a pre-2023-07-22 date from placeholder rows.
-- [ ] [REVIEW] P1. Reconcile ASTER's two disagreeing missing-date counts: the manifest cell-presence view reports 0
-      missing dates for a venue+window where the live turbo API reports 11 missing / 1,071 expected for the SAME
-      venue+window — determine whether this is a methodology difference between the two code paths or a real bug, and
-      document the recommended trusted count. Repo: instruments-service. Source:
-      `instruments_completion_tracker_2026_07_06.md` (Stage-2/3 ASTER count-discrepancy item). Done when: the root cause
-      of the 0-vs-11 discrepancy is identified and documented with a recommendation for which count the Stage-3
-      re-measure should trust.
+- [x] ✅ [REVIEW] P1. Reconcile ASTER's two disagreeing missing-date counts — instruments-service@7dbe85e1. **RESOLVED
+      2026-08-09 — methodology/scope difference between two structurally different manifests, NOT a bug in either path's
+      arithmetic.** The "0 missing" figure comes from
+      `instruments-service/scripts/verify_instrument_manifest_coverage.py`, which reads the `instruments-service`
+      REFERENCE-DATA catalogue manifest (`get_bucket_name("instruments", ...)` — did the daily instrument-listing job
+      write a row for that venue/date) with zero genesis-date/UAC-registry awareness (raw presence check against
+      whatever `--start-date`/`--end-date` window the caller passes). The "11 missing / 1,071 expected" figure comes
+      from the live turbo API (`deployment-api` `GET /api/data-status/turbo` → `DataStatusService.get_manifest_status()`
+      → `breakdowns_core.py`'s `v_missing = sorted(v_all_dates - v_dates)`), which diffs the REAL MTDS market-tick-data
+      manifest (trades/funding/order-book capture, 4-state `capture_status` honest-coverage model) against ASTER's
+      operator-confirmed genesis (`venue_launch_dates.py` `"ASTER": "2023-07-22"`) — 1,071 days matches the inclusive
+      2023-07-22→2026-06-26 calendar-day count (ASTER is `cefi`, 24/7, not in `_WEEKDAY_ONLY_PREDICTION_SHARDS`, so
+      every calendar day counts). The two manifests measure different things (reference-data-catalogue freshness vs.
+      real market-data capture) and can legitimately disagree — confirmed by `/codex/02-data/honest-coverage-model.md`'s
+      own Layer-1 (instrument coverage) vs Layer-2 (data-download coverage) split. The separately-tracked
+      `_fetch_earliest_funding_date` synthetic-placeholder bug (this batch's adjacent P1 item) affects only the
+      per-instrument catalogue record, confirmed NOT the cause of this discrepancy (turbo's `venue_start` comes from the
+      UAC registry, independent of that per-instrument field). **Recommendation: trust the 11-missing/1,071-expected
+      turbo/MTDS count** for the Stage-3 re-measure — it reflects actual captured market data (what
+      features/strategy/backtesting consume); the reference-data-catalogue "0 missing" figure should not be cited as
+      evidence ASTER's market data is gap-free. `verify_instrument_manifest_coverage.py`'s docstring updated
+      (instruments-service@7dbe85e1) to disambiguate its scope so the same false alarm doesn't recur for other venues.
+      **Caveat**: no literal execution log was found proving which exact tool call produced the original "0 missing"
+      figure — `verify_instrument_manifest_coverage.py` is the strongest structural/textual match found, but a future
+      re-run of the discrepancy on a different venue should independently confirm the same tool before assuming this
+      root cause generalizes verbatim.
 - [ ] [CODE] P1. Add a build-time exclusion filter to `build_instrument_catalogue.py`'s `build_catalogue_dataframe` so
       `venue=ICE`, `venue=CBOE AND instrument_type IN (OPTION, SPOT_PAIR)`, and the 2 VIX-cash `INDEX` instrument ids
       are excluded from every future catalogue rebuild — mirrors an already-executed one-off purge, making it permanent.
