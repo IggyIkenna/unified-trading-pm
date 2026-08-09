@@ -12,7 +12,7 @@ summary: >-
   archival) contribute ZERO new exclusions — the 8 newly-crossed docs span cefi/ci/defi/infra/sports/prediction/issues
   tranches I don't own, each with its own `[TAG] P<n>.` todo line the parser reads as "excluded" (a BLOCKED-*/DEFERRED-
   BY-DESIGN/stretch-shaped sentence not carrying the actual declared marker token at the start of its own line).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,14 +31,19 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
-archive_exempt: true
+resolved_by: ikennaigboaka [slot-17], unified-trading-pm@64dcc4074
 context_scope:
   [
     /scripts/quality_gates/check_ao_dispatch_visibility_gate.py,
     /scripts/quality_gates/ao_dispatch_visibility_baseline.yaml,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-09** — `status: resolved` with all 9 todos `[x]`; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. All 8 per-tranche remediation todos landed (mostly self-resolved by concurrent fleet commits
+> ahead of pickup) and the final P3 baseline-ratchet todo shipped `unified-trading-pm@64dcc4074`
+> (`max_accidental_exclusions` 28→0, `max_zero_dispatchable_docs` 25→9). See Progress Log below.
 
 # ao-dispatch-visibility gate regression blocks fleet-wide shipping
 
