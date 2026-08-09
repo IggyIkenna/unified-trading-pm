@@ -121,11 +121,21 @@ and only needed a spot-check.
       content freshness is still UNVERIFIED beyond bare existence — the dry-run's own verify pass (fresh
       `gcs_describe_object` + crc32c re-check per object, per `cleanup_legacy_twins.py`) is what actually re-validates
       it, not this existence check alone.
-- [ ] [INFRA] P1. Add a new `cefi-legacy-dup-cleanup` category to `launch-canonical-migration-vm.sh` (reuses the
+- [x] ✅ [INFRA] P1. Add a new `cefi-legacy-dup-cleanup` category to `launch-canonical-migration-vm.sh` (reuses the
       already-registered `canonical-migration-cefi-` VM_PREFIX_TO_BUCKET prefix, no new registry entry): dry ->
       `cleanup_legacy_twins.py --asset-group cefi --report-uri <candidate-list> --workers 32` (no `--apply`); full ->
       same + `--apply --i-understand`. Follow the existing category-builder pattern (comma-free command string,
       `WORKERS` already validated as a bare positive integer by the launcher's existing gate). Repo: deployment-service.
+      — **DONE** (slot-31, 2026-08-09): added `_cefi_legacy_dup_cleanup_cmd()` following the `_cefi_eu_twin_apply_cmd`
+      pattern (instruments-service tarball via `_svc="instruments_service"`, `_ag="CEFI"`, usage string + final-dispatch
+      case updated). `REPORT_URI` is env-overridable, gated by a new bucket-relative-path validation (mirrors the
+      existing WORKERS/TRADFI_TICK_BUCKET/RESUME_SEED_GS injection gates) and defaults to
+      `_index/audit/legacy_dup_delete_list_cefi.parquet` (the confirmed-existing candidate list from todo 1). No DRAIN
+      GATE added — the tool's own fresh crc32c verify + `gcs_conditional_delete` keyed to a same-run-captured generation
+      close the verify-then-delete race, and this deletes already-migrated legacy duplicates, not a live-writer path
+      (unlike cefi-dedup-apply/cefi-content-apply). Computed `vm_name` measured at 59 chars (<=63 GCE limit, no
+      abbreviation override needed). `bash -n` syntax-clean; full `quality-gates.sh` green. Evidence:
+      deployment-service@913f7db9.
 - [ ] [INFRA] P1. Launch the dry-run category first, verify deletable/blocked counts + a few blocked reasons are sane
       against the expected ~1.08M/~9.98TB, THEN launch full (`--apply`). No fire-and-forget — verify STARTED <60s,
       periodic progress (verify + delete counts logged every 50k), and a terminal state; monitor via a progress-metric
@@ -151,3 +161,11 @@ and only needed a spot-check.
   since the "if absent" branch didn't fire. Flagged for the next todo: the list's mtime predates the 2026-07-13 re-audit
   that excluded cefi, so freshness beyond bare existence is still unverified — that's the dry-run verify pass's job, not
   this todo's.
+- 2026-08-09 (slot-31, task `cefi_legacy_dup_delete_tooling_gap-e03a4801e66b`): added the `cefi-legacy-dup-cleanup`
+  category to `launch-canonical-migration-vm.sh` (deployment-service@913f7db9) — new `_cefi_legacy_dup_cleanup_cmd()`
+  builder + dispatch branch + `_svc`/`_ag` classification + usage string, mirroring `_cefi_eu_twin_apply_cmd`'s
+  self-contained single-invocation shape. `REPORT_URI` env override gated by a new shell-injection validation check
+  (same pattern as the existing WORKERS/TRADFI_TICK_BUCKET/RESUME_SEED_GS gates). Flipped todo 2. Shipped via the Pass-1
+  `quality-gates.sh` (green) → Pass-2 `quickmerge --agent` flow; SHA verified an ancestor of `origin/live-defi-rollout`.
+  Did NOT launch any VM (todo 3 — a genuinely multi-hour prod-scale run — is separately scoped and untouched by this
+  session).
