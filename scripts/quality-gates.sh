@@ -229,17 +229,16 @@ BE_EXCLUDE_GLOBS=(
     # reintroduced in any of these files. Removed as part of
     # pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md's false-negative
     # investigation (root cause: undocumented/stale bypass-glob entries, not a check bug).
-    "**/check-integration-dep-coverage.py"  # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
-    "**/generate_ui_reference_data.py"      # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
-    "**/generate_unified_spec.py"           # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
-    "**/migrate_sports_gcs_to_hive.py"      # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
-    "**/validate-import-deps.py"            # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
+    #
+    # check-integration-dep-coverage.py, generate_ui_reference_data.py,
+    # generate_unified_spec.py, migrate_sports_gcs_to_hive.py, validate-import-deps.py,
+    # reap_stale_blockers.py, verify_env_tiered_buckets_provisioned.py,
+    # pin_branch_protection_rulesets.py, check_emission_policy_paired_callsites.py,
+    # qg_audit.py removed 2026-08-09 (same doc, P3 todo): every `except Exception:` in
+    # these 10 files was narrowed to the specific exception type(s) its surrounding
+    # try-block actually expects — verified `rg -c "except Exception:" <file>` == 0 for
+    # all ten. The bypass is no longer needed; genuinely fixed, not just excluded.
     "**/audit_dead_code.py"                 # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9 (false positive — string literal)
-    "**/reap_stale_blockers.py"             # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
-    "**/verify_env_tiered_buckets_provisioned.py"  # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
-    "**/pin_branch_protection_rulesets.py"  # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
-    "**/check_emission_policy_paired_callsites.py"  # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
-    "**/qg_audit.py"                        # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
 )
 DEEP_IMPORT_EXCLUDE_GLOBS=(
     "!**/check_data_completeness.py"
@@ -271,15 +270,11 @@ IMPORT_INSIDE_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py")
 # `except Exception:` (already fixed upstream; verified via `rg -c` == 0 for all three).
 # Stale bypass entries silently masked the check's ability to catch a reintroduced
 # broad-except in any of them. See pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md.
-# promotion_lag_monitor.py + ci_failure_watcher.py: except Exception guards Firestore
-# best-effort writes so SDK/credential absence never blocks the monitors —
-# documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-11)
-BE_EXCLUDE_GLOBS+=("**/promotion_lag_monitor.py")
-BE_EXCLUDE_GLOBS+=("**/ci_failure_watcher.py")
-# cron_liveness_watchdog.py: except Exception in gh_json() (network/subprocess errors)
-# and _parse_ts() (malformed timestamp) — best-effort fallback, never blocks the alert.
-# Documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-27)
-BE_EXCLUDE_GLOBS+=("**/cron_liveness_watchdog.py")
+# promotion_lag_monitor.py, ci_failure_watcher.py, cron_liveness_watchdog.py: their
+# BE_EXCLUDE_GLOBS entries removed 2026-08-09 (pm_qg_broad_except_ratchet_red_finops_
+# regression_2026_08_09.md's P3 todo) — every `except Exception:`/`except Exception as
+# X:` in all three was narrowed to the specific exception type(s) actually expected;
+# verified `rg -c "except Exception:" <file>` == 0 for all three.
 # sync-catalogue-yaml.py: B608 (SQL injection) is a false positive — bucket param comes from CLI arg, not user input
 BANDIT_EXTRA_ARGS="--exclude scripts/catalogue/sync-catalogue-yaml.py"
 # PM is not a service — ServiceBootstrap (5.61) and Health API (5.62) don't apply.

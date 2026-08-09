@@ -166,67 +166,41 @@ failures (network, timeout, HTTP errors) never block the DAG validation script. 
 Firestore unavailability (SDK missing, no credentials, network error) never blocks the promotion gate. Falling back to
 the manifest ci_status values on any error is the intended safe-default behaviour. Added 2026-06-11.
 
-**Additional:** `scripts/cicd/promotion_lag_monitor.py` — `_write_firestore_promotion_lag()` catches `Exception` so a
-missing Firestore SDK or absent credentials never blocks the lag monitor from running and alerting. The write is
-explicitly best-effort; the monitor's core function (lag detection + alerting) is independent. Added 2026-06-11.
-
-**Additional:** `scripts/repo-management/ci_failure_watcher.py` — `_write_firestore_ci_watcher()` catches `Exception` so
-Firestore unavailability never blocks the CI watcher from scanning and paging. The write is explicitly best-effort.
-Added 2026-06-11.
-
 **Additional:** `scripts/cicd/reconcile_release_tags.py` — `_write_firestore_release_tags()` catches `Exception` so a
 missing Firestore SDK or absent credentials never blocks the release-tag reconciler from creating tags. The write
 (latest tag per repo → `repo_state/{repo}/release_tag`, so tag-readers query Firestore instead of the GitHub tags API)
-is explicitly best-effort. Added 2026-06-11.
+is explicitly best-effort. Added 2026-06-11. **NOTE (2026-06-11 entry, historical record only — the `BE_EXCLUDE_GLOBS`
+entry it documented was already removed 2026-08-09, per the paragraph below; left here since the pattern itself is still
+a valid documented rationale, just no longer needs the bypass because the code was since narrowed.**
 
-**Additional:** `scripts/repo-management/cron_liveness_watchdog.py` — `gh_json()` catches `Exception` (subprocess/JSON
-parse errors on the VM) and `check_workflow_liveness()` catches `Exception` (malformed GH timestamp) so network/parse
-failures never block the off-GHA dead-man's-switch alert. Both are explicitly best-effort fallbacks. Added 2026-06-27
-(plan L1583).
+`scripts/cicd/promotion_lag_monitor.py`, `scripts/repo-management/ci_failure_watcher.py`,
+`scripts/repo-management/cron_liveness_watchdog.py`, `scripts/repo-management/pin_branch_protection_rulesets.py`,
+`scripts/openapi/generate_unified_spec.py`, `scripts/migration/verify_env_tiered_buckets_provisioned.py`,
+`scripts/manifest/validate-import-deps.py`, `scripts/validation/check-integration-dep-coverage.py`,
+`scripts/sports/migrate_sports_gcs_to_hive.py`, `scripts/quality_gates/qg_audit.py`,
+`scripts/quality_gates/check_emission_policy_paired_callsites.py`, `scripts/orchestrator/reap_stale_blockers.py`,
+`scripts/openapi/generate_ui_reference_data.py` — **their `BE_EXCLUDE_GLOBS` entries were REMOVED 2026-08-09**
+(`pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md`'s P3 todo): every `except Exception:` /
+`except Exception as X:` in all 13 files was narrowed to the specific exception type(s) its surrounding try-block
+actually expects (subprocess errors, JSON/YAML parse errors, GCS/S3 client errors, `ast.parse`/`read_text` errors,
+timestamp parse errors, Firestore `google.api_core.exceptions.GoogleAPICallError` + `ImportError`). Verified
+`rg -c "except Exception:" <file>` == 0 for all 13 post-fix. The bypass is no longer needed — genuinely fixed, not just
+excluded. (`ci_failure_watcher.py`'s occurrence used the `except Exception as exc:` binding form, which this check's
+literal-colon `codex_rg "except Exception:"` regex does NOT match — see the new issue doc
+`broad_except_as_binding_form_blind_spot_2026_08_09.md` for the broader blind-spot this surfaced across the corpus.)
 
-**Additional (backfilled 2026-08-09 — see
-`plans/active/issues/pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md`):** the following
-`BE_EXCLUDE_GLOBS` entries in `scripts/quality-gates.sh` were added (mostly 2026-06-01, commit `6ecd10de72`) without a
-corresponding audit entry here, as this check's own inline comment requires. Documented now, not removed, because each
-`except Exception:` genuinely guards best-effort parsing/introspection of external or malformed input, same pattern as
-the entries above:
+`scripts/openapi/audit_dead_code.py` (1×) — **FALSE POSITIVE**, not a real bypass, still excluded: the match is inside a
+triple-quoted string literal (a generated-code template used by the dead-code auditor itself), not executable code. Kept
+in `BE_EXCLUDE_GLOBS` because the check's regex can't distinguish source from a string containing similar text.
 
-- `scripts/repo-management/pin_branch_protection_rulesets.py` (3×) — wraps `gh` CLI subprocess output parsing (decode
-  branch-protection JSON, detect an AWS CodeBuild status context, read an "enabled" bool); any gh/JSON failure falls
-  back to `None`/skip rather than crashing the rulesets sync.
-- `scripts/openapi/generate_unified_spec.py` (3×) — one wraps a per-service OpenAPI spec fetch (after a
-  `json.JSONDecodeError`-specific catch already handles the common case, this is the catch-all for other fetch
-  failures); two wrap dynamic `getattr`/`isinstance` introspection of `unified_api_contracts` UAC/UIC modules while
-  scanning for orphan schema classes — a symbol that doesn't introspect cleanly is skipped, not fatal to the whole spec
-  generation.
-- `scripts/migration/verify_env_tiered_buckets_provisioned.py` (2×) — wraps GCS/S3 `list_buckets()` calls; a cloud SDK
-  failure (credentials/network) is treated as "not provisioned" for that bucket set rather than crashing the
-  verification.
-- `scripts/manifest/validate-import-deps.py` (2×) — wraps per-file AST import-node parsing while walking the source
-  tree; a single malformed/edge-case file is skipped rather than aborting the whole dependency scan.
-- `scripts/validation/check-integration-dep-coverage.py` (1×) — wraps reading a candidate file's text to check for
-  integration-test patterns; an unreadable/binary file is skipped, not fatal.
-- `scripts/sports/migrate_sports_gcs_to_hive.py` (1×) — wraps `pd.read_parquet()` inside a per-league migration read
-  loop; a corrupt/malformed parquet shard is skipped so the migration continues for the rest.
-- `scripts/quality_gates/qg_audit.py` (1×) — wraps a `timeout=5` diagnostic subprocess call; a failure there is
-  best-effort and shouldn't halt the audit.
-- `scripts/quality_gates/check_emission_policy_paired_callsites.py` (1×) — wraps parsing service names out of a
-  candidate file while resolving emission-policy callsites; a malformed candidate is skipped.
-- `scripts/orchestrator/reap_stale_blockers.py` (1×) — wraps `load_backlog()`; a malformed `backlog.yaml` is treated as
-  empty rather than crashing the reaper.
-- `scripts/openapi/generate_ui_reference_data.py` (1×) — wraps `getattr`-based introspection of a data-spec's fields
-  while generating UI reference data; a spec missing an expected attribute is skipped, not fatal to the rest.
-- `scripts/openapi/audit_dead_code.py` (1×) — **FALSE POSITIVE**, not a real bypass: the match is inside a triple-quoted
-  string literal (a generated-code template used by the dead-code auditor itself), not executable code. Kept in
-  `BE_EXCLUDE_GLOBS` because the check's regex can't distinguish source from a string containing similar text.
-
-Five entries removed from `BE_EXCLUDE_GLOBS` the same day as genuinely stale (the file no longer contains
+Five entries removed from `BE_EXCLUDE_GLOBS`2026-08-09 as genuinely stale (the file no longer contains
 `except Exception:` at all — verified via `rg -c "except Exception:" <file>` == 0): `smoke-test-dev.py`,
 `validate-buildspec.py`, `validate-cloudbuild.py`, `validate-internal-editable.py`, `validate-manifest-dag.py`. Three
 more removed for the same reason from the `BE_EXCLUDE_GLOBS+=(...)` append block further down
 `scripts/quality-gates.sh`: `generate-cicd-diagram.py`, `tier_c_promotion_gate.py`, `reconcile_release_tags.py` (the
 latter two's prose entries above are left as historical record — the code that motivated them has since been fixed to
-use specific exception types).
+use specific exception types). A further 13 entries removed the same day per the paragraph above (genuinely narrowed,
+not just excluded) — `BE_EXCLUDE_GLOBS` now holds a single entry (`audit_dead_code.py`, the documented false positive).
 
 **Audit trail:** Added 2026-03-04. validate-manifest-dag.py added 2026-03-13.
 

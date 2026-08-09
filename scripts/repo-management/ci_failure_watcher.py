@@ -1971,7 +1971,10 @@ def _write_firestore_ci_watcher(
     project_id: str,
 ) -> None:
     try:
-        from google.cloud import firestore  # noqa: TID251, RUF100, I001  # noqa: imports-inside-functions  # noqa: cloud-sdk-direct
+        from google.api_core.exceptions import GoogleAPICallError  # noqa: imports-inside-functions
+        from google.cloud import (  # noqa: TID251, RUF100, I001  # noqa: imports-inside-functions  # noqa: cloud-sdk-direct
+            firestore,
+        )
 
         client = firestore.Client(project=project_id)
         trans_by_repo: dict[str, list[dict]] = {}
@@ -1996,7 +1999,7 @@ def _write_firestore_ci_watcher(
                 },
                 merge=True,
             )
-    except Exception as exc:  # Firestore unavailable → best-effort write; but make it VISIBLE
+    except (ImportError, GoogleAPICallError) as exc:  # Firestore unavailable → best-effort write; but make it VISIBLE
         print(f"::warning ::ci-failure-watcher Firestore write failed — ledger may be stale: {exc}")
 
 

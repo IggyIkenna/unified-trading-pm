@@ -134,17 +134,21 @@ per `task_template.md`'s dispatch-scope bar) rather than fixed by this session, 
 
 ## Todos
 
-- [ ] [BACKEND] P3 (re-triaged 2026-08-09, was P1). Narrow the 21 real `except Exception:` occurrences (table above,
-      excludes the `audit_dead_code.py` string-literal false positive) to the specific exception type(s) each
-      surrounding try-block actually expects — same approach as this doc's own drive-by fix to
-      `scripts/finops/measure_agent_fleet_tokens.py` (already shipped). **Downgraded from P1 → P3**: the NEW FACET todo
-      below's resolution found all 13 of the non-false-positive files in this table were ALREADY covered by
-      `BE_EXCLUDE_GLOBS` in `scripts/quality-gates.sh` (mostly since 2026-06-01) — they do NOT currently fail the gate
-      (verified: the check's real `rg` invocation with `BE_EXCLUDE_GLOBS` applied returns 0 hits on the unchanged
-      corpus). This is genuine code-quality debt (a documented bypass is still a bypass), not an active gate-blocker —
-      re-run `rg "except Exception:" --type py --glob "!tests/**" scripts/` after any fix to confirm the count drops,
-      then remove the now-unneeded `BE_EXCLUDE_GLOBS` entry for that file (+ its `QUALITY_GATE_BYPASS_AUDIT.md` §2.9
-      entry, backfilled 2026-08-09) once genuinely narrowed. Repo: unified-trading-pm.
+- [x] ✅ **DONE 2026-08-09 (slot-24) — `unified-trading-pm@974b8a653` (narrowing) + `@ac6fdac32`/`@68373bac2` (2
+      follow-up gate-regression fixes surfaced while verifying) + a 3rd commit removing the now-unneeded bypasses.**
+      Narrowed all 21 real `except Exception:` occurrences across the 12 files in the table above to the specific
+      exception type(s) each surrounding try-block actually expects (subprocess errors, JSON parse errors, GCS/S3 client
+      errors via `google.api_core.exceptions.GoogleAPICallError`/`botocore.exceptions`, `ast.parse`/`read_text` errors,
+      timestamp `ValueError`s). Re-ran `rg -c "except Exception:" --type py --glob     "!tests/**" scripts/` after: 0
+      real hits (only the documented `audit_dead_code.py` false positive remains). Completed the todo's own done-when:
+      removed all 13 now-unneeded `BE_EXCLUDE_GLOBS` entries in `scripts/quality-gates.sh` (10 in the main array + 3 in
+      the append block) and updated `QUALITY_GATE_BYPASS_AUDIT.md` §2.9 to mark them resolved — `BE_EXCLUDE_GLOBS` now
+      holds only the one genuine false-positive entry. **Drive-by, filed separately**: found a 22nd occurrence in
+      `ci_failure_watcher.py` using the `except Exception as exc:` binding form, which this gate's literal-colon regex
+      can't see at all (not merely bypassed — genuinely invisible); fixed that one in-file, corpus-swept and found 76
+      more of the same form across 30 other files — filed as
+      `/plans/active/issues/broad_except_as_binding_form_blind_spot_2026_08_09.md` (out of this todo's scope). Full
+      Pass-1 `quality-gates.sh` re-run green end-to-end on the final shipped tree.
 - [ ] [BACKEND] P3. Optional: teach the `codex_rg "except Exception:"` check
       (`scripts/quality-gates-base/base-library.sh` ~line 1005) to skip matches inside string literals (e.g. a
       lightweight AST-based scan instead of a raw regex) so a generated-code template string (like
@@ -236,3 +240,9 @@ per `task_template.md`'s dispatch-scope bar) rather than fixed by this session, 
   `bash scripts/quality-gates.sh` on the shipped tree: exit 0, "No broad except Exception" ✅, sentinel written at that
   exact SHA. Downgraded the "fix the 21" todo above P1→P3 since it's code-quality debt behind an (now-documented)
   bypass, not an active gate-blocker.
+- **2026-08-09 (slot-24, backend_engineer) — P3 "fix the 21" done, done-when fully completed**: narrowed all 21
+  occurrences + removed the 13 now-unneeded `BE_EXCLUDE_GLOBS` entries + updated the audit doc, per the todo's own above
+  annotation. Full detail there. Drive-by discovery filed separately:
+  `/plans/active/issues/broad_except_as_binding_form_blind_spot_2026_08_09.md` (77 `except Exception as X:` occurrences
+  across 31 files the gate's regex can't see at all — a new, more serious blind-spot class than anything this doc
+  previously found).
