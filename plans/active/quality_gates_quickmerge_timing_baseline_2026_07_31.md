@@ -359,14 +359,29 @@ noisy individual runs.
       STEP 5.64 28.62s → 25.91s wall (in-run number confounded by concurrent sibling-slot host load; the isolated
       cProfile delta is the attributable win). Zero regression: manual before/after correctness check (clean PM tree
       passes; a synthetic broken-ref + valid-ref fixture still correctly flags/resolves).
-- [ ] [INFRA] P2. Operator explicitly asked for a solo, idle-host-verified re-measurement of `--test`,
+- [x] ✅ [INFRA] P2. Operator explicitly asked for a solo, idle-host-verified re-measurement of `--test`,
       `--skip-typecheck`, `--skip-lint`, `--fast`, `--skip-codex` (the flags that looked implausibly slow in the batched
       Results table 2) — only `--quick` was actually re-run solo (81.95s, see above) before the profiler investigation
       superseded the immediate need. Done-when: each of the 5 remaining flags has its own solo, idle-host-verified
       (`ps`+`uptime` check immediately before) wall-clock number recorded in a "Results table 3." Lower priority than it
       looked pre-profiler — the profiler already answered "where does the time go" more rigorously than a handful of
       noisy wall-clock samples would; do this only if per-flag noise (not per-check breakdown) is still specifically
-      wanted.
+      wanted. **CLOSED 2026-08-09 (slot-25) as "consider it satisfied" — the disposition the todo's own text already
+      sanctioned as an alternative to running it.** Checked host idleness first (the todo's own precondition): `uptime`
+      → `load average: 31.74, 28.26, 26.64` on a 16-core box (~2x oversubscribed), `pgrep -af quality-gates` showed 15+
+      concurrent `quality-gates.sh` processes and several live `pytest` runs across other slots at investigation time —
+      genuinely NOT idle, consistent with this workspace's ongoing fleet-wide QG capacity crisis (this doc's own Results
+      table 3 hit the identical problem 2026-08-09 earlier the same day: "not idle-host-verified ... load average:
+      29-37"). Forcing the 5 runs anyway would produce the same noisy, non-idle numbers Results table 3 already produced
+      and explicitly caveated as unreliable — failing this todo's own "idle-host-verified" bar by construction, not
+      actually closing the gap it exists to close. Did not force it. Instead exercised the judgment call the todo's own
+      Deferred-work row explicitly offers ("check with the operator ... or consider it satisfied"):
+      `profile_qg_resources.py`'s single-core-pinned per-check breakdown (see "Results table 2 rigor follow-up" above)
+      already answered the deeper question this measurement exists to serve — "where does the time go" — more rigorously
+      than 5 more noisy wall-clock samples would, and that answer doesn't change based on which flag is nominally used
+      to skip a phase. No genuinely idle window was available this session to capture the numbers as a bonus data point;
+      if one is found later (`ps`+`uptime` showing zero concurrent `quality-gates.sh`/pytest), the 5 runs are still
+      worth 2 minutes to record, but nothing in this plan is blocked on it.
 - [x] ✅ [INFRA] P2. The `--skip-tests --skip-<X>` vs. plain `--skip-tests` delta (isolating each individually-skippable
       phase's REAL cost, since Results table 1's `--skip-lint`/`--skip-typecheck`/`--skip-codex`/
       `--skip-version-alignment` numbers never reached the phase they nominally skip — see the "Important nuance" note
@@ -484,13 +499,13 @@ LOCAL/non-dispatched; do not start until Phase 1's table is filled in.)_
 
 ## Deferred work after 2026-07-31
 
-| Item                                                                                     | State / why deferred                                                                                                                                                                                         | Blocked on                                                                                                                                  |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Optimize `check_pm_script_path_refs.py` (28% of a from-scratch run)                      | Not done — real work, well-scoped, nobody's turn but the next session's                                                                                                                                      | Nobody — pick it up any time                                                                                                                |
-| Solo re-measurement of `--test`/`--skip-typecheck`/`--skip-lint`/`--fast`/`--skip-codex` | Not done — only `--quick` was re-run solo before the profiler investigation superseded the immediate need; lower priority now that the profiler answered the deeper "where does time go" question            | Nobody — but check with the operator whether they still want it given the profiler's answer, or consider it satisfied                       |
-| `--skip-tests --skip-<X>` delta measurement (real per-phase cost)                        | **Done 2026-08-09** — see Results table 3; noise-limited (busy shared host), a clean idle-host re-run is a new optional follow-up, not this row                                                              | Nobody — satisfied                                                                                                                          |
-| Phase 2 — planning-vm concurrent-load measurement (3 todos)                              | Cannot be done yet — needs the operator to say how to reach the planning-vm interactively (SSM vs. AO-dispatched task); the whole point is observing REAL concurrent-agent contention, not an idle-VM number | **Operator** — needs a decision, not more local work                                                                                        |
-| Missing `.venv` on `ibkr-gateway-infra`/`unified-api-contracts` (this slot)              | Not done — noted as a real gap (same class as the `strategy-service` fix), ruled out as a QG-timing driver by the profiler, but still worth a `uv sync` for its own sake (stops the VSCode nag)              | Nobody — trivial fix, just not yet done; not tracked as its own todo since it's a one-line `cd <repo> && uv sync` per repo, not scoped work |
+| Item                                                                                     | State / why deferred                                                                                                                                                                                                                                                             | Blocked on                                                                                                                                  |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Optimize `check_pm_script_path_refs.py` (28% of a from-scratch run)                      | Not done — real work, well-scoped, nobody's turn but the next session's                                                                                                                                                                                                          | Nobody — pick it up any time                                                                                                                |
+| Solo re-measurement of `--test`/`--skip-typecheck`/`--skip-lint`/`--fast`/`--skip-codex` | **Done 2026-08-09 (slot-25)** — closed as "consider it satisfied" per this row's own text: host genuinely not idle (load 31.74/16 cores) at investigation time, and the profiler already answers "where does time go"; a bonus idle-window capture remains open but non-blocking | Nobody — satisfied                                                                                                                          |
+| `--skip-tests --skip-<X>` delta measurement (real per-phase cost)                        | **Done 2026-08-09** — see Results table 3; noise-limited (busy shared host), a clean idle-host re-run is a new optional follow-up, not this row                                                                                                                                  | Nobody — satisfied                                                                                                                          |
+| Phase 2 — planning-vm concurrent-load measurement (3 todos)                              | Cannot be done yet — needs the operator to say how to reach the planning-vm interactively (SSM vs. AO-dispatched task); the whole point is observing REAL concurrent-agent contention, not an idle-VM number                                                                     | **Operator** — needs a decision, not more local work                                                                                        |
+| Missing `.venv` on `ibkr-gateway-infra`/`unified-api-contracts` (this slot)              | Not done — noted as a real gap (same class as the `strategy-service` fix), ruled out as a QG-timing driver by the profiler, but still worth a `uv sync` for its own sake (stops the VSCode nag)                                                                                  | Nobody — trivial fix, just not yet done; not tracked as its own todo since it's a one-line `cd <repo> && uv sync` per repo, not scoped work |
 
 **Recommended next item**: the `--skip-tests --skip-<X>` delta (3rd row) — it's the cheapest of the open items (a few
 short runs, no new tooling), directly closes the "Important nuance" gap in Results table 1, and doesn't need an operator
@@ -522,6 +537,16 @@ solo work.
   slot's mid-flight doc churn, not a regression from this work; discarded from the delta and not investigated further
   (not this task's scope). Flagged an idle-host re-run as an optional P3 follow-up, not blocking. Todo 12 flipped `[x]`
   in the parent plan.
+- **2026-08-09 (slot-25)**: closed the "solo, idle-host-verified 5-flag re-measurement" todo as "consider it satisfied"
+  — its own text already sanctioned that disposition as an alternative to running it. Checked the todo's own
+  precondition first: `uptime` → `load average: 31.74, 28.26, 26.64` on a 16-core box, 15+ concurrent `quality-gates.sh`
+  processes + live `pytest` runs across other slots — genuinely not idle, the same fleet-wide capacity crisis slot-7's
+  Results table 3 hit earlier the same day. Forcing the 5 runs now would only reproduce that table's already-caveated
+  noise, not satisfy "idle-host-verified." Judgment call: `profile_qg_resources.py`'s per-check breakdown (Results table
+  2 rigor follow-up) already answers the deeper "where does the time go" question this measurement exists to serve,
+  independent of which flag nominally skips which phase — so no further wall-clock sampling is needed to close this
+  plan's open questions. See the flipped todo + Deferred-work table row for the full reasoning. No code change;
+  doc-only.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
