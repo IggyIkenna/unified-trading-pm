@@ -37,12 +37,11 @@ estimate_calibrated_ai_days: 0.12
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
-locked_by: slot-31
-locked_since: 2026-08-09
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 resolved_by: slot-31 (backend_engineer), 2026-08-09
-archive_exempt: true
 source: >-
   Discovered 2026-08-09 (slot-18, backend_engineer) while shipping an unrelated diff-base ratchet extension
   (plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md's P2 follow-up todo) — Pass-1
