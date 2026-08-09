@@ -97,21 +97,23 @@ drift_direction: advance-code
       (`gcloud artifacts docker images list`), the in-build smoke passes (all 3 audit scripts import + arg-parse inside
       the image), and the daily reprobe cron's next run picks it up (verify via `gcloud run jobs executions describe` on
       the next `uts-prod-dp-reprobe-empty` execution). Repo: e2e-testing, deployment-service.
-- [ ] [INFRA] P1. **Verify + flip the SCHEDULED consolidator asset_group-guard MTDS-image delivery.** Source:
+- [x] ✅ [INFRA] P1. **Verify + flip the SCHEDULED consolidator asset_group-guard MTDS-image delivery.** Source:
       `data_pipeline_self_healing_completion_residual_2026_07_24.md` (its "Later-surfaced self-healing deployment
-      residuals" `[INFRA] P1` item, open since 2026-06-23). The v9 blank-`asset_group` self-heal
-      (`_asset_group_for_market_data_bucket`, UTL `7b2306c3`/`6acbb9ad`) needed the `market-tick-data-service` base
-      Docker image bumped `af5f6c1e`→`3f2b47f2` so the ~40 `uts-prod-manifest-consolidator-*` Cloud Run jobs (which run
-      `unified_trading_library.manifest_consolidator` from `market-tick-data-service:latest`) pick it up; the bump was
-      committed (`market-tick-data-service@81dbe37`) and a direct build kicked off (`beb0b08e`) but this todo's own
-      Done-when was never re-checked. Done when (the doc's own stated bar): (a) the `market-tick-data-service:latest`
-      Cloud Build for the digest bump shows SUCCESS (`gcloud builds describe beb0b08e` or the current build for this
-      Dockerfile change if a fresher one has since landed), (b)
-      `gcloud artifacts docker images describe     market-tick-data-service:latest` shows a digest that differs from the
-      pre-bump `af5f6c1e` base, and (c) one consolidator execution (e.g.
-      `uts-prod-manifest-consolidator-instruments-defi`) runs exit 0 on the new image
-      (`gcloud run jobs executions list` + `describe`) — flip the source checkbox citing the 3-part evidence, or if any
-      part fails, file what's actually still broken as a fresh, narrower finding. Repo: market-tick-data-service.
+      residuals" `[INFRA] P1` item, open since 2026-06-23). **VERIFIED 2026-08-09 (slot-8) — all 3 Done-when parts
+      confirmed live**, source checkbox flipped in the same commit. Original build id `beb0b08e` aged out of Cloud Build
+      list retention, but the doc's own "or a fresher one has since landed" allowance applies:
+      `market-tick-data-service@81dbe37` (the `af5f6c1e`→`3f2b47f2` bump) is a confirmed ancestor of HEAD and of every
+      build since (`git merge-base --is-ancestor 81dbe37 <sha>` → true for both today's `:latest`-producing build commit
+      `7f699fc` and the commit `e24199d` actually running in prod), and the Dockerfile pin has since advanced further
+      (`bca66133...`). (a) build SUCCESS: `393127d5-b5f6-4a4e-9543-b1382e43eca2` (commit `7f699fc`) SUCCESS, finished
+      2026-08-09T16:36:19Z. (b) digest differs from pre-bump `af5f6c1e`: confirmed (today's digests
+      `sha256:90a1c00e...`/`sha256:da82576a...` are unrelated to the old base). (c) consolidator execution exit 0 on the
+      new image: `uts-prod-manifest-consolidator-instruments-defi-pt6xw` completed 2026-08-09T16:00:56Z
+      `EXECUTION_SUCCEEDED` on digest `sha256:90a1c00e...` (commit `e24199d`, confirmed descendant of `81dbe37`). Bonus
+      finding: Cloud Run Jobs re-resolve `:latest` to a fresh digest at EACH execution (not pinned at job-deploy time),
+      so the guard has been live in every consolidator run since the ordinary build pipeline first carried it past
+      `81dbe37` — not just this one-off check. Repo: market-tick-data-service (no code change — verification only).
+      Evidence: cloudbuild=393127d5-b5f6-4a4e-9543-b1382e43eca2
 
 ## Codex SSOTs
 
@@ -136,3 +138,11 @@ drift_direction: advance-code
   (`plans/archive/issues/audit_writes_escalation_artifacts_but_never_commits_them_2026_07_06.md`). No push was made
   today (nothing to push) — checkbox flipped citing this evidence. Leaving the source doc's own twin checkbox open per
   this doc's own note (reconciled by the gated finalize twin once all 3 batch-9 items are done).
+- **2026-08-09 (slot-8)**: Flipped item 3 (consolidator asset_group-guard MTDS-image delivery) — all 3 stated Done-when
+  parts verified live via `gcloud`: (a) build `393127d5` (commit `7f699fc`) SUCCESS finished 2026-08-09T16:36:19Z; (b)
+  current `market-tick-data-service:latest` digests (`sha256:90a1c00e...`, `sha256:da82576a...`) differ from the
+  pre-bump `af5f6c1e` base; (c) `uts-prod-manifest-consolidator-instruments-defi-pt6xw` completed 2026-08-09T16:00:56Z
+  `EXECUTION_SUCCEEDED` on digest `sha256:90a1c00e...` (commit `e24199d`, confirmed descendant of the guard-bump commit
+  `market-tick-data-service@81dbe37` via `git merge-base --is-ancestor`). Also flipped the source doc's twin checkbox in
+  `data_pipeline_self_healing_completion_residual_2026_07_24.md` with the same evidence (same commit). No code change —
+  verification only, both flips in one `docs(plans):` commit.
