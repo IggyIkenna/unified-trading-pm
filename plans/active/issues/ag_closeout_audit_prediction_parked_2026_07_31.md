@@ -299,3 +299,4 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
   `test_closeout_doc_depends_on_pulls_in_a_fork_with_no_finalize_pair` is confirmed present in
   `tests/unit/test_generate_ag_closeout_audit_candidates.py`. Doc stays NA.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

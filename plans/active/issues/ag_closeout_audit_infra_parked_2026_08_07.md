@@ -249,3 +249,4 @@ since it produced a shipped draft artifact, not an unresolved item).
   `infra_satellite_ao_dispatch_batch8_2026_08_07.md` from draft to active is explicitly an operator action (this skill's
   own scope excludes flipping a drafted batch itself); the 2 `[DOCS] P3` items are tooling-design calls, self-described
   as "not urgent." Freshly created today, nothing stale yet. `assigned_vm: NA` is correct.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.

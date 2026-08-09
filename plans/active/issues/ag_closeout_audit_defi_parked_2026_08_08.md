@@ -194,3 +194,4 @@ this doc. ✓
   their own gating (2 AO-eligible batch11 candidates not yet dispatched, 1 time-gated, 2 informational carry-forwards
   belonging to other tranches' write remit, 1 clean orthogonality note). No action for na-eligibility-audit here — this
   doc's own domain is `/ag-closeout-audit`'s orphan-detection tracking, not a todo list this skill dispatches from.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

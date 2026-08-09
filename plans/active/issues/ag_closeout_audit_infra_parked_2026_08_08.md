@@ -237,3 +237,4 @@ orphaned_never_touched, 1 orphaned_partial_coverage, 0 conflict-clear-bounded, 0
   explicit `[OPERATOR]` low-confidence retag question; the 4th item is a stale-checkbox pointer whose target file is
   defi-owned, explicitly not this doc's or this tranche's to write. Doc-level RECLASSIFY bar fails (not every remaining
   item is worker-bounded/deterministic) → stays NA.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
