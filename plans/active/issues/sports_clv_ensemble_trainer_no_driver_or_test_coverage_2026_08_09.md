@@ -101,6 +101,13 @@ the VM-scale run:
       that rule exists for) for `model_2a`/`model_2b`/`model_2c`/`model_2d`/`model_2e`, and report the measured
       coverage + performance delta (rmse/mae/r2 per outcome per horizon) back into this doc and
       `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md`. (repo: ml-service)
+- [ ] [CODE] P3. `ml_service/training/cli/main.py`'s `--asset-group` arg defaults to `"ALL"`, which is not a
+      `MarketCategory` member — any CLI invocation of this service that omits `--asset-group` explicitly crashes at
+      `ServiceRuntime.from_env_and_args` (`StartupValidationError: Invalid CLI --asset-group='ALL'`) before any handler
+      runs. Confirmed live 2026-08-09: dead-on-arrival for 5 `sports-ensemble-train` VM launches until
+      `--asset-group     SPORTS` was added explicitly. Every existing production launcher happens to always pass a real
+      value, so this was latent; harden it (e.g. drop the `"ALL"` default, or validate/translate it before it reaches
+      `ServiceRuntime`) so the next new operation added to this CLI doesn't hit the same trap. (repo: ml-service)
 
 ## Progress Log
 
@@ -162,3 +169,36 @@ the VM-scale run:
   doc should re-check the 5 VM names above via `gcloud compute instances describe <name> --zone=asia-northeast1-c` (gone
   = terminal) and pull `gs://deployment-scripts-central-element-323112/vm-logs/<name>/run.log` for the result line
   before assuming the run needs re-launching.
+
+- 2026-08-09 (slot-22): picked up todo 2. All 5 of slot-10's VMs had already self-deleted; pulled their `run.log`s —
+  every one failed in <2s at CLI argparse: `ml-service: error: the following arguments are required: --mode` (slot-10's
+  launch command omitted `--mode batch`; no real compute/cost was burned, but zero training happened despite the
+  Progress Log above reading as if the runs were in flight). Relaunched all 5 with `--mode batch` added — hit a SECOND,
+  latent bug: `ml_service/training/cli/main.py`'s own `_add_scope_args` defines `--asset-group` with `default="ALL"`
+  (`CATEGORIES = ["CEFI", "TRADFI", "SPORTS", "ALL"]`), but `unified_trading_library.service_cli.ServiceCLI.run()`
+  unconditionally feeds `getattr(args, "asset_group", None)` into `ServiceRuntime.from_env_and_args(...)`, which
+  validates it against the `MarketCategory` enum (`CEFI, TRADFI, DEFI, SPORTS, PREDICTION` — no `ALL` member) and raises
+  `StartupValidationError` before any handler code runs. Every existing production launcher (`launch-ml-training-vm.sh`)
+  always passes `--asset-group <real-value>` explicitly, so this footgun was previously unreachable — the new
+  `sports-ensemble-train` operation is the first caller that can be invoked without one. Fixed by adding
+  `--asset-group SPORTS` explicitly to the launch command (matches `SportsModelSpec`'s own asset group; the driver
+  itself doesn't consume `--asset-group`, it resolves everything from `--model-id`). Relaunched all 5 VMs a second time
+  — confirmed via `run.log` tail (past `ServiceRuntime: op=sports-ensemble-train mode=batch ... env=prod data=real` + 3
+  consecutive `PIPELINE_HEARTBEAT` lines with no traceback) that each is now actually inside
+  `SportsEnsembleTrainingRunner`'s real GCS feature-load, not crashing at bootstrap. New VM names (same `ml-train-`
+  prefix, `asia-northeast1-c`, `n2-highmem-16`, `uts-prd-sa`, `VM_SHUTDOWN_ON_COMPLETION=true`, tarball still pinned at
+  `ml-service@3232e17` — no tarball refresh needed):
+  - `ml-train-sports-model-2a-20260809-193036` (model_2a)
+  - `ml-train-sports-model-2b-20260809-193046` (model_2b)
+  - `ml-train-sports-model-2c-20260809-193055` (model_2c)
+  - `ml-train-sports-model-2d-20260809-193103` (model_2d)
+  - `ml-train-sports-model-2e-20260809-193115` (model_2e)
+
+  A background watchdog (`run_in_background`, 30s poll, 5h cap) is tailing all 5 to terminal state. If this session ends
+  before it reports, the next worker should re-check these 5 (not slot-10's, which are already gone) via
+  `gcloud compute instances describe <name> --zone=asia-northeast1-c` (gone = terminal) and pull
+  `gs://deployment-scripts-central-element-323112/vm-logs/<name>/run.log` for the
+  `SportsEnsembleTrainingRunner(<model_id>) complete: ...`/`no data available, run aborted` result line before assuming
+  a re-launch is needed. Filed the `--asset-group` default-"ALL" footgun as todo 3 below (P3, ml-service) — didn't fix
+  it inline since it's outside this doc's scope and every current production caller already passes an explicit value,
+  but a future new operation added to this same CLI will hit it again otherwise.
