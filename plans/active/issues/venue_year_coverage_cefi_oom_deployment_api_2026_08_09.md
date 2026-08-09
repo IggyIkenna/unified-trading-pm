@@ -227,14 +227,36 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       `to_pandas()` materialization per window) rather than a machine-type bump alone. Filed as a new BACKEND todo below
       since this audit's own done-when (measure + confirm/deny "date_window alone closes the gap") is met but the
       underlying capacity gap is not resolved.
-- [ ] [BACKEND] P1. Implement a genuinely streamed/row-group-at-a-time aggregation for `_live_coverage_venue_year.py`'s
-      per-`date_window` reads (accumulate venue-year + `source_breakdown` counts incrementally per pyarrow row-group
-      instead of materializing a full `to_pandas()` DataFrame per window) so cefi/defi-scale asset_groups stay well
-      under the 16 GiB Cloud Run limit without a machine-type bump. The audit above measured cefi at 9.94 GiB and
-      extrapolated defi at ~80 GiB for a single unfiltered `to_pandas()` call — both need the read shape itself fixed,
-      not just a bigger container. Re-run this issue's 3-scope cefi probe (+ a defi probe once feasible) as the
-      acceptance check. Repo: deployment-api (+ unified-trading-library if the streaming primitive belongs there
-      instead).
+- [x] ✅ [BACKEND] P1. Implement a genuinely streamed/row-group-at-a-time aggregation for
+      `_live_coverage_venue_year.py`'s per-`date_window` reads (accumulate venue-year + `source_breakdown` counts
+      incrementally per pyarrow row-group instead of materializing a full `to_pandas()` DataFrame per window) so
+      cefi/defi-scale asset_groups stay well under the 16 GiB Cloud Run limit without a machine-type bump. The audit
+      above measured cefi at 9.94 GiB and extrapolated defi at ~80 GiB for a single unfiltered `to_pandas()` call — both
+      need the read shape itself fixed, not just a bigger container. Re-run this issue's 3-scope cefi probe (+ a defi
+      probe once feasible) as the acceptance check. Repo: deployment-api (+ unified-trading-library if the streaming
+      primitive belongs there instead). — **deployment-api@3d72470** (Quickmerge, verified ancestor of
+      `origin/live-defi-rollout`): replaced the yearly-`date_window`-chunked read (todo 1's fix — still materialized
+      ~1.6 GiB as one `to_pandas()` call per window, per the memory-headroom audit above) with
+      `manifest_source.iter_manifest_row_groups()` — downloads the consolidated blob ONCE, then yields ONE DataFrame per
+      pyarrow row group (column-narrowed once via a footer-only schema read, mirroring `unified-trading-library`'s
+      `_read_parquet_columns_safe` fix), bounding peak memory to a single row group's decoded size (cefi averages ~10 MB
+      uncompressed per row group across 88 groups) regardless of manifest size — a genuine row-group-at-a-time stream,
+      not just a smaller window. `_live_coverage_venue_year.py` now accumulates `(venue, year)` status counts + totals
+      incrementally across row-group chunks (a key CAN recur across row groups, since row groups are NOT
+      calendar-year-aligned — cefi's own row groups each span 2-2.5 calendar years per the audit — so cross-chunk
+      SUMMING is now required, not just concatenation) and does row-group-level failure isolation (an asset_group is
+      only `asset_groups_failed` when NO row group succeeds; a mid-stream failure after ≥1 row group still surfaces that
+      data). `read_manifest_window` deleted (fully superseded, no remaining callers). Full test suite: **5273 passed**;
+      full `quality-gates.sh` (no skip flags) green, sentinel=3d72470. New/updated regression coverage:
+      `iter_manifest_row_groups` unit tests (streams one chunk per row group via a real multi-row-group parquet fixture,
+      narrows columns to present schema, skips genuinely-empty row groups, propagates read errors), route tests updated
+      to patch the new streamed primitive (multi-row-group aggregation correctness including a
+      same-`(venue, year)`-recurring-across-row-groups case, a new mid-stream-partial-success test for the
+      row-group-level failure isolation). **Live-prod re-verification of this fix is NOT yet done** — deployment-api's
+      `promotion_model: ldr_main` means it still needs to reach `main` + redeploy before the issue's own acceptance
+      check (re-run the 3-scope cefi probe against live prod) can pass; the existing open INFRA todo above (blocked on
+      the `unified-trading-library@609299ad` release chain) should be re-run against THIS fix's deployed revision too
+      once both land, rather than filing a duplicate re-verification todo.
 
 ## Progress Log
 
@@ -296,3 +318,13 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   for even a single window's full materialization; tradfi has headroom but not a comfortable margin once app overhead is
   added back. Filed a new BACKEND P1 todo for the real fix (row-group-level streaming aggregation instead of a
   per-window `to_pandas()` materialization).
+- **2026-08-09**: Todo 6 (BACKEND P1, row-group streaming) done — shipped `deployment-api@3d72470`. Replaced
+  `manifest_source.read_manifest_window()` (whole-window `to_pandas()` materialization) with
+  `iter_manifest_row_groups()` (single blob download, one DataFrame yielded per pyarrow row group), and refactored
+  `_live_coverage_venue_year.py` to accumulate `(venue, year)` counts across row-group chunks (SUMMING, since a key can
+  now recur across chunks — row groups aren't calendar-year-aligned) with row-group-level failure isolation. Full test
+  suite (5273 passed) + full `quality-gates.sh` green, sentinel=3d72470. This closes the LOCAL read-shape gap the P2
+  audit (previous entry) identified; it does NOT by itself close the still-open live-prod OOM — that remains gated on
+  the existing INFRA todo's `unified-trading-library@609299ad` release chain (LDR→main→semver-release→dependency-
+  bump→redeploy), currently blocked on `semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md`. Once
+  both fixes are live, re-run the INFRA todo's 3-scope cefi probe against the deployed revision containing BOTH SHAs.
