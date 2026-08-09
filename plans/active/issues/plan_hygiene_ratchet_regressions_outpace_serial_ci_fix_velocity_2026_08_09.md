@@ -111,6 +111,23 @@ words: "this branch is churning faster than one CI worker can chase serially").
       to solve, it's a policy call about whether per-commit enforcement is the right shape at all — needs an
       operator/main decision (weakening a currently-hard gate), not a unilateral backend change. File the decision as
       its own `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above.
+
+      **PARTIALLY ADDRESSED 2026-08-09 (slot-28, backend_engineer, unified-trading-pm@8bc27fe8f) — via
+          `codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md` (now archived), a sibling finding of the
+          same symptom filed independently before this doc's todo was written.** The "diffing against any git ref cannot
+          express wall-clock drift" claim above is correct for git-ref diff-scoping (`--diff-base <ref>`, the pattern the
+          P2 todo above uses) but does NOT apply to the different mechanism actually shipped: the ratchet now diffs the
+          current violating PATH SET against a persisted baseline SNAPSHOT (`codex_doc_freshness_baseline.yaml`'s
+          `baseline_files:`, previously written but never consulted) — a stored point-in-time list, not a git ref — which
+          DOES express "did wall-clock decay make THIS SPECIFIC doc newly-stale since the last snapshot", the exact
+          question the claim above says can't be asked. This resolves the concrete symptom both docs independently
+          reported (chaotic multi-session re-baselining on an unbisectable count, 25→26→27 same day) — a session hitting
+          the gate now sees the exact NEW doc(s) named, not a vague delta, and a doc already known-stale at baseline time
+          drifting further stale no longer counts as a fresh regression. It does NOT resolve the broader policy question
+          this todo raises (should a genuinely brand-new stale doc, with zero commits touching it, still be allowed to
+          block an unrelated PR at all, vs. moving to a periodic/batched sweep) — that residual call is still open and
+          still needs the `[OPERATOR]`-tagged decision this todo asks for; do not treat this note as closing it.
+
 - [ ] [BACKEND] P3. `check_todo_regression.sh` needs a DIFFERENT fix shape than the diff-base pattern above — it already
       compares two snapshots (PR-head vs `origin/live-defi-rollout`), but the SECOND side is a live MOVING target
       (re-fetched fresh every run), not a stable ref like `origin/main`, so it races on every CI run rather than being
