@@ -161,7 +161,7 @@ their own. This batch extracts exactly those sub-items, leaving each source doc'
       discovery), removed 2026-08-08 (root disk went 533G/145G free 79% → 359G/319G free 54%). Source:
       `issues/shared_host_home_filesystem_full_2026_07_26.md` § "Orphaned manifest-consolidator scratch on the
       orchestrator VM" (`[INFRA] P2` todo, filed 2026-08-08). (repo: identify the writer first — likely
-      agent-orchestrator or a deployment-service VM script) **DONE 2026-08-09** — `unified-trading-pm@b277df233`.
+      agent-orchestrator or a deployment-service VM script) **DONE 2026-08-09** — `unified-trading-pm@699f53832`.
       Root-caused (a): the sole in-repo writer of the `manifest-consolidate-` prefix is `unified-trading-library`'s
       `_duckdb_merge_payload` (`tempfile.TemporaryDirectory(prefix="manifest-consolidate-")`), which per
       `/codex/05-infrastructure/manifest-consolidator-ssot.md` runs ONLY inside the ephemeral per-AG Cloud Run Job —
@@ -228,10 +228,18 @@ independently conflict-checked against the full active corpus with zero competin
   `vm_launcher_prefix_registration_baseline.yaml` per the todo's own "fresh baseline if needed" allowance; only a
   brand-new unregistered launcher fails the check outright going forward. Todos 2-3 remain open (untouched, different
   files, no conflict).
-- **2026-08-09 (slot 33)** — Todo 2 shipped: `unified-trading-pm@b277df233`. Root-caused the writer (the Cloud Run Job's
+- **2026-08-09 (slot 33)** — Todo 2 shipped: `unified-trading-pm@699f53832`. Root-caused the writer (the Cloud Run Job's
   own merge step; no in-repo recurring bug, historical evidence points to a one-off manual local invocation) and shipped
   a TTL reaper mirroring `cleanup-stale-qg-tmp.sh`'s pattern. Caught + fixed a real liveness-check bug (`lsof +D`
   false-negatives on this host) during synthetic-trigger verification before shipping — see the todo's own evidence
   block for the full account. Cron install left as an explicit operator follow-up (worker sessions lack crontab spool
   write access on this host, same as the qg-tmp precedent). Todo 3 (free-space alert) remains open, different files, no
   conflict.
+- **2026-08-09 (slot 33)** — Corrected a typo'd evidence SHA on todo 2: both citations above read
+  `unified-trading-pm@b277df233`, which does not resolve to any object in this repo
+  (`issues/infra_satellite_batch10_fabricated_commit_sha_evidence_2026_08_09.md`, found by
+  `check_plan_commit_sha_evidence.py` while shipping an unrelated task).
+  `git log --all -- scripts/dev/cleanup-stale-manifest-consolidate-tmp.sh` resolves to the real commit `699f53832`
+  (`feat(infra): TTL reaper for abandoned manifest-consolidator scratch on shared hosts`, verified on
+  `origin/live-defi-rollout`, commit body matches this todo's description exactly) — the underlying work was genuinely
+  shipped, only the citation was mistyped. Both instances corrected to `699f53832`.

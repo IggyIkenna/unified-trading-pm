@@ -11,7 +11,7 @@ summary: >-
   scoped to the shipping agent's own files, so it blocked Pass-1 QG on pre-existing debt. Same failure class as the
   archived precedent /plans/archive/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md (that instance is
   fully resolved; this is a fresh, independent occurrence, not a reopen).
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -37,9 +37,14 @@ source:
     "discovered 2026-08-09 by scripts/quality_gates/check_plan_commit_sha_evidence.py while shipping the [B]
     registry_value_changed devops task, unrelated repo",
   ]
-resolved_by:
+resolved_by: unified-trading-pm@699f53832
 locked_by:
 ---
+
+> **🟢 ARCHIVED 2026-08-09** — `status: resolved` with zero open todos; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)'s
+> archive-immediately rule. `b277df233` was a typo, not a fabrication — the real commit `699f53832` was found and both
+> citations in `infra_satellite_ao_dispatch_batch10_2026_08_09.md` were corrected. No content was rewritten below.
 
 # infra_satellite_ao_dispatch_batch10_2026_08_09 todo cited a non-existent commit SHA
 
@@ -71,9 +76,10 @@ Whoever owns `infra_satellite_ao_dispatch_batch10_2026_08_09.md` (or the fix-wor
 
 ## Todos
 
-- [ ] [INFRA] P2. Investigate `unified-trading-pm@b277df233` cited at
+- [x] [INFRA] P2. Investigate `unified-trading-pm@b277df233` cited at
       `plans/active/infra_satellite_ao_dispatch_batch10_2026_08_09.md:146,231` — find the real commit (typo-correct) or
-      reopen the todo if the underlying work was never actually shipped.
+      reopen the todo if the underlying work was never actually shipped. **DONE 2026-08-09** —
+      `unified-trading-pm@699f53832`.
 
 ## Progress Log
 
@@ -83,3 +89,10 @@ Whoever owns `infra_satellite_ao_dispatch_batch10_2026_08_09.md` (or the fix-wor
   check's own printed guidance ("re-baseline with --baseline-write after confirming it is pre-existing, non-fabricated
   drift") to unblock, and filed this issue doc so the actual citation gets investigated rather than silently absorbed
   into the baseline forever.
+- **2026-08-09 (slot 33)** — Resolved. `b277df233` was a typo, not a fabrication:
+  `git log --all -- scripts/dev/cleanup-stale-manifest-consolidate-tmp.sh` resolves to `699f53832` ("feat(infra): TTL
+  reaper for abandoned manifest-consolidator scratch on shared hosts"), verified on `origin/live-defi-rollout` and its
+  commit body matches the todo's description exactly (root-cause + TTL reaper pair + fuser-liveness fix). Corrected both
+  citations in `plans/active/infra_satellite_ao_dispatch_batch10_2026_08_09.md` (lines 164, 231) to `699f53832`. Re-ran
+  `check_plan_commit_sha_evidence.py --baseline-write`: 0 unresolvable citations found corpus-wide, baseline shrunk 1 ->
+  0 (`baseline_citations: []`).
