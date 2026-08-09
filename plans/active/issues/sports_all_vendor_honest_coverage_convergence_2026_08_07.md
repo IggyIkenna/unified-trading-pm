@@ -938,3 +938,5 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   almost exactly (~1h05m past midnight this time vs ~1h45m then). INJURIES (62,709 needed) queued next behind the
   singleton lock once FIXTURE_LINEUPS completes or shows a genuine slowdown. smallchunk9 still healthy, chunk 18,
   unaffected throughout.
+- **01:41Z** — new FIXTURE_LINEUPS baseline post-resume: needed=**48,566** (0 quota errors, genuine fetches).
+  smallchunk9 chunk 18, 26 `CHUNK_FAILED` (in-range), fresh. Both healthy.
