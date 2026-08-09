@@ -76,10 +76,11 @@ reliability nor the cross-tranche-coverage half is sacrificed:
 
 - **Sun-Fri: one sharded dispatch per tranche per day** (one worker each, same shape `ag_closeout`/`na_eligibility`
   already use). Bounded, and a tranche that fails is retried independently of its siblings.
-- **Saturday: ONE unsharded `all` run, and the per-tranche shards do NOT fire that day.** Saturday is the low
-  fleet-activity window, so the whole-corpus sweep gets the slot headroom it actually needs, and skipping the shards
-  that day means the `all` run isn't racing 10 sibling workers for the same corpus (concurrent writes to a shared doc
-  are exactly the collision the primary-owner rule exists to prevent).
+- **Saturday: ONE unsharded `all` run, and the per-tranche shards do NOT fire that day.** This is NOT a staffing/low-
+  activity consideration (this is an all-agent fleet — it runs identically every day); it's the fixed weekly slot for
+  the only mode that can catch cross-tranche contradictions, reserved on its own day so it isn't racing 10 sibling
+  workers for the same corpus (concurrent writes to a shared doc are exactly the collision the primary-owner rule exists
+  to prevent). Corrected 2026-08-09 — the day itself doesn't need to be Saturday specifically, only fixed.
 
 **Why this was ruled**: the unsharded daily run was measured on 2026-08-06 across every retained attempt — 7 of 8 ended
 `reaped-stale` (died mid-run, several within 2-5 minutes of spawn, no `/done`), and the single completion took 13.5
