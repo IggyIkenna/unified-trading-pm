@@ -186,24 +186,22 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       itself: `unified-trading-library@137e219c` — a client-side `subprocess.TimeoutExpired` on the launcher-script wait
       previously aborted the whole shard immediately (0 retries) even though the identical `_vm_is_present`-gated retry
       machinery already existed for ordinary nonzero launcher exits; now the timeout flows through that same retry path.
-      3 new regression tests, QG green (226s). Full evidence + the 5 reproduction attempts of the SEPARATE
-      session-teardown blocker: `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. **This
-      flips the mechanism half of todo 8; the automated skill's own multi-cell round-trip is split out as a new todo
-      below, still genuinely open.**
+      3 new regression tests, QG green (226s). 5 reproductions of the separate session-teardown blocker:
+      `/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. **Flips the
+      mechanism half of todo 8; the skill's own multi-cell round-trip is split out below, still open.**
 - [ ] NEW todo (was 8's remaining scope). [DATA] P0. Complete the automated `/data-pipeline-check-mdps` skill's OWN
       multi-cell round-trip (force+skip, all AGs × venues × data_types × timeframes, report written) — the mechanism is
       proven (see todo 8 above) but the SKILL DRIVER ITSELF has never survived long enough (5 independent reproductions
       across 2 sessions, both ad-hoc interactive and AO-managed persistent workers) to produce one clean automated
       verdict beyond a single scoped cell. **GATED on prerequisite condition `mdps-e2e-shared-host-teardown-fixed`**
-      (set by main/operator; tracks `issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` — fleet-wide
-      shared-host RAM contention silently killing background processes mid-run, 32s-520s in, not tied to elapsed time; a
-      distinct but likely-related mechanism from the `WorkerLivenessWatchdog` heartbeat-silent kill documented for the
-      original ~19-minute reproduction in `/codex/04-architecture/agent-orchestrator-worker-liveness.md`). Do NOT
-      attempt this todo until that condition flips green — re-attempting blind just wastes another cycle on the same
-      wall. **RE-VERIFIED 2026-07-27 (slot-10)**: `issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`
-      is still `status: open`; no evidence the `mdps-e2e-shared-host-teardown-fixed` condition has flipped. Not
-      re-attempted — would be the 6th reproduction of the same known failure mode. Skipped rather than burning another
-      cycle; re-check once the operator/main flips the condition.
+      (set by main/operator; tracks
+      `/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` — repointed
+      2026-08-09, plan_reconciler agt-a3e83c, from a now-resolved+archived doc; condition genuinely still unmet, still
+      `status: open` as of 2026-08-06 — fleet-wide shared-host RAM contention silently killing background processes
+      mid-run, 32s-520s in, not tied to elapsed time; a distinct but likely-related mechanism from the
+      `WorkerLivenessWatchdog` heartbeat-silent kill documented for the original ~19-minute reproduction in
+      `/codex/04-architecture/agent-orchestrator-worker-liveness.md`). Do NOT attempt this todo until that condition
+      flips green — re-attempting blind just wastes another cycle on the same wall.
 - **[DATA] P0. 9.** RUN + VALIDATE `/data-pipeline-check-features` e2e: multi-day input window per family, prove
   force+skip for every MVP feature shard (all families × valid AGs). Report written. **Non-checkbox rollup header —
   restructured 2026-07-27 (slot-3)**, same pattern as todo 11's split: the run against CEFI:delta_one surfaced and
@@ -237,8 +235,8 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `volatility` (all-AG, covers CEFI) — made **zero new VM launches** this session, catching and killing my own
       5-second-old accidental duplicate `volatility:CEFI` launch before it reached VM-launch. Filed the concrete
       duplicate-VM billing-waste finding + fix recommendation:
-      `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` new todo. 9b's own full-matrix
-      completion remains genuinely open per the disposition below — this checkbox covers only the
+      `/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` new todo. 9b's own
+      full-matrix completion remains genuinely open per the disposition below — this checkbox covers only the
       coordination/no-duplicate-launch slice.
 - [x] 9b-duplicate-vm-guard. ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-6)** — `features-service@6981b2b8`. Re-checked live
       fleet state on pickup of 9b: **7** `features-e2e-cefi-*` VMs RUNNING (up from the 5 slot-10 found) + 2
@@ -248,13 +246,13 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       pattern main already ruled on once this session for a different task). Root-caused that slot-7's own launch
       (`-112159`, window 2026-06-28..2026-06-29) was itself a NEW 3rd duplicate of a window `-101851`/`-102228` were
       already computing — live proof the
-      `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` P1 duplicate-VM-launch bug was
-      still unfixed and costing money on the very run meant to close 9b. Shipped the fix: `_find_inflight_duplicate_vm`
-      (labels-based `aggregated_list_instances` check, no raw gcloud/subprocess) on both the force and skip leg
-      VM-launch paths in `features-service/scripts/pipeline_e2e_check.py` — a hit skips the launch instead of creating
-      another billable VM. QG green, quickmerge shipped. Launched zero new VMs this session; did not touch slot-7's (or
-      any other slot's) in-flight VMs. 9b's own full-matrix completion remains genuinely open, now owned by slot-7's
-      in-flight run — see the disposition note below.
+      `/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` P1
+      duplicate-VM-launch bug was still unfixed and costing money on the very run meant to close 9b. Shipped the fix:
+      `_find_inflight_duplicate_vm` (labels-based `aggregated_list_instances` check, no raw gcloud/subprocess) on both
+      the force and skip leg VM-launch paths in `features-service/scripts/pipeline_e2e_check.py` — a hit skips the
+      launch instead of creating another billable VM. QG green, quickmerge shipped. Launched zero new VMs this session;
+      did not touch slot-7's (or any other slot's) in-flight VMs. 9b's own full-matrix completion remains genuinely
+      open, now owned by slot-7's in-flight run — see the disposition note below.
 - [x] 9b-duplicate-vm-guard-mdps. ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-2)** —
       `market-data-processing-service@6cd96e8` + `deployment-service@c8ee47e`. Re-checked live fleet state on pickup of
       9b: slot-7's driver (PID 3665121, started 11:21 UTC) still running, 1h18m+ elapsed, genuinely progressing — stood
@@ -264,9 +262,9 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       found and fixed a launcher-label insufficiency the port surfaced — `launch-mdps-backfill-vm.sh` wasn't stamping
       venue/data_type labels the guard needs, so extended it to do so for the single-value (non-multi-filter) launch
       case. 11 new tests across both repos, QG green both, shipped via quickmerge. Full detail:
-      `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. Launched zero new VMs; did not
-      touch slot-7's in-flight run. 9b's own full-matrix completion remains genuinely open, still owned by slot-7 — see
-      the disposition note below.
+      `/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. Launched zero new
+      VMs; did not touch slot-7's in-flight run. 9b's own full-matrix completion remains genuinely open, still owned by
+      slot-7 — see the disposition note below.
 - [x] 10. ✅ [DATA] P1. **DONE 2026-07-28 (slot-13)** — Steady-state benchmark VMs run for both representative
       shard-types. **MDPS** (`mdps-backfill-cefi-pcbench-20260727-234527-a84603`, CEFI:BINANCE-FUTURES:trades, 15-day
       window, exit_code=0): real-compute-day cost **20.7s** (7,615 candles/7 timeframes) on the one day with genuine
@@ -296,10 +294,10 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       candle-orphan set. Shipped the fix — `merge_manifest_from_canonical_paths()`, an additive sibling that only adds
       genuinely-missing shard keys and preserves every other row — with 2 regression tests proving the safety property
       directly. QG green (1144s) + CI `quality-gates-v2` green. Full detail:
-      `issues/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`. This unblocks
-      `issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (corrected in the same session) for its
-      next session's actual Tier-2 SPOT VM run. **(Promoted 2026-07-27 from a nested sub-item to a first-class,
-      independently-dispatchable todo per BLK-1db5424c.)**
+      `/plans/archive/2026_08/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`. This unblocks
+      `/plans/archive/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (corrected in the same
+      session) for its next session's actual Tier-2 SPOT VM run. **(Promoted 2026-07-27 from a nested sub-item to a
+      first-class, independently-dispatchable todo per BLK-1db5424c.)**
 - [x] 11b-scope. ✅ [DATA] P0. **DONE 2026-07-27 (slot-15)** — Scoped the cross-repo orphan/lineage audit
       (MTDS→MDPS→features→ml/strategy) before attempting it as one VM run. Confirmed no orphan-detection tooling exists
       for MDPS/features/ml/strategy (only raw-MTDS has `migration_orphan_sweep.py`; independently verified via
@@ -308,12 +306,12 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       ml-strategy shard keys are each a different shape). Split the original single all-or-nothing checkbox into 4
       independently-dispatchable build/run/report todos rather than risk a rushed, unsafe attempt at the full scope in
       one dispatch. Full scoping + the 4 todos:
-      `issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md`.
+      `/plans/archive/issues/mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md`.
 - [x] 11b. ✅ [DATA] P0. **The actual cross-repo orphan/lineage report. DONE 2026-08-03** (`unified-trading-pm`) — all 4
       todos in `mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md` (now archived, resolved) landed real
       per-stage findings (MDPS candle, features, ml/strategy sweeps built + validated on real prod data); the combined
       report is
-      [`issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
+      [`/plans/archive/issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](/plans/archive/issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
       Headline: every pipeline stage now has real-prod-data-validated orphan tooling; every real orphan population found
       is either already backfilled or has a small, bounded, already-tracked follow-up — no new corpus-wide unknown.
 - [ ] 11c. [DATA] P0. **MIGRATE existing candle/feature data to zero orphans** (MVP or not) — WRITES the GCS manifest
@@ -521,20 +519,20 @@ Repos shipped: `unified-trading-library@8b894105`, `market-data-processing-servi
 
 ## Deferred work after 2026-07-27
 
-| #   | Item                                                                                                                                                                                     | Priority | Where tracked                                                                                                                                         | Gating                     |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| 1   | Root-cause / fix worker-session teardown killing long-running check-skill drivers                                                                                                        | P1       | `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`                                                                             | none                       |
-| 2   | Add `--resume`/checkpoint to `pipeline_e2e_check` so a killed run doesn't restart the whole matrix                                                                                       | P2       | same issue doc                                                                                                                                        | depends on #1's root cause |
-| 3   | ✅ DONE 2026-07-27 (slot-9) — Loosen/backoff `launch_vm_and_wait`'s launcher-script timeout under fleet contention (`utl@137e219c`)                                                      | P2       | same issue doc                                                                                                                                        | none                       |
-| 7   | ✅ RESOLVED 2026-07-31 — superseded, not run as written: closed as a byproduct of the corpus-wide `backfill_candle_manifest.py` campaign instead                                         | P1       | archived `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (superseded by `mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`) | none                       |
-| 8   | Audit `rebuild_mtds_manifest.py --from-canonical`'s existing call site for the same prefix-scoped-wipe risk (already-shipped permanent script)                                           | P1       | `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` todo 3                                                                       | none                       |
-| 9   | ✅ RESOLVED 2026-07-27 — corpus-wide re-measurement ran via `candle_orphan_sweep.py` (cefi 0.11%/defi 0%/tradfi 0.81%/prediction 2.28%), then backfilled                                 | P1       | `mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`                                                                                          | none                       |
-| 10  | Run todo 11b (cross-repo lineage audit) then 11c (migrate to zero orphans, [OPERATOR]) — the ex-todo-11 rollup split                                                                     | P0       | this plan, todos 11b/11c                                                                                                                              | 11c depends_on 11b         |
-| 4   | Root-cause non-deterministic instrument_type path segment for identical force re-runs                                                                                                    | P3       | `mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`                                                                             | none                       |
-| 5   | Complete todo 8's actual scope (skip-proof + defi/tradfi/sports/prediction reps) once #1/#2 land                                                                                         | P0       | this plan, todo 8                                                                                                                                     | #1                         |
-| 6   | ✅ DONE 2026-07-27 (slot-7) — Complete todo 9 (`/data-pipeline-check-features` full-matrix run + report)                                                                                 | P0       | this plan, todos 9/9b + 2 new issue docs (below)                                                                                                      | none                       |
-| 11  | Fix the 6 distinct genuine root causes behind 17/32 failed legs (coverage/dependency-check mismatch, multi_timeframe date bug, OOM, manifest-staleness/env-parity, external-vendor auth) | P0       | `issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md`                                                                        | none                       |
-| 12  | Fix the timeout/orphaned-duplicate-VM defect for large-universe shards — **PARTIALLY DONE 2026-07-27 (slot-6)**, `features-service@4d71b1b5`                                             | P1       | `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`                                                                     | none                       |
+| #   | Item                                                                                                                                                                                                                                           | Priority | Where tracked                                                                                                                                         | Gating                     |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| 1   | Root-cause / fix worker-session teardown killing long-running check-skill drivers                                                                                                                                                              | P1       | `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`                                                                             | none                       |
+| 2   | Add `--resume`/checkpoint to `pipeline_e2e_check` so a killed run doesn't restart the whole matrix                                                                                                                                             | P2       | same issue doc                                                                                                                                        | depends on #1's root cause |
+| 3   | ✅ DONE 2026-07-27 (slot-9) — Loosen/backoff `launch_vm_and_wait`'s launcher-script timeout under fleet contention (`utl@137e219c`)                                                                                                            | P2       | same issue doc                                                                                                                                        | none                       |
+| 7   | ✅ RESOLVED 2026-07-31 — superseded, not run as written: closed as a byproduct of the corpus-wide `backfill_candle_manifest.py` campaign instead                                                                                               | P1       | archived `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (superseded by `mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`) | none                       |
+| 8   | ✅ DONE 2026-08-04 — `market-tick-data-service@de0ed32f` (audited `rebuild_mtds_manifest.py --from-canonical`'s existing call site for the same prefix-scoped-wipe risk; corrected 2026-08-09, plan_reconciler agt-a3e83c)                     | P1       | `/plans/archive/2026_08/rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` todo 3 (archived, all 5 todos done)                   | none                       |
+| 9   | ✅ RESOLVED 2026-07-27 — corpus-wide re-measurement ran via `candle_orphan_sweep.py` (cefi 0.11%/defi 0%/tradfi 0.81%/prediction 2.28%), then backfilled                                                                                       | P1       | `mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md`                                                                                          | none                       |
+| 10  | Run todo 11b (cross-repo lineage audit) then 11c (migrate to zero orphans, [OPERATOR]) — the ex-todo-11 rollup split                                                                                                                           | P0       | this plan, todos 11b/11c                                                                                                                              | 11c depends_on 11b         |
+| 4   | Root-cause non-deterministic instrument_type path segment for identical force re-runs                                                                                                                                                          | P3       | `mdps_candle_path_instrument_type_segment_nondeterministic_2026_07_27.md`                                                                             | none                       |
+| 5   | Complete todo 8's actual scope (skip-proof + defi/tradfi/sports/prediction reps) once #1/#2 land                                                                                                                                               | P0       | this plan, todo 8                                                                                                                                     | #1                         |
+| 6   | ✅ DONE 2026-07-27 (slot-7) — Complete todo 9 (`/data-pipeline-check-features` full-matrix run + report)                                                                                                                                       | P0       | this plan, todos 9/9b + 2 new issue docs (below)                                                                                                      | none                       |
+| 11  | Fix the 6 distinct genuine root causes behind 17/32 failed legs (coverage/dependency-check mismatch, multi_timeframe date bug, OOM, manifest-staleness/env-parity, external-vendor auth)                                                       | P0       | `/plans/archive/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md`                                                         | none                       |
+| 12  | ✅ DONE (archived 2026-08-03) — fixed the timeout/orphaned-duplicate-VM defect for large-universe shards; 5 commits total (corrected 2026-08-09, plan_reconciler agt-a3e83c — was stuck at "PARTIALLY DONE 2026-07-27" citing only 1 of the 5) | P1       | `/plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md` `resolved_by`                                        | none                       |
 
 > The chain of entries from "OPERATOR CONTRACT: empty window vs not fetched yet" through "per-unit latency: safe wins +
 > HFT vectorization SHIPPED" (all 2026-07-20, already-closed technical narrative — the honest-absence two-signal
@@ -564,9 +562,9 @@ Repos shipped: `unified-trading-library@8b894105`, `market-data-processing-servi
 ### 2026-07-27 (slot-7) — todo "Run /data-pipeline-check-features across ALL shards" IN FLIGHT, not blocked
 
 Phase 0 passed. Local driver dies silently/often (`WorkerLivenessWatchdog`/RAM contention, slot-3 independently
-diagnosed same class — `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` todo 9). On
-death, check `gcloud compute instances list --filter="name~'features-e2e-<ag>'"` first (VM usually outlives the
-poller) + its `run.log`. **Resume**:
+diagnosed same class — `/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`
+todo 9). On death, check `gcloud compute instances list --filter="name~'features-e2e-<ag>'"` first (VM usually outlives
+the poller) + its `run.log`. **Resume**:
 `cd features-service && .venv/bin/python scripts/pipeline_e2e_check.py --day 2026-07-05 --legs force,skip --require-captured --auto-day --asset-group <AG> --family <FAM> --project central-element-323112`;
 `delta_one` first per-AG; CEFI is slot-3's; driver OVERWRITES its report per-invocation — merge with
 `unified-trading-pm@e537bff29` `scripts/plan-hygiene/merge_pipeline_e2e_report.py` after every cell.
@@ -582,8 +580,8 @@ asymmetry**: `multi_timeframe:TRADFI` and `cross_instrument:PREDICTION` both deg
 their own missing-input condition, `cross_instrument:TRADFI` alone raised an uncaught `FileNotFoundError` — worth a
 follow-up but not filed (downstream of the same already-tracked P1). `commodity:TRADFI` FAILED cleanly — 3
 public/no-auth sources 403/timeout/404'd, NOT `BLOCKED-CREDENTIALS` —
-`issues/features_commodity_public_api_403_from_gcp_vm_2026_07_27.md` (P2). **TWO P0 DATA-CORRECTNESS BUGS, same
-root-cause class**: `calendar` (0 rows) and `sports` (51 REAL fixtures — worse) both wrote to PROD despite
+`/plans/archive/issues/features_commodity_public_api_403_from_gcp_vm_2026_07_27.md` (P2). **TWO P0 DATA-CORRECTNESS
+BUGS, same root-cause class**: `calendar` (0 rows) and `sports` (51 REAL fixtures — worse) both wrote to PROD despite
 `IS_TEST_RUN=true` — each family's `is_test_run` field is declared but never consulted at its actual bucket-resolution
 call site (delta_one's `get_output_bucket()`/`get_data_sink()` is correct; calendar's fix shipped
 `features-service@ba5143fd`, sports' is open). Filed
@@ -594,21 +592,20 @@ session**: either pick up the 4 CEFI cells (coordinate with slot-3 first) or re-
 fixes land. Plan AT its 1000-line hard cap — archive older closed sections before adding more.
 
 - [x] ✅ NEW todo. [DATA] P0. **Coverage-check discrepancy — FOLDED 2026-07-27 (slot-7); FIXED 2026-07-27 (slot-4)**:
-      same root cause independently hit 3x (this occurrence + slot-3's day=2026-07-19 occurrence + the fuller writeup) —
-      tracked and fixed in `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` todo 1,
-      not here: `features-service@1b272676` (+ test reconciliation `4fbf4dc7`). Root cause was a coverage-check
-      granularity gap (NOT phantom-capture) — `--require-captured`/`--auto-day` accepted an `EMPTY_CONFIRMED` TARGET day
-      (a TradFi weekend/holiday MDPS positively confirmed has zero output) as "covered", guaranteeing the runtime
-      dependency checker's real GCS listing would then fail. Fixed by requiring the target day specifically to have a
-      real `CAPTURED` row while still tolerating `EMPTY_CONFIRMED` window-interior days. **This todo attracted 3
-      simultaneous independent dispatches** (this fix + slot-14's `696768c7` object-existence-probe variant + slot-2's
-      `ecd548b8` runtime-dependency-checker fix) — reconciled by rebase-merging slot-14's probe scoped to
-      `captured_days` only (not the broader `canonical_days`, which would have blanket-excluded every TradFi
-      weekend/holiday from window-interior tolerance too — a worse regression); slot-2's fix is a complementary
-      different-layer change (runtime checker vs this driver's pre-flight skip), no conflict. Full reconciliation
-      writeup in the issue doc. 18 tests pass across the 3 related test files, QG green. The issue doc's own todo 2
-      (re-run for a genuine force+skip proof) stays open — no `capture_status=captured` TRADFI/MDPS candle row exists
-      yet in the 06-01..07-27 window, so that proof is gated on a real TRADFI candle backfill, not on this fix.
+      same root cause hit 3x independently (this occurrence + slot-3's day=2026-07-19 occurrence + the fuller writeup) —
+      tracked+fixed in
+      `/plans/active/issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` todo 1:
+      `features-service@1b272676` (+ test reconciliation `4fbf4dc7`). Root cause was a coverage-check granularity gap
+      (NOT phantom-capture) — `--require-captured`/`--auto-day` accepted an `EMPTY_CONFIRMED` TARGET day (a TradFi
+      weekend/holiday MDPS positively confirmed has zero output) as "covered", guaranteeing the runtime dependency
+      checker's real GCS listing would then fail. Fixed by requiring the target day specifically to have a real
+      `CAPTURED` row while still tolerating `EMPTY_CONFIRMED` window-interior days. **3 simultaneous independent
+      dispatches** (this fix + slot-14's `696768c7` object-existence-probe variant + slot-2's `ecd548b8`
+      runtime-dependency-checker fix) reconciled: slot-14's probe rescoped to `captured_days` only (the broader
+      `canonical_days` would have blanket-excluded every TradFi weekend/holiday, a worse regression); slot-2's fix is a
+      complementary different-layer change, no conflict. Full writeup in the issue doc. 18 tests pass, QG green. Issue
+      doc's own todo 2 (re-run for a genuine force+skip proof) stays open — no `capture_status=captured` TRADFI/MDPS
+      candle row exists yet in 06-01..07-27, so that proof is gated on a real TRADFI candle backfill.
 
 ### 2026-07-27 (slot-3) — todo 9b: day=2026-07-19 CEFI-inclusive 8-family sweep complete; NOT claiming 9b closed
 
@@ -617,7 +614,7 @@ skipped) — `plans/audit/results/data_pipeline_e2e_check_features_2026_07_19.{m
 entry above asked "next session" to pick up (delta_one/volatility/multi_timeframe/cross_instrument), just on a different
 calendar day (07-19 vs slot-7's 07-05) — do NOT merge into slot-7's report file as-is, the day mismatch would
 misrepresent it. 2 new real driver bugs found+fixed+shipped:
-`issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` (P2) and
+`/plans/active/issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` (P2) and
 `/plans/archive/issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (resolved 2026-07-30)
 (P2 — root cause independently also fixed by slot-6's `features-service@6981b2b8`). Also incidentally answers the sports
 `IS_TEST_RUN` issue's own P2 audit-todo for volatility/cross_instrument/multi_timeframe/commodity: every cell that
@@ -629,7 +626,7 @@ to check. Real findings not separately filed given time: OOM kill (rc=137) on `c
 entries above). Slot-7's day=2026-07-05 non-CEFI driver (PID 3665121) confirmed STILL RUNNING at this check, so per
 slot-6's own disposition 9b's closure isn't mine to claim — **9b left OPEN**. Live fleet check also found **9**
 `features-e2e-*` VMs still RUNNING right now (oldest ~9h) — billing-waste addendum filed on
-`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` (P1, recommends
+`/plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` (P1, recommends
 `/vm-preemption-billing-waste-audit`). **Next session**: check if slot-7's run finished; then decide whether the day-19
 CEFI proof suffices or the 4 CEFI cells need a same-day (07-05) re-run before flipping 9b.
 
@@ -655,17 +652,17 @@ for calendar: TEST object created `2026-07-27T14:58:41Z`, no PROD equivalent exi
 
 **Two follow-up issue docs filed** (findings triage — this todo's job was RUN + REPORT, not fix):
 
-1. `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md` — CEFI:delta_one AND
+1. `/plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md` — CEFI:delta_one AND
    TRADFI:volatility both hit the driver's 2400s per-VM timeout despite genuinely still computing, causing an orphaned
    duplicate VM each time. **Already fixed same-day by slot-6** (`features-service@4d71b1b5`,
    `_FAMILY_TIMEOUT_OVERRIDES`) — TRADFI:volatility's fix is fully verified (real `EXIT_STATUS=0` observed at 4788s);
    CEFI:delta_one's override (36000s) is evidence-based but not yet directly observed completing.
-2. `issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md` (**P0, big finding**) — direct VM
-   `run.log` inspection of the 17 failed (non-timeout) legs surfaced 6 distinct GENUINE root causes across ≥3 repos: (A)
-   the coverage-check/dependency-check disagreement for TRADFI candles (independently corroborated by slot-3 on a
-   different day — tracked in ONE place,
-   `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`, not duplicated); (B)
-   `multi_timeframe` reads TODAY's wall-clock date instead of the requested window, hit IDENTICALLY by both CEFI and
+2. `/plans/archive/issues/features_e2e_check_full_matrix_widespread_real_failures_2026_07_27.md` (**P0, big finding**) —
+   direct VM `run.log` inspection of the 17 failed (non-timeout) legs surfaced 6 distinct GENUINE root causes across ≥3
+   repos: (A) the coverage-check/dependency-check disagreement for TRADFI candles (independently corroborated by slot-3
+   on a different day — tracked in ONE place,
+   `/plans/active/issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`, not duplicated);
+   (B) `multi_timeframe` reads TODAY's wall-clock date instead of the requested window, hit IDENTICALLY by both CEFI and
    TRADFI — the highest-value fix, asset_group-agnostic; (C) a genuine OOM (exit=137) during CEFI:cross_instrument's
    `regime_detection` HMM fit (also independently seen by slot-3); (D) SPORTS:sports skip-leg hit a stale manifest
    consolidator + a local/VM env-parity gap; (E) TRADFI:commodity's external vendors (EIA/CFTC/Baker Hughes) 403/404'd —
@@ -710,35 +707,35 @@ on every computed day; handled gracefully.
       "consolidated" doc would duplicate rather than add value. Appended a 2026-07-27 live-reproduction corroboration
       note to each instead: `/plans/archive/issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`
       (21/28 columns confirmed all-NaN across 13 days this session, consistent with its dead-placeholder-schema
-      diagnosis) and `issues/sports_features_layer_findings_sweep_2026_07_18.md` (`player_lineup` 74/74 all-zero
-      confirmed on day=2026-07-19 — flagged an open question: that day falls 2 days past the 2026-07-18 re-derive's
-      `2019-01-01..2026-07-17` window, so this may be normal data-capture lag rather than a regression; not
+      diagnosis) and `/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` (`player_lineup` 74/74
+      all-zero confirmed on day=2026-07-19 — flagged an open question: that day falls 2 days past the 2026-07-18
+      re-derive's `2019-01-01..2026-07-17` window, so this may be normal data-capture lag rather than a regression; not
       independently diagnosed further).
 - [x] ✅ [DATA] P2. **CORRECTED 2026-07-29 (slot-6) — narrowed to `perp_funding` specifically, not all 5 data_types.** A
       12-day `DependencyChecker` sweep (2026-05-01 through 2026-07-28, see
-      `issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md`'s now-flipped P2 todo for full
-      evidence) found `vault_share_price`/`lst_rates`/`lending_indices`/`oracle_prices` all show real captured manifest
-      rows on MOST tested days (day-to-day freshness gaps, not "never ingested" — the original framing here was
-      stale/wrong for these 4). Only `perp_funding` shows **zero** manifest rows on **every one of the 12 tested days**
-      — a genuine, currently-live gap, despite a daily `collect-perp-funding` Cloud Scheduler job (01:15 UTC) and a
-      historical `perp_funding=12,500 captured` count (`data_completion_defi_2026_07_15.md`). Root-cause tracked as its
-      own new follow-up todo in that issue doc (scheduler/handler/manifest-registration investigation, out of scope
-      here). Net: `DEFI:onchain`'s dependency check (requires ALL 5, `required: True`) still fails on every tested day —
-      blocks `DEFI:onchain` entirely until `perp_funding` ingestion resumes / is diagnosed. — **2026-07-31 (slot-15)**:
-      root cause is NOT a broken scheduler/handler — both run correctly daily and write real data + manifest rows. The
-      dependency check itself is stale: every live `perp_funding` venue (HYPERLIQUID/KALSHI_PERP/POLYMARKET_PERP) was
-      reclassified DeFi->CeFi by 3 independent operator rulings (2026-07-06/07-25/07-26), so 100% of writes now target
-      the CEFI bucket, never the DEFI bucket this check reads — a permanently-unsatisfiable required dependency, not a
-      freshness gap. `perp_funding` will not "resume" — the check needs fixing. Filed
-      `issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md` (now archived to
-      `/plans/archive/issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md`, all 3 todos
-      shipped) with full evidence + the scoped fix (remove/relax the `perp_funding` requirement in `UPSTREAM_DEPS_DEFI`,
-      operator/main call on which option). — **2026-08-01 (slot-12)**: bucket-resolution fix SHIPPED (Option B —
-      `UPSTREAM_DEPS_DEFI`'s `market-tick-data-service-perp` now points at the CEFI bucket, matching a real wired
-      DEFI:onchain consumer of this exact signal; see the issue doc's flipped P2 todo for full evidence). Live-verified:
-      the check now finds REAL manifest rows on every day MTDS actually wrote (previously: permanently "not run" on 100%
-      of days). Gate still cannot pass on any tested day, but for a DIFFERENT, newly-surfaced reason unrelated to the
-      bucket bug: POLYMARKET_PERP's deliberate, already-tracked DNS outage
+      `/plans/archive/issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md`'s now-flipped P2
+      todo for full evidence) found `vault_share_price`/`lst_rates`/`lending_indices`/`oracle_prices` all show real
+      captured manifest rows on MOST tested days (day-to-day freshness gaps, not "never ingested" — the original framing
+      here was stale/wrong for these 4). Only `perp_funding` shows **zero** manifest rows on **every one of the 12
+      tested days** — a genuine, currently-live gap, despite a daily `collect-perp-funding` Cloud Scheduler job (01:15
+      UTC) and a historical `perp_funding=12,500 captured` count (`data_completion_defi_2026_07_15.md`). Root-cause
+      tracked as its own new follow-up todo in that issue doc (scheduler/handler/manifest-registration investigation,
+      out of scope here). Net: `DEFI:onchain`'s dependency check (requires ALL 5, `required: True`) still fails on every
+      tested day — blocks `DEFI:onchain` entirely until `perp_funding` ingestion resumes / is diagnosed. — **2026-07-31
+      (slot-15)**: root cause is NOT a broken scheduler/handler — both run correctly daily and write real data +
+      manifest rows. The dependency check itself is stale: every live `perp_funding` venue
+      (HYPERLIQUID/KALSHI_PERP/POLYMARKET_PERP) was reclassified DeFi->CeFi by 3 independent operator rulings
+      (2026-07-06/07-25/07-26), so 100% of writes now target the CEFI bucket, never the DEFI bucket this check reads — a
+      permanently-unsatisfiable required dependency, not a freshness gap. `perp_funding` will not "resume" — the check
+      needs fixing. Filed (now archived, all 3 todos shipped)
+      `/plans/archive/issues/defi_onchain_perp_funding_permanently_unsatisfiable_dependency_2026_07_31.md` with full
+      evidence + the scoped fix (remove/relax the `perp_funding` requirement in `UPSTREAM_DEPS_DEFI`, operator/main call
+      on which option). — **2026-08-01 (slot-12)**: bucket-resolution fix SHIPPED (Option B — `UPSTREAM_DEPS_DEFI`'s
+      `market-tick-data-service-perp` now points at the CEFI bucket, matching a real wired DEFI:onchain consumer of this
+      exact signal; see the issue doc's flipped P2 todo for full evidence). Live-verified: the check now finds REAL
+      manifest rows on every day MTDS actually wrote (previously: permanently "not run" on 100% of days). Gate still
+      cannot pass on any tested day, but for a DIFFERENT, newly-surfaced reason unrelated to the bucket bug:
+      POLYMARKET_PERP's deliberate, already-tracked DNS outage
       (`issues/cefi_perp_funding_kalshi_polymarket_residual_     and_capture_gap_2026_07_30.md`) trips
       `_check_mtds_manifest`'s any-attempted_failed-fails-whole-dependency rule even on days HYPERLIQUID/KALSHI_PERP
       both captured. — **2026-08-01 (slot-10)**: venue-scoped known-outage tolerance SHIPPED
@@ -765,19 +762,19 @@ on every computed day; handled gracefully.
       real writes, `DEPLOYMENT_FAILED exit_code=1`); DEFI:onchain — MTDS never ingested the 5 onchain raw-tick types.
       Genuinely-remaining numbers re-opened immediately below.
 - [ ] [DATA] P1. **Remaining per-family real numbers, gated on upstream (NEW 2026-07-29, slot-13, split from above).**
-      Real compute throughput for CEFI/TRADFI/DEFI families once their gate/upstream clears: CEFI needs an operator
-      go-ahead (billing-waste gate `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`) —
-      the shipped `(delta_one,CEFI)` timeout override makes a single fresh VM viable when ungated; TRADFI:volatility
-      needs the options/futures raw-tick backfill, DEFI:onchain the 5 onchain raw-tick data_types (both open below). Do
-      NOT launch CEFI without operator go-ahead; do NOT re-run TRADFI/DEFI before the named gap closes. Repo:
-      features-service. — **2026-08-05 (slot-8)**: CEFI gate DONE (benchmark ran 08-02, real number 8.38 s/inst-day);
-      TRADFI:volatility stg-bucket infra blocker FIXED + shipped `features-service@cc5c52b8`; commodity test-bucket +
-      DEFI:onchain benchmark still pending — see Progress Log +
-      `issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md`. — **2026-08-05 (slot-2)**:
-      TRADFI:volatility dep-gate probe-axis bug FIXED+shipped (`unified-trading-library@bf2757d7` +
-      `features-service@10caf96e`) — gate now passes live for 07-28/29 + 08-04; benchmark relaunch needs a features
-      tarball rebuild. DEFI:onchain gate OPEN (a7976931) but the benchmark yields ZERO output — onchain IS-catalogue stg
-      leak (new P2 todo, issue doc).
+      Real compute throughput for CEFI/TRADFI/DEFI families once their gate/upstream clears: CEFI needs operator
+      go-ahead (billing-waste gate
+      `/plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`) — the shipped
+      `(delta_one,CEFI)` timeout override makes a single fresh VM viable when ungated; TRADFI:volatility needs the
+      options/futures raw-tick backfill, DEFI:onchain the 5 onchain raw-tick data_types (both open below). Do NOT launch
+      CEFI without go-ahead; do NOT re-run TRADFI/DEFI before the gap closes. Repo: features-service. — **2026-08-05
+      (slot-8)**: CEFI gate DONE (benchmark ran 08-02, real number 8.38 s/inst-day); TRADFI:volatility stg-bucket infra
+      blocker FIXED + shipped `features-service@cc5c52b8`; commodity test-bucket + DEFI:onchain benchmark still pending
+      — see Progress Log + `/plans/archive/issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md`. —
+      **2026-08-05 (slot-2)**: TRADFI:volatility dep-gate probe-axis bug FIXED+shipped
+      (`unified-trading-library@bf2757d7` + `features-service@10caf96e`) — gate now passes live for 07-28/29 + 08-04;
+      benchmark relaunch needs a features tarball rebuild. DEFI:onchain gate OPEN (a7976931) but the benchmark yields
+      ZERO output — onchain IS-catalogue stg leak (new P2 todo, issue doc).
 
 ### 2026-07-28 (slot-2, todo-10 remaining-scope attempt) — PREDICTION:delta_one 2nd bucket-token bug found + fixed
 
@@ -786,11 +783,12 @@ confirmed present in the real bucket via `gcloud storage ls`, fleet checked clea
 running). Ran
 `scripts/pipeline_e2e_check.py --day 2026-07-26 --asset-group PREDICTION --family delta_one --legs force --require-captured --auto-day`:
 the dependency check now PASSES (confirms the earlier P2 fix, `features-service@bba7de58`), but the VM still failed
-(`exit_code=1`) — a SECOND, unfixed instance of the exact same bucket-token bug class, this time in
-`LookbackValidator.validate_lookback_candles` (a sibling call site in the same `dependency_checker.py`, never migrated
-to the `_resolve_mdps_bucket` helper the first fix introduced). Root-caused via direct `run.log` read, fixed +
-regression-tested + shipped: `features-service@89e3ad3b`. Full writeup + fix todo in
-`issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` (2026-07-28 section).
+(`exit_code=1`) — a SECOND, unfixed instance of the same bucket-token bug, this time in
+`LookbackValidator.validate_lookback_candles` (a sibling call site, never migrated to the `_resolve_mdps_bucket` helper
+the first fix introduced). Root-caused via `run.log`, fixed + regression-tested + shipped: `features-service@89e3ad3b`.
+Full writeup + fix todo in
+`/plans/active/issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` (2026-07-28
+section).
 
 **Update, same session**: re-running after the fix shipped hit a THIRD and FOURTH unfixed instance of the identical bug
 class — `data_loader.py`'s `_get_source_bucket` (the actual candle-read path) and `live_handler.py`'s
@@ -805,14 +803,14 @@ confirmed GENUINELY COMPUTING via live `run.log` — real per-instrument feature
 PREDICTION universe (thousands of markets), honest per-instrument no-data skips, and real parquet writes
 (`Wrote 1/2 daily partitions for KALSHI:PREDICTION_MARKET:...`). Left running rather than babysat to completion given
 the large universe (`features-e2e-prediction-20260728-142821-0f2a85`, launched 14:28 UTC) — full writeup in
-`issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` (2026-07-28 continued
-section).
+`/plans/active/issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` (2026-07-28
+continued section).
 
 CEFI (data exists, 3-4 day contiguous windows available, fleet currently clear of duplicate VMs) and DEFI
 (sparse/non-contiguous recent coverage: 07-18, 07-22, 07-25 through 07-27) were investigated for data availability but
 not attempted this session — CEFI remains the operator-gated 8-VM billing-waste situation from
-`issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`, not re-attempted without an explicit
-go-ahead.
+`/plans/archive/issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`, not re-attempted
+without an explicit go-ahead.
 
 - [x] ✅ [DATA] P2. **DONE 2026-07-29 (slot-13).** `PREDICTION:delta_one` real number recovered directly from
       `features-e2e-prediction-20260728-142821-0f2a85`'s GCS run.log (driver died to the known session-teardown mode
@@ -830,17 +828,18 @@ go-ahead.
 
 Extended to `TRADFI:volatility` (upstream gap: no options/futures raw-tick for 07-12), `PREDICTION:delta_one` (code bug:
 `_format_template_vars` used naive `asset_group.lower()` → resolved non-existent bucket token; filed
-`issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md`; also discovered PREDICTION
-MDPS candle 6-month gap), `TRADFI:commodity` (Baker Hughes timeout — ruled 2026-07-28 a code bug, not a credential gap;
-EIA ask declined by operator). 7 families attempted total, 2 measured, 5 honestly-failed. `multi_timeframe`/
+`/plans/active/issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md`; also found a
+PREDICTION MDPS candle 6-month gap), `TRADFI:commodity` (Baker Hughes timeout — ruled 2026-07-28 a code bug, not a
+credential gap; EIA ask declined). 7 families attempted total, 2 measured, 5 honestly-failed. `multi_timeframe`/
 `cross_instrument` skipped — derived from delta_one test output, same upstream gap.
 
-- [x] ✅ [DATA] P2. Re-test `TRADFI:volatility`/`TRADFI:commodity` once their respective upstream gaps close (raw
-      options/futures tick backfill; Baker Hughes vendor fix) to get genuine benchmark measurements. **DONE 2026-08-05
-      (slot-16)** — upstream gaps confirmed closed; benchmark re-test attempted, blocked by new infra gaps (missing
-      staging/prod bucket routing + missing commodity test bucket). See Progress Log.
-- [x] [SCRIPT] P2. ✅ See `issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` —
-      fixed the PREDICTION bucket-token bug (`features-service@bba7de58`). Root cause was bigger than initially scoped:
+- [x] ✅ [DATA] P2. Re-test `TRADFI:volatility`/`TRADFI:commodity` once upstream gaps close (raw options/futures tick
+      backfill; Baker Hughes vendor fix) to get genuine benchmark measurements. **DONE 2026-08-05 (slot-16)** — upstream
+      gaps confirmed closed; re-test blocked by new infra gaps (missing staging/prod bucket routing + missing commodity
+      test bucket). See Progress Log.
+- [x] [SCRIPT] P2. ✅ See
+      `/plans/active/issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` — fixed
+      the PREDICTION bucket-token bug (`features-service@bba7de58`). Root cause was bigger than initially scoped:
       PREDICTION resolves via a dedicated FLAT yaml kind (`market-data-tick-prediction`), not an entry in the
       per-asset_group `market-data` dict — `resolve_bucket_name(kind="market-data", asset_group="prediction")` raises
       `BucketNamingError` rather than silently resolving wrong. Fixed by mirroring the identical, already-shipped fix in
@@ -855,8 +854,8 @@ Re-picked up the gated todo above (`data_pipeline_check_mdps_features-056`). Re-
 operator go-ahead still not granted (re-grepped `plans/active/`, no approval text); TRADFI:volatility's raw-tick
 backfill status unchanged. For DEFI:onchain, ran a 12-day `DependencyChecker("central-element-323112")` sweep
 (2026-05-01 through 2026-07-28, direct calls via the repo's own `.venv` — no VM launch needed) resolving the open
-question left by `issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md`: the "MTDS never
-ingested" framing was stale for 4 of the 5 required deps (`vault_share_price`/`lst_rates`/`lending_indices`/
+question left by `/plans/archive/issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md`: the
+"MTDS never ingested" framing was stale for 4 of the 5 required deps (`vault_share_price`/`lst_rates`/`lending_indices`/
 `oracle_prices` all show real captured rows on most days, just with day-to-day freshness gaps) — only `perp_funding` is
 genuinely absent on **every one of the 12 tested days**, a real live gap despite a daily Cloud Scheduler job and a
 historical 12,500-row capture count. Corrected the gating note above (line ~886) to name `perp_funding` specifically and
@@ -898,8 +897,8 @@ BINANCE-DELIVERY perp_funding attempted_failed regression (issue
 07-29/30 verification predates those rows); benchmark not yet re-run; `onchain/config.py:109` same-class stg risk under
 staging launch. Measurement (multi-hour benchmark VMs) cannot complete in a bounded session → declined via
 skip-current-task GATED, per plans-run-to-actual-completion. Filed
-`issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md` (sibling same-class sweep, 11 sites +
-tarball + commodity-bucket + DEFI-benchmark follow-up todos).
+`/plans/archive/issues/features_mdps_input_bucket_ambient_env_sibling_sites_2026_08_05.md` (sibling same-class sweep, 11
+sites + tarball + commodity-bucket + DEFI-benchmark follow-up todos).
 
 **Acks + process notes (same session)**: (1) Operator OOM directive 2026-08-05 acknowledged — NO heavy RAM/IO process
 was run locally this session; the single features-service `quality-gates.sh` ran under the shared-host QG cap (no

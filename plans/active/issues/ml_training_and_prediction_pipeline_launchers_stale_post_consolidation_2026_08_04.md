@@ -145,3 +145,8 @@ splitting into a third parallel decision thread on the same theme adds coordinat
   doc's own text states the correct fix needs a design call this P3 mechanical-deletion todo didn't scope; both open
   items redirect to the same still-open A/B/C decision pending in `mdps_features_deadcode_consolidation_2026_07_20.md`
   (independently verified: that doc is still `status: open`, unlocked, todos unchecked).
+- **plan_reconciler 2026-08-09** (tradfi tranche, dispatch agt-a3e83c): the sibling doc's 2026-08-08 round5 pass
+  declassified its own S1-a/S1-b todos from `[OPERATOR]` to ordinary `[SCRIPT]` work (finding-U test: no longer a design
+  call) and explicitly flagged this doc as "follows the same reasoning once picked up" — not yet incorporated here.
+  Noting for the next toucher; this doc's own `assigned_vm: NA` doesn't change today either way (still blocked on the
+  sibling's todo 8, a genuine design adjudication), so not reclassified.

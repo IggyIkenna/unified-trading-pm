@@ -54,8 +54,10 @@ context_scope:
 
 # data_pipeline_check_mdps_features_2026_07_20 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **🔒 GATED, not draft.** (Corrected 2026-08-09, plan_reconciler agt-a3e83c — this banner still read "STATUS: `draft`"
+> long after the frontmatter was flipped to `status: active`; the frontmatter was right and the banner was stale.)
+> `gate_on_depends: true` alone correctly holds every todo below until the gated plan's todos are done, so no separate
+> draft flip is needed for this doc.
 
 ## Todos
 

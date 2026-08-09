@@ -69,6 +69,22 @@ depends_on: []
 
 (populated during STEP 3/4)
 
+## Near-misses (caught + reverted, recorded for transparency)
+
+1. **Accidental whole-corpus frontmatter-fixer apply, 3 grace-protected docs touched, reverted.** While applying the
+   instruments_master batch, ran `python3 scripts/plan-hygiene/fix_frontmatter.py --check` expecting a dry-run —
+   `--check` is not a supported flag on this script, so it silently ran in full APPLY mode over the WHOLE corpus (no
+   file args = whole-corpus scope). It mechanically added missing `depends_on`/`drift_direction` fields to 3 docs
+   outside this run's edit set, all ~1h old (grace-protected):
+   `tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md` (infrastructure, not tradfi),
+   `tradfi_databento_account_billing_suspended_2026_08_09.md`,
+   `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`. Caught via `git status` before commit (only the intended 7
+   files should have shown modified); the 3 stray files were `git checkout --`'d back to origin before any commit. The
+   additions themselves were benign/correct per the tool's own logic — reverted purely on the 12h-grace HARD LIMIT, not
+   because they were wrong. **Lesson**: always pass explicit file args to `fix_frontmatter.py`/`fix_todo_format.sh`
+   (never a bare corpus-wide invocation) and verify via `git status` (not just `git diff --cached --stat <path>`, which
+   masks other hunks) before every commit in this run.
+
 ## Hygiene fixes
 
 1. **Findings-doc filename collision risk (process gap, not this corpus's content)** — `agents/plan_reconciler.md` STEP
