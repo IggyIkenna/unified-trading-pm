@@ -326,12 +326,20 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       valid-ref fixture still correctly flags the broken one and resolves the valid one) — no dedicated unit test
       pre-existed for this checker to regress.
 
-- [ ] 12. [VERIFY] P3. **Run the `--skip-tests`/`--skip-<X>` per-phase delta measurement** the source doc's own Deferred
-      table calls "now unblocked"/"ready to run" — a bounded benchmark using the existing timing methodology already
-      built in Phase 1 of that doc. **Done when**: the delta table is filled in and recorded in the source doc's
+- [x] ✅ 12. [VERIFY] P3. **Run the `--skip-tests`/`--skip-<X>` per-phase delta measurement** the source doc's own
+      Deferred table calls "now unblocked"/"ready to run" — a bounded benchmark using the existing timing methodology
+      already built in Phase 1 of that doc. **Done when**: the delta table is filled in and recorded in the source doc's
       Progress Log with real numbers (or recorded as blocked on credentials/infra if the measurement environment is
       unavailable). Source: `quality_gates_quickmerge_timing_baseline_2026_07_31.md` (line ~364) — never cited by any
-      covering doc.
+      covering doc. **Done**: ran `--skip-tests` baseline + `--skip-typecheck`/`--skip-codex`/`--skip-version-alignment`
+      variants (4 timed `quality-gates.sh` runs), all `exit 0` after discarding one transient plan-discipline blip on
+      the first baseline attempt (re-ran clean with zero intervening edits — confirmed foreign-slot noise, not this
+      work). Recorded as "Results table 3" in the source doc, with an explicit noise caveat: host load average was 29-37
+      on an 8-core box throughout, so the ~135-167s band and the `--skip-codex` row coming out slower than baseline
+      reflect shared-host contention, not a clean per-phase signal — matches the doc's own prior finding that wall-clock
+      deltas on a busy host are unreliable vs. the existing single-core-pinned profiler. Source doc's Deferred-work
+      table + Progress Log updated accordingly; an idle-host re-run flagged as an optional new P3 follow-up, not
+      blocking. — `unified-trading-pm@<pending quickmerge>`.
 
 > **Note (slot-3, 2026-08-09) — do not re-add the literal marker tokens to todos 1 and 12.** Both originally wrote the
 > blocked-status instruction as a backticked `BLOCKED-<TOKEN>` literal. That token keeps a todo OUT of the backlog

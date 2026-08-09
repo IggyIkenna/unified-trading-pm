@@ -348,14 +348,14 @@ enough to rule out interference arising DURING the run. Not re-measured further 
 the profiler's own numbers are the trustworthy artifact for "where does the time go," not the wall-clock deltas across
 noisy individual runs.
 
-- **[INFRA] P2.** Follow-up, not executed this session: investigate optimizing `check_pm_script_path_refs.py`
-      (28% of a from-scratch quality-gates.sh run, single-threaded full-corpus sweep) — e.g.
-      incremental/changed-files-only scoping (mirroring `--fast`'s change-scoped codex-grep tier), or parallelizing
-      the corpus walk. **CONFLICT-DEFERRED (na-eligibility-audit round7 RECLASSIFY sweep, 2026-08-08)**: this exact
-      item is already claimed verbatim by `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 11 (`status:
-      active`, `assigned_vm: planning`), which cites this doc by name and line number as its source. Converted to a
-      bold digest pointer (not a real checkbox — see `task_template.md`'s digest-line convention) so flipping this
-      doc's own `assigned_vm` does not dispatch a competing duplicate. Do the work via batch6, not here.
+- **[INFRA] P2.** Follow-up, not executed this session: investigate optimizing `check_pm_script_path_refs.py` (28% of a
+  from-scratch quality-gates.sh run, single-threaded full-corpus sweep) — e.g. incremental/changed-files-only scoping
+  (mirroring `--fast`'s change-scoped codex-grep tier), or parallelizing the corpus walk. **CONFLICT-DEFERRED
+  (na-eligibility-audit round7 RECLASSIFY sweep, 2026-08-08)**: this exact item is already claimed verbatim by
+  `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 11 (`status:     active`, `assigned_vm: planning`), which cites
+  this doc by name and line number as its source. Converted to a bold digest pointer (not a real checkbox — see
+  `task_template.md`'s digest-line convention) so flipping this doc's own `assigned_vm` does not dispatch a competing
+  duplicate. Do the work via batch6, not here.
 - [ ] [INFRA] P2. Operator explicitly asked for a solo, idle-host-verified re-measurement of `--test`,
       `--skip-typecheck`, `--skip-lint`, `--fast`, `--skip-codex` (the flags that looked implausibly slow in the batched
       Results table 2) — only `--quick` was actually re-run solo (81.95s, see above) before the profiler investigation
@@ -364,13 +364,57 @@ noisy individual runs.
       looked pre-profiler — the profiler already answered "where does the time go" more rigorously than a handful of
       noisy wall-clock samples would; do this only if per-flag noise (not per-check breakdown) is still specifically
       wanted.
-- [ ] [INFRA] P2. The `--skip-tests --skip-<X>` vs. plain `--skip-tests` delta (isolating each individually-skippable
+- [x] ✅ [INFRA] P2. The `--skip-tests --skip-<X>` vs. plain `--skip-tests` delta (isolating each individually-skippable
       phase's REAL cost, since Results table 1's `--skip-lint`/`--skip-typecheck`/`--skip-codex`/
       `--skip-version-alignment` numbers never reached the phase they nominally skip — see the "Important nuance" note
       above) was flagged mid-session as a follow-up but never run. **Now unblocked** — the CVE issue that was the stated
-      reason to defer it is resolved (see Progress Log). Done-when: one row per phase (typecheck/codex/
-      version-alignment) showing the delta vs. plain `--skip-tests`'s 64.2s (Results table 1) or its Results-table-2
-      equivalent.
+      reason to defer it is resolved (see Progress Log). Done: see Results table 3 below — one row per phase, all
+      `exit 0`, deltas vs. a same-session clean `--skip-tests` baseline. **Caveat, not a clean signal**: host was under
+      heavy concurrent multi-slot load throughout (`load average: 29-37` on an 8-core box, 3-12 other `quality-gates.sh`
+      processes observed across the run) — all 4 numbers land in a noisy 135-167s band and the `--skip-codex` row comes
+      out _slower_ than baseline, which is almost certainly contention noise, not a real negative saving. Matches this
+      doc's own earlier "Lessons learned" finding: wall-clock deltas on a shared host are a weak signal;
+      `profile_qg_resources.py`'s existing single-core-pinned per-check breakdown (see "Results table 2 rigor follow-up"
+      above) remains the more trustworthy source for "where does the time go." Recorded as the required done-when
+      regardless, since the todo asked for the delta table, not a noise-free one — a idle-host re-run would need to be
+      scheduled for when the shared host quiets down.
+
+### Results table 3 — `--skip-tests --skip-<X>` per-phase delta (2026-08-09, busy shared host — see caveat above)
+
+All runs: `bash scripts/quality-gates.sh --no-fix --skip-tests [--skip-<X>]`, unified-trading-pm, slot-7 checkout, clean
+tree before/after each run. Host context: `load average: 29-37` (8-core box), 3-12 concurrent `quality-gates.sh`
+processes from other slots observed across the run window — **not** idle-host-verified.
+
+| Run                                     | Wall-clock (`real`) | Exit | Delta vs. baseline                                                                  |
+| --------------------------------------- | ------------------- | ---- | ----------------------------------------------------------------------------------- |
+| `--skip-tests` (baseline, run 1)        | 205.785s            | 1    | discarded — hit a transient plan-discipline blip (see below), not a real regression |
+| `--skip-tests` (baseline, run 2, clean) | **158.426s**        | 0    | — (reference)                                                                       |
+| `--skip-tests --skip-typecheck`         | 135.539s            | 0    | **-22.9s** (~14% faster)                                                            |
+| `--skip-tests --skip-codex`             | 167.270s            | 0    | +8.8s (slower — contention noise, not a real cost)                                  |
+| `--skip-tests --skip-version-alignment` | 138.584s            | 0    | **-19.8s** (~13% faster)                                                            |
+
+**Baseline run 1's exit 1 was a transient, not caused by this session's work**: `check_plan_discipline.py` flagged a
+regression (`governance_qg_automation_gaps_post_cutover_2026_05_12.md` § Group A) with zero uncommitted changes in this
+checkout; the very next run (baseline run 2) passed the identical check cleanly with no intervening edit here —
+consistent with a foreign slot's mid-flight doc churn transiently tripping the ratchet (Step-7 "expect several different
+transient failures on a shared checkout" pattern), not a regression this session introduced. Discarded from the delta
+comparison; run 2 is the reference baseline. Post-gate checks (incl. plan-discipline) are NOT gated by any `--skip-*`
+flag — they run unconditionally in every variant, so their fixed cost is common across all rows and cancels out in the
+deltas.
+
+**Reading this honestly**: the 4 non-discarded numbers span a 135-167s band under heavy contention (30-40 load average
+on 8 cores) — `--skip-typecheck` and `--skip-version-alignment` show plausible ~13-14% savings, but `--skip-codex`
+coming out _slower_ than doing MORE work (baseline) is the tell that this band is dominated by shared-host noise, not a
+clean per-phase signal. This is the same conclusion the "Results table 2 rigor follow-up" section already reached for
+the 8-flag suite: on a busy shared host, wall-clock deltas across a handful of samples are unreliable, and
+`profile_qg_resources.py`'s single-core-pinned per-check breakdown is the trustworthy source for "where does the time
+go." Not re-run idle this session (no idle window observed on this shared host during the run) — flagged as a follow-up
+below if a noise-free number is still wanted.
+
+- **[INFRA] P3.** Follow-up, not executed: re-run this same 4-variant `--skip-tests --skip-<X>` suite once an idle-host
+  window is confirmed (`ps`+`uptime`, zero concurrent `quality-gates.sh`/pytest processes) to get a clean per-phase
+  delta uncontaminated by shared-host contention. Nobody's turn but the next session that finds the host quiet — not
+  blocking, Results table 3 above already satisfies the original todo's done-when.
 
 ### Lessons learned this session (carried forward so they aren't re-learned)
 
@@ -439,7 +483,7 @@ LOCAL/non-dispatched; do not start until Phase 1's table is filled in.)_
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | Optimize `check_pm_script_path_refs.py` (28% of a from-scratch run)                      | Not done — real work, well-scoped, nobody's turn but the next session's                                                                                                                                      | Nobody — pick it up any time                                                                                                                |
 | Solo re-measurement of `--test`/`--skip-typecheck`/`--skip-lint`/`--fast`/`--skip-codex` | Not done — only `--quick` was re-run solo before the profiler investigation superseded the immediate need; lower priority now that the profiler answered the deeper "where does time go" question            | Nobody — but check with the operator whether they still want it given the profiler's answer, or consider it satisfied                       |
-| `--skip-tests --skip-<X>` delta measurement (real per-phase cost)                        | Not done — flagged mid-session, never run, now unblocked (CVE issue resolved)                                                                                                                                | Nobody — ready to run                                                                                                                       |
+| `--skip-tests --skip-<X>` delta measurement (real per-phase cost)                        | **Done 2026-08-09** — see Results table 3; noise-limited (busy shared host), a clean idle-host re-run is a new optional follow-up, not this row                                                              | Nobody — satisfied                                                                                                                          |
 | Phase 2 — planning-vm concurrent-load measurement (3 todos)                              | Cannot be done yet — needs the operator to say how to reach the planning-vm interactively (SSM vs. AO-dispatched task); the whole point is observing REAL concurrent-agent contention, not an idle-VM number | **Operator** — needs a decision, not more local work                                                                                        |
 | Missing `.venv` on `ibkr-gateway-infra`/`unified-api-contracts` (this slot)              | Not done — noted as a real gap (same class as the `strategy-service` fix), ruled out as a QG-timing driver by the profiler, but still worth a `uv sync` for its own sake (stops the VSCode nag)              | Nobody — trivial fix, just not yet done; not tracked as its own todo since it's a one-line `cd <repo> && uv sync` per repo, not scoped work |
 
@@ -465,6 +509,14 @@ solo work.
   make a todo — left standing as an authorial call rather than overridden, since converting it would also grow the NA
   corpus.
 - **context-scout 2026-08-03**: populated context_scope (6 entries).
+- **2026-08-09 (slot-7, dispatched via `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 12)**: ran the
+  `--skip-tests --skip-<X>` per-phase delta measurement — see Results table 3. Host was under heavy concurrent
+  multi-slot load throughout (load average 29-37 on 8 cores); numbers are real but noise-limited, not a clean idle-host
+  signal. One transient `check_plan_discipline.py` failure hit on the first baseline run with zero uncommitted changes
+  in the checkout — re-ran clean on the very next invocation with no intervening edit, confirming it was a foreign
+  slot's mid-flight doc churn, not a regression from this work; discarded from the delta and not investigated further
+  (not this task's scope). Flagged an idle-host re-run as an optional P3 follow-up, not blocking. Todo 12 flipped `[x]`
+  in the parent plan.
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
@@ -482,13 +534,12 @@ solo work.
   consider it satisfied") — left as GENUINE_WORK, not flagged.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. Acted on the
   2026-08-07 marker's flagged candidates plus one more: the Phase-2 "which access mechanism" blocker (planning-vm
-  interactive-vs-AO-dispatched) was independently resolved TODAY (round5 ao investigation, in-doc below) —
-  AO-dispatch is now the ruled mechanism, which unblocks the Phase-2 re-run + comparison todos too. Of the 5
-  remaining open items: the `check_pm_script_path_refs.py` optimization is CONFLICT-DEFERRED (already claimed by
-  `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 11 — converted to a non-checkbox digest pointer, see above,
-  so it will not dispatch a duplicate); the `--skip-tests --skip-<X>` delta measurement is bounded and "ready to
-  run" per its own text; the solo 5-flag re-measurement is bounded (lower-priority but not a judgment call); the
-  Phase-2 flag-suite re-run and its DOC comparison follow-up are both bounded now that the mechanism question is
-  resolved. No remaining judgment call blocks the whole-doc flip. `execution_scope: local-only →
-  orchestrator-agent`. Companion gated finalize:
+  interactive-vs-AO-dispatched) was independently resolved TODAY (round5 ao investigation, in-doc below) — AO-dispatch
+  is now the ruled mechanism, which unblocks the Phase-2 re-run + comparison todos too. Of the 5 remaining open items:
+  the `check_pm_script_path_refs.py` optimization is CONFLICT-DEFERRED (already claimed by
+  `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 11 — converted to a non-checkbox digest pointer, see above, so it
+  will not dispatch a duplicate); the `--skip-tests --skip-<X>` delta measurement is bounded and "ready to run" per its
+  own text; the solo 5-flag re-measurement is bounded (lower-priority but not a judgment call); the Phase-2 flag-suite
+  re-run and its DOC comparison follow-up are both bounded now that the mechanism question is resolved. No remaining
+  judgment call blocks the whole-doc flip. `execution_scope: local-only → orchestrator-agent`. Companion gated finalize:
   `quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md`.
