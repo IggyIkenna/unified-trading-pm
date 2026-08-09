@@ -240,18 +240,16 @@ human already made the call and the fleet still never executes it.
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
       no longer lists `infra_satellite_ao_dispatch_batch1_2026_07_26.md` at all under either the active or archive path
       (0 hits — only the distinct `batch10`-`batch14` docs appear). (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in
-      `plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md`.** Its checkbox reads (truncated): "[SCRIPT]
-      P1. **Kalshi execution credential reshape + live paper-order verify.** Todo 1: read the existing" — the marker
-      trips `_is_non_dispatchable` (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its own
-      line, so `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is genuinely
-      still blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to the start
-      of its own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation line) so it
-      reads as a declared hold. If it is already resolved (several of these carry a dated `RULED`/`DESIGN DECIDED` note
-      — read the full todo before acting), rewrite the trigger phrase so the marker no longer appears anywhere in the
-      block. Verify:
-      `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-20, infra).** Triage accidental exclusion in
+      `plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md`. Moot, not accidental: the flagged todo (the
+      `[SCRIPT] P1` Kalshi execution credential reshape + live paper-order verify item) was independently completed and
+      checked off `[x] ✅ "DONE 2026-08-09 — execution-service@577b9a884"` by another session before this triage
+      dispatched (line 299 of the target doc). No open todo remains on disk for the gate to misclassify. Verified via
+      `cd agent-orchestrator && uv run python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`:
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` now reports `disk_open=2, backlog_open=1`, with its sole
+      remaining exclusion being an unrelated, correctly-declared item
+      (`[SCRIPT] P1. DEFERRED-BY-DESIGN. Phase 5 — canonical-groups backfill...`, `"declared": true`) — no rewrite
+      needed. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md`.** Its checkbox reads (truncated):
       "[DATA] P3. Reconcile `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` — once batch-10 todo 1" — the
@@ -539,3 +537,9 @@ human already made the call and the fleet still never executes it.
   `plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md`. Confirmed via
   `dispatch_visibility_report --json`: the doc no longer appears in the report at all (zero open todos left to
   misclassify).
+- **2026-08-09 (slot 20, infra)** — Fixed the `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo. Same "moot,
+  not accidental" pattern as the batch1/batch4/batch6/cefi/defi fixes above: the flagged Kalshi execution credential
+  reshape + live paper-order verify item was already checked off `[x]` (execution-service@577b9a884) by another session
+  on 2026-08-09 before this triage dispatched. Confirmed via `dispatch_visibility_report --json`:
+  `disk_open=2, backlog_open=1` for that doc, with the sole remaining exclusion an unrelated, correctly-declared
+  DEFERRED-BY-DESIGN Phase-5 item (`"declared": true`) — no rewrite needed.
