@@ -353,18 +353,18 @@ default from an external reference.
       (OmniRoute no-go) — one coherent call about which providers this workspace routes to, recorded in two docs.
 
       **Why closed rather than left open**: the original done-when required proving the abstraction "via a real
-                                      isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
-                                      out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
-                                      **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
-                                      front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
-                                      integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
-                                      few hours".
+                                          isolated local pilot dispatch", which needs a provisioned credential for a provider the operator has just ruled
+                                          out — "for now we are going to work with claude and deepseek only" (same session). As written the todo was
+                                          **unsatisfiable without reversing that ruling**, so leaving it open would put a permanently un-actionable item in
+                                          front of every future audit. When a second provider IS adopted, running that pilot dispatch simply *is* the
+                                          integration work — not a separate task to remember — and the operator's own estimate for that integration is "a
+                                          few hours".
 
-                                      **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
-                                      executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
-                                      simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
-                                      **The first real second-provider integration must treat this as unverified code**, not as a working feature to
-                                      configure. Do not re-file this as a standing todo — re-open it at that moment instead.
+                                          **Known, accepted risk — state it plainly rather than let the ✅ imply more than it should**: this code has never
+                                          executed against a real second provider. It is tested (34 pre-existing routing tests pass unmodified, plus
+                                          simulated multi-provider-failover tests) but unproven in production, and a no-op cannot regress anything today.
+                                          **The first real second-provider integration must treat this as unverified code**, not as a working feature to
+                                          configure. Do not re-file this as a standing todo — re-open it at that moment instead.
 
 - [x] [DATA] P2. ✅ Generalize the DeepSeek-specific health-gate ring to a per-provider map (failing free provider
       degrades to the next-priority free provider before falling back to Claude). — `agent-orchestrator@24bd611`, proven
@@ -384,9 +384,9 @@ default from an external reference.
       directly rather than waiting for the abstraction.
 
       **Explicitly NOT a permanent no**, and the reason it needs no standing todo: per the operator, integrating a
-                                      further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
-                                      future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
-                                      there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
+                                          further model later is **"not going to be hard, maybe a few hours of work only."** A cheap, well-understood
+                                          future option does not need to sit open in the corpus being re-audited every sweep — re-open this only when
+                                          there is an actual decision to add a provider. **Do not re-file this as a follow-up**: closing it is the point.
 
 - [x] [UI] P1. ✅ Surface DeepSeek's real dollar balance on the dashboard (available-balance-only design — DeepSeek's
       API exposes no spend/usage-history endpoint). — New `DeepSeekBalancePoller` (30-min cadence) +
@@ -404,6 +404,14 @@ default from an external reference.
       `deepseek_route_fraction` 0.8→0.9 — `agent-orchestrator@d18e6830cbabd402345fe6bacb071fe24bb2e01e`.
 - [x] [OPERATOR] P2. ✅ Top up the `deepseek-v4-pro` balance ($0.34 as of 2026-08-04T14:05Z). — Done: confirmed $4.84
       live via `/api/accounts` at 2026-08-04T14:33Z.
+- [ ] [OPERATOR] P2. **Recurrence, found 2026-08-09 (slot 30, while re-sourcing the token below): `deepseek-v4-pro`
+      balance is back to
+      $0 — a live `claude -p` auth probe under this account returned `API Error: 402 Insufficient
+      Balance` (confirmed via TWO separate probes: the pre-existing literal-token env file AND the GSM-indirection
+      version, byte-identical error both times — so this is a genuine account-balance exhaustion, not an auth/token
+      regression from the re-sourcing todo below). Same pattern as the 2026-08-04 top-up above (~$4.50
+      spent in ~5 days) — top up again, ideally by enough margin to reduce recurrence frequency.** (repo: N/A, operator
+      action)
 - [x] ✅ [OPERATOR] P2. **DONE 2026-08-09 (operator, interactive ruling recorded in this same doc,
       `deepseek_claude_blended_provider_routing_2026_07_28.md`): "Yes, create it now".** Created live via the exact
       prepared command below: `deepseek-v4-pro-api-key` (project `central-element-323112`), version 1, confirmed via
@@ -417,44 +425,44 @@ default from an external reference.
       exact resource name is recorded in this todo.
 
       **PREPARED 2026-08-08 (operator ruling, ao round-5 apply session item 19): "Operator will create it - needs
-                      Claude to provide the exact secret name + gcloud/aws command to run."** Proposed name (matching this repo's
-                      existing `{vendor}-api-key` GSM convention — see `tardis-api-key`/`databento-api-key`/`graph-api-key` in
-                      `/codex/05-infrastructure/auth-setup.md`, extended with the account variant since DeepSeek now has 2 distinct
-                      keys, pro + flash, per `deepseek_flash_ab_routing_test_2026_08_05.md`): **`deepseek-v4-pro-api-key`** (project
-                      `central-element-323112`, matching every other secret cited above). Exact command (run on whichever host holds
-                      the live literal key, currently `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` value — do
-                      NOT paste the key into shell history; use the `-n`-into-stdin form or a temp file deleted after):
-                      ```bash
-                      gcloud config set project central-element-323112
-                      echo -n "<the literal ANTHROPIC_AUTH_TOKEN value from ~/.claude-accounts/deepseek-v4-pro.env>" | \
-                        gcloud secrets create deepseek-v4-pro-api-key \
-                          --data-file=- \
-                          --replication-policy=automatic
-                      ```
-                      If/when the flash account (`deepseek-v4-flash.env`, provisioned on the orchestrator VM per the A/B test plan's
-                      todo 6, not present on this host) also needs GSM-sourcing, the matching name is **`deepseek-v4-flash-api-key`**
-                      (same command, swap the secret name + source the flash env file's token instead). Once created, hand the exact
-                      name(s) to an agent session to wire the re-sourcing (next todo) — no guessing needed, this doc already states
-                      the name.
+                          Claude to provide the exact secret name + gcloud/aws command to run."** Proposed name (matching this repo's
+                          existing `{vendor}-api-key` GSM convention — see `tardis-api-key`/`databento-api-key`/`graph-api-key` in
+                          `/codex/05-infrastructure/auth-setup.md`, extended with the account variant since DeepSeek now has 2 distinct
+                          keys, pro + flash, per `deepseek_flash_ab_routing_test_2026_08_05.md`): **`deepseek-v4-pro-api-key`** (project
+                          `central-element-323112`, matching every other secret cited above). Exact command (run on whichever host holds
+                          the live literal key, currently `~/.claude-accounts/deepseek-v4-pro.env`'s `ANTHROPIC_AUTH_TOKEN` value — do
+                          NOT paste the key into shell history; use the `-n`-into-stdin form or a temp file deleted after):
+                          ```bash
+                          gcloud config set project central-element-323112
+                          echo -n "<the literal ANTHROPIC_AUTH_TOKEN value from ~/.claude-accounts/deepseek-v4-pro.env>" | \
+                            gcloud secrets create deepseek-v4-pro-api-key \
+                              --data-file=- \
+                              --replication-policy=automatic
+                          ```
+                          If/when the flash account (`deepseek-v4-flash.env`, provisioned on the orchestrator VM per the A/B test plan's
+                          todo 6, not present on this host) also needs GSM-sourcing, the matching name is **`deepseek-v4-flash-api-key`**
+                          (same command, swap the secret name + source the flash env file's token instead). Once created, hand the exact
+                          name(s) to an agent session to wire the re-sourcing (next todo) — no guessing needed, this doc already states
+                          the name.
 
 - [ ] [INFRA] P2. **Re-source `ANTHROPIC_AUTH_TOKEN` from the GSM secret on BOTH hosts** — this machine and the planning
       VM — so `~/.claude-accounts/deepseek-v4-pro.env` no longer contains the literal key. ~~BLOCKED on the operator
-      todo above~~ **UNBLOCKED 2026-08-09**: the secret was created live (see the todo above), naming resolved. **Verified
-      still open 2026-08-06** by direct file read: the env file contains no `gcloud secrets` / secret-manager
-      indirection of any kind, i.e. the key is still literal — this half is unambiguously undone regardless of whether
-      a secret has since been created. **Done when**: both hosts read the token via secret-manager indirection, a fresh
+      todo above~~ **UNBLOCKED 2026-08-09**: the secret was created live (see the todo above), naming resolved.
+      **Verified still open 2026-08-06** by direct file read: the env file contains no `gcloud secrets` / secret-manager
+      indirection of any kind, i.e. the key is still literal — this half is unambiguously undone regardless of whether a
+      secret has since been created. **Done when**: both hosts read the token via secret-manager indirection, a fresh
       spawn authenticates successfully, and the literal key is removed from both files. **➡️ EXTRACTED 2026-08-09 to
       `ao_satellite_ao_dispatch_batch14_2026_08_09.md` todo 1 — do NOT action here.**
 
       > **⚠️ Measurement trap recorded 2026-08-06 — do not repeat it.** This todo's earlier line "Confirmed 2026-08-04:
-                                      > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
-                                      > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
-                                      > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
-                                      > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
-                                      > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
-                                      > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
-                                      > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
-                                      > retention returned a confident zero that meant nothing.
+                                          > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
+                                          > re-confirm it returned an empty list that looked like proof of absence but was **permission denial**: the
+                                          > session identity (`github-actions-deploy@central-element-323112`) lacks `secretmanager.secrets.list` on
+                                          > `central-element-323112`, `uts-prod`, and `unified-trading-system`, and `gcloud secrets list --filter=...`
+                                          > exits 0 with no rows rather than erroring visibly when filtered. **Check the identity's permission before
+                                          > reading an empty secret list as absence** — same class as the journald-retention trap recorded in
+                                          > `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`, where a `--since` predating
+                                          > retention returned a confident zero that meant nothing.
 
 - [x] [INFRA] P1. ✅ Durable per-task token usage (`TaskUsageRow`, any provider), persisted at `/done`. —
       `agent-orchestrator@b310c68`. Same-session follow-up: historical backfill script (dry-run default) +
@@ -500,6 +508,6 @@ default from an external reference.
 - **na-eligibility-audit 2026-08-09 (round9)**: satellite-extraction, not whole-doc RECLASSIFY — the operator created
   the GSM secret `deepseek-v4-pro-api-key` this session (see the todo above), unblocking exactly ONE of the 5 remaining
   open items (the `[INFRA] P2` re-sourcing todo, whose sole blocker was "needs the secret's exact name"). Extracted to
-  `ao_satellite_ao_dispatch_batch14_2026_08_09.md`. The other 4 items stay KEEP-NA, valid — unaffected by the
-  credential fact: 2 operator-review production pilots (time-gated), 1 CLI-version design call, 1
+  `ao_satellite_ao_dispatch_batch14_2026_08_09.md`. The other 4 items stay KEEP-NA, valid — unaffected by the credential
+  fact: 2 operator-review production pilots (time-gated), 1 CLI-version design call, 1
   `accounts.json`-is-gitignored-per-VM data check. Whole-doc RECLASSIFY bar not cleared.
