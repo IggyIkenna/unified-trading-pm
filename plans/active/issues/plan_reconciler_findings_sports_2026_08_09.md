@@ -138,10 +138,28 @@ depends_on: []
 
 ## Filed
 
-**Alerted (Phase 5.9(a) reconciliation)**: `BLK-43da7ab8` — batched blocked-question covering Filed items #2, #3, #6
-below (the 2 big findings + the zero-checkbox `assigned_vm` preference call), `recommendation: A`, `can_continue: true`.
-`routed_to_operator` (3: items #2/#3/#6) `== parked` (1 blocked-question ID covering all 3, `[unresolved]` pending
-operator answer) — reconciled.
+**Alerted + ANSWERED (Phase 5.9(a) reconciliation, STEP 8 applied same run)**: `BLK-43da7ab8` — batched blocked-question
+covering Filed items #2, #3, #6 below (the 2 big findings + the zero-checkbox `assigned_vm` preference call),
+`recommendation: A`. Operator picked **A** and clarified all 3 are mechanical (none require a ruling on the underlying
+substance) — applied immediately:
+
+1. **Item #2 (OOM doc)**: fixed the self-defeating `BLOCKED-OPERATOR-DECISION` dispatch tag (the AF-classification
+   decision it referenced was already ruled 2026-08-06); added an honest checkpoint-status note (the 2026-08-08
+   checkpoint has passed unobserved — attempted a live re-check, hit missing service-runtime env requirements,
+   documented for the next resumer); split the doc under its 1000L hard cap (was 1017L, now 995L) by extracting one
+   genuinely self-contained, already-owned-elsewhere history entry. unified-trading-pm@6ef55154d.
+2. **Item #3 (batch9 truncated citations)**: independently re-verified —
+   `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s Progress Log names only 3 specific re-verified examples, not
+   all 79; spot-checked 2 of the other 77 (`canonical_player_stats_fixture_events_quality_2026_07_16.md`'s entries) and
+   confirmed zero mentions in batch10 — the blanket "re-verified in batch10" claim is false for these, very likely false
+   for most of the remainder. Added a correction banner. unified-trading-pm@96ede0343.
+3. **Item #6 (zero-checkbox doc)**: flipped
+   `sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md` to `assigned_vm: NA` (a
+   determinable fact — nothing there was AO-dispatchable) and added a tracked `[OPERATOR]` todo naming the actual open
+   question (option A vs B). The underlying second-source ruling stays open for the operator exactly as before.
+   unified-trading-pm@2f6fd2e14.
+
+`routed_to_operator` (3) `== parked` (1 blocked-question ID) `== answered` (3, all applied) — reconciled.
 
 1. **Findings-doc naming collision risk on sharded multi-tranche days** — `agents/plan_reconciler.md` STEP 2b's
    `plan_reconciler_findings_<TODAY>.md` path has no tranche component; every sibling slot running today would target
