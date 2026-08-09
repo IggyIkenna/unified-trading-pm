@@ -20,7 +20,7 @@ related:
   [
     /plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md,
     /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
-    /plans/active/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]

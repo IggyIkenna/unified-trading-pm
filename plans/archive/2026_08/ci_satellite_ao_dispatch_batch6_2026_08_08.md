@@ -12,7 +12,7 @@ summary: >-
   the `scripts/workflow-templates/` rollout mechanism re-contended 3 ways (rationed to ONE todo here; the other two
   parked in `## Deferred` for batch 7) — otherwise no file collisions among the 12 conflict-cleared todos below. 21
   items stayed Deferred (conflict-gated / operator-gated / time-gated / live-incident / needs-re-scoping / human-only).
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -35,7 +35,7 @@ related:
     /plans/active/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md,
     /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
     /plans/active/ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md,
-    /plans/active/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
@@ -62,7 +62,7 @@ context_scope:
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
-    /plans/active/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md,
     /codex/08-workflows/ci-cd-flow.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -82,11 +82,11 @@ source: >-
 # CI satellite AO batch 6
 
 > **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 12 todos shipped. Finalize plan
-> `/plans/active/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md` (source-doc reconciliation, the 29-item
-> Deferred re-check, and this archival) completed and archived alongside in the same commit set. Every D6-1 through
-> D6-29 Deferred item remains tracked in its own live source doc (none was uniquely resident in this plan), so archiving
-> it strands no open work — see the finalize plan's todo 2 for the full per-item re-verification. Successor: none
-> drafted here; 11 of the 29 Deferred items are cleared and ready for a future `ci`-tranche batch to extract.
+> `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md` (source-doc reconciliation, the
+> 29-item Deferred re-check, and this archival) completed and archived alongside in the same commit set. Every D6-1
+> through D6-29 Deferred item remains tracked in its own live source doc (none was uniquely resident in this plan), so
+> archiving it strands no open work — see the finalize plan's todo 2 for the full per-item re-verification. Successor:
+> none drafted here; 11 of the 29 Deferred items are cleared and ready for a future `ci`-tranche batch to extract.
 
 > **✅ STATUS (historical): `active` — dispatched, ingested.** Operator-approved 2026-08-08 after a fresh conflict-check
 > re-verified Phase 3's original clearance still holds (no newer sibling batch, no new same-`parent_epic` claim, no

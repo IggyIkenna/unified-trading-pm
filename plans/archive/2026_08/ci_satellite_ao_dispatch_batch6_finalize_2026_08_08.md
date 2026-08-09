@@ -8,7 +8,7 @@ summary: >-
   stale-checkbox items in github_actions_operator_gated_followups_2026_07_17.md and
   post_cutover_silent_assumption_sweep_2026_07_23.md that batch6's own Phase 1 audit found already-done-but-unflipped,
   and archives batch 6 via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [ci, cicd, ao-dispatch, close-out, batch-6, satellite-docs, archival]
 related:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
     /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
@@ -36,7 +36,6 @@ estimate_baseline_ai_days: 0.9
 estimate_calibrated_ai_days: 0.7
 locked_by:
 locked_since:
-archive_exempt: true
 supersedes:
 superseded_by:
 depends_on: [ci_satellite_ao_dispatch_batch6_2026_08_08]
@@ -53,7 +52,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/task_template.md,
@@ -113,9 +112,9 @@ context_scope:
       `/codex/04-architecture/ci-alerting.md` needed no change (it governs Slack-page dedup, a distinct mechanism from
       either). (4) No CLAUDE.md bullet warranted — both are implementation details under the existing "CI alerts"
       one-liner's SSOT pointer, not new workspace-wide rules. (5) Every leading-slash
-      `/plans/active/ci_satellite_ao_dispatch_batch6_2026_08_08.md` and
-      `/plans/active/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md` reference in the active corpus (7 files, 14
-      occurrences — `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md`,
+      `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_2026_08_08.md` and
+      `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md` reference in the active corpus (7
+      files, 14 occurrences — `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md`,
       `issues/ci_monitor_recovery_bookend_residual_gaps_2026_08_09.md`,
       `issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`,
       `issues/ag_closeout_audit_ci_parked_2026_08_09.md`, `issues/ag_closeout_audit_ci_parked_2026_08_08.md`, plus each

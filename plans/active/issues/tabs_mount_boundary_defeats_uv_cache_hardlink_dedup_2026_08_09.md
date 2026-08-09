@@ -37,7 +37,7 @@ locked_by:
 related:
   [
     /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
-    /plans/active/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 source: [ci_satellite_ao_dispatch_batch6_2026_08_08.md item 10 (agent slot 24, 2026-08-09)]

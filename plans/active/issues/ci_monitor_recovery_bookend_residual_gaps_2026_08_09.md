@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [ci-cd, cicd, monitoring-gap, slack-alerting, dedup, follow-up]
 related:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md,
     /codex/04-architecture/ci-alerting.md,
   ]
