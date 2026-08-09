@@ -273,3 +273,9 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
   `trades` cluster-validation gap) — both remain genuine either/or design forks with no evidence-based tiebreaker, per
   every prior pass's reasoning, and neither matches any of today's cheat-sheet precedents (not an IAM/permission issue,
   not a script-flag-parity gap, not a reversibility-qualified delete). Doc stays NA, unchanged.
+
+- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — re-confirmed via
+  `plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md`'s "Parked — operator-gated" entry (today): the
+  same 2 genuine either/or design forks remain (extend `EXPECTED_BOOKMAKER_MARKET_SETS` vs. a `tier_3_global` tier;
+  restore deleted regression tests vs. accept current coverage), plus the standing `locked_by: live-defi-rollout` +
+  do-not-archive-without-ruling banner. No evidence-based tiebreaker exists. No flip.

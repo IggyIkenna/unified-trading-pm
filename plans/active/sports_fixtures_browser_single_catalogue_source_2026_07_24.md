@@ -132,3 +132,8 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
   plan's "Catalogue, browser, dependency" section's second todo names this doc verbatim. Conflict-check clear (same
   `parent_epic: sports_master`, no other doc claims this ground). Doc stays NA; checkbox flips via that plan's finalize
   sibling. Citation-only, no reclassification.
+
+- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA-STALE, re-confirmed — unchanged since the round7 2026-08-08
+  verdict. Sole open todo remains resolved by the dated `✅ OPERATOR RULING 2026-08-08` banner, implemented by
+  `sports_taxonomy_p3_consumers_2026_08_08.md`, independently re-confirmed today by
+  `sports_satellite_ao_dispatch_batch11_2026_08_09.md`. Checkbox flips via that plan's finalize sibling. No flip here.
