@@ -148,8 +148,9 @@ HARD LIMITS (violating ANY of these is a failed run — when in doubt, FILE inst
   written.
 - **NO deletions of plan files** (a delete loses history). Archival is the EXCEPTION added 2026-06-21: a VERIFIED-DONE,
   UNLOCKED, non-grace plan is `git mv`'d into `plans/archive/` per STEP 5f (a move, not a delete; PR-gated). NO archival
-  / auto-unlock of plans with `locked_by:` frontmatter. NO rewriting codex docs (flag drift; a human or a follow-up
-  fixes the doc). NO touching files outside `plans/**` except reading.
+  / auto-unlock of plans with `locked_by:` frontmatter. NO rewriting codex docs beyond the narrow MECHANICAL
+  codex-staleness carve-out (STEP 5.c below, operator ruling 2026-08-09) — anything outside that carve-out is FLAG-only
+  (a human or a follow-up fixes the doc). NO touching files outside `plans/**` except reading.
 - **ARCHIVAL IN A SHARDED RUN needs the cross-tranche check first** (`$TRANCHE` set): a doc that looks fully done
   _within your shard_ can still be cited as live work by ANOTHER tranche's consolidated-closeout doc, which your shard
   never reads. Before any STEP 5f archival, grep the other tranches' closeout docs (or their Sources lists) for the doc
@@ -305,9 +306,26 @@ stale side / add the missing banner). Anything genuinely undecidable → route i
 `bash scripts/plan-hygiene/fix_todo_format.sh <file>`. Only on non-grace files the fixers handle mechanically. e.
 **SUPERSEDED-IN-ACTIVE** (confirmed): a plan fully shipped (every todo flipped + verified) or explicitly superseded by a
 newer plan → add/refresh the `> **SUPERSEDED/COMPLETE — …**` banner naming the successor. Do NOT move the file (archival
-is 5f). f. **ARCHIVE-READY → AUTO-ARCHIVE** the verified-done UNLOCKED ones (operator 2026-06-21: "any fully done plans
-can be archived, same with issues — all autonomous"). A plan whose every todo is flipped `- [x]` with STEP-4-verified
-evidence is archived BY YOU on YOUR REVIEW BRANCH (the STEP-7 PR is the human review gate). For each:
+is 5f). f2. **MECHANICAL CODEX-STALENESS CORRECTION — auto-applied (operator ruling 2026-08-09, narrow carve-out to the
+"codex updates never autonomous" rule)**: a codex-alignment finding auto-applies (skips STEP 6 routing) ONLY when ALL
+hold — (1) HARD evidence at the SAME bar as a todo flip (a verified sha/PR, a live grep-then-READ of running code, or an
+explicit self-contradiction between two DATED claims in the same or a sibling authoritative doc) proves the codex text
+is factually stale; (2) the fix is a SINGLE unambiguous substitution — a status/date/number/pointer/tag corrected to
+match the verified-true state — with NO invented content and NO judgment call between ≥2 plausible corrected values (if
+you can't cite the one demonstrably-correct replacement from existing evidence, this does not qualify — route it, STEP
+6, same as any other doc-drift); (3) the finding does NOT touch a HARD-STOP governance area (the delete-safety
+protocol's own rules, human-only hard-stop definitions, version-graduation rules) — those stay routed regardless of how
+clear the evidence looks, given the stakes; (4) you do NOT run a NEW measurement/computation to produce the corrected
+value — cite only evidence that already exists (a shipped commit, an already-recorded number elsewhere, an internal
+contradiction) — if the correct replacement value requires a fresh live measurement, FLAG that it needs re-measurement
+instead of fabricating or computing one inline. Still goes through the FULL STEP-4 adversarial verify (refuter +
+confirmer) before applying — this carve-out changes WHETHER you may apply a confirmed finding, not whether it needs
+confirming. Log every mechanical correction in a NEW run-findings-doc section,
+`## Codex corrections applied (mechanical, evidence-cited)`, distinct from `## Doc-drift` (which stays for genuine
+judgment-call drift that still routes to STEP 6) — cite the exact evidence per correction. g. **ARCHIVE-READY →
+AUTO-ARCHIVE** the verified-done UNLOCKED ones (operator 2026-06-21: "any fully done plans can be archived, same with
+issues — all autonomous"). A plan whose every todo is flipped `- [x]` with STEP-4-verified evidence is archived BY YOU
+on YOUR REVIEW BRANCH (the STEP-7 PR is the human review gate). For each:
 
 1.  scan for DEFERRED / NICE-TO-HAVE / open items — migrate each to its active home with a `**MIGRATED FROM:**` line
     BEFORE archiving (a done plan with an un-migrated deferral is NOT archive-ready → leave it active + file the

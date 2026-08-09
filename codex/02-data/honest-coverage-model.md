@@ -693,13 +693,13 @@ unit tests); live measure `coverage_v3.json` 2026-06-29 06:00 UTC.
 reconciliation landed** (`honest_coverage_uac_writer_matrix_reconciliation_2026_06_29`: cefi venue-suffix fold, defi
 lending grain roll-up, `rate_indices` dialect fold, ASTER over-seed carve-out + 17,282-row manifest purge):
 
-| AG         | Layer-1 completeness | present/expected | real holes | strays | Layer-2 (lower bound, gated) |
-| ---------- | -------------------- | ---------------- | ---------- | ------ | ---------------------------- |
-| cefi       | 79.55% (was 65.91%)  | 35/44            | 9          | 104    | 37.90%                       |
-| defi       | 94.81% (was 69.44%)  | 73/77            | 4          | 128    | 58.02%                       |
-| tradfi     | 51.43%               | 18/35            | 17         | 52     | 95.15%                       |
-| sports     | 30.77%               | 8/26             | 18         | 24     | 100.00%                      |
-| prediction | 66.67%               | 4/6              | 2          | 17     | 22.73%                       |
+| AG         | Layer-1 completeness                                                                                                                                                                                                                                                         | present/expected    | real holes | strays | Layer-2 (lower bound, gated) |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ---------- | ------ | ---------------------------- |
+| cefi       | ⚠️ STALE — 79.55% (was 65.91%), dated 2026-07-03; other AG rows refreshed 2026-07-28, this row was not — do not cite as current without re-running `instruments-service/scripts/check_enumeration_completeness.py` for cefi first (flagged 2026-08-09, not re-measured here) | 35/44 (as of 07-03) | 9          | 104    | 37.90%                       |
+| defi       | 94.81% (was 69.44%)                                                                                                                                                                                                                                                          | 73/77               | 4          | 128    | 58.02%                       |
+| tradfi     | 51.43%                                                                                                                                                                                                                                                                       | 18/35               | 17         | 52     | 95.15%                       |
+| sports     | 30.77%                                                                                                                                                                                                                                                                       | 8/26                | 18         | 24     | 100.00%                      |
+| prediction | 66.67%                                                                                                                                                                                                                                                                       | 4/6                 | 2          | 17     | 22.73%                       |
 
 (Historical: the 2026-06-29 06:00 UTC certification measured cefi 65.91% / defi 69.44%; defi rose to 94.81% via the
 protocol enumeration work landed 06-29→06-30, cefi to 79.55% via the reconciliation dialect folds — 6 of cefi's 15

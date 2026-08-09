@@ -98,6 +98,18 @@ create-only hazard and must be fixed (amend, or a corrective follow-up commit) b
 backstop that catches this shape if it slips through — but don't rely on the sweep catching it later; verify at commit
 time.
 
+### Never combine the checkbox flip with the `git mv` archival in ONE commit (2026-07-30 incident; migrated here 2026-08-09 — this doc is the self-declared SSOT for the archival ritual, but the rule itself had only ever been written into `agents/RULES.md`)
+
+If a todo's own completion also makes its doc archival-eligible (all todos done, no lock), a single commit that both
+edits the checkbox AND `git mv`s the file to `plans/archive/...` makes the diff AT THE ORIGINAL `plan_ref` PATH show
+only a file deletion — no `[ ] → [x]` transition is visible there (git's rename pairing isn't applied when a path-scoped
+`git show`/`git log` query is run against just the old path), so `/done`'s M3 check (`cross_repo_pm_flip_verified`)
+rejects it with `cross_repo_pm_file_touched_no_checkbox_flip` even though the flip genuinely happened. **Fix: commit the
+flip FIRST as a plain edit at the still-active path, THEN `git mv` to the archive location as a separate follow-up
+commit.** This is a distinct, earlier failure mode from the `git commit --only` rename-deletion hazard above (that
+section's guidance governs the SHAPE of the archival commit once you're doing steps 5-6 as a combined move; this rule
+governs whether the flip and the move should even be in the same commit at all — they should not be).
+
 ### The line-cap does NOT block archival of an already-done doc (RULED 2026-07-30)
 
 **A doc with ZERO open todos archives via the normal 6-step ritual regardless of how far over the line-cap it is.**
