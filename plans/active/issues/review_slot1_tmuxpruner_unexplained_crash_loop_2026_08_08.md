@@ -445,3 +445,14 @@ own Tick history.
   (confirmed permission-denied) so could not independently check current kernel OOM-killer activity. Not asserting a new
   root cause — flagging the load/cadence decoupling as a fresh data point for whoever picks up the open `[BACKEND] P1`
   todos.
+- 2026-08-09 ~05:39Z (review agt-457acf, relayed by main agt-22de53 msg 4407): STRONGER decoupling signal — host is now
+  fully back to baseline, not just eased. Fresh session booted ~1min after the last kill (05:35:07Z). Load avg
+  7.42/9.25/12.97 on nproc=8 — the 1-min figure is essentially AT capacity, no CPU oversubscription at all (vs
+  14.29/13.30/18.86 at 05:24Z, vs 63-65 at the 03:14Z peak). `quality-gates.sh` processes 3 (was 5, was 12-19 at peak),
+  `claude` CLI processes 36 (was 37), mem 9.4Gi/30Gi used with 21Gi available (genuinely healthy), swap 11Gi/47Gi (was
+  12-14Gi). Slot-1 kill cadence over the trailing ~30min (all zero-precursor `tmux_session_lost`, via
+  `/api/activity?slot=1`): 05:08:27, 05:15:49 (+7m22s), 05:25:19 (+9m30s), 05:35:07 (+9m48s) — spacing maybe very
+  slightly widening (7-10min vs the earlier 5-8min) but still firing at essentially-baseline host load. This further
+  weakens the pure host-contention hypothesis: the host is no longer oversubscribed on CPU AT ALL, yet the kill cadence
+  continues largely unabated. Strengthens the standing feedback-loop hypothesis (msg 4376) relative to "wait for host
+  relief" as the fix.
