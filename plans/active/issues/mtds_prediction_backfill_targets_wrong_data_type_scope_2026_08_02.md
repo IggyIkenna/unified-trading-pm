@@ -196,3 +196,10 @@ whoever wants to close the loop.
   P3 todo is still KEEP-NA-STALE-DUPLICATE, confirmed still verbatim-present in
   `prediction_satellite_ao_dispatch_batch7_2026_08_04.md` (`status: draft`, `assigned_vm: planning`, Source-cited). Doc
   stays NA, no change from the 08-04 verdict.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (prediction tranche)**: KEEP-NA, valid — re-checked
+  against the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack
+  webhooks) — none apply. Re-verified `prediction_satellite_ao_dispatch_batch7_2026_08_04.md` still carries this
+  exact todo (`status: draft`, `assigned_vm: planning`) — still the correct, already-vetted owner; reclassifying
+  here would create a competing dispatch surface. No reclassification.

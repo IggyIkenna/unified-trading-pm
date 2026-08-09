@@ -151,3 +151,11 @@ dangling inside a closed plan todo.
   operator DEFERRED ruling's scope). Per the never-re-litigate rule (citation class e) this is not re-derived fresh,
   despite a second independent signal today (tradfi tranche) suggesting the work is bounded — the operator must rule on
   the reversion's scope first.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked against
+  the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack
+  webhooks) — none of these bear on the actual open question (whether the 2026-07-26 DEFERRED ruling's scope covers
+  this wiring todo or only the removal). The standing contested-revert + never-re-litigate rule governs here, not a
+  fresh criteria re-derivation — a third independent signal suggesting the work is bounded does not override it. Not
+  re-flipped; the operator still needs to rule on the reversion's scope. No reclassification.

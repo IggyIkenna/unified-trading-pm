@@ -490,6 +490,18 @@ context_scope:
   `_index` CAS `--apply`, an infra drain window, or a genuine per-item escalation — none worker-determinable end to end.
   Not a RECLASSIFY case. Doc stays NA.
 
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (prediction tranche)**: KEEP-NA, valid — re-checked
+  against the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack
+  webhooks) — none newly bound any of the 7 open items (A1's pointer to the capture-incident doc's Phase 6, the
+  Phase-B `--apply` migration itself, the ambiguous-value canonicalization enumeration, the casing re-verify, the
+  growing-blank-rows diagnostic, the fixture-attribute backfill, and the 3x-cadence reconciliation follow-up) — each
+  still ends in a race-sensitive operator-held `_index` CAS write, a design/investigation step, or a cross-doc
+  pointer. A1's own target (`prediction_capture_incident_remediation_2026_07_06.md` Phase 6) was independently
+  extracted today into `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` — verified, not re-actioned here (A1
+  itself is a rollup pointer, not separately dispatchable). No reclassification.
+
 - **2026-08-04 (slot-4, data_engineering) — `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 4
   (partial-slice execution of this doc's Phase-B `/data-pipeline-reconciliation` cadence todo) DONE.** (a) Corpus search
   for a `/data-pipeline-reconciliation prediction` report dated BEFORE the 2026-07-20 baseline (`plans/audit/results/`,

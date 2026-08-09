@@ -181,3 +181,12 @@ This profiling run was strictly read-only: zero code changes, zero GCS/manifest 
   real target of the still-open "implement the proper fix" todo.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is a range-loop-vs-cache architecture choice,
   genuine judgment call.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked against
+  the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack
+  webhooks). Specifically verified "Option B retired" is UNRELATED to this doc's own locally-named "Option A/Option
+  B" (the range-loop-vs-cross-process-cache choice in the 2026-08-04 cProfile finding) — the actual "Option B
+  retired" ruling (`unified-trading-pm@e0c0496ba1`, 2026-08-08) formally retires the never-built PM-reconciler
+  release-tag minter, a wholly different subsystem (`post_cutover_silent_assumption_sweep_2026_07_23.md`). No
+  criterion bounds the sole open item. No reclassification.

@@ -439,3 +439,12 @@ range never overlaps a still-in-flight per-market-only day).
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 19 open items, matches the 2026-08-06 count; consistent with 3
   prior audit passes and 4-5 `/ag-closeout-audit` "0 AO-eligible" rulings on the Phase-B CQG-bundle migration. No change
   in substance.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (prediction tranche)**: KEEP-NA, valid — re-checked
+  against the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement, GSM secret `deepseek-v4-pro-api-key` + 5 Slack
+  webhooks) — none bound any of the 19 open items. This is a cross-repo CQG-bundle object-layer migration + 5
+  downstream-service C-walks, gated on a coordinated MTDS+UAC+MDPS writer-code ship, a pre-migration writer drain, a
+  registered-launcher VM walk, and a content-verified prod-object delete — genuinely design/VM/delete-shaped, not
+  IAM/tiering/secret-shaped. Consistent with 4 prior audit passes and 4-5 independent `/ag-closeout-audit`
+  "0 AO-eligible" rulings. No reclassification.

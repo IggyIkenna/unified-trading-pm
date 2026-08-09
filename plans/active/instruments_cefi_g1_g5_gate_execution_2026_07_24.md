@@ -759,3 +759,11 @@ Coverage is the verification lens — every number flows through `compute_honest
   the 2026-08-05 marker was a 2026-08-06 na-eligibility-audit verdict entry, no new content/targets.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — MANIFEST_ALLOW_STALE_FALLBACK revert already closed earlier
   today by a concurrent session; 2 open items remain, both operator design/sign-off gates.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: KEEP-NA, valid — re-checked against
+  the full round-11 precedent set (IAM self-service default, D16 all-repos carve, S5.1 tiering,
+  plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days, reversibility-qualified deletes
+  agent-executable after a fresh check, Option B retirement [confirmed unrelated], GSM secret
+  `deepseek-v4-pro-api-key` + 5 Slack webhooks) — none apply to either remaining open item. Item 1 (the G1 umbrella
+  gate marker) is an operator sign-off recording, not a worker-determinable fact. Item 2 (EXTENDED's
+  raise-vs-fallback CF-11 honest-absence behavior) is a genuine behavior-change design decision with manifest
+  implications, not mechanically bounded by any round-11 ruling. No reclassification.

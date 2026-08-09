@@ -519,3 +519,16 @@ orchestrator-dispatched).
   (today's independent cefi full-corpus audit) explicitly excluded it as "cross-tranche... ambiguous parent_epic
   ownership." Extracting Phase 6's now-bounded todo is deferred to a prediction-tranche sweep or a dedicated
   cross-tranche pass, not claimed unilaterally here.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi + prediction tranches, dual-tagged doc)**:
+  KEEP-NA, valid — re-checked against the full round-11 precedent set (IAM self-service default, D16 all-repos
+  carve, S5.1 tiering, plan-destination-default-to-AO for auto-filed findings, escalation-N=3-days,
+  reversibility-qualified deletes agent-executable after a fresh check, Option B retirement [confirmed unrelated],
+  GSM secret `deepseek-v4-pro-api-key` + 5 Slack webhooks) — the 7 DESCOPED-NOT-MVP perp items remain correctly
+  parked on the standing 2026-07-14 operator ruling; none of round11's criteria touch Kalshi/Polymarket perps prod
+  access. **The follow-through round7 flagged is now DONE — by a peer, not this sweep**: Phase 6's
+  backfill-assessment todo has SINCE been extracted verbatim into
+  `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` (drafted 2026-08-09, `status: draft`,
+  `assigned_vm: planning`, Source citing "Phase 6's second checkbox, verbatim"). Verified via direct read of that
+  batch before touching this doc — no duplicate extraction created. Whole-doc flip stays blocked (7 items still
+  genuinely parked). No reclassification here; flagging for whoever next reconciles this doc's own Phase 6 checkbox
+  once batch10 lands.

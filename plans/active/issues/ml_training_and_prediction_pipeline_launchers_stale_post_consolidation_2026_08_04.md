@@ -122,19 +122,16 @@ splitting into a third parallel decision thread on the same theme adds coordinat
 
 ## Todos
 
-- [ ] 1. [SCRIPT] P2. Verify `ml_service`'s actual training CLI surface (`ml-service/ml_service/training/` +
-      `ml-service/ml_service/cli` or equivalent) against `launch-ml-training-vm.sh`'s assembled
-      `--operation/--instruments/--target-types/--timeframes/--start-date/--end-date` args; either rewrite the launcher
-      to call it directly (`python -m ml_service.training ...` or whatever the real entrypoint is) or build the
-      `setup-data-pipeline-vm.sh` `VM_TASK=ml-training` Phase B branch the script's own header describes, then set
-      `VM_SERVICE=ml_service` and delete the dead `ml_training_service` metadata value. Repo: deployment-service.
-- [ ] 2. [SCRIPT] P2. Determine whether
-      `launch-features-vm.sh --feature-family cross_instrument|delta_one     --asset-group PREDICTION` (the consolidated
-      launcher) covers `launch-prediction-pipeline-vm.sh`'s 3-step MDPS→cross_instrument→delta_one chunked sequencing;
-      if yes, fold this launcher into the same S1-a keep/delete decision in
-      `mdps_features_deadcode_consolidation_2026_07_20.md` and repoint/delete; if no (chunking logic has no consolidated
-      equivalent), fix its embedded import-verify to use
-      `features_service.cross_instrument`/`features_service.delta_one` in place. Repo: deployment-service.
+- **1. [SCRIPT] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch15_2026_08_09.md` todo 1 for AO
+  dispatch (parent_epic: infrastructure_master). See that doc for the live checkbox + evidence.** (Verify
+  `ml_service`'s actual training CLI surface against `launch-ml-training-vm.sh`'s assembled args; rewrite the
+  launcher or build the `setup-data-pipeline-vm.sh` `VM_TASK=ml-training` Phase B branch; no longer gated on the
+  sibling S1-a A/B/C decision — that decision was declassified 2026-08-08, round5-cefi-question-resolution.)
+- **2. [SCRIPT] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch15_2026_08_09.md` todo 2 for AO
+  dispatch (parent_epic: infrastructure_master). See that doc for the live checkbox + evidence.** (Determine whether
+  `launch-features-vm.sh --feature-family cross_instrument|delta_one --asset-group PREDICTION` covers
+  `launch-prediction-pipeline-vm.sh`'s 3-step chunked sequencing; fold into the same declassified S1-a keep/delete
+  precedent or fix the embedded import-verify in place.)
 
 ## Progress Log
 
@@ -145,3 +142,16 @@ splitting into a third parallel decision thread on the same theme adds coordinat
   doc's own text states the correct fix needs a design call this P3 mechanical-deletion todo didn't scope; both open
   items redirect to the same still-open A/B/C decision pending in `mdps_features_deadcode_consolidation_2026_07_20.md`
   (independently verified: that doc is still `status: open`, unlocked, todos unchecked).
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: this doc's own gate (the sibling
+  A/B/C decision in `mdps_features_deadcode_consolidation_2026_07_20.md`) was declassified 2026-08-08
+  (round5-cefi-question-resolution — applying `task_template.md` finding U's positive test, neither item is a
+  business/spend judgment, a credential gate, nor a whole-bucket destroy/failed reversibility check, so the prior
+  "operator/architect call" framing no longer holds). `cefi_satellite_ao_dispatch_batch12_2026_08_09.md` (drafted the
+  same day, extracting the sibling S1-a item) independently flagged this doc's own cross-reference as stale and
+  "out of this todo's stated single-file scope... flagging for whoever next touches that doc." Conflict-checked
+  clean (grepped `plans/active/` for both named launcher files — only this doc and an unrelated Class-B stall-kill
+  finding reference them). Both items extracted verbatim into `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`
+  (`status: active`, `assigned_vm: planning`) + its gated finalize twin. This doc's own `assigned_vm` stays `NA` —
+  per the established corpus convention (see `mdps_features_deadcode_consolidation_2026_07_20.md`'s own S1-a
+  extraction), the satellite batch is the live AO-dispatch surface; this doc becomes a historical redirect once its
+  batch lands.
