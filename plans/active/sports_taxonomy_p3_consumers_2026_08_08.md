@@ -137,12 +137,18 @@ spelling variant survives, which is the entire point of the panel". It does not.
   - **Partial progress (2026-08-09)** — the new home's DETECTION + PERSISTENCE primitives are built, tested, and
     shipped; the live wiring (todo below) and the history migration + old-adapter deletion (todo below) remain. Checkbox
     stays open — "relocate + preserve history" is one unit and neither half of the remaining work is done.
-- [ ] [CODE] P0. **Wire the new detector into a live/batch producer** reading real `odds`/`trades` snapshots (the same
-      per-bookmaker tick data `market-data-processing-service`'s `SportsArbitrageAdapter` reads today) and calling
+- [x] ✅ [CODE] P0. **Wire the new detector into a live/batch producer** reading real `odds`/`trades` snapshots (the
+      same per-bookmaker tick data `market-data-processing-service`'s `SportsArbitrageAdapter` reads today) and calling
       `features_service.sports.arb.detect_sports_arbitrage_opportunity` + `write_arb_opportunities` per fixture/interval
       — mirroring `features_service.cross_instrument.app.cross_venue_arb_runner`'s tick-loop shape. Without this the new
       module is a second "reference-only" library with no real caller (the same dead-code pattern found in
       `unified_api_contracts.canonical.domain.sports.arbitrage.ArbitrageOpportunity`, see below).
+  - **Shipped (2026-08-09)** — `features-service@67de878df`: new `features_service/sports/arb/runner.py`
+    (`run_arb_detection_once` + `run_live_loop`, reads MDPS's bucketed `odds_horizon_bucket` output via
+    `read_bucketed_odds`, groups per-`(fixture_id, horizon_name)` snapshot, calls the detector, writes via
+    `write_arb_opportunities`) + `--operation arb-detect` CLI handler + `_OPERATIONS` registration + unit tests
+    (`tests/sports/unit/arb/test_runner.py`). QG green. Scope excludes the P1 history-migration and old-adapter-deletion
+    todos below (unstarted, separate).
 - [ ] [CODE] P1. **Migrate the historical 13 days (2026-07-25 → 08-06) by reprocessing the underlying raw odds/trades
       ticks** through the new detector (the old MDPS candle output only ever kept the aggregated `arb_margin`, never
       which bookmaker contributed each leg — so a leg-level series must be RECOMPUTED from the raw ticks, not migrated
