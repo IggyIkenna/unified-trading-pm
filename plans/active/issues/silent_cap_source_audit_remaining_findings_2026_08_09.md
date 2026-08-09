@@ -127,7 +127,7 @@ findings.
       `test_history_beyond_1000_items_not_truncated` in both `test_protocol_outage_adapter.py` and the new
       `test_aave_positions.py`, each proving a >1000-item multi-page response is fully collected, not truncated to the
       first page. Full quality-gates.sh green (10286+ tests passed).
-- [ ] [SCRIPT] P2. **Graph `skip`-based pagination loops in market-tick-data-service treat a skip-cap GraphQL error
+- [x] ✅ [SCRIPT] P2. **Graph `skip`-based pagination loops in market-tick-data-service treat a skip-cap GraphQL error
       identically to "no more data."** 9 call sites across
       `market_interface/adapters/defi/{curve_adapter,balancer_adapter,uniswapv2_adapter,     uniswap_v3_adapter,uniswapv4_adapter}.py`
       (swaps + hourly-data + position-data queries, all `first: 1000, skip` loops bounded by The Graph's hard ~5000-skip
@@ -136,7 +136,20 @@ findings.
       `while True: if not     raw: break` loop treats it exactly like honest exhaustion. Repo: market-tick-data-service.
       Done when: each of the 9 call sites detects a GraphQL/HTTP error response distinctly from a genuinely empty page
       and logs/routes it as an incomplete fetch (mirroring the `for/else` cap-exhaustion pattern already shipped for
-      Kalshi/Polymarket this session) rather than silently treating it as "done."
+      Kalshi/Polymarket this session) rather than silently treating it as "done." — market-tick-data-service@60c61bbb
+      (fix content at d63f436c, refactored for QG file/method size gates at 60c61bbb): fixed all 9 sites across 3 code
+      shapes — (1) `curve_adapter.py`/ `balancer_adapter.py`: the page-fetch helper already returned `None` distinctly
+      on error, but the caller's `if not raw: break` collapsed `None`/`[]` into the same falsy branch — split into
+      `if raw is None: warn+break` / `if not raw: break`; (2) `uniswapv2_adapter.py`/`uniswapv4_adapter.py` (2 sites
+      each): the helper itself collapsed a genuinely empty page into `None` (`return swaps if swaps else None`) — fixed
+      to `return swaps` (preserve `[]`), plus the same distinct-warning split in the caller; (3) `uniswap_v3_adapter.py`
+      (3 sites): goes through the shared `_execute_graphql()` (never returns `None`; errors surface via
+      `data["errors"]`) — added an explicit `if data.get("errors"): warn+break` before the empty-page check. Each error
+      path now logs `"... pagination stopped early at skip=%d ... results may be truncated"` distinctly from the silent
+      genuine-exhaustion break. New regression tests (`test_defi_dex_swaps_pagination_error_handling.py`, 10 tests, 2
+      per adapter file): proves an error page logs the truncation warning and a genuinely empty page does not. Follow-up
+      P3 todo added below for a separate, pre-existing (not part of this finding) dormant AttributeError bug discovered
+      in `uniswap_v3_adapter.py` while adding this test coverage.
 - [ ] [SCRIPT] P2. **Instruments-service `first: 100` lending-market discovery caps, no guard.** Three files, ascending
       real-world risk: `compound_v3.py` (`markets(first: 100)` — lowest risk, Comet deployments are inherently few per
       chain), `spark.py` (`markets(first: 100, where:     {isActive:true})` — an Aave V3 fork), `aave_v3.py`
@@ -216,11 +229,33 @@ findings.
       market-tick-data-service. Done when: either the function gains real chunking so a future wider-window caller can't
       silently truncate, or (if genuinely out of scope) a code comment states the current call-graph invariant that
       keeps this safe, so a future caller change is forced to notice the constraint.
+- [ ] [CODE] P3. **`UniswapV3Adapter._download_swaps`/`_download_pool_hourly_data` (market-tick-data-service) crash with
+      `AttributeError` on ANY successful non-empty page — dormant because nothing in production instantiates
+      `UniswapV3Adapter`.** Discovered while adding regression coverage for this doc's Graph-pagination-error-vs-empty
+      todo (item 4, now shipped). `_parse_swap_record` reads `swap.amountUSD`/`swap.sqrtPriceX96`/
+      `swap.transaction.blockNumber` and `_convert_v3_hourly_item` reads `item.periodStartUnix` etc., but the backing
+      pydantic models (`GraphUniswapSwap`/`GraphSwapTransaction`/`GraphPoolHourData` in `_defi_graph_models.py`) declare
+      those fields under their snake_case Python name with a camelCase GraphQL `alias` (e.g.
+      `amount_usd: ... = Field(alias="amountUSD")`) — pydantic v2 attribute access uses the field name, not the alias,
+      so `swap.amountUSD` raises `AttributeError` (confirmed via a live `.venv` repro, not just a read). Live V3
+      swap/hourly capture is unaffected TODAY because `dex_swaps_handler.py`'s cascade
+      (`build_swaps_cascade`/`_dex_swaps_queries.py`) is the actual production path for Uniswap V3 and does not use this
+      adapter class — `grep -rn "UniswapV3Adapter("` outside its own file hits only one test file. Repo:
+      market-tick-data-service. Done when: every aliased-model attribute access in `_parse_swap_record` and
+      `_convert_v3_hourly_item` is switched to the model's actual (snake_case) field name, and a regression test
+      exercises `_download_swaps`/`_download_pool_hourly_data` with a non-empty page (previously impossible without
+      hitting this crash) to prove the class is safe if it's ever wired into production.
 
 ## Progress Log (append-only)
 
 - 2026-08-09 (slot 30, data_engineering): shipped the Aave-history pagination todo — see the todo's own evidence line
   above for detail. market-tick-data-service@0b6a13d5. Remaining todos in this doc are still open.
+- 2026-08-09 (slot 30, data_engineering): shipped item 4 (Graph skip-pagination error-vs-empty-page distinction, 9 call
+  sites) — see the todo's own evidence line above. market-tick-data-service@60c61bbb (fix content d63f436c, size-gate
+  refactor 60c61bbb), QG green (265s), quickmerge landed + ancestry-verified on origin/live-defi-rollout. Filed a new P3
+  follow-up todo for a separate, pre-existing dormant `AttributeError` bug in `UniswapV3Adapter` discovered while adding
+  test coverage (not part of the silent-cap finding itself — a field-name/alias mismatch). Remaining todos in this doc
+  are still open.
 
 ## Codex SSOTs
 
