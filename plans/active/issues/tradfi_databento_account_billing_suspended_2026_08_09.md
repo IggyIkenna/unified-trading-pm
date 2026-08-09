@@ -34,10 +34,10 @@ execution_scope: local-only
 priority: P0
 source:
   [
-    "Operator chat instruction, 2026-08-09: \"tradfi is currently billing blocked because databento have stopped our
-    account because we didn't pay .. every issue and plan involving a databento backfill needs to be put on hold for
-    now because it won't work anyway. anything which is not mtds or is backfill related can proceed including features
-    and ml because we do have data for those.\"",
+    'Operator chat instruction, 2026-08-09: "tradfi is currently billing blocked because databento have stopped our
+    account because we didn''t pay .. every issue and plan involving a databento backfill needs to be put on hold for
+    now because it won''t work anyway. anything which is not mtds or is backfill related can proceed including features
+    and ml because we do have data for those."',
   ]
 resolved_by:
 locked_by:
@@ -49,16 +49,17 @@ context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md]
 
 ## What's actually different from the existing billing-safety SSOT
 
-`/codex/02-data/tradfi-databento-sourcing-ssot.md` documents a **fail-closed allowlist** that stops us from being
-billed for out-of-subscription `(dataset, schema, start)` cells on an otherwise-live, paid-up subscription. That
-mechanism is unrelated to this issue: this is the vendor suspending the **account itself** for non-payment. Every
-Databento call — allowlisted or not — will now fail (auth/entitlement rejection at the account level), including:
+`/codex/02-data/tradfi-databento-sourcing-ssot.md` documents a **fail-closed allowlist** that stops us from being billed
+for out-of-subscription `(dataset, schema, start)` cells on an otherwise-live, paid-up subscription. That mechanism is
+unrelated to this issue: this is the vendor suspending the **account itself** for non-payment. Every Databento call —
+allowlisted or not — will now fail (auth/entitlement rejection at the account level), including:
 
 - The MTDS batch OHLCV/tick backfill launchers (`--source databento`).
-- The instruments-service reference-data `definition` schema fetch (`instruments_service/reference_data/adapters/tradfi/databento/adapter.py`).
-- The live `databento_tradfi_ws` connector (same account, same credential) — **not explicitly called out by the
-  operator but almost certainly affected too**; worth a live-side verification pass once someone is checking on this,
-  it is not itself the thing being paused here.
+- The instruments-service reference-data `definition` schema fetch
+  (`instruments_service/reference_data/adapters/tradfi/databento/adapter.py`).
+- The live `databento_tradfi_ws` connector (same account, same credential) — **not explicitly called out by the operator
+  but almost certainly affected too**; worth a live-side verification pass once someone is checking on this, it is not
+  itself the thing being paused here.
 
 ## What is paused
 
@@ -82,9 +83,9 @@ account is restored, then lift the gates doc-by-doc.
 
 Operator pays the outstanding Databento bill and the vendor restores account access. Until then this is a
 `BLOCKED-OPERATOR-DECISION` (finding U(i) class — a business/spend judgment with no data-derivable answer). Once
-restored: live-verify with a cheap real call (e.g. `definition` schema fetch for a known instrument) before resuming
-any bulk backfill, then flip each gated todo's marker back to dispatchable in the same edit that confirms it works
-(per the "retag the moment the block resolves" hard rule).
+restored: live-verify with a cheap real call (e.g. `definition` schema fetch for a known instrument) before resuming any
+bulk backfill, then flip each gated todo's marker back to dispatchable in the same edit that confirms it works (per the
+"retag the moment the block resolves" hard rule).
 
 ## Plans/issues gated by this doc (sweep log)
 
@@ -96,8 +97,8 @@ Massive-historical). 7 todos across 4 docs are genuine and now gated `BLOCKED-OP
 
 - `/plans/active/data_completion_tradfi_2026_07_15.md` — the `build_instrument_catalogue.py` scheduler todo (gated on
   Databento IS reference-capture restore) and the IS instrument-capture `--source databento` replacement-path todo.
-- `/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` — "Launch the ES_OPT backfill" and its
-  dependent post-launch manifest-verify todo.
+- `/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` — "Launch the ES_OPT backfill" and its dependent
+  post-launch manifest-verify todo.
 - `/plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md` — the "MVP backfill readiness gate" (tradfi MVP backfills,
   SPOT VMs, single Databento IP) and its dependent post-backfill reconciliation-run checkpoint.
 - `/plans/active/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` — the combined ES_OPT launch + manifest-verify todo
@@ -105,11 +106,11 @@ Massive-historical). 7 todos across 4 docs are genuine and now gated `BLOCKED-OP
   its own Progress Log recorded a watcher session actively polling the singleton lock and launching as of
   2026-08-07T~04:46Z — if that watcher is still running, it will now fail every attempt until billing is restored).
 
-**Explicitly left ungated** (read, judged not a live-fetch dependency): `tradfi_backfill_throughput_followups_2026_07_24.md`
-(OOM-remediation umbrella pointer — its one real open leg is a log-audit, not a fetch),
-`tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md` (ForexFactory, not Databento),
-`tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md` (re-measure ratio on already-captured data),
-`tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md` (features-VM relaunch, reads existing data),
+**Explicitly left ungated** (read, judged not a live-fetch dependency):
+`tradfi_backfill_throughput_followups_2026_07_24.md` (OOM-remediation umbrella pointer — its one real open leg is a
+log-audit, not a fetch), `tradfi_forexfactory_econ_calendar_consensus_capture_2026_07_30.md` (ForexFactory, not
+Databento), `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md` (re-measure ratio on already-captured
+data), `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md` (features-VM relaunch, reads existing data),
 `tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md` (manifest-row repair script), `estate_orphan_assessment_2026_07_21.md`
 (manifest reclassification script, cross-cutting not tradfi-specific), `data_completion_tradfi_2026_07_15.md`'s
 ohlcv_15m/24h conversion todo (MDPS aggregation of already-captured 1s/1m data),

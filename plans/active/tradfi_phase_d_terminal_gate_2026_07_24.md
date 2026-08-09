@@ -101,17 +101,21 @@ context_scope:
       `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_13.md`. **Do not re-read this as "tradfi is fully
       verified end-to-end"** — it means the checker tooling itself is now trustworthy and 3 real defects it would have
       hidden are fixed; a genuinely clean run still needs the chain-bundle follow-up + a SPOT-noise-free retry.
-- [ ] [DATA] P0. **MVP backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single
-      Databento IP, throughput-fixed) and verify manifest-counted canonical rows for each MVP cell. **Still blocked** —
-      Phase D is not literally green per the note above; do not start this until the chain-bundle follow-up is resolved
-      or the operator explicitly accepts the current evidence as sufficient.
-- [ ] [DATA] P1. **Post-full-backfill reconciliation RUN checkpoint (both raw-tick and candles layers)** — after the MVP
-      backfill readiness gate above goes green, run `/data-pipeline-reconciliation --asset-group tradfi` against PROD as
-      this terminal gate's final verification step (added per
-      `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md` §11's checkpoint-cadence requirement — the
-      terminal gate currently ends at the MVP backfill readiness gate with no reconciliation run cited). Definition of
-      done: a dated reconciliation report path cited, covering both the raw-tick and candles layers, with any finding
-      either resolved or explicitly carried forward as a new tracked todo.
+- [ ] [DATA] P0. BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09, see
+      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md). **MVP backfill readiness gate** —
+      only after A–D green: run the tradfi MVP backfills (SPOT VMs, single Databento IP, throughput-fixed) and verify
+      manifest-counted canonical rows for each MVP cell. **Still blocked** — Phase D is not literally green per the note
+      above; do not start this until the chain-bundle follow-up is resolved or the operator explicitly accepts the
+      current evidence as sufficient.
+- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION (depends on the MVP backfill readiness gate above, itself blocked on
+      databento account billing-suspended 2026-08-09, see
+      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md). **Post-full-backfill
+      reconciliation RUN checkpoint (both raw-tick and candles layers)** — after the MVP backfill readiness gate above
+      goes green, run `/data-pipeline-reconciliation --asset-group tradfi` against PROD as this terminal gate's final
+      verification step (added per `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md` §11's
+      checkpoint-cadence requirement — the terminal gate currently ends at the MVP backfill readiness gate with no
+      reconciliation run cited). Definition of done: a dated reconciliation report path cited, covering both the
+      raw-tick and candles layers, with any finding either resolved or explicitly carried forward as a new tracked todo.
 
 ## Codex SSOTs (read before touching this workstream)
 

@@ -1,15 +1,16 @@
 ---
 doc_type: issue
-title: TradFi "MVP-of-the-MVP" instrument scope ruling — narrowed immediate backfill target, rest gated until November 2026
+title:
+  TradFi "MVP-of-the-MVP" instrument scope ruling — narrowed immediate backfill target, rest gated until November 2026
 summary: >-
-  Operator ruling 2026-08-09: rather than complete all 6 tradfi MVP cells to 100% right now, immediate backfill work
-  is narrowed to exactly the instruments needed for the equities-vs-perps basis strategy (Binance-listed equity perps
+  Operator ruling 2026-08-09: rather than complete all 6 tradfi MVP cells to 100% right now, immediate backfill work is
+  narrowed to exactly the instruments needed for the equities-vs-perps basis strategy (Binance-listed equity perps
   launched 2026). Completing the REST of the tradfi MVP universe (full-history equities beyond 2026, daily Treasuries,
   VIX futures, CBOE yield index, FX KRW) to 100% is explicitly GATED until November 2026 — no plan/todo should drive
   that broader work before then. This doc is the SSOT other tradfi plans point to; it supersedes the "MVP universe"
   framing in `tradfi_consolidated_closeout_2026_07_18.md` for near-term dispatch purposes only (that doc's full 6-cell
   definition stays valid as the eventual November target, it is not rewritten).
-status: active
+status: open
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -33,40 +34,37 @@ execution_scope: local-only
 priority: P0
 source:
   [
-    "Operator chat instruction, 2026-08-09: narrowed scope to (1) MVP equities OHLCV_1m, year 2026 only — Binance
-    listed equity perps this year, that is the main strategy being tested (equities-vs-perps basis); (2) Korean
-    stocks — OHLCV_24h from Yahoo Finance as a proxy only, no intraday; (3) S&P 500 — the full 6.5-year OHLCV_1m for
-    both futures (ES) AND options (ES options); (4) BTC futures, ETH futures (CME), and BTC/ETH spot ETFs (equities).
-    Completing the rest of the tradfi MVP universe to 100% is gated until November. Operator: 'to start with, really
-    as a starting point we just need the year 2026 ... for korean stocks we just need ohlcv 24h from yahoo finance as
-    a proxy ... for s&p 500 year we want the 6.5 year ohlcv_1m futures and options ... we also need btc futures eth
-    futures and btc and eth etfs.'",
+    "Operator chat instruction, 2026-08-09: narrowed scope to (1) MVP equities OHLCV_1m, year 2026 only — Binance listed
+    equity perps this year, that is the main strategy being tested (equities-vs-perps basis); (2) Korean stocks —
+    OHLCV_24h from Yahoo Finance as a proxy only, no intraday; (3) S&P 500 — the full 6.5-year OHLCV_1m for both futures
+    (ES) AND options (ES options); (4) BTC futures, ETH futures (CME), and BTC/ETH spot ETFs (equities). Completing the
+    rest of the tradfi MVP universe to 100% is gated until November. Operator: 'to start with, really as a starting
+    point we just need the year 2026 ... for korean stocks we just need ohlcv 24h from yahoo finance as a proxy ... for
+    s&p 500 year we want the 6.5 year ohlcv_1m futures and options ... we also need btc futures eth futures and btc and
+    eth etfs.'",
   ]
 resolved_by:
 locked_by:
 locked_since:
 context_scope:
-  [
-    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
-  ]
+  [/plans/active/tradfi_consolidated_closeout_2026_07_18.md, /codex/02-data/tradfi-databento-sourcing-ssot.md]
 ---
 
 # TradFi "MVP-of-the-MVP" instrument scope ruling
 
 ## In scope — proceed now
 
-| Cell | Scope | Data type | Source |
-| --- | --- | --- | --- |
-| Delta-one single-stock equities | **Year 2026 only** (not the full multi-year history) | `ohlcv_1m` | Databento (`DBEQ.BASIC`) |
-| Korean stocks (KRX) | Daily proxy only, no intraday | `ohlcv_24h` | Yahoo Finance |
-| S&P 500 futures (ES) | Full 6.5-year history (2020-01-01 → now) | `ohlcv_1m` | Databento (`GLBX.MDP3`) |
-| S&P 500 options (ES options) | Full 6.5-year history (2020-01-01 → now) | `ohlcv_1m` | Databento (`GLBX.MDP3`) |
-| CME BTC/ETH futures (BTC, ETH, MBT, MET) | Full history | `ohlcv_1m` | Databento (`GLBX.MDP3`) |
-| BTC/ETH spot ETFs (e.g. IBIT, ETHA) | Full history | `ohlcv_1m` | Databento (`DBEQ.BASIC`) |
+| Cell                                     | Scope                                                | Data type   | Source                   |
+| ---------------------------------------- | ---------------------------------------------------- | ----------- | ------------------------ |
+| Delta-one single-stock equities          | **Year 2026 only** (not the full multi-year history) | `ohlcv_1m`  | Databento (`DBEQ.BASIC`) |
+| Korean stocks (KRX)                      | Daily proxy only, no intraday                        | `ohlcv_24h` | Yahoo Finance            |
+| S&P 500 futures (ES)                     | Full 6.5-year history (2020-01-01 → now)             | `ohlcv_1m`  | Databento (`GLBX.MDP3`)  |
+| S&P 500 options (ES options)             | Full 6.5-year history (2020-01-01 → now)             | `ohlcv_1m`  | Databento (`GLBX.MDP3`)  |
+| CME BTC/ETH futures (BTC, ETH, MBT, MET) | Full history                                         | `ohlcv_1m`  | Databento (`GLBX.MDP3`)  |
+| BTC/ETH spot ETFs (e.g. IBIT, ETHA)      | Full history                                         | `ohlcv_1m`  | Databento (`DBEQ.BASIC`) |
 
-**Rationale**: Binance listed single-stock equity perps in 2026 — the equities-vs-perps basis strategy this is meant
-to feed only needs 2026-forward equities data to test against. S&P futures+options get the full window because the
+**Rationale**: Binance listed single-stock equity perps in 2026 — the equities-vs-perps basis strategy this is meant to
+feed only needs 2026-forward equities data to test against. S&P futures+options get the full window because the
 strategy's price-arb/ML backtest (`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`) explicitly runs a
 2020-2026 train/test split. BTC/ETH futures+ETFs are the crypto-adjacent legs of the same basis family.
 
@@ -74,18 +72,18 @@ strategy's price-arb/ML backtest (`tradfi_sp500_ml_and_arb_backtest_readiness_20
 
 Everything else in the 6-cell tradfi MVP universe (`tradfi_consolidated_closeout_2026_07_18.md` § "MVP universe"):
 
-- Delta-one single-stock equities for years **other than 2026** (i.e. completing the full historical equities corpus
-  to 100%).
+- Delta-one single-stock equities for years **other than 2026** (i.e. completing the full historical equities corpus to
+  100%).
 - Daily Treasuries (`ohlcv_24h`, FRED).
 - VIX FUTURE (CBOE) + CBOE yield INDEX.
 - FX KRW spot pair, beyond whatever the KRX-daily proxy already covers.
-- Any FX/commodity futures backfill not named above (the currently-running `tradfi-bf-cme-ohlcv-1m-g0{1,2,3}-*` fleet
-  — 6A/6B/6C/6E/6J/6L currency futures, 6M/CL/CT/HG commodities — is **entirely out of this scope** and is being
-  killed, not relaunched, per this ruling).
+- Any FX/commodity futures backfill not named above (the currently-running `tradfi-bf-cme-ohlcv-1m-g0{1,2,3}-*` fleet —
+  6A/6B/6C/6E/6J/6L currency futures, 6M/CL/CT/HG commodities — is **entirely out of this scope** and is being killed,
+  not relaunched, per this ruling).
 
 **No plan/todo should dispatch backfill work for the out-of-scope list before November 2026.** If a worker or an
-autonomous session (e.g. `wave_launcher.py`'s gap-driven dispatch) would otherwise pick up one of these cells, treat
-it as `BLOCKED-OPERATOR-DECISION` citing this doc, not as ready work.
+autonomous session (e.g. `wave_launcher.py`'s gap-driven dispatch) would otherwise pick up one of these cells, treat it
+as `BLOCKED-OPERATOR-DECISION` citing this doc, not as ready work.
 
 ## Relationship to the Databento billing-suspension issue
 
@@ -98,24 +96,23 @@ in-scope relaunch this doc authorizes.
 
 ## Known relaunch gotchas (carry forward, don't re-discover)
 
-- `wave_launcher.py`'s dedup check (`running_cell_keys`) parses live VM names for a `root` group label and never
-  matches the per-single-root dispatch candidate keys it computes internally for CME — this is why the FX/commodity
-  fleet duplicated 3-13x per shard. Any relaunch of the in-scope CME cells (ES, BTC/ETH futures) must not reuse
+- `wave_launcher.py`'s dedup check (`running_cell_keys`) parses live VM names for a `root` group label and never matches
+  the per-single-root dispatch candidate keys it computes internally for CME — this is why the FX/commodity fleet
+  duplicated 3-13x per shard. Any relaunch of the in-scope CME cells (ES, BTC/ETH futures) must not reuse
   `wave_launcher.py` blind — either fix the key mismatch first, or launch directly via
   `launch-tradfi-bf-cme-ohlcv-1m.sh` / `launch-tradfi-bf-nasdaq-ohlcv-1m.sh` per-shard with a manual "is a VM already
   running for this shard" check.
 - ES ohlcv_1m capture has a real, confirmed (not vendor-side) gap May-December every year 2020-2026 — live-verified
-  against Databento directly. Relaunching ES needs `--force`/`VM_FORCE=true` semantics that don't just skip on a
-  false "already captured" read for those months, since the manifest's own `NO_INPUT_AVAILABLE` classification there
-  is wrong.
+  against Databento directly. Relaunching ES needs `--force`/`VM_FORCE=true` semantics that don't just skip on a false
+  "already captured" read for those months, since the manifest's own `NO_INPUT_AVAILABLE` classification there is wrong.
 
 ## Disposition of currently-running infra (2026-08-09)
 
 167 `tradfi-bf-cme-ohlcv-1m-g0{1,2,3}-*` VMs were running at the time of this ruling, 100% out of the scope above
-(FX/commodity futures) and massively duplicated (up to 13 concurrent VMs per shard, see above). Disposition: killed,
-not resumed. See Progress Log below for the kill + scoped-relaunch record.
+(FX/commodity futures) and massively duplicated (up to 13 concurrent VMs per shard, see above). Disposition: killed, not
+resumed. See Progress Log below for the kill + scoped-relaunch record.
 
 ## Progress Log
 
-- 2026-08-09: doc created, scope ruling recorded. Sweep of tradfi plans/issues for regression risk against this scope
-  in progress — see this doc's `related` list and the per-doc scope notes added to each.
+- 2026-08-09: doc created, scope ruling recorded. Sweep of tradfi plans/issues for regression risk against this scope in
+  progress — see this doc's `related` list and the per-doc scope notes added to each.

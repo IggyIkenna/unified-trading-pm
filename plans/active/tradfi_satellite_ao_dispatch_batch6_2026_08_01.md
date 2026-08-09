@@ -138,11 +138,16 @@ This is the first fresh `/ag-closeout-audit tradfi` pass since batch5 (2026-07-2
       non-recoverability reason, with a before/after manifest census, and `quality-gates.sh` is green. Source:
       `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`.
 
-- [ ] [DATA] P0. **Launch the ES_OPT backfill, then wire its post-launch manifest-verify into Phase-D gate tracking
-      (combined into ONE todo — the second step only makes sense once the first lands).** (1) Re-verify the singleton
-      lock is still clear immediately before launch (`gcloud compute instances list --filter='name~"^tradfi-bf-"'`) —
-      live-verified clear 2026-08-01, but re-check at execution time per the async-wait-and-poll-discipline norm, then
-      run `bash deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` (defaults: SPOT
+- [ ] [DATA] P0. **UNBLOCKED 2026-08-09** — S&P options are explicit in-scope work per the MVP-of-MVP ruling
+      (/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md); Databento live-verified reachable
+      the same day. If a watcher session for this launch is still alive, confirm it's actually making progress (not
+      stuck behind the unrelated FX/commodity fleet's rate-limit contention — see the scope-ruling doc's "known relaunch
+      gotchas") before assuming it's fine. **Launch the ES_OPT backfill, then wire its post-launch manifest-verify into
+      Phase-D gate tracking (combined into ONE todo — the second step only makes sense once the first lands).** (1)
+      Re-verify the singleton lock is still clear immediately before launch
+      (`gcloud compute instances list --filter='name~"^tradfi-bf-"'`) — live-verified clear 2026-08-01, but re-check at
+      execution time per the async-wait-and-poll-discipline norm, then run
+      `bash deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` (defaults: SPOT
       provisioning per the backfill-VM-defaults-to-SPOT HARD RULE; year-shards 2022-2026 per `cme-expiry-calendars.sh`'s
       `default_years_for_root`; `data_types=ohlcv_1m` only). This is a standard, idempotent, SPOT-default backfill-VM
       launch — no delete, no `--apply`, no `[OPERATOR]` tag needed (safe-idempotent justification per `task_template.md`

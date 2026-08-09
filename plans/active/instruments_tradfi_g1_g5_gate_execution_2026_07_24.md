@@ -154,8 +154,13 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` (the 11-cluster `ES_OPT_PARENTS`
       set lives in that script's sourced `cme-expiry-calendars.sh`) — see the corrected invocation in the new todo
       below.
-- [ ] [DATA] P0. **Launch the ES_OPT backfill** — run
-      `bash deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` (defaults: SPOT
+- [ ] [DATA] P0. **UNBLOCKED 2026-08-09** — the databento billing-suspension gate below is lifted for this item: S&P
+      options are explicit in-scope work per the MVP-of-MVP ruling
+      (/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md), and Databento was live-verified
+      reachable the same day (real `metadata.list_datasets` + `ES.FUT ohlcv-1m` pulls both succeeded). Prior gate
+      (superseded, kept for history): ~~BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09, see
+      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~. **Launch the ES_OPT backfill** —
+      run `bash deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` (defaults: SPOT
       provisioning per the backfill-VM-defaults-to-SPOT HARD RULE — `ON_DEMAND=false` unless `--on-demand` is passed;
       year-shards 2022-2026 per `cme-expiry-calendars.sh`'s `default_years_for_root`; `data_types=ohlcv_1m` only per the
       script's own ES_OPT branch — options-chain trades/tbbo across thousands of strikes × 11 chains stays a separate
@@ -179,9 +184,11 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       (`assigned_vm: planning`, activated 2026-08-06) with a live autonomous watcher session actively polling the
       singleton lock and launching ES_OPT as of 2026-08-07T~04:46Z (see that plan's own Progress Log) — track there, the
       "once that batch activates" condition is satisfied.
-- [ ] [DATA] P1. **Wire the ES_OPT post-launch manifest-verify into Phase-D gate tracking** (per the 2026-07-29 operator
-      ruling above) — once the ES_OPT launch todo above completes, run the same manifest-count-only check used for ES
-      futures (mirrors the NASDAQ/NYSE precedent, `data_completion_tradfi_2026_07_15.md`) scoped to venue=CME ×
+- [ ] [DATA] P1. **UNBLOCKED 2026-08-09** — same unblock as the launch todo above (S&P options in-scope per
+      /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md; Databento live-verified reachable).
+      **Wire the ES_OPT post-launch manifest-verify into Phase-D gate tracking** (per the 2026-07-29 operator ruling
+      above) — once the ES_OPT launch todo above completes, run the same manifest-count-only check used for ES futures
+      (mirrors the NASDAQ/NYSE precedent, `data_completion_tradfi_2026_07_15.md`) scoped to venue=CME ×
       root∈{ES,EW,EW1,EW2,EW4,E1A,E2A,E3A,E4A,E5A,EOM} × data_type=ohlcv_1m, and record the result as a line item in
       `plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell table, "S&P index options" row — so the
       post-completion manifest-verify isn't missed. Done when: that row cites the live query + counts. **CITATION
@@ -611,11 +618,10 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       plan; a full re-fetch of that range is a real campaign, not "small sample" scope, and was not attempted here.
       Repo: instruments-service. (MIGRATED FROM: same.)
 - **[SCRIPT] P3. EXTRACTED 2026-08-09 → `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md`.** RULED 2026-08-07
-      (operator, via consolidated NA-blocker-digest audit) — GO AHEAD, conditional on
-      the doc's own pre-existing gate: physical-GCS cleanup of old ICE-Databento instrument parquets, approved once
-      tombstone reconciliation confirms 0 consumers (twin-verify still required before delete — operator approval covers
-      the delete itself, not a waiver of the twin-verify safety check). Repo: deployment-service + instruments-service.
-      (MIGRATED FROM: same.)
+  (operator, via consolidated NA-blocker-digest audit) — GO AHEAD, conditional on the doc's own pre-existing gate:
+  physical-GCS cleanup of old ICE-Databento instrument parquets, approved once tombstone reconciliation confirms 0
+  consumers (twin-verify still required before delete — operator approval covers the delete itself, not a waiver of the
+  twin-verify safety check). Repo: deployment-service + instruments-service. (MIGRATED FROM: same.)
 
 ### G1.f.2 post-retirement cleanup (2026-06-26)
 
