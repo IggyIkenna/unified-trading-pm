@@ -159,10 +159,36 @@ drift_direction: advance-code
       reads (a) Cloud Logging for the ABSENCE of "Memory limit" ERROR entries on the new revision (the actual OOM
       signal), and (b) the GCS rollup blobs' own `updateTime`
       (`gs://central-element-323112-data-status-rollups/{service}/full.json.gz`) for instruments-service/MTDS
-      specifically, per this workspace's own "check target artifacts, not activity" rule. - **In-flight**: a background
-      verification pipeline (`verify_rollup_fix.sh`) is watching for LDR→main promotion → Cloud Build deploy → new Cloud
-      Run revision → ≥2 full 20-min rollup cron cycles → the Cloud Logging/GCS checks above, then will report a
-      definitive verified-or-not verdict in this same session. This checkbox stays open until that lands with evidence.
+      specifically, per this workspace's own "check target artifacts, not activity" rule. - **Round 3 fix DEPLOYED +
+      MEASURED LIVE, ruled out as the dominant cause**: `6ac1c43ff` reached `main` (this repo's "Option-B direct"
+      promotion squash-syncs main's tree to LDR's tree each cycle — `git merge-base --is-ancestor` never returns true
+      even after a real promotion, a live gotcha hit this session; use a CONTENT check instead), deployed as revision
+      `uts-prod-data-status-rollup-svc-00363-vbt`. Cloud Logging on that revision showed
+      `service=instruments-service killpg(pid=257, SIGTERM) delivered` — the process-group kill fix genuinely works,
+      child reaped cleanly, no orphan, no SIGKILL escalation needed. **The container OOM still happened anyway, 67s
+      later** ("Memory limit of 32768 MiB exceeded with 32770 MiB used") — proving the orphaned-grandchild leak, while a
+      real bug worth fixing (kept), was not the dominant driver of the container-level OOM. - **Round 4 (the actual
+      dominant root cause)**: 5 independent live OOM samples across rounds 3-4 (pre- and post- the process-group fix)
+      all measured this "dedicated" rollup service's ALWAYS-present baseline app overhead — it runs the FULL
+      deployment-api app surface (background cache-warming, VM listing, redis, catalogue-lifecycle cache, auto-sync; see
+      `routes/data_status/_rollup.py`'s own docstring), not a minimal rollup-only process — via
+      `(reported "X MiB used" at OOM) - 24576` (the old per-service/per-category rlimit) in a tight **8194-8640 MiB
+      band**. A per-category child was allowed to grow to its own individual 24Gi ceiling, but 24Gi + ~8.5Gi baseline
+      already exceeds the 32Gi container — so the platform's cgroup-level OOM killer fires the WHOLE container before
+      this rlimit's own per-process `MemoryError` check ever gets a chance to catch an oversized category cleanly. **Fix
+      (shipped)**: `deployment-api@1849f4e23` lowers `_CHILD_RLIMIT_AS_BYTES` (`data_status_rollup_worker.py`) and
+      `_SERIAL_ISOLATED_CATEGORY_RLIMIT_BYTES` (`data_status_service.py`) from 24Gi → 20Gi, leaving ~12Gi of headroom
+      (>3Gi margin over the measured worst-case 8.64Gi baseline). This is a safety-margin correction, not "raise the
+      Cloud Run memory limit" — the container's own 32Gi ceiling is unchanged; these constants govern the isolated
+      child's OWN allowance inside that fixed budget, so an oversized category now fails loud-and-clean inside its own
+      child (the same honest-failure path instruments-service's manifest step already uses) instead of taking the whole
+      container down. Also fixed in passing: the ceiling-fix's own comment additions shifted `_read_index_cached`'s
+      bare-call line number (483→490), re-triggering the SAME recurring line-pinned-baseline gotcha as the prior 449→483
+      fix — corrected via `unified-trading-pm@e0796aa05` (`read_availability_index_bare_call_baseline.yaml`). QG green
+      both repos. - **In-flight**: a background verification pipeline (`verify_ceiling.sh`) is watching for LDR→main
+      promotion (via CONTENT check) → Cloud Build deploy → new Cloud Run revision → ≥2 full 20-min rollup cron cycles →
+      Cloud Logging OOM-absence check, then will report a definitive verified-or-not verdict in this same session. This
+      checkbox stays open until that lands with evidence.
 - [x] [SCRIPT] P1. ✅ **Killed the hung idle `mtds-dex-swaps-backfill-2` VM.** Re-confirmed before deleting: no
       `PROGRESS.json` at its GCS log path (404), `run.log` tail (15:15-15:20Z) showed only RESOURCE_SAMPLE/
       PIPELINE_HEARTBEAT lines at ~0-1.4% CPU, no processing activity since the `process_final=True` shard-complete line
