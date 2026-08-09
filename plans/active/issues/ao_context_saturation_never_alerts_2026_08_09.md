@@ -88,10 +88,23 @@ that cannot compact is a failure, not a lifecycle event.
       not per tick); deliberately does NOT page Slack itself — that routing is todo 2 of this same issue, kept as a
       separate change to avoid two P1 todos racing on this same file under AO's concurrent-dispatch model. 6 new tests
       in `tests/test_context_lifecycle.py` cover both explicit done-when clauses plus the dedup/resolve transition.
-- [ ] [BACKEND] P1. Route it to `agent-orchestrator-alerts` as a standing condition with state-transition dedup — fire
-      on change, RESOLVED when it clears, re-remind on the standard cadence, never every tick — and give it the ✅ CLOSE
-      bookend the alerting SSOT requires for any actionable alert that paged an OPEN. Done-when: a test asserts one page
-      per transition (not per tick) and an explicit resolve.
+- [x] ✅ [BACKEND] P1. Route it to `agent-orchestrator-alerts` as a standing condition with state-transition dedup —
+      fire on change, RESOLVED when it clears, re-remind on the standard cadence, never every tick — and give it the ✅
+      CLOSE bookend the alerting SSOT requires for any actionable alert that paged an OPEN. Done-when: a test asserts
+      one page per transition (not per tick) and an explicit resolve. — `agent-orchestrator@e8818aa`:
+      `notify_context_saturation_detected` / `notify_context_saturation_resolved` added to
+      `server/notifications/slack.py` (mirrors the established `notify_git_staleness_red`/`_resolved` pattern — deep
+      link, `is_reminder` distinguishes a persisting episode from a fresh page, RESOLVED bookend correlates via an
+      `opened_at` "closes the saturation alert opened `<ts>`" line). `ContextLifecyclePolicy._tick_saturation_detector`
+      now pages on first detection, re-reminds every `context_saturation_realert_seconds` (pre-added knob, default 4h)
+      while still saturated via new `_TargetState.saturation_opened_at`/`saturation_last_paged_at` fields, and posts the
+      CLOSE bookend only when the episode actually paged — todo 1's own `context_saturation_detected`/`_resolved`
+      activity-log dedup latch is untouched (still fires exactly once per streak). 4 new tests: 2 in
+      `tests/test_context_lifecycle.py` (one-page-per-transition + reminder-on-cadence; resolved bookend correlates to
+      the original page and only fires after one) + 2 in `tests/test_alert_quality_overhaul.py` (direct `_post`-capture
+      proof the notifiers actually page, mirroring `test_git_staleness_red_pages_with_summary`). All green;
+      `basedpyright` clean on the 4 touched files. Todos 3-4 intentionally NOT touched — separate dispatch per this
+      issue's own scope.
 - [ ] [BACKEND] P2. Add the inverse detector for the silent-disarm shape specifically: no context-lifecycle activity
       event of ANY type for a given role for longer than a configurable window while that role has a live session. This
       is the check that would have caught 2026-08-09 directly (`role=main` logged 1 event in 4.3h against
@@ -113,3 +126,15 @@ that cannot compact is a failure, not a lifecycle event.
   correctly never fires even though `pct` itself never dropped. 6 new tests, all green; `basedpyright` clean on the 3
   touched files. Todos 2-4 intentionally NOT touched — left for their own separate dispatch per the task's own scope
   (todo 2 was still `queued`, not `dispatched`, at pickup time; same-file concurrent-dispatch risk).
+- **2026-08-09 (backend_engineer, slot-20)** — ✅ Todo 2 shipped. `notify_context_saturation_detected` /
+  `notify_context_saturation_resolved` added to `server/notifications/slack.py`, mirroring the established
+  `notify_git_staleness_red`/`_resolved` pattern (deep link, `is_reminder` flag for a persisting episode, RESOLVED
+  bookend with a "closes the saturation alert opened `<ts>`" correlation line). `_tick_saturation_detector` now pages on
+  first detection and re-reminds every `context_saturation_realert_seconds` (the knob todo 1 pre-added, default 4h)
+  while still saturated, via two new `_TargetState` fields (`saturation_opened_at`, `saturation_last_paged_at`) layered
+  on top of — not replacing — todo 1's per-streak activity-log dedup latch, so `context_saturation_detected` itself
+  still fires exactly once per streak. The CLOSE bookend only fires for an episode that actually paged (mirrors
+  `notify_escalation_resolved`'s "no page, no bookend" rule). 4 new tests: 2 in `tests/test_context_lifecycle.py`
+  (one-page-per-transition + reminder-on-cadence; resolved bookend correlates + only-after-a-page) and 2 in
+  `tests/test_alert_quality_overhaul.py` (direct `_post`-capture proof the notifiers actually page). All green;
+  `basedpyright` clean. Todos 3-4 intentionally NOT touched — separate dispatch per this issue's own scope.
