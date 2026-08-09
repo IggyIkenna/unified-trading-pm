@@ -122,3 +122,15 @@ words: "this branch is churning faster than one CI worker can chase serially").
   P3 above with the measurement (156/425 touched docs blocked, all pre-existing content). Worked around by excluding the
   156 affected docs from this session's commits rather than attempting per-doc fixes (outside this role's mandate); they
   remain untouched, tracked here for whoever picks up the structural fix.
+- 2026-08-09 (slot 30, task `promote_ref_orphaned_on_manual_pr_close-001`): Independent confirmation on a DIFFERENT
+  escalation path — `chore(promote): LDR -> main` PR #2648 (head `de1da7c33a`) failed `QG slice (checks)` on a 5th
+  distinct ratchet check not yet listed above: `assigned_vm:NA corpus size (docs + open todos, ratchet)`
+  (`scripts/plan-hygiene/check_na_corpus_ratchet.py`) — ran locally, confirmed a small overage (367 docs > baseline 365,
+  1097 open todos > baseline 1093), consistent with ambient churn from concurrent sessions authoring NA-tagged docs, not
+  a real spike. Per this doc's own established precedent, declined to chase it with a fix-and-retrigger cycle or a blind
+  `--update-baseline` (remedy requires either an `/na-eligibility-audit`-scale triage pass or a reviewed, justified
+  baseline bump — neither is a same-session one-shot fix for a worker not carrying that audit). Continuing to wait for
+  `dbaa7b463` to reach `origin/main` via a future green promote cycle rather than intervening. Confirms the systemic
+  finding extends to the NA-corpus check as well — 5 distinct ratchet checks now observed regressing under concurrent
+  commit load: `codex-doc-freshness`, `effort-signal-ratchet`, `archive-candidates`, `dangling-reference-paths`,
+  `assigned_vm:NA corpus size`.
