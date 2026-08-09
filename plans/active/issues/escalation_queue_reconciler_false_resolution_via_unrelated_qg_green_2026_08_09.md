@@ -113,9 +113,11 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Confirm DP-VM-003 (stalled backfill VM) has been manually relaunched/investigated — it was
-      auto-closed without any worker ever looking at it. If already handled through some other channel, note that here
-      and close this todo; if not, this needs a real dispatch.
+- [ ] [OPERATOR] P1. **CONFIRMED STILL OPEN 2026-08-09 (operator, interactive)** — checked live AO backlog status via
+      `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` (the sanctioned read-only SSM path): no
+      `DP-VM-003` entry anywhere in the current queued/dispatched backlog. Confirms the doc's own framing — it was
+      auto-closed without any worker ever looking at it, and nothing since has picked it up through another channel.
+      This is a real gap, not a stale finding — the stalled backfill VM still needs an actual manual relaunch.
 - [x] ✅ [VERIFY] P1. Confirm DP-FETCH-009 (CRITICAL 1% cefi `book_snapshot_5` cell-loss gap) has been manually
       investigated — **it has, extensively**:
       `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` carries a 25+-dispatch escalation

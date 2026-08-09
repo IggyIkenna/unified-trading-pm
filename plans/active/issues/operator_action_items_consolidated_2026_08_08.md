@@ -54,9 +54,24 @@ applied autonomously and is not repeated here.
 
 ## 1. Secrets / credentials only you can create
 
-- [ ] [OPERATOR] P2. **Create GSM secret for the DeepSeek API key** (currently plaintext on two hosts). Exact name +
-      command prepared by the AO apply agent — see `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md`
-      Progress Log for the exact `gcloud secrets create` invocation. An agent wires the re-sourcing once created.
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-09** — GSM secret `deepseek-v4-pro-api-key` created live. See
+      `plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md` for evidence; re-sourcing on both hosts is
+      the next (non-operator) todo there.
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-09 — 5 Slack alerting webhooks provisioned to GSM, unprompted operator offer
+      ("would be good to get them all ready so we can monitor them with agents").** Operator pasted all known webhook
+      URLs (8 total, including duplicates); hash-compared the 2 ambiguous duplicate pairs (`#uts-live-alerts`,
+      `#agent-orchestrator-alerts`) against what's already live in GSM to resolve which is current without guessing —
+      `#uts-live-alerts` resolved cleanly (one pasted value matched the live `alerting-uts-live-alerts-slack-webhook`
+      secret exactly, confirming which of the two was current); `#agent-orchestrator-alerts` had no existing secret to
+      compare against, so the choice there is unverified — **flagging for a quick confirm**, not blocking.
+      `#paper-trading-alerts` already matched the live `agent-orchestrator-paper-trading-slack-webhook` secret exactly —
+      no change needed. Created/populated: `cloud-monitoring-slack-ci-failures-webhook` (was an empty shell, now has
+      v1), `alerting-monitoring-deadman-slack-webhook` (new), `alerting-data-pipeline-alerts-slack-webhook` (new),
+      `alerting-agent-orchestrator-alerts-slack-webhook` (new — **unverified which of 2 candidate URLs is current,
+      picked the one matching the pattern of the resolved `#uts-live-alerts` case; operator should confirm the
+      #agent-orchestrator-alerts channel is actually receiving posts before relying on this for paging**). Raw webhook
+      URLs handled via a scratchpad temp file (session-isolated, not git-tracked) deleted immediately after use — never
+      committed, never echoed back in chat.
 - [ ] [OPERATOR] P2. **Set `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the planning VM's `.env.local`** so `ao-self-pull.sh`
       wedge/drift alerts page instead of silently logging "no webhook." Exact resolution+restart steps (mirroring
       `bootstrap_vm.sh`'s own logic) are in
@@ -146,10 +161,10 @@ pull any specific checkout's full table back up if you want it before deciding.
 
 ## 6. Loose ends worth a quick look
 
-- [ ] [OPERATOR] P1. **`.tabs/2`'s live working tree has real unresolved git conflict markers** in
-      `cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md` right now (found during the stash
-      audit, not touched) — separate from the stash question above, this file itself needs a human to resolve the
-      conflict.
+- [x] ✅ [VERIFY] P1. **RE-CHECKED 2026-08-09 (operator, interactive) — already resolved, no action needed.**
+      `.tabs/2`'s `cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md` has 0 conflict markers now;
+      last touch was a routine `na-eligibility-audit` commit (`a3c8a449f`), not a manual conflict resolution — some
+      other session's normal edit flow cleared it. Stale finding, closing.
 - [x] [OPERATOR] P1. ✅ **`prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`** — resolved and archived
       2026-08-09 (`/plans/archive/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`): the
       issue's own 4 todos shipped — deterministic repro, flock-serialized `git commit` in
