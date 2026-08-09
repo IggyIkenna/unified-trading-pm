@@ -154,6 +154,18 @@ if [ "$CI_MODE" = "--precommit" ]; then
     python3 "$SCRIPT_DIR/../quality_gates/check_plan_operator_ruling_evidence.py" --quiet --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Plan-operator-ruling-evidence (staged plans)" \
       || { echo "  ❌ A staged todo/resolved_by: cites 'operator ruling' with no traceable source (/plans/…, /codex/…, or .md doc within 300 chars) — add a specific doc/path reference (see plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md § 'Done when')"; PF=$(( PF + 1 )); }
+    # Archive-candidates, --only-scoped (2026-08-09): same shape as operator-ruling-evidence above —
+    # this check previously had NO precommit-time presence at all (only --ci mode's --diff-base and
+    # the full corpus-wide baseline mode), so a docs(plans) commit flipping a doc's last open todo to
+    # done had zero enforcement at commit time. Root-caused after the corpus-wide count reached 9
+    # (baseline 0) entirely via commits that never ran this check — the LDR-red Tier-A synthetic
+    # re-scan (baseline mode, not diff-scoped) is what eventually caught it, hours later, attributed
+    # to whoever's unrelated commit happened to trigger the next full quality-gates.sh run. A staged
+    # doc that's now 0-open/some-done/unlocked/not-exempt is unconditionally wrong regardless of the
+    # corpus's pre-existing backlog — no baseline needed for a single-file check.
+    bash "$SCRIPT_DIR/check_archive_candidates.sh" --quiet --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Archive candidates (staged plans)" \
+      || { echo "  ❌ A staged plan/issue doc now has 0 open todos + some done, unlocked — archive it: flip status to a terminal value, add the archive banner, git mv to plans/archive/[issues/], fix corpus referrers (or set archive_exempt: true with a Progress Log reason if its 0-open-todos state is intentional/durable)"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }

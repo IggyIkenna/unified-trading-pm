@@ -73,6 +73,17 @@
 # --diff-base <ref>: diff-scoped mode — compare the candidate set at HEAD vs the candidate set at
 #   <ref> (e.g. origin/main). Only candidates that appear at HEAD but NOT at <ref> are flagged as
 #   NEW; pre-existing candidates at <ref> are tolerated.
+# --only <paths>: precommit-scoped mode (2026-08-09) — check ONLY the given staged files, no
+#   baseline/diff-base involved. This check previously had NO precommit-time presence at all (only
+#   --ci mode's --diff-base and the full corpus-wide baseline mode), so a docs(plans) commit via
+#   safe-doc-push.sh (the fast path -> run_hygiene_sweep.sh --precommit, never the full gate) could
+#   flip a doc's last open todo to done and leave it unarchived with zero enforcement — invisible
+#   until a later full quality-gates.sh run or the LDR-red Tier-A synthetic re-scan (which uses
+#   baseline mode, not diff-scoped) caught the accumulated corpus debt. Root-caused 2026-08-09 after
+#   the corpus-wide count reached 9 (baseline 0) entirely via commits that never ran this check.
+#   Same reasoning as check_terminal_status_archived.py --only: a file YOU are actively staging
+#   that's 0-open/some-done/unlocked/not-exempt is unconditionally wrong regardless of the rest of
+#   the corpus's backlog — no baseline needed for a single-file check.
 
 set -uo pipefail
 
@@ -80,6 +91,8 @@ set -uo pipefail
 QUIET=""
 UPDATE_BASELINE=""
 DIFF_BASE=""
+ONLY_PATHS=()
+ONLY_MODE=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -88,6 +101,14 @@ while [ $# -gt 0 ]; do
     --diff-base)
       DIFF_BASE="$2"
       shift 2
+      ;;
+    --only)
+      ONLY_MODE="1"
+      shift
+      while [ $# -gt 0 ]; do
+        ONLY_PATHS+=("$1")
+        shift
+      done
       ;;
     *)
       # Unknown flag — swallow (back-compat with run_check's appended --quiet)
@@ -226,6 +247,74 @@ _candidate_slugs_at() {
 CANDIDATES=0
 FOUND=()
 OK=1
+
+if [ -n "$ONLY_MODE" ]; then
+  # ── Precommit-scoped mode: check exactly the given staged files, no baseline/diff-base ──
+  for f in "${ONLY_PATHS[@]}"; do
+    [ -f "$f" ] || continue
+    name="$(basename "$f")"
+    [ "$name" = "INDEX.md" ] && continue
+    [ "$name" = "task_template.md" ] && continue
+    case "$name" in
+      *.HANDOVER.md) continue ;;
+      _*) continue ;;
+    esac
+    # Scope to plans/active/ + plans/active/issues/ only — a staged file elsewhere
+    # (e.g. codex/, plans/archive/) is out of this check's population.
+    case "$f" in
+      */plans/active/*.md|plans/active/*.md) ;;
+      *) continue ;;
+    esac
+
+    locked_by="$(grep -E '^locked_by:' "$f" 2>/dev/null | head -1 | sed -E 's/^locked_by:[[:space:]]*//')"
+    [ -n "$locked_by" ] && continue
+
+    grep -qE '^archive_exempt:[[:space:]]*true' "$f" 2>/dev/null && continue
+
+    slug="${name%.md}"
+    # gate_on_depends exclusion: scan the whole active corpus for a finalize plan gating this slug
+    # (the same check the full modes run — cheap enough to redo per --only invocation, which is
+    # only ever a handful of staged files).
+    is_gated=""
+    for g in "$PM_DIR/plans/active"/*.md "$PM_DIR/plans/active/issues"/*.md; do
+      [ -f "$g" ] || continue
+      grep -qE '^gate_on_depends:[[:space:]]*true' "$g" 2>/dev/null || continue
+      deps_line="$(grep -E '^depends_on:' "$g" 2>/dev/null | head -1)"
+      [ -z "$deps_line" ] && continue
+      case " $(echo "$deps_line" | grep -oE '[A-Za-z0-9_-]+' | tr '\n' ' ')" in
+        *" ${slug} "*) is_gated="1"; break ;;
+      esac
+    done
+    [ -n "$is_gated" ] && continue
+
+    total_count="$(grep -cE '^[[:space:]]*- \[.\]' "$f" 2>/dev/null)"
+    total_count="${total_count:-0}"
+    done_count="$(grep -cE '^[[:space:]]*- \[x\]' "$f" 2>/dev/null)"
+    done_count="${done_count:-0}"
+    open_count=$(( total_count - done_count ))
+
+    if [ "$open_count" -eq 0 ] && [ "$done_count" -gt 0 ]; then
+      status="$(grep '^status:' "$f" 2>/dev/null | head -1 | sed 's/status: //')"
+      status="${status:-unknown}"
+      FOUND+=("${f}  done=${done_count}  status=${status}")
+      CANDIDATES=$(( CANDIDATES + 1 ))
+    fi
+  done
+
+  if [ -z "$QUIET" ]; then
+    for line in "${FOUND[@]}"; do
+      echo "  DONE-BUT-UNARCHIVED  $line"
+    done
+  fi
+
+  if [ "$CANDIDATES" -eq 0 ]; then
+    echo "✅ check_archive_candidates (--only): 0 candidate(s) in staged files"
+    exit 0
+  else
+    echo "❌ check_archive_candidates (--only): ${CANDIDATES} candidate(s) in staged files — archive them: flip status to a terminal value, add the archive banner, git mv to plans/archive/[issues/], fix corpus referrers."
+    exit 1
+  fi
+fi
 
 if [ -n "$DIFF_BASE" ]; then
   # ── Diff-scoped mode ──────────────────────────────────────────────────────
