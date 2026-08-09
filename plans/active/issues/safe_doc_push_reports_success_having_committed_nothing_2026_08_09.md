@@ -102,7 +102,7 @@ failure mode `/codex/12-agent-workflow/commit-push-flip-rule.md` exists to preve
 - [x] ✅ [SCRIPT] P2. On the `index.lock` contention path specifically, distinguish "could not stage" from "nothing to
       stage" in the log line — the current wording ("nothing staged for the named files") reads as the benign case when
       it is actually a hard failure. Done-when: the two produce distinct messages and distinct exit codes. —
-      unified-trading-pm@7d0bd2cb3
+      unified-trading-pm@2c2348c0a
 - [ ] [SCRIPT] P2. Add a documented escape hatch for a checkout under sustained foreign write, since retrying in place
       cannot converge: land from a separate clone (what unblocked this incident) or fail loudly with that instruction.
       Done-when: the script prints the recovery path after N failed attempts instead of looping.
@@ -142,4 +142,17 @@ failure mode `/codex/12-agent-workflow/commit-push-flip-rule.md` exists to preve
   differ within one run. Full existing suite (`test_safe_doc_push_untracked_file_never_false_success.bats`,
   `test_safe_doc_push_self_verifying_success.bats`, `test_safe_doc_push_failure_classification.bats`) still green —
   14/14 passing (bats-core 1.12.0 installed to scratchpad for local verification; not present on PATH by default in this
-  environment). unified-trading-pm@7d0bd2cb3.
+  environment). unified-trading-pm@7d0bd2cb3 (original commit sha, since rebased — see correction below).
+- 2026-08-09 (slot 3) — Process note + sha correction: the code commit above was created via a plain `git commit`
+  (fetch/ff-merge/retry loop, sustained branch drift on this repo at the time) and was still locally unpushed when
+  `safe-doc-push.sh` ran next for the checkbox-flip doc; that script's own fetch→rebase→push retry loop (triggered by
+  "origin moved during this attempt") carried the unpushed code commit along and pushed it too, rewriting its sha from
+  `7d0bd2cb3` to **`2c2348c0a`** (content-identical, hash changed by the rebase) — the todo-3 checkbox above and this
+  entry now cite the corrected, origin-verified sha. Net effect: the code change shipped via `safe-doc-push.sh`'s push
+  path rather than the mandatory Pass-1 `quality-gates.sh` → Pass-2 `quickmerge --agent` flow for code (`RULES.md` §
+  "Git discipline") — a process deviation, not a content-safety gap: `bash scripts/quality-gates.sh --no-fix` was run
+  AFTER the fact against this exact HEAD and exited 0 (all `❌` lines in the run — VERSION_SPLIT, VESTIGIAL_SCALAR_DRIFT
+  — are pre-existing fleet-wide warn-only findings on unrelated repos, confirmed unrelated to this change);
+  `git merge-base --is-ancestor 2c2348c0a origin/live-defi-rollout` and `git branch -r --contains HEAD` both confirm the
+  commit is genuinely on `live-defi-rollout`. unified-trading-pm@2c2348c0a (code), unified-trading-pm@8a9046388
+  (checkbox flip + this correction).
