@@ -57,7 +57,7 @@ context_scope:
 ## Todos
 
 - [x] ✅ [REVIEW] P1. **Reconcile the source doc's checkbox pointers with real evidence** —
-      unified-trading-pm@cc58c6351. Verified both commits (`deployment-service@082a5eda`, `deployment-service@03b10e46`)
+      unified-trading-pm@22a52f81d. Verified both commits (`deployment-service@082a5eda`, `deployment-service@03b10e46`)
       `git merge-base --is-ancestor`-reachable on `origin/live-defi-rollout`, then in
       `issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`: flipped todos 1 and
       2 to real `[x]` checkboxes citing the verified commits + evidence directly (replacing the redirect-only "EXTRACTED
