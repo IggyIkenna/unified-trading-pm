@@ -377,3 +377,29 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   dead, re-arm per the USAGE block at the top of `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (now
   correctly scoped to 2025+2026 by default — no manual re-narrowing needed). Did not touch `wave_launcher.py`
   (out-of-scope for this craft/item, tracked separately) or any live VM (no delete, per the staleness-check rule).
+
+- **2026-08-09T~12:46Z, slot 30 (data_engineering)**: Picked up the `[DATA] P2` action item ("once the next ES_OPT
+  launch happens post-`e2-highmem-4` fix, check whether the same RSS-spike/heartbeat-freeze signature recurs").
+  **Precondition still not met — nothing to check yet.** Verified live: (1) `gcloud compute operations list` filtered on
+  `targetLink~"tradfi-bf-es-opt"` — the most recent ES_OPT insert/delete pair is
+  `tradfi-bf-es-opt-light-2025-20260809-034037` at 2026-08-08T20:40:43/20:43:38-07:00 (03:40Z/03:43Z 08-09), i.e. still
+  BEFORE the `e2-highmem-4` fix (`deployment-service@391ff7f5`, landed 07:38:54Z) — zero ES_OPT operations of any kind
+  since the fix, confirmed against the full operations history (last 20 entries), not just a time-filtered slice; (2)
+  `gcloud compute instances list --filter='name~"^tradfi-bf-es-opt"'` — zero running; (3) slot-3's re-armed watcher (PID
+  1962373, per its own Progress Log entry above) is dead (`kill -0 1962373` → no such process), confirming this saga's
+  own documented fragility ("watchers still die silently at unpredictable intervals... re-arming on death is EXPECTED");
+  (4) singleton lock is currently held by 27 `tradfi-bf-*` VMs, all legitimate in-scope CME/NASDAQ/NYSE campaign shards
+  (checked names/creation timestamps — no `tradfi-bf-es-opt-*`, no obvious `wave_launcher.py` leftover pattern); (5)
+  `wave_launcher.py` is NOT currently running (`ps -ef` clean) and not present in either the operator's or root crontab
+  — the out-of-scope recurrence tracked in the sibling doc has not recurred a 3rd time as of this check. **Did not
+  trigger a dedicated ES_OPT launch** — this item's own text explicitly scopes that to "piggyback on that retry...
+  rather than triggering a dedicated launch," and re-arming/owning the P1 item's watcher is that sibling action item's
+  scope, not this one's. Leaving this item's checkbox unchecked: the actual condition it gates on (a post-fix launch's
+  run.log/heartbeat showing, or not showing, the RSS-spike-then-freeze signature) genuinely has not occurred yet — there
+  is no post-fix run.log to inspect. No code changed (none evidenced as needed or possible without the precondition).
+  Whoever next re-arms the P1 item's watcher (or triggers/observes any other post-fix ES_OPT launch) should check this
+  item immediately after: `gsutil cat` the resulting VM's run.log for an RSS climb to multi-GiB/cpu-pinned-100% pattern
+  followed by both `run.log` and the heartbeat-sidecar blob going silent together (the exact signature slot-9 confirmed
+  for the pre-fix wave) — if absent, check this box (machine-type fix confirmed sufficient); if present, escalate per
+  this item's own stated remedies (raise watchdog `--min-age` for this launcher class, or add incremental per-date
+  progress logging).
