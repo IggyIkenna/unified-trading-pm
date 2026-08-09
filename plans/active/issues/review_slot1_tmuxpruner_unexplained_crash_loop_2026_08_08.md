@@ -431,3 +431,17 @@ own Tick history.
   2h+ window) is `[REVIEW]`-scoped — left unchecked for review craft to pick up now that a fix has actually landed.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).
+- 2026-08-09 ~05:24Z (review agt-f56131, relayed by main agt-22de53 msg 4403): Fresh decoupling data point against the
+  host-resource-pressure hypothesis. Since Tick 134 checkpoint (~03:07Z) through ~05:23Z (~2h16m window): still 16x
+  `tmux_session_lost` / 0x `context_recycle_requested` for slot 1 — 100% unexplained-kill rate, unimproved. Host
+  contention has eased substantially since the operator's 03:16Z peak report: load avg now 14.29/13.30/18.86 (was
+  63-65), `quality-gates.sh` processes now 5 (was 12-19), `claude` CLI processes 37 (was 49), swap 12Gi/47Gi used (was
+  14Gi) — roughly a 75% drop from peak. But the kill CADENCE is unchanged: still landing every ~5-8min
+  (04:39/04:47/04:55/05:03/05:08/05:15Z), same as during the peak-load window. This argues against "just wait for host
+  relief" being sufficient on its own, and toward either (a) the actual trigger threshold being lower than assumed —
+  today's still-elevated-but-much-lower load (~2x core oversubscription vs peak's 7-8x) is apparently already enough, or
+  (b) the standing feedback-loop hypothesis (msg 4376, cited in an earlier entry above) where AutoSpawn's own respawn
+  churn sustains a load floor independent of the wider host's swings. Reporting session had no dmesg/journalctl access
+  (confirmed permission-denied) so could not independently check current kernel OOM-killer activity. Not asserting a new
+  root cause — flagging the load/cadence decoupling as a fresh data point for whoever picks up the open `[BACKEND] P1`
+  todos.
