@@ -371,3 +371,4 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   `status: active`, `assigned_vm: planning`); correctly not flipped independently. Todo 3 stays conditionally-scoped
   ("if it is found to cause its own denominator/accounting issues" -- trigger condition not yet evaluated); todo 4 stays
   DEPENDENCY_BLOCKED, sequenced after todo 1's `--apply` landing. Nothing to reclassify.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

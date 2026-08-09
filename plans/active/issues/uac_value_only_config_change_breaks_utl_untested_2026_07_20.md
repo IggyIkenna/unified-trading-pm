@@ -213,86 +213,87 @@ nothing: it is architecturally cached against exactly the input that changed.
       not an autonomous ship. This ALONE fixes the class for every existing re-run path.
 
       **operator ruling 2026-08-08**: wants to SEE the exact keying logic before signing off -- NOT shipping this
-      session. Technical walkthrough below, grounded in the LIVE code (`.github/workflows/python-quality-gates-v2.yml`
-      lines 104-201, re-read 2026-08-08), ready for a fast sign-off next time the operator is available.
+          session. Technical walkthrough below, grounded in the LIVE code (`.github/workflows/python-quality-gates-v2.yml`
+          lines 104-201, re-read 2026-08-08), ready for a fast sign-off next time the operator is available.
 
-      ### How the sentinel keys TODAY (verbatim mechanism, not paraphrased)
+          ### How the sentinel keys TODAY (verbatim mechanism, not paraphrased)
 
-      Job `content-gate` (`content sentinel`) runs first, computes a cache key, and probes Firestore
-      (`qg_green_markers/{key}`) for a prior green. A HIT short-circuits every `qg-slices` matrix leg to GREEN with zero
-      runner spend (`needs.content-gate.outputs.cache_hit`, gates the `if:` on the slices job).
+          Job `content-gate` (`content sentinel`) runs first, computes a cache key, and probes Firestore
+          (`qg_green_markers/{key}`) for a prior green. A HIT short-circuits every `qg-slices` matrix leg to GREEN with zero
+          runner spend (`needs.content-gate.outputs.cache_hit`, gates the `if:` on the slices job).
 
-      ```
-      TREE      = git rev-parse HEAD^{tree}                         # line 127 -- OWN tree only
-      WF_HASH   = sha256(.github/workflows/quality-gates-v2.yml)    # line 142 -- caller's own copy
-      REUSABLE_SHA = blob sha of python-quality-gates-v2.yml         # line 143-148 -- PM's reusable workflow
-                      (local checkout for PM itself; `gh api .../contents/...?ref=live-defi-rollout` for fleet callers)
-      BASE_SHAS = sorted dir-tree shas of scripts/quality-gates-base + scripts/quality_gates   # line 150
-      GATE_HASH = sha256(WF_HASH|REUSABLE_SHA|BASE_SHAS)[:24]        # line 156
-      KEY       = "qg-green-v2-{repo}-{TREE}-{GATE_HASH}"            # line 157
-      ```
+          ```
+          TREE      = git rev-parse HEAD^{tree}                         # line 127 -- OWN tree only
+          WF_HASH   = sha256(.github/workflows/quality-gates-v2.yml)    # line 142 -- caller's own copy
+          REUSABLE_SHA = blob sha of python-quality-gates-v2.yml         # line 143-148 -- PM's reusable workflow
+                          (local checkout for PM itself; `gh api .../contents/...?ref=live-defi-rollout` for fleet callers)
+          BASE_SHAS = sorted dir-tree shas of scripts/quality-gates-base + scripts/quality_gates   # line 150
+          GATE_HASH = sha256(WF_HASH|REUSABLE_SHA|BASE_SHAS)[:24]        # line 156
+          KEY       = "qg-green-v2-{repo}-{TREE}-{GATE_HASH}"            # line 157
+          ```
 
-      `TREE` is a git tree object hash of the CALLER repo's own working tree at HEAD -- it recursively covers every
-      file in that repo, **including `pyproject.toml`/`uv.lock`** (so it changes if a dep RANGE pin changes), but it
-      does **not** reach outside the repo -- it has no way to see what UAC/UTL's OWN content resolves to right now. The
-      code's own comment states this explicitly (line 87): "deliberately does NOT hash the deps' resolved CONTENT, so
-      [it relies on] the dep RANGE pins." `GATE_HASH` protects against the GATE ITSELF changing (3 homes: the caller's
-      workflow copy, PM's reusable workflow, PM's QG base scripts) -- it has nothing to do with dependency content
-      either.
+          `TREE` is a git tree object hash of the CALLER repo's own working tree at HEAD -- it recursively covers every
+          file in that repo, **including `pyproject.toml`/`uv.lock`** (so it changes if a dep RANGE pin changes), but it
+          does **not** reach outside the repo -- it has no way to see what UAC/UTL's OWN content resolves to right now. The
+          code's own comment states this explicitly (line 87): "deliberately does NOT hash the deps' resolved CONTENT, so
+          [it relies on] the dep RANGE pins." `GATE_HASH` protects against the GATE ITSELF changing (3 homes: the caller's
+          workflow copy, PM's reusable workflow, PM's QG base scripts) -- it has nothing to do with dependency content
+          either.
 
-      ### The gap, concretely
+          ### The gap, concretely
 
-      UAC ships `0.x` (pre-1.0, wide range pins like `>=0.1.20,<1.0.0` per `workspace-manifest.json`). A UAC commit that
-      edits a registry/config VALUE (e.g. `SOURCE_PRIORITY['tradfi'].remove('massive')`) does not bump UAC's version
-      past a downstream's range pin, so the downstream's own `uv.lock`/`pyproject.toml` are untouched by that edit ⟹
-      `TREE` is identical to the last green run ⟹ `KEY` is byte-identical ⟹ the sentinel HITS and returns the stale
-      green, even though the downstream's actual runtime behaviour (which reads that registry value) may now be broken.
-      This is exactly instances 1-2 documented above this todo.
+          UAC ships `0.x` (pre-1.0, wide range pins like `>=0.1.20,<1.0.0` per `workspace-manifest.json`). A UAC commit that
+          edits a registry/config VALUE (e.g. `SOURCE_PRIORITY['tradfi'].remove('massive')`) does not bump UAC's version
+          past a downstream's range pin, so the downstream's own `uv.lock`/`pyproject.toml` are untouched by that edit ⟹
+          `TREE` is identical to the last green run ⟹ `KEY` is byte-identical ⟹ the sentinel HITS and returns the stale
+          green, even though the downstream's actual runtime behaviour (which reads that registry value) may now be broken.
+          This is exactly instances 1-2 documented above this todo.
 
-      ### Candidate keying implementations (operator picks one, or directs a different one)
+          ### Candidate keying implementations (operator picks one, or directs a different one)
 
-      **Option 1 -- hash UAC's + UTL's installed package content directly.** After `uv sync` resolves the environment,
-      hash the tree of the INSTALLED `unified_api_contracts`/`unified_trading_library` package directories (e.g.
-      `find .venv/.../unified_api_contracts -type f -exec sha256sum {} + | sort | sha256sum`) and fold that into `KEY`
-      alongside `TREE`/`GATE_HASH`. Pro: exact -- catches literally any resolved-content difference, source or config
-      data. Con: requires `uv sync` to run BEFORE the key can be computed, which pushes the content-gate job's cost up
-      (today it is a ~5min checkout-only job with zero dependency install) -- partially defeats the sentinel's own
-      cost-saving purpose for the common case where nothing changed.
+          **Option 1 -- hash UAC's + UTL's installed package content directly.** After `uv sync` resolves the environment,
+          hash the tree of the INSTALLED `unified_api_contracts`/`unified_trading_library` package directories (e.g.
+          `find .venv/.../unified_api_contracts -type f -exec sha256sum {} + | sort | sha256sum`) and fold that into `KEY`
+          alongside `TREE`/`GATE_HASH`. Pro: exact -- catches literally any resolved-content difference, source or config
+          data. Con: requires `uv sync` to run BEFORE the key can be computed, which pushes the content-gate job's cost up
+          (today it is a ~5min checkout-only job with zero dependency install) -- partially defeats the sentinel's own
+          cost-saving purpose for the common case where nothing changed.
 
-      **Option 2 -- hash UAC's + UTL's resolved git ref/commit, not their file content.** `uv.lock` records the exact
-      resolved version (and, for a path/git dependency, the exact commit) for each dependency. Read that commit/version
-      out of the caller's own (unchanged) `uv.lock`, then look up the ACTUAL current tree-hash of UAC/UTL at their
-      `live-defi-rollout` HEAD (or `main`, whichever the range would resolve to) via `gh api
-      repos/.../contents/...?ref=...` -- same pattern the gate-version fingerprint already uses for `REUSABLE_SHA`
-      (lines 143-149). Fold `UAC_HEAD_TREE + UTL_HEAD_TREE` into `KEY`. Pro: no `uv sync` needed, stays a cheap
-      checkout-only job -- same shape as the EXISTING gate-version fingerprint code, so it is the smallest, most
-      surgical diff. Con: less precise than Option 1 -- it keys on "UAC/UTL's HEAD changed at all" rather than "the
-      SPECIFIC symbols/values this caller actually uses changed", so it will over-invalidate (extra full-gate runs) on
-      UAC/UTL commits that don't touch anything the caller reads. Given the sentinel's OWN fail-safe philosophy ("worst
-      case is no speedup", line 97), over-invalidation is the safe direction to err in.
+          **Option 2 -- hash UAC's + UTL's resolved git ref/commit, not their file content.** `uv.lock` records the exact
+          resolved version (and, for a path/git dependency, the exact commit) for each dependency. Read that commit/version
+          out of the caller's own (unchanged) `uv.lock`, then look up the ACTUAL current tree-hash of UAC/UTL at their
+          `live-defi-rollout` HEAD (or `main`, whichever the range would resolve to) via `gh api
+          repos/.../contents/...?ref=...` -- same pattern the gate-version fingerprint already uses for `REUSABLE_SHA`
+          (lines 143-149). Fold `UAC_HEAD_TREE + UTL_HEAD_TREE` into `KEY`. Pro: no `uv sync` needed, stays a cheap
+          checkout-only job -- same shape as the EXISTING gate-version fingerprint code, so it is the smallest, most
+          surgical diff. Con: less precise than Option 1 -- it keys on "UAC/UTL's HEAD changed at all" rather than "the
+          SPECIFIC symbols/values this caller actually uses changed", so it will over-invalidate (extra full-gate runs) on
+          UAC/UTL commits that don't touch anything the caller reads. Given the sentinel's OWN fail-safe philosophy ("worst
+          case is no speedup", line 97), over-invalidation is the safe direction to err in.
 
-      **Option 3 -- Option 2, but scoped to just the caller's actual import surface.** Same as Option 2, but instead of
-      the whole-repo HEAD tree, hash only the specific UAC/UTL submodule paths the caller's own source imports from
-      (derivable via a one-time `grep -r 'from unified_api_contracts' <caller>/`-style scan, cached per-repo). Pro:
-      closest approximation to Option 1's precision at Option 2's cost. Con: real new code to build and maintain (the
-      import-surface scanner), and a caller whose code changes which UAC symbols it imports needs that scan
-      re-run -- an extra moving part in the fleet's highest-blast-radius gate.
+          **Option 3 -- Option 2, but scoped to just the caller's actual import surface.** Same as Option 2, but instead of
+          the whole-repo HEAD tree, hash only the specific UAC/UTL submodule paths the caller's own source imports from
+          (derivable via a one-time `grep -r 'from unified_api_contracts' <caller>/`-style scan, cached per-repo). Pro:
+          closest approximation to Option 1's precision at Option 2's cost. Con: real new code to build and maintain (the
+          import-surface scanner), and a caller whose code changes which UAC symbols it imports needs that scan
+          re-run -- an extra moving part in the fleet's highest-blast-radius gate.
 
-      **Recommendation (not yet operator-approved -- stated for the walkthrough, not shipped):** Option 2. It reuses
-      the EXACT pattern already proven in this same job for `REUSABLE_SHA` (a `gh api .../contents/...` blob-sha
-      lookup against `live-defi-rollout` HEAD), so the diff is small, auditable, and consistent with the rest of the
-      job's own design -- no new dependency-scanning subsystem, no `uv sync` cost added to the sentinel job. The
-      precision loss vs Option 1/3 trades toward MORE full-gate runs, never toward a false skip, which matches the
-      job's own stated fail-safe direction.
+          **Recommendation (not yet operator-approved -- stated for the walkthrough, not shipped):** Option 2. It reuses
+          the EXACT pattern already proven in this same job for `REUSABLE_SHA` (a `gh api .../contents/...` blob-sha
+          lookup against `live-defi-rollout` HEAD), so the diff is small, auditable, and consistent with the rest of the
+          job's own design -- no new dependency-scanning subsystem, no `uv sync` cost added to the sentinel job. The
+          precision loss vs Option 1/3 trades toward MORE full-gate runs, never toward a false skip, which matches the
+          job's own stated fail-safe direction.
 
-      ### What sign-off actually gates
+          ### What sign-off actually gates
 
-      Nothing ships from this walkthrough. The next step once the operator has read this and either approves Option 2
-      (or names a different one) is: implement the chosen `KEY` extension in `.github/workflows/python-quality-gates-v2.yml`
-      lines ~120-160, roll it to the fleet's 22 per-repo copies the same way `REUSABLE_SHA`'s pattern already does
-      (template + `rollout-workflow-templates.sh`, never hand-edited per repo), and verify live: force a UAC value-only
-      change, confirm a downstream's sentinel now correctly MISSes and runs the full gate instead of returning stale
-      green.
+          Nothing ships from this walkthrough. The next step once the operator has read this and either approves Option 2
+          (or names a different one) is: implement the chosen `KEY` extension in `.github/workflows/python-quality-gates-v2.yml`
+          lines ~120-160, roll it to the fleet's 22 per-repo copies the same way `REUSABLE_SHA`'s pattern already does
+          (template + `rollout-workflow-templates.sh`, never hand-edited per repo), and verify live: force a UAC value-only
+          change, confirm a downstream's sentinel now correctly MISSes and runs the full gate instead of returning stale
+          green.
+
 - [ ] [DEVOPS] P1. **[B] DECOUPLED registry-value signal in `detect_breaking_change.py`** — narrow allowlist +
       order-normalizing AST canonicalizer, emit a **separate `registry_value_changed`** field (NOT `is_breaking` — that
       false-breaks the fleet on benign recalibrations, verified) that drives a targeted re-dispatch once [A] lands.
@@ -317,9 +318,9 @@ nothing: it is architecturally cached against exactly the input that changed.
       picked" — so this item stays open for that clause only.
 
       **RULED 2026-08-07 (operator, interactive session)**: YES — a red SIT should escalate to a background worker,
-              not just Issue + Slack. Design decision only; not yet scoped into an implementation todo (needs its own
-              bounded-outcome scoping — which worker/skill picks it up, what triggers the escalation, dedup against the
-              existing Issue+Slack path) before it's AO-dispatchable.
+                  not just Issue + Slack. Design decision only; not yet scoped into an implementation todo (needs its own
+                  bounded-outcome scoping — which worker/skill picks it up, what triggers the escalation, dedup against the
+                  existing Issue+Slack path) before it's AO-dispatchable.
 
 - [x] ✅ [DEVOPS] P2. **EXTRACTED 2026-08-02** (same ruling, item 18) to
       `ci_satellite_ao_dispatch_batch1_2026_07_26.md`. Correct the `full-workspace-sit` messaging/naming so
@@ -388,11 +389,13 @@ items. Only change since the last marker was a `context_scope` path fixup (one a
 content/todo change — confirmed via `git show 50b8643dc`. `locked_by: live-defi-rollout` (since 2026-05-21) + item [A]'s
 own "operator sign-off required, not an autonomous ship" text still govern; [B] stays blocked-on-[A]; the 2 struck items
 remain correctly ruled-out (not open work); the extracted/stale sub-clause still cites its done-elsewhere commits. No
+`assigned_vm` change. **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — item [A] itself
+now carries a fresh 2026-08-08 operator interaction (see the todo's own "operator ruling 2026-08-08" entry): the
+operator was walked through the exact keying mechanism and 3 candidate implementations, and explicitly declined to sign
+off this session. This is the clearest possible confirmation [A] stays a genuine, current operator-gated decision. [B]
+stays blocked on [A]; the 2 struck-through items remain ruled-out; the extracted item's remaining design-call clause was
+RULED 2026-08-07 (yes) but still needs its own bounded-outcome scoping. `locked_by: live-defi-rollout` unchanged.
+Checked today's 9 precedents; none apply (this is a live, dated, same-day operator decision-in-progress). No
 `assigned_vm` change.
-**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — item [A] itself now carries a fresh
-2026-08-08 operator interaction (see the todo's own "operator ruling 2026-08-08" entry): the operator was walked through
-the exact keying mechanism and 3 candidate implementations, and explicitly declined to sign off this session. This is
-the clearest possible confirmation [A] stays a genuine, current operator-gated decision. [B] stays blocked on [A]; the
-2 struck-through items remain ruled-out; the extracted item's remaining design-call clause was RULED 2026-08-07 (yes)
-but still needs its own bounded-outcome scoping. `locked_by: live-defi-rollout` unchanged. Checked today's 9 precedents;
-none apply (this is a live, dated, same-day operator decision-in-progress). No `assigned_vm` change.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
