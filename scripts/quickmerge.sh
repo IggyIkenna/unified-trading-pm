@@ -2010,6 +2010,25 @@ _qm_locked_git_commit() {
 # pre-existing foreign WIP (which we must never touch per the multi-agent safety rule), so
 # it is safe to auto-revert.
 _QM_PRE_HOOK_UNSTAGED="$(git diff --name-only 2>/dev/null || true)"
+
+# prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08 (todo 3, "make the loss
+# loud"): the flock in _qm_locked_git_commit closes the interleaving window for commits made
+# THROUGH this script/safe-doc-push.sh, but it can't cover a `git commit` invoked some other
+# way in this same checkout (a manual dev commit, a future call site). Checksum every
+# already-unstaged file BEFORE the commit call — exactly the set prek's own stash captures —
+# so a silent revert (the stash/restore race reinstating a stale snapshot over a newer edit)
+# is DETECTABLE even when the lock didn't prevent it, instead of reporting a clean tree.
+_QM_PRE_HOOK_CHECKSUMS=""
+if [ -n "$_QM_PRE_HOOK_UNSTAGED" ]; then
+  while IFS= read -r _qm_snap_path; do
+    [ -z "$_qm_snap_path" ] && continue
+    [ -f "$_qm_snap_path" ] || continue
+    _QM_PRE_HOOK_CHECKSUMS="${_QM_PRE_HOOK_CHECKSUMS}${_qm_snap_path}	$(git hash-object -- "$_qm_snap_path" 2>/dev/null)
+"
+  done <<EOF
+$_QM_PRE_HOOK_UNSTAGED
+EOF
+fi
 _QM_FRESH_COMMIT=0
 _QM_COMMIT_RETRY_MAX=15
 _QM_COMMIT_ATTEMPT=0
@@ -2131,6 +2150,42 @@ EOF
       git restore --worktree -- "$_qm_path" 2>&2 || echo "    ❌ restore failed for $_qm_path — inspect manually before proceeding" >&2
     done
     echo "[$REPO_NAME]     See plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md — this is the known hook-side-effect class, not something you did." >&2
+  fi
+
+  # prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08 (todo 3): compare the
+  # checksums snapshotted BEFORE this commit's hook chain ran against the SAME files now.
+  # Unlike the new-foreign-dirt check above, a changed checksum here means a file that was
+  # ALREADY unstaged-dirty (something's real WIP) has different content than before we
+  # started — the silent-revert signature (prek's restore reinstating a stale patch over a
+  # newer edit). There is no safe auto-fix (we don't know which version is "right", and this
+  # script must never overwrite foreign WIP either way) — HARD-STOP so the loss is loud
+  # instead of a clean-looking tree hiding it.
+  if [ -n "$_QM_PRE_HOOK_CHECKSUMS" ]; then
+    _QM_RACE_REVERTED=""
+    while IFS=$'\t' read -r _qm_race_path _qm_race_hash_before; do
+      [ -z "$_qm_race_path" ] && continue
+      if [ -f "$_qm_race_path" ]; then
+        _qm_race_hash_after="$(git hash-object -- "$_qm_race_path" 2>/dev/null)"
+      else
+        _qm_race_hash_after="__deleted__"
+      fi
+      if [ "$_qm_race_hash_after" != "$_qm_race_hash_before" ]; then
+        _QM_RACE_REVERTED="${_QM_RACE_REVERTED}${_qm_race_path}
+"
+      fi
+    done <<EOF
+$_QM_PRE_HOOK_CHECKSUMS
+EOF
+    if [ -n "$_QM_RACE_REVERTED" ]; then
+      echo "[$REPO_NAME] ❌ prek stash/restore race detected — these unstaged file(s) changed content DURING the commit (not something this script did):" >&2
+      printf '%s' "$_QM_RACE_REVERTED" | while IFS= read -r _qm_race_path; do
+        [ -z "$_qm_race_path" ] && continue
+        echo "  - $_qm_race_path" >&2
+      done
+      echo "[$REPO_NAME]     A concurrent commit's prek restore likely reinstated a stale snapshot over a newer edit." >&2
+      echo "[$REPO_NAME]     See plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md — do NOT re-run blindly; inspect the file(s) above (git diff / reflog on whoever owns that edit) before continuing." >&2
+      exit 1
+    fi
   fi
 fi
 

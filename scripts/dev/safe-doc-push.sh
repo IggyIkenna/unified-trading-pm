@@ -282,22 +282,67 @@ backoff() {
 # unlocked if flock(1) is unavailable. Held ONLY around the single `git commit` call below,
 # never across this script's own attempt loop, so a retry re-acquires+releases cleanly each
 # time -- no self-deadlock on this script's own retries.
+# _prek_race_snapshot -- checksum every already-unstaged file (working tree vs index) right
+# before a `git commit` call, i.e. exactly the set prek's own stash captures at hook-batch
+# start. Emits one "<path>\t<hash>" line per file to stdout.
+_prek_race_snapshot() {
+  local f
+  git diff --name-only 2>/dev/null | while IFS= read -r f; do
+    [[ -z "$f" || ! -f "$f" ]] && continue
+    printf '%s\t%s\n' "$f" "$(git hash-object -- "$f" 2>/dev/null)"
+  done
+}
+
+# _prek_race_check -- compare a snapshot from _prek_race_snapshot against the CURRENT state.
+# prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08 (todo 3, "make the loss
+# loud"): a changed checksum here means a file that already had unstaged WIP before this
+# commit call now holds DIFFERENT content -- the silent-revert signature (a concurrent
+# session's prek restore reinstating a stale patch over a newer edit). Prints the changed
+# paths and returns 1 when any are found; there is no safe auto-fix (we don't know which
+# version is "right", and must never overwrite foreign WIP), so the caller hard-stops.
+_prek_race_check() {
+  local before="$1" path hash_before hash_after changed=()
+  while IFS=$'\t' read -r path hash_before; do
+    [[ -z "$path" ]] && continue
+    if [[ -f "$path" ]]; then
+      hash_after="$(git hash-object -- "$path" 2>/dev/null)"
+    else
+      hash_after="__deleted__"
+    fi
+    [[ "$hash_after" != "$hash_before" ]] && changed+=("$path")
+  done <<<"$before"
+  if [[ ${#changed[@]} -gt 0 ]]; then
+    printf '%s\n' "${changed[@]}"
+    return 1
+  fi
+  return 0
+}
+
 locked_git_commit() {
-  local lock_fd=222 lock_file rc
+  local lock_fd=222 lock_file rc before_snapshot race_files
   lock_file="$(git rev-parse --git-dir 2>/dev/null)/quickmerge-commit.lock"
+  before_snapshot="$(_prek_race_snapshot)"
   if [[ -z "$lock_file" || "$lock_file" == "/quickmerge-commit.lock" ]]; then
     git commit "$@"
-    return $?
-  fi
-  if command -v flock >/dev/null 2>&1 && eval "exec ${lock_fd}>\"\$lock_file\"" 2>/dev/null; then
+    rc=$?
+  elif command -v flock >/dev/null 2>&1 && eval "exec ${lock_fd}>\"\$lock_file\"" 2>/dev/null; then
     flock "$lock_fd"
     git commit "$@"
     rc=$?
     flock -u "$lock_fd" 2>/dev/null || true
     eval "exec ${lock_fd}>&-" 2>/dev/null || true
-    return "$rc"
+  else
+    git commit "$@"
+    rc=$?
   fi
-  git commit "$@"
+  if [[ -n "$before_snapshot" ]] && ! race_files="$(_prek_race_check "$before_snapshot")"; then
+    echo "❌ prek stash/restore race detected — these unstaged file(s) changed content DURING the commit (not something this script did):" >&2
+    echo "$race_files" | sed 's/^/  - /' >&2
+    echo "  A concurrent commit's prek restore likely reinstated a stale snapshot over a newer edit." >&2
+    echo "  See plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md — do NOT re-run blindly; inspect the file(s) above (git diff / reflog on whoever owns that edit) before continuing." >&2
+    return 1
+  fi
+  return "$rc"
 }
 
 MAX_ATTEMPTS=6
@@ -364,6 +409,14 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
         echo "  index.lock contention (another process is writing this instant) -- short wait, retry"
         sleep 2
         continue
+      fi
+      if grep -qi "prek stash/restore race detected" /tmp/_sdp_commit_err; then
+        # prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08 (todo 3): a
+        # DETECTED silent revert, not contention -- retrying only invites another race on
+        # the same file. Hard-stop with the diagnosis locked_git_commit already printed.
+        echo >&2
+        cat /tmp/_sdp_commit_err >&2
+        exit 7
       fi
       if ! commit_failure_is_retriable /tmp/_sdp_commit_err; then
         {

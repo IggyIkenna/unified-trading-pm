@@ -160,5 +160,65 @@ else
 fi
 
 echo
+echo "── todo 3 (\"make the loss loud\"): checksum-based silent-revert detection in safe-doc-push.sh ──"
+RACE_SNAPSHOT_FN=$(sed -n '/^_prek_race_snapshot() {/,/^}$/p' "$SDP")
+RACE_CHECK_FN=$(sed -n '/^_prek_race_check() {/,/^}$/p' "$SDP")
+if [ -z "$RACE_SNAPSHOT_FN" ] || [ -z "$RACE_CHECK_FN" ]; then
+  fail "could not extract _prek_race_snapshot / _prek_race_check from safe-doc-push.sh"
+else
+  race_work="$WORK/race"
+  $GIT init -q "$race_work"
+  (
+    cd "$race_work" || exit 9
+    printf 'line1\n' > f.txt
+    $GIT add f.txt
+    $GIT commit -qm base
+    eval "$RACE_SNAPSHOT_FN"
+    eval "$RACE_CHECK_FN"
+
+    # Positive case: f.txt has real unstaged WIP, then gets silently reverted to a
+    # STALE snapshot underneath us (the exact signature this todo detects) -- must
+    # be flagged.
+    printf 'line1-edited-by-session-A\n' > f.txt
+    before="$(_prek_race_snapshot)"
+    printf 'line1-STALE-race\n' > f.txt
+    if changed="$(_prek_race_check "$before")"; then
+      echo "FAIL: race case -- _prek_race_check reported no change (expected f.txt flagged)"
+      exit 1
+    else
+      case "$changed" in
+        f.txt) exit 0 ;;
+        *) echo "FAIL: race case -- unexpected changed-file output: $changed"; exit 1 ;;
+      esac
+    fi
+  )
+  if [ "$?" -eq 0 ]; then
+    pass "_prek_race_check flags a file silently reverted to a stale snapshot"
+  else
+    fail "_prek_race_check did not correctly flag the silent-revert case"
+  fi
+
+  (
+    cd "$race_work" || exit 9
+    eval "$RACE_SNAPSHOT_FN"
+    eval "$RACE_CHECK_FN"
+    # Negative case: same unstaged content before and after -- must NOT be flagged
+    # (a hook-quiet commit / no interleaving race must never false-positive).
+    printf 'line1-edited-by-session-A\n' > f.txt
+    before="$(_prek_race_snapshot)"
+    if _prek_race_check "$before" >/dev/null; then
+      exit 0
+    else
+      exit 1
+    fi
+  )
+  if [ "$?" -eq 0 ]; then
+    pass "_prek_race_check reports no change when the unstaged file is untouched (no false positive)"
+  else
+    fail "_prek_race_check false-positived on an untouched unstaged file"
+  fi
+fi
+
+echo
 echo "── result: ${PASS} passed / ${FAIL} failed ──"
 [ "$FAIL" -eq 0 ] || exit 1
