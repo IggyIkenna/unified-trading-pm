@@ -115,18 +115,15 @@ human already made the call and the fleet still never executes it.
       `dispatch_visibility_report --pm-path ../unified-trading-pm --json` for
       `ao_satellite_ao_dispatch_batch6_2026_08_04.md` now shows `excluded: []` (was 1 accidental) and `backlog_open`
       rose 2→3 matching `disk_open=3`.
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in
-      `plans/active/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md`.** Its checkbox reads
-      (truncated): "[REVIEW] P2. **Reconcile.** Once the source doc's sole open `[VERIFY]` P1 item lands — re-launch
-      LIGHTER-ZKSYNC" — the marker trips `_is_non_dispatchable` (`agent-orchestrator/server/regen_backlog_from_plan.py`)
-      but does not open its own line, so `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared:
-      false). If it is genuinely still blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a
-      permanent-deferral tag) to the start of its own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or
-      a dedicated continuation line) so it reads as a declared hold. If it is already resolved (several of these carry a
-      dated `RULED`/`DESIGN DECIDED` note — read the full todo before acting), rewrite the trigger phrase so the marker
-      no longer appears anywhere in the block. Verify:
-      `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-24, infra).** Triage accidental exclusion in
+      `plans/active/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md`. Moot, not
+      accidental: the flagged todo (the `[REVIEW] P2. Reconcile — ... re-launch LIGHTER-ZKSYNC` item) was independently
+      completed and checked off `[x] ✅ "DONE 2026-08-09 (slot 28, review craft)"` by another session before this triage
+      dispatched. The doc now has a different sole open todo (`[DOC] P2. Archive.`, line 77) which is correctly
+      dispatchable — no exclusion, nothing to rewrite. Verified:
+      `cd agent-orchestrator && uv run python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`:
+      `cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md` now reports
+      `disk_open=1, backlog_open=1, excluded=[]`. (repo: unified-trading-pm)
 - [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-32).** Triage accidental exclusion in
       `plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md`. The flagged todo (the HYPERLIQUID/ASTER
       wire-vs-canonical investigate item) was independently completed and checked off `[x]` by another session on
@@ -493,3 +490,10 @@ human already made the call and the fleet still never executes it.
   re-running `dispatch_visibility_report --json` confirmed `ci_satellite_ao_dispatch_batch6_2026_08_08.md` no longer
   appears at all (zero hits, both under its old active path and the new archive path). Fixed both todos in one commit
   since they target the identical already-resolved doc with identical evidence.
+- **2026-08-09 (slot 24, infra)** — Fixed the
+  `cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md` todo. Same "moot, not accidental"
+  pattern as the batch1/batch4/batch6/cefi_batch10 fixes above: the flagged `[REVIEW] P2` reconcile/re-launch item was
+  already checked off `[x]` by slot-28 (review craft) before this triage dispatched. Followed the 2026-08-09 (slot 3)
+  note to re-run the live report rather than trust the stale enumeration — confirmed
+  `disk_open=1, backlog_open=1, excluded=[]` for that doc (its remaining open todo, `[DOC] P2. Archive.`, is correctly
+  dispatchable, not excluded).
