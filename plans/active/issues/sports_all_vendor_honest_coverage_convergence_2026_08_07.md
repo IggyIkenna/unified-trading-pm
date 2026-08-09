@@ -523,3 +523,21 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   gap, chunk 18 again — back-to-back with occurrence 7/smallchunk12, now the clear majority death chunk at 4/8),
   relaunched as `mtds-backfill-odds-smallchunk14-20260809`, confirmed genuinely booted (chunk 1/451, correct skip-fast).
   Full detail: `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 8x).
+- **21:33Z — 🎉🎉 MAJOR MILESTONE: FIXTURE_LINEUPS FORMALLY CLOSED OUT (genuinely converged, VM completed cleanly),
+  INJURIES LAUNCHED (final entity in the AF campaign queue).** `af-backfill-20260809-180612` reached
+  `PROGRESS: chunk=5/5 range=2026-05-15→2026-08-08 time=2026-08-09T21:17:46Z`, `instruments-backfill loop complete`,
+  `exit_code=0`, clean graceful self-delete via `VM_SHUTDOWN_ON_COMPLETION` — same completion signature FIXTURE_STATS
+  set as precedent. **Per rule 4a, re-censused live before trusting the clean exit**: FIXTURE_LINEUPS needed **still
+  116** (unchanged from the pre-completion reading, confirming durable, genuine convergence — not a fluke or a
+  regression). This closes out FIXTURE_LINEUPS at the exact same honest-absence floor as FIXTURE_STATS (116 each).
+  **Launched INJURIES immediately** (the AF campaign's final queued entity, singleton lock now free):
+  `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh` with
+  `RESUME_ENTITY=INJURIES RESUME_START_DATE=2020-06-06 RESUME_END_DATE=2026-08-09` (same pattern as the earlier
+  FIXTURE_LINEUPS launch) — created `af-backfill-20260809-222924`, confirmed RUNNING via the launcher's own output
+  (tarballs fresh, guard passed); boot-health verification via run.log in progress (background poll, not yet trusted on
+  exit_code alone). Confirmed baseline via `census_all_af_entities_completion_2026_08_03.py` right before launch:
+  INJURIES needed=62,709 (unchanged, matches the last dedicated reading — the biggest remaining chunk of the whole AF
+  campaign). Separately: `smallchunk14` healthy at chunk 9/451, zero incidents this tick. **AF campaign status: 3 of 4
+  full-league entities now converged (FIXTURE_STATS, PLAYER_STATS, FIXTURE_LINEUPS) — only INJURIES (running), STANDINGS
+  (271 needed), and TEAMS (96 needed) remain**, with STANDINGS/TEAMS being small honest-absence-adjacent residuals
+  likely to resolve incidentally as INJURIES sweeps the same date range.
