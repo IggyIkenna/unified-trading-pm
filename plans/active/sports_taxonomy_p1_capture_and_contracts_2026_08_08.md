@@ -591,7 +591,7 @@ achieved by exclusion, not canonicalisation.**
       if a real weakening is ever caught by manual review (evidence-triggered, not speculative). Scripts used (scratch,
       not shipped): `assert_replace_scan.py` / `assert_weaken_scan2.py`, run against `market-tick-data-service` and
       `instruments-service` over 2026-07-25..2026-08-09.
-- [ ] [DOCS] P2. **`/codex/02-data/sports-data-types-catalog.md`'s "Venue Axis" section venue list does not match the
+- [x] ✅ [DOCS] P2. **`/codex/02-data/sports-data-types-catalog.md`'s "Venue Axis" section venue list does not match the
       live `VENUES_BY_ASSET_GROUP["sports"]`** (found by `/docs-reconcile` 2026-08-08, direct-import verification
       against `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`). The doc claims "32
       canonical members" and names `BETFAIR_EX_AU`, `WILLIAM_HILL`, `BWIN`, `MYBOOKIEAG`, `LOWVIG`, `WYNNBET`, `FOXBET`,
@@ -606,7 +606,12 @@ achieved by exclusion, not canonicalisation.**
       registry hasn't fully landed yet or is simply a stale/miscopied enumeration — needs someone with this chain's full
       context to reconcile, not a doc-health pass guessing at domain intent. **Done when**: the doc's Venue Axis list is
       verified to either match the live registry exactly (member-for-member) or explicitly document why it intentionally
-      diverges (target vs. current state).
+      diverges (target vs. current state). — **DONE 2026-08-09 (data_engineering, slot 9)**: re-verified live registry
+      is a genuine stale/miscopied enumeration, not an intentional target-vs-current divergence (11 named venues never
+      registered; 15 real members unnamed). Rewrote `/codex/02-data/sports-data-types-catalog.md` § "Venue Axis" to list
+      all 31 live members exactly, grouped by their real `SportsVenueType` (`exchange_api`/
+      `prediction_market_api`/`bookmaker_api`/`web_scraper`, verified via direct import), corrected the "32-member"
+      references at lines 90 and 287 to 31. — unified-trading-pm
 
 ## Codex SSOTs
 

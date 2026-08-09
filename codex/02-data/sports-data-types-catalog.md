@@ -87,7 +87,7 @@ price is quoted.
 
 ### `executable` predicate
 
-Each venue in the 32-member canonical set carries an `executable` flag derived from
+Each venue in the 31-member canonical set carries an `executable` flag derived from
 `venue_adapter_keys.is_venue_executable()`: `True` only when a real adapter key exists (not `__no_adapter_yet__`). As of
 2026-08-08 no exchange-type venue has a complete adapter (`BLOCKED-CREDENTIALS` for Betfair Exchange). All ODDS_API
 aggregator-fanned venues are `executable=False` — we receive via aggregator, not direct.
@@ -284,26 +284,35 @@ Never inline `gs://...` strings — QG STEP 5.69 enforces. See `/codex/02-data/b
 
 - `clip_dates_to_source_coverage()` — clamps date range to per-venue availability window.
 - `is_in_known_gap()` — True for known data-dark periods (API outages, subscription gaps).
-- `get_expected_bookmakers()` — returns the 32 canonical venues with per-venue start dates; authoritative denominator
+- `get_expected_bookmakers()` — returns the 31 canonical venues with per-venue start dates; authoritative denominator
   for expected-shard counts. Never hardcode venue lists inline.
 
 ---
 
-## Venue Axis (32 canonical members as of P1)
+## Venue Axis (31 canonical members, verified live 2026-08-09)
 
-All 32 venues are in `VENUES_BY_ASSET_GROUP["sports"]` (landed `unified-api-contracts@05a709fd`). Every venue resolves
-all 5 classification dicts: `SportsVenueType`, auth method, instrument-type set, fee model, alpha profile.
+All 31 venues are in `VENUES_BY_ASSET_GROUP["sports"]` (landed `unified-api-contracts@05a709fd`; this list re-verified
+2026-08-09 via direct import against `market_data_categories.VENUES_BY_ASSET_GROUP['sports']` — corrects a prior "32
+canonical members" version of this section that had drifted: several named venues (`BETFAIR_EX_AU`, `WILLIAM_HILL`,
+`BWIN`, `BET365`, `CAESARS`, `POINTSBET_US`, `MYBOOKIEAG`, `LOWVIG`, `WYNNBET`, `FOXBET`, `MARATHONBET`, `1XBET`,
+`SUPABETS`, plus the open-ended "and additional regional books" tail) were never actually registered, while several real
+members (`BETFAIR_SB_UK`, `WILLIAMHILL` — no underscore, `BETOPENLY`, `BETRIVERS`, `BETVICTOR`, `CASUMO`, `LADBROKES`,
+`LIVESCOREBET`, `NOVIG`, `ONEXBET`, `PADDYPOWER`, `PROPHETX`, `SKYBET`, `VIRGINBET`, bare `UNIBET`) went unnamed). Every
+venue resolves all 5 classification dicts: `SportsVenueType`, auth method, instrument-type set, fee model, alpha
+profile. `executable=False` for all 31 as of 2026-08-09 — no venue has a complete adapter yet (per the `executable`
+predicate above).
 
-**Exchange venues** (`SportsVenueType.EXCHANGE`, `executable=False` pending credentials — per the `executable` predicate
-above, no exchange-type venue has a complete adapter as of 2026-08-08): `BETFAIR_EX_UK`, `BETFAIR_EX_EU`,
-`BETFAIR_EX_AU`, `SMARKETS`, `MATCHBOOK`
+**Exchange venues** (`SportsVenueType.EXCHANGE_API`): `BETFAIR_EX_UK`, `BETFAIR_EX_EU`, `SMARKETS`, `MATCHBOOK`
 
-**Fixed-odds sportsbooks** (`executable=False` unless direct adapter exists): `PINNACLE`, `BET365`, `BETWAY`,
-`WILLIAM_HILL`, `BWIN`, `UNIBET_EU`, `UNIBET_UK`, `CORAL`, `FANDUEL`, `DRAFTKINGS`, `BETMGM`, `CAESARS`, `POINTSBET_US`,
-`BETONLINEAG`, `BOVADA`, `MYBOOKIEAG`, `LOWVIG`, `WYNNBET`, `FOXBET`, `MARATHONBET`, `BETSSON`, `1XBET`, `BET888SPORT`,
-`SUPABETS`, and additional regional books.
+**Prediction-market-style venues** (`SportsVenueType.PREDICTION_MARKET_API`): `BETOPENLY`, `NOVIG`, `PROPHETX`
 
-`BETFAIR` (bare) is the operator-group parent — NOT a data-axis venue (P1 todo still in flight).
+**Bookmaker-API venues** (`SportsVenueType.BOOKMAKER_API`): `PINNACLE`, `ONEXBET`
+
+**Web-scraper sportsbooks** (`SportsVenueType.WEB_SCRAPER`): `BET888SPORT`, `BETFAIR_SB_UK`, `BETMGM`, `BETONLINEAG`,
+`BETRIVERS`, `BETSSON`, `BETVICTOR`, `BETWAY`, `BOVADA`, `CASUMO`, `CORAL`, `DRAFTKINGS`, `FANDUEL`, `LADBROKES`,
+`LIVESCOREBET`, `PADDYPOWER`, `SKYBET`, `UNIBET`, `UNIBET_EU`, `UNIBET_UK`, `VIRGINBET`, `WILLIAMHILL`
+
+`BETFAIR` (bare) is the operator-group parent — NOT a data-axis venue.
 
 ### `exchange_odds` / `fixed_odds` instrument_type retirement
 
