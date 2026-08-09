@@ -168,3 +168,17 @@ Fix at the root per the data-pipeline-correctness HARD RULE — no deadline defe
   KRAKEN-FUTURES/BITGET-FUTURES/BITFINEX-FUTURES/COINBASE-FUTURES have zero manifest rows for
   futures_chain/options_chain — registered capability, no live exposure yet. No code shipped (read-only audit +
   issue-doc filing, per the parent todo's own scope).
+- **2026-08-09T21:19Z (slot 27, data_engineering)** — dispatched on todo 1 (the gated DERIBIT re-capture). Checked the
+  precondition BEFORE attempting:
+  `gcloud compute instances list --filter='name~cefi OR name~tardis' --format='table(name,status)'` shows
+  `cefi-queue-heavy-binancefutu-x17-20260809-083733` (`RUNNING`) — matches
+  `deployment-service/scripts/vm/tardis-concurrency-guard.sh`'s `TARDIS_VM_NAME_PATTERN`
+  (`^(cefi|tradfi)-.*-(heavy|light)-|^cefi-queue-|^mtds-backfill-cefi-`) via the `^cefi-queue-` branch — this is a real
+  Tardis-consuming VM (the same one tracked in
+  `cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete_2026_08_08.md`'s in-flight aggregate backfill),
+  currently holding the sole N=1 Tardis slot. Per the hard N=1 rule (operator 2026-07-16,
+  `cefi_completion_program_2026_07_15.md` — N>1 storms the shared academic-key IP with mutual 403s), launching a DERIBIT
+  capture now would breach the cap. Declining to force it. `cefi-extended-starknet-*` VMs also RUNNING are CAP-EXEMPT
+  (EXTENDED-STARKNET doesn't fetch from `datasets.tardis.dev`) and don't count. Todo 1's own precondition ("Once a CeFi
+  Tardis capture/backfill slot is available") is unmet — did NOT touch todo 2 (the registry-drift fix), which is a
+  separately-dispatchable, non-gated backlog task. Releasing via `/skip-current-task {"reason_code": "GATED"}`.
