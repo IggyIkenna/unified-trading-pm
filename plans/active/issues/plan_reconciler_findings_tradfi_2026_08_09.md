@@ -246,3 +246,18 @@ but this run did not unlock or archive either doc per the HARD LIMIT regardless 
 
 None — all 32 non-grace docs in the tradfi working set were read in full by at least one hunter, and all confirmed
 candidates were either applied, refuted, or filed within this run.
+
+## Exit hygiene gate (Phase 5)
+
+Re-ran `run_hygiene_sweep.sh --ci` (full, with inventory + INDEX.md regen) after all fixes landed. Result: same 2 hard
+failures as the Phase-0 entry check (`Silent-default-effort` →
+`test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`, `asset_group: [ci]`; `Archive candidates` → 3 non-tradfi
+docs), **both re-verified still non-tradfi-attributable**. **Zero tradfi-attributable hard failures at either entry or
+exit.** `Todo format` flipped from WARN to full PASS. Inventory regen: 263 plans, **2 orphans** — both
+`ao_satellite_ao_dispatch_batch9_2026_08_08` / `_finalize` (the `ao` tranche's scope, not tradfi). **The regenerated
+`INDEX.md` + `active_plan_inventory_dashboard` were deliberately NOT committed** — both are corpus-wide artifacts (not
+tradfi-scoped), and several sibling tranche workers are running concurrently tonight (observed slots 2, 11, 12, 13 also
+mid-hygiene-sweep); bundling a full-corpus regen into this tradfi-scoped PR would create unnecessary conflict surface
+against sibling PRs for zero tradfi-specific benefit. Discarded via `git checkout --` after confirming their content
+(same precedent as STEP 1's `master_to_live_defi` side-effect handling). A future whole-corpus `all` pass (or whichever
+tranche's PR lands last) is the natural place for that refresh to actually land.
