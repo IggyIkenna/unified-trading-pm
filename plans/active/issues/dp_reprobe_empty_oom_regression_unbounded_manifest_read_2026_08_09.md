@@ -30,7 +30,7 @@ related:
   [
     /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
     /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
     e2e-testing/scripts/audit/reprobe_new_empty_confirmed.py,
     e2e-testing/scripts/audit/_dp_common.py,

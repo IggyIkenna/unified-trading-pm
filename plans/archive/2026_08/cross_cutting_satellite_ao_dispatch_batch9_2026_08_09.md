@@ -16,7 +16,7 @@ summary: >-
   Done-when. The source doc's whole-doc RECLASSIFY bar stays unmet — its other 2 open items are a dirty-dep aggregate
   (registry-mode flip gated on confirming each tier is wired) and an explicit `(stretch)` design item with no forcing
   function, neither extracted here.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -26,7 +26,7 @@ tags: [cross-cutting, ao-dispatch, close-out, batch-9, satellite-docs, observabi
 related:
   [
     /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch9_2026_08_09_finalize.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch9_2026_08_09_finalize.md,
     /plans/active/issues/dp_reprobe_empty_oom_regression_unbounded_manifest_read_2026_08_09.md,
   ]
 created: "2026-08-09"
@@ -62,8 +62,14 @@ drift_direction: advance-code
 
 # Cross-cutting satellite AO batch 9 (observability_master) — bounded-item extraction
 
-> **Status: active.** All 3 todos below are same-priority-independent and touch distinct files — no
-> `sequential`/`gate_on_depends` needed.
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 3 todos done. Finalize plan
+> (`cross_cutting_satellite_ao_dispatch_batch9_2026_08_09_finalize.md`) reconciled the 2 now-done twin checkboxes in
+> `data_pipeline_self_healing_completion_residual_2026_07_24.md` (the 3rd twin was already flipped in this doc's own
+> item-3 commit), then archived this plan via the standard 6-step ritual. Finalize archived alongside at
+> `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch9_2026_08_09_finalize.md`.
+
+> **Status: active** (historical, at time of dispatch). All 3 todos below are same-priority-independent and touch
+> distinct files — no `sequential`/`gate_on_depends` needed.
 
 ## Todos
 

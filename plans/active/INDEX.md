@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 320 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 316 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -618,7 +618,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (68)
+### cross-cutting (66)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -727,14 +727,6 @@ by hand._
 - [`cross_cutting_satellite_ao_dispatch_batch7_2026_08_09`](./cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md)
   — Seventh AO-dispatch batch for the cross-cutting tranche, produced by the round9 2026-08-09 RECLASSIFY +
   satellite-extraction sweep. Pulls 1 bounded item out of…
-- [`cross_cutting_satellite_ao_dispatch_batch9_2026_08_09`](./cross_cutting_satellite_ao_dispatch_batch9_2026_08_09.md)
-  — Ninth AO-dispatch batch for the cross-cutting tranche, produced by the round11 2026-08-09 RECLASSIFY +
-  satellite-extraction sweep (a re-check of docs whose KEEP-NA marker was staleness-only, never re-tested against
-  today's accumulated…
-- [`cross_cutting_satellite_ao_dispatch_batch9_2026_08_09_finalize`](./cross_cutting_satellite_ao_dispatch_batch9_2026_08_09_finalize.md)
-  — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch9_2026_08_09.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until all 3 todos are done. Reconciles the source doc's checkboxes, then archives the batch
-  doc via the…
 - [`cross_cutting_strategy_execution_determinism_2026_07_26`](./cross_cutting_strategy_execution_determinism_2026_07_26.md)
   — Extracted 2026-07-26 from `cross_cutting_consolidated_closeout_2026_07_25.md` Track 24 (resolved
   `autonomous_session_operator_decisions_2026_07_25.md` entry #19) — a genuinely different angle from that doc's other
@@ -1005,7 +997,7 @@ by hand._
   does NOT satisfy its done_definition — today the only action is a conversational ping. This plan gives review two
   narrow,…
 
-### ci (14)
+### ci (12)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -1014,13 +1006,6 @@ by hand._
 - [`ci_pipeline_speed_and_cost_redesign_2026_08_05`](./ci_pipeline_speed_and_cost_redesign_2026_08_05.md) — Operator
   target: LDR→main should take 3-5 minutes regardless of repo when little has changed, cross-repo workflow triggering
   should fire only when genuinely needed, and fleet CI cost (AWS self-hosted + GitHub Actions billing) should track…
-- [`ci_satellite_ao_dispatch_batch11_2026_08_09`](./ci_satellite_ao_dispatch_batch11_2026_08_09.md) — Round-11 combined
-  RECLASSIFY + satellite-extraction sweep, `ci` tranche. Extracts Residual 1 (the CI-runner-blocked full
-  `generate-unified-openapi.sh` regen) out of `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md` into
-  a…
-- [`ci_satellite_ao_dispatch_batch11_finalize_2026_08_09`](./ci_satellite_ao_dispatch_batch11_finalize_2026_08_09.md) —
-  Gated closeout for `ci_satellite_ao_dispatch_batch11_2026_08_09.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until that plan's one todo is done. Reconciles Residual 1's checkbox in the source doc…
 - [`ci_vm_exposure_remediation_2026_08_06`](./ci_vm_exposure_remediation_2026_08_06.md) —
   ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md's own fixes (IOPS bump, resource-cap removal)
   worked, but it left 3 exposure items unaddressed on the dedicated CI runner VM (i-042a6332509482556): no swap safety
