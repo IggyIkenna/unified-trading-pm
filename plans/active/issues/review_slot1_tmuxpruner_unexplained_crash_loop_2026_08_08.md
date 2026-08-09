@@ -252,8 +252,10 @@ own Tick history.
       detection-lag variance). (c) not directly re-testable at today's calmer host load, but the lag data weakens it as
       the primary driver. New todo added below capturing the most concrete new lead this session found (a restart-window
       death despite `KillMode=process`).
-- [ ] [BACKEND] P1. **NEW LEAD (backend, slot 28, 2026-08-09 ~19:30Z): a captured genuine slot-1 death landed inside a
-      `systemctl restart orchestrator` window DESPITE `KillMode=process` being deliberately configured (and confirmed
+- [x] ✅ [BACKEND] P1. **RULED OUT (backend, slot 20, 2026-08-09 ~19:55Z) — all 3 candidate systemd mechanisms checked,
+      none explain the death; correlation is near-baseline chance. See Progress Log entry below.** Original lead text
+      preserved below. **NEW LEAD (backend, slot 28, 2026-08-09 ~19:30Z): a captured genuine slot-1 death landed inside
+      a `systemctl restart orchestrator` window DESPITE `KillMode=process` being deliberately configured (and confirmed
       via systemd's own log lines: "Unit process 599219 (claude) remains running after unit stopped" then "Found
       left-over process 599219 (claude) in control group while starting unit. Ignoring.") to spare tmux/claude worker
       children from exactly this.** PID 599219 was captured alive (via a live-PID poll) up to 19:30:25Z (systemd's own
@@ -275,8 +277,78 @@ own Tick history.
       reliably reproducible, treat this single capture as one more low-probability contributing factor rather than the
       root cause, and look elsewhere. Repo: agent-orchestrator (investigation) / `scripts/orchestrator.service` (if a
       systemd-config fix is found).
+- [ ] [BACKEND] P1. **Next diagnostic step (backend, slot 20, 2026-08-09 ~19:55Z): capture the ACTUAL signal/exit status
+      of a dying slot-1 process, not just its absence.** Every "genuine death" check so far (5a163e7's capture, this
+      session's restart-window analysis) only confirmed the PID is GONE (`kill -0` fails / no `/proc` entry) — none
+      captured HOW it died (which signal, or a clean exit). Kernel OOM, cgroup OOM, `journalctl -k`, and logind
+      session-scoped kill are all now ruled out (see Progress Log below) with zero mechanism left that would explain a
+      SIGKILL/SIGTERM landing on one worker's `claude` PID roughly every 5-9min fleet-wide, silently, in every log
+      surface checked so far. Whoever picks this up: attach `strace -p <PID> -e trace=signal` (or equivalent, e.g. a
+      tight `/proc/<pid>/stat` state-field poll, since a delivered-but-uncaught SIGKILL leaves no trace for the target
+      process itself to log) to a live worker PID and wait for a natural death, to finally capture the actual signal
+      number — this is the one piece of direct evidence no prior session in this doc has gathered. Also worth a fresh
+      spot-check of `resource-watchdog.service`'s kill-relay log
+      (`journalctl -u orchestrator | grep -i resource-watchdog` or wherever it logs) for slot 1 specifically, since the
+      last check of it is now hours stale. Repo: agent-orchestrator (investigation only, unless a fix falls out of the
+      captured signal).
 
 ## Progress log
+
+- 2026-08-09 ~19:55Z (infra→backend_engineer craft, slot 20, unified-trading-pm — this doc only, no code shipped):
+  Picked up the "NEW LEAD — restart-window death despite KillMode=process" BACKEND P1 todo. **RULED OUT all 3 candidate
+  systemd mechanisms the todo asked about, via live evidence rather than a forced reproduction.**
+
+  **Why no deliberate `systemctl restart orchestrator` was triggered**: that command kills the ENTIRE live fleet's
+  liveness-probe surface for its duration (every slot, not just a throwaway test session) — a shared-system,
+  hard-to-reverse action out of proportion to an experiment, and CLAUDE.md's own risk-assessment rule (destructive /
+  shared-system actions need explicit authorization). Instead, this session used the fact that MY OWN process is itself
+  cgroup-resident inside `orchestrator.service` (`cat /proc/self/cgroup` → `0::/system.slice/orchestrator.service`,
+  parent PID 27677 = the shared tmux server every worker's `claude` process hangs off of) and that the orchestrator had
+  JUST restarted at 19:30:25Z — the EXACT timestamp slot 28's own capture (PID 599219) was already anchored to — giving
+  live, first-party access to the precise incident window without forcing a new one.
+
+  **(1) Cgroup OOM during the restart, RULED OUT with hard evidence.**
+  `cat /sys/fs/cgroup/system.slice/orchestrator.service/memory.events` → `oom 0`, `oom_kill 0`, `oom_group_kill 0` — and
+  `journalctl -u orchestrator` for the exact 19:30:25Z restart line reads
+  `Consumed 2h 35min 1.552s CPU time, 23.0G memory peak, 14.9G memory swap peak` (right at the `memory-cap.conf`
+  drop-in's `MemoryHigh=23G` ceiling, `MemoryMax=26G`) — i.e. the cgroup came close enough to its cap for this exact
+  restart to be a plausible OOM candidate, but the kernel's own cumulative oom_kill counter for this cgroup is zero.
+  Confirmed the counter is genuinely cumulative-since-cgroup-creation, not reset by the restart: the cgroup directory's
+  mtime is `13:22:23` (hours before 19:30:25Z) and `KillMode=process`'s whole design keeps leftover children resident,
+  so the cgroup never goes empty across a restart and systemd never rmdir/recreates it — confirmed live via the SAME
+  journal window: `Found left-over process 599219 (claude) in control group while starting unit. Ignoring.` alongside
+  ~80 OTHER leftover processes (tmux server + every other slot's `claude`/`bash`/`git` children) surviving the exact
+  same restart untouched. This directly reproduces and extends 5a163e7's prior "OOM ruled out" finding (which was scoped
+  to a non-restart death) to the restart-window case specifically. **(2)
+  `ProtectSystem=strict`/`NoNewPrivileges`/mount-namespace teardown, RULED OUT on mechanism grounds.** Read the full
+  composed unit (`systemctl cat orchestrator`). Linux mount namespaces are reference-counted by the processes attached
+  to them, not by unit-instance lifecycle — a surviving leftover process (already forked before the OLD ExecStart
+  process exited) keeps its OWN reference to the namespace systemd set up at the OLD instance's start; a NEW unit
+  instance starting gets a FRESH namespace for itself, and nothing in that transition unmounts or otherwise acts on the
+  OLD namespace the leftover process still holds a reference to. No systemd directive in the composed unit
+  (`ReadWritePaths=`, `ProtectSystem=strict`, `NoNewPrivileges=yes`, `PrivateTmp=no`) has any documented signal-sending
+  side effect on out-of-scope (per `KillMode=process`) leftover processes during a sibling restart — these are
+  namespace/syscall-filtering directives, not process-lifecycle directives. **(3) systemd-logind session-scoped kill
+  (`KillUserProcesses=`), a NEW angle not previously checked in this doc, RULED OUT.** `loginctl list-sessions` →
+  `No sessions.` — every orchestrator/worker process is pure `orchestrator.service`-cgroup-scoped (confirmed via
+  `systemd-cgls`), never PAM/logind-session-scoped in the first place (no interactive login spawned them), so a logind
+  session-teardown kill mechanism cannot apply regardless of the `KillUserProcesses` setting (which itself reads its
+  default `no` in `/etc/systemd/logind.conf`, confirming it's not even armed). **(4) Base-rate sanity check on the
+  correlation itself.** The todo's own numbers (118 kills vs 28 restarts on the day measured) imply, under a NULL
+  hypothesis of independent uniformly-random kill/restart timing, an EXPECTED by-pure-chance proximity rate of
+  ~7.8%/11.7%/19.4% at 120s/180s/300s windows (28 restarts × 2×window / 86400s-per-day). The OBSERVED 9.3%/13.6%/23.7%
+  is only modestly above this baseline (+1.5 to +4.3 points at each window) — consistent with "a real but minority
+  factor" as the todo itself already characterized it, not evidence of a dominant causal mechanism.
+
+  **Conclusion**: per the todo's own branch (3) ("if NOT reliably reproducible, treat this single capture as one more
+  low-probability contributing factor rather than the root cause, and look elsewhere") — all 3 named systemd mechanisms
+  are ruled out with direct evidence, and the residual restart-correlation is statistically weak. This closes the
+  restart-window angle specifically; it does NOT resolve the still-open root cause (the steady ~5-9min fleet-wide
+  drumbeat, now ruled out against: OOM kernel+cgroup, `journalctl -k`, this repo's own kill paths, `/loop` process
+  teardown, AND restart-window mechanisms). New follow-up todo added above capturing the one piece of direct evidence no
+  session has captured yet — the actual delivered signal, via a live `strace`/proc-state capture on a natural death —
+  since every prior "genuine death" confirmation (including this session's) has only ever proven the process is GONE,
+  never HOW.
 
 - 2026-08-09 ~09:16Z (backend, slot 23, agent-orchestrator@5a163e7): Picked up the standing "both prior fixes confirmed
   live but crash rate UNCHANGED" BACKEND P1 todo. Found + fixed the actual FIRST detector, then used a live empirical
