@@ -254,6 +254,33 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
 
 ## Progress Log
 
+### 2026-08-09 — Propagation ops (B1/B3/B4) verified DONE on live prod state (`cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1)
+
+Dispatched via AO batch11. Re-verified the chain against LIVE production GCS state rather than launching a fresh
+backfill/rollup/enumerator run, since the 2026-06-24 session already launched `instr-backfill-tradfi-20260623`
+(exit_code=0) and armed the nightly schedulers (`lifecycle-catalogue-regen-tradfi` 01:00 UTC,
+`expected-universe-v2-tradfi` 01:30 UTC, `instrument-catalogue-regen`) — ~6 weeks of nightly runs since then should have
+already propagated the full universe.
+
+- **Catalogue has the new MVP tickers** — downloaded
+  `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (919,493 rows). 103 distinct
+  EQUITY/ETF `base_asset`s tagged `mvp=True`, including every sampled 2026-06-24-batch addition
+  (HOOD/PLTR/COIN/MSTR/ARM/ASML/RIVN/SMCI/UBER/DELL/GME/CRWD/SONY/NOK/BABA/TSM/NVO) and all 16 sampled ETF additions
+  (EWT/EWY/ROBO/SLX/URNM/UVXY/GLD/IAU/SLV/PPLT/PALL/CPER/USO/UNG/IBIT/ETHA) — all `mvp=True`, correct venue
+  (NASDAQ/NYSE).
+- **Manifest shows them `expected_unattempted`** — downloaded
+  `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (7,022,190 rows). Every
+  one of the 17 sampled tickers above shows a real `expected_unattempted` population (1,000-3,000 rows each) alongside
+  `captured`/`empty_confirmed` rows — the enumerator has seeded them at the NASDAQ/NYSE:EQUITY grain as designed.
+- **A sample equity capture shows non-NaN OHLCV** — downloaded
+  `gs://market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-07-20/pipeline_mode=batch_databento/timeframe=15m/data_type=ohlcv_15m/instrument_type=EQUITY/venue=NASDAQ/NASDAQ:EQUITY:HOOD-USD.parquet`
+  — 49 rows, 0 NaNs across `open/high/low/close/volume`, realistic price range ($98.63-$102.56).
+- **Parity check**: the same `capture_status` distribution shape (dominated by `empty_confirmed`+`expected_unattempted`
+  for low-frequency data_types like `ohlcv_24h`) holds for long-established tickers (AAPL, NVDA) as for the new
+  additions (MSTR) — the new tickers are behaving identically to pre-existing ones, not showing a distinct gap.
+
+Checkbox flipped above; `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 flipped in the same commit.
+
 ### 2026-07-18 — Binance equity-perp universe WIDENED to ALL live TRADIFI_PERPETUAL listings (operator directive)
 
 **Operator directive 2026-07-18:** "WIDEN the cefi equity-perp universe to ALL Binance equity-perp listings — get all
@@ -620,15 +647,18 @@ realized +26–40% ann during spikes, 0 most ticks; SPX ~5.5%).
       stay non-MVP. The catalogue `_add_mvp_column` calls `is_mvp("tradfi",…)` per row → on next
       `build_instrument_catalogue` regen the new tickers tag `mvp=True`. unified- api-contracts@219e4b17. (98 mvp_scope
       tests + 173 ticker/g9 tests green.)
-- [ ] [SCRIPT] P0. **Propagation ops (B1/B3/B4) — run on real infra to completion.** The code (above) is the enabler;
+- [x] ✅ [SCRIPT] P0. **Propagation ops (B1/B3/B4) — run on real infra to completion.** The code (above) is the enabler;
       the chain is wired: (1) IS instruments backfill (`launch-instruments-backfill-vm.sh --asset-group TRADFI`) writes
       per-day InstrumentRecords for the new equities (databento/massive now fetch them) → (2)
       `build_instrument_     catalogue` rolls up + tags `mvp=True` → (3) `enumerate_expected_universe.py` v2 tradfi
       enumerator reads the catalogue, seeds the new equities as `expected_unattempted` at venue=NASDAQ/NYSE grain → (4)
       MTDS wave-launcher reads the manifest `expected_unattempted` gaps + captures. **Run + verify**: catalogue has new
       MVP tickers; manifest shows them `expected_unattempted`; a sample equity captures non-NaN OHLCV. Repo:
-      deployment-service (launchers) + instruments-service (catalogue/enumerator CLIs). **IN PROGRESS** (this session) —
-      see Progress Log.
+      deployment-service (launchers) + instruments-service (catalogue/enumerator CLIs). **DONE — verified live
+      2026-08-09** (`cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1). The live nightly schedulers
+      (`lifecycle-catalogue-regen-tradfi`, `expected-universe-v2-tradfi`, `instrument-catalogue-regen`) armed 2026-06-24
+      have run to completion in the ~6 weeks since — no fresh backfill/rollup/enumerator run was needed; verification
+      read prod state directly. See Progress Log for the full evidence.
 - [x] ✅ [DATA] P2. ~~**BLOCKED-DATA** — HYUNDAI / SAMSUNG / SK Hynix (3 Binance tradfi-perps with NO US-listed twin,
       KRX primary): source a Korea-equity reference + tick vendor so the cash-equity twin exists for basis (databento
       DBEQ.BASIC is US-only). Until sourced these perps have a dispersion-only (cross-crypto-venue) leg, no cash hedge.

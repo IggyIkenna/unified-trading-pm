@@ -6,7 +6,7 @@ summary: >-
   `assigned_vm: NA` docs that a same-day RECLASSIFY sweep read end-to-end but did NOT whole-doc-flip (each carries at
   least one genuine judgment/design/operator-gated item). Mirrors `/ag-closeout-audit`'s carve-out pattern but applied
   per-item rather than per-doc: 4 parallel research passes (one per doc-group) classified every open item in all 19 docs
-  against the bounded-outcome bar (`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` §5), found 16
+  against the bounded-outcome bar (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` §5), found 16
   genuinely extractable items total, grouped by `parent_epic` per
   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §2. This batch is the `parent_epic:
   cefi_master` group (10 items, 3 source docs) — sibling batches 12/13/14 (dated the same day) cover the
@@ -93,12 +93,17 @@ context_scope:
 
 ## Todos
 
-- [ ] [SCRIPT] P0. **Run the IS→catalogue→enumerator→MTDS propagation-ops wave chain (B1/B3/B4) to completion** for the
-      new Binance tradfi-perp cash-twin equities: instruments-service backfill → `build_instrument_catalogue` rollup →
-      `enumerate_expected_universe.py` v2 tradfi → MTDS wave. Repos: deployment-service, instruments-service. Source:
+- [x] ✅ [SCRIPT] P0. **Run the IS→catalogue→enumerator→MTDS propagation-ops wave chain (B1/B3/B4) to completion** for
+      the new Binance tradfi-perp cash-twin equities: instruments-service backfill → `build_instrument_catalogue` rollup
+      → `enumerate_expected_universe.py` v2 tradfi → MTDS wave. Repos: deployment-service, instruments-service. Source:
       `cefi_consolidated_closeout_2026_07_18.md` Track 0 (line 136, cites source Phase 1b). **Done when**: the catalogue
       shows the new MVP tickers, the manifest shows them `expected_unattempted`, and a sample equity capture shows
-      non-NaN OHLCV.
+      non-NaN OHLCV. **DONE 2026-08-09** — verified live against prod GCS state (the 2026-06-24-launched
+      `instr-backfill-tradfi-20260623` backfill + nightly schedulers already propagated the chain over the past ~6
+      weeks, no new run needed): catalogue has 103 mvp-tagged equity/ETF base_assets incl. every sampled new ticker;
+      manifest shows `expected_unattempted` for every sampled ticker; `NASDAQ:EQUITY:HOOD-USD` 2026-07-20 `ohlcv_15m`
+      sample = 49 rows, 0 NaN OHLCV. Full evidence: `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
+      Progress Log, 2026-08-09 entry.
 - [ ] [UAC] P0. **Map the index perps** (`SPXUSDT`/`NAS100`/`SPYUSDT`/`XAUUSDT`) to their CME index-future + Databento
       index canonical equivalents in unified-api-contracts, carrying the scale/multiplier (Binance SPX-perp is a SCALED
       micro unit — sizing MUST use the multiplier for the ES hedge ratio). Repo: unified-api-contracts. Source:
@@ -193,3 +198,7 @@ context_scope:
   `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`'s checkboxes for todos 6-9 replaced with pointers
   likewise; `cefi_ml_directional_continuous_live_2026_06_20.md`'s checkbox for todo 10 replaced with a pointer likewise
   — every non-extracted item in all 3 source docs left untouched.
+- **2026-08-09** — todo 1 (propagation-ops B1/B3/B4 wave chain) DISPATCHED + DONE: verified live against prod GCS state
+  that the chain (backfilled 2026-06-24, propagated nightly since) is fully complete — catalogue, manifest, and a sample
+  capture all confirmed. No new backfill/rollup/enumerator run was needed. Full evidence in
+  `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log (2026-08-09 entry, same commit).
