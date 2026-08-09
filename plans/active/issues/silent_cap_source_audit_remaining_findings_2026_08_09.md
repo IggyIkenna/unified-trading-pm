@@ -91,14 +91,21 @@ findings.
       exhaustion-driven; added a for/else cap-exhaustion warning (mirrors AsterAdapter); regression test
       `test_get_instruments_beyond_2000_market_hard_ceiling_not_truncated` proves a 2537-market/26-page universe is no
       longer truncated.
-- [ ] [CODE] P1. **Betfair `listMarketCatalogue` sorted-by-start-time top-1000 cap (LIVE, real risk).**
+- [x] ✅ [CODE] P1. **Betfair `listMarketCatalogue` sorted-by-start-time top-1000 cap (LIVE, real risk).**
       `instruments_service/reference_data/adapters/sports/adapters/betfair.py` `_fetch_markets_raw` (`maxResults=1000`,
       `sort: "FIRST_TO_START"`, effectively "all markets" filter). Betfair's API hard-caps `maxResults` at 1000 with NO
       offset pagination on this call — the only way past it is to narrow the `filter` (per `eventTypeId` / per rolling
       time window) and merge multiple scoped calls. Betfair typically has well over 1000 concurrently-listed markets, so
       later-starting markets are silently dropped today. Repo: instruments-service. Done when: the single "all markets"
       call is split into multiple `filter`-scoped calls (e.g. per sport `eventTypeId`) and merged; a regression test
-      proves a >1000-market universe across 2+ event types is no longer truncated.
+      proves a >1000-market universe across 2+ event types is no longer truncated. — instruments-service@b8668094:
+      enumerates event types (sports) live via `listEventTypes` (no hardcoded id list) and scopes each
+      `listMarketCatalogue` call to one `eventTypeId`, raising the effective ceiling from 1000 markets globally to 1000
+      per sport; a residual per-sport cap hit now logs `ADAPTER_PAGE_CAP_HIT` instead of staying silent; per-event-type
+      fetch failures are shard-isolated (partial results kept; only all-failed raises to `attempted_failed`). 3 new
+      regression tests: `test_get_instruments_pages_across_event_types` (2 sports merged),
+      `test_get_instruments_logs_page_cap_hit` (ceiling-hit observability),
+      `test_get_instruments_partial_event_type_failure_keeps_results` (shard isolation).
 - [ ] [CODE] P2. **TradFi/DeFi Aave-history caps in market-tick-data-service (protocol-outage + risk-parameter blind
       spots).** Two files: (a) `market_interface/adapters/defi/protocol_outage_adapter.py`'s
       `_AAVE_V2_RESERVE_HISTORY_QUERY` (`reserveConfigurationHistoryItems`, whole-history no time filter,

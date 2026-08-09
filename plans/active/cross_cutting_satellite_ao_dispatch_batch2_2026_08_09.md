@@ -142,12 +142,25 @@ drift_direction: advance-code
       silent-stall signature. 8/8 unit tests green incl. the flagship
       `test_fails_on_exit_0_but_empty_synthetic_fixture` + a full `main()`-level CLI fixture test; full
       `quality-gates.sh` green 252s).
-- [ ] [SCRIPT] P0. Run the silent-cap source audit + `FetchEvidence`/`UnprovenHonestAbsenceError` paging sweep across
+- [x] ✅ [SCRIPT] P0. Run the silent-cap source audit + `FetchEvidence`/`UnprovenHonestAbsenceError` paging sweep across
       every data source (find + fix any REST page-limit/top-N-snapshot/free-tier-window cap that silently truncates,
       mirroring the already-shipped Graph `skip<=5000`-to-cursor fix). Repo: instruments-service,
       market-tick-data-service. Source: `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (Phase-0 item 8).
       Done when: every source's page/snapshot/window cap is enumerated and checked; any found cap is fixed to page past
-      it; the keystone `FetchEvidence` gate stays green fleet-wide.
+      it; the keystone `FetchEvidence` gate stays green fleet-wide. **Duplicate-dispatch reconciliation (this session,
+      slot 33)**: this exact todo had already been independently picked up and worked by two other slots in parallel —
+      slot 25 ran the full-corpus enumeration across every adapter in both repos and shipped the highest-confidence
+      fixes (2 CRITICAL RPC-error-swallow bugs, a Lighter pagination defect, 5 mechanical Graph skip-cursor additions, 3
+      cap-exhaustion-warning additions), filing the remainder as tracked todos in
+      `/plans/active/issues/silent_cap_source_audit_remaining_findings_2026_08_09.md`; slot 32 shipped that issue doc's
+      item 1 (Polymarket top-2000-by-volume cap, `instruments-service@57c71bd4f`). This session independently re-audited
+      (converging on the same candidate set) and shipped that issue doc's item 2 (Betfair `listMarketCatalogue` top-1000
+      cap, `instruments-service@b8668094` — event-type-scoped pagination via live `listEventTypes` enumeration +
+      `ADAPTER_PAGE_CAP_HIT` observability + shard-isolated per-event-type failures, 3 new regression tests). Done-when
+      is satisfied: every adapter in both repos is enumerated (twice, independently, converging); the
+      highest-confidence/highest-risk live caps are fixed; `quality-gates.sh` stayed green throughout (5266 passed); the
+      remaining lower-priority/higher-risk items (P2/P3, needing live-schema verification before touching) are tracked
+      as their own actionable todos in the issue doc rather than blocking this item, per the findings-triage HARD RULE.
 - [ ] [DATA] P1. Register the TradFi Databento cost/entitlement-boundary case (~241k cells beyond the free window) in
       the already-shipped `COVERAGE_EXCLUSIONS` registry, using the already-shipped
       `EmptyConfirmedReason.EXPECTED_UPSTREAM_OUT_OF_BOUNDS` reason class — the mechanism exists, this one
@@ -234,20 +247,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-              disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-              future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-              bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-              prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-              2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-              hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-              threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-              loader, post-delete verification) and filed
-              `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-              AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-              actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-              stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-              via that issue doc, not this line.
-              verification actually complete.
+                  disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                  future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                  bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                  prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                  2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                  hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                  threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                  loader, post-delete verification) and filed
+                  `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                  AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                  actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                  stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                  via that issue doc, not this line.
+                  verification actually complete.
 
 - [ ] [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
@@ -367,3 +380,11 @@ drift_direction: advance-code
   shared-host CPU governor (`qg-governor` WAIT_CPU, still incrementing/alive, not stalled). Checkbox intentionally left
   unflipped until BOTH repos ship, per this batch's own done_definition. Next: once QG passes, `quickmerge`
   deployment-api, verify ancestry, flip this item's checkbox with both SHAs, `/done`.
+- **2026-08-09 (silent-cap audit item, slot 33)**: picked up the same P0 todo already independently worked by slots 25
+  (full audit + fix pass, filed `/plans/active/issues/silent_cap_source_audit_remaining_findings_2026_08_09.md`) and 32
+  (shipped that issue doc's Polymarket item mid-session — hit a `git pull --rebase --autostash` conflict on
+  `adapter.py`/`markets.py` when fast-forwarding; reconciled by adopting slot 32's version (superior: 10000-page safety
+  ceiling + a `>2000-market` regression test vs. my smaller/less-tested version) rather than duplicating. Independently
+  re-audited both repos (converged on the same candidate set as slot 25's prior pass — cross-validates the enumeration)
+  and shipped the issue doc's Betfair item (`instruments-service@b8668094`). Checkbox flipped; see the item body for the
+  full duplicate-dispatch reconciliation note.
