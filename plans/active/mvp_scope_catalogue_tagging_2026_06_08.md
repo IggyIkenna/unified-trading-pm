@@ -195,12 +195,11 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       universe, never grow it — mirrors `deployment-api@3390c98`'s `test_route_venue_year_coverage_scope.py` pattern).
       `MVP_SCOPE_CONFIG_VERSION` 20→21. **The data-status coverage CONSUMER is NOT part of this todo** — split into the
       new P2b-2 todo below (genuine design gap, not guessed at under time pressure).
-- **[IMPLEMENT] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** P2b-2 —
-      models data-status coverage consumer — the design gap this item was previously blocked on (what "could
-      exist" means for models; where trained-model identities get recorded) is resolved per the
-      round5-cross-cutting-audit 2026-08-08 note above (`TrainingGridConfig` = could-exist bound;
-      `ModelRegistry.list_models()` = live write path — narrows to ordinary wiring). See the batch doc for the
-      full scoped todo; do not duplicate-dispatch from here.
+- **[IMPLEMENT] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** P2b-2 — models
+  data-status coverage consumer — the design gap this item was previously blocked on (what "could exist" means for
+  models; where trained-model identities get recorded) is resolved per the round5-cross-cutting-audit 2026-08-08 note
+  above (`TrainingGridConfig` = could-exist bound; `ModelRegistry.list_models()` = live write path — narrows to ordinary
+  wiring). See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
 - [ ] [DATA] P2. **Verify**: with MVP ON, data-status shows ~100% for captured MVP cells and does NOT count non-MVP
       catalogued instruments as missing; with MVP OFF, the full could-exist universe is shown (the gap is honest, not
       hidden). **BLOCKED on the held migration (2026-06-17 /autonomous assessment):** unit-level parity is already
@@ -303,3 +302,4 @@ which has no MVP wiring today, and precomputes the sports/prediction catalogue `
   misjudged, and the doc's own multi-week history shows partial-unblocks handled by forking a slice out (P2a already
   dispatched separately via `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`) rather than a whole-doc flip.
   Flagging as a promising candidate for a dedicated follow-up pass, not forcing it here.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

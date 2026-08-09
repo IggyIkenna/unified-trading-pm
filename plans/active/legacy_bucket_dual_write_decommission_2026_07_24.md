@@ -97,15 +97,14 @@ context_scope:
       redirect.
 
 - **[INFRA] P0. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`** (the
-      `[BLOCKED-INFRA]` tag above is now stale — the operator-decision gate resolved per the round5-cross-cutting-
-      audit 2026-08-08 note below; retag on reconciliation). Migration data-copy fan-out — confirm launcher pins
-      correctly (per the now-shipped pin-aware retention mechanism), then re-attempt the 20-VM fan-out. See the
-      batch doc for the full scoped todo; do not duplicate-dispatch from here. Original diagnosis retained:
-      Attempt-1 (20 VMs) all failed exit-2: pulled `mtds-code.tar.gz` lacked the migration script (floating
-      tarball overwritten by a parallel-agent rebuild). **round5-cross-cutting-audit 2026-08-08**: option (a)
-      already shipped as a general mechanism (`/codex/05-infrastructure/vm-tarball-deployment.md` § "Pin-aware
-      retention", `tarball_pins.collect_in_use_pins()`, `unified-trading-library@52ee4056` +
-      `deployment-service@4c6cef9`/`@dfd7608`).
+  `[BLOCKED-INFRA]` tag above is now stale — the operator-decision gate resolved per the round5-cross-cutting- audit
+  2026-08-08 note below; retag on reconciliation). Migration data-copy fan-out — confirm launcher pins correctly (per
+  the now-shipped pin-aware retention mechanism), then re-attempt the 20-VM fan-out. See the batch doc for the full
+  scoped todo; do not duplicate-dispatch from here. Original diagnosis retained: Attempt-1 (20 VMs) all failed exit-2:
+  pulled `mtds-code.tar.gz` lacked the migration script (floating tarball overwritten by a parallel-agent rebuild).
+  **round5-cross-cutting-audit 2026-08-08**: option (a) already shipped as a general mechanism
+  (`/codex/05-infrastructure/vm-tarball-deployment.md` § "Pin-aware retention", `tarball_pins.collect_in_use_pins()`,
+  `unified-trading-library@52ee4056` + `deployment-service@4c6cef9`/`@dfd7608`).
 
 - [ ] [SCRIPT] P0. **Manifest completion belongs to the canonicalisation plans, NOT this plan.** Canonical `_index` is
       made authoritative by `defi_manifest_canonicalisation_2026_06_01.md` (defi) + the manifest v8/v9 schema
@@ -139,10 +138,10 @@ context_scope:
       shard-key dupes. Per-asset_group A3 manifest-divergence check clean. **(MIGRATED FROM:
       `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- **[INFRA] P0. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** Remove
-      the 8 already-paused (cefi/defi/tradfi/sports) legacy consolidator cron Terraform blocks from
-      `manifest_consolidator_scheduler.tf` (prediction's pair already removed 2026-07-13). See the batch doc for
-      the full scoped todo; do not duplicate-dispatch from here.
+- **[INFRA] P0. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** Remove the 8
+  already-paused (cefi/defi/tradfi/sports) legacy consolidator cron Terraform blocks from
+  `manifest_consolidator_scheduler.tf` (prediction's pair already removed 2026-07-13). See the batch doc for the full
+  scoped todo; do not duplicate-dispatch from here.
 
 - [ ] [SCRIPT] P0. **L6 decommission — gated PER asset_group on its L3 plan reporting C-GREEN** (legacy-only CELLS = 0 +
       canonical v9). L3 owners: defi=`defi_manifest_canonicalisation` §C ·
@@ -252,6 +251,7 @@ HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mir
   BLOCKED-INFRA tarball-persistence 3-option operator decision, prod-bucket deletes (human-only hard stop), or per-AG L3
   plans' own C-GREEN gates this plan only coordinates, not executes.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
-  today's round5-cross-cutting-audit entry cleared the tarball-persistence operator-gate on the
-  `[BLOCKED-INFRA]` P0 fan-out item, but the doc's other 9 open todos remain gated behind prod-bucket deletes
-  (human-only hard stop) or per-AG L3-plan C-GREEN gates this plan only coordinates -- whole doc stays NA.
+  today's round5-cross-cutting-audit entry cleared the tarball-persistence operator-gate on the `[BLOCKED-INFRA]` P0
+  fan-out item, but the doc's other 9 open todos remain gated behind prod-bucket deletes (human-only hard stop) or
+  per-AG L3-plan C-GREEN gates this plan only coordinates -- whole doc stays NA.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
