@@ -66,20 +66,25 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [CODE] P1. **Ship the e2e `_dp_common.file_escalation_issue` actionable-issue half via the D16 dirty-deps
+- [x] ✅ [CODE] P1. **Ship the e2e `_dp_common.file_escalation_issue` actionable-issue half via the D16 dirty-deps
       direct-push carve-out.** Source: `data_pipeline_self_healing_completion_residual_2026_07_24.md` (its `[CODE] P1`
-      "Ship the e2e `_dp_common.file_escalation_issue` actionable-issue half" todo). The code (frontmatter
-      `parent_epic`/`assigned_vm` + a real `- [ ] [CODE] P1.` todo + `target_repo` routing + the new
-      `test_file_escalation_issue_is_actionable` test) is already WRITTEN and QG-green (`quality-gates.sh --no-fix` exit
-      0, 31s, in `e2e-testing`) — the only reason it never shipped is that `quickmerge`'s pre-flight refused while a
-      peer's `strategy-service` WIP sat uncommitted (a dirty-dep block, dated 2026-06-23). Per the 2026-08-08 operator
-      ruling (D16), the dirty-deps direct-push carve-out is now closed all-repos, not PM-only — this is exactly that
-      case. Re-verify the peer `strategy-service` tree state first (it may have cleared naturally in the 7 weeks since);
-      if still dirty, use the D16 carve-out to land
-      `e2e-testing --files 'scripts/audit/_dp_common.py tests/unit/test_dp_audit.py'` directly rather than continuing to
-      wait. Done when: the e2e half is live on `origin/live-defi-rollout` and `file_escalation_issue`'s output
-      frontmatter carries `parent_epic`/`assigned_vm`/a real todo line, verified against a fresh-filed escalation issue
-      doc. Repo: e2e-testing.
+      "Ship the e2e `_dp_common.file_escalation_issue` actionable-issue half" todo). **PREMISE WAS STALE — already
+      shipped, no push needed.** Re-verified 2026-08-09: `strategy-service` is clean (0 dirty files) in this slot's
+      worktree, but that's moot — `e2e-testing/scripts/audit/_dp_common.py::file_escalation_issue` already carries the
+      `parent_epic`/`assigned_vm` frontmatter (lines 512-513) + a real `- [ ] [CODE] P1.` todo naming `target_repo`
+      (lines 469, 549-552) + `_commit_and_push_pm_artifacts` wiring (lines 561-566), and
+      `tests/unit/test_dp_audit.py::test_file_escalation_issue_is_actionable` (line 1229) asserts exactly this shape —
+      all landed **e2e-testing@821b73a** (2026-06-23) and confirmed an ancestor of `origin/live-defi-rollout` HEAD
+      (`git merge-base --is-ancestor 821b73a HEAD` → true, verified in this slot's fresh-pulled e2e-testing clone at
+      HEAD `47efe7d`). `assigned_vm` has since been updated to `planning` (post-2026-06-27 single-VM refactor;
+      `_ISSUE_ASSIGNED_VM = "planning"` at line 125) and the test explicitly asserts `"assigned_vm: planning" in body` —
+      further proof this is live, maintained code, not dead WIP. The separate commit-and-push gap this todo's Done-when
+      implicitly depends on (artifacts written but never committed on local runs) was found, fixed, and verified live
+      2026-07-12 (`plans/archive/issues/audit_writes_escalation_artifacts_but_never_commits_them_2026_07_06.md`,
+      `status: resolved`, evidence `unified-trading-pm@ad1fa6bc2`). Conclusion: the dirty-dep block cleared and this
+      landed through the normal quickmerge path sometime between 2026-06-23 and now — the source doc's checkbox was
+      simply never updated to reflect it. No D16 carve-out push was needed; nothing to ship today. Repo: e2e-testing (no
+      code change — verification only).
 - [ ] [INFRA] P2. **Rebuild `e2e-audit:latest` from clean LDR so the daily reprobe cron loads all 5 per-AG hooks.**
       Source: `data_pipeline_self_healing_completion_residual_2026_07_24.md` (its `[INFRA] P2` "Rebuild e2e-audit:latest
       from clean LDR" todo) — already flagged by this same doc's own 2026-08-07 na-eligibility-audit pass as
@@ -121,3 +126,13 @@ drift_direction: advance-code
   `(stretch)` item remain), but these 3 are individually bounded and worker-determinable. Item 1 is specifically
   unblocked by today's D16 all-repos dirty-deps direct-push carve-out ruling (2026-08-08); items 2-3 were already
   flagged by this source doc's own prior audit passes as extraction-ready and never actioned.
+- **2026-08-09 (slot-6)**: Flipped item 1 — investigation found the todo's own premise was stale, not the D16 carve-out
+  it was written to use. `strategy-service` is clean in this slot's worktree (the dirty-dep block that was live
+  2026-06-23 is long gone), but more importantly the e2e code itself (`_dp_common.file_escalation_issue` frontmatter +
+  todo + `target_repo` routing + `test_file_escalation_issue_is_actionable`) was already an ancestor of
+  `origin/live-defi-rollout` — landed **e2e-testing@821b73a** (2026-06-23) and never reverted; `assigned_vm` was even
+  updated to `planning` post-2026-06-27 refactor, proving it's live maintained code. The related commit-and-push gap was
+  independently fixed + verified live 2026-07-12
+  (`plans/archive/issues/audit_writes_escalation_artifacts_but_never_commits_them_2026_07_06.md`). No push was made
+  today (nothing to push) — checkbox flipped citing this evidence. Leaving the source doc's own twin checkbox open per
+  this doc's own note (reconciled by the gated finalize twin once all 3 batch-9 items are done).
