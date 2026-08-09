@@ -182,8 +182,9 @@ item here.
       keys to the shared `"lst"` GCS folder (an intentional many-to-one physical-folder choice, keyed consistently by
       the canonical uppercase enum, not a stray alias). No genuine mismatch (a query filtering one case while data is
       stored in the other) found. No code shipped — verifying the premise, not writing a migration.
-- [ ] [SCRIPT] P1. **Wire RPC `factory()` lookup for the 206,107 bare SUSHISWAP/UNISWAP rows** (per the 2026-08-08
-      operator ruling, option (b)) — build the adapter scaffold now regardless of provider-credential status per the
+- [x] ✅ [SCRIPT] P1. **Wire RPC `factory()` lookup for the 206,107 bare SUSHISWAP/UNISWAP rows** (per the 2026-08-08
+      operator ruling, option (b) — `defi_track01_per_instrument_and_canon_id_2026_07_24.md`,
+      `unified-trading-pm@a55b820b76`) — build the adapter scaffold now regardless of provider-credential status per the
       External-Data-Always-Available rule: (1) enumerate the unique `pool_address` set from the raw MTDS parquet for
       these rows, (2) RPC `factory()` lookup per pool, (3) resolve each pool to its canonical venue via the
       already-shipped factory-address→version map (`_dex_factory_registry.py`), (4) register
@@ -196,11 +197,12 @@ item here.
       `defi_track01_per_instrument_and_canon_id_2026_07_24.md`, Track 1 ("Wire RPC `factory()` lookup for the 206,107
       bare SUSHISWAP/UNISWAP rows" todo). Done when: the unique pool_address set is resolved via factory address, the
       missing UAC venues are registered, historical objects/manifest rows are migrated, and the non-canonical originals
-      are purged with the cited soft-delete value ≥604800s (or explicitly re-gated if below). **Partially shipped
-      2026-08-09 (slot 16) — sub-items (1)-(4) done, (5)-(6) split out to the new follow-up todo below**: see Progress
-      Log for full detail; commits `instruments-service@fa54f1d8` (RPC factory()-resolver + resolution script/tests) +
-      `unified-api-contracts@ed6b4c78` (venue registration). Not flipped `[x]` — the GCS/manifest migrate+purge scope
-      (5)-(6) is unstarted and now its own todo.
+      are purged with the cited soft-delete value ≥604800s (or explicitly re-gated if below). **Closed 2026-08-09
+      (slot 16) — sub-items (1)-(4) shipped in full; (5)-(6) split out to the new follow-up todo below** (the
+      GCS-object/ manifest migrate+purge half is heavier, unstarted, VM-scale I/O — a distinct-enough scope to track as
+      its own todo rather than leave this one open indefinitely): see Progress Log for full detail; commits
+      `instruments-service@fa54f1d8` (RPC factory()-resolver + resolution script/tests) +
+      `unified-api-contracts@ed6b4c78` (venue registration).
 - [ ] [SCRIPT] P1. **Migrate + purge the historical SUSHISWAP-ARBITRUM GCS objects/manifest rows to their
       factory()-resolved canonical venue, and enumerate + resolve the UNISWAP-ETHEREUM bare-row cohort** — follow-up to
       the todo above, split out because it's the heavier, unstarted half of the original scope. (1) For the 12,910
