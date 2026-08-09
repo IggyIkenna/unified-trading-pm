@@ -91,7 +91,7 @@ own Tick history.
       todo 5 also lands. Then independently re-verify via `GET /api/activity?slot=1` (or whichever slot is currently the
       review role) over a fresh 2h+ window that `tmux_session_lost` without a preceding `context_recycle_requested` has
       dropped to near-zero. Repo: unified-trading-pm (verification + checkbox flip only).
-- [ ] [BACKEND] P1. **Second, distinct root cause found (review, msg 4361, code-confirmed from live source, not
+- [x] ✅ [BACKEND] P1. **Second, distinct root cause found (review, msg 4361, code-confirmed from live source, not
       guessed)**: `check_spawn_heartbeat_timeouts()` (`server/worker_liveness/_auth_failover.py:54`) gates a
       slot-bearing agent's liveness on `SlotRow.last_ping >= SlotRow.last_spawned_at` (line 96); past
       `SPAWN_HEARTBEAT_TIMEOUT_SECONDS` it only spares the slot if `pane_state=="working"` (line 122). But review's
@@ -106,7 +106,9 @@ own Tick history.
       implementer, has not tested a fix): (a) have review's (and other slot-bearing agent-surface roles' — same
       `_AGENT_KIND_BY_PROMPT_TEMPLATE` set) loop also call a slot-level heartbeat endpoint once per tick so
       `SlotRow.last_ping` advances; (b) make `check_spawn_heartbeat_timeouts` consult `AgentRow.last_ping` too for those
-      roles; (c) exempt `pane_state=="idle"` the same way `"working"` already is. Repo: agent-orchestrator.
+      roles; (c) exempt `pane_state=="idle"` the same way `"working"` already is. Repo: agent-orchestrator. —
+      agent-orchestrator@dd01255 (option (b), code-only fix, covers every chat-loop role uniformly regardless of pane
+      state) + Progress Log entry below.
 - [ ] [DOCS] P3. Correct the ~00:22Z progress-log entry below (12-slot simultaneous burst) — review (msg 4361) showed
       it's a batch-processing artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick,
       NOT a tmux-server-level event as originally hypothesized; only the review-role entry in that burst was a real loss
@@ -121,6 +123,23 @@ own Tick history.
 
 ## Progress log
 
+- 2026-08-09 (backend, slot 26, agent-orchestrator@dd01255): Fixed the second, distinct root cause (the "second,
+  distinct root cause found" BACKEND P1 todo, review msg 4361) — picked option (b) from the 3 choices the todo left
+  open: `check_spawn_heartbeat_timeouts()` (`server/worker_liveness/_auth_failover.py`) now also consults the bound
+  `AgentRow.last_ping` (via `state_store.find_active_agent_for_session`, matched on `slot.tmux_session`) as a second
+  evidence source before treating a slot as spawn-timed-out — same bar as the existing `SlotRow.last_ping` check (the
+  agent's ping must postdate the spawn). Chose (b) over (a) (editing review.md/main.md/the typed-one-off prompt
+  templates to add a slot-heartbeat call to every tick — more surface area, prompt-doc-enforced not code-enforced) and
+  over (c) (exempting `pane_state=="idle"` alone — narrower, only covers the idle-pane symptom and not e.g. a case where
+  the pane capture itself is transiently unavailable while the agent is demonstrably still polling). (b) is a single
+  code-only change in the one function that owns this verdict, applies uniformly to review/main/any future chat-loop
+  role without touching their prompt docs, and is fully unit-testable. Added
+  `test_chat_loop_agent_last_ping_spares_slot_with_frozen_slot_ping` (proves a live AgentRow's fresh last_ping spares
+  the slot even with `SlotRow.last_ping` frozen at spawn and `has_session` mocked False) and
+  `test_stale_chat_loop_agent_last_ping_does_not_spare_slot` (proves an AgentRow ping that predates the spawn does NOT
+  spare it — only a post-spawn ping counts, same bar as the SlotRow check) to `tests/test_spawn_heartbeat_liveness.py`.
+  Full local `quality-gates.sh` green (2859 passed, ruff/basedpyright clean). Todo 3 (REVIEW re-verify) can now proceed
+  against BOTH root causes (the debounce fix, todo 1/2, and this one) — still left for review craft per its own scope.
 - 2026-08-09 ~01:04Z (main agt-22de53, relaying review msg 4365 from agt-252692, a fresh slot-1 session): Live, ongoing
   confirmation of todo 5 — `spawn_heartbeat_timeout_pane_working` firing repeatedly against THIS session
   (`00:58:59Z`/`00:59:41Z`/`01:01:04Z`/`01:02:13Z`, `elapsed_s` climbing 192→234→317→386s), `pane_state:working` each
