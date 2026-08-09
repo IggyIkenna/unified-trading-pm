@@ -157,3 +157,33 @@ instrument with a `-`/`@`-suffixed raw manifest id, asserting lookback validatio
   plus a venue-isolation negative test. `bash scripts/quality-gates.sh` green on the committed HEAD (sentinel matched);
   shipped via `quickmerge --agent`, post-push ancestry verified (`d2e325485` is an ancestor of
   `origin/live-defi-rollout`). The two P2 re-run todos are now unblocked.
+- 2026-08-09 (slot-10, no logged Progress Log entry at the time — reconstructed from `git log`): ✅ Shipped
+  `features-service@1cd9f819` ("use backfill target date, not wall-clock, as venue-volume reference_date") while working
+  this doc's P2 re-run todo — `_load_venue_volumes()` was aggregating CEFI venue liquidity using
+  `datetime.now(UTC).date()` regardless of the backfill's own target date, so the perp-representative collapse picked
+  BTC's representative by CURRENT liquidity (DERIBIT) instead of the backfill window's actual liquidity — DERIBIT has
+  zero captured coverage on 2026-05-03, silently killing lookback validation even though usable historical data exists
+  on the venue that was actually captured (BITGET-FUTURES). Threaded the batch's own `start_date` through as
+  `reference_date` instead. Added a regression test (`test_load_venue_volumes_uses_backfill_date_not_wall_clock`) in
+  `tests/delta_one/unit/test_batch_handler_expected_unattempted.py`.
+- 2026-08-09 (slot-29, task `delta_one_cefi_lookback_instrument_id_form_mismatch-53a0d8ce974a`): Resumed the P2 re-run
+  todo with both `d2e32548` and `1cd9f819` live. Re-ran the parent repro
+  (`--instruments "BITGET-FUTURES:PERPETUAL:BTCUSDT" --preflight-only`) — lookback validation now PASSES (both fixes
+  confirmed working), but hit a NEW, distinct blocker: the MVP-universe perp-representative collapse still drops
+  BITGET-FUTURES, because the current trailing-30-day volume basis (as of reference_date=2026-05-03) now selects
+  COINBASE-FUTURES instead — a real venue, with genuine captured coverage for the target window, but one the
+  already-shipped legacy BTC corpus (momentum, same day) never used. This is a NEW correctness/design question (which
+  venue IS "cefi/BTC" for delta_one), not a bug in either of the two fixes above — filed separately as
+  `/plans/active/issues/delta_one_cefi_btc_perp_representative_venue_mismatch_2026_08_09.md` with 3 candidate
+  resolutions (recommend: explicit `--instruments` should bypass the collapse). Also found + fixed an independent,
+  unrelated bug while diagnosing: `--preflight-only`/`--skip-preflight` were dead CLI flags in `BatchHandler.run()`
+  (named parameters never forwarded into the `**kwargs` dict `_run_preflight` reads) — every `--preflight-only`
+  invocation, including this issue's OWN documented repro commands, silently ran the full write path instead of stopping
+  after the lookback check (confirmed live: my own diagnostic run wrote a real `capture_status=attempted_failed`
+  manifest row for CEFI/returns/2026-05-03 to the PROD features-cefi bucket — honest failure record, not corrupted data,
+  but not the intended side-effect-free check). Fixed + shipped `features-service@0c70a43f` with regression tests
+  (`TestRunForwardsPreflightFlags`); `bash scripts/quality-gates.sh` green on the committed HEAD (sentinel matched; host
+  was under heavy shared-VM contention — basedpyright's 120s internal timeout needed `PYRIGHT_TIMEOUT=300` to clear the
+  noise, not a code issue), shipped via `quickmerge --agent`, post-push ancestry verified (`0c70a43f0` is an ancestor of
+  `origin/live-defi-rollout`). Escalating the venue-representative question via `/blocked`; this P2 todo stays open
+  pending that decision.
