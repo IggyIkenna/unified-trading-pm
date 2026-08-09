@@ -311,3 +311,4 @@ already-fixed-but-unflipped** — every one is genuinely still open.
   regressed twice in the sibling `sports_cf8_available_at_backfill_regression_2026_07_13.md` doc, so not pulling the
   RECLASSIFY trigger without a scoped implementation plan first. Not KEEP-NA-STALE either: this work is not duplicated
   in any active `assigned_vm: planning` doc.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
