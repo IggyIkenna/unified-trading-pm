@@ -54,7 +54,7 @@ context_scope:
     /codex/08-workflows/ci-cd-flow.md,
     /plans/archive/issues/stale_staging_versions_manifest_2026_07_23.md,
     /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     scripts/deploy/trading-kill-switch.sh,
     scripts/cicd/reconcile_release_tags.py,
   ]
@@ -693,8 +693,8 @@ active batch — flagged again as the standing carve-out candidate. Doc stays NA
 ## Progress Log
 
 - **context-scout 2026-08-03**: populated/refreshed context_scope (6 entries) — added
-  `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`, the active plan repeatedly cited throughout the
-  Resolution checklist as the doc actually tracking completion of most of this doc's shipped/remaining sub-items.
+  `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md`, the active plan repeatedly cited throughout
+  the Resolution checklist as the doc actually tracking completion of most of this doc's shipped/remaining sub-items.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — SUPERSEDED banners on 6 items, time-gated kill-switch, extraction

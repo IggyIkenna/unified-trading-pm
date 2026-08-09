@@ -26,7 +26,7 @@ name: promote-fleet-startup-failure-monitor
 #
 # SSOT: codex/04-architecture/ci-alerting.md (notify-slack.yml dedup contract).
 # Source: plans/archive/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md
-#         ([SCRIPT] P2, migrated into ci_satellite_ao_dispatch_batch1_2026_07_26.md);
+#         ([SCRIPT] P2, migrated into plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md);
 #         plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md
 #         (zombie-queued hardening, [DEVOPS] P2)
 

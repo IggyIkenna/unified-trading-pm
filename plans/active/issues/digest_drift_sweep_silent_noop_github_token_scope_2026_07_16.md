@@ -73,7 +73,7 @@ context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     .github/workflows/digest-drift-sweep.yml,
   ]
 resolved_by:
@@ -332,4 +332,5 @@ RECLASSIFY-eligible (open-ended diagnosis, not a checkable fact or scoped change
   body; no change needed.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
-**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — open-ended investigation, 3-of-4-FIXED banner, prior verdicts stand
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — open-ended investigation, 3-of-4-FIXED banner, prior verdicts
+stand

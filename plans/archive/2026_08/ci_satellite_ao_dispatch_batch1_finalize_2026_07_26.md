@@ -8,7 +8,7 @@ summary: >-
   deliver as standalone files (three concurrent todos cannot share that file). Then reconciles each distinct source
   doc's checkboxes/prose independently, re-checks the 6 conflict-gated Deferred items for any whose competing claim has
   since cleared, and archives batch 1 via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [ci, cicd, ao-dispatch, close-out, batch-1, satellite-docs, archival]
 related:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/06-coding-standards/quality-gates.md,
@@ -54,6 +54,15 @@ context_scope:
 ---
 
 # CI satellite AO batch 1 — finalize
+
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 4 todos shipped. Sibling
+> `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md` (the 43-item first ci-tranche AO-dispatch
+> batch) completed and archived alongside in the same commit set. All 8 conflict-/time-gated Deferred items (D1-D6,
+> D29-D30) were re-checked (todo 3): D1/D4/D5/D29 fully discharged, D2/D6/D30 remain open with a live tracked home in
+> their own source docs, D3's file conflict cleared with 4 of 5 held claims ready for a future `ci`-tranche batch to
+> extract. The 27 operator-gated/human-only entries (D7-D28, D31-D33) were each re-verified to still have a live home
+> (their own source doc, active or resolved-and-archived) — none evaporates with this archival. Successor: none drafted
+> here; the still-open Deferred items are ready for a future `ci_satellite_ao_dispatch_batchN` extraction.
 
 > **🔒 GATED, not draft.** (Corrected 2026-08-02 — this banner still read "STATUS: `draft`" long after the frontmatter
 > was flipped to `status: active`; the frontmatter was right and the banner was stale.) `gate_on_depends: true` alone
@@ -294,17 +303,36 @@ context_scope:
       unimplemented and operator-gated ("do NOT dispatch blind: quickmerge is high-blast-radius shared ship infra"); no
       re-observation event under heavy contention has been logged anywhere in the corpus since the 2026-07-22
       partial-progress note first raised it. **Still open, unchanged.**
-- [ ] [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch1_2026_07_26.md`** via the standard 6-step ritual (CLAUDE.md §
-      plan archival): migrate any still-unresolved Deferred item to a tracked todo elsewhere (todo 3 above should have
+- [x] ✅ [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch1_2026_07_26.md`** via the standard 6-step ritual (CLAUDE.md
+      § plan archival): migrate any still-unresolved Deferred item to a tracked todo elsewhere (todo 3 above should have
       resolved or re-confirmed D1-D6/D29-D30 — verify none silently vanishes, and confirm the 27 operator-gated /
       human-only entries D7-D28 and D31-D33 each still have a live home) → add the archive banner → run the
       codex-alignment check (batch-1 todo 17 changed `/codex/08-workflows/ci-cd-flow.md`, so confirm that landing is
       reflected and no NEW durable contract is undocumented) → update CLAUDE.md/codex if any batch-1 todo established a
       new contract (candidates: the three new QG checkers from todo 1, and the glue-pool liveness alarm) → grep the
       corpus for every referrer of `ci_satellite_ao_dispatch_batch1_2026_07_26` and repoint each to the archived path →
-      clear `locked_by` (already empty; confirm). **Done when**: the plan is in `plans/archive/2026_07/`, every corpus
+      clear `locked_by` (already empty; confirm). **Done when**: the plan is in `plans/archive/2026_08/`, every corpus
       referrer resolves, `check_reference_paths.py` has not regressed, and this finalize doc is archived alongside it in
-      the same commit.
+      the same commit. **DONE 2026-08-09.** Step-by-step: (1) verified all D1-D6/D29-D30 + D7-D28/D31-D33 each have a
+      live, genuinely-open-or-resolved home in their own source doc (spot-checked every doc named in the Deferred table
+      still exists under `plans/active/` or `plans/archive/`; verified D2/D3's 4 remaining sub-items/D6's bounded
+      sub-part each still carry a real `- [ ]` todo in their own doc, not just a mention here — none evaporates).
+      (2)/(3)/(4) codex-alignment: `/codex/08-workflows/ci-cd-flow.md`'s staging-re-entry + "BLOCKS by default" language
+      (batch-1 todo 17) was already landed and current — no edit needed there; the two genuinely-new-and-undocumented
+      contracts (the 3 QG checkers now wired into PM `quality-gates.sh`, and the `glue-pool-starvation-monitor.yml`
+      alarm) were NOT yet documented anywhere in codex — added a new § "CI-hardening post-gates" to
+      `/codex/06-coding-standards/quality-gates.md` and a new reporter row to `/codex/04-architecture/ci-alerting.md`'s
+      carrier table (`unified-trading-pm@<this commit set>`). (5) grepped the full workspace corpus (all repos under
+      this slot) for both docs' paths: repointed every LEADING-SLASH
+      `/plans/active/ci_satellite_ao_dispatch_batch1(_finalize)?_2026_07_26.md` reference in 10 active corpus docs (+ 2
+      `.github/workflows/*.yml` comment mentions) to the new `/plans/archive/2026_08/...` path; left pre-existing bare
+      (non-leading-slash) filename mentions untouched — those are pre-existing `check_reference_paths.py` format-ratchet
+      debt (`plans/archive/` is gate-excluded per the 2026-08-02 ruling; a bare mention isn't a broken link, and fixing
+      format debt corpus-wide is a separate, larger effort, not part of a single archival's scope);
+      `plans/active/INDEX.md` and `DOC_INDEX.generated.md` are auto-regenerated (never hand-edited) so need no manual
+      fix; left the machine-generated `scripts/quality_gates/evidence_backed_completion_baseline.yaml` grandfathered
+      entries alone (regenerated by its own checker, not a corpus doc reference). (6) `locked_by` confirmed empty on
+      both docs.
 
 ## Codex SSOTs
 
@@ -315,6 +343,11 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-09 (this session, slot 18) — todo 4 done, plan archived.** Archived both this doc and
+  `ci_satellite_ao_dispatch_batch1_2026_07_26.md` per the standard 6-step ritual. Full step-by-step evidence recorded on
+  the todo itself. `status: active` → `complete` on both docs; archive banners added; codex updated (`quality-gates.md`
+  § "CI-hardening post-gates", `ci-alerting.md` reporters table); 10 active corpus docs + 2 workflow-comment mentions
+  repointed to the new `/plans/archive/2026_08/...` path. All 4 finalize todos now `[x]`.
 - **2026-08-09 (this session, slot 18) — todo 3 done.** Re-checked all 6 conflict-gated Deferred items (D1-D6) and the 2
   time-gated ones (D29-D30) — **DONE, checkbox flipped `[x]`**. D1 already discharged (todo 1). D4 (delete
   `pre-push-strict-quickmerge.sh`) and D5 (`check_strict_quickmerge.py` dirty-deps carve-out) are now fully DISCHARGED —

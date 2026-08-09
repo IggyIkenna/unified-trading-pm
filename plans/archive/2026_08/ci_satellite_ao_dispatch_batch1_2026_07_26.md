@@ -12,7 +12,7 @@ summary: >-
   exactly one quickmerge.sh todo is dispatched here and all new-QG-checker wire-ins are pushed to the gated finalize
   plan. 33 items stayed Deferred (conflict-gated / operator-gated / time-gated / human-only) and 8 went to the operator
   as parked questions.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -31,7 +31,7 @@ tags: [ci, cicd, ao-dispatch, close-out, batch-1, satellite-docs, quickmerge, gi
 related:
   [
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/06-coding-standards/quality-gates.md,
@@ -64,16 +64,20 @@ context_scope:
     /codex/08-workflows/ci-cd-flow.md,
     /codex/06-coding-standards/quality-gates.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 ---
 
 # CI satellite AO batch 1
 
-> **⚠️ STATUS: `draft` — NOT dispatched, NOT ingested.** Flipping this (and its finalize sibling) to `status: active` is
-> the operator's call per CLAUDE.md § "Plan destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's
-> autonomous-mode rule. Drafted while the operator was unreachable; nothing here has been shipped.
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 43 todos shipped. Finalize plan
+> `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` (source-doc reconciliation, the 8-item
+> Deferred re-check, and this archival) completed and archived alongside in the same commit set. Every Deferred item
+> (D1-D33) remains tracked in its own live source doc (none was uniquely resident in this plan), so archiving it strands
+> no open work — see the finalize plan's todos 3-4 for the full per-item re-verification. Successor: none drafted here;
+> D2/D3(4 sub-items)/D6(bounded sub-part)/D30 are still-open items ready for a future `ci_satellite_ao_dispatch_batchN`
+> to extract.
 
 > **Why this plan exists at all.** Unlike the 5 asset groups, `ci` has never had an AO-dispatch batch, and its
 > consolidated closeout is a **digest with no todos** — being listed in its Track Sources is not dispatch. So every
@@ -948,6 +952,10 @@ tag; (7) the tranche-membership rule misses every `asset_group: [meta]`/`[infras
 
 ## Progress Log
 
+- **2026-08-09 (slot 18)** — Archived via the finalize plan's todo 4 (standard 6-step ritual). `status: active` →
+  `complete`; archive banner added; self-reference to the finalize sibling repointed to its new archive path. Full
+  step-by-step evidence (Deferred-item live-home verification, codex-alignment updates, corpus referrer repoint) is
+  recorded on the finalize plan's todo 4 — not duplicated here.
 - **2026-08-03** (slot 15, backend_engineer, task `ci_satellite_ao_dispatch_batch1-030`) — Worked the `[BACKEND] P2`
   billing-wall spend-telemetry item (migrated from `github_actions_billing_wall_recurrence_2026_07_29.md`). Found no
   code path exists: the remediation is explicitly a fork between minting an operator-owned GitHub `Plan: read`
