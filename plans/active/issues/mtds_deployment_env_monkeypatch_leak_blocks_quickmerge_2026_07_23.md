@@ -361,3 +361,11 @@ batch1 D3(3), and batch4-draft D4-12. No RECLASSIFY, no ARCHIVE.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — root-cause hunt with 14+ occurrences, mechanism not identified
+
+**round-11 RECLASSIFY sweep 2026-08-09** (tranche `ci`): KEEP-NA, valid — re-checked against today's accumulated
+precedents (IAM self-service, D16 all-repos, S5.1 tiering, AO-dispatch-by-default, escalation-N=3-days,
+reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks); none apply — this is not an
+IAM/credential/secret gap, it's an unconfirmed cross-process race with 14+ occurrences, two empirically falsified
+test-level fixes, and a falsified "structural guarantee" claim. The sibling doc
+(`mtds_deployment_env_race_survives_single_worker_2026_07_23.md`) it must be read together with is in this same tranche
+and reaches the identical conclusion below. No RECLASSIFY, no satellite-extraction. No ARCHIVE.

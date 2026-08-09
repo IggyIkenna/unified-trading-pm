@@ -169,3 +169,11 @@ fleet-wide CI concurrency cap) remains a genuine judgment call: high-blast-radiu
 sizing from real measurements, not a checkable fact. Corrected a stale sub-detail: the todo's own recommended mechanism
 (`qg-host-governor.sh` TOKEN mode) is superseded by a later sibling-doc amendment (reservation mode) — added an inline
 correction so a future implementer doesn't build against the wrong mode. No `assigned_vm` change.
+
+**round-11 RECLASSIFY sweep 2026-08-09** (tranche `ci`): KEEP-NA, valid — re-checked against today's accumulated
+precedents (IAM self-service, D16 all-repos, S5.1 tiering, AO-dispatch-by-default, escalation-N=3-days,
+reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks); none apply — this todo's blocker is
+not a missing grant, a script-push carve-out, or a stale operator-decision gate, it is an unresolved host-hook rollout
+across 25 self-hosted runner pools still needing (1) a runner-version support confirmation, (2) a canary on one
+low-traffic pool, and (3) K sized from real per-run measurements — none of which is a checkable fact a worker can
+resolve alone. No RECLASSIFY, no satellite-extraction. No ARCHIVE.

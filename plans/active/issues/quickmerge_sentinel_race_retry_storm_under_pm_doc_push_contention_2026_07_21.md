@@ -151,3 +151,11 @@ instruction not to dispatch a change to `quickmerge.sh` blind.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — in-doc dispatch prohibition, operator sign-off required on shared
 ship infra
+
+**round-11 RECLASSIFY sweep 2026-08-09** (tranche `ci`): KEEP-NA, valid — re-checked against today's accumulated
+precedents (IAM self-service, D16 all-repos, S5.1 tiering, AO-dispatch-by-default, escalation-N=3-days,
+reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks); none apply or override the doc's own
+explicit, still-present in-doc dispatch prohibition ("for operator / careful review — do NOT dispatch blind: quickmerge
+is high-blast-radius shared ship infra") — the AO-dispatch-by-default precedent governs new plans' own `assigned_vm`
+default, it does not override an existing, reasoned, high-blast-radius dispatch prohibition already written into a
+specific doc. No RECLASSIFY, no satellite-extraction. No ARCHIVE.

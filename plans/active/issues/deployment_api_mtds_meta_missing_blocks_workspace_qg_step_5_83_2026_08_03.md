@@ -199,3 +199,10 @@ design call). No ARCHIVE.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — undecided architecture tradeoff, not worker-determinable
+
+**round-11 RECLASSIFY sweep 2026-08-09** (tranche `ci`): KEEP-NA, valid — re-checked against today's accumulated
+precedents (IAM self-service, D16 all-repos, S5.1 tiering, AO-dispatch-by-default, escalation-N=3-days,
+reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks); none apply. The sole open item (todo
+3, `[INFRA] P3`) is still an undecided architecture tradeoff ("Consider whether STEP 5.83 should validate against a
+canonical/fresh state... rather than each shipping repo's local, possibly-stale sibling checkouts") — a design call with
+no stated decision, not a bounded outcome a worker can execute. No RECLASSIFY, no satellite- extraction. No ARCHIVE.

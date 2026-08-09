@@ -179,3 +179,12 @@ serial execution. Surface-bounded, substance-unbounded — stays KEEP-NA. No REC
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — non-deterministic race, substance-unbounded, prior verdicts stand
+
+**round-11 RECLASSIFY sweep 2026-08-09** (tranche `ci`): KEEP-NA, valid — re-checked against today's accumulated
+precedents (IAM self-service, D16 all-repos, S5.1 tiering, AO-dispatch-by-default, escalation-N=3-days,
+reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks); none apply. The sole open todo
+("instrument quickmerge's cascade/pull step") was already explicitly stress-tested against the RECLASSIFY bar 2026-08-03
+and did not clear it — near-identical instrumentation is already documented as tried and clean across 8 runs in the
+sibling monkeypatch-leak doc, and this doc's own bisection found non-deterministic clean/dirty outcomes even under
+confirmed-serial execution. Surface-bounded, substance-unbounded — unchanged. No RECLASSIFY, no satellite-extraction. No
+ARCHIVE.

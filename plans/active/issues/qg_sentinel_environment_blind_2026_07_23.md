@@ -261,3 +261,12 @@ was already closed 2026-07-31). No RECLASSIFY, no ARCHIVE.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — operator sequencing ruling, cross-doc MTDS blockers, prior
 verdicts stand
+
+**round-11 RECLASSIFY sweep 2026-08-09** (tranche `ci`): KEEP-NA, valid — re-checked against today's accumulated
+precedents (IAM self-service, D16 all-repos, S5.1 tiering, AO-dispatch-by-default, escalation-N=3-days,
+reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks); none apply. The one residual open
+item (Resolution-checklist item 3's MTDS half) remains deliberately sequenced behind the same unresolved MTDS
+DEPLOYMENT_ENV race documented in `mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md` /
+`mtds_deployment_env_race_survives_single_worker_2026_07_23.md` (both re-confirmed KEEP-NA in this same round-11 pass) —
+a 2026-07-26 operator sequencing ruling, not a stale gate any of today's precedents touch. No RECLASSIFY, no
+satellite-extraction. No ARCHIVE.
