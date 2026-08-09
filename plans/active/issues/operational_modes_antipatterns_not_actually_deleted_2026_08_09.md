@@ -149,7 +149,8 @@ each anti-pattern, and their `last_reviewed` bumped to reflect a review that act
       `/codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md`, and three archived plans (leave
       archived ones alone — they are historical record). **Done when**: no ACTIVE plan or codex doc references
       `paper_target_registry`; each points at `PAPER_EXECUTION_TARGETS` / `get_paper_target()`. Repo:
-      unified-trading-pm.
+      unified-trading-pm. **➡️ EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch15_2026_08_09.md` todo 1 — do NOT
+      action here.**
 - [ ] [BACKEND] P3. **Decide the `aave_live.py` `paper_trade: bool` constructor arg.** Either fold it into
       `OperationalMode`/`ExecutionTarget` like `service_config.py`'s was, or document why a protocol-level flag is
       legitimately different. **Done when**: the arg is gone, or the codex doc records the exemption with a reason.
@@ -165,3 +166,9 @@ each anti-pattern, and their `last_reviewed` bumped to reflect a review that act
 - **2026-08-09 (operator ruling)**: RULED — `TestingStage` is an unfinished migration, not a deliberate permanent shim;
   needs an owner + target date assigned (not invented here). Retagged `[OPERATOR]` → `[DOCS]` for the disposition record
   and filed a new `[OPERATOR]` P3 placeholder todo for the actual owner/date assignment. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-09 (round9)**: satellite-extraction, not whole-doc RECLASSIFY — first audit pass on
+  this doc (never previously touched by na-eligibility-audit). Of the 4 open items: the `paper_target_registry` rename
+  is a pure mechanical corpus-wide rename with a code-verified real symbol name, no judgment call — extracted to
+  `ao_satellite_ao_dispatch_batch15_2026_08_09.md`. The other 3 stay KEEP-NA, valid: the `TestingStage` codex-doc
+  update is downstream of the operator-only owner/date placeholder (self-declared "not worker-determinable"), and the
+  `aave_live.py` constructor-arg item is an explicit "decide" design call. Whole-doc RECLASSIFY bar not cleared.

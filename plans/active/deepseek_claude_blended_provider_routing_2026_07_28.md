@@ -438,12 +438,13 @@ default from an external reference.
                       the name.
 
 - [ ] [INFRA] P2. **Re-source `ANTHROPIC_AUTH_TOKEN` from the GSM secret on BOTH hosts** — this machine and the planning
-      VM — so `~/.claude-accounts/deepseek-v4-pro.env` no longer contains the literal key. **BLOCKED on the operator
-      todo above** (needs the secret's exact name; do not guess one). **Verified still open 2026-08-06** by direct file
-      read: the env file contains no `gcloud secrets` / secret-manager indirection of any kind, i.e. the key is still
-      literal — this half is unambiguously undone regardless of whether a secret has since been created. **Done when**:
-      both hosts read the token via secret-manager indirection, a fresh spawn authenticates successfully, and the
-      literal key is removed from both files.
+      VM — so `~/.claude-accounts/deepseek-v4-pro.env` no longer contains the literal key. ~~BLOCKED on the operator
+      todo above~~ **UNBLOCKED 2026-08-09**: the secret was created live (see the todo above), naming resolved. **Verified
+      still open 2026-08-06** by direct file read: the env file contains no `gcloud secrets` / secret-manager
+      indirection of any kind, i.e. the key is still literal — this half is unambiguously undone regardless of whether
+      a secret has since been created. **Done when**: both hosts read the token via secret-manager indirection, a fresh
+      spawn authenticates successfully, and the literal key is removed from both files. **➡️ EXTRACTED 2026-08-09 to
+      `ao_satellite_ao_dispatch_batch14_2026_08_09.md` todo 1 — do NOT action here.**
 
       > **⚠️ Measurement trap recorded 2026-08-06 — do not repeat it.** This todo's earlier line "Confirmed 2026-08-04:
                                       > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to
@@ -496,3 +497,9 @@ default from an external reference.
   `ao_open_issues_consolidated_close_out_2026_07_17.md`'s note on
   `ao_park_disposition_blocked_answer_no_follow_through`) — flagged for operator awareness, not acted on here since this
   is a Progress Log append, not an archival action.
+- **na-eligibility-audit 2026-08-09 (round9)**: satellite-extraction, not whole-doc RECLASSIFY — the operator created
+  the GSM secret `deepseek-v4-pro-api-key` this session (see the todo above), unblocking exactly ONE of the 5 remaining
+  open items (the `[INFRA] P2` re-sourcing todo, whose sole blocker was "needs the secret's exact name"). Extracted to
+  `ao_satellite_ao_dispatch_batch14_2026_08_09.md`. The other 4 items stay KEEP-NA, valid — unaffected by the
+  credential fact: 2 operator-review production pilots (time-gated), 1 CLI-version design call, 1
+  `accounts.json`-is-gitignored-per-VM data check. Whole-doc RECLASSIFY bar not cleared.

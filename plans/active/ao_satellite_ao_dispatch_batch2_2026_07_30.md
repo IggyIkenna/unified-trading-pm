@@ -208,13 +208,17 @@ other orphaned candidate considered and why it was NOT drafted.
       `/plans/archive/issues/na_eligibility_auditor_timer_not_yet_installed_2026_07_27.md` (its SCRIPT P3 item only —
       NOT its P2 timeout-retune item). Repo: agent-orchestrator (read-only). **➡️ EXTRACTED 2026-08-09 to
       `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 — do NOT action here.**
-- [ ] [INFRA] P3. **Re-mint the stale `~/.orch_token` on host `ip-172-31-5-118`.** The public-URL git-status reporter
-      path is failing auth on this host because of an expired/rotated token — re-mint it and confirm `reporter_stale`
-      clears within one fleet-git-health tick. This is a distinct credential operation from the already-shipped
-      loopback-preference fix (batch1 todo 3), which is unaffected by this. **Done when**: a fresh `~/.orch_token` is
-      minted on that host and `/api/fleet/git-health` reports `reporter_stale=false` for it within one 15-min tick.
-      Source: `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` (its remaining
-      INFRA P3 item). Repo: agent-orchestrator (host/credential action, no code change expected).
+- [x] [INFRA] P3. ✅ **MOOT — verified resolved 2026-08-06, no action needed (na-eligibility-audit round9, 2026-08-09).**
+      Re-mint the stale `~/.orch_token` on host `ip-172-31-5-118`. Source doc
+      (`git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`) itself already closed this exact item as
+      MOOT on 2026-08-06: the loopback-preference fix (batch1 todo 3, shipped 2026-07-26) removed this host's
+      public-URL-token dependency entirely, measured live from `hk` at the time —
+      `/api/fleet/git-health` host `ip-172-31-5-118` showed 17 slots, `reporter_stale` **0**. No re-mint was or is
+      needed for this host. This copy of the todo went stale when the source doc resolved it via a different fix
+      (loopback, not re-mint) rather than the credential op this copy describes — closing on the source doc's own
+      evidence rather than leaving a stopgap open against a host that no longer needs it. Source:
+      `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` (its own MOOT-verified
+      entry, 2026-08-06). Repo: agent-orchestrator.
 - [x] [DEVOPS] P1. ✅ **DONE 2026-07-30 — already resolved, don't dispatch.** The `.env.local`-based literal
       `ORCHESTRATOR_JWT_SECRET` was found already durably pinned (verified: a token survives a real restart), and the
       systemd-unit-level `ORCHESTRATOR_JWT_SECRET_GCS` drop-in this todo describes was separately completed the same day
@@ -377,3 +381,10 @@ never-cited set). This is the same scope boundary the 2026-07-26 and 2026-07-30 
   actual source doc (`dispatch_sequential_gate_fix_2026_07_24.md`, archived same day); this batch2 copy of the citation
   had simply gone stale. Re-verified both codex docs live and flipped the checkbox. 3 items remain open (na- timer
   verification, orch_token re-mint, wip-preserve ref) — none in this session's scope.
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA-STALE, citation-closed — the `orch_token` re-mint item was
+  found already resolved on the SOURCE doc (`git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`,
+  2026-08-06 MOOT verdict) by a different fix (loopback preference) than the one this copy describes (re-mint);
+  flipped `[x]` with the source doc's own evidence cited, not a new dispatch. The na-timer verification and
+  wip-preserve-ref items were already `EXTRACTED 2026-08-09` to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` by a
+  concurrent same-day pass — 0 items remain un-actioned on this doc. Whole-doc RECLASSIFY not applicable (this doc is
+  itself a dispatch-coordination artifact, not a source doc).

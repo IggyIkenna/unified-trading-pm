@@ -98,12 +98,14 @@ documented as the correct mechanism in `task_template.md` and still not exempted
       (`- [ ] [TAG] P<n>. CANCELLED — SUPERSEDED ...`) instead of converting to a bold non-checkbox bullet, matching
       what `check_todo_regression.sh` already expects. Either fix is small; the risk is leaving them disagreeing.
       Done-when: a fresh conversion of a stale todo to CANCELLED/SUPERSEDED format, per whichever convention wins,
-      passes `check_todo_regression.sh --only <file>` cleanly.
+      passes `check_todo_regression.sh --only <file>` cleanly. **➡️ EXTRACTED 2026-08-09 to
+      `ao_satellite_ao_dispatch_batch15_2026_08_09.md` todo 2 — do NOT action here.**
 - [ ] [DOC] P3. Grep the corpus for any EXISTING bold non-checkbox `CANCELLED —`/`SUPERSEDED` bullets that may have
       already silently reduced a plan's checkbox total below its origin value without anyone noticing (this check only
       runs `--only` on STAGED files today, so a prior conversion that landed via a path that skipped this hook — e.g.
       `safe-doc-push.sh` before its own recent hardening, or a raw push — could be sitting unnoticed). Not urgent; a
-      hygiene sweep item.
+      hygiene sweep item. **➡️ EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch15_2026_08_09.md` todo 3 — do NOT
+      action here.**
 - [ ] [DEVOPS] P2. **Second, independently-found trigger for the SAME root cause — Finding-J archival extraction has no
       exemption either.** `check_todo_regression.sh` also has no special-case for `task_template.md` finding J's OTHER
       documented, sanctioned mechanism: extracting a fully-closed dated Progress Log section verbatim into an
@@ -140,3 +142,10 @@ documented as the correct mechanism in `task_template.md` and still not exempted
   index" section for the mechanism); did not attempt the real cross-file fix here — out of this task's scope (a
   data-pipeline plan-hygiene fix isn't this todo's `[DOC]`/`[SCRIPT]` scope, and the proposed fix needs design judgment
   on the cross-file correlation logic, not a mechanical one-liner).
+- **na-eligibility-audit 2026-08-09 (round9)**: satellite-extraction, not whole-doc RECLASSIFY — first audit pass on
+  this doc (never previously touched by na-eligibility-audit). Of the 3 open items, 2 are extracted to
+  `ao_satellite_ao_dispatch_batch15_2026_08_09.md`: the format-contradiction fix (both resolution options are
+  described in the doc's own text as small, with a concrete done-when) and the mechanical corpus grep (explicitly
+  "not urgent; a hygiene sweep item," zero judgment). The 3rd item (Finding-J archival-extraction trigger) stays
+  KEEP-NA, valid — this doc's own text self-flags it as needing "design judgment on the cross-file correlation logic,
+  not a mechanical one-liner." Whole-doc RECLASSIFY bar not cleared.
