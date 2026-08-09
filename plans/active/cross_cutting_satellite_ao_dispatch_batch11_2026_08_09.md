@@ -90,18 +90,27 @@ drift_direction: advance-code
       shard key all emit the canonical PROTOCOL-CHAIN id so new writes match the canonicalised `_index` with no
       re-reconcile needed. Done when: a fresh capture for a multi-chain protocol writes under the PROTOCOL-CHAIN shard
       key, verified against the `_index`. Repo: instruments-service / unified-trading-library (manifest shard key).
-- [ ] [INFRA] P1. **B3 — copy e2e research data to canonical placement + e2e doc.** Source: same doc. HL
-      `perp_funding`/`perp_daily_ctx` currently lives ONLY in the no-env-suffix research bucket
-      `gs://perp-funding-central-element-323112/day=*/`; LST rates ONLY in
-      `gs://lst-rates-central-element-323112/day=*/` — prod-needed data outside canonical placement. (a) Determine the
-      canonical home per data_type (the dedicated `-prd-` bucket, e.g. `lst-rates-prd`, already exists, vs the
-      `market-data-tick-{cefi|defi}-prd` canonical `pipeline_mode=` path). (b) `gcs_copy_object` (workers=32, in-region)
-      the research objects to canonical placement + `record_captured` so the `_index` reflects them. (c) Write a note in
-      `e2e-testing/docs/` listing the old→canonical bucket/path mapping so the e2e funding scripts
-      (`staked_basis_funding_scan`/`colocated_engine`/etc.) update their fetch paths. The research buckets become
-      deletable only after (never in this todo — that step is operator-gated). Done when: the canonical-home decision is
-      recorded, the copy is verified content-complete (count + spot content, not path existence), and the e2e doc note
-      is written. Repo: instruments-service/deployment-service + e2e-testing (doc).
+- [x] ✅ [INFRA] P1. **B3 — copy e2e research data to canonical placement + e2e doc — STALE PREMISE, no copy needed
+      (verification + doc-fix only).** Both the legacy research buckets (`perp-funding-central-element-323112`,
+      `lst-rates-central-element-323112`) AND the `-prd-` twins this todo assumed already existed
+      (`perp-funding-prd-central-element-323112`, `lst-rates-prd-central-element-323112`) are confirmed **DELETED**
+      (`gcloud storage buckets describe` → 404 on all 4, verified 2026-08-09; independently corroborated same-day by
+      `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`). The real canonical home is the SHARED
+      `resolve_bucket_name(cloud="gcp", kind="tick-data", asset_group="defi")` bucket
+      (`market-data-tick-defi-prd-central-element-323112`) — the dedicated `perp-funding`/`lst-rates` `kind=` entries
+      were removed from `deployment-service/configs/cloud-providers.yaml` on 2026-07-13, and the data was carried into
+      the shared bucket by that same migration before the dedicated buckets were deleted 2026-07-14. (a) canonical-home
+      decision: recorded above. (b) copy: MOOT — nothing to copy, already migrated. Content-verified via a targeted
+      filtered `read_availability_index` spot-check (not a whole-corpus walk): HYPERLIQUID `perp_funding` (1,364
+      `captured` rows, 2026-06-04..06-09) + `perp_daily_ctx` (231 `captured` rows, 2026-06-01) present in the shared
+      bucket; `lst_rates` likewise (506 `captured` rows in the 2026-07-25..08-08 window, 40+ venues) — confirms the
+      2026-07-13 migration carried the historical corpus forward intact. (c) e2e doc: the doc already existed
+      (`e2e-testing/docs/defi/research_data_canonical_sources_2026_06_18.md`) but described the stale June-18
+      `-prd`-twin plan as current — added a SUPERSEDED banner recording the true final state + the already-repointed
+      consuming scripts (`staked_basis_funding_scan.py`, `funding_regime_classifier.py` — both confirmed already
+      migrated off the dedicated buckets 2026-07-13) + cross-refs to the two adjacent already-tracked issues (HL
+      forward-capture gap since 2026-06-02; the 2 dead-code companion scripts' disposition in batch9's DIAG todo) rather
+      than duplicating either. Repo: e2e-testing@ea38428.
 - [ ] [DATA] P2. **Run the Extended public instrument + perp backfill (UNBLOCKED — no key needed).** Source: same doc.
       IS daily-listing CLI for EXTENDED-STARKNET (genesis-accurate per-instrument `available_from`, already shipped) +
       MTDS OHLCV/funding capture over 2024-07-26→yesterday (funding only from 2025-08-01 mainnet). No API key required
