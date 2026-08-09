@@ -117,13 +117,23 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
 
 ## Todos
 
-- [ ] [INFRA] P2. **Centralize the UV version pin.** Add a single canonical `UV_VERSION` constant (natural home:
-      `scripts/workspace/resolve-canonical-versions.py`, alongside its existing dependency-version resolution logic, or
-      `canonical-dependency-manifest.json` if that's a better fit for how `resolve-canonical-versions.py` already reads
-      its other pins — worker's call, consistent with how the existing `uv_sources` mechanism is structured) and update
-      all 6 hardcoded `"0.10.8"` sites to read from it instead of a literal: `scripts/setup.sh` (2 call sites: the
-      `pip install "uv==$UV_VERSION"` fallback path and the curl-install path),
-      `scripts/workspace/workspace-bootstrap.sh` (`REQUIRED_UV`),
+- [x] ✅ [INFRA] P2. **Centralize the UV version pin.** — unified-trading-pm@e5697ac5c. `UV_VERSION = "0.10.8"` added to
+      `resolve-canonical-versions.py` (single canonical source); all 6 sites now derive from it via
+      `grep -oP '^UV_VERSION = "\K[^"]+'` (bash sites) or a direct raw-fetch + grep (the GHA YAML site, since the
+      dependency-clone step hasn't run yet at "Install uv" time). Verified: corpus-wide grep for `0.10.8` shows zero
+      hits outside the canonical definition + plan/issue-doc prose; `test-setup-sh-uv-bootstrap-fallback.sh` updated to
+      match the new shape and passes (5/5); `quality-gates.sh` ran green on alerting-service (a `base-service.sh`
+      consumer) with the drift-guard confirmed resolving `_uv_pin=0.10.8` correctly; `quality-gates.sh` also green on
+      unified-trading-pm itself. NOTE: `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml` is a
+      point-in-time snapshot (per `hosted-baseline.sh`'s own header) — the truly-live copy of this reusable workflow
+      lives in the separate `unified-trading-ci` repo and still has the old literal; out of this plan's
+      `repos:     [unified-trading-pm]` scope, filed as a follow-up issue doc (see Progress Log). Original text: Add a
+      single canonical `UV_VERSION` constant (natural home: `scripts/workspace/resolve-canonical-versions.py`, alongside
+      its existing dependency-version resolution logic, or `canonical-dependency-manifest.json` if that's a better fit
+      for how `resolve-canonical-versions.py` already reads its other pins — worker's call, consistent with how the
+      existing `uv_sources` mechanism is structured) and update all 6 hardcoded `"0.10.8"` sites to read from it instead
+      of a literal: `scripts/setup.sh` (2 call sites: the `pip install "uv==$UV_VERSION"` fallback path and the
+      curl-install path), `scripts/workspace/workspace-bootstrap.sh` (`REQUIRED_UV`),
       `scripts/self-hosted-runners/hosted-baseline/python-quality-gates-v2.yml` (the `pip install     "uv==..."` step —
       a GHA workflow YAML, so this site reads the constant via whatever mechanism the other 5 use, e.g. a shared
       env/step output, not a Python import), `scripts/quality-gates-base/base-service.sh` (3 sites: the
