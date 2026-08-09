@@ -230,11 +230,19 @@ ever applied after an explicit operator ruling — filed here, not edited:
       declares an `ml-models-store` delete "categorically human-only" without ever running the §3a
       fresh-retention-seconds check. No incorrect action has occurred (independently blocked by an unrelated IAM gap
       too) — flagging the plan's mischaracterization, not a codex fix.
-- [ ] [OPERATOR] P3. **Grace-protected this run, skip until it clears.** `/codex/08-workflows/ci-cd-flow.md:882,887-892`
-      describes semver PATCH bumps as commit-label-driven — structurally unreachable for weeks under squash-promote
-      (every `main` commit is `chore(promote):`), just replaced with content-based detection
-      (`semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md`, fix landed 2026-08-07 18:33-20:59Z, codex last
-      touched 08-06).
+- [x] ✅ [DOC] P3. **RULED 2026-08-09 (operator): "Override grace — fix it now."** Operator explicitly overrode the
+      grace-protection window for this mechanical fix rather than waiting for it to clear naturally. Corrected
+      `/codex/08-workflows/ci-cd-flow.md`'s "Version Bump Flow (Semver Agent)" section (the "Compute" table row + the
+      commit-prefix result table, ~lines 936/941-946) — both described semver PATCH bumps as purely commit-label-driven
+      (`fix:` prefix), which has been structurally unreachable since the LDR→main model went squash-only (every commit
+      reaching `main` is `chore(promote): LDR → main ...`, carrying no original conventional-commit message). Corrected
+      wording to describe the actual current mechanism per
+      `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` (fix landed 2026-08-07 18:33-20:59Z): the AST
+      content differ (`detect_breaking_change.py`) still correctly computes `is_breaking` via content (works under
+      squash) for the MINOR tier, and a NEW content-based fallback (any `SOURCE_DIR/` file changed in the diff window,
+      no breaking delta → default PATCH) now implements the PATCH tier that was previously dead. Kept the old
+      commit-prefix table for human intuition but retitled/annotated it to point at the real, content-based live signal
+      per tier rather than removing the historical framing outright.
 
 ### Other filed follow-ups
 
@@ -315,3 +323,9 @@ one hunter this run. The 262 grace-protected docs were correctly excluded per th
 - **stale-`[OPERATOR]`-flip sweep 2026-08-09**: the 4th-conflict-check-surface codex-drift finding was stale — the codex
   fix already landed (`unified-trading-pm@c2083029dc`, verified via `git log` against the target file). Flipped `[x]`,
   retagged `[OPERATOR]` → `[DOCS]`.
+- **RULED 2026-08-09 (operator)**: "Override grace — fix it now." Overrode the grace-protection window for the
+  semver-PATCH-bump-wording finding rather than waiting for `plan_reconciler`'s next natural clearing pass. Fixed
+  `/codex/08-workflows/ci-cd-flow.md` directly (Compute row + commit-prefix result table in the "Version Bump Flow"
+  section) to describe the actual content-based mechanism per
+  `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` instead of the stale pure-commit-label framing.
+  Flipped this todo done, retagged `[OPERATOR]` → `[DOC]`.
