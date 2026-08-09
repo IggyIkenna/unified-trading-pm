@@ -32,6 +32,10 @@ summary: >-
   is separately fixed, since `quality-gates-v2` on `main`-based branches fails regardless of PR content. Problem 2
   additionally blocks the repo's *actual* promotion (PR #813) independent of PR #814's fate.
 status: open
+archive_exempt:
+  true # bridge for the flip-then-mv two-commit split (plan-completion-and-archival-discipline.md
+  # "archive_exempt: true is the sanctioned bridge") -- all 4 todos now done, unlocked; dropped in the immediately
+  # following git-mv archival commit, same session.
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -115,7 +119,7 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
       `ao_fleet_health_investigation_followups_2026_08_06.md`'s own PR #791 todo (same underlying fix — this doc's
       Problem 2 and that doc's #791 backmerge are the same conflict, closed together). Evidence:
       agent-orchestrator@5872b3e5. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P3. Rollout-process gap (flagged by the same audit, not `agent-orchestrator`-specific): today is the
+- [x] ✅ [SCRIPT] P3. Rollout-process gap (flagged by the same audit, not `agent-orchestrator`-specific): today is the
       SECOND time in one day a shared-CI-repo-extraction/rollout event landed new/moved workflow files on
       `live-defi-rollout` without every affected repo's `main` (or even every repo's own LDR — see the 3-repo
       sub-finding in the strategy-service doc's "Fleet-wide audit" section) being caught up in the same pass, each time
@@ -123,16 +127,40 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
       that would normally deliver it). `scripts/workflow-templates/rollout-workflow-templates.sh` only writes local
       files into whichever branch happens to be checked out per-repo at run time; it does not verify parity across
       `main` and every repo's `live-defi-rollout`, and does not push. **operator ruling 2026-08-08 (NA-corpus blocker
-      digest round 5, id=54)**: yes, add the cross-branch parity check. Scoped implementation: extend
+      digest round 5, id=54 — same digest batch as id=53 in `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`,
+      cross-cutting/G1.run-full-history)**: yes, add the cross-branch parity check. Scoped implementation: extend
       `rollout-workflow-templates.sh` with a post-rollout verification pass — for every repo in the rollout's target
       set, `git show origin/main:<workflow-path>` vs `git show origin/live-defi-rollout:<workflow-path>` (byte-compare,
       per file the rollout just wrote/moved) and fail the rollout run (non-zero exit, printed per-repo diff summary) if
       any target repo's `main` doesn't yet carry the same content its own `main-backmerge-to-ldr.yml` will need —
       surfacing the chicken-and-egg gap AT rollout time instead of at the next promotion attempt. A rollout is not
       "complete" until this check is green for every repo in scope. (repo: unified-trading-pm,
-      `scripts/workflow-templates/rollout-workflow-templates.sh`)
+      `scripts/workflow-templates/rollout-workflow-templates.sh`) ✅ Added `PARITY_PAIRS` tracking (every (repo,
+      rendered-filename) pair the rollout genuinely targets, across both the generic per-repo loop and the UI-template
+      loop) + a `check_main_ldr_parity()` post-rollout pass: fetches `origin/main` + `origin/live-defi-rollout` once per
+      touched repo (network-graceful — a fetch failure WARNs and skips that repo rather than hard-failing, mirroring
+      `check-action-pins.py`'s own convention), byte-compares each tracked workflow path via `git show`, prints a
+      per-repo diff summary, and fails the run (non-zero exit) on any mismatch; a fully-missing file on both branches is
+      not a gap (nothing to compare); one-sided-missing or content-differing both count. Verified: `shellcheck` clean on
+      the added code (2 pre-existing unrelated warnings only), `bash -n` clean,
+      `--dry-run --repo agent-orchestrator --template quality-gates-v2.yml.tmpl` correctly exits 1 on a real live
+      mismatch and `--repo unified-api-contracts` correctly exits 0 on a clean repo, a fleet-wide `--dry-run` correctly
+      aggregates to exit 1 (3 real mismatches, all in agent-orchestrator — filed as
+      `agent_orchestrator_main_ldr_workflow_repoll_drift_2026_08_09.md` per the findings-closure rule, not fixed inline
+      as it's a distinct-scope reconciliation), and the network-graceful fetch-failure branch was verified directly
+      (env-scoped SSH override, no git-config mutation) to not trip `set -e`. `quality-gates.sh` green. Evidence:
+      unified-trading-pm@b8db2cd412.
 
 ## Progress Log
+
+- 2026-08-09 (slot-15, cicd): Closed todo 4 (the sole remaining open todo). Shipped `unified-trading-pm@b8db2cd412`
+  (verified ancestor of `origin/live-defi-rollout`). Fleet-wide `--dry-run` validation surfaced 3 real, live parity
+  mismatches — all in `agent-orchestrator`'s `main` branch, none elsewhere — filed as
+  `agent_orchestrator_main_ldr_workflow_repoll_drift_2026_08_09.md` per the findings-closure rule rather than fixed
+  inline (distinct-scope repo reconciliation, not part of this todo's own implementation scope). This doc's only
+  remaining todo is now closed; ready for archival per the 6-step ritual (deferred to whichever pass next sweeps
+  `infrastructure_master`'s closed docs — not done in this same turn to avoid combining the checkbox-flip commit with a
+  `git mv` archival commit, per the HARD RULE in RULES.md § 2).
 
 - **2026-08-07 (part 2)**: Closed todo 2. PR #817 hit a SECOND independent gap after its content check went green —
   `agent-orchestrator`'s branch-protection ruleset still required `sit-gate/fleet-green`, which can now never post (root
