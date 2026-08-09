@@ -216,7 +216,7 @@ over all pending draft batches) that independently spot-verified every todo belo
       Repo: market-tick-data-service. Source: `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md`. Done
       when: the source doc's open DIAG todo is checked off with an explicit population-overlap finding (full match /
       partial match + residual scope) citing the batch6 evidence.
-- [ ] [DATA] P2. **Verify the `lst_yields` historical feature backfill resume** launched 2026-08-05
+- [x] ✅ [DATA] P2. **Verify the `lst_yields` historical feature backfill resume** launched 2026-08-05
       (`--start-date 2023-11-01 --end-date 2026-08-05`, ~980 days, log `/tmp/lst_yields_resume_20260805.log`) actually
       ran to completion via a fresh `gcloud storage ls` day-partition count on
       `onchain/by_date/*/feature_group=lst_yields/`; if it stalled before finishing, re-launch the same idempotent
@@ -224,7 +224,12 @@ over all pending draft batches) that independently spot-verified every todo belo
       re-running safe) until coverage approaches the full ~1,815-day per-token-genesis target (2021-08-17→today). Repo:
       features-service. Source: `defi_lst_yields_coverage_extension_gcs_verified_2026_07_28.md`. Done when: a fresh
       day-partition count is cited showing coverage materially closer to (or at) the full genesis-to-today span, or any
-      residual gap is confirmed as honest per-token-genesis absence rather than a stalled process.
+      residual gap is confirmed as honest per-token-genesis absence rather than a stalled process. — **VERIFIED COMPLETE
+      2026-08-09 (slot-2)**: fresh
+      `gsutil ls -d gs://features-defi-prd-central-element-323112/onchain/by_date/*/     feature_group=lst_yields/`
+      count = **1,815 day-partitions**, spanning `day=2021-08-17`..`day=2026-08-05` contiguously — an EXACT match to
+      `(2026-08-05 - 2021-08-17).days + 1 = 1815` with zero gaps. The resume ran to full completion; coverage is AT the
+      full genesis-to-today target as of its launch date, not just "closer".
 - [x] ✅ [DATA] P1. **Verify the 2026-07-28 DeFi MDPS candle-backfill fleet's terminal outcome**
       (`launch-mdps-sharded-backfill.sh defi --env prod`, 5 SPOT VMs, run-ts=20260728-044648, year-sharded 2022-2026) —
       **VERIFIED 2026-08-06 (slot-9).** Terminal status per shard (all evidence from
