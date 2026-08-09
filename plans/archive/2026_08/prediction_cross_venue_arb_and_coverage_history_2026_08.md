@@ -564,7 +564,15 @@ live `status=open` is unauth-OK so live wasn't broken by it — the `/historical
   markets → per-market `/historical/trades` RSA-PSS-signed; the IS cutoff-aware routing IS@8b118d9 + RSA-PSS auth
   already ship) — a multi-hour 11k-series API grind (the IS series enumerator + e2e driver are the remaining build).
   Repo: e2e-testing (driver) + instruments-service (enumerator). Provenance: autonomous catalogue/backfill session
-  2026-06-23.
+  2026-06-23. **Reconciled 2026-08-09 (finalize P1)** — batch9 shipped both legs: code build
+  `instruments-service@3f2ddca0` + `e2e-testing@5e2f90e` (series enumerator + driver), then a honest-absence fix
+  (`instruments-service@d65dc051` + `e2e-testing@244e2cc`, fixing a silent-drop-on-empty gap the first production run
+  surfaced) followed by the production re-run VM `mtds-prediction-kalshihistgap-20260809-195223`
+  (`DEPLOYMENT_COMPLETED exit_code=0`, `elapsed_s=6943.1`). Independent manifest read confirms **2658/2658 markets in
+  the 2025-10→2026-04 mid-gap now carry an honest capture_status row**: `empty_confirmed=2649` (`SOURCE_RETURNED_ZERO`,
+  FetchEvidence-proven) + `attempted_failed=9` (genuinely disqualified fetches) + `captured=0` (the 3 markets with real
+  trades hit a separate, pre-existing classifier-OTHER gap for niche tickers — out of this item's scope). Mid-gap
+  residual CLOSED — no orphaned open reference remains.
 
 ### 2026-06-21 23:50 — Polymarket v9 re-walk COMPLETE + book_snapshot naming diagnosed
 
@@ -635,7 +643,16 @@ live `status=open` is unauth-OK so live wasn't broken by it — the `/historical
   Kalshi condition_id/`cid`); add a regression test (KXCPI/KXMLBGAME → real groups, not OTHER); then dry-run to confirm
   non-OTHER, THEN `--apply` (local or VM ~5000s). Re-reads existing tick parquets; NOT a tick migration. Repo:
   market-tick-data-service (`scripts/rebuild_prediction_manifest.py`). Provenance: operator partition-completeness Q
-  2026-06-23 + autonomous dry-run discovery 2026-06-24.
+  2026-06-23 + autonomous dry-run discovery 2026-06-24. **Reconciled 2026-08-09 (finalize P1)** — the operational
+  `--apply --venue KALSHI` run completed: VM `mtds-prediction-kalshi-cqg-rewalk-20260809-101228`
+  (`DEPLOYMENT_COMPLETED exit_code=0`, `elapsed_s=17536.0`, all 63 chunks 2021-06-30..2026-08-08 with
+  `unparseable/failed_unclassified/failed_zero_row: 0` on every chunk). Non-OTHER cqg distribution confirmed by the
+  beta-preview dry-run VM (`mtds-prediction-kalshi-cqg-beta-preview-20260809-091716`, 41+ real cqg groups, only 2.5%
+  OTHER), corroborated by the apply run's own `failed_unclassified: 0` across all 63 production chunks. The
+  SOURCE_RETURNED_ZERO residual (grown from the 116,192 cited above to 229,320 under the apply run's fuller
+  2021-06-30..2026-08-08 corpus scope — expected growth, not a regression) remains `empty_confirmed`, still tied to the
+  same open P0 43d KALSHI lifecycle-bounds gap this item's own scope always excluded. `--apply` operational item CLOSED
+  — no orphaned open reference remains.
 - [x] ✅ [SCRIPT] P2. **cqg partition-completeness — recent-window catalogue re-enumeration — VERIFIED ALREADY COMPLETE
       2026-08-04 (slot 6), premise stale.** The 2026-06-26 IS enumeration VM run enumerated 2026-06-20..22 (not just
       2026-06-23) with the already-fixed classifier; a live read confirms all three dates carry 40–42 real cqg groups

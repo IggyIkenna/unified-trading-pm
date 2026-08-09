@@ -55,13 +55,24 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Source-doc reconciliation**: confirm `prediction_cross_venue_arb_and_coverage_2026_07_24.md` shows
-      both extracted items closed — the series-scoped Kalshi historical-backfill todo and the cqg batch
+- [x] ✅ [REVIEW] P1. **Source-doc reconciliation**: confirm `prediction_cross_venue_arb_and_coverage_2026_07_24.md`
+      shows both extracted items closed — the series-scoped Kalshi historical-backfill todo and the cqg batch
       re-classification `--apply` todo — either flipped `[x]` with the batch9 commit citation, or annotated with a
       pointer to it. Repo: unified-trading-pm. Done when: both items are closed-by-citation with no orphaned "still
       looks open" gap; also re-verify the doc's own line count is still under `check_line_caps.sh`'s hard cap after the
       edit (the source doc was measured at 999-1000 lines as of 2026-08-08 per a sibling batch's own line-cap extraction
-      todo).
+      todo). **DONE 2026-08-09.** Both extracted items already live only in
+      `plans/archive/2026_08/prediction_cross_venue_arb_and_coverage_history_2026_08.md` (not in the active doc — the
+      active doc carries zero orphaned open references to either) as `EXTRACTED 2026-08-09 → batch9.md` stubs; the stubs
+      described the work as still-remaining, which was stale now that batch9 finished both. Appended a
+      `**Reconciled 2026-08-09 (finalize P1)**` closure note to each stub (mirrors this doc's own established
+      reconciliation pattern at its line 305): the Kalshi historical-backfill item cites
+      `instruments-service@3f2ddca0`/`e2e-testing@5e2f90e` (build) +
+      `instruments-service@d65dc051`/`e2e-testing@244e2cc` (honest-absence fix) + VM
+      `mtds-prediction-kalshihistgap-20260809-195223` (2658/2658 markets manifest-verified); the cqg BATCH
+      re-classification item cites VM `mtds-prediction-kalshi-cqg-rewalk-20260809-101228` (63/63 chunks,
+      `failed_unclassified: 0`) + the beta-preview dry-run confirming non-OTHER. Active source doc unchanged at 381
+      lines (well under the 1000-line hard cap); `check_line_caps.sh` run clean.
 - [ ] [DOC] P2. **Re-check the 3 not-extracted items** (tarball-overwrite race, fixture-pairing team-name canonicaliser,
       and `prediction_consolidated_closeout_2026_07_18.md`'s own 0-todo status) for whether anything has changed — in
       particular whether `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s team-name-alias work has landed,
@@ -78,3 +89,10 @@ drift_direction: advance-code
 - 2026-08-09 (targeted satellite-batch extraction, RECLASSIFY-sweep follow-up): drafted alongside batch9,
   `status: active`, gated via `depends_on` + `gate_on_depends: true`. No work started — waiting on batch9's dispatch
   - completion.
+- 2026-08-09 (todo 1 DONE, slot 24): batch9's own 4 todos confirmed all `[x]` (gate satisfied). Source-doc
+  reconciliation done: both extracted items (series-scoped Kalshi historical-backfill, cqg BATCH re-classification
+  `--apply`) live only as archived `EXTRACTED → batch9.md` stubs in
+  `plans/archive/2026_08/prediction_cross_venue_arb_and_coverage_history_2026_08.md` (the active source doc carries no
+  orphaned open reference to either) — appended a `Reconciled 2026-08-09 (finalize P1)` closure note to each stub citing
+  batch9's shipped SHAs/VMs, mirroring the doc's own existing reconciliation-note convention. Active source doc line
+  count re-verified: 381 lines, well under the 1000-line hard cap; `check_line_caps.sh` clean.
