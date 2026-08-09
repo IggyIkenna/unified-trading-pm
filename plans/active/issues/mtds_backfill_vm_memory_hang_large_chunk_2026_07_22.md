@@ -379,6 +379,18 @@ it wasn't a reliable one for CEFI.
       whether it's an unbounded cache, an un-drained event-sink buffer, or accumulating asyncio/aiohttp session state.
       This is the durable fix; the small-chunk-size mitigation above is a workaround, not a repair. Repo:
       market-tick-data-service.
+      **SHARPENED 2026-08-09 (main, Claude Code session)**: two candidate mechanisms ruled OUT this session by code
+      read (incomplete session-reuse fix; the already-fixed per-VM-shard-growth class — see Progress Log entry same
+      date for both). Two NOT-yet-tested candidates remain, both requiring live Linux kernel state a local macOS dev
+      session cannot provide: (a) dirty-page/writeback backlog — sample `/proc/meminfo`'s `Dirty:`/`Writeback:`
+      fields alongside RSS (extend the existing lightweight-sampler pattern) across a real multi-league chunk on an
+      actual VM, checking whether they climb and stay elevated across subprocess boundaries within one VM lifetime,
+      matching the 2026-08-07 cross-subprocess-persistence finding; (b) `pyarrow` mmap'd parquet-buffer non-release
+      in `ManifestWriter._flush_per_vm_pending`'s read-merge-write path — a `memray --native` run (the doc's other
+      standing next step) would attribute native allocations directly and settle which of (a)/(b)/neither is real.
+      **Done when**: one of these is confirmed via a live run and either a code fix ships + is re-profiled to show
+      RSS no longer climbs unbounded, or both are refuted and the search widens further (candidates then: OS-level
+      malloc-arena fragmentation, or a growing shared/non-VM-scoped read target elsewhere in the pipeline).
 - [x] [DATA] P2. **Consider an adaptive/smaller default `--chunk-size` specifically for "recent history" chunks** (the
       tail nearest the current date, where live-capture dormancy windows and scattered small gaps cluster densely) vs.
       the 250-day default that's proven safe for older, mostly-skip-dense history — either launcher-side (detect via a
@@ -699,3 +711,69 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — item 1 is an ongoing native-memory
   OOM root-cause investigation (session-reuse fix shipped as an efficiency win, does not confirm root cause); item 2
   flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE (bounded monitoring-bug fix) but not enough alone to flip the doc.
+- **2026-08-09 (main, Claude Code session) — live re-confirmed the leak recurs today, ruled out two candidate
+  explanations by code read, and surfaced a new, sharper hypothesis for the still-unexplained cross-subprocess
+  persistence pattern. No code change shipped — a hypothesis is not the same as a fix, per this doc's own standing
+  rule.**
+  1. **Live recurrence, current code.** Relaunched `mtds-backfill-odds-smallchunk9` (`--chunk-size 5`,
+     `deployment-service@5e8b82d08` — current HEAD, includes the 2026-07-31 session-reuse fix) as an unrelated
+     escalation-mechanism fix verification. OOM'd again after 25 real minutes (`12:50:25Z` → `13:15:48Z`,
+     `mem_pct: 93.4` at death, `reap_reason: vm_not_running`) — same signature as every prior recurrence. Confirms
+     this is still live today, not something that quietly resolved.
+  2. **Ruled out: incomplete session-reuse fix.** Full read of `odds_api_adapter.py` post-fix: `_fetch_all_leagues`
+     (the actual historical-backfill hot path `download_batch()` calls) opens exactly ONE `_make_session()` per date
+     (line ~557) and correctly threads it through `existing=session` to `_discover_fixtures` and
+     `_run_league_fetch_loop` — genuinely one `TCPConnector`/`ThreadedResolver` per date, not per-request as before
+     the fix. The 3 other bare `_make_session()` call sites (`fetch_sports`/`get_markets`/`get_prices`, lines
+     278/348/390) are LIVE-odds endpoints never invoked by the backfill path — irrelevant to this OOM, not a residual
+     gap in the fix. **This means the fix's failure to reduce RSS (2026-07-31 Progress Log entry above) is not
+     because it was incompletely applied** — it's real evidence the `ThreadedResolver`-churn hypothesis itself is
+     wrong or too small a contributor, exactly as that entry already concluded, now with the "was it actually
+     implemented right" question closed off too.
+  3. **Ruled out: the already-fixed per-VM-shard-growth mechanism is NOT the current cause here.** Found a directly
+     analogous, CONFIRMED-and-shipped OOM class in a sibling doc
+     (`/plans/archive/issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`,
+     `deployment-service@20ce4c9`): `ManifestWriter._flush_per_vm_pending` does a full read-merge-write of the
+     ENTIRE existing per-VM shard on every flush, so a VM whose `VM_NAME` (and therefore per-VM shard path) stays
+     constant for its whole lifetime accumulates an ever-growing shard and eventually OOMs regardless of chunking.
+     Fixed there by suffixing `VM_NAME` per-chunk. **`mtds_chunk_loop.sh` already applies this exact pattern to the
+     odds backfill** — `VM_NAME="${VM_NAME}-c${CHUNK_NUM}${LEAGUE_SUFFIX}"`, suffixed per chunk AND per league — so
+     each subprocess launch targets its own small, fresh per-VM shard, not an accumulating one. This mechanism is
+     structurally already mitigated here; it is not the explanation for the still-open recurrences.
+  4. **New hypothesis for the 2026-08-07 cross-subprocess-persistence finding (first subprocess survives ~93min,
+     every later one in the same VM lifetime dies in a tight 6.5-8.9min band regardless of density) — not yet
+     empirically tested.** Two threads of evidence point at something kernel/OS-level, not Python-heap: (a) the
+     original kernel OOM log (`CONFIRMED: real kernel OOM-kill` section above) shows `constraint=CONSTRAINT_NONE` —
+     a GLOBAL OOM decision, not one scoped to this process's own cgroup/limits; (b) `mtds_chunk_loop.sh` fans out one
+     fresh subprocess PER LEAGUE within a chunk (confirmed by reading the generator in
+     `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` — the `for LEAGUE in "${CHUNK_LEAGUES[@]}"` loop
+     wraps the `python -m market_tick_data_service` invocation), which is exactly the shape the 2026-08-07 finding
+     describes. Candidate mechanism: Linux dirty-page/writeback backlog — real parquet/log writes to a persistent
+     disk that can't sync back (to local disk, then GCS) as fast as they're produced would show as OS-level memory
+     pressure invisible to any single process's own RSS/tracemalloc reading, would persist across subprocess
+     launches (page cache and writeback queues are system-wide kernel state, not per-process), would correlate with
+     real-data density (matches every density-correlated observation in this doc), and a severe enough backlog can
+     force a genuinely global (`CONSTRAINT_NONE`) OOM even when reclaimable-looking cache exists, because dirty pages
+     must be written back before they're reclaimable. **Checked and ruled OUT as disk-space exhaustion specifically**:
+     every deployment-registry snapshot across every recurrence in this doc shows `disk_pct` in the low single digits
+     (1.8-1.9%) right up to the OOM — so it's page-cache/writeback pressure in RAM, not the disk filling up, if this
+     hypothesis is right at all. **Not yet tested** — needs either a live VM with `/proc/meminfo`'s `Dirty:`/
+     `Writeback:` fields sampled alongside RSS across a real multi-league chunk (the doc's existing "lightweight
+     sampler" pattern, just add these two fields), or a `memray --native` run on real data (the doc's other
+     standing next step) to see whether the native allocation is genuinely file-I/O/buffer-related.
+     **Alternative/competing hypothesis, also untested**: `mem_pct`/`rss=` in the `RESOURCE_SAMPLE` lines appears to
+     be the single process's OWN RSS (roughly matches `rss_MiB / total_RAM`), which if accurate argues AGAINST pure
+     kernel page-cache pressure (that wouldn't attribute to one process's RSS) and FOR memory-mapped file pages
+     counting toward this process's own resident set — e.g. if `pyarrow`'s parquet read/merge path
+     (`ManifestWriter._flush_per_vm_pending`, ruled structurally-mitigated above but still executes once per date
+     within a subprocess, up to `--chunk-size` times) uses memory-mapped I/O internally and doesn't promptly
+     `munmap` between date iterations, that would also explain tracemalloc-blindness (mmap'd C-extension buffers,
+     not Python objects) and real-data-density correlation, without needing a cross-process kernel mechanism at all
+     — in which case the cross-subprocess "tight 6.5-8.9min band" would need a different explanation (worth checking
+     whether ALL 5 leagues in that comparison happened to have genuinely similar real-fetch-day density, which
+     would undercut the "density-independent" framing the 2026-08-07 entry used).
+  5. **Why this session didn't go further**: confirming either candidate needs live Linux kernel state
+     (`/proc/meminfo`) during a real fetch — not available on this session's local macOS environment, and setting up
+     a faithful Linux+real-credentials+real-network repro (Docker or a dedicated profiling VM) is a real, separate
+     time/cost commitment beyond a code-level dig. Flagging both hypotheses here, evidence-ranked, rather than
+     guessing further or launching another VM without checking in first.
