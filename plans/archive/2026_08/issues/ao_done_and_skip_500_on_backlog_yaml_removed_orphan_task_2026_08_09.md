@@ -13,8 +13,8 @@ summary: |
   mutating endpoint checks it before running task-def-dependent logic. Only
   `POST /api/slots/<N>/reassign` (a third, less-documented endpoint with no
   `backlog.get()` dependency) succeeded, followed by `DELETE /api/backlog/<id>`.
-status: open
-resolved_by:
+status: resolved
+resolved_by: agent-orchestrator@8db0b29 (2026-08-09) — all 3 todos done, non-prod e2e reproduction confirms both fixes
 nature: process
 asset_group: [ci, meta]
 stage: [meta]
@@ -143,9 +143,10 @@ guidance) and burn a stale-worker slot indefinitely, or `/blocked` unnecessarily
       `test_release_task_to_queue_guard.py::test_skip_current_task_409s_on_a_stale_pointer_to_a_done_task`) that had
       encoded the old buggy fallthrough as their expectation, updated to match. Full `quality-gates.sh` green (2936
       passed, 2 skipped).
-- [ ] [VERIFY] P3. Once both fixes land, reproduce this exact scenario in a non-prod/test harness (dispatch a task,
+- [x] ✅ [VERIFY] P3. Once both fixes land, reproduce this exact scenario in a non-prod/test harness (dispatch a task,
       delete its plan out from under it, regen backlog, confirm `/done` now returns a clean orphan-closed response
-      instead of 500) to close this out with evidence. (repo: agent-orchestrator)
+      instead of 500) to close this out with evidence. (repo: agent-orchestrator) — agent-orchestrator@8db0b29 (see
+      Progress Log for the new end-to-end test + evidence).
 
 ## Progress Log
 
@@ -172,3 +173,20 @@ guidance) and burn a stale-worker slot indefinitely, or `/blocked` unnecessarily
   `release_task_to_queue` — added an explicit `row_already_terminal` check (status in `("done", "cancelled")`) so
   `task_orphaned` stays False for that case and the 409 guard still fires. agent-orchestrator@4f78629, quality-gates.sh
   green (2936 passed, 2 skipped). Todo 3 (end-to-end non-prod verify) remains open, separate from this todo.
+- **2026-08-09 (slot 6)**: Shipped todo 3 — the end-to-end non-prod reproduction. `test_done_orphan_task_closed.py` /
+  `test_skip_stale_marker_orphan.py` (from todos 1/2) already cover the fix at the unit level with a hand-substituted
+  empty `Backlog()`; this drives the REAL plan-file → `regen()` → `backlog.yaml` pipeline instead: writes a real plan
+  file with one open todo, regenerates the backlog from it (a real `regen()`-minted task_id, not a synthetic one),
+  inserts a real `SlotRow`+`TaskRow(status="dispatched")` simulating an actual dispatch, archives (deletes) the owning
+  plan file exactly as a completed-plan archival would (not merely checkbox-flipped), then regenerates again
+  (`prune_stale=True, db_path=None` — a yaml-only prune) to reproduce the documented live-incident precondition
+  verbatim: the `TaskRow` survives `status=dispatched` in state.db while `backlog.yaml` has no entry for it at all.
+  Confirmed this precondition holds (asserted inline before exercising the fix) — then called the REAL
+  `done_slot()`/`skip_current_task()` route functions directly and confirmed both close the orphan cleanly: no
+  exception, dead `TaskRow` deleted, slot released to `idle`, `resp.dispatch_reason`/`orphaned_stale_marker` both
+  correctly flag the orphan-close path. 2 new tests
+  (`tests/test_orphan_task_e2e_regen_reproduction.py::test_done_closes_regen_orphaned_dispatched_task_cleanly` /
+  `::test_skip_current_task_closes_regen_orphaned_dispatched_task_cleanly`), both pass; full existing orphan/regen suite
+  (31 tests: `test_done_orphan_task_closed.py` + `test_skip_stale_marker_orphan.py` + `test_regen_reconcile.py` + the 2
+  new) green alongside them. Full repo `quality-gates.sh` green (2938 passed, 2 skipped). agent-orchestrator@8db0b29.
+  **All 3 todos on this issue doc are now done** — archival-eligible (no `locked_by`).
