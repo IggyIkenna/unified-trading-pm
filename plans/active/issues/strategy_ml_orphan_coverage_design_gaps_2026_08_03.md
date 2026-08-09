@@ -153,11 +153,13 @@ just (c).
       `ml_predictions`/`strategy_instructions` fixes) OR delete the dead code
       (`CloudStrategyStorage.store_positions`/`store_pnl`, `store_orders_batch`, `OrderBatchStorage`) as tech debt.
       Repo: strategy-service. Only once resolved does an orphan sweep for this family become meaningful to build.
-- [ ] 2. [OPERATOR] P2. Decide whether `backtest_results` should get a manifest-WRITE design (new
+- [x] ✅ 2. [OPERATOR] P2. Decide whether `backtest_results` should get a manifest-WRITE design (new
       `data_type=backtest_results` keyed by `(strategy_id, run_id)`) or is intentionally out of the
-      availability-manifest's scope. Repo: strategy-service.
-- [ ] 3. [OPERATOR] P2. Decide whether `ml_models`/`ml_model_metadata`/`ml_training_artifacts` should get a
-      manifest-WRITE design (keyed by `model_id`) or are intentionally exempt. Repo: ml-service.
+      availability-manifest's scope. Repo: strategy-service. — RULED 2026-08-05 (BLK-75060009, see Progress Log):
+      ephemeral, no sweep — verified by plan_reconciler agt-1a9b86 2026-08-09.
+- [x] ✅ 3. [OPERATOR] P2. Decide whether `ml_models`/`ml_model_metadata`/`ml_training_artifacts` should get a
+      manifest-WRITE design (keyed by `model_id`) or are intentionally exempt. Repo: ml-service. — RULED 2026-08-05
+      (BLK-75060009, see Progress Log): ephemeral, no sweep — verified by plan_reconciler agt-1a9b86 2026-08-09.
 - [x] ✅ 4. [SCRIPT] P3. Once any of todos 1-3 resolves toward "wire it up", build the corresponding orphan-sweep
       extension — strategy-service@4733a7e7 (extend `strategy_orphan_sweep.py` for orders/positions/pnl and/or
       backtest_results; `ml_orphan_sweep.py` for models/metadata/training_artifacts) mirroring the A-E taxonomy pattern.

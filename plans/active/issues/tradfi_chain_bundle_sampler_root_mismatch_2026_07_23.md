@@ -226,9 +226,9 @@ existing `underlying=M6A`/`M6B`/`M6C`/`M6E`/`M6J`/`M6N`/`M6S`/`M2K`/`MCL`/`MGC`/
 `MICRO-<ROOT>` form. The 8 treasury/soft-commodity naming-style codes need NO migration — `tradfi_symbology.py` already
 had the adopted values live, only the non-live `tradfi_instrument_universe.py` copy changed.
 
-- [ ] [DATA] P1-OPERATOR-DECISION. **CONFIRMED — this mismatch is NOT CME-only; it also hits CBOE/VX (2026-07-27).**
-      Re-verifying `tradfi_phase_d_terminal_gate_2026_07_24.md`'s "still in-flight" CBOE force+skip check
-      (`TRADFI:CBOE:ohlcv_1s,ohlcv_1m --legs force,skip --require-captured --auto-day --day 2026-07-13`, launched
+- [ ] [DATA][BLOCKED-OPERATOR-DECISION] P1. **CONFIRMED — this mismatch is NOT CME-only; it also hits CBOE/VX
+      (2026-07-27).** Re-verifying `tradfi_phase_d_terminal_gate_2026_07_24.md`'s "still in-flight" CBOE force+skip
+      check (`TRADFI:CBOE:ohlcv_1s,ohlcv_1m --legs force,skip --require-captured --auto-day --day 2026-07-13`, launched
       2026-07-24 12:43 UTC against `mtds-code@0205eaab` — the build that added `CBOE → "VIX"` to
       `_CHAIN_UNDERLYING_FALLBACK`) found the identical symptom on BOTH force legs' raw `run.log`:
       `DatabentoAdapter:     instrument_ids filter ['VIX'] matched nothing for venue=CBOE dataset(s)=['XCBF.PITCH'] — 2 curated symbol(s)     available (['VX', 'VX.FUT'])`
@@ -276,8 +276,8 @@ had the adopted values live, only the non-live `tradfi_instrument_universe.py` c
       dry-run counts cited for both populations, `--apply` migration completes with before/after evidence (mirroring
       Surface A-D's own done-when bar), `tradfi_roots.py` + its tests converged, `quality-gates.sh` green in both
       `unified-api-contracts` and `market-tick-data-service`.
-- [ ] [DATA] P2-OPERATOR-DECISION. **NEW 2026-08-07 (found via an unrelated sub-agent task's quality-gates run)**:
-      `unified-api-contracts@00b2de54`'s sector-identity convergence broke the LIVE raw-Databento-symbol reverse
+- [ ] [DATA][BLOCKED-OPERATOR-DECISION] P2. **NEW 2026-08-07 (found via an unrelated sub-agent task's quality-gates
+      run)**: `unified-api-contracts@00b2de54`'s sector-identity convergence broke the LIVE raw-Databento-symbol reverse
       derivation
       `market-tick-data-service/market_tick_data_service/scripts/rewrite_tradfi_chain_bundle_content_id_2026_07_25.py::derive_canonical_id_for_row`
       relies on (`canonicalize_raw_tradfi_id("XAUH0", venue="CME", instrument_type=FUTURE)` now returns
