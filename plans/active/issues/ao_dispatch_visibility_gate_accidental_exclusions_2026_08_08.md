@@ -294,19 +294,15 @@ human already made the call and the fleet still never executes it.
       shows `sports_satellite_ao_dispatch_batch9_2026_08_04.md` with a single excluded entry,
       `{"description": "[DATA][BLOCKED-UPSTREAM-OUTAGE] P2. Re-launch the instruments-service Transfermarkt     PLAYER_VALUES backfill scoped", "declared": true}`
       — no `"declared": false` entries remain for this doc. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in
-      `plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`.** Its checkbox reads
-      (truncated): "[DOCS] P2. **RULED 2026-08-06 (operator), option A [WORKER REC]: one scoped retag pass between
-      scheduled auditor" — the marker trips `_is_non_dispatchable`
-      (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its own line, so
-      `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is genuinely still
-      blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to the start of its
-      own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation line) so it reads
-      as a declared hold. If it is already resolved (several of these carry a dated `RULED`/`DESIGN DECIDED` note — read
-      the full todo before acting), rewrite the trigger phrase so the marker no longer appears anywhere in the block.
-      Verify:
-      `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-13, infra).** Triage accidental exclusion in
+      `plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`. Moot, not
+      accidental: the flagged checkbox (the `[DOCS] P2. RULED 2026-08-06 (operator), option A` retag-pass todo) is
+      already checked `[x] ✅` in the doc — closed 2026-08-09 by slot-28, which verified the retag pass had already
+      executed via two earlier 2026-07-30/2026-08-02 commits. All 5 of the doc's todos are `[x]`, `status: resolved`,
+      and the doc is fully archived at `plans/archive/2026_08/issues/`. No open todo remains on disk for the gate to
+      misclassify. Verified: `grep -n '^- \[ \]' <doc>` returns zero hits, and
+      `cd agent-orchestrator && uv run python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
+      does not list this doc at all (zero hits — no open todos to report on). (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/issues/credential_ask_orphan_checker_ping_format_stale_2026_07_27.md`.** Its checkbox reads
       (truncated): "[SCRIPT] P3. Consider whether an IAM-permission gap (names the exact missing role/permission + exact
@@ -604,3 +600,10 @@ human already made the call and the fleet still never executes it.
   `sports_satellite_ao_dispatch_batch5_finalize`/`ag_closeout_linkage_gate`/`credential_ask_orphan_checker`/
   `sports_all_vendor_honest_coverage_convergence`/`sports_odds_api_scattered_multiyear_gaps` items above, were all part
   of the original 27-item list and remained open at that time.)
+- **2026-08-09 (slot 13, infra)** — Fixed the `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` todo. Same
+  "moot, not accidental" pattern as the batch1/batch4/batch6/cefi/defi/infra_satellite/prediction/vm_billing_waste fixes
+  above: the flagged checkbox (`[DOCS] P2. RULED 2026-08-06 (operator), option A` retag-pass todo) was already checked
+  `[x] ✅` by slot-28 on 2026-08-09 — all 5 of the target doc's todos are done, `status: resolved`, and the doc is fully
+  archived at `plans/archive/2026_08/issues/`. No open todo remains on disk for the gate to misclassify. Confirmed via
+  `grep -n '^- \[ \]' <doc>` (zero hits) and `dispatch_visibility_report --pm-path ../unified-trading-pm --json` (doc
+  does not appear in the report at all).
