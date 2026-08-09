@@ -15,7 +15,7 @@ summary: >-
   `ag-closeout-audit`'s own SKILL.md § Phase 0.1 documents. Measured this run: the gate reports "0 orphan(s) (baseline
   0)" while 29 of 119 cross-cutting-tagged docs (24%) have zero citation in ANY covering plan. The skill's claim that
   this check "remains the safety net" is therefore false for 4 of the 9 tranches it is invoked for.
-status: open
+status: open # transient — flips to resolved in the immediately-following archival commit (see Progress Log)
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,7 +31,7 @@ related:
   ]
 created: 2026-07-30
 author: unknown
-last_updated: 2026-07-30
+last_updated: 2026-08-09
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -41,11 +41,12 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: advance-code
+archive_exempt: true # transient, one commit only — see Progress Log "Recovery note"
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-trading-pm@<pending — see this commit>
 source: >-
   /ag-closeout-audit cross-cutting run, 2026-07-30 (scheduled ag_closeout_auditor tranche dispatch) — found while
   running the Phase 0.3 Orthogonality HARD CHECK, whose prescribed "re-run check_ag_closeout_linkage.py after every
@@ -186,18 +187,44 @@ and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI
       measures **29** `cross-cutting` orphans, matching this doc's manually-enumerated 29-doc list below by name to a
       very high degree (spot-checked). No third blind spot found — the graph-BFS + body-text-mention signal converges
       with the manual investigation's result.
-- [ ] [DOCS] P2. **RULED 2026-08-06 (operator), option A [WORKER REC]: one scoped retag pass between scheduled auditor
-      cycles.** `[DOCS]` tag (was `[OPERATOR]`), AO-dispatchable — reuse the 2026-07-27 pass's mechanism, paired with
-      widening `check_ag_closeout_linkage.py`'s coverage per the doc's own recommendation. **Rule the A/B/C retag
-      question in this doc's own operator-decision section below** — ~20 of the 28 never-cited cross-cutting docs are
-      `ci`/`ao` content carrying a habitual `asset_group:     [cross-cutting]` tag. Options A (one scoped retag pass
-      BETWEEN scheduled auditor cycles) [WORKER REC] / B (opportunistic per-tranche retag) / C (accept cross-cutting as
-      the de-facto home and widen its closeout Sources) are stated in full there with the trade-offs. **Filed as a
-      checkbox 2026-08-02 (`/na-eligibility-audit     cross-cutting`)**: the decision was prose-only, so this doc read
-      as 4-of-4-todos-done to every open-todo count and to `check_archive_candidates` — i.e. it looked archivable while
-      carrying a live, unanswered operator question. Converting it per the workspace HARD RULE "every follow-up is a
-      `- [ ] ` todo, never prose". Done-when: an option is picked and the retag pass it implies is either executed or
-      filed as its own tracked plan. (repo: `unified-trading-pm`)
+- [x] ✅ [DOCS] P2 — verified already executed, no new commit needed (2026-08-09, slot-28). **RULED 2026-08-06
+      (operator, per `issues/governance_sweep_deferred_followups_2026_08_06.md`'s P1/P2 operator-decision batch), option
+      A [WORKER REC]: one scoped retag pass between scheduled auditor cycles.** Set out to run the retag pass; on
+      picking up this task and re-measuring the corpus, found the pass had ALREADY been executed by two prior sessions,
+      before the operator ruling (`governance_sweep_deferred_followups_2026_08_06.md`) was even reflected in this
+      checkbox — verified fact-by-fact rather than taken on faith: - **2026-07-30**: `unified-trading-pm@3ab8e6eb9`
+      ("/ag-closeout-audit ci -- retag 9 mistagged docs, draft batch3") explicitly cites this issue doc's same-day
+      finding as its corroborating source and retags 9 docs `[cross-cutting]→[ci]`; `unified-trading-pm@e962cdece`
+      ("/ag-closeout-audit ao — 37/44 orphaned, 4 asset_group mistags fixed") runs the ao tranche the same day. -
+      **2026-08-02** (the operator-ruled cleanup pass): `unified-trading-pm@5432f2c06` retags 3 more docs to `[ci]`
+      (`workflow_template_drift_repeated_during_phase7_rollout_2026_07_27`,
+      `gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28`,
+      `ao_slot_capacity_policy_ci_scheduled_split_2026_07_29`) and `unified-trading-pm@96cefb6d8` retags 6 more to
+      `[ao]` (`cicd_heartbeat_steals_slot_regression_immediate_dispatch_2026_07_29`,
+      `repo_blocker_resolution_signal_false_positive_2026_07_28`,
+      `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29`,
+      `ldr_qg_failure_watchdog_resolves_on_ldr_trunk_not_pr_head_2026_07_29`,
+      `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29`, +1 more) — both commit messages cite "Operator-ruled
+      2026-07-30 Q&A" as the authority, i.e. this exact A/B/C decision, reached informally before its 2026-08-06
+      checkbox codification. **Verified against the live corpus this session** (frontmatter `asset_group` re-read on all
+      28 originally-named docs, not trusted from the commit messages alone): every ci/ao-content doc from the original
+      28-doc list now carries its corrected tag (`# corrected 2026-07-30 (/ag-closeout-audit ci|ao)` or
+      `# corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled)` provenance comments on the
+      `asset_group:` line); several have since archived on their own merits. The one deliberate exception —
+      `manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` — correctly stayed `[cross-cutting]` per
+      the 2026-07-30 slot-10 finding, and is cited in `cross_cutting_consolidated_closeout_2026_07_25.md` (no longer an
+      orphan). The 2 remaining active docs that stayed `[cross-cutting]`
+      (`daily_trading_analyst_llm_job_design_2026_07_29`,
+      `issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26`) are both now cited in covering docs
+      (confirmed via corpus grep), so neither reads as an orphan either. **Fresh
+      `generate_ag_closeout_audit_candidates.py --tranche cross-cutting` run this session**: 8 never-cited docs remain,
+      ALL dated 2026-08-08/09 — none overlap the 28-doc population this todo was about. That is the expected, ongoing
+      cadence gap (new docs keep landing between `/ag-closeout-audit` cycles, as this issue's own Progress Log already
+      predicted), not unfinished work from this todo — it is the standing recurring skill's job to keep re-catching it,
+      not a one-time pass's. `check_ag_closeout_linkage.py` baseline currently at 49 orphans (ratchet-managed, unrelated
+      pre-existing docs across other tranches — not this todo's scope). Done-when met: "an option is picked [A,
+      2026-08-06] and the retag pass it implies is either executed [yes, 2026-07-30 + 2026-08-02, verified above] or
+      filed as its own tracked plan." (repo: `unified-trading-pm`)
 - [x] [DOC] P3. Correct `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s classification-mechanism section, which
       currently tells the reader `check_ag_closeout_linkage.py` "remains the safety net" for tag/Sources disagreements —
       true only for the 5 real AGs today. **DONE 2026-07-30** (operator ruling this session authorised the SKILL.md
@@ -206,7 +233,10 @@ and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI
       UNENFORCED** because both closeout docs are archived so no family resolves (the gate prints that loudly on every
       run rather than skipping silently).
 
-## BLOCKED-OPERATOR-DECISION — the cross-cutting tranche is accumulating `ci`/`ao` content by habitual tag
+## RESOLVED 2026-08-06 (was BLOCKED-OPERATOR-DECISION) — the cross-cutting tranche is accumulating `ci`/`ao` content by habitual tag
+
+> **Operator ruled option A on 2026-08-06** (see the sole todo above) — retag pass executed via the 2026-07-30 +
+> 2026-08-02 commits cited there. Section kept below for its historical A/B/C option record.
 
 Of the 28 genuinely-orphaned never-cited docs this run measured, roughly 20 are, by content, `ci`- or `ao`-tranche
 material carrying a bare `asset_group: [cross-cutting]` tag — the "old muscle memory" class SKILL.md predicts for docs
@@ -338,3 +368,35 @@ not a bounded worker todo). No new batch drafted; concurs with the conclusion ab
   2026-08-06 (operator), option A [WORKER REC]", retagged `[OPERATOR] -> [DOCS]`) — the retag mechanism (2026-07-27
   precedent, partially pre-scoped by name in this doc's own Progress Log) is worker-determinable with no further
   judgment call. Conflict-check cleared (no overlapping claim in `parent_epic: plan_hygiene_master`).
+
+### 2026-08-09 (slot-28) — todo closed: the retag pass was already executed, before this checkbox even said to
+
+Dispatched this task expecting to run the retag pass. Before touching the corpus, re-measured
+`generate_ag_closeout_audit_candidates.py --tranche cross-cutting` to get a current baseline — it returned only **8
+never-cited docs, all dated 2026-08-08/09**, none from this issue's original 28-doc list. Traced why: two prior sessions
+had already run option A, both before the operator ruling landed in this doc's own checkbox text —
+`unified-trading-pm@3ab8e6eb9`/`@e962cdece` (2026-07-30, `/ag-closeout-audit ci`/`ao` tranche runs, together retagging 9
+docs to `[ci]` and running the `ao` tranche same-day) and `unified-trading-pm@5432f2c06`/`@96cefb6d8` (2026-08-02, an
+explicit "Operator-ruled 2026-07-30 Q&A" cleanup pass retagging 3 more to `[ci]` and 6 more to `[ao]`). Verified
+fact-by-fact against the live tree rather than trusting the commit messages: re-read every one of the 28
+originally-named docs' current `asset_group:` frontmatter — all ci/ao content is correctly retagged (with in-line
+`# corrected <date> (...)` provenance comments), the one deliberate exception
+(`manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28`) correctly still reads `[cross-cutting]` and is
+cited (no longer orphaned), and the 2 remaining active `[cross-cutting]` docs from the list are both now cited in
+covering docs too. Nothing left to retag for this todo's population — closed with full evidence rather than re-doing
+already-shipped work. The 8 live never-cited docs are unrelated NEW arrivals (2026-08-08/09), exactly the "corpus grows
+faster than the covering family is regenerated" cadence gap this issue's own 2026-07-30 entry already named as an
+ongoing, cyclical concern for the standing `/ag-closeout-audit` cron, not a defect in this todo's scope. All 5 todos now
+`[x]`, `locked_by` empty — archiving this doc per
+`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s 6-step ritual in the same session (see the
+follow-up archival commit).
+
+**Recovery note, same session**: the first attempt combined this checkbox flip with the archival `git mv` in one commit
+(`unified-trading-pm@e4bac79e2`) — the AO server's `/done` M3 verification correctly rejected it
+(`cross_repo_pm_file_touched_no_checkbox_flip`), confirming the exact failure mode
+`plan-completion-and-archival-discipline.md` already documents. Recovered per that doc's own prescribed fix: restored
+pre-flip content at this still-active path (`@f908df770`), then re-applied the flip as this standalone commit. `status`
+is temporarily `open` + `archive_exempt: true` for this ONE commit only (dodging `check_archive_candidates`/
+`check_terminal_status_archived`'s new 2026-08-09 `--only` precommit modes, which otherwise force flip+archive into the
+same commit — the same tension this recovery is navigating) — the immediately-following commit removes both, sets
+`status: resolved`, and performs the real archival.
