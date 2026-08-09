@@ -82,18 +82,35 @@ set (82 docs) is recorded in this run's report, which was carried in the dispatc
       evidence, the fix ships via quickmerge, and a fresh sample of the previously-corrupted by_date blob(s) shows
       correctly-encoded player/team names (or the corrupted rows are provably isolated to a re-captureable window with a
       stated plan).
-- [ ] [CONFIG] P2. Close the sports trigger-tier residual gap — add `odds_t12h`, `odds_t4h`, `odds_t2h` forward snapshot
-      triggers to `deployment-service/configs/sports-trigger-tiers.yaml`'s `pre_match.triggers` (following the existing
-      `odds_t24h`/`t6h`/`t1h` pattern, each with `cloud_run_job_name: "uts-prod-market-tick-data-service-fast-t1-recon"`
-      and tolerances ±30min for T-12h, ±15min for T-4h/T-2h), then relaunch the sports-scheduler VM via
-      `bash deployment-service/scripts/vm/launch-sports-scheduler-vm.sh`, then verify via a sample day's manifest that
-      all 6 forward horizons (T-24h/T-12h/T-6h/T-4h/T-2h/T-1h) show full per-fixture coverage. VM-launch safety
-      justification (stated safe-idempotent per task_template.md finding O path (c)): the sports-scheduler is a
-      singleton-locked scheduler VM whose state is GCS-backed and whose resume design tolerates preemption (SPOT
-      explicitly OK per the source doc's own text) — a relaunch is reversible and loses no data. Source:
-      `sports_features_layer_findings_sweep_2026_07_18.md`. Done when: the 3 new trigger entries are shipped, the
-      scheduler VM relaunches cleanly (exit 0), and a sample-day manifest check shows all 6 horizons with per-fixture
-      coverage (or a cited reason why a horizon cannot fire).
+- [x] ✅ [CONFIG] P2. Close the sports trigger-tier residual gap — add `odds_t12h`, `odds_t4h`, `odds_t2h` forward
+      snapshot triggers to `deployment-service/configs/sports-trigger-tiers.yaml`'s `pre_match.triggers` (following the
+      existing `odds_t24h`/`t6h`/`t1h` pattern, `cloud_run_job_name: "uts-prod-market-tick-data-service-fast-t1-recon"`,
+      tolerances ±30min T-12h / ±15min T-4h/T-2h). Shipped `deployment-service@9e1fd57ae` (config + 3 regression tests
+      in `tests/unit/test_sports_trigger_tiers_config.py`, all passing; full `quality-gates.sh` green). Source:
+      `sports_features_layer_findings_sweep_2026_07_18.md`. **Correction to this todo's VM-relaunch sub-step (stale
+      architectural premise, found this session)**: the original text instructed relaunching a standalone
+      sports-scheduler VM via `deployment-service/scripts/vm/launch-sports-scheduler-vm.sh`. Live investigation
+      (`gcloud compute instances list --filter='name~"^sports-scheduler-"'` → empty) plus
+      `sports_satellite_ao_dispatch_batch11_2026_08_09.md`'s independent, matching finding confirm production actually
+      runs sports-scheduler as the Cloud Run **Job** `uts-prod-sports-scheduler`, dispatched every 5 minutes by Cloud
+      Scheduler cron `uts-prod-sports-scheduler-cron` — not a VM. `deployment-service/Dockerfile:64`
+      (`COPY configs/ ./configs/`) bakes the config into the image, and `cloudbuild.yaml`'s sports-scheduler build steps
+      tag it both `:${COMMIT_SHA}` and `:latest`; Cloud Run **Jobs** (unlike Services) re-resolve `:latest` fresh on
+      every execution (independently confirmed via `gcloud run jobs executions describe` in
+      `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`), so the new triggers activate automatically on the
+      next cron tick after the standard LDR→main→Cloud-Build pipeline rebuilds the image — no VM action exists to take,
+      and running the stale script would have stood up a spurious duplicate scheduler double-dispatching every trigger.
+      Not executed. Live-prod verification (image rebuild landed + a sample day's manifest shows all 6 horizons with
+      per-fixture coverage) is split into todo 2a below since it depends on an async multi-stage pipeline that cannot
+      complete synchronously in one session.
+- [ ] [INFRA] P2. Verify the `odds_t12h`/`odds_t4h`/`odds_t2h` triggers are live in production and firing — confirm the
+      `deployment-service` sports-scheduler Cloud Run Job image was rebuilt with `deployment-service@9e1fd57ae` past the
+      standard LDR→main→Cloud-Build pipeline (`gcloud run jobs executions describe` on `uts-prod-sports-scheduler`, or
+      the build history for the sports-scheduler `cloudbuild.yaml` target), then pull a sample day's manifest and
+      confirm all 6 forward horizons (T-24h/T-12h/T-6h/T-4h/T-2h/T-1h) show full per-fixture coverage. Depends on todo 2
+      (`depends_on: sports_satellite_ao_dispatch_batch10_2026_08_06`, same doc). Done when: the rebuilt image is cited
+      with evidence (build ID / execution timestamp past the merge) and the sample-day manifest check shows all 6
+      horizons with per-fixture coverage (or a cited reason why a horizon cannot fire).
 - [ ] [INFRA] P3. File (or fold into an existing infra doc) the proposal to default `mtds-live-*` VM relaunches to
       `LC_TARBALL_FRESHNESS=enforce`, per the source doc's sole remaining open todo — the proposal must state the
       recommended default, the rationale (freshness-verified tarball deploys vs stale-image relaunch risk), and the
@@ -271,3 +288,13 @@ orphan verdict; writes/retags belong to the owning tranche's audit. All NEW (not
 - **Operator ruling 2026-08-07**: APPROVED — flipped `status: draft` → `active`. Pre-flip investigation (read-only)
   confirmed 82-doc Phase-1 classification + Phase-3 conflict-check against the full covering set, 4 todos targeting 4
   distinct files/repos with no overlap, no rename/archival ops among them.
+- **slot-17 2026-08-09**: Worked todo 2 (trigger-tier residual gap). Shipped `deployment-service@9e1fd57ae` — added
+  `odds_t12h`/`odds_t4h`/`odds_t2h` to `configs/sports-trigger-tiers.yaml`'s `pre_match.triggers` + 3 new regression
+  tests (`tests/unit/test_sports_trigger_tiers_config.py`, all passing; full `quality-gates.sh` green). **Did not**
+  execute the todo's VM-relaunch sub-step: `gcloud compute instances list --filter='name~"^sports-scheduler-"'` returned
+  empty, and cross-referencing `sports_satellite_ao_dispatch_batch11_2026_08_09.md` (independent, matching finding),
+  `deployment-service/Dockerfile:64`, and `cloudbuild.yaml`'s sports-scheduler build steps confirmed production runs
+  sports-scheduler as the Cloud Run Job `uts-prod-sports-scheduler` on a 5-min cron, not a standalone VM — the config
+  ships automatically via the standard image-rebuild path, and the VM launch script would have created a harmful
+  duplicate scheduler. Corrected the todo text in place rather than executing it as literally written; split live-prod
+  verification into new todo 2a (async pipeline, can't complete synchronously this session).
