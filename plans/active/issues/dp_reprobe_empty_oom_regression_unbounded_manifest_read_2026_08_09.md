@@ -134,27 +134,42 @@ Mechanical, bounded fix — mirror the already-proven `daily_digest.py` pattern:
       that the fix, while correct and necessary, is NOT SUFFICIENT — the real `defi` manifest has grown to 2.79GiB
       compressed (vs the ~130MB figure cited when daily_digest.py's own fix was validated 8 days ago), and even the
       column-restricted read now exceeds the 16Gi ceiling.** Full evidence in the Progress Log below. Repo: e2e-testing.
-- [ ] [INFRA] P1. **NEW, filed 2026-08-09 (slot 15) — the actual remaining OOM fix: bump `dp_reprobe_empty_job`'s Cloud
-      Run memory ceiling.** `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf:280-281`
-      (`module "dp_reprobe_empty_job"`) currently provisions `cpu="4" memory="16Gi"` — the same ceiling that was already
-      bumped once before (2026-07-26, from the original 4Gi) and is now insufficient again purely from organic manifest
-      growth (defi's compressed index is ~20x larger than 8 days ago), not a code regression. Cloud Run gen2 jobs
-      support `cpu=4` up to `memory=32Gi` — bump to `32Gi` (2x current, matching the doubling headroom the prior
-      4Gi→16Gi fix used) via Terraform, apply, then manually re-trigger `uts-prod-dp-reprobe-empty` to confirm a
-      completed (non-OOM) execution across all 5 asset_groups (not just `cefi`, which already passes at 16Gi). If 32Gi
-      still isn't enough, this is evidence the manifest-growth trend needs a structural fix (see the P2 alternative
-      below), not another mechanical bump. Repo: deployment-service.
-- [ ] [CODE] P2. **NEW, filed 2026-08-09 (slot 15) — structural alternative if the memory-ceiling bump above proves to
-      be a recurring treadmill.** The root cause underneath both this doc and `daily_digest.py`'s original fix is the
-      same: `_dp_common.read_manifest_index()` downloads the ENTIRE compressed parquet blob into memory
-      (`client.download_bytes(...)`) before doing a column-restricted decode — the column restriction only bounds the
-      DECODE step, not the download/buffer-retention step, so as the underlying manifest grows without bound, every
-      caller's memory floor grows with it regardless of how few columns each caller actually needs. A genuinely durable
-      fix would read via row-group/column pushdown directly against GCS (DuckDB's `read_parquet` over an `httpfs`/GCS
-      URL, or a range-read of only the needed row-groups) instead of materializing the full compressed file — the same
-      DuckDB-over-pandas precedent already used elsewhere per `/codex/05-infrastructure/manifest-consolidator-ssot.md`.
-      Out of scope to design/implement here — flagging as the next escalation if INFRA P1's ceiling bump doesn't hold
-      for long. Repo: e2e-testing.
+- [x] ✅ [INFRA] P1. **DONE (mechanical bump shipped + applied + verified live) 2026-08-09 (slot 13) — CONFIRMED
+      INSUFFICIENT: even Cloud Run's platform ceiling (32Gi/8vCPU — no larger instance exists, per
+      `manifest-consolidator-ssot.md` line 778) does not clear the OOM.** Bumped `dp_reprobe_empty_job` from
+      `cpu="4"     memory="16Gi"` to `cpu="8" memory="32Gi"` in
+      `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf:280-281` (NOTE: `cpu=4`/`memory=32Gi` is
+      REJECTED by the Cloud Run API — "For 4.0 CPU, memory must be between 2Gi and 16Gi inclusive" — the todo's original
+      "cpu=4 up to memory=32Gi" claim was wrong; 32Gi requires cpu=8, confirmed against every other `memory="32Gi"` job
+      in this repo's terraform, which all already pair it with `cpu="8"`). Applied via `tofu apply -target` (this repo
+      uses OpenTofu, not HashiCorp Terraform — running the wrong `terraform` binary silently rewrote
+      `.terraform.lock.hcl` to the `registry.terraform.io` namespace; reverted before shipping), verified live via
+      `gcloud run jobs describe` (`cpu: '8', memory: 32Gi`). **Manually re-triggered (`uts-prod-dp-reprobe-empty-xrxzx`)
+      — STILL OOM-failed**
+      (`"Task ...-task0 failed with exit code: 0 and message:     The configured memory limit was reached."`,
+      `Container terminated on signal 9` at 19:13:51Z). Timeline: started 19:11:53Z, `cefi` cleared at 19:13:00 (0 new
+      empties, ~67s in), OOM-killed ~51s into `defi` at 19:13:51 — i.e. doubling RAM 16Gi→32Gi bought the run
+      essentially ZERO extra runway before the kill (same "cefi ok, dies early into defi" shape as the 16Gi run). This
+      is strong evidence the read is not just large but effectively unbounded in this process (consistent with the
+      diagnosed antipattern: full-blob download + count-EXPANDS into per-row Python lists) — a bigger ceiling was never
+      going to hold. **The mechanical-bump path is now exhausted: 32Gi/8vCPU is Cloud Run's actual maximum, confirmed
+      both by this rejection and by every other job in the codebase topping out there.** The CODE P2 structural fix
+      below is no longer a hedge against "if 32Gi isn't enough" — that condition is now live and confirmed; escalated
+      its priority to P1 accordingly. Repo: deployment-service.
+- [ ] [CODE] P1 _(escalated from P2 2026-08-09 — the memory-ceiling path is now confirmed exhausted, not hypothetical;
+      see the INFRA P1 entry above)_. **NEW, filed 2026-08-09 (slot 15) — the only remaining fix: read via
+      row-group/column pushdown instead of downloading the full blob.** The root cause underneath both this doc and
+      `daily_digest.py`'s original fix is the same: `_dp_common.read_manifest_index()` downloads the ENTIRE compressed
+      parquet blob into memory (`client.download_bytes(...)`) before doing a column-restricted decode — the column
+      restriction only bounds the DECODE step, not the download/buffer-retention step, so as the underlying manifest
+      grows without bound, every caller's memory floor grows with it regardless of how few columns each caller actually
+      needs. A genuinely durable fix would read via row-group/column pushdown directly against GCS (DuckDB's
+      `read_parquet` over an `httpfs`/GCS URL, or a range-read of only the needed row-groups) instead of materializing
+      the full compressed file — the same DuckDB-over-pandas precedent already used elsewhere per
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md`. DP-FETCH-006's self-healing reclassify is NOT running to
+      completion on `defi` (and likely `tradfi`/`sports`/`prediction`, not yet reached in any run) until this lands —
+      the 32Gi/8vCPU ceiling bump is not a viable stopgap (see evidence above: it bought ~0 extra runway). Repo:
+      e2e-testing.
 - [ ] [INFRA] P3. Check whether `uts-prod-dp-manifest-hygiene-changed` and `uts-prod-dp-manifest-hygiene-full` have the
       same unrestricted-columns gap in their own manifest-read call sites — not checked this session. Repo: e2e-testing.
 
@@ -213,3 +228,41 @@ Mechanical, bounded fix — mirror the already-proven `daily_digest.py` pattern:
      row-group/column pushdown instead of downloading the full blob). DP-FETCH-006's self-healing reclassify is still
      NOT running to completion on `defi`/`tradfi`/`sports`/`prediction` (whichever haven't been reached yet — `cefi`
      confirmed OK) until one of those lands.
+- **2026-08-09T~19:05Z-19:15Z (slot 13, infra, task
+  `dp_reprobe_empty_oom_regression_unbounded_manifest_read-78a38cba365a`): shipped + applied the INFRA P1 ceiling bump,
+  live-verified it does NOT clear the OOM — the mechanical path is exhausted.**
+  1. **Corrected the todo's own premise**: `cpu=4`/`memory=32Gi` is REJECTED by the Cloud Run API
+     (`"For 4.0 CPU, memory must be between 2Gi and 16Gi inclusive"`) — 32Gi requires `cpu=8`. Confirmed against every
+     other `memory="32Gi"` job already in this repo's terraform (`cf_manifest_audit_scheduler.tf`,
+     `data_pipeline_fleet_monitor_scheduler.tf`, `mdps_odds_horizon_scheduler.tf`,
+     `sports_enrichment_provider_scheduler.tf`) — all pair it with `cpu="8"`, none go higher; codex
+     (`manifest-consolidator-ssot.md:778`) independently confirms "hard ceiling of 32 Gi RAM / 8 vCPU — there is no
+     larger instance" for this Cloud Run job class.
+  2. **Tooling gotcha**: this repo's terraform is OpenTofu (lock file header: "maintained automatically by tofu init"),
+     not HashiCorp Terraform — the host has both binaries (`/home/ubuntu/.local/bin/tofu` vs `/usr/local/bin/terraform`)
+     and running plain `terraform init` silently rewrote `.terraform.lock.hcl` to the `registry.terraform.io` provider
+     namespace (vs the repo's `registry.opentofu.org`) plus bumped `hashicorp/google` 7.37.0→7.43.0 — reverted
+     (`git checkout --`) before shipping anything. Used `tofu` for all subsequent init/plan/apply.
+  3. **Applied**: `cpu="4" memory="16Gi"` → `cpu="8" memory="32Gi"` at
+     `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf:280-281`, via
+     `tofu apply -target=module.dp_reprobe_empty_job` (scoped plan showed exactly the intended 1-resource diff, nothing
+     else). Live-verified via `gcloud run jobs describe --format="yaml(...resources)"` → `cpu: '8', memory: 32Gi`.
+     Shipped deployment-service (terraform-only change; quickmerge Pass-1/Pass-2 — see /done evidence for SHA).
+  4. **Manually re-triggered** (`gcloud run jobs execute uts-prod-dp-reprobe-empty --wait` →
+     `uts-prod-dp-reprobe-empty-xrxzx`) to test the todo's own done-when (non-OOM completion across all 5 AGs). **STILL
+     OOM-failed**: `status.conditions[type=Completed,status=False]` message
+     `"Task uts-prod-dp-reprobe-empty-xrxzx-task0 failed with exit code: 0 and message: The configured memory limit was reached."`,
+     log line `Container terminated on signal 9` at 19:13:51Z. Execution timeline from logs: started 19:11:53Z, `cefi`
+     cleared cleanly at 19:13:00 (`0 new SOURCE_RETURNED_ZERO empties`, ~67s in), OOM-killed ~51s into `defi` at
+     19:13:51 — **doubling RAM 16Gi→32Gi bought essentially zero extra runway** before the kill (same "cefi-ok,
+     dies-early-into-defi" shape as the pre-bump 16Gi run reported in the entry above). This is live evidence the read
+     is not merely large but effectively unbounded in-process for this manifest size, consistent with the
+     originally-diagnosed antipattern (full-blob download + count-EXPANDS into per-row Python lists) — a bigger ceiling
+     alone was never going to hold, and 32Gi/8vCPU is the actual platform max, so there is no bigger ceiling left to
+     try.
+  5. **Verdict**: flipped INFRA P1 to done (the mechanical bump was correctly shipped and IS a real, live, verified
+     terraform change) but the underlying OOM is still NOT resolved. Escalated `[CODE] P2` (the
+     row-group/column-pushdown structural fix) to **P1** — the "if 32Gi still isn't enough" condition it was filed as a
+     hedge against is now confirmed live, not hypothetical, and there is no further mechanical lever (ceiling bump) left
+     to pull. DP-FETCH-006 self-healing remains broken on `defi` (and un-reached AGs `tradfi`/`sports`/`prediction`)
+     until the CODE P1 lands.
