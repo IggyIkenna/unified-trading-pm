@@ -249,6 +249,67 @@ These are structurally separate from MTDS odds data — IS bucket, not MTDS tick
 fixture results) come from IS `fixtures_outcomes`/`matches`, not from the retired `markets`/`outcomes`/`settlements`
 types above. **Do NOT mix IS entity types with the MTDS data type catalog.**
 
+### ML label lineage — the full path, verified against live code (2026-08-09)
+
+`markets`/`outcomes`/`settlements` were phantom sports MTDS `data_type` declarations (0 rows ever written — see Retired
+Data Types above); they were never the source of match-outcome ML labels. The real lineage — traced end-to-end through
+the actual reader/writer code, not asserted — is:
+
+1. **instruments-service writes the outcome** (`instruments_service/engine/orchestrator/sports_fixtures.py`,
+   `_write_fixtures_per_league`): for each completed fixture (`home_score_regulation` populated — regulation always
+   finishes even in ET/PEN games) it writes the Q6 outcome columns (`_Q6_OUTCOME_COLUMNS` in
+   `instruments_service/engine/orchestrator/__init__.py`: `home_score_regulation`, `away_score_regulation`,
+   `home_score_after_extra_time`, `away_score_after_extra_time`, `home_score_after_penalty_shootout`,
+   `away_score_after_penalty_shootout`, `home_penalty_shootout_score`, `away_penalty_shootout_score`,
+   `went_to_extra_time`, `went_to_penalties`, `match_result`) to
+   `sports_reference/by_date/day={date}/entity=fixtures_outcomes/league={league}/fixtures_outcomes.parquet`, keyed on
+   `af_fixture_id`. The companion `entity=fixtures_schedule` write carries everything else (kickoff time, teams, league)
+   for ALL fixtures (not just completed ones) — the schedule/outcomes split
+   (`sports_fixtures_schema_split_completion_2026_06_20.md`) has no legacy dual-write. FootyStats' `MATCHES` entity
+   (`instruments_service/engine/orchestrator/footystats.py`, GCS `entity=footystats_matches`) is a SEPARATE, secondary
+   provider's match-result feed — same purpose (outcome ground truth), different provider, used for cross-provider
+   enrichment rather than as the primary label source. This is the "matches" half of "IS `fixtures_outcomes`/`matches`".
+2. **features-service reads + joins the split** (`features_service/sports/data/gcs_reader.py::read_fixtures_joined` /
+   `_read_split_fixtures_fallback`, delegating to UTL's `read_fixtures_joined(date, league_id=None)`): reads both
+   `entity=fixtures_schedule` and `entity=fixtures_outcomes` per league and joins them on `af_fixture_id`.
+3. **features-service normalizes the raw provider columns**
+   (`features_service/sports/data/gcs_normalizers.py::_FIXTURE_COL_MAP`): renames the raw score columns to the canonical
+   `home_goals`/`away_goals` (+ `ht_home_goals`/`ht_away_goals`, `ft_home_goals`/`ft_away_goals`). FootyStats' `matches`
+   rows go through the separate `_normalize_footystats_matches` normalizer to the same canonical column names. **Bug
+   found + fixed here (2026-08-09)**: `_FIXTURE_COL_MAP` only knew the LEGACY singleton `entity=fixtures` column names
+   (`home_score`/`away_score`, from before the 2026-07-14 schedule/outcomes split cutover). UTL's
+   `read_fixtures_joined()` — the reader `read_fixtures_joined`/`_read_split_fixtures_fallback` above delegates to —
+   returns the CURRENT Q6 names (`home_score_regulation`/`away_score_regulation`) for every date on/after the cutover,
+   and its own source comment states the legacy bare names "are retired and no longer written". Since `_FIXTURE_COL_MAP`
+   never mapped the Q6 names, `home_goals`/`away_goals` were silently ABSENT (not merely NaN — the column didn't exist)
+   from the normalized frame for every post-cutover fixture, which propagated through the exporter (step 4) and into
+   ml-service's `sports_target_generator.py` (step 5) as `_safe_col`'s "Missing column, filling with nan" path — i.e.
+   XG/win-draw-loss/meta ML labels were silently all-NaN for current data. Fixed by adding
+   `home_score_regulation`/`away_score_regulation` → `home_goals`/`away_goals` to `_FIXTURE_COL_MAP`
+   (`_rename_coalescing_collisions` already merges both eras' names when a lookback window straddles the cutover — no
+   additional handling needed). Halftime scores (`ht_home_goals`/`ht_away_goals`) are NOT in `_Q6_OUTCOME_COLUMNS` at
+   all (Q6 only carries regulation/ET/penalty scores + `match_result`) — whether halftime labels have an equivalent
+   post-cutover gap is unverified and out of scope of this fix; flagging for a follow-up if halftime-target training is
+   exercised against current dates.
+4. **features-service exports `home_goals`/`away_goals` into the fixture-level feature output**
+   (`features_service/sports/exporters/derived_features_helpers.py`, e.g. the `home_win`/clean-sheet/venue-context
+   calculators keying directly off `completed_keyed["home_goals"]`/`["away_goals"]`) — these columns pass through into
+   the `derived_features`/`fixture_features` parquet that ml-service reads.
+5. **ml-service reads the exported features** (`ml_service/training/app/core/sports_feature_loader.py`, fixture-based
+   GCS layout — one row per fixture, joined on `fixture_id` across feature groups) and **ml-service builds labels from
+   them** (`ml_service/training/app/core/sports_target_generator.py`: `COL_HOME_GOALS = "home_goals"`,
+   `COL_AWAY_GOALS = "away_goals"`, `COL_HT_HOME_GOALS = "ht_home_goals"`, `COL_HT_AWAY_GOALS = "ht_away_goals"` —
+   consumed by the XG/win-draw-loss/halftime/meta target generators).
+
+**Net**: retiring `markets`/`outcomes`/`settlements` required no lineage change — those three types were never wired
+into this path (0 rows, phantom declarations); the ML label lineage was always meant to run through IS
+`fixtures_outcomes`/`matches`. What step 3 found is a SEPARATE, real bug on that same path (the normalizer lagging
+behind the 2026-07-14 schedule/outcomes entity split, fixed in the same session this section was written) — labels were
+silently broken for current data for a different reason than "retired types," which is exactly the kind of thing a
+reader chasing "why is there no settlements data_type" needs to know is NOT the actual gap. This section exists so a
+future reader who greps for `settlements` and finds nothing does not conclude labels are missing (they weren't, once
+fixed) or re-open the wrong question.
+
 ---
 
 ## GCS Path Convention

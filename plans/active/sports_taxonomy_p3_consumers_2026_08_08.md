@@ -174,9 +174,22 @@ spelling variant survives, which is the entire point of the panel". It does not.
       68.6% floor which is honest absence, not a defect. Prerequisite: the P1/P2 zombie-tick fixes in
       `/plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md` must land first — re-run and confirm
       the floor is gone before switching, so the bar change is not masking a real regression.
-- [ ] [CODE] P1. **Point the ML label lineage at IS `fixtures_outcomes` / `matches`** now that
+- [x] ✅ [CODE] P1. **Point the ML label lineage at IS `fixtures_outcomes` / `matches`** now that
       `markets`/`outcomes`/`settlements` are retired as phantom declarations (P1). Document the lineage explicitly in
-      codex so the next reader does not re-open "why is there no settlements data_type".
+      codex so the next reader does not re-open "why is there no settlements data_type". — features-service@fa67da20:
+      traced the full lineage end-to-end against live code (IS `sports_fixtures.py` Q6 write → UTL
+      `read_fixtures_joined` → features-service `gcs_normalizers.py`/`_FIXTURE_COL_MAP` → exporters → ml-service
+      `sports_feature_loader.py`/`sports_target_generator.py`) and found + fixed a REAL bug on that path:
+      `_FIXTURE_COL_MAP` only knew the pre-2026-07-14-cutover legacy `home_score`/`away_score` column names, not the
+      current Q6 `home_score_regulation`/`away_score_regulation` names UTL's reader actually returns for every
+      post-cutover date (its own comment says the legacy names are "retired and no longer written") —
+      `home_goals`/`away_goals` (and every derived XG/win-draw-loss/meta ML label) were silently ALL-NaN for current
+      fixtures. Added the Q6 names to `_FIXTURE_COL_MAP` (existing `_rename_coalescing_collisions` already merges both
+      eras across a straddling lookback window) + a regression test. Full lineage documented in
+      `/codex/02-data/sports-data-types-catalog.md` § "ML label lineage". Halftime score labels
+      (`ht_home_goals`/`ht_away_goals`) are NOT covered by Q6 at all (no halftime columns in `_Q6_OUTCOME_COLUMNS`) —
+      whether they have an equivalent post-cutover gap is unverified, flagged in the codex section as a follow-up rather
+      than silently expanding this todo's scope.
 - [ ] [CODE] P1. **Move the sports feature loader off its PATH-PREFIX read of bucketed odds.**
       `sports_feature_loader._ODDS_BUCKETED_PREFIXES` matches
       `processed/by_date/day={date}/pipeline_mode=batch_mdps_odds_horizon_bucket/` and
