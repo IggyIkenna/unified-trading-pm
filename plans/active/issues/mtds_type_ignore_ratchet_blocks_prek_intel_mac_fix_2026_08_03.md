@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [quality-gates, ratchet, ci-cd, ready-to-ship-blocked]
 created: 2026-08-03
 author: unknown
-last_updated: "2026-08-03"
+last_updated: "2026-08-09"
 parent_epic: plan_hygiene_master
 assigned_vm: NA
 execution_scope: local-only
@@ -98,8 +98,14 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Root-cause the exact `# type: ignore` occurrence that pushed the count to 659, and either fix it with
-      an exact rule code or get the baseline properly raised.
+- [x] ✅ [SCRIPT] P2. Root-cause the exact `# type: ignore` occurrence that pushed the count to 659, and either fix it with
+      an exact rule code or get the baseline properly raised. **DONE (staleness-recheck 2026-08-09)** —
+      `market-tick-data-service@b16c9f69` (2026-08-07 20:04:46 UTC, same day as this doc's 2026-08-07 KEEP-NA marker)
+      ratcheted `_MTDS_TYPE_IGNORE_BASELINE` in `scripts/quality-gates.sh` from 660 down to 658, with the shipped code
+      comment explicitly citing this issue's own methodology ("mirroring the issue doc's own
+      `grep -rn "# type: ignore" ...` methodology"). Live-reverified: `grep -rn "# type: ignore" --include='*.py' . | grep
+      -v .venv | wc -l` on the current tree returns exactly **658**, matching the frozen baseline exactly — the ratchet
+      no longer blocks quickmerge.
 - [x] ✅ [SCRIPT] P2. Once unblocked, ship the already-verified prek Intel-Mac uv.sources fix in
       `market-tick-data-service/pyproject.toml`+`uv.lock` (already sitting correct in the working tree, just
       uncommitted) via the exact quickmerge command in "Recommended next step" above. — **SHIPPED
@@ -134,3 +140,7 @@ deliberately bumped by someone who has confirmed the new occurrence is legitimat
   root-cause + baseline-owner sign-off, todo 3 investigate the quickmerge-regate-vs-standalone-QG inconsistency). Both
   are fairly bounded/mechanical — flagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` in this audit's report for a possible
   future reclassify pass rather than reclassified here.
+- **staleness-recheck 2026-08-09**: closed todo 1 (root-cause the type:ignore ratchet block) —
+  `market-tick-data-service@b16c9f69` ratcheted `_MTDS_TYPE_IGNORE_BASELINE` 660→658 same-day as the 2026-08-07 marker,
+  live-reverified current repo count is exactly 658 (matches baseline, no longer blocking). 1 open todo remains (todo 3,
+  the `--no-fix`-vs-quickmerge-re-gate fatality inconsistency — no evidence found of anyone investigating it).
