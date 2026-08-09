@@ -28,6 +28,7 @@ execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
+sequential: true
 locked_by:
 locked_since:
 ---
@@ -135,3 +136,14 @@ instrument with a `-`/`@`-suffixed raw manifest id, asserting lookback validatio
   for the target dates, ruling out an honest-absence/missing-data explanation — this is purely an id-form mismatch
   inside the dependency checker. Did not attempt the fix inline (shared core code, out of this todo's scope) — filed
   this issue + the two follow-up todos instead.
+- 2026-08-09 (slot-15): Dispatched the P2 "same re-run for the sibling P2.11.16 todo" item, but the P1
+  dependency-checker fix this todo's own text says to wait for ("once the dependency-checker fix lands") had NOT landed
+  yet — confirmed via `git log` on `features-service` `live-defi-rollout` (no commit touching
+  `features_service/delta_one/app/core/dependency_checker.py` addresses the CEFI canonical-vs-raw-vendor id-form
+  translation) and via the backlog API (P1 task `delta_one_cefi_lookback_instrument_id_form_mismatch-92efd46e6c8f` was
+  `dispatched` to slot 14, not yet `done`). Plan-authoring gap: this doc's 3 todos have a real sequential dependency (P2
+  items explicitly say "once the above lands") but carried no `sequential: true`/`depends_on`, so the dispatcher offered
+  the P2 items concurrently with P1 instead of gating them — added `sequential: true` to this doc's frontmatter to fix
+  that for future dispatch (incl. the still-`queued` sibling P2 item). Skipping this task with `reason_code: GATED` +
+  `park_now: true` rather than attempting the re-run against unfixed code (would reproduce the exact failure the issue
+  documents) or duplicating slot 14's in-flight P1 fix.
