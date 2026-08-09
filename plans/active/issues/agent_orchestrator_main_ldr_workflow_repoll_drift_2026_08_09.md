@@ -27,7 +27,7 @@ repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 related:
   [
-    /plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
+    /plans/archive/2026_08/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
     /plans/archive/2026_08/issues/alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]

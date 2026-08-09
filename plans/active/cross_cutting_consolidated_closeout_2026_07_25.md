@@ -640,7 +640,8 @@ batch)
   [`slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md`](/plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md)
   — evidence for the latter 3: `ag_closeout_audit_cross_cutting_parked_2026_08_08.md`.
 - **ci**:
-  [`agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`](/plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md),
+  [`agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`](/plans/archive/2026_08/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md)
+  (archived 2026-08-09, resolved),
   [`deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md`](/plans/active/issues/deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md),
   [`glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md`](/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md),
   [`glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md`](/plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md),

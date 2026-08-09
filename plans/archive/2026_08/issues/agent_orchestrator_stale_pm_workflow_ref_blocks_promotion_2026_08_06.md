@@ -31,11 +31,7 @@ summary: >-
   clear the backmerge-deadlock class for this repo — it is correct and harmless but WILL NOT MERGE until problem 1 above
   is separately fixed, since `quality-gates-v2` on `main`-based branches fails regardless of PR content. Problem 2
   additionally blocks the repo's *actual* promotion (PR #813) independent of PR #814's fate.
-status: open
-archive_exempt:
-  true # bridge for the flip-then-mv two-commit split (plan-completion-and-archival-discipline.md
-  # "archive_exempt: true is the sanctioned bridge") -- all 4 todos now done, unlocked; dropped in the immediately
-  # following git-mv archival commit, same session.
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -49,7 +45,7 @@ related:
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
   ]
 created: 2026-08-06
-last_updated: "2026-08-06"
+last_updated: "2026-08-09"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -64,6 +60,8 @@ source:
   "fleet-wide notify-slack.yml backmerge-deadlock audit sub-agent, 2026-08-06 ~16:30-17:00 UTC, reported as a 4th layer
   per explicit instruction not to chase it autonomously"
 resolved_by:
+  "unified-trading-pm@b8db2cd412 (todo 4, the post-rollout main<->live-defi-rollout parity check) -- all 4 todos done,
+  unlocked"
 locked_by:
 locked_since:
 context_scope:
@@ -76,6 +74,10 @@ context_scope:
     /scripts/workflow-templates/rollout-workflow-templates.sh,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED** (status: resolved, 0 open todos, unlocked). Archived by cicd (slot-15) after
+> shipping the sole remaining todo (todo 4, the post-rollout main<->live-defi-rollout parity check,
+> `unified-trading-pm@b8db2cd412`).
 
 # agent-orchestrator: dangling PM workflow reference + genuine code conflict block promotion
 
