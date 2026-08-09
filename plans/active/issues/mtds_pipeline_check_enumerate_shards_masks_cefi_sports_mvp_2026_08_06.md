@@ -149,6 +149,19 @@ audit doesn't re-discover it as if new; not requesting action on it here.
   leaves the same masking risk for the NEXT asset_group that acquires an unsupported enumeration-time `is_mvp()`
   dependency.
 
+## Todos
+
+- [ ] [CODE] P1. **Fix `enumerate_mtds_shards()` so a combined (no `--asset-group` filter) sweep stops silently dropping
+      CEFI/SPORTS.** Implement remediation (b) above (per-asset_group fallback firing, not gated on the combined list's
+      aggregate truthiness) as the primary fix — it closes the masking MECHANISM, not just today's two affected groups,
+      so the next asset_group to acquire an unsupported enumeration-time `is_mvp()` dependency doesn't silently repeat
+      this. Add `_CEFI_MVP_SHARDS`/a SPORTS equivalent (remediation (a)) only if (b) alone still leaves a real per-venue
+      MVP-shape gap for either group once the fallback fires correctly — verify by re-running the exact repro in "What I
+      found" above. (repo: market-tick-data-service). **Done when**: a combined
+      `enumerate_mtds_shards(None, None, None, True, False)` call returns non-zero CEFI and SPORTS shards matching the
+      per-asset_group-filtered counts (225 CEFI / 110 SPORTS) cited above, and a regression test locks in the combined-
+      sweep case specifically (not just the per-asset_group case, which already worked).
+
 ## Workaround used this run (cefi_mtds_smoke_tester, day=2026-08-05)
 
 Invoked `pipeline_e2e_check.py` once per `--asset-group` explicitly (CEFI, DEFI, TRADFI, SPORTS, PREDICTION) rather than
