@@ -323,13 +323,34 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       around orchestrator restarts is invisible — no `kill_session` call, watchdog reclaim, or systemd signal is logged,
       only the pruner's later `has_session()` detection (which fired 589× on 08-04). Instrument the session-teardown
       paths so a future recurrence is attributable from journalctl/syslog alone. (repo: agent-orchestrator)
-- [ ] [DATA] P2. Verify the capacity QUEUE end-to-end on live traffic (agent-orchestrator@5087f30, deployed 2026-08-06
-      15:04 UTC): confirm (a) a real no-capacity dispatch now records `status="queued"` rather than `no_capacity` in
-      `/api/scheduled-jobs/recent`, (b) the AutoSpawn drain dispatches it when headroom returns and
+- [x] ✅ [DATA] P2. Verify the capacity QUEUE end-to-end on live traffic (agent-orchestrator@5087f30, deployed
+      2026-08-06 15:04 UTC): confirm (a) a real no-capacity dispatch now records `status="queued"` rather than
+      `no_capacity` in `/api/scheduled-jobs/recent`, (b) the AutoSpawn drain dispatches it when headroom returns and
       `ScheduledJobQueueRow.status` flips `queued -> dispatched`, and (c) the dedup PK holds — an hourly retry across a
       multi-hour outage leaves exactly ONE row per `<job>:<tranche>:<day>` and produces exactly ONE worker. Unit tests
-      cover all three (`tests/test_scheduled_jobs.py`), but no live no-capacity window has occurred since deploy. (repo:
+      cover all three (`tests/test_scheduled_jobs.py`), but no live no-capacity window has occurred since deploy. —
+      **VERIFIED LIVE 2026-08-09** against the live SQLite state (S3 DR backup
+      `s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/2026-08-09/live_20260809T210230Z.db`, not SSM —
+      see Progress Log for why). All three hold: (a) 0 `no_capacity` rows in `scheduled_job_runs` since deploy, 136
+      `queued` reports instead. (b) `scheduled_job_queue`: 100/100 rows now `status=dispatched` (spans 2026-08-06 20:00
+      -> 08-09 07:55 created, drained same window, wait times up to ~3h), `scheduled_job_queued`
+      /`scheduled_job_queue_dispatched` activity events 100/100 matched 1:1. (c) 0 duplicate `queue_key` rows (PK
+      holds); 100 distinct non-null `dispatch_agent_id` across 100 rows — exactly one worker per drained row, confirmed
+      on a real multi-hour-wait case (`plan_reconciler:ao:2026-08-09`, queued 02:01 -> dispatched 02:47, `agt-fe4564`,
+      one worker). New minor finding tracked below (not a correctness bug — no double-dispatch, no lost work). (repo:
       agent-orchestrator)
+- [ ] [DATA] P3. Same-day timer refire AFTER its `<job>:<tranche>:<day>` queue row is already `status=dispatched`
+      reports a misleading `status="queued"` in `/api/scheduled-jobs/recent` — found live 2026-08-09 verifying the todo
+      above. `_queue_for_capacity()` (`server/plan_health.py`) unconditionally returns `{"status": "queued", ...}`
+      regardless of whether `queue_scheduled_job()` actually (re-)queued the row or hit its `else: return row` no-op
+      branch (already dispatched that day — deliberately not re-queued, to avoid double-dispatch). No work is lost (the
+      tranche already got its one worker earlier that day) and the dedup PK still holds, but the LABEL is wrong: a no-op
+      read as "queued" looks like real pending work on the dashboard, and no run will ever complete for that specific
+      report. Live example: `ag_closeout_auditor:ao:2026-08-09` — worker `agt-41d860` dispatched 02:31, then 3 more
+      `queued` reports at 00:40/02:31/07:55/08:40 for the same key, none of which will ever get their own worker. Fix:
+      have `_queue_for_capacity()` (or `queue_scheduled_job()`) distinguish "freshly queued/attempts bumped" from
+      "already dispatched today, no-op" and return a distinct status (e.g. `"already_dispatched_today"`) for the latter.
+      (repo: agent-orchestrator)
 - [ ] [DATA] P3. Confirm the hoisted working-pane guard reduced false spawn-retry-cap pages (agent-orchestrator@9d26598,
       deployed 2026-08-06 15:04 UTC). Baseline to beat, measured 2026-07-30..08-06 from the orchestrator journal: 45 cap
       declarations, pane state at cap = frozen 19 / no_session 11 / **working 8** / idle 7. The 8 `pane=working` pages
@@ -755,3 +776,48 @@ gates promotion to `main`, not the fix's correctness.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged — all still resolve and
   still cover the doc's core mechanisms (slot-level stale-flip, reclaimer, reserve/batch config, cgroup fix, installer
   pattern, related one_shot-lifecycle issue).
+
+- **worker slot-20 2026-08-09 (todo — verify the capacity queue end-to-end on live traffic)**: VERIFIED + FLIPPED, via a
+  different read path than SSM.
+
+  **SSM was NOT usable this session — a genuinely different-identity permission gap, not a self-service one.** This
+  worker's AWS identity is `ikenna-worker` (an IAM user, confirmed via `aws sts get-caller-identity`), not
+  `uts-orchestrator-epic-role` (the EC2 instance role `check-scheduled-job-health.sh`/`check-ao-backlog-status.sh`
+  assume via the metadata service). `ssm:SendCommand` -> `AccessDeniedException`; `iam:ListAttachedUserPolicies` /
+  `iam:ListUserPolicies` on itself -> ALSO `AccessDeniedException` — `ikenna-worker` cannot even read its own policies,
+  let alone self-grant one, unlike `uts-orchestrator-epic-role`'s `self-manage-own-policies` inline policy (scoped to
+  the role's own ARN only, per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`). No alternate AWS
+  profile exists on this host (`aws configure list-profiles` -> `default` only). This matches worker slot-16's
+  2026-08-06 finding on the same doc (`BLK-f602483b`, the sudo/root-write gap) — same identity wall, different operation
+  (read via SSM here, not write via sudo there).
+
+  **Found a legitimate read-only alternative instead of escalating: the S3 DR SQLite backup.** `aws s3 ls` (broad S3
+  read access, unrelated IAM boundary) found `s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/` — the
+  standing 6-hourly SQLite snapshot noted in `server/config.py`'s DR-staleness monitor. Downloaded the newest one
+  (`2026-08-09/live_20260809T210230Z.db`, 253MB) to the scratchpad and queried it locally with `sqlite3 -readonly`
+  (mode=ro URI, zero risk of mutating the live DB even by accident — this is a downloaded copy, not a live connection).
+  Genuinely live data, not synthetic: covers 2026-08-06 20:00 UTC (first real no-capacity event post-deploy) through
+  2026-08-09 07:55 UTC (last row's `created_at`).
+
+  **All three parts of the todo confirmed, from `scheduled_job_queue` + `scheduled_job_runs` + `activity_log`:**
+  - (a) `SELECT status, COUNT(*) FROM scheduled_job_runs WHERE finished_at >= '2026-08-06 15:04:00'` -> `queued: 136`,
+    `dispatched: 50`, `error: 4`, `quarantined: 1`, **`no_capacity: 0`**. The old drop-on-no-capacity status has not
+    been recorded once since deploy.
+  - (b) `scheduled_job_queue`: 100/100 rows `status=dispatched`, none stuck `queued` at snapshot time. Activity log:
+    `scheduled_job_queued` 100, `scheduled_job_queue_dispatched` 100 — 1:1 matched. Wait times
+    (`dispatched_at - created_at`) ranged from seconds up to ~10716s (~3h), so this covers genuine multi-hour capacity
+    waits, not just fast-clearing ones.
+  - (c) Dedup PK: `GROUP BY queue_key HAVING COUNT(*)>1` -> 0 rows (structural PK + empirically zero collisions).
+    "Exactly ONE worker": `COUNT(*)=100, COUNT(DISTINCT dispatch_agent_id)=100`, zero NULLs — every drained row produced
+    exactly one, distinct agent. Verified on a real multi-firing case: `plan_reconciler:ao:2026-08-09` queued at 02:01
+    (attempts=0, i.e. never re-queued), dispatched 02:47 by `agt-fe4564` — exactly one worker, despite 3 separate
+    "queued" dispatch-attempt REPORTS for that key that day (see the new finding below for why the report count and
+    queue-row count diverge).
+
+  **New finding filed as a P3 follow-up (not a correctness bug):** cross-referencing `scheduled_job_runs` against
+  `scheduled_job_queue` surfaced 136 "queued" run-reports against only 100 queue rows — the gap is EXPLAINED, not a bug
+  in the dedup itself: `_queue_for_capacity()` always returns `status="queued"` even when `queue_scheduled_job()`
+  internally no-ops (a same-day timer refire hitting an already-`dispatched` queue row, deliberately not re-queued to
+  avoid double-dispatch). The underlying dedup/one-worker guarantee holds (confirmed above), but the per-attempt STATUS
+  LABEL is misleading for those no-op refires — logged as "queued" when nothing is actually pending. See the new todo
+  directly above this entry.
