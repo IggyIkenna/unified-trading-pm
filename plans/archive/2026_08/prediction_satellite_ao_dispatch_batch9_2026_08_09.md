@@ -11,7 +11,7 @@ summary: >-
   Kalshi historical-backfill build whose prerequisite gate (batch4's own todo #1, POLYMARKET instrument-lifecycle
   bounds) shipped 2026-08-07, and a now-safe operational `--apply` run whose blocking script bug was already fixed.
   Conflict-checked against prediction_satellite_ao_dispatch_batch4/6/7/8 (all active/complete) — zero collisions.
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -23,7 +23,7 @@ related:
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch9_2026_08_09_finalize.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch9_2026_08_09_finalize.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-09"
@@ -58,6 +58,24 @@ drift_direction: advance-code
 ---
 
 # Prediction satellite AO batch 9 — 2026-08-09
+
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 4 todos shipped/measured with real evidence (see Progress Log): the
+> series-scoped Kalshi historical-backfill enumeration, the now-safe cqg BATCH re-classification `--apply` re-walk, the
+> production backfill campaign, and the campaign's own silent-drop-on-empty fix + verified re-run. Independently
+> re-checked by `prediction_satellite_ao_dispatch_batch9_2026_08_09_finalize.md`'s todos 1-2 (source-doc reconciliation
+>
+> - not-extracted-items re-check). Archived per the 6-step ritual
+>   (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); codex-alignment check found no staleness —
+>   the new launcher VM prefixes this batch shipped (`mtds-prediction-kalshi-cqg-rewalk-*`,
+>   `mtds-prediction-kalshihistgap-*`) already resolve under the existing `mtds-prediction-` entry in
+>   `deployment-service/deployment_service/vm_prefix_registry.py`, no new registry entry or CLAUDE.md contract owed. No
+>   deferred item needed migrating — the "Not extracted this batch" items below already point at their own tracked homes
+>   (the tarball-overwrite race in the infra/ci tranche's closeout, the fixture-pairing residual already claimed by
+>   `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`). Finalize plan
+>   `prediction_satellite_ao_dispatch_batch9_2026_08_09_finalize.md` (source-doc reconciliation + this archival)
+>   completed and archived alongside this doc. Successor: none.
+>
+> **Status: ACTIVE (historical).**
 
 Only 2 items qualified, both from `prediction_cross_venue_arb_and_coverage_2026_07_24.md`.
 `prediction_consolidated_closeout_2026_07_18.md` is a coordination hub (`archive_exempt: true`,

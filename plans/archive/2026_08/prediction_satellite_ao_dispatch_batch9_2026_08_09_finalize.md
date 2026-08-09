@@ -7,7 +7,7 @@ summary: >-
   prediction_cross_venue_arb_and_coverage_2026_07_24.md's own checkboxes for the 2 items batch9 closes, re-checks the 3
   not-extracted items for whether any blocking condition has since cleared, then archives batch9 via the standard 6-step
   ritual.
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [prediction, ao-dispatch, close-out, batch-9, satellite-docs, archival]
 related:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -33,10 +33,9 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-archive_exempt: true
 context_scope:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch9_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
   ]
@@ -52,7 +51,14 @@ drift_direction: advance-code
 
 # Prediction satellite AO batch 9 — finalize
 
-**status: active — gated on batch9's 2 todos via `depends_on` + `gate_on_depends: true`.**
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 3 todos done: source-doc pointer reconciliation, independent re-check of
+> batch9's 3 not-extracted items, and the archival itself (this doc +
+> `prediction_satellite_ao_dispatch_batch9_2026_08_09.md`, moved to `plans/archive/2026_08/` in the same commit as this
+> banner). Every active-corpus referrer repointed to the archive path; no deferred item needed migrating. No codex
+> staleness found. Successor: none.
+
+**Status: active from the start (historical).** `gate_on_depends: true` machine-held every todo below until batch9's 2
+todos were `done`.
 
 ## Todos
 
