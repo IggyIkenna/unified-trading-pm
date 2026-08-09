@@ -49,6 +49,7 @@ source: >-
   `not_clean_since`, rather than a bug fix to the existing field.
 resolved_by:
 locked_by:
+archive_exempt: true
 context_scope:
   [
     agent-orchestrator/server/routes/git_health.py,
@@ -115,16 +116,27 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
       distinct `not_clean_since` values (`null`, `2026-08-07T06:17:03Z`, `2026-08-07T06:27:03Z`) across slots/repos on
       the same host — impossible under a collapsed-global path. Closed 2026-08-07 by finalize twin todo 1.
       unified-trading-pm@594aea342.
-- [ ] [BACKEND] P3. Based on the above, either fix the upstream timestamp source, or add a distinct "last observed dirty
-      transition" field alongside the existing hysteresis-gated `not_clean_since` so worktree-health consumers
+- [x] ✅ [BACKEND] P3. Based on the above, either fix the upstream timestamp source, or add a distinct "last observed
+      dirty transition" field alongside the existing hysteresis-gated `not_clean_since` so worktree-health consumers
       (review.md § 3d) can reliably distinguish a fresh edit from a genuinely long-stuck worktree (repo:
       agent-orchestrator). **Recommendation (verdict (iii) confirmed, 2026-08-07):** the bugfix-the-existing-field
       branch is provably right — swap `slot-git-status-report.sh` line 198's forwarded host-wide
       `dirty_consecutive_ticks` aggregate for a per-repo lookup via the already-existing `_read_repo_dirty_ticks` (keyed
       by repo path in the same `/tmp/slot-cron-ff-pull.result.json`) so `_propagate_not_clean_since`'s confirm-gate is
       keyed to the same repo it is clearing/preserving, matching `ff_one()`'s own per-repo confirm-gate logic. No
-      schema/field addition required. Stays open: implementation requires QG in agent-orchestrator; out of scope for
-      this finalize plan.
+      schema/field addition required. **Server half shipped 2026-08-08 (agent-orchestrator@5d6752b)**:
+      `RepoStatus.dirty_consecutive_ticks` + `_propagate_not_clean_since` already prefer a per-repo value when present,
+      falling back to the slot-level scalar otherwise — but that commit's own message named an outstanding companion
+      reporter change ("new reporters (slot-git-status-report.sh companion change) include per-repo values") that was
+      never done. **Closed 2026-08-09**: added `read_repo_dirty_ticks()` to `slot-git-status-report.sh` (mirrors
+      `slot-cron-ff-pull.sh`'s `_read_repo_dirty_ticks`, same `FF_RESULT_FILE` + same `repo_key` convention — the repo
+      clone's resolved `pwd` post-pushd, matching `ff_one()`'s own `repo_key`); `classify_repo()` now computes it per
+      repo and emits it as a 12th TSV column in every return path; `post_snapshot()`'s payload builder threads it into
+      each repo's JSON dict as `dirty_consecutive_ticks`, which the already-shipped server code consumes. Verified
+      locally: built a synthetic FF-cron result file with a per-repo `repo_dirty_ticks` map, confirmed `classify_repo` +
+      the payload builder correctly produce `2` for a repo present in the map, `0` for a repo absent from the map, and
+      `0` when the result file itself is missing entirely — matching `_read_repo_dirty_ticks`'s own fallback semantics.
+      `bash -n` + `shellcheck` clean (only pre-existing unrelated SC2015 infos). unified-trading-pm@07dbb2cb9b.
 
 ## Progress Log
 
@@ -253,3 +265,14 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
   future `/na-eligibility-audit`/`/archive-candidates-audit` pass) once it reaches zero open todos, same as every other
   `assigned_vm: planning` issue doc in this corpus.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **2026-08-09 (slot 13, backend_engineer)**: Closed the sole remaining todo. Shipped the companion reporter-side change
+  `agent-orchestrator@5d6752b`'s commit message named but never landed: `slot-git-status-report.sh` now computes +
+  forwards each repo's own `dirty_consecutive_ticks` (via a new `read_repo_dirty_ticks()`, mirroring
+  `slot-cron-ff-pull.sh`'s `_read_repo_dirty_ticks` on the same `FF_RESULT_FILE` + `repo_key` convention), which the
+  already-shipped server-side `RepoStatus.dirty_consecutive_ticks` / `_propagate_not_clean_since` code consumes in
+  preference to the host-wide aggregate. Verified locally against a synthetic FF-cron result file (present-in-map → 2,
+  absent-from-map → 0, missing-result-file → 0). All todos now closed, doc unlocked — unified-trading-pm@07dbb2cb9b.
+  Flip committed with `archive_exempt: true` per `check_archive_candidates.sh`'s sanctioned flip-then-mv bridge
+  (`check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md`) — a plain edit at this still-active
+  path, per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "never combine the checkbox flip
+  with the `git mv` in one commit" rule. Archival move follows immediately as the next commit.
