@@ -34,8 +34,15 @@ convention as na_corpus_baseline.yaml / repo_docs_ssot_baseline.yaml:
     case, reported as its own louder finding per the issue's ask.
 
 A DECLARED exclusion (a live marker that DOES open its own line — the deliberate,
-correctly-authored hold) never counts against either axis; it is the parser working
-exactly as intended.
+correctly-authored hold) never counts against max_accidental_exclusions; it is the
+parser working exactly as intended. It STILL counts toward max_zero_dispatchable_docs
+if it's the doc's only open todo — that axis is declared/accidental-blind by design
+(disk_open>0 and backlog_open==0, full stop; see `_summarize`): a doc with a single
+genuinely-blocked todo really does have zero dispatchable work right now, regardless
+of whether the block is correctly classified. Confirmed 2026-08-09
+(/plans/archive/issues/ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md
+todo 3): fixing an accidental->declared misclassification does not by itself lower
+max_zero_dispatchable_docs.
 
 Usage: check_ao_dispatch_visibility_gate.py [--workspace-root DIR] [--vm-id ID]
                                              [--json] [--update-baseline] [--quiet]

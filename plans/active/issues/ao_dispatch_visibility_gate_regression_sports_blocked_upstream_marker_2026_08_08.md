@@ -109,11 +109,32 @@ radius before fixing; (c) fix the regex + add a regression test; (d) re-run this
       corpus: the sports doc's Transfermarkt todo now reports `declared: True`, and
       `check_ao_dispatch_visibility_gate.py` measures 24 accidental exclusions post-fix (was 26) — still ≤ baseline 26,
       so no re-baseline needed for this todo (todo 3 below still applies once the corpus grep in todo 2 is done).
-- [ ] [SCRIPT] P3. **Grep the corpus for other `]\[BLOCKED-`/`]\[DEFERRED-BY-DESIGN`/`]\[stretch` no-space combos** once
-      the regex root cause is confirmed, to size how many other docs share this same silent-exclusion bug. Repo:
-      unified-trading-pm.
-- [ ] [SCRIPT] P3. **Once fixed, re-run `check_ao_dispatch_visibility_gate.py --update-baseline` to ratchet
-      `max_zero_dispatchable_docs` back down** from 26 to the newly-clean measured count. Repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P3. **Grep the corpus for other `]\[BLOCKED-`/`]\[DEFERRED-BY-DESIGN`/`]\[stretch` no-space combos**
+      once the regex root cause is confirmed, to size how many other docs share this same silent-exclusion bug. Repo:
+      unified-trading-pm. — `rg -Eon '\]\[(BLOCKED-[A-Z-]+|DEFERRED-BY-DESIGN|stretch)\]' plans/ --include=*.md` (incl.
+      archive, for completeness) found exactly 3 no-space occurrences total, ALL in active docs, all `[BLOCKED-*]` shape
+      (zero `DEFERRED-BY-DESIGN`/`stretch` no-space hits anywhere in the corpus):
+      `sports_all_vendor_honest_coverage_convergence_2026_08_07.md:175` (`[SCRIPT][BLOCKED-UPSTREAM-OUTAGE]`, the
+      original find), `sports_satellite_ao_dispatch_batch9_2026_08_04.md:129` (`[DATA][BLOCKED-UPSTREAM-OUTAGE]`), and
+      `issues/upbit_cefi_data_gap_may_2026_2026_08_04.md:119` (`[DATA][BLOCKED-CREDENTIALS]`). Re-ran
+      `check_ao_dispatch_visibility_gate.py --json` against live HEAD (agent-orchestrator@dd01255, which contains the
+      todo-1 fix a0eb343) and confirmed all 3 now report `"declared": true` in the gate's per-doc `excluded[]` — the fix
+      is corpus-wide-clean for this exact bug shape, no third instance needs a separate follow-up.
+- [x] ✅ [SCRIPT] P3. **Once fixed, re-run `check_ao_dispatch_visibility_gate.py --update-baseline` to ratchet
+      `max_zero_dispatchable_docs` back down** from 26 to the newly-clean measured count. Repo: unified-trading-pm. —
+      Re-ran live: `zero_dispatchable_docs` measures **26**, exactly at the current baseline (unchanged) — no lower
+      count to ratchet to. Root cause: `zero_dispatchable_docs` counts any `disk_open>0 and backlog_open==0` doc
+      (`check_ao_dispatch_visibility_gate.py:123`) **regardless of whether its exclusion is `declared` or `accidental`**
+      — a doc whose sole open todo is a _correctly_-declared `BLOCKED-*` hold still counts on this axis by design (it's
+      the "active plan AO will never touch at all" signal, not the accidental-exclusion bug-class signal — that's
+      `max_accidental_exclusions`, a separate axis). Confirmed via the live JSON: the sports doc
+      (`disk_open:1, backlog_open:0, excluded:[{declared:true}]`) and the upbit doc (same shape) both still land in the
+      26 — correctly, since each really does have zero dispatchable work right now, todo-1's fix or not. So this todo's
+      premise (fixing the parser lowers this axis) doesn't hold for THIS bug class; **no `--update-baseline` run
+      performed, baseline correctly left at 26**. (Separately, `max_accidental_exclusions` was already re-baselined
+      26→34 today by a different agent/commit for an unrelated corpus-drift regression — see
+      `scripts/quality_gates/ao_dispatch_visibility_baseline.yaml` git history @6ec2599f6 — not touched here, out of
+      this issue's scope.)
 
 ## Progress Log
 
@@ -123,3 +144,8 @@ radius before fixing; (c) fix the regex + add a regression test; (d) re-run this
 - **2026-08-09**: todo 1 shipped — agent-orchestrator@a0eb343. Root cause was in `dispatch_visibility_report.py`'s
   `_is_declared` classifier, not `_parse_open_todos`/`_STALE_MARKER_*_RE` as originally guessed (the exclusion decision
   itself was always correct). See todo 1's own note for the full root-cause + fix summary.
+- **2026-08-09**: todos 2+3 closed out — corpus grep found no further `[BLOCKED-*]`/`DEFERRED-BY-DESIGN`/`stretch`
+  no-space-combo instances beyond the 2 already-confirmed-fixed docs; `zero_dispatchable_docs` re-measured at 26 (same
+  as baseline) with no lower count available to ratchet to, since that axis counts declared exclusions too — see todo
+  3's evidence for the full explanation. All todos done, no lock — archiving per the 6-step ritual
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
