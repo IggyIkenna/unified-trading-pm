@@ -39,7 +39,7 @@ context_scope:
   [
     /codex/08-workflows/deployment-flow.md,
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
   ]
 source:
   - "surfaced while updating deployment-flow.md's sentinel-format claims for qg_sentinel_environment_blind_2026_07_23.md
@@ -96,24 +96,25 @@ CLAUDE.md's current § "Git discipline"), so it's AO-dispatchable once picked up
       shipped rewrite, `unified-trading-pm@b9d0b9209`, for the target shape). Done when: the two sibling docs (engineer
       view / operator view) describe the SAME pipeline shape, and every staging-mediated-as-default claim in
       `deployment-flow.md` is corrected or explicitly marked as the non-default toggle path. **DONE — shipped via
-      `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s `[DOC] P2` item: `unified-trading-pm@445f02081`
-      (2026-08-06T17:02:28Z, "docs(codex): rewrite deployment-flow.md pipeline diagram + Gates 1/2/3 for LDR-direct
-      model"), confirmed a real ancestor of `origin/live-defi-rollout`. Live-verified 2026-08-09 (stale-recheck sweep):
-      the doc now carries a "Target branch updated for the LDR-direct model" banner and the rewritten pipeline sections.
-      Batch4's own doc had already flipped this checkbox at the source (`status: active`) — this doc's citation-copy was
-      simply never updated to match; closing that gap now.**
+      `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s `[DOC] P2` item:
+      `unified-trading-pm@445f02081` (2026-08-06T17:02:28Z, "docs(codex): rewrite deployment-flow.md pipeline diagram +
+      Gates 1/2/3 for LDR-direct model"), confirmed a real ancestor of `origin/live-defi-rollout`. Live-verified
+      2026-08-09 (stale-recheck sweep): the doc now carries a "Target branch updated for the LDR-direct model" banner
+      and the rewritten pipeline sections. Batch4's own doc had already flipped this checkbox at the source
+      (`status: active`) — this doc's citation-copy was simply never updated to match; closing that gap now.**
 
 ## na-eligibility-audit verdict
 
 **na-eligibility-audit 2026-07-31** (tranche `ci`, autonomous): **KEEP-NA-STALE (already-duplicated).** Taken in
 isolation this todo reads as a clean RECLASSIFY candidate (small, bounded, calibrated 0.24 AI-days, explicit done-when,
 mirrors an already-shipped precedent). But the sibling `/ag-closeout-audit ci` skill's same-day draft
-`/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` has **already extracted this exact todo verbatim** (its
-own `[DOC] P2` item, citing `Source: issues/deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md`). Reclassifying
-this doc's own `assigned_vm` now would open a second, independent dispatch path to the identical file edit once batch4
-activates. Staying NA until batch4 either ships this todo or is archived without shipping it — if the latter, re-open
-this doc as a RECLASSIFY candidate on the next audit pass. (Also flags a cross-skill population overlap worth a standing
-fix — see `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md`.)
+`/plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md` has **already extracted this exact todo
+verbatim** (its own `[DOC] P2` item, citing
+`Source: issues/deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md`). Reclassifying this doc's own `assigned_vm`
+now would open a second, independent dispatch path to the identical file edit once batch4 activates. Staying NA until
+batch4 either ships this todo or is archived without shipping it — if the latter, re-open this doc as a RECLASSIFY
+candidate on the next audit pass. (Also flags a cross-skill population overlap worth a standing fix — see
+`/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md`.)
 
 **na-eligibility-audit 2026-08-02** (tranche `ci`, autonomous): **CONFIRMS KEEP-NA-STALE, unchanged.** Re-verified the
 holding condition live rather than trusting the prior verdict: `ci_satellite_ao_dispatch_batch4_2026_07_31.md` still

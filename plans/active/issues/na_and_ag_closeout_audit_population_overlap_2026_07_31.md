@@ -35,7 +35,7 @@ related:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/2026_07/issues/deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md,
     /plans/archive/2026_07/issues/uv_bootstrap_fallback_test_structural_anchor_stale_2026_07_30.md,
     /plans/archive/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md,

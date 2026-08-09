@@ -17,7 +17,7 @@ summary: >-
   re-measurement sweep was similarly combined into ONE todo to avoid 4 concurrent writers on the same source doc. 9
   conflict-cleared bounded todos below; the rest deferred by taxonomy (operator-gated / role-mismatch / too-large /
   live-incident / time-gated-not-yet / needs-re-scoping) or already covered.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -30,7 +30,7 @@ related:
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md,
-    /plans/active/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -38,7 +38,7 @@ related:
     /codex/08-workflows/deployment-flow.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-08-06"
+last_updated: "2026-08-09"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,7 +53,7 @@ context_scope:
   [
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md,
     /codex/08-workflows/ci-cd-flow.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -69,6 +69,16 @@ source: >-
 ---
 
 # CI satellite AO batch 4
+
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 9 todos shipped. Finalize plan
+> `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md` (source-doc reconciliation, the
+> 20-item Deferred re-check, and this archival) completed and archived alongside in the same commit set. Every
+> still-genuinely-open Deferred item (D4-1, D4-7, D4-8, D4-9, D4-12, D4-13, D4-14, D4-17, D4-18) remains tracked in its
+> own live active source doc with a real `- [ ]` checkbox (none was uniquely resident in this plan), so archiving it
+> strands no open work — see the finalize plan's todos 2-3 for the full per-item re-verification. D4-5/D4-6/D4-10 are
+> now operator-ruled and independently dispatchable directly in their own source docs; D4-2/D4-3/D4-4/D4-11/D4-15/D4-16/
+> D4-19/D4-20 are fully resolved or superseded-by-completion. Successor: none drafted here; D4-1 (`quickmerge.sh`
+> branch-check broadening) is ready for a future `ci_satellite_ao_dispatch_batchN` to extract.
 
 > **✅ STATUS: `active`** — operator-approved 2026-08-06, dispatching. Todos 7 and 8 were found already shipped via
 > `ci_satellite_ao_dispatch_batch1_2026_07_26.md` before dispatch (see their checkboxes); the other 7 todos are

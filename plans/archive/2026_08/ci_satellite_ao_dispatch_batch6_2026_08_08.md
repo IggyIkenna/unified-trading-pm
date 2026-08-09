@@ -29,10 +29,10 @@ scope: [engineer, admin]
 tags: [ci, cicd, ao-dispatch, close-out, batch-6, satellite-docs, glue-runners, workflow-templates, quickmerge]
 related:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
-    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
-    /plans/active/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md,
@@ -59,8 +59,8 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md,
     /codex/08-workflows/ci-cd-flow.md,

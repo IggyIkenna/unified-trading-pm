@@ -137,9 +137,9 @@ historical one.
   - [x] ✅ **RESOLVED/MOOT 2026-07-31** — [CI] P1. File the concrete fix once root cause confirmed. Moot per above — the
         root cause was the billing wall (now cleared), not a dispatch-frequency issue requiring a fix here.
 - [x] ✅ **MIGRATED 2026-08-02** (operator ruling, `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 3) — both
-      prevention todos below moved into `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Migrated
-      prevention todos from resolved incidents" section. Original text preserved there verbatim with a source citation
-      back to this doc. **CLOSED 2026-08-09** (`ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md` todo 1
+      prevention todos below moved into `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+      "Migrated prevention todos from resolved incidents" section. Original text preserved there verbatim with a source
+      citation back to this doc. **CLOSED 2026-08-09** (`ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md` todo 1
       reconciliation), per the 2026-07-31 na-eligibility-audit verdict's own "cite/close lines 128 and 132-144"
       follow-up below: both migrated items shipped — the `[SCRIPT] P2` standing monitor via
       `unified-trading-pm@ccb1d7b10` (verified ancestor of `origin/live-defi-rollout`;
@@ -238,8 +238,8 @@ gated `[CI] P1` follow-up ("once the operator confirms root cause") are genuinel
 diagnostics a worker cannot perform (checks/billing API both 403 for the available PAT scope), still unanswered. The
 remaining two — `[SCRIPT] P2` (3+-consecutive-`startup_failure` monitor) and `[CI] P1` (root-cause + fix the missing
 `gh pr merge --auto` arm on MTDS promote PRs) — are **already verbatim-extracted into**
-`/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (same-day sibling `/ag-closeout-audit ci` draft, each
-citing this doc as Source, explicitly noting the auto-merge fix is "not gated on this doc's own operator-only items").
-Not reclassifying either — would duplicate batch4's already-drafted fix once it activates. Follow-up once batch4 ships
-or archives unshipped: cite/close lines 128 and 132-144 here. Cross-skill population-overlap tracked in
+`/plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (same-day sibling `/ag-closeout-audit ci` draft,
+each citing this doc as Source, explicitly noting the auto-merge fix is "not gated on this doc's own operator-only
+items"). Not reclassifying either — would duplicate batch4's already-drafted fix once it activates. Follow-up once
+batch4 ships or archives unshipped: cite/close lines 128 and 132-144 here. Cross-skill population-overlap tracked in
 `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md`.

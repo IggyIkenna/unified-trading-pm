@@ -6,7 +6,7 @@ summary: >-
   until all 9 of that plan's todos are done. Reconciles each distinct source doc's checkboxes/prose independently,
   re-checks the Deferred items (D4-1 through D4-20) for whether their blocker has cleared, and archives batch 4 via the
   standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [ci, cicd, ao-dispatch, close-out, batch-4, satellite-docs, archival]
 related:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
@@ -23,7 +23,7 @@ related:
     /codex/06-coding-standards/quality-gates.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-07-31"
+last_updated: "2026-08-09"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -49,7 +49,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/08-workflows/deployment-flow.md,
@@ -59,6 +59,15 @@ context_scope:
 ---
 
 # CI satellite AO batch 4 — finalize
+
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 4 todos shipped. Sibling
+> `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (the 9-item fourth ci-tranche AO-dispatch
+> batch) completed and archived alongside in the same commit set. All 20 Deferred items (D4-1 through D4-20) were
+> re-checked (todos 2-3): D4-2/D4-3/D4-4/D4-11/D4-15/D4-16/D4-19/D4-20 fully discharged or superseded-by-completion;
+> D4-5/D4-6/D4-10 operator-ruled and reclassified to independently dispatchable todos in their own source docs; the
+> remaining 9 (D4-1/D4-7/D4-8/D4-9/D4-12/D4-13/D4-14/D4-17/D4-18) remain genuinely open with a live tracked `- [ ]`
+> checkbox in their own active source doc — none evaporates with this archival. Successor: none drafted here; D4-1 is
+> ready for a future `ci_satellite_ao_dispatch_batchN` extraction.
 
 > **🔒 GATED, not draft.** `depends_on: [ci_satellite_ao_dispatch_batch4_2026_07_31]` + `gate_on_depends: true` holds
 > every todo below until all 9 of batch4's own todos are `done` — this applies whether batch4 is still `status: draft`
@@ -202,17 +211,33 @@ context_scope:
   9 (D4-7/8/9/12/13/14/17/18) still need archival-time migration to a tracked follow-up per todo 4's own instruction,
   since they remain genuinely open and unclaimed by any active plan.
 
-- [ ] [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch4_2026_07_31.md`** via the standard 6-step ritual (CLAUDE.md §
-      plan archival): migrate any still-unresolved Deferred item to a tracked follow-up (todos 2-3 above should have
-      re-confirmed D4-1 through D4-20 — verify none silently vanishes) → add the archive banner → run the
-      codex-alignment check (todo 3's `deployment-flow.md` rewrite and todo 1's `ci-cd-flow.md`/ `per-tab-worktrees.md`
-      referrer repoints changed durable contracts — confirm those landings are reflected and no NEW undocumented
-      contract exists, e.g. the STAGE 1.6 dormancy-aware dep-gate behavior, the `UnifiedCloudServicesConfig`
-      alias-precedence fix, the MTDS auto-merge-arm fix) → update CLAUDE.md/codex if any batch-4 todo established a new
-      contract → grep the corpus for every referrer of `ci_satellite_ao_dispatch_batch4_2026_07_31` and repoint each to
-      the archived path → clear `locked_by` (already empty; confirm). **Done when**: the plan is in
-      `plans/archive/2026_07/`, every corpus referrer resolves, `check_reference_paths.py` has not regressed, and this
-      finalize doc is archived alongside it in the same commit.
+- [x] ✅ [DOC] P1. **DONE 2026-08-09 (slot 11, worker→cicd craft). Archived
+      `ci_satellite_ao_dispatch_batch4_2026_07_31.md`** via the standard 6-step ritual
+      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). (1) Migration check: verified all 9
+      still-genuinely-open Deferred items (D4-1, D4-7, D4-8, D4-9, D4-12, D4-13, D4-14, D4-17, D4-18) already carry a
+      live `- [ ]` checkbox in their own `plans/active/` source doc (grepped each —
+      `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md` (2 open),
+      `build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md` (1),
+      `breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` (1),
+      `mtds_deployment_env_race_survives_single_worker_2026_07_23.md` (1),
+      `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (5),
+      `post_cutover_silent_assumption_sweep_2026_07_23.md` (5), `qg_sentinel_environment_blind_2026_07_23.md` (1),
+      `silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` (3),
+      `quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md` (1, D4-1) — nothing evaporates; no new todo
+      needed. (2) Archive banners added to both batch4.md and this doc. (3) Codex-alignment check: confirmed
+      `/codex/08-workflows/deployment-flow.md` already reflects the LDR-direct/dormant-staging rewrite (todo 3), and
+      `/codex/08-workflows/ci-cd-flow.md` + `/codex/05-infrastructure/per-tab-worktrees.md` carry no stale reference to
+      the deleted `pre-push-strict-quickmerge.sh` hook (todo 1) — both already correctly repointed at
+      `scripts/hooks/pre-push`, no NEW undocumented contract found. (4) No further CLAUDE.md/codex update needed —
+      nothing new to establish. (5) Corpus-wide referrer sweep: repointed all 24 leading-slash path references across 18
+      files (`ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s original active path → `/plans/archive/2026_08/...`) plus
+      4 references to this finalize doc's own path; bare prose mentions (no leading slash) left as historical citations
+      per existing corpus convention. **Archive target is `plans/archive/2026_08/` (archival-date month), not
+      `plans/archive/2026_07/`** as this todo's original text assumed — matches the precedent set by the sibling
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md`/`_finalize` pair, archived the same day into `2026_08`. (6)
+      `locked_by` confirmed empty on both docs; both `git mv`d to `plans/archive/2026_08/` in a follow-up commit after
+      this checkbox-flip commit (per the archival-ritual's flip-then-move ordering rule). **Done when**: both docs live
+      in `plans/archive/2026_08/`, every corpus referrer resolves, `check_reference_paths.py` has not regressed.
 
 ## Codex SSOTs
 
@@ -260,3 +285,13 @@ context_scope:
   — still in their batch4-recorded operator-/design-gated state, no new claiming doc or ruling. Full per-item detail in
   the todo 3 checkbox above. Flagged only, no follow-up drafted, per this todo's own scope. Todo 4 (archival) remains —
   not in this todo's scope.
+- **2026-08-09 (slot 11, worker→cicd craft)** — Completed todo 4 (archival), the last remaining todo. Confirmed all 9
+  still-genuinely-open Deferred items (D4-1/D4-7/D4-8/D4-9/D4-12/D4-13/D4-14/D4-17/D4-18) already carry a live `- [ ]`
+  checkbox in their own active `plans/active/` source doc — nothing evaporates. Codex-alignment check:
+  `deployment-flow.md` and `ci-cd-flow.md`/`per-tab-worktrees.md` already correctly reflect batch4's shipped contracts,
+  no new undocumented contract found, no further codex update needed. Repointed 24 leading-slash corpus referrers (18
+  files) from `ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s original active path to `/plans/archive/2026_08/...`
+  (archival-date month, matching the sibling batch1/batch1_finalize precedent archived the same day), plus 4 referrers
+  to this finalize doc's own path. Both docs `git mv`d to `plans/archive/2026_08/` as a follow-up commit after this
+  checkbox-flip commit (per the never-combine-flip-with-move rule). `locked_by` confirmed empty on both. Batch 4 and its
+  finalize plan are now fully closed.

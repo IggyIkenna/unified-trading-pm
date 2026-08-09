@@ -17,8 +17,8 @@ resolved_by: >-
   All 4 "Remaining / for the operator" items reached [x] -- the dep-order spot-check (operator-ruled clean, 2026-08-08),
   the two batch1-covered stale-doc items, the husky-UI wiring (2026-08-03), and the redundant-hook deletion
   (`unified-trading-pm@b02ba28c7`, 2026-08-06, verified live 2026-08-09 during
-  `/plans/active/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md` todo 1 reconciliation). Zero open checkbox or
-  prose work remains.
+  `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md` todo 1 reconciliation). Zero open
+  checkbox or prose work remains.
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -51,7 +51,7 @@ depends_on:
 context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /scripts/hooks/pre-push,
     /scripts/cicd/check_strict_quickmerge.py,
     /scripts/dev/hooks/pre-push-strict-quickmerge.sh,
@@ -232,7 +232,7 @@ was hiding.
 "Remaining / for the operator" heading, and the head item is a genuine judgment call ("decide whether the 33 laundered
 commits need any dep-order spot-check, or whether this doc closes it"). The P3 hook-deletion item is separately
 conflict-gated as `/plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E4**, and the
-husky-UI-repos P3 item is already claimed by `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`.
+husky-UI-repos P3 item is already claimed by `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md`.
 
 **na-eligibility-audit 2026-08-01** (tranche `ci`, autonomous): KEEP-NA, stale-items — re-confirmed all 3 items. The
 head judgment-call item stays valid. The hook-deletion item's E4 citation chain is now stale (batch2 archived) but the

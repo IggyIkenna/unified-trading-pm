@@ -203,11 +203,12 @@ confirm this is the same stale artifact (and clear it per the cited precedent) o
 **na-eligibility-audit 2026-08-03** (tranche `ci`, autonomous, `agt-4acc10`): KEEP-NA-STALE (already-duplicated) —
 citation correction. The 2026-07-30/08-01 citation to archived `ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred
 E5 is now stale (batch2 is archived/superseded). Verified live: steps 2+4 are now extracted verbatim as todo 2 in
-`/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (lines 143-167, `Source:` cites this doc's Suggested next
-steps 2+4), with step 3 tracked there as Deferred **D4-1** (still gated on todo 2 landing + `quickmerge.sh` being free).
-Batch4 is `status: draft` — not yet dispatched — so this is a citation fix, not a reclassification; flipping this doc
-directly would race/duplicate-dispatch onto the same `unified-trading-library` config files batch4 already owns once
-activated. `locked_by` anomaly (flagged 2026-08-01) unchanged, still unactioned pending operator.
+`/plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md` (lines 143-167, `Source:` cites this doc's
+Suggested next steps 2+4), with step 3 tracked there as Deferred **D4-1** (still gated on todo 2 landing +
+`quickmerge.sh` being free). Batch4 is `status: draft` — not yet dispatched — so this is a citation fix, not a
+reclassification; flipping this doc directly would race/duplicate-dispatch onto the same `unified-trading-library`
+config files batch4 already owns once activated. `locked_by` anomaly (flagged 2026-08-01) unchanged, still unactioned
+pending operator.
 
 ## Progress Log
 

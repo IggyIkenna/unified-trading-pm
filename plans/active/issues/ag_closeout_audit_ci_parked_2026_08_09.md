@@ -24,7 +24,7 @@ related:
   [
     /plans/active/issues/ag_closeout_audit_ci_parked_2026_08_08.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md,
