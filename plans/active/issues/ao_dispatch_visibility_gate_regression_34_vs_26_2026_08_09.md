@@ -32,6 +32,7 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+archive_exempt: true
 context_scope:
   [
     /scripts/quality_gates/check_ao_dispatch_visibility_gate.py,
@@ -218,10 +219,24 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
       still carry `BLOCKED-` markers but both report `declared: true` (the marker opens its own checkbox line — a
       legitimate declared exclusion, not an accidental one). No doc content edit needed — same "self-resolved by
       concurrent fleet commits ahead of pickup" shape noted by every other tranche's fix in this doc's Progress Log.
-- [ ] [SCRIPT] P3. Once all 8 remediation todos above land (accidental_exclusions measures at/near 0 on a fresh pull),
-      re-run `check_ao_dispatch_visibility_gate.py --update-baseline` to ratchet `max_accidental_exclusions` back down
-      from 34 toward 0 — never leave the baseline sitting at absorbed debt once the debt is paid off. Repo:
-      unified-trading-pm.
+- [x] ✅ [SCRIPT] P3. Once all 8 remediation todos above land (accidental_exclusions measures at/near 0 on a fresh
+      pull), re-run `check_ao_dispatch_visibility_gate.py --update-baseline` to ratchet `max_accidental_exclusions` back
+      down from 34 toward 0 — never leave the baseline sitting at absorbed debt once the debt is paid off. Repo:
+      unified-trading-pm. **Done**: fresh measurement (after building the agent-orchestrator sibling `.venv` via
+      `uv sync`, required for the gate's subprocess delegation to run for real instead of degrading to the no-op/skip
+      path) showed `accidental_exclusions=0`, `zero_dispatchable_docs=9`, `ineffective_declarations=4` fleet-wide,
+      confirmed stable across a re-measure on a fresh rebase. Ran `--update-baseline`: `max_accidental_exclusions` 28→0,
+      `max_zero_dispatchable_docs` 25→9, `max_ineffective_declarations` unchanged at 4 (no warnings — a pure
+      ratchet-down, not a raise). Gate re-verified GREEN with the new baseline — unified-trading-pm@64dcc4074. Hit two
+      unrelated pre-existing fleet-wide QG blockers while shipping (both corpus-wide, unconditional re-scans that block
+      Pass-1 QG regardless of `--files` scope, not caused by this change): (1) `check_cloudbuild_template_drift.py` red
+      on `client-reporting-api` (count 3→4, an already-open repo-blocker `RB-b7866b60`) — fixed by forward-porting the
+      template's already-updated `_RUN_INIMAGE_QG` guard into `client-reporting-api/cloudbuild.yaml`'s quality-gates
+      step (client-reporting-api@9b28914, verified ancestor of origin), then resolved the repo-blocker myself since the
+      root cause was fixed; (2) `check_evidence_backed_completion.py` sub-rule B red (23→24, filed
+      `evidence_backed_completion_regression_24_vs_23_2026_08_09.md` + repo-blocker `RB-ca63ec01`, joined as a waiter —
+      root-caused and resolved by another slot before I needed to fix it myself). Both blockers verified GREEN before
+      this final ship.
 
 ## Progress Log
 
@@ -261,3 +276,14 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
   (re-run `--update-baseline`) is separate scope — the current baseline (`max_accidental_exclusions: 28`, already
   ratcheted down from 34 by an earlier slot) still tolerates well above the live-measured 0, so the gate stays green
   regardless; leaving the baseline ratchet-down itself for whichever slot picks up that todo.
+- **cicd-worker slot 17, 2026-08-09**: picked up the final P3 todo. Built the agent-orchestrator sibling `.venv`
+  (`uv sync`) so the gate could run for real (was degrading to a no-op skip without it); measured
+  `accidental_exclusions=0` fleet-wide, ran `--update-baseline` (`max_accidental_exclusions` 28→0,
+  `max_zero_dispatchable_docs` 25→9), shipped unified-trading-pm@64dcc4074. Along the way hit and cleared 2 unrelated
+  pre-existing fleet-wide QG blockers (cloudbuild-template-drift on client-reporting-api; an evidence-backed-completion
+  sub-rule B regression) — see the todo's own **Done** note for detail. **All 9 todos in this doc are now done; ready to
+  archive.** `archive_exempt: true` set TEMPORARILY on this same commit (per
+  `/codex/12-agent-workflow/commit-push-flip-rule.md`'s flip-then-mv ordering — never combine the checkbox flip with the
+  `git mv` archival in one commit, since a path-scoped `git log -- <plan_ref>` on the OLD path can miss the transition
+  once the same commit also moves the file) — the immediate next commit removes it, sets `status: resolved`, adds the
+  archive banner, and does the `git mv` to `plans/archive/issues/`.
