@@ -134,7 +134,7 @@ Progress Log) confirmed, with exact file:line citations:
       assert `n_loops == "5"`. Re-verified live (slot 18, 2026-08-09): full `quality-gates.sh` on strategy-service green
       (5825 passed). This todo's own checkbox was simply never flipped when the prior dispatch landed — no new code
       needed.
-- [ ] [BACKEND] P1. Implement Family-1 (`CARRY_RECURSIVE_BORROW_LENDING_ONLY`) real `on_tick()` leg construction in
+- [x] ✅ [BACKEND] P1. Implement Family-1 (`CARRY_RECURSIVE_BORROW_LENDING_ONLY`) real `on_tick()` leg construction in
       `strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py`: add a new code path
       (do not touch the shared `staking_yield_enabled=true` branch used by the live `CARRY_RECURSIVE_STAKED` archetype)
       that, for this archetype specifically, builds a `list[AtomicLeg]` per loop iteration following the codex doc's
@@ -200,3 +200,17 @@ Progress Log) confirmed, with exact file:line citations:
   the checkbox to reflect actual completion — no new code shipped this dispatch. Next up: todo 4 (Family-1 real
   `on_tick()` leg construction) is genuinely unstarted and substantial (`recursive_staked.py`'s STAKE→TRANSFER→LEND→
   BORROW bundle) — not attempted this turn.
+- **2026-08-09 (slot 20, backend_engineer)**: Todo 4 shipped — added
+  `CarryRecursiveStakedEngine._on_tick_family1_borrow_lending_only()` +
+  `_build_family1_loop_legs()`/`_build_family1_instruction()` to `recursive_staked.py`: a new code path (the shared
+  `staking_yield_enabled=true` branch is untouched) that builds `n_loops` iterations of a
+  STAKE(debt_asset)→TRANSFER(collateral_asset)→LEND(collateral_asset)→BORROW(debt_asset) `AtomicLeg` bundle per loop,
+  each iteration's BORROW output (`current_amount * ltv_per_loop`) feeding the next iteration's STAKE input, driven by
+  the catalog-resolved `ltv_per_loop`/`n_loops` params from todos 1-3 (no staking-yield APY math, no target-leverage
+  cutoff — `n_loops` itself is the depth policy). `CARRY_BASIS_PERP_INV` (`perp_leg_enabled=true`) still stubs to `[]`
+  pending todo 5. New test file `test_recursive_borrow_lending_only_family1_on_tick.py` (6 tests) drives `on_tick()`
+  with the real `aave_v3/ethereum/wsteth/weth` catalog row and asserts: non-empty `AtomicInstruction`; leg count ==
+  `n_loops`(5) × 4 legs/loop == 20; per-loop action/instrument/size_units progression matches the
+  STAKE→TRANSFER→LEND→BORROW spec exactly; `[]` when already positioned; `[]` when `perp_leg_enabled=true` (Family 2
+  still out of scope). `quality-gates.sh` green on strategy-service (full run, no skip flags).
+  strategy-service@817bb4e0.
