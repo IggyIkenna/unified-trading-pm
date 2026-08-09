@@ -336,7 +336,7 @@ human already made the call and the fleet still never executes it.
       longer appears anywhere in the block. Verify:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
       no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in
+- [x] ✅ [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`.** Its checkbox reads (truncated):
       "[SCRIPT] P3. **D4 — `recursive_borrow_paper_smoke.py` is a non-instantiating stub** (`INFRA_GAP`/" — the marker
       trips `_is_non_dispatchable` (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its own
@@ -560,3 +560,10 @@ human already made the call and the fleet still never executes it.
   `sports_satellite_ao_dispatch_batch9_2026_08_04.md` now shows its sole excluded todo with `"declared": true` (was
   `false` at issue-filing time) — genuinely still blocked (live Transfermarkt outage), correctly declared, no accidental
   exclusion remains.
+- **2026-08-09 (slot 3, infra)** — Fixed the `e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md` D4 todo. A FOURTH
+  todo resolved by the same `unified-trading-pm@84f363ff6` incidental sweep: the `[SCRIPT] P3` D4 todo's
+  `BLOCKED-CREDENTIALS` marker was moved from the continuation line onto the checkbox's own line
+  (`[SCRIPT][BLOCKED-CREDENTIALS] P3. **D4 — ...`), so it now trips `_is_non_dispatchable` on its own opening line
+  instead of accidentally via a continuation-line mention. Confirmed via `dispatch_visibility_report --json`: the doc's
+  `excluded` list now shows `"declared": true` for both remaining exclusions (this D4 todo and the pre-existing D1
+  DEFERRED-BY-DESIGN item) — no rewrite needed here, the fix already landed.
