@@ -292,3 +292,23 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   all 5 years") is not yet true (2025 is still 0%), and I didn't personally trigger or observe a fresh retry completing.
   Leaving open with the corrected, narrower scope documented for whoever picks this up next (retry should now target
   2025+2026 specifically, not assume a from-scratch 5-year run).
+- **2026-08-09T~09:53Z, slot-31 (infra)**: Worked the `[INFRA] P1` "RE-INVESTIGATED... false-positive hypothesis does
+  NOT hold" action item (slot-9's watchdog investigation). That item's own literal question (is this a false-positive
+  zombie-watchdog kill needing a watchdog-side fix) is already conclusively answered NO by slot-9's evidence chain; the
+  only thing keeping it open is its nested `[DATA] P2` sub-step ("once the next ES_OPT launch happens post-fix, check
+  whether the RSS-spike/heartbeat-freeze signature recurs"). Confirmed live: (1) `gcloud compute operations list` — zero
+  `tradfi-bf-es-opt-*` insert ops since 2026-08-08T20:40:43-07:00 (03:40Z 08-09), i.e. still nothing post-fix
+  (`deployment-service@391ff7f5`, landed 07:38:54Z); (2) `gcloud compute instances list` — 12 `tradfi-bf-*` VMs RUNNING
+  (CME/NASDAQ/NYSE campaigns), zero ES_OPT, singleton lock (`_check_singleton_lock()`,
+  `launch-tradfi-backfill-vm.sh:161-193` — a live `status=RUNNING name~"^tradfi-bf-"` gcloud check, not a GCS/lockfile)
+  still held; (3) slot-22 has a LIVE tmux session (pts/9, ~1h16m elapsed at check time) actively mid-retry on the
+  sibling `[DATA] P1` action item right now — 3 backgrounded watcher attempts today, the latest (PID 3629269) found dead
+  mid-session, slot-22 re-arming. Per the dual-watcher double-launch race this doc's earlier entries already flag,
+  triggering a competing launch myself would collide with that in-flight work, so I did not. This `[INFRA] P1` item's
+  checkbox stays correctly unchecked — the `[DATA] P2` evidence it's gated on will land as a byproduct of slot-22's (or
+  a subsequent worker's) in-flight retry, not from a fresh duplicate launch. No code change shipped (none was evidenced
+  as needed, confirming slot-9's original conclusion still holds). Also confirmed the `wave_launcher.py` out-of-scope
+  cron issue (`tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`) is still open/unfixed at
+  the root (only reactively killed twice so far) — it is the recurring cause of the singleton lock staying held; whoever
+  next has bandwidth on that P1 should prioritize the actual fix (pause/fix the cron), not another reactive kill, since
+  it's what's blocking every downstream ES_OPT retry attempt.
