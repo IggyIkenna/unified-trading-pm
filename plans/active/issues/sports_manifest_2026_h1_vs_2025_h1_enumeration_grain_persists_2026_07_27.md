@@ -34,6 +34,7 @@ summary: >-
   SPORTS-SCOPED re-verification only — cefi/defi/tradfi/prediction use the SAME scheduler + the SAME static-default
   pattern (`expected_universe_v2_asset_groups` in the same .tf file) and were NOT re-measured here.
 status: open
+archive_exempt: true
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -542,6 +543,19 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   complete. Did NOT pick up the post-run cell-seeding ratio re-check todo below in this same session (per
   /boot-per-shippable-unit discipline — one task per session; the dispatcher will assign it as its own backlog task, now
   unblocked).
+- **data_engineering worker (slot 27) 2026-08-09**: ran the post-run cell-seeding ratio re-check (final open todo) — see
+  the flipped todo below for the full result. Overall H1 ratio moved 3.13x→0.95x; the two remaining ≥5x raw outliers
+  (`FIXTURES`, `trades`) are both traced to separate, already-tracked issues, not a residual of this doc's own
+  boundary-window bug. **Every todo in this doc is now `[x]`, `locked_by` is empty — archival-eligible.** Set
+  `archive_exempt: true` on this flip-only commit per the two-commit archival bridge
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "archive_exempt is the sanctioned bridge");
+  the immediately-following `git mv` archival commit will drop it. Proceeding with the 6-step ritual in this same
+  session (referrer sweep across `data_completion_sports_2026_07_24.md`,
+  `sports_satellite_ao_dispatch_batch9_2026_08_04.md`,
+  `issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`,
+  `issues/ag_closeout_audit_sports_parked_2026_08_09.md`,
+  `issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md` — the 5 active-corpus referrers found via a
+  corpus-wide path grep; 2 already-archived referrers need no fix).
 
 ## Follow-ups
 
@@ -609,11 +623,36 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       `start_date: '2026-01-01', end_date:     '2026-04-10'` was respected. **All 7 chunks now EXIT_STATUS=0** — job
       (2)'s historical backfill launch phase is complete; the post-run cell-seeding ratio re-check todo below is now
       unblocked.
-- [ ] [DATA] P2. Once chunks 3-7 above are ALL done: run the post-run cell-seeding ratio re-check (same read-only method
-      as this issue's own H1 measurement — single manifest read, columns projected to
+- [x] ✅ [DATA] P2. Once chunks 3-7 above are ALL done: run the post-run cell-seeding ratio re-check (same read-only
+      method as this issue's own H1 measurement — single manifest read, columns projected to
       `date`/`data_type`/`capture_status`/`league_id`/`source`, count total rows per `data_type` for the matched H1
       windows `2025-01-01..2025-06-30` vs `2026-01-01..2026-06-30`) and record whether the ratio has moved toward ~1x.
-      This is the done-when gate for job (2)'s production run. (repo: instruments-service)
+      This is the done-when gate for job (2)'s production run. (repo: instruments-service) — **RATIO RESOLVED. Ran
+      2026-08-09 (slot 27, data_engineering) via the original script unmodified
+      (`instruments-service/scripts/sports_manifest_enumeration_grain_check_2026_07_27.py`, single read of the live
+      `_index/availability_index.parquet`, 16,886,255 total rows). Overall H1 cell-seeding ratio moved from **3.13x
+      (363,842→1,137,706) to 0.95x (1,288,535→1,218,340)** — job (2)'s historical backfill achieved its done-when.
+      Per-data_type: the great majority now cluster **0.87x-1.32x** (was 2.2x-3.6x); the two worst-flagged original
+      outliers are now RESOLVED — `FIXTURES_OUTCOMES` 15.7x→0.74x, `ODDS` 6.0x→0.76x. Two data_types still read ≥5x in
+      the raw script output but BOTH are traced to already-tracked, separate issues, not a residual boundary-window bug:
+      (1) `FIXTURES` (legacy atom) still shows 15.6x (3,264→50,918, essentially unchanged from the original 16.56x) —
+      confirmed via a targeted capture_status breakdown that 2025 H1 `FIXTURES` is 100% `captured`, zero
+      `expected_unattempted`, even post-backfill. Root cause: `scripts/enumerate_expected_universe.py`'s
+      `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE` (added by `fixtures_manifest_legacy_backfill_2026_07_24.md`,
+      instruments-service@e19c5a7a) redirects ALL new `expected_unattempted` seeding from legacy `FIXTURES` to the real
+      on-disk atom `FIXTURES_SCHEDULE` — confirmed `FIXTURES_SCHEDULE` itself is now at **1.01x** (71,857→72,452), i.e.
+      the real underlying universe IS resolved; comparing on the frozen/no-longer-seeded legacy `FIXTURES` token is a
+      measurement artifact of an already-known, still-open migration
+      (`plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md`), not a new gap — not re-investigated
+      further here. (2) `trades` (lowercase) shows 20.96x (2,011→42,141) — this data_type wasn't in this doc's original
+      outlier set at all; traced to a DIFFERENT already-tracked issue:
+      `unified_api_contracts.canonical.domain.sports.league_data.SPORTS_ODDS_DATA_TYPE_CANONICAL_FORM` documents
+      `trades` as a legacy mislabeled odds_api-bookmaker-quotes token being collapsed into canonical `odds` per operator
+      ruling 4 (`plans/active/sports_taxonomy_p2_migration_2026_08_08.md`, successor to the archived
+      `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`) — a live taxonomy-collapse migration, not a
+      boundary-window artifact. Neither residual needs a new todo here; both already have an owning doc. **This issue's
+      own scope (the static-window boundary artifact) is fully resolved for sports.** Full JSON report:
+      `/tmp/sports_enum_grain_recheck_2026_08_09.json` (not committed — scratch artifact per script-homes convention).**
 
 > **2026-08-06 archive-candidate audit**: Todo 4 is flipped [x] but its own text says 'post-run ratio re-check
 > transferred to slot 8 entry (open todo)', and Progress Log (slot 8 + slot 6, 2026-08-04) confirms 'Chunks 3-7 not yet
