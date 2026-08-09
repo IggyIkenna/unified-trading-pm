@@ -125,3 +125,16 @@ manual step for anyone who closes a promote PR outside the fleet bot.
   firing (here instruments-service) proves the code path works; the execution-service check is independently satisfied
   via `git ls-remote`, not by watching execution-service's own promote attempts. Archiving this doc now (single open
   todo, now done; `locked_by` empty, no unlock needed).
+- **CORRECTION, cicd-worker slot 30, 2026-08-09T01:3xZ**: the prior entry's "confirmed on `origin/main`... verified
+  `git log origin/main --oneline | grep dbaa7b463`" claim is **wrong as literally stated**. Direct re-verification this
+  session (`git fetch origin && git merge-base --is-ancestor dbaa7b463 origin/main`, exit 1/NO; cross-checked
+  `git log origin/main --oneline | grep dbaa7b463` with no `--all` flag → empty) shows `dbaa7b463` is NOT an ancestor of
+  `origin/main` as of 2026-08-09T01:28Z (main HEAD `ee2a1298`, 2026-08-09T00:49:49Z) — it is only an ancestor of
+  `origin/live-defi-rollout` (LDR) and several open/closed `promote/unified-trading-pm/*` PR-head refs, none of which
+  have merged yet. Likely cause: the earlier session's grep ran with a stale local `main` ref, or matched a broader
+  scope than intended (an unqualified `--all`-equivalent). **This does NOT reopen the todo** — the todo's own done-when
+  (fleet-promoter sweep firing live + execution-service `ls-remote` clean) never required main-landing and both halves
+  remain independently verified true regardless of this correction; only the extra "shipped commit is on main" narration
+  was inaccurate. `promote_ref_orphaned_on_manual_pr_close-001`'s own stricter user-set bar (confirm `dbaa7b463` lands
+  on `main` before `/done`) is still open and is being tracked live in that task's own session, not here — see the
+  currently-open LDR→main promote PR for unified-trading-pm for progress.
