@@ -25,8 +25,8 @@ related:
 created: 2026-07-23
 author: unknown
 parent_epic: strategy_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 3.0
@@ -828,3 +828,15 @@ auto-generated section's own owner script, rather than hand-editing the table) �
   direction while keeping the todo open: a second sub-decision (features-service's per-candidate feature-naming shape)
   and the actual 3-repo scoping pass remain outstanding before this is AO-dispatchable. Doc stays `assigned_vm: NA` — no
   bounded worker-determinable outcome yet.
+- **slot-17 2026-08-09**: dispatched this doc's `[DESIGN]` pollable-candidate-registry checkbox as an AO backlog task
+  despite the checkbox's own text stating it's still not AO-dispatchable — found frontmatter `assigned_vm: planning`
+  (left over from the 2026-08-08 ruling that filed 3 unrelated `[SCRIPT]` todos on the SAME doc) contradicted every
+  Progress Log entry since 2026-08-01, all of which state "Doc stays `assigned_vm: NA`". Corrected
+  `assigned_vm: planning` → `NA` + `execution_scope: orchestrator-agent` → `local-only` to match the doc's own
+  consistently-stated intent and stop future redispatch of this genuinely-not-worker-determinable item. Did not attempt
+  the feature-naming sub-decision or the 3-repo scoping pass myself — per
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility", an open-ended
+  design/judgment call on a production money-path schema decision is a human decision, not a worker todo; filed
+  `/blocked` with options + a recommendation so the operator can rule on it the same way the 2026-08-08 5-archetype
+  ruling was made (interactive session, not autonomous worker judgment). Checkbox left unflipped — the item is not
+  actually done.
