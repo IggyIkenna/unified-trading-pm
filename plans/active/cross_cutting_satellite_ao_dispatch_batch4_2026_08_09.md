@@ -95,7 +95,7 @@ drift_direction: advance-code
       `check_frontmatter_yaml.py`, `check_reference_paths.py`, `check_na_corpus_ratchet.py`,
       `check_terminal_status_archived.py` all clean on the 3 touched files (2 pre-existing unrelated corpus failures —
       `check_archive_candidates`, `check_prosewrap_padding` — confirmed not caused by this change).
-- [ ] [DOC] P3. Document the `gcloud config set account` host-wide-mutation hazard in
+- [x] ✅ [DOC] P3. Document the `gcloud config set account` host-wide-mutation hazard in
       `/codex/05-infrastructure/per-tab-worktrees.md` § "Multi-agent safety" (or a new subsection), regardless of which
       code-fix direction eventually lands for the underlying clobbering bug: state that `gcloud config set     account`
       mutates shared host state (not session-scoped), that a worker switching identity should prefer a per-invocation
@@ -103,7 +103,11 @@ drift_direction: advance-code
       change the ambient identity at any time. Repo: unified-trading-pm. Source:
       `issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md` (hazard-documentation item). Done
       when: the codex doc's "Multi-agent safety" section (or a new subsection) states the hazard and the
-      per-invocation-override recommendation in the terms above.
+      per-invocation-override recommendation in the terms above. — unified-trading-pm@de70cd5aa. Added item 5 to
+      `per-tab-worktrees.md` § "What worktree isolation does NOT cover" (the doc's existing multi-agent-safety-gap
+      catalogue, items 1-4) stating the host-wide `core/account` mutation hazard, the confirmed 2026-08-04 incident, the
+      per-invocation `--account=`/`CLOUDSDK_CORE_ACCOUNT` override recommendation, and the
+      any-concurrent-slot-can-flip-it-at-any-time caveat, per the terms specified in this todo.
 
 ## Codex SSOTs
 
