@@ -56,7 +56,7 @@ locked_since:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile every SOURCE doc P1 resolved, re-verifying each cited commit exists.** P1 is a
+- [x] ✅ [REVIEW] P1. **Reconcile every SOURCE doc P1 resolved, re-verifying each cited commit exists.** P1 is a
       batch-style phase: its todos close open items in
       `/plans/archive/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` (the 19-vs-21 unmapped
       bookmaker classification, resolved mechanically by retiring the split),
@@ -64,7 +64,50 @@ locked_since:
       process rule), and the two capture-outage docs (`mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md`,
       `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`). Flip each source doc's OWN checkbox with evidence —
       do not trust a source doc's copy of an evidence line. **Done when**: every named source doc's checkbox is flipped
-      and each cited commit is confirmed via `git log`.
+      and each cited commit is confirmed via `git log`. — **RECONCILED 2026-08-09 (slot 23, review)**, read all four
+      source docs in full (not the P1 copy) + independently verified every cited commit via `git cat-file -e`/`git show`
+      in its own repo (none trusted from P1's citation alone): 1.
+      `sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md` — **already fully closed + archived**: both its
+      own todos are `[x]`, `status: resolved`, archived 2026-08-08 citing this same
+      `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` as the plan that superseded its ask. The
+      mechanical resolution P1 claims (retire the exchange_odds/fixed_odds split) cites `unified-api-contracts@56f20ad0`
+      — verified present (`git cat-file -e` + `git show --stat`, commit message matches the claimed content exactly:
+      `derive_sports_odds_instrument_type()`, makes the 19-vs-21 count moot). No action needed — the doc's own checkbox
+      was already flipped before P1 was authored. 2.
+      `sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md` — **the SPECIFIC item P1 claims is already
+      `[x]`**: the `[PROCESS] P1` "entity rename/split MUST enumerate consumers" todo (§ R) is checked, citing
+      `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md` — confirmed the file exists and was authored
+      in the plan-authoring commit `unified-trading-pm@6860859a5` (matches the todo's own citation). This 943-line doc's
+      `status` stays `open` — it carries MANY other open `[ ]` items (§ R's "audit every other stale-entity consumer", §
+      U's residual-league decisions) that are explicitly owned by `sports_consolidated_closeout_2026_07_19.md` Tracks
+      E/F, NOT by P1 — correctly untouched, not P1's scope. 3.
+      `mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md` — P1's Block A todo-1 cites this as background reading
+      only ("may already carry the answer"), never claims to resolve it. Confirmed: this doc diagnoses a DIFFERENT,
+      unrelated failure (the `pipeline_e2e_check.py` force-fetch tool hitting an upstream `the-odds-api.com`
+      401/quota-exhaustion on 2026-08-01) — 4 of 5 todos are `[x]` with the shipped fix
+      `market-tick-data-service@bc269b51` verified present; the sole remaining `- [ ] [OPERATOR] P2` is a genuine
+      credential/billing ask, correctly left open and untouched by P1. No overlap with P1's actual root cause. 4.
+      `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` — this IS the doc P1's diagnosis relied on ("Full
+      root cause already in `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`; confirmed live and
+      code-level"). Verified that claim holds: read the full code-level trace (future-date-guard removal exposing an
+      unscoped 30-league fetch, OOM-before-manifest-write crash-loop) and independently confirmed every commit P1's
+      diagnosis + this doc's own fix chain cites exists — `market-tick-data-service@410d7569` (future-date-guard
+      exemption, the exposing change), `deployment-service@4e0e03d` (`--league` scoping fix),
+      `market-tick-data-service@afa8eaec` (pre-flight source-scoping fix), `unified-trading-library@2e072fbf` (top-level
+      freshness-skip demotion), and `market-tick-data-service@fc704195` (the root-fixed + re-strengthened
+      `_asset_group_for_venue` test P1's own weakened-test sweep cites). This 1019-line doc's `status` stays `open` — it
+      carries its OWN still-live, independent operational chain (live-verify todos for the pre-flight fix, a 5-day
+      historical backfill whose "gate cleared" claim was self-caught-and-reverted as premature 2026-08-06, and an
+      unresolved `[DATA] P2` vendor-verify-first decision) that is about restoring FULL coverage for the specific
+      2026-07-27..08-02 gap window — a distinct, still-in-progress task from P1's contract-only scope, correctly left
+      untouched (P1's own Block A todo-2 separately re-measured live capture as healthy for day=2026-08-07, which is
+      corroborating, not duplicate, evidence).
+
+      **Net**: no false-done claims found in any of the four source docs; every commit P1 or its sources cite resolves
+              to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
+              capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
+              (unrelated, already-tracked) chains finish.
+
 - [ ] [REVIEW] P1. **Check whether reconciling left any source doc at zero open todos**, and if so run the same 6-step
       archival ritual on it — a finalize that closes only its own plan while leaving a now-fully-done source doc live is
       the exact omission that caused a real `run_hygiene_sweep.sh --ci` hard-fail (10 violations). **Done when**: each
