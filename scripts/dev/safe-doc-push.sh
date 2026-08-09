@@ -69,7 +69,14 @@
 # touching a named file (a stubbed/mocked commit call, or a deeper git-state anomaly; added
 # 2026-08-09, safe_doc_push_reports_success_having_committed_nothing_2026_08_09 todo 2). Added
 # 2026-08-08: exit 5 was previously returned for this case too, which told the next agent
-# to retry something that could never succeed (see commit_failure_is_retriable below).
+# to retry something that could never succeed (see commit_failure_is_retriable below). 8 this
+# checkout is under SUSTAINED FOREIGN WRITE -- LOCK_CONTENTION_MAX consecutive index.lock
+# failures (on either `git add` or `git commit`) before MAX_ATTEMPTS is even reached.
+# Retrying in place cannot converge while a peer process keeps re-taking the lock faster than
+# this script's own retries clear it -- the script prints a documented escape hatch (land the
+# named files from a separate clone, what unblocked the incident this todo comes from) instead
+# of looping to MAX_ATTEMPTS and reporting a generic "transient, re-run" message. Added
+# 2026-08-09, safe_doc_push_reports_success_having_committed_nothing_2026_08_09 todo 4.
 
 set -uo pipefail
 
@@ -356,6 +363,49 @@ backoff() {
   sleep "$((1 + RANDOM % 3 + attempt))"
 }
 
+# LOCK_CONTENTION_MAX / lock_contention_count -- escape-hatch counter for
+# safe_doc_push_reports_success_having_committed_nothing_2026_08_09 (todo 4). Retrying an
+# index.lock failure in place is correct for a MOMENTARY collision (a peer's single `git add`/
+# `git commit` mid-flight), but under SUSTAINED foreign write -- a peer session's own retry
+# loop re-taking the lock as fast as this script releases it -- retrying in the SAME checkout
+# cannot converge; it just burns MAX_ATTEMPTS and reports a generic "transient, re-run" message
+# that sends the caller straight back into the same non-convergent loop. Once consecutive
+# index.lock failures (across the `git add` and `git commit` sites below) reach this count,
+# stop looping and print the documented recovery instead: land the named files from a separate
+# clone -- the exact move that unblocked the live incident this todo comes from.
+LOCK_CONTENTION_MAX=3
+lock_contention_count=0
+
+print_lock_contention_escape_hatch() {
+  cat >&2 <<EOF
+
+❌ ${lock_contention_count} consecutive index.lock failures in this checkout -- this is
+   SUSTAINED FOREIGN WRITE (a concurrent process is holding or re-taking the lock faster than
+   this script's own retries can clear it), not a momentary collision. Retrying in place
+   cannot converge: re-running this script against THIS SAME checkout will very likely hit the
+   identical wall again.
+
+   ESCAPE HATCH (what unblocked safe_doc_push_reports_success_having_committed_nothing_2026_08_09,
+   the live incident this behavior comes from -- land from a separate clone instead of
+   contending for this checkout's lock):
+
+     1. Clone fresh, reusing this checkout's objects so it's cheap:
+          git clone --reference "\$(pwd)" "\$(git rev-parse --show-toplevel)" /tmp/safe-doc-push-\$\$
+          cd /tmp/safe-doc-push-\$\$ && git checkout -q ${BRANCH}
+     2. Re-create the named file(s)' content there (copy from this checkout, or re-apply your
+        edit), then re-run from the fresh clone:
+          bash scripts/dev/safe-doc-push.sh "<same commit message>" --files "<same paths>" ${BRANCH}
+     3. Once it lands, this checkout's own working tree is unaffected -- pull it back in
+        (\`git pull --ff-only origin ${BRANCH}\`) at your convenience; there is nothing to
+        reconcile here since this attempt never committed anything (see verify_committed
+        above -- a false success is refused, not just an unverified one).
+
+   If you'd rather wait it out: check whether \`.git/index.lock\` is stale (a multi-minute-old
+   lock file with no process actually holding it is safe to remove) before assuming the peer
+   session is still active.
+EOF
+}
+
 # locked_git_commit -- serialise `git commit` (which runs the prek/pre-commit hook chain
 # synchronously) against any OTHER concurrent commit in this SAME checkout, in this or any
 # other process (e.g. quickmerge.sh, which wraps its own commit calls the same way).
@@ -495,7 +545,12 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       # no-op-edit case. That phrasing reads as "probably fine" when it is actually a hard
       # failure to stage at all -- distinguish it here, before ever reaching that branch.
       if grep -qi "index.lock" /tmp/_sdp_add_err; then
-        echo "  ❌ could not stage named files -- index.lock contention on 'git add' (another process is writing this instant). This is a HARD FAILURE, not the benign 'nothing to stage' case -- short wait, retry"
+        lock_contention_count=$((lock_contention_count + 1))
+        echo "  ❌ could not stage named files -- index.lock contention on 'git add' (another process is writing this instant). This is a HARD FAILURE, not the benign 'nothing to stage' case -- short wait, retry (${lock_contention_count}/${LOCK_CONTENTION_MAX} consecutive lock failures)"
+        if [[ "$lock_contention_count" -ge "$LOCK_CONTENTION_MAX" ]]; then
+          print_lock_contention_escape_hatch
+          exit 8
+        fi
         sleep 2
         continue
       fi
@@ -533,7 +588,12 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
         echo "  git reported nothing-to-commit but end-to-end verification failed -- not trusting it; retrying" >&2
       fi
       if grep -qi "index.lock" /tmp/_sdp_commit_err; then
-        echo "  index.lock contention (another process is writing this instant) -- short wait, retry"
+        lock_contention_count=$((lock_contention_count + 1))
+        echo "  index.lock contention (another process is writing this instant) -- short wait, retry (${lock_contention_count}/${LOCK_CONTENTION_MAX} consecutive lock failures)"
+        if [[ "$lock_contention_count" -ge "$LOCK_CONTENTION_MAX" ]]; then
+          print_lock_contention_escape_hatch
+          exit 8
+        fi
         sleep 2
         continue
       fi
