@@ -210,7 +210,8 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
       filing so it's tracked rather than left to keep silently recurring every time the backfill script runs against a
       doc with a long first paragraph. Recommended fix (not implemented): truncate at the last sentence or word boundary
       before 200 chars, and/or flag any doc where the auto-derived summary got truncated at all for required human
-      review before it ships, rather than silently landing a partial sentence.
+      review before it ships, rather than silently landing a partial sentence. **➡️ EXTRACTED 2026-08-09 to
+      `ao_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 — do NOT action here.**
 
 ## Progress Log
 
