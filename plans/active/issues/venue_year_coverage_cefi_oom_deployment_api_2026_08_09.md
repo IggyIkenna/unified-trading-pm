@@ -49,7 +49,7 @@ source: >-
   /reliability gap found mid-verify, not fixed inline per that todo's own explicit instruction).
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P1
+priority: P0
 ---
 
 # `venue-year-coverage` cefi OOM (16GiB Cloud Run limit)
@@ -126,24 +126,54 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       produced), a cross-chunk `source_breakdown` merge test, plus 3 new `read_manifest_window()` unit tests (pushdown
       columns+filter shape, propagates errors rather than swallowing them, never falls back to the unfiltered read on a
       genuinely-empty window).
-- [ ] [INFRA] P1. **Live-prod re-verification — deploy-pipeline-pending.** The done-when this todo was originally scoped
-      against (`GET .../venue-year-coverage?asset_groups=cefi&scope=could_exist|mvp|all` returning `200` within <30s
-      against LIVE PROD, with a clean Cloud Logging check) requires deployment-api@049d8d58a to actually be DEPLOYED to
-      the `uts-shared-deployment-api` Cloud Run service — confirmed NOT yet the case as of 2026-08-09~15:35 UTC (the
-      live `latestReadyRevisionName` / 100%-traffic revision `uts-shared-deployment-api-     00490-9gf` was created
-      2026-08-09T13:35:46Z, BEFORE this fix's commit). deployment-api's deploy trigger mechanism wasn't identified in
-      this session (no GH Actions "deploy" workflow found for the repo; no Cloud Build trigger matched a
-      `deployment-api` name filter) — infra/CI/CD is outside `backend_engineer` craft scope
-      (`does_not: Infra provisioning, VM launches, CI/CD, cloud (→ infra)`), so tracking down + waiting out the actual
-      deploy cadence is this todo's own remaining scope, not folded into the code-fix todo above. Done when: confirm
-      deployment-api@049d8d58a (or later) is the live revision, then re-run the 3-scope curl probe (`could_exist`,
-      `mvp`, `all` for `asset_groups=cefi`) and cite the responses + a clean Cloud Logging window (no
-      `Memory limit     exceeded` / `terminated on signal 9` in the request window).
+- [x] ✅ [INFRA] P1. **Live-prod re-verification — deploy confirmed, but the fix does NOT resolve the OOM live.** Deploy
+      trigger identified: Cloud Build trigger `deployment-api-main-deploy` (`_BRANCH=main`, `_DEPLOY=true`,
+      `deployment-api/cloudbuild.yaml`'s `deploy` step) fires on every push to `main`; `deployment-api` promotes
+      LDR→main per-commit via the `ldr_main` direct model (`promote/deployment-api/<sha>` PRs, auto-merged, one every
+      ~10-40min). Confirmed deployment-api@049d8d58a reached `main` — **squashed** (not fast-forwarded) as commit
+      `06a2a29` (PR #548, merged 2026-08-09T15:49:40Z, `Promoted-From-LDR: 049d8d58a2ba…`, diff matches the fix exactly:
+      `_live_coverage_venue_year.py` + `manifest_source.py` + the 3 new/updated test files) — a **bare
+      `git merge-base --is-ancestor 049d8d58a origin/main` reads NO for this repo's promotion model**, since it
+      squashes; check by commit-message grep on `origin/main` or the `Promoted-From-LDR` trailer instead. Cloud Build
+      `ee9512bb` (SHORT_SHA=06a2a29) deployed revision `uts-shared-deployment-api-00491-qsm` (2026-08-09T15:57:55Z,
+      image digest `sha256:2e88a4c…` — verified byte-identical to the `:06a2a29` AR tag digest). A later same-day commit
+      `a0b5abb` (build `ab019014`, ancestor-confirmed to include `06a2a29`) then deployed
+      `uts-shared-deployment-api-00492-vh6` (2026-08-09T16:08:51Z), which is the STABLE 100%-traffic revision this
+      re-verification ran against. **Re-verification result: FAIL.** Ran the 3-scope probe against `00492-vh6`
+      (post-settle, requests spaced ≥15s apart, `--max-time 60`, one at a time): `scope=could_exist` → `503` in 47s
+      (Cloud Logging: `Memory limit of 16384 MiB exceeded with 16535 MiB used` @16:12:33, SIGTERM/instance-recycle);
+      `scope=mvp` → client timeout (`000`) at 60s, Cloud Logging:
+      `Memory limit of 16384 MiB exceeded with 16629 MiB used` @16:14:19; `scope=all` → `503` in 58s, Cloud Logging:
+      `Memory limit of 16384 MiB exceeded with 16768 MiB used` @16:16:34,
+      `"container instance was found to be using too much memory and was terminated"`. All 3 reproduced cleanly on the
+      settled, fix-containing revision (not a rollout-transition artifact — confirmed by re-running after traffic was
+      100% pinned to `00492-vh6` for >3 min). **The `date_window` yearly-chunk fix from todo 1 does NOT close the cefi
+      OOM** — see the new BACKEND todo below. This todo's own infra-scoped done-when (confirm live deploy + run the
+      probe + cite responses/logs) is met; the underlying bug is not — deployment-api@a0b5abb (2026-08-09).
+- [ ] [BACKEND] P0. **The `date_window` yearly-chunk fix (deployment-api@049d8d58a, squashed to `main`@06a2a29, live
+      since 2026-08-09T15:57:55Z) does NOT resolve the cefi OOM in production** — reproduced 3× (all 3 `scope=` values)
+      against the stable, fix-containing, 100%-traffic revision `uts-shared-deployment-api-00492-vh6`, each hitting
+      `Memory limit of 16384 MiB exceeded` (16535-16768 MiB) per the INFRA todo's evidence above. Root cause unknown —
+      the fix's own Progress Log entry (todo 1) passed the full local test suite + `quality-gates.sh`, so this is a
+      live-only gap the test suite doesn't cover (no real-size cefi manifest in test fixtures). Candidate causes to
+      investigate: (a) a single CALENDAR YEAR of cefi tick-level data is itself still too large post-pushdown (the
+      issue's own root-cause section already established that an UNFILTERED read of cefi exceeds 16GiB outright — a
+      yearly window may not be a fine-enough grain if recent years carry disproportionately more instruments/ticks than
+      older ones; try monthly or weekly windows, or measure real per-year row/byte counts first); (b) the pyarrow
+      `date_window` filter in `read_manifest_window()` isn't actually reducing the row-group set for cefi's specific
+      partitioning/date-column type (verify EXPLAIN/row-group-skip stats on a real read, not just the filter shape unit
+      test); (c) the per-chunk `pd.DataFrame`s or intermediate pyarrow tables aren't being released between years (check
+      for an accumulating list before the final `concat` rather than an incremental accumulate+drop). Re-run this same
+      3-scope curl probe (`could_exist`/`mvp`/`all`, `asset_groups=cefi`) against live prod as the acceptance check once
+      a further fix ships; cite fresh Cloud Logging evidence of a CLEAN window (no `Memory limit exceeded` /
+      `terminated on signal 9`) same as this issue's original acceptance bar. Repo: deployment-api.
 - [ ] [BACKEND] P2. Audit the container's memory headroom (16GiB) vs. cefi/tradfi/defi's REAL manifest sizes — measure
       peak RSS for an unfiltered full read of each, similar to the RSS-measurement approach the archived
       `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08` issue doc used for `measure_honest_coverage.py` — to
       confirm the `date_window` fix alone closes the gap rather than just narrowing the failure window. If peak RSS for
-      a bounded read is still uncomfortably close to 16GiB, consider a memory bump alongside the read-shape fix.
+      a bounded read is still uncomfortably close to 16GiB, consider a memory bump alongside the read-shape fix. **NOTE
+      (2026-08-09): the P0 todo above already confirms the answer is NO for cefi as currently implemented — this audit
+      is still useful for tradfi/defi (not yet proven safe either) and for sizing the eventual real fix.**
 
 ## Progress Log
 
@@ -154,3 +184,15 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   green. Split the original done-when's live-prod leg into its own todo (below) since the fix isn't deployed yet as of
   this session — the deploy pipeline/cadence for `uts-shared-deployment-api` wasn't identified and is outside this
   craft's scope to chase down synchronously.
+- **2026-08-09 ~16:00-16:17 UTC**: Todo 2 (INFRA live-prod re-verification) done. Identified the deploy mechanism
+  (`deployment-api-main-deploy` Cloud Build trigger, fires on push to `main`; deployment-api promotes LDR→main
+  per-commit, SQUASHED, via the `ldr_main` model). Confirmed deployment-api@049d8d58a reached `main` (squashed as
+  `06a2a29`) and is live (superset commit `a0b5abb`, revision `uts-shared-deployment-api-00492-vh6`, 100% traffic).
+  **Re-ran the acceptance probe and it FAILED**: all 3 `scope=` values for `asset_groups=cefi` still OOM the container
+  (`Memory limit of 16384 MiB exceeded`, 16535-16768 MiB used, 3 clean reproductions on the settled fix-containing
+  revision). Bumped this issue back to **P0** and opened a new BACKEND todo — the yearly-`date_window` chunking fix
+  reduces the OOM's trigger surface (single unfiltered read → per-year reads) but does not close it for cefi's real-size
+  manifest; root cause of why a single year is still too large (or why pushdown isn't reducing enough) is
+  uninvestigated. This is a live, still-open production reliability gap on a SHARED Cloud Run service — flagging
+  prominently per the workspace's "big finding" governance rule (data-correctness/reliability, contradicts a prior
+  "done" claim).
