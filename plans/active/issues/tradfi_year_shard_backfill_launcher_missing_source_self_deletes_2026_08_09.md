@@ -109,13 +109,40 @@ launcher never sets). For THIS incident's launch this is harmless (0 pre-existin
 pre-flight skip-filter has nothing to skip either way), but it means `--no-force-window` silently has no effect on any
 launch routed through `mtds-backfill`. Not investigated/fixed here — see action items.
 
+## Second finding (2026-08-09, same session, post-relaunch) — stall-timeout reaps VMs on a slow-but-real historical fetch
+
+After the `VM_TASK`/`VM_SOURCE` fix, all 5 re-launched ES_OPT VMs started genuinely fetching data (confirmed via run.log
+— no more `--source` error). But **4 of 5 (2022, 2023, 2024, 2025) went silent for ~10-18 minutes on their FIRST real
+(non-holiday) trading day and were then externally deleted** (not self-deleted — no `DEPLOYMENT_FAILED`/
+`VM_SHUTDOWN_ON_COMPLETION` line in any of their logs; the log simply stops mid-day, before a `Processed date=...`
+completion line, at RSS ~8-10GiB). Only **2026 succeeded** — it processed multiple real trading days
+(`venue=CME: 24180 rows written`, `Processed date=2026-01-08: 1 venues ok, 0 failed`) with RSS cycling ~2.6GiB→9GiB→
+(presumably down again after each write), never stalling.
+
+**Working hypothesis (not yet confirmed against dmesg/OOM logs — the VMs are already deleted so this can't be verified
+post-hoc for this run)**: the launcher header's own comment documents `STALL_TIMEOUT_SEC=600` (a 10-minute log-mtime
+watchdog, inherited from `vm-exec-with-gcs-tee.sh`). Fetching a FULL ES_OPT chain (11 underlyings × all
+strikes/expiries) for a single historical date produces no incremental log output while the Databento API call is in
+flight — if that single call takes >10 min for some (older? more-strikes? less-cached?) dates, the stall watchdog kills
+the VM as "hung" even though it's making real, silent progress. 2026 (recent, likely faster/cached Databento response)
+apparently never hit this; 2022-2025 (older, possibly slower) did, but not deterministically — investigate before
+assuming this exact mechanism without direct confirmation (e.g. add a heartbeat/progress log line INSIDE the fetch call,
+or check `STALL_TIMEOUT_SEC` handling for a way to raise it per-launcher).
+
 ## Action items
 
-- [ ] [DATA] P1. **Verify the re-launched ES_OPT VMs actually complete and write real data** — monitor
-      `tradfi-bf-es-opt-*` to completion, then run the manifest count-check (venue=CME × ohlcv_1m ×
-      instrument_type=options_chain × the 11 canonical ES_OPT instrument_ids) per
+- [ ] [DATA] P1. **Verify the ES_OPT backfill eventually completes across all 5 years and write real data** — 2022-2025
+      died mid-fetch (see second finding above); 2026 succeeded. Once the singleton lock is next clear, retry the failed
+      year-shards (idempotent, per this task's own safety framing), then run the manifest count-check (venue=CME ×
+      ohlcv_1m × instrument_type=options_chain × the 11 canonical ES_OPT instrument_ids) per
       `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2's own done-criteria. Repo: unified-trading-pm
       (progress tracked in that plan, not duplicated here).
+- [ ] [INFRA] P1. **Investigate + fix the stall-timeout-kills-slow-real-fetch pattern** documented in the second finding
+      above — either raise `STALL_TIMEOUT_SEC` for `mtds-backfill`-routed ES_OPT launches specifically, or add
+      incremental progress logging inside the per-date Databento fetch so the watchdog sees liveness during a
+      legitimately slow (not hung) call. Confirm root cause first (check for an actual OOM-killer dmesg entry vs. a
+      genuine stall-watchdog kill — the two need different fixes) on the NEXT retry before assuming this hypothesis.
+      Repo: deployment-service (`vm-exec-with-gcs-tee.sh`) + market-tick-data-service (Databento adapter fetch path).
 - [ ] [INFRA] P2. **Audit whether this same `VM_TASK=cefi-backfill` bug affects other callers of
       `launch-tradfi-backfill-vm.sh`** (BTC/ETH crypto-basis tier-plan, ad-hoc single-window mode) and whether any
       historical ES/BTC/ETH TradFi manifest data that appears "captured" actually came through THIS launcher (broken
