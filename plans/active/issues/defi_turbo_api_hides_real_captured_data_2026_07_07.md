@@ -36,7 +36,7 @@ assigned_vm: planning
 resolved_by:
 locked_by:
 execution_scope: local-only
-model_tier: opus-required
+model_tier: sonnet-doable
 thinking_tier: high
 estimate_class: research
 estimate_baseline_ai_days: 2
