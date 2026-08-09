@@ -175,3 +175,5 @@ corpus actually uses was never brought into the checker's purview.
   `known_broken` entries total, +17 net new from the widened backtick scan) — matches this item's own instruction to
   absorb pre-existing debt rather than ship zero-tolerance day one. `[DOCS] P3` (re-run `/docs-reconcile` against the
   widened checker) is left open — different `[TAG]`/craft, out of this task's scope.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.

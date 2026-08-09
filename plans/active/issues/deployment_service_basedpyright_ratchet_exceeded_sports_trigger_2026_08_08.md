@@ -29,6 +29,13 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    deployment-service/deployment_service/sports_trigger_evaluation.py,
+    deployment-service/deployment_service/sports_trigger_periodic.py,
+    /codex/06-coding-standards/quality-gates.md,
+    /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md,
+  ]
 ---
 
 ## Finding
@@ -85,14 +92,15 @@ false positives worth a targeted `# type: ignore`-equivalent per this repo's own
   files) is complete and QG-verified in isolation — sitting as an uncommitted local working-tree diff in this repo's
   clone, not lost, just blocked. Once this ratchet clears, re-run `bash scripts/quality-gates.sh` +
   `quickmerge.sh "fix(alerts): DP-FETCH-009 excludes superseded_by_* retirement markers from the attempted_failed alert count" --agent --files 'deployment_service/data_pipeline_monitors/attempted_failed_staleness.py deployment_service/data_pipeline_monitors/meta_watchers.py tests/unit/test_data_pipeline_monitors.py'`.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: considered for RECLASSIFY -- the sole todo (fix
-  ~23 basedpyright errors in `sports_trigger_{evaluation,periodic,scheduler,state}.py` so the ratchet drops to
-  <=1293) is bounded/deterministic on its face. **Conflict-check HELD, not flipped**: an active
-  `assigned_vm: planning` doc in a DIFFERENT parent_epic
-  (`plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`, parent_epic `sports_master`)
-  shipped a same-repo, same-file-family basedpyright fix in `deployment_service/sports_trigger_periodic.py` one
-  week ago (moved the ratchet 1293->1294 via a `reportPrivateUsage` fix) and remains AO-dispatchable -- a fresh
-  worker on this doc's todo risks racing that plan's own future edits to the identical file family under the
-  same shared repo-wide basedpyright counter. Per the ao-dispatch-batch-naming-and-conflict-check.md protocol
-  step 3 ("CONFLICT -- do NOT draft a competing todo... queue it for an explicit operator ruling"), staying
-  `assigned_vm: NA` and flagging here rather than guessing which side should own the file family.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: considered for RECLASSIFY -- the sole todo (fix ~23
+  basedpyright errors in `sports_trigger_{evaluation,periodic,scheduler,state}.py` so the ratchet drops to <=1293) is
+  bounded/deterministic on its face. **Conflict-check HELD, not flipped**: an active `assigned_vm: planning` doc in a
+  DIFFERENT parent_epic (`plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`, parent_epic
+  `sports_master`) shipped a same-repo, same-file-family basedpyright fix in
+  `deployment_service/sports_trigger_periodic.py` one week ago (moved the ratchet 1293->1294 via a `reportPrivateUsage`
+  fix) and remains AO-dispatchable -- a fresh worker on this doc's todo risks racing that plan's own future edits to the
+  identical file family under the same shared repo-wide basedpyright counter. Per the
+  ao-dispatch-batch-naming-and-conflict-check.md protocol step 3 ("CONFLICT -- do NOT draft a competing todo... queue it
+  for an explicit operator ruling"), staying `assigned_vm: NA` and flagging here rather than guessing which side should
+  own the file family.
+- **context-scout 2026-08-09**: populated context_scope (4 entries).
