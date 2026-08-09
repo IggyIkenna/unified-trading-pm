@@ -27,7 +27,7 @@ tags:
 related:
   [
     /plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md,
   ]
@@ -180,12 +180,16 @@ backfill slice needs a fresh relaunch.
 
 ## Todos
 
-- [ ] [DATA] P2. For each of the 17 (asset_group, data_type) pairs in the DP-FETCH-009 table above, check the current
+- [x] ✅ [DATA] P2. For each of the 17 (asset_group, data_type) pairs in the DP-FETCH-009 table above, check the current
       `attempted_failed` ratio via the manifest (same detector logic as `check_high_attempted_failed`,
       `deployment-service/data_pipeline_monitors/`). Any pair still above the DP-FETCH-009 threshold (`abs>=500` or
       `ratio>=10%`) is a confirmed live gap — dispatch a targeted backfill relaunch for that shard. Any pair now clear
       needs no action. Repo: deployment-service (manifest check) + market-tick-data-service/features-onchain-service
-      (backfill relaunch as needed per asset_group).
+      (backfill relaunch as needed per asset_group). — verified live 2026-08-09 (slot-32, data_engineering): **11 of 17
+      pairs are STILL HIGH** (confirmed live gap, current `attempted_failed` count in the trailing 14-day window). See
+      Progress Log for the full per-pair table + methodology. Backfill relaunch dispatch NOT done in this task —
+      escalated per the P3 todo below instead (11 > 5 confirmed-open shards; multi-repo/multi-AG blast radius warrants a
+      scoped follow-up plan rather than an in-session ad-hoc relaunch fan-out).
 - [ ] [DATA] P2. For each of the 23 VM names in the DP-VM-002 list above, check the availability manifest's `captured`
       count for that VM's target shard as of today vs. its value at the VM's `created_at` timestamp (listed above). A
       shard whose count did not climb since is unconfirmed-still-missing — relaunch it. A shard that climbed via a later
@@ -205,3 +209,60 @@ backfill slice needs a fresh relaunch.
   date, post-fix escalation behavior). 36 of 76 buckets (by row volume) resolve to a confirmed self-healing or
   already-investigated explanation; the residual 40 named entities (17 DP-FETCH-009 asset_group/data_type pairs + 23
   DP-VM-002 VM names) are filed above as the bounded, checkable follow-up.
+- **2026-08-09 (slot-32, data_engineering, task
+  qg_v2_green_false_resolution_historical_sample_audit_unverified_dp_gaps-04689ae21350)**: Todo 1 (the 17 DP-FETCH-009
+  pairs) verified live. **Memory-bounding note for the next reader**: the production detector's own reader
+  (`deployment_service.data_pipeline_monitors.meta_watchers._read_attempted_failed_cells`, a plain
+  `pd.read_parquet(io.BytesIO(raw), columns=[4 cols])` call) OOM'd this shared host when run directly — RSS hit 10.8GB
+  against a 6G `run-bounded-analysis.sh` cap reading all 5 asset_groups' consolidated indexes (cefi/defi are tens of
+  millions of rows; 4 pandas object-dtype string columns at that row count is the same failure class as the archived
+  `/plans/archive/2026_08/read_availability_index_slim_read_oom_at_defi_scale_2026_08_01.md` incident, just in a
+  DIFFERENT reader — deployment-service's own, not UTL's already-fixed `read_availability_index` slim path). This is
+  expected/acceptable for the production Cloud Run Job (provisioned with adequate container memory) but unsafe to run
+  ad-hoc on the shared planning-vm per RULES.md § 1 / data_engineering.md STEP 0.56 — not filed as a fresh issue since
+  the existing memory-bounding HARD RULE already anticipates and prescribes the fix for exactly this shape. Worked
+  around the same way the archived incident did: downloaded each asset_group's index ONCE (single-walk, same blob the
+  production check reads, one local scratch file at a time, deleted immediately after read) and ran a DuckDB
+  (`memory_limit='2GB'`) `GROUP BY data_type` aggregate filtered to only the 17 target `data_type` values instead of
+  materialising all data_types × all rows into pandas — completed cleanly under a 4G RSS cap.
+
+  **Result — 11 of 17 pairs are STILL HIGH** (current `attempted_failed` count in the trailing 14-day window, same
+  threshold logic as `check_high_attempted_failed`: `abs>=500` OR (`count>=50` AND `ratio>=10%`)):
+
+  | asset_group | data_type             | captured | attempted_failed | ratio | HIGH (confirmed live gap) |
+  | ----------- | --------------------- | -------: | ---------------: | ----: | :------------------------ |
+  | cefi        | trades                |  1585570 |            14265 |  0.9% | **YES**                   |
+  | cefi        | derivative_ticker     |  1539343 |            18478 |  1.2% | **YES**                   |
+  | defi        | dex_pool_swaps        |  9650042 |              213 |  0.0% | no                        |
+  | cefi        | futures_chain         |        0 |             2858 |  100% | **YES** (0 ever captured) |
+  | defi        | dex_pools             |   340486 |                0 |  0.0% | no                        |
+  | cefi        | options_chain         |        0 |              799 |  100% | **YES** (0 ever captured) |
+  | prediction  | trades                |   372858 |            23566 |  5.9% | **YES**                   |
+  | cefi        | liquidations          |   704777 |            20445 |  2.8% | **YES**                   |
+  | defi        | dex_swaps             |  2025156 |                0 |  0.0% | no                        |
+  | prediction  | book_snapshot_5       |    23122 |             7899 | 25.5% | **YES**                   |
+  | defi        | lst_rates             |    75891 |                0 |  0.0% | no                        |
+  | cefi        | perp_funding          |     1085 |              101 |  8.5% | no (below both bars)      |
+  | tradfi      | ohlcv_24h             |     7425 |              727 |  8.9% | **YES**                   |
+  | sports      | arbitrage_opportunity |    17851 |             2505 | 12.3% | **YES**                   |
+  | tradfi      | ohlcv_1m              |   718422 |                0 |  0.0% | no                        |
+  | sports      | odds_horizon_bucket   |   137258 |              892 |  0.6% | **YES**                   |
+  | defi        | risk_params           |    42141 |               22 |  0.1% | no                        |
+
+  All 6 confirmed-clear pairs are defi/tradfi(ohlcv_1m) with `attempted_failed=0` or negligible — genuinely healed, no
+  action needed. The 11 confirmed-HIGH pairs span cefi (5: trades, derivative_ticker, futures_chain, options_chain,
+  liquidations), tradfi (1: ohlcv_24h), sports (2: arbitrage_opportunity, odds_horizon_bucket), prediction (2: trades,
+  book_snapshot_5) — cefi/futures_chain and cefi/options_chain are notable: `captured=0`, 100% failure rate, meaning
+  these pairs have NEVER successfully captured a single row in the trailing window (possibly a broken adapter/venue
+  pairing rather than a transient backfill gap — worth a human read before any blind relaunch, not just a mechanical
+  backfill dispatch).
+
+  **11 > 5 confirmed-still-open shards — this crosses the P3 todo's own escalation bar** ("a large confirmed-count
+  changes this from 'verification gap' to 'active data hole'"). Backfill relaunch dispatch was NOT attempted in this
+  task: it spans 2 repos (market-tick-data-service, features-onchain-service) × 4 asset_groups and is itself a
+  properly-scoped-todo-per-shard undertaking (per CLAUDE.md's dispatch-scope-eligibility rule), not a single-task
+  add-on. Filed a `/blocked` notification to the operator/main agent per CLAUDE.md's "big finding (data-correctness) →
+  NOTIFY OPERATOR" HARD RULE, recommending a scoped follow-up plan naming each of the 11 shards + owning repo (mirrors
+  this doc's own P3 todo intent) rather than an ad-hoc in-session relaunch fan-out — see the blocked-question for the
+  operator's decision. Todo 2 (the 23 DP-VM-002 VM names) is NOT done — out of scope for this task; whoever picks it up
+  next should fold its results into this same escalation once both todos are complete.
