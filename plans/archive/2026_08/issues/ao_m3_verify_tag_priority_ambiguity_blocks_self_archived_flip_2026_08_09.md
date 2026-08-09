@@ -24,7 +24,7 @@ summary: >-
   resolved the ambiguity, but that fix only works when one of the colliding todos happens to be mis-tagged; a doc with
   two genuinely-identical `[TAG] P<n>.` todos (e.g. two real `[BACKEND] P1.` code-change todos) would have no such
   escape hatch.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -55,6 +55,11 @@ locked_by:
 context_scope:
   [agent-orchestrator/server/verify.py, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md]
 ---
+
+> **ARCHIVED 2026-08-09** — resolved: `_archival_rename_disposition` now falls through to an ordinal-position
+> correlation (`_disposition_by_tag_position`) when content correlation is ambiguous. See the Todo/Progress Log below
+> for the shipped commit and the reasoning for implementing Option (b) instead of the originally-recommended Option (a).
+> No corpus referrers to this doc were found at archive time.
 
 ## What I found
 
@@ -103,13 +108,14 @@ independent of tag ambiguity).
 
 ## Todo
 
-- [ ] [BACKEND] P2. In `agent-orchestrator/server/verify.py`, fix `_flips_at_path_or_rename` (and its
+- [x] ✅ [BACKEND] P2. In `agent-orchestrator/server/verify.py`, fix `_flips_at_path_or_rename` (and its
       CANCELLED/DEFERRED/BLOCKED siblings) to re-invoke their underlying `git show` calls with `-M` (rename detection)
       when the literal-path diff is a pure delete, so a same-commit archival `git mv` bundled with a real checkbox flip
       is detected directly via the diff (not only via the weaker `_archival_rename_disposition` content-based fallback
       that fails closed on a `[TAG] P<n>.` collision). Add a regression test: two todos sharing the same `[TAG] P<n>.`
       prefix, both flipped `[x]` in the SAME commit that also `git mv`s the doc to `plans/archive/<YYYY_MM>/`, must
-      resolve `checkbox_flipped=True` for either todo's `brief`. (repo: agent-orchestrator)
+      resolve `checkbox_flipped=True` for either todo's `brief`. (repo: agent-orchestrator) —
+      agent-orchestrator@2dccb9f4a
 
 ## Progress Log
 
@@ -117,3 +123,18 @@ independent of tag ambiguity).
   archived doc's Progress Log for the full blow-by-blow (retag workaround, exact function-level root cause). Not fixing
   inline in this session (out of scope for the task that surfaced it; this doc tracks the fix as its own bounded,
   AO-eligible unit).
+- 2026-08-09 (slot 24, backend_engineer): Implemented **Option (b)** from the "Recommended decision" above rather than
+  the literal `-M`-on-`git show` mechanism the todo described. Traced through Option (a): passing both pathspecs to one
+  `git show` (with or without `-M`) makes `_flips_at_path_or_rename` scan the WHOLE old+new file pair as one diff, which
+  reliably closes the gap for a single-todo doc but produces false positives on a doc with 2+ todos where only the LAST
+  one closes in the archival commit and the others were already `[x]` in an earlier commit — those already-checked lines
+  show as "added" too (pure-add diff), so `added_checked_line` goes true regardless of which todo the removed line was.
+  It would also change the resolution path (and `reason`) for the two ALREADY-PASSING tests
+  `test_done_accepts_cross_repo_self_archived_with_annotated_checked_line` and
+  `test_done_rejects_cross_repo_self_archived_ambiguous_tag_priority` (the latter would flip from reject to accept).
+  Option (b) — ordinal-position correlation between the parent and destination revisions
+  (`_disposition_by_tag_position`/`_tag_priority_line_statuses`) — avoids both problems: it doesn't touch
+  `_flips_at_path_or_rename` at all, so every existing test's behavior is unchanged (verified: full existing suite green
+  including the two tests above), and it resolves the new regression test's two-genuinely-different-todos-sharing-a-
+  tag+priority-and-vocabulary case cleanly. `quality-gates.sh` full run green (2913 passed); shipped
+  agent-orchestrator@2dccb9f4a.
