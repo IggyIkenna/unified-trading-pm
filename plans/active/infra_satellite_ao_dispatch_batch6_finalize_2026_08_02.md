@@ -12,6 +12,7 @@ summary: >-
   first; the cron-install operator-gated sub-item in the second) — so this plan's main job is to flip accurately and
   confirm neither is prematurely archived, then run the standard ritual on the batch pair itself.
 status: active
+archive_exempt: true
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -88,12 +89,16 @@ skill's no-double-gate mechanism).
       exports to `scripts/setup.sh` + single-repo `nlink>1` verification); cron-install sub-item (a) confirmed correctly
       `[OPERATOR]`-gated (already done). Source doc confirmed NOT an archival candidate — `assigned_vm: NA` unchanged.
       See `issues/host_root_disk_full_transient_2026_07_13.md` Progress Log for the full reconciliation entry.
-- [ ] [DOC] P3. **Archive `infra_satellite_ao_dispatch_batch6_2026_08_02.md`** once both todos above are done and both
-      reconciliations are verified — run the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix
-      every corpus referrer path, confirm `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py` both
-      stay clean). Do this as a SEPARATE commit from the checkbox-flip commits above (never combine a flip + `git mv` in
-      one commit — 2026-07-30 incident, `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). (repo:
-      unified-trading-pm)
+- [x] ✅ [DOC] P3. **Archive `infra_satellite_ao_dispatch_batch6_2026_08_02.md`** once both todos above are done and
+      both reconciliations are verified — run the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`,
+      fix every corpus referrer path, confirm `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py`
+      both stay clean). Do this as a SEPARATE commit from the checkbox-flip commits above (never combine a flip +
+      `git mv` in one commit — 2026-07-30 incident,
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). (repo: unified-trading-pm) — **DONE
+      2026-08-09** (slot 14): both reconciliations above verified against current source-doc state; batch pair archived
+      to `plans/archive/2026_08/` in the immediately following commit (this plan itself also reaches 0 open todos here,
+      so it archives alongside its parent batch per the archival-discipline SSOT's archive-immediately rule — see
+      `archive_exempt: true` bridge above).
 
 ## Codex SSOTs
 
@@ -107,3 +112,6 @@ skill's no-double-gate mechanism).
   (autonomous mode, scheduled daily run, slot 11).
 - **context-scout 2026-08-03**: re-scouted; context_scope unchanged (2 entries), still accurate — a genuinely code-free
   finalize/gate doc.
+- **2026-08-09** (slot 14): all 3 todos now `[x]` — both source-doc reconciliations were already verified done
+  (2026-08-08) and confirmed still accurate against current file state; flipped todo 3 and archiving the batch pair as
+  the immediately following commit.
