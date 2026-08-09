@@ -1949,6 +1949,36 @@ _qm_restage_target_files() {
   fi
 }
 
+# _qm_locked_git_commit -- serialise `git commit` (which runs the prek/pre-commit hook chain
+# synchronously) against any OTHER concurrent commit in this SAME checkout, in this or any
+# other process (e.g. safe-doc-push.sh, which wraps its own commit calls the same way).
+# prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08: prek stashes unstaged
+# changes to a patch at hook-batch START and restores it at the END; two overlapping
+# `git commit` calls in one checkout can interleave those windows, and the first session's
+# restore silently reverts a second session's newer edit to HEAD -- no error, no conflict
+# marker, no stash entry to recover from. A flock scoped to this checkout's .git dir closes
+# the interleaving window without touching prek itself -- a distinct lock file/FD from the
+# cascade lock above (different critical section, same degrade-to-unlocked convention).
+# Held ONLY around the single `git commit` call, never across the retry loop below (up to
+# _QM_COMMIT_RETRY_MAX attempts) -- each retry re-acquires+releases cleanly, no self-deadlock.
+_qm_locked_git_commit() {
+  local lock_fd=222 lock_file rc
+  lock_file="$(git rev-parse --git-dir 2>/dev/null)/quickmerge-commit.lock"
+  if [ -z "$lock_file" ] || [ "$lock_file" = "/quickmerge-commit.lock" ]; then
+    git commit "$@"
+    return $?
+  fi
+  if command -v flock >/dev/null 2>&1 && eval "exec ${lock_fd}>\"\$lock_file\"" 2>/dev/null; then
+    flock "$lock_fd"
+    git commit "$@"
+    rc=$?
+    flock -u "$lock_fd" 2>/dev/null || true
+    eval "exec ${lock_fd}>&-" 2>/dev/null || true
+    return "$rc"
+  fi
+  git commit "$@"
+}
+
 # Bounded retry for a commit-time branch-drift race (ao_quickmerge_stage5_
 # branch_drift_retry_2026_07_27): STAGE 0.4 already pulled us current before QG
 # ran, but on a busy shared branch a peer can push AGAIN in the seconds between
@@ -2005,14 +2035,14 @@ while true; do
     else
       _QM_AMEND_MSG_FILE=$(mktemp "${TMPDIR:-/tmp}/qm-amend-msg.XXXXXX")
       { git log -1 --format=%B; printf '\nQuickmerge: %s\n' "$_QM_TRAILER_KIND"; } >"$_QM_AMEND_MSG_FILE"
-      git commit --amend -F "$_QM_AMEND_MSG_FILE" --quiet
+      _qm_locked_git_commit --amend -F "$_QM_AMEND_MSG_FILE" --quiet
       rm -f "$_QM_AMEND_MSG_FILE"
       echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed but missing the Quickmerge trailer; amended HEAD to add 'Quickmerge: ${_QM_TRAILER_KIND}'. Proceeding to push."
     fi
     break
   fi
 
-  if git commit -m "$_QM_COMMIT_MSG" --quiet; then
+  if _qm_locked_git_commit -m "$_QM_COMMIT_MSG" --quiet; then
     _QM_FRESH_COMMIT=1
     break
   fi
@@ -2024,7 +2054,7 @@ while true; do
   # --files is set, re-stage ONLY those paths (the hook's edits to YOUR files re-stage;
   # foreign modified files stay out of the index). Only the unscoped path uses `git add -A`.
   _qm_restage_target_files
-  if git commit -m "$_QM_COMMIT_MSG" --quiet; then
+  if _qm_locked_git_commit -m "$_QM_COMMIT_MSG" --quiet; then
     _QM_FRESH_COMMIT=1
     if [ -n "$FILES_ARG" ]; then
       echo "[$REPO_NAME] Pre-commit modified files; re-staged (scoped to --files) and committed on retry" >&2

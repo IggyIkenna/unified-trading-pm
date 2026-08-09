@@ -268,6 +268,38 @@ backoff() {
   sleep "$((1 + RANDOM % 3 + attempt))"
 }
 
+# locked_git_commit -- serialise `git commit` (which runs the prek/pre-commit hook chain
+# synchronously) against any OTHER concurrent commit in this SAME checkout, in this or any
+# other process (e.g. quickmerge.sh, which wraps its own commit calls the same way).
+# prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08: prek stashes unstaged
+# changes to a patch at hook-batch START and restores it at the END; two overlapping
+# `git commit` calls in one checkout can interleave those windows, and the first session's
+# restore silently reverts a second session's newer edit to HEAD -- no error, no conflict
+# marker, no stash entry to recover from. A flock scoped to this checkout's .git dir closes
+# the interleaving window without touching prek itself. Mirrors the existing cascade-lock
+# convention elsewhere in this repo (quickmerge.sh's flock around its ancestor-checkout
+# critical section) -- same FD-open/flock/unlock/FD-close shape, same graceful degrade to
+# unlocked if flock(1) is unavailable. Held ONLY around the single `git commit` call below,
+# never across this script's own attempt loop, so a retry re-acquires+releases cleanly each
+# time -- no self-deadlock on this script's own retries.
+locked_git_commit() {
+  local lock_fd=222 lock_file rc
+  lock_file="$(git rev-parse --git-dir 2>/dev/null)/quickmerge-commit.lock"
+  if [[ -z "$lock_file" || "$lock_file" == "/quickmerge-commit.lock" ]]; then
+    git commit "$@"
+    return $?
+  fi
+  if command -v flock >/dev/null 2>&1 && eval "exec ${lock_fd}>\"\$lock_file\"" 2>/dev/null; then
+    flock "$lock_fd"
+    git commit "$@"
+    rc=$?
+    flock -u "$lock_fd" 2>/dev/null || true
+    eval "exec ${lock_fd}>&-" 2>/dev/null || true
+    return "$rc"
+  fi
+  git commit "$@"
+}
+
 MAX_ATTEMPTS=6
 committed=false
 final_ok=false
@@ -322,7 +354,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       fi
     fi
 
-    if ! git commit -q -m "$MSG" 2>/tmp/_sdp_commit_err; then
+    if ! locked_git_commit -q -m "$MSG" 2>/tmp/_sdp_commit_err; then
       if grep -qi "nothing to commit" /tmp/_sdp_commit_err; then
         echo "✅ Nothing to commit -- already landed. Treating as success."
         final_ok=true
