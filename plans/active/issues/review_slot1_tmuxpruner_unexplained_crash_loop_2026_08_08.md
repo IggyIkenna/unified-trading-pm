@@ -87,10 +87,31 @@ own Tick history.
       the appropriate host-capacity issue if one already exists (check
       `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` first for a possible match
       before filing new). Repo: agent-orchestrator. — agent-orchestrator@e32d962 + Progress Log entry below.
-- [ ] [REVIEW] P3. Once a fix lands, independently re-verify via `GET /api/activity?slot=1` (or whichever slot is
-      currently the review role) over a fresh 2h+ window that `tmux_session_lost` without a preceding
-      `context_recycle_requested` has dropped to near-zero. Repo: unified-trading-pm (verification + checkbox flip
-      only).
+- [ ] [REVIEW] P3. **DO NOT close yet** — `e32d962` fixed a different code path (see todo 5 below); re-verify only once
+      todo 5 also lands. Then independently re-verify via `GET /api/activity?slot=1` (or whichever slot is currently the
+      review role) over a fresh 2h+ window that `tmux_session_lost` without a preceding `context_recycle_requested` has
+      dropped to near-zero. Repo: unified-trading-pm (verification + checkbox flip only).
+- [ ] [BACKEND] P1. **Second, distinct root cause found (review, msg 4361, code-confirmed from live source, not
+      guessed)**: `check_spawn_heartbeat_timeouts()` (`server/worker_liveness/_auth_failover.py:54`) gates a
+      slot-bearing agent's liveness on `SlotRow.last_ping >= SlotRow.last_spawned_at` (line 96); past
+      `SPAWN_HEARTBEAT_TIMEOUT_SECONDS` it only spares the slot if `pane_state=="working"` (line 122). But review's
+      documented loop (`review.md` STEP 2) calls only `/api/agents/{id}/poll`, which writes `AgentRow.last_ping`
+      (`server/routes/agents.py:784` → `state_store/agents.py:751`) — **never** `SlotRow.last_ping`. So a review
+      session's `SlotRow.last_ping` freezes near spawn time and never advances; once `spawn_retry_count` hits cap=2,
+      `spawn_retry_cap_reached` fires (a `_DEATH_SIGNAL_EVENT_TYPES` member, `worktree_clean_check/_liveness.py:70`) and
+      the session is killed — repeatedly, for its entire life, not a one-time boot issue. `pane_state=="idle"`
+      (legitimate "waiting quietly, nothing queued" between review ticks) is NOT exempted the way `"working"` is.
+      Confirmed live: 5x `tmux_session_lost` since 23:44:42Z spanning BOTH the 23:45:40Z and 00:17:46Z `e32d962`-load
+      restarts with unchanged cadence — the debounce fix does not touch this path. Pick ONE (review left scoping to the
+      implementer, has not tested a fix): (a) have review's (and other slot-bearing agent-surface roles' — same
+      `_AGENT_KIND_BY_PROMPT_TEMPLATE` set) loop also call a slot-level heartbeat endpoint once per tick so
+      `SlotRow.last_ping` advances; (b) make `check_spawn_heartbeat_timeouts` consult `AgentRow.last_ping` too for those
+      roles; (c) exempt `pane_state=="idle"` the same way `"working"` already is. Repo: agent-orchestrator.
+- [ ] [DOCS] P3. Correct the ~00:22Z progress-log entry below (12-slot simultaneous burst) — review (msg 4361) showed
+      it's a batch-processing artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick,
+      NOT a tmux-server-level event as originally hypothesized; only the review-role entry in that burst was a real loss
+      (the other 4 were already-finished scheduled jobs, `archived_lifecycle_complete:true`). Superseded-note only, keep
+      the original entry for history — do not delete it.
 - [x] ✅ [OPERATOR] P1. `agent-orchestrator@e32d962` (the TmuxPruner debounce fix) was committed but not loaded — the
       live uvicorn process (PID 885271) started at 23:15:22Z, ~11min BEFORE the 23:26:25Z commit. Main could not restart
       it (sandbox permission boundary: `sudo`/non-interactive `systemctl restart` both blocked). RESOLVED —
@@ -100,6 +121,16 @@ own Tick history.
 
 ## Progress log
 
+- 2026-08-09 ~00:35Z (main agt-22de53, relaying review msg 4361 from a fresh slot-1 session): Second, distinct
+  root-cause hypothesis, code-confirmed (not guessed) from live agent-orchestrator source — see new todo 5 above for the
+  full chain (`check_spawn_heartbeat_timeouts` gates on `SlotRow.last_ping`, which review's poll-only loop never
+  advances; `pane_state=="idle"` isn't exempted like `"working"` is). This ALSO self-corrected my own ~00:22Z entry
+  below: the "12-slot simultaneous burst" is a batch-processing artifact of that same function scanning all slots in one
+  pass per tick, not a tmux-server-level event — see new todo 6. Confirmed via review's own slot-1 history: 5x
+  `tmux_session_lost` since 23:44:42Z spanning both post-`e32d962` restarts with unchanged cadence, i.e. the debounce
+  fix (todo 1/2, already shipped) addressed a different code path and does not resolve this. Reopened todo 3 (re-verify)
+  explicitly — it must wait for todo 5, not just the already-shipped debounce fix. No action taken beyond documenting;
+  review flagged this as read-only code+data analysis, scoping the actual fix is left to whoever picks up todo 5.
 - 2026-08-09 ~00:22Z (main agt-22de53): Data point for the open REVIEW re-verify todo (todo 3) — a routine stall sweep
   found `GET /api/activity` reporting 12x `tmux_session_lost` (slots 1,4,5,11,12,13 + 6 unattributed) all at the EXACT
   same timestamp (`00:21:27.90x`Z, sub-millisecond apart), i.e. a simultaneous fleet-wide burst, at `00:21:27Z` — 4min
