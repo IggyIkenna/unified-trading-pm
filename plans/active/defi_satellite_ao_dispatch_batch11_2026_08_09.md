@@ -165,7 +165,7 @@ item here.
       bare SUSHISWAP/UNISWAP rows" todo). Done when: the unique pool_address set is resolved via factory address, the
       missing UAC venues are registered, historical objects/manifest rows are migrated, and the non-canonical originals
       are purged with the cited soft-delete value ≥604800s (or explicitly re-gated if below).
-- [ ] [SERVICE] P1. **Verify current shipped state, then ship the already-coded+tested BALANCER/ORCA/RAYDIUM
+- [x] ✅ [SERVICE] P1. **Verify current shipped state, then ship the already-coded+tested BALANCER/ORCA/RAYDIUM
       token-symbol-resolution diff** if it hasn't landed since 2026-08-03 — first check via `git log` whether
       instruments-service's `resolve_evm_token_symbol`/`resolve_solana_token_symbol` wiring into
       `balancer.py::_pool_to_record`, `orca.py::_build_pool_record`, `raydium.py::_build_pool_record` has already
@@ -176,7 +176,16 @@ item here.
       files (code is untouched and ready from the 2026-07-21 session — no fresh work needed, just ship it). Repo:
       instruments-service. Source: `defi_track01_per_instrument_and_canon_id_2026_07_24.md`, Track 1 ("eliminate the
       address/UUID fallback in `canonical_instrument_id`" todo, sub-items (2)/(4)). Done when: `quality-gates.sh` is
-      green and the diff is confirmed an ancestor of `origin/live-defi-rollout`, cited by commit sha.
+      green and the diff is confirmed an ancestor of `origin/live-defi-rollout`, cited by commit sha. **Verified
+      2026-08-09 — already shipped, no re-execution needed.** `resolve_evm_token_symbol`/`resolve_solana_token_symbol`
+      wiring is live in all 3 adapters (`balancer.py::_pool_to_record`, `orca.py::_build_pool_record`,
+      `raydium.py::_build_pool_record`), shipped by `instruments-service@aeaa7e50` ("fix(defi): resolve blank/malformed
+      pool token symbols via the shared UTL resolver", 2026-07-22 — predates the 2026-08-03 threshold this todo checked
+      against). `git merge-base --is-ancestor aeaa7e50 origin/live-defi-rollout` confirms it's on the integration trunk;
+      `gh run list --branch live-defi-rollout` shows `quality-gates-v2` currently green (run 31307721283,
+      2026-08-09T10:11:18Z). Associated tests present at
+      `tests/unit/reference_data/adapters/defi/test_dex_metadata_population.py` and
+      `tests/unit/test_defi_adapters_comprehensive.py`. No code change made — nothing to ship.
 - [ ] [SCRIPT] P2. **Check whether the catalogue-venue gap fix (`unified-api-contracts@f7314dc2`) has reached the
       deployed instruments-service image**, and if so, run the deploy-gated re-enum+re-rollup.** The fix (26 new DeFi
       venues registered in the UAC validation allowlist, e.g. RENZO-ETHEREUM) is shipped on LDR but the re-enum/
@@ -284,3 +293,9 @@ item here.
   `market_data_defi_lending_indices_prd`. No code shipped — swept live repos for hardcoded legacy-bucket string literals
   and found only dead one-off historical migration scripts (out of scope, not touched). Full evidence in the flipped
   checkbox above.
+- 2026-08-09 (slot 29, data_engineering worker): Todo 7 (BALANCER/ORCA/RAYDIUM token-symbol-resolution diff) closed on
+  live verification, not new execution — the `resolve_evm_token_symbol`/`resolve_solana_token_symbol` wiring was already
+  shipped by `instruments-service@aeaa7e50` (2026-07-22), well before the 2026-08-03 threshold this todo checked
+  against. Confirmed `aeaa7e50` is an ancestor of `origin/live-defi-rollout` HEAD (`git merge-base --is-ancestor`), and
+  `quality-gates-v2` is currently green on the branch (run 31307721283, 2026-08-09T10:11:18Z). No code change needed.
+  Full evidence in the flipped checkbox above.
