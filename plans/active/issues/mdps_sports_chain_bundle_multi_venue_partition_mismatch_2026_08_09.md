@@ -42,6 +42,7 @@ priority: P1
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+sequential: true
 context_scope:
   [
     /plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md,
@@ -162,3 +163,9 @@ The fix needs to move the venue-partitioning boundary from "whole chain file" to
   batch fallback in `_build_candle_output_path`, one level deeper than `551ca82`'s fix. Did not fix inline —
   restructuring the process/write boundary in `live_workers_chain.py` is a real code-design change, not a config/
   low-effort fix. Left Finding 5's `[CODE] P2` todo unchecked (its done-when still unmet) and did not flip it.
+- 2026-08-09 (slot 11, `data_engineering`): Dispatched todo 2 (`-05aa5ad81aad`), but its own text ("Once the above
+  lands...") gates it on todo 1, which is still `status: dispatched` (in-flight to another slot, `-494586d72f17`), not
+  yet landed in code (confirmed via `git log` on `live_workers_chain.py`/ `candle_write_mixin.py` — no commit past
+  `551ca82`). Added missing `sequential: true` (mirrors the fix pattern used for the sibling MTDS reader-gap doc) so the
+  dispatcher serializes todo 1 before todo 2 instead of re-offering this same premature dispatch. Skipped
+  `reason_code: GATED`, no code changed.
