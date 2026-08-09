@@ -30,7 +30,7 @@ related:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     plans/active/issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md,
     plans/active/issues/defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md,
-    plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     plans/active/issues/tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md,
   ]
 created: 2026-07-15
@@ -55,7 +55,7 @@ context_scope:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
-    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md,
   ]
 ---

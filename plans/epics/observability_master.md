@@ -46,7 +46,7 @@ related_plans:
   - ../active/data_pipeline_alert_substrate_residual_2026_07_24.md
   - ../active/data_pipeline_alerts_batch_remediation_2026_07_15.md
   - ../archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md
-  - ../active/data_pipeline_hardening_self_monitoring_2026_06_22.md
+  - /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md
   - ../active/data_pipeline_self_healing_completion_residual_2026_07_24.md
   - ../active/deployment_registry_firestore_migration_2026_07_14.md
   - ../active/deployment_registry_firestore_p0_unblock_2026_07_14.md
@@ -158,7 +158,7 @@ Decisions — TradFi + DeFi (forked from the hardening/self-monitoring plan)
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Data-Pipeline Alert Substrate — Residual
 Hardening (forked from the hardening/self-monitoring plan)
 
-### [`data_pipeline_hardening_self_monitoring_2026_06_22`](../active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
+### [`data_pipeline_hardening_self_monitoring_2026_06_22`](/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md)
 
 **status**: active · **estimate**: 18 cal AI-days (class: infra) **title**: Data-Pipeline Hardening + Self-Monitoring
 (anti silent-misclassification)

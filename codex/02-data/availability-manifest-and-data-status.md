@@ -1791,7 +1791,7 @@ the gate does not apply.
 `FetchEvidence` from the actual response and pass it to `record_empty`/`record_zero_rows`. An error branch that
 previously fell through to `SOURCE_RETURNED_ZERO` now sets the matching `FetchErrorSignal` → routes to `record_failed`.
 The per-AG adapter threading is tracked in
-[`data_pipeline_hardening_self_monitoring_2026_06_22.md`](../../plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
+[`data_pipeline_hardening_self_monitoring_2026_06_22.md`](/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md)
 (Phase 1, per-AG dispatch). Until an adapter is threaded it raises at runtime — that break is intentional (operator
 2026-06-22): it is the mechanism that stops the "ran for hours, marked everything empty, just needed a code fix" class.
 

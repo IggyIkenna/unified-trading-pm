@@ -4,7 +4,7 @@ title: Data-Pipeline Hardening + Self-Monitoring (anti silent-misclassification)
 summary:
   Harden all data-pipeline adapters against silent misclassification with FetchEvidence gates, per-adapter guards, daily
   summaries, and self-monitoring alerts across all 5 asset groups.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -86,6 +86,12 @@ context_scope:
 > everything else moved is `[x]`-shipped or pure completed-run narrative (0 open todos in the moved content).
 
 # Data-Pipeline Hardening + Self-Monitoring
+
+> **ARCHIVED (2026-08-09) — complete.** Every todo shipped (all `[x]` with cited evidence). The sole remaining open
+> item, "9 live data VMs frozen 5.5–32h", resolved 2026-08-09 (slot-24): the originally-named VMs are conclusively gone,
+> CeFi live capture is confirmed recovered via the consolidated launcher, and TradFi live capture's separate,
+> currently-live outage was forked to its own P0 issue —
+> `/plans/active/issues/tradfi_live_cme_capture_stopped_2026_08_09.md`. Record-only from here.
 
 > **Operator intent (2026-06-22)**: "I can't babysit thousands of data types. Stop running VMs for hours only to realise
 > they're slow / rate-limited / not writing to the right place / marking everything `empty_confirmed` when the data
@@ -526,12 +532,31 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 ### REAL OUTAGE surfaced by the fixed watcher (P0 — needs recovery)
 
-- [ ] [INFRA] P0. **9 live data VMs frozen 5.5–32h, silently RUNNING, zero capture** — the old infra-sidecar watcher was
-      blind to all of them: `mtds-live-cefi-deribit-{book-snapshot-5,derivative-ticker,trades}` (~6.8h),
+- [x] ✅ **9 live data VMs frozen 5.5–32h, silently RUNNING, zero capture** — the old infra-sidecar watcher was blind to
+      all of them: `mtds-live-cefi-deribit-{book-snapshot-5,derivative-ticker,trades}` (~6.8h),
       `mtds-live-cefi-hyperliquid-{book-snapshot-5,derivative-ticker,trades}` (~6.8h), `mtds-live-tradfi-cme-trades`
       (5.8h), `tradfi-bf-cme-ohlcv-1m-ym-2020` (5.5h), `tradfi-fwd-daily-cron-20260621-154132` (32h). Diagnose root
       cause per family (binance live had a fatal `ValueError: live_tick_blob_path … glued 'VENUE-CHAIN' token` at 23:41
       → likely the same non-canonical-path crash class across the cefi live VMs) + relaunch. (deployment-service / mtds)
+  - ✅ **DONE-WHEN SATISFIED 2026-08-09 (slot-24, per `/vm-preemption-billing-waste-audit`'s execution mechanism, scoped
+    to cefi + tradfi live-capture)**: the ORIGINAL 2026-06-23 finding (these exact VM names silently RUNNING-but-frozen)
+    is conclusively stale — none exist under any name (`gcloud compute instances list`, GCP `central-element-323112` +
+    AWS `427895769566`/`ap-northeast-1`, both re-checked). Split outcome on the two families this todo names, resolving
+    the (a)/(b) done-when for each independently:
+    - **(a) CeFi — RECOVERED, flip.** `mtds-live-cefi-consolidated-20260809-121034` is RUNNING (the 2026-06-27
+      consolidated MVP launcher superseded the old per-shard VMs this todo named). Its
+      `_index/per_vm/mtds-live-cefi-consolidated-20260809-121034.parquet` manifest shard was written as recently as
+      2026-08-09T16:07:18Z (checked same minute) and carries `capture_status=captured` rows for DERIBIT/HYPERLIQUID
+      trades with `written_at` up to 2026-08-09T15:36 UTC — actively flowing, not frozen.
+    - **(b) TradFi — genuinely stopped, NOT a flip; new P0 filed instead.** Zero `mtds-live-tradfi-*` VMs in either
+      cloud; no heartbeat blob; no `_index/per_vm/mtds-live-tradfi*` shard; the full tradfi `availability_index.parquet`
+      shows the newest `pipeline_mode~live` row (venue=CME) was written 2026-08-04T08:51:36 UTC — ~5.3 days stale at
+      check time. Per the done-when's own branch (b), this is a NEW finding, not evidence against flipping THIS todo
+      (whose literal named VMs are confirmed gone either way) — filed as
+      `/plans/active/issues/tradfi_live_cme_capture_stopped_2026_08_09.md` with the relaunch + root-cause todos.
+    - The 2026-07-25 blocker (`storage.buckets.list` 403 for `unified-trading-sa`) did not reproduce this session —
+      `gsutil`/`resolve_bucket_name`-backed reads against both prod buckets succeeded ambiently; no IAM self-grant was
+      needed.
   - 🟡 **STATUS-CHECK NEEDED (2026-07-24)**: this finding is now ~1 month stale (surfaced 2026-06-23). Per the
     async-wait/poll-discipline HARD RULE, re-verify current fleet state before assuming this is still live — either (a)
     re-run the exit_code/heartbeat fleet monitor sweep against the named VM prefixes and confirm whether they
@@ -599,3 +624,16 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   `cross_cutting_consolidated_closeout_2026_07_25.md` — no doc claims ownership of this specific todo,
   `/vm-preemption- billing-waste-audit` remains the named execution mechanism, this doc retains it. No finalize twin
   needed — this is the doc's own existing plan, not a new extraction; it dispatches as-is.
+- **2026-08-09 (slot-24)**: sole open P0 todo flipped `[x]` — done-when satisfied (cefi live capture confirmed recovered
+  via the consolidated launcher; tradfi live capture confirmed genuinely stopped since 2026-08-04, filed as a new P0
+  issue doc per the done-when's own branch (b)). See the todo's own annotation for the full evidence trail. New issue:
+  `/plans/active/issues/tradfi_live_cme_capture_stopped_2026_08_09.md`. All open work in this plan is now clear,
+  unlocked, no gating finalize twin — ran the 6-step archival ritual same-turn per the HARD RULE: `status: complete`,
+  ARCHIVED banner added, every live-corpus referrer (16 files: agents/, plans/active/\*, plans/epics/, codex/02-data/\*,
+  codex/05-infrastructure/\*, codex/15-runbooks/incidents/\*) repointed to the new archive path (pre-existing
+  `../`-relative forms converted to the leading-slash absolute convention in the same edit); already-archived docs'
+  frozen historical citations (many pinned to specific line-number anchors describing past content) were deliberately
+  left untouched — rewriting a path inside closed historical record without re-verifying its cited line ranges would
+  misrepresent a re-verification that didn't happen. No codex contract changes needed — this plan's phases were already
+  codex-aligned in earlier rounds; the one net-new fact (tradfi live capture down since 2026-08-04) lives in the new
+  issue doc, not a codex SSOT. `git mv` to `/plans/archive/2026_08/`.

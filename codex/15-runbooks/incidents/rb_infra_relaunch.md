@@ -21,7 +21,10 @@ last_executed: never
 code_refs:
 authoritative_for: [How a planning-VM worker relaunches a failed/stalled/OOM'd data VM from the registries]
 referenced_by:
-  [/codex/05-infrastructure/data-pipeline-alerts.md, plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md]
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+  ]
 ---
 
 # RB-INFRA-RELAUNCH — Registry-driven VM relaunch via escalate-to-orchestrator

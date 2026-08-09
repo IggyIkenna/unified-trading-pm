@@ -51,8 +51,9 @@ temperament_base: diligent
 >
 > Rendered by `server/escalation.py` via `prompts.render("data_pipeline_failure", ...)`. Dispatch surface:
 > `POST /api/escalate` with `wall_type=data_pipeline_failure` (the data-pipeline monitors → orchestrator, authed with
-> the shared `ORCHESTRATOR_INTERNAL_SECRET`). SSOT: `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md`
-> Phase 6 (C) + `codex/05-infrastructure/data-pipeline-alerts.md`.
+> the shared `ORCHESTRATOR_INTERNAL_SECRET`). SSOT:
+> `/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md` Phase 6 (C) +
+> `codex/05-infrastructure/data-pipeline-alerts.md`.
 
 ## Your boot message provides
 
