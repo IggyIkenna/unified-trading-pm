@@ -19,7 +19,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [ao-dispatch-visibility, ratchet-regression, ci-cd, blocking, quickmerge]
-related: [/plans/active/issues/ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md]
+related: [/plans/archive/issues/ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md]
 created: 2026-08-09
 parent_epic: infrastructure_master
 source: cicd-worker-slot30, discovered while shipping unrelated promote_ref_orphaned_on_manual_pr_close archival
@@ -133,7 +133,10 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
       Same remedy as above. Repo: unified-trading-pm.
 - [ ] [DOCS] P2. Fix the 10 `plans/active/issues/` accidental exclusions:
       `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
-      `ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md`,
+      ~~`ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md`~~ (already resolved +
+      archived 2026-08-09 — its flagged todo was its own "grep the corpus" todo, now `[x]`; archived docs drop out of
+      this gate's scan entirely, see
+      `/plans/archive/issues/ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md`),
       `ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md`,
       `capability_wizard_analysis_findings_2026_06_11.md`,
       `credential_ask_orphan_checker_ping_format_stale_2026_07_27.md`,

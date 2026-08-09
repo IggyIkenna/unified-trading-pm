@@ -13,7 +13,7 @@ summary: >-
   shipping per this gate's own documented remedy ("only --update-baseline after fixing or filing the newly-found
   accidental exclusions") — did not attempt the parser fix itself (agent-orchestrator code change, outside this
   session's docs-only task scope).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -36,7 +36,7 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: ikennaigboaka [slot-13], agent-orchestrator@a0eb343, unified-trading-pm@2ccce2a6f
 context_scope:
   [
     agent-orchestrator/server/regen_backlog_from_plan.py,
@@ -48,6 +48,12 @@ source: >-
   Surfaced 2026-08-08 while shipping ao_satellite_ao_dispatch_batch5-003 (unrelated docs-only §3/§4 closure) — the QG's
   post-gate check failed on unrelated corpus drift that landed via a routine mid-task fresh-pull.
 ---
+
+> **🟢 ARCHIVED 2026-08-09** — `status: resolved` with all 3 todos `[x]`; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Parser fix shipped `agent-orchestrator@a0eb343`; corpus grep found zero further
+> no-space-bracket instances; `max_zero_dispatchable_docs` correctly left at 26 (that axis counts declared exclusions
+> too, so this fix doesn't move it — see todo 3's evidence). See Progress Log below.
 
 # AO dispatch-visibility gate regressed on an unrelated, concurrent sports-capture commit
 
@@ -149,3 +155,9 @@ radius before fixing; (c) fix the regex + add a regression test; (d) re-run this
   as baseline) with no lower count available to ratchet to, since that axis counts declared exclusions too — see todo
   3's evidence for the full explanation. All todos done, no lock — archiving per the 6-step ritual
   (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
+- **2026-08-09**: archived. Referrer swept (`ao_dispatch_visibility_gate_regression_34_vs_26_2026_08_09.md`'s
+  `related:` + its P2 todo's file list, both repointed/struck to reflect the archive move + already-resolved status —
+  that doc's own separate 34-accidental-exclusions regression is unrelated and untouched). Corrected
+  `check_ao_dispatch_visibility_gate.py`'s docstring, which incorrectly claimed a declared exclusion "never counts
+  against either axis" — it does still count toward `max_zero_dispatchable_docs`, which is exactly the finding that
+  makes todo 3 correctly a no-op.
