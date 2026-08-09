@@ -21,6 +21,8 @@ summary: >-
   call can land. The underlying WORK is not lost (checkbox flip + archival both verified on `origin/live-defi-rollout`),
   only the orchestrator's own SQLite done-bookkeeping/dashboard-visibility for that specific task_id.
 status: open
+resolved_by:
+archive_exempt: true
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -47,7 +49,6 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by:
 locked_by:
 context_scope:
   [
@@ -82,18 +83,20 @@ this doc exists so the next worker (or `check-agent-orchestrator`) recognizes th
 
 ## Todos
 
-- [ ] [BACKEND] P2. Root-cause in `regen_backlog_from_plan.py` (or wherever the row-deletion actually happens): confirm
-      whether a row for a task whose source doc just left `plans/active/` is deleted immediately on next regen tick, or
-      only after some grace window — and whether `/done` could instead special-case "row missing but a
+- [x] ✅ [BACKEND] P2. Root-cause in `regen_backlog_from_plan.py` (or wherever the row-deletion actually happens):
+      confirm whether a row for a task whose source doc just left `plans/active/` is deleted immediately on next regen
+      tick, or only after some grace window — and whether `/done` could instead special-case "row missing but a
       `slot_done`-shaped call just arrived within N seconds of a matching archival commit" to still record completion
       before deleting. Done when: the deletion path is identified precisely (file + line), and either a fix ships or a
       documented decision states the current 404-then-skip-current-task recovery is an acceptable, cheap-enough steady
-      state (bounded blast radius, no lost work). Repo: agent-orchestrator.
-- [ ] [DOCS] P3. If the decision above is "no fix, current behavior is acceptable", add a one-line callout to
+      state (bounded blast radius, no lost work). Repo: agent-orchestrator. — documented decision, no new code needed
+      here (a fix already shipped same-day under a sibling issue that fully subsumes this scenario); see Progress Log.
+- [x] ✅ [DOCS] P3. If the decision above is "no fix, current behavior is acceptable", add a one-line callout to
       `plans/active/task_template.md`'s finalize-plan-coverage section (or
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) telling a worker landing an
       archive-is-the-last-todo task to expect this exact `/done` 404 and go straight to `skip-current-task` with
-      `reason_code: "OTHER"` instead of retrying blindly. Repo: unified-trading-pm.
+      `reason_code: "OTHER"` instead of retrying blindly. Repo: unified-trading-pm. — MOOT: the shipped fix means a
+      worker landing this exact shape no longer sees a 404/500 at all, so no such callout is needed; see Progress Log.
 
 ## Progress Log
 
@@ -102,3 +105,37 @@ this doc exists so the next worker (or `check-agent-orchestrator`) recognizes th
   `skip-current-task` with `reason_code: "OTHER"` and a full explanation in the reason field — server confirmed
   `orphaned_stale_marker: true`, row will not re-dispatch. All actual plan/doc work independently verified on origin
   before filing this doc; nothing here blocks or reopens that work.
+- **2026-08-09 (slot 26, backend_engineer)**: Root-caused todo 1 by direct source read of
+  `agent-orchestrator/server/regen_backlog_from_plan.py`. **Deletion path (file + line, no grace window)**:
+  `_prune_stale()`'s orphan detection (lines 2992-2997) treats ANY yaml task whose `brief` is no longer among the
+  currently-open todos (`_parse_open_todos` over the live `plans/active/` scan) as an orphan and unconditionally strips
+  it from `backlog.tasks` (line 3005) — this fires on the very FIRST `PlanRegenLoop` tick after the checkbox flips
+  and/or the doc leaves `plans/active/`, with no explicit grace-window delay coded; the only bound is the tick cadence
+  itself (`config.plan_regen_interval_seconds`, default 600s). The SQLite `TaskRow` is NOT deleted by this same pass —
+  the literal `DELETE FROM tasks` (line 3040) is scoped to `status IN ('queued','blocked') AND dispatched_to IS NULL`,
+  which an actively-dispatched row never matches; a dedicated "done-not-removed race" check (lines 3055-3096) instead
+  either leaves a still-live dispatched row alone (if the plan file is still readable with the todo checked) or flips it
+  to terminal `status='cancelled'` (never deleted) once the source file is gone. Then found this is a **duplicate root
+  cause of a sibling issue already filed, fixed, and archived TODAY**:
+  `plans/archive/2026_08/issues/ao_done_and_skip_500_on_backlog_yaml_removed_orphan_task_2026_08_09.md` (slot 33 → 3 →
+  6, `status: resolved`). That doc traced the exact same mechanism from the `/done`-caller side: `backlog.get(task_id)`
+  (the in-memory YAML lookup `done_slot`/`skip_current_task` both use) returns `None` once `_prune_stale` has stripped
+  the yaml entry, even though the SQLite `TaskRow` can still be `status=dispatched` — and BOTH `/done` and
+  `/skip-current-task` previously mishandled that split state (500s), not merely 404s. Fix shipped same-day:
+  `agent-orchestrator@3147392` (`done_slot` now calls the new `_maybe_close_orphaned_done_task` — releases the slot,
+  deletes the dead `TaskRow`, returns a clean 200 instead of crashing) + `agent-orchestrator@4f78629`
+  (`skip_current_task`'s `task_orphaned` predicate fixed to also treat `backlog_task is None` as orphaned, guarded
+  against clobbering an already-terminal `done`/`cancelled` row) + `agent-orchestrator@8db0b29` (end-to-end regen-driven
+  reproduction test, confirms both routes close the orphan cleanly with no exception). Verified this fix is live on
+  `origin/live-defi-rollout` in this slot's already-fresh-pulled `agent-orchestrator` clone. **Answering todo 1's own
+  question directly**: no time-window special-case was built (nor is one needed) — the shipped fix instead checks orphan
+  status AT CALL TIME (`backlog.get(req.task_id) is None`) rather than correlating timestamps against an archival
+  commit, which is strictly more robust (works regardless of how long the gap was, or whether the archival was the SAME
+  worker's own last todo — this doc's exact scenario — or a prior session's). This makes todo 1's documented-decision
+  branch the applicable one: **no new code needed from this todo** — the fix already covers this doc's precise "archival
+  is my own last todo" shape (confirmed by re-reading `_maybe_close_orphaned_done_task`'s logic: it keys only on
+  `task_def is None`, with no dependency on who performed the archival). Todo 2 is consequently MOOT — since `/done` no
+  longer 404s/500s on this shape at all, no "expect this and go straight to skip-current-task" doc callout is needed;
+  flipping it closed rather than writing a now-inaccurate callout. Recovery guidance for the tiny remaining edge (SQLite
+  row itself somehow already gone, e.g. a genuinely stale/cleared dispatch pointer) still exists via
+  `skip-current-task`'s `orphaned_stale_marker` path, now correctly handled per the sibling fix.
