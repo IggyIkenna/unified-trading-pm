@@ -413,3 +413,5 @@ own Tick history.
   established session. Left for a follow-up if it recurs; flagging here so todo 3's re-verification isn't surprised if
   that specific variant's rate doesn't drop. Todo 3 (independent re-verification via `/api/activity?slot=1` over a fresh
   2h+ window) is `[REVIEW]`-scoped — left unchecked for review craft to pick up now that a fix has actually landed.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).
