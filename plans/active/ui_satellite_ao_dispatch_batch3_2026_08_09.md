@@ -74,13 +74,17 @@ drift_direction: advance-docs
 
 ## Todos
 
-- [ ] [REVIEW] P3. **File the deployment-bucket-resolution issue doc.** Source:
-      `artifact_pipeline_observability_2026_07_17.md`'s `[REVIEW] P3` "Issue doc — the whole VM tarball path bypasses
-      `resolve_bucket_name()`" todo. File a single issue doc (`plans/active/issues/`) combining: (a) the VM tarball
-      deployment path's `resolve_bucket_name()` bypass, and (b) the two-point AWS-lane breakage the source doc's own
-      text names alongside it. Read/write/investigation only — no code change to the live artifact/tarball pipeline.
-      Done when: the issue doc exists with both points captured, findings-triage tagged per the standard rule (in-file
-      fix / adjacent-plan fix / new issue). Repo: unified-trading-pm.
+- [x] ✅ [REVIEW] P3. **File the deployment-bucket-resolution issue doc.** — `unified-trading-pm` (this commit). Filed
+      `plans/active/issues/deployment_bucket_resolution_gaps_2026_08_09.md`. (a) VM tarball `resolve_bucket_name()`
+      bypass CONFIRMED still open — live-verified: neither `setup-data-pipeline-vm.sh:47` nor
+      `create-code-tarballs.sh:46` calls `resolve_bucket_name()`; the literal
+      `deployment-scripts-central-element-323112` is duplicated across 21 `.sh` files under
+      `deployment-service/scripts/vm/` (live grep) — filed as a new AO todo in the issue doc. (b) The "two-point
+      AWS-lane breakage" (issue doc #4/#7) is **already shipped** (`unified-trading-pm@b87cc06fcf`,
+      `deployment-service@61cf93f44`, both 2026-08-07) — re-verified live against current
+      `freeze-deferred-build-replay.yml` and `aws_ec2_launch_lib.sh` content, not just read from the prior claim;
+      recorded as closed-prior context, no new todo. Source: `artifact_pipeline_observability_2026_07_17.md`'s
+      `[REVIEW] P3` "Issue doc — the whole VM tarball path bypasses `resolve_bucket_name()`" todo.
 - [ ] [INFRA] P3. **Check + report AR/ECR native vulnerability-scan status.** Source: same doc's `[INFRA] P3` "(stretch
       — optional) Image vulnerability-scan status" todo — "never itself investigated, only ever noted as remaining."
       Check whether Artifact Registry (GCP) and ECR (AWS) native vulnerability scanning is enabled on the images this
@@ -108,3 +112,7 @@ drift_direction: advance-docs
   risk against the doc's live, dense, operator-reviewed in-flight build). Conflict-checked against
   `ui_satellite_ao_dispatch_batch1_2026_08_06.md` and `batch2_2026_08_08.md` (both grepped clean for these 3 items). The
   7 implementation-shaped items batch1 already declined remain declined here too — not re-litigated.
+- **2026-08-09 (slot 20)**: Todo 1 done — filed `plans/active/issues/deployment_bucket_resolution_gaps_2026_08_09.md`.
+  Live re-verification found the plan's premise half-stale: the resolve_bucket_name() bypass is still real (21 files),
+  but the "two-point AWS-lane breakage" it named alongside it had already been fixed 2026-08-07 in a different issue doc
+  — recorded accordingly rather than duplicating closed work.
