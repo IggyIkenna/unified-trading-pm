@@ -20,7 +20,7 @@ summary:
   command against the SAME exact commit SHAs succeeds cleanly on a normal git checkout (real version resolution works),
   but fails specifically under the tarball/pretend-version scheme once the constraint floor crosses 0.99.0 — this is a
   real, currently-live, deterministic breakage, not a transient/environmental flake."
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -49,13 +49,17 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: deployment-service@49b50814
 source:
   slot 22, cross_cutting_satellite_ao_dispatch_batch5-77d480c19d08, discovered while backfilling MDPS candles,
   2026-08-09
 ---
 
 # VM tarball bootstrap's pretend-version (0.99.0) is now below uac's real dependency floor (>=0.106.0)
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED** (status: resolved, 0 open todos, unlocked). Fixed fleet-wide
+> (deployment-service@49b50814, all 18 `scripts/vm/*.sh` scripts bumped `0.99.0`→`0.199.0` + a standing QG check added)
+> and verified live via a real `launch-mdps-backfill-vm.sh` run reaching `EXIT_STATUS=0`/`DEPLOYMENT_COMPLETED`.
 
 ## What I found
 
@@ -127,7 +131,21 @@ since the failure mode is specific to the tarball/no-git-history path a local ch
       this is the standing check the todo asked for. Note: slot-4 landed a content-identical single-line fix to
       `setup-data-pipeline-vm.sh` concurrently (`501eb48b`); reconciled via rebase, keeping the fuller comment +
       extending the fix to the other 17 scripts + the new standing check, which slot-4's commit did not cover.
-- [ ] [INFRA] P0. **After the fix, launch a real verification VM** (mirrors this issue's own repro:
+- [x] ✅ [INFRA] P0. **After the fix, launch a real verification VM** (mirrors this issue's own repro:
       `market-tick-data-service` + `market-data-processing-service` + `unified-api-contracts` +
       `unified-trading-library`) and confirm `uv pip install` succeeds and the VM reaches real processing, not just that
-      setup completes. Repo: deployment-service.
+      setup completes. Repo: deployment-service. — Verified live post-fix (deployment-service@49b50814,
+      `SETUPTOOLS_SCM_PRETEND_VERSION=0.199.0`) via `launch-mdps-backfill-vm.sh` (the exact GCP launcher +
+      `startup-script-url=.../setup-data-pipeline-vm.sh` combo that produced the original repro's
+      `mdps-backfill-cefi-20260809-140132`/`-140809` failures). VM `mdps-backfill-cefi-20260809-145609` (no bucket
+      overrides, mirroring the original repro exactly, `--dry-run`) reached `EXIT_STATUS=0` / `DEPLOYMENT_COMPLETED`:
+      `uv pip install --no-sources -e uac -e utl -e mdps -e mtds` succeeded (no `SETUP FAILED`), MDPS bootstrapped
+      (`ServiceRuntime`, event logging, catalogue load — 431540 rows), listed + processed a real BYBIT
+      BTC-USD@INV-20260925 trades file for 2026-08-07/08, wrote a per-VM manifest shard, and reported a clean
+      `PROCESSING SUMMARY` (1/1 succeeded, 0 errors) before self-deleting. Two earlier attempts
+      (`mdps-backfill-cefi-main-prd-20260809-144645`/`-145225`, using a `--source-bucket`/`--output-bucket` test-bucket
+      split) also confirmed `uv pip install` succeeds and real service code executes (full `ServiceRuntime` bootstrap +
+      GCS/manifest-census logic), but both hit `rc=1` via
+      `subprocess-per-date: ... pre-filtered as confirmed-empty via manifest census` — unrelated to this issue (a
+      manifest-census quirk specific to the source/output bucket split, not a setuptools_scm/pip install failure); the
+      third, bucket-override-free run isolated and ruled this out with a clean pass.

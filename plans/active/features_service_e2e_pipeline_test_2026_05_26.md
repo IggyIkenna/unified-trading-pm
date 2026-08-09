@@ -93,9 +93,12 @@ drift_direction: advance-code
 > 6. DEFERRED-fan-out MDPS 1h backfill 2026-04-14..04-30 + BITGET-SPOT 4h/24h candles — **AUDITED via batch 5
 >    (2026-08-09, slot 22): confirmed genuine gap, backfill dispatched-but-blocked upstream (tracked, not silently
 >    absorbed).** MDPS-closable portion (BITGET-FUTURES 1h 04-20..04-30) launched after shipping a `--timeframes`
->    scoping fix (deployment-service@8f1feb4eb9e4); currently blocked on a newly-discovered fleet-wide P0 VM-launch bug
->    (`issues/vm_tarball_setuptools_scm_pretend_version_below_uac_floor_breaks_all_vm_launches_2026_08_09.md`, notified
->    main). The remaining BITGET-SPOT window is a separate upstream MTDS raw-tick gap
+>    scoping fix (deployment-service@8f1feb4eb9e4); was blocked on a fleet-wide P0 VM-launch bug
+>    (`/plans/archive/2026_08/issues/vm_tarball_setuptools_scm_pretend_version_below_uac_floor_breaks_all_vm_launches_2026_08_09.md`)
+>    — **RESOLVED + verified live 2026-08-09** (deployment-service@49b50814 bumped `SETUPTOOLS_SCM_PRETEND_VERSION`
+>    0.99.0→0.199.0 fleet-wide; a real `launch-mdps-backfill-vm.sh` verification run reached `EXIT_STATUS=0`). The
+>    BITGET-FUTURES 1h retry itself is a fresh open todo below (P2 §"Phase B" area), not yet re-launched. The remaining
+>    BITGET-SPOT window is a separate upstream MTDS raw-tick gap
 >    (`issues/mdps_1h_candle_backfill_blocked_upstream_mtds_raw_tick_gap_bitget_2026_08_09.md`). See
 >    `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` todo 2 for full evidence.
 > 7. `usdc_idle_yield_apy_bps` stub disposition — **round5-cross-cutting-audit 2026-08-08: RESOLVED, already on
@@ -726,10 +729,15 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
 - [x] ✅ AUDIT COMPLETE, BACKFILL DISPATCHED-BUT-BLOCKED (upstream, tracked) via batch 5 (2026-08-09, slot 22) — [DATA]
       P2. DEFERRED fan-out — audit-then-backfill MDPS 1h `2026-04-14→04-30` (mtf 4h/24h) + BITGET-SPOT 4h/24h candles.
       Confirmed genuine gap; MDPS-closable portion (BITGET-FUTURES 1h 04-20..04-30) launched after shipping a
-      `--timeframes` scoping fix (deployment-service@8f1feb4eb9e4), now blocked on a newly-discovered fleet-wide P0
-      VM-launch bug (notified main). Remaining BITGET-SPOT window is a separate upstream MTDS raw-tick gap. Full
-      evidence: `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` todo 2; see banner item 6 above for the
-      issue-doc cites. Repo: MDPS.
+      `--timeframes` scoping fix (deployment-service@8f1feb4eb9e4), was blocked on a fleet-wide P0 VM-launch bug —
+      **RESOLVED 2026-08-09 (deployment-service@49b50814)**, see banner item 6 above. The retry itself is now a fresh
+      open todo directly below. Remaining BITGET-SPOT window is a separate upstream MTDS raw-tick gap. Full evidence:
+      `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` todo 2; see banner item 6 above for the issue-doc
+      cites. Repo: MDPS.
+- [ ] [DATA] P2. **Retry the previously-blocked MDPS 1h BITGET-FUTURES backfill (2026-04-20..04-30)** now that the
+      VM-launch bug above is fixed — relaunch via `launch-mdps-backfill-vm.sh` (the `--timeframes`-scoped fix
+      deployment-service@8f1feb4eb9e4 is already live) and confirm it runs to completion this time. Repo:
+      market-data-processing-service.
 - [ ] [VALIDATE] P2. **`usdc_idle_yield_apy_bps` stub — wiring half only** (confirm-half RESOLVED, round5-cross-cutting-
       audit 2026-08-08: leave-as-0-floor is the standing disposition — see banner item 7 above; corrects the
       confirm-vs-wire framing this checkbox previously carried). Remaining: wire `venue_funding_yield` once
