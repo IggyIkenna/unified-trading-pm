@@ -70,11 +70,15 @@ doesn't reflect the actual production training pipeline, which is worse than rep
 
 ## Recommended decision
 
-- [ ] [CODE] P0. Generalize `SportsModel2ATrainer` (or extract a horizon-parametrized trainer) to accept a
+- [x] ✅ [CODE] P0. Generalize `SportsModel2ATrainer` (or extract a horizon-parametrized trainer) to accept a
       `model_id: str` and look up `SPORTS_MODEL_CONFIGS[model_id]` / the matching grid config, instead of hardcoding
       `model_2a` — this is the same underlying gap the `--family` scoping todo in
       `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` (ML section) already names; fixing the trainer
-      generalization there closes both. (repo: ml-service)
+      generalization there closes both. (repo: ml-service) — ml-service@4b43762: `SportsModel2ATrainer.__init__` now
+      takes `model_id: str = "model_2a"`, validates against `SPORTS_MODEL_CONFIGS`, sets
+      `self.model_spec =     SPORTS_MODEL_CONFIGS[model_id]`, and resolves `self.grid_config` via new
+      `SPORTS_MODEL_ID_TO_GRID` (model_2a/2d/2e — the horizons with an actual `TrainingGridConfig`; model_2b/2c have no
+      grid yet, tracked by the P1 todo below).
 - [ ] [CODE] P1. Once the trainer is generalized, run the actual retrain for `model_2a`/`model_2b`/`model_2c` (existing,
       never-yet-trained-end-to-end boundaries) plus the new `model_2d`/`model_2e` (T-6h/T-2h), and report the measured
       coverage + performance delta this plan's todo asks for. (repo: ml-service)
@@ -84,3 +88,5 @@ doesn't reflect the actual production training pipeline, which is worse than rep
 - 2026-08-09 (slot-11): shipped the horizon-declaration half (`SPORTS_MODEL_CONFIGS` + grid configs +
   `FEATURE_HORIZONS`/`MODEL_HORIZONS`); filed this doc for the retrain-blocked half rather than leaving the plan todo's
   "measure the delta" ask unmet with a fabricated number.
+- 2026-08-09 (slot-13): shipped the P0 trainer-generalization todo (ml-service@4b43762) — QG green, verified on origin.
+  P1 (actual retrain + measured delta run) remains open and is now unblocked.
