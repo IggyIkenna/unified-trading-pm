@@ -442,24 +442,30 @@ fi
 # ── [3] BOOTSTRAP UV (before venv creation — venv creation needs uv) ────────
 log_step "Bootstrap uv"
 
+# uv is pinned for lockfile determinism — an unpinned uv reformats uv.lock (revision bump)
+# even with identical deps, dirtying trees + jamming the FF-pull cron.
+# SSOT for the pin (single canonical definition): unified-trading-pm/scripts/workspace/resolve-canonical-versions.py
+UV_VERSION="$(grep -oP '^UV_VERSION = "\K[^"]+' "$WORKSPACE_ROOT/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null)"
+
 if [ "$IN_CI" = true ]; then
     log_skip "CI mode"
 elif [ "$CHECK_ONLY" = true ]; then
     command -v uv &>/dev/null && log_ok "uv available" || { log_fail "uv not found"; ISSUES=$((ISSUES + 1)); }
-# uv is pinned for lockfile determinism — an unpinned uv reformats uv.lock (revision bump)
-# even with identical deps, dirtying trees + jamming the FF-pull cron.
-# SSOT for the pin: plans/active/uv_lockfile_determinism_2026_06_02.md (Phase 1 will move
-# this constant into resolve-canonical-versions.py so it is read, not hardcoded in 3 places).
-elif command -v uv &>/dev/null && uv --version 2>&1 | grep -q '0\.10\.8'; then
-    log_skip "uv 0.10.8 already installed (pinned)"
+elif [ -z "$UV_VERSION" ]; then
+    # No canonical source reachable (e.g. --isolated: no unified-trading-pm sibling) — install
+    # whatever uv resolves, unpinned, rather than duplicating the literal here.
+    command -v uv &>/dev/null || { "$PYTHON_CMD" -m pip install uv --quiet 2>/dev/null || pip install uv --quiet 2>/dev/null; }
+    log_warn "canonical UV_VERSION source not found — installed uv unpinned"
+elif command -v uv &>/dev/null && uv --version 2>&1 | grep -q "$UV_VERSION"; then
+    log_skip "uv $UV_VERSION already installed (pinned)"
 elif command -v curl &>/dev/null; then
     # uv-managed CPython has no pip; a pip-installed uv wouldn't replace the active binary either.
-    curl -LsSf "https://astral.sh/uv/0.10.8/install.sh" | env UV_UNMANAGED_INSTALL="$HOME/.local/bin" sh >/dev/null 2>&1
+    curl -LsSf "https://astral.sh/uv/${UV_VERSION}/install.sh" | env UV_UNMANAGED_INSTALL="$HOME/.local/bin" sh >/dev/null 2>&1
     hash -r
-    log_ok "Installed/realigned uv 0.10.8 (pinned, astral installer)"
+    log_ok "Installed/realigned uv $UV_VERSION (pinned, astral installer)"
 else
-    "$PYTHON_CMD" -m pip install uv==0.10.8 --quiet 2>/dev/null || pip install uv==0.10.8 --quiet 2>/dev/null
-    log_ok "Installed uv 0.10.8 (pinned, pip fallback)"
+    "$PYTHON_CMD" -m pip install "uv==$UV_VERSION" --quiet 2>/dev/null || pip install "uv==$UV_VERSION" --quiet 2>/dev/null
+    log_ok "Installed uv $UV_VERSION (pinned, pip fallback)"
 fi
 
 # ── [4] VENV CREATION ──────────────────────────────────────────────────────

@@ -475,18 +475,21 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     esac
     export UV_CACHE_DIR="${UV_CACHE_DIR:-${_uv_ws_common}/.uv-cache}"
     export UV_LINK_MODE="${UV_LINK_MODE:-hardlink}"
-    command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
+    # Single canonical uv version pin: unified-trading-pm/scripts/workspace/resolve-canonical-versions.py
+    _uv_pm_root="${WORKSPACE_ROOT:-$(cd "${_uv_repo_root}/.." && pwd)}"
+    _uv_pin="$(grep -oP '^UV_VERSION = "\K[^"]+' "${_uv_pm_root}/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null)"
+    command -v uv &>/dev/null || pip install "uv${_uv_pin:+==$_uv_pin}" --quiet
     # uv-version drift-guard — WARN-ONLY (never blocking; the fix is a one-line realign, not a gate).
-    # The workspace uv pin is 0.10.8 (uv_lockfile_determinism_2026_06_02.md — committed uv.lock files
-    # are `revision = 3`, the serialization 0.10.8 produces; a `uv lock` run under a drifted 0.11.x can
-    # re-serialize to a different revision, i.e. silent lock churn). setup.sh self-realigns on a FRESH
-    # bootstrap, but this check catches drift on a box that never re-runs setup.sh (a long-lived VM,
-    # a manually-updated uv). SSOT: plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md.
+    # The workspace uv pin above (uv_lockfile_determinism_2026_06_02.md — committed uv.lock files
+    # are `revision = 3`, the serialization the pinned uv produces; a `uv lock` run under a drifted
+    # newer uv can re-serialize to a different revision, i.e. silent lock churn). setup.sh self-realigns
+    # on a FRESH bootstrap, but this check catches drift on a box that never re-runs setup.sh (a
+    # long-lived VM, a manually-updated uv). SSOT: plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md.
     _uv_ver="$(uv --version 2>/dev/null | awk '{print $2}')"
-    if [[ -n "$_uv_ver" && "$_uv_ver" != "0.10.8" ]]; then
-        echo "⚠️  uv version drift: running $_uv_ver, workspace pin is 0.10.8 — re-lock output may not match CI. Realign: curl -LsSf https://astral.sh/uv/0.10.8/install.sh | env UV_UNMANAGED_INSTALL=\$HOME/.local/bin sh"
+    if [[ -n "$_uv_pin" && -n "$_uv_ver" && "$_uv_ver" != "$_uv_pin" ]]; then
+        echo "⚠️  uv version drift: running $_uv_ver, workspace pin is $_uv_pin — re-lock output may not match CI. Realign: curl -LsSf https://astral.sh/uv/${_uv_pin}/install.sh | env UV_UNMANAGED_INSTALL=\$HOME/.local/bin sh"
     fi
-    unset _uv_ver
+    unset _uv_ver _uv_pin _uv_pm_root
     # uv.lock freshness — WARN-ONLY, never blocking (stays warn-only per 1.5b: making it blocking
     # treadmills on the semver CI-side `version =` bump). The lock IS now the install SSOT —
     # `uv sync --frozen` (below, 1.5b) installs the committed lock EXACTLY, byte-for-byte with CI — so a

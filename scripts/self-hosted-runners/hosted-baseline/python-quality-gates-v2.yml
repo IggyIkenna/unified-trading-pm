@@ -330,10 +330,19 @@ jobs:
       - name: Install uv
         if: steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true'
         shell: bash
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          DEP_BRANCH: ${{ github.head_ref || github.ref_name }}
         # Pinned for uv.lock determinism — an unpinned uv reformats the lock (revision bump)
         # even with identical deps, so CI's `uv lock --check` would false-fail.
+        # Single canonical definition: unified-trading-pm/scripts/workspace/resolve-canonical-versions.py
+        # — fetched directly (the "Clone unified-trading-pm and dependencies" step hasn't run yet here).
         # SSOT: plans/active/uv_lockfile_determinism_2026_06_02.md
-        run: pip install "uv==0.10.8"
+        run: |
+          UV_VERSION="$(curl -fsSL -H "Authorization: token ${GH_PAT}" \
+            "https://raw.githubusercontent.com/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/${DEP_BRANCH:-main}/scripts/workspace/resolve-canonical-versions.py" \
+            2>/dev/null | grep -oP '^UV_VERSION = "\K[^"]+')"
+          pip install "uv${UV_VERSION:+==$UV_VERSION}"
 
       - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
         id: tools-cache

@@ -262,13 +262,16 @@ _VA_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scr
 WORKSPACE_VENV="${REPO_ROOT}/.venv-workspace"
 if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]; then
     unset VIRTUAL_ENV   # never inherit an activated workspace venv from the parent shell
-    command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
+    # Single canonical uv version pin: unified-trading-pm/scripts/workspace/resolve-canonical-versions.py
+    _uv_pm_root="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}"
+    _uv_pin="$(grep -oP '^UV_VERSION = "\K[^"]+' "${_uv_pm_root}/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null)"
+    command -v uv &>/dev/null || pip install "uv${_uv_pin:+==$_uv_pin}" --quiet
     # uv-version drift-guard — WARN-ONLY (mirrors base-service.sh; same rationale + SSOT).
     _uv_ver="$(uv --version 2>/dev/null | awk '{print $2}')"
-    if [[ -n "$_uv_ver" && "$_uv_ver" != "0.10.8" ]]; then
-        echo "⚠️  uv version drift: running $_uv_ver, workspace pin is 0.10.8 — re-lock output may not match CI. Realign: curl -LsSf https://astral.sh/uv/0.10.8/install.sh | env UV_UNMANAGED_INSTALL=\$HOME/.local/bin sh"
+    if [[ -n "$_uv_pin" && -n "$_uv_ver" && "$_uv_ver" != "$_uv_pin" ]]; then
+        echo "⚠️  uv version drift: running $_uv_ver, workspace pin is $_uv_pin — re-lock output may not match CI. Realign: curl -LsSf https://astral.sh/uv/${_uv_pin}/install.sh | env UV_UNMANAGED_INSTALL=\$HOME/.local/bin sh"
     fi
-    unset _uv_ver
+    unset _uv_ver _uv_pin _uv_pm_root
     # uv.lock freshness — WARN-ONLY, never blocking (stays warn-only per 1.5b: making it blocking
     # treadmills on the semver CI-side `version =` bump). The lock IS now the install SSOT —
     # `uv sync --frozen` (below, 1.5b) installs the committed lock EXACTLY, byte-for-byte with CI — so a
