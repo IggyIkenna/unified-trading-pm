@@ -168,23 +168,35 @@ pass (not a delta) per this dispatch's autonomous-mode instructions. batch6 itse
       `quality-gates.sh` is green. Source: `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md`,
       `issues/tradfi_fx_krw_usd_triplicate_venue_partitions_2026_08_04.md`.
 
-- [ ] [DATA] P2. **Investigate why the tradfi legacy-twin bucket-delete dry-run measures 0% canonical-twin coverage
-      instead of the expected near-100% — root-cause only, no delete/apply.** The 2026-07-30 dry-run of
-      `instruments-service/scripts/cleanup_legacy_twins.py --asset-group tradfi --report-uri     _index/audit/orphan_sweep_tradfi.parquet --dry-run`
-      loaded 900 class-B legacy-twin candidate rows and found 0 deletable — every single row reported reason "canonical
-      twin NOT captured in manifest," reconfirmed unchanged by na-eligibility-audit passes on 2026-07-31 and 2026-08-02.
-      A genuine manifest-registration gap is the leading hypothesis (per the gating doc's own Progress Log) but has
-      never been directly investigated. Trace a representative sample of the 900 blocked rows: confirm whether their
-      claimed canonical twins genuinely are absent from the manifest (a real registration gap — identify which
-      writer/backfill should have registered them and didn't), or whether the twin-lookup logic in
-      `cleanup_legacy_twins.py` itself has a matching bug (e.g. an id-shape mismatch between the legacy row's derived
-      canonical id and how the manifest actually stores the twin). Do NOT run `--apply` or any delete — this todo is
-      diagnostic only; the delete stays gated on this investigation's outcome plus a fresh 100%-coverage re-run. Repos:
-      instruments-service, market-tick-data-service. **Done when**: a dated finding is recorded in
-      `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s Progress Log identifying the root cause (registration
-      gap vs. lookup-logic bug) for a representative sample, with enough detail that a follow-up fix (in whichever repo
-      owns the actual defect) can be scoped as its own todo. Source:
-      `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`.
+- [x] ✅ [DATA] P2. **DONE 2026-08-09 — root cause found: lookup-logic bug in `canonical_twin_path()`, NOT a manifest
+      registration gap.** Investigated all 900 class-B tradfi legacy-twin candidates against the live prod report +
+      manifest (read-only): all 900 share an identical pre-hive legacy path shape (no `asset_group=`/`venue=`/
+      `instrument_type=` hive keys). The manifest cell lookup itself resolves 900/900 correctly (verified both the
+      exact-match shape `cleanup_legacy_twins.py` uses and the grain-aware shape `migration_orphan_sweep.py` uses — both
+      hit 900/900; `_canonical_source_for_cell` correctly resolves `source="databento"`). The actual defect is
+      `canonical_twin_path()`'s string-splice: for a pre-hive legacy path it never derives `asset_group=`/`venue=`/
+      `instrument_type=`, producing a derived canonical path (confirmed via `gcs_describe_object`) that does not exist
+      in GCS — versus the real canonical shape from `unified_api_contracts.canonical_path_templates("tradfi")`. Full
+      finding + a scoped follow-up `[CODE]` fix todo recorded in
+      `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s Progress Log / Todo section (2026-08-09 entries).
+      Original text preserved below for context.
+
+  Original todo text: Investigate why the tradfi legacy-twin bucket-delete dry-run measures 0% canonical-twin coverage
+  instead of the expected near-100% — root-cause only, no delete/apply. The 2026-07-30 dry-run of
+  `instruments-service/scripts/cleanup_legacy_twins.py --asset-group tradfi --report-uri     _index/audit/orphan_sweep_tradfi.parquet --dry-run`
+  loaded 900 class-B legacy-twin candidate rows and found 0 deletable — every single row reported reason "canonical twin
+  NOT captured in manifest," reconfirmed unchanged by na-eligibility-audit passes on 2026-07-31 and 2026-08-02. A
+  genuine manifest-registration gap is the leading hypothesis (per the gating doc's own Progress Log) but has never been
+  directly investigated. Trace a representative sample of the 900 blocked rows: confirm whether their claimed canonical
+  twins genuinely are absent from the manifest (a real registration gap — identify which writer/backfill should have
+  registered them and didn't), or whether the twin-lookup logic in `cleanup_legacy_twins.py` itself has a matching bug
+  (e.g. an id-shape mismatch between the legacy row's derived canonical id and how the manifest actually stores the
+  twin). Do NOT run `--apply` or any delete — this todo is diagnostic only; the delete stays gated on this
+  investigation's outcome plus a fresh 100%-coverage re-run. Repos: instruments-service, market-tick-data-service.
+  **Done when**: a dated finding is recorded in `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s Progress Log
+  identifying the root cause (registration gap vs. lookup-logic bug) for a representative sample, with enough detail
+  that a follow-up fix (in whichever repo owns the actual defect) can be scoped as its own todo. Source:
+  `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`.
 
 - [ ] [CODE] P3. **Relax `_filter_market_state`'s gap-tolerance check for the sparse dev-tier TRADFI candle corpus.**
       features-service's delta_one `orchestrator.py::_filter_market_state` uses `boundary_tolerance = max(2, 4)` (4 NaN
