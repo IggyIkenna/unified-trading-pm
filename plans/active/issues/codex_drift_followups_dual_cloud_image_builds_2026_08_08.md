@@ -116,11 +116,13 @@ access from this worktree).
       actual write path in `cloud-build-router.yml` / `cloud-build-router-aws.yml` so these fields get populated on a
       successful build, or remove the dead write-intent code and stop presenting the manifest as a provenance source
       anywhere in the codebase. Repo: unified-trading-pm.
-- [ ] [OPERATOR] P3. Decide whether `ikenna-worker`'s AWS IAM identity should carry read-only
-      `codebuild:ListProjects`/`codebuild:BatchGetBuilds` (needed to independently re-verify AWS-side codex claims from
-      a worker worktree) or whether AWS read-verification should route through a different identity/process entirely —
-      current gap: this worker's ambient identity lacks it, and the documented AO self-service identity
-      (`uts-orchestrator-epic-role`) isn't reachable from this worktree (no EC2 metadata service).
+- [ ] [OPERATOR] P3. **RULED 2026-08-09 (operator): grant `ikenna-worker`'s AWS IAM identity read-only
+      `codebuild:ListProjects`/`codebuild:BatchGetBuilds`.** STANDING-ACTION — the decision is made, execution is still
+      pending: applying this grant requires the operator's own AWS console/CLI access, not a worker-self-serviceable
+      identity (`ikenna-worker` is a human-owned IAM user, distinct from the self-service `uts-orchestrator-epic-role`
+      covered by `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`). Stays open until the operator
+      (or someone with the operator's AWS access) actually applies the grant; done when a worker re-verifies the
+      capability live (`aws codebuild list-projects` succeeding as `ikenna-worker` from a worker worktree).
 
 ## Progress Log
 
@@ -130,3 +132,7 @@ access from this worktree).
   bar, which requires an ACTIVE extracting doc). Finding 4 (AWS IAM identity scope for `ikenna-worker`) is a genuine
   `[OPERATOR]` decision, correctly not extracted. Recommend a forward-pointer citation once batch9 activates.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (1 entry), still accurate.
+- **2026-08-09 (operator ruling)**: RULED — grant `ikenna-worker`'s AWS identity read-only
+  `codebuild:ListProjects`/`codebuild:BatchGetBuilds`. Kept `[OPERATOR]` (not retagged away) and marked STANDING-ACTION:
+  the decision is made but execution requires the operator's own AWS console/CLI access, which no worker can self-serve
+  for this identity. Stays open pending the actual grant + a live re-verification.

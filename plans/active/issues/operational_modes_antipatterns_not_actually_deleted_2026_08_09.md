@@ -4,7 +4,7 @@ title:
   "operational-modes.md was wrong in 6 ways — 2 'deleted' anti-patterns are still live and decompose()'s documented
   signature never existed"
 summary: >-
-  A code-verified review of codex/04-architecture/operational-modes.md (triggered by its 90-day freshness expiry on
+  A code-verified review of /codex/04-architecture/operational-modes.md (triggered by its 90-day freshness expiry on
   2026-08-09) found the workspace SSOT for the operating-mode taxonomy materially wrong. It declared three anti-patterns
   deleted; only one is. It documented ExecutionTarget/ExecutionTrigger members that do not exist (LIVE_VENUE, MANUAL)
   and omitted one that does (FORK). Worst, it documented decompose() as decompose(mode: OperationalMode) -> (target,
@@ -128,12 +128,17 @@ each anti-pattern, and their `last_reviewed` bumped to reflect a review that act
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Rule on `TestingStage`: deliberate keep, or unfinished migration?** It was declared deprecated
-      2026-05-09 yet is now the sole input type of `decompose()`. If it is a permanent migration-era shim, the
-      deprecation language in `/codex/04-architecture/operational-modes.md` must be retired and the enum documented as
-      supported. If the migration is simply unfinished, it needs an owner and a target. This is a design judgment about
-      a UAC public contract, not a worker-determinable fact — hence `[OPERATOR]`. **Done when**: the codex doc states
-      one of the two outcomes with a date. Repo: unified-trading-pm.
+- [ ] [DOCS] P2. **RULED 2026-08-09 (operator): `TestingStage` is an unfinished migration, NOT a deliberate permanent
+      shim.** The deprecation language in `/codex/04-architecture/operational-modes.md` should describe it as unfinished
+      (still the sole input type of `decompose()`, deprecated 2026-05-09, migration never completed) rather than being
+      retired as if this were a deliberate keep. This todo's original done-when ("the codex doc states one of the two
+      outcomes with a date") is only half-satisfiable from this ruling alone — the outcome is now known, but no owner or
+      target date was assigned. **Do not invent an owner or date** — see the placeholder todo below; update the codex
+      doc once that placeholder resolves. Repo: unified-trading-pm.
+- [ ] [OPERATOR] P3. **Placeholder — assign an owner + target date for finishing the `TestingStage` migration** (per the
+      2026-08-09 ruling above: unfinished, not a deliberate keep). Not worker-determinable — stays open until the
+      operator names both. **Done when**: `/codex/04-architecture/operational-modes.md` records the owner + target date,
+      and the todo above is closed alongside it.
 - [x] ✅ WITHDRAWN 2026-08-09 — [BACKEND] P2. ~~Finish the `_PAPER_VENUE_KEYS` deletion `pvl-p17c` claimed.~~ Rests on a
       finding that turned out to be wrong (see Finding 4 above): the migration DID happen and the surviving symbol is a
       legitimate post-branch allowlist, not the anti-pattern. Deleting it would break sports paper routing for all 5
@@ -157,3 +162,6 @@ each anti-pattern, and their `last_reviewed` bumped to reflect a review that act
   governs, and the drift was invisible from the doc alone. Worth noting the failure mode — every one of these six errors
   would have been caught the moment anyone tried to USE the doc, which suggests nobody had, for three months, despite it
   being `authoritative_for` four separate contracts.
+- **2026-08-09 (operator ruling)**: RULED — `TestingStage` is an unfinished migration, not a deliberate permanent shim;
+  needs an owner + target date assigned (not invented here). Retagged `[OPERATOR]` → `[DOCS]` for the disposition record
+  and filed a new `[OPERATOR]` P3 placeholder todo for the actual owner/date assignment. Doc stays `assigned_vm: NA`.

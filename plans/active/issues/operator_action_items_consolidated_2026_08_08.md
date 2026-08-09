@@ -131,10 +131,9 @@ pull any specific checkout's full table back up if you want it before deciding.
       technical walkthrough of the current code + 3 candidate keying implementations with tradeoffs is already written
       into `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`, ready for a fast
       sign-off. Nothing shipped, as instructed.
-- [ ] [OPERATOR] P3. **Did you personally rule on tradfi audit Finding E-1 (order-routing scaffolding) somewhere
-      untracked?** A worker's "DECIDED (operator ruling)" citation traced to no recorded source anywhere in the corpus.
-      Treated as unruled per your answer; a fresh `[OPERATOR]` todo is filed in
-      `plans/archive/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md` if you do recall it.
+- [x] ✅ [DOCS] P3. **See `plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md` —
+      RULED 2026-08-09.** Bridge the gates (option A). Full ruling + a newly-found conflict with an unproven
+      backfill=paper=live precondition are recorded there, not re-litigated here.
 
 ## 5. Permanent hard-stops (not time-sensitive, listed for completeness)
 
@@ -164,3 +163,6 @@ pull any specific checkout's full table back up if you want it before deciding.
 - 2026-08-08: Filed as the consolidated wrap-up of the full 80-item Q&A + 6-agent apply + 7-tranche RECLASSIFY session,
   per the operator's explicit request for one document to work through.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **2026-08-09 (operator ruling)**: the Finding E-1 item above was ruled — bridge the gates (option A). Marked done here
+  as a pointer; full ruling recorded in
+  `plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`.

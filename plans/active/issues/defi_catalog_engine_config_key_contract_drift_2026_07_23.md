@@ -770,18 +770,17 @@ auto-generated section's own owner script, rather than hand-editing the table) �
       doc's own earlier Recommendation §3 update: "✅ DONE 2026-07-24 ... CARRY_FUNDING_DISPERSION (78 rows) ...
       DEFI_LP_CONCENTRATED/_POOL/_VAULT (3 rows each) all confirmed firing cleanly, zero silent-degradation found." This
       checkbox predated that confirmation and was never flipped.
-- [ ] [OPERATOR] P2. **Design decision: live liquidation-candidate feed integration** (`LIQUIDATION_CAPTURE` +
-      `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, both currently `_ALLOWED_EMPTY_ARCHETYPES`). Per the "Scope of the real,
-      unbuilt integration" section above: no live third-party liquidation-candidate feed exists anywhere in the
-      workspace (exhaustively confirmed 2026-07-24) — this is a design-class, multi-repo, multi-day build spanning
-      market-tick-data-service (fork `position_data_handler.py` to sort by `healthFactor` ascending + run on a
-      live/high-frequency cadence via the UTL `EventTransport` facade), features-service (a new dynamically-keyed
-      `liq_candidate_*_<id>` calculator — an unprecedented per-candidate feature-naming shape needing its own design
-      call), and strategy-service (a live params-mutation path on `V2EngineOrchestrator`/`BaseArchetypeEngineV2`, which
-      today sets `self.params` once and never rewrites it). Needs a human to pick the design direction (push-on-tick vs.
-      pollable candidate registry) before this can be scoped as an AO-dispatchable todo — converted from prose to a
-      tracked item per the workspace's "every follow-up is a todo" rule; still open, not yet actioned (previously noted
-      as "incidental, not actioned" by na-eligibility-audit 2026-08-06).
+- [ ] [DESIGN] P2. **RULED 2026-08-09 (operator): pollable-candidate-registry design (not push-on-tick)** for the live
+      liquidation-candidate feed integration (`LIQUIDATION_CAPTURE` + `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`, both currently
+      `_ALLOWED_EMPTY_ARCHETYPES`). The transport-shape decision is resolved — **still NOT AO-dispatchable**: a second
+      design sub-decision remains open (features-service's `liq_candidate_*_<id>` dynamically-keyed calculator is an
+      unprecedented per-candidate feature-naming shape needing its own design call, per the "Scope of the real, unbuilt
+      integration" section above), and the 3-repo build (market-tick-data-service forking `position_data_handler.py` to
+      poll candidates sorted by `healthFactor` ascending via the UTL `EventTransport` facade; features-service's new
+      calculator; strategy-service's live params-mutation path on `V2EngineOrchestrator`/`BaseArchetypeEngineV2`, which
+      today sets `self.params` once and never rewrites it) still needs to be broken into bounded, AO-dispatchable todos
+      against this now-resolved direction. Next step: a LOCAL/human design pass that resolves the feature-naming
+      sub-decision and scopes the pollable-registry build into concrete todos — not yet actioned.
 - [ ] [OPERATOR] P2. **Design decision: `RecursiveLoopOrchestrator` translation layer** for
       `CARRY_RECURSIVE_BORROW_LENDING_ONLY` / `CARRY_BASIS_PERP_INV` (both currently `_ALLOWED_EMPTY_ARCHETYPES`, gated
       on `staking_yield_enabled=false`). Per the "orchestrator-stub: exhaustive investigation, scoped not built" section
@@ -824,3 +823,8 @@ auto-generated section's own owner script, rather than hand-editing the table) �
   for 5 broken archetypes, 66 rows, held `xfail(strict=True)`) remains a textbook trading-parameter/design-judgment
   call, not a bounded worker task. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **2026-08-09 (operator ruling)**: RULED on the liquidation-candidate feed's transport-shape design decision —
+  pollable-candidate-registry, not push-on-tick. Retagged `[OPERATOR]` → `[DESIGN]` and reworded to record the resolved
+  direction while keeping the todo open: a second sub-decision (features-service's per-candidate feature-naming shape)
+  and the actual 3-repo scoping pass remain outstanding before this is AO-dispatchable. Doc stays `assigned_vm: NA` — no
+  bounded worker-determinable outcome yet.

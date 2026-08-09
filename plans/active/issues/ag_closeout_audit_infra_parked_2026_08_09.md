@@ -123,7 +123,8 @@ source: >-
    (`status: active`, lines unchanged). Neither ready to batch as-is.
 6. **[OPERATOR] P3 — Low-confidence retag flag on
    `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md`** (finding 22, carried since 2026-08-08,
-   2nd appearance) — still tagged `[infrastructure]`, not retagged. Unchanged; still not acted on given low confidence.
+   2nd appearance) — **RULED 2026-08-09 (operator): retag to `[defi, infrastructure]`** (recommendation B taken). Target
+   doc's `asset_group` frontmatter updated; see its own Progress Log. No longer carried-forward as of this entry.
 
 ## Evolving, still not infra's to write
 
@@ -178,14 +179,14 @@ shipped draft artifact, not an unresolved item) — **balanced**.
       (finding 12, carried, 7th day). Design/tooling-priority call, not urgent.
 - [ ] [DOCS] P3. **Scope + conflict-check the 2 flagged batch-era candidates** (finding 13, carried, 7th day: `CITE_RE`
       hardening design; `repo_scripts_governance_audit_2026_06_18.md`'s L208/L213) before any future run drafts them.
-- [ ] [OPERATOR] P3. **Low-confidence: consider retagging
+- [x] ✅ [DOCS] P3. **RULED 2026-08-09 (operator): retag
       `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md`** from `[infrastructure]` to
-      `[defi, infrastructure]` or bare `[defi]` (finding 22, carried, 2nd day) — recommendation B per the 2026-08-08
-      report, not acted on given low confidence.
-- [ ] [OPERATOR] P2. **Review + approve (or reject) `infra_satellite_ao_dispatch_batch9_2026_08_09.md`** (status: draft)
-      — 4 todos: UV-version-pin centralization (6 files) + 3 conflict-clear fixes extracted from
-      `codex_drift_followups_dual_cloud_image_builds_2026_08_08.md`. Flip to `status: active` to dispatch; its finalize
-      twin is already `status: active` and correctly gated either way.
+      `[defi, infrastructure]` (finding 22, recommendation B taken) — `unified-trading-pm` (docs-only, same commit as
+      this entry).
+- [x] ✅ [DOCS] P2. **RULED 2026-08-09 (operator): approved. Flipped `infra_satellite_ao_dispatch_batch9_2026_08_09.md`
+      `status: draft` → `status: active`** — its finalize twin was already `status: active` and correctly gated, so no
+      further gate work was needed. 4 todos now dispatchable: UV-version-pin centralization (6 files) + 3 conflict-clear
+      fixes extracted from `codex_drift_followups_dual_cloud_image_builds_2026_08_08.md`.
 - [ ] [OPERATOR] P2. **Review + approve (or reject) `infra_satellite_ao_dispatch_batch11_2026_08_09.md`** (status:
       draft, drafted by this run's own second dispatch) — 2 todos: generalize `generate_na_doc_tranche_inventory.py`'s
       `body_content_hash()` marker-stripping to cover `/context-scout`'s own body-level Progress Log line (measured 44%
@@ -248,6 +249,12 @@ per the same convention the first run's ledger used) — **balanced**.
 
 ## Progress Log
 
+- **2026-08-09 (operator ruling)**: RULED on 2 of this doc's own todos. (1) Finding 6/finding-22 retag: retag
+  `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md` to `[defi, infrastructure]` — applied,
+  target doc's `asset_group` frontmatter updated. (2) batch9 approval: approved — flipped
+  `infra_satellite_ao_dispatch_batch9_2026_08_09.md`'s `status: draft` → `status: active`; finalize twin already
+  `status: active`. Both todos above flipped `[x]`. batch11's own approval todo is untouched — no ruling received on it
+  this session.
 - **2026-08-09 (second run, slot 9, dispatch agt-c74a01)**: `/ag-closeout-audit infra` re-dispatched same day. Live
   re-derived candidate set (50/13/12), diffed against the first run's reported findings rather than re-triaging from
   scratch, found exactly 1 genuinely new candidate (na-eligibility-audit's context-scout body-hash-blind-spot doc, filed

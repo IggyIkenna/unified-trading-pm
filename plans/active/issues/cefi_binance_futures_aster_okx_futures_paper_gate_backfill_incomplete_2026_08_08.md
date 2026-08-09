@@ -108,12 +108,14 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Decide backfill priority/ordering for BINANCE-FUTURES/ASTER/OKX-FUTURES completeness (option 1 vs
-      option 2 above) so the paper-run gate in `no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md` can
-      eventually clear. Repo: N/A (strategy-desk/data-pipeline priority decision).
-- [ ] [DATA] P2. Once a decision is made and the targeted backfill (if option 2) completes, re-run this exact
-      venue-scoped `read_availability_index(columns=, filters=[("venue","in",[...])])` check and cite the fresh
-      reachable-coverage numbers here + in the parent doc's Progress Log. Repo: instruments-service.
+- [x] ✅ [DECISION] P1. **RULED 2026-08-09 (operator): wait for the in-flight aggregate backfill
+      (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`) to reach BINANCE-FUTURES/ASTER/OKX-FUTURES naturally**
+      through its own chronological traversal — option 1 taken, option 2 (a dedicated venue-scoped backfill pass)
+      explicitly rejected. Repo: N/A (strategy-desk/data-pipeline priority decision).
+- [ ] [DATA] P2. Once the in-flight aggregate backfill (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`)
+      naturally reaches these 3 venues' full chronological range, re-run this exact venue-scoped
+      `read_availability_index(columns=, filters=[("venue","in",[...])])` check and cite the fresh reachable-coverage
+      numbers here + in the parent doc's Progress Log. Repo: instruments-service.
 
 ## Progress Log (append-only)
 
@@ -126,3 +128,8 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   todo's own stated alternative — "a targeted IS/MTDS spot-check") which completed cleanly and answers the exact 3-venue
   question without a whole-corpus walk.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **2026-08-09 (operator ruling)**: RULED — wait for the in-flight aggregate backfill
+  (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`) to reach BINANCE-FUTURES/ASTER/OKX-FUTURES naturally; do
+  NOT run a dedicated venue-scoped backfill pass. Todo 1 flipped (decision recorded); todo 2's re-check trigger reworded
+  to match (no longer conditional on "if option 2"). Doc stays `assigned_vm: planning` — todo 2 remains genuinely open,
+  gated on the aggregate backfill's own progress.

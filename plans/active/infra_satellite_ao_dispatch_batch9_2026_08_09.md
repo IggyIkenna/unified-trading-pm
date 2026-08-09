@@ -13,7 +13,7 @@ summary: >-
   possible orphaned trigger pair, and a dead provenance write-path. That source doc's own 4th item (AWS IAM read access)
   is operator-gated and NOT extracted here. Two of the four todos below (2 and 4) both touch
   `.github/workflows/cloud-build-router.yml`, so this plan runs `sequential: true`.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -171,8 +171,8 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
 
 ## Operator approval gate
 
-**This plan is `status: draft` — awaiting operator review.** Flip to `status: active` only after explicit approval (its
-finalize twin is already `status: active` per the no-double-gate ruling and will stay correctly gated either way).
+**RULED 2026-08-09 (operator): approved.** Flipped `status: draft` → `status: active`; its finalize twin was already
+`status: active` per the no-double-gate ruling and stays correctly gated either way.
 
 ## Codex SSOTs (read before touching a todo)
 
@@ -187,3 +187,6 @@ finalize twin is already `status: active` per the no-double-gate ruling and will
 - **2026-08-09** — Drafted by `/ag-closeout-audit infra` (autonomous mode, scheduled daily run, slot 22, dispatch
   agt-3b6f6b). Paired with `infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md` in the same run per the
   finalize-plan-coverage rule.
+- **2026-08-09 (operator ruling)**: RULED — approved. Flipped `status: draft` → `status: active` per the ask in
+  `issues/ag_closeout_audit_infra_parked_2026_08_09.md`'s own `[OPERATOR]` todo (now closed there). Finalize twin
+  unchanged (already `status: active`, correctly gated via `depends_on` + `gate_on_depends: true`).

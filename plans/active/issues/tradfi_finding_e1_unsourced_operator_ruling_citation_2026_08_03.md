@@ -121,12 +121,26 @@ worse than just fixing the citation once the source is confirmed or the decision
       `[OPERATOR]` todo below (the doc itself is archived, so re-flagging happens here rather than re-opening a
       done+archived checkbox there).
 
-- [ ] [OPERATOR] P2. **Genuinely rule on Finding E-1's architecture question** -- bridge the
-      `NAUTILUS_UNSUPPORTED_VENUES` + UAC-capability-declarations gates so tradfi order-routing becomes reachable, or
-      confirm the current scaffolding-only state (already shipped, docstring-only, no gates bridged) is the intended
-      long-term posture. The previously-claimed "operator ruling" for this exact question is now confirmed unsourced
-      (2026-08-08). No urgency from the shipped side (nothing behavior-changing is blocked on this), but the real
-      decision remains outstanding.
+- [x] ✅ [CODE] P1. **RULED 2026-08-09 (operator): bridge the `NAUTILUS_UNSUPPORTED_VENUES` + UAC-capability-declaration
+      gates so tradfi order-routing becomes reachable (option A, NOT scaffolding-only).** Recorded. **Not yet dispatched
+      as bounded engineering work** — see the conflict flagged in the new todo below, found while scoping this: both
+      gate sites (`execution-service/execution_service/utils/nautilus_compatibility.py:30-48`,
+      `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_tradfi.py`) carry an EXPLICIT
+      2026-08-03 code comment — "do not remove these venues from this set until backfill=paper=live wiring is proven for
+      tradfi" — and the cited proof todo (`plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md`
+      todo 1) closed 2026-08-04 with the OPPOSITE verdict: "NO tradfi MVP cell has paper/live wiring proven (TradFi is
+      batch-only this cycle per `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md:82`)"
+      (`plans/audit/results/tradfi_mvp_cell_wiring_and_pipeline_verification_2026_08_04.md`). Filed as a new
+      `[OPERATOR]` todo rather than silently proceeding or silently overriding today's ruling.
+- [ ] [OPERATOR] P1. **Confirm the 2026-08-09 "bridge the gates" ruling still holds given the unproven
+      backfill=paper=live wiring** (see above) — the two gate sites' own code comments were written specifically to
+      block this exact change until that proof lands, and the 2026-08-04 proof audit found none of the 6 tradfi MVP
+      cells have it (TradFi is batch-only this cycle). Options: (a) proceed with the code-level bridge anyway, decoupled
+      from any actual live-order placement (e.g. gates opened but a separate live-trading kill-switch/feature-flag still
+      blocks real execution) — if so, state that decoupling explicitly so an AO todo can be scoped safely; (b) hold the
+      bridge until the paper/live proof lands, superseding today's ruling; (c) confirm today's ruling already accounted
+      for this and should proceed as a full bridge regardless. Not worker-determinable — a live-trading-capability
+      judgment call, not the citation-provenance question the rest of this doc tracks.
 
 ## Progress Log
 
@@ -156,3 +170,15 @@ worse than just fixing the citation once the source is confirmed or the decision
   (`unified-trading-pm`, same commit as this entry); a new `[OPERATOR]` todo filed above for the still-genuinely-open
   architecture question. This doc itself is NOT archived -- the new todo keeps it open.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **2026-08-09 (operator ruling)**: RULED — bridge the `NAUTILUS_UNSUPPORTED_VENUES` + UAC-capability-declaration gates
+  (option A, not scaffolding-only). Retagged the outstanding architecture-question todo `[OPERATOR]` → `[CODE]` and
+  flipped it done (the question is answered). While scoping the resulting engineering work for possible
+  `assigned_vm: NA` → `planning` reclassification (per `task_template.md`'s dispatch-scope-eligibility bar), found both
+  gate sites carry an explicit 2026-08-03 code comment blocking exactly this change until backfill=paper=live wiring is
+  proven for tradfi — and the linked proof audit (2026-08-04) found it is NOT proven anywhere (TradFi is batch-only this
+  cycle). This is a genuine SSOT contradiction between today's ruling and an existing, more specific, already-checked
+  precondition on a live-money-path change — not silently resolved either way. Filed a new `[OPERATOR]` P1 todo asking
+  the operator to confirm how to proceed given this conflict. **Not reclassified to `assigned_vm: planning`** — the work
+  is not safely bounded until this conflict is resolved (dispatching an unattended bridge of a live order-routing gate
+  while its own precondition is unmet would be exactly the kind of silent-regression risk `task_template.md` finding V
+  warns about). Doc stays `assigned_vm: NA`.

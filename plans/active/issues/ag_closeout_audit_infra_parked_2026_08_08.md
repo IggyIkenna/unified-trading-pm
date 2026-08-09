@@ -150,7 +150,8 @@ infra-tranche member without flagging a mistag at all.
   to `[defi, infrastructure]` or bare `[defi]`, matching the sibling pattern already used for
   `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` (Finding 21) and
   `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` itself. **Recommendation: B**, on the balance of the
-  evidence above, but flagged rather than acted on given the genuinely low confidence — not fixed here.
+  evidence above, but flagged rather than acted on given the genuinely low confidence — not fixed here. **RULED
+  2026-08-09 (operator): B taken** — see the target doc's own Progress Log, not re-litigated here.
 
 ### 23. [INFO, not parked] Reconfirmed: 4 candidates independently corroborate the known `[ci, infrastructure]` dual-tag mistag pattern from infra's own side
 
@@ -180,10 +181,9 @@ orphaned_never_touched, 1 orphaned_partial_coverage, 0 conflict-clear-bounded, 0
       (finding 12, carried, 6th day). Design/tooling-priority call, not urgent.
 - [ ] [DOCS] P3. **Scope + conflict-check the 2 flagged batch-era candidates** (finding 13, carried, 6th day: `CITE_RE`
       hardening design; `repo_scripts_governance_audit_2026_06_18.md`'s L208/L213) before any future run drafts them.
-- [ ] [OPERATOR] P3. **Low-confidence: consider retagging
-      `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md`** from `[infrastructure]` to
-      `[defi, infrastructure]` or bare `[defi]` (finding 22) — recommendation B, not acted on given low confidence; a
-      human content read would settle it faster than another audit pass.
+- [x] ✅ [DOCS] P3. **See `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md` — RULED
+      2026-08-09.** Retagged to `[defi, infrastructure]`; full ruling recorded in that doc and in
+      `ag_closeout_audit_infra_parked_2026_08_09.md` (finding 6), not re-litigated here.
 - [x] ✅ [DOCS] P3. **DONE 2026-08-09 (stale-check re-verify, KEEP-NA staleness pass).** Flipped the stale checkbox on
       `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`'s item 1, citing
       `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s 2026-08-07 17:26Z evidence (finding 21) —
@@ -238,3 +238,7 @@ orphaned_never_touched, 1 orphaned_partial_coverage, 0 conflict-clear-bounded, 0
   defi-owned, explicitly not this doc's or this tranche's to write. Doc-level RECLASSIFY bar fails (not every remaining
   item is worker-bounded/deterministic) → stays NA.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **2026-08-09 (operator ruling)**: RULED on finding 22 — retag
+  `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md` to `[defi, infrastructure]`
+  (recommendation B taken). Full ruling recorded in the target doc and in `ag_closeout_audit_infra_parked_2026_08_09.md`
+  (finding 6) — this entry is a pointer, not re-litigated here.

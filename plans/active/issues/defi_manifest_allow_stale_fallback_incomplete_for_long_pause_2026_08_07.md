@@ -21,7 +21,7 @@ summary: >-
   no error, just silently-incomplete coverage.
 status: open
 nature: issue
-asset_group: [infrastructure]
+asset_group: [defi, infrastructure]
 stage: [meta]
 repos: [unified-trading-library, deployment-service, market-tick-data-service]
 scope: [engineer]
@@ -155,3 +155,7 @@ Two independently-shippable angles:
   dependency-blocked on the DeFi consolidator genuinely catching up (the concurrent `canonical-migration-defi-rebuild`
   VM finishing or the cron resuming) — neither is worker-determinable today.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **2026-08-09 (operator ruling)**: RULED — retag `asset_group` from `[infrastructure]` to `[defi, infrastructure]` (per
+  the low-confidence flag carried since 2026-08-08 in `ag_closeout_audit_infra_parked_2026_08_08.md` finding 22 /
+  `ag_closeout_audit_infra_parked_2026_08_09.md` finding 6 — recommendation B taken). Frontmatter updated; content
+  unchanged.
