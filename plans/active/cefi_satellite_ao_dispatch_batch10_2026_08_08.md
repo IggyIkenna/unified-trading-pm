@@ -118,15 +118,24 @@ context_scope:
       no residual gap. Flipped Phase C in `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` to
       DONE-BY-FAIT-ACCOMPLI citing CF-11's actual conclusion (option (a) — no genuine residual gap found on closer
       reading). Source: `cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` (Phase C).
-- [ ] [DATA] P2. **Read-only investigate the ~1104 genuine HYPERLIQUID(660)/ASTER(444) wire-vs-canonical filename
-      collisions on the 6 flagged dates** (2025-11-01, 2025-11-02, 2026-01-01, 2026-01-02, 2026-01-03, 2026-07-11) named
-      in `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Finding 8/10. Sample-compare row counts
-      / capture-time ranges / tick content per colliding pair to determine whether one capture is a strict subset of the
-      other. **Audit only — do NOT rename/delete/merge anything.** Source:
+- [x] ✅ **DONE 2026-08-09.** [DATA] P2. **Read-only investigate the ~1104 genuine HYPERLIQUID(660)/ASTER(444)
+      wire-vs-canonical filename collisions on the 6 flagged dates** (2025-11-01, 2025-11-02, 2026-01-01, 2026-01-02,
+      2026-01-03, 2026-07-11) named in `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Finding
+      8/10. Sample-compare row counts / capture-time ranges / tick content per colliding pair to determine whether one
+      capture is a strict subset of the other. **Audit only — do NOT rename/delete/merge anything.** Source:
       `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` (Finding 8/10). **Done when**: each sampled
       pair is classified subset-confirmed (recommend a safe merge path, but do not execute it) or
       genuinely-distinct-content (recommend permanent leave-as-is), with results appended to the issue doc's Findings —
       or the sample proves inconclusive and is escalated to the operator for a decision, with the evidence attached.
+      **DONE**: re-ran the shipped script's own discovery/resolve logic (read-only, no downloads) for the 6 dates × 2
+      venues — live population is now 522 candidates (not 1104; `2025-11-01`/`02` show zero today, a corpus-drift fact
+      flagged in the finding). Sample-compared 26 pairs (all 9 HYPERLIQUID candidates + a diverse ASTER sample): **0/26
+      are genuinely-distinct content** once `symbol`/`instrument_type`-casing/`available_at` label-convention columns
+      are normalized — 23 identical_content, 3 subset_confirmed (old wire-form ⊆ new canonical, ASTER `trades` truncated
+      at exactly 1000 rows). Recommends a safe automated fix (extend `_confirm_would_patch_duplicate`'s exclusion set)
+      rather than the prior "leave as-is forever" default. Evidence:
+      `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Finding 11 (2026-08-09), same commit as
+      this checkbox flip.
 - [x] ✅ [DATA] P2. **Check the terminal state of VM `mdps-backfill-cefi-20260807-130321` and re-run the per-cell
       symbol-count bundle audit** against the 84 targeted (6 BYBIT + 6 DERIBIT day) cells named in
       `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md`. If the VM was preempted again, relaunch (SPOT
