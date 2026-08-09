@@ -85,6 +85,7 @@ context_scope:
       todo 1 already empirically proved byte-identical output + zero idempotency drift on every dashboard file type, so
       this is a mechanical version bump. Done when: `agent-orchestrator/dashboard`'s `format`/`format:check` scripts
       agree with `scripts/hooks/prettier-autostage.sh`'s 3.9.5 pin on the same file set. Repo: agent-orchestrator.
+      **➡️ EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 6 — do NOT action here.**
 - [ ] [INFRA] P3. **Then decide whether the dashboard should gate on formatting at all.**
       `agent-orchestrator/scripts/quality-gates.sh` runs `tsc --noEmit` + `vitest` for the dashboard but never
       `format:check`, which is the only reason this skew has not failed anyone's gate. That is a gap or a deliberate
