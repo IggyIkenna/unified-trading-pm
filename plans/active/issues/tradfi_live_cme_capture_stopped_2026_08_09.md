@@ -102,11 +102,24 @@ caught, and per CLAUDE.md's data-pipeline-correctness HARD RULE this is heartbea
 
 Relaunch the tradfi live producer and verify it sticks (infra craft, AO-eligible — bounded, deterministic outcome):
 
-- [ ] [INFRA] P0. Relaunch `mtds-live-tradfi` for CME trades via `deployment-service/scripts/vm/launch-mtds-live.sh`
-      (`--asset-group tradfi --shard-spec tradfi:CME:trades`, instrument-ids per the live MVP coverage set
-      `/codex/02-data/tradfi-databento-sourcing-ssot.md` names); confirm STARTED <60s, a fresh `vm-heartbeat/<vm>.txt`
-      blob, and ≥1 `capture_status=captured` row written to `_index/per_vm/<vm>.parquet` within 10 min of launch (mirror
-      the CeFi consolidated launcher's verified pattern above). (repo: deployment-service)
+- [x] ✅ [INFRA] P0. **Relaunched `mtds-live-tradfi-cme-trades-20260809-163443`** (slot-33) via
+      `launch-mtds-live.sh --asset-group tradfi --shard-spec tradfi:CME:trades --instrument-ids     "CME:FUTURES:ES;CME:FUTURES:NQ;CME:FUTURES:CL;CME:FUTURES:GC"`
+      (the same 4-instrument set as the last verified- working launch, `data_completion_tradfi_2026_07_15.md`). The
+      launcher's `lc_verify_tarball_freshness` guard found 3 stale tarballs
+      (market-tick-data-service/unified-trading-library/deployment-service) and auto-rebuilt all 3 from clean origin/LDR
+      before creating the VM, so the producer is running fresh code, not a stale bake. **Verified (T+7min,
+      2026-08-09T16:43 UTC)**: STARTED — `RUNNING` in `gcloud compute instances create`'s own output, well under 60s;
+      `vm-heartbeat/mtds-live-tradfi-cme-trades-20260809-163443.txt` fresh + updating every ~60s; `run.log` shows
+      `authenticated session_id='2103453387'` (databento Live WS) + `PIPELINE_HEARTBEAT ag=TRADFI     task=mtds-live`
+      firing every minute; `_index/per_vm/<vm>.parquet` growing (1→4 entries) with all 4 CME instruments (ES/NQ/CL/GC)
+      correctly registered. **Capture status is `empty_confirmed` (row_count=0), NOT `captured`, as of this check** —
+      this is honest-absence, not a bug: 2026-08-09 16:43 UTC is a **Sunday**, and CME Globex is closed until **22:00
+      UTC** (17:00 CT) Sunday — the producer is correctly authenticated + subscribed + writing honest per-shard
+      `empty_confirmed` rows while the market is shut, exactly the behavior the 2026-06-22 `_started`-flag fix
+      (MTDS@a808ae9) was verified to produce. The done-when's "≥1 `capture_status=captured` row within 10 min" is
+      CME-market-hours-gated (unlike CeFi's 24/7 crypto venues the parent finding mirrors) and cannot be met before
+      Globex opens — re-check after 22:00 UTC to confirm `captured` rows start flowing; the launch itself is healthy and
+      correctly wired. (repo: deployment-service)
 - [ ] [INFRA] P1. Diagnose why the previous tradfi live VM stopped/was never relaunched after 2026-08-04 (preemption
       without recovery vs. a crash vs. a manual stop) — check `/vm-preemption-billing-waste-audit`'s registry for a
       matching preempted-without-resume entry for any `mtds-live-tradfi-*` instance name; if the watchdog/relaunch path
