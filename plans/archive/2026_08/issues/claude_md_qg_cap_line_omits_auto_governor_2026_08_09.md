@@ -10,7 +10,7 @@ summary: >-
   shared-host concurrency") that blocks/queues automatically and excludes queue-wait from the `MAX_DURATION` timeout. A
   reasonable reading of the CLAUDE.md line is "the agent must manually pre-check capacity before invoking the script" —
   which is the wrong, more expensive interpretation.
-status: open
+status: resolved
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -37,7 +37,11 @@ source: >-
   /plans/archive/2026_08/issues/cefi_chain_drop_v2_dedup_stop_on_surprise_198k_lossy_groups_2026_08_08.md todo 4
   (2026-08-09, slot-5) — see that doc's Progress Log for the shipping session this was discovered in (archived
   2026-08-09, all todos closed).
-resolved_by:
+resolved_by: >-
+  data_engineering-worker-slot5 2026-08-09 — shipped unified-trading-pm@fc767d2c9: `cursor-configs/CLAUDE.md`'s
+  shared-host QG line now states it is auto-enforced by `quality-gates.sh`'s own `qg-host-governor.sh`, no manual
+  capacity pre-check needed. Size-cap QG reverified green (38,482→38,602 B, still under the 38,912 B / 95% WARN
+  threshold and the 40,960 B hard cap — no compensating trim required).
 locked_by:
 ---
 
@@ -80,13 +84,22 @@ hasty edit to a shared, size-capped, high-traffic file under this session's own 
 
 ## Todos
 
-- [ ] [DOC] P3. Clarify the "Shared-host ≤2 full QGs at once" line in `CLAUDE.md` (§ Git discipline + shipping pipeline)
+- [x] [DOC] P3. Clarify the "Shared-host ≤2 full QGs at once" line in `CLAUDE.md` (§ Git discipline + shipping pipeline)
       to note it is auto-enforced by `quality-gates.sh`'s built-in `qg-host-governor.sh` (flock token bucket) — agents
       should just invoke the script normally, no manual capacity pre-check needed. Keep net size neutral (trim elsewhere
-      if needed) per the file's QG-enforced ≤40KB cap. (repo: unified-trading-pm)
+      if needed) per the file's QG-enforced ≤40KB cap. (repo: unified-trading-pm) — ✅ unified-trading-pm@fc767d2c9
 
 ## Progress Log
 
 - **2026-08-09 (slot-5, data_engineering)** — Filed during `/pre-compact` while auditing session lessons for
   `cefi_chain_drop_v2_dedup_stop_on_surprise_198k_lossy_groups_2026_08_08.md` todo 4. Not fixed inline (small, but a
   shared size-capped file deserves a deliberate edit, not a rushed one under session-end time pressure).
+- **2026-08-09 (slot-5, data_engineering)** — Shipped `unified-trading-pm@fc767d2c9`: `cursor-configs/CLAUDE.md`'s
+  Git-discipline line now reads "...Shared-host ≤2 full QGs at once, auto-enforced by `quality-gates.sh`'s own
+  `qg-host-governor.sh` (`max(2, floor(cores/4))`, queues rather than fails — just invoke normally); never bulk-kill
+  another slot's `pytest`/QG." Re-ran `check_agent_rules_size_cap.py` after the edit: 38,482→38,602 B (+120 B), still
+  `ok` — under the 38,912 B (95%) WARN threshold and the 40,960 B hard cap, so no compensating trim was needed. Shipped
+  via `scripts/dev/safe-doc-push.sh` (pure-doc fast path, per this same file's own carve-out). Side note for whoever
+  next touches agent-rules size: the same QG run flagged `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` at 9,832/10,240 B
+  (WARN, 408 B headroom) — pre-existing, unrelated to this change, not fixed here (not blocking, and recent history
+  shows it already gets routinely trimmed). Only todo now closed — archiving.
