@@ -26,8 +26,8 @@ created: "2026-07-27"
 author: unknown
 last_updated: "2026-07-27"
 parent_epic: infrastructure_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 priority: P3
 estimate_class: refactor
 estimate_baseline_ai_days: 0.2
@@ -93,13 +93,22 @@ resolved — the baseline creeps toward meaninglessness instead of catching real
 - [x] [SCRIPT] P3. **DONE — already shipped, unified-trading-pm@75adf01c4** ("fix(qg): recognize BLK-<id> as valid
       credential-ask-orphan evidence"). Verified live 2026-07-30: `BLK_ID_RE = re.compile(r"\bBLK-[0-9a-f]{6,}\b")` is
       defined and wired into `_has_ask_evidence()`'s accepted-evidence checks alongside `PING_PATH_RE`/`SECRET_NAME_RE`.
-- [ ] [SCRIPT] P3. Consider whether an IAM-permission gap (names the exact missing role/permission + exact remedy
-      command, no secret needed) should be tagged `BLOCKED-PERMISSIONS` instead of `BLOCKED-CREDENTIALS` going forward —
-      a naming split, not a behavior change, so the vendor-credential ratchet stays meaningful. If adopted, migrate the
-      two lines found here as part of the same change.
+- [ ] [SCRIPT] P3. **Design decision (LOCAL/human — see Progress Log 2026-08-09 RECLASSIFY): should a `BLOCKED-<TOKEN>`
+      naming split exist for IAM-permission gaps** (names the exact missing role/permission + exact remedy command, no
+      secret needed), tagged `BLOCKED-PERMISSIONS` instead of `BLOCKED-CREDENTIALS` going forward? A naming split, not a
+      behavior change, so the vendor-credential ratchet stays meaningful. If adopted, migrate the two lines found here
+      as part of the same change.
 
 ## Progress Log
 
+- **plan_reconciler 2026-08-09 (agt-c80749, ci tranche)**: RECLASSIFIED `assigned_vm: planning` → `NA`
+  (`execution_scope` → `local-only`). The sole remaining open todo ("Consider whether an IAM-permission gap... should be
+  tagged `BLOCKED-PERMISSIONS` instead of `BLOCKED-CREDENTIALS` going forward") is an open-ended naming/design decision
+  with no data-derivable answer — the exact "judgment call wearing a todo's clothes" pattern CLAUDE.md's
+  dispatch-scope-eligibility rule bans for AO-dispatched work (SKILL.md hunter 5). Per that hunter's own two valid
+  resolutions (operator rules it now, or it's pulled into a LOCAL/human plan), took the second path since no operator
+  ruling was already on record for this specific naming question. Also fixed a line-1-truncation defect on the same todo
+  (the actual ask was continuation-line-only) as part of the same pass.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: reviewed, still accurate — refreshed marker (4 entries).
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (4 entries), unchanged.
