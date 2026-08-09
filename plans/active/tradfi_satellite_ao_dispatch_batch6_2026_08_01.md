@@ -685,18 +685,24 @@ further this session** (diminishing returns, per no-sawtooth polling discipline)
 this: bounded synchronous foreground polling (`timeout 480 bash -c 'while ...; sleep 60; done'`) may be more reliable
 than backgrounding today, same as the 2026-08-08T22:50Z entry above already found once before.
 
-Total direct observation this session: ~27 min across 4 windows (09:13-09:39Z). Lock: flat at 14 VMs for ~25 min, then
-ONE VM completed naturally (14→13 at 09:36Z) — first sign of real drain observed this session, still far from 0.
-`wave_launcher.py`: 0 live processes at last check (a mid-window count of "4" looked transient, fleet didn't move; not
-investigated further).
+**Session total (09:12-10:04Z, ~52 min direct observation across 6 windows)**: armed FOUR setsid watchers total — first
+three (PIDs `2086857`, `3004093`, one more) each died silently within ~5-7 min despite verified process-group isolation;
+a 4th, **PID `637323`** (armed 10:04:37Z), was still live at time of writing. A ~9-min bounded foreground poll (immune
+to the backgrounding issue) confirmed the trend directly: **fleet drained 14→13→12→11** over the full session, roughly 1
+VM every 20-30 min — real but slow. At this rate, full clear is likely another 2-4+ hours out, well beyond what a single
+session can usefully wait for. `wave_launcher.py`: 0 live processes at last check (a mid-window count of "4" looked
+transient, fleet didn't move; not investigated further). No `tradfi-bf-es-opt-*` VMs appeared at any point this session.
 
 - **NEXT ACTION (fresh session)**: check todo #2's checkbox first. If `[ ]`: (1) check current lock
   (`gcloud compute instances list --filter='name~"^tradfi-bf-"'`) and whether any `tradfi-bf-es-opt-*` VMs exist
   (someone's watcher fired) — if so, monitor for completion, THEN re-run the **corrected** manifest query
   (`underlying in (SP500, ES)`, NOT the old 11-id filter) and expect 2025/2026 to move, not the other years. (2) If not,
-  re-arm a watcher OR use bounded foreground polling (both legitimate — foreground may be more reliable today per this
-  session's findings). (3) Watch for `wave_launcher.py` recurring (2-3 occurrences so far, cadence unclear) — kill by
-  exact PID if seen, don't touch the cron installer itself (still unidentified — scope-violation doc's own P1). (4) Once
-  2025 shows real coverage and 2026 is materially higher, update the closeout plan's "S&P index options" row
-  (reverted/unedited this session — that file is at the 1000-line hard cap, needs its own shrink pass before ANY edit
-  can land there, not specific to this one) and flip this todo.
+  check `kill -0 637323` first (may still be alive and about to fire); if dead, re-arm a watcher OR use bounded
+  foreground polling (foreground proved more directly informative this session, though still consumes turn time — pick
+  based on how much of the session you can dedicate to this vs. other work). Given the ~20-30min/VM drain rate observed,
+  expect this to take MULTIPLE sessions to actually reach count==0 — that is normal for this saga, not a sign something
+  is wrong. (3) Watch for `wave_launcher.py` recurring (2-3 occurrences so far, cadence unclear) — kill by exact PID if
+  seen, don't touch the cron installer itself (still unidentified — scope-violation doc's own P1). (4) Once 2025 shows
+  real coverage and 2026 is materially higher, update the closeout plan's "S&P index options" row (reverted/unedited
+  this session — that file is at the 1000-line hard cap, needs its own shrink pass before ANY edit can land there, not
+  specific to this one) and flip this todo.
