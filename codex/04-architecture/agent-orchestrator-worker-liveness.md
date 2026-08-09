@@ -22,7 +22,7 @@ referenced_by:
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
-last_reviewed: 2026-07-30
+last_reviewed: 2026-08-09
 code_refs:
   [
     agent-orchestrator/server/worker_liveness_watchdog.py,
@@ -679,6 +679,58 @@ Flow:
   #agent-orchestrator-alerts with an `/accounts` deep-link (sibling of `notify_all_accounts_unusable`).
 
 SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md` § "Operator follow-up (2026-06-22)".
+
+---
+
+## Calibration-source contract: only CLI-rendered percentages may calibrate a learned window (2026-08-09)
+
+**The rule.** `context_probe.observe(model, tokens, *, pane_pct=...)` treats `pane_pct` as an AUTHORITATIVE calibration
+source — the exact denominator the CLI itself is dividing by — and latches `tokens / (pane_pct/100)` into
+`calibrated_window`. That field is **monotonic** (only ever grows) and **outranks every other signal** (the watermark,
+the `model_tier` prior), so a single bad write permanently inflates a model's learned window for the whole fleet. A
+caller may therefore pass `pane_pct` to `observe()` ONLY when it is a percentage the CLI **itself rendered** — never a
+heuristic estimate of one.
+
+`server/worker_liveness/__init__.py::derive_context_used_pct()` (a general-purpose "how full is it" READING) has three
+branches, in priority order: (1) `_CONTEXT_USED_RE` — "N% context used", CLI-rendered, authoritative; (2)
+`_AUTO_COMPACT_RE` — "N% until auto-compact" (inverted), CLI-rendered, authoritative; (3) `_TOKEN_USAGE_RE` — a
+mid-spinner "↑ N.Nk tokens" readout divided by a hardcoded `_DEFAULT_CONTEXT_WINDOW_K` assumption — a **guess**, not a
+CLI-rendered fact. Branch 3 calibrates the window against an assumption about the window — circular, and the `observe()`
+contract above means it is unsafe to ever feed as `pane_pct`.
+
+**The fix**: `derive_calibration_pct()` (same module) is split out to cover ONLY branches 1–2 — CLI-rendered
+percentages, never the heuristic. Both calibration call sites (`context_lifecycle.py::_pane_readings()`, which returns
+`(reading_pct, calibration_pct)` from one pane capture and passes `calibration_pct` — never `reading_pct` — to
+`context_probe.context_used_pct(..., pane_pct=calibration_pct)`) now pass this narrower value;
+`derive_context_used_pct()` (all three branches) remains available as a plain reading, never as a calibration input.
+**Any future caller of `context_probe.observe()`/`context_used_pct()` must follow the same rule: pass a calibration
+value only if it came from a CLI-rendered percentage, never from a token-count/window-size heuristic.**
+
+**Defense-in-depth**: `context_probe._calibration_is_plausible()` independently rejects a calibration exceeding
+`_MAX_CALIBRATION_OVERSHOOT` (1.5×) of `max(model_tier.context_window(model), watermark_tokens)` — so even a future
+caller that gets the source wrong cannot inflate a model's window past a bounded multiple of its prior/watermark. This
+does not depend on every caller honoring the calibration-source contract above; it is the backstop, not a substitute for
+it.
+
+**Main's `AgentRow` floor — the other half of the fix.** Every WORKER already had a self-reported floor: `_read_pct`
+took `max(SlotRow.context_used_pct, probe)`, so a poisoned/under-reading probe could only ever be overridden upward by
+the worker's own `/progress`-reported percentage. **Main has no `SlotRow`** (it is not a slot-bound worker), so before
+this fix it relied on the measured probe ALONE — no self-report floor at all. `context_lifecycle.py::_main_pct()` closes
+that asymmetry: it takes the measured probe, then floors it on main's own `AgentRow.context_used_pct` (the CLI's own
+self-reported figure, posted by main on every tick) via the same ratchet-and-persist pattern as the worker path —
+`max(measured, self_reported)` wins and is written back. A learned- window error can therefore only ever make the
+compaction policy fire EARLY (over-report), never blind it (under-report), for every target in the fleet — worker or
+main.
+
+**The incident this closes.** `claude-sonnet-5`'s `calibrated_window` was latched to 2,614,639 (true window ~937K, a
+2.8x overshoot) because a `_TOKEN_USAGE_RE` heuristic reading was fed to `observe()` as if it were authoritative. Main's
+real 99%-context session measured as 26% against the poisoned window, no `context_lifecycle` threshold ever fired
+(`proactive_compact_guidance` = 0 for `role=main` across a 4.3-hour activity window), and main ran to the model's hard
+limit with the compaction safety net silently disarmed — while the worker fleet was unaffected because every worker
+still had its `SlotRow` self-report floor. Full root-cause detail, live-verification evidence, and the
+plausibility-audit results:
+`plans/active/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md`. Regression
+coverage: `tests/test_context_probe.py::test_the_measured_poisoning_case_is_rejected` and siblings.
 
 ---
 

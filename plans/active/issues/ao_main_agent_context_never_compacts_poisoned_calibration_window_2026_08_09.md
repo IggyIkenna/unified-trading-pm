@@ -40,6 +40,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true
 source: >-
   Operator observation 2026-08-09 ("why is the AO main agent 99% context without getting pre-compact and compact run
   yet"), root-caused in an interactive session (slot 4) against the live VM via read-only SSM.
@@ -146,9 +147,12 @@ post-fix reports 68%. Tests: `tests/test_context_probe.py::test_the_measured_poi
       already correctly overridden by each target's own self-report floor (`_main_pct` for main, `SlotRow` for workers).
       No registry/model change made. Full detail in `/codex/04-architecture/agent-orchestrator-worker-liveness.md` §
       "Context-window learning is per-model; per-session divergence is expected and already floored".
-- [ ] [DOCS] P1. Post-phase codex audit: fold the calibration-source contract (only CLI-rendered percentages may
-      calibrate) and main's AgentRow floor into `/codex/04-architecture/agent-orchestrator-worker-liveness.md`.
-      Done-when: the SSOT states both rules and cites this incident.
+- [x] ✅ [DOCS] P1. Post-phase codex audit: fold the calibration-source contract (only CLI-rendered percentages may
+      calibrate) and main's AgentRow floor into `/codex/04-architecture/agent-orchestrator-worker-liveness.md`. — **DONE
+      2026-08-09 (slot 3, backend_engineer)**, added a new § "Calibration-source contract: only CLI-rendered percentages
+      may calibrate a learned window" stating both rules (the `observe()`/`pane_pct` authoritative-source contract + the
+      `_derive_calibration_pct()` split + `_calibration_is_plausible()` backstop; main's `_main_pct()` `AgentRow` floor
+      closing the no-`SlotRow` asymmetry) and citing this issue doc by path.
 
 ## Progress Log
 
@@ -156,6 +160,15 @@ post-fix reports 68%. Tests: `tests/test_context_probe.py::test_the_measured_poi
   `calibrated_window=2,614,639` (the sidecar is documented as safe to lose; it re-converges from transcript reads); main
   immediately re-measured at 69%, above the 60% guidance threshold. Submitted `/compact` to `orch-agent-main` via the
   same verified-submit helper the backend's own forced path uses. Code fix authored, QG-green and shipped.
+
+- **2026-08-09 (slot 3, backend_engineer)** — Closed the final "post-phase codex audit" todo. All 4 remaining todos are
+  now done; this issue doc has no `locked_by` and no todos open, so it is archival-eligible per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Set `archive_exempt: true` TEMPORARILY on this
+  commit only — RULES.md's hard rule forbids combining the checkbox flip with the `git mv` archival in one commit (a
+  confirmed 2026-07-30 incident: the diff at the original `plan_ref` path shows only a deletion when both land together,
+  so a flip-verification check can't see the `[ ] → [x]` transition there), so this commit ships the flip alone and a
+  separate immediate follow-up commit performs the actual archival ritual (terminal status, banner, `git mv`, referrer
+  fix) and removes this flag.
 
 - **2026-08-09 (slot 22, backend_engineer)** — Closed the "confirm live" todo. This session's slot worktree turned out
   to already be running ON the orchestrator VM (`i-0c9b283b31d6b5ca7`), so verification was direct (no SSM round-trip
