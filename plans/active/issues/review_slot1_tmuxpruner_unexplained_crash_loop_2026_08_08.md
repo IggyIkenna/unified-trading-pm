@@ -221,19 +221,21 @@ own Tick history.
       `GET /api/state` now reports `server_started:2026-08-08T23:45:40Z` (after the commit); `git log` in the
       orchestrator checkout still confirms HEAD=e32d962. Someone/something with the right privilege restarted it. Todo 3
       (REVIEW re-verify) can now proceed.
-- [ ] [BACKEND] P2. **`journalctl -k` is readable from a worker sandbox (confirmed 2026-08-09, slot 33) — leverage it to
-      keep narrowing the still-unidentified root cause.** `dmesg` itself stays blocked (`Operation not permitted`), but
-      `journalctl -k --since <ts> --until <ts>` succeeds from an ordinary worker session (no `sudo`, no special grant
-      observed). 4 independent `orch-slot-1` `tmux_session_lost` timestamps checked this way all showed ZERO kernel-log
-      entries in their windows, further supporting "genuine death, kernel not involved" over "OOM/cgroup/ hardware kill"
-      — but 4 samples is not exhaustive. Whoever picks this up: (a) re-verify the access is durable (not a one-off
-      sandbox quirk — check from a couple of different slots/sessions), (b) if durable, wire a standing correlation
-      check (kernel-log window around each fresh `tmux_session_lost` for `orch-slot-1`) into whatever tooling/runbook
-      the ongoing investigation already uses, rather than each session re-deriving the `journalctl -k` command from
-      scratch, (c) also try `journalctl -k` (not just `-u orchestrator`) around a death for signal-related lines
-      (`SIGKILL`, `SIGTERM`, cgroup `oom-kill`, `Out of memory`) using a wider grep, since this session only eyeballed a
-      tail rather than pattern-matching. Repo: unified-trading-pm (this doc) or agent-orchestrator (if a durable check
-      gets code-ified).
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-09 ~20:10Z (infra→backend_engineer craft, slot 20) — access re-verified durable,
+      standing correlation check code-ified, wider signal grep run against 10 fresh samples, zero matches.** All 3
+      sub-asks resolved: (a) re-verified `journalctl -k` access from slot 20 (a different session than slot 33's
+      original finding) — works with no `sudo`, `dmesg` still blocked (`Operation not permitted`) as before; durable,
+      not a one-off quirk. (b) wired a standing script,
+      `agent-orchestrator/scripts/orchestrator/check-tmux-session-lost-kernel-correlation.sh`, so future sessions don't
+      re-derive the `journalctl -k` command from scratch — pulls `tmux_session_lost` events for a given slot via
+      `GET /api/activity`, checks a kernel-log window around each, and classifies each as no-entries / signal-OOM-match
+      / incidental-non-match. (c) ran it against 10 fresh `orch-slot-1` deaths (19:02-20:08Z) with the wider signal/OOM
+      grep this todo asked for (`SIGKILL`/`SIGTERM`/`out of memory`/`invoked oom-killer`/
+      `oom-kill`/`oom_kill`/`killed process`/cgroup-kill) — **zero signal/OOM matches across all 10**; 8/10 windows had
+      no kernel-log entries at all, 2/10 had an incidental unrelated kernel line (another slot's own
+      `strace -p ... -e trace=signal` ptrace-attach probe, not a match). Extends the sample from 4 to 14 total
+      (cumulative with the original 4), all kernel-log-negative. Repo: agent-orchestrator@05acc62 (script) +
+      unified-trading-pm (this doc) + Progress Log entry below.
 - [x] ✅ [BACKEND] P1. **All 3 known fixes confirmed live with ZERO combined effect on kill cadence (review re-verify,
       2026-08-09 ~19:16Z, see Progress Log below) — the 3 tested mechanisms (transient has-session miss, frozen
       `SlotRow.last_ping`, undebounced `reap_orphan_agents`) are each individually patched but collectively explain none
@@ -293,6 +295,45 @@ own Tick history.
       captured signal).
 
 ## Progress log
+
+- 2026-08-09 ~20:10Z (infra→backend_engineer craft, slot 20, agent-orchestrator@05acc62): Picked up the "`journalctl -k`
+  is readable from a worker sandbox" BACKEND P2 todo (slot 33's original finding, 4 samples).
+
+  **(a) Durability re-verified from a different session/slot.** `journalctl -k --since "10 minutes ago"` succeeded
+  immediately from this slot-20 sandbox, no `sudo`/special grant, matching slot 33's finding exactly. `dmesg` itself
+  still refuses (`Operation not permitted`) — the gap is specifically `dmesg` (reads the live kernel ring buffer
+  directly) vs `journalctl -k` (reads the same data via journald, which apparently doesn't gate it the same way).
+
+  **(b) Standing correlation check code-ified**: added
+  `agent-orchestrator/scripts/orchestrator/check-tmux-session-lost-kernel-correlation.sh`. Runs directly on the
+  orchestrator VM (no SSM relay needed — a worker session already runs there, confirmed via `/proc/self/cgroup` →
+  `orchestrator.service`, unlike `check-ao-backlog-status.sh`/`check-on-origin-rate.sh` which are SSM-relayed for
+  off-box dev machines). Pulls `tmux_session_lost` events for a target slot from `GET /api/activity`, and for each event
+  runs `journalctl -k` over a `[-90s,+30s]` window (both configurable), classifying the result as
+  `NO_KERNEL_LOG_ENTRIES` / `SIGNAL_MATCH` (matches a wide signal/OOM grep) / `INCIDENTAL_NON_SIGNAL_ENTRY` (a kernel
+  line present but not a match — e.g. another slot's own `strace` ptrace-attach probe, so a human doesn't mistake "1
+  line found" for "found the kill").
+
+  **(c) Ran it with the wider grep this todo specifically asked for** (`SIGKILL`/`SIGTERM`/`out of memory`/
+  `invoked oom-killer`/`oom-kill`/`oom_kill`/`killed process`/cgroup-kill — not just eyeballing a tail) against 10 fresh
+  `orch-slot-1` `tmux_session_lost` timestamps spanning 19:02:45Z-20:08:03Z
+  (`GET /api/activity?slot=1&type=tmux_session_lost`): **8/10 windows had zero kernel-log entries; 2/10 had exactly one
+  incidental, unrelated kernel line each** (both were another slot's own `strace -p <pid> -e trace=signal` ptrace-attach
+  probe — visible because the sibling strace/signal-capture investigation from the still-open P1 todo below happened to
+  be running concurrently — not a signal delivered to the dying process). **Zero signal/OOM matches across all 10.**
+  Combined with slot 33's original 4 samples, this brings the cumulative kernel-log-negative sample to 14/14 — still
+  supports "genuine death, kernel not involved" over OOM/cgroup/hardware-fault causation, and now via a reusable,
+  wider-grepping tool instead of a one-off manual command each session has to re-derive.
+
+  **Unrelated observation, not chased further (out of this todo's scope)**: partway through this session the AO HTTP API
+  (`localhost:8765`) briefly refused connections for ~20-30s (`curl: (7) Couldn't connect to server`) while the
+  `uvicorn` process itself stayed alive (confirmed via `ps`) and host load read 16.67/14.11/14.54 — consistent with, but
+  not investigated as, the same host-contention picture this doc already documents elsewhere; noted here only so a
+  future session doesn't treat it as a fresh, unrelated data point if it recurs.
+
+  Left for the next session (already captured in the existing P1 "capture the ACTUAL signal" todo below, not a new
+  todo): this check only ever proves kernel non-involvement for the SAMPLED deaths — it is not, and isn't meant to be, a
+  substitute for the `strace`/proc-state signal capture that todo already calls for.
 
 - 2026-08-09 ~19:55Z (infra→backend_engineer craft, slot 20, unified-trading-pm — this doc only, no code shipped):
   Picked up the "NEW LEAD — restart-window death despite KillMode=process" BACKEND P1 todo. **RULED OUT all 3 candidate
