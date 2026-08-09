@@ -43,6 +43,8 @@ source:
   ]
 assigned_role: data_engineering
 effort: high
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Silent-cap source audit — remaining findings

@@ -39,6 +39,9 @@ parent_epic: instruments_master
 priority: P1
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # What I found
