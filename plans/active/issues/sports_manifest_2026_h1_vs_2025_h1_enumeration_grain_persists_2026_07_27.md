@@ -495,17 +495,26 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   own done-when (EXIT_STATUS=0) is **not reachable** under the current code without one of that issue's fixes — did not
   flip chunk 3's todo below; converting it to a blocked state instead (see banner). Did not touch chunks 4-7 pending the
   operator's fix-direction decision.
+- **infra worker (slot 33) 2026-08-09 (continued, post BLK-30815e45 answer)**: operator picked fix (B). Implemented at
+  the write/count boundary rather than the generator (a generator-level gate broke the pre-existing
+  `test_oscillation_guard_drops_season_gate_empty_over_captured_atom` regression test — that test proves the recurring
+  daily cron + the oscillation guard, a SEPARATE `captured_set`-keyed mechanism, both rely on the deterministic branches
+  re-yielding every run regardless of `present_set`). `_stream_write_v2_absent_rows` now accepts
+  `present_set`/`present_cols` and skips a candidate already recorded before counting it toward `max_writes_per_run` or
+  writing it — shipped + verified on origin: instruments-service@0d66cb926e0b (234/234 existing tests pass unmodified
+  - 2 new regression tests, full `quality-gates.sh` green). Re-ran chunk 3: converged in ONE attempt, `EXIT_STATUS=0`,
+    17.6s, 144,586 genuinely-new rows (present-set of 11.79M correctly excluded the duplicate rows accumulated from the
+    pre-fix attempts) — flipped chunk 3's todo below. Chunks 4-7 no longer blocked; next worker should proceed normally.
 
 ## Follow-ups
 
-> **🔴 BLOCKED-OPERATOR 2026-08-09 (slot 33)**: chunk 3/7 below (and likely chunk 4-7, and possibly the
-> never-EXIT_STATUS=0-confirmed chunk 2) cannot reach `EXIT_STATUS=0` under the current code — retries are a livelock,
-> not a slow convergence. See
-> `/plans/active/issues/sports_expected_universe_v2_halt_safety_livelock_no_present_set_gate_2026_08_09.md` for full
-> evidence + fix options. Do NOT keep blindly retrying chunk 3-7 until that issue's `[OPERATOR]` todo picks a fix
-> direction.
+> **✅ RESOLVED 2026-08-09 (slot 33)**: operator picked fix (B) on `BLK-30815e45` — gate the write/count boundary on
+> `present_set` (see `sports_expected_universe_v2_halt_safety_livelock_no_present_set_gate_2026_08_09.md`, shipped
+> instruments-service@0d66cb926e0b). Chunk 3 re-run converged in ONE attempt (`EXIT_STATUS=0`, 17.6s, 144,586
+> genuinely-new rows — present-set correctly excluded the ~11.8M rows accumulated from the pre-fix duplicate-writing
+> attempts). Chunks 4-7 should now converge normally too — no longer blocked.
 
-- [ ] [DATA] P2. Launch + verify chunk 3/7 (2022-01-01..2022-12-31) of the job (2) historical `expected_unattempted`
+- [x] ✅ [DATA] P2. Launch + verify chunk 3/7 (2022-01-01..2022-12-31) of the job (2) historical `expected_unattempted`
       backfill: invoke the child launcher directly
       (`deployment-service/scripts/vm/launch-expected-universe-v2-vm.sh     --apply-write sports`,
       `ENUM_START_DATE=2022-01-01 ENUM_END_DATE=2022-12-31`) in a harness-kill-proof tmux window
@@ -520,7 +529,11 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       restore/pin to the correct identity (prefer a per-invocation `--account=` override per that doc's recommended
       fix), then retry; this is not a real IAM gap. Done-when: chunk 3 reaches EXIT_STATUS=0, its per-VM shard is
       visible under `gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/`. Update this doc's
-      Progress Log with the VM name(s) + final status before flipping. (repo: deployment-service)
+      Progress Log with the VM name(s) + final status before flipping. (repo: deployment-service) — ✅ VM
+      `expected-universe-v2-sports-20260809-161551`, `EXIT_STATUS=0`, per-VM shard at
+      `gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/expected-universe-v2-sports-20260809-161551-part00001.parquet`
+      (144,586 rows). Required the halt-safety livelock fix (instruments-service@0d66cb926e0b) first — see the resolved
+      banner above.
 - [ ] [DATA] P2. Launch + verify chunk 4/7 (2023-01-01..2023-12-31) of the same backfill — same launcher invocation,
       halt-safety/gcloud-clobber handling, and done-when as chunk 3's todo above, with
       `ENUM_START_DATE=2023-01-01 ENUM_END_DATE=2023-12-31`. (repo: deployment-service)
