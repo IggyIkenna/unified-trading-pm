@@ -127,18 +127,14 @@ human already made the call and the fleet still never executes it.
       no longer appears anywhere in the block. Verify:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
       no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in `plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md`.**
-      Its checkbox reads (truncated): "[DATA] P2. **Read-only investigate the ~1104 genuine HYPERLIQUID(660)/ASTER(444)
-      wire-vs-canonical filename" — the marker trips `_is_non_dispatchable`
-      (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its own line, so
-      `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is genuinely still
-      blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to the start of its
-      own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation line) so it reads
-      as a declared hold. If it is already resolved (several of these carry a dated `RULED`/`DESIGN DECIDED` note — read
-      the full todo before acting), rewrite the trigger phrase so the marker no longer appears anywhere in the block.
-      Verify:
-      `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-32).** Triage accidental exclusion in
+      `plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md`. The flagged todo (the HYPERLIQUID/ASTER
+      wire-vs-canonical investigate item) was independently completed and checked off `[x]` by another session on
+      2026-08-09 (before this triage dispatched) — it's no longer an open todo, so the accidental-exclusion
+      classification no longer applies. Verified via
+      `cd agent-orchestrator && uv run python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`:
+      `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` now reports `disk_open=3, backlog_open=3, excluded=[]` — no
+      rewrite needed. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`.** Its
       checkbox reads (truncated): "[VERIFY] P1. **Re-measure the billed notify/glue cost — the 3-5 day window has long
       passed.** The mover flip" — the marker trips `_is_non_dispatchable`
