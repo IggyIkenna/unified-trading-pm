@@ -76,7 +76,11 @@ _RUNTIME_VERB_RE = re.compile(
     r"ldr[\s/→-]+main\s+promot|promotion[\s-]?(?:lag|pr|gate))\b",
     re.IGNORECASE,
 )
-_GREEN_TOKEN_RE = re.compile(r"\b(green|SUCCESS|succeeded)\b", re.IGNORECASE)
+# Hyphen-guarded on both sides (not just `\b`, which treats `-` as a boundary) so a domain
+# compound term like "success-reporting" (a named dispatch mechanism used throughout the
+# ci_satellite_ao_dispatch_batchN_* corpus, never a claim that anything succeeded) doesn't match
+# — confirmed false-positive, evidence_backed_completion_regression_24_vs_23_2026_08_09.md todo 1.
+_GREEN_TOKEN_RE = re.compile(r"(?<!-)\b(?:green|SUCCESS|succeeded)\b(?!-)", re.IGNORECASE)
 
 # Sentence/clause boundary for the same-clause proximity check below: a `.`/`!`/`?` followed by
 # whitespace and then an uppercase letter or a backtick (prose/markdown convention — a new clause
