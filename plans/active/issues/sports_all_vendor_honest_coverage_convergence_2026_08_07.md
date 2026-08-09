@@ -958,3 +958,5 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   FIXTURE_LINEUPS needed **38,691 → 37,606** (-1,085). Both healthy, no action.
 - **09:53Z** — smallchunk10 entered chunk 18, streak ended, 6 `CHUNK_FAILED` (in-range/expected). FIXTURE_LINEUPS needed
   **37,606 → 36,476** (-1,130). Both healthy, no action.
+- **10:21Z** — smallchunk10 still chunk 18, 11 `CHUNK_FAILED` (in-range), heartbeat live. FIXTURE_LINEUPS needed
+  **36,476 → 34,003** (-2,473, accelerating). Both healthy, no action.
