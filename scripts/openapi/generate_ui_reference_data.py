@@ -52,7 +52,7 @@ def safe_extract(label: str, fn: object) -> object:
     """Safely extract data, returning error string on failure."""
     try:
         return fn()
-    except Exception as e:
+    except (ImportError, AttributeError, KeyError, TypeError, ValueError) as e:
         logger.warning("  Failed to extract %s: %s", label, e)
         return f"EXTRACTION_ERROR: {e}"
 
@@ -97,7 +97,7 @@ def extract_uac_registries() -> dict[str, object]:
             logger.info(
                 "  DeFi protocol registry: %d venues, %d protocols", len(DEFI_VENUE_TO_PROTOCOL), len(DEFI_PROTOCOLS)
             )
-        except Exception as e:
+        except (ImportError, IndexError, TypeError) as e:
             logger.warning("  Failed to extract DeFi protocol registry: %s", e)
 
         try:
@@ -105,7 +105,7 @@ def extract_uac_registries() -> dict[str, object]:
 
             data["chain_rpc_templates"] = {str(k): str(v) for k, v in CHAIN_RPC_TEMPLATES.items()}
             logger.info("  Chain RPC templates: %d chains", len(CHAIN_RPC_TEMPLATES))
-        except Exception as e:
+        except (ImportError, AttributeError, TypeError) as e:
             logger.warning("  Failed to extract CHAIN_RPC_TEMPLATES: %s", e)
 
         try:
@@ -115,14 +115,14 @@ def extract_uac_registries() -> dict[str, object]:
                 str(k): {str(pk): str(pv) for pk, pv in v.items()} for k, v in SOLANA_DEFI_PROTOCOLS.items()
             }
             logger.info("  Solana DeFi protocols: %d", len(SOLANA_DEFI_PROTOCOLS))
-        except Exception as e:
+        except (ImportError, AttributeError, TypeError) as e:
             logger.warning("  Failed to extract SOLANA_DEFI_PROTOCOLS: %s", e)
 
         try:
             from unified_api_contracts.registry import DEFI_POOL_PAIRS  # noqa: qg-deep-import
 
             data["defi_pool_pairs"] = [{"base": p[0], "quote": p[1]} for p in DEFI_POOL_PAIRS]
-        except Exception as e:
+        except (ImportError, IndexError, TypeError) as e:
             logger.warning("  Failed to extract DEFI_POOL_PAIRS: %s", e)
 
         endpoint_data = {}
@@ -143,7 +143,7 @@ def extract_uac_registries() -> dict[str, object]:
         data["endpoint_registry"] = endpoint_data
 
         logger.info("  UAC registries extracted")
-    except Exception as e:
+    except (ImportError, AttributeError, KeyError, TypeError) as e:
         logger.warning("  Failed to extract UAC registries: %s", e)
         traceback.print_exc()
 
@@ -162,7 +162,7 @@ def extract_uac_enums() -> dict[str, list[str]]:
                 with contextlib.suppress(Exception):
                     enums[name] = extract_enum_values(obj)
         logger.info("  Extracted %d UAC enums (auto-discovered)", len(enums))
-    except Exception as e:
+    except ImportError as e:
         logger.warning("  Failed to extract UAC enums: %s", e)
     return enums
 
@@ -186,7 +186,7 @@ def extract_uic_enums() -> dict[str, list[str]]:
                 with contextlib.suppress(Exception):
                     enums[name] = extract_enum_values(obj)
         logger.info("  UIC root exports: %d enums", len(enums))
-    except Exception as e:
+    except ImportError as e:
         logger.warning("  Failed to extract UIC root enums: %s", e)
 
     # architecture_v2 submodules (not re-exported at root)
@@ -209,7 +209,7 @@ def extract_uic_enums() -> dict[str, list[str]]:
                 ):
                     with contextlib.suppress(Exception):
                         enums[name] = extract_enum_values(obj)
-        except Exception as e:
+        except ImportError as e:
             logger.warning("  Failed to walk %s: %s", mod_path, e)
 
     logger.info("  architecture_v2: +%d enums; total UIC: %d", len(enums) - before, len(enums))
@@ -265,7 +265,7 @@ def extract_architecture_v2_capability_registry() -> dict[str, object]:
         result["per_archetype"] = per_archetype
         total_cells = sum(int(s["cell_count"]) for s in summary_list)  # type: ignore[arg-type]
         logger.info("  ARCHETYPE_CAPABILITY_REGISTRY: %d archetypes, %d cells", len(rows), total_cells)
-    except Exception as e:
+    except (ImportError, AttributeError, KeyError, TypeError) as e:
         logger.warning("  Failed to extract ARCHETYPE_CAPABILITY_REGISTRY: %s", e)
         traceback.print_exc()
     return result
@@ -291,7 +291,7 @@ def extract_config_schema_universe() -> dict[str, object]:
             "fields": fields,
         }
         logger.info("  UnifiedCloudConfig: %d fields", len(fields))
-    except Exception as e:
+    except (ImportError, AttributeError) as e:
         logger.warning("  Failed to extract UnifiedCloudConfig: %s", e)
 
     # UCI validation constants
@@ -324,7 +324,7 @@ def extract_config_schema_universe() -> dict[str, object]:
             else str(VALID_INSTRUCTION_TYPES),
         }
         logger.info("  Validation constants extracted")
-    except Exception as e:
+    except (ImportError, TypeError) as e:
         logger.warning("  Failed to extract validation constants: %s", e)
 
     return configs
@@ -393,7 +393,7 @@ def extract_service_port_registry() -> dict[str, object]:
             with open(mapping_file) as f:
                 data = json.load(f)
             return data.get("stacks", {})  # noqa: qg-empty-fallback
-    except Exception as e:
+    except (OSError, json.JSONDecodeError, AttributeError) as e:
         logger.warning("  Failed to read ui-api-mapping.json: %s", e)
     return {}
 
@@ -456,7 +456,7 @@ def extract_execution_algos() -> dict[str, object]:
             len(VALID_BOOK_TYPES),
             len(VALID_INSTRUCTION_TYPES),
         )
-    except Exception as e:
+    except (ImportError, TypeError) as e:
         logger.warning("  Failed to extract execution algos: %s", e)
 
     return algos
@@ -483,7 +483,7 @@ def extract_sports_bookmaker_registry() -> dict[str, dict[str, object]]:
                 registry[key]["api_docs_url"] = info.api_docs_url
 
         logger.info("  Extracted %d bookmakers", len(registry))
-    except Exception as e:
+    except (ImportError, AttributeError, TypeError) as e:
         logger.warning("  Failed to extract bookmaker registry: %s", e)
 
     return registry
@@ -505,7 +505,7 @@ def extract_defi_protocol_capabilities() -> dict[str, object]:
         logger.info(
             "  Extracted %d DeFi protocols, %d venue mappings", len(DEFI_PROTOCOLS), len(DEFI_VENUE_TO_PROTOCOL)
         )
-    except Exception as e:
+    except (ImportError, ValueError, TypeError) as e:
         logger.warning("  Failed to extract DeFi protocol capabilities: %s", e)
 
     # Solana DeFi protocols
@@ -514,7 +514,7 @@ def extract_defi_protocol_capabilities() -> dict[str, object]:
 
         capabilities["solana_protocols"] = {name: dict(info) for name, info in SOLANA_DEFI_PROTOCOLS.items()}
         logger.info("  Extracted %d Solana DeFi protocols", len(SOLANA_DEFI_PROTOCOLS))
-    except Exception as e:
+    except (ImportError, TypeError, AttributeError) as e:
         logger.warning("  Failed to extract Solana DeFi protocols: %s", e)
 
     return capabilities
@@ -537,7 +537,7 @@ def extract_tradfi_exchange_calendars() -> dict[str, dict[str, object]]:
             }
 
         logger.info("  Extracted %d exchange session calendars", len(calendars))
-    except Exception as e:
+    except (ImportError, AttributeError) as e:
         logger.warning("  Failed to extract exchange calendars: %s", e)
 
     return calendars
@@ -560,7 +560,7 @@ def extract_venue_data_availability() -> dict[str, dict[str, object]]:
             }
 
         logger.info("  Extracted %d venue data availability entries", len(availability))
-    except Exception as e:
+    except (ImportError, AttributeError) as e:
         logger.warning("  Failed to extract VENUE_DATA_AVAILABILITY: %s", e)
 
     return availability
@@ -604,7 +604,7 @@ def extract_jurisdiction_overlay() -> dict[str, object]:
             len(JURISDICTION_VENUE_POLICIES),
             len(list(Jurisdiction)),
         )
-    except Exception as e:
+    except (ImportError, AttributeError, TypeError) as e:
         logger.warning("  Failed to extract jurisdiction overlay: %s", e)
 
     return overlay
@@ -623,7 +623,7 @@ def extract_venue_coordinates() -> dict[str, dict[str, float]]:
             }
 
         logger.info("  Extracted %d venue coordinates", len(coordinates))
-    except Exception as e:
+    except (ImportError, AttributeError) as e:
         logger.warning("  Failed to extract VENUE_COORDINATES: %s", e)
 
     return coordinates
@@ -637,7 +637,7 @@ def extract_tradfi_tick_data_windows() -> list[dict[str, str]]:
 
         windows = list(TRADFI_TICK_DATA_WINDOWS)
         logger.info("  Extracted %d TradFi tick data windows", len(windows))
-    except Exception as e:
+    except (ImportError, TypeError) as e:
         logger.warning("  Failed to extract TRADFI_TICK_DATA_WINDOWS: %s", e)
 
     return windows
@@ -651,7 +651,7 @@ def extract_mvp_cme_exchange_codes() -> list[str]:
 
         codes = sorted(MVP_CME_EXCHANGE_CODES)
         logger.info("  Extracted %d MVP CME exchange codes", len(codes))
-    except Exception as e:
+    except (ImportError, TypeError) as e:
         logger.warning("  Failed to extract MVP_CME_EXCHANGE_CODES: %s", e)
 
     return codes
@@ -667,7 +667,7 @@ def extract_strategy_registry() -> dict[str, object]:
         strategies = registry.get("strategies", registry)
         count = len(strategies) if isinstance(strategies, (list, dict)) else 0
         logger.info("  Extracted strategy registry: %d strategies", count)
-    except Exception as e:
+    except (ImportError, AttributeError, TypeError) as e:
         logger.warning("  Failed to extract STRATEGY_REGISTRY: %s", e)
 
     return registry
@@ -683,7 +683,7 @@ def extract_client_registry() -> dict[str, object]:
         clients = registry.get("clients", registry)
         count = len(clients) if isinstance(clients, (list, dict)) else 0
         logger.info("  Extracted client registry: %d clients", count)
-    except Exception as e:
+    except (ImportError, AttributeError, TypeError) as e:
         logger.warning("  Failed to extract CLIENT_REGISTRY: %s", e)
 
     return registry
@@ -701,7 +701,7 @@ def extract_strategy_instance_catalogue() -> dict[str, object]:
         instances = catalogue.get("instances", [])  # noqa: qg-empty-fallback
         count = len(instances) if isinstance(instances, list) else 0
         logger.info("  Extracted strategy instance catalogue: %d instances", count)
-    except Exception as e:
+    except (ImportError, AttributeError, TypeError) as e:
         logger.warning("  Failed to extract STRATEGY_INSTANCE_CATALOGUE: %s", e)
 
     return catalogue
@@ -727,7 +727,7 @@ def extract_venue_set_variants() -> list[dict[str, object]]:
                 }
             )
         logger.info("  Extracted venue-set variants: %d", len(variants))
-    except Exception as e:
+    except (ImportError, AttributeError, TypeError) as e:
         logger.warning("  Failed to extract VENUE_SET_VARIANTS: %s", e)
 
     return variants
@@ -752,7 +752,7 @@ def extract_lifecycle_enums() -> dict[str, list[str]]:
             len(result["product_routings"]),
             len(result["account_types"]),
         )
-    except Exception as e:
+    except (ImportError, AttributeError, TypeError) as e:
         logger.warning("  Failed to extract lifecycle enums: %s", e)
 
     return result
