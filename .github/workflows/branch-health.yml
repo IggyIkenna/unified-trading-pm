@@ -213,11 +213,21 @@ jobs:
     outputs:
       lag: ${{ steps.scan.outputs.lag }}
       report: ${{ steps.scan.outputs.report }}
+      cleared: ${{ steps.scan.outputs.cleared }}
+      cleared_key: ${{ steps.scan.outputs.cleared_key }}
+      cleared_report: ${{ steps.scan.outputs.cleared_report }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
+      - name: Restore AR lag state cache
+        uses: actions/cache@v5
+        with:
+          path: .ar-lag-state.json
+          key: ar-lag-state-${{ github.run_id }}
+          restore-keys: |
+            ar-lag-state-
       - name: Authenticate to GCP (AR query — best-effort)
         id: gcp_auth_ar
         continue-on-error: true
@@ -237,6 +247,7 @@ jobs:
           set +e
           LAG=false
           REPORT_LINES=""
+          CURRENT_LAGGING=()
 
           # Read the fleet's repo list from workspace-manifest.json.
           REPOS=$(python3 -c "
@@ -250,6 +261,9 @@ jobs:
             echo "AR-lag: no repos found in manifest — fail-open"
             echo "lag=false" >> "$GITHUB_OUTPUT"
             echo "report=AR-lag: no repos to check" >> "$GITHUB_OUTPUT"
+            echo "cleared=false" >> "$GITHUB_OUTPUT"
+            echo "cleared_key=" >> "$GITHUB_OUTPUT"
+            echo "cleared_report=" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -260,6 +274,7 @@ jobs:
             SATISFIED=$(echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print('true' if d.get('satisfied',True) else 'false')" 2>/dev/null || echo "true")
             if [ "$SATISFIED" = "false" ]; then
               LAG=true
+              CURRENT_LAGGING+=("$REPO")
               UNPUBLISHED=$(echo "$RESULT" | python3 -c "
           import json, sys
           d = json.load(sys.stdin)
@@ -278,6 +293,36 @@ jobs:
             echo "report=AR-lag: all internal deps published at floor" >> "$GITHUB_OUTPUT"
           fi
 
+          # State-diff (mirrors lag-monitor's own prev→current per-set diff, done inline here
+          # since this job's state is a flat repo-name set, not a structured branch-pair record):
+          # .ar-lag-state.json (restored from the prior run's actions/cache) is the PREVIOUS
+          # lagging repo set. Any repo that WAS lagging and is not in CURRENT_LAGGING just
+          # cleared — named in cleared_report so ar-lag-notify-resolved can post which repo(s)
+          # recovered, not a generic all-clear.
+          PREV_LAGGING=""
+          if [ -f .ar-lag-state.json ]; then
+            PREV_LAGGING=$(python3 -c "import json; print('\n'.join(json.load(open('.ar-lag-state.json'))))" 2>/dev/null || echo "")
+          fi
+          printf '%s\n' "${CURRENT_LAGGING[@]}" | sed '/^$/d' | sort -u > .ar-lag-current.txt
+          printf '%s\n' "$PREV_LAGGING" | sed '/^$/d' | sort -u > .ar-lag-prev.txt
+          CLEARED_REPOS=$(comm -23 .ar-lag-prev.txt .ar-lag-current.txt | sed '/^$/d')
+          if [ -n "$CLEARED_REPOS" ]; then
+            CLEARED_LIST=$(echo "$CLEARED_REPOS" | paste -sd, -)
+            CLEARED_REPORT=":large_green_circle: *AR Dep-Publish Lag RESOLVED* for: ${CLEARED_LIST//,/, } — internal deps now published at floor."
+            echo "cleared=true" >> "$GITHUB_OUTPUT"
+            # Per-cleared-set key (mirrors lag-monitor's cleared_key) so two distinct clears each
+            # post once — a static key would let the first clear's cooldown swallow a second.
+            echo "cleared_key=ar-dep-publish-lag-cleared:${CLEARED_LIST}" >> "$GITHUB_OUTPUT"
+            printf "cleared_report<<__EOR__\n%s\n__EOR__\n" "$CLEARED_REPORT" >> "$GITHUB_OUTPUT"
+          else
+            echo "cleared=false" >> "$GITHUB_OUTPUT"
+            echo "cleared_key=" >> "$GITHUB_OUTPUT"
+            echo "cleared_report=" >> "$GITHUB_OUTPUT"
+          fi
+          # Persist current lagging set (overwrite the restored prev) so the post-job cache save
+          # carries it forward — same convention as lag-monitor's .lag-state.json handoff.
+          python3 -c "import json; json.dump(sorted(set(l.strip() for l in open('.ar-lag-current.txt') if l.strip())), open('.ar-lag-state.json', 'w'))"
+
   ar-lag-notify:
     needs: ar-lag
     if: needs.ar-lag.outputs.lag == 'true'
@@ -291,6 +336,33 @@ jobs:
       cooldown_min: 60
       # Own concurrency lane (see lag-notify) so this never cancels a pending promotion-lag notify.
       concurrency_suffix: ar-lag
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      # Was missing fleet-wide (incident 2026-07-25): an explicit `secrets:` block only forwards
+      # what's named here, so every one of this repo's notify-slack.yml callers that used this
+      # exact block silently ran the carrier's alert-ledger auth without a credential — fail-open
+      # (continue-on-error), so the Slack post itself still went out, but dedup + the GCS ledger
+      # (deployment-ui Alerts page) silently never ran.
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  ar-lag-notify-resolved:
+    needs: ar-lag
+    if: needs.ar-lag.outputs.cleared == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      # Names the specific repo(s) whose AR dep-publish gap just cleared (per-set diff in the
+      # ar-lag scan step), not a generic fleet all-clear — mirrors lag-notify-resolved.
+      message: ${{ needs.ar-lag.outputs.cleared_report }}
+      severity: INFO
+      recovery: true
+      workflow_name: branch-health
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Per-cleared-SET key (from the scan step) so two distinct clears each post once; a static
+      # key would let the first clear's cooldown swallow a second repo's clear.
+      dedup_key: ${{ needs.ar-lag.outputs.cleared_key }}
+      cooldown_min: 30
+      # Own concurrency lane so a same-run ar-lag-notify never cancels this pending all-clear.
+      concurrency_suffix: ar-lag-cleared
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
       # Was missing fleet-wide (incident 2026-07-25): an explicit `secrets:` block only forwards
