@@ -82,7 +82,9 @@ depends_on: []
 
 # digest-drift-sweep: green for 27 days, dispatched nothing
 
-> ## 🟢 3-of-4 FIXED (2026-07-26) — token + silent-failure hardening shipped; only the dormant-cascade question remains
+> ## 🟢 4-of-4 FIXED (2026-08-09) — token + silent-failure hardening shipped; dormant-cascade question resolved (was
+>
+> already fixed as a side effect of a different doc's fix, see row 1 below)
 >
 > _(2b/2c/3 fixed 2026-07-26 per `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` todo 3, slot-5/infra.
 > Prior measurement 2026-07-26 by `/plan-reconcile ci` — rows below updated against the live file post-fix.)_
@@ -97,7 +99,7 @@ depends_on: []
 > | 2b. capture the HTTP status on the FETCH (`404` benign · `401/403` fail loudly) | ✅ **DONE** — the fetch now uses `-o "$BODY_FILE" -w '%{http_code}'`; `200` parses, `404` on both branches is a benign skip (still counted in `SKIPPED_NO_ARG`), anything else (`401`/`403`/etc.) `exit 1`s the step loudly. `unified-trading-pm@6cb21eca3` (2026-07-26)   |
 > | 2c. self-auditing assertion (`dispatched + fresh == 0` ⇒ exit non-zero)         | ✅ **DONE** — the summary now asserts `Dispatched + Already fresh + Capped == 0` (over a non-empty `IMAGE_REPOS`) and `exit 1`s; `CAPPED` counts as "found and would have dispatched" so a cap-bound run is never mistaken for the failure. `unified-trading-pm@6cb21eca3` |
 > | 3. add a dispatch cap (`--max-dispatches`)                                      | ✅ **DONE** — `workflow_dispatch.inputs.max_dispatches` (default `5`) bounds real `/dispatches` POSTs per run; repos beyond the cap are deferred to the next tick and counted separately. `unified-trading-pm@6cb21eca3`                                                   |
-> | 1. investigate the dormant primary cascade FIRST                                | ❔ unchanged by this note — still open                                                                                                                                                                                                                                     |
+> | 1. investigate the dormant primary cascade FIRST                                | ✅ **DONE (2026-08-09)** — same root cause as `post_cutover_silent_assumption_sweep_2026_07_23.md` § F2 (orphaned `semver-agent.yml`), fixed as a side effect of F2's 2026-07-25 retarget; live-verified, see the flipped todo below.                                      |
 >
 > Proven via `scripts/quality-gates-base/tests/test-digest-drift-sweep-silent-failure-hardening.sh` (extracts the live
 > workflow's embedded bash and exercises all 8 cases: benign-absent-Dockerfile negative test, 401/403 loud-failure,
@@ -310,9 +312,21 @@ assertion — otherwise we keep a third detector nobody reads.
 
 ## Todos
 
-- [ ] [DEVOPS] P1. **Investigate why `update-dependency-version.yml`'s primary cascade has been dormant since
-      2026-06-28** — recommendation 1 above remains the sole unresolved item; recommendations 2b/2c/3 already shipped
-      2026-07-26.
+- [x] ✅ [DEVOPS] P1. **Investigate why `update-dependency-version.yml`'s primary cascade has been dormant since
+      2026-06-28** — RESOLVED (verified live 2026-08-09 by plan_reconciler agt-c80749). Root cause: the SAME
+      `semver-agent.yml` `push:[staging]`→dormant-branch orphaning documented in
+      `/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md` § F2 — `update-repo-version.yml` (the
+      cascade's actual entry point) is fed exclusively by semver-agent's `version-bump` `repository_dispatch`, and
+      structurally cannot be triggered by this doc's own separate `digest-drift-sweep` fix (different event type). Fixed
+      as a side effect of F2's 2026-07-25 retarget to `push:[main]`. LIVE-verified via `gh run list`:
+      `update-repo-version.yml` ran 0 times 2026-06-30 through 2026-07-22, then resumed 2026-07-23 and has fired
+      continuously every day since (16-42 runs/day, 95/100 success); a live run today (`unified-trading-pm` run
+      `31289462623`) traced end-to-end confirms version-bump → dependents resolved → dependency-update dispatched
+      (HTTP 204) → downstream. All 6 consumer repos this todo named as dormant
+      (agent-orchestrator/execution-service/ml-service/market-tick-data-service/features-service/instruments-service)
+      show `update-dependency-version.yml` firing multiple times/day through 2026-08-08/09, 85-98% success. No bounded
+      fix was needed here — F2's fix already resolved it as a side effect; this todo closes as a duplicate-root-cause
+      confirmation, not a new change. Recommendations 2b/2c/3 already shipped 2026-07-26.
 
 ## na-eligibility-audit verdict
 
@@ -332,4 +346,5 @@ RECLASSIFY-eligible (open-ended diagnosis, not a checkable fact or scoped change
   body; no change needed.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
-**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — open-ended investigation, 3-of-4-FIXED banner, prior verdicts stand
+**na-eligibility-audit 2026-08-06**: KEEP-NA, valid — open-ended investigation, 3-of-4-FIXED banner, prior verdicts
+stand

@@ -71,9 +71,11 @@ context_scope:
 
 # CI satellite AO batch 1
 
-> **⚠️ STATUS: `draft` — NOT dispatched, NOT ingested.** Flipping this (and its finalize sibling) to `status: active` is
-> the operator's call per CLAUDE.md § "Plan destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's
-> autonomous-mode rule. Drafted while the operator was unreachable; nothing here has been shipped.
+> **✅ ACTIVE, DISPATCHED, 42/43 DONE.** (Corrected 2026-08-09 by plan_reconciler agt-c80749 — this banner still read
+> "STATUS: `draft` — nothing here has been shipped" long after the frontmatter was flipped to `status: active` and every
+> todo but one was dispatched and completed with shipped-commit evidence; the same stale-banner bug was already caught
+> and fixed in this plan's finalize sibling on 2026-08-02 but never propagated back here.) Sole open item: the
+> "Re-measure the billed notify/glue cost" todo (`[VERIFY] P1`).
 
 > **Why this plan exists at all.** Unlike the 5 asset groups, `ci` has never had an AO-dispatch batch, and its
 > consolidated closeout is a **digest with no todos** — being listed in its Track Sources is not dispatch. So every

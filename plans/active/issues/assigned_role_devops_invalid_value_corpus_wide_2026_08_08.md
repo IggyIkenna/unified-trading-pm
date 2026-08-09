@@ -55,19 +55,20 @@ Two docs already got fixed in-place today (as a side effect of unrelated dispatc
 `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md` and
 `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md` (→ `cicd`).
 
-**10 more still carry the invalid value**
+**8 more still carry the invalid value** (corrected 2026-08-09 by plan_reconciler agt-c80749 — 2 of the original 10 are
+now moot: `unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md` was archived 2026-08-09 with 0 open todos
+before this fix could reach it, and `digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md` was archived this
+same session — retagging `assigned_role` on an archived, fully-resolved doc has no operational effect)
 (`grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md`, re-verify at execution time since this
 corpus changes daily):
 
 - `plans/active/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`
 - `plans/active/issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`
-- `plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`
 - `plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md`
 - `plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md`
 - `plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md`
 - `plans/active/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`
 - `plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md`
-- `plans/active/issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`
 - `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`
 
 ## Why it matters

@@ -153,6 +153,13 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       (2,774 runs but ~40s each, trivial total) and `conflict-resolution-merged.yml` (1,026 runs but its `if:` gate
       skips almost every invocation in ~1s). **Expected impact**: fix #1 alone should eliminate the large majority of
       PM's $483.58/mo — re-measure PM's September billing once a full month has elapsed under the fix to confirm.
+      **Superseded note (added 2026-08-09 by plan_reconciler agt-c80749, verified live)**: this
+      `self_hosted_runner_labels` setting was deliberately REVERTED to `""` on 2026-08-07
+      (`unified-trading-pm@c8cd56251e`, `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24) — unrelated to
+      this todo's own scope, PM's repo went PUBLIC 2026-08-06, making `ubuntu-latest` free for it and
+      self-hosted-on-a-public-repo a fork-PR security exposure instead of a savings. This todo's own historical claim
+      stands accurately for 2026-08-05, but PM's CI runs on `ubuntu-latest` again today, not self-hosted — see the
+      superseding doc for the current billing picture.
 - [x] ✅ [INFRA] P1. **Audit the `update-dependency-version.yml` fan-out** — CLOSED as "already true", 2026-08-05.
       `update-repo-version.yml` (the sender, `.github/workflows/update-repo-version.yml:294-310`) computes
       `/tmp/dependents.txt` by walking `workspace-manifest.json`'s `repositories.<name>.dependencies` list and only
