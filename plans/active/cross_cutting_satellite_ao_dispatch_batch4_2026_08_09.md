@@ -73,12 +73,21 @@ drift_direction: advance-code
       generator's membership test captures the diagnosed class (docs `check_ag_closeout_linkage.py`'s reachability check
       flags as members but today's narrower test misses), verified by re-running Phase 0 and confirming those
       previously-invisible candidates now appear in the member list.
-- [ ] [DOC] P2. Line-cap-split `cross_cutting_consolidated_closeout_2026_07_25.md` (999/1000 lines, 1 line of margin
+- [x] ✅ [DOC] P2. Line-cap-split `cross_cutting_consolidated_closeout_2026_07_25.md` (999/1000 lines, 1 line of margin
       after its latest addition) — fork a Track/phase-named child doc with `depends_on` pointing back, mirroring how the
       other 5 asset-group consolidated-closeout docs were already split. Repo: unified-trading-pm. Source:
       `issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md` (line-cap-split item). Done when: the parent doc is
       back under ~700 lines with a forked child covering the trimmed content, and the parent's `depends_on`/child
-      pointer is wired per `task_template.md` finding I.
+      pointer is wired per `task_template.md` finding I. — unified-trading-pm@(pending). Parent trimmed 1007→716 lines
+      (had grown past the 1000L hard cap since this todo was authored). Forked Tracks 14/18-22 (still-open,
+      observability/self-monitoring-themed) to `cross_cutting_closeout_observability_and_monitoring_2026_08_09.md`;
+      forked Track 15 (closed) + the full Progress Log through 2026-08-08 to
+      `plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md` (status: complete, per
+      `check_terminal_status_archived.py` — a terminal-status doc belongs in plans/archive/, not plans/active/).
+      `depends_on`/`related`/Split-notice wired on the parent per finding I. Verified: `check_line_caps.sh`,
+      `check_frontmatter_yaml.py`, `check_reference_paths.py`, `check_na_corpus_ratchet.py`,
+      `check_terminal_status_archived.py` all clean on the 3 touched files (2 pre-existing unrelated corpus failures —
+      `check_archive_candidates`, `check_prosewrap_padding` — confirmed not caused by this change).
 - [ ] [DOC] P3. Document the `gcloud config set account` host-wide-mutation hazard in
       `/codex/05-infrastructure/per-tab-worktrees.md` § "Multi-agent safety" (or a new subsection), regardless of which
       code-fix direction eventually lands for the underlying clobbering bug: state that `gcloud config set     account`
