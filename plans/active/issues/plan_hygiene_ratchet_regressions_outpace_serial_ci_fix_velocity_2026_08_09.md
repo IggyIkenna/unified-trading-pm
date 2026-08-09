@@ -92,14 +92,16 @@ words: "this branch is churning faster than one CI worker can chase serially").
       shipped: option (c)'s diff-scoping applied to `check_reference_paths.py`, mirroring the already-proven
       `check_archive_candidates.sh --diff-base` pattern, plus a latent fail-unsafe bug fixed in that same pattern for
       the periodic cron path). Follow-up P2/P3 todos below track the checks this dispatch did NOT convert.
-- [ ] [BACKEND] P2. Extend the SAME `--diff-base <ref>` pattern (proven twice now: `check_archive_candidates.sh`
-      2026-08-06, `check_reference_paths.py` 2026-08-09 above) to `check_effort_signal_ratchet.py` and
-      `check_na_corpus_ratchet.py` — both are structurally identical in shape (a corpus-wide scan producing a total
-      count compared against a static baseline), so the same "compare the violation/candidate SET at HEAD vs the set at
-      `<ref>`, fail only on what's new" refactor applies directly. Wire the result into `run_hygiene_sweep.sh`'s shared
-      `DIFF_BASE_REF` guard (already computed once, resolvability-checked) the same way the two existing diff-scoped
-      checks consume it — do not duplicate the `[ -n "$CI_MODE" ]`-only guard shape, that was the latent bug this
-      dispatch fixed. Repo: unified-trading-pm (`scripts/plan-hygiene/`).
+- [ ] [BACKEND] P2. **CODE DONE, NOT YET SHIPPED (2026-08-09, slot 18) — see Progress Log entry below.** Extend the SAME
+      `--diff-base <ref>` pattern (proven twice now: `check_archive_candidates.sh` 2026-08-06,
+      `check_reference_paths.py` 2026-08-09 above) to `check_effort_signal_ratchet.py` and `check_na_corpus_ratchet.py`
+      — both are structurally identical in shape (a corpus-wide scan producing a total count compared against a static
+      baseline), so the same "compare the violation/candidate SET at HEAD vs the set at `<ref>`, fail only on what's
+      new" refactor applies directly. Wire the result into `run_hygiene_sweep.sh`'s shared `DIFF_BASE_REF` guard
+      (already computed once, resolvability-checked) the same way the two existing diff-scoped checks consume it — do
+      not duplicate the `[ -n "$CI_MODE" ]`-only guard shape, that was the latent bug this dispatch fixed. Repo:
+      unified-trading-pm (`scripts/plan-hygiene/`). Blocked on an unrelated repo-wide QG red
+      (`pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md`) — flip to `[x]` once pushed.
 - [ ] [BACKEND] P3. `check_codex_doc_freshness.py` (`scripts/quality_gates/`, wired directly into `quality-gates.sh`'s
       post-gates, not `run_hygiene_sweep.sh`) is fundamentally NOT diff-scopable the way the checks above are — its
       violations are pure TIME decay (`last_reviewed` aging past a threshold), so a doc can flip stale↔fresh between two
@@ -319,3 +321,45 @@ words: "this branch is churning faster than one CI worker can chase serially").
   registered waiter (slot 24) since the underlying drift is still live. Net: this dispatch's own P2 deliverable is
   shipped and verified; the cloudbuild-drift regression is a SEPARATE, now-tracked problem for someone else's dispatch,
   not a blocker on calling this one done.
+- 2026-08-09 (backend_engineer, slot 18, dispatched for the follow-up P2 todo above): extended the diff-base pattern to
+  the remaining 2 checks named in the todo. `check_effort_signal_ratchet.py`: reused the existing
+  `_is_silent_default_text` content-level predicate (already shared by baseline mode and `--only`) plus a batched
+  `git ls-tree`/`git cat-file --batch` read (same shape as `check_reference_paths.py`'s `_violations_at`) to compute the
+  silent-default-effort plan basename SET at an arbitrary ref; `--diff-base <ref>` fails only on basenames new to that
+  set at HEAD. `check_na_corpus_ratchet.py`: this one is NOT a pure violation-SET check like the other three (it tracks
+  TWO scalar axes — doc count AND total open-todo count — and an already-qualifying doc can gain new todos without being
+  a "new" population member), so the diff-scoped refactor needed a small generalization beyond a literal set-diff:
+  compute a `{relpath: open_todos}` map at HEAD and at `<ref>` (via the same docspec.parse_frontmatter-based predicate
+  `generate_na_doc_tranche_inventory.py` already uses — proper YAML parse, never a line-grep, per that script's own
+  documented bug class), then fail on either axis independently — `new_docs` (paths present at HEAD but not at `<ref>`)
+  or `new_todos_total` (sum of each new doc's full count, plus positive per-doc growth on docs that already qualified at
+  `<ref>` — todos removed, or a doc leaving the population, never count against either axis, matching baseline mode's
+  shrinkage-is-never-a-violation contract). Both wired into `run_hygiene_sweep.sh`'s existing `DIFF_BASE_REF` guard
+  exactly like the two proven checks (no new guard shape, no `[ -n "$CI_MODE" ]`-only duplication). **Caught + fixed a
+  real bug while validating**: my first `git ls-tree <ref> -- <dir>` implementation (no trailing slash) returns the
+  single `tree` object entry for the directory itself, not its children — silently produced 0 entries at every ref,
+  which would have made diff-scoped mode permanently report "0 pre-existing debt at base" (i.e. fail-unsafe on 100% of
+  the live corpus, not just genuinely new drift). Caught by manually comparing head-set vs base-set sizes before
+  trusting the diff output (169 silent-default plans expected at `origin/main`, got 0). Fixed by adding the trailing
+  slash (`plans/active/` / `<dir>/`) both scripts need for a non-recursive `ls-tree` on a specific subdirectory —
+  verified post-fix: `check_effort_signal_ratchet.py --diff-base origin/main` correctly finds 0 new violations (159 at
+  HEAD, 169 at origin/main — LDR is AHEAD, not behind, since slot-23's earlier fix in this same lineage already reduced
+  the count); `check_na_corpus_ratchet.py --diff-base origin/main` correctly finds real new drift (19-21 new docs /
+  44-78 new todos, moving as the sweep re-ran minutes apart — live fleet churn during verification, not a bug). Ran the
+  full `run_hygiene_sweep.sh --ci` end-to-end: both checks execute in diff-scoped mode without error;
+  `Silent-default-effort plans (ratchet)` passed, `assigned_vm:NA corpus size` correctly failed on genuine live drift
+  unrelated to this change (other checks in the sweep also failed on pre-existing/concurrent regressions — per this
+  doc's own established "hand off, don't chase" precedent, none of that is this dispatch's scope). Files touched:
+  `scripts/plan-hygiene/check_effort_signal_ratchet.py`, `scripts/plan-hygiene/check_na_corpus_ratchet.py`,
+  `scripts/plan-hygiene/run_hygiene_sweep.sh`. Committed locally `unified-trading-pm@7aa1fcaa4`. **Could not push via
+  the normal quickmerge flow**: Pass-1 `bash scripts/quality-gates.sh` fails on this exact HEAD (and identically on a
+  pristine committed tree with zero relation to this change) via the "No broad except Exception" codex-compliance gate —
+  a genuine, unrelated, pre-existing repo-wide RED introduced by `unified-trading-pm@0f6087516` (a same-day, unrelated
+  finops commit), NOT caused by this dispatch. Filed
+  `plans/active/issues/pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md` (full repro + violation
+  inventory) and declared repo-blocker `qg_red` for `unified-trading-pm` per RULES.md § 4b rather than chase an
+  unrelated 12-file/21-occurrence fix inside this dispatch's scope. This todo's code is DONE and verified correct (see
+  the diff-base testing above); it will push + get its `docs(plans):` SHA-citation update the moment the repo-blocker
+  resolves green. The remaining P3 todos above (`check_codex_doc_freshness.py` — needs an operator/main policy call, not
+  a unilateral backend change; `check_todo_regression.sh` — needs a differently-shaped merge-base-aware fix) are NOT
+  addressed by this dispatch, exactly as scoped.
