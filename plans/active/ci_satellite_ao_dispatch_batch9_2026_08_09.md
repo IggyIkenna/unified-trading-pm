@@ -96,7 +96,10 @@ Todos 1 and 2 touch disjoint files (`qg_host_adaptive_resource_governor_2026_07_
     `/plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md` (leading-slash convention per
     `check_reference_paths.py`). Verified: stale-count grep = 0, archived-count grep = 4,
     `check_reference_paths.py --only` clean. Source finding flipped in
-    `issues/plan_reconciler_ci_late_findings_2026_08_06.md`. — unified-trading-pm@89925f0c6
+    `issues/plan_reconciler_ci_late_findings_2026_08_06.md`. — unified-trading-pm@a52672b6d (corrected 2026-08-09 by the
+    batch9-finalize review pass — the SHA originally cited here, `89925f0c6`, does not resolve to a commit touching this
+    file; `a52672b6d` is the actual shipping commit, matching this todo's content and verified an ancestor of
+    `origin/live-defi-rollout`)
 
 - [x] 2. ✅ [DOC] P2. **Fix the stale `status: active` for `mtds_retry_safe_default_audit_2026_07_14` in
       `plans/epics/infrastructure_master.md` (around L595-597, re-locate by grepping the slug fresh — the epic file
@@ -134,3 +137,9 @@ Todos 1 and 2 touch disjoint files (`qg_host_adaptive_resource_governor_2026_07_
   place, not duplicated here). Conflict-checked against every active `ci`/`infrastructure_master` batch (1, 4-8) and
   `qg_host_adaptive_resource_governor_2026_07_14.md`'s own body: no overlap found — neither target file is claimed by
   any other active batch todo.
+- **2026-08-09 (batch9-finalize review pass)** — Verified both todos' cited commits resolve and are ancestors of
+  `origin/live-defi-rollout` (`git merge-base --is-ancestor`). Todo 2's `930f7393e` checked out clean. Todo 1's cited
+  `89925f0c6` does NOT resolve to any commit in this repo (it's a stray digit-transposition of an unrelated
+  deployment-service commit) — located the actual shipping commit by content match (`a52672b6d`, "repoint 4 stale issue
+  refs in qg_host_adaptive_resource_governor") and corrected the citation above. Both source-doc checkboxes in
+  `issues/plan_reconciler_ci_late_findings_2026_08_06.md` now carry the verified SHAs.

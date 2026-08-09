@@ -34,6 +34,7 @@ supersedes:
 superseded_by:
 depends_on: [ci_satellite_ao_dispatch_batch9_2026_08_09]
 gate_on_depends: true
+archive_exempt: true
 source: >-
   Authored alongside `ci_satellite_ao_dispatch_batch9_2026_08_09.md` per `plans/active/task_template.md` §4's
   finalize-plan-coverage rule. Authored `status: active` (not `draft`) per the established no-double-gate finding:
@@ -57,7 +58,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile batch-9's 2 source-doc checkboxes.** Both batch-9 todos end with `Source:` naming
+- [x] [REVIEW] P2. ✅ **Reconcile batch-9's 2 source-doc checkboxes.** Both batch-9 todos end with `Source:` naming
       `issues/plan_reconciler_ci_late_findings_2026_08_06.md` (P1 finding 2, P2 finding 1). Flip both checkboxes to
       `[x]` citing the batch-9 commit(s) that shipped them — **verify the cited commit(s) exist and are an ancestor of
       `origin/live-defi-rollout` before citing** (`git merge-base --is-ancestor`). **Do NOT set `status: resolved` or
@@ -65,6 +66,13 @@ context_scope:
       the mtds title/summary editorial rewrite, both explicitly left open in that doc's own 2026-08-09 Progress Log
       entry), so it correctly stays `status: open` with `assigned_vm: NA`. **Done when**: both checkboxes are flipped
       with verified evidence, the doc's `status` is unchanged (`open`), and PM's `quality-gates.sh` is green.
+  - **Done** — both checkboxes in `issues/plan_reconciler_ci_late_findings_2026_08_06.md` already carried `[x]`; added
+    verified commit citations to each (`git merge-base --is-ancestor` against `origin/live-defi-rollout`): P1 finding 2
+    → `unified-trading-pm@a52672b6d`, P2 finding 1 → `unified-trading-pm@930f7393e`. **Found + fixed a bogus SHA**:
+    batch9's own progress-log entry for todo 1 cited `89925f0c6`, which does not resolve to any commit in this repo
+    (transposed digits of an unrelated deployment-service commit) — corrected to the verified `a52672b6d` in
+    `ci_satellite_ao_dispatch_batch9_2026_08_09.md`'s own Progress Log. Source doc's `status: open` left unchanged (2
+    genuinely-open items remain, per this plan's own scope note). — unified-trading-pm (this commit)
 
 ## Codex SSOTs
 
@@ -77,3 +85,13 @@ context_scope:
 - **2026-08-09** — Drafted alongside `ci_satellite_ao_dispatch_batch9_2026_08_09.md`. Authored `status: active` per the
   established no-double-gate precedent; batch 9 itself is also authored `status: active` per this task's explicit
   dispatch instructions.
+- **2026-08-09 (todo flip commit)** — `archive_exempt: true` added here as a ONE-COMMIT BRIDGE, not a standing
+  exemption: this doc's sole todo just flipped to `[x]`, making it 0-open/done/unlocked and hence
+  `check_archive_candidates --only`-flagged in the SAME commit — but
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "Never combine the checkbox flip with the
+  `git mv` archival in ONE commit" (migrated as this workspace's SSOT 2026-08-09, same day) explicitly forbids shipping
+  the flip and the git-mv archival together. That leaves no compliant single-commit shape for a self-archiving finalize
+  plan's own last-todo flip — flagged as a same-day SSOT/hook contradiction in
+  `issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`. This exemption covers only
+  THIS commit; the very next commit performs the actual 6-step archival ritual (git mv + banner + status + referrer-fix)
+  and removes this key (moot once the doc leaves `plans/active/`).
