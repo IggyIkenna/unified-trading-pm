@@ -16,7 +16,7 @@ summary: >-
   current promote PR #646 (promote/client-reporting-api/6e0622b853a7) is CONFLICTING on Dockerfile (ARG
   BASE_IMAGE_DIGEST: main stale sha256:9c1a… vs LDR current sha256:a27d…) and has NO quality-gates-v2 check + sit-gate
   fail-closed. LDR already carries the exact fixes that would repair main once promoted.
-status: open # flipping to resolved + archiving in a SEPARATE follow-up commit, per the flip/mv split HARD RULE
+status: resolved # 2026-08-09 agt-a398c9 — wedge closed live, see "## Resolution"
 nature: issue
 asset_group: [ci, infrastructure]
 stage: [meta]
@@ -37,7 +37,6 @@ priority: P1
 parent_epic: infrastructure_master
 drift_direction: advance-code
 resolved_by: plan_reconciler agt-a398c9 2026-08-09
-archive_exempt: true # THIS COMMIT ONLY — flip precedes archival per the flip/mv split HARD RULE, see next commit
 depends_on: []
 locked_by:
 locked_since:
