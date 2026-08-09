@@ -93,10 +93,18 @@ concrete reason not to).
 
 ## Todos
 
-- [ ] [BACKEND] P2. Restore `market_tick_data_service/market_interface/adapters/sports/betfair_adapter.py` from
+- [x] ✅ [BACKEND] P2. Restore `market_tick_data_service/market_interface/adapters/sports/betfair_adapter.py` from
       `market-tick-data-service@6bc85e13~1` (content already recovered and verified against current UAC in this issue
       doc's research — the UAC `external.betfair` models are unchanged) and re-add its `__init__.py` imports/exports
-      (reverse of `6bc85e13`'s diff). (repo: market-tick-data-service)
+      (reverse of `6bc85e13`'s diff). (repo: market-tick-data-service) — market-tick-data-service@fc9e36cd. Restored the
+      313-line file verbatim via `git show 6bc85e13~1:...betfair_adapter.py`; re-added `BetfairAdapter` to
+      `market_interface/adapters/sports/__init__.py` and `market_interface/__init__.py` (imports + `__all__`),
+      MatchbookAdapter intentionally left deleted (out of scope for this todo). Verified UAC deps
+      (`unified_api_contracts.external.betfair.{BetfairAuthResponse,BetfairMarketBook,BetfairMarketCatalogue,BetfairRunner}`)
+      and `BaseSportsAdapter` unchanged;
+      `python3 -c "import market_tick_data_service.market_interface as mi; mi.BetfairAdapter"` resolves cleanly. QG
+      green (sentinel matched HEAD `fea84ecd`); shipped via quickmerge (rebased to `fc9e36cd` on push), verified
+      ancestor of `origin/live-defi-rollout`.
 - [ ] [BACKEND] P2. Add a `download_batch(date, data_types, leagues)` method to the restored `BetfairAdapter` that calls
       `get_markets()` then `get_prices()` per discovered market and returns a `pd.DataFrame` shaped compatibly with
       `OddsApiAdapter.download_batch`'s output (same column set odds_api emits, e.g. fixture linkage / bookmaker / price
@@ -123,3 +131,7 @@ concrete reason not to).
   scaffold) was invalidated by an intervening dead-code deletion; recovered the deleted file's content via git history
   for the next worker's use (embedded above); did not implement anything in market-tick-data-service this session — see
   the parent plan's Progress Log for the pointer back here.
+- 2026-08-09 (slot-3, backend_engineer): completed todo 1 — restored `betfair_adapter.py` verbatim + re-added its
+  `BetfairAdapter` imports/exports to both `__init__.py` files (Matchbook left deleted, out of scope). QG green, shipped
+  `market-tick-data-service@fc9e36cd`. Todos 2-4 (download_batch shim, fixture_id resolution, live-verify) remain open
+  for the next worker.
