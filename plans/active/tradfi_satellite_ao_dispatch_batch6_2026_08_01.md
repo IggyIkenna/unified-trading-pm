@@ -581,3 +581,23 @@ fix is live on `origin/live-defi-rollout` now, no local-only dependency), since 
 time-sensitive action (the lock won't stay clear long, per this whole saga's history). The zombie-watchdog fix is the
 actual unblock for a CLEAN completion, but it's a deeper INFRA investigation better suited to a dedicated session/role,
 not something to block a re-launch attempt on.
+
+### 2026-08-09T05:54Z — slot 22 — watcher re-armed, lock still held (6 VMs, smaller fleet)
+
+Fresh session, task `tradfi_satellite_ao_dispatch_batch6-f9921af83ce2`. Direct check + 8-min bounded synchronous poll:
+lock held steady, **6** `tradfi-bf-*` VMs (CME ES/ETH/MBT/MET + 1 NYSE-2024 shard, all ~2.2-2.6h old at check time),
+zero drain across the window — down from the 12+ at the prior checkpoint but not clear. 0 ES_OPT VMs running.
+`deployment-service`'s VM_TASK/VM_SOURCE fix confirmed already landed on origin (`c99ab99b`, `acf965d9` — no local-only
+dependency for a fresh clone). Zombie-watchdog P1 fix and the scope-violation doc are both still open/unresolved,
+unchanged from the prior checkpoint.
+
+Re-armed via the `setsid nohup … & disown` pattern (the one with a proven multi-hour survival precedent earlier in this
+saga): **PID `2092980`**, verified isolated (PGID=SID=PID), sed-patched for slot 22. **Note for whoever next re-arms
+this script**: the committed `es-opt-backfill-watcher.sh`'s hardcoded
+`TASK_ID="tradfi_satellite_ao_dispatch_batch6-002"` is stale — live backlog task ids now carry a hash suffix (this
+session's was `-f9921af83ce2`, not `-002`); always re-check the CURRENT task id from your own `/boot` response before
+re-arming, don't trust the committed default.
+
+- **NEXT ACTION (fresh session)**: same as every prior checkpoint — check todo #2's checkbox first; if `[ ]`, check
+  `kill -0 2092980` for liveness (may be dead, that's expected/normal per this saga's findings); if dead, re-arm per the
+  recipe above with your OWN current task id.
