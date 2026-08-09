@@ -14,7 +14,7 @@ scope: [engineer]
 tags: [defi, carry, recursive-loop, finalize, archival]
 related:
   [
-    /plans/active/recursive_loop_orchestrator_wiring_2026_08_09.md,
+    /plans/archive/2026_08/recursive_loop_orchestrator_wiring_2026_08_09.md,
     /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
   ]
 created: "2026-08-09"
@@ -42,7 +42,7 @@ source:
   mandatory finalize-plan-for-every-AO-plan rule.
 context_scope:
   [
-    /plans/active/recursive_loop_orchestrator_wiring_2026_08_09.md,
+    /plans/archive/2026_08/recursive_loop_orchestrator_wiring_2026_08_09.md,
     /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
   ]
 ---
@@ -69,8 +69,8 @@ context_scope:
       `[DESIGN]` todo IS a real trackable `- [ ]` checkbox in this same file (todo 4 below, "Decide + scope the RIGHT
       mechanism..."), not prose-only — confirmed via direct grep of the live file content, not a trust of the prior
       session's claim.
-- [ ] [DOC] P1. Run the standard 6-step archival ritual on `recursive_loop_orchestrator_wiring_2026_08_09.md` once every
-      one of its todos is `[x]` and unlocked: move it to `plans/archive/2026_08/`, fix every corpus referrer path
+- [x] ✅ [DOC] P1. Run the standard 6-step archival ritual on `recursive_loop_orchestrator_wiring_2026_08_09.md` once
+      every one of its todos is `[x]` and unlocked: move it to `plans/archive/2026_08/`, fix every corpus referrer path
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), and confirm `run_hygiene_sweep.sh` stays
       green. Repo: unified-trading-pm. Done-when: the file is under `plans/archive/2026_08/`, `status: complete`, 0
       broken referrer links, hygiene sweep green.
@@ -121,3 +121,26 @@ context_scope:
 - **2026-08-09 (slot 29, review)**: Todo 2 shipped — independently re-checked the parent plan's todo 6 (Family-2
   hedge-poller audit) outcome and confirmed the required follow-up `[DESIGN]` todo (todo 4 in this file) is a genuine
   tracked `- [ ]` checkbox, not prose-only. No new todo needed — slot 8 already filed it correctly on 2026-08-09.
+- **2026-08-09 (slot 10, backend_engineer)**: Todo 3 shipped — ran the standard 6-step archival ritual on
+  `recursive_loop_orchestrator_wiring_2026_08_09.md`. (1) Deferral migration: already satisfied — todo 7's poller-audit
+  finding was already tracked as this file's own todo 4 (`[DESIGN]`), no new todo needed. (2) Added the
+  `✅ ARCHIVED 2026-08-09` banner + flipped `status: complete` +
+  `superseded_by: recursive_loop_orchestrator_wiring_finalize_2026_08_09` in the parent plan's frontmatter. (3)+(4)
+  Codex-alignment: both archetype SSOTs
+  (`/codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md`,
+  `.../carry-basis-perp-inv.md`) had `implementation_status: design`, now stale given this plan shipped the real
+  translation layer + `RecursiveLoopOrchestrator`'s first production caller — bumped both to `code-shipped` with a new
+  "Translation-layer status" section citing the exact shipped commits (`strategy-service@817bb4e0`/`f2ac7fdf`,
+  `execution-service@2352a17e`) and noting the still-open perp-hedge-poller gap (this file's todo 4). No CLAUDE.md
+  change needed — no new cross-cutting HARD RULE, just a domain implementation-status update already covered by the
+  existing Strategy domain-index pointer. (5) Corpus-wide referrer sweep
+  (`grep -rl 'recursive_loop_orchestrator_wiring_2026_08_09'`) found 5 referrers besides the plan+finalize pair itself:
+  `plans/active/INDEX.md` (auto-generated, regenerated via `scripts/plans/regenerate_active_plan_index.py` rather than
+  hand-edited), `plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md` (2 prose citations,
+  repointed `/plans/active/...` → `/plans/archive/2026_08/...`), and this file's own `related:`/`context_scope:` entries
+  (repointed the same way; `depends_on:` left as the bare slug `recursive_loop_orchestrator_wiring_2026_08_09` per
+  convention — that field is machine-parsed and location-independent). The 2 codex docs' new citations already point at
+  the archive path from authoring. (6) `git mv` to
+  `plans/archive/2026_08/recursive_loop_orchestrator_wiring_2026_08_09.md` as a commit separate from this checkbox
+  flip + the content edits (never combine a checkbox flip with a `git mv` in one commit, per the ritual's own SSOT) — no
+  lock existed to clear. `run_hygiene_sweep.sh` re-run green after the move (see commit evidence below).
