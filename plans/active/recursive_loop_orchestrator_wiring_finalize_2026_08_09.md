@@ -94,18 +94,18 @@ context_scope:
       plan) is filed against that ruling.
 
       **RULED 2026-08-09 (main, via BLK-b0af53e2, slot 4)**: option (1) — clone the `HealthFactorMonitor` pattern into a
-              new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
-              Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
-              (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
-              perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
-              (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
-              rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
-              service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
-              code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
-              opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
-              docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
-              would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
-              requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
+                  new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
+                  Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
+                  (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
+                  perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
+                  (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
+                  rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
+                  service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
+                  code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
+                  opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
+                  docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
+                  would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
+                  requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
 
 - [x] ✅ [BACKEND] P2. Implement the `HealthFactorMonitor`-pattern asyncio poller CLASS for `PerpHedgeSizer` (Family-2
       `CARRY_BASIS_PERP_INV`), per todo 4's 2026-08-09 ruling (option A). Build a new `PerpHedgeMonitor` class in
@@ -127,7 +127,7 @@ context_scope:
       forward). App.py startup/shutdown wiring + the "same execution path as `recursive_loop_runner.py`" integration
       test are OUT of this todo's scope now — see todo 7.
 
-- [ ] [DESIGN][BACKEND] P2. Build the open-Family-2-position registry `PerpHedgeMonitor` needs to source genuine
+- [x] ✅ [DESIGN][BACKEND] P2. Build the open-Family-2-position registry `PerpHedgeMonitor` needs to source genuine
       currently-open positions from, per main's 2026-08-09 ruling on BLK-7f4d33db (option C — overriding the worker's
       recommended option B of an honest-empty interim source): shipping `PerpHedgeMonitor` wired to a permanently-empty
       position source would satisfy the letter of "wired at startup" while providing ZERO actual margin/liquidation risk
@@ -145,7 +145,38 @@ context_scope:
       perp_pair + wallet + `HedgeSizerConfig` per position) genuinely reflecting live on-chain state (or an honest,
       explicitly-flagged interim source with a filed follow-up if live on-chain enumeration needs infra this todo can't
       reach), with unit test coverage; `quality-gates.sh` green on every touched repo. Codex SSOTs:
-      `/codex/04-architecture/defi-execution-overview.md`, `/codex/04-architecture/tier-and-import-architecture.md`.
+      `/codex/04-architecture/defi-execution-overview.md`, `/codex/04-architecture/tier-and-import-architecture.md`. —
+      execution-service@8a76e2f1. Investigated `recursive_staked.py` (read-only, strategy-service): confirmed Family-2
+      positions ARE opened there via `_on_tick_family2_basis_perp_inv()`, which publishes an `AtomicInstruction`
+      (`instrument_type=RECURSIVE_LENDING_LOOP_PERP_HEDGED`) onto the same published `atomic_instruction` event-log
+      shard `atomic_instruction_router.py` already subscribes to (the live=batch `EventTransport` spine every
+      strategy->execution hand-off on this workspace uses) — so `Family2PositionRegistry` reads that SAME log rather
+      than inventing a parallel source or shipping a permanently-empty stub. Two genuine, explicitly-flagged interim
+      gaps surfaced (both filed as real tracked todos below, not left as prose, per the done-when's own escape hatch):
+      (1) `_on_tick_family2_basis_perp_inv()` never emits a close/unwind instruction for Family 2 today, so the registry
+      correctly treats every observed open as currently-open — filed as todo 8 for when a real unwind path ships; (2)
+      neither `AtomicInstruction` nor its attestations carry a wallet identifier anywhere in the pipeline (confirmed via
+      direct inspection of `_build_family2_instruction`) — the registry emits a caller-supplied `default_wallet` label
+      instead of fabricating one, filed as todo 9. 6 unit tests (enumerate-one, skip-family1, skip-non-strategy-source,
+      skip-unknown-perp-venue, skip-malformed-payload, enumerate-multiple-with-shared-wallet), all green.
+      `quality-gates.sh` full green (169s) on the committed HEAD (commit-before-QG ordering rule followed — first pass
+      ran pre-commit on the dirty tree and its sentinel didn't carry forward, re-ran post-commit).
+
+- [ ] [BACKEND] P3. Add unwind/close consumption to `Family2PositionRegistry` (todo 6) once strategy-service's
+      `recursive_staked.py` ships a real Family-2 close/unwind emission path — today `_on_tick_family2_basis_perp_inv()`
+      never emits one (confirmed via todo 6's own investigation), so every observed Family-2 open event is, correctly
+      for now, treated as currently-open; that assumption goes stale the moment a real unwind path exists unless this
+      follow-up ships alongside it. Repo: execution-service. Done-when: the registry also consumes a Family-2
+      close/unwind event (correlating on `correlation_id`/`instruction_id`) and retires the matching open position from
+      `enumerate_open_positions()`'s output; unit test covers the retire path.
+
+- [ ] [DESIGN][BACKEND] P3. Add a genuine per-position wallet attestation to the Family-2 `AtomicInstruction` pipeline —
+      today neither the instruction nor its attestations carry a wallet identifier anywhere (confirmed via todo 6's
+      direct inspection of `recursive_staked.py::_build_family2_instruction`), so `Family2PositionRegistry` emits a
+      caller-supplied `default_wallet` placeholder for every position instead of the real per-position wallet. Repo:
+      strategy-service (emit the attestation) + execution-service (`Family2PositionRegistry` reads it instead of the
+      placeholder). Done-when: `OpenFamily2Position.wallet` reflects the real per-position wallet sourced from the
+      instruction, not a shared default; unit test covers a multi-wallet scenario.
 
 - [ ] [BACKEND] P2. Wire `PerpHedgeMonitor` lifecycle at `execution-service/execution_service/api/app.py`'s
       `@app.on_event("startup")`/`@app.on_event("shutdown")`, sourcing the currently-open Family-2 position set from
@@ -235,3 +266,10 @@ context_scope:
   open-Family-2-position registry), todo 7 (rescoped — wire `PerpHedgeMonitor` at `app.py` startup/shutdown against todo
   6's registry + the execution-path integration test). `quality-gates.sh` green on execution-service (both the
   dirty-tree pre-commit run and the correct post-commit re-run, per the commit-before-QG ordering rule).
+- **2026-08-09 (slot 10, backend_engineer)**: Todo 6 shipped — `Family2PositionRegistry`
+  (`execution_service/defi_execution/monitors/family2_position_registry.py`), `execution-service@8a76e2f1`. Read the
+  actual `atomic_instruction` publish/subscribe contract (`strategy_service.engine.strategies.v2.live_routing` publish
+  side + `execution_service.v2.atomic_instruction_router` read side) rather than inventing a new mechanism — the
+  registry reuses that module's own `ATOMIC_INSTRUCTION_DATA_TYPE`/`ATOMIC_INSTRUCTION_SOURCE` constants and reads the
+  same shard via the UTL `EventTransport` facade. Filed the two honest interim-source gaps as real todos (8, 9) per the
+  done-when's own escape hatch, rather than leaving them as docstring prose.
