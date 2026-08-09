@@ -360,25 +360,27 @@ unchanged:
       `infra_*_satellite_ao_dispatch_batch2*` plan exists yet (`ls plans/active/ | grep -i 'infra.*batch2'` → empty) —
       staying open here per the fallback instruction rather than pointing at a plan that doesn't exist. Rehome into
       batch2's own drafting pass once it exists.
-- [ ] [CODE] P2. **domain-client base-gate check is STALE + self-contradictory (confirmed 2026-06-12)** — it demands
-      `unified_domain_client` which exists NOWHERE in the workspace (clients live in `unified_trading_library.domain`),
-      has no opt-out, and CONTRADICTS the deep-import check for the same symbol (top-level import fires one check,
-      submodule import fires the other). Fix: retarget the check in base-service.sh to `unified_trading_library.domain`
-      (or build the UDC package per the original architecture). Repo: unified-trading-pm. **ALREADY PARKED 2026-07-27**
-      — carried forward (as one of 4 bundled items) in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` § Deferred
-      item 2 ("the domain-client base-gate retarget ... unified_domain_client → unified_trading_library.domain"), ruled
-      2026-07-26 to batch into ONE `sequential: true` unit with 3 sibling `base-service.sh`/`base-library.sh` edits in
-      the next infra batch (no `batch2` exists yet — same fallback as the pip-audit item above). Stays open here until
-      that batch lands.
+- [x] ✅ [CODE] P2. **CLOSED 2026-08-09 (`/ag-closeout-audit infra` daily run) — DONE, stale checkbox reconciled.**
+      Domain-client base-gate check was retargeted **2026-07-30** — verified live in
+      `scripts/quality-gates-base/base-service.sh:1416-1426` today: "NO separate `unified_domain_client` package
+      anywhere in the workspace. RETARGETED 2026-07-30: this check previously demanded imports come FROM
+      `unified_domain_client`... fix retargets this check to the real invariant: domain-client symbols must come from
+      `unified_trading_library`." The live gate (line 1532) now greps
+      `from unified_trading_library|from     unified_domain_client` as the accepted pattern set — matches the fix this
+      todo asked for. This item was one of the 4 bundled into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` §
+      Deferred item 2 (G1); all 4 confirmed done via `infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md`'s re-check
+      (see that doc, now archived). Was: **STALE + self-contradictory (confirmed 2026-06-12)** — it demanded
+      `unified_domain_client` which existed NOWHERE in the workspace (clients live in `unified_trading_library.domain`),
+      had no opt-out, and CONTRADICTED the deep-import check for the same symbol.
 - [x] ✅ [CODE] P3. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — DONE via the cross-referenced
       doc.** `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own copy of this exact item is `[x]` DONE at
-      `unified-api-contracts@194f3f7f`: `is_at_risk` now resolves `LIQUIDATION_PARAMS_REGISTRY[AAVE_V3].health_factor_critical`
-      (`1.15`) instead of the hardcoded `1.1`, mirroring execution-service's local copy; every consumer grepped, only a
-      bare re-export found; a pinning regression test added
-      (`tests/internal/unit/domain/execution_service/test_defi_position.py`); QG green. Independently re-verified this
-      pass: `git merge-base --is-ancestor 194f3f7f origin/live-defi-rollout` confirms ancestor. Original text preserved
-      below for record. Was: **UAC `internal/domain/execution_service/defi_position.py` STALE vs the live local
-      copy** — UAC hardcodes liquidation threshold 1.1; the execution-service local uses
+      `unified-api-contracts@194f3f7f`: `is_at_risk` now resolves
+      `LIQUIDATION_PARAMS_REGISTRY[AAVE_V3].health_factor_critical` (`1.15`) instead of the hardcoded `1.1`, mirroring
+      execution-service's local copy; every consumer grepped, only a bare re-export found; a pinning regression test
+      added (`tests/internal/unit/domain/execution_service/test_defi_position.py`); QG green. Independently re-verified
+      this pass: `git merge-base --is-ancestor 194f3f7f origin/live-defi-rollout` confirms ancestor. Original text
+      preserved below for record. Was: **UAC `internal/domain/execution_service/defi_position.py` STALE vs the live
+      local copy** — UAC hardcodes liquidation threshold 1.1; the execution-service local uses
       `LIQUIDATION_PARAMS_REGISTRY[MarginModel.AAVE_V3].health_factor_critical` (1.15). Reconcile UAC to the
       registry-driven form. Repo: unified-api-contracts. **MIGRATED 2026-07-27** — confirmed present with real content
       as its own `[CODE] P3` todo in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` ("Reconcile UAC's stale
@@ -629,15 +631,16 @@ for a `batch2` on the next pass and rehome then.
   (batch1/6/7) — none is a clean match. The domain-client base-gate retarget's `base-service.sh`/`base-library.sh`
   contention (batch1 finding 2, "batch these 4 deferred items into ONE sequential unit in the next infra batch") now
   appears CLEARED — the two sibling claims that created it
-  (`cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s lint-generalization item, done; `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md`, archived)
-  are both resolved, and a corpus-wide grep found zero other open todos touching either file — but this doc's own item
-  is only 1 of the 4 the operator ruled must land as ONE bundled `sequential: true` unit, so a solo flip here would
-  violate that ruling rather than honor it; flagging as a strong RECLASSIFY-candidate for a fresh, properly-scoped
-  batch bundling all 4, not actioned this run. The pip-audit item remains genuinely blocked (batch1 finding 7:
-  dep-manifest contention across `workspace-constraints.toml` + 15 repos, "genuinely too large for a batch todo") —
-  `cve_affected_pinned_deps_remediation_2026_06_18.md` (an active `assigned_vm: planning` doc) covers ujson/twisted/
-  msgpack but not pyarrow/mako, so only partial overlap. Phase 3's schema-provenance migration remains an explicitly
-  acknowledged too-large-for-a-batch-todo design pass. `assigned_vm: NA` correct.
+  (`cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s lint-generalization item, done;
+  `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md`, archived) are both resolved, and a corpus-wide grep found zero
+  other open todos touching either file — but this doc's own item is only 1 of the 4 the operator ruled must land as ONE
+  bundled `sequential: true` unit, so a solo flip here would violate that ruling rather than honor it; flagging as a
+  strong RECLASSIFY-candidate for a fresh, properly-scoped batch bundling all 4, not actioned this run. The pip-audit
+  item remains genuinely blocked (batch1 finding 7: dep-manifest contention across `workspace-constraints.toml` + 15
+  repos, "genuinely too large for a batch todo") — `cve_affected_pinned_deps_remediation_2026_06_18.md` (an active
+  `assigned_vm: planning` doc) covers ujson/twisted/ msgpack but not pyarrow/mako, so only partial overlap. Phase 3's
+  schema-provenance migration remains an explicitly acknowledged too-large-for-a-batch-todo design pass.
+  `assigned_vm: NA` correct.
 - **na-eligibility-audit 2026-08-07** (infra tranche): KEEP-NA, valid — unchanged since 2026-08-02; re-verified the 5
   open items fresh. The UAC `defi_position.py` citation (line ~373) remains correctly cross-referenced into
   `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (no new citation needed — same conclusion as the 2026-07-30 audit).
