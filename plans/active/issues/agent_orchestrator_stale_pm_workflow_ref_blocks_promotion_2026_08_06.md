@@ -47,8 +47,8 @@ related:
 created: 2026-08-06
 last_updated: "2026-08-06"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
@@ -170,3 +170,11 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
   operator/rollout-process-owner decision ("whether to build this now or accept the recurring cost") — not a
   worker-determinable outcome as currently scoped.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **round9-cross-cutting-sweep 2026-08-09**: RECLASSIFY — flipped `assigned_vm: NA → planning`
+  (`execution_scope: local-only → orchestrator-agent`). The sole remaining open todo (todo 4, rollout-process parity
+  gap) carries an explicit operator ruling (2026-08-08, NA-corpus blocker digest round 5, id=54: "yes, add the
+  cross-branch parity check") plus a fully-scoped implementation spec (extend
+  `scripts/workflow-templates/rollout-workflow-templates.sh` with a post-rollout `origin/main` vs
+  `origin/live-defi-rollout` byte-compare verification pass) — no remaining judgment call. Conflict-check: no other
+  active plan implements this specific parity-check feature. Exempt from the finalize-twin requirement per
+  `check_finalize_plan_coverage.py`'s single-open-todo carve-out (exactly 1 open todo).

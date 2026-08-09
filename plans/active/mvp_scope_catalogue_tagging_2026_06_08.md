@@ -200,17 +200,11 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
   models; where trained-model identities get recorded) is resolved per the round5-cross-cutting-audit 2026-08-08 note
   above (`TrainingGridConfig` = could-exist bound; `ModelRegistry.list_models()` = live write path — narrows to ordinary
   wiring). See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
-- [ ] [DATA] P2. **Verify**: with MVP ON, data-status shows ~100% for captured MVP cells and does NOT count non-MVP
-      catalogued instruments as missing; with MVP OFF, the full could-exist universe is shown (the gap is honest, not
-      hidden). **BLOCKED on the held migration (2026-06-17 /autonomous assessment):** unit-level parity is already
-      covered (`deployment-api@3390c98` `test_route_venue_year_coverage_scope.py` asserts denominator monotonicity
-      `mvp ≤ could_exist ≤ all` + the `is_mvp` filter). The full real-DATA verify needs a fresh consolidated `_index` —
-      **note (corrected 2026-07-15, plan-reconcile): the "consolidators intentionally PAUSED" premise cleared** — per
-      `mvp_catalogue_finalization_v10_2026_06_27.md` G0 (2026-06-27), all 5 per-AG instruments consolidators were
-      directly re-verified ENABLED with a fresh `_index` heartbeat (<1900s), superseding the prior PAUSED claim below
-      (originally: currently stale because the manifest consolidators are intentionally PAUSED behind the held
-      manifest-canonicalisation `--apply`, R5 in `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md`). This
-      todo remains open pending a re-check of current consolidator status and the actual real-DATA verify run.
+- **[DATA] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch8_2026_08_09.md`.** **Verify**: with
+  MVP ON, data-status shows ~100% for captured MVP cells and does NOT count non-MVP catalogued instruments as
+  missing; with MVP OFF, the full could-exist universe is shown (the gap is honest, not hidden) — re-confirm
+  consolidator freshness first, then run the real-DATA verify. See the batch doc for the full scoped todo; do not
+  duplicate-dispatch from here.
 
 ## Config versioning (config_version) — per-config, metadata-not-path-axis
 
@@ -303,3 +297,8 @@ which has no MVP wiring today, and precomputes the sports/prediction catalogue `
   dispatched separately via `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`) rather than a whole-doc flip.
   Flagging as a promising candidate for a dedicated follow-up pass, not forcing it here.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **round9-cross-cutting-sweep 2026-08-09**: satellite-extracted the "Verify" `[DATA] P2` todo into
+  `cross_cutting_satellite_ao_dispatch_batch8_2026_08_09.md` — the item flagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` by
+  the 2026-08-07/08-08 na-eligibility-audit passes but never previously extracted. Whole-doc RECLASSIFY not applied —
+  `locked_by: live-defi-rollout` remains set (unrelated to this extraction; content edits/extractions are unaffected
+  by the archival lock).

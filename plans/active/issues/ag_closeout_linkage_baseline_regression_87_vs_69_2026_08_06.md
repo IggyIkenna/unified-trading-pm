@@ -36,8 +36,8 @@ created: 2026-08-06
 author: ag_closeout_auditor (cefi tranche, dispatch agt-02411c, slot 3)
 last_updated: 2026-08-08
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 1.0
@@ -223,3 +223,12 @@ the triage given their concentration.
 - **na-eligibility-audit 2026-08-08 (cross-cutting tranche)**: KEEP-NA, valid — reaffirms 2026-08-06/07 (unchanged):
   sole open item (Todo 3, P3) is an open build-or-not investment question with no stated done-when.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **round9-cross-cutting-sweep 2026-08-09**: RECLASSIFY — flipped `assigned_vm: NA → planning`
+  (`execution_scope: local-only → orchestrator-agent`). The sole remaining open todo (todo 3, add a `--tranche <name>`
+  filter to `check_ag_closeout_linkage.py`) was explicitly annotated by the 2026-08-08 round5-cross-cutting-audit as
+  "direct existing precedent, not a novel design call... AO-dispatchable, no operator decision needed" (mirrors the
+  already-shipped `generate_ag_closeout_audit_candidates.py --tranche` flag). Live-verified the script has no
+  `--tranche` arg today, so the todo is genuinely still open, not stale. Conflict-check: no active plan has an open
+  todo to build this feature (2 finalize docs cite `check_ag_closeout_linkage.py --tranche prediction` in a "Done
+  when" clause, but that's a citation error confusing it with `generate_ag_closeout_audit_candidates.py`'s real flag).
+  Exempt from the finalize-twin requirement per `check_finalize_plan_coverage.py`'s single-open-todo carve-out.
