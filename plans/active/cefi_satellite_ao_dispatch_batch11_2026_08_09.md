@@ -225,7 +225,7 @@ context_scope:
       `exchangeInfo` grep) and never had a NET-basis row in the source doc. No universe/backtest change made. Full
       per-symbol table + evidence: `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log,
       2026-08-09 entry.
-- [ ] [DATA] P1. **Run a window-scoped honest-coverage measurement**
+- [x] ✅ [DATA] P1. **Run a window-scoped honest-coverage measurement**
       (`instruments-service/scripts/measure_honest_coverage.py     --asset-group cefi`, or a targeted
       `/data-pipeline-check-mtds` day-sample) restricted to OKX-SPOT/-SWAP/-FUTURES, BINANCE-SPOT/-FUTURES, BYBIT over
       2024-01-01→present — this is the blocking prerequisite the source doc's own P0 live-capital backtest-fidelity gate
@@ -233,7 +233,19 @@ context_scope:
       chronological backfill tracked elsewhere). Repo: instruments-service. Source:
       `cefi_ml_directional_continuous_live_2026_06_20.md` line 180. **Done when**: a coverage % for exactly this venue
       set + window is cited in that plan's Progress Log with an `attempted_failed`/`expected_unattempted` breakdown; if
-      materially below complete, the specific gap (venue/data_type/date range) is filed as its own blocking issue.
+      materially below complete, the specific gap (venue/data_type/date range) is filed as its own blocking issue. —
+      **DONE 2026-08-09** — measured by reusing `measure_honest_coverage.py`'s bounded, column-pruned manifest reader
+      (`_read_manifest`/`_count_statuses`, single read, no new whole-corpus GCS walk), filtered in-memory to the target
+      venue set + date window. **Result: 48.90% overall reachable coverage** (captured=1,295,524 /
+      attempted_failed=94,706 / expected_unattempted=1,258,908 / empty_confirmed=331,778 of 2,980,916 scoped rows) —
+      materially below complete. Per venue: OKX-FUTURES 80.51%, OKX-SWAP 64.18%, BINANCE-FUTURES 57.46%, BINANCE-SPOT
+      45.25%, BYBIT 35.99%, OKX-SPOT 29.34% (worst). Gap concentrates in `trades`/`book_snapshot_5` (10.6%-46.3% per
+      venue) vs. `derivative_ticker`/`liquidations` (58%-97%). **Trailing-90d coverage (24.70%) is WORSE than the
+      full-window average (48.90%)** in every single venue — a live-capture-health signal, not just a historical gap.
+      `futures_chain` is 0.00% for BINANCE-FUTURES/BYBIT with 100% attempted_failed (every attempt fails — a distinct
+      correctness bug). Cited in `cefi_ml_directional_continuous_live_2026_06_20.md`'s Progress Log (same commit);
+      specific gap filed as its own blocking issue with 4 fix todos:
+      `issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md`.
 
 ## Codex SSOTs
 
@@ -355,3 +367,29 @@ context_scope:
      `import` of a Barchart symbol exists anywhere (checked). Next session: implement items 1-3 above, run QG in both
      repos, quickmerge, flip the plan's own Barchart todo. `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
      Progress Log, 2026-08-09 entry (same commit).
+- **2026-08-09** — todo 9 (Binance listing/history-length vs regime-window cross-reference) DISPATCHED + DONE: read-only
+  research, no code shipped. Live-queried Binance `fapi/v1/exchangeInfo` (`onboardDate`) +
+  `fapi/v1/klines?interval=1d&startTime=0` (first real daily candle) for XAU/XAG/COPPER/SPX/SPY/NDX, cross-referenced
+  against the source doc's own ~11-12mo NET-basis regime window (2025-07-01→2026-06-30). **XAU/XAG/COPPER/SPY** are real
+  perps with only 23-55% overlap with that window (each listed partway through it) — their SLIM/NEGATIVE verdicts are
+  regime-conditional, not proven permanent (the same table's CL -20% backwardation reading is this doc's own proof that
+  commodity regimes flip). **SPX**'s nominal 100% coverage is a false signal: Binance `SPXUSDT` is confirmed live to be
+  the SPX6900 meme coin (`underlyingType=COIN`/`Meme`), not an S&P-500 instrument — matches batch11 todo 2's independent
+  finding, restated here because it undermines this todo's own coverage metric for that row. **NDX** has no Binance perp
+  at all (confirmed via a full `exchangeInfo` symbol-list grep) and never had a NET-basis row in the source doc to begin
+  with. No universe/backtest change made, per this todo's explicit scope. Full per-symbol table + evidence:
+  `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log, 2026-08-09 entry (same commit).
+- **2026-08-09** — todo 10 (window-scoped honest-coverage measurement, OKX/BINANCE/BYBIT 2024-01-01→present)
+  DISPATCHED + DONE, read-only measurement, no code shipped. Reused `measure_honest_coverage.py`'s bounded column-pruned
+  manifest reader (single cefi manifest read, no new whole-corpus GCS walk), filtered in-memory to the target venue
+  set + date window (2,980,916 scoped rows of 10,537,552 total). **Result: 48.90% overall reachable coverage —
+  materially below complete.** Per-venue range 29.34% (OKX-SPOT, worst) to 80.51% (OKX-FUTURES). Gap concentrates in
+  `trades`/`book_snapshot_5` (10.6%-46.3%) vs. healthy `derivative_ticker`/`liquidations` (58%-97%). **Trailing-90d
+  coverage (24.70%) is WORSE than the full-window average in every single venue** — flagged as a likely
+  live-capture-health issue, not just a historical backfill gap. `futures_chain` is 0.00% for BINANCE-FUTURES/BYBIT with
+  100% attempted_failed (every attempt fails — a distinct correctness bug, not an absence gap). Result cited in
+  `cefi_ml_directional_continuous_live_2026_06_20.md`'s Progress Log (same commit; that doc's grid-run schedulability
+  verdict updated from "unconfirmed" to "confirmed NOT schedulable, blocking issue filed"). Specific gap filed as its
+  own blocking issue with 4 fix todos (P0 live-capture investigation, P1 futures_chain root-cause, P1 backfill-plan
+  cross-reference, P2 targeted backfill):
+  `/plans/active/issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md`.
