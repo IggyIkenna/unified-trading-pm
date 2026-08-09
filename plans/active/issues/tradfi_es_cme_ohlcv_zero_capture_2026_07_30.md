@@ -1,21 +1,20 @@
 ---
 doc_type: issue
 title: >-
-  tradfi CME ES futures ohlcv_1m/1s manifest-verify reveals ZERO real rows ever captured (2020-2026) — the "fleet
-  FINISHED" framing was VM-completion, not data-capture, proof
+  tradfi CME ES futures ohlcv_1m/1s — RESOLVED: real data captures; the initial "ZERO rows ever captured" reading was a
+  query-key artifact (real rows land under a blank instrument_id, not ES.FUT), not a genuine capture failure
 summary: >-
-  Executed the 2026-07-29 operator-ruled manifest-count check for CME ES futures ohlcv_1m/1s
-  (`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s P0 todo). Result is NOT the expected "backfill proven"
-  outcome: a direct read of the live `market-data-tick-tradfi-prd` `_index` (5,894,011 rows) shows every one of the
-  4,855 `venue=CME, instrument_id=ES.FUT, data_type in {ohlcv_1m, ohlcv_1s}` manifest rows across the full 2020-2026
-  history is either `attempted_failed` (3,048, `error_reason=WithinBoundsTradfiSourceZero`) or `empty_confirmed` (1,807,
-  `error_reason=SOURCE_RETURNED_ZERO`) — **0 rows have `row_count>0`, and 0 rows are `captured`.** The 7-VM
-  `tradfi-bf-cme-ohlcv-1m-es-*` fleet (ran 2026-07-21T03:42-09:48, confirmed zero preemptions) genuinely executed and
-  wrote manifest rows for every requested date, but the Databento fetch itself returned zero bars on every single
-  attempt for this headline MVP instrument (S&P 500 E-mini futures) — not a partial gap, a total one. This contradicts
-  the parent plan's "fleet FINISHED" framing, which was VM-lifecycle proof (STARTED/RUNNING/self-deleted cleanly), not
-  data-capture proof — exactly the distinction `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` warns about
-  (count target artifacts, not activity/VM-completion).
+  **RESOLVED (updated 2026-08-09 by plan_reconciler agt-1a9b86 — see the doc's own "FINAL UPDATE" section for the full
+  chain; original framing below is retained for archaeology only).** Executed the 2026-07-29 operator-ruled
+  manifest-count check for CME ES futures ohlcv_1m/1s (`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s P0
+  todo). The initial query, scoped to `venue=CME, instrument_id=ES.FUT`, found 0 of 4,855 rows with `row_count>0` — but
+  this was a query-key artifact, not a real capture failure: real ES data lands under a BLANK `instrument_id` (the
+  manifest's bundle-grain shard key), not the literal `ES.FUT` string. Two genuine infra bugs were found and fixed along
+  the way (a stall-watchdog-vs-consolidator-lock-horizon mismatch; a manifest-consolidator chunking bug that stalled on
+  a wide-span FRED row) — both shipped and verified live. Post-fix, the re-launched fleet's per-VM manifest shards show
+  real captured ES data landing (thousands of rows/day). The one remaining, narrower, confirmed finding: newly-captured
+  rows are tagged with a blank `instrument_id` where they should carry `ES.FUT` — a live write-path bug in
+  `databento_enrichment.py::download_batch_df`, tracked in the Todos below.
 status: open
 nature: issue
 asset_group: [tradfi]
