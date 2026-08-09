@@ -48,8 +48,8 @@ context_scope: [unified-trading-pm/scripts/plan-hygiene/, unified-trading-pm/.gi
 consecutive distinct regressions in a row, each on a fresh `HEAD`:
 
 1. `codex-doc-freshness` — already independently root-caused and re-baselined this session
-   (`plans/active/issues/codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md`), an ambient time-decay
-   ratchet, not this worker's fault.
+   (`plans/archive/2026_08/issues/codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md`, archived
+   2026-08-09 once its structural fix shipped), an ambient time-decay ratchet, not this worker's fault.
 2. `effort-ratchet`
 3. `archive-candidates` (x2 — regressed twice)
 4. `dangling-reference-paths` — 95 violations > baseline 86, current at time of report

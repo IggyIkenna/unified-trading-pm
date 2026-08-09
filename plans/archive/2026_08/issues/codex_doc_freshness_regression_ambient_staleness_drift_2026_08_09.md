@@ -11,7 +11,7 @@ summary: >-
   regression the same way) — both diffs are now stale: verified via a clean re-run against current HEAD, the true live
   count is 26, exactly AT baseline (not regressed) as of this filing. Not an active blocker right now; filing to
   document the structural gap for whoever eventually revisits the gate's design, since it will recur.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -33,7 +33,6 @@ locked_by:
 resolved_by: slot-28 (backend_engineer), unified-trading-pm@8bc27fe8f
 last_updated: 2026-08-09
 locked_since:
-archive_exempt: true
 source: >-
   Slot 10 (agt-1a9b86) hit this while shipping an unrelated ao-dispatch-visibility baseline ratchet, re-baselined 25->27
   locally but that session went orphaned/stale (worker died, 19 commits behind origin) before it could push — review
@@ -42,6 +41,10 @@ source: >-
   independently re-ran the check against a clean current-HEAD checkout, confirmed the true count is 26 (at baseline),
   and filed this doc with corrected numbers rather than pushing the stale 25->27 diff.
 ---
+
+> **ARCHIVED 2026-08-09** — both todos done: `last_reviewed` refresh shipped (`unified-trading-pm@c54c344d9`), and the
+> structural per-file-baseline-diffing fix shipped (`unified-trading-pm@8bc27fe8f`). Original path:
+> `plans/active/issues/codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md`.
 
 # codex-doc-freshness QG regresses on ambient time decay, not any single change
 
