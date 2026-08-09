@@ -150,10 +150,17 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
       Repo: unified-trading-pm.
 - [ ] [DOCS] P2. Fix the 1 prediction-tranche accidental exclusion (2 markers in the same doc):
       `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`. Same remedy as above. Repo: unified-trading-pm.
-- [ ] [DOCS] P2. Fix the 5 sports-tranche (non-issues) accidental exclusions:
+- [x] ✅ [DOCS] P2. Fix the 5 sports-tranche (non-issues) accidental exclusions:
       `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md`,
       `sports_satellite_ao_dispatch_batch5_2026_07_26.md`, `sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md`.
-      Same remedy as above. Repo: unified-trading-pm.
+      Same remedy as above. Repo: unified-trading-pm. **Done — moot, already resolved by fleet drift before pickup**:
+      `check_ao_dispatch_visibility_gate.py --json` (fresh `origin/live-defi-rollout` pull, corpus now 281 docs)
+      measures fleet-wide `accidental_exclusions: 0` — the gate's own summary. Confirmed at the doc level: all 3 named
+      docs report `excluded: []` (0 flagged todos each) in the current report; `batch10_finalize` carries no
+      `BLOCKED-`/`DEFERRED-BY-DESIGN` token at all, and `batch5`/`batch5_finalize` DO still contain several such tokens
+      mid-continuation-block but none of them are currently mismatched against the backlog (disk_open == backlog_open
+      for both), so no doc edit was needed — same "already fixed by another slot / corpus moved past it before this todo
+      was picked up" shape as the `ci_satellite_ao_dispatch_batch6` finding above. No content change required.
 - [ ] [DOCS] P2. Fix the 10 `plans/active/issues/` accidental exclusions:
       `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
       ~~`ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md`~~ (already resolved +
@@ -185,3 +192,12 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
   gate already GREEN via the pre-existing 6ec2599 re-baseline, no fleet-wide blocking remains. Filed the actual
   per-tranche remediation as tracked todos below (mechanical/judgment doc fixes, out of scope for this 1h investigate
   task) rather than fixing all 34 inline. Todo 1 (this investigation) flipped done.
+- **cicd-worker slot 16, 2026-08-09**: picked up the sports-tranche (non-issues) remediation todo. Fresh-pulled
+  `origin/live-defi-rollout` (corpus now 281 docs, up from 241 at filing) and re-ran
+  `check_ao_dispatch_visibility_gate.py --json`: fleet-wide `accidental_exclusions` already reads 0 — the whole
+  regression has self-resolved via concurrent fleet commits (other slots' doc fixes + corpus churn) ahead of this todo
+  being picked up. Confirmed at doc level: all 3 named sports docs show `excluded: []`. No content edit needed; flipped
+  the checkbox done with the finding recorded inline. Note for whichever slot picks up the remaining
+  defi/infra/prediction/`issues/`-tranche todos below: the same fleet-wide-0 state likely means those are ALSO moot by
+  now — worth a fresh `--json` re-check before doing any manual doc surgery, rather than assuming the original
+  per-tranche breakdown from filing time still holds.
