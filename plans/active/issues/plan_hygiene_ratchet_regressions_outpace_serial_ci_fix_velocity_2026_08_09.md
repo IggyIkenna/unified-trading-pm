@@ -19,7 +19,7 @@ repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
 tags: [ci, quality-gates-v2, ratchet, plan-hygiene, concurrency, live-incident]
 related:
-  - /plans/active/issues/quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md
+  - /plans/archive/issues/quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md
 created: 2026-08-09
 author: agt-22de53 (main), relaying a finding from agt-558c62 (slot 3)
 parent_epic: infrastructure_master

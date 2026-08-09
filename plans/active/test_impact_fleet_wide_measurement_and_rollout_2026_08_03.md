@@ -19,7 +19,7 @@ tags: [ci-cd, testing, pytest, selective-execution, test-impact-analysis, cost, 
 related:
   [
     /plans/archive/issues/test_impact_selective_execution_design_2026_08_03.md,
-    /plans/active/issues/quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md,
+    /plans/archive/issues/quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md,
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
   ]
