@@ -37,7 +37,7 @@ related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md,
-    /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/archive/issues/ag_closeout_audit_prediction_parked_2026_08_08.md,
@@ -60,7 +60,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/task_template.md,
     scripts/plan-hygiene/check_line_caps.sh,

@@ -21,13 +21,12 @@ summary: >-
   cross-references content inside the extracted range before removing it. That verification pass is why this audit run
   did not attempt the extraction inline — it is a real doc-hygiene fix, not a design/judgment call, but wants a
   dedicated, careful pass rather than a rushed side-effect of an unrelated marker write.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
-archive_exempt: true
 tags: [plan-hygiene, line-caps, progress-log, na-eligibility-audit, doc-maintenance]
 related:
   [
@@ -51,6 +50,7 @@ source:
     the marker write.",
   ]
 resolved_by:
+  unified-trading-pm@afd6891bb3 (batch8, slot 8, 2026-08-09 — extraction landed + this doc's own todo checked off)
 locked_by:
 locked_since:
 context_scope:
@@ -62,6 +62,12 @@ context_scope:
 supersedes:
 superseded_by:
 ---
+
+> **ARCHIVED 2026-08-09** — sole todo done (`unified-trading-pm@afd6891bb3`), status flipped `open` → `resolved`.
+> Reconciled by `prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md`'s `[REVIEW] P3` todo 1, per that plan's
+> own `depends_on`+`gate_on_depends` gate on `prediction_satellite_ao_dispatch_batch8_2026_08_08.md`'s todo (also done).
+> `archive_exempt: true` (set 2026-08-09) is cleared now that the routed-through-finalize archival it named has actually
+> happened.
 
 # prediction_cross_venue_arb_and_coverage_2026_07_24.md is at the 1000-line hard cap
 
@@ -156,3 +162,14 @@ to confirm the doc is back under the soft cap (not just barely under the hard ca
   todo (now done) — it is the correct owner of this doc's `status: resolved` flip + eventual archival, not a standalone
   action here. Not archiving now avoids doing the 6-step ritual (referrer fixes across 8 corpus citations,
   codex-alignment check) twice — once here, once again when finalize re-verifies.
+- **2026-08-09 (finalize reconciliation, `prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize-001`,
+  `[REVIEW] P3` todo 1)**: reconciliation confirmed — batch8's own todo is done (`unified-trading-pm@afd6891bb3`) and
+  this doc's own todo was already `[x]` with a commit citation (see above). Completed the routed-through-finalize
+  archival named in the entry directly above: flipped `status: open` → `resolved`, filled `resolved_by:`, removed the
+  now-moot `archive_exempt: true` (its whole justification was "archival happens through this exact finalize todo,"
+  which just ran), added the archive banner, and `git mv`'d this doc to `plans/archive/2026_08/issues/`. Fixed all 8
+  corpus referrers' leading-slash `/plans/active/issues/...` paths to the new `/plans/archive/2026_08/issues/...`
+  location (the `check_reference_paths.py` existence-ratchet population); left bare/relative prose mentions
+  (`issues/...`, bare filename) describing past state as-is, since those aren't the format the existence check enforces
+  and rewriting them would blur what each historical entry actually observed at the time. See
+  `prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md`'s own Progress Log for the exact commit citation.

@@ -24,7 +24,7 @@ related:
     plans/active/issues/plan_line_cap_remediation_2026_07_23,
     /plans/archive/2026_07/prediction_cross_venue_arb_and_coverage_history_2026_07_24.md,
     /plans/archive/2026_08/prediction_cross_venue_arb_and_coverage_history_2026_08.md,
-    /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
   ]
 created: "2026-07-24"
 parent_epic: predictions_master

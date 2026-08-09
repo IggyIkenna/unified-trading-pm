@@ -50,7 +50,7 @@ related:
   [
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/archive/2026_07/prediction_cross_venue_arb_and_coverage_history_2026_07_24.md,
-    /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
   ]
 created: 2026-08-09
 last_updated: 2026-08-09
@@ -71,7 +71,8 @@ depends_on:
 source:
   extracted 2026-08-09 from /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md (prediction satellite AO
   batch 8) to bring that plan back under its 500-line soft cap -- see
-  /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md for the finding this executes.
+  /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md for the finding this
+  executes.
 ---
 
 # Prediction cross-venue arb detection + honest-coverage correctness — extracted history (wave 2)

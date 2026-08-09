@@ -20,7 +20,7 @@ related:
     /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md,
-    /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"
@@ -47,7 +47,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md,
-    /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---

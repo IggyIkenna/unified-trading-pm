@@ -15,9 +15,10 @@ summary: >-
   when the file is ALREADY over cap before the commit — a file sitting exactly AT the 1000-line boundary has zero
   headroom for even a 1-line addition, and the carve-out's own `PRE_COMMIT_LINES -gt PLAN_HARD_CAP` check can never be
   true for a doc starting at exactly 1000. This is the SAME failure class as
-  `/plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` (filed one day earlier for a
-  different doc in a different tranche) — but that doc was ALSO at-cap; this is now the SECOND independent occurrence,
-  suggesting a doc sitting exactly at the 1000-line boundary (not yet over) is not a rare edge case in this corpus.
+  `/plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md` (filed one day earlier
+  for a different doc in a different tranche) — but that doc was ALSO at-cap; this is now the SECOND independent
+  occurrence, suggesting a doc sitting exactly at the 1000-line boundary (not yet over) is not a rare edge case in this
+  corpus.
 status: resolved
 nature: issue
 asset_group: [tradfi, cross-cutting]
@@ -29,7 +30,7 @@ related:
   [
     /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/active/issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md,
-    /plans/active/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
+    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
     /plans/active/task_template.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
