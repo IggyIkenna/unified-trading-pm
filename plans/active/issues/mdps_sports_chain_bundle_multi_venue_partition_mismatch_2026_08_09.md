@@ -25,7 +25,7 @@ tags: [sports, data-correctness, partition-mismatch, candle-write, chain-bundle,
 related:
   [
     /plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md,
-    /plans/active/issues/mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md,
+    /plans/archive/2026_08/issues/mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md,
   ]
 created: "2026-08-09"
 author: mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check-6de668ad5496 (slot-31, data_engineering)

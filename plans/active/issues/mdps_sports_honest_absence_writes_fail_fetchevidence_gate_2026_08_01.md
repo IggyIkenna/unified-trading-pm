@@ -545,10 +545,10 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   `--env staging` export) instead of the explicit prod tier the raw-tick read already uses — this fires BEFORE any
   candle-write code (including this finding's fix) ever runs, for ANY SPORTS `pipeline_e2e_check.py` invocation, not
   just this one. Filed as its own issue with root-cause + a fix-option A/B recommendation + a follow-up re-verify todo:
-  [`mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md`](/plans/active/issues/mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md).
-  Left this todo's checkbox UNCHECKED (its done-when is not yet met) rather than premature-flip it — the unit test above
-  proves the fix is correct at the function level, but the plan's stricter real-VM e2e proof is genuinely outstanding,
-  blocked on the linked issue's fix landing first.
+  [`mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md`](/plans/archive/2026_08/issues/mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md)
+  (now archived — both its todos are done). Left this todo's checkbox UNCHECKED (its done-when is not yet met) rather
+  than premature-flip it — the unit test above proves the fix is correct at the function level, but the plan's stricter
+  real-VM e2e proof is genuinely outstanding, blocked on the linked issue's fix landing first.
 
 - 2026-08-09 (slot-31, data_engineering,
   `mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check-6de668ad5496`): the staleness-guard blocker above
