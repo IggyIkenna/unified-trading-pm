@@ -954,4 +954,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   a dedicated look if the census stays flat past another 1-2 merge cycles (~30min). smallchunk9 still chunk 26, 49
   `CHUNK_FAILED` (in-range), heartbeat live throughout. Both fleets' underlying data pipelines healthy, no action beyond
   continued watching.
+- **05:11Z — census anomaly SELF-RESOLVED.** Needed moved for the first time in ~2h15m: 48,521→48,432 (-89), confirming
+  the consolidator flat-streak was genuinely just an unusually long delay, not a bug — no further investigation needed.
+  smallchunk9 still chunk 26, 51 `CHUNK_FAILED` (RSS hit 92.8% mem right before this retry, normal trigger), heartbeat
+  fresh. Both healthy.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
