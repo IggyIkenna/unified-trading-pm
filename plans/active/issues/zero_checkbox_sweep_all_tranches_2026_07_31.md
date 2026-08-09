@@ -220,3 +220,12 @@ them as a finding; the population definition is deliberately left unchanged.
   the sweep at the next monthly `/plan-reconcile` pass) is this doc's own deliberately-permanent standing-register
   cadence item, owned by that scheduled skill, not AO dispatch (archiving/dispatching it is exactly what orphaned this
   class twice before, per this doc's own history).
+- **plan_reconciler 2026-08-09 (agt-a398c9, infra tranche)**: one of the 8 "NEW — unclassified" 2026-08-06-measurement
+  rows, `client_reporting_api_promote_wedge_backmerge_dead_2026_08_06.md`, CONVERTED this run — its prose "Recommended
+  resolution" became 4 real `- [ ]`/`- [x]` todos, all closed with fresh 2026-08-09 evidence (the promotion wedge it
+  described is resolved: backmerge succeeding on main, root-cause reference removed, closed as a side effect of
+  `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 13). `status: resolved` set on the doc itself; archival move
+  NOT done — it's dual-tagged `[ci, infrastructure]` and the `ci` tranche's own
+  `ag_closeout_audit_ci_parked_2026_08_08.md` already flagged it pending a retag decision, so the archive step is left
+  for whichever tranche resolves that ownership question. Non-exempt unclassified count from the 2026-08-06 measurement:
+  8 → 7.

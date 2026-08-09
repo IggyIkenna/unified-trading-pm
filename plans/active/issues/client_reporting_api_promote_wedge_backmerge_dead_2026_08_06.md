@@ -16,7 +16,7 @@ summary: >-
   current promote PR #646 (promote/client-reporting-api/6e0622b853a7) is CONFLICTING on Dockerfile (ARG
   BASE_IMAGE_DIGEST: main stale sha256:9c1a… vs LDR current sha256:a27d…) and has NO quality-gates-v2 check + sit-gate
   fail-closed. LDR already carries the exact fixes that would repair main once promoted.
-status: open
+status: open # flipping to resolved + archiving in a SEPARATE follow-up commit, per the flip/mv split HARD RULE
 nature: issue
 asset_group: [ci, infrastructure]
 stage: [meta]
@@ -36,7 +36,8 @@ execution_scope: orchestrator-agent
 priority: P1
 parent_epic: infrastructure_master
 drift_direction: advance-code
-resolved_by:
+resolved_by: plan_reconciler agt-a398c9 2026-08-09
+archive_exempt: true # THIS COMMIT ONLY — flip precedes archival per the flip/mv split HARD RULE, see next commit
 depends_on: []
 locked_by:
 locked_since:
@@ -106,6 +107,42 @@ Dispatch a **merge_conflict wall** for #646 (or fold into the fleet recovery):
 
 Note: `shared_ci_workflow_repo_extraction_2026_08_06.md` (wave 3, `client-reporting-api`) is the durable follow-up that
 moves notify-slack.yml to the shared `unified-trading-ci` repo; this issue is the immediate unblock until then.
+
+## Resolution (2026-08-09, plan_reconciler agt-a398c9 — infra tranche)
+
+**This doc had ZERO `- [ ]`/`- [x]` checkboxes anywhere — the "Recommended resolution" above was plain numbered prose,
+invisible to `regen_backlog_from_plan.py`'s checkbox-driven AO dispatch despite `assigned_vm: planning` + `priority: P1`
+(independently caught by 2 hunters this run, cross-referenced against
+`zero_checkbox_sweep_all_tranches_2026_07_31.md:141`'s prior "NEW — unclassified" flag). Converting to real todos below
+— but live re-verification (not the stale 2026-08-06 snapshot above) shows the underlying wedge is now **RESOLVED**, not
+still-open:
+
+- [x] ✅ [VERIFY] P1. **Confirm PR #646's fate and current main↔LDR relationship.** `gh pr view 646` shows
+      `state: CLOSED` (not merged) — superseded, not landed. `gh pr list --search "chore(promote)"` shows **zero** open
+      promote PRs for client-reporting-api today. `gh api .../compare/main...live-defi-rollout` shows
+      `ahead_by: 287, behind_by: 0` — main is a pure ancestor of LDR (287 commits behind), no longer carrying unique
+      diverging commits the way the original 3-commit conflict described. The specific #646 conflict this doc was
+      written around no longer exists as an open, actionable PR.
+- [x] ✅ [VERIFY] P1. **Confirm whether `main-backmerge-to-ldr.yml` is still dead on main.** It is NOT —
+      `gh run     list --workflow main-backmerge-to-ldr.yml --branch main` shows 5 consecutive `conclusion: success`
+      runs as recently as 2026-08-09T00:18:47Z. The zero-job 0s validation-failure pattern this doc describes is gone.
+- [x] ✅ [VERIFY] P1. **Root-cause check: does main's copy of `main-backmerge-to-ldr.yml` still reference the missing
+      `notify-slack.yml`?** No — `gh api .../contents/.github/workflows/main-backmerge-to-ldr.yml?ref=main` + grep for
+      "notify" returns zero hits; the broken `uses: ./.github/workflows/notify-slack.yml` reference this doc root-caused
+      is gone from main's copy of the workflow. `notify-slack.yml` itself still does not exist as a standalone file on
+      main (still 404) — but nothing on main references it anymore, so that's no longer a defect.
+- [x] ✅ [VERIFY] P1. **Identify what fixed it.** `shared_ci_workflow_repo_extraction_2026_08_06.md` todo 13 (`[x]`
+      DONE) — "Wave 3: client-reporting-api..." — shipped `client-reporting-api@6b09fcd`, exactly the durable follow-up
+      this doc's own "Note" above named as the eventual fix. The wedge was closed by that sibling plan, not by anything
+      dispatched from this doc.
+
+**Net: no remaining live work.** All 4 todos above are closure-verification, not net-new work — filed as real todos (not
+left as prose) per this run's zero-checkbox-sweep obligation, then immediately closed with today's evidence. Doc has 0
+open items, is unlocked (`locked_by:` blank) — archived this same run (6-step ritual). **Note for whoever next touches
+this doc**: it carries `asset_group: [ci, infrastructure]`, and `ag_closeout_audit_ci_parked_2026_08_08.md`
+independently flagged it as likely ci-owned content pending a retag decision it deliberately deferred
+("non-owning-tranche-race caution") — that retag question is still open and unrelated to this archival; the doc's
+location (now `plans/archive/`) doesn't block a future retag of its `asset_group` frontmatter.
 
 ## Evidence
 
