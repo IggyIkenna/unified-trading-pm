@@ -18,7 +18,7 @@ summary: >-
   recovered promptly (~2min); slots 10/13/16/21 were still status=killed/worker_alive=false 4-5min later at check time —
   strengthens the "serial refill, slow per-slot cadence" hypothesis below, since only 1 of 5 simultaneous kills refilled
   within-SLA. Priority raised P3->P2 given the larger simultaneous blast radius.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -30,6 +30,7 @@ related:
     /plans/archive/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md,
     /plans/active/issues/one_shot_complete_session_ownership_desync_2026_08_08.md,
     /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
+    /plans/active/issues/autospawn_refill_sla_data_points_1_2_and_live_recheck_followup_2026_08_09.md,
   ]
 created: 2026-08-08
 parent_epic: orchestrator_master
@@ -39,6 +40,9 @@ priority: P2
 assigned_role: backend_engineer
 drift_direction: advance-code
 resolved_by:
+  "slot-25, infra, 2026-08-09 — companion finalize plan's evidence-check todo independently verified the root-cause fix
+  (dfef970); archived per the 6-step ritual after migrating the two remaining prose caveats (data points 1/2, live
+  recheck) to a tracked follow-up issue doc"
 locked_by:
 source:
   "review (agent-orchestrator loop tick, msg 4091, ~2026-08-08T11:22Z); main independently verified via /api/state read"
@@ -53,6 +57,12 @@ context_scope:
 ---
 
 # AutoSpawn refill slower than documented ~60s SLA — two data points
+
+> **🟢 ARCHIVED (2026-08-09).** Sole todo done + independently verified (companion finalize plan's evidence-check todo);
+> root cause confirmed for data point 3 (`agent-orchestrator@dfef970`, `_do_spawns_concurrently()`). The two prose
+> caveats (data points 1/2 not independently explained; production live-recheck not performed) were migrated to a
+> tracked follow-up:
+> `/plans/active/issues/autospawn_refill_sla_data_points_1_2_and_live_recheck_followup_2026_08_09.md`.
 
 ## Evidence
 
@@ -144,3 +154,11 @@ impact — both are self-healing idle-capacity gaps, not silent failures.
   status is a hard gate; the companion finalize plan verifies the evidence then flips `status: resolved` + archives in
   one step, per convention). Unblocks the companion finalize plan's evidence-check + archival todos.
 - **context-scout 2026-08-09**: populated context_scope (4 entries).
+- **2026-08-09 (slot 25, infra)**: Archived per the 6-step ritual. Confirmed zero open `- [ ]` todos remain (sole todo
+  already `[x]`, independently verified by the companion finalize plan's evidence-check todo). Migrated the two
+  remaining prose caveats (data points 1/2 not independently explained; production live-recheck not performed) into a
+  real tracked todo doc —
+  `/plans/active/issues/autospawn_refill_sla_data_points_1_2_and_live_recheck_followup_2026_08_09.md` — per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` §2 (todos-not-prose), rather than letting them
+  evaporate with this archived doc. `status: resolved`. Moving to `plans/archive/2026_08/issues/` in this same commit
+  (no checkbox flip happening in this session, so the never-combine-flip-with-mv rule does not apply here).
