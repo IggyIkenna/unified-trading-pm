@@ -82,14 +82,31 @@ drift_direction: advance-code
       renders. Display-only gap — the backfill WRITE path already works. Done when:
       `--operation status --asset-group     prediction` runs without raising and renders coverage. Repo:
       instruments-service.
-- [ ] [CODE] P2. **DeFi venue-grain — align the ADAPTER/writer shard key to the decided PROTOCOL-CHAIN grain.** Source:
-      same doc. The `_index` reconcile (already DONE) fixed the STORED data to the decided PROTOCOL-CHAIN grain
-      (`AAVE_V3-ETHEREUM`, per UAC SSOT `ALL_DEFI_VENUES`), but the WRITER still keys multi-chain protocol shards by the
-      adapter's bare `venue` property rather than `InstrumentRecord.venue`=`PROTOCOL-CHAIN`, so a fresh capture can
-      re-introduce a bare-spelling row. Make the adapter `venue` property, `InstrumentRecord.venue`, and the manifest
-      shard key all emit the canonical PROTOCOL-CHAIN id so new writes match the canonicalised `_index` with no
-      re-reconcile needed. Done when: a fresh capture for a multi-chain protocol writes under the PROTOCOL-CHAIN shard
-      key, verified against the `_index`. Repo: instruments-service / unified-trading-library (manifest shard key).
+- [x] ✅ [CODE] P2. **DeFi venue-grain — align the ADAPTER/writer shard key to the decided PROTOCOL-CHAIN grain — STALE
+      PREMISE, already shipped (verification only).** Source: same doc. This exact fix landed on
+      `instruments-service@6b7fbadf`/`ec73983e` (2026-08-05,
+      `fix(defi): align multi-chain adapter venue property to     PROTOCOL-CHAIN grain`, 42 adapter files + 49 test
+      assertions) — **four days before this batch-11 doc was authored (2026-08-09)** — so the source doc's checkbox was
+      already stale at extraction time. Verified live against current HEAD, not just the commit log: every multi-chain
+      DeFi adapter's `venue` property returns the combined form (e.g.
+      `instruments_service/reference_data/adapters/defi/aave_v3.py:224-226` → `f"{self._venue_prefix}-{self._chain}"` =
+      `AAVE_V3-ETHEREUM`; `compound_v3.py:95-97` → `f"COMPOUND_V3-{self._chain}"`; spot-checked across all 57 non-oracle
+      defi adapters, no bare-spelling holdouts found), each adapter's `_build_*_records` threads that same combined
+      string into `InstrumentRecord.venue` (no drift between the two), and the manifest writer
+      (`engine/orchestrator/writers.py:43` `_canonical_manifest_venue_chain()`) splits the combined form into
+      `(venue=PROTOCOL, chain=CHAIN)` for the manifest row_key — used identically by both the capture path
+      (`_write_venue`, line ~405) and the expected-unattempted seeder (`process_write.py:853`), so a seed row and a
+      captured row land on the same key with no re-reconcile needed. Test coverage already exists and is current:
+      `tests/unit/test_defi_adapters_comprehensive.py` (per-adapter `test_venue_property` assertions),
+      `tests/unit/test_orchestrator_helpers.py:196-232` (`_canonical_manifest_venue_chain` unit tests incl. the
+      CeFi-perp non-split guard). unified-trading-library's `manifest_writer` is generic infra that records whatever
+      `(venue, chain)` the caller passes — no separate bare-venue keying bug found there. **Distinct,
+      still-genuinely-open issue in the same family** (NOT this todo — a duplicate-alias-key bug in the pre-launch
+      enumerator, not the adapter/writer venue property):
+      `/plans/active/issues/defi_aavev3_bare_alias_enumerator_bug_2026_08_08.md` (code fixed
+      `instruments-service@2b2e9f124`; an `[OPERATOR]`-gated stale-row purge + a `[DESIGN]` question remain open there,
+      untouched by this todo). Repo: instruments-service (verified, no change needed) / unified-trading-library
+      (verified, no change needed).
 - [x] ✅ [INFRA] P1. **B3 — copy e2e research data to canonical placement + e2e doc — STALE PREMISE, no copy needed
       (verification + doc-fix only).** Both the legacy research buckets (`perp-funding-central-element-323112`,
       `lst-rates-central-element-323112`) AND the `-prd-` twins this todo assumed already existed
@@ -192,6 +209,13 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- **2026-08-09**: DeFi venue-grain todo (P2, adapter/writer PROTOCOL-CHAIN shard key) flipped — STALE PREMISE, the fix
+  was already shipped `instruments-service@6b7fbadf`/`ec73983e` on 2026-08-05, four days before this batch was authored.
+  Verified live against current HEAD (not just the commit log): all 57 non-oracle multi-chain DeFi adapters' `venue`
+  properties + `InstrumentRecord.venue` + the manifest writer's `_canonical_manifest_venue_chain()` split already emit
+  the canonical combined/split form consistently; existing test coverage (`test_defi_adapters_comprehensive.py`,
+  `test_orchestrator_helpers.py`) is current. No code change needed in either named repo. See the todo's own note for
+  the distinct still-open sibling issue (`defi_aavev3_bare_alias_enumerator_bug_2026_08_08.md`).
 - **2026-08-09**: Batch authored via the round11 cross-cutting+ui RECLASSIFY + satellite-extraction sweep. 11 items
   extracted from `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` (`instruments_master`) — formalizing
   that doc's own 2026-08-07 audit finding that roughly half its 22 open items were independently bounded/mechanical and
