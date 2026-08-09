@@ -18,7 +18,7 @@ related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
-    /plans/active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-03"

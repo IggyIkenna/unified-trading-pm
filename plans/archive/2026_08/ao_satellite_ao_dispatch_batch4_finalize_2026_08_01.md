@@ -6,7 +6,7 @@ summary: >-
   the batch's sole todo is done. Reconciles the completed todo's evidence back into its TRUE source issue doc (the batch
   was an extraction, so the source doc's own checkbox is the one that goes stale), archives the source doc if it reaches
   zero open todos, and runs the standard 6-step archival ritual on the batch plan itself.
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -53,6 +53,10 @@ source: >-
 ---
 
 # AO satellite AO batch 4 — finalize
+
+> **🟢 ARCHIVED 2026-08-09** — all 5 todos `[x]`, `locked_by:` empty. Batch 4's gated closeout is complete: the batch
+> plan itself was already archived (with a banner naming this doc as owing the flip); this doc's sole remaining checkbox
+> is now flipped to match, closing the gap (plan_reconciler agt-fe4564).
 
 > **Machine-gated on `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md`** (`depends_on` +
 > `gate_on_depends: true`) — will not dispatch until that plan's sole todo is `done`. No separate `status` flip needed
@@ -120,12 +124,17 @@ source: >-
       since nothing moved. Verified via
       `grep -rl orchestrator_failover_double_dispatch_duplicate_work_2026_07_25 plans/ codex/` — 13 referrer hits, all
       still pointing at the live `plans/active/issues/` path (no archived copy exists to repoint to).
-- [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
+- [x] ✅ [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md`, move the file to `plans/archive/2026_08/`,
       fix every corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then run
       `.venv/bin/python scripts/plans/regenerate_active_plan_inventory.py`. **Done when**: the batch plan is archived
       with a banner, the inventory regenerates with an orphan count of 0, and `check_finalize_plan_coverage.py` no
-      longer names this pair.
+      longer names this pair. — verified by plan_reconciler agt-fe4564 2026-08-09: the batch plan is archived at
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md` with a `🔴 ARCHIVED 2026-08-06 — COMPLETE`
+      banner naming this doc as the pending flip; this finalize doc's own `related:` already points at the archive path;
+      `check_finalize_plan_coverage.py` reports 0 violations (does not name this pair). The archival ritual itself was
+      already done (by an earlier `/plan-reconcile ao` pass per the archived copy's own banner) — this flip closes the
+      gap between that completed work and this doc's stale checkbox.
 
 ## Codex SSOTs
 
