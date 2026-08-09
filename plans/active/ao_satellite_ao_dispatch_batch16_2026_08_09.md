@@ -101,7 +101,7 @@ re-read this round found:
 
 ## Todos
 
-- [ ] [INFRA] P2. **Add a token-near-expiry early warning to `slot-git-status-report.sh` (option (a), the doc's own
+- [x] ✅ [INFRA] P2. **Add a token-near-expiry early warning to `slot-git-status-report.sh` (option (a), the doc's own
       stated preference).** The reporter already decodes the bearer JWT (used for the treadmill diagnosis in the source
       doc's own evidence trail — the `exp` claim is already being read). Add: if `exp` is within ~3 days of the current
       time, emit ONE warning event per state-transition (i.e. dedup so it doesn't refire every ~5-min cron tick while
@@ -113,7 +113,11 @@ re-read this round found:
       `remint-orch-token.sh` resets `exp` clears the near-expiry state (either an explicit RESOLVED event or the state
       naturally not re-firing). Source:
       `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md:140` (its `[INFRA] P2` item
-      — the sole remaining unclaimed AO-eligible item). Repo: unified-trading-pm.
+      — the sole remaining unclaimed AO-eligible item). Repo: unified-trading-pm. **Evidence**:
+      unified-trading-pm@b427499b33 — `scripts/dev/slot-git-status-report.sh` decodes the reporter's bearer JWT `exp`
+      claim and fires one state-transition-dedup warning into the AO activity feed within `TOKEN_EXPIRY_WARN_DAYS`
+      (default 3) of expiry, clearing on re-mint; TTL unchanged; `tests/test_slot_git_status_token_expiry.bats` covers
+      fire-once / no-refire / clear-on-remint.
 
 ## Codex SSOTs (read before starting)
 
