@@ -48,12 +48,12 @@ extends it, per-service captures what is unique.
 
 ### Start Here
 
-| Goal                  | Read                                                                                       |
-| --------------------- | ------------------------------------------------------------------------------------------ |
-| New service developer | `04-architecture/README.md` → `06-coding-standards/README.md` → service's per-service docs |
-| AI agent              | `.cursorrules` → `.cursor/rules/*.mdc` → `00-SSOT-INDEX.md` for canonical source lookups   |
-| Code reviewer         | `10-audit/` checklists for compliance verification                                         |
-| Ops / infra engineer  | `deployment-service/configs/` → `05-infrastructure/` → `00-SSOT-INDEX.md`                  |
+| Goal                  | Read                                                                                                                                                                                                            |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| New service developer | `04-architecture/README.md` → `06-coding-standards/README.md` → service's per-service docs                                                                                                                      |
+| AI agent              | `unified-trading-pm/DOC_INDEX.generated.md` (grep, never read whole) → `authoritative_for:` frontmatter facet → confirm `summary:` → open doc — see `/codex/11-project-management/doc-frontmatter-schema.md` §1 |
+| Code reviewer         | `10-audit/` checklists for compliance verification                                                                                                                                                              |
+| Ops / infra engineer  | `deployment-service/configs/` → `05-infrastructure/` → `00-SSOT-INDEX.md`                                                                                                                                       |
 
 ## The System at a Glance
 

@@ -58,11 +58,14 @@ code_refs:
 > **The pipeline is the MVP (operator decision Harsh + Ikenna, 2026-06-30).** A commit is green locally
 > (`quality-gates.sh`) and reaches `live-defi-rollout` (LDR) via `quickmerge`. SIT validates the LDR content. The
 > LDR→main fleet promoter merges **LDR→main directly** — there is NO staging hop. `staging` is KEPT but **DORMANT**
-> behind a reversible per-repo toggle. **The LDR→main promote gate set is exactly THREE things:** `sit-gate/fleet-green`
+> behind a reversible per-repo toggle. **The LDR→main promote gate set is exactly THREE things:**
 >
-> - `quality-gates-v2` (on the promote PR) + quickmerge-provenance. The former "complex pipeline" gates — **label-check,
->   the SIT cross-repo COMBINATION workspace-digest, the dep-order gate, version-out-of-source (D13)** — are RETIRED /
->   advisory-only and are NOT part of the contract.
+> - `sit-gate/fleet-green`
+> - `quality-gates-v2` (on the promote PR)
+> - quickmerge-provenance
+>
+> The former "complex pipeline" gates — **label-check, the SIT cross-repo COMBINATION workspace-digest, the dep-order
+> gate, version-out-of-source (D13)** — are RETIRED / advisory-only and are NOT part of the contract.
 >
 > **Historical record (refactor COMPLETE, archived 2026-07-31):
 > `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`** — all 29 todos done; it superseded the WS-L
