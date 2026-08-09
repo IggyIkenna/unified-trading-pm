@@ -79,16 +79,20 @@ semantic change), confirm `check_prosewrap_padding.sh` passes clean afterward, s
 
 ## Todos
 
-- [ ] [BACKEND] P3. Hand-repair the ~27 over-padded continuation lines in
+- [x] ✅ [BACKEND] P3. Hand-repair the ~27 over-padded continuation lines in
       `silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` (lines ~117-155), collapsing each flagged
       line's leading-whitespace run to sane indentation. Verify content-only via `git diff -w` (zero semantic change)
       before shipping. **Done when**: `check_prosewrap_padding.sh --only <path>` passes clean on that file. (repo:
-      unified-trading-pm)
-- [ ] [BACKEND] P3. Hand-repair the ~61 over-padded continuation lines in
+      unified-trading-pm) **DONE (2026-08-09, cicd escalation agt-433520)** — collapsed the two corrupted blocks
+      (lines 117-132 at 886-space indent, lines 151-163 at 770/772-space indent) back to their paragraph/bullet's real
+      indent (6, with bullet continuations at 8). `git diff -w` empty (zero semantic change); check passes clean.
+- [x] ✅ [BACKEND] P3. Hand-repair the ~61 over-padded continuation lines in
       `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (starting ~line 26), collapsing each flagged
       line's leading-whitespace run to sane indentation. Verify content-only via `git diff -w` (zero semantic change)
       before shipping. **Done when**: `check_prosewrap_padding.sh --only <path>` passes clean on that file. (repo:
-      unified-trading-pm)
+      unified-trading-pm) **DONE (2026-08-09, cicd escalation agt-433520)** — 82 over-indent(18) lines collapsed to 6,
+      plus 1 backtick-padding site (`--jq     .commit.tree.sha` → `--jq .commit.tree.sha`). `git diff -w` empty; check
+      passes clean (0 violations, was 83).
 
 ## Progress Log
 

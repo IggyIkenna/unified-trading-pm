@@ -24,10 +24,7 @@ priority: P1
 estimate_class: brand-new
 source: discovered live while running the round-derivation residual census (sports_closeout_batch1_ao_ready-008)
 resolved_by:
-archive_exempt:
-  true # 2026-08-09 — 0 open todos as of this commit, but the checkbox-flip and the git-mv archival must
-  # land as separate commits (plan-completion-and-archival-discipline.md's "never combine" rule) — this is a transient
-  # exemption for the flip commit only, meant to be cleared by the very next archival commit (see Progress Log).
+archive_exempt: true # 2026-08-09 — transient exemption: 0 open todos but the checkbox-flip and git-mv archival land as separate commits per archival-discipline's "never combine" rule; cleared by the next archival commit (see Progress Log).
 locked_by:
 drift_direction: advance-code
 depends_on: []
