@@ -233,7 +233,16 @@ full-regeneration approach and toward the narrower per-leg-role venue-containmen
 
 ---
 
-## Recommendation (operator decision needed — not actioned)
+## Recommendation (operator decision needed — not actioned) — SUPERSEDED, all 3 decided+shipped 2026-07-24
+
+> **STALE SECTION — flagged by this doc's own 2026-08-06 na-eligibility-audit note, corrected 2026-08-09 by
+> plan_reconciler.** All 3 decisions below were made and shipped the same day this doc was authored; none is still open:
+>
+> - Curtailment layer: BUILT — Layer-3 curtailment gate shipped (Side-decision 2, `unified-api-contracts@211e0d05`).
+> - Finding 2 (`SmartOrderRoutingConfig.allowed_venues`): DELETED — `strategy-service@813ec66b`.
+> - Finding 3 (registry reconciliation): RECONCILED via the containment gate — see Side-decision 2 above.
+>
+> Original text retained below for archaeology only — do NOT pick work from it.
 
 - Decide whether to build the curtailment layer now (design sketch above), and at what scope (all 19 archetypes, or
   start with the already-drivable 7 in `paper_universe.py`'s `_ENGINE_DRIVABLE_ARCHETYPES`).
@@ -865,6 +874,6 @@ roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tic
   this same doc — hygiene cleanup candidates for a future pass, not reclassification triggers. Doc stays
   `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
-  since the 2026-08-06 audit (context-scout metadata only, per git log). Both open checkboxes (recursive-loop
-  archetype design gap; MVP_SCOPE catalog-identity precondition) remain explicit operator-design-gated per their own
-  text. Doc stays `assigned_vm: NA`.
+  since the 2026-08-06 audit (context-scout metadata only, per git log). Both open checkboxes (recursive-loop archetype
+  design gap; MVP_SCOPE catalog-identity precondition) remain explicit operator-design-gated per their own text. Doc
+  stays `assigned_vm: NA`.

@@ -148,16 +148,17 @@ just (c).
 
 ## Open work
 
-- [ ] 1. [OPERATOR] P2. Decide the fate of `strategy_orders`/`strategy_positions`/`strategy_pnl`: wire up a real
-      caller + deployment config (in which case also fix the PATH_REGISTRY divergence found above, mirroring todo 3b's
-      `ml_predictions`/`strategy_instructions` fixes) OR delete the dead code
-      (`CloudStrategyStorage.store_positions`/`store_pnl`, `store_orders_batch`, `OrderBatchStorage`) as tech debt.
-      Repo: strategy-service. Only once resolved does an orphan sweep for this family become meaningful to build.
-- [ ] 2. [OPERATOR] P2. Decide whether `backtest_results` should get a manifest-WRITE design (new
-      `data_type=backtest_results` keyed by `(strategy_id, run_id)`) or is intentionally out of the
-      availability-manifest's scope. Repo: strategy-service.
-- [ ] 3. [OPERATOR] P2. Decide whether `ml_models`/`ml_model_metadata`/`ml_training_artifacts` should get a
-      manifest-WRITE design (keyed by `model_id`) or are intentionally exempt. Repo: ml-service.
+- [ ] 1. [CODE] P2. **Retagged from `[OPERATOR]` 2026-08-09 by plan_reconciler — the decision is resolved, the
+      implementation is not.** Operator answered BLK-75060009 (2026-08-05, see Progress Log): `strategy_orders`/
+      `strategy_positions`/`strategy_pnl` → wire up. Todo 4 below already shipped the orphan-sweep TOOL for this family;
+      still remaining: the actual wire-up (a real caller + deployment config) and the PATH_REGISTRY divergence fix
+      mirroring todo 3b's `ml_predictions`/`strategy_instructions` fixes. Repo: strategy-service.
+- [x] ✅ 2. [OPERATOR] P2. **Retagged+closed 2026-08-09 by plan_reconciler.** Operator answered BLK-75060009
+      (2026-08-05, see Progress Log): `backtest_results` → ephemeral, no sweep. No manifest-WRITE design needed; nothing
+      further to build. Repo: strategy-service.
+- [x] ✅ 3. [OPERATOR] P2. **Retagged+closed 2026-08-09 by plan_reconciler.** Operator answered BLK-75060009
+      (2026-08-05, see Progress Log): `ml_models`/`ml_model_metadata`/`ml_training_artifacts` → ephemeral, no sweep. No
+      manifest-WRITE design needed; nothing further to build. Repo: ml-service.
 - [x] ✅ 4. [SCRIPT] P3. Once any of todos 1-3 resolves toward "wire it up", build the corresponding orphan-sweep
       extension — strategy-service@4733a7e7 (extend `strategy_orphan_sweep.py` for orders/positions/pnl and/or
       backtest_results; `ml_orphan_sweep.py` for models/metadata/training_artifacts) mirroring the A-E taxonomy pattern.
