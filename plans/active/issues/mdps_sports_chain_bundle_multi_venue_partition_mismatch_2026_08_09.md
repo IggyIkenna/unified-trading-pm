@@ -144,11 +144,21 @@ The fix needs to move the venue-partitioning boundary from "whole chain file" to
 
 ## Todos
 
-- [ ] [CODE] P1. Implement Option A (or an operator-ruled equivalent) so SPORTS chain-bundle candle writes route each
+- [x] ✅ [CODE] P1. Implement Option A (or an operator-ruled equivalent) so SPORTS chain-bundle candle writes route each
       bookmaker's rows to their own venue-partitioned file instead of combining all bookmakers into one write with one
       derived venue. Done-when: a from-scratch
       `pipeline_e2e_check.py --asset-group SPORTS --data-types     odds_horizon_bucket` force run against day=2026-04-14
-      produces 0 `[partition_mismatch]` rejects. (repo: market-data-processing-service)
+      produces 0 `[partition_mismatch]` rejects. — market-data-processing-service@53344df. Implemented at the write
+      boundary (`_write_or_record_empty_timeframe` in `live_workers_chain.py`): a combined candles frame spanning more
+      than one real venue is split per-venue (via the same `_venue_token_from_canonical_id` deriver
+      `_build_candle_output_path`'s fallback already uses) and written once per venue group with `input_venue=None` so
+      the path builder derives each group's venue from its own rows — never row 0 of the whole batch. Single-venue
+      frames (the common non-SPORTS case) pass through unchanged, zero extra writes. Covered by 2 new unit tests
+      (`TestWriteOrRecordEmptyTimeframeMultiVenueSplit` in `test_live_workers_coverage2.py`) reproducing this issue's
+      exact 2-bookmaker/1-match shape; full QG green (2389 tests + the 2 new ones). The from-scratch
+      `pipeline_e2e_check.py` VM run against day=2026-04-14 itself is todo 2 below (re-verification), not re-run as part
+      of this todo — it needs a backfill VM, out of scope for this code-fix dispatch. (repo:
+      market-data-processing-service)
 - [ ] [DATA] P2. Once the above lands, re-run the same verification and flip Finding 5's `[CODE] P2` todo in
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md` with this run's evidence (0
       partition_mismatch rejects for the SPORT888/BETONLINEAG/CORAL and UNIBET cells specifically, plus confirm no NEW
@@ -156,6 +166,15 @@ The fix needs to move the venue-partitioning boundary from "whole chain file" to
 
 ## Progress Log
 
+- 2026-08-09 (slot-5, data_engineering, `mdps_sports_chain_bundle_multi_venue_partition_mismatch-494586d72f17`):
+  implemented todo 1 — market-data-processing-service@53344df. Shape (b)-adjacent fix: rather than restructuring
+  `_process_chain_timeframe`'s return contract (would have broken its existing unit-test suite's single-frame assertions
+  for no functional gain), split at the write choke point instead — `_write_or_record_empty_timeframe` now groups a
+  combined candles frame by real venue (reusing `_build_candle_output_path`'s own `_venue_token_from_canonical_id`
+  deriver, so grouping and partition derivation can never disagree) and issues one `_write_candles` call per group. Full
+  QG green (`.qg_last_passed_sha=53344dfa0...`, 2389 tests passed + 2 new). Todo 2 (the from-scratch VM e2e
+  re-verification) is left for a follow-up dispatch — it needs a backfill VM, out of scope for this code-only task
+  (est_hours=1.0).
 - 2026-08-09 (slot-31, data_engineering,
   `mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check-6de668ad5496`): filed while re-running Finding
   5's prescribed verification after the staleness-guard blocker was fixed — confirmed the guard fix (0 hits) but the
