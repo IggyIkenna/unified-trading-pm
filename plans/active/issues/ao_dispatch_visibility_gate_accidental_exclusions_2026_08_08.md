@@ -312,18 +312,20 @@ human already made the call and the fleet still never executes it.
       longer appears anywhere in the block. Verify:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
       no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in
-      `plans/active/issues/deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md`.** Its checkbox reads
-      (truncated): "[INFRA] P3. **Final drain confirmation on/after 2026-08-09.** Re-run `gcs_bucket_stats.py` for" —
-      the marker trips `_is_non_dispatchable` (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open
-      its own line, so `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is
-      genuinely still blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to
-      the start of its own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation
-      line) so it reads as a declared hold. If it is already resolved (several of these carry a dated
-      `RULED`/`DESIGN DECIDED` note — read the full todo before acting), rewrite the trigger phrase so the marker no
-      longer appears anywhere in the block. Verify:
-      `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-23, infra).** Triage accidental exclusion in
+      `plans/active/issues/deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md`. Moot, not accidental,
+      and self-resolved by design: the finding was filed while the doc's sole open todo (the "Final drain confirmation
+      on/after 2026-08-09" check) was date-gated. Per that doc's own Progress Log (2026-08-06, slot-6), a
+      `DEFERRED-BY-DESIGN` marker was attached to an EARLIER incarnation of the todo specifically so regen would skip it
+      pre-gate — that marker text only survives today in Progress Log prose (line 136), not anywhere in the live
+      checkbox's own block (checked via `grep -n 'BLOCKED\|DEFERRED-BY-DESIGN' <doc>`: zero hits inside the todo's
+      continuation block, lines 114-121). The todo's own text says the hold "was date-gated... to on/after 2026-08-09;
+      that date has now arrived, so the hold is cleared and this todo is dispatchable" — today is 2026-08-09, so this is
+      no longer even a live exclusion, accidental or otherwise. Verified:
+      `cd agent-orchestrator && uv run python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
+      shows `deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md` with
+      `disk_open=1, backlog_open=1, excluded=[]` — the sole open todo is correctly dispatchable right now, no rewrite
+      needed. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md`.** Its checkbox reads (truncated):
       "[DATA] P2. **RULED 2026-08-06 (operator): proceed now.** Signed off to schedule the `--apply` against the full" —
@@ -567,3 +569,8 @@ human already made the call and the fleet still never executes it.
   instead of accidentally via a continuation-line mention. Confirmed via `dispatch_visibility_report --json`: the doc's
   `excluded` list now shows `"declared": true` for both remaining exclusions (this D4 todo and the pre-existing D1
   DEFERRED-BY-DESIGN item) — no rewrite needed here, the fix already landed.
+- **2026-08-09 (slot 23, infra)** — Fixed the `deployment_scripts_bucket_soft_delete_retention_drift_2026_07_31.md`
+  todo. Self-resolved by design, not a text rewrite: the doc's sole open todo was date-gated to on/after 2026-08-09 (a
+  prior `DEFERRED-BY-DESIGN` marker used to hold it pre-gate lives only in Progress Log prose now, not the live checkbox
+  block), and today is 2026-08-09 — the gate has cleared on its own. Confirmed via `dispatch_visibility_report --json`:
+  `disk_open=1, backlog_open=1, excluded=[]` — correctly dispatchable, no rewrite needed.
