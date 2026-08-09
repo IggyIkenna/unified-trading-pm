@@ -169,3 +169,17 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   `POST /api/prerequisites/auto_unpark__cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete-f73f17b4c2b8 {"value": true}`
   (or use the dashboard's "Dispatch now" on the parked-tasks view). Closing BLK-f089c03b as resolved. No code/report
   changes; this Progress Log entry + the backlog park are the only changes this turn.
+
+- **2026-08-09 (slot 29, data_engineering craft, stale re-dispatch of the same already-parked task)**: This task landed
+  on slot 29 as `already_in_progress: true` / `dispatch_reason: resume` despite the durable park recorded above
+  (confirmed still `reason_code: PARKED`, `skip_count: 2` via `GET /api/backlog/parked` at boot time) — a dispatcher
+  timing artifact, not a genuine unpark. Re-verified the underlying gate condition directly rather than trusting the
+  park's freshness alone: `gcloud compute instances describe cefi-queue-heavy-binancefutu-x17-20260727-210013` now
+  returns `NOT FOUND` (the specific VM name the park's unpark-trigger prose cites no longer exists), but
+  `gcloud compute instances list --filter="name~cefi-queue-heavy"` shows a **relaunched** instance
+  (`cefi-queue-heavy-binancefutu-x17-20260809-083733`, status `RUNNING`, created 2026-08-09T01:37Z) — the backfill is
+  still actively mid-run under a new VM name after another preemption/relaunch cycle, not measurably self-terminated.
+  The gate condition (VM genuinely terminates, not just renamed) is still unmet; re-running the venue-scoped
+  completeness check now would reproduce the same stale-baseline risk already declined twice above. Declining to redo
+  the check. Skipping this dispatch back to the dispatcher (task stays correctly parked); no code/check re-run
+  performed. This Progress Log entry is the only change this turn.
