@@ -146,3 +146,4 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
   present unchanged. Doc stays NA.
 - **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: RULED — delete (option
   A). See Todos section above for the full ruling + rationale.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

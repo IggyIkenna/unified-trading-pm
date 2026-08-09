@@ -280,3 +280,4 @@ proven this run.
   `assigned_vm: planning` docs and `cefi_consolidated_closeout_2026_07_18.md` — no existing plan covers
   `pipeline_e2e_check.py` RSS logging or this OOM issue. Companion finalize plan:
   `/plans/active/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06_finalize_2026_08_08.md`.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
