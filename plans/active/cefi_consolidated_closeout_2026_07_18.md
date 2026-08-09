@@ -95,10 +95,16 @@ context_scope:
 ## Headline verdict — "is the migration final?"
 
 - **Instrument-ID canonicalization (4 surfaces: GCS filename / parquet `instrument_id` column / manifest key / reader):
-  YES, this is the FINAL migration for that axis.** The 4-script program is Phase-C dry-run-clean; the operator-gated
-  drain+apply is now the sequential critical path in
-  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`. Everything id-format-related is
-  subsumed, absorbed, or already done — see that child plan for the full predecessor-subsumption record.
+  the DESIGN/SCOPE is final for that axis; corpus-wide EXECUTION is NOT (re-opened 2026-08-02, still open — see Track 1
+  below).** The 4-script program is Phase-C dry-run-clean, but Script 1's corpus-wide parquet-content backfill was
+  RE-OPENED 2026-08-02 (operator ruling — the fleet docs are the measured ground truth, this closeout doc follows them,
+  not the reverse) after the fleet docs themselves showed shards still incomplete post the original "all EXIT_STATUS=0"
+  report. Track 1's own todo stays unchecked pending that fleet-measured completion. Everything id-FORMAT-related (the
+  target spec, the rename/dedup/eu-twin scripts) is subsumed, absorbed, or already done — see the child plan
+  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` for the full
+  predecessor-subsumption record — but that does not make the corpus-wide CONTENT backfill final. (Corrected 2026-08-09
+  — this verdict was last touched 2026-07-25, before the 2026-08-02 re-opening, and was never revised to match; see
+  Track 1 for current status.)
 - **CeFi OVERALL: NOT done.** Several separate open tracks remain — none blocks the id-migration; several are real
   data-correctness work; Track 2 (coverage) is a decision that reframes "cefi done."
 
@@ -232,7 +238,8 @@ Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
       Completion Program + REVERSE the 50.79% acceptance.** Basis (all operator-stated): the archival's premise is a
       verified-false ~350x code-bug, now fixed + measured live; the "accept 50.79%" was inferred, not actually given.
       Coverage % is the climbing metric. The operator can reverse this ruling; surfaced in the session report.
-- **Close-out criterion**: operator ruling recorded (done, above); coverage re-measured post-resume-backfill (tracked in
+- **Close-out criterion**: operator ruling recorded (done, above, basis in
+  `issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md`); coverage re-measured post-resume-backfill (tracked in
   the forked child plan).
 
 ### Checkpoint cadence
@@ -630,12 +637,12 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
   operator-gated (Korea-equity vendor ask, 2 strategy-desk design calls), 3 dependency-blocked (Track 1 cutover + 2
   Track 2 post-backfill gates in sibling fleet docs).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-checked against today's 9
-  cheat-sheet rulings; none convert this hub's mixed content into a bounded whole (Track 0's Korea-equity vendor ask
-  was independently resolved 2026-08-07 in the sibling `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
-  doc — see that doc's own fix in this same sweep — but this doc's DART/hedge-venue design item was already resolved
-  today in-doc, and Track 0 still carries genuine `[SCRIPT]`/`[UAC]`/`[DESIGN]` build items alongside real operator-
-  and dependency-gated ones). Whole-doc flip stays blocked per the HARD RULE (mixed judgment + bounded items). Track
-  0's remaining bounded items (B1/B3/B4 propagation ops, index-perp UAC mapping, KRX Yahoo backfill, Databento
-  L-floor measurement, Barchart removal) are candidates for a future satellite-batch extraction (mirroring the
-  established `cefi_satellite_ao_dispatch_batchN` pattern) — not executed in this pass, out of this sweep's
-  whole-doc-flip mechanism.
+  cheat-sheet rulings; none convert this hub's mixed content into a bounded whole (Track 0's Korea-equity vendor ask was
+  independently resolved 2026-08-07 in the sibling `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` doc —
+  see that doc's own fix in this same sweep — but this doc's DART/hedge-venue design item was already resolved today
+  in-doc, and Track 0 still carries genuine `[SCRIPT]`/`[UAC]`/`[DESIGN]` build items alongside real operator- and
+  dependency-gated ones). Whole-doc flip stays blocked per the HARD RULE (mixed judgment + bounded items). Track 0's
+  remaining bounded items (B1/B3/B4 propagation ops, index-perp UAC mapping, KRX Yahoo backfill, Databento L-floor
+  measurement, Barchart removal) are candidates for a future satellite-batch extraction (mirroring the established
+  `cefi_satellite_ao_dispatch_batchN` pattern) — not executed in this pass, out of this sweep's whole-doc-flip
+  mechanism.

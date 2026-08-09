@@ -62,6 +62,31 @@ depends_on: []
 
 ## Hygiene fixes
 
+1. **`defi_cefi_venue_chain_axis_contamination_2026_07_28.md`** — 7 dangling `/plans/active/issues/...` refs (6x
+   `cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md`, 1x
+   `defi_hyperliquid_residual_manifest_rows_2026_08_04.md`, incl. one in `context_scope` frontmatter) repointed to their
+   confirmed archive locations (`/plans/archive/issues/...` and `/plans/archive/2026_08/issues/...` respectively — both
+   targets verified present via `find`, moved 2026-08-06/07, well outside the 12h grace window).
+   unified-trading-pm@900c0e435.
+2. **`deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md`** — 1 dangling
+   `/plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md` ref (a stale holdout — the doc's `context_scope` and
+   a later context-scout note already had the correct archive path) repointed to
+   `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md`. unified-trading-pm@900c0e435.
+
+Corpus-wide `check_reference_paths.py` existence check is RED (95 dangling vs baseline 86) but this is NOT cefi-driven —
+zero of the remaining dangling refs corpus-wide cite a cefi doc as source after the 2 fixes above (re-verified). Slot 14
+is independently remediating this corpus-wide regression (`agent_message_sent`/`slot_progress` activity log, 2026-08-09
+~02:37 UTC: "Fixed 9 dangling reference path... local check_reference_paths now at baseline 86") — not duplicated here
+to avoid a same-file collision on docs outside my tranche.
+
+`check_archive_candidates.sh` (default/baseline mode) found exactly 1 corpus-wide candidate:
+`plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` — tradfi, not
+cefi; out of this tranche's scope, not actioned here.
+
+`check_effort_signal_ratchet.py` ("Silent-default-effort plans") is RED corpus-wide (280/284 active plans rely on the
+silent Sonnet default) — systemic across all 10 tranches, not a cefi-specific regression; not actioned in a
+tranche-scoped run (flagged for a dedicated corpus-wide pass, see Filed).
+
 ## Filed
 
 ## Archive candidates (operator review)

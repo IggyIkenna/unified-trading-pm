@@ -54,8 +54,9 @@ context_scope:
 
 # defi_pipeline_e2e_and_coverage_validation_2026_06_20 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **Machine-gated on `defi_pipeline_e2e_and_coverage_validation_2026_06_20.md`** (`depends_on` +
+> `gate_on_depends: true`) — the dispatcher will not queue any todo below until that plan's todos are done (or on
+> explicit operator direction to start reconciling early).
 
 ## Todos
 
