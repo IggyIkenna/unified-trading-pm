@@ -368,8 +368,8 @@ entitlement — not a bug to chase); daily cells (Treasuries, KRW) are Yahoo-sou
 `is_mvp(asset_group='tradfi', venue='CME', instrument_type='FUTURE', data_type='ohlcv_1m')` is **False** with no
 `base_ccy` (only True once `base_ccy='ES'` is supplied) — this checker's enumeration-time MVP probe has no sampled
 instrument yet, so it can never supply one, and naively probing every `InstrumentType` with none silently returns
-**zero** tradfi cells. The engine instead hand-lists the operator's 2026-07-18 MVP universe as 5 `(venue, data_type)`
-cells:
+**zero** tradfi cells. The engine instead hand-lists the operator's MVP universe (2026-07-18, expanded 2026-08-09) as 6
+`(venue, data_type)` cells:
 
 | MVP item                                                                                   | Shard             |
 | ------------------------------------------------------------------------------------------ | ----------------- |
@@ -377,6 +377,7 @@ cells:
 | Delta-one single-stock equities + ETFs (NASDAQ-listed)                                     | `NASDAQ/ohlcv_1m` |
 | Delta-one single-stock equities (NYSE-listed)                                              | `NYSE/ohlcv_1m`   |
 | Daily Treasury yield indices (US2Y/US5Y/US10Y/US30Y/US3M)                                  | `CBOE/ohlcv_24h`  |
+| DXY (US Dollar Index) — added 2026-08-09 scope ruling                                      | `ICE/ohlcv_24h`   |
 | Daily KRW/USD                                                                              | `FX/ohlcv_24h`    |
 
 **The canonical-shape regression** (`--legs …,canonical`) is a 4th leg, TRADFI-only: after the force-leg writes to the
