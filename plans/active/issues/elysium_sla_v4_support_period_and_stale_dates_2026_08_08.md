@@ -95,9 +95,14 @@ complete" by 30 June 2026, which did not happen.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Rule on the Initial Support Period: 30 or 60 calendar days. Both `ODUM_SLA_v4_2026-07-24.md` §3
-      (line 131) + §5 heading (line 220) and §2 (line 88) must then agree, along with the docx executive summary.
-      Contract term already in the client's hands — a unilateral edit is not in scope for an agent.
+- [x] ✅ [OPERATOR] P1. **RULED 2026-08-09 (operator, interactive): 60 calendar days is the correct Initial Support
+      Period** — §3 (line 131, binding) and §5's heading (line 220) were right; §2 (line 88) and the docx executive
+      summary were wrong. Fixed the internal codex-record inconsistency: `ODUM_SLA_v4_2026-07-24.md`:88 now reads
+      "post-60-day continuation options" (was "post-30-day"), matching §3/§5. **This does NOT correct what's already in
+      the client's hands** — the docx executive summary (30 days) and both sent delay-letter/follow-up communications
+      (30 days) are unchanged; the client has been told a shorter support window than they're actually entitled to. That
+      correction is todo 2 below (reissue vs. side letter) — ruled on the internal record only, not on how/whether to
+      notify the client of the discrepancy.
 - [ ] [OPERATOR] P1. Decide how to correct the five stale June/May-2026 dates given the SLA has been sent: reissue as v5
       with the September/October timeline, or handle by side letter.
 - [ ] [OPERATOR] P2. Confirm the actual send date of the delay letter. The codex record is dated 2026-07-20, but both
