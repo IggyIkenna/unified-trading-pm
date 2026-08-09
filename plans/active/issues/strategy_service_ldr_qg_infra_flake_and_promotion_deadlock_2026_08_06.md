@@ -371,15 +371,18 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       `assigned_at=agent_registered_at` NAIVE from the DB, compared against timezone-AWARE transcript timestamps
       (`can't compare offset-naive and offset-aware` in `build_task_usage_snapshot`); Class-A `/done` avoids it via
       `ss.to_utc`. Non-blocking (post-commit), tracked as follow-up P2 below. Provenance: agt-e33f21.
-- [ ] [CICD] P2. Fix orchestrator one-shot `/done` 500 in `_done_one_off`
+- [x] ✅ [CICD] P2. **DONE 2026-08-06 15:03Z — stale-check re-verified 2026-08-09, never flipped here.** Fixed
+      orchestrator one-shot `/done` 500 in `_done_one_off`
       (`agent-orchestrator/server/routes/slots_worker.py` ~L1620): `assigned_at=agent_registered_at` is read NAIVE from
       the DB; `build_task_usage_snapshot` compares it against timezone-AWARE transcript timestamps →
       `TypeError: can't compare offset-naive and offset-aware datetimes` on EVERY one-shot `/done` with transcript
-      usage. Post-commit (the completion itself commits first), but it (a) returns 500 to the worker instead of the
-      "completion recorded" ack and (b) silently drops TaskTokenUsage recording for one-offs
-      (`ao_task_usage_role_group_breakdown_2026_08_06`). Fix: wrap `agent_registered_at` in `ss.to_utc(...)` — mirrors
-      the Class-A path (slots_worker.py ~L1698 `ss.to_utc(slot_row.assigned_at)`). Provenance: agt-e33f21 (found
-      2026-08-06 12:01Z).
+      usage. Fix shipped `agent-orchestrator@5d1a8a6` ("fix(ao): to_utc() agent.registered_at in _done_one_off — fixes
+      crashed one-off task-usage recording"), just ~3 hours after this todo was found (12:01Z finding vs. 15:03Z fix) —
+      current code confirms `agent_registered_at = ss.to_utc(agent.registered_at)` live at the exact call site, with an
+      inline comment documenting this precise bug (`ao_task_token_usage_role_group_filters_zero_2026_08_06`). The
+      2026-08-07 na-eligibility-audit pass on this doc already flagged this as a "RECLASSIFY-candidate... looks
+      worker-determinable" but didn't check whether it was already shipped — it was, by an unrelated commit, the same
+      day it was found. Provenance: agt-e33f21 (found 2026-08-06 12:01Z).
 - [x] ✅ [OPERATOR] P2. **DONE 2026-08-07 — operator ran
       `git push origin --delete promote/strategy-service/32f0a859d0ae` in the strategy-service checkout** (the command
       initially failed once run from the wrong repo checkout — `unified-trading-pm` — corrected and re-run in
@@ -666,6 +669,14 @@ process itself in this pass).
 
 ## Progress Log
 
+- **stale-check re-verify 2026-08-09 (infra tranche, KEEP-NA staleness re-check)**: flipped the `_done_one_off` 500 fix
+  todo `[x]` — genuinely shipped 2026-08-06T15:03Z (`agent-orchestrator@5d1a8a6`, ~3 hours after the bug was found in
+  this same doc), confirmed live in current `slots_worker.py` (`agent_registered_at = ss.to_utc(agent.registered_at)`).
+  Commit verified a real ancestor of `origin/live-defi-rollout` via `git merge-base --is-ancestor`. The 2026-08-07
+  na-eligibility-audit pass on this doc had already spotted this as a strong RECLASSIFY candidate but stopped short of
+  checking whether it was already done — it was. The doc's other 3 open items (unified-api-contracts backmerge-hang
+  investigation, dispatch-storm-mutex-to-main promote todo, glue-runner cache-save investigation) remain genuinely open
+  — no evidence found of any of them shipping since 2026-08-07.
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06. Re-read end-to-end;
   `grep -cE '^- \[ \]'` = 4, matching. The `[OPERATOR]`-tagged branch-delete todo flipped `[x]` this same session
   (2026-08-07, with verification evidence) is confirmed done on fresh read; nothing else in the doc reads stale.
