@@ -120,8 +120,8 @@ source: >-
       re-assessed — this fix may fully or partially resolve that doc's pending implementation todo too (same poller,
       same class of gate) — cross-reference the outcome into that doc's Progress Log either way. Repo:
       agent-orchestrator.
-- [ ] [INFRA] P2. **Make `run-e2e-backend.sh` and `run-e2e-backend-chat.sh` generate their `ORCHESTRATOR_BACKENDS` file
-      at runtime with the slot-offset-aware port, mirroring `run-e2e-backend-collision.sh`'s (`1e2ecac`) and
+- [x] ✅ [INFRA] P2. **Make `run-e2e-backend.sh` and `run-e2e-backend-chat.sh` generate their `ORCHESTRATOR_BACKENDS`
+      file at runtime with the slot-offset-aware port, mirroring `run-e2e-backend-collision.sh`'s (`1e2ecac`) and
       `run-e2e-backend-tier.sh`'s already-established pattern.** Discovered 2026-08-08 (this plan's own todo 1
       re-verification): `dashboard/tests/e2e/fixtures/backends.e2e.json` (default/`chromium` project, used by
       `deepseek-*.spec.ts`) and `backends.e2e.chat.json` (`worker-chat` project) are still STATIC checked-in files with
@@ -228,3 +228,21 @@ source: >-
     matching Progress Log entry there; see that doc for detail. `deepseek-per-turn-metrics.spec.ts` itself was not
     re-run for the same infra-blocker reason above, but the fix is structurally identical to the one that doc's own todo
     2 already decided on, so the code-level resolution is confirmed even without a fresh e2e run.
+- **2026-08-09 (slot-25, infra, task `ao_satellite_ao_dispatch_batch8_finalize-8e54312e4d5b`)** — Todo 6 ✅ shipped:
+  `agent-orchestrator@cd85c21`. `run-e2e-backend.sh` and `run-e2e-backend-chat.sh` now generate their
+  `backends.e2e.json` / `backends.e2e.chat.json` into `$TMP_DIR` at runtime with the slot-offset-aware
+  `E2E_BACKEND_PORT`/`E2E_CHAT_BACKEND_PORT` (`playwright.config.ts` already passed these in), mirroring
+  `run-e2e-backend-collision.sh`/`-tier.sh`'s established pattern exactly. Both static checked-in fixture files under
+  `dashboard/tests/e2e/fixtures/` deleted (only referenced by these two scripts, both now pointed at the generated
+  `$TMP_DIR` copy); `.tmp/`/`.tmp-chat/` were already whole-directory-gitignored so no new ignore entries needed. Pass-1
+  `quality-gates.sh` green (2938 passed, 2 skipped), shipped via Pass-2 quickmerge, `cd85c21` verified ancestor of
+  `origin/live-defi-rollout`.
+  - **Done-when fully verified, not smoke-tested**: ran `npm ci` + `npx playwright test` for real from THIS `.tabs/25`
+    slot checkout (offset 250) against both specs named in the done-when. `deepseek-wallet-reconciliation.spec.ts`:
+    login succeeds, backend resolves on the correct offset-aware port (no "Failed to fetch"), 1/2 tests pass; the 1
+    failure is the worker-split `$3.0000` vs `$5.0000` mismatch, which is a PROVEN pre-existing, already-tracked
+    fixture-data bug (`/plans/active/issues/dashboard_deepseek_e2e_specs_red_stale_fixture_expectations_2026_08_08.md` —
+    reproduced there at a commit before this plan's own work even started), not a login/routing failure — outside this
+    INFRA todo's scope. `worker-chat.spec.ts`: all 3/3 tests pass clean. Both specs "log in successfully from a
+    `.tabs/N` (N≠0) slot checkout" per the todo's exact done-when wording; the residual `$3/$5` data bug is
+    cross-referenced above, not silently absorbed or claimed as fixed here.
