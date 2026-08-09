@@ -22,6 +22,9 @@ assigned_vm: planning
 source: [sports_taxonomy_p3_consumers-008]
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
