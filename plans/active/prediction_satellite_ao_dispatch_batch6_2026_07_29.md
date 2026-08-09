@@ -256,7 +256,7 @@ sports-tranche-owned).
       — 81.8% captured of attempted, zero retry-pileup. Full numbers + methodology in the source issue doc's Progress
       Log. Both this todo and the source issue doc's `[INFRA] P1` item flipped to `[x]` in the same turn.
 
-- [ ] [SCRIPT] P1. **Kalshi execution credential reshape + live paper-order verify.** Todo 1: read the existing
+- [x] ✅ [SCRIPT] P1. **Kalshi execution credential reshape + live paper-order verify.** Todo 1: read the existing
       `kalshi-api-credentials` bundled JSON secret's fields and provision two new Secret Manager secrets
       (`kalshi-api-key-id`, `kalshi-private-key-pem`) from them, verified non-empty via
       `gcloud secrets versions access`. RULED 2026-07-28 — explicitly NOT wallet-key-class (a reshape of already-live
@@ -300,6 +300,29 @@ sports-tranche-owned).
       is rejected, pursue A or C. Flagged by two independent na-eligibility-audit passes (2026-08-07, 2026-08-09) as a
       sync gap — the source doc's ruling had not yet been mirrored here; mirrored now. The actual non-live verification
       execution (A or C) remains open engineering work, no longer an operator-decision hold.
+
+      **Todo 2 DONE 2026-08-09 (Option C, per the 2026-08-06 ruling) — `execution-service@9f25d0e5`.** Implemented
+      the non-live mocked-response verification: `TestKalshiRealCredentialWiringNonLiveVerification`
+      (`tests/sports_execution/unit/test_kalshi_adapter.py`) loads the REAL `kalshi-api-key-id`/
+      `kalshi-private-key-pem` secrets through the SAME `SportsExecutionRouter` + `_LIVE_VENUE_CONFIGS` production
+      wiring `sports_factory.py` uses, drives the REAL RSA-PKCS1v15 request-signing code
+      (`kalshi._build_kalshi_headers`) with that key, and exercises order submit → fill/ack → position update with
+      the aiohttp transport swapped for an in-process fake — zero network calls reach any Kalshi host, live or demo.
+      Manually run (outside the QG pytest network sandbox, which fast-fails any real Secret Manager call — confirmed
+      both tests correctly self-skip under `quality-gates.sh`, same as every other `requires_credentials` test in
+      this repo) against the real provisioned credentials: both tests PASS — the secrets are genuine
+      non-placeholder 2048-bit RSA material, and a full order-submit/fill/ack/position-update sequence signs
+      correctly (256-byte RSA-PKCS1v15 signatures on every request, confirmed NOT the silent SHA-256-fallback path
+      `_build_kalshi_headers` takes on an unparseable key) and parses correctly end-to-end. Option A (Kalshi's demo
+      host) was NOT attempted — untested whether it accepts the same live-account credentials, and Option C alone
+      fully satisfies the ruling. Also fixed a genuine, adjacent gap found while verifying:
+      `tests/sports_execution/unit/` (23 files, incl. this one) was completely un-gated by `quality-gates.sh` (same
+      class as the pre-existing `defi_execution`/`e2e` gap already documented in that script) — scoped the fix to
+      just the touched file (`PYTEST_UNIT_DIR` now includes `tests/sports_execution/unit/test_kalshi_adapter.py`);
+      the remaining 22-file gap is a follow-up, not fixed here. Both source-doc todos flipped in the same commit
+      set — see `kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`. **Done when** fully met: both
+      secrets exist + verify non-empty (2026-07-31) and a full order-submit/fill/ack/position-update sequence is
+      proven correct end-to-end with real credentials (2026-08-09, non-live per the 2026-08-06 ruling).
 
 - [x] ✅ [DIAG] P2. **DONE 2026-08-05 — `unified-api-contracts@42c22278`.** Kalshi mass `attempted_failed`
       unclassified-adapter-error investigation + fix. (1) Recurrence check: queried prediction manifest

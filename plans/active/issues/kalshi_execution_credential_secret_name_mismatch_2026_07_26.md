@@ -14,7 +14,7 @@ summary: >-
   the likely reason the Kalshi execution paper- order flow "was never actually verified end-to-end"
   (kalshi_live_capture_regression_and_drift_ 2026_07_13.md): it is not that nobody got to it, it is that the wiring is
   broken and would fail the moment anyone tried.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [execution]
@@ -41,7 +41,7 @@ source:
     half of prediction_satellite_ao_dispatch_batch3-001; escalated live as BLK-c2d1fff9 (main/operator answer pending as
     of filing).",
   ]
-resolved_by:
+resolved_by: "prediction_satellite_ao_dispatch_batch6-abb85b31cce7 (slot 12, 2026-08-09)"
 locked_by:
 context_scope:
   [
@@ -133,23 +133,23 @@ Two directions, both viable, not adjudicated by this doc:
       `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, verified live, updated that codex doc's
       grants list. `routing.py`/`sports_factory.py` left unchanged (Option A requires no code change — confirmed by
       reading both files first). (repo: execution-service config only, + GCP Secret Manager; no code shipped)
-- [ ] [DATA] P1. **RULED 2026-08-06 (operator): NO — do not touch the live exchange.** The 2026-07-28 ruling's scope
-      limit stands; placing a real order on `api.elections.kalshi.com` remains unauthorized. The original verification
-      ask (`kalshi_live_capture_regression_and_drift_2026_07_13.md`) stays unfulfillable as literally worded — find a
-      non-live verification path (e.g. a sandbox/testnet host if Kalshi offers one, or verify the
-      order-submit/fill/ack/position-update code path via mocked responses instead of a real venue call) rather than
-      re-asking this question. **BLOCKED-OPERATOR-DECISION 2026-07-31** (see
-      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 for the full question + options — filed there, not
-      duplicated here). Once the credential wiring is fixed, place a real Kalshi paper order through execution-service
-      end-to-end (order submit → fill/ack → position update) against the elections-subdomain host and capture
-      logs/commit evidence it works — this is the ORIGINAL verification
-      `kalshi_live_capture_regression_and_drift_2026_07_13.md` asked for, gated on the todo above (now unblocked —
-      credentials exist). **Not attempted**: `KalshiAdapter` defaults to Kalshi's LIVE production host
-      (`api.elections.kalshi.com`, which literally matches this todo's "elections-subdomain host" text) — this
-      codebase's own `OperationalMode.PAPER` never calls any real venue API at all (routes everything through a
-      simulated `PaperBettingAdapter`), so "paper order" cannot mean that, and the operator's 2026-07-28 ruling on this
-      doc explicitly scoped itself to the secret-reshape todo above ("does not touch the exchange side at all") — it
-      never separately authorized placing a real order on the live exchange. (repo: execution-service)
+- [x] ✅ [DATA] P1. **DONE 2026-08-09 — `execution-service@9f25d0e5`.** RULED 2026-08-06 (operator): "NO — do not
+      touch the live exchange." The 2026-07-28 ruling's scope limit stood; placing a real order on
+      `api.elections.kalshi.com` stayed unauthorized, so the original verification ask
+      (`kalshi_live_capture_regression_and_drift_2026_07_13.md`) was fulfilled via the ruling's own non-live path
+      instead: `TestKalshiRealCredentialWiringNonLiveVerification`
+      (`execution-service/tests/sports_execution/unit/test_kalshi_adapter.py`) loads the REAL
+      `kalshi-api-key-id`/`kalshi-private-key-pem` secrets through the SAME `SportsExecutionRouter` +
+      `_LIVE_VENUE_CONFIGS` production wiring `sports_factory.py` uses, drives the REAL RSA-PKCS1v15
+      request-signing code with that key, and exercises order submit → fill/ack → position update with the aiohttp
+      transport swapped for an in-process fake — zero network calls reach any Kalshi host, live or demo. Manually
+      run (outside the QG pytest network sandbox, which blocks the real Secret Manager call — the test correctly
+      self-skips under `quality-gates.sh`, same as every other `requires_credentials` test in this repo) against
+      the real provisioned credentials: both tests PASS, including a genuine 256-byte RSA-2048 signature on every
+      request (not `_build_kalshi_headers`'s silent SHA-256-fallback for an unparseable key). Kalshi's demo host
+      (the sandbox/testnet option this todo's text suggested) was not attempted — untested whether it accepts the
+      same live-account credentials; the mocked-response path fully satisfies the ruling on its own. Full evidence
+      + reasoning: `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5. (repo: execution-service)
 
 ## Progress Log
 
@@ -192,3 +192,10 @@ Two directions, both viable, not adjudicated by this doc:
   `assigned_vm: planning`/`status: active`, todo 5 still open). The 2026-08-07 marker's flagged sync-gap (the 2026-08-06
   "no live order, find a non-live path" ruling not yet mirrored into batch6 todo 5) is still unresolved — not this doc's
   fix to make (batch6 is its own owner's file). Doc stays NA.
+- **RESOLVED 2026-08-09 (slot 12, `prediction_satellite_ao_dispatch_batch6-abb85b31cce7`)**: the sync gap flagged by the
+  2026-08-07/2026-08-09 audit passes is now closed (batch6 todo 5 mirrors this doc's 2026-08-06 ruling). Both todos in
+  this doc are now `[x]` — Option C (mocked-response verification) executed and passing against the real provisioned
+  credentials, `execution-service@9f25d0e5`. Full evidence in `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
+  todo 5. `status: resolved`. Not archived in this same commit (per the archival-discipline rule against combining a
+  checkbox flip with a `git mv` in one commit) — archival-eligibility is a separate follow-up for the next hygiene
+  sweep / `/archive-candidates-audit` pass.
