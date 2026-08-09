@@ -190,6 +190,46 @@ if [ "$CI_MODE" = "--precommit" ]; then
     python3 "$SCRIPT_DIR/../quality_gates/check_evidence_backed_completion.py" --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Evidence-backed-completion (staged plans)" \
       || { echo "  ❌ A staged plan's '- [x]' runtime-green claim (build/deploy/promote) has no Evidence: cloudbuild=<id> — add the citation, or confirm this genuinely isn't a runtime claim"; PF=$(( PF + 1 )); }
+    # Prosewrap-padding, --only-scoped (2026-08-09): this shrinking ratchet (baseline: corpus-wide
+    # violation_count, 4472 lines at time of writing) previously had NO precommit-time presence,
+    # only the full corpus-wide baseline mode — so a docs(plans) commit landing a NEW prettier
+    # proseWrap corruption instance had zero enforcement at commit time and only surfaced hours/
+    # days later on the next unrelated full quality-gates.sh run, misattributed to whichever
+    # commit happened to trigger it. --only does NOT compare a staged file's total against the
+    # corpus-wide baseline (a handful of staged-file violations would never approach 4472,
+    # defeating the point) — it compares, per staged file, the SET of violation signatures
+    # (detector-type + content, not line number) at current content vs `git show HEAD:<path>`,
+    # flagging only what THIS commit introduces. Same HEAD-vs-current growth-ratchet shape as
+    # check_effort_signal_ratchet.py --only above.
+    bash "$SCRIPT_DIR/check_prosewrap_padding.sh" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Prosewrap-padding (staged plans)" \
+      || { echo "  ❌ A staged plan has a NEW prettier proseWrap continuation-padding instance — see plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the repair recipe"; PF=$(( PF + 1 )); }
+    # depends_on DAG, --only-scoped (2026-08-09): the full-sweep cycle/self-dep check (below,
+    # corpus-wide) previously had NO precommit-time presence, so a docs(plans) commit introducing
+    # a cycle (depends_on gates archival — neither plan can ever close) had zero enforcement at
+    # commit time. Unlike a single-file check, a cycle can SPAN two files (A depends_on B, B
+    # depends_on A) where only one is staged — --only still builds the FULL corpus graph (cheap,
+    # local reads only, ~750 docs) exactly like the full-sweep mode below, but reports a violation
+    # only if it involves an edge ORIGINATING from a staged file (a self-dep, or a cycle with at
+    # least one staged node) — catches "my edit introduced/is part of a cycle" without blocking on
+    # a pre-existing cycle entirely among files this commit doesn't touch.
+    python3 "$SCRIPT_DIR/check_depends_on_graph.py" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ depends_on DAG (staged plans)" \
+      || { echo "  ❌ A staged plan's depends_on introduces a cycle or self-dependency — depends_on gates archival, so this would permanently stasis the plan(s) involved. Break the cycle: drop the weaker depends_on edge, or merge the plans."; PF=$(( PF + 1 )); }
+    # AG-closeout linkage, --only-scoped (2026-08-09): this shrinking ratchet (baseline: 49
+    # corpus-wide orphans at time of writing) previously had NO precommit-time presence, only the
+    # full corpus-wide baseline mode. Cross-file like the depends_on check above (a doc's orphan
+    # status depends on the related: graph, which can path through OTHER docs, and on the
+    # closeout family's own body text — a DIFFERENT file) — --only builds the FULL corpus
+    # graph/closeout-family/body-blob (cheap, local reads only), never a staged-only subgraph
+    # (which could miss a real path through an unstaged intermediate doc). Per staged file: if it
+    # is currently an orphan, was it ALSO an orphan when evaluated with its OWN `git show
+    # HEAD:<path>` content (rest of today's corpus held fixed)? If yes, pre-existing debt in a
+    # file this commit merely touches — skip. If this file's OWN content change (a dropped
+    # related: link, a changed asset_group) newly created the orphan status, flag it.
+    python3 "$SCRIPT_DIR/check_ag_closeout_linkage.py" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ AG-closeout linkage (staged plans)" \
+      || { echo "  ❌ A staged single-asset-group plan/issue doc has no path (related: graph or closeout-doc mention) to its AG's consolidated closeout plan — add a related: link, or a mention in the closeout doc"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }

@@ -42,12 +42,109 @@
 # Usage: check_prosewrap_padding.sh [--quiet] [--update-baseline] [files...]
 #   no files -> scans plans/active + plans/epics + plans/audit + codex (plans/archive excluded —
 #     historical record, out of repair scope, same convention as check_prettier_mangling.sh)
+#   check_prosewrap_padding.sh --only <path> [<path> ...]
+#
+# ``--only <paths>`` (2026-08-09, precommit migration): this ratchet previously had NO
+# precommit-time presence, only the full corpus-wide baseline mode — so a docs(plans) commit
+# introducing a NEW prosewrap-padding instance had zero enforcement at commit time and only
+# surfaced hours/days later when an unrelated commit happened to trigger the next full
+# quality-gates.sh run, misattributed to that unrelated commit's SHA. Same fast-path-blind-to-
+# full-gate pattern as the other checks migrated this evening (check_todo_regression.sh,
+# check_effort_signal_ratchet.py, check_evidence_backed_completion.py).
+#
+# Deliberately NOT "does this staged file's TOTAL violation count exceed the corpus baseline" —
+# the baseline is corpus-wide (4472 at time of writing); a handful of violations in 1-2 staged
+# files would never approach it, defeating the point. Instead --only compares, PER STAGED FILE,
+# the SET of violation signatures (detector-type + matched content, not line number — line
+# numbers shift on every edit) at the current working-tree content vs `git show HEAD:<path>`'s
+# content, using the exact same detector (_detect_hits below) for both sides so the two modes
+# can never define "a violation" differently. Only a signature new in the current content (not
+# present at HEAD) is flagged — a violation already sitting in the file at HEAD is pre-existing
+# debt covered by the full-sweep ratchet, not this commit's problem, matching the shape of
+# check_effort_signal_ratchet.py's --only mode.
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PM_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 BASELINE_PATH="$SCRIPT_DIR/prosewrap_padding_baseline.yaml"
 
 INDENT_THRESHOLD=14
+
+# Shared detector — reads from the file given as $1, or from stdin if called with no args (used
+# for `git show HEAD:<path>` content, which has no filesystem path of its own). Prints
+# "FNR:type:content" per violating line; callers needing a HEAD-vs-current SIGNATURE (--only
+# mode) strip the leading "FNR:" since line numbers shift between the two versions.
+_detect_hits() {
+  awk -v thresh="$INDENT_THRESHOLD" '
+    /^[[:space:]]*```/ { fence = !fence; next }
+    fence { next }
+    {
+      # Detector 1: 3+ consecutive spaces inside a backtick-delimited span, anywhere on the line
+      # (runs on the RAW line — table rows can legitimately pad backtick spans for column
+      # alignment, so skip table rows for this detector too).
+      is_table = ($0 ~ /^[[:space:]]*\|/)
+      if (!is_table) {
+        s = $0
+        while (match(s, /`[^`]*`/)) {
+          span = substr(s, RSTART, RLENGTH)
+          if (span ~ /   /) {
+            print FNR":backtick-padding:" span
+            break
+          }
+          s = substr(s, RSTART + RLENGTH)
+        }
+      }
+
+      # Detector 2: over-indented continuation line (non-blank, non-table, outside fences).
+      if (!is_table && $0 !~ /^[[:space:]]*$/) {
+        match($0, /^ */)
+        if (RLENGTH >= thresh) {
+          print FNR":over-indent(" RLENGTH "):" substr($0, RLENGTH + 1, 50)
+        }
+      }
+    }
+  ' "$@"
+}
+
+if [ "${1:-}" = "--only" ]; then
+  shift
+  QUIET=0
+  ONLY_FILES=()
+  for a in "$@"; do
+    case "$a" in
+      --quiet) QUIET=1 ;;
+      *) ONLY_FILES+=("$a") ;;
+    esac
+  done
+  FLAGGED_FILES=0
+  for f in "${ONLY_FILES[@]}"; do
+    [ -f "$f" ] || continue
+    case "$f" in
+      */plans/archive/*|plans/archive/*) continue ;;
+    esac
+    cur_sigs="$(_detect_hits "$f" | sed -E 's/^[0-9]+://' | sort -u)"
+    rel="$(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
+    rel="${rel#"$PM_DIR"/}"
+    head_sigs="$(git -C "$PM_DIR" show "HEAD:$rel" 2>/dev/null | _detect_hits | sed -E 's/^[0-9]+://' | sort -u)"
+    new_sigs=""
+    if [ -n "$cur_sigs" ]; then
+      new_sigs="$(comm -23 <(printf '%s\n' "$cur_sigs") <(printf '%s\n' "$head_sigs") 2>/dev/null || true)"
+    fi
+    if [ -n "$new_sigs" ]; then
+      FLAGGED_FILES=$(( FLAGGED_FILES + 1 ))
+      if [ "$QUIET" -eq 0 ]; then
+        N=$(printf '%s\n' "$new_sigs" | grep -c .)
+        echo "${f#"$PM_DIR"/} (${N} new line(s)):"
+        printf '%s\n' "$new_sigs" | sed 's/^/    /'
+      fi
+    fi
+  done
+  if [ "$FLAGGED_FILES" -gt 0 ]; then
+    echo "❌ check_prosewrap_padding (--only): ${FLAGGED_FILES} staged file(s) with a NEW prosewrap-padding instance — see plans/archive/issues/prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md for the repair recipe."
+    exit 1
+  fi
+  [ "$QUIET" -eq 0 ] && echo "✅ check_prosewrap_padding (--only): 0 new violation(s) in staged files"
+  exit 0
+fi
 
 QUIET=0
 UPDATE_BASELINE=""
@@ -77,35 +174,7 @@ for f in "${FILES[@]}"; do
     */plans/archive/*|plans/archive/*) continue ;;
   esac
 
-  HITS="$(awk -v thresh="$INDENT_THRESHOLD" '
-    /^[[:space:]]*```/ { fence = !fence; next }
-    fence { next }
-    {
-      # Detector 1: 3+ consecutive spaces inside a backtick-delimited span, anywhere on the line
-      # (runs on the RAW line — table rows can legitimately pad backtick spans for column
-      # alignment, so skip table rows for this detector too).
-      is_table = ($0 ~ /^[[:space:]]*\|/)
-      if (!is_table) {
-        s = $0
-        while (match(s, /`[^`]*`/)) {
-          span = substr(s, RSTART, RLENGTH)
-          if (span ~ /   /) {
-            print FNR":backtick-padding:" span
-            break
-          }
-          s = substr(s, RSTART + RLENGTH)
-        }
-      }
-
-      # Detector 2: over-indented continuation line (non-blank, non-table, outside fences).
-      if (!is_table && $0 !~ /^[[:space:]]*$/) {
-        match($0, /^ */)
-        if (RLENGTH >= thresh) {
-          print FNR":over-indent(" RLENGTH "):" substr($0, RLENGTH + 1, 50)
-        }
-      }
-    }
-  ' "$f")" || true
+  HITS="$(_detect_hits "$f")" || true
 
   if [ -n "$HITS" ]; then
     N=$(printf '%s\n' "$HITS" | grep -c .)
