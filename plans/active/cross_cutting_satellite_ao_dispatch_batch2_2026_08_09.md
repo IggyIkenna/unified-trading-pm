@@ -212,7 +212,12 @@ drift_direction: advance-code
       follow-ups below)**: (a) FX/FRED instrument records fail schema validation post-fetch
       (`SHARD FAILED … all     N instruments failed validation`, reason `timezone required for TradFi`) — these venues
       fetch successfully but write 0 captured rows; (b) one CME COMBO symbol (`UD:1N: 12 2518307`) carries a malformed
-      embedded `:` and hits `ADAPTER_ERROR` in `build_instrument_id`.
+      embedded `:` and hits `ADAPTER_ERROR` in `build_instrument_id`. Evidence:
+      cloudbuild=00f77c23-2ce0-4371-b203-8cedbede3404 (instruments-service-build trigger
+      `2a7fe0d0-cae8-4731-9c2b-0dbf76a6f04c`, resolved via `gcloud builds describe` — status SUCCESS,
+      substitutions.SHORT_SHA=cad1d32/COMMIT_SHA=cad1d3226f123308632a8608ebd1d18ecb3cb904,
+      BRANCH_NAME=live-defi-rollout, createTime=2026-08-09T08:02:25Z — resolves this todo's
+      `instruments-service@cad1d322` cite to the actual Cloud Build id).
 - [x] ✅ [CODE] P1. Build the granularity-aware catalogue producer for prediction (per-cqg grain) and sports (per-league
       vs. per-fixture grain), mirroring the already-shipped shape-aware producer for cefi/tradfi/defi
       (`instruments-service@6ea46565`). Repo: instruments-service. Source:
@@ -297,20 +302,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                                      disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                                      future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                                      bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                                      prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                                      2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                                      hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                                      threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                                      loader, post-delete verification) and filed
-                                      `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                                      AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                                      actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                                      stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                                      via that issue doc, not this line.
-                                      verification actually complete.
+                                          disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                                          future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                                          bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                                          prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                                          2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                                          hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                                          threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                                          loader, post-delete verification) and filed
+                                          `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                                          AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                                          actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                                          stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                                          via that issue doc, not this line.
+                                          verification actually complete.
 
 - [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the

@@ -81,13 +81,24 @@ false-positive and reworded) or the baseline is reviewed-and-ratcheted (only aft
       reword the claim to avoid the trigger phrase or narrow the checker's detection regex (read both sides per
       findings-triage — don't reflex-narrow the regex without confirming the todo genuinely never claimed a
       runtime/deploy outcome). Repo: unified-trading-pm.
-- [ ] [DEVOPS] P1. Investigate `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md:171` — determine whether
+- [x] ✅ [DEVOPS] P1. Investigate `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md:171` — determine whether
       `instruments-service@cad1d322`'s deploy to prod has a resolvable Cloud Build id (check
       `gcloud builds list --filter` around the commit's landing time, or the deploy workflow run for that sha). If
       found, add `Evidence: cloudbuild=<id>` to the todo. If the claim is actually evidenced by the cited prod
       scheduler-run success logs rather than a Cloud Build deploy (i.e., no separate build step applies), reword to
       avoid the runtime-green trigger phrase, or confirm with whoever owns the checker whether scheduler-run evidence
-      should count as an accepted evidence class. Repo: unified-trading-pm.
+      should count as an accepted evidence class. Repo: unified-trading-pm. — **Genuine gap, found + resolved**: the
+      `instruments-service-build` Cloud Build trigger (id `2a7fe0d0-cae8-4731-9c2b-0dbf76a6f04c`, region
+      `asia-northeast1`, project `central-element-323112`) DOES have a resolvable build for this commit —
+      `gcloud builds list --filter='createTime>="2026-08-09T07:55:00Z" AND createTime<"2026-08-09T08:20:00Z"'` surfaced
+      build `00f77c23-2ce0-4371-b203-8cedbede3404`, `gcloud builds describe` confirmed status=SUCCESS,
+      substitutions.COMMIT_SHA=`cad1d3226f123308632a8608ebd1d18ecb3cb904` (matches the cited `cad1d322` short-sha),
+      BRANCH_NAME=`live-defi-rollout`, createTime=2026-08-09T08:02:25Z. Added
+      `Evidence: cloudbuild=00f77c23-2ce0-4371-b203-8cedbede3404` to the todo block in
+      `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` — unified-trading-pm@(this commit). Re-ran
+      `check_evidence_backed_completion.py` post-fix: sub-rule B dropped to 20 claims-without-evidence (well under the
+      baseline of 24; this specific line no longer appears in the violation list), sub-rule A 0 violations (cited build
+      resolves SUCCESS).
 - [ ] [SCRIPT] P2. Once both todos above land (or are confirmed false-positive and reworded), re-run
       `check_evidence_backed_completion.py --baseline-write` to ratchet `claim_without_evidence_baseline` back down to
       the resolved count — never leave the baseline absorbing this regression once it's addressed. Repo:
@@ -100,3 +111,10 @@ false-positive and reworded) or the baseline is reviewed-and-ratcheted (only aft
   new claims + 1 resolved claim (see Evidence above); did not attempt to fix inline — both new claims need domain
   investigation (checker-scope judgment call / cross-repo Cloud Build history lookup) beyond a small/clear fix. Declared
   repo-blocker `qg_red` for unified-trading-pm citing this doc.
+- **data_engineering-worker slot 13, 2026-08-09**: resolved todo 2 (the `cad1d322` Cloud Build lookup — see checkbox
+  above for full evidence). Left todo 1 (`ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md:122`) untouched — out
+  of this task's scope — but note for whoever picks it up: a fresh `check_evidence_backed_completion.py` run post-fix no
+  longer lists that line among the 20 remaining claims-without-evidence either, so it may already be resolved/reworded
+  by another slot; verify before re-investigating. Todo 3 (baseline-write) intentionally left open per its own stated
+  gate ("once both todos above land") even though the corpus is currently green (20 < baseline 24) — re-baselining is
+  that todo's own scope, not bundled into this one.
