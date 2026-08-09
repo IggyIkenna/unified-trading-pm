@@ -33,6 +33,9 @@ source: >-
   CeFi live event-log capture dispatcher"). The dispatcher-wiring gap itself is now fully fixed and verified end-to-end
   with real captured data for BINANCE-FUTURES; this doc tracks the NEW, separate data-correctness gap this fix surfaced
   for the other 4 venues.
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # cefi depth_of_book_10 live wiring shipped; 4/5 venues not producing real rows
