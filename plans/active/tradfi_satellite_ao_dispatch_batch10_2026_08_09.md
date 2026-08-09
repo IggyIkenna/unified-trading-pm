@@ -6,8 +6,8 @@ title:
 summary: >-
   Satellite-batch extraction from the round-9 combined RECLASSIFY + satellite-extraction sweep (2026-08-09), tradfi
   tranche. Two items qualified: (1) the manual-launch FRED/CBOE-Treasury-INDEX/KRW/DXY backfill verify+launch step from
-  `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` — all 4 cells are Yahoo/FRED-sourced (NOT gated by the
-  open Databento billing-suspension issue) and every named launcher either already exists or shipped same-day; (2) a
+  `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` — all 4 cells are Yahoo/FRED-sourced (NOT gated by the open
+  Databento billing-suspension issue) and every named launcher either already exists or shipped same-day; (2) a
   read-only `gcloud logging read` diagnostic from `tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md`
   to determine whether `lifecycle-catalogue-regen-tradfi-daily`'s 2026-06-25 pause claim ever actually took effect via
   the Scheduler API — flagged as a clean MISCLASSIFIED_LIKELY_AO_ELIGIBLE candidate by that same doc's own 2026-08-09
@@ -69,60 +69,92 @@ other operator/design-gated content untouched. Yield is deliberately thin; repor
 
 ## Todos
 
-- [ ] [DATA] P1. **Verify FRED manifest coverage, then launch/verify the CBOE Treasury yield-curve INDEX + KRW/USD +
-      DXY backfills.** Per `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s in-scope list, these 4 cells are
-      ALL Yahoo Finance / FRED sourced — **not gated by the open Databento account-billing-suspension issue**
-      (`tradfi_databento_account_billing_suspended_2026_08_09.md`, which only affects Databento-sourced fetches).
-      First, check the live manifest for actual FRED macro-series coverage — `macro_micro_econ_data_capture_audit_2026_06_05.md`
-      records the FRED backfill launched+verified 2026-07-30 (`tradfi-bf-fred-full-*`), so this step may resolve to
-      "already covered, verify only." Then launch/verify full-history backfills for: (a) the CBOE Treasury
-      yield-curve INDEX (US3M/US2Y/US5Y/US10Y/US30Y, Yahoo `ohlcv_24h`) — existing launcher, manual invocation (not
-      `wave_launcher.py`-auto-dispatched, FX/ICE/`ohlcv_24h` excluded by design); (b) KRW/USD spot FX (Yahoo
-      `ohlcv_24h`) — existing launcher, manual invocation, same reason; (c) DXY (US Dollar Index, Yahoo `ohlcv_24h`) —
-      launcher shipped same-day (`deployment-service@bd561d917`,
-      `scripts/vm/launch-tradfi-bf-ice-ohlcv-24h.sh`, `VM_VENUE=ICE`, no `--source` flag needed since Yahoo is the
-      only source). Per the vm-launcher-runbook, verify each launch STARTED + reaches a terminal manifest state (no
-      fire-and-forget). **Done when**: the manifest shows non-empty `captured` coverage for all 4 cells across their
-      full stated history windows (CBOE-Treasury/KRW full history; DXY full history), with the FRED-coverage
-      verify-vs-backfill disposition stated explicitly. Repos: market-tick-data-service, instruments-service. Source:
+- [x] ✅ [DATA] P1. **Verify FRED manifest coverage, then launch/verify the CBOE Treasury yield-curve INDEX + KRW/USD +
+      DXY backfills.** — `market-tick-data-service@af2c53ce` (root-cause fix) +
+      `unified-trading-pm/plans/active/issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md`
+      (follow-up bug, filed). Per-cell disposition: - **KRW/USD (FX)**: ALREADY COMPLETE, no action needed — manifest
+      shows real `captured` coverage 2020-01-01→2026-08-06 (2020 captured rows), matching FX's registered discovery
+      floor. Verify-only, as the source doc predicted. - **FRED**: the "already covered, verify only" prediction was
+      WRONG — investigated and found the prior 2026-07-30 backfill ran at the OLD 1962-01-02 floor, was purged (GCS
+      objects + manifest rows) after a same-day operator scope correction to 2020-01-01, and NO backfill had run at the
+      corrected floor since (confirmed via direct GCS `pipeline_mode=batch_fred` prefix checks for 2020/2021/2023/2024 —
+      absent for all but the sparse pre-existing 2024 dates). Relaunched `launch-tradfi-bf-fred.sh` at the corrected
+      2020-01-01 default floor (`tradfi-bf-fred-full-20260809-150543`, after one SPOT preemption + clean relaunch).
+      Confirmed real sequential `captured` rows advancing from 2020-01-01 (verified via manifest + run.log); per-day
+      overhead (~90-100s/day, an already-tracked separate inefficiency per
+      `macro_micro_econ_data_capture_audit_2026_06_05.md`'s progress log) means the full 2020→2026-08 window will take
+      on the order of days to fully densify — VM is SPOT + self-deleting, continues unattended, no further action
+      needed. - **DXY (ICE)**: had only ~3 weeks of prior coverage (2026-07-20→08-07). Launched full 2019-2026
+      8-year-shard backfill (`launch-tradfi-bf-ice-ohlcv-24h.sh`). Confirmed real `captured` rows now span the full
+      declared window (2019-01-02→2026-08-07, 469 captured of 474 real rows at last check) — genuinely in progress
+      across every year, continues unattended to full density. - **CBOE Treasury yield-curve INDEX**: found and fixed a
+      real root-cause bug — `tick_data_handler.py::_resolve_source()`'s `--source databento REQUIRED` gate was missing
+      CBOE from its Yahoo-routed venue exemption (FX/KRX/ICE/FRED all got this fix after an identical incident; CBOE
+      never had until today). Every CBOE `ohlcv_24h` payload had been dying since the launcher's creation (2026-07-21),
+      silently writing a blank-instrument `empty_confirmed` placeholder instead of real data — the manifest showed ZERO
+      real coverage the entire time. Fixed + tested + shipped: `market-tick-data-service@af2c53ce` (data-type -scoped
+      exemption — CBOE also serves Databento VX-futures via a different data_type, so the fix does NOT blanket-exempt
+      the whole venue). Hit + resolved a tarball/manifest content-mismatch race during relaunch (GCS
+      `mtds-code.tar.gz` + `mtds-code.manifest.json` are two separate object writes with no atomicity — a first relaunch
+      ran stale pre-fix code despite the manifest claiming the fix's sha; killed that batch, rebuilt with `--force`,
+      verified tarball CONTENT directly (not just the manifest) before trusting it, relaunched clean). **Confirmed
+      working** via direct VM run.log evidence: real `CBOE:INDEX:US3M/US5Y/US10Y/US30Y-USD` `StreamingParquetWriter`
+      writes for 2021-01-04 onward. Found a SECOND, separate bug while verifying `--start-floor 2000-01-01` (the "full
+      history" ask): `is_venue_available()` is venue-level only (not venue+data_type) — CBOE's registered floor is the
+      Databento VX-futures genesis (~2020-06-01), so every CBOE `ohlcv_24h` date before that is honest-absence-skipped
+      even though the real Yahoo Treasury series has genuine history back to 2000-01-03 (4 of 5 tenors) / 2018-08-13
+      (US2Y). This is a correctly-behaving honest-absence signal for the WRONG floor, not a crash — filed as its own
+      scoped follow-up (`issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md`, P2/P3
+      todos, `assigned_vm: NA`) rather than bundled into this fix, since it's a cross-cutting orchestrator change, not
+      confined to one handler. **Net effect**: CBOE now genuinely captures real data from ~2020-06-01 onward (proven via
+      VM logs; not yet visible in the CONSOLIDATED manifest index as of this write-up — per-VM shards write with
+      `process_final=False` until the VM's full year completes, then the standalone `*/1` consolidator cron merges it —
+      this is expected system behavior, not a defect); true 2000-2020-06 history is blocked on the newly-filed
+      floor-granularity fix. Repos: market-tick-data-service, instruments-service. Source:
       `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (the "NEW (2026-08-09) — before launching
       anything: check the manifest..." todo).
-- [ ] [DIAG] P2. **Determine WHEN `lifecycle-catalogue-regen-tradfi-daily` actually got re-enabled** (was it ever
-      truly paused via the Cloud Scheduler API on 2026-06-25 as two plan docs claimed, or did that session pause it
-      manually out-of-band via a mechanism that didn't persist — e.g. a `gcloud` command that failed silently, or a
-      subsequent Terraform apply/redeploy that reset it to its Terraform-declared default state). Run
+- [ ] [DIAG] P2. **Determine WHEN `lifecycle-catalogue-regen-tradfi-daily` actually got re-enabled** (was it ever truly
+      paused via the Cloud Scheduler API on 2026-06-25 as two plan docs claimed, or did that session pause it manually
+      out-of-band via a mechanism that didn't persist — e.g. a `gcloud` command that failed silently, or a subsequent
+      Terraform apply/redeploy that reset it to its Terraform-declared default state). Run
       `gcloud logging read 'resource.type="cloud_scheduler_job" resource.labels.job_id="lifecycle-catalogue-regen-tradfi-daily"' --project=central-element-323112 --freshness=90d`
-      (Cloud Audit Logs retention permitting) to pull the actual pause/resume history. This is read-only (no delete,
-      no `--apply`, no VM launch) — a bounded, worker-determinable diagnostic. **Done when**: the doc's own DIAG
-      todo (`issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` todo 4) is answered with cited
-      log evidence — either "the pause never took" (script/API-call bug) or "something later silently re-enabled it"
-      (a deploy-time reset gap) — and that doc's checkbox is flipped `[x]` citing the finding. Repo:
-      unified-trading-pm (finding write-up) + whichever repo the root cause points to (fix itself is NOT in scope for
-      this todo — diagnosis only). Source:
-      `issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` (todo 4, DIAG P2), flagged
-      MISCLASSIFIED_LIKELY_AO_ELIGIBLE by that doc's own 2026-08-09 na-eligibility-audit entry but not promoted that
-      run.
+      (Cloud Audit Logs retention permitting) to pull the actual pause/resume history. This is read-only (no delete, no
+      `--apply`, no VM launch) — a bounded, worker-determinable diagnostic. **Done when**: the doc's own DIAG todo
+      (`issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` todo 4) is answered with cited log
+      evidence — either "the pause never took" (script/API-call bug) or "something later silently re-enabled it" (a
+      deploy-time reset gap) — and that doc's checkbox is flipped `[x]` citing the finding. Repo: unified-trading-pm
+      (finding write-up) + whichever repo the root cause points to (fix itself is NOT in scope for this todo — diagnosis
+      only). Source: `issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` (todo 4, DIAG P2),
+      flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE by that doc's own 2026-08-09 na-eligibility-audit entry but not promoted
+      that run.
 
 ## Not extracted this batch — items that stay behind
 
 - `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s `wave_launcher.py` CME dedup fix — found ALREADY SHIPPED
-  during this sweep's conflict-check (`deployment-service@bcf55c781f98f3834298252c443ed5ffa6f42a35`, confirmed
-  ancestor of `origin/live-defi-rollout`); flipped `[x]` directly on the source doc in this same sweep, not extracted
-  here.
-- `tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md`'s build-time exclusion filter (item 1) —
-  already tracked verbatim in `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (KEEP-NA-STALE duplicate,
-  citation already present); its scheduler re-enable item (item 2) is DEPENDENCY_BLOCKED on that filter shipping; its
+  during this sweep's conflict-check (`deployment-service@bcf55c781f98f3834298252c443ed5ffa6f42a35`, confirmed ancestor
+  of `origin/live-defi-rollout`); flipped `[x]` directly on the source doc in this same sweep, not extracted here.
+- `tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md`'s build-time exclusion filter (item 1) — already
+  tracked verbatim in `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (KEEP-NA-STALE duplicate, citation
+  already present); its scheduler re-enable item (item 2) is DEPENDENCY_BLOCKED on that filter shipping; its
   standing-health-check item (item 4) is a genuine open design/scoping question, not yet a committed bounded task.
 - `data_completion_tradfi_2026_07_15.md` — read this same sweep; its 15 open items are overwhelmingly
-  operator/credential/design-gated (Databento billing suspension, `altdata` AG-home wiring scoping, a cefi-owned
-  QG-RED item, a permanent R1 data-loss record) per 8 prior na-eligibility-audit passes, independently confirmed here.
-  One citation fix applied directly (November-2026 scope-gate note on the NASDAQ/NYSE equities coverage-gap item) —
-  no bounded, conflict-clear extraction candidate found.
+  operator/credential/design-gated (Databento billing suspension, `altdata` AG-home wiring scoping, a cefi-owned QG-RED
+  item, a permanent R1 data-loss record) per 8 prior na-eligibility-audit passes, independently confirmed here. One
+  citation fix applied directly (November-2026 scope-gate note on the NASDAQ/NYSE equities coverage-gap item) — no
+  bounded, conflict-clear extraction candidate found.
 
 ## Progress Log
 
-- 2026-08-09 (round-9 combined RECLASSIFY + satellite-extraction sweep, tradfi tranche): drafted alongside its
-  finalize twin. 2 conflict-clear todos extracted from 2 source docs; 1 additional item (wave_launcher.py dedup fix)
-  found already-shipped and flipped directly on its source doc rather than extracted. Conflict-check run against
+- 2026-08-09 (round-9 combined RECLASSIFY + satellite-extraction sweep, tradfi tranche): drafted alongside its finalize
+  twin. 2 conflict-clear todos extracted from 2 source docs; 1 additional item (wave_launcher.py dedup fix) found
+  already-shipped and flipped directly on its source doc rather than extracted. Conflict-check run against
   tradfi_satellite batches 6-9 (all active/complete) and `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` —
   zero collisions on the 2 extracted items.
+- 2026-08-09 (data_engineering worker, slot 17): todo 1 done. Manifest check found FRED needed a genuine relaunch (not
+  verify-only as predicted — prior backfill was at a since-abandoned floor and purged), KRW/USD already complete, DXY
+  needed a full-history launch, and CBOE was hard-broken (zero real coverage ever, `--source` gate bug). Fixed + shipped
+  the CBOE root cause (`market-tick-data-service@af2c53ce`), launched/relaunched all 3 needed backfills, verified real
+  captured data for all 4 cells via direct manifest + VM-log evidence, and filed a follow-up issue for a second CBOE bug
+  (venue-level discovery floor, not data-type-aware) found while verifying full-history scope. Full per-cell
+  disposition + evidence in the todo itself. Todo 2 (DIAG P2, scheduler-history) is untouched — out of this session's
+  scope, belongs to whichever worker picks it up next.
