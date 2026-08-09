@@ -122,13 +122,13 @@ splitting into a third parallel decision thread on the same theme adds coordinat
 
 ## Todos
 
-- [ ] 1. [SCRIPT] P2. Verify `ml_service`'s actual training CLI surface (`ml-service/ml_service/training/` +
+- [ ] [SCRIPT] P2. 1. Verify `ml_service`'s actual training CLI surface (`ml-service/ml_service/training/` +
       `ml-service/ml_service/cli` or equivalent) against `launch-ml-training-vm.sh`'s assembled
       `--operation/--instruments/--target-types/--timeframes/--start-date/--end-date` args; either rewrite the launcher
       to call it directly (`python -m ml_service.training ...` or whatever the real entrypoint is) or build the
       `setup-data-pipeline-vm.sh` `VM_TASK=ml-training` Phase B branch the script's own header describes, then set
       `VM_SERVICE=ml_service` and delete the dead `ml_training_service` metadata value. Repo: deployment-service.
-- [ ] 2. [SCRIPT] P2. Determine whether
+- [ ] [SCRIPT] P2. 2. Determine whether
       `launch-features-vm.sh --feature-family cross_instrument|delta_one     --asset-group PREDICTION` (the consolidated
       launcher) covers `launch-prediction-pipeline-vm.sh`'s 3-step MDPS→cross_instrument→delta_one chunked sequencing;
       if yes, fold this launcher into the same S1-a keep/delete decision in

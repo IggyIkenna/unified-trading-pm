@@ -196,7 +196,7 @@ not something an AO worker should guess at.
       harden `_write_success_manifest` so a swallowed recording failure is at least visible (metric / log event) instead
       of silent. Repo: features-service. — features-service@6f4fdb46 + QG ✅ sentinel=6f4fdb46; dry-run confirmed both
       cells already empty_confirmed; metric hardening shipped; correction script idempotent.
-- [ ] 6. [SCRIPT] P3. **Reconcile the stale `_legacy_seed.parquet` phantom rows** — the per-VM seed
+- [ ] [SCRIPT] P3. 6. **Reconcile the stale `_legacy_seed.parquet` phantom rows** — the per-VM seed
       (`_index/per_vm/_legacy_seed.parquet`) still carries the 2 phantom `captured` time_features rows (2026-07-04/05,
       written 2026-07-27). The consolidated index is correct (`empty_confirmed`), but `read_availability_index`'s
       fallback to per-VM shards when the consolidated blob is >120s stale resurrects them (verified live:
