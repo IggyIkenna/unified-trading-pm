@@ -12,7 +12,7 @@ summary: >-
   the same tick, so serialization alone doesn't obviously account for those; an account/quota-headroom gate or cooldown
   interaction remains a plausible independent contributor, not ruled out. (2) A live recheck of slots 10/11/13/16/21's
   current respawn status/health following the fix was never performed in that session.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -43,14 +43,16 @@ resolved_by:
   and live-recheck evidence it is still routinely missing the SLA today; fix decision handed off to
   autospawn_fleet_cap_headroom_throttling_routine_sla_miss_2026_08_09.md"
 locked_by:
-archive_exempt:
-  true # bridge for the flip-then-mv two-commit archival sequence (RULES.md §2) — dropped in the
-  # immediately-following git-mv commit, same session (check_archive_candidates.sh's sanctioned pattern)
 context_scope:
   [agent-orchestrator/server/autospawn.py, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md]
 ---
 
 # AutoSpawn refill SLA fix — data points 1/2 unexplained + live recheck outstanding
+
+> **🟢 ARCHIVED (2026-08-09).** Both todos done: data points 1/2 root-caused to `_apply_fleet_cap()` headroom throttling
+> (distinct from `dfef970`'s within-tick batch fix); live-recheck confirms the SLA is still routinely missed today. Fix
+> decision (capacity/tuning judgment call) handed off to
+> `/plans/active/issues/autospawn_fleet_cap_headroom_throttling_routine_sla_miss_2026_08_09.md`.
 
 ## Background
 
