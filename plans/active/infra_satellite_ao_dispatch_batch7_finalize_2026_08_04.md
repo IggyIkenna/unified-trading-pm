@@ -68,12 +68,13 @@ skill's no-double-gate mechanism).
       Once batch7's content-hash (todo 1) and SKILL.md-update (todo 2) todos ship, flip both of that source doc's
       `- [ ] [SCRIPT] P3` / `- [ ] [DOCS] P3` checkboxes to `[x]`, citing the batch7 commit SHA(s).~~ This todo's own
       premise (flip-on-ship, citing batch7's shipped SHAs) never triggered: a SEPARATE, earlier 2026-08-07 operator
-      ruling ("less work and edits, still correct" — recorded in commit d1d36f012) citation-closed both of the source
-      doc's todos as duplicates of batch7's own (then-still-`draft`) todos, one day before batch7's todos actually
-      shipped (2026-08-08). Both source-doc checkboxes were flipped `[x]` on that basis (Option A: cite the batch7 plan,
-      don't re-do the work here) — not by citing shipped SHAs, since none existed yet at ruling time. With both
-      checkboxes closed and no other operator-gated remainder, the source doc was archived the same day
-      (unified-trading-pm@70d750e74, per the standard 6-step ritual) to
+      ruling ("less work and edits, still correct" — recorded in commit d1d36f012, applied to
+      `/plans/archive/issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`)
+      citation-closed both of the source doc's todos as duplicates of batch7's own (then-still-`draft`) todos, one day
+      before batch7's todos actually shipped (2026-08-08). Both source-doc checkboxes were flipped `[x]` on that basis
+      (Option A: cite the batch7 plan, don't re-do the work here) — not by citing shipped SHAs, since none existed yet
+      at ruling time. With both checkboxes closed and no other operator-gated remainder, the source doc was archived the
+      same day (unified-trading-pm@70d750e74, per the standard 6-step ritual) to
       `/plans/archive/issues/na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`
       — confirmed present there, `status: resolved`, both todos `[x]`. Nothing left for this todo to do. (repo:
       unified-trading-pm)

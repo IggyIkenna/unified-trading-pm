@@ -118,7 +118,8 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       (cache fix landed 2026-08-06) has elapsed as of this batch's authoring date. Run
       `bash scripts/cicd/measure-ci-job-minutes.sh` and record the delta against the stated 5,875 min/24h baseline in
       the source doc's own dated Progress Log entry (do not edit this plan's body). **Done when**: the delta is recorded
-      with real numbers (or `BLOCKED-CREDENTIALS` if the measurement source is unreachable — do not estimate). Source:
+      with real numbers (or recorded as blocked on credentials if the measurement source is unreachable — do not
+      estimate; the literal marker token is deliberately NOT written here, see the note under todo 12). Source:
       `issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` (Part 8 line 523) — never cited by any
       covering doc.
 
@@ -330,9 +331,17 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
 - [ ] 12. [VERIFY] P3. **Run the `--skip-tests`/`--skip-<X>` per-phase delta measurement** the source doc's own Deferred
       table calls "now unblocked"/"ready to run" — a bounded benchmark using the existing timing methodology already
       built in Phase 1 of that doc. **Done when**: the delta table is filled in and recorded in the source doc's
-      Progress Log with real numbers (or `BLOCKED-CREDENTIALS`/`BLOCKED-INFRA` if the measurement environment is
+      Progress Log with real numbers (or recorded as blocked on credentials/infra if the measurement environment is
       unavailable). Source: `quality_gates_quickmerge_timing_baseline_2026_07_31.md` (line ~364) — never cited by any
       covering doc.
+
+> **Note (slot-3, 2026-08-09) — do not re-add the literal marker tokens to todos 1 and 12.** Both originally wrote the
+> blocked-status instruction as a backticked `BLOCKED-<TOKEN>` literal. That token keeps a todo OUT of the backlog
+> entirely wherever it appears in the block (`plans/active/task_template.md` § Non-dispatchable), so the parser read
+> both as live holds and AO never dispatched them — silently, including todo 1 at **P0**. Verified against the real
+> `regen_backlog_from_plan._is_non_dispatchable`: the original text returns `True` (dropped), the prose form returns
+> `False` (dispatches). Meaning is unchanged; only the literal token was removed. SSOT:
+> `/plans/archive/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md`.
 
 ## Deferred
 

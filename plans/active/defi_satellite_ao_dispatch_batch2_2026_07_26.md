@@ -212,8 +212,9 @@ context_scope:
       SAME fix pattern already used on the resolved files in this issue (`archetype_capability_manifest.json`,
       `archetype_leg_spec_seeds.py`, `collateral_registry.py`, `simulation_assumptions.py`, `jurisdiction_overlay.py`,
       `order_semantics.py`, `venue_tokens.py`, `archetype_leg_spec.py`): remove/repoint the dead venue entry and leave a
-      `# DRIFT/PACIFICA (Solana) removed 2026-07-16 (operator ruling: ...)` comment marker, matching the marker
-      convention already applied workspace-wide. Do NOT touch `unified-trading-system-ui`'s
+      `# DRIFT/PACIFICA (Solana) removed 2026-07-16 (operator ruling: ...)` comment marker — the ruling itself is
+      recorded in `/codex/04-architecture/solana-defi-coverage.md` — matching the marker convention already applied
+      workspace-wide. Do NOT touch `unified-trading-system-ui`'s
       `venue_set_variants`/`archetype_capability_registry`/`strategy_instance_catalogue` or
       `tests/e2e/_shared/strategy-registry.ts` in this todo — those are separately gated on an undecided strategy-domain
       call (delete vs re-leg `CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod` onto Jupiter) and on the stale UI/UAC
