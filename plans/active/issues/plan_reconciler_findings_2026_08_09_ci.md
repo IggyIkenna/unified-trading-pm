@@ -167,16 +167,67 @@ path, not a one-off.
   separate durable doc exists for this specific same-session ruling, noted honestly rather than fabricating a pointer.
 - `assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md` — corrected "10 more" → "8 more" in its own enumeration
   (2 entries now moot: 1 pre-existing archived doc the moved-doc-referrer hunter found, 1 archived this run).
+- **AO-dispatch-readiness (task_template.md finding L / SKILL.md hunter 5)** — 3 `assigned_vm: planning` docs had
+  load-bearing todo content stranded past the first physical line (invisible to `regen_backlog_from_plan.py`'s
+  `_parse_open_todos`): `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md` (both todos, critical qualifiers
+  omitted), `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (sole open todo, target doc name hidden mid-bold-wrap),
+  `ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md` (todo 1 omitted a distinct sub-instruction entirely, todo 3
+  truncated mid-citation with the entire 6-step procedure continuation-only). All rewritten so the complete instruction
+  fits on line 1. unified-trading-pm@28e6b883c.
 
 ## Filed
 
-_(populated in STEP 6)_
+1. **`BLK-987241fb`** (ASK, answered async) — `monitoring_control_plane_master_2026_06_10.md` `parent_epic` question
+   (observability_master vs infrastructure_master — see Contradictions #2 / Doc-drift #1 for full evidence). Options A
+   (reassign, [WORKER REC]) / B (keep as-is) / C (split). `can_continue: true`.
+2. **P1 tooling bug — prek stash-restore silently drops staged content on `git mv` archival commits.** Reproduced 3/3
+   times this session (`digest_drift_sweep`, `provenance_gate_override`, `client_reporting_api_promote_wedge` archival
+   commits): a commit combining a `git mv` with content edits (status/banner) lands with the RENAME but not the content
+   — "Restored unstaged changes from `<patch>`" appears to restore a STALE pre-edit snapshot over the staged version.
+   Symptom matches SKILL.md Phase 5.9(c) exactly ("git mv reporting (100%) rename similarity is the tell"). Caught every
+   time via mandatory verify-at-HEAD (`diff <(git show HEAD:<path>) <path>`), never silently shipped wrong, but costs a
+   full extra commit+push cycle each time and would silently corrupt an archival for any agent that skips the
+   verify-at-HEAD step. Needs investigation in `agent-orchestrator`/pre-commit hook infra (prek's stash handling around
+   renames) — outside a plan-doc reconciliation pass's own remit to fix.
+   - [ ] [BACKEND] P1. Root-cause why prek's "Restored unstaged changes from patch" step drops staged content
+         specifically on commits combining a `git mv` with a content edit to the moved file — reproduce with
+         `git mv <f> <new>; <edit new>; git add <new>; git commit` on a throwaway branch, inspect the `.patch` file prek
+         generates immediately before the drop to confirm it's stashing a stale (pre-edit) tree state. Fix in the prek
+         hook config or upstream prek itself. Done-when: 10 consecutive git-mv+edit commits in a row land correctly at
+         HEAD with zero manual re-fix commits needed.
+3. **Systemic gap — `plans/active/task_template.md` never mentions `effort:`/`thinking_tier:` anywhere in its
+   frontmatter guidance**, so every tranche's AO-dispatch-batch docs silently regress the corpus-wide
+   `check_effort_signal_ratchet.py` gate by design (250 vs baseline 217 corpus-wide as of this run; ci's marginal
+   contribution: 4 docs created today). See Scope+method above for full detail.
+   - [ ] [DOC] P2. Add `effort:`/`thinking_tier:` to `plans/active/task_template.md`'s AO-dispatched frontmatter block
+         (§2, alongside `assigned_vm: planning`), with a one-line note on when the role-generic default is fine vs when
+         to declare explicitly (mirrors CLAUDE.md's "every `assigned_vm: planning` plan defaults to `effort: max`" + the
+         2026-07-22 todo-count-derivation ruling). Done-when: a fresh AO-dispatch-batch doc authored from the template
+         no longer silently regresses `check_effort_signal_ratchet.py`.
+4. **Codex-alignment drift** — `orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` cites
+   `/codex/07-security/self-hosted-runner-security-posture.md`
+   (`authoritative_for: self-hosted runner ambient-identity posture, glue-runner credential-exposure facts`), but that
+   codex doc doesn't document this issue's 5×-recurring, now-operator-ruled (2026-08-08, option b) failure mode at all —
+   worse, `cloud-build-router.yml` and sibling glue workflows directly violate the codex doc's own STEP 2b design
+   invariant ("drops per-job `auth` steps because ambient ADC is there"), which is the actual root cause of the 5
+   outages. Per SKILL.md Phase 5, a codex/SSOT edit is only ever applied after an explicit operator ruling — filed, not
+   auto-fixed.
+   - [ ] [DOCS] P2. After operator ruling: update `/codex/07-security/self-hosted-runner-security-posture.md` to (a)
+         document the WIF-job-auth-overwrites-shared-active-account failure mode and its 2026-08-08 ruling (option b,
+         non-shared credential file per job), and (b) either fix or explain the apparent contradiction between the codex
+         doc's STEP 2b invariant and `cloud-build-router.yml`'s actual per-job `auth` steps. Done-when: codex reflects
+         the live 2026-08-08-ruled state and the STEP 2b contradiction is resolved or explicitly scoped.
 
 ## Archive candidates (operator review)
 
-_(populated in STEP 5)_
+None beyond the 3 already auto-archived above (all were UNLOCKED + fully-verified-done, so archived directly per
+SKILL.md Phase 4's auto-fix table — no operator gate needed for an unlocked, verified-done plan/issue doc).
 
 ## Refuted (dropped by verify)
+
+1. **"PM public flip" vs `ci_pipeline_speed_and_cost_redesign`'s self-hosted fix** — NOT a contradiction (dedicated
+   verifier): different axes (repo-visibility vs runner-placement), 3 distinct dated events, no doc is factually wrong
+   about its own claim. See Contradictions #6.
 
 _(populated in STEP 4)_
 
