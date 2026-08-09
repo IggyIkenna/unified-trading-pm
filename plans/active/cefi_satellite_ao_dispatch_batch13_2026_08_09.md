@@ -150,3 +150,15 @@ context_scope:
   `depth_of_book_10` isn't in the MDPS `DataType` enum — caught+logged, doesn't block persistence, but is a real open
   design question (does depth_of_book_10 feed MDPS candles or not) captured as a P3 todo in the issue doc rather than
   guessed at inline.
+- **2026-08-09, slot 11**: worked todo 2 via the issue doc's per-venue debug todos (concurrently with slots 6/23/27 also
+  on this doc — Coinbase/Deribit/Bybit all landed by others while I was mid-investigation; my own first-pass Coinbase
+  fix independently re-derived the same root cause but was discarded in favor of the already-landed, more-thorough fix).
+  Closed the LAST remaining P2 item, OKX-SWAP: SSH'd into the live production VM
+  (`mtds-live-cefi-consolidated-20260809-121034`) for real signal, ruled out connectivity/universe/batch-size causes via
+  a live wire probe of the full 438-instrument production shape, then found via the shard's own log that production
+  canonical instrument_ids carry an `@LIN`/`@INV` margin marker `_instrument_to_okx_inst_id` never stripped — building a
+  malformed wire `instId` OKX silently never matched. Fixed + shipped `market-tick-data-service@52383e877`, full
+  detail + regression tests in the issue doc's Progress Log. **Todo 2's own checkbox stays correctly unflipped**: all 4
+  per-venue connector bugs are now code-fixed but NONE have been live-verified past deploy yet — a VM cycle + fresh
+  manifest read across all 5 venues is still needed before this todo's done-when ("rows landing for at least the 5
+  capable venues") is actually met. See the issue doc for the full per-venue fix ledger.

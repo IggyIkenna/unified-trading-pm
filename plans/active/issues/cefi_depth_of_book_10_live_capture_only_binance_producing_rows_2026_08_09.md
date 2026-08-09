@@ -172,9 +172,23 @@ operator/architecture call, not a mechanical fix.
       (was the actual reason this bug went undetected). `level2_batch`/`level2_50` caps at top 50 levels/side (not
       uncapped like the old `level2`) — irrelevant here since `depth_of_book_10` only slices 10. New regression test
       (`test_error_frame_logged_not_silently_dropped`) + all 39 existing connector tests pass.
-- [ ] [CODE] P2. Debug the OKX-SWAP `depth_of_book_10` factory branch in `okx_ws.py` — same `empty_confirmed`-only
+- [x] ✅ [CODE] P2. Debug the OKX-SWAP `depth_of_book_10` factory branch in `okx_ws.py` — same `empty_confirmed`-only
       pattern (438 rows in ~30 min), also OKX-SWAP's first-ever live dispatch on this VM. Repo:
-      market-tick-data-service.
+      market-tick-data-service. — **DONE, `market-tick-data-service@52383e877`**: SSH'd into the live production VM
+      (`mtds-live-cefi-consolidated-20260809-121034`), confirmed the shard process alive (not crash-looping), IS
+      universe resolving all 438 instruments correctly, and a live wire probe subscribing all 438 real OKX instIds in
+      one `books`-channel batch works fine (438 subscribe acks, real snapshot/update data flowing) — ruling out
+      connectivity, universe-resolution, and batch-size-limit causes (the classes that broke BYBIT-FUTURES/DERIBIT
+      respectively). Root cause found by grepping the live shard's OWN log for the actual canonical instrument_ids it
+      was handling: production IS-universe hands `_instrument_to_okx_inst_id` ids like `OKX-SWAP:PERPETUAL:0G-USDT@LIN`
+      / `OKX-SWAP:PERPETUAL:ADA-USD@INV` (confirmed across hundreds of distinct instruments) — contradicting
+      `_build_okx_canonical_id`'s docstring claim that OKX is exempt from the `@LIN`/`@INV` margin marker. The
+      `parts[-1]`-only reverse built the WRONG wire `instId` (`"0G-USDT@LIN-SWAP"` — not a real OKX instrument), so
+      every subscribe silently matched nothing. Fixed by stripping the marker before building the wire instId (mirrors
+      the established `bybit_ws._instrument_to_bybit_symbol` pattern). 2 new regression tests
+      (`test_perpetual_strips_lin_margin_marker`/`test_perpetual_strips_inv_margin_marker`); all 113 OKX connector tests
+      pass. **Not yet live-verified past deploy** — like the BINANCE-FUTURES/BYBIT-FUTURES/DERIBIT fixes above, this
+      needs a VM cycle to pick up the code change before a fresh manifest read can confirm real rows landing.
 - [ ] [CODE] P3. Resolve whether `depth_of_book_10` (and its L2-microstructure siblings `queue_position`/
       `order_flow_imbalance`) should be added to
       `unified_api_contracts.internal.domain.market_data_processing.candle_schema.DataType` (feeding MDPS candle
@@ -255,3 +269,25 @@ operator/architecture call, not a mechanical fix.
   this fix up and re-verifying real `capture_status=captured` BYBIT-FUTURES `depth_of_book_10` rows in prod — code-level
   fix only; a VM cycle deploys it. This issue doc stays open pending OKX-SWAP (todo still open) + the MDPS-enum P3
   todo + prod re-verification for all 3 fixed venues.
+- **2026-08-09, slot 11**: closed the OKX-SWAP `[CODE] P2` todo — the 4th and last of the per-venue debug items (found
+  Coinbase + Deribit + Bybit already fixed by other slots concurrently on arrival; my own first attempt independently
+  re-derived the identical Coinbase `level2`→`level2_batch` root cause but landed seconds after slot 6's more thorough
+  fix — discarded my redundant local commit in favor of the already-landed one, per no-blind-overwrite discipline).
+  SSH'd into the live production VM (`mtds-live-cefi-consolidated-20260809-121034`) to get REAL signal instead of
+  further static/generic-probe guessing: confirmed the OKX-SWAP shard alive (not crash-looping), IS universe resolving
+  all 438 instruments, and a live wire probe subscribing all 438 real OKX instIds in one `books`-channel batch (mirrors
+  the exact production shape) works fine — 438 subscribe acks, real book data flowing — ruling out connectivity,
+  universe-resolution, and batch-size-limit causes (the classes that broke DERIBIT/BYBIT-FUTURES respectively). Grepped
+  the live shard's OWN log for the actual canonical instrument_ids it processes: every one carries an `@LIN`/`@INV`
+  margin marker (`OKX-SWAP:PERPETUAL:0G-USDT@LIN`, `OKX-SWAP:PERPETUAL:ADA-USD@INV`, confirmed across hundreds of
+  distinct instruments) — contradicting `_build_okx_canonical_id`'s own docstring claim that OKX is exempt from that
+  marker. `_instrument_to_okx_inst_id`'s `parts[-1]`-only reverse built the WRONG wire `instId` (`"0G-USDT@LIN-SWAP"` —
+  not a real OKX instrument), so every subscribe silently matched nothing, exactly the `empty_confirmed`-only symptom.
+  Fixed by stripping the marker before building the wire instId, mirroring the established
+  `bybit_ws._instrument_to_bybit_symbol` pattern. Shipped `market-tick-data-service@52383e877` (QG green; 2 new
+  regression tests, all 113 OKX connector tests pass). **Not yet live-verified past deploy** — same caveat as every
+  other fix in this doc: a VM cycle is needed to pick up the code change, then a fresh manifest read confirms real rows
+  landing. **All 4 P2 per-venue debug todos are now code-fixed** (BINANCE-FUTURES already worked;
+  BYBIT-FUTURES/DERIBIT/COINBASE-SPOT/OKX-SWAP fixed across `market-tick-data-service@{level2_batch sha}`, `e3bd10b9`,
+  `52383e877` + slot-27's Deribit batching fix) — only the P3 MDPS-enum question and a live VM redeploy+re-verify pass
+  across all 5 venues remain before this doc (and the parent plan's todo 2) can close.
