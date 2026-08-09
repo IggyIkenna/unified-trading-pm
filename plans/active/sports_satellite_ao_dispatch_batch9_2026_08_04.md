@@ -294,7 +294,7 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       the doc lives at its new `plans/archive/2026_08/` path with an archived banner,
       `regenerate_active_plan_inventory.py` shows zero orphan/broken-referrer count for this doc's old path, all 10
       referrer paths resolve to the new location, and the hygiene sweep is green.
-- [ ] [DATA] P2. Scope and execute the GCS-object-level residual cleanup for the 8,937 manifest-dropped rows removed
+- [x] ✅ [DATA] P2. Scope and execute the GCS-object-level residual cleanup for the 8,937 manifest-dropped rows removed
       2026-08-04 (`canonicalize_sports_league_id_schema_2026_06_24.py --drop-out-of-universe --apply`; snapshot
       `gs://instruments-store-sports-prd-central-element-323112/_index/snapshots/pre_league_id_canonicalize_20260804T075724Z.parquet`)
       — dropping a manifest row does NOT delete the underlying GCS parquet object. Derive the candidate object list
@@ -304,7 +304,16 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `[OPERATOR]` gate needed once this holds). Source:
       `sports_curated_universe_domestic_selection_remaining_2026_07_25.md`. Done when: every one of the 8,937
       dropped-row objects is either confirmed genuinely orphaned and deleted (evidence recorded per the delete-safety
-      checklist) or confirmed NOT safe to delete with the reason recorded.
+      checklist) or confirmed NOT safe to delete with the reason recorded. — **ALREADY DONE, pre-dates this batch's
+      dispatch (2026-08-09, slot 10, pre-task plan/issue conflict check).** This exact cleanup was executed 2026-08-04
+      (slot 14) under its source doc BEFORE that doc was archived: `instruments-service@48d3b10c` (script
+      `scripts/gcs_orphan_cleanup_sports_curated_universe_2026_08_04.py`, five-part proof per the delete-safety
+      protocol) — deleted=7,998 orphaned league-specific objects, failed=0, skipped=8 (mixed-content risk, left in
+      place), 11,186 already not-found. Full evidence:
+      `/plans/archive/issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md` lines 582-601 (todo
+      closed + doc archived 2026-08-06). The batch9 `/ag-closeout-audit` run (2026-08-04) that generated this todo
+      sourced it from the pre-archival, pre-closure state of that doc — this checkbox flip is a no-op correction, not
+      new work: no new GCS deletes were performed this session.
 - [ ] [DIAG] P3. Investigate why the sports `_index` dedup rate jumped from ~11% (June baseline) to 45% (2026-08-03)
       during the `canonicalize_sports_league_id_schema_2026_06_24.py --apply` re-key run. Determine whether the jump is
       a one-time artifact of the concurrent curated-universe-backfill VM campaign or a genuine consolidator gap. Source:
@@ -859,100 +868,12 @@ doc's `[SCRIPT]` P3 no-relaunch STOP is cleared.
   own inline `Source:` citation) — no single source path is appropriate per SKILL.md's dispatch-batch-coordinator
   exemption.
 
-### 2026-08-07 — P2 PLAYER_VALUES Transfermarkt backfill launched (slot 14)
+### 2026-08-07..08 — P2 PLAYER_VALUES Transfermarkt backfill (VM `tm-backfill-20260807-233040`) — intermediate status
 
-VM `tm-backfill-20260807-233040` (SPOT e2-standard-8, `asia-northeast1-c`) launched 2026-08-07T23:30:40Z via
-`bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2025-09-01 2025-11-30`.
-All 4 tarballs confirmed fresh at launch time.
-
-**Status at pre-compact (2026-08-07T23:36Z):** VM RUNNING. GCS log at
-`gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260807-233040/run.log` shows:
-
-- Service started, PLAYER_VALUES+TRANSFERMARKT filters applied
-- `TRANSFERMARKT short-circuit: skipping orchestrator for date=2025-09-01` — skip-fresh working correctly (captured
-  dates skipped, only `attempted_failed` cells re-attempted)
-- 502 retry from `transfermarkt-football-data-api.p.rapidapi.com` in progress (attempt 1/10, backoff 3.0s)
-
-**Next step after VM completes (exit_code=0):** run manifest re-measurement to count PLAYER_VALUES `attempted_failed`
-cells in 2025-09-01..2025-11-30 (baseline=256), then flip this todo's checkbox citing VM name + measurement result.
-Measurement script pattern: 3-col read (`date`, `data_type`, `capture_status`) from
-`instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, filter
-`data_type==PLAYER_VALUES AND date∈[START,END]`. Run via `run-bounded-analysis.sh` per memory-bounding rule.
-
-### 2026-08-07T23:50Z — second pre-compact (slot 14); VM still active
-
-**VM status at 23:50Z:** RUNNING — at attempt 4/10 (backoff 24.0s) for Transfermarkt 502 retries at 23:37Z; within
-normal 10-attempt retry envelope. Background 5-min poll armed (up to 90 min).
-
-**Updated at 23:42Z (third pre-compact):** VM at attempt 7/10 (backoff capped at 48.0s since attempt 5) on
-`/api/v1/competitions/standings`. Attempts 8–10 also at ~48s each — VM may exit non-zero ~23:44–23:46Z if API stays
-down.
-
-**Resume steps (pick up from repo, zero session memory needed):**
-
-1. Check VM:
-   `gcloud compute instances list --filter="name=tm-backfill-20260807-233040" --zones=asia-northeast1-c --format='value(name,status)'`
-2. If gone:
-   `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/tm-backfill-20260807-233040/run.log | tail -30`
-   and look for `[[VM_PROGRESS]] last_completed_date=2025-11-30` (success) or final `exit` line.
-3. If exit_code=0: create `measure_pv_golden.py` with the snippet below, run via
-   `cd instruments-service && bash scripts/dev/run-bounded-analysis.sh python <path>/measure_pv_golden.py`.
-4. Flip P2 checkbox (`- [ ] → - [x] ✅`), commit `docs(plans):`, POST `/api/slots/14/done`
-   `{"task_id":"sports_satellite_ao_dispatch_batch9-002","sha":"<sha>","evidence":"<measurement output>"}`.
-5. **If exit_code≠0 (API exhaustion):** wait 15–30 min for Transfermarkt API recovery, then re-launch:
-   `bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2025-09-01 2025-11-30`
-   (skip-fresh is default — already-captured cells won't be re-attempted; idempotent re-launch is safe).
-
-**Measurement script (inline — scratchpad not durable):**
-
-```python
-#!/usr/bin/env python3
-"""Measure PLAYER_VALUES attempted_failed in golden window 2025-09-01..2025-11-30."""
-from __future__ import annotations
-import io
-from datetime import UTC, datetime
-import pandas as pd
-from unified_trading_library import get_storage_client
-
-BUCKET = "instruments-store-sports-prd-central-element-323112"
-START, END, TARGET = "2025-09-01", "2025-11-30", "PLAYER_VALUES"
-
-def main() -> int:
-    ts = datetime.now(UTC).strftime("%Y-%m-%dT%H:%MZ")
-    client = get_storage_client()
-    raw = client.download_bytes(BUCKET, "_index/availability_index.parquet")
-    manifest = pd.read_parquet(io.BytesIO(raw), columns=["date", "data_type", "capture_status"])
-    mask = (manifest["data_type"] == TARGET) & (manifest["date"] >= START) & (manifest["date"] <= END)
-    counts = manifest[mask]["capture_status"].value_counts().to_dict()
-    af = counts.get("attempted_failed", 0)
-    print(f"[{ts}] PLAYER_VALUES {START}..{END}: attempted_failed={af} (baseline=256); counts={counts}")
-    verdict = "PASS — dropped from 256" if af < 256 else "WARN — unchanged or higher"
-    print(f"VERDICT: {verdict}")
-    return 0
-
-if __name__ == "__main__":
-    raise SystemExit(main())
-```
-
-### 2026-08-08T00:18Z — sustained Transfermarkt API outage; VM still cycling (slot 14)
-
-**VM `tm-backfill-20260807-233040` RUNNING at 00:18Z** (48+ min since first 502 at 23:34Z). API is returning 502 on
-`competitions/standings` continuously. Service handles each `attempted_failed` date by exhausting its 10-attempt retry
-window (~9 min), writing `attempted_failed` to the manifest, then moving on — no outer exit on per-date exhaustion.
-
-**Progress as of 00:18Z:** 5 date-batches cycled (~45 min × 1 date/9 min). Zero captures. `attempted_failed` cells are
-being re-stamped as `attempted_failed` for each date processed.
-
-**Path forward:** VM will continue cycling through all `attempted_failed` dates. Either:
-
-- **(A) API recovers mid-run** → remaining dates capture successfully; VM exits 0; run measurement (script inline
-  above); if `attempted_failed < 256` → flip P2 checkbox + `docs(plans):` commit + POST `/api/slots/14/done`.
-- **(B) API stays down; VM cycles to completion** → VM exits (likely exit_code=0 having processed all dates); run
-  measurement expecting `attempted_failed ≈ 256`; wait 20–30 min for API recovery; re-launch:
-  `bash deployment-service/scripts/vm/launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2025-09-01 2025-11-30`
-  (idempotent — skip-fresh re-attempts `attempted_failed` cells).
-
-**Do NOT launch a new VM while `tm-backfill-20260807-233040` is still RUNNING** — singleton lock will reject it.
+Launch + two pre-compact status snapshots while the VM cycled through Transfermarkt 502 retries, extracted to
+`/plans/archive/2026_08/sports_satellite_ao_dispatch_batch9_progress_log_history_2026_08_09.md` (line-cap remediation
+2026-08-09) — fully superseded by the terminal outcome in the "Todo 2 — BLOCKED-UPSTREAM-OUTAGE" entry immediately below
+(VM killed 2026-08-08 after a confirmed 15h+ vendor-endpoint outage).
 
 ## Codex SSOTs
 
@@ -994,3 +915,16 @@ root-cause citation in
 `plans/archive/issues/sports_odds_predictions_golden_window_empty_confirmed_residual_2026_08_09.md`. Flagged there (not
 actioned, out of scope): `data_completion_sports_2026_07_24.md`'s own duplicate P2 line for this residual should be
 struck by whoever next touches that plan.
+
+### 2026-08-09 — Todo "Scope and execute the GCS-object-level residual cleanup for the 8,937 manifest-dropped rows" — STALE DUPLICATE, flipped without new work (slot-10)
+
+Pre-task plan/issue conflict check (grep before starting, per CLAUDE.md HARD RULE) found this exact cleanup was already
+executed 2026-08-04 (slot 14) under its own source doc, BEFORE that doc's 2026-08-06 archival:
+`instruments-service@48d3b10c` (script `scripts/gcs_orphan_cleanup_sports_curated_universe_2026_08_04.py`, full
+five-part proof per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) — deleted=7,998 orphaned
+league-specific objects, failed=0, skipped=8 (mixed-content risk, left in place), 11,186 already not-found. Closed +
+evidenced at `/plans/archive/issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md` lines 582-601.
+The batch9 `/ag-closeout-audit sports` run that generated this todo (2026-08-04, same day) sourced it from that doc's
+pre-closure state — a same-day race between the closing commit and the audit's classification pass, not a genuine gap.
+Checkbox flipped citing the existing evidence; no new GCS deletes performed this session (redoing a completed
+five-part-proof delete against already-deleted/already-not-found objects would be pure waste, not a safety concern).
