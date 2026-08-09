@@ -615,3 +615,4 @@ longer has its own download button.
 - **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — all 8 open checkboxes are
   judgment-call/operator-gated design items (mockup re-verification cadence, parquet resharding design gated on operator
   sign-off, etc.), none a bounded worker-determinable fact-check.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

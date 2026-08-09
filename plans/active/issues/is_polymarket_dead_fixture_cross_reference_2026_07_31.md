@@ -153,3 +153,4 @@ Not adjudicated here:
   worker-determinable fact. Third consecutive audit pass (07-31, 08-04, 08-07) reaching the same verdict. Doc stays NA.
 - **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: RULED — delete (option
   A). See Todos section above for the full ruling + rationale.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

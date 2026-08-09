@@ -189,3 +189,4 @@ per-finding) — that's tracked separately. This doc's scope is alerting infrast
   deployment-service@302dcef33. QG green.
 - **2026-08-07 (item 3)**: GCS 429 routing fix shipped — `_is_gcs_rate_limit()` helper + `DP_GCS_429_THRASH` routing in
   all 4 AlertStorageStore write methods + 16 unit tests. alerting-service@773bb55c2. QG green.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (9 entries).

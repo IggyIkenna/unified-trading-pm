@@ -258,3 +258,4 @@ every healthy tick forever) — that is a real, if modest, additional job
   edit in an over-cap file has no `check_line_caps.sh` carve-out). Set `archive_exempt: true`, kept `status: open`
   (terminal status without physical archival would itself fail `check_terminal_status_archived`). Un-set once the
   deadlock doc's operator decision lands and the archival can complete.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

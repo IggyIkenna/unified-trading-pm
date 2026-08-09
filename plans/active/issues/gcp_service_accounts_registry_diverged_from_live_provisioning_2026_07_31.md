@@ -152,3 +152,4 @@ Two directions are both plausible and this is an architecture decision, not a bo
   2026-08-01 note or the 08-06 self-resolution at face value; reaches the same verdict as 2026-08-01. Investigated 3
   related docs to rule out KEEP-NA-STALE-DUPLICATE — none absorb this doc's scope (see this run's chat-level report for
   detail).
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

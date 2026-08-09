@@ -251,3 +251,4 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
   candidate for a future infra batch.
 - **context-scout 2026-08-03**: refreshed context_scope (3 entries, unchanged — verified all still resolve).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
