@@ -148,23 +148,38 @@ reporting across this pipeline's own audit trail).
 
 ## Recommended next steps
 
-- [ ] [DATA] P1. Root-cause + fix the sports odds_api manifest shard-reconciliation defect: the shard key
-      `(venue=bookmaker, league_id, date)` is coarser than actual per-fixture coverage variance, so a single run can
-      write BOTH `captured` and `attempted_failed` for the identical shard key with no reconciliation — confirmed live
-      for `PINNACLE/ARGENTINA_PRIMERA/2026-08-02` (3 captured + 13 attempted_failed, same run, `attempted_at` within
-      ~3s) and quantified at 67.9% (735/1082) of 2026-08-02's odds_api attempted_failed rows sharing a shard key with a
-      co-existing captured row. Read `/codex/05-infrastructure/manifest-consolidator-ssot.md`
-      (`_resolve_dedup_cols()`/`_dedup_key_sql()`, the documented "last-write-wins by attempted_at" behavior that should
-      already prevent this) FIRST — trace whether the dedup key it uses actually matches
-      `unified_trading_library/manifest_writer/_rows.py::_ROW_KEY_COLUMNS`, or whether the per-fixture verdicts never
-      get folded into one shard-level write before reaching the consolidator (upstream defect in the
-      adapter/orchestrator write path instead). Also assess whether `EmptyFromLiveInstrumentError`'s per-fixture
-      "was_expected" guard (`unified_api_contracts/canonical/crosscutting/_honest_coverage_logic.py`) is too coarse for
-      sports (checks fixture-liveness only, not per-bookmaker-per-fixture coverage) — that may be a second, independent
-      contributor. Done when: a unit test confirms a shard key that receives BOTH a captured and an attempted_failed
-      write within one run resolves to a single, non-contradictory manifest state, and a re-read of the 2026-08-02
-      sample shows the phantom-duplicate rate materially below 67.9%. (repo: unified-trading-library,
-      market-tick-data-service, unified-api-contracts)
+- [x] ✅ [DATA] P1. Root-cause + fix the sports odds_api manifest shard-reconciliation defect —
+      market-tick-data-service@cf855ff0. `(venue=bookmaker, league_id, date)` is coarser than actual per-fixture
+      coverage variance, so a single run can write BOTH `captured` and `attempted_failed` for the identical shard key
+      with no reconciliation — confirmed live for `PINNACLE/ARGENTINA_PRIMERA/2026-08-02` (3 captured + 13
+      attempted_failed, same run, `attempted_at` within ~3s) and quantified at 67.9% (735/1082) of 2026-08-02's odds_api
+      attempted_failed rows sharing a shard key with a co-existing captured row. Read
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` (`_resolve_dedup_cols()`/`_dedup_key_sql()`, the
+      documented "last-write-wins by attempted_at" behavior that should already prevent this) FIRST — trace whether the
+      dedup key it uses actually matches `unified_trading_library/manifest_writer/_rows.py::_ROW_KEY_COLUMNS`, or
+      whether the per-fixture verdicts never get folded into one shard-level write before reaching the consolidator
+      (upstream defect in the adapter/orchestrator write path instead). Also assess whether
+      `EmptyFromLiveInstrumentError`'s per-fixture "was_expected" guard
+      (`unified_api_contracts/canonical/crosscutting/_honest_coverage_logic.py`) is too coarse for sports (checks
+      fixture-liveness only, not per-bookmaker-per-fixture coverage) — that may be a second, independent contributor.
+      Done when: a unit test confirms a shard key that receives BOTH a captured and an attempted_failed write within one
+      run resolves to a single, non-contradictory manifest state, and a re-read of the 2026-08-02 sample shows the
+      phantom-duplicate rate materially below 67.9%. (repo: unified-trading-library, market-tick-data-service,
+      unified-api-contracts) — **root cause confirmed: NOT the consolidator's dedup key or the
+      `EmptyFromLiveInstrumentError` guard** (both behave as documented) — it's an UPSTREAM MTDS write-path bug. Both
+      `_write_shard_counts_to_manifest` (captured path, `manifest_finalize.py`) and `_emit_sports_v2_sentinels`
+      (attempted_failed/empty_confirmed sentinel fan-out, `sentinels.py`) were stamping the per-fixture id into
+      `underlying=` — one of the consolidator's `_OPTIONAL_DEDUP_COLS` — instead of the documented DISPLAY-axis
+      `fixture_id=` column (`_rows.py:230-234`, excluded from the dedup key). That fragmented the documented
+      `(venue=bookmaker, league_id, day)` shard atom into one manifest row PER FIXTURE, so a captured row and an
+      attempted_failed row for the SAME (bookmaker, league, day) never shared a dedup key and never reconciled. Fixed
+      both call sites to stamp `fixture_id=`/`"fixture_id"` instead of `underlying=`/`"underlying"`; added 2 regression
+      unit tests (`test_sports_shard_write_stamps_fixture_id_not_underlying`,
+      `test_emit_sports_v2_sentinels_stamps_fixture_id_not_underlying`) asserting the write path no longer fragments the
+      shard atom. **Second half of done-when NOT run this pass**: a live re-read showing phantom-duplicate rate <67.9%
+      needs the fix deployed (MTDS image rebuild) + a fresh capture/consolidation cycle — the ALREADY-WRITTEN 2026-08-02
+      rows keep their old `underlying=fixture_id` values regardless of this code fix (only new writes stop fragmenting),
+      so this is the same live verification already scoped as todo 2 below, not a separate check.
 - [ ] [DATA] P2. Once the reconciliation fix above ships, re-run the `reachable_coverage` table for the 07-27..08-06 gap
       days (`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`'s own backfill todo) against the CORRECTED
       manifest read and post the delta — confirms whether the true residual af is small enough to accept as terminal
@@ -201,3 +216,20 @@ in the parent issue doc first; its pre-commit `check_line_caps` hook hard-blocke
 and my checkbox-flip + evidence diff didn't fit any of the three documented small-edit exceptions) — filed this
 standalone doc instead per CLAUDE.md's "split when over cap" guidance, `related:` back to the parent. No code shipped
 (pure investigation, per this todo's own done-when).
+
+**2026-08-09 (slot 32, data_engineering)** — Picked up todo 1 (root-cause + fix). Traced the write path from
+`odds_api_adapter.py` → `venue_fetch.py::_fetch_sports_venue_and_write` (captured shards grouped by
+`(bookmaker_key, league_id, fixture_id)`) → `manifest_finalize.py::_write_shard_counts_to_manifest` (captured rows) and
+`sentinels.py::_emit_sports_v2_sentinels` (attempted_failed/empty_confirmed sentinel fan-out, one call per (bookmaker,
+league_id, fixture_id) not already captured). Confirmed the consolidator's dedup key (`_BASE_DEDUP_COLS` +
+`_OPTIONAL_DEDUP_COLS`, `manifest_consolidator.py`) behaves exactly as documented — `underlying` IS in
+`_OPTIONAL_DEDUP_COLS`, `fixture_id` is NOT. Both write call sites were stamping the fixture id via
+`underlying=`/`"underlying"` instead of the dedicated `fixture_id=`/`"fixture_id"` display-axis column
+(`ManifestWriter.add()` and `_ROW_KEY_COLUMNS` both already support `fixture_id` — it was simply the wrong kwarg name at
+both call sites). Root cause is a plain column-naming bug in MTDS, not a consolidator or honest-coverage-guard defect.
+Fixed both sites (`manifest_finalize.py`, `sentinels.py`), added 2 regression unit tests, ran full `quality-gates.sh`
+(green, sentinel matches shipped SHA), shipped via quickmerge — market-tick-data-service@cf855ff0, verified on
+`origin/live-defi-rollout`. Flipped todo 1's checkbox above. Live phantom-duplicate-rate re-verification against the
+2026-08-02 sample is deferred to todo 2 (already scoped for exactly this, and requires the fix to reach the deployed
+MTDS image + a fresh capture/consolidation cycle before any NEW rows reflect it — old rows keep their pre-fix
+`underlying=fixture_id` values).
