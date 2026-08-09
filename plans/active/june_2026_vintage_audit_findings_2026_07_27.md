@@ -115,12 +115,12 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       the inverse of the one this §2 item's own dispatch text described.
 
       **DONE (na-eligibility-audit 2026-08-03)** — the doc has since genuinely closed: the reverted root-cause todo was
-                                                  completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
-                                                  `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
-                                                  todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
-                                                  (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
-                                                  that the 2026-07-28 completion superseded — it is no longer true"). Now at
-                                                  `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
+                                                                  completed for real 2026-07-28 (slot-15, root cause diagnosed via git/commit archaeology, corroborated against
+                                                                  `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own identical todo 52, confirmed checked there too), all 3
+                                                                  todos are `[x]`, and the doc was unlocked + archived 2026-07-31 under the operator's `[unlock-plan]` ruling
+                                                                  (`status: resolved`, banner: "the earlier 'todo 1's `[x]` was FALSE' note described a transient 2026-07-27 state
+                                                                  that the 2026-07-28 completion superseded — it is no longer true"). Now at
+                                                                  `plans/archive/issues/phantom_captures_defi_2026_06_28.md` for real.
 
 - [x] ✅ [PLAN] P2. `plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` — ARCHIVED
       2026-07-27 — unified-trading-pm@(this commit). All 3 stale items re-verified against current code (`understat.py`,
@@ -197,28 +197,30 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
 
 ## §3 — Migrate to a named July plan, then archive (15 docs)
 
-- [ ] [PLAN] P2. `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` →
+- [x] ✅ [PLAN] P2. `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (P1, legs a-e) +
-      `instruments_completion_tracker_2026_07_06.md` (Stage 2a/2b GAP-4). Already migrated verbatim 2026-07-26; both
-      successors still open — dual-track until they ship, then flip+archive. 2 items correctly left gated/latent, not
-      migrated. **STATUS UPDATE 2026-07-28 (unified-trading-pm@21d31f2a9, verification pass)**: both successors
-      confirmed real and open — batch1b's P1 todo (legs a-e) is present and unchecked; `instruments_completion_tracker`
-      Stage 2c (nested under the doc's "Stage 2" header — the "2a/2b" citation was an approximation, GAP-4 is actually
-      under 2c) carries the open GAP-4 reconcile todo at line ~235-238, also unchecked. The "2 items correctly left
-      gated/latent" claim confirmed accurate (pre-funding-genesis Aster trades backfill, gated on GAP-4; the latent cefi
-      `ohlcv_*` direct-write capability, deferred no-current-need) — both are explicitly named in batch1b's "Excludes"
-      note. **New finding**: batch1b's leg (a) ("make exact discrete per-settlement funding readable") is now DONE
-      UPSTREAM — the source doc's own P1 checkbox for it shipped 2026-07-27
-      (`unified-api-contracts@22689df5`/`market-tick-data-service@466d5670`), one day after batch1b was drafted;
-      annotated batch1b in-place so it isn't re-done. **New finding**: a 3rd item — the source doc's standalone P2 "Bulk
-      historical Tardis-CSV `derivative_ticker.funding_timestamp` is forward-looking" todo — is NOT covered by batch1b's
-      5 legs nor the 2-item Excludes note; it needs a design decision (in-place derivation vs. heavy-I/O reprocessing
-      backfill), so it isn't a bare-dispatchable AO todo — flagged inline in batch1b, not force-dispatched. Still
-      dual-track, not archivable — both successors remain open. **STATUS UPDATE 2026-07-28 (later same-day, VM-launch
-      session)**: the 3rd item's design decision was made (operator: full historical reprocessing, not forward-only) and
-      EXECUTION started this same day — real per-venue VM launches, independently verified against live GCS/VM state
-      rather than trusted from prior text reports (which turned out to understate real progress — see the source doc's
-      own new Progress Log entry).
+      `instruments_completion_tracker_2026_07_06.md` (Stage 2a/2b GAP-4). Already migrated verbatim 2026-07-26. **Both
+      successors now DONE — verified plan_reconciler agt-733350 2026-08-09**: batch1b's legs a-e are all `[x]` (leg c
+      resolved 2026-08-06 citing a real launcher-header record); `instruments_completion_tracker`'s Stage 2c GAP-4 item
+      flipped `[x]` this same run, live-verified against `expected_start_dates.yaml` directly (see that doc's own
+      Progress Log). 2 items correctly left gated/latent, not migrated. **STATUS UPDATE 2026-07-28
+      (unified-trading-pm@21d31f2a9, verification pass)**: both successors confirmed real and open — batch1b's P1 todo
+      (legs a-e) is present and unchecked; `instruments_completion_tracker` Stage 2c (nested under the doc's "Stage 2"
+      header — the "2a/2b" citation was an approximation, GAP-4 is actually under 2c) carries the open GAP-4 reconcile
+      todo at line ~235-238, also unchecked. The "2 items correctly left gated/latent" claim confirmed accurate
+      (pre-funding-genesis Aster trades backfill, gated on GAP-4; the latent cefi `ohlcv_*` direct-write capability,
+      deferred no-current-need) — both are explicitly named in batch1b's "Excludes" note. **New finding**: batch1b's leg
+      (a) ("make exact discrete per-settlement funding readable") is now DONE UPSTREAM — the source doc's own P1
+      checkbox for it shipped 2026-07-27 (`unified-api-contracts@22689df5`/`market-tick-data-service@466d5670`), one day
+      after batch1b was drafted; annotated batch1b in-place so it isn't re-done. **New finding**: a 3rd item — the
+      source doc's standalone P2 "Bulk historical Tardis-CSV `derivative_ticker.funding_timestamp` is forward-looking"
+      todo — is NOT covered by batch1b's 5 legs nor the 2-item Excludes note; it needs a design decision (in-place
+      derivation vs. heavy-I/O reprocessing backfill), so it isn't a bare-dispatchable AO todo — flagged inline in
+      batch1b, not force-dispatched. Still dual-track, not archivable — both successors remain open. **STATUS UPDATE
+      2026-07-28 (later same-day, VM-launch session)**: the 3rd item's design decision was made (operator: full
+      historical reprocessing, not forward-only) and EXECUTION started this same day — real per-venue VM launches,
+      independently verified against live GCS/VM state rather than trusted from prior text reports (which turned out to
+      understate real progress — see the source doc's own new Progress Log entry).
       `BINANCE-FUTURES`/`BYBIT`/`OKX-SWAP`/`KRAKEN-FUTURES`/`BITGET-FUTURES`/`BITFINEX-FUTURES` are live on real SPOT
       VMs (running since ~17:0x BST, healthy, monotonic checkpoints, hours from completion); `COINBASE-FUTURES` ran to
       full completion (40/40 objects corrected); `EXTENDED-STARKNET` is BLOCKED on an unrelated unresolved merge
@@ -425,9 +427,10 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       the D2 mirror in `data_completion_defi_2026_07_15.md:217` is itself still unflipped/stale, not this finding).
       Items 2-6,8 left untouched under the operator's explicit 2026-06-01 "let it be" banner, per instructions. The
       Tardis-key item (item among 2-6/8, in the `cefi_venue_backfill_coverage_remediation` section) annotated only (not
-      unparked) — Tardis billing is now CLEARED (operator ruling 2026-07-12 finding 228, reconfirmed 2026-07-27
-      §5-RESOLVED #3/#12/#25) but the item stays under the standing "let it be" banner. Doc not archived — items 2-6,8
-      remain real dormant-by-design open work.
+      unparked) — Tardis billing is now CLEARED (operator ruling 2026-07-12 finding 228, see
+      `/plans/active/data_completion_to_100_all_ag_2026_06_21.md:213`, reconfirmed 2026-07-27 §5-RESOLVED #3/#12/#25)
+      but the item stays under the standing "let it be" banner. Doc not archived — items 2-6,8 remain real
+      dormant-by-design open work.
 - [x] ✅ [PLAN] P2. `plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` —
       unified-trading-pm@82f7fe635. GATE-0 narrow tracker confirmed fully shipped (9/9, "Success criteria" section all
       `[x]`, cross_cutting_consolidated_closeout_2026_07_25.md Track 1 G0 entry agrees). Both stale-unflipped traps
