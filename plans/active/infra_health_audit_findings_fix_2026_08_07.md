@@ -177,10 +177,18 @@ drift_direction: advance-code
 - [ ] [SCRIPT] P2. **Reduce `mtds-backfill-odds-401-retry` memory footprint** — OOM every 7-9 min but self-recovers and
       keeps progressing; wasteful, not broken. The sibling `mtds-backfill-odds-smallchunk-20260807` run (smaller chunks,
       far fewer OOMs) is a working precedent — apply the same chunk-size mitigation here.
-- [ ] [SCRIPT] P2. **Fix the `dp-alerting-subscriber` GCS 429 retry storm** on `write_config_snapshot`'s
+- [x] [SCRIPT] P2. **Fix the `dp-alerting-subscriber` GCS 429 retry storm** ✅ on `write_config_snapshot`'s
       `routing_rules.yaml` writes (479 occurrences in one day, separate from the already-fixed `mirror_live` bug) —
-      likely needs a write-coalescing/backoff fix rather than raw retry, since the write frequency itself looks like the
-      problem (an object-mutation rate limit implies redundant writes of the same content).
+      confirmed root cause: `router.route_event()` calls `_persist_config_snapshot()` on every routed event, but
+      `AlertingSystemConfig.routing_rules` is process-lifetime-static (byte-for-byte render of the UAC
+      `LIVE_ALERT_RULES` SSOT), so every write re-uploaded byte-identical content to the same blob. Fix: in-memory
+      SHA-256 content-hash cache keyed by snapshot `name` in `AlertStorageStore.write_config_snapshot` — skips the GCS
+      upload when unchanged since the last successful write, still writes immediately on genuine change (preserves audit
+      intent). 5 regression tests added. Evidence: `alerting-service@066a1bcad8e6c17edcdc4bbefc2cc872fcb1408a`, QG green
+      (`ALL QUALITY GATES PASSED`, sentinel `58824f38b0dd41a6421812cb8d28424f1e6f1f8b`), landed on LDR
+      (`live-defi-rollout`) via quickmerge 2026-08-09. LDR→main fleet promotion was stalled at the time (see
+      `plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md` Progress Log
+      2026-08-07 recurrence entry) — deploy propagation to Cloud Run not verified as part of this todo.
 - [x] [SCRIPT] P3. **Fix the AWS cost-snapshot IAM failure** ✅ — root cause: OIDC identity drift, not a permissions
       bug. AWS IAM role `gcp-cloudrun-athena-cost-reader` (trust policy `Federated: accounts.google.com`, condition
       `accounts.google.com:sub == 104881302737822972808`) was provisioned 2026-07-14 trusting
@@ -295,8 +303,8 @@ drift_direction: advance-code
   than its siblings — not promoted to RECLASSIFY this run since the doc's other 6 items don't clear the bar and a
   whole-doc flip would dispatch those too, but worth a second look if it's still open next pass. Doc stays NA as a
   whole; still genuinely live `/autonomous` work, not defaulted/unassessed.
-- **2026-08-09**: Confirmed the "tracked elsewhere" `mdps-backfill-cefi-20260807-130321` action (todo above, line
-  ~225) was actually executed, not just referenced. Independently re-verified the old VM is genuinely gone (404 on
+- **2026-08-09**: Confirmed the "tracked elsewhere" `mdps-backfill-cefi-20260807-130321` action (todo above, line ~225)
+  was actually executed, not just referenced. Independently re-verified the old VM is genuinely gone (404 on
   `gcloud compute instances describe`, only `insert`+`compute.instances.preempted` ops, no successor — matches this
   todo's own finding) and relaunched it (`mdps-backfill-cefi-20260808-095136`, SPOT e2-standard-8, launched
   2026-08-08T08:56:57Z, confirmed STARTED + still RUNNING, actively progressing, no preemption op). While verifying,
@@ -305,5 +313,5 @@ drift_direction: advance-code
   `market-data-processing-service@e9f9819`; writeup `issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md`)
   — this pre-fix VM will not itself fix the BYBIT bundles even at completion; a per-day-scoped relaunch is already
   queued in `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md` for once it reaches terminal state. No
-  duplicate relaunch performed. Full detail: `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` todo 3 (already
-  flipped `[x]`) and the Track-7 issue doc's "2026-08-08 84-cell audit" section.
+  duplicate relaunch performed. Full detail: `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` todo 3 (already flipped
+  `[x]`) and the Track-7 issue doc's "2026-08-08 84-cell audit" section.
