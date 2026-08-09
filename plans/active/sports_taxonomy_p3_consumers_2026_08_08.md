@@ -233,10 +233,22 @@ spelling variant survives, which is the entire point of the panel". It does not.
       The fixture-grain-vs-league-grain decision was already ruled 2026-07-14 ("FIXTURE-GRAIN WANTED"); only dispatch
       routing was unrouted. Build once against the FINAL venue/data_type/horizon axes rather than rebuilding after.
       Resolves the 4 open todos in `/plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md`.
-- [ ] [UI] P1. **Fixtures-browser: accept and LABEL the staleness** (operator ruling 2026-08-08). Confirm the
+- [x] ✅ [UI] P1. **Fixtures-browser: accept and LABEL the staleness** (operator ruling 2026-08-08, see
+      `/plans/active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md`'s dated ruling banner). Confirm the
       catalogue-rollup regen cadence and surface it honestly ("as of <timestamp>"), consistent with how the rest of the
       estate labels rollup freshness. No live-day overlay. Needs `[UI]` + `pw:L2 ✓` + a cited regression spec per the
-      playwright gate. Resolves `/plans/active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md`.
+      playwright gate. Resolves `/plans/active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md`. — **DONE
+      2026-08-09** (slot-20, `ui_developer`): confirmed the regen cadence at the SSOT
+      (`deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf`) — sports catalogue rollup fires `0 1 * * *`
+      (01:00 UTC daily incremental) + `0 7 * * 6` (Sat 07:00 UTC full rebuild). `deployment-api@a050b88`: new
+      `fixtures_browser.catalogue_as_of()` reads `prod/catalog.parquet`'s blob `last_modified` (TTL-cached metadata
+      HEAD, same cache window as the frame reader; `None` on any read failure, never fabricated) and
+      `GET /fixtures/browse` now returns it as `as_of`; 4 new unit tests (success/failure/missing-blob/TTL-cache).
+      `deployment-ui@2259df1`: `FixturesBrowser.tsx` renders "Catalogue as of &lt;timestamp&gt; — regenerated daily...
+      live status may lag" or an explicit "freshness unavailable" fallback on a null `as_of` — no live-day overlay, per
+      the ruling cited above. 2 new Vitest cases (both states) + `pw:L2 ✓`
+      `deployment-ui/tests/e2e/data-status-fixtures-browser-as-of-freshness.spec.ts`. Both repos' `quality-gates.sh`
+      green, both SHAs verified ancestors of `origin/live-defi-rollout`.
 - [ ] [REVIEW] P1. **`sports_dependency.py::_build_fixture_league_map_from_gcs` — enumerate callers and use cases FIRST,
       then decide** (operator ruling 2026-08-08). Named use cases to check: the fixtures catalogue as a sports auxiliary
       to the instruments catalogue, and dependency checks from downstream services (which already have the manifest, so
