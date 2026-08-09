@@ -115,9 +115,20 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
       marker references (none were genuinely-live blocks) to avoid the literal `BLOCKED-CREDENTIALS` /
       `BLOCKED-OPERATOR-DECISION` token outside a declared position; re-ran `dispatch_visibility_report` — all 3 dropped
       off the flagged list, `check_ao_dispatch_visibility_gate.py` confirms `accidental_exclusions` 34→30, gate exit 0.
-- [ ] [DOCS] P2. Fix the 4 ci-tranche accidental exclusions: `ci_satellite_ao_dispatch_batch1_2026_07_26.md`,
+- [x] ✅ [DOCS] P2. Fix the 4 ci-tranche accidental exclusions: `ci_satellite_ao_dispatch_batch1_2026_07_26.md`,
       `ci_satellite_ao_dispatch_batch4_2026_07_31.md`, `ci_satellite_ao_dispatch_batch5_2026_08_02.md` (1 each),
-      `ci_satellite_ao_dispatch_batch6_2026_08_08.md` (2). Same remedy as above. Repo: unified-trading-pm.
+      `ci_satellite_ao_dispatch_batch6_2026_08_08.md` (2). Same remedy as above. Repo: unified-trading-pm. **Done**:
+      batch1/batch4/batch5 rewrote their quoted/mid-sentence `BLOCKED-CREDENTIALS` conditional-instruction phrasing
+      (none were genuinely-live blocks — same false-positive shape as the cefi fix) to a paraphrase that no longer
+      spells the literal token; re-ran `dispatch_visibility_report` after each — all 3 dropped off the flagged list.
+      `ci_satellite_ao_dispatch_batch6_2026_08_08.md` has ZERO open `- [ ]` todos on disk as of this session (all done)
+      — its 2 flagged exclusions from the issue's original 2026-08-09 measurement are moot, already resolved by another
+      slot before this todo was picked up; confirmed it does not appear in the current `--json` report at all (only its
+      `_finalize` sibling does, cleanly declared/backlog-matched, 0 excluded).
+      `check_ao_dispatch_visibility_gate.py     --json` before/after my 3 doc edits: `accidental_exclusions` 28→25 (gate
+      exit 0 throughout — this axis churns with concurrent fleet commits per the script's own buffer note, so the
+      absolute number moved further between measurements; the -3 delta from my edits is confirmed via the doc-level
+      `excluded: []` check above).
 - [ ] [DOCS] P2. Fix the 2 cross_cutting-tranche accidental exclusions:
       `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`,
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`. Same remedy as above. Repo: unified-trading-pm.

@@ -263,10 +263,10 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
      as of 2026-07-27/28, so this too has been unblocked for days. This is the number the original
      "~~$1,000/mo →
      ~$300-400/mo" target was actually about.
-  - **Done when**: all 4 measurements are recorded with real numbers (or `BLOCKED-CREDENTIALS` if the billing token is
-    unavailable — do not estimate) in one dated Progress Log section of the source doc, honoring its own documented
-    measurement traps (skipped jobs aren't billed; a throttled API call silently counts as 0; `billable: {}` with no
-    `UBUNTU` key is the real zero, not `/timing.total_ms`).
+  - **Done when**: all 4 measurements are recorded with real numbers (or a note that the billing token is unavailable —
+    do not estimate) in one dated Progress Log section of the source doc, honoring its own documented measurement traps
+    (skipped jobs aren't billed; a throttled API call silently counts as 0; `billable: {}` with no `UBUNTU` key is the
+    real zero, not `/timing.total_ms`).
   - Source: `github_actions_operator_gated_followups_2026_07_17.md` (Phase 5 `[VERIFY] P0` line 154; the
     representative-QG-run `[VERIFY] P0` line 149; the two Enhanced-Billing `[VERIFY] P2` items lines 753/756) — none
     previously cited by any ci-tranche covering doc despite 3 of the 4 gates now being long-expired.
