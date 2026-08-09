@@ -270,3 +270,15 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   same run `31336986549`. Same blocker, same root cause
   (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent (hand off, don't
   chase serially). No new lever available. Skipping again with `reason_code: GATED`.
+- **2026-08-09 (infra worker, slot 5, todo 2 re-check)**: Re-verified from scratch once more —
+  `git merge-base --is-ancestor 30ed07eff origin/main` on `unified-trading-pm` still returns NO
+  (`origin/main..origin/live-defi-rollout` now 904 commits, up from slot 23's 791). `unified-trading-library`'s
+  `origin/main` has advanced by one more promote commit (`f2544c6a`, `v0.77.0-2-gf2544c6a`), but
+  `git tag --contains 609299adf4bf49d5b027fd21289d6abd60a8bcfa` is still empty and `v0.77.0` remains the latest tag —
+  the new promote commit didn't touch this fix's release status. The open auto-drain promote PR is still the SAME #2706
+  (opened 2026-08-09T21:30:00Z, `updatedAt` 23:15:40Z) — `QG slice (checks)` still `fail` on the same run
+  `31336986549`/job `93304415192`, `QG slice (tests)` still `pending`. Same blocker, same root cause
+  (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent (hand off, don't
+  chase serially — that doc's own scope). No alternate lever: `Semver Agent`'s caller stub on `unified-trading-library`
+  still has no `workflow_dispatch` trigger, and the reusable workflow's classifier fetch is still unpinned to PM's live
+  default branch. Leaving todo 2 open/unchecked; skipping with `reason_code: GATED` again.
