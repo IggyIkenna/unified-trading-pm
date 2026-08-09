@@ -546,50 +546,50 @@ traffic to count until the migration is finished. What is certain is that their 
       recheck (mentioned in the original finding) also still needs doing.
 
       **operator ruling 2026-08-08**: will do it later — leave BOTH sub-parts blocked for now, do not execute either
-                              autonomously. Preparing the exact ready-to-run steps below so both are a single click/paste next time the
-                              operator is available; nothing below was applied this session.
+                      autonomously. Preparing the exact ready-to-run steps below so both are a single click/paste next time the
+                      operator is available; nothing below was applied this session.
 
-                              **Sub-part (2) — the exact click-through (unchanged from above, restated for a fast pickup):**
-                              `github.com/IggyIkenna/unified-trading-pm` → **Settings → Actions → General** → scroll to **"Fork pull request
-                              workflows"** → select **"Require approval for all outside collaborators."** → Save. Verified live 2026-08-08
-                              this is STILL the current exposure (re-checked `gh api repos/IggyIkenna/unified-trading-pm/actions/permissions`
-                              → `{"enabled":true,"allowed_actions":"all","sha_pinning_required":false}` — `allowed_actions` unchanged from the
-                              2026-08-06 finding, and the fork-PR-approval setting itself is still web-UI-only, no API surface found).
+                      **Sub-part (2) — the exact click-through (unchanged from above, restated for a fast pickup):**
+                      `github.com/IggyIkenna/unified-trading-pm` → **Settings → Actions → General** → scroll to **"Fork pull request
+                      workflows"** → select **"Require approval for all outside collaborators."** → Save. Verified live 2026-08-08
+                      this is STILL the current exposure (re-checked `gh api repos/IggyIkenna/unified-trading-pm/actions/permissions`
+                      → `{"enabled":true,"allowed_actions":"all","sha_pinning_required":false}` — `allowed_actions` unchanged from the
+                      2026-08-06 finding, and the fork-PR-approval setting itself is still web-UI-only, no API surface found).
 
-                              **Sub-part (1) — the allow-list, now actually enumerated (2026-08-08) so the command below is ready-to-paste,
-                              not a placeholder:** scanned every `uses:` line across `.github/workflows/*.yml` +
-                              `scripts/workflow-templates/*.yml*` (the fleet template sources). Local composite-action refs (`./...`) need no
-                              allow-list entry — only externally-hosted actions do. Full external set, 12 actions:
-                              `actions/cache`, `actions/checkout`, `actions/create-github-app-token`, `actions/download-artifact`,
-                              `actions/github-script`, `actions/setup-python`, `actions/upload-artifact`, `astral-sh/setup-uv`,
-                              `aws-actions/configure-aws-credentials`, `google-github-actions/auth`, `google-github-actions/setup-gcloud`, plus
-                              the org's own reusable-workflow refs `IggyIkenna/unified-trading-ci` and `IggyIkenna/unified-trading-pm` (PM
-                              calling its own reusable `python-quality-gates-v2.yml`). Ready-to-run (NOT executed this session — operator
-                              deferred both sub-parts):
+                      **Sub-part (1) — the allow-list, now actually enumerated (2026-08-08) so the command below is ready-to-paste,
+                      not a placeholder:** scanned every `uses:` line across `.github/workflows/*.yml` +
+                      `scripts/workflow-templates/*.yml*` (the fleet template sources). Local composite-action refs (`./...`) need no
+                      allow-list entry — only externally-hosted actions do. Full external set, 12 actions:
+                      `actions/cache`, `actions/checkout`, `actions/create-github-app-token`, `actions/download-artifact`,
+                      `actions/github-script`, `actions/setup-python`, `actions/upload-artifact`, `astral-sh/setup-uv`,
+                      `aws-actions/configure-aws-credentials`, `google-github-actions/auth`, `google-github-actions/setup-gcloud`, plus
+                      the org's own reusable-workflow refs `IggyIkenna/unified-trading-ci` and `IggyIkenna/unified-trading-pm` (PM
+                      calling its own reusable `python-quality-gates-v2.yml`). Ready-to-run (NOT executed this session — operator
+                      deferred both sub-parts):
 
-                              ```bash
-                              gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions \
-                                -f allowed_actions=selected
+                      ```bash
+                      gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions \
+                        -f allowed_actions=selected
 
-                              gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions/selected-actions \
-                                -f github_owned_allowed=true \
-                                -f verified_allowed=true \
-                                -f 'patterns_allowed[]=astral-sh/setup-uv@*' \
-                                -f 'patterns_allowed[]=aws-actions/configure-aws-credentials@*' \
-                                -f 'patterns_allowed[]=google-github-actions/auth@*' \
-                                -f 'patterns_allowed[]=google-github-actions/setup-gcloud@*' \
-                                -f 'patterns_allowed[]=IggyIkenna/unified-trading-ci@*' \
-                                -f 'patterns_allowed[]=IggyIkenna/unified-trading-pm@*'
-                              ```
+                      gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions/selected-actions \
+                        -f github_owned_allowed=true \
+                        -f verified_allowed=true \
+                        -f 'patterns_allowed[]=astral-sh/setup-uv@*' \
+                        -f 'patterns_allowed[]=aws-actions/configure-aws-credentials@*' \
+                        -f 'patterns_allowed[]=google-github-actions/auth@*' \
+                        -f 'patterns_allowed[]=google-github-actions/setup-gcloud@*' \
+                        -f 'patterns_allowed[]=IggyIkenna/unified-trading-ci@*' \
+                        -f 'patterns_allowed[]=IggyIkenna/unified-trading-pm@*'
+                      ```
 
-                              `github_owned_allowed=true` covers every `actions/*` action (checkout/cache/setup-python/upload-download-artifact
-                              /create-github-app-token/github-script — all GitHub-owned) without needing individual patterns;
-                              `verified_actions=true` is intentionally NOT set (none of the 12 are in GitHub's "verified creator" program, so it
-                              would add nothing) — the 6 explicit `patterns_allowed` entries above cover every remaining non-GitHub-owned action
-                              actually in use. **Before running**: re-derive the `uses:` scan fresh (a workflow may have added a new action
-                              since 2026-08-08) — `grep -rhoE "uses:\s*[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+" .github/workflows/*.yml
-                              scripts/workflow-templates/*.yml* | sed 's/uses:\s*//' | sort -u` — and diff against the 12 above before
-                              applying, so a newly-added action isn't silently locked out mid-CI-run.
+                      `github_owned_allowed=true` covers every `actions/*` action (checkout/cache/setup-python/upload-download-artifact
+                      /create-github-app-token/github-script — all GitHub-owned) without needing individual patterns;
+                      `verified_actions=true` is intentionally NOT set (none of the 12 are in GitHub's "verified creator" program, so it
+                      would add nothing) — the 6 explicit `patterns_allowed` entries above cover every remaining non-GitHub-owned action
+                      actually in use. **Before running**: re-derive the `uses:` scan fresh (a workflow may have added a new action
+                      since 2026-08-08) — `grep -rhoE "uses:\s*[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+" .github/workflows/*.yml
+                      scripts/workflow-templates/*.yml* | sed 's/uses:\s*//' | sort -u` — and diff against the 12 above before
+                      applying, so a newly-added action isn't silently locked out mid-CI-run.
 
 - [x] ✅ [INFRA] P0. **Fix the 6 failing plan-hygiene ratchets.** PM's LDR→main promotion is blocked and re-fails every
       ~15 min. Not I/O — the `checks` slice fails in 2m44s on content. Exact list in Finding 4. **DONE — closed
@@ -675,10 +675,14 @@ traffic to count until the migration is finished. What is certain is that their 
       `ubuntu-latest`)" — the state this todo asks for already holds; nothing actionable remains unless/until a future
       repo-visibility change (the conditional "if ever made private" clause, which is not this checkbox's scope).
 
-- **[DOC] P2. EXTRACTED 2026-08-09 — see `ci_satellite_ao_dispatch_batch7_2026_08_09.md` todo 1.** ~~Update stale codex
-  docs.~~ `central-vm-relaunch-glue-runner-reinstall.md` (full rewrite — runners no longer on the planning VM);
-  `self-hosted-runner-security-posture.md` (dedicated VM **and** the public-repo threat model);
-  `agent-orchestrator-deploy.md` (AO instance size once the downsize resolves).
+- [x] ✅ **[DOC] P2. DONE 2026-08-09 — `unified-trading-pm@e4434d4d4`** (shipped via
+      `ci_satellite_ao_dispatch_batch7_2026_08_09.md` todo 1, now archived at
+      `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch7_2026_08_09.md`). ~~Update stale codex docs.~~
+      `central-vm-relaunch-glue-runner-reinstall.md` (full rewrite — runners no longer on the planning VM, all facts
+      live-verified via AWS `describe-instances`/`describe-volumes`); `self-hosted-runner-security-posture.md`
+      (dedicated VM, current 7-repo self-hosted set, and the public-repo threat model incident marked RESOLVED);
+      `agent-orchestrator- deploy.md` (AO instance size + CI-VM downsize facts corrected — the doc's own text had the
+      wrong instance family and date).
 
 - [x] ✅ [OPERATOR] P3. **DONE 2026-08-07 — already executed before being re-asked.** `i-0c9b283b31d6b5ca7` downsized
       `m8i.4xlarge` → `m8i.2xlarge` (see `plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`,

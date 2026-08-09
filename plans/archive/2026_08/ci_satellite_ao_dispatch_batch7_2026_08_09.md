@@ -12,7 +12,7 @@ summary: >-
   genuinely-uncovered, bounded, worker-determinable item surfaced under this `parent_epic` — a 3-doc codex sync now
   unblocked by the 2026-08-08 CI-VM downsize + public-repo-migration completing. The sibling `assigned_role: devops`
   frontmatter-hygiene item (different `parent_epic`) is drafted separately as batch 8 per the parent_epic-grouping rule.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -23,7 +23,7 @@ related:
   [
     /plans/active/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /plans/active/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md,
-    /plans/active/ci_satellite_ao_dispatch_batch7_finalize_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch7_finalize_2026_08_09.md,
     /plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md,
     /plans/active/ci_satellite_ao_dispatch_batch8_finalize_2026_08_09.md,
     /plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md,
@@ -64,6 +64,13 @@ source: >-
 ---
 
 # CI satellite AO batch 7 (infrastructure_master group)
+
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** The single todo's 3-codex-doc sync shipped (`unified-trading-pm@e4434d4d4`),
+> every fact live-verified against AWS at execution time (not copied from the source audit doc). Archived in the same
+> session per the archival HARD RULE (a plan whose only todo just went `[x]` is a zero-dispatchable doc if left `active`
+> — `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). Finalize plan
+> `ci_satellite_ao_dispatch_batch7_finalize_2026_08_09.md` (source-doc reconciliation + this archival) completed and
+> archived alongside. Successor: none.
 
 > **Why this plan exists.** This is a deliberately THIN batch — the honest result of re-auditing 15 already
 > heavily-mined docs. `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (42/43 done), `..._batch4_2026_07_31.md` (8/9
@@ -206,5 +213,5 @@ source: >-
   exactly); the fork-PR security grep re-run live (zero matches); the `unified-trading-pm`-public-with-self-hosted
   incident updated from "open P0" to "RESOLVED 2026-08-07" with the standing invariant + live check documented.
   `last_reviewed`/`last_updated` bumped to 2026-08-09 on all three. Files:
-  `codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`,
-  `codex/07-security/self-hosted-runner-security-posture.md`, `codex/05-infrastructure/agent-orchestrator-deploy.md`.
+  `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`,
+  `/codex/07-security/self-hosted-runner-security-posture.md`, `/codex/05-infrastructure/agent-orchestrator-deploy.md`.

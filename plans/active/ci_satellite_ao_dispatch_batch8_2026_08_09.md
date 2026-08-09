@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [ci, ao-dispatch, close-out, batch-8, satellite-docs, plan-hygiene, frontmatter, assigned-role]
 related:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch7_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch7_2026_08_09.md,
     /plans/active/ci_satellite_ao_dispatch_batch8_finalize_2026_08_09.md,
     /plans/active/issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
