@@ -179,12 +179,15 @@ exposed to this class before the veto shipped.
       Cloud Run Jobs pull the tag fresh per execution, so the live monitor already runs the fixed code. This was never
       actually an operator-only action — `deployment-api` rebuilds on a routine, frequent cadence (multiple builds/day
       observed) independent of any manual trigger.
-- [ ] [SCRIPT] P2. Fix the `launch-cefi-forward-poll.sh` singleton-lock TOCTOU race — CONFIRMED RECURRING, not a
+- [x] ✅ [SCRIPT] P2. Fix the `launch-cefi-forward-poll.sh` singleton-lock TOCTOU race — CONFIRMED RECURRING, not a
       one-off: it fired on BOTH the original launch (`-064507`/`-064513`/`-064526`, insert timestamps 13s apart) AND its
-      own relaunch 12 minutes later (`-065757` then `-065837`, only 46s apart) in the same incident window. Bound the
-      singleton check with a short-lived GCS/Firestore lock, or accept a brief `sleep`+re-check before create. Repo:
-      deployment-service. Separate from this doc's root-cause fix (the `is_spot` veto is unaffected by whether this race
-      is ever fixed); upgraded from P3 given the confirmed recurrence.
+      own relaunch 12 minutes later (`-065757` then `-065837`, only 46s apart) in the same incident window. **Shipped
+      `deployment-service@4c28ca640f6b6921f39c493c69995a04984df5f3`** (2026-08-06, the same day as this doc — an atomic
+      GCS create-if-absent singleton lock, `lc_acquire_singleton_lock`, gating the RUNNING-VM check) — found still
+      live + tested on `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 2's 2026-08-09 pickup; see that plan's
+      flipped checkbox for the full re-verification (6 regression tests incl. a 12-process concurrent-race proof, all
+      green). This checkbox and the plan's were left stale for 3 days because 4 successive na-eligibility-audit passes
+      checked plan-claim status, not live code state — closing both now.
 - [ ] [SCRIPT] P3. If runtime/serial-console access to a freshly-`instances.stop`'d `cefi-fwd-*` VM is ever available
       before it self-cleans, capture the shutdown-script's own log line
       (`[preemption-shutdown] wrote PREEMPTED signal for ...` vs "FAILED") to pin down whether the false signal came
@@ -243,3 +246,13 @@ exposed to this class before the veto shipped.
   cefi_satellite_ao_dispatch_batch9_2026_08_07.md todo 2 — verified that todo is still `- [ ]` open as of this run (fix
   not yet shipped), so this doc's checkbox correctly stays open per its own 'flip both together' instruction. Not yet
   ready to close.
+- **2026-08-09 (batch9 todo 2 pickup, slot 27)**: this "fix not yet shipped" premise (repeated across 4 prior
+  na-eligibility-audit passes) was WRONG — `deployment-service@4c28ca640f` had already shipped the atomic-GCS
+  singleton-lock fix on 2026-08-06, the same day this doc was filed and a full day before batch9 was even drafted. Every
+  prior audit checked "is an active plan claiming this line" without checking whether the claiming plan's underlying
+  code had already landed. Re-verified live: `lc_acquire_singleton_lock` gates the RUNNING-VM check in
+  `launch-cefi-forward-poll.sh`; 6 regression tests in `TestAcquireSingletonLock`
+  (`tests/unit/test_vm_launcher_scripts.py`), including a 12-process concurrent-race test proving exactly 1 of 12
+  simultaneous racers wins — all 11 tests re-run green. Flipped this checkbox + batch9 todo 2 together in the same
+  commit, citing the pre-existing commit. No new deployment-service code shipped by this pass — closing a stale
+  paperwork gap only.

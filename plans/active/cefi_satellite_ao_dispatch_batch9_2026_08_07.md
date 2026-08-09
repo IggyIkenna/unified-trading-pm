@@ -113,28 +113,27 @@ context_scope:
       when**: the source doc's `[DATA] P3` Follow-ups checkbox is flipped `[x]` citing a confirm/refute verdict backed
       by live manifest + archive-key evidence (or, if confirmed and a fix is out of the audit's scope, a new issue filed
       with the evidence).
-- [ ] [SCRIPT] P2. **Fix the `launch-cefi-forward-poll.sh` singleton-lock TOCTOU double-insert race — CONFIRMED
-      RECURRING** (fired on BOTH the original launch — insert timestamps 13s apart — and its own relaunch 12 minutes
-      later — 46s apart — in the same incident window). Bound the singleton check with a short-lived GCS/Firestore lock
-      or an accepted `sleep`+re-check-before-create, with 2+ regression tests; `quality-gates.sh` green before ship.
-      **Coordination note (2026-08-09, unrelated Tardis-cap hardening pass, `deployment-service`):** this same file was
-      independently edited the same day — `FORCE` (the launcher's own singleton-lock/duplicate-VM bypass flag) renamed
-      to `LAUNCHER_FORCE` to close a latent variable-namespace collision with `tardis-concurrency-guard.sh`'s own
-      `FORCE=1` override (both are `source`d into the same process), plus a `tardis_guard_reserve_slot` call added
-      immediately before the `gcloud compute instances create` line. Whoever picks up this todo: `git pull --rebase`
-      first and diff against current `HEAD` rather than an older local copy — the TOCTOU fix touches the same
-      singleton-lock region (now referencing `$LAUNCHER_FORCE`, not `$FORCE`) but is a different bug (this todo) from
-      what the 2026-08-09 pass fixed (Tardis cap). See
-      `plans/active/issues/tardis_concurrency_gate_hardening_2026_08_09.md` for the full diff. Source:
-      `issues/tardis_concurrency_gate_hardening_2026_08_09.md`. **Not a conflict with the already-shipped filter fix**:
-      `deployment-service@fa794a1` (2026-08-04) anchored the singleton-lock FILTER on the RUN_TS digit so a cron host no
-      longer collides with the daily worker — that closed a filter-pattern collision, NOT this TOCTOU window between
-      check and insert; this todo is unclaimed by any other plan (verified corpus-wide). Source:
-      `issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md` (todo 2, line ~175 — the doc's
-      items 1 (`[OPERATOR]` deployment-api redeploy confirmation) and 3 (time-gated serial-console capture) stay OPEN in
-      the source doc; do not touch them). **Done when**: the fix ships on `live-defi-rollout` via quickmerge with the
-      regression tests + QG green, the source doc's `[SCRIPT] P2` checkbox is flipped `[x]` citing the commit, and a
-      live double-launch attempt is shown to refuse the second process (or the race is otherwise demonstrated closed).
+- [x] ✅ [SCRIPT] P2. **Fix the `launch-cefi-forward-poll.sh` singleton-lock TOCTOU double-insert race — ALREADY
+      SHIPPED, found stale on pickup 2026-08-09.** This todo's own fix was landed by `deployment-service@4c28ca640f`
+      ("fix(vm): close cefi-fwd duplicate-launch TOCTOU race with an atomic GCS singleton lock", 2026-08-06 14:57 BST) —
+      the SAME DAY the source issue doc was filed, **a full day before this batch9 plan itself was drafted
+      (2026-08-07)**. Neither the source doc's checkbox nor 4 subsequent na-eligibility-audit passes (2026-08-07/08/09)
+      caught that the code-level fix already existed; they only checked "is an active plan claiming this todo," not the
+      live code state. Verified live on pickup: `deployment-service/scripts/vm/launch-cefi-forward-poll.sh` calls
+      `lc_acquire_singleton_lock "cefi-fwd-launch" "$PROJECT" 300 "$LAUNCHER_FORCE"` before the RUNNING-VM check
+      (`scripts/vm/lib/launcher_common.sh:281`) — an atomic GCS create-if-absent conditional PUT
+      (`--if-generation-match=0`) with TTL-based stale-lock reclaim, exactly the fix shape this todo specified. 6
+      regression tests exist in `tests/unit/test_vm_launcher_scripts.py::TestAcquireSingletonLock` (well over the "2+"
+      bar): acquire-when-absent, refuse-on-fresh-lock, reclaim-past-TTL, force-bypass, independent-lock-keys, and a
+      12-process concurrent-race test (`test_concurrent_launches_exactly_one_wins`) asserting exactly 1 of 12
+      simultaneous racers acquires the lock and the other 11 are refused — the "otherwise demonstrated closed" done-when
+      clause (a real live double-launch would cost real GCP spend + 403-storm risk for no new information). Re-ran all
+      11 `TestAcquireSingletonLock`/`Singleton`-selected tests fresh on 2026-08-09 pickup: 11 passed. The 2026-08-09
+      Tardis-cap hardening pass (`deployment-service@58af2ab1`, see the coordination note this todo originally carried)
+      only renamed `FORCE`→`LAUNCHER_FORCE` and added `tardis_guard_reserve_slot` — it did not touch
+      `lc_acquire_singleton_lock` itself, which predates it by 3 days. No new code shipped by this todo; it closes the
+      paperwork gap. Source: `issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md` (todo 2,
+      line ~182 — flipped in the same commit as this checkbox; the doc's items 1 and 3 stay OPEN, untouched).
 - [ ] [DATA] P3. **Complete `features_universe_filter`'s done-when half-2: real-VM-launch observation of the
       `LC_TARBALL_FRESHNESS` auto-republish.** The source doc's `[SCRIPT] P2` todo (flipped `[x]` 2026-08-06,
       `deployment-service@c1e0481`) has a two-half done-when; half-2 — "a real VM launch against an intentionally-stale
