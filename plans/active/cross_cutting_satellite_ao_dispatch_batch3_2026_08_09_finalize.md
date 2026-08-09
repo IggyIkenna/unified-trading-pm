@@ -29,6 +29,7 @@ estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.48
 locked_by:
 locked_since:
+archive_exempt: true
 supersedes:
 superseded_by:
 depends_on: [cross_cutting_satellite_ao_dispatch_batch3_2026_08_09]
@@ -49,8 +50,12 @@ context_scope:
 
 # Cross-cutting satellite AO batch 3 — finalize
 
-> **Machine-gated on `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`** (`depends_on` +
-> `gate_on_depends: true`). `sequential: true` because archival (todo 2) must run after reconciliation (todo 1).
+> **ARCHIVED 2026-08-09 -- COMPLETE.** Both todos done. Todo 1 reconciled both source docs' 7 EXTRACTED pointers; todo 2
+> archived `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` via the standard 6-step ritual, alongside this
+> finalize doc, in the same commit set. Successor: none.
+
+> **Machine-gated (historical) on `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`** (`depends_on` +
+> `gate_on_depends: true`). `sequential: true` because archival (todo 2) had to run after reconciliation (todo 1).
 
 ## Todos
 
@@ -66,12 +71,25 @@ context_scope:
       terraform-cron `EXTRACTED -> batch3` pointer to `[x]` (verified-already-done, no code change); the
       migration-data-copy-fan-out item was already correctly reconciled by a prior session. 8 open items remain,
       `status` stays `active`. Both source docs' Progress Logs updated with the full breakdown.
-- [ ] [DOC] P1. Archive `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` via the standard 6-step ritual once
-      todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by` (confirm
-      already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the new path,
-      and this finalize doc archives alongside it in the same commit.
+- [x] ✅ [DOC] P1. Archive `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` via the standard 6-step ritual.
+      **DONE 2026-08-09, slot 15**: (1) no unresolved Deferred item exists (this batch had no `## Deferred` section --
+      all 7 items were extracted+dispatched, none parked). (2) Archive banners added to both this doc and batch3 itself.
+      (3) Codex-alignment check: the one new contract batch3 established (the DeFi row in
+      `/codex/04-architecture/instruments-preflight-chain.md`, todo 5) was already added in batch3's own commit -- no
+      further codex change needed. (4) No CLAUDE.md bullet warranted -- no new workspace-wide rule, just an internal
+      docs/contract update. (5) Only 3 leading-slash referrers exist, all self/sibling refs between this doc and batch3
+      itself (no external doc references either via `/plans/active/...` path) -- repointed to `/plans/archive/2026_08/`
+      in the follow-up commit. (6) `locked_by` confirmed empty on both docs. **Done when**: the plan is in
+      `plans/archive/2026_08/`, every corpus referrer resolves, `check_reference_paths.py` has not regressed, and this
+      finalize doc is archived alongside it in the same commit.
 
 ## Progress Log
 
 - **2026-08-09 (todo 1, slot 15)**: Reconciled both source docs against batch3's 7 now-done todos. Full breakdown in
   todo 1's own entry above and each source doc's Progress Log.
+- **2026-08-09 (todo 2, slot 15)**: Archived `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` via the standard
+  6-step ritual, alongside this finalize doc, in the same commit set. Full breakdown in todo 2's own entry above.
+  `archive_exempt: true` added transiently to this doc's own frontmatter so the checkbox-flip commit doesn't trip
+  `check_archive_candidates`'s 0-open-todos gate before the physical move lands (same pattern as
+  `ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md`'s archival earlier today) -- removed in the immediate
+  follow-up `git mv` commit.
