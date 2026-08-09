@@ -142,23 +142,30 @@ outcome) or **stays behind** (judgment call, operator-gated, dependency-blocked,
       own... not splitting this doc's todos across two `assigned_vm` values in this pass" — this batch is that split).
       Done-when: every real outbound `odds_api` HTTP call site has a stated, tested timeout, or the audit's negative
       result is cited with file:line evidence.
-- [ ] [REVIEW] P3. **Write the FSS-output ↔ ml-service-input ↔ strategy-service-input naming-parity test** — assert that
+- [x] ✅ [REVIEW] P3. **ALREADY SHIPPED (round-11 sweep, 2026-08-09) — this exact deliverable pre-dates this batch.**
+      Write the FSS-output ↔ ml-service-input ↔ strategy-service-input naming-parity test — assert that
       `features-service`'s `odds_features` exporter output, `ml-service`'s `SportsFeatureLoaderMixin` schema validation,
       and `strategy-service`'s `SportsValueBettingEngine`/`SportsArbDutchingEngine`/ `sports_feature_subscriber.py` all
       read/write the SAME field names now that all 3 consumers have been migrated to UAC's
-      `SportsFeatureVector`/`OddsFeaturesMixin` as SSOT (verified live: todos 1-6 in the source plan below are all
-      `[x]`, shipped across `unified-api-contracts@689efa54`, `features-service@0ded2449`, `ml-service@07976ae`,
-      `strategy-service@4c55438c`, `ml-service@10e219f`). This is the original deliverable
-      `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` asked for, blocked until the
-      migration landed — it has now landed. `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s Conflict-gated
-      section held this exact item back citing "the still-unshipped 3-repo four-way naming migration" — re-verified this
-      pass: that migration IS shipped (source plan's own 2026-08-08 Progress Log entry independently flags the same
-      staleness and recommends exactly this extraction), so the prior conflict-gate no longer applies. Test asserts
-      field-name parity across the 3 real consumer boundaries against the live UAC schema, not a mock — fails loud on
-      any drift. `quality-gates.sh --no-fix` green on every touched repo before commit; ship via quickmerge. Source:
-      `/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md` todo 9 (`[REVIEW] P3`). Done-when: a
-      new, passing parity test exists in the repo(s) that would actually exercise this boundary, asserting the same
-      field-name set across producer/loader/subscriber against the real `OddsFeaturesMixin` schema.
+      `SportsFeatureVector`/`OddsFeaturesMixin` as SSOT. Verified live at task pickup: this batch's extraction missed
+      that the identical deliverable was already dispatched + shipped as todo P2a in
+      `/plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md` (archived) — same test, same
+      file path (`features-service/tests/sports/unit/test_cross_repo_odds_feature_parity.py`), landed 2026-08-04 at
+      `features-service@36fb7b88` (2026-08-04 14:54:11 UTC), 5 days before this batch11 doc was authored. Re-ran the
+      existing suite fresh this pass (fresh-pulled `features-service` to `origin/live-defi-rollout` first, `.venv`
+      pytest): **10/10 tests pass** — `test_uac_contract_fields_are_fully_accounted`,
+      `test_fss_fields_are_fully_accounted`, `test_allowlists_are_mutually_exclusive`,
+      `test_ml_consumer_overlap_with_fss_producer`, `test_no_stale_uac_schema_only_entries`,
+      `test_no_stale_fss_extended_entries`, `test_strategy_arb_dutching_odds_decimal_prefix_has_producer_fields`,
+      `test_strategy_arb_dutching_per_venue_fields_are_pattern_matchable`,
+      `test_value_betting_engine_fields_transitively_covered`, `test_no_field_in_both_allowlists_and_contract`. Also
+      independently confirmed (fresh source read, not reused from the archived plan) that the test's transcribed
+      strategy-service literals (`odds_decimal_` prefix, `prob_fair_` prefix, `prob_implied_home/draw/away`) still match
+      the live `sports_value_betting.py`/`sports_arb_dutching.py`/`sports_feature_subscriber.py` source exactly — no
+      drift since the 2026-08-04 ship. No new code needed; nothing to ship. Done-when met by pre-existing work. Source:
+      `/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md` todo 9 (`[REVIEW] P3`, itself already
+      resolved-by-citation 2026-08-09 — see that doc's own Progress Log). — features-service@36fb7b88 (pre-existing;
+      this pass verified only, shipped no new commit)
 
 ## Codex SSOTs
 
@@ -194,3 +201,19 @@ outcome) or **stays behind** (judgment call, operator-gated, dependency-blocked,
   `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` are NOT explained by a missing-timeout call site in
   this adapter/connector pair — that doc's separate `PREFIX_IDLE_THRESHOLDS`/watchdog-window todo (explicitly deferred,
   untouched here) remains the next avenue if the hang recurs. No repo touched; nothing to ship via quickmerge.
+- **2026-08-09 (todo 2 — FSS↔ml-service↔strategy-service naming-parity test, slot-11)**: STALE-EXTRACTION FOUND — this
+  batch's own extraction missed a prior duplicate. The identical deliverable was already dispatched + shipped as todo
+  P2a in the ARCHIVED `sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`: same test, same path
+  (`features-service/tests/sports/unit/test_cross_repo_odds_feature_parity.py`), `features-service@36fb7b88`
+  (2026-08-04), 5 days before this doc's 2026-08-09 authoring. Re-verified fresh this pass (not trusting the archived
+  claim blindly): fresh-pulled `features-service`, ran the 10-test suite via `.venv` pytest — 10/10 pass; independently
+  re-grepped `sports_value_betting.py`/`sports_arb_dutching.py`/`sports_feature_subscriber.py` to confirm the test's
+  transcribed field-name literals (`odds_decimal_`, `prob_fair_`, `prob_implied_home/draw/away`) still match live source
+  exactly, no drift since ship. Flipped the checkbox with pre-existing evidence citation; no new commit (nothing to
+  ship). **Root cause worth flagging**: batch11's methodology cross-referenced the SOURCE naming-canonicalization plan's
+  own todo 9 (a since-resolved-by-citation cross-reference todo) rather than checking the ARCHIVE for whether the actual
+  deliverable text had already been extracted+shipped under a differently-numbered todo in a sibling batch's finalize
+  doc — the conflict-check protocol's plan/issue grep should extend to `plans/archive/` when a todo's prose closely
+  matches a known naming-migration deliverable, not just `plans/active/`. Not filing a separate issue doc for this —
+  one-off methodology note, not a recurring pattern (batch2/5/10 finalize docs were already correctly cross-referenced
+  elsewhere in this same doc's Conflict-gated sections). — unified-trading-pm (this commit)
