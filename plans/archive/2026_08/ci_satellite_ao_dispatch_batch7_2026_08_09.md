@@ -65,7 +65,7 @@ source: >-
 
 # CI satellite AO batch 7 (infrastructure_master group)
 
-> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** The single todo's 3-codex-doc sync shipped (`unified-trading-pm@d83354f82`),
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** The single todo's 3-codex-doc sync shipped (`unified-trading-pm@5ef6d9697`),
 > every fact live-verified against AWS at execution time (not copied from the source audit doc). Archived in the same
 > session per the archival HARD RULE (a plan whose only todo just went `[x]` is a zero-dispatchable doc if left `active`
 > — `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). Finalize plan
