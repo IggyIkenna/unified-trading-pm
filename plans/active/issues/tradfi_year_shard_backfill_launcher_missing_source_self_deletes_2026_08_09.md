@@ -257,14 +257,28 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
       evidence. As of 2026-08-09T~09:53Z no ES_OPT VM has launched since the fix landed (07:38:54Z) — slot-22 is
       actively mid-retry on the sibling P1 action item above; this check should piggyback on that retry (or a subsequent
       one) rather than triggering a dedicated launch. Repo: deployment-service.
-- [ ] [INFRA] P2. **PARTIALLY DONE (2026-08-09, separate session, deployment-service@391ff7f5)** — confirmed
-      `_tradfi-ohlcv-launcher-lib.sh` (NASDAQ/NYSE/CME-grouped/KRX launchers) was already correctly wired
-      (`VM_TASK=mtds-backfill` + `VM_SOURCE`, not affected). A different agent independently found + fixed the SAME bug
-      in `launch-targeted-options-chain-backfill.sh` (CME-OPTIONS/CBOE-VIX-OPTIONS shards,
-      `deployment-service@acf965d9`) concurrently with this doc's own fix — both landed together after resolving a real
-      git stash conflict (identical fix, different comments). Remaining, NOT done: the historical-manifest-provenance
-      cross-check (did any already-"captured" ES/BTC/ETH row actually come through this broken launcher). Repo:
-      deployment-service + market-tick-data-service (manifest cross-check).
+- [x] [INFRA] P2. ✅ **2026-08-09, slot-12 (infra)** — **historical-manifest-provenance cross-check DONE: structurally
+      impossible for the broken launcher to have ever written a "captured" row.** `_tradfi-ohlcv-launcher-lib.sh`
+      (NASDAQ/NYSE/CME-grouped/KRX launchers) was already correctly wired (`VM_TASK=mtds-backfill` + `VM_SOURCE`, not
+      affected). A different agent independently found + fixed the SAME bug in
+      `launch-targeted-options-chain-backfill.sh` (CME-OPTIONS/CBOE-VIX-OPTIONS shards, `deployment-service@acf965d9`)
+      concurrently with this doc's own fix — both landed together after resolving a real git stash conflict (identical
+      fix, different comments). Traced the MTDS CLI code path
+      (`market_tick_data_service/cli/handlers/tick_data_handler.py`): `TickDataHandler.process()` (per-date entry point)
+      calls `_resolve_fetch_params()` → `_resolve_source()` at line 252, which raises
+      `ValueError: --source databento is REQUIRED...` synchronously for any TRADFI OHLCV run missing `--source` — this
+      happens BEFORE `process_ticks()` (the actual fetch+write path, line 217) is ever invoked. Since `--source` is a
+      fixed CLI arg for the whole VM invocation (not per-date), the very FIRST date processed already raises, so 0 rows
+      can ever be written for the entire run — confirms the incident's own run.log evidence ("0 results collected") is
+      not a coincidence but a structural guarantee. For the CEFI/BTC/ETH shards in
+      `launch-targeted-options-chain-backfill.sh` (DERIBIT/DERIBIT-COMBO/OKX): the `acf965d9` fix commit message itself
+      confirms these were "Tardis-sourced -- fine through the generic fallback" — i.e. this launcher's
+      `VM_TASK=cefi-backfill` misroute never actually broke the CEFI dispatch path (Tardis doesn't consult `--source`),
+      only the TRADFI shards it shared `_launch_shard()` with. **Conclusion: no manifest-provenance risk exists for ES,
+      BTC, or ETH** — TRADFI rows structurally could not have been written by a broken-launcher run
+      (hard-fail-before-any-write), and CEFI/BTC/ETH rows were never on a broken path in the first place. No code change
+      needed (pure investigation, confirming no remediation is required). Repo: deployment-service +
+      market-tick-data-service (manifest cross-check) — investigated only, no code shipped.
 - [ ] [CODE] P3. **Wire `VM_FORCE_WINDOW` into the `mtds-backfill` branch** (or document why it's intentionally scoped
       only to the generic fallback) — currently silently ignored for every `mtds-backfill`-routed launch, including this
       one. Repo: deployment-service, `scripts/vm/setup-data-pipeline-vm.sh`.
@@ -403,3 +417,27 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   for the pre-fix wave) — if absent, check this box (machine-type fix confirmed sufficient); if present, escalate per
   this item's own stated remedies (raise watchdog `--min-age` for this launcher class, or add incremental per-date
   progress logging).
+
+- **2026-08-09, slot-12 (infra)**: Picked up the `[INFRA] P2` historical-manifest-provenance cross-check action item.
+  Traced the actual MTDS CLI failure ordering rather than re-verifying via manifest timestamps alone (a more direct
+  proof): `TickDataHandler.process()` (`market_tick_data_service/cli/handlers/tick_data_handler.py:189`, the per-date
+  entry point) calls `self._resolve_fetch_params(...)` at line 216, which calls `self._resolve_source(...)` at line 252
+  — this raises `ValueError("--source databento is REQUIRED...")` synchronously (confirmed by reading `_resolve_source`,
+  lines 421-464) for any TRADFI-targeted run with OHLCV in scope and no `--source` set. Critically, this call happens at
+  line 252, strictly BEFORE `process_ticks(...)` (line 217-228 — the actual fetch-and-write path) is ever awaited.
+  `--source` is set once from `args` for the entire VM invocation (not re-read per date), so on a broken-launcher run
+  missing `--source`, the very FIRST date `process()` is called for already raises — meaning the whole VM run writes
+  exactly 0 rows before any manifest write can occur, by construction, not by observed behavior alone. This matches the
+  incident's own run.log evidence ("0 results collected", immediate `DEPLOYMENT_FAILED`) and makes it a structural
+  guarantee rather than an empirical one — i.e. it holds for every past invocation of the broken launcher path, not just
+  the 5 VMs directly observed in this doc's first finding. For the CEFI/BTC/ETH shards sharing
+  `launch-targeted-options-chain-backfill.sh`'s `_launch_shard()` (DERIBIT/ DERIBIT-COMBO/OKX): re-read the `acf965d9`
+  fix commit message, which explicitly states the CEFI/Tardis-sourced shards were "fine through the generic fallback" —
+  i.e. `VM_TASK=cefi-backfill` was never actually a broken route for them (Tardis fetches don't consult `--source` at
+  all), only the TRADFI shards (CME-OPTIONS/CBOE-VIX-OPTIONS) sharing that function were affected. So BTC/ETH manifest
+  rows captured via this launcher carry no provenance risk either — the bug never touched their code path. **Conclusion:
+  the historical-manifest-provenance cross-check is closed with a definitive NO — no already-"captured" ES, BTC, or ETH
+  row can have come through either broken launcher.** TRADFI rows are structurally excluded (hard-fail-before-any-write,
+  proven from the CLI's own control flow, not inferred from timing); CEFI/BTC/ETH rows were never on a broken path to
+  begin with. No code change shipped — none is needed; this was a pure investigation task and the evidence is conclusive
+  without a corrective commit. Checked this item's box.
