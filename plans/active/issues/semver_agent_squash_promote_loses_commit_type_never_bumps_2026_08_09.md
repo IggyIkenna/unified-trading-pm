@@ -217,3 +217,22 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   `unified-trading-pm@30ed07eff` (or a later commit carrying `source_touched`) is confirmed an ancestor of
   `origin/main`, then either a trivial push to `unified-trading-library`'s `main` (if one lands naturally from other
   work) or waiting for the next real one will re-classify `609299ad` correctly.
+- **2026-08-09 (infra worker, slot 20, todo 2 re-check)**: Re-verified from scratch —
+  `git merge-base --is-ancestor 30ed07eff origin/main` on `unified-trading-pm` still returns NO
+  (`origin/main..origin/live-defi-rollout` now 687 commits, up from 568 at the prior check), so the `source_touched` fix
+  has still not reached PM's `main`. The auto-drain promote pipeline is visibly still retrying every ~15 min and failing
+  the same way: `gh pr list --search "promote in:title"` shows PRs #2691-#2705 (15 consecutive attempts across
+  ~13:35Z-19:03Z today), every one but the latest CLOSED without merging. Pulled the live failing job log for the
+  current open attempt (PR #2705, run `31330640508`, job `93288244861`) — the exact same 5 hard ratchet failures as slot
+  18's prior check: `No prettier proseWrap continuation-padding`, `Reference path convention`,
+  `Create-only archival guard`, `assigned_vm:NA corpus size` (now 33 new NA docs / 96 new open todos vs `origin/main`,
+  up from whatever slot 18 saw), `Archive candidates`. Same root cause, same lineage, no new information — this remains
+  squarely `plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`'s scope (P2, cross-cutting,
+  its own established "hand off, don't chase serially" precedent — 9+ dispatches already), not this INFRA todo's. Per
+  that precedent, NOT attempting a fix myself. Confirmed there is genuinely no alternate lever available either:
+  `Semver Agent`'s caller stub on `unified-trading-library` still has no `workflow_dispatch` trigger
+  (`push: branches: [main]` only), and the reusable workflow's classifier-script fetch is unpinned to PM's live default
+  branch, so even a `gh run rerun` of the existing `31325951737` run would just re-fetch the still-unfixed classifier
+  and reproduce the same skip. Leaving todo 2 open/unchecked, same condition as before: will only make forward progress
+  once PM's `main` actually advances past `30ed07eff`. Skipping this task with `reason_code: GATED` so it doesn't keep
+  re-dispatching to every heartbeat in the fleet while the real blocker is unresolved elsewhere.
