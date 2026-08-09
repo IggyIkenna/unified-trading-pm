@@ -26,7 +26,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
 codex_ssots: [/codex/11-project-management/plan-hygiene.md, /codex/12-agent-workflow/canonical-plan-flow.md]
 related_plans:
-  - ../active/ag_closeout_audit_rollout_2026_07_25.md
+  - ../archive/2026_08/ag_closeout_audit_rollout_2026_07_25.md
   - ../active/asset_class_to_asset_group_rename_2026_07_21.md
   - ../active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md
   - ../active/data_pipeline_e2e_milestones_gate_2026_07_24.md
@@ -393,7 +393,7 @@ _(no plans currently assigned at this priority)_
 
 ## P1 — important; post-current-gate
 
-### [`ag_closeout_audit_rollout_2026_07_25`](../active/ag_closeout_audit_rollout_2026_07_25.md)
+### [`ag_closeout_audit_rollout_2026_07_25`](../archive/2026_08/ag_closeout_audit_rollout_2026_07_25.md) — ✅ COMPLETE, archived 2026-08-09
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: research) **title**: AG closeout-audit rollout —
 cefi/defi/tradfi/prediction (sports treatment, generalized)

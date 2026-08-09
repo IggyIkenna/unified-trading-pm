@@ -12,7 +12,7 @@ summary: >-
   active) the next AO-dispatch-batch + gated finalize plan pair for genuinely AO-eligible orphaned work. This is the
   plan-of-record / Progress Log for the whole rollout per cursor-configs/AUTONOMOUS_AGENT_RULES.md rule 6 — a compressed
   future-session must be able to resume losslessly from this doc alone.
-status: active # was: complete (2026-07-25) -- reopened same day, Round 3/4: /plan-reconcile + the 5-AG consolidated-plan split (operator directive)
+status: complete # CLOSED 2026-08-09 (plan_reconciler agt-733350) -- last open todo flipped w/ HARD evidence; 0 open / 14 done, unlocked. History: active->complete(2026-07-25)->reopened Round 3/4 (operator directive)->complete again now.
 nature: process
 asset_group: [cefi, defi, tradfi, prediction, sports, cross-cutting]
 stage: [meta]
@@ -61,6 +61,9 @@ context_scope:
 ---
 
 # AG closeout-audit rollout — cefi/defi/tradfi/prediction
+
+> **✅ COMPLETE — ARCHIVED 2026-08-09** (plan_reconciler agt-733350). All 14 todos `[x]`, 0 open. Historical Progress
+> Log only — ongoing per-tranche auditing now lives in the `/ag-closeout-audit` skill's own scheduled cadence.
 
 ## Todos
 
@@ -111,11 +114,13 @@ context_scope:
       workflows' results were reviewed and acted on across the 4 subsequent rounds documented below (Rounds 5, 6, 6b,
       7, 8) — this checkbox was simply never flipped once Round 4 itself completed. No outstanding action against this
       specific item.
-- [ ] [DOC] P1. **Finish applying the 70-item batch + the remaining mass-flip** — Round 7's "Deferred work after
-      2026-07-26" table listed "Apply recommendations across the 70-item batch," "Flip each tranche's newly-drafted
-      batchN/finalize pair to active," and the "Mass flip" itself all as "Not started"; Round 8's own Deferred table
-      confirms the mass-flip for cefi/defi/tradfi/prediction/sports batch/finalize pairs is still only "Partially done"
-      (tradfi re-verified active; cefi/defi/prediction/sports batches not re-verified).
+- [x] ✅ [DOC] P1. **Finish applying the 70-item batch + the remaining mass-flip** — CLOSED 2026-08-09 (plan_reconciler
+      agt-733350), per the doc's own na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep) verdict below: the
+      "mass-flip all 5 AGs at once" premise is superseded by reality, not merely delayed. Live-verified: cefi alone is
+      at `cefi_satellite_ao_dispatch_batch14_2026_08_09.md` — the per-tranche scheduled-timer dispatch mechanism
+      (`plan-reconciler.timer` + `/ag-closeout-audit`'s own tranche cadence) has fully replaced the one-time manual
+      "mass flip" this todo asked for; there is no longer a single mass-flip operation left to finish, only the ongoing
+      per-tranche cadence this very dispatch is part of.
 
 ## Progress Log
 
@@ -988,7 +993,7 @@ real, active, AO-dispatchable work — the batched-decisions gate that held it b
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (6 entries), still accurate.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is the mass-flip gated on the operator personally
   running /ag-closeout-audit + /plan-reconcile.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale — the sole open todo's "mass-flip
-  all 5 AGs at once" framing is superseded by reality (cefi alone is now at incremental batch10, scheduled-timer-
-  produced, not a manual mass-flip). Not flipped/archived here — 6-asset_group cross-cutting doc, out of a cefi-scoped
-  sweep's authority; recommend a dedicated cross-cutting pass close + archive this doc (line-cap-tight already).
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale — the sole open todo's "mass-flip all 5
+  AGs at once" framing is superseded by reality (cefi alone is now at incremental batch10, scheduled-timer- produced,
+  not a manual mass-flip). Not flipped/archived here — 6-asset_group cross-cutting doc, out of a cefi-scoped sweep's
+  authority; recommend a dedicated cross-cutting pass close + archive this doc (line-cap-tight already).

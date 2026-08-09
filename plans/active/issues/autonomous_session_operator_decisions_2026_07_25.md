@@ -16,7 +16,7 @@ repos: [unified-trading-pm]
 scope: [engineer]
 tags: [autonomous, operator-decision, ag-closeout-audit]
 related:
-  - /plans/active/ag_closeout_audit_rollout_2026_07_25.md
+  - /plans/archive/2026_08/ag_closeout_audit_rollout_2026_07_25.md
 created: "2026-07-25"
 author: unknown
 last_updated: "2026-07-31"
@@ -34,7 +34,7 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /plans/archive/2026_08/ag_closeout_audit_rollout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
   ]

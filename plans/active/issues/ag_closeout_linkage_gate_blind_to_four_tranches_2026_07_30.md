@@ -26,7 +26,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
-    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /plans/archive/2026_08/ag_closeout_audit_rollout_2026_07_25.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md,
   ]
 created: 2026-07-30
