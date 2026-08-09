@@ -73,7 +73,7 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 17 source docs' checkboxes.** For each of batch 1's 25 now-done todos: find the
+- [x] ✅ **DONE 2026-08-09 (slot-3, review-craft-per-task).** For each of batch 1's 25 now-done todos: find the
       corresponding checkbox in the source doc its text names (every todo ends with `Source: `<doc>.md``) and flip it
       `[x]`, citing the batch-1 commit(s) that shipped it. **Verify each cited sha actually exists and is an ancestor of
       `origin/live-defi-rollout` (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`) before citing it — do
@@ -98,7 +98,34 @@ source: >-
       doc — reconcile both.) **Several of these carry `locked_by: live-defi-rollout`** — flipping a checkbox is fine on
       a locked doc; ARCHIVING one is not (that needs `[unlock-plan]`). **Done when**: every source-doc box corresponding
       to a done batch-1 todo is flipped with a verified sha, and any box that could NOT be flipped is listed with the
-      reason. Repo: unified-trading-pm.
+      reason. Repo: unified-trading-pm. **RESULT**: walked all 17 source docs (setuptools doc correctly skipped, already
+      archived+reconciled). All shas re-verified via `git merge-base --is-ancestor` against `origin/live-defi-rollout`
+      (2 shas — `execution-service@8479a77f`, `deployment-service@1e8af34a`'s sibling in an unrelated doc — turned out
+      to be pre-quickmerge-rebase shas no longer resolving directly; confirmed via content-diff, per
+      `agents/review.md`'s squash/rebase-ancestry gotcha, that the identical diff landed under a different current sha,
+      so nothing was actually missing). **13 of 17 docs were ALREADY fully reconciled** by earlier passes (mostly the
+      2026-08-08 na-eligibility-audit round7 sweep, which ran before this finalize todo was dispatched) —
+      `uv_pin_fleet_drift`, `deployment_ui_smoke_failures`, `vm_billing_waste`, `utl_uac_reuse_consolidation` (now fully
+      archived with operator `[unlock-plan]` sign-off), `issue_docs_remediation_sweep`, `repo_scripts_governance_audit`,
+      `service_dockerfile_pattern_normalization`, `codex_vs_repo_docs_ssot_audit`, `prod_terraform_drift_backlog`,
+      `plan_hygiene_precommit_and_agentic_resolution`, `cve_affected_pinned_deps_remediation`, and
+      `stash_pile_workspace_cleanup` needed no edits. **4 docs got real fixes this pass**: `e2e_login_persona_handoff`
+      (2 boxes flipped, `unified-trading-system-ui@15e4b4bc`), `codex_violations_ratchet_to_five` (added the missing
+      `unified-trading-pm@a674e1ff3` ruff-ratchet-baseline citation to the deployment-api item),
+      `l0_doc_index_generator` (2 boxes were genuinely still `[ ]` despite batch1 claiming them done — flipped, citing
+      `agent-orchestrator@517a0bc` + `unified-trading-pm@54d7779a4`), `reference_path_convention` (replaced a literal
+      `pm@<commit-pending>` placeholder with the real verified sha
+      `unified-trading-pm@b555f4b86b76b2f6dfeb02c3bf3549d63b88fd19`). **One discrepancy found in this todo's own
+      premise**: `session_bound_vm_monitoring_reliability_gap_2026_07_26.md` does NOT actually carry any content related
+      to the "fleet-monitor pair" todo (checkpoint-reading blind spot / preemption-alert severity) — grepped the whole
+      doc for `checkpoint|alert|read_progress|cdlap|DP_VM_PREEMPTED`, zero hits; its actual subject is a session-bound
+      `ScheduleWakeup` monitoring-loop reliability question, unrelated. The "18 entries because session_bound
+      co-sourced" framing above is incorrect — `vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`
+      alone fully self-sources that todo (already correctly `[x]` there, both halves, citing
+      `deployment-service@b501a5e`). No box was flipped in `session_bound_vm_monitoring_reliability_gap` (none exists to
+      flip); its own open items are unrelated pre-existing work, left untouched. **No box in any of the 17 docs could
+      not be flipped for lack of a match** — every batch-1 todo's target checkbox was found in its named doc except the
+      (nonexistent) one this discrepancy concerns.
 
 - [ ] [REVIEW] P1. **Re-check batch 1's 10 CONFLICT-GATED deferrals — the only category that clears without a ruling.**
       For each, go read the specific competing claim named in batch 1's `## Deferred` and determine whether it has since
@@ -180,4 +207,15 @@ the orphan count look better while leaving the mechanism that produced it untouc
 
 - **2026-07-26** — Drafted alongside `infra_satellite_ao_dispatch_batch1_2026_07_26.md` by `/ag-closeout-audit infra`
   (Autonomous mode). Left `status: draft` — flips to `active` only with its parent, on explicit operator approval.
+- **2026-08-09 (slot-3)** — Worked todo 1 (reconcile all 17 source docs). Fanned out 17 parallel sub-agents (one per
+  doc, read+edit only, no git writes, to avoid a shared-index race in one slot clone). 13/17 docs were already fully
+  reconciled by earlier passes (mostly the 2026-08-08 na-eligibility-audit round7 sweep); 4 got real fixes
+  (`e2e_login_persona_handoff_helper_stale`, `codex_violations_ratchet_to_five`, `l0_doc_index_generator` — 2 boxes that
+  were genuinely still open despite batch1 claiming them done, `reference_path_convention` — a stale
+  `pm@<commit-pending>` placeholder replaced with the real verified sha). Found and recorded one discrepancy in this
+  todo's own premise: `session_bound_vm_monitoring_reliability_gap_2026_07_26.md` does not actually co-source the
+  fleet-monitor-pair todo as claimed (zero related content) —
+  `vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md` alone fully sources it. Full detail in the
+  todo's own RESULT note above. Todo 1 done; todos 2-4 remain (this plan is `sequential: true`, so todo 2 unblocks
+  next).
 - **context-scout 2026-08-03**: re-scouted; context_scope refreshed (6 entries) — finalize gate, code-free by design.

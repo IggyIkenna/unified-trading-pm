@@ -96,16 +96,25 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
 
 ## Todos
 
-- [ ] [UI] P2. Diagnose why `admin@odum.internal` (and likely other demo personas) redirect to
+- [x] ✅ Diagnose why `admin@odum.internal` (and likely other demo personas) redirect to
       `https://uat.odum-research.com/login` instead of logging in locally under
       `NEXT_PUBLIC_MOCK_API=true     NEXT_PUBLIC_AUTH_PROVIDER=demo` (`pnpm dev:mock`) — check the "standing internal
       email" redirect branch in `app/(public)/login/page.tsx` against `isDemoPersonaEmail()` (`lib/auth/personas.ts`)
-      for a classification bug. (repo: unified-trading-system-ui)
-- [ ] [UI] P2. Once (1) is fixed, restore/repair the `?persona=<id>` (or equivalent) fast-path login helper contract
-      that `tests/e2e/user-management.spec.ts`, `tests/e2e/admin-flow.spec.ts`-style specs, and every other
+      for a classification bug. (repo: unified-trading-system-ui) — unified-trading-system-ui@15e4b4bc (verified
+      ancestor of origin/live-defi-rollout). Actual root cause differed from the classification-bug hypothesis:
+      `next.config.mjs` unconditionally loaded `.env.production` into `next dev`, wrongly satisfying `login/page.tsx`'s
+      `isProdSite` check — the same "standing internal email → UAT redirect" branch this todo names — fixed by making
+      the env-file load NODE_ENV-aware. Reconciled via infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md todo 1.
+- [x] ✅ Once (1) is fixed, restore/repair the `?persona=<id>` (or equivalent) fast-path login helper contract that
+      `tests/e2e/user-management.spec.ts`, `tests/e2e/admin-flow.spec.ts`-style specs, and every other
       `loginAsAdmin`/`loginAsClient`-based E2E spec assume, and re-verify
       `npx playwright test --project=chromium     tests/e2e/user-management.spec.ts` exits 0 as the regression check.
-      (repo: unified-trading-system-ui)
+      (repo: unified-trading-system-ui) — unified-trading-system-ui@15e4b4bc (verified ancestor of
+      origin/live-defi-rollout). `?persona=<id>` fast-path restored in `app/(public)/login/page.tsx`; verified via
+      Playwright that `?persona=admin` now logs in locally. Full-suite green is blocked by two separate pre-existing
+      gaps unrelated to this helper, filed as
+      issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md. Reconciled via
+      infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md todo 1.
 - [ ] [UI] P3. Re-run `tests/e2e/admin-strategy-assignments.spec.ts` (written 2026-07-22 for the
       `AdminStrategyAssignment` admin CRUD feature) once the login helper is fixed, and record the `pw:L2 ✓` evidence
       retroactively on `/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`'s

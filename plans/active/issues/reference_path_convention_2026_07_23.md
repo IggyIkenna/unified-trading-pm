@@ -165,7 +165,9 @@ estimate_calibrated_ai_days: 1.6
       full corpus body text for every recently-moved doc's OLD path and routes any hit straight to the existing Phase 4
       auto-fix row, plus a note to re-run `check_reference_paths.py` without `--quiet` so its itemized list becomes a
       real Phase-1 candidate feed. Also corrected Phase 0's own text, which previously assumed the mechanical checker
-      always surfaces the flag (untrue under its default `--quiet` + ratchet invocation). `pm@<commit-pending>`.
+      always surfaces the flag (untrue under its default `--quiet` + ratchet invocation).
+      `pm@b555f4b86b76b2f6dfeb02c3bf3549d63b88fd19` (2026-08-02, "docs(plans): extend /plan-reconcile with moved-doc
+      referrer hunter (Phase 1 #8)").
 
 ## Codex SSOTs
 

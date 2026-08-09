@@ -100,14 +100,21 @@ rg 'doc_type=plan .*assigned_vm=vm-defi'   DOC_INDEX.generated.md   # defi plans
       `frontmatter_content_pass_and_gate_consolidation_2026_06_30` (content: 55 Opus lanes in the operator's silent
       window). Evidence: docspec HARD=0 SOFT=0 on 1,298 live docs; single blocking gate live (pm@d47886909); agent-role
       docs gated in-repo (agent-orchestrator@202c9b6).
-- [ ] [SCRIPT] P2. **Central read-only rendered L0 view** in the AO dashboard / deployment-ui (same generator, served —
-      not a git artifact) for human visibility. — 🟡 SUBSTANTIALLY DELIVERED 2026-07-04 as the LOCAL variant
+- [x] ✅ [SCRIPT] P2. **Central read-only rendered L0 view** in the AO dashboard / deployment-ui (same generator, served
+      — not a git artifact) for human visibility. — 🟡 SUBSTANTIALLY DELIVERED 2026-07-04 as the LOCAL variant
       (pm@d03703d0e): `scripts/docs/gen_doc_graph.py` → `DOC_GRAPH.generated.html` (gitignored, self-contained,
       per-host): 1,119 nodes / 3,113 `related`+`referenced_by` edges, 3D force layout, facet filters + search +
       neighborhood isolate + doc panel. REMAINING (the letter of this todo): serve that generated file from the AO
-      dashboard / deployment-ui as a static route for central human visibility.
-- [ ] [SCRIPT] P3. **On-demand stale-check before an agent reads** (covers the inter-FF-tick gap) — a thin wrapper an
-      agent calls before grepping the index.
+      dashboard / deployment-ui as a static route for central human visibility. — agent-orchestrator@517a0bc (verified
+      ancestor). New auth-gated `GET /api/docs/doc-graph` route + `/doc-graph` dashboard page
+      (`dashboard/src/DocGraph.tsx`) serve the current on-disk `DOC_GRAPH.generated.html` read-only, done 2026-08-01
+      (slot-4). Reconciled via infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md todo 1.
+- [x] ✅ [SCRIPT] P3. **On-demand stale-check before an agent reads** (covers the inter-FF-tick gap) — a thin wrapper an
+      agent calls before grepping the index. — unified-trading-pm@54d7779a4 (verified ancestor). Added
+      `scripts/docs/refresh-doc-index.sh` (thin wrapper, regenerates only on content change via
+      `gen_doc_index.py --stale-check`; generator write made atomic via `_atomic_write_text`), done 2026-08-03 (slot-6);
+      CLAUDE.md's doc-retrieval one-liner now points at the wrapper. Reconciled via
+      infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md todo 1.
 
 ## Success criteria
 
