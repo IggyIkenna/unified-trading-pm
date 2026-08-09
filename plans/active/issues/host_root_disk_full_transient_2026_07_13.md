@@ -42,7 +42,7 @@ related:
   [
     plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md,
+    /plans/archive/2026_08/issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md,
   ]
 depends_on: []
 ---
@@ -151,7 +151,7 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
   boundary, not `setup.sh` env-var propagation; fix relocated `UV_CACHE_DIR` inside `.tabs/` across `base-service.sh`,
   `install-uv-cache-shell-env.sh`, `prune-uv-cache.sh`, `install-prune-uv-cache-cron.sh`, and the adjacent same-bug
   `agent-orchestrator/server/tmux_spawn.py`; verified via a real `uv sync` showing `nlink=2`). Full detail + evidence:
-  `/plans/active/issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`. Codex SSOT updated:
+  `/plans/archive/2026_08/issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`. Codex SSOT updated:
   `/codex/05-infrastructure/per-tab-worktrees.md` § "Shared uv cache". **Both todos now `[x]`, `locked_by` empty — this
   doc is archival-eligible; leaving the actual archive-and-referrer-sweep (13 corpus referrers, several archived-doc
   historical mentions) to the next `/ag-closeout-audit infra` or `/na-eligibility-audit` pass rather than absorbing it

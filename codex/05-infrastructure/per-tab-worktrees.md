@@ -1009,9 +1009,9 @@ MUST sit on the same filesystem as the venvs it links into, or hardlinks silentl
 measured proof: shared `.so` inodes at `links=81`, ~21 GB reclaimed).
 
 **The cache dir must live INSIDE `.tabs/`, not as its sibling (RULED 2026-08-09,
-`/plans/active/issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`).** This host presents `.tabs/`
-as its own mount/bind boundary — `stat -c %d` reports an identical device id for `.tabs/` and its siblings, but the
-kernel's `link()` syscall still refuses to cross the real boundary between them (`EXDEV`, confirmed via a raw `ln`
+`/plans/archive/2026_08/issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`).** This host presents
+`.tabs/` as its own mount/bind boundary — `stat -c %d` reports an identical device id for `.tabs/` and its siblings, but
+the kernel's `link()` syscall still refuses to cross the real boundary between them (`EXDEV`, confirmed via a raw `ln`
 probe; same mechanism independently found for pnpm's default store, `ci_satellite_ao_dispatch_batch6_2026_08_08.md` item
 10). A cache dir placed as a sibling of `.tabs/` (the 2026-07-17-codified `<workspace-root>/.uv-cache`) silently
 degraded every cache→venv install to a full copy — `UV_LINK_MODE=hardlink` being correctly set did NOT save it, because
