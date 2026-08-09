@@ -28,7 +28,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [codex_doc_freshness ratchet review, slot 30, 2026-08-09]
-resolved_by:
+resolved_by: worker-slot25-2026-08-09
 locked_by:
 locked_since:
 depends_on: []
@@ -75,7 +75,7 @@ but it is exactly the kind of doc/code divergence `check_codex_doc_freshness.py`
 
 ## Recommended decision
 
-- [ ] [DOCS] P3. Decide + apply ONE of: (a) actually finish the `pvl-p17c` migration — delete
+- [x] ✅ [DOCS] P3. Decide + apply ONE of: (a) actually finish the `pvl-p17c` migration — delete
       `execution-service/execution_service/adapters/sports_factory.py`'s `_PAPER_VENUE_KEYS` string-set and have sports
       routing dispatch off `OperationalMode.PAPER` directly (matches the doc's original intent), or (b) if the
       string-set is now considered a legitimate, permanent per-adapter allowlist (not an anti-pattern), update
@@ -84,7 +84,7 @@ but it is exactly the kind of doc/code divergence `check_codex_doc_freshness.py`
       `operational-modes.md` once the doc matches reality. Done-when:
       `grep -rn _PAPER_VENUE_KEYS     execution-service/execution_service/` shows either zero hits (option a) or the
       doc's claim matches the actual file/entries (option b), and `operational-modes.md`'s `last_reviewed:` is bumped to
-      the fix date.
+      the fix date. — **Resolved via option (b)**: `unified-trading-pm@<pm-sha>` (see Progress Log).
 
 ## Progress Log
 
@@ -94,3 +94,11 @@ but it is exactly the kind of doc/code divergence `check_codex_doc_freshness.py`
   crossed the same 90-day limit today) was independently verified accurate and its stamp bumped; this one wasn't, by
   design. Re-baselined `codex_doc_freshness_baseline.yaml` by 1 (26, was 25) to reflect this genuinely-not-yet-clearable
   item, citing this doc.
+- **worker slot 25, 2026-08-09**: resolved via option (b) — `_PAPER_VENUE_KEYS` in `sports_factory.py` is not a
+  mode-detection anti-pattern; `create_sports_adapter()` already branches on `mode == OperationalMode.PAPER` (the enum)
+  and only consults `_PAPER_VENUE_KEYS` afterward, to pick which venue keys the single `PaperBettingAdapter` instance
+  registers under. Updated `codex/04-architecture/operational-modes.md`: item 2 of "Anti-patterns (deleted)" now names
+  the current path (`adapters/sports_factory.py:21`) and the current 5 entries, reclassifies it as a legitimate
+  per-adapter allowlist rather than a deleted anti-pattern, and cites this issue doc; the summary/TL;DR lines making the
+  same blanket "deleted" claim were corrected too. Bumped `last_reviewed: 2026-08-09`. No code change (option (a) would
+  have been a regression — the allowlist is live, tested, correct behavior, not dead/duplicate logic).

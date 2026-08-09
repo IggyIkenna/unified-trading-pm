@@ -4,8 +4,9 @@ title: operational-modes
 summary:
   "The workspace SSOT for the operating-mode taxonomy — ONE OperationalMode enum {LIVE, MANUAL, BACKTEST, PAPER} plus
   additive (ExecutionTarget, ExecutionTrigger) axes via a pure decompose() helper; composes orthogonally with
-  RuntimeMode. Deletes the anti-patterns paper_trade:bool, _PAPER_VENUE_KEYS, and the parallel
-  TestingStage.LIVE_TESTNET."
+  RuntimeMode. Deletes the anti-patterns paper_trade:bool and the parallel TestingStage.LIVE_TESTNET; sports
+  _PAPER_VENUE_KEYS relocated to adapters/sports_factory.py as a legitimate per-adapter venue-key allowlist (mode
+  dispatch itself already reads OperationalMode.PAPER directly)."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -39,7 +40,7 @@ referenced_by:
     /codex/14-customer-journeys/dart/mode-toggle.md,
   ]
 owner:
-last_reviewed: 2026-05-10
+last_reviewed: 2026-08-09
 code_refs:
 overview:
   SSOT for the workspace's operating-mode taxonomy — single canonical `OperationalMode` enum + additive
@@ -63,8 +64,9 @@ implements_in: plans/archive/2026_07/master_to_live_defi_2026_05_23.md
 The workspace has ONE operating-mode SSOT:
 `unified_api_contracts.internal.modes.OperationalMode { LIVE, MANUAL, BACKTEST, PAPER }`. Everything else (the additive
 `ExecutionTarget` / `ExecutionTrigger` enums, the `decompose()` helper, the `paper_target_registry`) is derived from or
-composes with this single enum. Anti-patterns (`paper_trade: bool` field in execution-service, `_PAPER_VENUE_KEYS`
-string-set in sports routing, parallel `TestingStage.LIVE_TESTNET` enum) are deleted.
+composes with this single enum. Anti-patterns (`paper_trade: bool` field in execution-service, parallel
+`TestingStage.LIVE_TESTNET` enum) are deleted; sports `_PAPER_VENUE_KEYS` was relocated (not deleted) — see item 2
+below.
 
 ## Closed-set 4-cell mode matrix
 
@@ -135,13 +137,23 @@ that overlapped with `OperationalMode`. Deprecated 2026-05-09:
 - Other values (`MOCK`, `HISTORICAL`, `LIVE_MOCK`, `STAGING`) re-expressed via `OperationalMode` + a separate
   `progression_stage` field if still needed (likely UI-only).
 
-## Anti-patterns (deleted)
+## Anti-patterns (deleted, except item 2 — relocated + reclassified, see below)
 
 1. **execution-service `paper_trade: bool` field** (`service_config.py` with alias `PAPER_TRADE | DEFI_PAPER_TRADE`) —
    competing surface to `OperationalMode.PAPER`. **Deleted** by `pvl-p17b`. 4 consumer call-sites migrated.
-2. **sports `_PAPER_VENUE_KEYS = ("paper", "betfair", "matchbook")`** in
-   `execution-service/execution_service/sports_execution/routing.py:16-25` — string-set rather than enum. **Deleted** by
-   `pvl-p17c`. Routing logic migrated to read `OperationalMode.PAPER` directly.
+2. **sports `_PAPER_VENUE_KEYS = ("paper", "betfair", "matchbook")`** — originally in
+   `execution-service/execution_service/sports_execution/routing.py:16-25`, used as a string-set mode check instead of
+   the enum. `pvl-p17c` migrated the actual mode dispatch to read `OperationalMode.PAPER` directly (verified still true
+   — `create_sports_adapter()` branches on `mode == OperationalMode.PAPER`) and removed the tuple from `routing.py`.
+   **Not deleted overall**: `_PAPER_VENUE_KEYS` now lives in
+   `execution-service/execution_service/adapters/sports_factory.py:21`, with 5 entries
+   (`"paper", "betfair", "matchbook", "kalshi", "polymarket"`, grown from the original 3 as venues were added). Its role
+   changed from mode-detection (the anti-pattern) to a per-adapter venue-key allowlist consumed only AFTER the
+   `OperationalMode.PAPER` branch is already taken — the set of venue keys the single `PaperBettingAdapter` instance
+   registers itself under so any of those venues route to paper. That is a legitimate, permanent lookup, not a parallel
+   mode-detection mechanism — reclassified 2026-08-09, not tracked for further deletion.
+   (`plans/active/issues/operational_modes_paper_venue_keys_anti_pattern_not_deleted_2026_08_09.md`, resolved
+   2026-08-09.)
 3. **Parallel `TestingStage` enum** — see deprecation above.
 
 ## Composes with
