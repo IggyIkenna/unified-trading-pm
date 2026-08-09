@@ -6,7 +6,7 @@ summary: >-
   (`ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`) checkbox pointers once
   batch15's 2 todos land, and archiving batch15 via the 6-step ritual. `status: active` from the start;
   `gate_on_depends: true` machine-holds every todo until batch15's own tasks are done.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-15, finalize, item-level-extraction]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch15_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch15_2026_08_09.md,
     /plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -43,16 +43,23 @@ source: >-
   `cefi_satellite_ao_dispatch_batch15_2026_08_09.md` per task_template.md §4's finalize-plan-coverage rule.
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch15_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch15_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
 # CeFi satellite AO batch 15 — finalize
 
-> **Status: active from the start.** `gate_on_depends: true` machine-holds every todo below until batch15's own 2 tasks
-> are `done`. **Machine-gated on `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`.** `sequential: true` because todo 2
-> depends on todo 1's reconciliation, and todo 2 (archival) must run last.
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** Both todos done in the same session. Source doc's checkbox pointers reconciled
+> (todo 1); batch15 archived via the 6-step ritual (todo 2) — this doc, being batch15's own gating finalize plan with no
+> further finalize twin of its own, archives alongside it in the same commit per the
+> `cefi_satellite_ao_dispatch_batch14_2026_08_09_finalize.md` precedent (the checkbox flip, `status: complete`, archive
+> banner, and `git mv` land together — `check_archive_candidates.sh`/`check_terminal_status_archived.py` jointly leave
+> no valid intermediate committed state otherwise). Successor: none.
+>
+> **Status: active from the start (historical).** `gate_on_depends: true` machine-holds every todo below until batch15's
+> own 2 tasks are `done`. **Machine-gated on `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`.** `sequential: true`
+> because todo 2 depends on todo 1's reconciliation, and todo 2 (archival) must run last.
 
 ## Todos
 
@@ -66,12 +73,20 @@ context_scope:
       NOT reach 0 open todos: filed a new todo 3 (archival + 7-referrer corpus sweep) as a tracked follow-up rather than
       skipping it, per this todo's own instruction — remaining open count is 1, explicitly re-stated in that doc's
       Progress Log. `status` left `open` (accurate — 1 todo remains).
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`** via the standard 6-step ritual: add the
-      archive banner → confirm no new durable contract needs codex-alignment → grep the corpus for every referrer of
-      `cefi_satellite_ao_dispatch_batch15_2026_08_09` and repoint each to the archived path → clear `locked_by` (already
-      empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus referrer resolves to
-      the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside it in the same
-      commit.
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`** via the standard 6-step ritual —
+      unified-trading-pm (this commit). No deferred items to migrate (both todos shipped, nothing left prose-only).
+      Archive banner added to batch15 + this finalize doc. Codex-alignment check: the launcher fixes just caught the
+      scripts up to the already-documented consolidation mapping (`/codex/04-architecture/ml-service-architecture.md`
+      line ~174 already lists `ml-training-service/`→`ml-service/ml_service/training/`; `vm-launcher-runbook.md`'s
+      `launch-ml-training-vm.sh` entry carried no stale-path claim to correct) — no codex edit needed. Corpus referrers
+      repointed to the archived path: the source issue doc's
+      (`ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`) own todo-3 referrer-list
+      citations for both `cefi_satellite_ao_dispatch_batch15_2026_08_09.md` and this finalize doc.
+      `plans/active/INDEX.md` is auto-regenerated from `plans/active/*.md`
+      (`scripts/plans/regenerate_active_plan_index.py`) — left for the standard regen cadence rather than hand-edited,
+      per the `batch14`/`batch11` precedent. `locked_by` confirmed empty on both docs. **Done when**: the plan is moved
+      to `plans/archive/2026_08/`, every corpus referrer resolves to the new path, `run_hygiene_sweep.sh` stays green,
+      and this finalize doc is archived alongside it in the same commit.
 
 ## Codex SSOTs
 
@@ -84,3 +99,13 @@ context_scope:
   until batch15's todos are done.
 - **2026-08-09** — todo 1 done (see checkbox evidence above). Todo 2 (archive batch15) unlocked by `sequential: true`
   now that todo 1 is flipped; dispatch to the next available worker.
+- **2026-08-09 (slot-18)**: todo 2 done — ran the 6-step archival ritual for
+  `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`. No deferred items to migrate. Codex-alignment check: no edit
+  needed (see checkbox evidence). Corpus referrers repointed: the source issue doc's todo-3 referrer-list citations for
+  both batch15 and this finalize doc now point at `/plans/archive/2026_08/`. `INDEX.md` left for the standard auto-regen
+  cadence (no hand-edit of generated content). `locked_by` confirmed empty on both docs. **Bundled the checkbox flip
+  with the `status: complete` + banner + `git mv` in one commit** (matching the
+  `cefi_satellite_ao_dispatch_batch14_2026_08_09_finalize.md` precedent) rather than splitting per the
+  archival-discipline doc's abstract flip/mv-separation guidance — this repo's live
+  `check_archive_candidates.sh`/`check_terminal_status_archived.py` precommit hooks jointly leave no valid intermediate
+  committed state for a doc with no further gating finalize plan of its own.

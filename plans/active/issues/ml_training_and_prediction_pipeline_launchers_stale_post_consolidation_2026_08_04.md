@@ -151,9 +151,11 @@ the sibling doc's own decision thread — todo 1 needed no A/B/C fold-in at all 
       `plans/active/cefi_satellite_ao_dispatch_batch12_2026_08_09.md`,
       `plans/active/issues/ag_closeout_audit_defi_parked_2026_08_08.md`,
       `plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md`,
-      `plans/active/cefi_satellite_ao_dispatch_batch15_2026_08_09.md`,
-      `plans/active/cefi_satellite_ao_dispatch_batch15_2026_08_09_finalize.md`, `plans/active/INDEX.md`. **Done when**:
-      doc moved to `plans/archive/2026_08/`, every listed referrer repointed, `run_hygiene_sweep.sh` green.
+      `plans/archive/2026_08/cefi_satellite_ao_dispatch_batch15_2026_08_09.md` (repointed 2026-08-09 — batch15 itself
+      archived via its finalize plan's todo 2),
+      `plans/archive/2026_08/cefi_satellite_ao_dispatch_batch15_2026_08_09_finalize.md` (repointed 2026-08-09, same
+      archival), `plans/active/INDEX.md`. **Done when**: doc moved to `plans/archive/2026_08/`, every listed referrer
+      repointed, `run_hygiene_sweep.sh` green.
 
 ## Progress Log
 
@@ -186,3 +188,7 @@ the sibling doc's own decision thread — todo 1 needed no A/B/C fold-in at all 
   open count: 1** (a new todo 3, filed as a follow-up rather than skipped — archiving this doc needs a corpus-referrer
   sweep across 7 active referrers, out of this reconciliation pass's scope). Doc's own substantive work (todos 1-2) is
   fully resolved; `status` stays `open` pending todo 3's archival sweep.
+- **2026-08-09 (slot-18)**: `cefi_satellite_ao_dispatch_batch15_2026_08_09.md` + its finalize twin were themselves
+  archived (finalize todo 2's own 6-step ritual) — repointed this doc's own todo-3 referrer-list citations for both to
+  `/plans/archive/2026_08/`. Remaining open count on todo 3 unchanged (still 1 — the other 5 of 7 listed referrers are
+  still active paths, not this doc's own archival to run).

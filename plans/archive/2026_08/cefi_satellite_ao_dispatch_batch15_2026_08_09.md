@@ -14,7 +14,7 @@ summary: >-
   flagging that this doc's own cross-reference to "the same A/B/C decision" is stale (predates the declassification) and
   its 2 items target 2 DIFFERENT launchers, out of batch12's own single-file scope — "flagging for whoever next touches
   that doc." This batch is that follow-through.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -64,11 +64,16 @@ context_scope:
 
 # CeFi satellite AO batch 15 — item-level extraction (infrastructure_master group)
 
-> **Status: ACTIVE.** Conflict-checked 2026-08-09 — grepped `plans/active/*.md` + `plans/active/issues/*.md` for
-> `launch-ml-training-vm.sh` and `launch-prediction-pipeline-vm.sh`: the only hits are this batch's own source doc
-> (`ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`) and
-> `vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md` (a wholly different finding — Class-B stall-kill-timeout gap,
-> not the stale-module-path defect this batch fixes; no todo there targets either file). No active
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** Both todos shipped (`deployment-service@082a5eda`,
+> `deployment-service@03b10e46`), `quality-gates.sh` green on both. Finalize plan
+> `cefi_satellite_ao_dispatch_batch15_2026_08_09_finalize.md` (source-doc reconciliation + this archival) completed and
+> archived alongside this doc in the same commit. Successor: none.
+>
+> **Status: ACTIVE (historical).** Conflict-checked 2026-08-09 — grepped `plans/active/*.md` +
+> `plans/active/issues/*.md` for `launch-ml-training-vm.sh` and `launch-prediction-pipeline-vm.sh`: the only hits are
+> this batch's own source doc (`ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`)
+> and `vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md` (a wholly different finding — Class-B stall-kill-timeout
+> gap, not the stale-module-path defect this batch fixes; no todo there targets either file). No active
 > `assigned_vm: planning` plan under any `parent_epic` claims either launcher for this defect class. **Cross-todo
 > file-collision check**: todo 1 edits `launch-ml-training-vm.sh` (+ possibly `setup-data-pipeline-vm.sh` if the Phase-B
 > branch path is chosen); todo 2 edits `launch-prediction-pipeline-vm.sh`. No file overlap between the two todos
@@ -124,3 +129,6 @@ context_scope:
   this todo's stated single-file scope" and "flagging for whoever next touches that doc." This batch is that
   follow-through: extracted both items verbatim, conflict-checked clean (no other active plan claims either launcher for
   this defect), `status: active` (not draft — the gating question is resolved, nothing left to hold this batch back).
+- **2026-08-09 (slot-18)**: archived via `cefi_satellite_ao_dispatch_batch15_2026_08_09_finalize.md` todo 2's 6-step
+  ritual (both todos above already `[x]`). Bundled the archive banner + `status: complete` + `git mv` with the finalize
+  doc's own checkbox-flip commit — see that doc's Progress Log for the full rationale.
