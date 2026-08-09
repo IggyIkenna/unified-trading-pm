@@ -195,13 +195,46 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       promotion means a bare `is-ancestor` check reads NO), and cite fresh Cloud Logging evidence of a CLEAN window (no
       `Memory limit exceeded` / `terminated on signal 9`) same as this issue's original acceptance bar. Repo:
       deployment-api (+ verify unified-trading-library reached main).
-- [ ] [BACKEND] P2. Audit the container's memory headroom (16GiB) vs. cefi/tradfi/defi's REAL manifest sizes — measure
-      peak RSS for an unfiltered full read of each, similar to the RSS-measurement approach the archived
+- [x] ✅ [BACKEND] P2. Audit the container's memory headroom (16GiB) vs. cefi/tradfi/defi's REAL manifest sizes —
+      measure peak RSS for an unfiltered full read of each, similar to the RSS-measurement approach the archived
       `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08` issue doc used for `measure_honest_coverage.py` — to
       confirm the `date_window` fix alone closes the gap rather than just narrowing the failure window. If peak RSS for
       a bounded read is still uncomfortably close to 16GiB, consider a memory bump alongside the read-shape fix. **NOTE
       (2026-08-09): the P0 todo above already confirms the answer is NO for cefi as currently implemented — this audit
-      is still useful for tradfi/defi (not yet proven safe either) and for sizing the eventual real fix.**
+      is still useful for tradfi/defi (not yet proven safe either) and for sizing the eventual real fix.** — **Measured
+      (2026-08-09), bare pandas+pyarrow single-process, `pf.read().to_pandas()` (unfiltered, all 42 columns, no
+      `date_window`), one asset_group at a time, RSS-poll-capped (`run-bounded-analysis.sh`, no systemd-run on this
+      host) so the measurement itself never risked the shared planning-vm:** cefi = **9.94 GiB** peak RSS (10,646,059
+      rows, 88 row groups, 895.6 MiB uncompressed column bytes per the parquet footer) — consistent in order of
+      magnitude with the P0 todo's own live-bucket measurement (~8.0 GiB for a "1-year" call whose filter was silently
+      discarded, i.e. also effectively a full read) and with the live 16.5-16.8 GiB Cloud-Run OOM once FastAPI/uvicorn +
+      concurrent-request overhead is added on top; tradfi = **5.88 GiB** peak RSS (7,024,235 rows, 58 row groups, 527.2
+      MiB uncompressed) — the only one of the three with real headroom under 16 GiB in isolation, though not by a
+      wide-enough margin to call safe once app-process overhead and concurrent requests are added back. **defi was NOT
+      run as a live unbounded read** — its footer metadata alone (81,600,007 rows, 664 row groups, 7,218.1 MiB
+      uncompressed columnar bytes, ~8.06x cefi's) combined with the measured uncompressed-bytes→peak-RSS amplification
+      ratio (cefi 11.36x, tradfi 11.42x — consistent within 0.5%) extrapolates to **~80 GiB peak RSS**, ~5x this shared
+      host's own total 30 GiB and ~5x the Cloud Run container's 16 GiB limit; attempting the actual read here would
+      violate RULES.md §1's "bound memory before running any heavy script directly on the shared host" HARD RULE and
+      risk a repeat of the `expand_defi_pool_catalogue_from_manifest.py`-class host-wide outage — a live defi
+      measurement needs a dedicated VM with ≥96-128 GiB, not this task's scope. **Conclusion: the
+      `date_window`/narrowed-columns fix (`unified-trading-library@609299ad`) narrows the failure window (per-year
+      instead of whole-corpus) but does NOT by itself make any of the three AGs safe at 16 GiB** — cefi and
+      (extrapolated) defi exceed the container limit even for a single asset_group's single-year read once real column
+      cardinality is accounted for; tradfi has some headroom but not a comfortable margin. A real fix needs either (a)
+      per-asset_group memory sizing (a much bigger container/VM for cefi/defi-scale reads, tradfi could likely stay
+      smaller), or (b) a genuinely streamed/chunked aggregation (row-group-at-a-time accumulation instead of one
+      `to_pandas()` materialization per window) rather than a machine-type bump alone. Filed as a new BACKEND todo below
+      since this audit's own done-when (measure + confirm/deny "date_window alone closes the gap") is met but the
+      underlying capacity gap is not resolved.
+- [ ] [BACKEND] P1. Implement a genuinely streamed/row-group-at-a-time aggregation for `_live_coverage_venue_year.py`'s
+      per-`date_window` reads (accumulate venue-year + `source_breakdown` counts incrementally per pyarrow row-group
+      instead of materializing a full `to_pandas()` DataFrame per window) so cefi/defi-scale asset_groups stay well
+      under the 16 GiB Cloud Run limit without a machine-type bump. The audit above measured cefi at 9.94 GiB and
+      extrapolated defi at ~80 GiB for a single unfiltered `to_pandas()` call — both need the read shape itself fixed,
+      not just a bigger container. Re-run this issue's 3-scope cefi probe (+ a defi probe once feasible) as the
+      acceptance check. Repo: deployment-api (+ unified-trading-library if the streaming primitive belongs there
+      instead).
 
 ## Progress Log
 
@@ -253,3 +286,13 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   dependency-update PR) and (d) (redeploy) cannot happen until (b) does — this INFRA todo stays open, blocked on the new
   issue doc's fix landing + `unified-trading-library` getting a fresh push to re-trigger classification. Not flipping
   the checkbox — the live-prod OOM is confirmed still unresolved in production as of this session.
+- **2026-08-09**: Todo 5 (BACKEND P2, memory-headroom audit) done. Measured bare single-process peak RSS for an
+  unfiltered full read of each of cefi/tradfi's live manifests directly (RSS-poll-capped via `run-bounded-analysis.sh`
+  so the measurement itself couldn't take down the shared host): cefi 9.94 GiB, tradfi 5.88 GiB. defi's footer metadata
+  (81.6M rows, 7.2 GiB uncompressed columnar bytes, ~8x cefi's) extrapolated via the consistent uncompressed-bytes→RSS
+  amplification ratio (~11.4x, confirmed within 0.5% across cefi and tradfi) to ~80 GiB — genuinely corpus-scale, not
+  attempted directly on the 30 GiB shared host per RULES.md §1. Conclusion: the yearly-`date_window` + narrowed-columns
+  fix narrows the failure window but does not make cefi or (by extrapolation) defi safe under the 16 GiB container limit
+  for even a single window's full materialization; tradfi has headroom but not a comfortable margin once app overhead is
+  added back. Filed a new BACKEND P1 todo for the real fix (row-group-level streaming aggregation instead of a
+  per-window `to_pandas()` materialization).
