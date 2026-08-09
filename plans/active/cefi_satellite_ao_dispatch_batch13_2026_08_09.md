@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-13, satellite-docs, item-level-extraction, na-audit]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/crypto_alpha_research_2026_07_24.md,
     /plans/active/l2_book_microstructure_capture_2026_07_13.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -46,7 +46,7 @@ source: >-
 context_scope:
   [
     /plans/active/l2_book_microstructure_capture_2026_07_13.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
   ]
 ---
 

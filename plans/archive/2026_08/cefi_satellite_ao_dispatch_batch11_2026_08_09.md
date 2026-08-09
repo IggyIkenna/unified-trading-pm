@@ -15,7 +15,7 @@ summary: >-
   Progress Log for the specific verification notes, including one item (todo 5, Barchart removal) that was
   conflict-checked against several TradFi docs mentioning "Barchart" and confirmed non-duplicative (those docs track
   data/manifest state, none claims the literal code-deletion this todo performs).
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -80,17 +80,29 @@ context_scope:
 
 # CeFi satellite AO batch 11 — item-level extraction (cefi_master group)
 
-> **Status: ACTIVE.** Conflict-checked against the live corpus 2026-08-09 (see Progress Log) — no overlap found with any
-> other active `assigned_vm: planning` plan in `parent_epic: cefi_master`, `cefi_satellite_ao_dispatch_batch9/10`, or
-> `cefi_consolidated_closeout_2026_07_18.md`'s own content (todos 1-5 below ARE `cefi_consolidated_closeout`'s Track 0
-> items, extracted from there directly — its checkbox is being replaced with a pointer to this doc in the same commit as
-> this file). **Cross-todo file-collision check**: todos 1/3/7/8/9/10 are operational runs/audits with no durable
-> code-file target (or a conditional one, only touched if the audit finds something); todo 2 targets
-> `unified-api-contracts`' index-perp canonical-mapping registry; todo 4 targets `unified-api-contracts`' L-floor
-> lookback constants (a different module from todo 2); todo 5 deletes Barchart adapter/client files in
-> `unified-api-contracts` + `market-tick-data-service` (no overlap with todo 2/4's files); todo 6 extends
-> `market-tick-data-service`'s live-book connectors (different code path from todo 5's deletion). No file is edited by
-> more than one todo.
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 10 todos shipped/measured with real evidence (see Progress Log), reconciled
+> against their 3 source docs (`cefi_consolidated_closeout_2026_07_18.md`,
+> `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`, `cefi_ml_directional_continuous_live_2026_06_20.md`)
+> and independently re-verified by finalize-plan todos 1-2. Archived per the 6-step ritual
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); a codex staleness found in the process —
+> `/codex/02-data/tradfi-databento-sourcing-ssot.md`'s Databento lookback-floor table cited the pre-todo-4 conservative
+> constants — was corrected to the measured values in the same session. Finalize plan
+> `cefi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md` (source-doc reconciliation + this archival) completed and
+> archived alongside this doc. One deferred item (deployment-ui Barchart-label spot-check, never checked) migrated to a
+> tracked todo before archival: `/plans/active/issues/deployment_ui_barchart_label_spotcheck_2026_08_09.md`. Successor:
+> none.
+>
+> **Status: ACTIVE (historical).** Conflict-checked against the live corpus 2026-08-09 (see Progress Log) — no overlap
+> found with any other active `assigned_vm: planning` plan in `parent_epic: cefi_master`,
+> `cefi_satellite_ao_dispatch_batch9/10`, or `cefi_consolidated_closeout_2026_07_18.md`'s own content (todos 1-5 below
+> ARE `cefi_consolidated_closeout`'s Track 0 items, extracted from there directly — its checkbox is being replaced with
+> a pointer to this doc in the same commit as this file). **Cross-todo file-collision check**: todos 1/3/7/8/9/10 are
+> operational runs/audits with no durable code-file target (or a conditional one, only touched if the audit finds
+> something); todo 2 targets `unified-api-contracts`' index-perp canonical-mapping registry; todo 4 targets
+> `unified-api-contracts`' L-floor lookback constants (a different module from todo 2); todo 5 deletes Barchart
+> adapter/client files in `unified-api-contracts` + `market-tick-data-service` (no overlap with todo 2/4's files); todo
+> 6 extends `market-tick-data-service`'s live-book connectors (different code path from todo 5's deletion). No file is
+> edited by more than one todo.
 
 ## Todos
 

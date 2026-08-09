@@ -294,4 +294,4 @@ This plan's own "Model-improvement backlog" section remains the owner until a su
   **Grid-run schedulability verdict unchanged: still NOT schedulable** — the operator's 2026-08-08 gating condition
   ("only schedule once coverage is confirmed") is now answered with a confirmed NO, not an unconfirmed unknown; the
   blocking issue's fix todos are the new path to schedulability. Full breakdown + evidence:
-  `/plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 10 Progress Log entry (same commit).
+  `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 10 Progress Log entry (same commit).

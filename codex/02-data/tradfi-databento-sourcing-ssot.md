@@ -183,16 +183,17 @@ metered. We enforce a hard per-level lookback floor: a request whose `start` pre
 | L3    | `mbo`                                                        | 33 days                                 | `33` days                                  |
 
 **Exact boundary, binary-searched live 2026-08-09 (`metadata.get_cost` on GLBX.MDP3/ES.c.0, a cost-estimate endpoint —
-no data fetched, no billing risk;** `/plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 4, full
-evidence in that doc's Progress Log — supersedes the 2026-06-24 conservative spot-check below): **L1 (trades) exactly
-367d free / 368d metered** (prior conservative constant was 365d); **L2 (mbp-10) and L3 (mbo) exactly 33d free / 34d
-metered** (prior conservative constant was 30d) — L1's boundary cross-checked identical on DBEQ.BASIC/AAPL, confirming
-the boundary is LEVEL-scoped, not per-dataset. **L0 has NO rolling metered boundary at all**: probed 5850d-5908d back on
-GLBX.MDP3, every point $0.0000, then 5909d+ raises a hard 422 `data_start_before_available_start` (GLBX.MDP3's own
-archive starts 2010-06-06) — never a metered charge. `_FULL_HISTORY_DAYS`/`LEVEL_MAX_LOOKBACK_DAYS["L0"]` updated from
-the arbitrary `16*365=5840` approximation to the measured 5908d (exact distance from 2026-08-09 to GLBX.MDP3's inception
-— the oldest of the 3 subscribed datasets, so the widest value safe for all three; XCBF.PITCH starts 2018-11-04,
-DBEQ.BASIC equities 2023-04-15, both cross-checked live).
+no data fetched, no billing risk;** `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 4,
+full evidence in that doc's Progress Log — supersedes the 2026-06-24 conservative spot-check below): **L1 (trades)
+exactly 367d free / 368d metered** (prior conservative constant was 365d); **L2 (mbp-10) and L3 (mbo) exactly 33d free /
+34d metered** (prior conservative constant was 30d) — L1's boundary cross-checked identical on DBEQ.BASIC/AAPL,
+confirming the boundary is LEVEL-scoped, not per-dataset. **L0 has NO rolling metered boundary at all**: probed
+5850d-5908d back on GLBX.MDP3, every point $0.0000, then 5909d+ raises a hard 422 `data_start_before_available_start`
+(GLBX.MDP3's own archive starts 2010-06-06) — never a metered charge.
+`_FULL_HISTORY_DAYS`/`LEVEL_MAX_LOOKBACK_DAYS["L0"]` updated from the arbitrary `16*365=5840` approximation to the
+measured 5908d (exact distance from 2026-08-09 to GLBX.MDP3's inception — the oldest of the 3 subscribed datasets, so
+the widest value safe for all three; XCBF.PITCH starts 2018-11-04, DBEQ.BASIC equities 2023-04-15, both cross-checked
+live).
 
 **Prior (2026-06-24) conservative spot-check, for provenance**: `get_cost` at `stype_in="continuous"` — L1 free at 364d
 ($0) → charged at 371d ($0.12); L2/L3 free at 28d ($0) → charged at 35d ($2.23); L0 $0 at 2000d. That earlier pass only

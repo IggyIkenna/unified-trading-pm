@@ -41,7 +41,7 @@ tags:
 related:
   [
     /plans/active/cefi_ml_directional_continuous_live_2026_06_20.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /codex/02-data/honest-coverage-model.md,
     /plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md,
@@ -110,7 +110,7 @@ OKX-FUTURES 48.47% — every single venue's most-recent-90d number is lower than
 
 Full raw output (overall + per-venue + per-(venue,data_type) + recency breakdown) is in this same commit's Progress Log
 entry on `/plans/active/cefi_ml_directional_continuous_live_2026_06_20.md` and
-`/plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 10.
+`/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 10.
 
 ## Why it matters
 

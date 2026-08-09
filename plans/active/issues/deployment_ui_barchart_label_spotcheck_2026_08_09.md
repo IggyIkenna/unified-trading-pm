@@ -14,7 +14,7 @@ stage: [meta]
 repos: [deployment-ui]
 scope: [engineer]
 tags: [cefi, barchart, ui, cleanup, deployment-ui]
-related: [/plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md]
+related: [/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md]
 created: "2026-08-09"
 author: slot-11
 assigned_vm: NA

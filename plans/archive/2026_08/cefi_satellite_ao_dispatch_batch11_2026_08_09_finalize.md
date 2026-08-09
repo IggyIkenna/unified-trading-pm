@@ -7,8 +7,7 @@ summary: >-
   `cefi_ml_directional_continuous_live_2026_06_20.md`) checkbox pointers back to real evidence once batch11's 10 todos
   land, and archiving batch11 via the 6-step ritual. `status: active` from the start per the 2026-07-30 no-double-gate
   ruling; `gate_on_depends: true` machine-holds every todo until batch11's own tasks are done.
-status: active
-archive_exempt: true
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -17,7 +16,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-11, finalize, item-level-extraction]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -45,15 +44,22 @@ source: >-
   task_template.md §4's finalize-plan-coverage rule.
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
 # CeFi satellite AO batch 11 — finalize
 
-> **Status: active from the start (2026-07-30 ruling — no double gate).** `gate_on_depends: true` already machine-holds
-> every todo below until batch11's own 10 tasks are `done`. **Machine-gated on
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 3 todos done: source-doc pointer reconciliation, independent
+> re-verification of batch11's 10 todos, and the archival itself (this doc +
+> `cefi_satellite_ao_dispatch_batch11_2026_08_09.md`, moved to `plans/archive/2026_08/` in the same commit). Every
+> corpus referrer repointed to the archive path; one deferred item migrated to a tracked todo
+> (`/plans/active/issues/deployment_ui_barchart_label_spotcheck_2026_08_09.md`); a codex staleness found and fixed
+> (`/codex/02-data/tradfi-databento-sourcing-ssot.md`). Successor: none.
+>
+> **Status: active from the start (historical; 2026-07-30 ruling — no double gate).** `gate_on_depends: true` already
+> machine-holds every todo below until batch11's own 10 tasks are `done`. **Machine-gated on
 > `cefi_satellite_ao_dispatch_batch11_2026_08_09.md`.** `sequential: true` because todo 2 depends on todo 1's
 > reconciliation, and todo 3 (archival) must run last.
 

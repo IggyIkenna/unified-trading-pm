@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [krx, yahoo-finance, tradfi, ssot-contradiction, honest-coverage, manifest-integrity, ao-dispatch]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/archive/issues/krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md,
     /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,

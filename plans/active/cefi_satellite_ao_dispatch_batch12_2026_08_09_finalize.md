@@ -18,7 +18,7 @@ tags: [cefi, ao-dispatch, close-out, batch-12, finalize, item-level-extraction]
 related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch12_2026_08_09.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-09"

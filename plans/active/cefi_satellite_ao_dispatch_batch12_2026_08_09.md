@@ -21,7 +21,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-12, satellite-docs, item-level-extraction, na-audit]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
     /plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md,
     /plans/active/issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md,
@@ -52,7 +52,7 @@ source: >-
 context_scope:
   [
     /plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 ---
