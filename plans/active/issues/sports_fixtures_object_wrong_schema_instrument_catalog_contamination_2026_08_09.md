@@ -437,3 +437,32 @@ transcript available in that session's Progress Log entry on
   today, no live write-path risk remains). Proceeding to remediate the ONE object this issue doc independently confirmed
   by direct verification (not dependent on the census) as forward progress; the corpus-wide remainder stays open pending
   the census's real completion.
+
+  **Remediation shipped for the one confirmed object** (`instruments-service@cfc3736b`,
+  `scripts/quarantine_fixtures_wrong_schema_bolivia_2026_08_09.py`). Chose quarantine over re-fetch: checked the
+  canonical twin first — `entity=fixtures_schedule/league=BOLIVIA_PRIMERA/fixtures_schedule.parquet` for the SAME
+  `day=2026-04-14` already holds real, content-verified fixture data (`af_league_id` present, 1 row, zero
+  instrument-catalogue sentinel-column hits) — so the legacy `entity=fixtures/league=BOLIVIA_PRIMERA_DIVISION` object
+  was pure dead-partition garbage, not missing data; writing fresh api_football data under the dead legacy shape would
+  have just re-populated a partition nothing reads canonically. Delete-safety checklist (adapted for a
+  content-corruption case rather than this doc's usual legacy-vs-canonical-duplicate shape —
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`):
+
+  ```
+  Location:            gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures/league=BOLIVIA_PRIMERA_DIVISION/fixtures.parquet
+  Content re-verify:   fresh download+parse at execution time -> all 6 instrument-catalogue sentinel columns still present (not stale evidence)
+  Canonical twin:      entity=fixtures_schedule/league=BOLIVIA_PRIMERA (same day) -> gcs_describe_object resolves, content-verified real fixture schema (af_league_id present, 0 sentinel hits)
+  Writers:             grep `entity="fixtures"` in instruments_service/ -> 0 hits (todo 2 finding, re-confirmed); no live writer targets this legacy shape
+  Readers:             only known reader is the league-vocabulary migration's cross-entity resolver, which currently CRASHES on this object's schema — quarantine converts crash->honest-absence, a strict improvement, no real fixture data lost (there was none)
+  Reversibility (§3a): gcs_bucket_soft_delete_retention_seconds(bucket) = 604800s (>= 604800 required), queried fresh in the same run -> qualifies for agent-autonomous prod delete
+  Mechanics:            gcs_copy_object to gs://.../sports_reference/_quarantine/schema_contamination_2026_08_09/day=2026-04-14/.../league=BOLIVIA_PRIMERA_DIVISION/fixtures.parquet, verified present (8194 bytes, matches original), then gcs_conditional_delete(original, if_generation_match=<fresh generation>) -> True
+  Post-delete verify:   gcs_describe_object(original) -> None (independently re-confirmed via `gcloud storage objects describe` -> 404)
+  Disposition:          yes-after-verify (canonical twin content-verified; quarantine copy is the reversibility backstop independent of GCS soft-delete)
+  Hard stop:            none (prod-bucket delete executed via the §3a reversibility-qualified path, not human-only)
+  ```
+
+  **Todo 3 stays OPEN** — this closes exactly 1 of an unknown-but-larger-than-1 total affected-object count; the
+  corpus-wide remainder is still blocked on todo 1's census (genuinely still running per the entries above, not
+  something this session can shortcut). Next session picking up todo 3 once the census completes: apply the SAME
+  disposition logic per affected triple (check for a canonical twin first; quarantine-not-refetch when one exists with
+  real data; only fall through to a fresh api_football fetch when no canonical twin exists) rather than re-deriving it.
