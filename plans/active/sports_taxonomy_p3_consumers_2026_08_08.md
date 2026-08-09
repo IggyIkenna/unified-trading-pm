@@ -131,13 +131,25 @@ spelling variant survives, which is the entire point of the panel". It does not.
 
 ### Arbitrage
 
-- [ ] [CODE] P0. **Relocate `arbitrage_opportunity` from market-data to the signals/features layer** with a real
+- [x] ✅ [CODE] P0. **Relocate `arbitrage_opportunity` from market-data to the signals/features layer** with a real
       multi-venue key (leg list / venue set), replacing the single-venue stamp that cannot be correct for a cross-venue
       construct. Preserve the existing 13 days (2026-07-25 → 08-06) rather than discarding — it is the only
-      arb-frequency history and the arb-decay analysis needs a series.
-  - **Partial progress (2026-08-09)** — the new home's DETECTION + PERSISTENCE primitives are built, tested, and
-    shipped; the live wiring (todo below) and the history migration + old-adapter deletion (todo below) remain. Checkbox
-    stays open — "relocate + preserve history" is one unit and neither half of the remaining work is done.
+      arb-frequency history and the arb-decay analysis needs a series. — **DONE 2026-08-09** (slot-30): the umbrella
+      unit is closed by its four sub-todos below, all of which had landed by the time this dispatch arrived; re-verified
+      each live on `origin/live-defi-rollout` rather than trusting the doc alone: (1) detection+persistence primitives
+      (`features-service@5f10127d`) exist at `features_service/sports/arb/{detector.py,store.py}`; (2) live/batch
+      producer (`features-service@67de878d`) — confirmed `features_service/sports/cli/main.py` registers
+      `"arb-detect": ArbDetectHandler` calling `run_arb_detection_once`/`run_live_loop` from `sports/arb/runner.py`; (3)
+      historical 13-day migration + old-adapter deletion (`features-service@ef25e364`,
+      `market-data-processing-service@23a1306`) — confirmed all 4 written objects exist under
+      `gs://features-sports-prd-central-element-323112/sports_arb/by_date/day={2026-07-25,07-26,07-31,08-01}/.../opportunities.parquet`,
+      and confirmed `market_data_processing_service/app/adapters/sports/arbitrage_adapter.py` no longer exists in the
+      repo (`git log` shows `5afb72a feat(sports)!: retire SportsArbitrageAdapter`) with zero remaining
+      `SportsArbitrageAdapter` references outside comments/test-removal-notes; (4) operator-group guard consumption
+      (`features-service@50a707a3`) — confirmed live. Market-data no longer produces `arbitrage_opportunity`: MDPS's
+      sports adapter registry (`app/adapters/sports/__init__.py`) carries only a retirement docstring, no live
+      registration. No new code required this session — this dispatch closes the umbrella checkbox on already-verified,
+      already-shipped work.
 - [x] ✅ [CODE] P0. **Wire the new detector into a live/batch producer** reading real `odds`/`trades` snapshots (the
       same per-bookmaker tick data `market-data-processing-service`'s `SportsArbitrageAdapter` reads today) and calling
       `features_service.sports.arb.detect_sports_arbitrage_opportunity` + `write_arb_opportunities` per fixture/interval
@@ -550,3 +562,11 @@ spelling variant survives, which is the entire point of the panel". It does not.
   against prod GCS (4/13 days had upstream data, 12 opportunities written, honest-absence on the rest), then
   `SportsArbitrageAdapter` + its registry wiring + 3 named test files deleted/updated. `test_schema_robustness.py` left
   untouched (deliberate — schema-generic, not adapter-gated). Both repos QG green + verified on origin.
+
+- **2026-08-09 (slot 30, backend_engineer)** — Closed the Arbitrage section's umbrella "Relocate `arbitrage_opportunity`
+  from market-data to the signals/features layer" todo. All four of its sub-todos (detection+persistence, live/batch
+  wiring, historical migration + old-adapter deletion, operator-group guard consumption) were already shipped by prior
+  sessions (slots 16, 24, 3) by the time this dispatch arrived — re-verified each live on `origin/live-defi-rollout`
+  rather than trusting the doc alone (repo git log for the deletion commit, GCS `ls` for the 4 historical objects, grep
+  for the CLI operation registration and the retired MDPS adapter's absence). No new code needed; this is the umbrella
+  checkbox's closure now that every sub-unit is genuinely done. See the todo line above for the full verification trail.
