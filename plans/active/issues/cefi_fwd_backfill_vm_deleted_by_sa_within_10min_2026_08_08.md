@@ -506,3 +506,20 @@ before launch.
   cross-references, so both docs are watching the same VM for the same reason. Raises the priority/blast-radius of the
   still-open `[CODE]` P2 preflight-bug todo above beyond its original `defi_cefi_venue_chain_axis_contamination-014`
   scope — no new todo added here (it's already correctly scoped + open), this is visibility only.
+- **slot-25 (infra) 2026-08-09**: picked up the final open `[INFRA]` P1 todo above. Confirmed baseline via
+  `probe_cefi_perp_funding_raw_coverage.py --start 2026-08-06 --end 2026-08-09`: all 6 CARRY_BASIS_PERP venues still 0
+  objects across the whole gap (matches the todo's premise). Tardis single-VM slot still held by
+  `cefi-queue-heavy-binancefutu-x17-20260809-083733` (unrelated multi-year trades/book_snapshot_5 historical backfill,
+  `VM_START_DATE=2019-01-01`/`VM_END_DATE=2026-08-08`, launched 08:37Z). Measured its own `PROGRESS.json` twice (11:07Z:
+  2020-05-11 done, ~158 days/hr; 12:11Z: 2020-05-18 done, ~141 days/hr) → **ETA to free the slot ~14-16h from launch,
+  i.e. roughly 2026-08-10T00:00-02:00Z**, not close. **Operational finding, not a code bug**: attempted to hold this
+  wait via a `run_in_background` Bash watchdog (poll every 10min + heartbeat every ~4.5min, per this workspace's own
+  async-wait-discipline SSOT) intending to launch `launch-cefi-forward-poll.sh` the moment the slot frees — the
+  background process was killed by the harness twice, at wildly different elapsed times (~20min the first time, ~1min
+  the second), well short of the ~14-16h needed. A single worker session cannot reliably hold a wait this long in this
+  environment; repeatedly re-arming a short-lived background loop across many turns would itself be the exact busy-poll
+  anti-pattern the async-wait SSOT warns against. Did not flip the todo (not done — nothing has been launched yet).
+  Filed a `/blocked` (not a judgment call in the classic sense, but the operator/main should decide how a >12h
+  external-resource wait should be routed given no existing AO mechanism covers it) recommending the todo stay queued
+  as-is so a future dispatch — closer to the ETA — completes the launch+verify in one shorter session, per the
+  `/blocked` response for the exact options considered.
