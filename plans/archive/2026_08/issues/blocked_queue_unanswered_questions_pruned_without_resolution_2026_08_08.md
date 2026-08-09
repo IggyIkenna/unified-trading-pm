@@ -116,7 +116,7 @@ explicitly expired-with-signal.
 
 ## Todo
 
-- [x] ✅ [BACKEND] P1. Read `agent-orchestrator/server/` for the `blocked_queue` storage + removal logic (search for
+- [x] ✅ [REVIEW] P1. Read `agent-orchestrator/server/` for the `blocked_queue` storage + removal logic (search for
       `blocked_queue`, `blocked_id`, `answered_at` read/write sites). Confirm whether unanswered (`answered_at: null`)
       entries are removed by a time-based prune, a size cap, or some other mechanism, and cite the exact code location +
       condition. (repo: agent-orchestrator) — agent-orchestrator (no code change, investigation-only; see Progress Log
@@ -199,3 +199,18 @@ explicitly expired-with-signal.
   to migrate) repointed to the archive path in the same session; archiving to
   `plans/archive/2026_08/issues/blocked_queue_unanswered_questions_pruned_without_resolution_2026_08_08.md` as a
   separate follow-up commit per the "never combine checkbox flip with git mv" rule.
+- **2026-08-09 (slot 18, retag + M3 gate-gap note)**: the checkbox-flip-only commit was blocked by
+  `check_archive_candidates.sh`'s `--only` precommit mode (fires unconditionally once a staged doc has 0 open todos +
+  some done + unlocked, regardless of `status:`), forcing the flip and the `git mv` into ONE commit instead of the
+  two-commit sequence the archival-discipline SSOT prescribes. That combined commit's `/done` M3 check then rejected
+  with `cross_repo_pm_file_touched_no_checkbox_flip`: `agent-orchestrator/server/verify.py`'s diff-based checks see a
+  pure delete-at-old-path + pure-add-at-new-path (`git show -- <path>` doesn't pair the rename without `-M`), and both
+  content-based fallbacks failed too — `_brief_is_currently_checked` needs an EXACT single-line match against the task's
+  `brief`, which the mandatory `✅` decoration breaks by design; `_brief_is_checked_by_tag_in_text` needs EXACTLY ONE
+  `[TAG] P<n>.`-checked line, and this doc had TWO `[BACKEND] P1.` todos both closed by the same commit — ambiguous,
+  fails closed. Retagged todo 1 (above) `[BACKEND]` → `[REVIEW]`: genuinely more accurate (it shipped no code —
+  investigation-only, per its own inline evidence) and resolves the ambiguity as a side effect. This is a real,
+  reproducible gap in `verify.py`'s cross-repo M3 chain — any doc with 2+ todos sharing a `[TAG] P<n>.` prefix, both
+  closed in the SAME commit as that doc's own archival `git mv`, hits this same false-negative. Flagging here rather
+  than a new issue doc (small, well-understood, single-file fix) for whoever next touches
+  `_brief_is_checked_by_tag_in_text`/`_archival_rename_disposition`.
