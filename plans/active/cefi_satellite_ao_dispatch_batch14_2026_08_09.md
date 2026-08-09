@@ -60,7 +60,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Build the Aster execution adapter**: new
+- [x] ✅ [BACKEND] P2. **Build the Aster execution adapter**: new
       `execution-service/execution_service/trade_execution/adapters/aster_ccxt.py` mirroring `upbit_ccxt.py`'s
       CCXT-wrapper shape (place/cancel order, fetch balance/positions/fills, sim-mode support, using
       `ccxt.async_support.aster`'s standard `apiKey`/`secret` credentials); add `"aster"` to `factory.py`'s
@@ -71,7 +71,12 @@ context_scope:
       `issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md` line 163 (§ "Aster — execution adapter doesn't
       exist; build-scope estimate"; operator-approved 2026-08-08, "Build both... AND the Aster execution adapter").
       **Done when**: `aster_ccxt.py` exists with a passing unit test suite, `"aster"` resolves through `factory.py`'s
-      CCXT dispatch and `live_execution_handler.py`'s credential loader, and `quality-gates.sh` is green.
+      CCXT dispatch and `live_execution_handler.py`'s credential loader, and `quality-gates.sh` is green. —
+      execution-service@05b425e6. Aster is perpetual-only in this system (UAC `ASTER -> {"PERPETUAL"}`,
+      `_ASTER.kind="perp_cex"`), so the adapter mirrors upbit's apiKey/secret credential pattern with hyperliquid-style
+      perpetual position handling (Binance-futures symbol convention `BTC-USDT-PERP -> BTC/USDT:USDT`); `_get_exchange`
+      raises loud on `testnet=True` since Aster has no public sandbox. 44 unit tests added (`test_aster_ccxt.py`); full
+      `quality-gates.sh` green (sentinel=05b425e6c313cb87d606893e544ab6c0fb9ff587).
 
 ## Codex SSOTs
 
@@ -98,3 +103,6 @@ context_scope:
   `/ag-closeout-audit` batch10 characterization said "all 3 items human-gated," likely written before or without
   registering the 2026-08-08 retag of 2 items from `[HUMAN]`→`[BACKEND]` — that characterization is stale for this
   specific item, not a real conflict (no other active plan claims the Aster adapter build).
+- **2026-08-09 (slot-23)**: shipped `aster_ccxt.py` + factory/credential wiring + 44 unit tests,
+  execution-service@05b425e6, `quality-gates.sh` green. Only open todo in this doc is now done — plan is complete and
+  unlocked, eligible for archival per plan-completion-and-archival-discipline.
