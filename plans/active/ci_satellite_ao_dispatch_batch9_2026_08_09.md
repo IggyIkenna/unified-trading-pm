@@ -117,7 +117,7 @@ Todos 1 and 2 touch disjoint files (`qg_host_adaptive_resource_governor_2026_07_
     matching the sibling `cicd_mvp_ldr_to_main_pipeline_2026_06_30` entry's format (L536). Entry stays IN PLACE in the
     P3 section (that sibling convention keeps completed entries in their original section, doesn't relocate them).
     `plans/epics/infrastructure_master.md` at 780 lines, well under the 2000-line hard cap. Source finding flipped in
-    `issues/plan_reconciler_ci_late_findings_2026_08_06.md`. — unified-trading-pm@PENDING_SHA
+    `issues/plan_reconciler_ci_late_findings_2026_08_06.md`. — unified-trading-pm@930f7393e
 
 ## Codex SSOTs (read before executing any todo)
 
