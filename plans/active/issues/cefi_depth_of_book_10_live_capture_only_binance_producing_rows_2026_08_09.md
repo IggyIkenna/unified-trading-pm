@@ -126,11 +126,27 @@ exact VM in this exact time window. Separately, resolve the `CandleBoundaryCross
 (add `depth_of_book_10`, or scope `_publish_boundary_event`'s callers to skip non-candle-eligible data_types) — an
 operator/architecture call, not a mechanical fix.
 
-- [ ] [CODE] P2. Debug why `BybitFuturesDepth10WSConnector` (bybit_futures_book_ticker_ws.py) produces only
+- [x] ✅ [CODE] P2. Debug why `BybitFuturesDepth10WSConnector` (bybit_futures_book_ticker_ws.py) produces only
       `empty_confirmed` manifest rows on live WS traffic despite the venue's other connectors (trades/book_snapshot_5/
       derivative_ticker) capturing real data on the same VM in the same window — compare against the REST-verified book
       depth from `book_microstructure_connectivity_check.py` to isolate whether the WS subscription/parse path is
-      silently dropping real depth updates. Repo: market-tick-data-service.
+      silently dropping real depth updates. Repo: market-tick-data-service. — **DONE 2026-08-09, slot-19,
+      `market-tick-data-service@e3bd10b9`.** Root cause: NOT the connector's WS subscribe/parse path at all —
+      `BybitFuturesDepth10WSConnector` reuses the exact same `_BybitBookStateConnector` base class as the WORKING
+      `book_snapshot_5` connector, only `depth`/`subscribe_depth` differ. The bug is upstream, in IS-universe
+      resolution: `BYBIT-FUTURES` is a UAC-registered alias that maps to the SAME underlying Tardis exchange as `BYBIT`;
+      instruments-service's batch IS writer persists `instrument_key`s under the PRIMARY venue token (`BYBIT`), never
+      under the alias. A live shard launched with `venue=BYBIT-FUTURES` looked up an `instruments.parquet` blob that
+      never existed, resolved zero instruments, and spun in the empty-universe retry loop. Since `websocket_runner`'s
+      `_buffers`/`connect(instrument_ids=...)` are both keyed off that same resolved set, the connector subscribed to
+      nothing and every flush cycle wrote `empty_confirmed` with zero real data. Fix: `_resolve_is_lookup_venue()` in
+      `market_tick_data_service/live/_is_universe.py` mirrors IS's own
+      `TardisReferenceDataAdapter._resolve_instrument_key_venue` resolution so the lookup targets the blob IS actually
+      wrote; falls back to the venue unchanged when it has no Tardis alias (confirmed via live `VenueMapping` check:
+      only `BYBIT-FUTURES` of the 5 depth10 venues is an alias — `DERIBIT`/`COINBASE-SPOT`/ `OKX-SWAP`/`BINANCE-FUTURES`
+      all resolve to themselves, consistent with their differing symptoms/root causes). New regression test
+      (`test_is_lookup_venue_resolves_tardis_alias_to_primary_venue`) + all 38 existing `test_websocket_runner.py` tests
+      pass; full repo suite (10332 passed) + QG green.
 - [x] ✅ [CODE] P2. Debug why `DeribitDepth10WSConnector` (deribit_book_ticker_ws.py) produces ZERO `depth_of_book_10`
       manifest rows at all (not even `empty_confirmed`) despite `derivative_ticker` capturing 2,997 rows on the same
       venue/VM/window — check whether the connector even registers a flush-triggering instrument window for this
@@ -216,3 +232,23 @@ operator/architecture call, not a mechanical fix.
     cycle deploys it — out of this todo's DETERMINABLE-by-worker-alone scope, the remaining
     BYBIT-FUTURES/COINBASE-SPOT/OKX-SWAP todos on this issue doc still need debugging, and this issue doc should stay
     open until all 4 are resolved + prod-verified).
+- **2026-08-09, slot-19**: closed the BYBIT-FUTURES `[CODE] P2` todo. Root cause is upstream of the connector entirely —
+  `BybitFuturesDepth10WSConnector` shares its WS subscribe/parse implementation with the WORKING `book_snapshot_5`
+  connector (`_BybitBookStateConnector`, differing only in `depth`/`subscribe_depth`), so the WS layer was never the
+  bug. `BYBIT-FUTURES` is a UAC-registered Tardis-alias venue routing to the SAME underlying exchange as `BYBIT`;
+  instruments-service's batch IS writer only ever persists `instrument_key`s under the PRIMARY venue token (`BYBIT`). A
+  shard launched with `venue=BYBIT-FUTURES` looked up an `instruments.parquet` blob under the alias name, found nothing,
+  resolved zero instruments, and spun in the empty-universe retry loop — since `_buffers`/`connect()` are both keyed off
+  that same resolved set, the connector subscribed to nothing, hence `empty_confirmed` on every flush. Live-checked via
+  `VenueMapping` that this alias-mapping bug is BYBIT-FUTURES-specific among the 5 depth10 venues
+  (`DERIBIT`/`COINBASE-SPOT`/`OKX-SWAP`/`BINANCE-FUTURES` all resolve to themselves) — consistent with the other 3
+  venues needing distinct, connector-specific fixes (subscribe-batching, deprecated-channel, TBD) rather than this same
+  root cause. **Fix**: `_resolve_is_lookup_venue()` added to `market_tick_data_service/live/_is_universe.py`, mirroring
+  IS's own `TardisReferenceDataAdapter._resolve_instrument_key_venue`; `read_is_universe_sync` resolves the lookup venue
+  before building the IS blob path, falling back to the venue unchanged when it has no Tardis alias. Shipped
+  `market-tick-data-service@e3bd10b9` (QG green: 10332 passed/28 skipped/1 xpassed repo-wide; new regression test
+  `test_is_lookup_venue_resolves_tardis_alias_to_primary_venue` + all 38 `test_websocket_runner.py` tests pass). **Not
+  yet done** (same caveat as slot-27's DERIBIT entry): redeploying the live `mtds-live-cefi-consolidated-*` VM to pick
+  this fix up and re-verifying real `capture_status=captured` BYBIT-FUTURES `depth_of_book_10` rows in prod — code-level
+  fix only; a VM cycle deploys it. This issue doc stays open pending OKX-SWAP (todo still open) + the MDPS-enum P3
+  todo + prod re-verification for all 3 fixed venues.
