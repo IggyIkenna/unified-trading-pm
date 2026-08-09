@@ -283,6 +283,7 @@ curl -sS "$SERVER_URL/api/activity?type=slot_dual_flip_pattern_violation&limit=1
 curl -sS "$SERVER_URL/api/activity?type=slot_retire_audit_needed&limit=10"
 curl -sS "$SERVER_URL/api/activity?type=slot_task_skipped&limit=10"
 curl -sS "$SERVER_URL/api/activity?type=tmux_session_lost&limit=10"
+curl -sS "$SERVER_URL/api/activity?types=slot_done_rejected_no_plan_flip,slot_done_rejected_dirty,slot_done_rejected_sha_unverifiable,slot_done_rejected_not_on_origin,slot_done_rejected_no_quickmerge&limit=30"
 ```
 
 - `slot_done_verified` is informational (file list + commit subject parsed from `git show --stat`). Skim it; no chat
@@ -292,6 +293,25 @@ curl -sS "$SERVER_URL/api/activity?type=tmux_session_lost&limit=10"
   warnings are noise; multiple in a row from one slot deserve a chat ping to main.
 - `slot_dual_flip_pattern_violation` is the higher-severity escalation (≥3 `slot_done_no_plan_flip` from one slot in
   4h). This DOES warrant a chat-to-main message.
+- **`slot_done_rejected_*` — the HARD-409 family (distinct from the soft warnings above; audit finding
+  `review_agent_blind_to_done_rejected_family_2026_08_09`).** `/done` itself hard-rejects (no state change, task stays
+  `dispatched`) on: `_no_plan_flip`, `_dirty` (worktree), `_sha_unverifiable`, `_not_on_origin`, `_no_quickmerge`. The
+  worker gets the reason synchronously and is expected to fix + re-POST `/done` in the same session — a 2026-08-09 24h
+  audit (26 unique slot+task incidents) found 62% self-heal this way with zero review involvement, which is the gate
+  working as designed, not a violation. This event family was previously **absent** from review's watch list entirely
+  (review only saw the soft `slot_done_no_plan_flip`/`slot_done_dirty_worktree` cousins, which don't fire on the
+  hard-reject path) — that gap, not an advisory-role limitation, is why repeated `/done` rejections went unnoticed. Your
+  job watching it: for each (slot_id, task_id) pair with ≥2 rejects OR any reject not yet followed by a
+  `slot_done`/`slot_done_verified` for the same task_id, cross-check the task's LIVE status via
+  `curl -sS "$SERVER_URL/api/backlog"` (filter by id):
+  - `status: done` → resolved by retry, nothing to do.
+  - `status: queued`/`dispatched` with a `blocked_reason` citing an unmet prerequisite → **not** stuck — it's
+    legitimately parked; the worker correctly couldn't flip a checkbox for work that isn't really finished. Still worth
+    a chat-to-main note if the SAME task was dispatched-and-rejected 3+ times before parking (wasted dispatch cycles = a
+    prereq-check-before-dispatch bug, not a plan-flip bug).
+  - `queued`/`dispatched` with NO `blocked_reason` and no successful `slot_done` for that task_id → genuinely stuck;
+    chat-ping main.
+  - Not in the backlog at all → likely resolved/regenerated under a different id; low priority, note it and move on.
 - `slot_done_dirty_worktree` fires when the worktree has uncommitted files after /done. Use `last_change_age_seconds`:
   large age (>5min) + slot status=idle → likely orphan worth a ping; small age (<60s) + slot status=working → probably
   mid-cycle WIP, ignore.
