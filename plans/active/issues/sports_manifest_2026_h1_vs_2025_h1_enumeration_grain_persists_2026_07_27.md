@@ -505,6 +505,12 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   - 2 new regression tests, full `quality-gates.sh` green). Re-ran chunk 3: converged in ONE attempt, `EXIT_STATUS=0`,
     17.6s, 144,586 genuinely-new rows (present-set of 11.79M correctly excluded the duplicate rows accumulated from the
     pre-fix attempts) — flipped chunk 3's todo below. Chunks 4-7 no longer blocked; next worker should proceed normally.
+- **data_engineering worker (slot 12) 2026-08-09**: launched chunk 4/7 (2023-01-01..2023-12-31) — VM
+  `expected-universe-v2-sports-20260809-195359`, `EXIT_STATUS=0` in ~2.5min (single attempt, no halt-safety trip). 0
+  candidate rows found — `run.log`: "v2: nothing to backfill — manifest already covers the expected per-instrument
+  universe" for 2023, present-set at launch already 13,490,496 rows. 2023 was apparently already fully seeded (no new
+  per-VM shard written). `start_date`/`end_date` confirmed respected in the `ENUMERATOR_STARTED` event. Flipped chunk
+  4's todo. Chunk 5/7 (2024) next.
 
 ## Follow-ups
 
@@ -535,9 +541,14 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       `gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/expected-universe-v2-sports-20260809-161551-part00001.parquet`
       (144,586 rows). Required the halt-safety livelock fix (instruments-service@0d66cb926e0b) first — see the resolved
       banner above.
-- [ ] [DATA] P2. Launch + verify chunk 4/7 (2023-01-01..2023-12-31) of the same backfill — same launcher invocation,
+- [x] ✅ [DATA] P2. Launch + verify chunk 4/7 (2023-01-01..2023-12-31) of the same backfill — same launcher invocation,
       halt-safety/gcloud-clobber handling, and done-when as chunk 3's todo above, with
-      `ENUM_START_DATE=2023-01-01 ENUM_END_DATE=2023-12-31`. (repo: deployment-service)
+      `ENUM_START_DATE=2023-01-01 ENUM_END_DATE=2023-12-31`. (repo: deployment-service) — ✅ VM
+      `expected-universe-v2-sports-20260809-195359`, `EXIT_STATUS=0` in ~2.5min. Enumerator found **0 candidate rows**
+      ("manifest already covers the expected per-instrument universe" for 2023) — present-set at launch was already
+      13,490,496 rows (main + per-VM shards), so 2023 was already fully seeded (likely incidental coverage from an
+      earlier full-range/overlapping run). No new per-VM shard written (nothing to write). `run.log` confirms
+      `start_date: '2023-01-01', end_date: '2023-12-31'` was respected. Done-when (EXIT_STATUS=0) satisfied.
 - [ ] [DATA] P2. Launch + verify chunk 5/7 (2024-01-01..2024-12-31) of the same backfill — same launcher invocation,
       halt-safety/gcloud-clobber handling, and done-when as chunk 3's todo above, with
       `ENUM_START_DATE=2024-01-01 ENUM_END_DATE=2024-12-31`. (repo: deployment-service)
