@@ -294,3 +294,13 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   silently dying independent of the main backfill process? If so, `run.log` freshness alone is an insufficient health
   signal — the watchdog's own trace log (or a similar local-size-based check) may need to become part of the standard
   diagnostic, not just heartbeat blob + run.log content.
+
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — re-verified the 2 remaining open todos. Todo 1
+  ("catch it before the silent window elapses") is still a genuine opportunistic catch-a-live-event task with no
+  schedulable done-when — even if IAP-SSH access were self-serviced (per today's IAM-self-service default theme), the
+  task itself still can't be given a bounded worker "done when" (it only fires IF a hang happens to be caught mid-tick).
+  The `PREFIX_IDLE_THRESHOLDS` todo remains explicitly self-gated on root cause, which is now if anything LESS settled
+  than before (the 2026-08-09T07:15Z entry above found a genuinely NEW failure mode — the `run.log` GCS-tee upload
+  silently stalling independent of the main process — that the existing silent-hang/OOM-retry taxonomy doesn't cover).
+  No new extraction candidate surfaced this pass; batch11's already-extracted timeout-audit item is the one bounded
+  piece and stays there. Doc stays `assigned_vm: NA`.
