@@ -169,14 +169,23 @@ depends_on: []
    see git log.
 3. Duplicate `assigned_role: infra` frontmatter key removed from
    `cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md`. unified-trading-pm@f3d81a78b.
-4. **TOOLING BUG found + worked around, not fixed (script lives outside `plans/**`, out of this role's edit scope)**:
+4. **AGENT-ROLE-FILE BUG found + worked around this run (`unified-trading-pm/agents/plan_reconciler.md` lives outside
+   `plans/**`, out of this role's edit scope per the HARD LIMIT)**: STEP 7's example result-POST command uses
+   `$SERVER_URL/api/plan_health/result` (underscore) — the real route (confirmed via
+   `agent-orchestrator/server/routes/agents.py:465`, `@router.post("/api/plan-health/result", ...)`) is HYPHENATED,
+   `/api/plan-health/result`. The underscore form 404s (`{"detail":"Not Found"}`, confirmed live this run before
+   retrying with the correct path). Every OTHER route mention in the same file (STEP 0's dispatch trigger, the
+   frontmatter `triggers:` block) correctly uses the hyphenated form — only the STEP 7 result-POST example has the typo.
+   This would silently fail STEP 7 for every future plan_reconciler dispatch that copies the example verbatim without
+   independently double-checking the route. (repo: unified-trading-pm, file: `agents/plan_reconciler.md`)
+5. **TOOLING BUG found + worked around, not fixed (script lives outside `plans/**`, out of this role's edit scope)**:
    `check_effort_signal_ratchet.py`'s `_frontmatter()` parser is a naive same-line regex
    (`^([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$`) that reads an EMPTY value when prettier reflows a long inline comment onto a
    continuation line (`key:\n  value # long comment...`) — hit this twice live this run (`thinking_tier`, then
    `archive_exempt`) before recognizing the pattern; both times the value was genuinely present, just parsed as empty.
    Filed as a todo below — this will keep silently misfiring for anyone who writes a frontmatter comment long enough for
    prettier to wrap it below the value.
-5. **Mechanical adjudicator additionally found + adjudicated** (see raw hunter output for detail, not re-litigated
+6. **Mechanical adjudicator additionally found + adjudicated** (see raw hunter output for detail, not re-litigated
    here): 1 real reference-path violation in the grace-protected `docs_reconcile_autonomous_sweep_2026_07_30.md:139`
    (dangling ref to a deliberately-deleted codex doc the doc's own later banner already explains — trivial one-line fix,
    filed below since the doc is grace-protected this run); 3 genuine broken markdown links via the moved-doc referrer
@@ -214,9 +223,15 @@ re-escalated to avoid alert fatigue on an already-well-tracked item):**
       rolling-ledger convention should dedupe carried-forward items for count-baseline purposes. (repo:
       unified-trading-pm)
 - [ ] [SCRIPT] P2. **`check_effort_signal_ratchet.py`'s naive same-line frontmatter parser silently reads empty on a
-      prettier-wrapped value** (Hygiene fixes item 4 above) — fix the regex to handle a YAML scalar continuation line,
+      prettier-wrapped value** (Hygiene fixes item 5 above) — fix the regex to handle a YAML scalar continuation line,
       or document the trap prominently in the script's own docstring so the next agent doesn't lose a commit cycle to it
       the way this run did (twice). (repo: unified-trading-pm)
+- [ ] [DOC] P1. **`unified-trading-pm/agents/plan_reconciler.md` STEP 7's example result-POST command has a wrong
+      route** (Hygiene fixes item 4 above) — `$SERVER_URL/api/plan_health/result` (underscore) 404s; the real route is
+      `/api/plan-health/result` (hyphenated, confirmed live this run + against
+      `agent-orchestrator/server/routes/agents.py:465`). Fix the one example line; every other route mention in the same
+      file already uses the correct hyphenated form. Not fixed by this run directly (`agents/` is outside the `plans/**`
+      edit scope this role is limited to). (repo: unified-trading-pm)
 - [ ] [SCRIPT] P3. **`check_archive_candidates.sh --only` respects `archive_exempt: true`;
       `check_terminal_status_archived.py --only` does not** (only respects `locked_by`) — two sibling precommit gates
       checking overlapping archival-readiness conditions with inconsistent escape hatches. Hit live this run: had to use
