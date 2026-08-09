@@ -130,10 +130,19 @@ guidance) and burn a stale-worker slot indefinitely, or `/blocked` unnecessarily
       sentinel-sha still falls through to normal completion), plus
       `tests/test_done_empty_sha_gate.py::test_done_proper_sentinel_sha_not_rejected` extended to cover the sentinel-sha
       carve-out against an empty backlog. Full `quality-gates.sh` green (2935 passed).
-- [ ] [BACKEND] P2. Fix `skip_current_task`'s `task_orphaned` predicate in `server/routes/slots_ops.py` to also treat
+- [x] ✅ [BACKEND] P2. Fix `skip_current_task`'s `task_orphaned` predicate in `server/routes/slots_ops.py` to also treat
       `backlog_task is None` (fully absent from `backlog.yaml`, not just present-but-undispatchable) as orphaned — route
       it through the existing `session.delete(row)` + `backlog.tasks = [...]` cleanup branch instead of falling into the
-      normal release path that appears to throw. (repo: agent-orchestrator)
+      normal release path that appears to throw. (repo: agent-orchestrator) — agent-orchestrator@4f78629. Also guarded
+      the orphan-delete against a `done`/`cancelled` `TaskRow` (a stale `slot.current_task` pointer to an
+      already-completed task is normal — its regen-dropped backlog.yaml absence must NOT be treated as an orphan-to-
+      delete, or it silently clobbers the existing terminal-status 409 guard from
+      `ao_backlog_done_row_disappearance_2026_07_25.md`). Regression tests:
+      `tests/test_skip_stale_marker_orphan.py::test_skip_orphans_task_fully_absent_from_backlog_yaml` (new) + 2
+      pre-existing tests (`test_content_id_migration_wiring.py`,
+      `test_release_task_to_queue_guard.py::test_skip_current_task_409s_on_a_stale_pointer_to_a_done_task`) that had
+      encoded the old buggy fallthrough as their expectation, updated to match. Full `quality-gates.sh` green (2936
+      passed, 2 skipped).
 - [ ] [VERIFY] P3. Once both fixes land, reproduce this exact scenario in a non-prod/test harness (dispatch a task,
       delete its plan out from under it, regen backlog, confirm `/done` now returns a clean orphan-closed response
       instead of 500) to close this out with evidence. (repo: agent-orchestrator)
@@ -153,3 +162,13 @@ guidance) and burn a stale-worker slot indefinitely, or `/blocked` unnecessarily
   for unrelated reasons, e.g. sha-gate tests using `Backlog()` as a cheap no-op fixture; verified none of those broke).
   agent-orchestrator@3147392, quality-gates.sh green (2935 passed, 2 skipped). Todos 2 (`skip_current_task`'s inverted
   `task_orphaned` predicate) and 3 (end-to-end verify) are separate backend/verify todos, not touched by this task.
+- **2026-08-09 (slot 3, fresh session)**: Shipped todo 2. `skip_current_task`'s `task_orphaned` predicate now treats
+  `backlog_task is None` as orphaned (was `backlog_task is not None and not task_still_dispatchable(...)`, which
+  evaluated False for a fully-removed backlog entry and fell into the `release_task_to_queue` else-branch that 500'd).
+  While implementing, caught a real regression risk two pre-existing tests had baked in as their expectation: a
+  `slot.current_task` stale pointer to an already-`done` task is ALSO commonly absent from `backlog.yaml` (regen drops
+  finished todos too), and naively treating `backlog_task is None` as orphaned would have made the orphan-delete branch
+  unconditionally delete that already-`done` `TaskRow` instead of hitting the existing terminal-status 409 guard in
+  `release_task_to_queue` — added an explicit `row_already_terminal` check (status in `("done", "cancelled")`) so
+  `task_orphaned` stays False for that case and the 409 guard still fires. agent-orchestrator@4f78629, quality-gates.sh
+  green (2936 passed, 2 skipped). Todo 3 (end-to-end non-prod verify) remains open, separate from this todo.
