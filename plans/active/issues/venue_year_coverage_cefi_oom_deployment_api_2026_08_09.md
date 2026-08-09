@@ -239,3 +239,17 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   → redeploy) outside a single dispatched worker's session to synchronously chase — confirmed compatible with
   deployment-api's existing `unified-trading-library>=0.77.0,<1.0.0` pin (LDR HEAD is `v0.77.0`, so this ships as an
   in-range patch, no major-version gate needed).
+- **2026-08-09**: Worked the remaining INFRA todo (live-prod re-verification of `unified-trading-library@609299ad`).
+  Step (a) confirmed done: `609299ad` reached `origin/main` (squashed as `e94be221`,
+  `Promoted-From-LDR: 609299adf4bf49d5b027fd21289d6abd60a8bcfa` trailer-verified, since a bare `is-ancestor` check reads
+  NO under this repo's squash model too). **Step (b) is BLOCKED — root-caused, not just "still pending"**:
+  `Semver Agent` ran successfully (no error) on `e94be221` but its own log shows it computed `BUMP=""` and skipped the
+  version bump entirely (`old_export_count==new_export_count`, no `feat:`/`fix:` prefix visible on the squash commit's
+  own subject) — `git tag --contains 609299ad` on `origin/main` returns nothing, latest tag is still `v0.77.0`. This is
+  a genuine `semver-agent.yml` classifier gap (squash-promote loses the original commit's conventional-commit type, and
+  an internal fix with no new public export doesn't trip the AST-differ fallback either), NOT specific to this fix —
+  filed as its own P0 issue doc with full root-cause + fix recommendation:
+  `/plans/active/issues/semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md`. Steps (c) (
+  dependency-update PR) and (d) (redeploy) cannot happen until (b) does — this INFRA todo stays open, blocked on the new
+  issue doc's fix landing + `unified-trading-library` getting a fresh push to re-trigger classification. Not flipping
+  the checkbox — the live-prod OOM is confirmed still unresolved in production as of this session.
