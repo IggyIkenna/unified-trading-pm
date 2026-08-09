@@ -370,6 +370,31 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       capturing the running SHA at reap time (the observability todo above is the enabler) and watching whether
       `kind=cicd` reaped-stale continues at the pre-fix rate (baseline: 72 reaped-stale/7d, 71 of them `role=custom`).
       (repo: agent-orchestrator)
+
+      **RE-CHECKED 2026-08-09 (slot 11, data_engineering) — INCONCLUSIVE, still NOT closed.** Queried the live
+          SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
+          2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
+          below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
+          pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
+          rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
+          survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
+          both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
+          original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
+          per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
+          08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
+          also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
+          week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
+          rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
+          above for a causal read. New follow-up filed directly below given the climbing raw rate.
+          (repo: agent-orchestrator)
+
+- [ ] [DATA] P2. **Bump the observability-enabler todo above (session-teardown instrumentation, was P3) given the 08-09
+      re-check's climbing reaped-stale rate** — without it, the "regression vs. new mechanism vs. volume artifact"
+      question for the mid-run-session-death todo above cannot be causally resolved, and the raw reaped-stale count is
+      now growing (1/08-06 -> 4/08-07 -> 18/08-08 -> 46/08-09 in the live snapshot). Once shipped, re-run this todo's
+      before/after query (`SELECT ... FROM agents WHERE agent_kind='cicd' AND     exit_reason='reaped-stale'` bucketed
+      by `registered_at` vs the fix commit, cross-referenced against the newly captured checkout SHA at reap time) and
+      post the delta. (repo: agent-orchestrator)
 - [x] ✅ [DOC] P2. Give the scheduled-task dispatch mechanism a CODEX home — it currently has none. Grep-confirmed
       2026-08-06: no `codex/` doc describes the scheduled-job dispatch status model at all, so the whole contract lives
       only in THIS issue doc, which archives. That inverts the SSOT rule (durable fact -> codex; a plan/issue merely
@@ -572,6 +597,16 @@ tests; the re-install is the single step standing between that and any of it act
 gates promotion to `main`, not the fix's correctness.
 
 ## Progress Log
+
+- **slot-11 2026-08-09 (todo — re-check whether mid-run session death is fully closed by @5941552)**: Downloaded the
+  latest S3 DR SQLite snapshot (`live_20260809T210230Z.db`, same read path documented in the slot-20 entry below) and
+  queried `agents` for `kind=cicd`/all-kind reaped-stale counts before/after the 2026-08-06 15:04:08 fix commit. Result:
+  INCONCLUSIVE — the `agents` table only retains 190 rows so the pre-fix sample is too thin to compare cleanly, but the
+  fleet-wide reaped-stale share is climbing day over day post-fix (7.7%->44.7%, 08-06->08-09) concurrent with an ~8x
+  dispatch-volume ramp over the same window, confounding a clean read. Updated the todo above in place with the full
+  numbers and filed a P2 follow-up to bump the (previously P3) observability-enabler todo, since a causal answer needs
+  the checkout-SHA-at-reap-time instrumentation it would add. No code shipped — pure measurement, per this todo's own
+  done-when ("resolve by capturing SHA [blocked on separate enabler] and watching the rate [done here]").
 
 - **slot-3 interactive 2026-08-06 (operator rulings: shard plan-reconciler, `ui` as the 10th tranche, Saturday `all`
   run, guard on `lifecycle-complete`)**: SHIPPED — agent-orchestrator@4a77bfe + @5f15d0a (AO worker),
