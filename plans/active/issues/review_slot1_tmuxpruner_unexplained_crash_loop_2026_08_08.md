@@ -234,7 +234,7 @@ own Tick history.
       (`SIGKILL`, `SIGTERM`, cgroup `oom-kill`, `Out of memory`) using a wider grep, since this session only eyeballed a
       tail rather than pattern-matching. Repo: unified-trading-pm (this doc) or agent-orchestrator (if a durable check
       gets code-ified).
-- [ ] [BACKEND] P1. **All 3 known fixes confirmed live with ZERO combined effect on kill cadence (review re-verify,
+- [x] ✅ [BACKEND] P1. **All 3 known fixes confirmed live with ZERO combined effect on kill cadence (review re-verify,
       2026-08-09 ~19:16Z, see Progress Log below) — the 3 tested mechanisms (transient has-session miss, frozen
       `SlotRow.last_ping`, undebounced `reap_orphan_agents`) are each individually patched but collectively explain none
       of the observed cadence.** Need a genuinely different investigative angle rather than a 4th single-cause guess:
@@ -246,7 +246,35 @@ own Tick history.
       from all 3 already patched; (c) check whether `has_session_debounced()`'s 0.25s recheck window is even sufficient
       under the observed CPU-contention levels (documented elsewhere in this doc reaching 5-8x core oversubscription) —
       a 0.25s window that felt generous at low load may itself be too short under contention, which would explain why
-      the debounce fix moved the needle so little. Repo: agent-orchestrator.
+      the debounce fix moved the needle so little. Repo: agent-orchestrator. — DONE 2026-08-09 (slot 28,
+      backend_engineer craft), all 3 sub-angles run empirically, see Progress Log entry below. (b) RULED OUT with hard
+      data. (a) run cleanly (2/2 genuine deaths) and surfaced 2 new sub-findings (mixed first-detector, wide
+      detection-lag variance). (c) not directly re-testable at today's calmer host load, but the lag data weakens it as
+      the primary driver. New todo added below capturing the most concrete new lead this session found (a restart-window
+      death despite `KillMode=process`).
+- [ ] [BACKEND] P1. **NEW LEAD (backend, slot 28, 2026-08-09 ~19:30Z): a captured genuine slot-1 death landed inside a
+      `systemctl restart orchestrator` window DESPITE `KillMode=process` being deliberately configured (and confirmed
+      via systemd's own log lines: "Unit process 599219 (claude) remains running after unit stopped" then "Found
+      left-over process 599219 (claude) in control group while starting unit. Ignoring.") to spare tmux/claude worker
+      children from exactly this.** PID 599219 was captured alive (via a live-PID poll) up to 19:30:25Z (systemd's own
+      "remains running" log line) and confirmed GONE (`kill -0` fails, no `/proc` entry) at 19:30:32Z — 7s later, mid
+      way through `ao-self-pull.sh`'s cron-triggered restart (old process SIGTERM'd 19:30:15Z, new process not fully
+      ready until 19:30:37Z). Neither the old process (dead by 19:30:25Z) nor the new one (not yet running its
+      AgentKeeper/TmuxPruner loops until ~19:30:35-37Z) can have been the direct killer via this repo's own Python reap
+      paths — and `systemctl restart orchestrator` is a plain call (`scripts/ao-self-pull.sh`, no `pkill`/broader kill),
+      so the mechanism is NOT in this repo's code. Full-day correlation (118 kills vs 28 restarts today):
+      9.3%/13.6%/23.7% of kills fall within 120s/180s/300s of a restart respectively — a real but MINORITY factor
+      (consistent with the doc's earlier ~15%/120s finding, not a new headline number), so this does not explain the
+      steady ~5-9min drumbeat on its own, but it IS a concrete, reproducible anomaly against an explicit safety contract
+      (`KillMode=process`'s whole documented purpose is "workers survive a backend restart"). Whoever picks this up: (1)
+      reproduce deliberately — spawn a throwaway tmux+claude session, live-PID-poll it, trigger
+      `systemctl restart orchestrator` (or wait for the next `ao-self-pull.sh` cron tick), see if it reliably dies; (2)
+      if reproducible, check whether `ProtectSystem=strict`/mount-namespace teardown, `NoNewPrivileges`, or some other
+      systemd sandboxing directive in `orchestrator.service` has a documented interaction with cgroup-resident but
+      namespace-scoped child processes across a unit restart that could kill them despite `KillMode=process`; (3) if NOT
+      reliably reproducible, treat this single capture as one more low-probability contributing factor rather than the
+      root cause, and look elsewhere. Repo: agent-orchestrator (investigation) / `scripts/orchestrator.service` (if a
+      systemd-config fix is found).
 
 ## Progress log
 
@@ -731,3 +759,69 @@ own Tick history.
   against actual slot-1 kill times), and questioning whether the existing 0.25s debounce window is itself too short
   under the CPU-contention levels documented elsewhere in this doc. Did not attempt a 4th fix myself — genuinely outside
   `[REVIEW]` scope and the remaining hypotheses need code-level investigation `[BACKEND]` craft owns.
+
+- 2026-08-09 ~19:37Z (backend, slot 28) — Ran all 3 of the standing todo's sub-angles empirically. **(b) SQLite
+  lock-contention correlation: RULED OUT.** Pulled all 118 `tmux_session_lost` timestamps for slot 1 today
+  (`GET /api/activity?slot=1&type=tmux_session_lost&since=2026-08-09T00:00:00Z`) and all 20 distinct
+  `database is locked` burst timestamps from `journalctl -u orchestrator` (deduped to the second; host confirmed
+  `Etc/UTC` so no tz conversion needed) — **0/118 kills fall within 30s of any lock event**; the nearest gaps observed
+  were 163-330s (2.7-5.5min), and lock bursts (20/day) are far rarer than kills (118/day) besides. This mechanism does
+  not explain any material fraction of the observed cadence.
+
+  **(a) Multi-death live-PID capture, run twice in one sitting.** This host's shared tmux server is directly reachable
+  from this slot (same as `5a163e7`'s method), so ran a bounded (`run_in_background`, 30min cap) poll of
+  `tmux has-session -t =orch-slot-1:` every 2s, snapshotting the pane's PID on every appearance and running
+  `kill -0 <pid>` the instant the session vanished. Caught 2 fresh deaths: PID 599219 (alive 19:28:29Z-19:30:32Z,
+  ~2m03s) and PID 754711 (alive 19:31:50Z-19:34:03Z, ~2m13s) — **both confirmed GENUINE process death** (`kill -0`
+  fails, no `/proc/<pid>` entry), same verdict as `5a163e7`'s single sample. This answers the todo's own question: the
+  exit mechanism is UNIFORM (2/2 genuine), not mixed, across this fresh sample.
+
+  Two NEW sub-findings fell out of capturing exact death instants and comparing them to the recorded activity-log
+  timestamps: **(i) the proximate detector is NOT consistently `reap_orphan_agents`** — both of these 2 deaths were
+  actually reported by `TmuxPruner` ("TmuxPruner cleared N stale tmux_session reference(s)"), not AgentKeeper's
+  `reap_orphan_agents` (which ran its own ticks at 19:30:37Z/19:31:57Z/19:33:17Z in this exact window but reaped
+  unrelated agents each time) — contradicting `5a163e7`'s "every single time sampled" finding from its own 3-sample
+  check. Both loops tick every 60s independently; which one's tick lands closer after a given death determines which one
+  "wins" the race to report it, so the earlier finding was a real but non-universal pattern, not a fixed ordering.
+  **(ii) Detection lag (true death → recorded activity-log timestamp) varies by roughly an order of magnitude**: 14s for
+  the first death (activity ts 19:30:46.457Z vs true death 19:30:32.256Z) vs 102s for the second (activity ts
+  19:35:45.331Z vs true death 19:34:03.473Z). This matters for angle (c) below and for any future timestamp-correlation
+  analysis in this doc (like the DB-lock check above) — the recorded `tmux_session_lost` timestamp can lag the true
+  death by well over a minute, so tight-window correlations against it carry that much slop. (The DB-lock ruling-out
+  above still holds even after accounting for this: observed gaps of 163-330s exceed even the 102s worst-case lag by a
+  wide margin.)
+
+  **(c) Debounce-window-sufficiency: not directly re-testable today** — host load at test time was calm (load avg ~10-17
+  on `nproc=16`, i.e. roughly at-to-slightly-over 1x, not the 5-8x oversubscription windows documented elsewhere in this
+  doc), and a bare `tmux has-session` subprocess call measured ~3ms even under that load, so no debounce-relevant
+  slowness was observed to test against. **Note**: `nproc` on this host reads **16**, not the "8-core box (nproc=8)"
+  cited repeatedly earlier in this doc's oversubscription-ratio math (e.g. "36/44/46 load... 4-6x nproc=8") — worth a
+  flag for whoever re-derives an oversubscription ratio from a load-average figure going forward; either the host was
+  resized at some point in this investigation's timeline or an earlier reading was taken in a differently-scoped
+  context, but the two nproc values are inconsistent and every downstream "Nx core oversubscription" claim in this doc
+  implicitly assumes nproc=8. Indirect evidence against (c) as the PRIMARY driver, though: the 14-102s detection-lag
+  range measured in (a) above is entirely explained by the 60s AgentKeeper/TmuxPruner tick interval and which one's
+  phase lands first — the 0.25s debounce recheck is a rounding error against that, so even a materially longer debounce
+  window would not change the observed kill-to-detection latency pattern by more than a fraction of a second. This
+  doesn't prove 0.25s is sufficient under genuine heavy contention (not measured directly here), but it does mean the
+  debounce window is very unlikely to be the dominant lever on the observed ~5-9min cadence — the cadence is set by
+  whatever kills the process, not by how fast it's detected afterward.
+
+  **Most significant new finding, not one of the 3 original sub-angles**: one of the 2 captured deaths (PID 599219) died
+  ~7s after systemd's own log explicitly recorded it as surviving an `orchestrator.service` restart ("Unit process
+  599219 (claude) remains running after unit stopped" at 19:30:25Z, confirmed gone by 19:30:32Z) — a
+  `systemctl restart orchestrator` triggered by `scripts/ao-self-pull.sh`'s cron tick (runs every ~15min, restarted the
+  service on 5/6 of the last 6 ticks sampled). `orchestrator.service` explicitly sets `KillMode=process` (with an
+  in-file comment citing a 2026-05-20 incident) specifically so a backend restart does NOT touch tmux/claude worker
+  children — and systemd's own log confirms it did NOT directly kill this PID ("Found left-over process 599219 (claude)
+  in control group while starting unit. Ignoring."). Yet the process died anyway, inside the restart window, before
+  either the old process (dead by 19:30:25Z) or the new one (AgentKeeper/TmuxPruner not ticking until ~19:30:35-37Z)
+  could have reaped it via this repo's own code — and `ao-self-pull.sh`'s restart call is a plain
+  `systemctl restart orchestrator`, no `pkill`/broader kill. Full-day correlation (118 kills vs 28 restarts today):
+  9.3%/13.6%/23.7% of kills land within 120s/180s/300s of a restart respectively — consistent with the doc's earlier
+  ~15%/120s finding (a real but MINORITY contributing factor, not the dominant driver of the steady drumbeat), so this
+  doesn't overturn the standing conclusion, but it's now a concrete, timestamped instance of an apparent violation of
+  `KillMode=process`'s own safety contract, worth its own targeted follow-up (new todo added above) rather than being
+  folded back into the general host-contention hypothesis. Did not attempt a code fix this session — the todo's own
+  framing asked for a new investigative angle, not a 4th patch, and this lead needs deliberate reproduction (todo added
+  above) before a fix target is even known. No code shipped this session (this doc only).
