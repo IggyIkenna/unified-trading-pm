@@ -242,3 +242,5 @@ cited `ci_satellite_ao_dispatch_batch4_2026_07_31.md` as `status: draft` (it has
 same stale-wording class found elsewhere in this tranche today). Rewrote the checkbox to name step 3 as the sole
 remaining item. Step 3 itself (D4-1, `scripts/quickmerge.sh` branch-check broadening) stays a genuine design/judgment
 call — no `assigned_vm` change. `locked_by` anomaly (flagged 2026-08-01, still unactioned) unchanged.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
