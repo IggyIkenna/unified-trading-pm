@@ -136,10 +136,23 @@ operator/architecture call, not a mechanical fix.
       venue/VM/window — check whether the connector even registers a flush-triggering instrument window for this
       data_type. Repo: market-tick-data-service. — market-tick-data-service@90e2336c (see Progress Log for root cause +
       live-reproduction evidence).
-- [ ] [CODE] P2. Debug why `CoinbaseDepth10WSConnector` (coinbase_book_ws.py) produces only `empty_confirmed` rows (424
-      in ~30 min) — this is COINBASE-SPOT's first-ever live dispatch on this VM (no prior working baseline for
+- [x] ✅ [CODE] P2. Debug why `CoinbaseDepth10WSConnector` (coinbase_book_ws.py) produces only `empty_confirmed` rows
+      (424 in ~30 min) — this is COINBASE-SPOT's first-ever live dispatch on this VM (no prior working baseline for
       comparison), so also verify the venue's `level2` subscription itself is actually receiving book-diff messages, not
-      just that the depth-10 slicing logic runs. Repo: market-tick-data-service.
+      just that the depth-10 slicing logic runs. Repo: market-tick-data-service. — **DONE 2026-08-09, slot 6,
+      `market-tick-data-service@cc736408`.** Root cause: Coinbase Exchange deprecated the public `level2` channel — it
+      now requires authentication (live-verified: unauthenticated subscribe gets
+      `{"type":"error","reason":"level2, level3, and full channels now require     authentication..."}` then an empty
+      `{"type":"subscriptions","channels":[]}`). The connector's `_handle_frame` never recognized
+      `error`/`subscriptions` frame types (silently returned `[]` for anything but `snapshot`/ `l2update`), so the WS
+      connected fine (no connectivity error) and just received zero real data forever — exactly the
+      `empty_confirmed`-only symptom. Fix: switched to `level2_batch` (still public, unauthenticated, Coinbase aliases
+      it server-side to `level2_50`) — live-verified to emit the IDENTICAL `snapshot`/`l2update` message shape already
+      parsed, so no parsing logic changed, only the subscribed channel name (3 call sites: `_open_and_subscribe`/
+      `subscribe`/`unsubscribe`). Also added `error`-frame logging so a future rejected subscribe is never silent again
+      (was the actual reason this bug went undetected). `level2_batch`/`level2_50` caps at top 50 levels/side (not
+      uncapped like the old `level2`) — irrelevant here since `depth_of_book_10` only slices 10. New regression test
+      (`test_error_frame_logged_not_silently_dropped`) + all 39 existing connector tests pass.
 - [ ] [CODE] P2. Debug the OKX-SWAP `depth_of_book_10` factory branch in `okx_ws.py` — same `empty_confirmed`-only
       pattern (438 rows in ~30 min), also OKX-SWAP's first-ever live dispatch on this VM. Repo:
       market-tick-data-service.
@@ -153,6 +166,13 @@ operator/architecture call, not a mechanical fix.
 
 ## Progress Log
 
+- **2026-08-09, slot 6**: Closed the COINBASE-SPOT `[CODE] P2` todo. Live-verified against the real Coinbase Exchange WS
+  API (unauthenticated `level2` subscribe → rejected with an `error` frame the connector never logged) that the root
+  cause was a Coinbase API deprecation, not a parsing bug — `level2` now requires auth, `level2_batch` is the
+  still-public alternative with an identical message shape. Fixed the 3 subscribe/unsubscribe call sites in
+  `coinbase_book_ws.py` + added `error`-frame logging (the actual detection gap) + a regression test. Did not touch the
+  other 3 venue-specific todos (BYBIT-FUTURES/DERIBIT/OKX-SWAP) — distinct WS APIs, out of this task's scope; this doc
+  stays open for those.
 - **2026-08-09, slot-23**: filed after shipping + verifying the dispatcher-wiring fix (deployment-service@28e64163,
   @778ee0e3, Terraform `persist-cefi-depth-of-book-10` topic+subscription applied to prod) end-to-end for
   BINANCE-FUTURES, and discovering the other 4 venues do not yet produce real captured rows. See
