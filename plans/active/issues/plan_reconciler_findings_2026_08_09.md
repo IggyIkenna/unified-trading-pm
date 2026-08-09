@@ -300,26 +300,33 @@ fresher numbers elsewhere in the same covering-set, so no future action is neede
 ## In-flight verification (checkpoint note — this run is NOT finished as of this commit)
 
 **Session context checkpoint 2026-08-09 ~04:03 UTC**: this run has 7 commits pushed to `plan_reconciler/agt-0c9e3f` so
-far (all contradiction/doc-drift/hygiene fixes + STEP 6 routing complete) and 1 background verification still IN FLIGHT:
+far (all contradiction/doc-drift/hygiene fixes + STEP 6 routing complete). One background verification was launched and
+was subsequently **KILLED before completion** (confirmed via task-notification, ~04:07 UTC, likely killed as part of
+this session's context-compaction prep — not a test failure, no exit code was ever written) — **NOT resumable by "check
+if still running," it is confirmed dead. The next session must re-launch it fresh.**
 
-- **What**: `npx playwright test --project=chromium tests/smoke/` (full suite, 450 tests) running in `deployment-ui`,
-  launched ~2026-08-09T03:52Z, to gate the 3 missed-flip candidates in
-  `data_status_tab_and_downloads_remediation_2026_06_16.md` lines ~166-195 (venue-filter frontend, duplicate
-  available-dates panel collapse, pagination visible-count selector) — all 3 are independently confirmed code-shipped
-  (`deployment-ui@80c547d`) with their sole cited blocker confirmed already resolved (`deployment-ui@067f7cd`,
-  2026-07-29); the doc's own 2026-08-07 na-eligibility-audit note says the only remaining gate is "a fresh `pw:L2`
-  full-suite green" — this run is that fresh re-verification.
-- **Where**: log at this session's scratchpad (`playwright_smoke_run.log`, NOT durable — regenerable by re-running the
-  command above; do not treat its absence in a future session as a problem, just re-run it).
-- **Resumption instructions for whoever picks this up next** (a fresh session, or me after a context compact):
-  1. Check if the process is still running (`ps aux | grep playwright` in `deployment-ui`, or just re-run the command
-     fresh — it's idempotent and takes ~35-40 min for the full suite at `workers: 1`).
-  2. If it already finished: check the exit code. Clean `exit 0` → flip all 3 todos in
-     `data_status_tab_and_downloads_remediation_2026_06_16.md` (lines ~166-195) citing `deployment-ui@80c547d` +
-     `deployment-ui@067f7cd` + this fresh full-suite pass as evidence (per `## Contradictions`/`## Flips verified`
-     format), commit `docs(plans): flip 3 data-status UI todos — pw:L2 fresh full-suite green [agt-0c9e3f]`, push, and
-     append to `## Flips verified` above.
-  3. If it failed: do NOT flip — read which spec(s) failed, determine if it's a NEW regression (file it) or an unrelated
+- **What**: `npx playwright test --project=chromium tests/smoke/` (full suite, 450 tests) in `deployment-ui`, to gate
+  the 3 missed-flip candidates in `data_status_tab_and_downloads_remediation_2026_06_16.md` lines ~166-195 (venue-filter
+  frontend, duplicate available-dates panel collapse, pagination visible-count selector) — all 3 are independently
+  confirmed code-shipped (`deployment-ui@80c547d`) with their sole cited blocker confirmed already resolved
+  (`deployment-ui@067f7cd`, 2026-07-29); the doc's own 2026-08-07 na-eligibility-audit note says the only remaining gate
+  is "a fresh `pw:L2` full-suite green" — this is that fresh re-verification.
+- **Progress before kill**: reached 319/450 tests with zero observed failures in the log (all output was `console.warn`
+  React-Router-future-flag noise + test-name announcement lines — no `FAILED`/`✘` markers seen). This is informational
+  only, NOT evidence — an incomplete run proves nothing about the full-suite exit code; do not flip on a partial result
+  no matter how clean it looked.
+- **Where**: log at this session's scratchpad (`playwright_smoke_run.log`) — NOT durable, and now moot since the run was
+  killed mid-flight; do not bother reading it, just re-run fresh.
+- **Resumption instructions for whoever picks this up next**:
+  1. Re-launch fresh: `cd deployment-ui && npx playwright test --project=chromium tests/smoke/` (idempotent, ~35-40 min
+     at `workers: 1` — run it in the background and actually wait for its own completion signal this time, rather than a
+     session that may compact mid-run).
+  2. Clean `exit 0` → flip all 3 todos in `data_status_tab_and_downloads_remediation_2026_06_16.md` (lines ~166-195)
+     citing `deployment-ui@80c547d` + `deployment-ui@067f7cd` + this fresh full-suite pass as evidence (per
+     `## Contradictions`/`## Flips verified` format), commit
+     `docs(plans): flip 3 data-status UI todos — pw:L2 fresh full-suite green [agt-0c9e3f]`, push, and append to
+     `## Flips verified` above.
+  3. If it fails: do NOT flip — read which spec(s) failed, determine if it's a NEW regression (file it) or an unrelated
      pre-existing flake (note it, still don't flip without a clean run).
   4. Either way, this doc's own `## Coverage`/`## Plans not reached` sections and STEP 7 (final flush + PR) are still
      owed after this resolves — this run is not done at this checkpoint, just durably saved.
