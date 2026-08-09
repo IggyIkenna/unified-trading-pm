@@ -115,10 +115,15 @@ their own. This batch extracts exactly those sub-items, leaving each source doc'
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Build a forward-registration CI guard so a NEW ad hoc/one-off backfill launcher can never launch a
-      VM invisible to the fleet monitor.** 1. Add
-      `deployment-service/scripts/quality_gates/check_vm_launcher_prefix_registration.py` (or fold into an existing QG
-      check in that dir): glob every `deployment-service/scripts/vm/launch-*.sh`, grep each for its
+- [x] ✅ [SCRIPT] P2. **Build a forward-registration CI guard so a NEW ad hoc/one-off backfill launcher can never launch
+      a VM invisible to the fleet monitor.** — `deployment-service@c8f1612b`. Shipped
+      `check_vm_launcher_prefix_registration.py` (derives each launcher's prefix, fails when uncovered by
+      `is_data_vm()`/unregistered in `LAUNCHER_FOR_VM_PREFIX`, `# non-relaunchable:` opt-out), wired into
+      `quality-gates.sh`, baseline-ratcheted (`vm_launcher_prefix_registration_baseline.yaml`, 39 pre-existing launchers
+      grandfathered), `launcher_registry.py` docstring + this batch's codex SSOT updated with the closed-loop contract,
+      8 new unit tests (incl. a synthetic unregistered-launcher case) — all green, `quality-gates.sh` passed clean
+      (259s). 1. Add `deployment-service/scripts/quality_gates/check_vm_launcher_prefix_registration.py` (or fold into
+      an existing QG check in that dir): glob every `deployment-service/scripts/vm/launch-*.sh`, grep each for its
       `VM_NAME=`/`VM_PREFIX=` bash assignment, and derive the literal/prefix portion (a fixed string prefix before the
       first `${...}` interpolation). 2. For each derived prefix, FAIL when it is not covered by
       `vm_classification.is_data_vm(<a synthetic VM name with that prefix>)` (mirrors the existing
@@ -190,3 +195,10 @@ independently conflict-checked against the full active corpus with zero competin
   docs), following the 2026-08-08 infra RECLASSIFY sweep's whole-doc-level finding of zero qualifying flips. Paired with
   `infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md` per the finalize-plan-coverage rule. Conflict-checked
   against the concurrently-drafted `infra_satellite_ao_dispatch_batch9_2026_08_09.md` — zero overlap.
+- **2026-08-09 (slot 13)** — Todo 1 shipped: `deployment-service@c8f1612b`. On first run against the real 176-launcher
+  fleet the check found 39 launchers whose derived prefix isn't (yet) covered by both `is_data_vm()` and
+  `LAUNCHER_FOR_VM_PREFIX` (mostly the documented `None`-registry class — fan-out/read-only/live-service/infra launchers
+  that predate the new `# non-relaunchable:` marker convention) — grandfathered into
+  `vm_launcher_prefix_registration_baseline.yaml` per the todo's own "fresh baseline if needed" allowance; only a
+  brand-new unregistered launcher fails the check outright going forward. Todos 2-3 remain open (untouched, different
+  files, no conflict).

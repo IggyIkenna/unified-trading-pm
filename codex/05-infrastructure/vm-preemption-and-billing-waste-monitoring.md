@@ -82,6 +82,21 @@ before this doc (2026-07-24 gap analysis, `data_pipeline_e2e_milestones_gate_202
   silently missing from that classifier again, that guard test should already be failing CI — treat a live repeat of
   this finding as evidence the guard itself regressed, not just the prefix list.
 
+**Forward-registration closed-loop contract (codified 2026-08-09,
+`issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md`'s `[SCRIPT] P2` follow-up).** The 2026-08-04 fix +
+its guard test close the loop for an EXISTING `launcher_registry` entry that silently drops out of `DATA_VM_PREFIXES` —
+they do not catch a **brand-new** one-off/ad hoc launcher whose `VM_NAME=`/`VM_PREFIX=` was never registered in ANY of
+the three registries (`vm_classification.DATA_VM_PREFIXES`, `launcher_registry.LAUNCHER_FOR_VM_PREFIX`,
+`vm_prefix_registry.VM_PREFIX_TO_BUCKET`) in the first place — exactly how `af-backfill-` went unnoticed for ~9 days
+before that fix. **A new `scripts/vm/launch-*.sh` MUST register its `VM_NAME`/`VM_PREFIX` in all three registries in the
+SAME commit that adds the launcher**, or mark it `# non-relaunchable: <reason>` in the launcher script if it is
+deliberately not a fleet-monitored data VM (a fan-out wrapper, a read-only audit, a live-service singleton). Enforced by
+`deployment-service/scripts/quality_gates/check_vm_launcher_prefix_registration.py` (wired into
+`deployment-service/scripts/quality-gates.sh`): it derives each launcher's VM-name prefix from the launcher FILE SET
+itself (not the registries' own keys, so a launcher registered nowhere is caught) and fails on a prefix that is new
+relative to a per-repo shrinking baseline (`vm_launcher_prefix_registration_baseline.yaml`, seeded 2026-08-09 with the
+pre-existing fleet).
+
 ### 2. attempted_failed billing-waste audit
 
 - For any VM class showing an elevated `attempted_failed` count (see `deployment-observability.md`'s existing
