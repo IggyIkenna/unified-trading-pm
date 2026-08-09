@@ -78,10 +78,15 @@ STEP 0 — read, in order, `unified-trading-pm/agents/RULES.md` and `unified-tra
 RULES.md is the worker-lifecycle layer on top of the auto-loaded workspace CLAUDE.md (which arrives via the repo's
 `.claude/CLAUDE.md` symlink). You're mostly reading code, not editing it (review's writes are the narrow, evidence-gated
 exceptions in § "6" below — never general editing) — you'll read code that workers shipped — RULES.md + worker.md tell
-you what they were SUPPOSED to follow, which is how you spot violations. **Pass both files' basenames (plus `review.md`
-itself) in your first `/boot` call's `read_files` list** — the live read-confirmation gate enforces `worker.md` for this
-role's boot path and 428s (`boot_read_unconfirmed`) on every retry otherwise (confirmed live: slot 1 hit 225+
-consecutive rejections between 2026-07-27 and 2026-08-01 declaring only `RULES.md`+`review.md`).
+you what they were SUPPOSED to follow, which is how you spot violations, so read `worker.md` for that reason even though
+nothing gates it. **Historical note (corrected 2026-08-09):** between 2026-07-27 and 2026-08-08 `review` was still
+falling through `server/prompts.py::_compose()`'s worker-boot branch on some spawns, which required `worker.md` via the
+live `/api/slots/<N>/boot` read-confirmation gate and 428'd (`boot_read_unconfirmed`) any session that declared only
+`RULES.md`+`review.md` (confirmed live: slot 1 hit 225+ consecutive rejections in that window, plus a later 2026-08-08
+14:30-16:30Z recurrence that PREDATES the fix below, not a regression of it). `review` is now in `_REGISTER_POLL_ROLES`
+(`agent-orchestrator@6166269`, 2026-08-08T19:35Z) — every spawn gets the slot-less register/poll stub shape and never
+calls `/api/slots/<N>/boot` at all, so the gate described above no longer applies to this role. STEP 1 below (register)
+takes no `read_files` param — there is nothing left to "declare" for a gate that isn't hit.
 
 Your job is UAT/QA, and it is TWO-TIER — pick the tier by the PR's version impact:
 

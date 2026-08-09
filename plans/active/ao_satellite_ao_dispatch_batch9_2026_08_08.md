@@ -125,7 +125,7 @@ re-running the classification from scratch. That re-check (2026-08-08) found:
 
 ## Todos
 
-- [ ] [DOCS] P1. **Audit every craft/audit-role file in `unified-trading-pm/agents/*.md` against
+- [x] ✅ [DOCS] P1. **Audit every craft/audit-role file in `unified-trading-pm/agents/*.md` against
       `server/prompts.py::expected_read_files`, and add the regression test proving the STEP-0 declared read-list stays
       in sync — one combined todo since the audit and its regression test are tightly coupled (the test's assertion IS
       the audit, made durable).** First re-confirm live which roles the composer-guard fix (`_REGISTER_POLL_ROLES` +
@@ -175,3 +175,16 @@ Log for the full disposition of the other 47 items re-checked (none needed extra
   `context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`'s unrelated `KeyError` role-file-lookup fix) —
   neither collides with this todo's target files. Left `status: draft` deliberately — flipping to `active` is the
   operator's call, matching batch5-8's own precedent.
+- **2026-08-09 (slot 30, backend_engineer/infra crafts) — todo 1 DONE**: full audit found zero gaps in the
+  originally-anticipated direction (all 5 craft roles + `ag_closeout_auditor`/`na_eligibility_auditor` already correctly
+  documented — this doc's own "may not be covered" uncertainty resolved: both ARE covered by the composer-guard fix). 2
+  unanticipated live gaps found + fixed in the SAME pass (findings-triage: in-file → same-commit): (1)
+  `cefi_reconciliation_auditor`/`cefi_mtds_smoke_tester` missing from `_ONE_SHOT_ESCALATION_ROLES` since their
+  2026-08-05 addition to `plan_health.py` — `agent-orchestrator@5353b6b`; (2) `review.md`'s STEP-0 still claimed the
+  live /boot gate enforces `worker.md` for it — stale post-`6166269` (review never calls `/boot` anymore), corrected to
+  a historical note — `unified-trading-pm@<pending>`. 14:30-16:30Z 2026-08-08 recurrence PREDATES `6166269` (19:35Z that
+  day) — not a live regression, no P0 filed. Regression test:
+  `agent-orchestrator/tests/test_role_file_worker_md_read_sync.py`, full `quality-gates.sh` green (3060 tests + 262
+  dashboard tests). Full audit table + evidence recorded in
+  `/plans/active/issues/review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`'s own todos/Progress Log per this
+  plan's "Rules for every worker" (checkboxes there deliberately left unflipped for the finalize plan to reconcile).
