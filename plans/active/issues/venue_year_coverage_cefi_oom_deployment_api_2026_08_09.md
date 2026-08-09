@@ -29,7 +29,7 @@ status: open
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
-repos: [deployment-api]
+repos: [deployment-api, unified-trading-library]
 scope: [engineer]
 tags: [oom, deployment-api, data-status, venue-year-coverage, cloud-run, memory]
 related:
@@ -152,23 +152,49 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       100% pinned to `00492-vh6` for >3 min). **The `date_window` yearly-chunk fix from todo 1 does NOT close the cefi
       OOM** — see the new BACKEND todo below. This todo's own infra-scoped done-when (confirm live deploy + run the
       probe + cite responses/logs) is met; the underlying bug is not — deployment-api@a0b5abb (2026-08-09).
-- [ ] [BACKEND] P0. **The `date_window` yearly-chunk fix (deployment-api@049d8d58a, squashed to `main`@06a2a29, live
-      since 2026-08-09T15:57:55Z) does NOT resolve the cefi OOM in production** — reproduced 3× (all 3 `scope=` values)
-      against the stable, fix-containing, 100%-traffic revision `uts-shared-deployment-api-00492-vh6`, each hitting
-      `Memory limit of 16384 MiB exceeded` (16535-16768 MiB) per the INFRA todo's evidence above. Root cause unknown —
-      the fix's own Progress Log entry (todo 1) passed the full local test suite + `quality-gates.sh`, so this is a
-      live-only gap the test suite doesn't cover (no real-size cefi manifest in test fixtures). Candidate causes to
-      investigate: (a) a single CALENDAR YEAR of cefi tick-level data is itself still too large post-pushdown (the
-      issue's own root-cause section already established that an UNFILTERED read of cefi exceeds 16GiB outright — a
-      yearly window may not be a fine-enough grain if recent years carry disproportionately more instruments/ticks than
-      older ones; try monthly or weekly windows, or measure real per-year row/byte counts first); (b) the pyarrow
-      `date_window` filter in `read_manifest_window()` isn't actually reducing the row-group set for cefi's specific
-      partitioning/date-column type (verify EXPLAIN/row-group-skip stats on a real read, not just the filter shape unit
-      test); (c) the per-chunk `pd.DataFrame`s or intermediate pyarrow tables aren't being released between years (check
-      for an accumulating list before the final `concat` rather than an incremental accumulate+drop). Re-run this same
-      3-scope curl probe (`could_exist`/`mvp`/`all`, `asset_groups=cefi`) against live prod as the acceptance check once
-      a further fix ships; cite fresh Cloud Logging evidence of a CLEAN window (no `Memory limit exceeded` /
-      `terminated on signal 9`) same as this issue's original acceptance bar. Repo: deployment-api.
+- [x] ✅ [BACKEND] P0. **The `date_window` yearly-chunk fix (deployment-api@049d8d58a, squashed to `main`@06a2a29, live
+      since 2026-08-09T15:57:55Z, Evidence: cloudbuild=ab019014 — the deploy already verified SUCCESS by todo 2 above)
+      does NOT resolve the cefi OOM in production** — reproduced 3× (all 3 `scope=` values) against the stable,
+      fix-containing, 100%-traffic revision `uts-shared-deployment-api-00492-vh6`, each hitting
+      `Memory limit of 16384 MiB exceeded` (16535-16768 MiB) per the INFRA todo's evidence above. **ROOT CAUSE FOUND
+      (candidate (b) confirmed, (a)/(c) ruled out) — the fix lives in `unified-trading-library`, NOT `deployment-api`.**
+      Live GCS metadata probe against
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (10,593,589 rows, 86 row
+      groups, 42 cols) showed every row group's `date` min/max spans 2-2.5 CALENDAR YEARS (rows are NOT date-sorted at
+      write time) — irrelevant to the actual trigger, though, because `DRILLDOWN_COLUMNS`
+      (`deployment-api/deployment_api/services/manifest_source.py`) requests `canonical_question_group` (a
+      `SHARD_AXIS_MATRIX` axis), which is **absent from every current asset_group's manifest schema** (confirmed via
+      footer-only schema probe: cefi/defi/tradfi/sports/prediction all lack it as of 2026-08-09).
+      `unified_trading_library.manifest_writer._read_index._read_parquet_columns_safe`'s `columns=`+`filters=` slim path
+      raised `ArrowInvalid` on that missing column and fell straight to its legacy-schema fallback: a FULL, UNFILTERED,
+      ALL-42-COLUMN decode — on EVERY window, regardless of granularity, since the missing column is window-independent.
+      Measured directly against the live bucket (bare pandas+pyarrow, no FastAPI/uvicorn baseline): the broken fallback
+      path = **~8.0 GiB RSS** for a single "1-year" call (its `filters=` was silently discarded); the narrowed-columns
+      retry (this fix) = **~1.6 GiB RSS** for the identical call (28 of 29 requested columns present, 1,518,847 of
+      10,593,589 rows matched) — a 5x reduction, comfortably under the 16 GiB container limit, and explains why the OOM
+      size (16.5-16.8 GiB) tracked the full-corpus decode almost exactly regardless of `scope=`. **Fix shipped:
+      `unified-trading-library@609299ad`** (LDR, verified ancestor of `origin/live-defi-rollout`) —
+      `_read_parquet_columns_safe` now retries with `columns=` narrowed to the intersection with the file's actual
+      schema (cheap footer-only `pq.ParquetFile` read) BEFORE falling back to the unbounded full read, so `filters=`
+      pushdown stays live for the columns that do exist. New regression tests cover both the narrowed-retry-succeeds
+      case and the narrowed-retry-still-fails (filter col also absent) case. Full local test suite + full
+      `quality-gates.sh` (no skip flags) green, sentinel=609299ad. **Live-prod re-verification is a SEPARATE follow-up
+      (see the new INFRA todo below)** — this fix is on `unified-trading-library`'s LDR trunk only; it has not yet
+      promoted to `main`, released via semver-agent, been picked up by deployment-api's dependency pin
+      (`>=0.77.0,<1.0.0` — confirmed compatible: LDR HEAD's own version is `v0.77.0`, so this ships as a patch within
+      the existing floor, no major-version gate), or redeployed. Repos: unified-trading-library (the actual fix),
+      deployment-api (the consumer needing a dependency bump once released).
+- [ ] [INFRA] P0. **Live-prod re-verification of the `unified-trading-library@609299ad` fix** — once (a) LDR→main
+      promotion lands the fix on `main` (`ldr-to-main-promote-fleet.yml`, `*/15`), (b) semver-agent mints + publishes
+      the new UTL patch release (`push:[main]`), (c) deployment-api's dependency-update automation
+      (`update-dependency-version.yml` / `unified-trading-ci`'s reusable workflow) opens + merges the version bump PR
+      (`unified-trading-library>=0.77.0,<1.0.0` already permits the new patch — no manual re-pin needed), and (d) the
+      `deployment-api-main-deploy` Cloud Build trigger redeploys `uts-shared-deployment-api` — re-run the same 3-scope
+      curl probe (`could_exist`/`mvp`/`all`, `asset_groups=cefi`) against live prod, confirm the deployed revision
+      actually contains `609299ad`'s ancestry (mirror todo 2's `Promoted-From-LDR`/digest-verification approach — squash
+      promotion means a bare `is-ancestor` check reads NO), and cite fresh Cloud Logging evidence of a CLEAN window (no
+      `Memory limit exceeded` / `terminated on signal 9`) same as this issue's original acceptance bar. Repo:
+      deployment-api (+ verify unified-trading-library reached main).
 - [ ] [BACKEND] P2. Audit the container's memory headroom (16GiB) vs. cefi/tradfi/defi's REAL manifest sizes — measure
       peak RSS for an unfiltered full read of each, similar to the RSS-measurement approach the archived
       `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08` issue doc used for `measure_honest_coverage.py` — to
@@ -198,3 +224,18 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   uninvestigated. This is a live, still-open production reliability gap on a SHARED Cloud Run service — flagging
   prominently per the workspace's "big finding" governance rule (data-correctness/reliability, contradicts a prior
   "done" claim).
+- **2026-08-09**: Todo 3 (BACKEND) done — root-caused via a live GCS metadata probe (footer-only Parquet schema read, no
+  full download) rather than guessing among the three candidate causes: `canonical_question_group` is absent from EVERY
+  current asset_group's manifest schema, so `unified_trading_library`'s `_read_parquet_columns_safe` raised
+  `ArrowInvalid` on every `columns=`+`filters=` slim read and fell back to a full unfiltered 42-column decode —
+  regardless of `date_window` size — which is why the prior yearly-chunking fix (todo 1) never actually took effect.
+  Measured directly against the live cefi bucket: ~8.0 GiB RSS (broken fallback) vs ~1.6 GiB RSS (this fix's narrowed-
+  columns retry) for the identical 1-year window. **The actual defect — and the fix — is in `unified-trading-library`,
+  not `deployment-api`** (the issue's original `repos:` scoping was corrected accordingly). Shipped
+  `unified-trading-library@609299ad` to LDR (full test suite + full `quality-gates.sh` green, sentinel-verified, post-
+  push ancestry independently verified on `origin/live-defi-rollout`). Split the live-prod re-verification into a new
+  INFRA todo (mirroring the todo-1/todo-2 split already established in this doc) since it depends on a multi-stage,
+  multi-hour automated pipeline (LDR→main promotion → semver-agent release → deployment-api's dependency-update dispatch
+  → redeploy) outside a single dispatched worker's session to synchronously chase — confirmed compatible with
+  deployment-api's existing `unified-trading-library>=0.77.0,<1.0.0` pin (LDR HEAD is `v0.77.0`, so this ships as an
+  in-range patch, no major-version gate needed).
