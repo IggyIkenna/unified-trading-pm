@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 262 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 300 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (28)
+### cefi (36)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -69,6 +69,33 @@ by hand._
   — Finalize twin for `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (drafted 2026-08-08 by the /ag-closeout-audit
   skill, slot 8, dispatch agt-6bc9c4). Reconciling 6 source docs' checkboxes once batch10's 6 todos land, asking the
   operator…
+- [`cefi_satellite_ao_dispatch_batch11_2026_08_09`](./cefi_satellite_ao_dispatch_batch11_2026_08_09.md) — Eleventh
+  AO-dispatch batch for cefi. Produced by a per-item satellite-extraction pass over the 19 cefi-tranche
+  `assigned_vm: NA` docs that a same-day RECLASSIFY sweep read end-to-end but did NOT whole-doc-flip (each carries at
+  least one…
+- [`cefi_satellite_ao_dispatch_batch11_2026_08_09_finalize`](./cefi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md)
+  — Finalize twin for `cefi_satellite_ao_dispatch_batch11_2026_08_09.md`. Reconciling 3 source docs'
+  (`cefi_consolidated_closeout_2026_07_18.md`, `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`,…
+- [`cefi_satellite_ao_dispatch_batch12_2026_08_09`](./cefi_satellite_ao_dispatch_batch12_2026_08_09.md) — Twelfth
+  AO-dispatch batch for cefi, sibling of `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` (same item-level-extraction
+  run, same 19-doc candidate list — see that doc for the full methodology). This batch is the `parent_epic:…
+- [`cefi_satellite_ao_dispatch_batch12_2026_08_09_finalize`](./cefi_satellite_ao_dispatch_batch12_2026_08_09_finalize.md)
+  — Finalize twin for `cefi_satellite_ao_dispatch_batch12_2026_08_09.md`. Reconciling 3 source docs'
+  (`issues/mdps_features_deadcode_consolidation_2026_07_20.md`, `aster_and_cefi_rolling_adv_feature_2026_07_21.md`,…
+- [`cefi_satellite_ao_dispatch_batch13_2026_08_09`](./cefi_satellite_ao_dispatch_batch13_2026_08_09.md) — Thirteenth
+  AO-dispatch batch for cefi, sibling of `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` (same item-level-extraction
+  run, same 19-doc candidate list — see that doc for the full methodology). This batch is the `parent_epic:…
+- [`cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize`](./cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize.md)
+  — Finalize twin for `cefi_satellite_ao_dispatch_batch13_2026_08_09.md`. Reconciling 2 source docs'
+  (`crypto_alpha_research_2026_07_24.md`, `l2_book_microstructure_capture_2026_07_13.md`) checkbox pointers once
+  batch13's 2 todos land, and…
+- [`cefi_satellite_ao_dispatch_batch14_2026_08_09`](./cefi_satellite_ao_dispatch_batch14_2026_08_09.md) — Fourteenth
+  AO-dispatch batch for cefi, sibling of `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` (same item-level-extraction
+  run, same 19-doc candidate list — see that doc for the full methodology). This batch is the `parent_epic:…
+- [`cefi_satellite_ao_dispatch_batch14_2026_08_09_finalize`](./cefi_satellite_ao_dispatch_batch14_2026_08_09_finalize.md)
+  — Finalize twin for `cefi_satellite_ao_dispatch_batch14_2026_08_09.md`. Reconciling
+  `issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`'s checkbox pointer once batch14's 1 todo lands, and
+  archiving batch14 via the 6-step…
 - [`cefi_satellite_ao_dispatch_batch9_2026_08_07`](./cefi_satellite_ao_dispatch_batch9_2026_08_07.md) — Ninth
   AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-07 (scheduled autonomous dispatch,
   tranche=cefi, slot 4, dispatch agt-ed7b44). Phase 0 re-derived the covering-plan set via…
@@ -122,7 +149,7 @@ by hand._
   via depends_on + gate_on_depends: true until that doc's 2 remaining todos (P0 vendor-catalog request gate; P1
   `--apply`…
 
-### defi (33)
+### defi (36)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -169,6 +196,10 @@ by hand._
 - [`defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07`](./defi_jupiter_venue_registration_and_live_connector_wireup_finalize_2026_08_07.md)
   — Gated finalize companion for defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md — re-verifies
   the build's evidence (incl. its own todo 6's audit-doc + codex-doc edits), then archives both docs per…
+- [`defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09`](./defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md)
+  — Gated closeout for issues/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04.md — machine-held
+  via depends_on + gate_on_depends: true until the source doc's sole remaining item (the bounded
+  read_availability_index…
 - [`defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08`](./defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08.md)
   — Gated finalize companion for issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md (reclassified
   NA→planning, na-eligibility-audit round7 RECLASSIFY sweep, 2026-08-08) — re-verifies the forward-write build's
@@ -188,6 +219,12 @@ by hand._
 - [`defi_satellite_ao_dispatch_batch10_2026_08_06_finalize`](./defi_satellite_ao_dispatch_batch10_2026_08_06_finalize.md)
   — Gated closeout for defi_satellite_ao_dispatch_batch10_2026_08_06.md — machine-held via depends_on + gate_on_depends:
   true until every one of that plan's 9 todos is done. Mirrors batch1-9-finalize: reconcile each of the source docs…
+- [`defi_satellite_ao_dispatch_batch11_2026_08_09`](./defi_satellite_ao_dispatch_batch11_2026_08_09.md) —
+  Satellite-batch extraction mirroring /ag-closeout-audit's pattern, produced from a targeted read of 14 defi plan/issue
+  docs that a same-day RECLASSIFY sweep found did NOT qualify for a whole-doc `assigned_vm` flip (each still carries…
+- [`defi_satellite_ao_dispatch_batch11_2026_08_09_finalize`](./defi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md)
+  — Gated closeout for defi_satellite_ao_dispatch_batch11_2026_08_09.md — machine-held via depends_on + gate_on_depends:
+  true until every one of that plan's 12 todos is done. Reconciles each of the 6 source docs (flip/cite the item each…
 - [`defi_satellite_ao_dispatch_batch2_2026_07_26`](./defi_satellite_ao_dispatch_batch2_2026_07_26.md) — Second
   AO-dispatch batch for defi, produced by the `/ag-closeout-audit` skill's full Phase-1 (per-doc classify) + Phase-3
   (conflict-check + draft) triage over all 56 defi AG-primary docs not already covered by the consolidated closeout,…
@@ -237,7 +274,7 @@ by hand._
   finalize companion for solana_dex_pool_swaps_indexer_2026_08_08.md — reconcile evidence back into the source scoping
   doc, re-check any deferred follow-up, then archive both docs per the standard 6-step ritual.
 
-### tradfi (25)
+### tradfi (26)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -321,23 +358,23 @@ by hand._
   — Gated closeout for tradfi_satellite_ao_dispatch_batch8_2026_08_08.md — machine-held via depends_on plus
   gate_on_depends: true until all 3 of that plan's todos are done. Mirrors the batch1-7-finalize pattern: reconcile each
   distinct source…
+- [`tradfi_satellite_ao_dispatch_batch9_2026_08_09`](./tradfi_satellite_ao_dispatch_batch9_2026_08_09.md) —
+  Satellite-batch extraction mirroring /ag-closeout-audit's pattern, produced from a targeted read of the 2 tradfi
+  plan/issue docs a same-day RECLASSIFY sweep found did NOT qualify for a whole-doc `assigned_vm` flip. Both docs are
+  large,…
+- [`tradfi_satellite_ao_dispatch_batch9_2026_08_09_finalize`](./tradfi_satellite_ao_dispatch_batch9_2026_08_09_finalize.md)
+  — Gated closeout for tradfi_satellite_ao_dispatch_batch9_2026_08_09.md — machine-held via depends_on +
+  gate_on_depends: true until both of that plan's todos are done. Reconciles the 2 source docs (flip/cite the item each
+  batch9 todo closed),…
 - [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](./tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
-- [`tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08_finalize_2026_08_08`](./tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08_finalize_2026_08_08.md)
-  — Gated closeout for the retroactive reclassification of
-  issues/tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08.md (NA → planning, 2026-08-08
-  na-eligibility-audit round7 RECLASSIFY sweep). Machine-held via…
 
-### sports (37)
+### sports (40)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
   cefi, defi, tradfi, prediction — each of which already carries its own…
-- [`ag_closeout_audit_sports_tooling_followups_2026_08_06_finalize_2026_08_08`](./ag_closeout_audit_sports_tooling_followups_2026_08_06_finalize_2026_08_08.md)
-  — Gated closeout for issues/ag_closeout_audit_sports_tooling_followups_2026_08_06.md -- machine-held via depends_on +
-  gate_on_depends: true until both of that doc's todos (the check_ag_closeout_linkage.py status: superseded exclusion,
-  and…
 - [`backfill_smoke_write_path_canonical_audit_finalize_2026_08_08`](./backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md)
   — Gated closeout for the retroactive reclassification of
   issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md (NA → planning, 2026-08-08 na-eligibility-audit round7
@@ -409,6 +446,21 @@ by hand._
   — Gated closeout for sports_satellite_ao_dispatch_batch10_2026_08_06.md — machine-held via depends_on +
   gate_on_depends: true until all 4 of that plan's todos are done. Mirrors the batch2-9-finalize pattern: reconcile each
   of the 4 distinct…
+- [`sports_satellite_ao_dispatch_batch11_2026_08_09`](./sports_satellite_ao_dispatch_batch11_2026_08_09.md) — Eleventh
+  AO-dispatch batch for sports. Mirrors the satellite-batch-extraction pattern against the 12-doc `sports` tranche the
+  same-day RECLASSIFY sweep read end-to-end but did not whole-doc-flip: pulled out only the specific bounded,…
+- [`sports_satellite_ao_dispatch_batch11_2026_08_09_finalize`](./sports_satellite_ao_dispatch_batch11_2026_08_09_finalize.md)
+  — Gated closeout for sports_satellite_ao_dispatch_batch11_2026_08_09.md — machine-held via depends_on +
+  gate_on_depends: true until both of that plan's todos are done. Mirrors the batch2-10-finalize pattern: reconcile each
+  of the 2 distinct…
+- [`sports_satellite_ao_dispatch_batch12_2026_08_09`](./sports_satellite_ao_dispatch_batch12_2026_08_09.md) **[draft]**
+  — Twelfth AO-dispatch batch for sports, drafted by the daily `/ag-closeout-audit sports` run. Phase 0-1 classified 62
+  sports-tagged AG-primary docs (15 excluded as genuinely multi-AG broad coordinators, 47 deep-audited via a Workflow):
+  3…
+- [`sports_satellite_ao_dispatch_batch12_2026_08_09_finalize`](./sports_satellite_ao_dispatch_batch12_2026_08_09_finalize.md)
+  — Gated closeout for sports_satellite_ao_dispatch_batch12_2026_08_09.md — machine-held via depends_on +
+  gate_on_depends: true until all 4 of that plan's todos are done. Mirrors the batch2-11-finalize pattern: reconcile
+  each of the 4 distinct…
 - [`sports_satellite_ao_dispatch_batch5_2026_07_26`](./sports_satellite_ao_dispatch_batch5_2026_07_26.md) — Fifth
   AO-dispatch batch for sports, produced by the `/ag-closeout-audit` skill's full Phase-1 (per-doc classify) + Phase-3
   (conflict-check + draft) triage over all 60 sports AG-primary docs not already covered by the consolidated closeout,…
@@ -458,7 +510,7 @@ by hand._
   "registry-aware honest-coverage denominator" todo — confirmed still unshipped across 4 consecutive same-day
   dispatches…
 
-### prediction (28)
+### prediction (32)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -507,6 +559,13 @@ by hand._
 - [`prediction_phase_e_football_arb_live_2026_07_24`](./prediction_phase_e_football_arb_live_2026_07_24.md) — Phase E of
   the prediction consolidated close-out, split out verbatim (line-cap remediation, 2026-07-24) — the af_fixture_id
   identity chain (Polymarket + Kalshi soccer, ~0%→~100% team-name matching) and the 3-venue Kalshi/Polymarket/Betfair…
+- [`prediction_satellite_ao_dispatch_batch10_2026_08_09`](./prediction_satellite_ao_dispatch_batch10_2026_08_09.md)
+  **[draft]** — Eighth-generation satellite-batch extraction (batch4/6/7/8/9 precede it) produced by the scheduled
+  `/ag-closeout-audit prediction` run 2026-08-09 (Phase 1: 37-doc Workflow fan-out, 0 errors — 22
+  `exclude_cross_cutting`, 4…
+- [`prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize`](./prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md)
+  — Gated closeout for prediction_satellite_ao_dispatch_batch10_2026_08_09.md — machine-held via depends_on +
+  gate_on_depends: true until all 4 of that plan's todos are done. Reconciles each of the 4 source docs' own checkboxes…
 - [`prediction_satellite_ao_dispatch_batch4_2026_07_26`](./prediction_satellite_ao_dispatch_batch4_2026_07_26.md) —
   Fourth AO-dispatch batch for prediction, produced by the `/ag-closeout-audit prediction` scheduled run 2026-07-26
   (ag_closeout_auditor, slot 7). Phase 1 re-classified all 26 prediction AG-primary candidate docs via a Workflow
@@ -537,6 +596,13 @@ by hand._
   — Gated closeout for prediction_satellite_ao_dispatch_batch8_2026_08_08.md — machine-held via depends_on +
   gate_on_depends: true until that plan's one todo is done. Mirrors the batch4/batch6/batch7-finalize pattern (reconcile
   the source…
+- [`prediction_satellite_ao_dispatch_batch9_2026_08_09`](./prediction_satellite_ao_dispatch_batch9_2026_08_09.md) —
+  Satellite-batch extraction mirroring /ag-closeout-audit's pattern, produced from a targeted read of the 2 prediction
+  plan docs a same-day RECLASSIFY sweep found did NOT qualify for a whole-doc `assigned_vm` flip.…
+- [`prediction_satellite_ao_dispatch_batch9_2026_08_09_finalize`](./prediction_satellite_ao_dispatch_batch9_2026_08_09_finalize.md)
+  — Gated closeout for prediction_satellite_ao_dispatch_batch9_2026_08_09.md — machine-held via depends_on +
+  gate_on_depends: true until both of that plan's todos are done. Reconciles
+  prediction_cross_venue_arb_and_coverage_2026_07_24.md's own…
 - [`predictions_ml_walk_forward_and_arb_2026_06_20`](./predictions_ml_walk_forward_and_arb_2026_06_20.md) — Run Model 2A
   walk-forward validation (AUC gate) and ship the FSS arb_calculator — the predictions-ML half of the
   sports_predictions_e2e milestone.
@@ -560,7 +626,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (57)
+### cross-cutting (61)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -614,17 +680,10 @@ by hand._
 - [`colocated_feature_pipeline_in_memory_handoff_2026_06_21`](./colocated_feature_pipeline_in_memory_handoff_2026_06_21.md)
   — Land deferred colocated feature pipeline I/O efficiency items (in-memory DAG handoff, parquet consolidation, column
   pruning) and restore features-service basedpyright strictness.
-- [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30`](./context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
-  — Operator asked me to evaluate a set of other coding-agent ideas (OpenCode's Scout subagent, Paperclip's fleet
-  control-plane, Pi's harness, Superpowers' brainstorming skill) against this workspace's
-  context/cost/throughput/planning-quality…
 - [`cross_cutting_consolidated_closeout_2026_07_25`](./cross_cutting_consolidated_closeout_2026_07_25.md) — New 6th
   "asset-group-style" umbrella (alongside cefi/defi/tradfi/prediction/sports) for data-pipeline (+ a small
   strategy/execution-determinism angle, Track 24) work that genuinely spans multiple asset groups rather than belonging
   to one.…
-- [`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26`](./cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md)
-  — First AO-dispatch batch for the cross-cutting tranche (genuinely cross-asset-group data-pipeline work — never
-  audited before this session), produced by the `/ag-closeout-audit` skill's full Phase-1 (per-doc classify) + Phase-3…
 - [`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize`](./cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md)
   — Gated closeout for cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md AND its sibling
   cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md — machine-held via depends_on + gate_on_depends: true until
@@ -633,6 +692,27 @@ by hand._
   — Second half of the cross-cutting tranche's first AO-dispatch batch — see
   `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` for the full Phase-1/Phase-3 audit summary, the Deferred
   conflict-gated/operator-gated/time-gated sections…
+- [`cross_cutting_satellite_ao_dispatch_batch2_2026_08_09`](./cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md)
+  — Second AO-dispatch batch for the cross-cutting tranche, produced by a satellite-batch-extraction pass (mirroring
+  `/ag-closeout-audit`'s pattern) over the 27 `assigned_vm: NA` cross-cutting docs that did NOT qualify for a whole-doc…
+- [`cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize`](./cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md)
+  — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` — machine-held via `depends_on` +
+  `gate_on_depends: true` until all 22 todos are done. Reconciles each of the 6 distinct `instruments_master` source
+  docs'…
+- [`cross_cutting_satellite_ao_dispatch_batch4_2026_08_09`](./cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md)
+  — Fourth AO-dispatch batch for the cross-cutting tranche, produced by the same 2026-08-09 satellite-batch-extraction
+  pass as batches 2-3 — this one pulls 3 bounded items out of `infrastructure_master` source docs:…
+- [`cross_cutting_satellite_ao_dispatch_batch4_2026_08_09_finalize`](./cross_cutting_satellite_ao_dispatch_batch4_2026_08_09_finalize.md)
+  — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` — machine-held via `depends_on` +
+  `gate_on_depends: true` until all 3 todos are done. Reconciles both `infrastructure_master` source docs' checkboxes,
+  then…
+- [`cross_cutting_satellite_ao_dispatch_batch5_2026_08_09`](./cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md)
+  — Fifth AO-dispatch batch for the cross-cutting tranche, produced by the same 2026-08-09 satellite-batch-extraction
+  pass as batches 2-4 — this one pulls 2 bounded items out of `features_service_e2e_pipeline_test_2026_05_26.md`…
+- [`cross_cutting_satellite_ao_dispatch_batch5_2026_08_09_finalize`](./cross_cutting_satellite_ao_dispatch_batch5_2026_08_09_finalize.md)
+  — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` — machine-held via `depends_on` +
+  `gate_on_depends: true` until both todos are done. Reconciles `features_service_e2e_pipeline_test_2026_05_26.md`'s
+  checkboxes,…
 - [`cross_cutting_strategy_execution_determinism_2026_07_26`](./cross_cutting_strategy_execution_determinism_2026_07_26.md)
   — Extracted 2026-07-26 from `cross_cutting_consolidated_closeout_2026_07_25.md` Track 24 (resolved
   `autonomous_session_operator_decisions_2026_07_25.md` entry #19) — a genuinely different angle from that doc's other
@@ -704,6 +784,10 @@ by hand._
 - [`instruments_mtds_consistency_remediation_residuals_2026_07_24`](./instruments_mtds_consistency_remediation_residuals_2026_07_24.md)
   — Split 2 of 3 from instruments_mtds_subset_consistency_remediation_2026_06_17.md (2026-07-24 line-cap remediation,
   clean-partition). This is the parent's own CORE original scope -- the F1-F7/N1-N9 findings from the 2026-06-17…
+- [`instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize`](./instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize.md)
+  — Gated finalize companion for instruments_mtds_consistency_remediation_residuals_2026_07_24.md (operator ruling
+  2026-07-24 requirement) — reconciles N5r/N6r + N1b evidence back into the source doc once both land, then runs the
+  6-step…
 - [`instruments_store_cf_canonicalization_single_walk_2026_07_24`](./instruments_store_cf_canonicalization_single_walk_2026_07_24.md)
   — Split 1 of 3 from instruments_mtds_subset_consistency_remediation_2026_06_17.md (2026-07-24 line-cap remediation,
   clean-partition). Carries the instruments-store canonical-form (CF-1..CF-12) single-walk code-remediation lineage --
@@ -749,27 +833,49 @@ by hand._
   — Forked out of mtds_data_status_page_parity_2026_07_21.md's sole remaining open todo (plan line-cap remediation,
   2026-07-24): implement the already-traced, already-designed write-time `mvp: bool` stamp for sports/prediction rows on
   UTL's…
-- [`tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08_finalize_2026_08_08`](./tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08_finalize_2026_08_08.md)
-  — Gated closeout for the retroactive reclassification of
-  issues/tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08.md (NA → planning, 2026-08-08
-  na-eligibility-audit round7 RECLASSIFY sweep). Machine-held via…
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (25)
+### ao (33)
 
 - [`ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08`](./ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md)
   — Gated closeout for `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md` — machine-held via
   `depends_on` + `gate_on_depends: true` until all 17 of that doc's remaining todos (14 per-row REOPEN-or-FLIP
   verdicts + 3 follow-ups)…
-- [`ao_observability_and_deploy_hygiene_gaps_2026_08_08_finalize_2026_08_08`](./ao_observability_and_deploy_hygiene_gaps_2026_08_08_finalize_2026_08_08.md)
-  — Gated closeout for `ao_observability_and_deploy_hygiene_gaps_2026_08_08.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until all 3 of that doc's remaining todos (fleet-cap raise, slot-30 re-run, stash-content
-  verifier) are…
 - [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md) —
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
   LDR code AND the production orchestrator on the planning VM (read-only SSM — live state.db, activity_log, process
   table,…
+- [`ao_satellite_ao_dispatch_batch10_2026_08_09`](./ao_satellite_ao_dispatch_batch10_2026_08_09.md) **[draft]** — TENTH
+  AO-dispatch batch for the `ao` topic tranche — produced by a satellite-batch-extraction pass (mirroring
+  `/ag-closeout-audit`'s pattern) over 21 `ao`-owned `assigned_vm: NA` docs that a same-day RECLASSIFY sweep read
+  end-to-end but…
+- [`ao_satellite_ao_dispatch_batch10_finalize_2026_08_09`](./ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md) —
+  Gated closeout for `ao_satellite_ao_dispatch_batch10_2026_08_09.md` — machine-held via `depends_on` +
+  `gate_on_depends` until all 6 of that batch's todos are done. Reconciles each verified todo's evidence back into its
+  TRUE source doc's…
+- [`ao_satellite_ao_dispatch_batch11_2026_08_09`](./ao_satellite_ao_dispatch_batch11_2026_08_09.md) **[draft]** —
+  ELEVENTH AO-dispatch batch for the `ao` topic tranche — a single-item satellite extraction from
+  `docs_reconcile_remaining_broken_links_2026_08_02.md`, a 12-open-todo `assigned_vm: NA` doc whose remaining items are
+  otherwise all genuine…
+- [`ao_satellite_ao_dispatch_batch11_finalize_2026_08_09`](./ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md) —
+  Gated closeout for `ao_satellite_ao_dispatch_batch11_2026_08_09.md` — machine-held via `depends_on` +
+  `gate_on_depends` until that batch's single todo is done. Reconciles the verified todo's evidence back into…
+- [`ao_satellite_ao_dispatch_batch12_2026_08_09`](./ao_satellite_ao_dispatch_batch12_2026_08_09.md) **[draft]** —
+  TWELFTH AO-dispatch batch for the `ao` topic tranche — produced by a fresh `/ag-closeout-audit ao` Phase 1 run
+  (2026-08-09, dispatch `agt-41d860`) that classified 36 `assigned_vm: NA` `ao`-tagged candidate docs not yet cited by
+  any of…
+- [`ao_satellite_ao_dispatch_batch12_finalize_2026_08_09`](./ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md) —
+  Gated closeout for `ao_satellite_ao_dispatch_batch12_2026_08_09.md` — machine-held via `depends_on` +
+  `gate_on_depends` until all 11 of that batch's todos are done. Reconciles each verified todo's evidence back into its
+  TRUE source doc's…
+- [`ao_satellite_ao_dispatch_batch13_2026_08_09`](./ao_satellite_ao_dispatch_batch13_2026_08_09.md) **[draft]** —
+  THIRTEENTH AO-dispatch batch for the `ao` topic tranche — a single-item satellite extraction from
+  `operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`, produced by the same 2026-08-09
+  `/ag-closeout-audit ao` Phase 1 run as…
+- [`ao_satellite_ao_dispatch_batch13_finalize_2026_08_09`](./ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md) —
+  Gated closeout for `ao_satellite_ao_dispatch_batch13_2026_08_09.md` — machine-held via `depends_on` +
+  `gate_on_depends` until its sole todo is done. Reconciles the verified todo's evidence back into…
 - [`ao_satellite_ao_dispatch_batch2_2026_07_30`](./ao_satellite_ao_dispatch_batch2_2026_07_30.md) — SECOND AO-dispatch
   batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-07-30, autonomous mode, real
   Workflow per-doc fan-out — unlike the 2026-07-26/07-30 prior audits, which were single-threaded with…
@@ -815,6 +921,13 @@ by hand._
   Gated closeout for ao_satellite_ao_dispatch_batch8_2026_08_08.md — machine-held via depends_on + gate_on_depends until
   every todo in that batch is done. Reconciles each completed todo's evidence back into its TRUE source issue doc(s)
   (the…
+- [`ao_satellite_ao_dispatch_batch9_2026_08_08`](./ao_satellite_ao_dispatch_batch9_2026_08_08.md) **[draft]** — NINTH
+  AO-dispatch batch for the `ao` topic tranche. Unlike batch5-8 (each a fresh `/ag-closeout-audit ao` fan-out), this
+  batch was produced by `ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md`'s own todo 3 — a named-gate re-check
+  of…
+- [`ao_satellite_ao_dispatch_batch9_finalize_2026_08_08`](./ao_satellite_ao_dispatch_batch9_finalize_2026_08_08.md) —
+  Gated closeout for ao_satellite_ao_dispatch_batch9_2026_08_08.md — machine-held via depends_on + gate_on_depends until
+  that batch's single todo is done. Reconciles the verified todo's evidence back into…
 - [`autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08_finalize_2026_08_08`](./autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08_finalize_2026_08_08.md)
   — Gated closeout for `autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until its sole todo (root-cause the AutoSpawn refill SLA gap) is done. Reconciles the…
@@ -825,10 +938,6 @@ by hand._
   Gated closeout for /plans/active/content_derived_backlog_task_ids_2026_08_08.md — machine-held via `depends_on` +
   `gate_on_depends: true` until every todo there is done. Exists because this particular migration's two failure modes
   are both…
-- [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30`](./context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
-  — Operator asked me to evaluate a set of other coding-agent ideas (OpenCode's Scout subagent, Paperclip's fleet
-  control-plane, Pi's harness, Superpowers' brainstorming skill) against this workspace's
-  context/cost/throughput/planning-quality…
 - [`deepseek_claude_blended_provider_routing_2026_07_28`](./deepseek_claude_blended_provider_routing_2026_07_28.md) —
   Register DeepSeek V4 Pro as a second, first-class model provider in agent-orchestrator's account pool, and add a
   routing layer so AutoSpawn decides per-task whether a fresh spawn uses DeepSeek or a Claude Max account — a real
@@ -848,12 +957,8 @@ by hand._
   monitoring_control_plane_master_2026_06_10.md as a file-disjoint scope-creep section (agent-orchestrator internals,
   not the…
 
-### ci (21)
+### ci (16)
 
-- [`ag_closeout_audit_sports_tooling_followups_2026_08_06_finalize_2026_08_08`](./ag_closeout_audit_sports_tooling_followups_2026_08_06_finalize_2026_08_08.md)
-  — Gated closeout for issues/ag_closeout_audit_sports_tooling_followups_2026_08_06.md -- machine-held via depends_on +
-  gate_on_depends: true until both of that doc's todos (the check_ag_closeout_linkage.py status: superseded exclusion,
-  and…
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
   archived (65/67 todos done, plan-line-cap remediation 2026-07-24): (1) the CI-runner-blocked full
@@ -874,19 +979,6 @@ by hand._
 - [`ci_satellite_ao_dispatch_batch4_finalize_2026_07_31`](./ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md) —
   Gated closeout for ci_satellite_ao_dispatch_batch4_2026_07_31.md — machine-held via depends_on + gate_on_depends: true
   until all 9 of that plan's todos are done. Reconciles each distinct source doc's checkboxes/prose independently,…
-- [`ci_satellite_ao_dispatch_batch5_2026_08_02`](./ci_satellite_ao_dispatch_batch5_2026_08_02.md) — Fifth AO-dispatch
-  batch for the `ci` topic tranche, authored 2026-08-02 against an operator ruling authorising the extraction. Six
-  conflict-cleared bounded todos, headed by the cloudbuild empty-tag-guard rollout the operator separately…
-- [`ci_satellite_ao_dispatch_batch5_finalize_2026_08_02`](./ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md) —
-  Gated closeout for ci_satellite_ao_dispatch_batch5_2026_08_02.md — machine-held via depends_on + gate_on_depends: true
-  until all 6 of that plan's todos are done. Reconciles each distinct source doc's checkboxes/prose independently,…
-- [`ci_satellite_ao_dispatch_batch6_2026_08_08`](./ci_satellite_ao_dispatch_batch6_2026_08_08.md) — Sixth AO-dispatch
-  batch for the `ci` topic tranche, drafted by `/ag-closeout-audit ci` (autonomous mode, 2026-08-08,
-  `ag_closeout_auditor` scheduled worker, slot 4). Phase 0 re-derived the candidate set fresh (48 members, 10
-  never-cited)…
-- [`ci_satellite_ao_dispatch_batch6_finalize_2026_08_08`](./ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md) —
-  Gated closeout for ci_satellite_ao_dispatch_batch6_2026_08_08.md — machine-held via depends_on + gate_on_depends: true
-  until all 12 of that plan's todos are done. Reconciles each distinct source doc's checkboxes/prose independently,…
 - [`ci_vm_exposure_remediation_2026_08_06`](./ci_vm_exposure_remediation_2026_08_06.md) —
   ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md's own fixes (IOPS bump, resource-cap removal)
   worked, but it left 3 exposure items unaddressed on the dedicated CI runner VM (i-042a6332509482556): no swap safety
@@ -919,10 +1011,10 @@ by hand._
   — Extends a 4-repo commit-classification sample (execution-service, features-service, instruments-service,
   market-data-processing-service) to all ~23 Python fleet repos, to turn the selective-test-execution design's savings
   estimate from a…
-- [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
-  incremental rebuilds only recompile changed code, not the full app.
+- [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) **[complete]** — Keep the UI quality-gate
+  build cache warm so incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (21)
+### infrastructure (27)
 
 - [`ci_pipeline_speed_and_cost_redesign_2026_08_05`](./ci_pipeline_speed_and_cost_redesign_2026_08_05.md) — Operator
   target: LDR→main should take 3-5 minutes regardless of repo when little has changed, cross-repo workflow triggering
@@ -951,6 +1043,21 @@ by hand._
   — shared_ci_workflow_repo_extraction_2026_08_06.md extracted the 2 files every repo calls via `uses:` (the actual
   cross-repo dependency surface) into unified-trading-ci. It deliberately left alone a SECOND, larger class: ~9 more
   workflow…
+- [`infra_satellite_ao_dispatch_batch10_2026_08_09`](./infra_satellite_ao_dispatch_batch10_2026_08_09.md) — Tenth
+  AO-dispatch batch for the `infra` topic tranche, produced by a manual satellite-batch-extraction pass (mirrors
+  `/ag-closeout-audit`'s pattern) over the 14 NA docs the 2026-08-08 infra RECLASSIFY sweep found zero whole-doc
+  candidates…
+- [`infra_satellite_ao_dispatch_batch10_finalize_2026_08_09`](./infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md)
+  — Gated closeout for `infra_satellite_ao_dispatch_batch10_2026_08_09.md`, per the finalize-plan-coverage gate
+  (task_template.md §4, operator ruling 2026-07-24; machine-enforced by
+  `scripts/quality_gates/check_finalize_plan_coverage.py`).…
+- [`infra_satellite_ao_dispatch_batch11_2026_08_09`](./infra_satellite_ao_dispatch_batch11_2026_08_09.md) **[draft]** —
+  Eleventh AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode,
+  2026-08-09, second run of the day — slot 9, dispatch agt-c74a01). Single source:…
+- [`infra_satellite_ao_dispatch_batch11_finalize_2026_08_09`](./infra_satellite_ao_dispatch_batch11_finalize_2026_08_09.md)
+  — Gated closeout for `infra_satellite_ao_dispatch_batch11_2026_08_09.md`, per the finalize-plan-coverage gate
+  (task_template.md §4, operator ruling 2026-07-24; machine-enforced by
+  `scripts/quality_gates/check_finalize_plan_coverage.py`).…
 - [`infra_satellite_ao_dispatch_batch1_2026_07_26`](./infra_satellite_ao_dispatch_batch1_2026_07_26.md) — The infra
   tranche's covering set is a ZERO-TODO digest. `infra_consolidated_closeout_2026_07_25.md` lists 32 Source docs for
   discoverability and carries no `- [ ]` of its own (verified: `grep -cE '^\s*-\s*\[[ xX]\]'` on it returns 0), and…
@@ -970,6 +1077,13 @@ by hand._
   Phase 0 re-derived the covering set (13 covering docs, unchanged since 2026-08-02; 50 members, up from 45 on…
 - [`infra_satellite_ao_dispatch_batch7_finalize_2026_08_04`](./infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md)
   — Gated closeout for `infra_satellite_ao_dispatch_batch7_2026_08_04.md`, per the finalize-plan-coverage gate
+  (task_template.md §4, operator ruling 2026-07-24; machine-enforced by
+  `scripts/quality_gates/check_finalize_plan_coverage.py`). Once…
+- [`infra_satellite_ao_dispatch_batch9_2026_08_09`](./infra_satellite_ao_dispatch_batch9_2026_08_09.md) — Ninth
+  AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode, 2026-08-09).
+  Two independent sources: (1) `infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md`'s G2 item (move the hardcoded…
+- [`infra_satellite_ao_dispatch_batch9_finalize_2026_08_09`](./infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md)
+  — Gated closeout for `infra_satellite_ao_dispatch_batch9_2026_08_09.md`, per the finalize-plan-coverage gate
   (task_template.md §4, operator ruling 2026-07-24; machine-enforced by
   `scripts/quality_gates/check_finalize_plan_coverage.py`). Once…
 - [`na_docs_validity_and_ao_eligibility_audit_2026_07_26`](./na_docs_validity_and_ao_eligibility_audit_2026_07_26.md) —

@@ -811,6 +811,40 @@ service-specific auto-repin/side-effect step belongs in THAT service's own `clou
 shared file, verify end-to-end which live trigger reaches it before declaring the wiring "CONFIG DONE" — "the step
 exists in a file with the right guard" is not evidence it ever executes).
 
+### Empty-tag / `$SHORT_SHA` guard — `cloudbuild.yaml` must fall back when the build source has no SHA (codified 2026-08-06)
+
+A `cloudbuild.yaml` step that tags a Docker image `:$SHORT_SHA` dies with `invalid reference format` (exit 125) whenever
+the build is triggered from a **storageSource** (a tarball/manual submit) rather than a real GitHub-connected commit —
+`$SHORT_SHA` resolves EMPTY in that path, producing `image:` (a bare colon, no tag). Every image-building consumer's
+`cloudbuild.yaml` (17/19 CI-tranche consumers as of 2026-08-06; `e2e-testing` and `system-integration-tests` are
+legitimate N/A — test-harness repos with no Docker image / no push step) MUST guard the build-tag substitution with a
+fallback: extract a `VERSION` (or similar) value and set `SAFE_SHA=${SHORT_SHA:-$VERSION}` (or equivalent), with a FATAL
+diagnostic if BOTH resolve empty rather than silently building an untagged/`:latest` -shadowing image. Verified
+end-to-end via a real `gcloud builds submit` storageSource dispatch with `SHORT_SHA` empty (execution-service, build
+`4d265c51-5ca0-4349-b48f-80d4f7179430`, 2026-08-06) — recovered via `VERSION=0.0.0.dev0` fallback instead of dying.
+Rollout tracked at `/plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md`;
+the drift-baseline ratchet this guard interacts with is `scripts/quality_gates/check_cloudbuild_template_drift.py` /
+`cloudbuild_template_drift_baseline.yaml` (shrinking-ratchet, never raised).
+
+**Two-step rollout when a template-drift baseline exists**: do NOT roll a new/changed template step out to
+already-drifted consumers in the same pass that also tries to shrink the baseline — resolve the existing per-repo drift
+FIRST (bring every consumer to at-or-below its ratcheted baseline), THEN apply the new guard/step as its own separate
+rollout. Combining both in one pass makes it impossible to tell whether a post-rollout drift-count increase is the new
+step or pre-existing debt.
+
+### `quality-gates-v2` CI-status dispatch must be outage-aware — a 0-job billing/startup-kill run is not a genuine FAILING status (codified 2026-08-07)
+
+The "Record CI status" step (`if: always()`) in `quality-gates-v2` dispatches a `STATUS=FAILING` Firestore write on ANY
+non-success conclusion — including a 0-job account-level billing-wall/quota kill (`jobs: []`,
+`conclusion: startup_failure`), which no worker can fix and which generated `ldr_qg_failure` escalation spam fleet-wide
+during the 2026-07-29 billing-wall incident. **Detect the infrastructure-kill pattern** (`CONTENT_GATE_RESULT=failure`
+AND `SLICES_RESULT=failure` → treat as `BILLING_KILL=true`) and skip the FAILING dispatch, emitting only a `::notice::`
+annotation instead — a genuine failing run (content-gate succeeds, slices fails) still dispatches normally. Implemented
+in `unified-trading-ci`'s shared `python-quality-gates-v2.yml` (the reusable workflow was extracted there per
+`shared_ci_workflow_repo_extraction_2026_08_06.md` — this is the single source now, not a per-repo `.tmpl` +
+`rollout-workflow-templates.sh` rollout). Source:
+`/plans/archive/issues/github_actions_billing_wall_recurrence_2026_07_29.md`.
+
 ## Strict quickmerge — direct integration-branch code pushes are BANNED (HARD RULE, 2026-06-08)
 
 CODE reaches the integration branch ONLY via `quickmerge --agent --files`. A direct `git push` of code to

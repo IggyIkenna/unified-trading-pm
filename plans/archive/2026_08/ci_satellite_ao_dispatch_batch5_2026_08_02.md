@@ -14,7 +14,7 @@ summary: >-
   batch 5, and the F3 dispatch-success-reporting gap the 2026-08-01 `/na-eligibility-audit ci` re-flagged as "the one
   genuinely-uncovered bounded gap, still not yet extracted into any active batch". Two halves of F3 and batch4's D4-1
   are rationed into `## Deferred` on genuine same-file contention, not dropped.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -38,7 +38,7 @@ related:
     /plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/active/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md,
-    /plans/active/ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_2026_07_29.md,
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
@@ -62,7 +62,7 @@ context_scope:
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
     /plans/archive/issues/github_actions_billing_wall_recurrence_2026_07_29.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
-    /plans/active/ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 locked_by:
@@ -81,8 +81,15 @@ source: >-
 
 # CI satellite AO batch 5
 
-> **✅ STATUS: `active`** — operator-approved 2026-08-06, dispatching. Todo 5 was found already shipped
-> (`deployment-ui@7086565`) before dispatch — see its checkbox. The other 5 todos are unaffected.
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 6 todos done. Finalize plan
+> (`ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md`) reconciled all 5 distinct source docs the 6 todos cite,
+> re-checked all 7 Deferred items (D5-1 through D5-7 — 2 resolved since drafting, 2 re-triaged onward via
+> batch6/batch6-finalize, 1 unchanged RESOLVED, 2 reconfirmed still open), then archived this plan via the standard
+> 6-step ritual. Finalize archived alongside at
+> `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md`.
+
+> **✅ STATUS: `active`** (historical, at time of dispatch) — operator-approved 2026-08-06, dispatching. Todo 5 was
+> found already shipped (`deployment-ui@7086565`) before dispatch — see its checkbox. The other 5 todos are unaffected.
 
 > **Why this plan exists.** `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (12/32 todos still open) and
 > `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (9/9 still open, still `draft`) both remain active — this is NOT a
@@ -476,3 +483,7 @@ future batch's re-triage; the rest need direct operator action, elapsed time, or
   can be added later). Baseline unchanged at 38 (dispatch sites still present; fixed count = 0 for orphan purposes —
   this fixes the reporting, not the orphan count). PM `quality-gates.sh` green. Shipped `unified-trading-pm@ead69c37d`,
   verified on origin.
+- **2026-08-09 (finalize todo 4, slot 33 — review→cicd craft) — ARCHIVED.** All 6 todos done, `locked_by` empty —
+  archived via the standard 6-step ritual (see `ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md` todo 4 for the
+  full per-step detail). Moved to `plans/archive/2026_08/` alongside its finalize plan in a commit separate from this
+  Progress Log/banner edit.

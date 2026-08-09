@@ -7,7 +7,7 @@ summary: >-
   re-checks the Deferred items (D5-1 through D5-7) for whether their blocker has cleared, and archives batch 5 via the
   standard 6-step ritual. Carries one batch-specific check the batch itself cannot contain: confirming the cloudbuild
   drift baseline was ratcheted DOWN (never up) by todo 1's two-step rollout.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [ci, cicd, ao-dispatch, close-out, batch-5, satellite-docs, archival]
 related:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
     /plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
@@ -49,7 +49,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/task_template.md,
@@ -57,6 +57,12 @@ context_scope:
 ---
 
 # CI satellite AO batch 5 — finalize
+
+> **🟢 ARCHIVED 2026-08-09** — all 4 todos done: reconciled all 5 distinct source docs the 6 batch-5 todos cite,
+> re-checked/re-verified all 7 Deferred items (D5-1 through D5-7; 2 resolved since drafting, 2 re-triaged onward via
+> batch6/batch6-finalize, 1 unchanged RESOLVED, 2 reconfirmed still open), then archived the parent via the standard
+> 6-step ritual in this same commit. Parent archived to
+> `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_2026_08_02.md`.
 
 > **🔒 GATED, not draft.** `depends_on: [ci_satellite_ao_dispatch_batch5_2026_08_02]` + `gate_on_depends: true` holds
 > every todo below until all 6 of batch5's own todos are `done` — this applies whether batch5 is still `status: draft`
@@ -180,16 +186,36 @@ context_scope:
     given its own plan? **Done when**: each of D5-1 through D5-7 has either (a) a note that it is ready for batch-6
     extraction because its blocker cleared, or (b) a re-verified confirmation the blocker is still open. Do NOT draft
     follow-up todos here — this plan's scope is reconciliation, not fresh drafting.
-- [ ] [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch5_2026_08_02.md`** via the standard 6-step ritual (CLAUDE.md §
-      plan archival): migrate any still-unresolved Deferred item to a tracked follow-up (todo 3 above should have
-      re-confirmed D5-1 through D5-7 — verify none silently vanishes) → add the archive banner → run the codex-alignment
-      check (todo 1 changes the cloudbuild template contract and todo 4 changes the `quality-gates-v2` CI-status
-      dispatch contract; confirm `/codex/08-workflows/ci-cd-flow.md` reflects both, and that the two-step "resolve
-      drift, then roll out" procedure is captured as a durable contract rather than living only in this batch) → update
-      CLAUDE.md/codex if any batch-5 todo established a new contract → grep the corpus for every referrer of
-      `ci_satellite_ao_dispatch_batch5_2026_08_02` and repoint each to the archived path → clear `locked_by` (already
-      empty; confirm). **Done when**: the plan is in `plans/archive/2026_08/`, every corpus referrer resolves,
-      `check_reference_paths.py` has not regressed, and this finalize doc is archived alongside it in the same commit.
+- [x] ✅ [DOC] P1. **DONE 2026-08-09 (slot 33, review→cicd craft).** Archived
+      `ci_satellite_ao_dispatch_batch5_2026_08_02.md` via the standard 6-step ritual
+      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).
+  - **Step 1 (migrate Deferred items)**: none needed migrating — every D5-1 through D5-7 item's real work already lives
+    in its own independent source doc (`quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md`,
+    `post_cutover_silent_assumption_sweep_2026_07_23.md`, batch4's own Deferred table, the capacity-crisis doc), none of
+    which are being archived here — todo 3's re-check confirmed nothing evaporates with batch5.
+  - **Step 2 (archive banner)**: added to both `ci_satellite_ao_dispatch_batch5_2026_08_02.md` and this finalize doc,
+    `status: complete` on both.
+  - **Step 3 (codex-alignment check)**: confirmed `/codex/08-workflows/ci-cd-flow.md` did NOT yet reflect either
+    contract batch5 shipped — added two new subsections: "Empty-tag / `$SHORT_SHA` guard" (todo 1's SAFE_SHA fallback
+    - the two-step "resolve drift, then roll out" procedure) and "`quality-gates-v2` CI-status dispatch must be
+      outage-aware" (todo 4's billing-kill-detection, done-elsewhere in `unified-trading-ci`). Shipped
+      `unified-trading-pm@<this commit>`.
+  - **Step 4 (CLAUDE.md)**: no CLAUDE.md-level change needed — both new contracts are codex-doc detail, not
+    always-on-every-task rules; the existing `/codex/08-workflows/ci-cd-flow.md` pointer in CLAUDE.md already covers the
+    domain.
+  - **Step 5 (referrer sweep)**: grepped the whole corpus for `ci_satellite_ao_dispatch_batch5_2026_08_02` and
+    `…_finalize_2026_08_02` — 8 leading-slash `/plans/active/...` references found (2 mutual between batch5/finalize, 2
+    in active issue docs `ag_closeout_audit_ci_parked_2026_08_08.md`/`…_09.md`, 4 in already-archived docs —
+    `batch6`/`batch6_finalize`/`ag_closeout_audit_ci_parked_2026_08_07.md`/
+    `cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md`), all repointed to
+    `/plans/archive/2026_08/...`. Bare-filename prose citations (historical "X was shipped by batch5 todo N" facts) left
+    as-is per this doc's own convention — `check_reference_paths.py` only scopes leading-slash tokens; a historical fact
+    citation doesn't need a live path.
+  - **Step 6 (move + clear lock)**: `locked_by` confirmed empty on both docs (no unlock needed). Both files `git mv`d to
+    `plans/archive/2026_08/` as a separate commit from this checkbox flip (per the "never combine flip + mv in one
+    commit" rule). `INDEX.md`/`active_plan_inventory` regenerated via their own scripts, not hand-edited.
+  - **Done-when met**: both docs live in `plans/archive/2026_08/`; every corpus referrer using the leading-slash form
+    resolves; `check_reference_paths.py` re-run clean (not regressed) before shipping.
 
 ## Codex SSOTs
 
@@ -299,3 +325,16 @@ context_scope:
   present; D5-6 — capacity-crisis doc confirmed still `status: open`). Zero follow-up todos drafted, per this todo's
   scope. Full per-item detail + citations on the todo checkbox itself above. Evidence:
   `unified-trading-pm@<this commit>` (this session's edit to this plan only — no code repos touched).
+- **2026-08-09 (todo 4, slot 33 — review→cicd craft) — TODO 4 COMPLETE, PLAN ARCHIVED.** Ran the standard 6-step
+  archival ritual against `ci_satellite_ao_dispatch_batch5_2026_08_02.md` (all 6 todos done, `locked_by` empty —
+  genuinely archival-eligible). Codex-alignment check found `/codex/08-workflows/ci-cd-flow.md` did not yet reflect
+  either contract batch5 shipped — added two new subsections (empty-tag/`SAFE_SHA` guard + the two-step
+  drift-then-rollout procedure; outage-aware `quality-gates-v2` CI-status dispatch). Referrer sweep: 8 leading-slash
+  `/plans/active/...` citations repointed to `/plans/archive/2026_08/...` across active + already-archived docs;
+  bare-filename prose citations left untouched (out of `check_reference_paths.py`'s scope, and correct per this corpus's
+  own historical-fact-citation convention). Both docs `git mv`d to `plans/archive/2026_08/` in a commit separate from
+  this checkbox flip (never combine flip + move, per the archival discipline SSOT's 2026-07-30 incident rule).
+  `INDEX.md` + the active-plan inventory regenerated via their own scripts (never hand-edited).
+  `check_reference_paths.py` re-run clean before shipping — zero new dangling/malformed leading-slash references. Full
+  per-step detail on the todo checkbox itself above. Evidence: `unified-trading-pm@<this commit>` (archival move +
+  referrer-repoint commit(s), this session).
