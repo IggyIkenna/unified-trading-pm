@@ -94,10 +94,11 @@ failure mode `/codex/12-agent-workflow/commit-push-flip-rule.md` exists to preve
       (`git cat-file -e HEAD:<path>`). A path absent from HEAD must fall through to a real failure, never a success.
       Done-when: a test passes a new untracked file with staging forced to fail and asserts a NON-zero exit. —
       unified-trading-pm@963f8e670
-- [ ] [SCRIPT] P1. Make the success claim self-verifying end to end: after the commit step, assert
+- [x] ✅ [SCRIPT] P1. Make the success claim self-verifying end to end: after the commit step, assert
       `git log --oneline -1 -- <each named file>` is non-empty, and after the push assert
       `git branch -r --contains HEAD` includes the target branch. Report success ONLY on those verified facts, never on
-      an intermediate command's exit code. Done-when: a test with a stubbed no-op commit asserts a non-zero exit.
+      an intermediate command's exit code. Done-when: a test with a stubbed no-op commit asserts a non-zero exit. —
+      unified-trading-pm@2f482ce00
 - [ ] [SCRIPT] P2. On the `index.lock` contention path specifically, distinguish "could not stage" from "nothing to
       stage" in the log line — the current wording ("nothing staged for the named files") reads as the benign case when
       it is actually a hard failure. Done-when: the two produce distinct messages and distinct exit codes.
@@ -118,3 +119,13 @@ failure mode `/codex/12-agent-workflow/commit-push-flip-rule.md` exists to preve
   pre-fix script and passes (non-zero exit, no false-success message) against the fix; a control case confirms the
   genuine already-landed-tracked-file short-circuit still works. Full existing suite
   (`test_safe_doc_push_failure_classification.bats`) still green. unified-trading-pm@963f8e670.
+- 2026-08-09 (slot 18) — Todo 2 shipped: added `verify_committed()` (`git log --oneline -1 -- <path>` non-empty per
+  named file) and `verify_pushed()` (`git branch -r --contains HEAD` includes `origin/$BRANCH`) as ground-truth checks
+  gating every "✅" line (the real commit success, both "already landed" fallbacks, and the final push) — none of them
+  trust an intermediate git command's exit code alone anymore. New regression suite
+  `tests/test_safe_doc_push_self_verifying_success.bats`: a fake `git` on PATH stubs `git commit` to a silent no-op
+  (exit 0, nothing actually committed) while every other subcommand execs through to the real binary — confirms the
+  script now exits non-zero and never prints a false ✅ against that stub; a control case confirms the genuine
+  commit+push happy path still reports verified success. Full existing suite
+  (`test_safe_doc_push_failure_classification.bats`, `test_safe_doc_push_untracked_file_never_false_success.bats`) still
+  green — 11/11 passing. unified-trading-pm@2f482ce00.
