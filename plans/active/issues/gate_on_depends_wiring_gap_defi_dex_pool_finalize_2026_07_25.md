@@ -781,3 +781,35 @@ checkbox (the gate is still genuinely unmet even after narrowing); not touching 
 task rather than forcing it through, per this doc's established disposition.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+
+## 2026-08-09 recurrence — cleanest repro yet: `status: draft` upstream, not a markdown-formatting edge case (ao_satellite_ao_dispatch_batch11)
+
+Slot 5 (data_engineering craft adopting review for this task) was dispatched
+`ao_satellite_ao_dispatch_batch11_finalize-dd3fa33044f1` (plan_ref
+`plans/active/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md`,
+`depends_on: [ao_satellite_ao_dispatch_batch11_2026_08_09]`, `gate_on_depends: true`). Verified live:
+
+```
+GET /api/backlog/ao_satellite_ao_dispatch_batch11_finalize-dd3fa33044f1/blockers
+→ {"explanation":"ready (no blockers)"}
+
+GET /api/backlog (filtered for ao_satellite_ao_dispatch_batch11_2026_08_09, non-finalize):
+→ 0 rows
+```
+
+Same "zero-derived-parent-row" symptom as every prior entry below, but this repro is cleaner than the two standing
+hypotheses (markdown-bold-after-`P<n>.`, indented sub-bullet): `ao_satellite_ao_dispatch_batch11_2026_08_09.md` is
+`status: draft` — per `PLAN_FORMAT.md`, a draft plan is explicitly **NOT ingested** into the backlog at all (by design,
+pending operator approval to flip to `active`). Its sole todo is a plain top-level `- [ ]` line with no bold span and no
+nesting — neither of the two previously-suspected derivation-regex edge cases applies here. Zero backlog rows for a
+`status: draft` upstream is _correct_ behavior for the upstream itself (drafts shouldn't dispatch); the bug is that
+`gate_on_depends`'s wiring — and the on-disk defense-in-depth check (`gate_on_depends_holds_on_disk`,
+`agent-orchestrator@c34b560`, which reads the upstream plan FILE directly via `_parse_open_todos`, not backlog rows) —
+evidently doesn't independently re-derive "draft upstream with an unshipped todo" as an unmet gate either. Worth the
+`backend_engineer` checking whether `_parse_open_todos`/`gate_on_depends_holds_on_disk` skips or mis-parses a
+`status: draft` upstream specifically (e.g. treating "not ingested" as "nothing to be unmet about" rather than "not
+done"), independent of the bold/sub-bullet hypotheses already on file.
+
+Declined to author the reconciliation on the false premise batch11 shipped (no commit exists); recorded the discrepancy
+inline in the finalize plan's own todo 1 + added a new tracked todo there per its done-when clause, rather than
+duplicating a new issue doc. Skipping via `reason_code: GATED` per this doc's established disposition.

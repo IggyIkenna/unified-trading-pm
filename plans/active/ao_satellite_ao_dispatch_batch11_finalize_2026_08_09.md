@@ -61,7 +61,24 @@ source: >-
 - [ ] [REVIEW] P0. **Re-verify batch11's done-claim against reality, not against its checkbox** — re-run
       `git show --stat <sha>` for the cited commit, re-run the named regression test, and confirm the full
       `scripts/plan-hygiene/` test suite is still green post-fix. **Done when**: the claim is verified, and any
-      discrepancy is re-opened as a new tracked todo here with the discrepancy stated.
+      discrepancy is re-opened as a new tracked todo here with the discrepancy stated. **DISCREPANCY FOUND 2026-08-09
+      (slot 5)**: there is no done-claim to verify — `/plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md` is
+      still `status: draft` (pending operator approval) with its sole `[SCRIPT] P2` todo `- [ ]` unchecked; no commit
+      has landed touching `fix_frontmatter.py`. This finalize task dispatched anyway
+      (`GET /api/backlog/ao_satellite_ao_dispatch_batch11_finalize-dd3fa33044f1/blockers` → `"ready (no blockers)"`;
+      `GET /api/backlog` shows **zero** rows for the parent plan_ref — consistent with `status: draft` plans not being
+      ingested by design, per `PLAN_FORMAT.md`). See new todo below for the tracked discrepancy; this is the same
+      "zero-derived-parent-row" `gate_on_depends` wiring gap tracked in
+      `/plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` (its still-open
+      `[BACKEND]     P1` root-cause item), now with a cleaner repro: a `status: draft` upstream, not a
+      markdown-formatting edge case. Not flipping this checkbox — the claim did not verify.
+- [ ] [REVIEW] P0. **NEW — discrepancy from todo 1 above**: this finalize plan dispatched its todo 1 despite its
+      `gate_on_depends: true` gate on `ao_satellite_ao_dispatch_batch11_2026_08_09.md` being genuinely unmet (that plan
+      is `status: draft`, 0/1 todos done). Cross-referenced (not duplicated) in
+      `/plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`'s Progress Log as a new
+      recurrence — the "zero-derived-parent-row" mechanism its still-open `[BACKEND] P1` item tracks. **Done when**:
+      batch11 is flipped to `status: active`, dispatched, and its sole todo actually ships — at which point todo 1 above
+      can be genuinely re-run against a real commit sha.
 - [ ] [REVIEW] P0. **Reconcile the verified todo's evidence into `docs_reconcile_remaining_broken_links_2026_08_02.md`'s
       own `[SCRIPT] P2` checkbox** (line ~202) — replace the redirect-pointer text batch11 left behind with the real
       commit sha and test evidence. **Done when**: the flip is committed with the `docs(plans):` prefix and cites the
@@ -86,3 +103,16 @@ source: >-
 - **2026-08-09** — Authored in the same turn as batch11, per the mandatory finalize-twin rule (task_template.md §4).
   `sequential: true` since the 4 todos are a genuine chain. Ships `status: active` (not `draft`) — `gate_on_depends`
   already machine-holds every task until batch11's own todo is done, matching the batch7-10 finalize precedent.
+
+- **2026-08-09 (slot 5, data_engineering craft adopting review for this task)**: Dispatched on todo 1
+  (`ao_satellite_ao_dispatch_batch11_finalize-dd3fa33044f1`). The gate did NOT hold: batch11
+  (`/plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md`) is still `status: draft` (pending operator approval
+  per this doc's own note above — "flip to `active` to dispatch"), its sole todo `- [ ]` unchecked, no commit landed.
+  Verified live: `GET /api/backlog/.../blockers` → `"ready (no blockers)"`; `GET /api/backlog` shows 0 rows for the
+  parent plan_ref. This is the well-documented "zero-derived-parent-row" `gate_on_depends` wiring gap
+  (`/plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`, ~15 prior bounces across ≥9
+  distinct plan pairs, one root-cause item still open) — added a recurrence note there rather than filing a duplicate
+  doc. Declining to author the reconciliation (todo 2) on the false premise batch11 shipped; not flipping todo 1's
+  checkbox (the claim did not verify — recorded as a DISCREPANCY inline on the todo + a new tracked todo). Skipping this
+  task (`reason_code: GATED`) per this bug class's established disposition. No reconciliation content written; this
+  Progress Log entry + the two todo edits above are the only changes this turn.
