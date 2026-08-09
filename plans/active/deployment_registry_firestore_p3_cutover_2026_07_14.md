@@ -241,6 +241,13 @@ QG-green per repo.
   not re-measured this pass (no new dual-write deploy has landed since 2026-07-30; re-verify those independently before
   trusting this pass's criterion-1 numbers alongside them). **HALT stays correctly in force.** Per this doc's own
   re-verification convention, do not reuse this note's counts for a future re-measurement — re-run fresh.
+- **na-eligibility-audit 2026-08-09 (ui tranche, dispatch agt-eee16e)**: KEEP-NA, valid — re-confirmed; the only change
+  since the 2026-08-07 marker is the 2026-08-08 (`ui_satellite_ao_dispatch_batch1_finalize`) criterion-1 re-measurement
+  entry above, which refines the diagnosis (509 stale `status=running` docs traced to the GCS-only reaper; criterion-1
+  won't converge via passive wait alone) without lifting the HALT. The explicit dated operator HALT (2026-07-14) on the
+  4-item GO/NO-GO checklist stays correctly in force; all 4 remaining todos are the gated, sequential,
+  irreversible-delete cutover steps this doc's own banner blocks pending that checklist. DEPENDENCY_BLOCKED (root: unmet
+  GO/NO-GO checklist, itself gated on a Firestore reaper migration + fleet soak).
 
 ## Codex SSOTs
 

@@ -319,3 +319,10 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   stuck `deployment_ui_smoke_failures` lock, 4th consecutive flag). Full write-up:
   `issues/ag_closeout_audit_ui_parked_2026_08_09.md`. `check_ag_closeout_linkage.py` reconfirmed 0 `ui`-tagged orphans
   (10 total corpus orphans, all `ao`/`cross-cutting`/`defi`, baseline 49).
+- **na-eligibility-audit 2026-08-09 (ui tranche, dispatch agt-eee16e)**: KEEP-NA, valid — re-confirmed; only change
+  since the 2026-08-08 marker is today's `ag_closeout_auditor` Progress Log entry (informational — 4th
+  `/ag-closeout-audit ui` run, 8/14 orphaned unchanged, zero verdicts changed, no todo-content edit). Todos 1-4 remain
+  self-declared verification-only rollups against work tracked in other docs. Todo 5 (corpus-wide retag) still needs
+  genuine per-doc judgment on the same cross-tranche-ownership candidates (unchanged since 2026-08-07). Todo 6 correctly
+  still unchecked: `/ag-closeout-audit ui` has now run 4 times (08-06/07/08/09) but `/plan-reconcile ui` has still never
+  run on this tranche. No reclassification, no citation fix, no archival warranted.

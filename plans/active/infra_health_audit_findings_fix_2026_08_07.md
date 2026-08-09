@@ -370,3 +370,14 @@ drift_direction: advance-code
   queued in `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md` for once it reaches terminal state. No
   duplicate relaunch performed. Full detail: `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` todo 3 (already flipped
   `[x]`) and the Track-7 issue doc's "2026-08-08 84-cell audit" section.
+- **na-eligibility-audit 2026-08-09 (ui tranche, dispatch agt-eee16e)**: KEEP-NA, valid — re-confirmed; only 1 open item
+  remains (`uts-prod-data-status-rollup-svc` OOM), down from 7 at the 2026-08-08 marker as the other 6 closed out since.
+  Content shift worth flagging: this item has moved from open-ended investigate-then-decide judgment (its 2026-08-08
+  framing) to a bounded, deterministic verify-then-flip — the fix (`deployment-api@e2b9a55`) is already shipped to LDR,
+  and the only remaining step is (a) wait for the external ~hourly LDR→main promotion to land it, (b) check Cloud
+  Logging for `SERVICE_PROCESSED` events on MTDS/instruments-service, (c) flip the checkbox with that evidence. That
+  shape would normally clear the RECLASSIFY bar, but this doc is under continuous active hands-on iteration right now
+  (Progress Log entries at 2026-08-09T01:52Z and T01:58Z, within the hour of this audit) — reclassifying mid-flight
+  risks a duplicate/competing dispatch racing whichever session is already driving it live. Tagging
+  MISCLASSIFIED_LIKELY_AO_ELIGIBLE rather than promoting to a clean RECLASSIFY this pass; re-assess next run against the
+  primary RECLASSIFY bar if this item is still open and the doc has gone quiet (no Progress Log edit in the interim).

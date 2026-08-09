@@ -175,3 +175,8 @@ remains discoverable.
   full read, cross-checked against the 2026-08-08 baseline rather than copied forward; 0 changed. Phase 3:
   conflict-check found the one plausible extraction candidate already claimed by an active sibling todo (Finding 2) — no
   batch 3 drafted. Parked-count reconciliation: 4 findings, all 4 written to this doc.
+- **na-eligibility-audit 2026-08-09 (ui tranche, dispatch agt-eee16e)**: KEEP-NA, valid — a point-in-time
+  `ag-closeout-audit` findings record (0 open todos), same disposition as its 2026-08-07/2026-08-08 siblings. Finding
+  1's bookkeeping gap and Findings 3-4's carried-forward items are each explicitly out of this doc's own write-scope
+  (owned by `ui_satellite_ao_dispatch_batch1_finalize`'s todo 4, `ui_consolidated_closeout`'s P2 todo #5, and
+  `/plan-reconcile ui`/`/archive-candidates-audit` respectively) — not actionable here.
