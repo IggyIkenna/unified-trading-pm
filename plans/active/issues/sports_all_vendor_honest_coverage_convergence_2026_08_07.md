@@ -567,3 +567,11 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   INJURIES needed **60,733 → 52,494** (-8,239 in ~43min, ~11,497/hr — up sharply from ~4,391/hr last tick; ETA to
   convergence now ~4.6h at this rate, down from the earlier ~14h estimate). STANDINGS/TEAMS unchanged as expected. No
   intervention needed.
+- **23:19Z-23:27Z — 9th silent-hang occurrence (smallchunk14, chunk 18 again — now 5/9 occurrences at chunk 18, a clear
+  majority), relaunched; INJURIES steady progress continues.** `smallchunk14` died with clean 3-signal evidence
+  (~17.3min gap, standard watchdog account, RSS=17.3GiB — not OOM), relaunched as
+  `mtds-backfill-odds-smallchunk15-20260810` (new date, timestamp-suffixed), confirmed genuinely booted (chunk 1/452,
+  correct skip-fast). Full detail: `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 9x). INJURIES
+  (`af-backfill-20260809-222924`): `[[VM_PROGRESS]]` marker confirms real monotonic advance to 2022-06-19 (from
+  2021-11-04 last tick). Census: INJURIES needed **52,494 → 47,294** (-5,200 in ~33min, ~9,455/hr — steady, similar
+  order to last tick; ETA holding around ~5h). Both fleets healthy overall, no further intervention needed.
