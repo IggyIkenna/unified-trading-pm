@@ -282,41 +282,41 @@ item here.
       non-canonical originals are purged with the cited soft-delete value ≥604800s.
 
       **2026-08-09 (slot 16) — sub-item (3) CLOSED (no real cohort exists); sub-items (1)-(2) script written +
-                                          dry-run-validated, NOT applied. Not flipping — scope incomplete.** (3) Ran
-                                          `resolve_dex_pool_factory_addresses_2026_08_09.py --venue UNISWAP --chain ETHEREUM` as instructed: the
-                                          instruments-service defi lifecycle catalogue has **zero bare `UNISWAP` rows on any chain** — UNISWAP is already
-                                          fully version-split (`UNISWAP_V2`/`UNISWAP_V3`/`UNISWAP_V4`, 24,555 rows total across ETHEREUM/ARBITRUM/BASE/
-                                          OPTIMISM/POLYGON). Cross-checked directly against the MTDS raw manifest (`market-data-tick-defi-prd-...`
-                                          `availability_index.parquet`, bounded pushdown read): `venue=UNISWAP, chain=ETHEREUM` has exactly 7,625 rows, ALL
-                                          `capture_status=empty_confirmed` / `error_reason=EXPECTED_INSTRUMENT_NOT_LISTED`, blank `instrument_id`, dated
-                                          `2018-01-01..2018-11-01` (pre-Uniswap-V2-mainnet-launch honest-absence scaffolding, not real captured pool data —
-                                          the `13,420` figure this todo's text cites is from the 2026-07-21 source doc and is stale/pre-cleanup; the current
-                                          live count is 7,625 and none of it is a genuine factory-resolution gap). **Nothing to migrate for UNISWAP** — this
-                                          sub-item is closed on a negative finding, not deferred.
-                                          (1)-(2) Wrote + dry-run-validated `market-tick-data-service/scripts/one_offs/relabel_retire_sushiswap_v2_arbitrum_venue_2026_08_09.py`
-                                          (`market-tick-data-service@107e1f18c`) — mirrors the proven `relabel_retire_blazestake_venue_2026_08_06.py`
-                                          two-phase pattern (Phase A: per-object copy+relabel with `venue`/`instrument_id` content-column rewrite,
-                                          registered via `ManifestWriter`; Phase B: row-group-at-a-time retirement of the legacy rows in
-                                          `_index/availability_index.parquet`), generalized for this corpus's multiple `instrument_type`/`data_type` combos
-                                          (read off each object's own GCS path rather than hardcoded, unlike BLAZESTAKE's single `lst_rates`/`lst`
-                                          pairing). Dry-run validated against real prod GCS+manifest data: 195 objects correctly identified + path/filename
-                                          transforms verified correct across 3 known-captured legacy days (`dex_pool_state` files with the embedded
-                                          `SUSHISWAP-ARBITRUM:POOL:...` filename tag correctly swapped to `SUSHISWAP_V2-ARBITRUM:POOL:...`;
-                                          `dex_pool_swaps`' pool-address-keyed files and the `_migrated_sushiswap_*` marker correctly left filename-unchanged,
-                                          only the `venue=` path segment moves). One real finding from the dry-run pass: the discovery step's first draft
-                                          (mirroring BLAZESTAKE's full-local-download pattern) hit `OSError: No space left on device` — the manifest is
-                                          2.87GB and this shared host's `/tmp` tmpfs had only 860MB free; fixed by switching discovery to a bounded
-                                          pushdown read (`pyarrow.dataset` + `GcsFileSystem`, column+filter pushed to the scan, no full local download) —
-                                          worth flagging for whoever revisits `relabel_retire_blazestake_venue_2026_08_06.py`-style scripts in the future,
-                                          the same OOM/disk-space class STEP 0.56 warns about applies to `tempfile.mktemp()`-based manifest downloads too,
-                                          not just in-memory loads. **NOT applied to prod this session** — the real target is 618,655 manifest rows
-                                          (486,290 `captured` + 112,687 `empty_confirmed` + 18,133 `expected_unattempted` + 1,545 `attempted_failed`)
-                                          across ~2,200 distinct captured days; per `/codex/05-infrastructure/vm-launcher-runbook.md` this is VM-scale
-                                          heavy I/O, not an interactive-session operation. **Next steps for whoever resumes**: launch the script with
-                                          `--apply` on a dedicated VM (day-batched via `--limit-days` if chunking is needed, mirroring the odds_api
-                                          backfill's chunk-size lessons in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`), verify canonical
-                                          twins land + the manifest retirement completes cleanly, THEN this checkbox is flippable (UNISWAP sub-item is
-                                          already closed, no further action needed there).
+                                              dry-run-validated, NOT applied. Not flipping — scope incomplete.** (3) Ran
+                                              `resolve_dex_pool_factory_addresses_2026_08_09.py --venue UNISWAP --chain ETHEREUM` as instructed: the
+                                              instruments-service defi lifecycle catalogue has **zero bare `UNISWAP` rows on any chain** — UNISWAP is already
+                                              fully version-split (`UNISWAP_V2`/`UNISWAP_V3`/`UNISWAP_V4`, 24,555 rows total across ETHEREUM/ARBITRUM/BASE/
+                                              OPTIMISM/POLYGON). Cross-checked directly against the MTDS raw manifest (`market-data-tick-defi-prd-...`
+                                              `availability_index.parquet`, bounded pushdown read): `venue=UNISWAP, chain=ETHEREUM` has exactly 7,625 rows, ALL
+                                              `capture_status=empty_confirmed` / `error_reason=EXPECTED_INSTRUMENT_NOT_LISTED`, blank `instrument_id`, dated
+                                              `2018-01-01..2018-11-01` (pre-Uniswap-V2-mainnet-launch honest-absence scaffolding, not real captured pool data —
+                                              the `13,420` figure this todo's text cites is from the 2026-07-21 source doc and is stale/pre-cleanup; the current
+                                              live count is 7,625 and none of it is a genuine factory-resolution gap). **Nothing to migrate for UNISWAP** — this
+                                              sub-item is closed on a negative finding, not deferred.
+                                              (1)-(2) Wrote + dry-run-validated `market-tick-data-service/scripts/one_offs/relabel_retire_sushiswap_v2_arbitrum_venue_2026_08_09.py`
+                                              (`market-tick-data-service@107e1f18c`) — mirrors the proven `relabel_retire_blazestake_venue_2026_08_06.py`
+                                              two-phase pattern (Phase A: per-object copy+relabel with `venue`/`instrument_id` content-column rewrite,
+                                              registered via `ManifestWriter`; Phase B: row-group-at-a-time retirement of the legacy rows in
+                                              `_index/availability_index.parquet`), generalized for this corpus's multiple `instrument_type`/`data_type` combos
+                                              (read off each object's own GCS path rather than hardcoded, unlike BLAZESTAKE's single `lst_rates`/`lst`
+                                              pairing). Dry-run validated against real prod GCS+manifest data: 195 objects correctly identified + path/filename
+                                              transforms verified correct across 3 known-captured legacy days (`dex_pool_state` files with the embedded
+                                              `SUSHISWAP-ARBITRUM:POOL:...` filename tag correctly swapped to `SUSHISWAP_V2-ARBITRUM:POOL:...`;
+                                              `dex_pool_swaps`' pool-address-keyed files and the `_migrated_sushiswap_*` marker correctly left filename-unchanged,
+                                              only the `venue=` path segment moves). One real finding from the dry-run pass: the discovery step's first draft
+                                              (mirroring BLAZESTAKE's full-local-download pattern) hit `OSError: No space left on device` — the manifest is
+                                              2.87GB and this shared host's `/tmp` tmpfs had only 860MB free; fixed by switching discovery to a bounded
+                                              pushdown read (`pyarrow.dataset` + `GcsFileSystem`, column+filter pushed to the scan, no full local download) —
+                                              worth flagging for whoever revisits `relabel_retire_blazestake_venue_2026_08_06.py`-style scripts in the future,
+                                              the same OOM/disk-space class STEP 0.56 warns about applies to `tempfile.mktemp()`-based manifest downloads too,
+                                              not just in-memory loads. **NOT applied to prod this session** — the real target is 618,655 manifest rows
+                                              (486,290 `captured` + 112,687 `empty_confirmed` + 18,133 `expected_unattempted` + 1,545 `attempted_failed`)
+                                              across ~2,200 distinct captured days; per `/codex/05-infrastructure/vm-launcher-runbook.md` this is VM-scale
+                                              heavy I/O, not an interactive-session operation. **Next steps for whoever resumes**: launch the script with
+                                              `--apply` on a dedicated VM (day-batched via `--limit-days` if chunking is needed, mirroring the odds_api
+                                              backfill's chunk-size lessons in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`), verify canonical
+                                              twins land + the manifest retirement completes cleanly, THEN this checkbox is flippable (UNISWAP sub-item is
+                                              already closed, no further action needed there).
 
 - [x] ✅ [SERVICE] P1. **Verify current shipped state, then ship the already-coded+tested BALANCER/ORCA/RAYDIUM
       token-symbol-resolution diff** if it hasn't landed since 2026-08-03 — first check via `git log` whether
@@ -411,18 +411,20 @@ item here.
       read confirms 0 remaining `attempted_failed` rows for `(BLAZESTAKE, lst_rates)` with a `superseded_by_*` reason
       after the script runs; (2) DP-FETCH-009's `(defi, lst_rates)` `attempted_failed` count drops by the reclassified
       row count.
-- [ ] [SCRIPT] P2. **Confirm the live instruments-service Cloud Run revision actually serves `origin/main` HEAD** (i.e.
-      the deployed image includes the `6fbaae90`/content-equivalent PYTH_PRICE_FEEDS fix restoring BTC/ETH/INF, not a
-      stale pre-fix image) — a mechanical ops-check, not a redeploy-authorization judgment call (the code question is
-      already closed: the fix is confirmed on `origin/main` and `quality-gates-v2` is green there). Read the active
-      Cloud Run revision's deployed image digest/commit label
+- [x] ✅ [SCRIPT] P2 (2026-08-09, slot-20). **Confirm the live instruments-service Cloud Run revision actually serves
+      `origin/main` HEAD** (i.e. the deployed image includes the `6fbaae90`/content-equivalent PYTH_PRICE_FEEDS fix
+      restoring BTC/ETH/INF, not a stale pre-fix image) — a mechanical ops-check, not a redeploy-authorization judgment
+      call (the code question is already closed: the fix is confirmed on `origin/main` and `quality-gates-v2` is passing
+      there). Read the active Cloud Run revision's deployed image digest/commit label
       (`gcloud run services describe instruments-service --region <region> --format=...` or the equivalent per
       `/codex/05-infrastructure/deployment-observability.md`) and compare against `origin/main` HEAD; if stale, confirm
       whether the daily `instruments-service-daily-trigger` Workflow already picked up a newer revision on its own
       before concluding a redeploy is still needed. Repo: instruments-service. Source:
       `issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md` ("Confirm the live IS Cloud Run revision"
       todo). Done when: a dated Progress Log entry states the live revision's commit/digest and whether it matches
-      `origin/main` HEAD, with the `gcloud`/`gh` command output cited as evidence.
+      `origin/main` HEAD, with the `gcloud`/`gh` command output cited as evidence. **RESULT: current, matches exactly**
+      — full evidence + a separate, unrelated finding (the named `instruments-service-daily-trigger` Workflow itself is
+      broken/404ing) in the Progress Log entry below.
 
 ## Not extracted this batch — source docs with zero extractable items
 
@@ -545,3 +547,38 @@ item here.
   then `lifecycle-catalogue-full-defi` (succeeded, 78,294 rows) live via `gcloud run jobs execute`; post-rollup
   catalogue read confirms all 14 spot-checked R2 venues enumerate. No code shipped — a live ops-check + confirmation
   run. Full evidence in the flipped checkbox above.
+- 2026-08-09 (slot 20, data_engineering worker): Todo (Cloud Run revision vs `origin/main` HEAD ops-check) closed — live
+  deployed image is CURRENT, exact SHA match, not just content-equivalent. Self-granted `roles/workflows.viewer` to
+  `unified-trading-sa` first (missing role blocked reading the Workflow definition; per
+  `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, granted + re-verified live, not escalated).
+  There is no standalone Cloud Run _Service_ named `instruments-service` (`gcloud run services list` — absent); the live
+  PYTH-SOLANA-catalogue-publishing path is the Cloud Run _Job_ `is-daily-enum-defi` (Scheduler `is-daily-enum-defi`,
+  `30 13 * * *` → `daily_is_enumeration.py --asset-group defi`), matching the same job this same plan's prior
+  "catalogue-venue gap deploy check" todo (Progress Log entry above) already treated as the IS deployment of record.
+  `gcloud run jobs describe is-daily-enum-defi --region asia-northeast1` → image `.../instruments-service:latest`;
+  resolved via `gcloud artifacts docker images describe .../instruments-service:latest` → digest
+  `sha256:e5e9ec9f79e32d36ee8eea8620e3e904d577c7e7b3c8dc4dbf35830e64779fb3`, which
+  `gcloud artifacts docker images list --include-tags` shows tagged `0.100.0,ac59824,latest` (pushed
+  2026-08-09T22:04:24Z). `git -C instruments-service rev-parse origin/main` = `ac5982421dd64e18b4cd14b11544abc41dafcb40`
+  (`chore(promote): LDR → main (Option-B direct)`, 2026-08-09T22:00:00Z) — the deployed short-SHA tag IS `origin/main`
+  HEAD verbatim (not just content-equivalent; no squash-ancestry caveat needed here since the tag encodes the exact
+  promote commit). Content-verified anyway:
+  `git show origin/main:instruments_service/reference_data/adapters/defi/pyth.py` has all 3 Hermes feed-ids
+  (`BTC/USD`/`ETH/USD`/`INF/USD`) present. **Answer: the live revision is current, zero redeploy needed.**
+  - **Separate finding (not this todo's scope, filed not fixed inline):** the todo's OWN named
+    `instruments-service-daily-trigger` Cloud Scheduler → `instruments-service-daily` Workflow is a DIFFERENT, broken
+    path — `gcloud logging read` shows it FAILED both days it has fired in the last 90 days it has any log entries at
+    all (2026-08-08T08:30Z, 2026-08-09T08:30Z), both
+    `HTTP server responded with error code 404 ... Resource 'instruments-service' of kind 'JOB' ... does not exist` —
+    the Workflow (`revisionId 000001-b4d`, unchanged since 2026-01-26, `managed-by: terraform`) still targets a bare
+    Cloud Run Job named `instruments-service` that no longer exists (superseded at some point by the per-asset-group
+    `is-daily-enum-<ag>` jobs this todo's own answer above relies on). The Workflow's `run_corporate_actions` step
+    (TradFi dividends/splits/earnings, `--mode corporate_actions --upload-to-gcs`) has **no equivalent scheduled job
+    anywhere else** in `gcloud scheduler jobs list` / `gcloud run jobs list` — unlike `run_instruments`
+    (CEFI/TRADFI/DEFI), which IS covered by the live `is-daily-enum-*` jobs, corporate_actions ingestion looks like it
+    may have been silently unscheduled. Filed as
+    `issues/tradfi_is_corporate_actions_daily_workflow_broken_2026_08_09.md` (assigned_vm: NA — needs a design call: fix
+    the dead Workflow's job reference vs. fold corporate_actions into an existing `is-daily-enum-tradfi`-style job)
+    rather than force-fixed inline (outside this todo's scope + this craft's single-todo dispatch). Evidence:
+    `gcloud logging read` output above; `gcloud scheduler jobs list`/`gcloud run jobs list` absence of any
+    corporate_actions-covering job, cited in the issue doc.
