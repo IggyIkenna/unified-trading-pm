@@ -432,3 +432,12 @@ code-fix task). A data_engineering slot with a full session budget should:
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item remains dependency-blocked.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — sole open todo #4 remains genuinely
+  `BLOCKED-PREREQUISITES` on `footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md`,
+  which is itself still `status: open` with one own open `[DIAG] P3` re-verify todo (not yet flipped) — confirms the
+  same dependency-gated verdict `ag_closeout_audit_sports_parked_2026_08_09.md` recorded for this doc today. Note for
+  the next pass: the sibling's blocking fix (image rebuild) shipped 2026-08-07 and its re-verify todo's own "done
+  when" (≥2 consecutive daily 01:30 UTC enumerator runs post-rebuild showing 0 new `pending_fetch`) looks close to
+  satisfied on elapsed calendar time alone (today is 2026-08-09, past both the 08-08 and 08-09 01:30 UTC windows) —
+  but that verification is the SIBLING doc's own todo to run and flip, not folded in here; not executed this pass
+  (out of this doc's own scope, and a live-manifest re-verify is real work, not a citation check).
