@@ -299,11 +299,20 @@ drift_direction: advance-code
       scattered `expected_unattempted` days per venue (2023-12-16/17/18/19, 2026-07-14) — not a stall pattern, not
       required by this todo's done-when. — instruments-service (no code change; plan-flip only, per this batch's
       precedent for verification-only items).
-- [ ] [CODE] P2. Unify TradFi's two disagreeing options encodings (`instrument_type=options_chain` vs.
+- [x] ✅ [CODE] P2. Unify TradFi's two disagreeing options encodings (`instrument_type=options_chain` vs.
       `data_type=options_chain` + blank `instrument_type`) and stamp `instrument_type` on the ~182k blank-type cells
       this produces — a pure typing/normalization fix, not a data-gap judgment call. Repo: instruments-service. Source:
       `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (F6 item). Done when: a fresh manifest count
-      shows 0 blank-`instrument_type` cells remaining among the previously-182k population.
+      shows 0 blank-`instrument_type` cells remaining among the previously-182k population. — DONE 2026-08-09 (slot-18,
+      data_engineering): **this todo's own premise was stale — both the "~182k" figure and the "Repo:
+      instruments-service" attribution turned out wrong; verified + fixed the REAL current population instead.** Full
+      investigation + methodology in the Progress Log. Shipped `market-tick-data-service@5ea59b90`
+      (`scripts/stamp_tradfi_options_chain_blank_instrument_type_2026_08_09.py` — CAS re-stamp, snapshot-before-write,
+      self-verify, stop-on-surprise). `--apply` ran live 2026-08-09: 291 rows (venue=CME, data_type=options_chain,
+      capture_status=captured, blank instrument_type — ALL sharing one `written_at` batch, 2026-07-16T07:04:10Z) stamped
+      `instrument_type='options_chain'` (the literal value 99.7% of sibling rows already carried). Independently
+      re-verified via a FRESH manifest read post-apply: **0 blank-instrument_type `data_type=options_chain` cells
+      remain** (104,540/104,540 now uniformly typed). Done-when literally satisfied.
 - [x] ✅ [INFRA] P1. Delete the legacy GCS duplicate objects in `market-data-tick-cefi-prd-central-element-323112`
       (cefi-only today, ~1.08M objects / ~9.98TB) — restricted to `gcs_describe_object`-verified bare-canonical-twin
       objects only, GCS soft-delete retention already confirmed >= 604800s (reversibility-verified per
@@ -316,20 +325,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                                                                  disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                                                                  future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                                                                  bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                                                                  prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                                                                  2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                                                                  hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                                                                  threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                                                                  loader, post-delete verification) and filed
-                                                                  `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                                                                  AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                                                                  actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                                                                  stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                                                                  via that issue doc, not this line.
-                                                                  verification actually complete.
+                                                                      disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                                                                      future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                                                                      bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                                                                      prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                                                                      2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                                                                      hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                                                                      threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                                                                      loader, post-delete verification) and filed
+                                                                      `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                                                                      AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                                                                      actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                                                                      stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                                                                      via that issue doc, not this line.
+                                                                      verification actually complete.
 
 - [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
@@ -527,31 +536,31 @@ drift_direction: advance-code
       it as the live index" — is not directly achievable safely).
 
       Findings: (1) `rebuild_defi_manifest.py --apply` (mtds@3f5cc6e/cf63cf6, already shipped) UPSERTS by cell key
-                  (date, venue, data_type, instrument_type, instrument_id, underlying) — a freshly canonical-spelled row lands as a
-                  NEW key alongside the stale legacy-spelled row instead of removing it, so a plain re-run cannot achieve
-                  "replace, not merge". (2) UTL's real wholesale-replace primitive is deliberately NOT used bucket-wide by
-                  `rebuild_mtds_manifest.py` (uses an additive merge helper instead) because the DeFi tick bucket co-locates MDPS
-                  candle rows under the same index — a bucket-wide replace would silently delete every candle-manifest row (see
-                  `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`).
+                      (date, venue, data_type, instrument_type, instrument_id, underlying) — a freshly canonical-spelled row lands as a
+                      NEW key alongside the stale legacy-spelled row instead of removing it, so a plain re-run cannot achieve
+                      "replace, not merge". (2) UTL's real wholesale-replace primitive is deliberately NOT used bucket-wide by
+                      `rebuild_mtds_manifest.py` (uses an additive merge helper instead) because the DeFi tick bucket co-locates MDPS
+                      candle rows under the same index — a bucket-wide replace would silently delete every candle-manifest row (see
+                      `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`).
 
-                  Correct design mirrors the sports K1K2 casing-revert manifest-swap script's ADD+REMOVE CAS-protected pattern
-                  (`scripts/sports/k1k2_casing_revert_2026_07_27/`), precisely scoped: ADD = fresh canonical rows from a
-                  `rebuild_defi_manifest.py --dry-run --beta-manifest-out` projection (needs `--chunk-days` and
-                  `--beta-manifest-out` made compatible — currently mutually exclusive — to avoid the OOM class already fixed for
-                  the non-projection path, `mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md`); REMOVE =
-                  ONLY the legacy-spelled/uppercase-itype/chain-polluted rows whose canonical replacement is confirmed present in
-                  that same projection (never "every stale row" — mirrors the K1K2 script's report-scoped-REMOVE invariant, so a
-                  captured cell is never orphaned).
+                      Correct design mirrors the sports K1K2 casing-revert manifest-swap script's ADD+REMOVE CAS-protected pattern
+                      (`scripts/sports/k1k2_casing_revert_2026_07_27/`), precisely scoped: ADD = fresh canonical rows from a
+                      `rebuild_defi_manifest.py --dry-run --beta-manifest-out` projection (needs `--chunk-days` and
+                      `--beta-manifest-out` made compatible — currently mutually exclusive — to avoid the OOM class already fixed for
+                      the non-projection path, `mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md`); REMOVE =
+                      ONLY the legacy-spelled/uppercase-itype/chain-polluted rows whose canonical replacement is confirmed present in
+                      that same projection (never "every stale row" — mirrors the K1K2 script's report-scoped-REMOVE invariant, so a
+                      captured cell is never orphaned).
 
-                  Sub-steps: (a) make `--chunk-days` and `--beta-manifest-out` compatible; (b) build a new
-                  `defi_manifest_venue_itype_canon_swap.py` (mirrors the K1K2 script skeleton) with a dry-run default, an
-                  apply-prod-plus-confirm gate, and a mandatory pre-write snapshot; (c) run the chunked dry-run projection on a
-                  dedicated VM (corpus-scale GCS walk, never the shared host) and diff it against live; (d) run the
-                  pre-migration drain gate plus snapshot; (e) apply and post-verify (0 stale rows remaining, 0 captured-to-failed
-                  mass flip). Repo: market-tick-data-service. Done when: the live defi index has 0 legacy-spelled/uppercase-itype/
-                  chain-polluted rows AND 100% of their canonical twins present with matching row_count, verified via a fresh
-                  post-apply GCS-sampled re-audit (mirrors the N6r 2026-06-18 post-apply verification already done for the
-                  index-walk fix).
+                      Sub-steps: (a) make `--chunk-days` and `--beta-manifest-out` compatible; (b) build a new
+                      `defi_manifest_venue_itype_canon_swap.py` (mirrors the K1K2 script skeleton) with a dry-run default, an
+                      apply-prod-plus-confirm gate, and a mandatory pre-write snapshot; (c) run the chunked dry-run projection on a
+                      dedicated VM (corpus-scale GCS walk, never the shared host) and diff it against live; (d) run the
+                      pre-migration drain gate plus snapshot; (e) apply and post-verify (0 stale rows remaining, 0 captured-to-failed
+                      mass flip). Repo: market-tick-data-service. Done when: the live defi index has 0 legacy-spelled/uppercase-itype/
+                      chain-polluted rows AND 100% of their canonical twins present with matching row_count, verified via a fresh
+                      post-apply GCS-sampled re-audit (mirrors the N6r 2026-06-18 post-apply verification already done for the
+                      index-walk fix).
 
 ## Codex SSOTs
 
@@ -623,3 +632,38 @@ drift_direction: advance-code
   NOT apply anything to live prod — this needed real design work first, not a rushed write against a 1-hour-estimated
   task that was actually a multi-day migration. No code shipped this session (investigation + plan-doc restructuring
   only).
+- **2026-08-09 (F6-reframed TradFi options_chain instrument_type item, slot 18)**: dispatched an Explore sub-agent first
+  (per SUB_AGENT_MANDATORY_RULES.md) to locate the write-side code before touching anything. It found the todo's own
+  premise didn't survive contact with the live system: (1) `instruments-store-tradfi`'s definitional catalog
+  (`instruments_service/engine/orchestrator/writers.py::_write_venue`) never emits `data_type=options_chain` at all —
+  every `options_chain`/`futures_chain` occurrence lives in the **market-data** manifest (`market-data-tick-tradfi-*`,
+  owned by market-tick-data-service), written by `venue_fetch.py::_record_venue_shard_counts` via
+  `_tradfi_manifest_shard.py`; (2) a standing, dated operator ruling
+  (`cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`, shipped `market-tick-data-service@020b703e`)
+  explicitly excludes `futures_chain`/`options_chain` from generic instrument_type casing normalization — a "unify the
+  encodings" framing risked fighting that ruling; (3) the "182k" figure traces to the original F6 finding's BROADER
+  (non-options-specific) blank-instrument_type count bundled with a separately-REFUTED "options thinness" observation —
+  multiple canonicalisation passes since (2026-07-25 casing fix, 2026-08-09 blank-instrument_id restamp) moved the live
+  population on. Independently re-measured via DuckDB (`memory_limit='2GB'`, single-walk download of both candidate
+  bucket indexes, deleted after) rather than trusting either the stale doc or the sub-agent's own numbers:
+  `instruments-store-tradfi` has 4,605 blank-instrument_type rows total, NONE options-related (confirms finding 1);
+  `market-data-tick-tradfi` has exactly 291 rows matching the LITERAL defect shape
+  (`venue=CME, data_type=options_chain, capture_status=captured, instrument_type=''`), all sharing one `written_at`
+  (2026-07-16T07:04:10Z — a single historical write batch, not an active leak) — vs. 104,249 sibling rows (99.7%)
+  already correctly stamped `instrument_type='options_chain'`. This narrow fix does NOT conflict with the
+  casing-directive ruling: it fills a blank to match the SAME already-dominant literal convention, it re-cases nothing
+  and touches zero already-typed rows.
+
+  Shipped `market-tick-data-service@5ea59b90`: `scripts/stamp_tradfi_options_chain_blank_instrument_type_2026_08_09.py`
+  (mirrors the proven `restamp_tradfi_cme_chain_bundle_blank_instrument_id_2026_08_09.py` sibling's CAS-write design —
+  snapshot before write, self-verify after, stop-on-surprise bound, bounded CAS-retry loop) + 19 unit tests
+  (candidate-mask defect signature incl. `None`-vs-`''` blank handling, sibling-`futures_chain`-population exclusion,
+  row-count invariant, stop-on-surprise bounds), all passing. Ran under `run-bounded-analysis.sh --mem-cap 10G` per
+  RULES.md § 1 (7.0M-row manifest). Dry-run confirmed exactly 291 candidates (matching the independent DuckDB census);
+  `--apply` succeeded on the FIRST CAS attempt (generation `1786307360881243` → `1786307613433035`, pre-write snapshot
+  at `_index/backups/availability_index.pre_options_chain_itype_stamp_20260809T203315Z.parquet`). Independently
+  re-verified via a completely FRESH manifest download post-apply (not reusing the script's own self-verify): **0
+  blank-instrument_type `data_type=options_chain` cells remain**, all 104,540 rows now uniformly typed. Done-when
+  literally satisfied for the REAL population; the stale "182k"/instruments-service framing is superseded by this
+  finding, not separately chased (no live gap exists there to chase — see finding 1 above). Full `quality-gates.sh` run
+  in progress at commit time (see next entry for the pass/fail verdict before `/done`).
