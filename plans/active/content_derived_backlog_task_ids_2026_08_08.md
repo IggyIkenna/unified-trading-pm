@@ -178,11 +178,12 @@ Both were established by reading the code, and both are silent — neither raise
       missed remap does not error at runtime (`_completed_task_satisfied` treats absent as satisfied) — it silently
       un-gates. This assertion is the only thing that catches it. Done-when: the check runs against the Phase-2 map
       artifact and reports zero unexplained entries. (repo: agent-orchestrator) — agent-orchestrator@d86827b
-- [ ] [BACKEND] P1. **Enforce the dispatched-row deferral — hazard 1's gate.** The migration must SKIP any row whose
-      status is `dispatched` and defer its rename to the transition points that already fire on terminal state
-      (`done_slot` finalization, `_prune_stale`'s cancel path, `/skip-current-task`'s release). With this ordering
-      honored, **no id-alias/back-compat column is needed**. Done-when: a test proves a `dispatched` row is never
-      renamed by the migration and is renamed correctly once it goes terminal. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-09 (slot-23, content_derived_backlog_task_ids-011)** — **Enforce the
+      dispatched-row deferral — hazard 1's gate.** The migration must SKIP any row whose status is `dispatched` and
+      defer its rename to the transition points that already fire on terminal state (`done_slot` finalization,
+      `_prune_stale`'s cancel path, `/skip-current-task`'s release). With this ordering honored, **no
+      id-alias/back-compat column is needed**. Done-when: a test proves a `dispatched` row is never renamed by the
+      migration and is renamed correctly once it goes terminal. (repo: agent-orchestrator) — agent-orchestrator@6b57503
 - [ ] [BACKEND] P2. **Do NOT rewrite `activity_log` or `compactions` rows in place.** Rewriting a past audit entry to an
       id it did not happen under is itself the audit-integrity violation this whole effort exists to prevent. Instead
       append a `backlog_task_id_migrated {old_id, new_id}` activity row per rename so old→new stays resolvable.
@@ -455,3 +456,33 @@ Both were established by reading the code, and both are silent — neither raise
   skipped (full suite, basedpyright clean, ruff clean — pre-existing unrelated thread-exception warnings in
   `test_operator_gated_blocked` and JWT short-key warnings in `test_internal_auth_asymmetric`, not touched by this
   change). Evidence: agent-orchestrator@d86827b (verified ancestor of origin/live-defi-rollout before this flip).
+
+- **2026-08-09 (slot-23, content_derived_backlog_task_ids-011, Phase 2 todo 4)**: Implemented hazard 1's gate. Added
+  `server/content_id_migration.py` as the single shared decision point (`is_rename_eligible` / `pending_rename_for` /
+  `resolve_deferred_rename` / `rename_yaml_task`) — reads old->new from the already-built, verified migration map
+  artifact (`-010`'s refreshed 2452-entry artifact) rather than a live recomputation, so a per-row deferred rename can
+  never disagree with what the (separate, operator-gated) bulk apply would compute for the same row. Wired into the
+  three named transition points: `done_slot` (after `mark_done`), `_prune_stale`'s cancel path (after the
+  dispatched->cancelled UPDATE — no yaml touch needed, every cancelled id is by construction already an orphan being
+  pruned from yaml in the same pass), and `/skip-current-task`'s release (after the cooldown/auto-park block, so the
+  rename can't shift the id out from under those — deliberately-OLD-id-keyed — calls mid-request; those namespaces are
+  `-012`'s separate scope). `done_slot`/skip-current-task also rename the matching `backlog.yaml` entry in the same
+  operation when one still exists — skipping that would let `sync_backlog_to_db` re-derive a fresh `queued` row at the
+  old id on the next regen tick (confirmed by reading `sync_backlog_to_db`'s own id-matching logic), reintroducing the
+  exact two-store divergence this migration exists to fix.
+
+  **Real bug caught by the tests, not just written around**: both ORM call sites run `session_scope()` sessions with
+  `autoflush=False` (see the existing M3 dual-flip-warning comment in `slots_worker.py`). The first implementation
+  issued the raw `UPDATE tasks SET task_id=...` immediately, before the ORM's own pending `row.status=...` write (still
+  unflushed) — on session close, SQLAlchemy tried to flush that pending UPDATE keyed on the now-renamed-away old
+  `task_id` and raised `StaleDataError: expected to update 1 row(s); 0 were matched`. Fixed with an explicit
+  `session.flush()` immediately before the raw rename in both hooks.
+
+  Tests: `tests/test_content_id_migration.py` (19 tests, pure decision logic — `resolve_deferred_rename` never returns a
+  rename for `status="dispatched"` even with a real pending map entry; returns the mapped id for every other status;
+  cache mtime-invalidation; yaml rename-in-place preserving sibling tasks) + `tests/test_content_id_migration_wiring.py`
+  (6 tests, live wiring at all three call sites, including the negative case: a `_prune_stale` row that stayed
+  `dispatched` this tick — the done-not-removed race exception — is never renamed even with a pending map entry). QG:
+  2879 passed, 2 skipped (full suite, basedpyright clean, ruff clean — the same two pre-existing unrelated warnings as
+  `-010`, not touched by this change). Evidence: agent-orchestrator@6b57503 (verified ancestor of
+  origin/live-defi-rollout before this flip).
