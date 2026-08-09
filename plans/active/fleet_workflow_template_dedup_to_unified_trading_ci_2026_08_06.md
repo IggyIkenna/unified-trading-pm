@@ -63,6 +63,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
 assigned_role: infra
+thinking_tier: medium # 2026-08-09 agt-a398c9 — infra role's own default, made explicit; see BLK-e02c6622
 drift_direction: advance-code
 depends_on: [shared_ci_workflow_repo_extraction_2026_08_06]
 context_scope:
@@ -346,10 +347,10 @@ quality-gates-v2 (~20-200 lines, mostly trigger/dep-closure/`with:` config, not 
       `rollout-workflow-templates.sh` is now scoped to (`image-build-gate.yml` + `quality-gates-v2.yml.tmpl` as
       already-converted stubs, `notify-slack.yml` as the still-canonical full-content file, `staging-lock-check.yml` as
       the deliberately-not-yet-converted file pending todo 11). Describes the POST-this-plan state, not mid-migration.
-- [ ] 10. [INFRA] P3. _(stretch, optional)_ **Add a branch-protection / visibility-change alert on
-      `unified-trading-ci`** — given this plan makes it fleet-critical (11 reusable workflows/actions hosted there once
-      this plan + the prior one both ship), consider whether the same accidental-private-flip class of incident that
-      started `shared_ci_workflow_repo_extraction_2026_08_06.md` warrants a standing guard (a scheduled check via
+- [ ] [INFRA] P3. _(stretch, optional)_ **Add a branch-protection / visibility-change alert on `unified-trading-ci`** —
+      given this plan makes it fleet-critical (11 reusable workflows/actions hosted there once this plan + the prior one
+      both ship), consider whether the same accidental-private-flip class of incident that started
+      `shared_ci_workflow_repo_extraction_2026_08_06.md` warrants a standing guard (a scheduled check via
       `gh api repos/IggyIkenna/unified-trading-ci` asserting `visibility == public`, alerting if not) rather than
       relying on someone noticing fleet-wide CI going red again. Genuinely optional — the risk already exists
       identically for `unified-trading-pm` today and has no such guard either; scope this as its own small follow-up if

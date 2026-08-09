@@ -52,6 +52,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 assigned_role: infra
+thinking_tier: medium # 2026-08-09 agt-a398c9 — infra role's own default, made explicit; see BLK-e02c6622
 drift_direction: advance-code
 depends_on:
 context_scope:
@@ -282,10 +283,10 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
       stopped/disabled on the CI VM, confirmed `inactive` with no re-registration; other 7 private repos' pools
       confirmed untouched. Full detail + 24h CI-VM usage tracking:
       `/plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md`.
-- [ ] 20. [INFRA] P2. **Re-measure GitHub Actions billing for the 17 reverted repos** (should read $0/unmetered,
-      confirming the public-repo-unmetered premise held in practice) and the self-hosted VM's steady-state load average
-      before vs. after (not a spot-check — matches `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s own
-      still-open "longer-window measurement" gap). Update that plan's issue doc
+- [ ] [INFRA] P2. **Re-measure GitHub Actions billing for the 17 reverted repos** (should read $0/unmetered, confirming
+      the public-repo-unmetered premise held in practice) and the self-hosted VM's steady-state load average before vs.
+      after (not a spot-check — matches `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`'s own still-open
+      "longer-window measurement" gap). Update that plan's issue doc
       (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`) with the dated result rather than duplicating
       it here.
 - [x] 21. ✅ [INFRA] P1. **Deregistered the old self-hosted runners for all 17 landed repos — DONE.** Used the
