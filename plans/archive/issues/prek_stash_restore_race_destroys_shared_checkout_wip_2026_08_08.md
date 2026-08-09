@@ -6,7 +6,7 @@ summary: >-
   checkout two concurrent runs interleave, and one session's restore reverts another session's in-progress file to HEAD
   with no error, no conflict, and no stash entry. Measured three times in one session on the same file; recovered only
   because a scratchpad backup existed. This is a silent data-loss class, not a merge conflict.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,7 +21,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-08
-last_updated: "2026-08-08"
+last_updated: "2026-08-09"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -32,6 +32,8 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: backend_engineer
 drift_direction: fix-regression
 resolved_by:
+  unified-trading-pm@d38f16f66 (todo 2) + unified-trading-pm@f8a307bad (todo 3) + this session's todo-4 commit, see
+  Progress Log
 locked_by:
 locked_since:
 supersedes:
@@ -40,6 +42,12 @@ source: >-
   Hit three times while shipping the AO context-probe fix (2026-08-08 interactive session, slot 1).
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED.** All 4 todos done: deterministic repro
+> (`scripts/dev/repro-prek-stash-restore-race.sh`), the flock serialization fix (`unified-trading-pm@d38f16f66`), the
+> checksum-verify loud-failure fix (`unified-trading-pm@f8a307bad`), and the scratchpad-backup HARD RULE now documented
+> as item 4 of `/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT cover". 0 open todos,
+> unlocked.
 
 # prek stash/restore race destroys uncommitted WIP on a shared checkout
 
@@ -108,9 +116,12 @@ standard "check `git status`, check `git stash list`" recovery ritual actively c
       `scripts/quality-gates-base/tests/test-quickmerge-commit-lock.sh` extracting the real `_prek_race_snapshot`/
       `_prek_race_check` functions — one asserts detection on a synthesized silent-revert, one asserts no false positive
       on an untouched unstaged file (both pass; full 6/6 suite green). Full `quality-gates.sh` Pass-1 green.
-- [ ] [DOCS] P2. **Add the scratchpad-backup rule to the multi-agent safety SSOT** — "back up uncommitted WIP to the
-      scratchpad BEFORE running any git-touching command in a shared checkout, and verify the backup before trusting
-      it." That is what saved the work here, and it is not currently written down anywhere.
+- [x] [DOCS] P2. ✅ **Add the scratchpad-backup rule to the multi-agent safety SSOT** — `unified-trading-pm@<pending>`.
+      Added item 4 to the "What worktree isolation does NOT cover" list in
+      `/codex/05-infrastructure/per-tab-worktrees.md` documenting the prek stash/restore race mechanism (cites this
+      issue doc + the deterministic repro script) plus the HARD RULE: "back up uncommitted WIP to the scratchpad BEFORE
+      running any git-touching command in a shared checkout, and verify the backup before trusting it." That is what
+      saved the work here, and it is now written down.
 
 ## Codex SSOTs
 
@@ -163,3 +174,10 @@ standard "check `git status`, check `git stash list`" recovery ritual actively c
   `safe-doc-push.sh`/`quickmerge.sh` invoke it). Script kept as `Lifecycle: permanent` — worth a follow-up run against
   the now-shipped todo-2 flock fix (`unified-trading-pm@d38f16f66`, landed concurrently by slot-22 above) to confirm it
   actually closes the interleaving window, and again once todo 3's checksum-verify lands.
+- **2026-08-09 (slot 32, infra worker adopting backend_engineer craft for this task)**: Shipped the last open todo —
+  added item 4 to the "What worktree isolation does NOT cover" list in `/codex/05-infrastructure/per-tab-worktrees.md`,
+  documenting the prek stash/restore race mechanism (citing this issue doc + the deterministic repro script from the
+  prior entry) and the scratchpad-backup HARD RULE. Backed up both edited files to the session scratchpad and verified
+  the copies (`diff -q`) before running any git command, per the very rule being added — practicing what the new rule
+  states. All 4 todos now done; archiving this doc per the plan-completion-and-archival-discipline SSOT's 6-step ritual
+  (flip committed first at the still-active path, `git mv` to `plans/archive/issues/` follows as a separate commit).

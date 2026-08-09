@@ -536,6 +536,27 @@ not shared), leaving `COMMIT_EDITMSG` as the confirmed, reproduced root cause.
   `git diff --cached --stat` + `git restore --staged <foreign-file>` before every commit (see "Within-slot ergonomics"
   below); this one (message-only) can happen even when the tree is provably clean.
 
+**4. prek's own stash/restore cycle around each hook run is also not race-safe in a shared checkout — a verified
+data-loss class, not a theoretical one (confirmed 2026-08-08,
+`/plans/archive/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`).** Each prek run stashes
+unstaged changes to a PID-namespaced patch (`~/.cache/prek/patches/<ts>-<pid>.patch`) at hook-batch start and restores
+them at the end. If a second session edits the SAME file while a first session's hooks are still running, the first
+session's restore reinstates its own STALE pre-edit snapshot over the second session's newer edit — silently: no error
+to the victim session, no conflict marker, and (unlike item 1 above) no `refs/stash` entry at all, since prek uses its
+own patch cache rather than a real git stash. The victim's `git status` reads clean immediately afterward, which
+actively confirms the wrong conclusion rather than merely omitting the right one. Reproduced on demand via
+`scripts/dev/repro-prek-stash-restore-race.sh`. Two code fixes now shrink the window (flock-serializing the `git commit`
+call in `safe-doc-push.sh`/`quickmerge.sh`, plus a checksum-verify hard-stop on those same call sites — see the issue
+doc's Progress Log) but do not close every path — a raw/manual `git commit` outside those two scripts can still hit it.
+
+- **HARD RULE — back up uncommitted WIP to the scratchpad BEFORE running any git-touching command in a shared checkout,
+  and verify the backup before trusting it.** Copy the file(s) you're mid-editing to your scratchpad
+  (`cp <file> <scratchpad>/<file>.bak` or equivalent) ahead of any `git commit` / `prek run` / `safe-doc-push.sh` /
+  `quickmerge.sh` invocation that could race with a concurrent session's hooks on the same clone, THEN confirm the copy
+  actually landed (`diff`/`ls -la` the backup — don't just trust the `cp` exit code). This is what recovered the
+  original incident's lost work; without it the edit would have been gone with no trace in any commit, stash, or on
+  disk.
+
 ## Within-slot ergonomics
 
 Every slot clone's `.envrc` declares:

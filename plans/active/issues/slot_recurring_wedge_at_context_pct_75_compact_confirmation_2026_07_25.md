@@ -376,7 +376,7 @@ capacity risk, not just reliability — see Progress Log 2026-08-07.
 - **Process finding, filed separately**: this session lost the same working file THREE times to concurrent prek
   stash/restore cycles in the shared checkout — silently, with no stash entry and a clean `git status`. Recovered only
   from a scratchpad backup. See
-  `/plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`.
+  `/plans/archive/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`.
 
 ## 2026-08-08 validation window — measured result (partial pass, stated plainly)
 

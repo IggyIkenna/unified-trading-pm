@@ -17,7 +17,7 @@ scope: [admin]
 tags: [operator-action-items, session-wrapup, stash-cleanup, secrets, blocker-digest]
 related:
   [
-    /plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md,
+    /plans/archive/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md,
     /plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md,
   ]
 created: 2026-08-08
@@ -38,7 +38,7 @@ locked_by:
 resolved_by:
 context_scope:
   [
-    /plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md,
+    /plans/archive/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md,
     /plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md,
     /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
@@ -150,11 +150,13 @@ pull any specific checkout's full table back up if you want it before deciding.
       `cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md` right now (found during the stash
       audit, not touched) — separate from the stash question above, this file itself needs a human to resolve the
       conflict.
-- [ ] [OPERATOR] P1. **`prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`** — a confirmed-live bug in
-      the shared checkout's `prek` stash-restore hook that was actively destroying uncommitted work today (independently
-      discovered by 3+ concurrent agents). Several agents had to route around it with `--no-verify` or `git commit-tree`
-      on already-verified-correct content. Worth a priority look since it's an active hazard to every session sharing
-      this checkout, not just today's.
+- [x] [OPERATOR] P1. ✅ **`prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`** — resolved and archived
+      2026-08-09 (`/plans/archive/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`): the
+      issue's own 4 todos shipped — deterministic repro, flock-serialized `git commit` in
+      `safe-doc-push.sh`/`quickmerge.sh` (`unified-trading-pm@d38f16f66`), a checksum-verify hard-stop on silent reverts
+      (`unified-trading-pm@f8a307bad`), and a documented scratchpad-backup HARD RULE
+      (`/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT cover", item 4). No remaining
+      priority look needed.
 - [ ] [OPERATOR] P2. **`tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md`** — a Cloud Scheduler job
       believed paused since 2026-06-25 was found still firing daily during today's tradfi §8 purge; protectively paused
       (plus a second, never-tracked weekly job) but the root cause of why the pause never took needs a look.
