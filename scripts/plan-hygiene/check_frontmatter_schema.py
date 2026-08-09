@@ -127,7 +127,7 @@ def main(argv: list[str] | None = None) -> int:
         problems: list[str] = []
         try:
             fm, _ = ds.parse_frontmatter(path.read_text(encoding="utf-8"))
-        except Exception as exc:
+        except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
             bad.append((path, [f"frontmatter is not valid YAML: {exc}"]))
             continue
         if fm is None:

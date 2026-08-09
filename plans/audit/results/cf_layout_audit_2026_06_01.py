@@ -86,7 +86,7 @@ def _sample_schema(uri: str, tmp: Path) -> str:
                 date_hint = f" | {c}~{str(df[c].iloc[0])[:19]} (nuniq {df[c].nunique()})"
                 break
         return f"  nrows={len(df)} cols={cols[:18]}{date_hint}"
-    except Exception as exc:
+    except Exception as exc:  # noqa: broad-except — best-effort schema sample, any read failure is reported inline
         return f"  (read error: {exc})"
 
 

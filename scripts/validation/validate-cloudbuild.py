@@ -70,7 +70,8 @@ def validate_file(path: Path, schema: dict[str, object]) -> tuple[bool, str | No
 
     try:
         data = load_yaml(path)
-    except Exception as e:
+    except Exception as e:  # noqa: broad-except — `yaml` is a local import inside load_yaml(); an
+        # ImportError here leaves the name unbound, so referencing yaml.YAMLError would itself NameError
         return False, f"YAML parse error: {e}"
 
     if data is None:

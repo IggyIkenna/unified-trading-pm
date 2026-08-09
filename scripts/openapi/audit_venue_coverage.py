@@ -110,11 +110,11 @@ for _canon in _ADAPTER_INVENTORY:
 def _load_venue_category_map(uac_root: Path) -> dict[str, str]:
     """Load VENUE_CATEGORY_MAP from unified-api-contracts."""
     sys.path.insert(0, str(uac_root))
-    try:
+    try:  # noqa: fallback-import — optional UAC registry import, degrades to empty dict, not a dependency-hiding shim
         from unified_api_contracts.registry import VENUE_CATEGORY_MAP  # noqa: qg-deep-import
 
         return {str(k): str(v) for k, v in VENUE_CATEGORY_MAP.items()}
-    except Exception as exc:
+    except (ImportError, AttributeError) as exc:
         logger.warning("VENUE_CATEGORY_MAP unavailable: %s", exc)
         return {}
 
@@ -122,11 +122,11 @@ def _load_venue_category_map(uac_root: Path) -> dict[str, str]:
 def _load_endpoint_registry_venues(uac_root: Path) -> set[str]:
     """Return set of uppercase venue IDs that appear in ENDPOINT_REGISTRY."""
     sys.path.insert(0, str(uac_root))
-    try:
+    try:  # noqa: fallback-import — optional UAC registry import, degrades to empty set, not a dependency-hiding shim
         from unified_api_contracts.registry import ENDPOINT_REGISTRY  # noqa: qg-deep-import
 
         return {str(spec.venue).upper().strip() for spec in ENDPOINT_REGISTRY if spec.venue}
-    except Exception as exc:
+    except (ImportError, AttributeError) as exc:
         logger.warning("ENDPOINT_REGISTRY unavailable: %s", exc)
         return set()
 
@@ -134,7 +134,7 @@ def _load_endpoint_registry_venues(uac_root: Path) -> set[str]:
 def _load_leg_eligible_venues(uac_root: Path) -> set[str]:
     """Return set of lowercase venue IDs that appear in any archetype leg eligible_venue_ids."""
     sys.path.insert(0, str(uac_root))
-    try:
+    try:  # noqa: fallback-import — optional UAC registry import, degrades to empty set, not a dependency-hiding shim
         from unified_api_contracts.internal.architecture_v2.archetype_leg_spec import (  # noqa: qg-deep-import
             ARCHETYPE_LEG_STRUCTURES,
         )
@@ -144,7 +144,7 @@ def _load_leg_eligible_venues(uac_root: Path) -> set[str]:
             for leg in structure.legs:
                 result.update(str(v).lower() for v in leg.eligible_venue_ids)
         return result
-    except Exception as exc:
+    except (ImportError, AttributeError) as exc:
         logger.warning("ARCHETYPE_LEG_STRUCTURES unavailable: %s", exc)
         return set()
 

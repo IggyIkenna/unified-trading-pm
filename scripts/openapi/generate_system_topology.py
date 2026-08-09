@@ -38,7 +38,7 @@ def load_json(path: Path) -> dict[str, object] | list[object] | None:
     try:
         with open(path) as f:
             return json.load(f)
-    except Exception as e:
+    except (OSError, ValueError) as e:
         logger.warning("  Failed to load %s: %s", path, e)
         return None
 
@@ -51,7 +51,7 @@ def load_yaml_file(path: Path) -> dict[str, object] | list[object] | None:
     try:
         with open(path) as f:
             return yaml.safe_load(f)
-    except Exception as e:
+    except (OSError, yaml.YAMLError) as e:
         logger.warning("  Failed to load %s: %s", path, e)
         return None
 

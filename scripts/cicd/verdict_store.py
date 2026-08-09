@@ -195,7 +195,8 @@ def set_verdict(
         try:
             _apply(client.transaction(max_attempts=max_attempts))
             return cast("str | None", outcome.get("prev")), cast("str", outcome.get("written", verdict))
-        except Exception as err:  # re-raised below unless transient-by-name
+        except Exception as err:  # noqa: broad-except — re-raised below unless transient-by-name;
+            # matched by exception class NAME (not isinstance) so this module stays google.api_core-import-free
             if type(err).__name__ not in _transient or attempt == 2:
                 raise
             last_err = err

@@ -390,7 +390,8 @@ def set_status(
         try:
             _apply(client.transaction(max_attempts=max_attempts))
             return outcome.get("prev", "NONE"), outcome.get("written", status)
-        except Exception as err:  # re-raised below unless transient-by-name
+        except Exception as err:  # noqa: broad-except — re-raised below unless transient-by-name; matched
+            # by exception class NAME (not isinstance) so this module stays google.api_core-import-free
             if type(err).__name__ not in _transient or attempt == 2:
                 raise
             last_err = err
@@ -480,7 +481,8 @@ def resolve_ci_status_map(
     base = manifest_ci_status_map(manifest)
     try:
         fs = get_all(project_id=project_id, firestore_module_factory=firestore_module_factory)
-    except Exception as err:
+    except Exception as err:  # noqa: broad-except — any Firestore unavailability (SDK absent
+        # pre-cutover, transient API error) must degrade to the manifest fallback, never crash
         logging.getLogger(__name__).warning(
             "ci_status Firestore read unavailable (%s: %s) — using manifest fallback cache",
             type(err).__name__,
@@ -534,7 +536,8 @@ if __name__ == "__main__":
         _proj = cast("str | None", _ns.project_id)
         try:
             _doc = get_doc(_repo, project_id=_proj)
-        except Exception as _err:
+        except Exception as _err:  # noqa: broad-except — Firestore unavailability degrades to an
+            # empty doc (the fail-CLOSED signal for the ldr_main SIT-gate), never crashes the CLI
             logging.getLogger(__name__).warning(
                 "ci_status get-doc Firestore unavailable (%s: %s) — emitting empty doc",
                 type(_err).__name__,

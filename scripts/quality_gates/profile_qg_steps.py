@@ -183,7 +183,8 @@ def _profile_repo(repo_path: Path) -> ProfileReport:
 
         proc.wait()
         exit_code = proc.returncode or 0
-    except Exception as e:
+    except Exception as e:  # noqa: broad-except — per-repo isolation: one repo's QG-invocation
+        # failure must not abort profiling the remaining repos
         print(f"Error running QG for {repo_name}: {e}", file=sys.stderr)
         exit_code = -1
 

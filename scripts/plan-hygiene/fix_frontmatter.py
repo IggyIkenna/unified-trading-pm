@@ -93,7 +93,7 @@ def _load_enum_sets() -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
             cast("frozenset[str]", mod.STAGE),
             cast("frozenset[str]", mod.SCOPE),
         )
-    except Exception as exc:  # any import failure must degrade to a no-op, never crash the fixer
+    except Exception as exc:  # noqa: broad-except — any import failure must degrade to a no-op, never crash the fixer
         print(
             f"  WARN fix_frontmatter: could not load docspec enums ({exc}); skipping enum-normalisation",
             file=sys.stderr,
@@ -406,7 +406,7 @@ def frontmatter_yaml_error(text: str) -> str | None:
     raw = ("".join(fm_lines)) if not opening_extra.strip() else (opening_extra + "\n" + "".join(fm_lines))
     try:
         yaml.safe_load(raw)
-    except Exception as exc:
+    except yaml.YAMLError as exc:
         return " ".join(str(exc).split())[:200]
     return None
 
@@ -999,7 +999,8 @@ def main() -> None:
             try:
                 if fix_active_plan(fp):
                     plan_fixed += 1
-            except Exception as e:
+            except Exception as e:  # noqa: broad-except — top-level per-file CLI guard: any failure
+                # aborts with a clear message rather than a raw traceback
                 print(f"  ERROR {fp.name}: {e}", file=sys.stderr)
                 sys.exit(2)
 
@@ -1010,7 +1011,8 @@ def main() -> None:
             try:
                 if fix_epic(fp):
                     epic_fixed += 1
-            except Exception as e:
+            except Exception as e:  # noqa: broad-except — top-level per-file CLI guard: any failure
+                # aborts with a clear message rather than a raw traceback
                 print(f"  ERROR {fp.name}: {e}", file=sys.stderr)
                 sys.exit(2)
 

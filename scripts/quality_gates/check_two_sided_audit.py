@@ -115,7 +115,8 @@ def main() -> int:
     print("Running two-sided prospectus vs codex audit...")
     try:
         counts = _run_audit()
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  # noqa: broad-except — pylint: disable=broad-except — top-level CLI
+        # guard: any audit failure is reported cleanly with a traceback, never a bare crash
         print(f"ERROR: audit failed -- {exc}", file=sys.stderr)
         import traceback
 

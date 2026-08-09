@@ -171,7 +171,7 @@ def _overlay_firestore_ci_status(manifest: dict[str, object]) -> None:
             f"::warning::tier_c_promotion_gate: Firestore SDK unavailable ({exc}) — "
             "deciding on STALE manifest ci_status cache. Install google-cloud-firestore."
         )
-    except Exception as exc:  # Firestore genuinely degraded: warn + fall back to manifest cache.
+    except Exception as exc:  # noqa: broad-except — Firestore genuinely degraded: warn + fall back to manifest cache.
         print(
             f"::warning::tier_c_promotion_gate: Firestore ci_status read failed "
             f"({type(exc).__name__}: {exc}) — falling back to manifest cache."

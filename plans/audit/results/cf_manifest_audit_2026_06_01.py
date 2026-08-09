@@ -42,7 +42,6 @@ import tempfile
 from pathlib import Path
 
 import pandas as pd
-from unified_trading_library import get_storage_client
 
 INDEX_REL = "_index/availability_index.parquet"
 CANONICAL_SCHEMA_VERSION = 9
@@ -56,6 +55,10 @@ ERA_A_CHAIN_DATA_TYPES: frozenset[str] = frozenset({"options_chain", "futures_ch
 
 def _cp(uri: str, dst: Path, tries: int = 5) -> bool:
     """Pull a single GCS object via the UTL SDK wrapper, retried. Returns ok."""
+    # UTL is not a declared unified-trading-pm dependency; lazy-imported here since this one-off
+    # audit script only needs it for real GCS pulls, never for the pure-logic gate the tests exercise
+    from unified_trading_library import get_storage_client  # noqa: imports-inside-functions
+
     bucket, path = uri.removeprefix("gs://").split("/", 1)
     for i in range(tries):
         try:

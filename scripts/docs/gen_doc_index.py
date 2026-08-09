@@ -167,7 +167,8 @@ def _atomic_write_text(out: Path, content: str) -> None:
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp, out)
-    except BaseException:
+    except BaseException:  # noqa: broad-except — deliberately the widest catch (incl.
+        # KeyboardInterrupt/SystemExit) to guarantee the temp-file cleanup always runs; always re-raises
         tmp.unlink(missing_ok=True)
         raise
 
