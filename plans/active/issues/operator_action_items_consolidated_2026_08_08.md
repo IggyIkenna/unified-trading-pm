@@ -184,3 +184,8 @@ pull any specific checkout's full table back up if you want it before deciding.
 - **2026-08-09 (operator ruling)**: the Finding E-1 item above was ruled — bridge the gates (option A). Marked done here
   as a pointer; full ruling recorded in
   `plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`.
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — this doc is a pure consolidated OPERATOR-only action
+  list (credential/wallet-key provisioning, IAM/GitHub-org settings, human design reviews, live-trading sign-off,
+  per-checkout stash-drop judgment calls) — every remaining item genuinely requires the operator's own hands or
+  judgment. The 2 credential items this round's cheat-sheet flagged are already recorded here as DONE, with the
+  re-sourcing follow-up correctly pointed at (and now extracted from) `deepseek_claude_blended_provider_routing_2026_07_28.md`.

@@ -120,3 +120,6 @@ mechanical fix, which is why this is filed rather than patched.
   distinguishing (a) fixture-drift vs (b) real-regression can still terminate in a genuine semantics call the
   investigation alone can't resolve, per the doc's own original framing. Stays `assigned_vm: NA` — revisit if the
   investigation lands a clean, code-only verdict.
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — re-confirms the same-day operator-ruling entry
+  directly above (RECLASSIFY already explicitly considered and declined this session). No new facts change that
+  call.

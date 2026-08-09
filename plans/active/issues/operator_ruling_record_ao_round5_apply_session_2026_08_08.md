@@ -115,3 +115,7 @@ cannot be audited for completeness.
   adding authority. Authenticity confirmation is tracked as the open `[OPERATOR]` todo above rather than assumed — per
   `/plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`, an agent inventing
   a plausible source for someone else's ruling is the exact failure the evidence gates exist to catch.
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — first audit pass on this doc. Item 1 is an
+  operator-only authenticity confirmation (cannot be worker-determined by design). Item 2 (give future ruling
+  sessions a home) requires a genuine convention design decision among 3 named options — a judgment call, not a
+  mechanical fix. No new facts apply.

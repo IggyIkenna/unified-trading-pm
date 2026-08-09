@@ -108,3 +108,7 @@ never executed". With forces now firing from 60, the two separate cleanly — an
   fix did not cause this — it uncovered it. Mitigated in the same session by `agent-orchestrator@989592628`, which stops
   a slot with headroom from being recycled over a compaction that will not run; that is a containment, not the fix.
 - **context-scout 2026-08-09**: populated context_scope (5 entries).
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — first audit pass on this doc. The 3 code-fix items
+  are already `KEEP-NA-STALE, citation-closed` (duplicated verbatim into `ao_satellite_ao_dispatch_batch12_2026_08_09.md`
+  todos 9-11 by a concurrent same-day pass). The sole remaining item (re-measure the wedge rate) is explicitly gated on
+  those 3 landing plus a fresh multi-hour/day fleet-observation window — genuinely time-gated, not bounded today.

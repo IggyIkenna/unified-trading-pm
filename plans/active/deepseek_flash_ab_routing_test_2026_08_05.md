@@ -778,3 +778,9 @@ appetite for it.
   `[OPERATOR]` to `[BACKEND]` with a concrete extension spec (add an `AgentRow`-keyed candidate source for the affected
   window) so it's now a build+run todo, not an open decision. Neither todo is fully closed-out yet (12a is new work; 25
   needs the extension built before the actual backfill runs) — both are now unblocked and worker-determinable.
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid, already touched by a same-day satellite pass —
+  5 of the 10 remaining open items (2, 4, 12a, 17b, 25) were `EXTRACTED 2026-08-09` to
+  `ao_satellite_ao_dispatch_batch12_2026_08_09.md` by a concurrent session. The other 5 (8, 9, 10, 11, 13) stay
+  KEEP-NA: a 24h real-fleet monitoring window, a post-window cost comparison, a completion-quality audit, review-
+  coverage verification, and a final write-up — all operator-review/time-gated, none touched by today's credential/
+  webhook facts. Whole-doc RECLASSIFY not applicable (already partially extracted, remainder genuinely gated).

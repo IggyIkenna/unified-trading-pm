@@ -97,3 +97,8 @@ on shared AWS infra, not something to self-grant.
 - **2026-08-09 (slot-5, data_engineering)** — Filed after `/check-agent-orchestrator` failed AccessDenied while checking
   for new queued work (original session scope already fully shipped/archived). Not self-fixable — an IAM policy change
   on shared AWS infra is operator territory.
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — first audit pass on this doc. The sole `[OPERATOR]`
+  item is an IAM policy grant to a specific human-named identity (`ikenna-worker`) on shared AWS infra, distinct from
+  the "AO/operator cloud identities are IAM-self-service" precedent (that precedent covers the orchestrator's OWN
+  service accounts granting themselves a missing role, not a human-named IAM user needing a grant from another
+  identity) — the doc's own text explicitly frames this as "not something to self-grant." No new facts apply.

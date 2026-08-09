@@ -1001,3 +1001,14 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
   645 events (~322/day). **VERDICT: rate did NOT drop (~3.4× INCREASE); orphan-reaper hypothesis ELIMINATED; churn hunt
   resumes.** (2) Stale-dispatch 24h invariant: `dispatched`-status tasks = 6, slots with `current_task` = 6, exact 1:1
   match, zero orphans; 7 `stale_dispatch_reclaimed` events since 2026-07-26 confirm reclaimer active. **VERDICT: PASS.**
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — Prior verdict re-verified, no whole-doc RECLASSIFY.
+  Of the 5 remaining un-extracted open items (365, 474, 479-already-extracted-to-batch10, 677, 807): item 365
+  (tmux_session_lost root-cause) stays genuinely open-ended per its own 2026-08-08 re-measure showing the rate
+  INCREASED, not a simple bounded task; item 474 (ao_docs_reconciliation close-out) requires deep cross-doc
+  verification spanning many scattered commits, not a mechanical check; item 677 (Layer-1 producer rewire) is
+  operator-sequenced to run last. Item 807 (prove one plan_reconciler run end-to-end) is flagged, not extracted:
+  `plan_reconciler` graduated to steady-state direct-push 2026-08-09 (see
+  `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md`'s Background — 28+ consecutive clean runs
+  2026-08-02→08-09), which makes this item's literal gate (observe a pushed `plan_reconciler/<dispatch_id>` branch)
+  now inapplicable to the current mechanism — closing it properly needs to reconcile the gate's INTENT against the
+  new steady-state facts, not just cite one recent run; left open rather than force a possibly-wrong extraction.

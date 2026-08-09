@@ -155,3 +155,9 @@ local sandbox first:
 
 - **2026-08-09 (interactive session, slot 3)**: Plan authored. Audit + endpoint discovery done (todos 1-2). Proceeding
   to todo 3 (review.md instructions) then the local sandbox test (todos 4-5) before shipping (todo 6).
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — first audit pass on this doc. Not a RECLASSIFY
+  candidate despite items 3-7 looking individually bounded: the doc's own summary and Testing-plan section explicitly
+  state this is "operator direction 2026-08-09, local/human track, not AO-dispatched" and describe the work as
+  "new, security-relevant behavior on a role that ~30 live agents boot from continuously," requiring local-sandbox
+  validation before shipping to the live `review.md`. Explicit operator scoping overrides the individual items'
+  apparent boundedness.
