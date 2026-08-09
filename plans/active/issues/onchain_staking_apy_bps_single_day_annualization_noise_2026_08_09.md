@@ -134,10 +134,11 @@ within normal LST peg noise) compounds to -18% to -35% "APY".
   cleared the bounded/worker-determinable bar (a grep-and-read diagnostic with a stated done-when) independently of todo
   2, which stays `assigned_vm: NA` on this doc — it remains an explicit quant-math methodology design call ("a
   strategy-math judgment call... out of data_engineering craft scope"), not worker-determinable as written. Extracted
-  todo 1 into `/plans/active/defi_satellite_ao_dispatch_batch12_2026_08_09.md` (parent_epic: features_and_ml_master),
-  gated finalize twin authored. Conflict-check clear: the only other corpus reference to this doc is
-  `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md`'s citation (this doc's own origin filing, now 0 open
-  todos). Doc's own `assigned_vm` stays `NA` — todo 2 alone does not clear the whole-doc bar.
+  todo 1 into `/plans/archive/2026_08/defi_satellite_ao_dispatch_batch12_2026_08_09.md` (parent_epic:
+  features_and_ml_master), gated finalize twin authored (archived 2026-08-09, both todos done). Conflict-check clear:
+  the only other corpus reference to this doc is `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md`'s citation
+  (this doc's own origin filing, now 0 open todos). Doc's own `assigned_vm` stays `NA` — todo 2 alone does not clear the
+  whole-doc bar.
 - **2026-08-09** (`defi_satellite_ao_dispatch_batch12_2026_08_09_finalize.md` todo 1, source-doc reconciliation):
   confirmed this doc's todo 1 citation and todo 2's P2→P1 retag both already reflect batch12's RAW-consumption verdict
   correctly. Found + fixed one orphaned gap: the "Why this matters" section's "Consumer impact not verified" bullet
