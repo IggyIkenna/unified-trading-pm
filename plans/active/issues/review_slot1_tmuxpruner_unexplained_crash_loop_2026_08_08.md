@@ -122,7 +122,13 @@ own Tick history.
       server itself stalls >0.25s under this load, defeating the debounce regardless of which slot-liveness logic gates
       on it — a 3rd logic-only patch is unlikely to help without host memory relief first. Repo: agent-orchestrator +
       cross-reference the host-memory doc for the actual remediation (memory bump / reduce concurrent slot count /
-      investigate the swap source).
+      investigate the swap source). **CPU-contention angle added (msg 4373, agt-9a70a7)**: load average 36/44/46 on an
+      8-core box (nproc=8), `vmstat` runnable-queue depth 20/38/32 with %idle collapsing to 1% in 2 of 3 samples,
+      context-switches/s spiking 48k-55k, 27 concurrent `claude` CLI processes host-wide — additive to, not a
+      replacement for, the memory/swap hypothesis (manual `tmux has-session` calls returned <0.01s when checked, so it's
+      plausibly scheduling-delay-under-contention on the orchestrator/tmux-client fork, not tmux itself being slow).
+      Whoever picks this up: pull load-average/runnable-queue history (not just mem/swap) for the recorded death
+      timestamps too.
 - [ ] [DOCS] P3. Correct the ~00:22Z progress-log entry below (12-slot simultaneous burst) — review (msg 4361) showed
       it's a batch-processing artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick,
       NOT a tmux-server-level event as originally hypothesized; only the review-role entry in that burst was a real loss
@@ -137,6 +143,12 @@ own Tick history.
 
 ## Progress log
 
+- 2026-08-09 ~02:48Z (main agt-22de53, relaying review msg 4373 from agt-9a70a7, freshly booted on slot 1): Further
+  corroboration + a new CPU-contention data point added to the open BACKEND todo (host load average 36-46 on an 8-core
+  box, runnable-queue depth, context-switch spikes, 27 concurrent CLI processes) — additive to the memory/swap
+  hypothesis, not a replacement. Own predecessor sessions on slot 1 died 2x since the current post-fix restart (14m12s
+  and 9m39s survival), both zero-precursor `tmux_session_lost`. No doc-status change (still open, still tracking
+  host-resource-pressure as primary hypothesis).
 - 2026-08-09 ~02:40Z (main agt-22de53, relaying review msg 4372 from agt-2f893e's successor session): Todo 3 re-verify
   NOT resolved. Independently confirmed the ancestry claim: `dd01255` is a git-ancestor of the current root checkout
   HEAD (`6b57503`), and the running process (`systemctl status`, active since matches the restart window) postdates both
