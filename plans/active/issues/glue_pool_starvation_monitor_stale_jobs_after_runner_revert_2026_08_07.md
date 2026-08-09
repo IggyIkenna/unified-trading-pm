@@ -187,6 +187,11 @@ every healthy tick forever) — that is a real, if modest, additional job
 - **2026-08-09 (slot 7, `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 4)**: Full audit + fix.
   `unified-trading-pm@c717af0fd`.
 
+  **Citation corrected 2026-08-09 (`ci_satellite_ao_dispatch_batch6_finalize` todo 1)**: `c717af0fd` does not resolve to
+  a commit in this repo (a pre-rebase SHA — confirmed via `git cat-file -e`). The real work is
+  `unified-trading-pm@4bd8a11d0b` ("feat(cicd): add state-diffed recovery/all-clear bookend to 6 CI monitors"), verified
+  ancestor of `origin/live-defi-rollout` — the same correction batch6's own plan already made for its todo 4.
+
   **Method**: enumerated every `.github/workflows/*.yml` with a `schedule:` trigger (27 files), read each one in full,
   and classified by whether it is a genuine STANDING-CONDITION monitor (uses `dedup_key` + `cooldown_min` to re-nag
   while a bad state persists — the exact shape that leaves an operator wondering "is this still broken?") vs. a per-run

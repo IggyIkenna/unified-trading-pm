@@ -348,14 +348,17 @@ enough to rule out interference arising DURING the run. Not re-measured further 
 the profiler's own numbers are the trustworthy artifact for "where does the time go," not the wall-clock deltas across
 noisy individual runs.
 
-- **[INFRA] P2.** Follow-up, not executed this session: investigate optimizing `check_pm_script_path_refs.py` (28% of a
-  from-scratch quality-gates.sh run, single-threaded full-corpus sweep) — e.g. incremental/changed-files-only scoping
-  (mirroring `--fast`'s change-scoped codex-grep tier), or parallelizing the corpus walk. **CONFLICT-DEFERRED
-  (na-eligibility-audit round7 RECLASSIFY sweep, 2026-08-08)**: this exact item is already claimed verbatim by
-  `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 11 (`status:     active`, `assigned_vm: planning`), which cites
-  this doc by name and line number as its source. Converted to a bold digest pointer (not a real checkbox — see
-  `task_template.md`'s digest-line convention) so flipping this doc's own `assigned_vm` does not dispatch a competing
-  duplicate. Do the work via batch6, not here.
+- [x] ✅ **[INFRA] P2.** Investigate optimizing `check_pm_script_path_refs.py` (28% of a from-scratch quality-gates.sh
+      run, single-threaded full-corpus sweep) — e.g. incremental/changed-files-only scoping (mirroring `--fast`'s
+      change-scoped codex-grep tier), or parallelizing the corpus walk. **DONE 2026-08-08
+      (`ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 11) — `unified-trading-pm@ec01e4167`** (verified ancestor of
+      `origin/live-defi-rollout`, `ci_satellite_ao_dispatch_batch6_finalize` todo 1). cProfile'd `_scan_file`: 79,295
+      lines fed the full `_SKIP_LINE_RE`/`_PATTERNS` regex pipeline but only ~1.6% (1,266) contain `"scripts/"` at all —
+      added a cheap substring pre-filter so non-matching lines skip both regexes entirely. Standalone cProfile: 0.333s →
+      0.087s (74% less CPU work). `profile_qg_resources.py --repo unified-trading-pm --core 2` before/after full run:
+      STEP 5.64 28.62s → 25.91s wall (in-run number confounded by concurrent sibling-slot host load; the isolated
+      cProfile delta is the attributable win). Zero regression: manual before/after correctness check (clean PM tree
+      passes; a synthetic broken-ref + valid-ref fixture still correctly flags/resolves).
 - [ ] [INFRA] P2. Operator explicitly asked for a solo, idle-host-verified re-measurement of `--test`,
       `--skip-typecheck`, `--skip-lint`, `--fast`, `--skip-codex` (the flags that looked implausibly slow in the batched
       Results table 2) — only `--quick` was actually re-run solo (81.95s, see above) before the profiler investigation
@@ -377,7 +380,9 @@ noisy individual runs.
       `profile_qg_resources.py`'s existing single-core-pinned per-check breakdown (see "Results table 2 rigor follow-up"
       above) remains the more trustworthy source for "where does the time go." Recorded as the required done-when
       regardless, since the todo asked for the delta table, not a noise-free one — a idle-host re-run would need to be
-      scheduled for when the shared host quiets down.
+      scheduled for when the shared host quiets down. Shipped via `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo
+      12 — `unified-trading-pm@7f41c4488` (verified ancestor of `origin/live-defi-rollout`,
+      `ci_satellite_ao_dispatch_batch6_finalize` todo 1).
 
 ### Results table 3 — `--skip-tests --skip-<X>` per-phase delta (2026-08-09, busy shared host — see caveat above)
 

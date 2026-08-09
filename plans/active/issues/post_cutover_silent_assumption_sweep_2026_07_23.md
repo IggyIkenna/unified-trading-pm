@@ -387,28 +387,34 @@ classify them by conventional-commit prefix (the rules above), compute the next 
 
 ### Sub-steps
 
-- [x] ⛔ [INFRA] P1. **RETIRED 2026-08-08 (operator ruling: formally retire Option B now).** ~~Implement
-      conventional-commit bump computation + tag mint in `reconcile_release_tags.py`, reusing the proven rules. Gate
-      behind an explicit `--mint` flag so the detector stays usable standalone.~~ Moot -- the per-repo `semver-agent`
-      retarget (`unified-trading-pm@0b128a725`, `push:[main]`, fleet-rolled to all 22 `ldr_main` repos) shipped instead
-      and is proven live (see the ⛔ banner above this section). No `--mint` flag exists or will be built;
+- [x] ⛔ [INFRA] P1. **RETIRED 2026-08-08 (operator ruling: formally retire Option B now — see
+      `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 4).** ~~Implement conventional-commit
+      bump computation + tag mint in `reconcile_release_tags.py`, reusing the proven rules. Gate behind an explicit
+      `--mint` flag so the detector stays usable standalone.~~ Moot -- the per-repo `semver-agent` retarget
+      (`unified-trading-pm@0b128a725`, `push:[main]`, fleet-rolled to all 22 `ldr_main` repos) shipped instead and is
+      proven live (see the ⛔ banner above this section). No `--mint` flag exists or will be built;
       `reconcile_release_tags.py` stays a STALL DETECTOR only (`/codex/08-workflows/ci-cd-flow.md:1004`).
-- [x] ⛔ [DOC] P1. **SUPERSEDED 2026-07-25, formally retired 2026-08-08 (operator ruling).** Option B (this
-      whole sub-steps list) was never built; the per-repo `semver-agent` retarget shipped instead (see the ⛔ banner
-      above this section + the Resolution checklist's F2 item). There is no reconciler-side message-only-vs-API-diff
-      tradeoff to rule on since the reconciler itself does not exist and is not being built.
-- [x] ⛔ [INFRA] P1. **RETIRED 2026-08-08 (operator ruling).** ~~Port the bump-rate circuit breaker to the
-      reconciler (tag-mints/hour), plus a low `--max-creates` for the first drain.~~ Moot -- the reconciler-side minter
-      this circuit breaker would protect is not being built; the per-repo `semver-agent` retarget shipped instead and
-      already carries its own proven circuit breaker (the 2026-06-10 incident's fix, unchanged by this retarget).
-- [x] ⛔ [INFRA] P2. **RETIRED 2026-08-08 (operator ruling).** ~~Batch the manifest write to ONE commit per run
-      (the whole point of B) — verify by confirming a single `chore(manifest):` commit after a multi-repo mint.~~ Moot
-      -- Option B (the whole point of which was this batching) was never built; the per-repo semver-agent retarget
-      shipped instead, with its own unbatched-but-now-restored per-repo manifest commits (F2's outcome achieved by the
-      opposite route -- see the Resolution checklist item).
-- [x] ⛔ [INFRA] P2. **RETIRED 2026-08-08 (operator ruling).** ~~First supervised drain: run with `--dry-run`,
-      eyeball the 22 proposed versions, then mint.~~ Moot -- there is no reconciler-side mint path to drain; minting
-      already happens per-repo via the live semver-agent retarget.
+- [x] ⛔ [DOC] P1. **SUPERSEDED 2026-07-25, formally retired 2026-08-08 (operator ruling — see
+      `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 4).** Option B (this whole sub-steps
+      list) was never built; the per-repo `semver-agent` retarget shipped instead (see the ⛔ banner above this
+      section + the Resolution checklist's F2 item). There is no reconciler-side message-only-vs-API-diff tradeoff to
+      rule on since the reconciler itself does not exist and is not being built.
+- [x] ⛔ [INFRA] P1. **RETIRED 2026-08-08 (operator ruling — see
+      `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 4).** ~~Port the bump-rate circuit
+      breaker to the reconciler (tag-mints/hour), plus a low `--max-creates` for the first drain.~~ Moot -- the
+      reconciler-side minter this circuit breaker would protect is not being built; the per-repo `semver-agent` retarget
+      shipped instead and already carries its own proven circuit breaker (the 2026-06-10 incident's fix, unchanged by
+      this retarget).
+- [x] ⛔ [INFRA] P2. **RETIRED 2026-08-08 (operator ruling — see
+      `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 4).** ~~Batch the manifest write to
+      ONE commit per run (the whole point of B) — verify by confirming a single `chore(manifest):` commit after a
+      multi-repo mint.~~ Moot -- Option B (the whole point of which was this batching) was never built; the per-repo
+      semver-agent retarget shipped instead, with its own unbatched-but-now-restored per-repo manifest commits (F2's
+      outcome achieved by the opposite route -- see the Resolution checklist item).
+- [x] ⛔ [INFRA] P2. **RETIRED 2026-08-08 (operator ruling — see
+      `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 4).** ~~First supervised drain: run
+      with `--dry-run`, eyeball the 22 proposed versions, then mint.~~ Moot -- there is no reconciler-side mint path to
+      drain; minting already happens per-repo via the live semver-agent retarget.
 - [x] ⛔ [DOC] P2. **RETIRED 2026-08-08 (operator ruling) — already superseded in practice.** ~~Update
       `/codex/08-workflows/ci-cd-flow.md` § "Release tag reconciler" once B ships — it currently documents B as
       _planned_.~~ B will never ship; codex already reflects the actual shipped state
@@ -447,14 +453,14 @@ codex, or a future staging re-entry gets a dead pipeline.
       ⚠️ **Re-entry gate unchanged: this item must be closed BEFORE execution-service handles live order flow** — the
       defect is invisible at runtime (204 reads as success), so it will not resurface on its own. Whoever picks up
       execution-service work owns this.
-- [x] ⛔ [INFRA] P1. **SUPERSEDED 2026-07-25, formally retired 2026-08-08 (operator ruling: retire it formally
-      now).** ~~F2 — restore version minting via OPTION B (the PM reconciler), NOT the per-repo agent.~~ **F2's OUTCOME
-      (version minting restored) IS ACHIEVED — by the opposite route.** On an operator directive 2026-07-25 the
-      per-repo `semver-agent` was retargeted `staging` → `push:[main]` (`unified-trading-pm@0b128a725`,
-      ancestor-verified), fleet-rolled to all 22 `ldr_main`+git-tag repos, and proven live
-      (`unified-trading-library` v0.57.0 published to Artifact Registry, the first real publish since 2026-06-27). The
-      PM-reconciler minter was **never built** and is architecturally incoherent for git-tag repos. See the ⛔ banner on
-      § "Option B" below and
+- [x] ⛔ [INFRA] P1. **SUPERSEDED 2026-07-25, formally retired 2026-08-08 (operator ruling: retire it formally now — see
+      `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § Phase 4).** ~~F2 — restore version minting
+      via OPTION B (the PM reconciler), NOT the per-repo agent.~~ **F2's OUTCOME (version minting restored) IS ACHIEVED
+      — by the opposite route.** On an operator directive 2026-07-25 the per-repo `semver-agent` was retargeted
+      `staging` → `push:[main]` (`unified-trading-pm@0b128a725`, ancestor-verified), fleet-rolled to all 22
+      `ldr_main`+git-tag repos, and proven live (`unified-trading-library` v0.57.0 published to Artifact Registry, the
+      first real publish since 2026-06-27). The PM-reconciler minter was **never built** and is architecturally
+      incoherent for git-tag repos. See the ⛔ banner on § "Option B" below and
       [/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md](/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
       § Phase 4. The per-repo semver-agent retarget is what shipped and holds — Option B is closed, not just
       unimplemented.
@@ -620,7 +626,17 @@ codex, or a future staging re-entry gets a dead pipeline.
       `uts-shared-deployment-api`) are in the Progress Log below. **Citation added 2026-08-07 (na-eligibility-audit)**:
       the remaining open scope (`cascade-qg-ordering.yml`, `sit-gate.yml`) is tracked in
       `ci_satellite_ao_dispatch_batch5_2026_08_02.md` (~line 249, `status: active`, `assigned_vm: planning`), which
-      explicitly cites this doc as Source — do not re-extract, batch5 already owns it.
+      explicitly cites this doc as Source — do not re-extract, batch5 already owns it. **`cascade-qg-ordering.yml` /
+      `sit-gate.yml` SLICE: DONE 2026-08-07 (`ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 6) —
+      `unified-trading-pm@ead69c37d`** (verified ancestor of `origin/live-defi-rollout`,
+      `ci_satellite_ao_dispatch_batch6_finalize` todo 1). `cascade-qg-ordering.yml`'s `quality-gate-run` orphan was
+      already fixed 2026-08-03 (switched to `workflow_dispatch` of `quality-gates-v2.yml`, which fails loudly on no
+      target). `sit-gate.yml`'s `game-day-sit`/`synthetic-smokes` guards existed but were dead code (GitHub returns 204
+      for `repository_dispatch` regardless of listener existence, so the success branch always fired) — fixed by
+      changing the message to `::notice::Fired X (best-effort; GitHub 204 does not confirm listener)`, no longer
+      implying a confirmed dispatch. **Only remaining open scope**: the 24 repos' `semver-agent.yml` `schema-changed`
+      dispatch (D5-2 in batch5's Deferred table, conflict-gated on the `scripts/workflow-templates/` rollout mechanism —
+      not claimed by batch6 either; still genuinely open).
 - [ ] [INFRA] P2. Disable or fix the F4 vacuous crons (`sit-debounce-trigger`, `freeze-deferred-build-replay`,
       `fix-approval-timeout`, `supersede-stale-dep-update-prs`); diagnose `digest-drift-sweep`'s non-convergence (it
       costs real money via `ubuntu-latest` fan-out); ~~make `workspace-quickmerge-validation` fail when it logs a
@@ -714,12 +730,12 @@ all 12 open items end-to-end. 11 remain genuinely operator-/design-gated (SUPERS
 fleet-wide tag-minting judgment call, unruled F4 cron disposition, unresolved `sit_validated_workspace_digest` design
 call). 1 (the F3 `cascade-qg-ordering.yml`/`sit-gate.yml` success-reporting remainder) was already extracted into
 `ci_satellite_ao_dispatch_batch5_2026_08_02.md` (status: active) but this doc's own checkbox carried no back-citation —
-added one. No `assigned_vm` change.
-**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-read all 5 remaining open items
-against today's 9 operator-Q&A precedents; none apply. F1 (kill-switch) stays TIME-GATED on execution-service handling
-live order flow, unchanged. The "reconcile ~4 weeks of missing tags" item and the F3 success-reporting remainder stay
-KEEP-NA-STALE (already-duplicated in `ci_satellite_ao_dispatch_batch1_2026_07_26.md` / `batch5_2026_08_02.md`
-respectively, both cited in place). The F4 vacuous-crons item bundles a plausibly-bounded sub-part (disable 4 named
-no-op crons) with a genuinely open-ended sub-part (`digest-drift-sweep`'s non-convergence, itself gated on the dormant-
-cascade investigation) — not split out or reclassified here. The `sit_validated_workspace_digest` item ("close the gap,
-or document why safe to drop") is a genuine design call, not a checkable fact. No `assigned_vm` change.
+added one. No `assigned_vm` change. **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid —
+re-read all 5 remaining open items against today's 9 operator-Q&A precedents; none apply. F1 (kill-switch) stays
+TIME-GATED on execution-service handling live order flow, unchanged. The "reconcile ~4 weeks of missing tags" item and
+the F3 success-reporting remainder stay KEEP-NA-STALE (already-duplicated in
+`ci_satellite_ao_dispatch_batch1_2026_07_26.md` / `batch5_2026_08_02.md` respectively, both cited in place). The F4
+vacuous-crons item bundles a plausibly-bounded sub-part (disable 4 named no-op crons) with a genuinely open-ended
+sub-part (`digest-drift-sweep`'s non-convergence, itself gated on the dormant- cascade investigation) — not split out or
+reclassified here. The `sit_validated_workspace_digest` item ("close the gap, or document why safe to drop") is a
+genuine design call, not a checkable fact. No `assigned_vm` change.

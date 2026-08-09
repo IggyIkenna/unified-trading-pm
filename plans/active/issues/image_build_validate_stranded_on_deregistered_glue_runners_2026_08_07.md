@@ -102,8 +102,10 @@ needed a brand new dispatch). Result: `validate / GCP Cloud Build — alerting-s
 
 - [x] ✅ [INFRA] P2. Fleet-wide sweep: are there OTHER reusable workflows that moved in the same 2026-08-06
       `shared_ci_workflow_repo_extraction_2026_08_06.md` extraction and might have the same
-      still-self-hosted-but-now-stranded pattern? — unified-trading-pm@(this commit). **Finding: none found.** Swept all
-      5 extracted files (`python-quality-gates-v2.yml`, `notify-slack.yml`, `image-build-validate.yml`,
+      still-self-hosted-but-now-stranded pattern? — `unified-trading-pm@39e71f811` (citation corrected 2026-08-09,
+      `ci_satellite_ao_dispatch_batch6_finalize` todo 1 — the placeholder "this commit" resolved to the actual flip
+      commit, verified ancestor of `origin/live-defi-rollout`). **Finding: none found.** Swept all 5 extracted files
+      (`python-quality-gates-v2.yml`, `notify-slack.yml`, `image-build-validate.yml`,
       `.github/actions/setup-python-tools/action.yml`, `.github/actions/setup-agent-tools/action.yml`) in
       `unified-trading-ci`. `grep -rn 'runs-on:.*self-hosted' unified-trading-ci/.github/workflows/` → 0 hits (the only
       prior hit, `image-build-validate.yml`, is already fixed — confirmed all 3 jobs `runs-on: ubuntu-latest`).
