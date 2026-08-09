@@ -157,6 +157,23 @@ is_named() {
   return 1
 }
 
+# files_exist_in_head -- true only if EVERY named file already has an entry in HEAD's tree.
+# safe_doc_push_reports_success_having_committed_nothing_2026_08_09.md: the "nothing staged --
+# does content already match HEAD?" fallback below used `git diff --quiet -- files` alone, which
+# is quiet (reports no difference) for a file that isn't in the index at all -- true for a
+# tracked file whose content genuinely matches HEAD, but ALSO true for a brand-new untracked
+# file that was simply never staged (untracked paths are invisible to a plain `git diff`, not
+# "no difference"). A path absent from HEAD can never be "already landed"; requiring
+# `git cat-file -e HEAD:<path>` for every named file before trusting the diff is what tells the
+# two cases apart.
+files_exist_in_head() {
+  local _f
+  for _f in "${FILES[@]}"; do
+    git cat-file -e "HEAD:$_f" 2>/dev/null || return 1
+  done
+  return 0
+}
+
 # KNOWN_RENAME_SOURCES -- captured ONCE, right here, before the loop below (or any
 # fetch/pull/rebase) touches the tree. This is the only point where the caller's staged
 # rename is guaranteed to still be intact and unambiguous (a clean R100 pair). Every
@@ -439,11 +456,12 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       : # there is something to commit
     else
       echo "  nothing staged for the named files -- checking if content already matches HEAD"
-      if git diff --quiet -- "${FILES[@]}" 2>/dev/null; then
+      if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
         echo "✅ Named files already match HEAD (a concurrent session landed identical content) -- treating as success."
         final_ok=true
         break
       fi
+      echo "  at least one named file is absent from HEAD -- staging genuinely failed, not already-landed; retrying"
     fi
 
     if ! locked_git_commit -q -m "$MSG" 2>/tmp/_sdp_commit_err; then
