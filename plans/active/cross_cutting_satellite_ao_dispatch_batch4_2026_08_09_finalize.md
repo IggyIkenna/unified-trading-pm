@@ -33,6 +33,7 @@ supersedes:
 superseded_by:
 depends_on: [cross_cutting_satellite_ao_dispatch_batch4_2026_08_09]
 gate_on_depends: true
+archive_exempt: true
 source: >-
   Satellite-batch-extraction sweep 2026-08-09, per `task_template.md` §4's finalize-plan-coverage rule.
 assigned_role: infra
@@ -63,10 +64,13 @@ context_scope:
       commit citations; neither doc reaches 0 open todos (2 remain open in each — cross-tranche retag handoffs in the
       ag_closeout doc, the 2 code-fix `[INFRA]` todos in the gcloud doc), so both stay `status: open` per this todo's
       own instruction. See Progress Log for this session's own shipping SHA.
-- [ ] [DOC] P1. Archive `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` via the standard 6-step ritual once
-      todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by` (confirm
-      already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the new path,
-      and this finalize doc archives alongside it in the same commit.
+- [x] ✅ [DOC] P1. Archive `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` via the standard 6-step ritual
+      once todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by`
+      (confirm already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the
+      new path, and this finalize doc archives alongside it in the same commit. `locked_by` confirmed empty on the
+      source doc; no codex-alignment change needed (routine batch closeout, no new contract). Both the source plan and
+      this finalize doc moved to `plans/archive/2026_08/` in the follow-up archival commit; all 8 corpus referrers
+      repointed.
 
 ## Progress Log
 
