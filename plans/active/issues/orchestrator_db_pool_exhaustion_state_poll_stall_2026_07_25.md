@@ -301,3 +301,4 @@ restarting the service and from shipping the fix (routes via BACKEND worker + qu
   (new `tests/test_db_pool_exhaustion_recovery.py`, `quality-gates.sh` green 2779 passed/2 skipped). Doc remains NA
   overall: the readiness-probe `[BACKEND] P2` todo still embeds the never-autonomous `autonomous-recovery-matrix.md`
   edit.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

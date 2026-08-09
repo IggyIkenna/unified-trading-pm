@@ -223,3 +223,4 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
   Flipped with evidence. 2 genuine-work items remain (EXTENDED-STARKNET / LIGHTER-ZKSYNC prod GCS pipeline_mode
   re-partition/merges against a live split-brain) — re-checked, no evidence either has landed since the 2026-08-07
   marker; doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
