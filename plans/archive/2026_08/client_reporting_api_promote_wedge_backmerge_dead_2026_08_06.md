@@ -16,7 +16,7 @@ summary: >-
   current promote PR #646 (promote/client-reporting-api/6e0622b853a7) is CONFLICTING on Dockerfile (ARG
   BASE_IMAGE_DIGEST: main stale sha256:9c1a… vs LDR current sha256:a27d…) and has NO quality-gates-v2 check + sit-gate
   fail-closed. LDR already carries the exact fixes that would repair main once promoted.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci, infrastructure]
 stage: [meta]
@@ -120,3 +120,14 @@ moves notify-slack.yml to the shared `unified-trading-ci` repo; this issue is th
   absent.
 
 - **context-scout 2026-08-06**: populated context_scope.
+
+## Resolution (2026-08-09, plan_reconciler ci-tranche, agt-04cb0e)
+
+**Wedge fully cleared — verified live, not inferred.** `gh pr list --repo IggyIkenna/client-reporting-api --state open`
+→ 0 open PRs (PR #646 is `CLOSED`, superseded). `main-backmerge-to-ldr.yml`'s 5 most recent runs are all `success`
+(`push`-triggered, most recent 2026-08-09T16:30:28Z) — the workflow file on `main` no longer references
+`notify-slack.yml` at all (grepped its raw content via `gh api .../contents/...?ref=main`, zero hits), so the
+recommended resolution's premise (get `notify-slack.yml` onto `main`) was superseded by a different fix (the reference
+itself was removed from the workflow, presumably via `shared_ci_workflow_repo_extraction_2026_08_06.md`'s wave-3 work).
+`gh api .../compare/main...live-defi-rollout` confirms `behind_by: 0` — `main` is a clean ancestor of
+`live-defi-rollout`, no residual divergence. No remaining work; archiving.

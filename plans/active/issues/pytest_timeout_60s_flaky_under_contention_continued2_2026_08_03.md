@@ -998,3 +998,7 @@ repeated here.
   doc's own commit; no branch changes in either repo). Added `agent-orchestrator` to this doc's `repos:` frontmatter
   (1st occurrence for this repo in this doc-chain, though the doc-chain itself lives in the PM repo that ships via this
   same repo's orchestrator).
+
+- **2026-08-09 (plan_reconciler ci-tranche, agt-04cb0e)** — re-tested todo 1's gate: ledger-coordination fix landed
+  (`status: complete`, Phase 2+3 `[x]`) but recurrence did NOT stop — `continued3` logs a fresh occurrence 2026-08-09
+  ~02:20-03:15Z. Todo 3's archive condition unmet; both stay open.
