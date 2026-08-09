@@ -23,6 +23,9 @@ author: slot-9 (infra)
 source: ["plans/active/infra_capture_and_devops_leftovers_2026_07_06.md"]
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
