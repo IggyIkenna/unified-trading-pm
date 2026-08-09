@@ -129,19 +129,27 @@ Not urgent (static, not actively growing) but real and unaddressed.
       Progress Log identifying the actual failing call + why, with enough detail that a follow-up writer-fix +
       backfill-script todo (if warranted) can be scoped without re-investigating from scratch. ✅ — root cause found,
       see Progress Log 2026-08-09 (slot-22).
-- [ ] [DATA] P2. Fix `rebuild_tradfi_manifest.py::parse_tradfi_path()`'s `_PAT_UNDERLYING_BUNDLE` branch (lines 291-308)
+- [x] [DATA] P2. Fix `rebuild_tradfi_manifest.py::parse_tradfi_path()`'s `_PAT_UNDERLYING_BUNDLE` branch (lines 291-308)
       to gate its blank-`instrument_id`/bundled classification on `itype.lower() in BUNDLED_ITYPES` — mirroring the
       check the OTHER precedence branch (`_PAT_PER_INSTRUMENT`, line 332) already applies — instead of matching ANY
-      `instrument_type={IT}/data_type={DT}/underlying={U}/…` path unconditionally. Then re-run (or targeted-rescan) the
-      rebuild for the affected `venue=CME`/`instrument_type=future` dates so the 20,254 rows get a correct per-row
-      canonical `instrument_id` (via `derive_tradfi_row_instrument_id`/`build_instrument_id` against the parquet's own
-      `symbol`+`expiry_date` columns — the rebuild script would need to download+classify each legacy
-      bundled-by-underlying object's rows rather than the current placeholder `row_count=1`/no-download bundled path,
-      since a real per-row id is only resolvable from row content, not the path alone). Repo: market-tick-data-service.
-      **Done when**: `parse_tradfi_path()` no longer classifies a non-`BUNDLED_ITYPES` `instrument_type` as bundled, a
-      regression test covers a `instrument_type=future/underlying=U/` legacy path, and the 20,254 rows are re-verified
-      non-blank (or explicitly re-classified as an intentional bundle-grain row) via a live manifest recount. Static
-      backlog — no urgency, ordinary backlog priority.
+      `instrument_type={IT}/data_type={DT}/underlying={U}/…` path unconditionally. Repo: market-tick-data-service.
+      **Done when**: `parse_tradfi_path()` no longer classifies a non-`BUNDLED_ITYPES` `instrument_type` as bundled and
+      a regression test covers a `instrument_type=future/underlying=U/` legacy path. ✅ — gate shipped + regression
+      tests added, `market-tick-data-service@bd6233b4`, see Progress Log 2026-08-09 (slot-25). Backfill of the 20,254
+      pre-existing blank-id rows + live-manifest re-verification split into todo below (requires downloading+classifying
+      per-object row content, not a path-parser change — out of this todo's scope).
+- [ ] [DATA] P3. Backfill the 20,254 pre-existing blank-`instrument_id` `venue=CME`/`instrument_type=FUTURE` manifest
+      rows (2026-08-09 census above) now that `parse_tradfi_path()` (`market-tick-data-service@bd6233b4`) no longer
+      mis-classifies this shape as a bundle: download + classify each legacy bundled-by-underlying object's rows to
+      derive a real per-row `instrument_id` via `derive_tradfi_row_instrument_id`/`build_instrument_id` against the
+      parquet's own `symbol`+`expiry_date` columns (the rebuild script's current placeholder `row_count=1`/no-download
+      bundled path cannot resolve this — a real per-row id is only resolvable from row content, not the path alone),
+      write corrected rows, then re-verify via a live manifest recount that the 20,254-row population is non-blank (or
+      explicitly re-classify any genuinely irresolvable rows). Repo: market-tick-data-service. **Done when**: a live
+      manifest recount (same filters as the 2026-08-09 census) shows 0 remaining blank-`instrument_id`
+      `capture_status=captured` rows for this population, or each remaining row is explicitly justified non-resolvable
+      in this doc's Progress Log. Static backlog (no writes since 2026-08-07 as of filing) — no urgency, ordinary
+      backlog priority; re-verify freshness before treating as urgent if picked up much later.
 
 ## Progress Log
 
@@ -209,3 +217,16 @@ Not urgent (static, not actively growing) but real and unaddressed.
   - **Follow-up todo added above** (fix `parse_tradfi_path()`'s bundled-classification gate + re-derive/backfill the
     20,254 rows' real per-row `instrument_id`). Population confirmed still static as of this session (query above
     matches the original filer's count exactly: 20,254).
+- **slot-25 worker 2026-08-09** (todo 2, code-fix portion): Shipped the `_PAT_UNDERLYING_BUNDLE` gating fix —
+  `parse_tradfi_path()` now only classifies a bundle-grain (blank-`instrument_id`) row when
+  `itype.lower() in BUNDLED_ITYPES`; a non-bundled `instrument_type` under a legacy `underlying=U/` directory (e.g.
+  singular `future`) falls through the other precedence branches and lands as `unparseable` (logged in the
+  `unparseable_shapes` histogram) instead of a silently blank-id `captured` row. Added two regression tests
+  (`TestNonBundledItypeUnderUnderlyingDirNotClassifiedAsBundle`) covering the `instrument_type=future/underlying=U/`
+  legacy shape (both `pipeline_mode=`-tagged and legacy `category=tradfi` forms) — both assert `parse_tradfi_path()`
+  returns `None`. All 97 tests in the module's test suite (parser + cf11 + coverage + chunking) pass; full
+  `quality-gates.sh` green. Shipped `market-tick-data-service@bd6233b4` (a follow-up commit to `@8fecf83c` trimming a
+  comment to satisfy the 900-line file-size gate). **Split remaining scope** (re-run/backfill the 20,254 existing rows'
+  real per-row `instrument_id` + a live manifest recount) into the new todo above — that requires downloading and
+  classifying each legacy object's row content (a real per-row id is not path-derivable), a materially larger operation
+  than this code-fix todo, not attempted in this session.
