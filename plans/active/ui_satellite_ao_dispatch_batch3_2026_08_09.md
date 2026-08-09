@@ -81,11 +81,11 @@ drift_direction: advance-docs
       text names alongside it. Read/write/investigation only — no code change to the live artifact/tarball pipeline.
       Done when: the issue doc exists with both points captured, findings-triage tagged per the standard rule (in-file
       fix / adjacent-plan fix / new issue). Repo: unified-trading-pm.
-- [ ] [INFRA] P3. **Check + report AR/ECR native vulnerability-scan status.** Source: same doc's `[INFRA] P3` "(stretch,
-      optional) Image vulnerability-scan status" todo — "never itself investigated, only ever noted as remaining." Check
-      whether Artifact Registry (GCP) and ECR (AWS) native vulnerability scanning is enabled on the images this pipeline
-      builds, and report current status (enabled/disabled, findings summary if enabled) back into the source doc's
-      Progress Log. Read-only investigation — no infra change unless the finding itself is a trivial config flip
+- [ ] [INFRA] P3. **Check + report AR/ECR native vulnerability-scan status.** Source: same doc's `[INFRA] P3` "(stretch
+      — optional) Image vulnerability-scan status" todo — "never itself investigated, only ever noted as remaining."
+      Check whether Artifact Registry (GCP) and ECR (AWS) native vulnerability scanning is enabled on the images this
+      pipeline builds, and report current status (enabled/disabled, findings summary if enabled) back into the source
+      doc's Progress Log. Read-only investigation — no infra change unless the finding itself is a trivial config flip
       explicitly scoped as part of this todo's done-when. Done when: a concrete enabled/disabled status + any findings
       summary is recorded. Repo: deployment-service.
 - [ ] [SCRIPT] P3. **Correct the misattributed VM origin** in
