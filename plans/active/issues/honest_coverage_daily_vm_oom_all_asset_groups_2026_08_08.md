@@ -197,3 +197,17 @@ data landing under an unexpected path.
   `[OPERATOR]`-tagged (decide immediate machine-type bump vs. wait for the diagnostic, no ruling on record), alone
   keeping the whole doc NA; todo 3 is self-described in-doc as needing an owner decision on the detection mechanism
   before implementation.
+- **cefi_reconciliation_auditor 2026-08-09 (dispatch agt-e94fdf, slot 5)**: THIRD consecutive OOM confirmed —
+  `gs://central-element-323112-honest-coverage/` still has no `2026-08-06/`, `2026-08-07/`, or `2026-08-08/` dir; latest
+  remains `2026-08-05T22:19:11Z`, now ~74h stale (was ~50h at the 08-08 report). Re-ran the same read-only
+  `gcloud logging read` against `measure-honest-coverage-20260808-003044`'s serial console (launched 00:30:44Z by
+  `honest-coverage-daily-launcher-wg6xr`, itself reporting `Completed/True` in 44.4s — the launcher's blind-success
+  signal persists unchanged): `Out of memory: Killed process 4870 (python) ... anon-rss:15402388kB` at 00:35:26Z, ~4m42s
+  after VM launch. Third data point: 08-06 15,352,788kB / 08-07 15,411,360kB / 08-08 15,402,388kB — all three within
+  ~59MB of each other, now overwhelming evidence this is a deterministic ceiling being hit by a consistently-sized read,
+  not noisy organic growth. VM auto-shutdown (`VM_SHUTDOWN_ON_COMPLETION=true`) still fires on the OOM'd container exit,
+  same as prior 2 days. No fix shipped (still cross-asset-group, still needs the `--oom-monitor` diagnostic or an
+  operator machine-type call, unchanged from 08-08's disposition) — see
+  `/plans/audit/results/data_pipeline_reconciliation_cefi_2026_08_09.md` §4 for the full writeup + today's illustrative
+  cefi-only re-derivation (53.78%, vs the stale published 50.15% — now a 3.63-point undercount, up from 1.72 points
+  08-08).
