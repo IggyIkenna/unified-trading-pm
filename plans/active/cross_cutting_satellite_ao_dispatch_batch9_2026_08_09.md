@@ -27,6 +27,7 @@ related:
   [
     /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch9_2026_08_09_finalize.md,
+    /plans/active/issues/dp_reprobe_empty_oom_regression_unbounded_manifest_read_2026_08_09.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"
@@ -85,7 +86,7 @@ drift_direction: advance-code
       landed through the normal quickmerge path sometime between 2026-06-23 and now — the source doc's checkbox was
       simply never updated to reflect it. No D16 carve-out push was needed; nothing to ship today. Repo: e2e-testing (no
       code change — verification only).
-- [ ] [INFRA] P2. **Rebuild `e2e-audit:latest` from clean LDR so the daily reprobe cron loads all 5 per-AG hooks.**
+- [x] ✅ [INFRA] P2. **Rebuild `e2e-audit:latest` from clean LDR so the daily reprobe cron loads all 5 per-AG hooks.**
       Source: `data_pipeline_self_healing_completion_residual_2026_07_24.md` (its `[INFRA] P2` "Rebuild e2e-audit:latest
       from clean LDR" todo) — already flagged by this same doc's own 2026-08-07 na-eligibility-audit pass as
       "MISCLASSIFIED_LIKELY_AO_ELIGIBLE... for a future pass," never actioned since. The live `e2e-audit:latest` Cloud
@@ -96,7 +97,24 @@ drift_direction: advance-code
       `origin/live-defi-rollout` checkout. Done when: the new image digest differs from the currently-deployed one
       (`gcloud artifacts docker images list`), the in-build smoke passes (all 3 audit scripts import + arg-parse inside
       the image), and the daily reprobe cron's next run picks it up (verify via `gcloud run jobs executions describe` on
-      the next `uts-prod-dp-reprobe-empty` execution). Repo: e2e-testing, deployment-service.
+      the next `uts-prod-dp-reprobe-empty` execution). Repo: e2e-testing, deployment-service. — **DONE 2026-08-09
+      (slot-18, infra)**: built from a clean `e2e-testing@78f7f2b` (`origin/live-defi-rollout` HEAD, confirmed all 5
+      per-AG hook modules present — `_REPROBE_HOOK_MODULES` lists `reprobe_cefi/defi/sports/tradfi/prediction`; the
+      plan's cited `5db3860` SHA predates an August history rewrite and no longer resolves, but the content is confirmed
+      live via direct source read, not just SHA ancestry). Build `1057b974-93b2-4d54-8540-a9c18757f43a`
+      (asia-northeast1) SUCCESS in 2m8s. Digest changed
+      `sha256:6b52baca...`→`sha256:0fc05321d5790b35875d1330424348abc0abc4be873b17a449b44b909458e3ce`. In-build smoke
+      confirmed all 3 audit scripts (`data_pipeline_daily_digest.py`, `manifest_hygiene_daily.py` ×2 modes,
+      `reprobe_new_empty_confirmed.py`) import + arg-parse OK inside the image. Cron pickup verified WITHOUT waiting for
+      the next scheduled run: the job spec references the `:latest` tag (not a pinned digest, per this doc's own todo 3
+      "bonus finding" that Cloud Run Jobs re-resolve `:latest` per-execution), so a manual
+      `gcloud run jobs execute uts-prod-dp-reprobe-empty --wait` immediately confirmed the new digest was picked up
+      (execution `uts-prod-dp-reprobe-empty-r2gsn`). That execution still failed with a pre-existing, UNRELATED memory
+      OOM (same failure on the 3 prior natural daily runs, 2026-08-07/08/09, both before and after this rebuild) — filed
+      as its own issue, `/plans/active/issues/dp_reprobe_empty_oom_regression_unbounded_manifest_read_2026_08_09.md`,
+      root-caused to `reprobe_new_empty_confirmed.py` never getting the `columns=` restriction `daily_digest.py` already
+      shipped for the same manifest-read antipattern — out of this todo's scope (a code fix, not an image rebuild).
+      Evidence: cloudbuild=1057b974-93b2-4d54-8540-a9c18757f43a
 - [x] ✅ [INFRA] P1. **Verify + flip the SCHEDULED consolidator asset_group-guard MTDS-image delivery.** Source:
       `data_pipeline_self_healing_completion_residual_2026_07_24.md` (its "Later-surfaced self-healing deployment
       residuals" `[INFRA] P1` item, open since 2026-06-23). **VERIFIED 2026-08-09 (slot-8) — all 3 Done-when parts
