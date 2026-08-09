@@ -148,6 +148,10 @@ INVERSE case was found and corrected instead (see Contradictions).
 - `plans/active/INDEX.md` has 27 drift entries (defi-relevant:
   `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`, `defi_migration_audit_log_2026_07_24.md`,
   `defi_venue_lst_rates_residual_2026_07_24.md` missing from it) — same corpus-wide-regen deferral reasoning as above.
+- `agents/plan_reconciler.md` STEP 7's result-POST snippet says `POST $SERVER_URL/api/plan_health/result` (underscore) —
+  the real, OpenAPI-confirmed path is `/api/plan-health/result` (hyphen, matching `/api/plan-health/dispatch`'s naming).
+  The underscore form 404s. Outside `plans/**`, cannot self-edit — this would block every future plan_reconciler
+  dispatch's STEP 7 the same way until fixed.
 
 ## Hygiene fixes
 
