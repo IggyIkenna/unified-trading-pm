@@ -858,3 +858,19 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   bandwidth outside a monitoring pass itself — not fixed here (parking outright would silence the window's genuine
   14-day watch obligation, not just throttle its redispatch rate; this pass's scope is observe-and-report only). Window
   NOT yet closed (day ~4 of ~14, closes ~2026-08-20); releasing via skip-current-task per established precedent.
+- **slot-32 2026-08-09 ~13:05Z (eighteenth pass, same task) — root-caused + fixed slot-29's flagged dispatch-cadence
+  waste**: spot-checked unified-trading-pm/unified-api-contracts/instruments-service latest `quality-gates-v2` runs
+  (unified-api-contracts + instruments-service: 3/3 `conclusion=success` each, `main`/`promote`/`live-defi-rollout`
+  branches; unified-trading-pm: job-level check of `31314100524` confirms `QG slice (checks): failure` /
+  `QG slice (tests): success` — same known ratchet class, not pytest-timeout). Zero pytest-timeout recurrence anywhere.
+  **Root cause of the 5-dispatches-in-45min waste slot-29 flagged**: every releasing worker's `POST /skip-current-task`
+  call used the default `reason_code: "OTHER"`, which (`server/routes/slots_ops.py:: skip_current_task`,
+  agent-orchestrator) is per-SLOT-scoped only and arms NO fleet-wide cooldown at all — only `BLOCKED`/`PARKED`/`GATED`
+  call `register_cooldown` (base 12min / extended 60min). This is DESIGNED behaviour (a scope/craft-mismatch skip
+  legitimately shouldn't cooldown-block other slots) but `worker.md` never told workers which `reason_code` to pass for
+  a "not yet actionable, time-gated" skip like this one — so every pass defaulted to `OTHER` and the task was instantly
+  re-dispatchable to the very next slot's heartbeat, fleet-wide. **Fix shipped**: `unified-trading-pm@<SHA>` adds
+  worker.md § "4c) SKIPPING A TIME-GATED task" documenting `reason_code: "GATED"` (+ `estimated_unblock_minutes` when
+  known) for exactly this case. Releasing THIS pass via skip-current-task with `reason_code: "GATED"`,
+  `estimated_unblock_minutes: 180` (the policy max) to arm the cooldown immediately rather than leaving the fix as
+  docs-only-for-next-time. Window NOT yet closed (day ~4 of ~14, closes ~2026-08-20).

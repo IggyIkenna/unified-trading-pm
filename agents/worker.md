@@ -423,6 +423,21 @@ escalation fires for this kind (there's no CI failure to fix).
 3. Then: same posture as `qg_red` — if you have other dispatchable work, do that; otherwise send ONE heartbeat and WAIT
    QUIETLY. The resolution arrives as an outbox message on your next `/progress` or `/heartbeat`.
 
+### 4c) SKIPPING A TIME-GATED task (e.g. a monitoring window not yet closed) — always pass `reason_code`
+
+**`POST /skip-current-task`'s `reason_code` defaults to `OTHER`, which is per-SLOT only — it arms NO fleet-wide cooldown
+at all** (`server/routes/slots_ops.py::skip_current_task`, agent-orchestrator repo: only `BLOCKED`/`PARKED`/ `GATED`
+call `register_cooldown`). A worker that skips a not-yet-actionable task (e.g. a "watch until `<date>`" P2/P3 monitoring
+todo) with a bare `reason` string and no `reason_code` leaves the task IMMEDIATELY re-dispatchable to the very next slot
+that heartbeats — confirmed live 2026-08-09: `pytest_timeout_60s_flaky_under_contention`'s post-fix monitoring-window
+todo was dispatched 5× in ~45 minutes (5 separate slots, each re-observing run IDs the immediately prior pass had
+already logged) because every releasing worker used the default `reason_code`. **When your skip reason is "this task's
+own done-when condition isn't met yet, not a genuine blocker" (a monitoring window, a wait-for-a-date todo), pass
+`reason_code: "GATED"`** (+ `estimated_unblock_minutes` when you have a real estimate, capped at
+`tuning.dispatch_cooldown_max_eta_minutes` — default 180) so the fleet cooldown actually arms (base 12min on the first
+decline in a window, extended 60min on repeats) instead of the task re-dispatching to the very next heartbeat anywhere
+in the fleet.
+
 ### 4.5) FINDINGS CLOSURE (HARD RULE — codified 2026-06-10)
 
 If your task PRODUCES FINDINGS you are NOT fixing inline in this same task (an audit, review, consistency-check,
