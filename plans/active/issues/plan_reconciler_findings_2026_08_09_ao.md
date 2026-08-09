@@ -245,7 +245,9 @@ item per SKILL.md's batching guidance rather than 14 separate asks:
   `ao_recovery_audit_layer1_deleted_2026_07_15.md` (both genuinely 1-open-but-unstarted, not "almost done" — flagged by
   the mechanical hunter as a literal-rubric-match nuance, not real near-complete candidates)
 
-Routed via `/blocked` (`BLK-26742a3d`) as a single batched class question rather than 14 individual asks.
+Routed via `/blocked` (`BLK-26742a3d`) as a single batched class question rather than 14 individual asks. **ANSWERED
+2026-08-09 (operator, final): option A** — leave as-is, resurface naturally on the next `ao`-tranche pass. Matches the
+recommendation; no action needed.
 
 ## Refuted (dropped by verify)
 
