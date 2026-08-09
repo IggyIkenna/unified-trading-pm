@@ -956,3 +956,9 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   19/451, real forward work (`Odds API batch complete: date=2020-09-07`), heartbeat ~1.5min old, RSS ~1.08GiB/7.7% —
   healthy, no OOM signature on the new chunk. Full detail:
   `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`.
+- **13:08Z — CONFIRMED 6th silent-hang occurrence: `smallchunk10` killed by the watchdog at chunk 26.** All 3 signals
+  (run.log, heartbeat blob, `WATCHDOG_TRACE.log`) went silent together ~12:50Z; VM deleted `13:07:57Z` (~18min gap, by
+  the standard `1060025368044-compute@...` account — matches the watchdog's own established pattern exactly, clean
+  multi-signal evidence unlike the smallchunk9 incident). Relaunched as `mtds-backfill-odds-smallchunk11-20260809`
+  (timestamp-suffixed). FIXTURE_LINEUPS unaffected, healthy, far advanced. Full detail:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`.
