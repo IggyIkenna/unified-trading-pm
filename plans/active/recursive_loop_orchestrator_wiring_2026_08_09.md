@@ -122,11 +122,18 @@ Progress Log) confirmed, with exact file:line citations:
       `0.05` for both archetypes, do not hardcode). Repo: strategy-service. Done-when: a new/updated catalog-builder
       unit test asserts each of the 7 cataloged cells carries the correct numeric `ltv_per_loop` (0.93-0.05=0.88 for the
       Aave e-mode cell, etc.), and `quality-gates.sh` is green.
-- [ ] [BACKEND] P1. Wire `ArchetypeConfig.recursion_depth_max` (already `5` for both archetypes,
+- [x] ✅ [BACKEND] P1. Wire `ArchetypeConfig.recursion_depth_max` (already `5` for both archetypes,
       `archetype_config.py:271,299`) into the same two catalog builders as an `"n_loops"` param, read via
       `get_archetype_config(archetype).recursion_depth_max` — do not hardcode `5` in the catalog file. Repo:
       strategy-service. Done-when: a catalog-builder unit test asserts `n_loops=5` on every cataloged cell for both
-      archetypes, and `quality-gates.sh` is green.
+      archetypes, and `quality-gates.sh` is green. **Already shipped alongside todo 2** — strategy-service@b98f74fb3
+      added `"n_loops": str(config.recursion_depth_max)` to both `build_carry_recursive_borrow_lending_only()` (`:662`)
+      and `build_carry_basis_perp_inv()` (`:721`) in the same commit, plus
+      `test_family1_recursion_borrow_lending_only_ltv_per_loop_and_n_loops`/
+      `test_family2_basis_perp_inv_ltv_per_loop_and_n_loops` (`test_catalog_carry_recursive_ltv_wiring.py`) already
+      assert `n_loops == "5"`. Re-verified live (slot 18, 2026-08-09): full `quality-gates.sh` on strategy-service green
+      (5825 passed). This todo's own checkbox was simply never flipped when the prior dispatch landed — no new code
+      needed.
 - [ ] [BACKEND] P1. Implement Family-1 (`CARRY_RECURSIVE_BORROW_LENDING_ONLY`) real `on_tick()` leg construction in
       `strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py`: add a new code path
       (do not touch the shared `staking_yield_enabled=true` branch used by the live `CARRY_RECURSIVE_STAKED` archetype)
@@ -185,3 +192,11 @@ Progress Log) confirmed, with exact file:line citations:
   touches one of 3 shared files (`defi_reserve_params.py` → `catalog_carry.py` → `recursive_staked.py` →
   execution-service leg-controller → the test file), and each step's correctness genuinely depends on the prior step
   landing first.
+- **2026-08-09 (slot 18, backend_engineer)**: Dispatched for todo 3 (`n_loops` wiring). Found it already fully done —
+  `strategy-service@b98f74fb3` (todo 2's shipped commit) added the `n_loops` param AND its test coverage in the same
+  commit as the `ltv_per_loop` wiring (adjacent lines in the same dict literal, one natural commit). Confirmed via
+  `git blame` (both `"n_loops": str(config.recursion_depth_max)` lines attributed to `b98f74fb3`) and by re-running
+  `quality-gates.sh` on strategy-service live (green, 5825 passed, including both `n_loops`-asserting tests). Flipped
+  the checkbox to reflect actual completion — no new code shipped this dispatch. Next up: todo 4 (Family-1 real
+  `on_tick()` leg construction) is genuinely unstarted and substantial (`recursive_staked.py`'s STAKE→TRANSFER→LEND→
+  BORROW bundle) — not attempted this turn.
