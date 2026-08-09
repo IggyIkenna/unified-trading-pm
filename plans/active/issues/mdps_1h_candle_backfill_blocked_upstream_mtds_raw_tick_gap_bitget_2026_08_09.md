@@ -109,16 +109,52 @@ BITGET-SPOT's total absence in this window an intentional venue-onboarding-date 
 before some later date)? If (a), MTDS raw-tick backfill for this scope, then re-run the MDPS candle backfill for the
 newly-available days. If (b), the MDPS gap is honest-absence, not a defect — no action needed beyond documenting it.
 
+## BITGET-SPOT determination (2026-08-09, slot 18)
+
+**Verdict: (b) — intentional pre-onboarding absence, NOT a genuine MTDS capture gap. No backfill warranted for
+BITGET-SPOT in the 2026-04-14..04-30 window.**
+
+Evidence (converging, three independent layers, all post-dating the audited window):
+
+1. **Venue not even mapped yet.** BITGET's Tardis venue mapping (the prerequisite for MTDS to resolve any Bitget symbol
+   at all) was added `market-tick-data-service@9ff43846` (2026-05-01 19:13 UTC+1) — "Tier-3" onboarding wave, per
+   `tests/unit/test_mtds_venue_coverage.py`'s own comment ("Tier-3 (2026-05-01: BITFINEX-SPOT/FUTURES, BITGET-SPOT,
+   BITGET-FUTURES, KRAKEN-SPOT, KRAKEN-FUTURES)"). This is AFTER the entire audited window (2026-04-14..04-30) ends.
+2. **Venue not in the MVP capture universe until 6+ weeks after the window.** `unified-api-contracts`'s `mvp_scope.py`
+   module (the capture-gating SSOT; `is_in_mvp_capture_universe` is what
+   `market_tick_data_service/engine/ cefi_catalog_reader.py` actually consults to decide what to download) didn't exist
+   before 2026-06-08, and BITGET-SPOT/BITGET-FUTURES were added to its `venues` frozenset only in
+   `unified-api-contracts@54325576` (2026-06-23, MVP_SCOPE v7→v8, commit msg: "Add the 8 venues (...BITGET-*...) to the
+   MVP rule venues set (were absent -> mvp=0)"). Per `plans/active/issues/cefi_universe_capture_rule_2026_06_23.md`,
+   this 2026-06-23 operator ruling is what SUPERSEDES the pre-existing informal "curated top-100 guess" capture universe
+   — i.e. there was no earlier formal mechanism that could have included BITGET-SPOT before this date either.
+3. **Live transport wired even later.** `bitget_spot_ws.py`'s `WSFeedConnector` was first registered in
+   `market-tick-data-service@6bf4f616` (2026-07-07, "BITGET-SPOT + BITGET-FUTURES WSFeedConnectors (gap-003)").
+4. **Manifest shape matches "never in scope," not "attempted and failed."** The audit's own finding (§ "What I found"
+   above) is that BITGET-SPOT has zero rows of ANY `capture_status` — not even `expected_unattempted`, which the WRITER
+   materializes for any cell it considers in-scope. A truly in-scope-but-unattempted cell would show
+   `expected_unattempted` (as BITGET-FUTURES trades correctly does for its own 04-14..04-19 gap); BITGET-SPOT's total
+   absence from the manifest denominator is the expected, correct signature of a venue that was outside the capture
+   universe entirely at the time — not a bug.
+
+This does **not** resolve the separate BITGET-FUTURES `trades` 2026-04-14..04-19 question (todo 2 below) — that cell
+DOES show `expected_unattempted` (i.e. was already in-scope, just not yet attempted), which is a materially different
+manifest signature and needs its own check against when BITGET-FUTURES `trades` specifically entered the capture
+schedule, separate from BITGET-SPOT's venue-mapping/MVP-scope timeline above.
+
 ## Todo
 
-- [ ] [DATA] P2. **Determine whether BITGET-SPOT's total 2026-04-14..04-30 raw-tick absence is a genuine MTDS capture
+- [x] ✅ [DATA] P2. **Determine whether BITGET-SPOT's total 2026-04-14..04-30 raw-tick absence is a genuine MTDS capture
       gap or an intentional pre-onboarding absence** (check MTDS venue-onboarding history / config for when BITGET-SPOT
-      was added to the CeFi capture scope). Repo: market-tick-data-service.
-- [ ] [DATA] P2. **If a genuine gap: run the MTDS raw-tick backfill for BITGET-SPOT (all data_types) 2026-04-14.. 04-30
-      and BITGET-FUTURES trades 2026-04-14..04-19** using the same MTDS backfill tooling this workspace already uses for
-      CeFi raw-tick catch-up (mirrors `launch-mtds-cefi-backfill.sh` per
+      was added to the CeFi capture scope). Repo: market-tick-data-service. — RESOLVED (b): intentional pre-onboarding
+      absence, see "BITGET-SPOT determination" above. No MTDS backfill needed for BITGET-SPOT in this window; the
+      manifest's total absence is honest-absence, not a defect.
+- [ ] [DATA] P2. **BITGET-FUTURES trades 2026-04-14..04-19 only** (BITGET-SPOT portion resolved above — no action):
+      determine whether this `expected_unattempted` gap is a genuine backfillable capture gap, and if so run the MTDS
+      raw-tick backfill for BITGET-FUTURES trades 2026-04-14..04-19 using the same MTDS backfill tooling this workspace
+      already uses for CeFi raw-tick catch-up (mirrors `launch-mtds-cefi-backfill.sh` per
       `features_service_e2e_pipeline_test_2026_05_26.md` Phase 0.5 provenance). Repo: market-tick-data-service.
-- [ ] [DATA] P3. **Once the raw ticks land, re-run the scoped MDPS candle backfill** (same pattern as this session's
-      `mdps-backfill-cefi-20260809-123352`:
-      `launch-mdps-backfill-vm.sh --data-types trades --venues "BITGET-SPOT"     cefi 2026-04-14 2026-04-30 full` + the
-      BITGET-FUTURES 04-14..04-19 residual) to close the remaining candle gap. Repo: market-data-processing-service.
+- [ ] [DATA] P3. **Once the BITGET-FUTURES raw ticks land, re-run the scoped MDPS candle backfill** for the
+      BITGET-FUTURES 04-14..04-19 residual (same pattern as this session's `mdps-backfill-cefi-20260809-123352`) to
+      close the remaining candle gap. BITGET-SPOT candle backfill is NOT needed (see resolved todo above — the
+      underlying raw ticks were never meant to exist). Repo: market-data-processing-service.
