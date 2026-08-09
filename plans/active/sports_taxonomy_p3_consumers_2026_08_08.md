@@ -100,9 +100,28 @@ spelling variant survives, which is the entire point of the panel". It does not.
 - [ ] [TEST] P0. **Regression test from the real failure**: a coverage payload containing an accepted-exception venue, a
       blank venue and a non-canonical value must produce a value list containing ALL THREE. A test asserting only
       `non_canonical_count == 0` would have passed against the broken behaviour — which is why it shipped.
-- [ ] [REVIEW] P1. **Re-check the sibling asset_groups for the same masking.** The same drop-before-enumerate applies to
-      cefi/defi/tradfi/prediction exception sets. Report per-AG how many values the panel currently hides; file `- [ ]`
-      follow-ups per AG where it is material, rather than fixing them silently here.
+- [x] ✅ [REVIEW] P1. **Re-check the sibling asset_groups for the same masking.** The same drop-before-enumerate applies
+      to cefi/defi/tradfi/prediction exception sets. Report per-AG how many values the panel currently hides; file
+      `- [ ]` follow-ups per AG where it is material, rather than fixing them silently here. — Reviewed
+      deployment-api@1b8d20b06334daeb6e3d8ad776e4f68707068f2e: the drop-before-enumerate masking was NEVER an
+      asset_group-conditional code path — it lived in the single shared `enumerate_distinct_values()` function that
+      every asset_group's `GET /distinct-values/{asset_group}` call passes through (no `if asset_group == "sports"`
+      branch anywhere in `_is_blank`/`_is_accepted_exception`/`_accepted_exception_reason`/the enumeration loop). The P0
+      fix therefore already landed for cefi/defi/tradfi/prediction/sports SIMULTANEOUSLY in that one commit, not
+      sports-only. Verified three ways: (1) commit diff shows the change is entirely inside the shared function/dict
+      definitions, zero per-AG conditionals; (2) the commit's OWN shipped unit tests
+      (`test_route_data_status_distinct_values.py`) already exercise cefi/defi/tradfi through this exact function —
+      `test_defi_bare_pipeline_phase_venue_is_canonical_not_drift`,
+      `test_cefi_and_tradfi_instrument_types_are_not_case_folded`,
+      `test_tradfi_and_cefi_chain_bundle_instrument_types_are_badged_not_dropped` — with badge-not-drop +
+      `exception_reason` assertions, and QG was green (5265 passed, per item 1's own evidence line) covering these exact
+      tests; (3) `prediction` (and cefi/defi/tradfi) are all fully registered in
+      `VENUES_BY_ASSET_GROUP`/`DATA_TYPES_BY_ASSET_GROUP` (unified-api-contracts `market_data_categories.py`), so the
+      endpoint is completely wired for every sibling AG, not just sports. **Per-AG count of values currently hidden by
+      drop-before-enumerate: 0 for cefi, 0 for defi, 0 for tradfi, 0 for prediction** (same as sports post-fix) — not
+      material, no follow-up issue docs filed. (defi's separate bare-vs-composite-venue and case-insensitive
+      instrument_type handling in `_comparison_set()` is a DIFFERENT, already-fixed false-drift mechanism — unrelated to
+      this masking bug — see the module docstring's "Grain-aware exceptions" section.)
 
 ### Arbitrage
 
@@ -209,3 +228,12 @@ spelling variant survives, which is the entire point of the panel". It does not.
   `/plans/archive/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md`, NOT hand-triaged,
   because three prior regex-widening fixes all regressed. Ingestion of the fixed todo lands on the next plan-regen tick
   (~30 min default); no operator action.
+
+- **2026-08-09 (slot 14, review)** — Closed the "sibling asset_groups" masking re-check todo. Finding: NOT MATERIAL, 0
+  hidden values per AG. The drop-before-enumerate bug fixed in `deployment-api@1b8d20b06334daeb6e3d8ad776e4f68707068f2e`
+  lived in the single shared `enumerate_distinct_values()` function that EVERY asset_group's
+  `GET /distinct-values/{asset_group}` call passes through — there was never a sports-only code path, so the fix already
+  covers cefi/defi/tradfi/prediction as of the same commit. Verified via commit-diff read (no per-AG conditionals), the
+  commit's own already-QG-green unit tests exercising cefi/defi/tradfi through the identical function, and confirming
+  all four sibling AGs are fully registered in UAC's `VENUES_BY_ASSET_GROUP`/ `DATA_TYPES_BY_ASSET_GROUP`. No follow-up
+  issue docs filed (nothing material to track).
