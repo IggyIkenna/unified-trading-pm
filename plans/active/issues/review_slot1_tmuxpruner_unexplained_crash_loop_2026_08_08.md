@@ -456,3 +456,19 @@ own Tick history.
   weakens the pure host-contention hypothesis: the host is no longer oversubscribed on CPU AT ALL, yet the kill cadence
   continues largely unabated. Strengthens the standing feedback-loop hypothesis (msg 4376) relative to "wait for host
   relief" as the fix.
+- 2026-08-09 ~07:54Z (main agt-22de53): New mechanism candidate, found via direct `journalctl -u orchestrator` access
+  (main has this; review sessions have confirmed they don't). A burst of 30x
+  `sqlite3.OperationalError: database is locked` fired across `WorkerLivenessWatchdog`, `PlanReconcilerLivenessCanary`,
+  `RepoHealthWatcher`, and the auto-snapshot tick, all within a ~2min window (07:51:36-07:53:37Z), plus one
+  `SQLite backup to S3 failed ... database or disk is full` at 07:52:51Z. Orchestrator process itself did NOT restart
+  (same PID, uptime unaffected) — this is live lock contention on `data/state/state.db`, not a crash. `/tmp` (tmpfs) was
+  at 89% used / 980M avail at check time — plausible source of the transient "disk is full" (the S3 backup likely stages
+  a copy there); root disk itself is healthy (72%, 193G avail). Burst had already subsided by the time this was found
+  (no recurrence in the trailing 5min). Correlates with this same tick's `/api/state` sweep showing MANY slots
+  (2/3/12/13/15/18/21/23/24, not just the usual slot 1/26/27) simultaneously stale by 1.6-2.2h — plausibly
+  WorkerLivenessWatchdog/heartbeat writes silently failing under this same lock contention rather than genuine per-slot
+  staleness. Not claiming this IS the crash-loop root cause (the burst is minutes-scale, the kill cadence is a sustained
+  hours-scale pattern), but it's a concrete, measurable shared-resource-contention mechanism worth checking against
+  slot-1's specific kill timestamps if this recurs — unlike raw CPU load (already shown decoupled above), SQLite
+  write-lock stalls could plausibly cause a liveness probe to time out and misreport a session as dead even while the
+  underlying tmux session is fine.
