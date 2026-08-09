@@ -28,6 +28,8 @@ related:
     /plans/archive/issues/sports_odds_api_key_deactivated_2026_07_26.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+    /plans/active/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_08.md,
+    /plans/active/issues/ao_dispatch_visibility_gate_regression_34_vs_26_2026_08_09.md,
   ]
 created: 2026-07-28
 author: unknown
@@ -103,7 +105,17 @@ A `BLOCKED-PREREQUISITES` checkbox — no matter where the text sits — still n
 calls `_is_non_dispatchable()` at line 1393) keeps re-deriving it as an open, dispatchable todo on every regen tick.
 **This doc's conclusion is unchanged** — only the quoted symbol names/line numbers were stale.
 
-**Blast radius**: `grep -rl "BLOCKED-PREREQ" plans/active/` finds 15 files (14 markdown + 1 generated `.json` mirror):
+**Blast radius**: `grep -rl "BLOCKED-PREREQ" plans/active/` finds 15 files (14 markdown + 1 generated `.json` mirror) as
+of the original 2026-07-28 filing (list below is that point-in-time snapshot). **Superseded 2026-08-09 (plan_reconciler
+agt-fe4564)**: a purpose-built automated gate now tracks this precisely —
+`/plans/active/issues/ao_dispatch_visibility_gate_accidental_exclusions_2026_08_08.md` added a dedicated
+`max_ineffective_declarations` baseline (currently **4**, all `BLOCKED-PREREQUISITES`) with its own sibling
+`/plans/active/issues/ao_dispatch_visibility_gate_regression_34_vs_26_2026_08_09.md` tracking regressions — a live
+re-audit of this doc's own todos should key off that gate / `python -m server.dispatch_visibility_report` rather than
+re-deriving a fresh manual grep count, which was already stale (18 raw hits) even before this correction. Note also
+`/plans/active/sports_closeout_track_s2_foldin_2026_07_25.md` (listed below) independently argues its own
+`BLOCKED-PREREQUISITES` items aren't accurately described by any existing token — read that doc before assuming a
+blanket fix here covers it.
 
 - `plans/active/sports_closeout_track_s2_foldin_2026_07_25.md` (8 unchecked checkboxes carry the string)
 - `plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` (4)

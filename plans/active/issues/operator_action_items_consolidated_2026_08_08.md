@@ -128,7 +128,7 @@ pull any specific checkout's full table back up if you want it before deciding.
 - [ ] [OPERATOR] P3. **Did you personally rule on tradfi audit Finding E-1 (order-routing scaffolding) somewhere
       untracked?** A worker's "DECIDED (operator ruling)" citation traced to no recorded source anywhere in the corpus.
       Treated as unruled per your answer; a fresh `[OPERATOR]` todo is filed in
-      `plans/archive/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md` if you do recall it.
+      `plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md` if you do recall it.
 
 ## 5. Permanent hard-stops (not time-sensitive, listed for completeness)
 
@@ -143,7 +143,9 @@ pull any specific checkout's full table back up if you want it before deciding.
 - [ ] [OPERATOR] P1. **`.tabs/2`'s live working tree has real unresolved git conflict markers** in
       `cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md` right now (found during the stash
       audit, not touched) — separate from the stash question above, this file itself needs a human to resolve the
-      conflict.
+      conflict. **plan_reconciler note 2026-08-09**: re-checked `.tabs/2`'s live copy of this file directly — zero
+      conflict-marker lines remain today. Left unflipped since who resolved it and whether any content was lost during
+      the resolution is unconfirmed; still worth your own quick look to close this out with confidence.
 - [ ] [OPERATOR] P1. **`prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`** — a confirmed-live bug in
       the shared checkout's `prek` stash-restore hook that was actively destroying uncommitted work today (independently
       discovered by 3+ concurrent agents). Several agents had to route around it with `--no-verify` or `git commit-tree`

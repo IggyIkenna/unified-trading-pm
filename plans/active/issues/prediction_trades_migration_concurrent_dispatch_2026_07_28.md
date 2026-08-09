@@ -224,7 +224,11 @@ solution.
   dispatchable: both are bounded engineering with stated done-whens. Todo 3 was retagged `[BACKEND]` → `[OPERATOR]`,
   which is what actually keeps it out of the queue — `_NON_DISPATCHABLE_RE` excludes `[OPERATOR]`-tagged todos, so the
   doc can be `assigned_vm: planning` while that one item remains operator-held. Do NOT "tidy" that tag back to
-  `[BACKEND]`: it is load-bearing, not a mislabel.
+  `[BACKEND]`: it is load-bearing, not a mislabel. **[correction 2026-08-09, plan_reconciler agt-fe4564]**: the
+  mechanism name here is wrong — verified live against `agent-orchestrator/server/regen_backlog_from_plan.py`,
+  `[OPERATOR]`-tagged todos are routed by `_OPERATOR_TAG_PREFIX_RE`/`operator_gated` into the `BLK-op-*` queue, not by
+  `_NON_DISPATCHABLE_RE` (which only matches `BLOCKED-<TOKEN>` markers). The practical outcome described above (todo 3
+  stays gated) is still correct; only the cited code path was wrong.
 
   **Why todo 3 is genuinely the operator's**: it is a threshold choice with a live trade-off in both directions — too
   short and a still-working slot gets its task re-dispatched underneath it (the exact duplicate-dispatch waste this doc

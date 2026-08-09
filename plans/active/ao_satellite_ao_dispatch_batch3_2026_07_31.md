@@ -167,16 +167,16 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
       source doc's Progress Log.
 
 - [x] [SCRIPT] P2. **Ship a read-only orphan-still-orphaned verifier, harden the liveness discriminator, then use the
-      verifier to triage all 25 fleet-wide `refs/wip-preserve/**`refs.** In`agent-orchestrator`(alongside
+      verifier to triage all 25 fleet-wide `refs/wip-preserve/**` refs.** In `agent-orchestrator` (alongside
       `server/worktree_clean_check/`): (1) add a read-only verifier that, for a recorded orphan sha, reports
-      `git     merge-base --is-ancestor <sha>     origin/<branch>`plus a per-touched-file blob-level`SAME-AS-ORIGIN`/
-      `DIFFERS`verdict and the`git diff origin     <sha>`line-delta SIGN (net-negative means recovering would REGRESS
-      origin), emitting`SUPERSEDED`/`STILL-ORPHANED`/`WOULD-REGRESS`per item, and wire it into the orphan-recording path
-      so a stale orphan row self-closes; (2) make`server/worktree_clean_check/\_liveness.py`'s discriminator triangulate
-      tmux-session existence AND `/api/state.worker_alive`AND a`/proc/<pid>/cwd`check instead of trusting
-      `.agent-claim`mtime alone, re-asserting immediately before any write rather than once at sweep start; (3) using
-      the verifier from (1), triage all 25 fleet-wide`refs/wip-preserve/**` refs (dated 2026-07-26..07-29, across slots
-      2/3/4/6/9/10/11/12/15) to a recorded SUPERSEDED/RECOVER/DELETE verdict — do not hand-triage. **Done when\*\*: the
+      `git merge-base --is-ancestor <sha> origin/<branch>` plus a per-touched-file blob-level `SAME-AS-ORIGIN`/
+      `DIFFERS` verdict and the `git diff origin <sha>` line-delta SIGN (net-negative means recovering would REGRESS
+      origin), emitting `SUPERSEDED`/`STILL-ORPHANED`/`WOULD-REGRESS` per item, and wire it into the orphan-recording
+      path so a stale orphan row self-closes; (2) make `server/worktree_clean_check/_liveness.py`'s discriminator
+      triangulate tmux-session existence AND `/api/state.worker_alive` AND a `/proc/<pid>/cwd` check instead of trusting
+      `.agent-claim` mtime alone, re-asserting immediately before any write rather than once at sweep start; (3) using
+      the verifier from (1), triage all 25 fleet-wide `refs/wip-preserve/**` refs (dated 2026-07-26..07-29, across slots
+      2/3/4/6/9/10/11/12/15) to a recorded SUPERSEDED/RECOVER/DELETE verdict — do not hand-triage. **Done when**: the
       verifier reproduces the prior sweep's 10 recorded verdicts from their shas alone; the discriminator returns LIVE
       for both the slot-5 (32-day-expired claim, demonstrably live) and slot-15 (dead→live inside a 9-minute window)
       shapes on record; and each of the 25 wip-preserve refs has a recorded verdict in both source docs below. Source:
@@ -230,7 +230,10 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   2026-07-31 (dispatch agt-676f1e) as "KEEP-NA, valid" without catching the false premise, since its own design-question
   todos don't depend on the premise being true. Not fixed here (fixing prose-level factual drift in another doc is
   `/plan-reconcile`'s corpus, not this skill's); written up as its own durable finding — see
-  `/plans/archive/issues/ag_closeout_audit_ao_parked_2026_07_31.md`.
+  `/plans/archive/issues/ag_closeout_audit_ao_parked_2026_07_31.md`. **RESOLVED (plan_reconciler, 2026-08-09)**: the
+  target doc's "What's true today" section now reads "(corrected 2026-08-01 — see Progress Log)" with the accurate facts
+  and cites this exact finding as its correction source; the follow-up doc this note points to was itself archived
+  2026-08-08 with the fix recorded. No further action needed.
 
 ## Codex SSOTs (read before starting a todo)
 

@@ -49,6 +49,15 @@ context_scope:
 
 # Backlog park lost across a sibling-todo plan edit — 2026-07-30
 
+> **⚠️ CORRECTION (plan_reconciler, 2026-08-09)**: the title and summary above state the root cause as "a park does not
+> carry forward across an edit that changes the plan doc's OTHER todos" — but this doc's own 2026-07-30T14:20Z Progress
+> Log entry below directly disproves that exact mechanism: a regression test reproducing the described shape (park a
+> todo, insert a sibling, regen) **passes on current code**, and a hand-verified third variant also survives. The
+> Progress Log's own verdict is "content-hash-only already, NOT positional — the specific 'sibling insertion breaks the
+> park' mechanism this todo asked me to confirm/fix does not reproduce," leaving the ORIGINAL incident's actual trigger
+> unexplained (a possible unlocked read-modify-write race is flagged as unproven, out of scope). Read the Progress Log
+> before trusting the title/summary framing.
+
 ## What I found
 
 Direct evidence, all gathered live on the orchestrator VM (`ip-172-31-5-118`, where this session happens to run):

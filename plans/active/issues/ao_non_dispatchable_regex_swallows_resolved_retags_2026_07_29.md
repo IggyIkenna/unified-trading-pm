@@ -115,7 +115,15 @@ past tense rather than deleting it outright.
       operator decision, now resolved" instead of "was `BLOCKED-OPERATOR-DECISION`") so these 27 todos become
       immediately dispatchable. Safe, mechanical, no design judgment — confirm each is genuinely resolved (not a false
       positive from this heuristic) before editing. File list: this doc's Evidence section has 3; re-run the corpus-wide
-      script above for the full 27/21-file list.
+      script above for the full 27/21-file list. **NOT flipped 2026-08-09 (plan_reconciler agt-fe4564)**: found real
+      shipped work — `unified-trading-pm@6edd4486a` executed this rephrase pass, and todo 4 below (done) spot-checked 23
+      of "the 24 mentions rephrased" by that commit. But this todo's own stated target scope is 27 mentions/21 files, 3
+      mentions/6 files more than what `6edd4486a` actually touched (24/15) — never reconciled anywhere in this doc's
+      Progress Log. Before flipping, re-run the corpus-wide `_parse_open_todos`-replication check (Evidence section
+      above) to identify the specific residual items in the 27-vs-24 gap and confirm whether they're genuine misses
+      (rephrase them too) or were already excluded from the real target set for a documented reason (e.g. already
+      covered by a different fix, or a false-positive in the original 27-count). Do not flip on the 24/15 figure alone —
+      it undercounts this todo's own stated scope.
 - [x] ✅ [OPERATOR] P1. **Operator-ruled (interactive session): (c) both.** Decide the structural fix for
       `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` — pick between: (a) add a
       resolution-language exclusion (negative lookbehind/context check for "was", "no longer", "retagged from",
