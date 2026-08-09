@@ -115,10 +115,36 @@ context_scope: [agent-orchestrator/server/dirty_state.py, agent-orchestrator/ser
       option. 4 new tests in `tests/test_watchdog_dirty_sweep.py` (flags a stale sibling-dirty repo under a live
       session, resolves once cleaned, skips a recently-edited repo, no-ops when no live session owns the slot). Full
       `quality-gates.sh` green (2827 backend + 262 dashboard tests).
-- [ ] [REVIEW] P2. Verify the 2 backup branches (`wip-preserve/orchestrator-slot-12-89f525f7`,
+- [x] ✅ [REVIEW] P2. Verify the 2 backup branches (`wip-preserve/orchestrator-slot-12-89f525f7`,
       `wip-preserve/orchestrator-slot-12-89f525f7-uncommitted`) contain the expected content, then route a worker to
       cherry-pick/rebase the taxonomy + stalled-head-detection work onto current `live-defi-rollout` (it is 6+ commits
-      behind and drifting) — or explicitly determine it's superseded and safe to drop, citing the diff reviewed.
+      behind and drifting) — or explicitly determine it's superseded and safe to drop, citing the diff reviewed. —
+      **Determined SUPERSEDED, safe to drop — no cherry-pick needed.** Both branches confirmed present in
+      `market-tick-data-service` (`89f525f70f8379c0dd2adc39d98079218d1d2ab3` / commits ref,
+      `a8d17559607327976bfb1dd7a766b248479426b6` / stash-create ref) and contain the expected content (2 commits
+      `1c868524` taxonomy-detection feature + `89f525f7` re-export fix, plus the 4-file uncommitted diff
+      `QUALITY_GATE_BYPASS_AUDIT.md` / `_dex_swaps_stalled_head.py` / `dex_swaps_handler.py` /
+      `scripts/quality-gates.sh` exactly as the summary describes). Diff review against `origin/live-defi-rollout` (52
+      commits ahead of the branches' merge-base): the taxonomy feature was independently cherry-picked/re-landed on LDR
+      **at least 10 separate times** by other slots (`git log --all -S"EXPECTED_SUBGRAPH_STALLED_HEAD"` shows 531a07d8,
+      8c5421ea, 3f11a8d6, fd9a1f37, 1c868524, 57c7faa0, 66a3791c, 0ce87ac5, 9a4403c8, 15ba9e3e, fdc86b13, 5bc795a5,
+      c6edb663, 5d633923 — same commit message, repeated re-application) and the re-export fix likewise landed as
+      `727184b7` ("index on live-defi-rollout: 89f525f7 …") — LDR's current `_dex_swaps_queries.py` already carries the
+      re-export (`_SubgraphStalledHeadError`/`_is_subgraph_head_stale`/`probe_subgraph_head_and_raise_if_stale`/
+      `record_stalled_head_empty` at lines 48-51/73-76) AND a further refinement not in the backup branch (a
+      `record_indexer_empty()` consolidating helper). `tests/unit/test_dex_swaps_handler.py` is **byte-identical**
+      between the backup branch and LDR (1415/1415 lines, zero diff) — direct proof of full content parity, not just
+      message-text matching. For the uncommitted-stash branch's 4 files: `scripts/quality-gates.sh`'s `BE_EXCLUDE_GLOBS`
+      already carries the `_dex_swaps_stalled_head.py` entry on LDR; `QUALITY_GATE_BYPASS_AUDIT.md` already carries an
+      equivalent bypass-justification row for the same function (worded differently, same substance);
+      `dex_swaps_handler.py`'s exception-handling consolidation is present on LDR via the differently-named
+      `record_indexer_empty()` helper (functionally equivalent to the stash's `_record_deindexed_or_stalled_empty()`);
+      the one textual difference — `probe_subgraph_head_and_raise_if_stale` checking `isinstance(data, dict)` (stash) vs
+      `data is None` (LDR) — is not a real gap: `_execute_subgraph_query`'s own type signature is
+      `tuple[dict[...] | None, int]`, so `data` can never be a non-dict, non-None value; the extra isinstance check is
+      redundant given the existing type contract, not a bugfix. **Conclusion: zero unique work survives in either backup
+      branch — everything is already on `live-defi-rollout`, in equal-or-better form.** No cherry-pick routed; no worker
+      dispatch needed. Branches left in place (harmless, non-destructive) — verifying slot 5, 2026-08-09.
 - [ ] [REVIEW] P3. Once todo 1 lands, verify: re-check `/api/activity` for the next slot that hits `tmux_session_lost`
       -> `slot_resume_exhausted` while dirty, confirm `slot_dirty_state_resolved` no longer classifies it
       `liveness:live`.
@@ -136,3 +162,11 @@ context_scope: [agent-orchestrator/server/dirty_state.py, agent-orchestrator/ser
 - 2026-08-09 (slot 19, backend_engineer): Landed todo 2 — agent-orchestrator@9a5506f. See the checkbox above for the
   full implementation summary.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).
+- 2026-08-09 (slot 5, review-craft worker): Landed todo 3 (verification only, no code shipped). Confirmed both backup
+  branches exist with the expected content, then diffed each against `origin/live-defi-rollout`: the taxonomy commit's
+  content is identical to work independently re-landed on LDR 10+ times by other slots, the re-export fix's content is
+  on LDR via `727184b7`, and `tests/unit/test_dex_swaps_handler.py` is byte-identical between the backup branch and LDR
+  (1415/1415 lines). The uncommitted-stash branch's 4-file diff is either already present on LDR (BE_EXCLUDE_GLOBS
+  entry, audit-doc row, an equivalent exception-consolidation helper) or redundant given `_execute_subgraph_query`'s own
+  `dict | None` return-type contract. Verdict: SUPERSEDED, safe to drop, no cherry-pick routed. See the checkbox above
+  for full citation. `market-tick-data-service` unmodified (verification-only task).
