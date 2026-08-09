@@ -129,9 +129,18 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
       exit 0 throughout — this axis churns with concurrent fleet commits per the script's own buffer note, so the
       absolute number moved further between measurements; the -3 delta from my edits is confirmed via the doc-level
       `excluded: []` check above).
-- [ ] [DOCS] P2. Fix the 2 cross_cutting-tranche accidental exclusions:
+- [x] ✅ [DOCS] P2. Fix the 2 cross_cutting-tranche accidental exclusions:
       `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`,
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`. Same remedy as above. Repo: unified-trading-pm.
+      **Done**: batch1's `data_completion_to_100_all_ag_2026_06_21.md` residual todo paraphrased its 3
+      `BLOCKED-CREDENTIALS` mid-sentence mentions (describing OTHER docs' status, not this todo's own — same
+      false-positive shape as cefi/ci) to "status: awaiting credentials" phrasing; batch1b's
+      `mvp_scope_catalogue_tagging_2026_06_08.md` residual todo paraphrased its 2 stale `BLOCKED-OPERATOR-DECISION`
+      mentions (a resolved, already-corrected historical reference inside a "this clause is stale" retag note — the
+      `_STALE_MARKER_*_RE` resolution-language guards don't recognize "was corrected"/"is stale" as resolution verbs, so
+      both mentions still read as live) to "awaiting an operator decision" / "awaiting-operator-decision framing".
+      Re-ran `check_ao_dispatch_visibility_gate.py --json`: both docs now show `excluded: []` (were 1 each);
+      `accidental_exclusions` 25→23, gate exit 0.
 - [ ] [DOCS] P2. Fix the 2 defi-tranche accidental exclusions: `defi_satellite_ao_dispatch_batch6_2026_07_30.md`,
       `defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md`. Same remedy as above. Repo: unified-trading-pm.
 - [ ] [DOCS] P2. Fix the 3 infra-tranche accidental exclusions: `infra_capture_and_devops_leftovers_2026_07_06.md` (2 —
