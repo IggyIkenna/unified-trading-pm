@@ -17,7 +17,7 @@ summary: >-
   check_prosewrap_padding --only then correctly, but disruptively, flags as a hard commit block. This is NOT caused by
   the committing worker's own edit content — reproduced with prettier run on git HEAD content with ZERO edits (isolated
   copy, no git operations): padding grew anyway.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -49,11 +49,17 @@ source:
     multi-paragraph-per-todo convention already used throughout that same file by OTHER, untouched todos.",
   ]
 resolved_by:
+  "todo DONE 2026-08-09 (slot 14): unified-trading-pm@89517ae041 + 707623d403, verified against this doc's own repro
+  cases."
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
 ---
+
+> **🟢 ARCHIVED 2026-08-09** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Resolution evidence carried in `resolved_by:`. No content was rewritten.
 
 # check_prosewrap_padding --only precommit gate blocks any commit to an already-affected file
 
@@ -123,13 +129,15 @@ to block routine plan-flip commits fleet-wide as more files accumulate at least 
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Implement recommendation (A), (B), or the operator's chosen alternative in
-      `scripts/plan-hygiene/check_prosewrap_padding.sh`'s `--only` mode, so a commit that does not itself introduce new
-      prosewrap-shaped content (verified against the worker's OWN diff, not prettier's post-reformat output) is not
-      blocked. Confirm against this doc's 3 repro cases (real-file commit, isolated no-op prettier pass, minimal
-      2-paragraph fixture). **Done when**: re-running the exact repro from this doc's "What I found" §1 no longer blocks
-      the commit, and a genuinely NEW prosewrap-padding instance (hand-added, e.g. a backtick span with 3+ spaces) still
-      correctly blocks. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P1. Implement recommendation (A) — DONE 2026-08-09 (slot 14, two-part fix). First pass
+      (`unified-trading-pm@89517ae041`) stripped the `over-indent(NN)` exact-depth number before comparing against
+      HEAD's own violations — insufficient alone: it missed the common case where HEAD's line sat under
+      `INDENT_THRESHOLD` (never flagged there) and only crossed it via THIS commit's prettier pass, still reading as
+      "new". Follow-up (`unified-trading-pm@707623d403`) adds `_all_content_previews()` comparing against ALL of HEAD's
+      content, not just its violations. **Confirmed against this doc's own repro §1**: the exact blocked commit now
+      passes (`✅ 0 new violation(s)`). **Confirmed both negative-case directions in isolation**: pre-existing text
+      reflowed past threshold → not flagged; genuinely new over-indented text → still flags (`❌ ... exit 1`).
+      Full-sweep (non-`--only`) mode unchanged. (repo: unified-trading-pm)
 
 ## Progress Log
 
@@ -137,3 +145,6 @@ to block routine plan-flip commits fleet-wide as more files accumulate at least 
   `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5's required plan-flip commit — see that plan's Progress
   Log / todo 5 evidence for the actual code deliverable (already shipped, unaffected by this issue). Reported as
   `/blocked` to main with this doc as the citation.
+- **2026-08-09 (slot 14, data_engineering)**: hit the identical wall independently while flipping N1b's checkbox on
+  `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (unrelated task). Implemented + verified
+  recommendation (A) rather than working around it — see todo above for evidence.
