@@ -20,9 +20,11 @@ summary: >-
   itself, because the archival necessarily removes the doc from the glob the regen scans before the worker's own `/done`
   call can land. The underlying WORK is not lost (checkbox flip + archival both verified on `origin/live-defi-rollout`),
   only the orchestrator's own SQLite done-bookkeeping/dashboard-visibility for that specific task_id.
-status: open
+status: resolved
 resolved_by:
-archive_exempt: true
+  agent-orchestrator@3147392 + @4f78629 + @8db0b29 (2026-08-09, shipped under sibling issue
+  ao_done_and_skip_500_on_backlog_yaml_removed_orphan_task_2026_08_09.md) — root cause confirmed identical, fix already
+  covers this doc's own "archival is my own last todo" shape; documented decision, no new code needed from this doc.
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -59,6 +61,11 @@ context_scope:
 ---
 
 # Archival-as-own-last-todo deletes its own backlog row before `/done` — structural, not a rare race
+
+> **🟢 ARCHIVED 2026-08-09 (slot 26, backend_engineer).** Both todos done. Root cause confirmed identical to
+> `/plans/archive/2026_08/issues/ao_done_and_skip_500_on_backlog_yaml_removed_orphan_task_2026_08_09.md` (resolved the
+> same day) — that doc's shipped fix (`agent-orchestrator@3147392` + `@4f78629` + `@8db0b29`) already covers this doc's
+> exact "archival is my own last todo" shape; no new code needed. See Progress Log for the full trace.
 
 ## What I found
 
