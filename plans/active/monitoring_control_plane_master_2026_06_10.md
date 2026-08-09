@@ -70,6 +70,12 @@ per-slot badges or by SSHing around.
 
 ## Operator decisions (2026-06-10 — all four asked + answered)
 
+> **Re-confirmed 2026-08-09 (plan_reconciler `BLK-987241fb`)**: a keyword-content heuristic flagged this doc's
+> `parent_epic: observability_master` as a possible mismatch vs `infrastructure_master` (content/repo-overlap favored
+> infrastructure_master, 4/6 vs 1/6 repos). Escalated rather than silently reassigned. `main` declined to override the
+> named, dated decision below unilaterally and left it for the operator; the operator's guidance was to let the
+> 2026-06-10 decision stand as originally recorded — **no reclassification applied**, `parent_epic` unchanged.
+
 1. **Parenting — SPLIT**: CI dashboard + this master under `observability_master`; fleet git-health under
    `orchestrator_master` (it extends the orchestrator dashboard).
 2. **Data source — HYBRID**: deployment-api aggregator reads the GitHub API live (branch heads, check runs, PRs) behind
@@ -502,11 +508,14 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `dedup_state.watchdog_dormant_alerted_path`, evaluated every tick BEFORE the cap early-return so the UTC-rollover
       edge can close the episode) + `StateResponse.watchdog_dormant` → `HealthSummary.watchdogDormant` → straight to
       `crit` with no warn tier (while dormancy holds, every OTHER signal on the strip stops being self-correcting).
-      Complementary to `CriticalHealth` (ao_dashboard_critical_health_visibility_2026_08_07), not a duplicate: this
-      rides the `/api/state` poll the strip already makes, rather than the extra fetches CriticalHealth needs — worth a
-      look at folding it into `CriticalHealth` if that surface becomes the standard home. Operator ruling 2026-08-08.
-      Evidence: `quality-gates.sh` green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262 vitest (3
-      new). (repo: agent-orchestrator)
+      Complementary to `CriticalHealth` (`ao_dashboard_critical_health_visibility_2026_08_07` — NOTE 2026-08-09
+      plan_reconciler agt-c80749: this slug does not resolve to any file in the corpus, active or archived; a
+      pre-existing dangling reference, not introduced here), not a duplicate: this rides the `/api/state` poll the strip
+      already makes, rather than the extra fetches CriticalHealth needs — worth a look at folding it into
+      `CriticalHealth` if that surface becomes the standard home. Operator ruling 2026-08-08 (same-session ruling,
+      recorded durably only here in `monitoring_control_plane_master_2026_06_10.md`'s own Progress Log — no separate
+      decision-ledger doc identified). Evidence: `quality-gates.sh` green — 2677 python (13 new), basedpyright 0/0,
+      `tsc --noEmit` clean, 262 vitest (3 new). (repo: agent-orchestrator)
 - [x] ✅ [CODE] P3. **(G7) Worker-liveness watchdog activity has no dedicated standing panel** — slot
       working/paused/blocked states render, but the watchdog's kill / daily-cap-dormancy / autospawn-flap /
       respawn-escalation events are transition-only. Add a watchdog-health panel (kills today vs cap, dormant?, recent
@@ -740,10 +749,17 @@ stand
 pass, unchanged. Still 3/3 open items, still [UI]-role-mismatch (rollout-ratchet panels, E13) / needs-a-design-pass
 (runtime-level deploy signal v2, E14) / dependent-on-the-first-item (G4 ruleset drift, explicitly stated to fold into
 the rollout-ratchet panels as a third column). Same independently-corroborated citation chain as every prior pass; no
-RECLASSIFY candidates.
-**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 6th consecutive pass, unchanged. Checked
-all 9 of today's operator-Q&A precedents against the 3 open items — none apply. Deliberately did not overturn 5
-independently-corroborated prior KEEP-NA passes without a matching precedent — "requires a `[UI]`-capable
-`assigned_role`" is not itself disqualifying for AO dispatch, but the standing citation chain's real basis (role-mismatch
-framing plus a genuinely-unscoped design-call status, both re-derived across 5 passes) was not re-litigated here — a
-fresh scoping pass, not a mechanical precedent match, would be needed to responsibly flip this. No `assigned_vm` change.
+RECLASSIFY candidates. **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 6th consecutive
+pass, unchanged. Checked all 9 of today's operator-Q&A precedents against the 3 open items — none apply. Deliberately
+did not overturn 5 independently-corroborated prior KEEP-NA passes without a matching precedent — "requires a
+`[UI]`-capable `assigned_role`" is not itself disqualifying for AO dispatch, but the standing citation chain's real
+basis (role-mismatch framing plus a genuinely-unscoped design-call status, both re-derived across 5 passes) was not
+re-litigated here — a fresh scoping pass, not a mechanical precedent match, would be needed to responsibly flip this. No
+`assigned_vm` change.
+
+**plan_reconciler 2026-08-09 (agt-c80749, ci tranche, `BLK-987241fb`)**: `parent_epic` mismatch escalated (keyword
+heuristic favored `infrastructure_master`, content/repo-overlap evidence genuinely supported it too — see the batch3
+hunter's finding in `plan_reconciler_findings_2026_08_09_ci.md`). `main` declined to unilaterally override the named
+2026-06-10 decision below and deferred to the operator; **operator ruling: let the named decision stand as originally
+recorded.** `parent_epic: observability_master` CONFIRMED, not reclassified. See the re-confirmation banner above §
+"Operator decisions".

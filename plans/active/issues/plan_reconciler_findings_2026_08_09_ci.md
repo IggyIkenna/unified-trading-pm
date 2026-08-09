@@ -116,9 +116,11 @@ path, not a one-off.
 1. **[P0, FIXED]** `ci_satellite_ao_dispatch_batch1_2026_07_26.md` — stale "STATUS: draft" banner directly contradicting
    `status: active` frontmatter + 42/43 shipped todos (same bug already fixed in its finalize sibling 2026-08-02, never
    propagated back). unified-trading-pm@0408d1ad7.
-2. **[P1, ROUTED — see Doc-drift]** `monitoring_control_plane_master_2026_06_10.md` `parent_epic: observability_master`
-   vs keyword-heuristic top match `infrastructure_master` — mixed evidence (a plausible 2026-06-10 dual-epic naming
-   collision, not simply "heuristic wrong"), recommend operator reconfirmation rather than a mechanical flip.
+2. **[P1, RESOLVED — no change]** `monitoring_control_plane_master_2026_06_10.md` `parent_epic: observability_master` vs
+   keyword-heuristic top match `infrastructure_master` — mixed evidence (a plausible 2026-06-10 dual-epic naming
+   collision, not simply "heuristic wrong"). Routed via `BLK-987241fb`; `main` declined to unilaterally override a named
+   operator decision, operator ruled to let the 2026-06-10 decision stand as recorded. `parent_epic` unchanged;
+   re-confirmation banner added to the doc. unified-trading-pm@[this commit].
 3. **[P1, FIXED]** `github_actions_operator_gated_followups_2026_07_17.md` — self-contradiction: a 2026-08-07
    context-scout note asserting "18 real open drift issues, not false positives — a live unresolved P0" was reversed by
    a deeper 2026-08-08 investigation earlier in the SAME doc (checker bug + mis-recorded cassette, not live drift) —
@@ -141,7 +143,8 @@ path, not a one-off.
 ## Doc-drift
 
 1. **`monitoring_control_plane_master_2026_06_10.md` parent_epic** — see Contradictions #2. Routed to operator (genuine
-   authority/preference call, not evidence-settleable — SKILL.md Modes § Calibration).
+   authority/preference call, not evidence-settleable — SKILL.md Modes § Calibration). **RESOLVED**: operator ruled to
+   let the named 2026-06-10 decision stand; no reclassification.
 2. **`orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` codex-alignment DRIFT** — cites
    `/codex/07-security/self-hosted-runner-security-posture.md`
    (`authoritative_for: self-hosted runner ambient-identity posture, glue-runner credential-exposure facts`), but that
@@ -183,9 +186,15 @@ path, not a one-off.
 
 ## Filed
 
-1. **`BLK-987241fb`** (ASK, answered async) — `monitoring_control_plane_master_2026_06_10.md` `parent_epic` question
-   (observability_master vs infrastructure_master — see Contradictions #2 / Doc-drift #1 for full evidence). Options A
-   (reassign, [WORKER REC]) / B (keep as-is) / C (split). `can_continue: true`.
+1. **`BLK-987241fb`** — `monitoring_control_plane_master_2026_06_10.md` `parent_epic` question (observability_master vs
+   infrastructure_master — see Contradictions #2 / Doc-drift #1 for full evidence). Options A (reassign, [WORKER REC]) /
+   B (keep as-is) / C (split). **ANSWERED 2026-08-09** — `main` declined to unilaterally override the named 2026-06-10
+   decision (correctly recognizing that's an authority call, not a hygiene fix, despite the evidence favoring
+   reassignment) and deferred to the operator; **operator ruled Option B (keep as-is)**. Applied: no reclassification,
+   re-confirmation banner + Progress Log entry added to the doc. Delivery note: the answer initially surfaced as a
+   `blocked_message_orphaned_by_reassign` activity event rather than through `/messages` normally — likely a side effect
+   of this session's task-context change around the pre-compact checkpoint — found via `GET /api/activity?limit=500`
+   filtered for the `blocked_id` when the normal channels came back empty.
 2. **P1 tooling bug — prek stash-restore silently drops staged content on `git mv` archival commits.** Reproduced 3/3
    times this session (`digest_drift_sweep`, `provenance_gate_override`, `client_reporting_api_promote_wedge` archival
    commits): a commit combining a `git mv` with content edits (status/banner) lands with the RENAME but not the content
@@ -279,24 +288,34 @@ against it.
 
 ## Deferred work after 2026-08-09
 
+**UPDATE 2026-08-09 (post-checkpoint): `BLK-987241fb` has been ANSWERED and APPLIED** (see Filed #1, Contradictions #2,
+Doc-drift #1) — the one asked question this run raised is now resolved, satisfying STEP 8's completion condition in
+full. The interruption described below no longer blocks anything; kept as an accurate record of what happened
+mid-session, not as a still-open item.
+
 STEP 1-7 (the one-shot e2e pass — detect, verify, apply, route, PR, POST result) completed in full this session. STEP 8
 (loop-and-wait for the `BLK-987241fb` answer, then apply + call `/done`) was interrupted mid-wait when this session hit
 a context-compaction checkpoint (the 20-min bounded background poll — 2-min heartbeat cadence — was killed by the
-harness before its window elapsed; no answer had arrived in the portion that did run). Nothing was lost: the question is
-durably filed in TWO places independent of this session's memory (the live `/blocked` alert `BLK-987241fb`, and this
+harness before its window elapsed; no answer had arrived in the portion that did run). Nothing was lost: the question
+was durably filed in TWO places independent of this session's memory (the live `/blocked` alert `BLK-987241fb`, and this
 doc's own `## Filed` item 1) — exactly the redundancy `agents/plan_reconciler.md` STEP 8 step 4 describes ("each open
-question is ALSO a filed STEP-6 todo, so even if the operator never answers... nothing is lost").
+question is ALSO a filed STEP-6 todo, so even if the operator never answers... nothing is lost"); when the operator did
+answer, the answer itself needed the same redundancy to actually reach this session (see Filed #1's delivery note).
 
-| Item                                                                                                                                                                         | State / why deferred                                                                                                                                                                                                                                                                                                                                                                                  | Blocked on                          |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| Apply the `BLK-987241fb` answer (`monitoring_control_plane_master_2026_06_10.md` `parent_epic`) once it arrives, then `POST /api/slots/<N>/done {"one_shot_complete": true}` | **Operator-owned — cannot be done yet.** Needs a real human decision via the dashboard (a genuine authority/preference call per SKILL.md's evidence-vs-authority test, not evidence-settleable — see Contradictions #2). Not started because it structurally cannot be.                                                                                                                               | The operator checking the dashboard |
-| The 3 other `## Filed` items (prek stash-restore bug, `task_template.md` effort/thinking_tier gap, `orchestrator_gcloud` codex-alignment drift)                              | **Not done — real work, pick it up.** Each is a self-contained `- [ ]` todo with its own done-when; none require this specific session's continuity to execute. Recommended next: the prek bug (P1, highest severity, already reproduced 3/3 — see "Lessons" below for the exact repro recipe) if a `agent-orchestrator`-capable worker picks this doc up before the operator answers `BLK-987241fb`. | Nobody — genuinely open             |
+**Genuinely remaining** (not blocking this dispatch's completion — independent tracked backlog items, not "asked
+questions" STEP 8 needs resolved): the 3 other `## Filed` items (prek stash-restore bug, `task_template.md`
+effort/thinking_tier gap, `orchestrator_gcloud` codex-alignment drift). Each is a self-contained `- [ ]` todo with its
+own done-when in this doc; recommended next is the prek bug (P1, highest severity, already reproduced 3/3 with a full
+repro recipe in `## Lessons` below) for whichever `agent-orchestrator`-capable worker picks it up.
 
-**Recommended next item for whoever resumes this specific dispatch**: poll `GET /api/slots/15/messages` (or the
-dashboard) for `BLK-987241fb`'s answer; if answered, apply it to `monitoring_control_plane_master_2026_06_10.md`'s
-`parent_epic` field (align to the ruled value, checkpoint-commit, push, append to this doc's `## Flips verified` /
-`## Contradictions`), then call `/done`. If a genuinely fresh session picks this up instead of a resume, re-derive
-`SLOT_ID`/`DISPATCH_ID` from the orchestrator's slot-15 state before calling `/done` — do not guess them.
+| Item                                                                         | State / why deferred                                                                                                                                                                                                                                                                   | Blocked on                                           |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| P1 tooling bug — prek stash-restore drops staged content on `git mv` commits | **Not done — real work, pick it up.** Reproduced 3/3, full repro recipe in `## Lessons` below. Recommended first (highest severity, already-diagnosed root cause).                                                                                                                     | Nobody — genuinely open                              |
+| `task_template.md` missing `effort:`/`thinking_tier:` frontmatter guidance   | **Not done — real work, pick it up.** Self-contained doc edit, done-when stated in `## Filed` item 3.                                                                                                                                                                                  | Nobody — genuinely open                              |
+| `orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` codex drift | **Operator-owned for the ruling, then real work.** A codex/SSOT edit needs an explicit operator ruling before any agent applies it (SKILL.md Phase 5) — file a fresh `/blocked` or bundle into the next relevant plan_reconciler pass to get that ruling, THEN it's a normal doc edit. | Whoever next touches this codex doc's owning tranche |
+
+None of these require this specific dispatch's continuity — any future session (this one resumed, or a fresh one) can
+pick any of them up independently by reading this doc.
 
 ## Lessons (for whoever hits these next)
 
