@@ -83,6 +83,13 @@ locked_by:
 supersedes:
 superseded_by:
 resolved_by: ""
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md,
+    alerting-service/alerting_service/config.py,
+    alerting-service/Dockerfile,
+  ]
 ---
 
 ## Todos
@@ -117,3 +124,4 @@ resolved_by: ""
 - **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — the sole open item (P3, delete the paused legacy
   Job/scheduler outright) is deliberately time-gated ("once confirmed stable for a few days"), not blocked on anything
   external; genuine unscheduled follow-up.
+- **context-scout 2026-08-09**: populated context_scope (4 entries).

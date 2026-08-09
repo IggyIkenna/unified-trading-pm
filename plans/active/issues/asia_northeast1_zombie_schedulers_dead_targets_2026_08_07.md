@@ -186,3 +186,4 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
   auto-repointed) + 1 informational note; captured last-fired evidence via a single batched Cloud Logging query
   (discovered `gcloud scheduler jobs describe` clears `status`/`lastAttemptTime` once a job is `PAUSED` — noted in
   Method for future reference). No code changes — infra-only (no repo owns these scheduler resources).
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (2 entries), still accurate.

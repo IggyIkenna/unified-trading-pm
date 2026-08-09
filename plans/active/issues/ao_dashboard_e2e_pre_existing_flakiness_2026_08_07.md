@@ -265,3 +265,5 @@ shipped independently or these findings would still be sitting entirely undocume
      file-disjointness rule (todo 3 = collision-only files). Also reverted an incidental `parked.e2e.yaml`
      re-serialization-only diff observed during a full-config repro run, same pre-existing `bootstrap.initialise()`
      normalize-on-load behavior noted in todo 2's entry above — not touched.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

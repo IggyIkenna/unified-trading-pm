@@ -195,3 +195,5 @@ them"), but the instruction is not being followed in practice, at least in this 
   general principle. Also added a tight cross-referencing bullet to `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`
   (budget-constrained at 10KB — pointed back at worker.md's example rather than duplicating the worked example there).
   Shipped `unified-trading-pm@a20e52125`.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
