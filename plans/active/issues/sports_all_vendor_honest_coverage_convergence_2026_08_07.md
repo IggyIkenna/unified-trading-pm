@@ -940,3 +940,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   unaffected throughout.
 - **01:41Z** — new FIXTURE_LINEUPS baseline post-resume: needed=**48,566** (0 quota errors, genuine fetches).
   smallchunk9 chunk 18, 26 `CHUNK_FAILED` (in-range), fresh. Both healthy.
+- **02:10Z** — census flat at 48,566 (0 net change) despite `run.log` showing genuine fresh fetches seconds before the
+  census ran. Root-caused: the census reads the **consolidated** manifest (single-walk discipline), refreshed
+  periodically by a separate consolidator job, not live per-VM shards — a flat reading with fresh run.log activity is
+  expected lag, NOT a stall; only flag if it stays flat across 2+ consecutive ticks. smallchunk9 cleared chunk 18→ now
+  chunk 22/451, still 26 total `CHUNK_FAILED` (zero new). Both healthy, no action.
