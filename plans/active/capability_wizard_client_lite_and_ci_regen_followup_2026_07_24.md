@@ -20,8 +20,8 @@ related:
     /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
     /codex/09-strategy/architecture-v2/capability-wizard.md,
-    /plans/active/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
-    /plans/active/ci_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
   ]
 created: "2026-07-24"
 parent_epic: strategy_master

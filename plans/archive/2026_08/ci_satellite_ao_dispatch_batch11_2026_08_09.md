@@ -10,17 +10,18 @@ summary: >-
   BEFORE committing anything, so a broken/incomplete `.venv-workspace` can never silently empty the committed registry
   (the exact F12 footgun the parent doc names). Residual 2 (client-lite wizard successor, an unscoped design call) is
   NOT extracted — it stays open/NA in the parent doc, unchanged.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm, unified-api-contracts]
 scope: [engineer, admin]
-tags: [ci, ao-dispatch, satellite-docs, openapi, capability-wizard, venv-workspace, reclassify, strategy_master]
+tags:
+  [ci, ao-dispatch, satellite-docs, openapi, capability-wizard, venv-workspace, reclassify, strategy_master, archival]
 related:
   [
     /plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md,
-    /plans/active/ci_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /codex/09-strategy/architecture-v2/capability-wizard.md,
@@ -63,6 +64,17 @@ source: >-
 ---
 
 # CI satellite AO batch 11 (strategy_master group)
+
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** Sole todo done via its valid `BLOCKED-EXTRACTION-REGRESSION` outcome
+> (`unified-trading-pm@026a84d6f6`, the venv root-cause fix — nothing else committed, per the todo's own
+> non-discretionary checkpoint rule). Archived alongside its now-done finalize twin,
+> `ci_satellite_ao_dispatch_batch11_finalize_2026_08_09.md`, in this same follow-up commit — per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "archive immediately" HARD RULE and the
+> `ci_satellite_ao_dispatch_batch10_2026_08_09.md` precedent for this exact shape. Remaining follow-up work
+> (re-verify-and-commit the regen, drift-gate correction, GCS 404, stale phantom-repo entry) lives on at
+> `/plans/active/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` — this archival does not close that
+> work, only this extraction batch's own todo. Successor: none (a future pass on the same source-doc Residual would be a
+> new batch per the established numbering convention).
 
 > **Why this is a separate doc from batch 7-10.** Different source doc, different `parent_epic` (`strategy_master`, not
 > shared by any prior `ci`-tranche batch) — per the established batch7/batch8/batch9/batch10 parent_epic-grouping
@@ -107,7 +119,7 @@ source: >-
      own stated Gate.
   7. Flip `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`'s Residual-1 todo `[x]` citing the
      `unified-api-contracts` commit SHA + the observed extraction counts (via this batch's finalize twin, not directly
-     here — see `ci_satellite_ao_dispatch_batch11_finalize_2026_08_09.md`).
+     here — see `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_finalize_2026_08_09.md`).
 
   **Done when**: either (a) outputs regenerated + committed with a verified-passing extraction-count checkpoint and a
   green `check_openapi_drift.py`, or (b) a clean `BLOCKED-VENV-INCOMPLETE` / `BLOCKED-EXTRACTION-REGRESSION` report with
@@ -156,3 +168,8 @@ source: >-
   flip) intentionally NOT done here — deferred to this batch's finalize twin per this todo's own step 7 instruction, and
   correctly still open since Residual 1 itself is not yet fully resolved (the findings doc's todo 1 carries the
   remaining commit step).
+- **2026-08-09 (review slot-12, archival)** — ✅ Archived per the 6-step ritual alongside its now-done finalize twin
+  (`ci_satellite_ao_dispatch_batch11_finalize_2026_08_09.md`, which reconciled the source doc's Residual-1 checkbox
+  disposition): `git mv` to `plans/archive/2026_08/`, `status: complete`, archive banner added, no DEFERRED item to
+  migrate (the follow-up work is already tracked at `venv_workspace_openapi_regen_batch11_findings_2026_08_09.md`), no
+  codex-alignment update needed, corpus referrers repointed to the new archive path.

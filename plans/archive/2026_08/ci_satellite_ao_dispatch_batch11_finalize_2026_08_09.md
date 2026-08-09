@@ -7,16 +7,16 @@ summary: >-
   (`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`). Does NOT archive the source doc — Residual 2
   (client-lite wizard successor) is a deliberately-not-extracted, genuinely-open design call, so it stays `status:
   active` / `assigned_vm: NA`.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
-tags: [ci, ao-dispatch, close-out, batch-11, satellite-docs, capability-wizard]
+tags: [ci, ao-dispatch, close-out, batch-11, satellite-docs, capability-wizard, archival]
 related:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md,
   ]
 created: "2026-08-09"
@@ -42,10 +42,9 @@ assigned_role: infra
 effort: low
 sequential: true
 drift_direction: none
-archive_exempt: true
 context_scope:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md,
     /plans/active/task_template.md,
   ]
@@ -53,8 +52,18 @@ context_scope:
 
 # CI satellite AO batch 11 — finalize
 
-> **🔒 GATED, not draft.** `depends_on: [ci_satellite_ao_dispatch_batch11_2026_08_09]` + `gate_on_depends: true` holds
-> the todo below until batch 11's one todo is `done`.
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** Sole todo done (`unified-trading-pm@3aab334175`): Residual 1's blocked
+> disposition (`BLOCKED-EXTRACTION-REGRESSION`) recorded in the source doc
+> (`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`), which stays open/active — this plan's own job
+> is done. Archived per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "archive immediately"
+> HARD RULE and the `ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md` /
+> `ci_satellite_ao_dispatch_batch10_finalize_2026_08_09.md` precedent for this exact shape. The checkbox-flip commit
+> shipped separately from this git-mv archival commit per that same codex doc's "never combine" rule (see
+> `issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`) — the `archive_exempt: true`
+> bridge used for the flip commit is removed here as moot now that the doc is leaving `plans/active/`. Successor: none.
+
+> **🔒 GATED, not draft (historical).** `depends_on: [ci_satellite_ao_dispatch_batch11_2026_08_09]` +
+> `gate_on_depends: true` held the todo below until batch 11's one todo was `done`.
 
 ## Todos
 
@@ -94,3 +103,8 @@ context_scope:
   never-combine-flip-and-mv SSOT — see
   `issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md` (the `batch9_finalize`
   precedent). Removed in the immediately-following archival commit, which performs the real 6-step ritual.
+- **2026-08-09 (review slot-12, archival)** — ✅ Archived per the 6-step ritual: `git mv` to `plans/archive/2026_08/`,
+  `status: complete`, archive banner added, `archive_exempt` dropped (moot outside `plans/active/`), no DEFERRED item to
+  migrate (this plan's own todo is fully closed and the source doc's Residual 1 disposition is already recorded there),
+  no codex-alignment update needed (no new durable contract shipped), corpus referrers repointed to the new archive
+  path.
