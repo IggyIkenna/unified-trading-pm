@@ -116,6 +116,27 @@ false-positive surface). Recommend, in order:
 
 ## Todos
 
+- [ ] [INFRA] P2. NEW FINDING (2026-08-09, slot 22): `_brief_is_checked_by_tag_in_text` still fails CLOSED (correctly,
+      by current design, but too conservatively) when a plan doc has **multiple genuinely different,
+      independently-completed** `- [x] [TAG] P<n>.` lines sharing the same tag+priority — `matches` has `len > 1`, so
+      the function returns `False` unconditionally at `return len(matches) == 1 and ...` without ever reaching the
+      2026-08-02 `_shares_distinguishing_content` hardening (that check only fires when `hits == 1`). Confirmed live:
+      `/done` on `defi_dex_pool_swaps_733_row_indexer_health_findings-c4893c5446f8` (task
+      `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`'s final P2 todo, a genuine self-archival flip
+      bundled with the `git mv` per the standard 6-step ritual) 409'd with `cross_repo_pm_file_touched_no_checkbox_flip`
+      even though the checkbox WAS genuinely flipped (`market-tick-data-service@5d633923` landed, verified ancestor of
+      origin) — the doc has **7** separate `- [x] [DATA] P2.` lines (a large, long-running investigation doc with many
+      independently-closed P2 findings), so `_archival_rename_disposition`'s `_brief_is_checked_by_tag_in_text` call on
+      the destination blob saw `len(matches)==7` and returned `False` before content-matching could disambiguate.
+      **Proposed fix**: when `len(matches) > 1`, apply `_shares_distinguishing_content` against EACH match (not just
+      skip straight to `False`) and accept only if EXACTLY ONE match shares distinguishing content with `brief` — same
+      fail-closed guarantee on a genuine ambiguity (0 or 2+ content-matching candidates), but stops rejecting a real
+      flip just because OTHER, unrelated same-tag-priority todos in the same doc also happen to be checked. Resolution
+      for this specific occurrence: no self-service override exists (per the sibling
+      `ao_done_gate_no_carveout_for_red_gate_     evidence_only_closure_2026_07_28.md` finding — this class requires an
+      operator/main manual DB patch); the underlying work (code shipped + checkbox flipped + doc archived) is
+      independently verified via `git merge-base --is-ancestor` on both the code repo and the PM repo, so `/done`
+      recovery is a bookkeeping-only gap, not a work-completeness gap. (repo: agent-orchestrator)
 - [ ] [INFRA] P2. Widen `_TODO_TAG_PRIORITY_RE` (or add a preprocessing strip) so a `brief`/plan line with a leading
       `BLOCKED-<TOKEN>` (or similar) marker before `[TAG] P<n>.` still extracts tag+priority correctly. Add a regression
       test using a brief like `"BLOCKED-UPSTREAM-DESIGN [DATA] P2. ..."`. (repo: agent-orchestrator)
