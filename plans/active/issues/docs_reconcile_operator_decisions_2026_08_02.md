@@ -214,6 +214,44 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   Fireblocks carve-out. C: **Neither — the real cadence is something else entirely** (e.g. whatever Fireblocks' own
   API/dashboard actually enforces), and both docs need updating to match. Other: operator can type a custom answer.
 
+## 🚧 BLOCKED-OPERATOR-DECISION 5 — `plan-hygiene.md` duplicated verbatim in two dirs, both `authoritative_for` "plan hygiene" (added 2026-08-09)
+
+- [ ] [DOCS] P1. **Decide the disposition of `/codex/12-agent-workflow/plan-hygiene.md` vs
+      `/codex/11-project-management/plan-hygiene.md` — merge, split with cross-links, or re-scope one's
+      `authoritative_for` claim.**
+
+  Found by the 2026-08-09 `/docs-reconcile --autonomous` sweep's `authoritative_for` collision hunter, independently
+  re-verified against both live docs before parking. Both `status: current`, both literally titled "Plan Hygiene":
+
+  - `/codex/12-agent-workflow/plan-hygiene.md` — title `Plan Hygiene — Silent Failure Modes, Tags, Crons, and Severity`,
+    `authoritative_for: [plan-hygiene 4 silent-failure modes, hygiene-sweep severity ladder]`.
+  - `/codex/11-project-management/plan-hygiene.md` — title `Plan Hygiene — Scripts, Runbook, and Cron`,
+    `authoritative_for: [plan-hygiene script suite (structural checks), required/deprecated plan frontmatter field list]`.
+
+  Both describe the same underlying system (`run_hygiene_sweep.sh`, cron cadence, the retired GHA
+  `plan-health-agent.yml` job folded into `quality-gates-v2` — the retirement event is described almost verbatim in both
+  bodies). Neither doc's `related:` frontmatter cross-references the other — the disambiguation signal present in every
+  legitimate parent/child split found elsewhere in this same sweep (e.g. `portfolio-allocator.md`'s two docs mutually
+  cross-reference; `mev-protection.md`'s pair has an explicit "canonical SSOT" self-declaration + `referenced_by:`). The
+  12-agent-workflow doc DOES cross-reference the 11-project-management one twice inline in prose (§ "Daily deep
+  reconciler", § "Plan-health PR gate") — so the author was aware of the overlap but never resolved it structurally.
+  `rg -l '^authoritative_for:.*plan-hygiene' codex/` today returns both with no signal for which to open for a generic
+  "plan hygiene" query — the exact retrieval-correctness break this field exists to prevent.
+
+  A: **Merge into one doc.** The 11-project-management doc is scripts/runbook/cron-focused (mechanics); the
+  12-agent-workflow doc is silent-failure-modes/severity-focused (why it matters + what breaks). Fold one into the other
+  (whichever section location fits this corpus's `codex/NN-*` topic convention better) and redirect the other to a thin
+  pointer, matching the precedent this same doc used for the `naming-convention.md` → `strategy-identity-versioning.md`
+  merge (BLOCKED-OPERATOR-DECISION analog, resolved 2026-07-31). [Not marked RECOMMENDED — both docs are substantial
+  (not one clearly a stub) and cover genuinely distinct sub-topics, so a merge may lose useful separation; flagging as
+  an option, not the default.] B: **Keep both, add explicit cross-references and narrow each `authoritative_for` claim
+  to be unambiguous** (e.g. 12-agent-workflow keeps "silent-failure modes + severity ladder", 11-project-management
+  keeps "script suite + frontmatter field list" — genuinely non-overlapping if stated precisely, since the current
+  claims already gesture at a split, they're just not cross-linked). [RECOMMENDED — lower-risk than a merge, preserves
+  both docs' distinct content, and only requires adding `related:` entries + tightening the `authoritative_for:` wording
+  rather than a content migration.] C: **Something else** — e.g. one doc is actually stale/superseded and should be
+  archived outright. Other: operator can type a custom answer.
+
 ## Progress Log
 
 - 2026-08-02 (docs_reconciler, dispatch agt-0b4ee1): filed. 4 other commits from this same sweep already shipped
@@ -302,3 +340,9 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   entry above already correctly declined to guess at). Textbook KEEP-NA, no re-derivation needed.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **docs-reconcile 2026-08-09** (one-off `docs_reconciler` boot, slot 27): added BLOCKED-OPERATOR-DECISION 5
+  (`plan-hygiene.md` duplicated verbatim across `codex/12-agent-workflow/` and `codex/11-project-management/`) — found
+  by this run's `authoritative_for` collision hunter (16 duplicate-basename/fuzzy-topic groups examined corpus-wide, 15
+  disqualified as either status-mismatched or legitimate parent/child splits with proper `related:` cross-links; this is
+  the 1 genuine collision). Independently re-verified both docs' `status`/`authoritative_for`/`related` frontmatter live
+  before parking, not just trusted from the hunter's report.

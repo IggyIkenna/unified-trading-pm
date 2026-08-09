@@ -5,7 +5,7 @@ summary: >-
   Canonical MVP-scope SSOT — the strict rules-derived subset of the could-exist universe per (asset_group, venue,
   instrument_type, data_type): CeFi perp-gate + options_chain-only + Coinbase trades-only, TradFi CME ohlcv_1m-only +
   OPTION narrowed to the ES/S&P-500 complex only, DeFi tag-all, Sports 96-league football, Prediction Polymarket+Kalshi
-  arb-overlap; code SSOT MVP_SCOPE at config version 14.
+  arb-overlap; code SSOT MVP_SCOPE at config version 16.
 status: current
 nature: ssot
 asset_group: [meta]

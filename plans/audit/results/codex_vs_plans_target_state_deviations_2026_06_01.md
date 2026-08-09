@@ -113,7 +113,7 @@ SM; workers verify with public key from GCS `internal-public.pem`; HS256 dual-ac
 
 - `/codex/04-architecture/agent-orchestrator-overview.md` (two-secret/HS256 section + Tech-stack Auth row + "seam for
   later" language + "Auth flip rationale" HS256 provisioning recipe).
-- `/codex/12-agent-workflow/orchestrator-multi-vm-topology.md` (two-secret HS256 section; add
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (two-secret HS256 section; add
   `ORCHESTRATOR_INTERNAL_ALG`, `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS`). → update both to ES256 + asymmetric key
   distribution + soak note.
 
@@ -139,7 +139,7 @@ SM; workers verify with public key from GCS `internal-public.pem`; HS256 dual-ac
 ### Theme K — PlanRegen interval 6h → 30 min
 
 - `/codex/04-architecture/agent-orchestrator-overview.md` (L238) and
-  `/codex/12-agent-workflow/orchestrator-multi-vm-topology.md`: both say
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`: both say
   `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS default 21600 (6h)` / "≤6h latency". Plan
   `plan_hygiene_silent_failure_capture` Phase 6 shipped 1800s (30 min) fleet-wide + `pm-pull.timer` 5-min cadence. →
   update default to 1800 + note pm-pull 5-min cadence (≤35 min push-to-pickup).

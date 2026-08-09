@@ -100,21 +100,16 @@ flowchart TB
     tick --> processing
     instruments --> processing
 
-    calendar --> delta
-    processing --> delta
-    tick --> vol
-    processing --> onchain
+    processing --> fs
+    tick --> fs
 
-    delta --> train
-    vol --> train
-    onchain --> train
-    sports --> train
+    fs --> train
 
     train --> inference
-    delta --> inference
+    fs --> inference
 
     inference --> strategy
-    delta --> strategy
+    fs --> strategy
     instruments --> strategy
 
     strategy --> exec

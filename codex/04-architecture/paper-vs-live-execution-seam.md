@@ -122,9 +122,9 @@ Execution-service routes per `decompose(mode)`:
     │                              Prediction: matching-engine simulation
     │                              (default fallback): matching engine
     │
-    └─ target == LIVE_VENUE ──▶ real venue adapter (CeFi connector / DeFi connector /
+    └─ target == MAINNET ─────▶ real venue adapter (CeFi connector / DeFi connector /
                                   sports adapter / prediction adapter)
-                                  + trigger == MANUAL → manual-pending queue (operator
+                                  + trigger == MANUAL_OPERATOR → manual-pending queue (operator
                                     approves via DART per pvl-p23c)
                                   + trigger == AUTOMATED → fire immediately
 ```

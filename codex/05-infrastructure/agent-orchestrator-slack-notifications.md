@@ -81,7 +81,8 @@ The S (Slack) / T (Telegram) columns mark which module exports each function.
 
 ### Payload shape (Block Kit)
 
-All three functions produce:
+All 13 Slack functions produce (Block Kit is Slack-specific; Telegram's 9 functions use a separate, non-Block-Kit
+payload shape in `server/notifications/telegram.py`):
 
 ```json
 {

@@ -147,12 +147,13 @@ unified-trading-system-ui clone) found the failing CI run (30896404779) this iss
 commit (`633abcf4`, an LDR→main promote from 2026-08-03 — a full day before the fix existed);
 `git show 633abcf4:lib/architecture-v2/block-list.ts` genuinely has only 10 `BL-` entries, confirming the reported
 failure was real at that commit. But a same-day, differently-scoped `defi`-tagged issue doc's "Fifth pass"
-GMX-venue-removal work added the missing `BL-12` entry to BOTH `block-list.ts` and `codex/.../block-list.md` (shipped
-`unified-trading-system-ui@3c2efb2c`) with zero awareness of this parity-test issue. Current `origin/main` (2026-08-05
-21:07 UTC promote) has the identical 11-id set `{BL-1..BL-10, BL-12}` in both files — exactly the pass condition for all
-4 assertions in `block-list-parity.test.ts` (read directly, not assumed). `vitest` itself was not executed (would
-require a worktree/npm-install detour on a shared slot clone, out of scope for a read-only classification task), so this
-is strong git-content-level evidence, not a runtime-verified close.
+GMX-venue-removal work added the missing `BL-12` entry to BOTH `block-list.ts` and
+`/codex/09-strategy/architecture-v2/block-list.md` (shipped `unified-trading-system-ui@3c2efb2c`) with zero awareness of
+this parity-test issue. Current `origin/main` (2026-08-05 21:07 UTC promote) has the identical 11-id set
+`{BL-1..BL-10, BL-12}` in both files — exactly the pass condition for all 4 assertions in `block-list-parity.test.ts`
+(read directly, not assumed). `vitest` itself was not executed (would require a worktree/npm-install detour on a shared
+slot clone, out of scope for a read-only classification task), so this is strong git-content-level evidence, not a
+runtime-verified close.
 
 **Recommendation [WORKER REC]**: retag `asset_group: [cross-cutting]` → `[ui]`. Whoever picks this up (ui tranche or
 operator) should VERIFY (`vitest run block-list-parity.test.ts`) and ARCHIVE citing the `3c2efb2c` evidence, not
