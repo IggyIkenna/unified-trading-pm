@@ -460,6 +460,20 @@ def test_body_content_hash_differs_on_body_change():
     assert MOD.body_content_hash(v1) != MOD.body_content_hash(v2)
 
 
+def test_body_content_hash_stable_across_context_scout_marker_line():
+    """A context-scout-only touch (its dated Progress Log bookkeeping line) must not
+    change the hash -- the false-positive class from
+    na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md: 44% of
+    one tranche's docs (11/25) were needlessly re-classified because context-scout's
+    line survived _VERDICT_MARKER_LINE_RE's stripping (it only matched
+    na-eligibility-audit's own marker).
+    """
+    before = "---\ntitle: doc\n---\n# Body\n\n- [ ] a todo\n\n## Progress Log\n\n- **2026-08-01** -- initial content.\n"
+    context_scout_line = "- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).\n"
+    after_context_scout_touch = before + context_scout_line
+    assert MOD.body_content_hash(before) == MOD.body_content_hash(after_context_scout_touch)
+
+
 def test_incremental_skip_true_when_stored_hash_matches(monkeypatch, tmp_path):
     """A doc with a [body-hash:…] marker whose stored hash equals the current body hash
     must report incremental_skip=True — the primary (no-git) skip path.
