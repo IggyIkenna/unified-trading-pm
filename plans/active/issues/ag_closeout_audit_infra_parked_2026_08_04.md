@@ -174,10 +174,12 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
       reaches the live AO backlog.
 - [x] ✅ [OPERATOR] P1. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — RESOLVED 2026-08-07,
       operator accepted the loss.** `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`
-      is now archived with `status: resolved` and `resolved_by: "RESOLVED 2026-08-07 (operator ruling) -- unrecovered
-      loss, accepted, no further investigation. Both the source directory and the stash-backup bundle are confirmed
-      genuinely absent; the operator declined recovery."` Original text preserved below for record. Was: **Investigate
-      the missing stash-backup bundle** (finding 11, second consecutive day confirmed absent) — confirm whether
+      is now archived with `status: resolved` and
+      `resolved_by: "RESOLVED 2026-08-07 (operator ruling)     -- unrecovered loss, accepted, no further investigation..."`
+      (full text in `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`, now archived —
+      both the source directory and the stash-backup bundle are confirmed genuinely absent, the operator declined
+      recovery). Original text preserved below for record. Was: **Investigate the missing stash-backup bundle** (finding
+      11, second consecutive day confirmed absent) — confirm whether
       `instruments-service-agentwork-sports-2026-07-13-stashes.bundle` (67.8 MB) was relocated to a durable location
       before `.tabs/3/stash-bundles/` disappeared, or represents an unrecovered loss of 10 real stash entries. Update
       `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` with the outcome either way.
@@ -195,11 +197,20 @@ batch todo (durable home: batch7) or reconfirmed an already-tracked carried-forw
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
+  no whole-doc RECLASSIFY, no new extraction. Both remaining `[DOCS] P3` items (findings 12, carried; 13, carried)
+  re-checked against this round's accumulated-precedent list (IAM self-service, D16 all-repos, S5.1 tiering,
+  plan-destination-AO-default, escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM secret + 5
+  Slack webhooks) — none apply; both remain the same design/tooling-priority (12) and not-yet-bounded scoping (13) calls
+  this doc's own text already describes. See the sibling `ag_closeout_audit_infra_parked_2026_08_03.md`'s round11 marker
+  for this round's fresh conflict-check on finding 13's `repo_scripts_governance_audit_2026_06_18.md` L208/L213 half
+  (same underlying finding, carried into both parked-findings docs) — not duplicated here.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale items — closed finding 11's
-  stash-backup-bundle investigation todo with hard evidence: `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`
-  is now archived, `status: resolved`, `resolved_by:` recording the operator's 2026-08-07 ruling ("unrecovered loss,
-  accepted, no further investigation"). Doc stays NA overall: findings 12/13 (both `[DOCS] P3` design/scoping calls)
-  checked against today's operator-Q&A cheat sheet — no precedent applies to either; still genuinely un-bounded.
+  stash-backup-bundle investigation todo with hard evidence:
+  `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` is now archived,
+  `status: resolved`, `resolved_by:` recording the operator's 2026-08-07 ruling ("unrecovered loss, accepted, no further
+  investigation"). Doc stays NA overall: findings 12/13 (both `[DOCS] P3` design/scoping calls) checked against today's
+  operator-Q&A cheat sheet — no precedent applies to either; still genuinely un-bounded.
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, stale-items — closed finding 10's re-apply todo (batch3
   `assigned_vm` flip): verified live on `plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md`
   (`status: complete`, `assigned_vm: planning` confirmed via direct `grep`, 2026-08-07) — the blank-flip regression is

@@ -343,6 +343,27 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
+  reconsidered but NOT flipped. Todo 20 (billing/load re-measurement) was originally time-gated as "needs a few days of
+  real elapsed usage to be meaningful" (2026-08-07 note); as of today, 4 days have elapsed since the bulk of the 17
+  repos' reverts landed (2026-08-05) and 2 days since PM's own revert (todo 24, 2026-08-07) — genuinely closer to
+  boundary than at the last check, and the underlying pull mechanism itself is fully bounded/procedural (the same
+  `github-billing-token` GSM secret + `aws ce get-cost-and-usage` procedure already used successfully by the sibling
+  `ci_pipeline_speed_and_cost_redesign_2026_08_05.md` P0 todo, which explicitly treated a partial-month pull as a
+  legitimate interim data point). Did NOT flip this round for two reasons: (1) "a few days" has no stated numeric
+  threshold in this doc's own text, so treating 2-4 days as sufficient is itself a judgment call this sweep should not
+  make unilaterally when the doc's own author (an interactive, operator-directed session, not AO-dispatch) explicitly
+  chose the LOCAL/human track "since each revert needs live-judgment verification"; (2) the todo's own text says "update
+  that plan's issue doc" (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`) rather than this plan
+  directly, and that issue doc is itself an active hub for at least 2 adjacent billing-measurement efforts
+  (`github_actions_operator_gated_followups_2026_07_17.md`'s own separate "two-week billing-ledger comparison," earliest
+  ~2026-07-31) — coordinating which measurement lands where has a real risk of duplicate/conflicting dispatch that a
+  fresh conflict-check alone does not fully resolve. Flagging this as the closest-to-boundary item found in this round's
+  11-doc sweep, worth a direct re-check in a few more days rather than dispatching now. Checked against this round's
+  accumulated-precedent list (IAM self-service, D16 all-repos, S5.1 tiering, plan-destination-AO-default,
+  escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks) — none directly
+  resolve the "is enough time elapsed" question; noted this is a pure timing/ coordination call, not a precedent-driven
+  one.
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06. Re-read end-to-end;
   `grep -cE '^- \[ \]'` = 1, matching (todo 24, PM's own revert, was closed same day 2026-08-07, before this pass). The
   sole remaining item (todo 20, billing/load re-measurement) is explicitly timing-gated — needs a few days of real

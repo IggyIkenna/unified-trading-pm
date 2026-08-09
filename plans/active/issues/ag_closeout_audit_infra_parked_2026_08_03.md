@@ -274,13 +274,13 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
       `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm` flip correctly** (finding 10).
 - [x] ✅ [OPERATOR] P1. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — RESOLVED 2026-08-07,
       operator accepted the loss.** `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`
-      is now archived (`plans/archive/issues/...`) with `status: resolved` and `resolved_by: "RESOLVED 2026-08-07
-      (operator ruling) -- unrecovered loss, accepted, no further investigation. Both the source directory and the
-      stash-backup bundle are confirmed genuinely absent; the operator declined recovery."` — the exact outcome this
-      todo asked for was recorded on that doc, and the delete todo was correctly not flipped blind (the doc's own
-      RESOLVED banner explicitly states "unrecovered loss, accepted" rather than silently marking done). Original text
-      preserved below for record. Was: **Investigate the missing stash-backup bundle** (finding 11) — this needs the
-      operator's own direct knowledge/backup check, not delegable to a worker: confirm whether
+      is now archived (`plans/archive/issues/...`) with `status: resolved` and
+      `resolved_by: "RESOLVED 2026-08-07     (operator ruling) -- unrecovered loss, accepted, no further investigation. Both the source directory and the     stash-backup bundle are confirmed genuinely absent; the operator declined recovery."`
+      (source: `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`, now archived) — the
+      exact outcome this todo asked for was recorded on that doc, and the delete todo was correctly not flipped blind
+      (the doc's own RESOLVED banner explicitly states "unrecovered loss, accepted" rather than silently marking done).
+      Original text preserved below for record. Was: **Investigate the missing stash-backup bundle** (finding 11) — this
+      needs the operator's own direct knowledge/backup check, not delegable to a worker: confirm whether
       `instruments-service-agentwork-sports-2026-07-13-stashes.bundle` (67.8 MB, previously verified to contain all 10
       stash SHAs) was relocated to a durable location before `.tabs/3/stash-bundles/` disappeared, or whether this
       represents an unrecovered loss of 10 real stash entries. Update
@@ -295,12 +295,27 @@ fix recorded in-line (batch6 todo 1) and 6 carried-forward items re-verified (5 
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
+  no whole-doc RECLASSIFY, no new extraction. Both remaining `[DOCS] P3` items (findings 12/13) re-checked against this
+  round's accumulated-precedent list (IAM self-service, D16 all-repos, S5.1 tiering, plan-destination-AO-default,
+  escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks) — none apply.
+  Finding 13's second half (running the never-executed conflict-check against
+  `repo_scripts_governance_audit_2026_06_18.md`'s L208/L213 items before any future run drafts them) was investigated
+  this round: located the target doc, confirmed both items are still open (`- [ ]`, Phase 2 "ruff-lint pass on scripts/"
+  section) and still un-cited by any active satellite batch or `infra_consolidated_closeout_2026_07_25.md` — genuinely
+  conflict-clear on that narrow question. Not drafted into a satellite batch here:
+  `repo_scripts_governance_audit_2026_06_18.md` is outside this sweep's 11-doc candidate list (per-item extraction is
+  scoped to this round's own candidates, not to docs a candidate merely references), and it carries
+  `locked_by: live-defi-rollout` — the standard corpus-wide epic lock, not unique to this doc, but drafting FROM a
+  locked doc's content is properly the `/ag-closeout-audit infra` skill's own drafting mechanism (the mechanism finding
+  13 itself names: "before any future run drafts them"), not this RECLASSIFY sweep's. Leaving finding 13 open with this
+  conflict-check result recorded, so the next `/ag-closeout-audit infra` run can draft directly without re-deriving it.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale items — closed finding 11's
-  stash-backup-bundle investigation todo with hard evidence: `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`
-  is now archived, `status: resolved`, `resolved_by:` recording the operator's 2026-08-07 ruling ("unrecovered loss,
-  accepted, no further investigation"). Doc stays NA overall: findings 12/13 (both `[DOCS] P3` design/scoping calls,
-  explicitly self-described as not-yet-bounded) checked against today's operator-Q&A cheat sheet — no precedent
-  applies to either.
+  stash-backup-bundle investigation todo with hard evidence:
+  `issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md` is now archived,
+  `status: resolved`, `resolved_by:` recording the operator's 2026-08-07 ruling ("unrecovered loss, accepted, no further
+  investigation"). Doc stays NA overall: findings 12/13 (both `[DOCS] P3` design/scoping calls, explicitly
+  self-described as not-yet-bounded) checked against today's operator-Q&A cheat sheet — no precedent applies to either.
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06. Re-read end-to-end;
   `grep -cE '^- \[ \]'` = 3, matching (finding 10's re-apply todo already closed 2026-08-06 by a separate governance
   sweep, per that todo's own text). Remaining: finding 11 (operator-only — confirm whether the missing stash-backup

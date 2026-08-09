@@ -427,6 +427,13 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
+  unchanged. Sole open todo (todo 10, `[INFRA] P3`, "add a branch-protection/visibility-change alert on
+  `unified-trading-ci`") is still explicitly self-described as "genuinely optional... consider whether... warrants a
+  standing guard" — a design/priority call on WHETHER to build it, not a spec a worker can execute without that decision
+  being made first; not satellite-extractable as-is. Checked against this round's accumulated-precedent list (IAM
+  self-service, D16 all-repos, S5.1 tiering, plan-destination-AO-default, escalation-N=3-days, reversibility-qualified
+  deletes, Option B retired, GSM secret + 5 Slack webhooks) — none resolve the "should we build this at all" question.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — unchanged since 2026-08-07. Re-read
   end-to-end; `grep -cE '^- \[ \]'` = 1, matching (todo 10 only). Checked against today's operator-Q&A rulings cheat
   sheet: no precedent matches a "should we build a standing visibility-change alert" question, and a fresh grep for any

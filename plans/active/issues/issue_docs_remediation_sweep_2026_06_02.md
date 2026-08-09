@@ -514,6 +514,18 @@ tracked here.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA-STALE,
+  unchanged — no new citation-closes found this round (re-grepped `infra_satellite_ao_dispatch_batch*` 1-14 +
+  `infra_consolidated_closeout_2026_07_25.md` for the remaining 6 open `- [ ]` items' distinctive text — UAC D15
+  Hyperliquid/Aster axis classification, MTDS liquidations/risk_params reconciliation ×2, strategy-service
+  `_RECURSIVE_STAKED_LEND` venue additions, the 2 `tofu apply` operator-gated items — zero hits). Doc stays NA on the
+  same two independent grounds already recorded: `locked_by: live-defi-rollout` with no `[unlock-plan]` grant, and
+  genuinely-open non-infra content outside any infra pass's scope (the 4 DeFi-data-pipeline items are judgment/design
+  calls on axis classification and field-mapping verification, not mechanical; the 2 `tofu apply` items are
+  operator-gated infra applies). Checked against this round's accumulated-precedent list (IAM self-service, D16
+  all-repos, S5.1 tiering, plan-destination-AO-default, escalation-N=3-days, reversibility-qualified deletes, Option B
+  retired, GSM secret + 5 Slack webhooks) — none unlock a whole-doc flip or a satellite-extractable sub-item; the lock
+  - non-infra-scope blockers are independent of any of these precedents.
 - **na-eligibility-audit 2026-08-06 (infra tranche)**: **KEEP-NA-STALE — 2 citation closes, doc stays NA.** G-TRACE +
   UAC D8 infura items closed citing `infra_satellite_ao_dispatch_batch1_2026_07_26.md:722/444` (see closes); remaining 7
   items unchanged (mixed judgment/operator-gated content). locked_by live-defi-rollout — citation closes + marker only,

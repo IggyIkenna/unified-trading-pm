@@ -328,6 +328,14 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
+  unchanged. Sole open todo (warm git-object cache for JIT-ephemeral runners) still carries its own explicit "Do NOT
+  roll out until this is understood" constraint pending on-VM diagnosis of the deployed-but-no-op `fast-checkout.sh`
+  mystery — a live-infra diagnostic judgment call, not a bounded worker-determinable outcome; no satellite-extractable
+  sub-item within it either (the diagnosis and the rollout decision are the same undivided task). Checked against this
+  round's accumulated-precedent list (IAM self-service, D16 all-repos, S5.1 tiering, plan-destination-AO-default,
+  escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks) — none apply to
+  an unresolved on-VM filesystem-visibility mystery.
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since the 2026-08-06 verdict (only a
   context-scout scope refresh touched the doc since); sole open todo (warm git-object cache for JIT runners) still
   carries the explicit "Do NOT roll out until this is understood" constraint pending on-VM diagnosis of the deployed-
