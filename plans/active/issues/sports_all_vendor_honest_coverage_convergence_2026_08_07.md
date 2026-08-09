@@ -484,3 +484,13 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   (~1.35-1.39M range), fresh. Census: FIXTURE_LINEUPS needed **8,332 → 6,334** (-1,998 in ~31min, ~3,750/hr — steady,
   89% converged from the 58,523 campaign start). Still not at the near-zero INJURIES trigger (targeting a floor similar
   to FIXTURE_STATS's own 116-shard honest-absence residual); no intervention needed.
+- **19:14Z — Both fleets healthy, no incidents; FIXTURE_LINEUPS rate has slowed noticeably.** `smallchunk13`: chunk
+  14/451 (`2020-08-10→2020-08-14`), real forward progress (up from chunk 7), zero OOMs, healthy — 4 chunks from chunk
+  18's danger zone, watching next tick. `af-backfill-20260809-180612`: actively writing real manifest shards (13,620
+  total entries this VM instance), now processing more "enrichment-only" per-fixture sweeps (log shows
+  `core entities fresh — enrichment-only mode`) rather than fresh core fetches — plausible explanation for the slowdown
+  below. Census: FIXTURE_LINEUPS needed **6,334 → 5,741** (-593 in ~32min, ~1,112/hr — down sharply from the prior
+  ~3,750/hr; still genuine forward movement per rule 1b, not a stall, just a real rate change likely from the campaign
+  shifting into slower enrichment-only territory). At this new rate, ~5.2h to the near-zero floor (was ~1.7h estimate
+  last tick) — re-estimating each tick rather than trusting the old rate. Not yet at the INJURIES trigger, no
+  intervention needed.
