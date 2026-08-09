@@ -128,3 +128,10 @@ and only needed a spot-check.
 
 - 2026-08-09 (slot-16): investigated, shipped `cleanup_legacy_twins.py` hardening, filed this issue doc; the original
   batch2 checkbox stays unchecked pending the todos above.
+- 2026-08-09 (slot-11): dispatched only the 4th todo (flip the batch2 checkbox). Confirmed the other 3 todos are still
+  `queued` in the backlog (ids `cefi_legacy_dup_delete_tooling_gap-{d2c76ca9ef30,e03a4801e66b,8e4ddd1a79a5}`) — no
+  commits landed against `launch-canonical-migration-vm.sh` or a new `cleanup_legacy_twins.py` run since the prior
+  session's hardening; no VM run evidence exists. This todo has no `prereqs.completed_tasks` gate on the other 3, so the
+  dispatcher handed it to slot-11 anyway even though its done_definition (cite a completed full-run's post-delete
+  verification) is unsatisfiable right now. Filed BLK-33bbcb2a recommending a dependency gate be added rather than
+  fabricating a flip. Checkbox intentionally left unflipped.
