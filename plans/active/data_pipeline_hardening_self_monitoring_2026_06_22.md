@@ -4,7 +4,7 @@ title: Data-Pipeline Hardening + Self-Monitoring (anti silent-misclassification)
 summary:
   Harden all data-pipeline adapters against silent misclassification with FetchEvidence gates, per-adapter guards, daily
   summaries, and self-monitoring alerts across all 5 asset groups.
-status: complete
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -47,6 +47,7 @@ depends_on:
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
+archive_exempt: true # TEMPORARY one-commit M3-flip-verification bridge, dropped in the immediately-following archival commit (see Progress Log + /plans/active/issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md)
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
@@ -86,12 +87,6 @@ context_scope:
 > everything else moved is `[x]`-shipped or pure completed-run narrative (0 open todos in the moved content).
 
 # Data-Pipeline Hardening + Self-Monitoring
-
-> **ARCHIVED (2026-08-09) — complete.** Every todo shipped (all `[x]` with cited evidence). The sole remaining open
-> item, "9 live data VMs frozen 5.5–32h", resolved 2026-08-09 (slot-24): the originally-named VMs are conclusively gone,
-> CeFi live capture is confirmed recovered via the consolidated launcher, and TradFi live capture's separate,
-> currently-live outage was forked to its own P0 issue —
-> `/plans/active/issues/tradfi_live_cme_capture_stopped_2026_08_09.md`. Record-only from here.
 
 > **Operator intent (2026-06-22)**: "I can't babysit thousands of data types. Stop running VMs for hours only to realise
 > they're slow / rate-limited / not writing to the right place / marking everything `empty_confirmed` when the data
@@ -637,3 +632,17 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
   misrepresent a re-verification that didn't happen. No codex contract changes needed — this plan's phases were already
   codex-aligned in earlier rounds; the one net-new fact (tradfi live capture down since 2026-08-04) lives in the new
   issue doc, not a codex SSOT. `git mv` to `/plans/archive/2026_08/`.
+- **2026-08-09 (slot-24), M3-verification split-commit recovery**: the combined flip+`git mv` commit above
+  (`unified-trading-pm@4f270300b`) hit `/done`'s M3 check with `reason: cross_repo_pm_file_touched_no_checkbox_flip` — a
+  diff at the ORIGINAL `plans/active/...` path shows only a deletion (git's rename pairing isn't applied under a
+  path-scoped `git log`/`git show` query), so the `[ ] → [x]` transition wasn't visible there. This is the exact
+  conflict `/plans/active/issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`
+  documents between `check_archive_candidates --only` (demands same-commit archival once a doc goes 0-open) and
+  `plan-completion-and-archival-discipline.md`'s "never combine flip + `git mv`" rule — confirming that issue's open
+  question: the M3 gap for this shape is STILL live (not resolved by the 2026-07-28 fix
+  `ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md` describes). Applying that issue's
+  documented one-commit `archive_exempt: true` bridge retroactively: moved the doc back to
+  `plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md`, reverted `status` to `active` + dropped the
+  ARCHIVED banner (both restored in the immediately-following commit), added `archive_exempt: true`. This commit's diff
+  at the canonical path now shows the real todo checkbox flip; the archival re-lands as a separate follow-up commit
+  right after.

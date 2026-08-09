@@ -5,8 +5,8 @@ title: >-
   last live-pipeline manifest write is ~5 days stale
 summary: >-
   Re-verified the 2026-06-23 "9 live data VMs frozen" finding in
-  `/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md` per its 2026-08-09 RECLASSIFY
-  done-when. CeFi live capture (deribit/hyperliquid) has RECOVERED — the consolidated launcher
+  `/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md` per its 2026-08-09 RECLASSIFY done-when. CeFi
+  live capture (deribit/hyperliquid) has RECOVERED — the consolidated launcher
   (`mtds-live-cefi-consolidated-20260809-121034`, GCP `central-element-323112`) is RUNNING and actively writing
   `capture_status=captured` rows for DERIBIT/HYPERLIQUID trades as of 2026-08-09T15:36 UTC (checked at 16:07 UTC, ~30min
   fresh). TradFi live capture is a DIFFERENT and CURRENT finding: `gcloud compute instances list` against
@@ -30,7 +30,7 @@ scope: [engineer, admin]
 tags: [tradfi, live-capture, cme, mtds-live, vm-launcher, data-pipeline-correctness, silent-outage]
 related:
   [
-    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,

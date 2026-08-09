@@ -33,7 +33,7 @@ related:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
-    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/archive/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md,
     /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
   ]
