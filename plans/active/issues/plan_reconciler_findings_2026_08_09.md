@@ -239,6 +239,26 @@ balanced (Phase 5.9(a) ledger check).
 
 (populated as verified)
 
+## Investigated, genuinely still open (recorded so a future session doesn't re-derive this)
+
+Hunter-MissedFlip checked all 36 open todos across the 11 non-locked writable docs against live repo state (git log +
+code reads, not just doc prose). 34 are confirmed genuinely open with no shipping evidence — not worth re-listing
+individually (they match each doc's own self-assessment). 2 are **partial-ship** — real code exists but doesn't fully
+satisfy the todo's own stated ask, so neither was flipped nor is either purely "not started":
+
+- **`issues/cost_observability_deferred_followups_2026_07_10.md` — "Credits/discounts as a first-class view"**: a
+  `GrossCredit` component is shipped (`deployment-ui/src/pages/CostObservability.tsx` ~lines 427-463, wired into the KPI
+  band + breakdown table) implementing "gross → credits → net." But the todo also explicitly asks for a computed
+  "effective discount rate" (%) — not found anywhere near this code. Half the ask shipped.
+- **Same doc — "Usage quantity + unit → unit economics"**: `cost_per_gb` + a storage/operations/egress cost-component
+  split + raw `vcpu` tracking are shipped
+  (`deployment-api/deployment_api/services/cost_observability/{models,resource_rows,queries}.py`). But no `$/vCPU-hour`
+  derived metric exists — only a raw vcpu count field — which the todo also explicitly asks for. Half the ask shipped.
+
+Neither should be flipped on this evidence; the genuinely-still-open remainder in each is real, matching the doc's own
+current framing. Recorded here as a documented starting point (exact file:line + what's missing) so a future session
+implementing these doesn't have to re-derive what's already there.
+
 ## Coverage (hunters / batches / docs)
 
 (populated at STEP 7)
