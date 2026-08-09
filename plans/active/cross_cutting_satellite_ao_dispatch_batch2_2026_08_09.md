@@ -302,20 +302,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                                          disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                                          future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                                          bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                                          prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                                          2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                                          hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                                          threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                                          loader, post-delete verification) and filed
-                                          `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                                          AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                                          actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                                          stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                                          via that issue doc, not this line.
-                                          verification actually complete.
+                                              disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                                              future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                                              bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                                              prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                                              2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                                              hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                                              threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                                              loader, post-delete verification) and filed
+                                              `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                                              AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                                              actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                                              stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                                              via that issue doc, not this line.
+                                              verification actually complete.
 
 - [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
@@ -339,12 +339,18 @@ drift_direction: advance-code
       `mvp <=     could_exist <= all` monotonicity via a deterministic patched `is_model_mvp`, captured-lookup,
       sports-exclusion) + 4 new deployment-api unit tests (scope forwarding, default scope, 502 on unreachable,
       error-status relay) — both repos' full `quality-gates.sh` green.
-- [ ] [CODE] P1. Fix `_fetch_earliest_funding_date` (instruments-service `cefi/aster.py`) to exclude the synthetic
+- [x] ✅ [CODE] P1. Fix `_fetch_earliest_funding_date` (instruments-service `cefi/aster.py`) to exclude the synthetic
       pre-launch placeholder funding rows (flat `0.0001` rate) before deriving `available_from_datetime` — these rows
       currently pull ASTER's stamped genesis date earlier than the true launch. Repo: instruments-service. Source:
       `instruments_completion_tracker_2026_07_06.md` (Stage-2 ASTER genesis item). Done when: the fix excludes synthetic
       placeholder rows before deriving `available_from_datetime`; a regression test asserts ASTER genesis no longer
-      stamps a pre-2023-07-22 date from placeholder rows.
+      stamps a pre-2023-07-22 date from placeholder rows. — instruments-service@c4969441. `_fetch_earliest_funding_date`
+      now pages ascending through `fundingRate` history (up to 8 pages × 1000 rows), skipping every row whose rate
+      equals the flat `0.0001` synthetic placeholder, and returns the first genuine entry (falls back to the venue
+      launch date if none found — same fallback as before). 4 new regression tests in `test_aster_adapter.py`
+      (`TestAsterFetchEarliestFundingDate`): skips leading placeholder rows, all-placeholder short page → None,
+      pagination across a full placeholder page, no-data → None; full `quality-gates.sh` green (sentinel
+      `.qg_last_passed_sha=c496944163c9236ae9b672d51a240a323df1a877`).
 - [x] ✅ [REVIEW] P1. Reconcile ASTER's two disagreeing missing-date counts — instruments-service@7dbe85e1. **RESOLVED
       2026-08-09 — methodology/scope difference between two structurally different manifests, NOT a bug in either path's
       arithmetic.** The "0 missing" figure comes from
