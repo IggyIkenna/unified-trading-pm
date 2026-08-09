@@ -258,6 +258,19 @@ SKILL.md Phase 4's auto-fix table — no operator gate needed for an unlocked, v
   contradiction candidate refuted (PM public flip, see Refuted above); all other applied fixes (banner/table/
   citation/format corrections) were either self-evident from direct re-verification (re-summed counts, re-read raw line
   breaks, live `gh api`/`git show` checks) or corroborated independently by 2+ hunters.
+- **Exit-gate hygiene check**: the whole-corpus `run_hygiene_sweep.sh --ci` (with regen) died mid-run under host memory
+  contention (879Mi free / 11Gi swap-in-use at the time, 3+ sibling tranche-shard workers running the identical sweep
+  concurrently on this shared host — no OOM confirmation available via `dmesg`, but the process exited with no
+  completion marker and the symptom matches the exact host-contention failure class the 2026-08-06 sharding ruling
+  already exists to route around). Rather than retry blindly into the same contention, ran the SAME underlying checks
+  scoped to the 15 files this run actually touched instead: `fix_frontmatter.py --check` (0 issues),
+  `check_todo_format.sh --only` (1 flag, confirmed pre-existing via `git show origin/live-defi-rollout:<path>` — not
+  introduced this run), `check_plan_operator_ruling_evidence.py --only` (0 violations),
+  `check_archive_candidates.sh --only` (0 candidates), and a direct line-count check against every touched doc's cap
+  (max 993/1000 hard, `ci_satellite_ao_dispatch_batch1_2026_07_26.md` — pre-existing size, my edit added ~4 lines).
+  Every commit this run also independently passed prek's identical per-commit hygiene gate at commit time. Combined,
+  this is strong evidence my changes are hygiene-clean even though the full corpus-wide sweep itself could not complete
+  on this host tonight.
 
 ## Plans not reached
 
