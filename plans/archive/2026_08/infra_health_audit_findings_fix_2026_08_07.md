@@ -11,7 +11,7 @@ summary: >-
   not — a real finding in its own right, since a bug nobody gets paged for is a bug that never gets found), then fix the
   underlying issue regardless of alert status. Also run a dedicated zombie sweep (VMs and Cloud Run job executions that
   are technically "running" but doing nothing) beyond what the original audit incidentally found.
-status: active
+status: resolved
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -63,6 +63,11 @@ drift_direction: advance-code
 ---
 
 # Fix the infra-health-audit findings
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED.** All 16 todos done, unlocked. The last open item
+> (`uts-prod-data-status-rollup-svc` OOM) closed after a 5-round live investigation — VERIFIED LIVE via a 49-min,
+> 2-cron-cycle Cloud Logging sweep showing zero OOM events across the previously-100%-reproducing failure conditions.
+> See that todo's own entry for the full incident.
 
 ## Todos
 
@@ -116,79 +121,56 @@ drift_direction: advance-code
       `gcloud run jobs describe client-reporting-batch --region=asia-northeast1     --format="value(...resources.limits.memory)"`
       returning `2Gi` (2026-08-08). Fix-agent details (source-of-truth IaC change, sizing rationale, execution
       verification) pending its own report; this checkbox reflects the confirmed live GCP state, not just a claim.
-- [ ] [SCRIPT] P1. **Fix `uts-prod-data-status-rollup-svc` OOM at its ceiling — round 3 fix shipped to LDR
-      2026-08-09T07:43Z, live verification IN PROGRESS.** Status as of 2026-08-09T07:43Z: - **Rounds 1-2 recap**:
-      per-service isolation (`4c0e039`) + per-category subprocess sharding (`_SERIAL_DISPATCH_ISOLATED`) fixed the
-      ORIGINAL in-process RSS ratchet, and the `daemon=True→False` hotfix (`e2b9a55`) fixed the sharding fix's own
-      regression (0/14 succeeding). Both reached `main`, deployed on revision
-      `uts-prod-data-status-rollup-svc-00360-hkf` (created `2026-08-09T03:43:35Z`, confirmed 100% traffic). - **Round 3
-      finding: the OOM PERSISTED on that revision — measured 10/10 cron cycles over 6h (04:09→07:09Z), every single
-      one**. Pulled the full Cloud Logging history for revision `00360-hkf`: an IDENTICAL pattern on every cycle —
-      `instruments-service` (first in `_DEFAULT_SERVICES`) times out at exactly 420s
-      (`manifest rollup failed for service=instruments-service: timed out after 420s`), then ~100-110s later the WHOLE
-      CONTAINER OOMs ("Memory limit of 32768 MiB exceeded") while the loop is working through the next service. - **Root
-      cause (genuinely new, not the daemon bug)**: `_run_service_isolated`'s 420s timeout-kill path
-      (`process.terminate()`/`process.kill()`, unchanged since before per-category sharding existed) only signals the
-      per-service child's own PID. But under `_SERIAL_DISPATCH_ISOLATED`, that child has itself spawned a per-category
-      GRANDCHILD via `bounded_subprocess.run_bounded` (its own independent 24Gi rlimit, 200s timeout enforced by the
-      now-about-to-die parent). A service's ~5 categories at up to 200s each (up to 1000s) routinely exceed the
-      service's 420s outer ceiling — confirmed the ROUTINE case for instruments-service, not rare — so the timeout-kill
-      fires mid-category. Killing only the parent PID leaves the grandchild ORPHANED: nothing ever signals it, it keeps
-      running and consuming memory (up to its own 24Gi) for the rest of the sweep, while the loop moves on to the next
-      service's fresh compute — the orphan's leftover memory plus the next service's compute pushes the container over
-      32Gi. Confirmed daemon=True's auto-cleanup-on-parent-exit does NOT apply here (that mechanism is an `atexit` hook
-      that only fires on normal Python interpreter shutdown, never on an externally-delivered SIGTERM/SIGKILL, which is
-      exactly how the timeout path kills the child). - **Fix**: `deployment-api` (commit
-      `6ac1c43ff66cbeff4903c6559cbbac70fb1299ec`, landed on LDR 2026-08-09T07:43Z) — the per-service child now calls
-      `os.setpgrp()` as its first statement (becomes its own process-group leader before it can spawn anything), and
-      `_run_service_isolated`'s timeout path now kills the WHOLE process group via `os.killpg()` instead of a single
-      PID, so any grandchild dies atomically with its parent. Applied the same hardening to
-      `bounded_subprocess.run_bounded` itself (defense-in-depth for the shared reusable utility, since it's the exact
-      primitive being nested one level down). 4 files changed (worker + bounded_subprocess + both test files,
-      updated/added regression tests incl. `test_terminates_and_reports_timeout_when_still_alive` now asserting
-      `os.killpg(pid, SIGTERM)`/`SIGKILL` instead of the old single-PID `terminate()`/`kill()`, plus new
-      `test_becomes_process_group_leader_first`/`test_becomes_process_group_leader_before_running_fn` coverage). QG
-      green (5252 passed). Shipped via normal `quickmerge.sh --agent --files` (no carve-out needed this round). -
-      **`--hotfix-to-main` explicitly NOT used**: checked `scripts/quickmerge.sh --help` first — it requires operator
-      env `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` and is explicitly documented "agents cannot self-authorize this path";
-      letting the normal fleet LDR→main promotion (`*/15`) carry it is correct here. - **Correction to the operator's
-      own verification ask**: `log_event("SERVICE_PROCESSED"/"SERVICE_FAILED")` writes ONLY to the GCS `GcsEventSink`
-      (`unified_trading_library.events_interface.log_event` — when a writer is configured it calls
-      `_writer.write_event()` and returns, no console/logger call at all); it NEVER reaches stdout/Cloud Logging, so
-      those event names can't be grepped from Cloud Logging even on a clean success. Ground-truth verification instead
-      reads (a) Cloud Logging for the ABSENCE of "Memory limit" ERROR entries on the new revision (the actual OOM
-      signal), and (b) the GCS rollup blobs' own `updateTime`
-      (`gs://central-element-323112-data-status-rollups/{service}/full.json.gz`) for instruments-service/MTDS
-      specifically, per this workspace's own "check target artifacts, not activity" rule. - **Round 3 fix DEPLOYED +
-      MEASURED LIVE, ruled out as the dominant cause**: `6ac1c43ff` reached `main` (this repo's "Option-B direct"
-      promotion squash-syncs main's tree to LDR's tree each cycle — `git merge-base --is-ancestor` never returns true
-      even after a real promotion, a live gotcha hit this session; use a CONTENT check instead), deployed as revision
-      `uts-prod-data-status-rollup-svc-00363-vbt`. Cloud Logging on that revision showed
-      `service=instruments-service killpg(pid=257, SIGTERM) delivered` — the process-group kill fix genuinely works,
-      child reaped cleanly, no orphan, no SIGKILL escalation needed. **The container OOM still happened anyway, 67s
-      later** ("Memory limit of 32768 MiB exceeded with 32770 MiB used") — proving the orphaned-grandchild leak, while a
-      real bug worth fixing (kept), was not the dominant driver of the container-level OOM. - **Round 4 (the actual
-      dominant root cause)**: 5 independent live OOM samples across rounds 3-4 (pre- and post- the process-group fix)
-      all measured this "dedicated" rollup service's ALWAYS-present baseline app overhead — it runs the FULL
-      deployment-api app surface (background cache-warming, VM listing, redis, catalogue-lifecycle cache, auto-sync; see
-      `routes/data_status/_rollup.py`'s own docstring), not a minimal rollup-only process — via
-      `(reported "X MiB used" at OOM) - 24576` (the old per-service/per-category rlimit) in a tight **8194-8640 MiB
-      band**. A per-category child was allowed to grow to its own individual 24Gi ceiling, but 24Gi + ~8.5Gi baseline
-      already exceeds the 32Gi container — so the platform's cgroup-level OOM killer fires the WHOLE container before
-      this rlimit's own per-process `MemoryError` check ever gets a chance to catch an oversized category cleanly. **Fix
-      (shipped)**: `deployment-api@1849f4e23` lowers `_CHILD_RLIMIT_AS_BYTES` (`data_status_rollup_worker.py`) and
-      `_SERIAL_ISOLATED_CATEGORY_RLIMIT_BYTES` (`data_status_service.py`) from 24Gi → 20Gi, leaving ~12Gi of headroom
-      (>3Gi margin over the measured worst-case 8.64Gi baseline). This is a safety-margin correction, not "raise the
-      Cloud Run memory limit" — the container's own 32Gi ceiling is unchanged; these constants govern the isolated
-      child's OWN allowance inside that fixed budget, so an oversized category now fails loud-and-clean inside its own
-      child (the same honest-failure path instruments-service's manifest step already uses) instead of taking the whole
-      container down. Also fixed in passing: the ceiling-fix's own comment additions shifted `_read_index_cached`'s
-      bare-call line number (483→490), re-triggering the SAME recurring line-pinned-baseline gotcha as the prior 449→483
-      fix — corrected via `unified-trading-pm@e0796aa05` (`read_availability_index_bare_call_baseline.yaml`). QG green
-      both repos. - **In-flight**: a background verification pipeline (`verify_ceiling.sh`) is watching for LDR→main
-      promotion (via CONTENT check) → Cloud Build deploy → new Cloud Run revision → ≥2 full 20-min rollup cron cycles →
-      Cloud Logging OOM-absence check, then will report a definitive verified-or-not verdict in this same session. This
-      checkbox stays open until that lands with evidence.
+- [x] [SCRIPT] P1. ✅ **Fixed `uts-prod-data-status-rollup-svc` OOM — 5-round investigation, VERIFIED LIVE
+      2026-08-09T13:04Z.** - **Rounds 1-2 recap**: per-service isolation (`4c0e039`) + per-category subprocess sharding
+      (`_SERIAL_DISPATCH_ISOLATED`) fixed the original in-process RSS ratchet; `daemon=True→False` (`e2b9a55`) fixed the
+      sharding fix's own regression (0/14 succeeding). Deployed on revision `00360-hkf` — OOM PERSISTED, measured 10/10
+      cron cycles over 6h, every one: `instruments-service` times out at 420s, then ~100-110s later the WHOLE CONTAINER
+      OOMs. - **Round 3**: root-caused to `_run_service_isolated`'s 420s timeout-kill path signalling only the
+      per-service child's PID — under `_SERIAL_DISPATCH_ISOLATED` that child spawns a per-category GRANDCHILD
+      (`bounded_subprocess.run_bounded`), and a service's ~5 categories at up to 200s each routinely exceed the 420s
+      outer ceiling, so the kill fires mid-category and orphans the grandchild (nothing signals it; `daemon=True`'s
+      auto-cleanup is an `atexit` hook that never fires on an externally-delivered SIGTERM). **Fix**:
+      `deployment-api@6ac1c43ff` — `os.setpgrp()`/`os.killpg()` process-group cleanup (worker + `bounded_subprocess.py`,
+      QG 5252 passed). Deployed as `00363-vbt`: Cloud Logging confirmed `killpg(pid=257, SIGTERM) delivered` — the fix
+      genuinely works, clean reap, no orphan — **but the OOM still happened anyway, 67s later**, proving the orphan leak
+      was real but not the dominant driver. - **Round 4**: 5 independent OOM samples (pre/post the process-group fix)
+      all measured this "dedicated" service's baseline app overhead (full deployment-api surface: cache-warming, VM
+      listing, redis, catalogue-lifecycle, auto-sync) at a tight 8194-8640 MiB band; the old 24Gi per-category ceiling
+      left zero real margin against the 32Gi container. **Fix**: `deployment-api@1849f4e23` lowers
+      `_CHILD_RLIMIT_AS_BYTES`/`_SERIAL_ISOLATED_CATEGORY_RLIMIT_BYTES` 24Gi→20Gi (safety-margin correction, not "raise
+      the ceiling" — the 32Gi container limit is unchanged). Deployed as `00364-k2p`, verified via `docker pull` of the
+      exact image digest + grep inside it (ruling out a stale-image false negative) — waited 2 full cron cycles: **OOM
+      STILL occurred, 4 events, statistically IDENTICAL to every prior sample (32770-33216 MiB)** — proof the rlimit was
+      never the binding constraint. - **Round 5 (the real dominant root cause)**: `deployment_api/lifespan.py` — this
+      service shares its image with `uts-shared-deployment-api` but only ever serves `POST /api/data-status/rollup-run`;
+      it nonetheless ran the FULL app surface unconditionally (leader-worker deployment auto-sync/reaper — lists every
+      running VM + sequentially downloads every stale `deployments/active/*.json` blob every ~60-70s —, the SSE
+      deployment-events drain, and the catalogue-lifecycle cache warm), all in the TOP-LEVEL PARENT process, entirely
+      outside any isolated-child rlimit already proven ineffective in round 4. **Fix**: `deployment-api@f3ee76f93` adds
+      `DEPLOYMENT_API_MINIMAL_STARTUP` (new pydantic field, `DATA_STATUS_PREWARM_SERVICE` pattern) — skips those 3 task
+      groups when true; default false (zero behavior change for `uts-shared-deployment-api`/any other deployment). Set
+      live via `gcloud run services update ... --update-env-vars=DEPLOYMENT_API_MINIMAL_STARTUP=true`. **VERIFIED
+      LIVE**: deployed as revisions `00367-c8v` (12:15Z) then `00368-xmj` (12:29Z, superseded by an unrelated concurrent
+      promotion) — Cloud Logging confirms `MINIMAL_STARTUP: skipping ...` firing (12 lines across gunicorn workers) and,
+      across a 49-min window (12:15→13:04Z) spanning 2 full cron cycles, `instruments-service`,
+      `market-tick-data-service` AND `market-data-processing-service` ALL independently hit their known 420s
+      structural-gap timeout (the EXACT condition that caused 10/10 OOMs pre-fix and 1/1 post-round-4) — **zero "Memory
+      limit exceeded"/"too much memory" events**, confirmed via an explicit fleet-wide Cloud Logging sweep across both
+      revisions. The per-service 420s timeouts for instruments-service/MTDS/MDPS are the PRE-EXISTING,
+      already-documented, accepted structural gap (data volume growth outpacing the ceiling — see
+      `data_status_rollup_ml_service_full_blob_missing_2026_07_26.md`), not the bug this todo fixes; that gap stays open
+      as its own tracked item. - **Correction to the operator's own verification ask**: `log_event("SERVICE_PROCESSED")`
+      writes ONLY to the GCS `GcsEventSink` (never stdout/Cloud Logging), so it can't be grepped even on success —
+      ground truth used Cloud Logging OOM-absence + live diagnostic log lines instead. - **`--hotfix-to-main` explicitly
+      NOT used** (requires operator env `QUICKMERGE_HOTFIX_TO_MAIN_OK=1`, "agents cannot self-authorize"); the normal
+      `*/15` fleet promotion carried every round. - **2 shared-infra side-incidents found + fixed this session**: (1)
+      `base-service.sh`'s non-portable `grep -oP` (GNU-only PCRE) silently aborted `quality-gates.sh` host-wide under
+      `set -e` (macOS BSD grep has no `-P`) — fixed via `rg --pcre2` (already a hard QG dependency). (2) shipping that
+      fix raced a concurrent session's independent fix for the same bug — an autostash reconciliation committed+pushed
+      literal `<<<<<<</=======/>>>>>>>` conflict markers to `live-defi-rollout` (`eb50e13cc`), breaking every slot's QG
+      the same way — caught via a direct `bash -n` check against the ACTUAL pushed content (never trust a reported "✅
+      Pushed" alone) and corrected (`d6495e760`).
 - [x] [SCRIPT] P1. ✅ **Killed the hung idle `mtds-dex-swaps-backfill-2` VM.** Re-confirmed before deleting: no
       `PROGRESS.json` at its GCS log path (404), `run.log` tail (15:15-15:20Z) showed only RESOURCE_SAMPLE/
       PIPELINE_HEARTBEAT lines at ~0-1.4% CPU, no processing activity since the `process_final=True` shard-complete line
