@@ -1,0 +1,109 @@
+---
+doc_type: issue
+title: "plan_reconciler daily deep reconciliation run — ui tranche, 2026-08-09"
+summary: >-
+  Run-findings doc for plan_reconciler dispatch agt-0c9e3f (slot 8, 2026-08-09), TRANCHE=ui — the first-ever
+  `/plan-reconcile ui` pass (per `ui_consolidated_closeout_2026_07_30.md`'s own Todo 6, unchecked across 4 prior
+  `/ag-closeout-audit ui` runs). Corpus: 20 asset_group:[ui] docs (~569KB) — 8 in the 12h grace window (the 5-doc
+  covering set + 2 actively-dispatched AO docs + today's own ag_closeout_audit_ui_parked doc), 12 non-grace and
+  actionable. Builds directly on the same-day 2026-08-09 `ag_closeout_auditor` run's fresh 14-doc verdict tally.
+status: open
+nature: issue
+asset_group: [ui]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: [plan_reconciler, reconciliation, plan-hygiene, findings, scheduled, ui]
+related:
+  [/plans/active/ui_consolidated_closeout_2026_07_30.md, /plans/active/issues/ag_closeout_audit_ui_parked_2026_08_09.md]
+created: "2026-08-09"
+parent_epic: plan_hygiene_master
+priority: P2
+estimate_class: research
+estimate_baseline_ai_days: 1.0
+estimate_calibrated_ai_days: 0.6
+assigned_role: review
+assigned_vm: planning
+execution_scope: orchestrator-agent
+locked_by: plan_reconciler
+locked_since: "2026-08-09"
+supersedes:
+superseded_by:
+resolved_by:
+source: "slot 8, plan_reconciler agt-0c9e3f, 2026-08-09"
+context_scope:
+  [
+    unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh,
+    unified-trading-pm/agents/plan_reconciler.md,
+    unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
+  ]
+drift_direction: advance-code
+depends_on: []
+---
+
+# plan_reconciler run — 2026-08-09 (agt-0c9e3f, tranche=ui)
+
+## Scope + method
+
+- `TRANCHE=ui` supplied → topic-scoped shard per `cursor-configs/skills/plan-reconcile/SKILL.md` § "Topic-scoped
+  (sharded) runs". Population = every doc with `asset_group: [ui]` (2-line YAML-list frontmatter form, `asset_group:`
+  then `  [ui]` on the next line — confirmed via a block-aware scan, not a single-line grep) in `plans/active/*.md` +
+  `plans/active/issues/*.md`. **20 docs, ~569KB, 6256 lines.** No `plans/epics/*.md` doc is ui-tagged; no doc's
+  `parent_epic:` points at the closeout (the tag is the sole signal, as the hub doc itself documents).
+- This is the **first-ever `/plan-reconcile ui` run** — `ui_consolidated_closeout_2026_07_30.md` Todo 6 has read "not
+  yet run" across 4 consecutive `/ag-closeout-audit ui` passes (2026-08-06/07/08/09).
+- Grace set (newest commit <12h old at run start, 2026-08-09T03:07Z): **8 of 20** — the entire 5-doc covering set
+  (`ui_consolidated_closeout`, `ui_satellite_ao_dispatch_batch{1,2}[_finalize]`) plus 2 actively-dispatched
+  `assigned_vm: planning` docs (`deployment_api_sigabrt_crash_loop_2026_07_24.md`,
+  `deployment_registry_firestore_p3_cutover_2026_07_14.md`) plus today's own
+  `issues/ag_closeout_audit_ui_parked_2026_08_09.md`. Read-only context this run.
+- Non-grace actionable set: **12 docs** (the ag-closeout-audit "candidate" population minus the 2 grace-protected AO
+  docs, plus the 2 older `ag_closeout_audit_ui_parked_2026_08_0{7,8}.md`).
+- Corpus-wide normative refs (`PLAN_FORMAT.md`, `task_template.md`, `INDEX.md`, `ACTIVE_INDEX.md`) + codex stay in scope
+  per the sharding contract.
+- Leaned heavily on the same-day `ag_closeout_auditor` run (`agt-db95b9`,
+  `issues/ag_closeout_audit_ui_parked_2026_08_09.md`) as a verified-fresh input rather than re-deriving the whole
+  orphan/coverage picture from scratch — that run's own remit (completeness-projection) is disjoint from this one's
+  (contradiction + false-unchecked + hygiene), but its Phase-1 per-doc reads are recent, corroborated evidence this run
+  can build on.
+
+## Flips verified
+
+(populated as verified)
+
+## Archived (verified-done, unlocked, non-grace)
+
+(populated as verified)
+
+## Contradictions
+
+(populated as verified)
+
+## Doc-drift
+
+(populated as verified)
+
+## Hygiene fixes
+
+(populated as verified)
+
+## Filed
+
+(populated as verified)
+
+## Archive candidates (operator review)
+
+(populated as verified)
+
+## Refuted (dropped by verify)
+
+(populated as verified)
+
+## Coverage (hunters / batches / docs)
+
+(populated at STEP 7)
+
+## Plans not reached
+
+(populated if applicable)
