@@ -236,3 +236,12 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   and reproduce the same skip. Leaving todo 2 open/unchecked, same condition as before: will only make forward progress
   once PM's `main` actually advances past `30ed07eff`. Skipping this task with `reason_code: GATED` so it doesn't keep
   re-dispatching to every heartbeat in the fleet while the real blocker is unresolved elsewhere.
+- **2026-08-09 (infra worker, slot 13, todo 2 re-check)**: Re-verified from scratch again —
+  `git merge-base --is-ancestor 30ed07eff origin/main` on `unified-trading-pm` still returns NO
+  (`origin/main..origin/live-defi-rollout` now 712 commits, up from 687 at slot 20's check), and
+  `unified-trading-library`'s latest tag on `main` is still `v0.77.0` (no tag contains `609299ad`). The auto-drain
+  promote PR is still the SAME open PR (#2705, unchanged since slot 20's check — no new attempt superseded it), and its
+  `QG slice (checks)` job still fails. No new information; same blocker, same root cause
+  (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent (hand off, don't
+  chase serially). Skipped the linked INFRA todo in `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md` again
+  with `reason_code: GATED`.
