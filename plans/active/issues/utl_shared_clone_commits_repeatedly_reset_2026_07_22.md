@@ -253,7 +253,9 @@ single canonical clone per repo and behaves incorrectly under multi-clone (workt
       invoked check path stayed
       `.tabs/26/deployment-service/scripts/quality_gates/check_backfill_vm_disk_provisioning.py`, never MAIN's copy. No
       further action needed.
-- [ ] 5. [INFRA] P2. **AUTHORIZED 2026-08-08 (operator ruling, ao round-5 apply item 16): "Authorize all 3."**
+- [x] 5. [INFRA] P2. ✅ **FIXED 2026-08-09 (slot-33)** — `unified-trading-pm@4c7d0dba6`. **AUTHORIZED 2026-08-08
+      (operator ruling, ao round-5 apply item 16, see
+      /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md): "Authorize all 3."**
       **`PROJECT_ROOT` override (needed to satisfy the PM `test_repo_in_manifest` integration test in a worktree whose
       directory name doesn't match a registered repo) appears to redirect MORE than just that one identity check — it
       changes where the `.qg_last_passed_sha`/`.qg_content_sentinel` files are written AND (observed on
@@ -265,7 +267,19 @@ single canonical clone per repo and behaves incorrectly under multi-clone (workt
       (`git format-patch` / `git am`) and apply it directly onto the real MAIN clone, then run QG there. Needs a real
       fix: either the PM identity test should derive repo identity from `git remote get-url origin` (worktree-safe)
       instead of `Path.cwd().name`, or `PROJECT_ROOT` should scope ONLY the identity-string check and never the
-      file-scan/sentinel-write basis.
+      file-scan/sentinel-write basis. **Took the lower-blast-radius option (the first one)**: fixed
+      `tests/integration/test_pm_scripts_integration.py`'s `_get_repo_name()` to derive identity from
+      `git remote get-url origin` (falling back to the directory basename only when there is no remote), instead of
+      `repo_path.name`. This removes the only legitimate reason an operator ever needed to set `PROJECT_ROOT` to a
+      different tree than the actual invoking worktree — the identity check no longer cares about directory naming, so
+      the sentinel-hijack failure mode this todo describes has no remaining trigger. Deliberately did NOT touch
+      `qg-common.sh`'s existing worktree-identity guard or the shared `base-service.sh`/`base-library.sh`
+      `cd     "$PROJECT_ROOT"` / sentinel-path plumbing (the second, higher-blast-radius option) — this doc's own
+      Progress Log already flagged that direction as "redefines what QG green means fleet-wide... needs operator
+      scoping." Added two unit tests (`test_get_repo_name_uses_remote_url_not_directory_basename`,
+      `test_get_repo_name_falls_back_to_basename_without_remote`) exercising a scratch git repo under a mismatched
+      directory name; full `test_pm_scripts_integration.py` suite (8 tests) + `quality-gates.sh` both green on the
+      shipped commit.
 
 ## Progress Log
 
