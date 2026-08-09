@@ -1004,6 +1004,10 @@ PIP_SH=$(codex_rg " pip install " --glob "**/*.sh" --glob "!unified-trading-pm/*
 _be_extra_globs=()
 for _excl in "${BROAD_EXCEPT_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _be_extra_globs+=("--glob" "!${_excl}"); done
 BE=$(codex_rg "except Exception:" --type py --glob "!tests/**" "${_be_extra_globs[@]}" "$SOURCE_DIR/" 2>/dev/null || :)
+# AST-filter out matches that only occur inside a string/comment (e.g. a generated-code
+# template literal) — the raw regex above can't tell source code from a string containing
+# similar text; this narrows to real ExceptHandler nodes before counting a violation.
+[[ -n "$BE" ]] && BE=$(echo "$BE" | python3 "$(dirname "${BASH_SOURCE[0]}")/filter_broad_except_string_literals.py" 2>/dev/null || echo "$BE")
 [[ -n "$BE" ]] && { log_warn "broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md"; echo "$BE" | head -5; V=$(( V + 1 )); } || log_success "No broad except Exception"
 
 SWALLOWED=$(codex_rg "except Exception:" --type py --glob "!tests/**" "${_be_extra_globs[@]}" "$SOURCE_DIR/" -A 2 2>/dev/null \
