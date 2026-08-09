@@ -139,3 +139,19 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
   pattern per `/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`). Skipped my
   duplicate commit during rebase (`git rebase --skip`, no code conflict landed) and flipped this checkbox against
   279e07b instead of shipping a redundant second implementation.
+- 2026-08-09 (slot 15) — Was dispatched todo 2 (the >=6h measurement) directly, before todo 1 had shipped — confirmed
+  via the backlog (`GET /api/backlog`) that todo 1's task was still `queued`/unclaimed at the time, so implemented +
+  shipped it first (see checkbox above) since todo 2 is unstartable without it. Deployed + verified LIVE on the
+  orchestrator VM: checkout `e8818aa` (descends from `279e07b`) with `orchestrator.service` `ActiveEnterTimestamp` =
+  **2026-08-09T18:00:24Z**, confirmed AFTER that pull (not a stale pre-pull process). Checked `GET /api/activity`
+  post-deploy: 0 `context_force_idle_gate_blocked` events yet — expected, not a bug: the restart the deploy required
+  also cleared `ContextLifecyclePolicy`'s in-memory `_TargetState` (this doc's own "Guidance and recycle are one-shot
+  per episode" defect above), so every target's `guidance_sent_at`/`forced_at`/`idle_streak` reset to unset at that
+  moment — main/review has to re-climb to the Tier-1 guidance threshold and then clear
+  `context_compact_force_after_seconds` again before the now-instrumented gate is even reached. Starting todo 2's
+  > =6h window from **2026-08-09T18:00:24Z** (the confirmed-live restart timestamp), not from filing time — no tick
+  > before that point could have hit the instrumented code path at all. Releasing todo 2 back to the queue
+  > (`reason_code: GATED`) rather than holding this session open for a multi-hour wall-clock wait; the next dispatch
+  > (this slot or another) should read this timestamp and query `/api/activity` (`context_force_idle_gate_blocked` /
+  > `forced_precompact` / `forced_compact`, `role in {main, review}`, `ts >= 2026-08-09T18:00:24Z`) once the window has
+  > actually elapsed to fill in todo 2's open-vs-blocked counts.
