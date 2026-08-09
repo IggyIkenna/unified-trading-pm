@@ -541,3 +541,13 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   full-league entities now converged (FIXTURE_STATS, PLAYER_STATS, FIXTURE_LINEUPS) — only INJURIES (running), STANDINGS
   (271 needed), and TEAMS (96 needed) remain**, with STANDINGS/TEAMS being small honest-absence-adjacent residuals
   likely to resolve incidentally as INJURIES sweeps the same date range.
+- **21:46Z — a SECOND, undocumented odds_api VM (`smallchunk10`, reused name) ran concurrently with `smallchunk14` for
+  ~15 min — a real `odds-api-concurrency-guard.sh` cap-violation — but self-resolved (deleting on its own) before any
+  action was needed.** Full detail + evidence in the owning issue doc:
+  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s 21:46Z Progress Log entry. Short version: `smallchunk10`
+  (`START_DATE=2020-08-29`, heavily overlapping `smallchunk14`'s `START_DATE=2020-06-06`, both `END_DATE=2026-08-08`)
+  appeared `RUNNING` alongside `smallchunk14` with no launch provenance in either doc — most likely an uncoordinated
+  concurrent-slot relaunch. Credit balance checked live and healthy (10,654,194 of 15M remaining), so not urgent; by the
+  time investigation finished `smallchunk10` had already entered `STOPPING` on its own. `smallchunk14` unaffected,
+  healthy at chunk 12/451. No VM launched or killed by this tick. Flagging: if this shape recurs and does NOT
+  self-resolve, escalate to the operator (real vendor-credit double-spend risk).
