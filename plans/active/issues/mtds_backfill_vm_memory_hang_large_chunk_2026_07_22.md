@@ -788,3 +788,28 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
      Linux+real-credentials+real-network repro (Docker or a dedicated profiling VM) is a real, separate time/cost
      commitment beyond a code-level dig. Flagging both hypotheses here, evidence-ranked, rather than guessing further or
      launching another VM without checking in first.
+- **2026-08-09 (slot 5, data_pipeline_failure escalation, DP_VM_STALL `DP-VM-003` on
+  `mtds-backfill-odds-smallchunk10-20260809`, escalation `agt-adfeaf`) — sixth+ recurrence; NOT relaunched, runbook
+  bound already exceeded before this dispatch.** Per `/codex/15-runbooks/incidents/rb_infra_relaunch.md`'s
+  `≤2 relaunches/(vm-prefix, day)` bound, queried `DeploymentsRegistry` for this exact `vm_name` before acting: **3
+  already-archived `failed` attempts for this same prefix earlier TODAY** (2026-08-09), all
+  `SPORTS`/`mtds-backfill`/`full`, all reaped `vm_not_running`:
+  - `52467378-...` started `17:21:07Z` → failed `17:40:02Z` (exit=1)
+  - `b5742639-...` started `07:53:36Z` → failed `13:10:02Z` (exit=125)
+  - `dd4eb45f-...` started `21:33:35Z` → failed `21:50:04Z` (exit=1) — this is the run the DP_VM_STALL alert (12m-stale
+    heartbeat) actually fired against; by the time this escalation was picked up, the reaper had already terminalized it
+    as `failed` and `gcloud compute instances describe` confirmed the VM itself no longer exists (self-cleaned, zero
+    ongoing SPOT billing waste — no stop/delete action needed). Fetched `run.log` for the 3rd attempt (`dd4eb45f`, same
+    GCS path, overwritten per-run): bootstraps cleanly on `e2-highmem-4` / `--chunk-size 5` (both standing mitigations
+    already active per this doc), processes chunk 1's first 2 dates (skip + a real 828-row `EPL` fetch), RSS jumps
+    `787MiB → 10,061MiB` within ~40s of the first real fetch, then the log goes silent with no Python traceback — the
+    same signature this doc has documented for 5+ prior recurrences. **Did not attempt a 4th relaunch**: (a) the bound
+    is already exceeded (3, not ≤2) independent of this dispatch, (b) this is the identical, still-open P1
+    native-memory-leak root cause this doc has tracked since 2026-07-22 with the operational mitigation ladder (bigger
+    machine → smaller chunks) already exhausted per the 2026-07-31 fifth-recurrence entry, and (c) no new fix has
+    shipped since the 2026-08-09 hypothesis-only entry above that would qualify for the runbook's root-cause-diagnosed
+    carve-out. Skipped the authoring-slot ping (`$AUTHORING_SLOT=dp-fleet-monitor`, not a numeric slot id per the role's
+    own skip condition). No code change this session — this is a pure registry-verification + Progress Log entry,
+    consistent with this doc's own precedent for a `data_pipeline_failure` one-shot escalation hitting an
+    already-exhausted mitigation ladder. The P1 root-cause todo below remains the only path to a reliable full-range
+    run.
