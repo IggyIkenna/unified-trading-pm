@@ -79,7 +79,7 @@ semantic change), confirm `check_prosewrap_padding.sh` passes clean afterward, s
 
 ## Todos
 
-- [ ] [BACKEND] P3. Hand-repair the ~27 over-padded continuation lines in
+- [x] ✅ [BACKEND] P3. Hand-repair the ~27 over-padded continuation lines in
       `silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` (lines ~117-155), collapsing each flagged
       line's leading-whitespace run to sane indentation. Verify content-only via `git diff -w` (zero semantic change)
       before shipping. **Done when**: `check_prosewrap_padding.sh --only <path>` passes clean on that file. (repo:
@@ -96,3 +96,9 @@ semantic change), confirm `check_prosewrap_padding.sh` passes clean afterward, s
   the archival's corpus-referrer repoint step hit this precommit block on these 2 files and deferred them rather than
   risk a bulk fix mid-archival. `check_reference_paths.py` confirmed within baseline either way (not a blocking
   regression from leaving these 2 un-repointed).
+- **2026-08-09 (slot 28, backend_engineer) — todo 1 DONE**: hand-repaired all 27 over-padded continuation lines in
+  `silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` (lines 117-125, 127-132, 151-160, 162-163 —
+  894/778/780 leading spaces collapsed to the sibling-line convention of 6). Verified content-only via `git diff -w`
+  (empty output) and zero remaining lines with >=14 leading spaces in the file. `check_prosewrap_padding.sh --only`
+  passes clean. Todo 2 (`uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`) left untouched — out of this
+  task's dispatched scope.
