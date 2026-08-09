@@ -69,17 +69,25 @@ context_scope:
 
 ## Todos
 
-- [ ] [INFRA] P1. **Register the three new QG checkers into PM `scripts/quality-gates.sh` in ONE commit.** Batch-1 todos
-      2, 6 and 7 each deliver a standalone checker plus a proven red/green run but deliberately do NOT wire in — three
-      concurrent todos cannot share one file (CLAUDE.md § Plans: concurrent same-priority todos must touch different
-      files). Add all three invocations here: `check_dispatch_listeners.py` (every dispatched `event_type` has a
-      listener in the resolved target repo), `check_cloudbuild_template_drift.py` (rendered template vs each consumer's
-      committed `cloudbuild.yaml`), `check_no_swallowed_credential_fetch.py` (no `2>/dev/null || true` around a
-      credential fetch). Each must be **baseline-ratcheted** (fails only on NEW violations, per the
-      `doc_reference_baseline.yaml` / `defi_address_citation_baseline.yaml` convention) so the gate does not turn red on
-      day-one pre-existing debt. **Done when**: `bash scripts/quality-gates.sh --no-fix` on PM is GREEN with all three
-      wired, each checker is proven to fail the gate on a synthetic new violation, and the three baselines are
-      committed.
+- [x] ✅ [INFRA] P1. **Register the three new QG checkers into PM `scripts/quality-gates.sh` in ONE commit.** —
+      unified-trading-pm@3ee5039ff (checker wiring, `scripts/quality-gates.sh`) + unified-trading-pm@51808a4a6
+      (forward-ported `_RUN_INIMAGE_QG` guard into `configs/cloudbuild-api-template.yaml` — unblocked a pre-existing
+      fresh cloudbuild-drift regression the new gate would otherwise have caught day-one).
+      `bash scripts/quality-gates.sh --no-fix` ran GREEN on PM at HEAD 3ee5039ff (1851 tests passed, all three new
+      post-gates ✅ at-or-below baseline, 0 accumulated post-gate failures). Each checker's synthetic-new-violation unit
+      test passed (`test_exits_nonzero_on_new_orphan_beyond_baseline`,
+      `test_synthetic_template_lags_repo_case_fails_at_seeded_baseline`,
+      `test_synthetic_new_site_fails_at_seeded_baseline`). Three baselines already committed by batch-1 todos 2/6/7;
+      unchanged by this todo. Batch-1 todos 2, 6 and 7 each deliver a standalone checker plus a proven red/green run but
+      deliberately do NOT wire in — three concurrent todos cannot share one file (CLAUDE.md § Plans: concurrent
+      same-priority todos must touch different files). Add all three invocations here: `check_dispatch_listeners.py`
+      (every dispatched `event_type` has a listener in the resolved target repo), `check_cloudbuild_template_drift.py`
+      (rendered template vs each consumer's committed `cloudbuild.yaml`), `check_no_swallowed_credential_fetch.py` (no
+      `2>/dev/null || true` around a credential fetch). Each must be **baseline-ratcheted** (fails only on NEW
+      violations, per the `doc_reference_baseline.yaml` / `defi_address_citation_baseline.yaml` convention) so the gate
+      does not turn red on day-one pre-existing debt. **Done when**: `bash scripts/quality-gates.sh --no-fix` on PM is
+      GREEN with all three wired, each checker is proven to fail the gate on a synthetic new violation, and the three
+      baselines are committed.
 - [ ] [REVIEW] P1. **Reconcile all 29 todos' source docs.** Each batch-1 todo ends with `Source:` naming one or more
       docs (five todos cite two sources each — the `check_strict_quickmerge` pair, the `full-workspace-sit` pair, the
       cloudbuild-template pair, the fleet version/tag census pair, and the codex `ci-cd-flow.md` todo which cites FOUR).
@@ -168,3 +176,14 @@ context_scope:
   that `deployment-ui` has no open promote PR).
 - **context-scout 2026-08-03**: re-confirmed context_scope (5 entries) unchanged — still matches this doc's own "Codex
   SSOTs" section; no source-code paths added (`_finalize` gate doc, skip-source carve-out).
+- **2026-08-09 — todo 1 done.** Wired all three batch-1 checkers into `scripts/quality-gates.sh` as blocking,
+  baseline-ratcheted post-gates (`unified-trading-pm@3ee5039ff`). Wiring `check_cloudbuild_template_drift.py` first
+  surfaced a genuine over-baseline regression: `client-reporting-api`'s cloudbuild.yaml had locally grown a
+  `_RUN_INIMAGE_QG` in-image-QG-toggle guard (landed via `99171ca`, unrelated concurrent work) that was never
+  forward-ported into the shared `configs/cloudbuild-api-template.yaml` — the exact pattern already proven in
+  `cloudbuild-service-template.yaml`'s own quality-gates step. Since the checker's own baseline-write clamps DOWN only
+  (never raises), the only path to GREEN was fixing the drift, not re-baselining around it — forward-ported it
+  (`unified-trading-pm@51808a4a6`), re-verified the fleet-wide drift scan returned to 0 regressions across all 20
+  consumers, then shipped both as separate commits via one quickmerge call. Full
+  `bash scripts/quality-gates.sh --no-fix` GREEN at HEAD `3ee5039ff` (1851 tests passed, all three new post-gates
+  at-or-below baseline).
