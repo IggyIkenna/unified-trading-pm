@@ -233,3 +233,14 @@ launcher category + run a real dry-run census — the actual delete stays operat
   and the "parked findings always get a durable issue doc" rule this doc satisfies
 - `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3 — the conflict-check protocol behind
   Finding 1 and every "Parked — dependency-gated"/"time-gated" entry above
+
+## Progress Log
+
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — reviewed same-day. This doc is a findings/triage
+  ledger (0 checkboxes of its own by design — every referenced item's actual dispatchable work already lives as a
+  tracked todo in its own named source doc; this doc records only the disposition). No new information surfaced this
+  pass that would change any entry's taxonomy bucket. Cross-referenced against this sweep's own candidate docs: the
+  operator-gated/dependency-gated verdicts recorded here for `footystats_matches_predictions_fetch_gaps_2026_07_08.md`,
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`, and
+  `sports_predictions_live_mode_activation_readiness_2026_07_21.md` were independently confirmed still current when
+  those docs were read directly this pass. Stays `assigned_vm: NA`.
