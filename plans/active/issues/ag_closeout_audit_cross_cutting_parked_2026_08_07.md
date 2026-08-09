@@ -310,3 +310,8 @@ spot per this skill's SKILL.md).
   7 open todos are cross-tranche `asset_group` retag handoffs (ci x5, ui x1, infrastructure x1), each explicitly
   "owning-tranche fix, leave to X tranche's own audit, not this run" -- cross-cutting cannot execute these itself by
   construction.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged): all
+  7 open todos are cross-tranche `asset_group` retag handoffs (ci x5, ui x1, infrastructure x1), each explicitly
+  "owning-tranche fix, leave to X tranche's own audit, not this run" -- cross-cutting cannot execute these itself by
+  construction.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

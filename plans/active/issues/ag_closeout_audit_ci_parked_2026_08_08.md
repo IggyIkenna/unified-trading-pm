@@ -42,6 +42,13 @@ execution_scope: orchestrator-agent
 drift_direction: none
 depends_on: []
 supersedes: ag_closeout_audit_ci_parked_2026_08_07
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
+    /plans/active/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_07.md,
+  ]
 ---
 
 # ag-closeout-audit ci final report — 2026-08-08
@@ -231,3 +238,7 @@ work). Not this audit's to reclassify or archive.
 
 **na-eligibility-audit 2026-08-08** (tranche `ci`): KEEP-NA, valid — confirmed independently: 0 open `- [ ]` todos, doc
 is a prose findings-report (not dispatchable content in its own right), `assigned_vm: NA` correct as-is.
+
+## Progress Log
+
+- **context-scout 2026-08-09**: populated context_scope (4 entries).

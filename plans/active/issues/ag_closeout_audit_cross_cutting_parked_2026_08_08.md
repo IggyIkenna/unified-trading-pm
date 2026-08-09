@@ -272,12 +272,11 @@ ledger.
       exposure, all 4 fix-steps still open. Done when: retagged and the `ui` tranche's audit picks it up with priority
       commensurate with a live P1 security hole.
 - **[SCRIPT] P3. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.**
-      `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership test silently excludes never-cited
-      docs with a non-data `parent_epic`. See the batch doc for the full scoped todo; do not duplicate-dispatch
-      from here.
+  `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership test silently excludes never-cited docs with a
+  non-data `parent_epic`. See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
 - **[DOC] P2. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.**
-      `cross_cutting_consolidated_closeout_2026_07_25.md` is at/near the 1000-line hard cap — line-cap-split it.
-      See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
+  `cross_cutting_consolidated_closeout_2026_07_25.md` is at/near the 1000-line hard cap — line-cap-split it. See the
+  batch doc for the full scoped todo; do not duplicate-dispatch from here.
 - [ ] [OPERATOR] P2. `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` — rule on whether
       `/codex/04-architecture/live-strategy-config-hot-reload.md`'s documented safe-field allow-list/
       `UnsafeConfigChangeError` is the target to BUILD (strategy-service currently ships an unconditional-swap reloader
@@ -307,5 +306,6 @@ ledger.
   tracking the retag + the underlying fix separately).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- same-day filing, reaffirms the
   earlier na-eligibility-audit entry above (unchanged): 2 of 5 open items are cross-tranche retag handoffs
-  (owning-tranche's write, not this one's), 1 is an unruled `[OPERATOR]` design question that alone keeps the
-  whole doc NA, and the remaining 2 (script fix, line-cap split) don't clear the whole-doc bar on their own.
+  (owning-tranche's write, not this one's), 1 is an unruled `[OPERATOR]` design question that alone keeps the whole doc
+  NA, and the remaining 2 (script fix, line-cap split) don't clear the whole-doc bar on their own.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
