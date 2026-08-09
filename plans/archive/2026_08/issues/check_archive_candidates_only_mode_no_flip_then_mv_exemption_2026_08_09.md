@@ -14,7 +14,7 @@ summary: >-
   2026-08-09 while archiving sports_taxonomy_p1_capture_and_contracts_2026_08_08_finalize.md; worked around with a
   temporary `archive_exempt: true` (removed in the follow-up archival commit), but the underlying gap in the check
   script is unfixed and will keep blocking every future single-todo-completing archival commit under this pattern.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -44,8 +44,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-archive_exempt: true
 ---
+
+> **🗄️ ARCHIVED 2026-08-09** — resolved, sole todo closed. Fixed via `unified-trading-pm@a231c2a80`: formally documented
+> `archive_exempt: true` as the sanctioned bridge for the flip-then-mv two-commit archival pattern
+> (`check_archive_candidates.sh` header + `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 1),
+> with regression coverage in `tests/test_check_archive_candidates_flip_then_mv.bats`. This doc's own archival (this
+> commit) is itself an example of the pattern it documents.
 
 # check_archive_candidates.sh --only mode conflicts with the flip-then-mv archival rule
 

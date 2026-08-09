@@ -117,8 +117,8 @@ that mode unconditionally flags ANY staged `plans/active/*.md` doc that reaches 
 not `archive_exempt`, regardless of whether THIS commit is what brought it there. For a doc whose own LAST open todo is
 its own archival trigger, that leaves no legal single commit — the flip-only commit (correct per the rule above) trips
 `--only`'s immediate-archival demand, but doing the `git mv` in that same commit is exactly the banned combination.
-Found live 2026-08-09 archiving `sports_taxonomy_p1_capture_and_contracts_2026_08_08_finalize.md`
-(`check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md`).
+Found live 2026-08-09 archiving `sports_taxonomy_p1_capture_and_contracts_2026_08_08_finalize.md` — see
+`/plans/archive/2026_08/issues/check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md`.
 
 **Fix: set `archive_exempt: true` in frontmatter on the flip-only commit, then drop it as part of the immediately
 following `git mv` archival commit.** No new mechanism — `--only` mode already treats `archive_exempt: true` as a skip
