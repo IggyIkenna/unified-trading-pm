@@ -705,7 +705,10 @@ extraction workspace-wide. Other: operator can type a custom answer.
 
 **Status**: resolved — option A in principle (the KPI re-measure is a bounded numeric re-run, no human needed) — but not
 extracted into a separate batch, since the target date (~2026-07-27) is only a day out and it's the last open item in an
-otherwise-shipped LOCAL plan; the natural trigger is the date arriving. `unified-trading-pm@36c5433eb`.
+otherwise-shipped LOCAL plan; the natural trigger is the date arriving. `unified-trading-pm@36c5433eb`. **CLOSED —
+verified 2026-08-09 (plan_reconciler)**: `ao_fleet_observability_kpis_2026_07_20.md` is `status: complete` and archived
+at `plans/archive/2026_07/` — the deferred dashboard-card follow-up shipped in-plan the next day
+(`agent-orchestrator@efc52fa`, 2026-07-21). No dangling prose-only work here.
 
 ## 25. AO tranche membership — the one covering plan sits outside the Sources list (2026-07-26, ao)
 

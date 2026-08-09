@@ -151,9 +151,14 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
 
 ## Todos
 
-- [ ] [DOC] P3. No action needed on Finding 1 unless/until an operator or the next worker touching either adapter file
-      picks (A) or (B) on the two named issue docs directly — this finding is informational (explains why neither was
-      batched), not itself an actionable task. (repo: unified-trading-pm)
+- [ ] [DOC] P3. **UPDATE 2026-08-09 (plan_reconciler) — the waiting condition has been met, but the deletions themselves
+      have NOT executed yet.** Both named docs got their operator ruling 2026-08-07: option (A) delete, in both cases —
+      `plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md` and
+      `plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`. Neither doc's own
+      delete-todo has been flipped `[x]` yet (both still `- [ ]` as of today) — the ruling exists, the code change does
+      not. This finding's own todo stays informational/non-batchable (it explains why neither was folded into a batch,
+      not a task to fold them), but a future pass should verify the deletions actually landed before treating this as
+      fully closed. (repo: unified-trading-pm)
 - [x] ✅ [SCRIPT] P2. Extend `generate_ag_closeout_audit_candidates.py::_covering_paths()` to resolve the closeout hub
       doc's own frontmatter `depends_on:` (not just each discovered `_finalize` doc's) to real files, unioning them into
       the covering set — same pattern as the existing finalize→main resolution. **Done when**:
