@@ -133,11 +133,41 @@ see the two follow-up todos below):
   operational outcome than today's silent-wrong-bucket bug and would violate the shard-level-failure- isolation
   architecture (`/codex/04-architecture/shard-level-failure-isolation.md`). Full reasoning is inline at each site.
 
+## Progress (2026-08-09, data_engineering slot 23) — todo 1 closed, with a deliberate deviation from the literal text
+
+Todo 1 asked to "add the 33 measured venues to `VENUES_BY_ASSET_GROUP[\"defi\"]`" — but its own verification clause
+("check downstream consumers ... for any code that assumed the smaller (103-venue) set on purpose ... this may be
+additive-only but verify") flagged exactly the trap that clause exists to catch: `VENUES_BY_ASSET_GROUP["defi"]` is NOT
+a static list, it is computed as
+`list(dict.fromkeys(v for v in _ALL_DEFI_VENUES if _DEFI_VENUE_PHASE.get(v) == "live"))` (market_data_categories.py,
+same file) — deliberately narrowed to the IS-producible/"live"-phase subset as the honest-coverage denominator (see that
+key's own comment). All 33 gap venues are `DEFI_VENUE_PHASE == "pipeline"` (confirmed in `defi_venues.py`), i.e. NOT
+IS-producible by design. instruments-service's `test_defi_set_equals_uac_denominator_drift_guard`
+(`tests/unit/test_orchestrator_helpers.py`) asserts EXACT set equality between `VENUES_BY_ASSET_GROUP["defi"]` and
+`_build_defi_venues()` — adding the 33 pipeline venues there would have broken that cross-repo test and silently widened
+the honest-coverage denominator with venues nothing captures yet (the same trap UAC's own
+`test_defi_venues_sushiswap_arbitrum_registration.py:: test_new_venues_excluded_from_defi_denominator` locks down for 2
+of these same 33 venues).
+
+**Actual fix shipped** (`unified-api-contracts@7b96791e`): left `VENUES_BY_ASSET_GROUP["defi"]` untouched (still 103,
+still == the IS-producible set) and instead extended `VENUE_TO_ASSET_GROUP` with a `"defi"` fallback for any
+`ALL_DEFI_VENUES` member not already mapped —
+`VENUE_TO_ASSET_GROUP.update({v: "defi" for v in _ALL_DEFI_VENUES if v not in VENUE_TO_ASSET_GROUP})`. This closes the
+actual root cause (asset-group RESOLUTION for these 33 venues, which is what every `.get(venue, "cefi")`-style call site
+in the "Concrete measured live path" above actually needs) without touching the denominator semantics. Verified:
+`ALL_DEFI_VENUES - VENUE_TO_ASSET_GROUP.keys()` now returns `set()` (was 33); `VENUES_BY_ASSET_GROUP["defi"]` count
+unchanged at 103; `VENUE_TO_ASSET_GROUP` now maps all 135 `ALL_DEFI_VENUES` members to `"defi"`. unified-api-contracts
+full `quality-gates.sh` green on the shipped SHA. Did NOT run instruments-service's own test suite live (env issue in
+this checkout unrelated to this change —
+`ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'`), but the drift-guard test only reads
+`VENUES_BY_ASSET_GROUP["defi"]`, which this change never touches, so it cannot be affected by this diff.
+
 ## Recommended decision
 
-- [ ] [CODE] P2. **Close the UAC registry gap itself**: add the 33 measured venues to `VENUES_BY_ASSET_GROUP["defi"]` in
-      `market_data_categories.py` (`unified-api-contracts/unified_api_contracts/registry/`) so `VENUE_TO_ASSET_GROUP`
-      becomes a complete map over `ALL_DEFI_VENUES`. Re-run the same enumeration this issue doc used
+- [x] ✅ [CODE] P2. **Close the UAC registry gap itself** — `unified-api-contracts@7b96791e`. **Close the UAC registry
+      gap itself**: add the 33 measured venues to `VENUES_BY_ASSET_GROUP["defi"]` in `market_data_categories.py`
+      (`unified-api-contracts/unified_api_contracts/registry/`) so `VENUE_TO_ASSET_GROUP` becomes a complete map over
+      `ALL_DEFI_VENUES`. Re-run the same enumeration this issue doc used
       (`ALL_DEFI_VENUES - VENUE_TO_ASSET_GROUP.keys()`) to confirm it returns empty. Check downstream consumers of
       `VENUES_BY_ASSET_GROUP["defi"]`/`VENUE_TO_ASSET_GROUP` for any code that assumed the smaller (103-venue) set on
       purpose before landing (e.g. EXPECTED_COVERAGE_BY_ASSET_GROUP, capability declarations) — this may be
