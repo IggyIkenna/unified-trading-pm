@@ -65,13 +65,21 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Write `backfill_defi_source_column.py` (copy the existing TradFi template script) to stamp the known
-      historical `source` per `data_type`: most DeFi data_types → `onchain_subgraph`; `oracle_prices` → resolve `pyth`
-      vs. `chainlink` from the existing `pipeline_mode`/path; `native_staking_rates` → `solana_rpc` vs. `helius_rpc`.
-      Idempotent (safe re-run, no duplicate writes). Repo: market-tick-data-service (or wherever the cited TradFi
-      template script lives). Source: `data_source_provenance_enforcement_2026_07_24.md` (backfill-script item). Done
-      when: the script exists, implements the 3 stated per-`data_type` mapping rules, and is verified idempotent on a
-      re-run.
+- [x] ✅ [SCRIPT] P1. Write `backfill_defi_source_column.py` (copy the existing TradFi template script) to stamp the
+      known historical `source` per `data_type`: most DeFi data_types → `onchain_subgraph`; `oracle_prices` → resolve
+      `pyth` vs. `chainlink` from the existing `pipeline_mode`/path; `native_staking_rates` → `solana_rpc` vs.
+      `helius_rpc`. Idempotent (safe re-run, no duplicate writes). Repo: market-tick-data-service (or wherever the
+      cited TradFi template script lives). Source: `data_source_provenance_enforcement_2026_07_24.md` (backfill-script
+      item). Done when: the script exists, implements the 3 stated per-`data_type` mapping rules, and is verified
+      idempotent on a re-run. — **market-tick-data-service@63776a43**. Copied
+      `restamp_tradfi_source_2026_07_07.py`'s mechanism verbatim (blank-`source`+valid-`pipeline_mode` mask, derive via
+      `source_string_for(PipelineMode(...))`) — data_type-agnostic by design, so it needs no hardcoded per-`data_type`
+      table: the 3 named mapping rules (and a 4th unnamed one, `lst_rates` → `onchain_subgraph`/`defillama`) all fall
+      out of the same generic `pipeline_mode` derivation, per the live `SOURCE_PRIORITY` registry
+      (`oracle_prices` → `["pyth_hermes","chainlink","aave"]`, `native_staking_rates` →
+      `["solana_rpc","helius_rpc"]`). Idempotency proven via unit test
+      (`test_apply_twice_is_idempotent_second_run_finds_zero_target_rows`): stamping once then re-deriving the target
+      mask on the stamped output finds 0 rows left to stamp. 13 unit tests added, `quality-gates.sh` green.
 - [ ] [MTDS] P1. Confirm `record_empty_for_shard`/`record_failed_for_shard` in market-data-processing-service's
       `canonical_writer.py` forward a `source` parameter the same way the already-shipped captured-write-path does —
       thread it through if either function currently drops it. Repo: market-data-processing-service. Source:
