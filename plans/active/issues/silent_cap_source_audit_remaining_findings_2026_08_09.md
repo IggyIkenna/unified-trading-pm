@@ -150,15 +150,21 @@ findings.
       per adapter file): proves an error page logs the truncation warning and a genuinely empty page does not. Follow-up
       P3 todo added below for a separate, pre-existing (not part of this finding) dormant AttributeError bug discovered
       in `uniswap_v3_adapter.py` while adding this test coverage.
-- [ ] [SCRIPT] P2. **Instruments-service `first: 100` lending-market discovery caps, no guard.** Three files, ascending
-      real-world risk: `compound_v3.py` (`markets(first: 100)` — lowest risk, Comet deployments are inherently few per
-      chain), `spark.py` (`markets(first: 100, where:     {isActive:true})` — an Aave V3 fork), `aave_v3.py`
+- [x] ✅ [SCRIPT] P2. **Instruments-service `first: 100` lending-market discovery caps, no guard.** Three files,
+      ascending real-world risk: `compound_v3.py` (`markets(first: 100)` — lowest risk, Comet deployments are inherently
+      few per chain), `spark.py` (`markets(first: 100, where:     {isActive:true})` — an Aave V3 fork), `aave_v3.py`
       (`_RESERVES_QUERY_TEMPLATE`, `first: 100,     where: {isActive: true})`). All three currently sit well under 100
       real reserves/markets per chain, but none has a runtime count-check or comment acknowledging the boundary the way
       Kalshi's historical-mode cap does. Repo: instruments-service. Done when: each gains either a `skip` pagination
       loop (mirrors this session's `uniswap_v2.py`/`morpho.py` fixes) OR, if a live schema check confirms `skip` isn't
       supported, a loud warning when `len(results) >= 100` (mirrors this session's `morpho.py` warning-only fix) plus a
-      code comment stating which mitigation was chosen and why.
+      code comment stating which mitigation was chosen and why. — instruments-service@58ede81d: all three query
+      `gateway.thegraph.com` (the same genuine-The-Graph infra already proven to support `skip` in `uniswap_v2.py`/
+      `uniswap_v3.py`, unlike Morpho's unverified first-party API), so each gained a real `while skip <= _MAX_SKIP`
+      (5000, matching the sibling adapters) pagination loop rather than a warning-only mitigation. New regression tests
+      (`test_get_instruments_paginates_past_first_page` in `test_defi_adapters_comprehensive.py` ×2 and
+      `test_spark_metadata.py`) prove a >`_FETCH_LIMIT`-market/reserve universe across a full + short page is fully
+      collected, not truncated. Full quality-gates.sh green (155s).
 - [ ] [CODE] P2. **Raydium REST pagination not wired despite a paged API contract.**
       `instruments_service/reference_data/adapters/defi/raydium.py` `_fetch_active_pools` hardcodes `page="1"` with no
       loop to `page=2,3,…`, even though the endpoint is an explicit `page`/`pageSize` REST API whose response wrapper
@@ -256,6 +262,9 @@ findings.
   follow-up todo for a separate, pre-existing dormant `AttributeError` bug in `UniswapV3Adapter` discovered while adding
   test coverage (not part of the silent-cap finding itself — a field-name/alias mismatch). Remaining todos in this doc
   are still open.
+- 2026-08-09 (slot 24, data_engineering): shipped the `first: 100` lending-market discovery cap todo (compound_v3.py,
+  spark.py, aave_v3.py) — see the todo's own evidence line above for detail. instruments-service@58ede81d, QG green
+  (155s), quickmerge landed + ancestry-verified on origin/live-defi-rollout. Remaining todos in this doc are still open.
 
 ## Codex SSOTs
 
