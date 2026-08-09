@@ -270,20 +270,22 @@ spelling variant survives, which is the entire point of the panel". It does not.
       T-1h/T-10m either); see
       `/plans/active/issues/sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` for the
       generalize-then-retrain follow-up todos. Checkbox stays unflipped until the retrain half lands.
-- [ ] [CODE] P1. **Switch `verify_ml_readiness.py` to the precedented aggregate >=95% pass bar** (operator ruling
+- [x] ✅ [CODE] P1. **Switch `verify_ml_readiness.py` to the precedented aggregate >=95% pass bar** (operator ruling
       2026-08-08), replacing the strict per-day gate that fails near-empty FIFA-international-break days on an exact
-      68.6% floor which is honest absence, not a defect. Prerequisite: the P1/P2 zombie-tick fixes in
-      `/plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md` must land first — re-run and confirm
-      the floor is gone before switching, so the bar change is not masking a real regression. **STILL BLOCKED (confirmed
-      2026-08-09, slot 18)**: the P2 zombie-tick purge cannot land — a NEW blocking issue,
-      `/plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`,
-      found the purge script is structurally forbidden from touching the legacy GCS path the reader actually falls back
-      to and serves the zombie rows from, so `reprocess_sports_odds.py --force` silently no-ops against the real
-      contamination. That issue's own todo 2 ("design + ship the reader/writer reconciliation") is explicitly scoped as
-      "a human/cross-repo design call, not a mechanical fix" and remains `- [ ]` open — this todo cannot switch the gate
-      without violating the operator ruling's own "not masking a real regression" condition until that reconciliation
-      lands and the re-run confirms the floor is gone. Not attempting a unilateral cross-service design fix inline
-      (outside this todo's craft/scope) — leaving open, cross-linked.
+      68.6% floor which is honest absence, not a defect. Prerequisite (the reader/writer reconciliation in
+      `/plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`)
+      confirmed landed since the "STILL BLOCKED (slot 18)" note above was written: that issue's todos 1-4 are all `[x]`
+      — the reconciliation fix shipped, the zombie purge re-ran against all 18 sweep-identified dates, and a re-run of
+      `verify_ml_readiness.py --start-date 2025-09-01 --end-date 2025-11-30` confirmed **the 17-date failure set cleared
+      to 0 FAILED (88/91 passed, gate met: YES)** — the floor is gone, so this gate-switch is not masking a real
+      regression. (A separate, non-blocking P2 downstream gap — 3 dates with missing `odds_features` parquet entirely —
+      is tracked in that issue's own still-open todo, not folded into this evidence.) — features-service@de10c5014:
+      `AGGREGATE_PASS_RATE_THRESHOLD = 0.95` in `ml_readiness_check.py`, gate logic changed from `dates_failed == 0` to
+      `dates_pass_rate >= aggregate_pass_rate_threshold` over evaluated (non-missing) dates,
+      `MLReadinessSummary.dates_pass_rate` field added, `verify_ml_readiness.py` CLI gained
+      `--aggregate-pass-rate-threshold` + report line, 3 new/updated unit tests in `test_ml_readiness_check.py`. Full
+      `quality-gates.sh` green (sentinel `37e8c6602cb7d070128722029c3ef34bddb4c9d2`). Shipped via quickmerge, landed on
+      `live-defi-rollout` — ancestry verified.
 - [x] ✅ [CODE] P1. **Point the ML label lineage at IS `fixtures_outcomes` / `matches`** now that
       `markets`/`outcomes`/`settlements` are retired as phantom declarations (P1). Document the lineage explicitly in
       codex so the next reader does not re-open "why is there no settlements data_type". — features-service@fa67da20:
