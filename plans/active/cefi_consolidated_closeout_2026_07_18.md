@@ -239,9 +239,12 @@ Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
   `plans/archive/2026_07/cefi_completion_program_2026_07_15.md` (archived "honest-done, 50.79% accepted").
 - **The finding (verified 2026-07-18)**: the archival's basis — "the 2.89M-cell gap is not closable at the N=1 Tardis
   ceiling ≈ 1.8 years" — is FALSE. It was a **~350x code-bug throughput collapse** (`run_in_executor(None,…)`
-  default-pool + a date-serial barrier), not a physical ceiling; the gap is **~1-2 days of work at June rates**. **THE
-  THROUGHPUT BUG IS NOW FIXED + MEASURED LIVE** (~14 MB/s on the VM). The doc also flags that "operator accepted 50.79%"
-  may have been INFERRED from the erroneous ceiling verdict, not actually given.
+  default-pool + a date-serial barrier), not a physical ceiling; the gap was **originally estimated ~1-2 days of work at
+  June rates — actual measured reality since diverged sharply (7 VM deaths/preemptions across 12+ days per
+  `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`, still not complete as of that doc's latest entry) — do
+  not cite the original 1-2-day figure as current (corrected 2026-08-09, plan_reconciler)**. **THE THROUGHPUT BUG IS NOW
+  FIXED + MEASURED LIVE** (~14 MB/s on the VM). The doc also flags that "operator accepted 50.79%" may have been
+  INFERRED from the erroneous ceiling verdict, not actually given.
 - [x] ✅ [REVIEW] P0. **RULING (autonomous, within documented intent — /autonomous, 2026-07-18)**: **RE-OPEN the CeFi
       Completion Program + REVERSE the 50.79% acceptance.** Basis (all operator-stated): the archival's premise is a
       verified-false ~350x code-bug, now fixed + measured live; the "accept 50.79%" was inferred, not actually given.

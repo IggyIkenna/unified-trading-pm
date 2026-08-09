@@ -126,13 +126,20 @@ context_scope:
    backfill for ~70 min, verified 3×. The CAS lost-update race is documented in
    `manifest_consolidator_cas_retry_lost_update_race_2026_07_08.md`; redeploy only if a future purge fails to stick.
 
-## Not here (superseded, not deferred)
+## Not here (superseded, not deferred) — ⚠️ STALE, see correction below
+
+> **CORRECTION (2026-08-09, plan_reconciler):** the "operator accept-decision (2026-07-17)" this section rests on was
+> ITSELF reversed the very next day — `cefi_consolidated_closeout_2026_07_18.md`'s Track 1 "RULING (autonomous,
+> 2026-07-18): RE-OPEN the CeFi Completion Program + REVERSE the 50.79% acceptance" — and the Tardis-cap backfill work
+> this section says "do not re-file... as open work" is now the literal subject of the currently-active, P0-priority
+> `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`. Kept below for historical record (why the original framing
+> existed), but do NOT treat "not deferred, do not re-file" as current guidance.
 
 The Tardis-cap backfill work — WS **A** (recent-tail main-venue backfill), **B** (403 re-capture + af=0 census), **F**
 (DERIBIT-COMBO historical `by_date`), **G-tick** (equity-perp tick download), the **final `af=0`/`eu=0` recompute**, and
-the **ConnectionTimeout-storm diagnosis** — is **superseded by the operator accept-decision (2026-07-17)**, not
-deferred. It is only pursuable if the operator later revisits the Tardis licence/scope decision. Do not re-file it as
-open work.
+the **ConnectionTimeout-storm diagnosis** — was **superseded by the operator accept-decision (2026-07-17)**, not
+deferred, AT THE TIME THIS WAS WRITTEN. It is only pursuable if the operator later revisits the Tardis licence/scope
+decision. ~~Do not re-file it as open work.~~ (see correction above — it already has been, via Track 2)
 
 ---
 
