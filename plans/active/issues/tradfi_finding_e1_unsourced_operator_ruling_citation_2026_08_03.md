@@ -35,10 +35,10 @@ related:
   ]
 created: 2026-08-03
 author: unknown
-last_updated: 2026-08-03
+last_updated: 2026-08-09
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.2
@@ -132,15 +132,49 @@ worse than just fixing the citation once the source is confirmed or the decision
       batch-only this cycle per `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md:82`)"
       (`plans/audit/results/tradfi_mvp_cell_wiring_and_pipeline_verification_2026_08_04.md`). Filed as a new
       `[OPERATOR]` todo rather than silently proceeding or silently overriding today's ruling.
-- [ ] [OPERATOR] P1. **Confirm the 2026-08-09 "bridge the gates" ruling still holds given the unproven
-      backfill=paper=live wiring** (see above) — the two gate sites' own code comments were written specifically to
-      block this exact change until that proof lands, and the 2026-08-04 proof audit found none of the 6 tradfi MVP
-      cells have it (TradFi is batch-only this cycle). Options: (a) proceed with the code-level bridge anyway, decoupled
-      from any actual live-order placement (e.g. gates opened but a separate live-trading kill-switch/feature-flag still
-      blocks real execution) — if so, state that decoupling explicitly so an AO todo can be scoped safely; (b) hold the
-      bridge until the paper/live proof lands, superseding today's ruling; (c) confirm today's ruling already accounted
-      for this and should proceed as a full bridge regardless. Not worker-determinable — a live-trading-capability
-      judgment call, not the citation-provenance question the rest of this doc tracks.
+- [x] ✅ [CODE] P1. **RULED 2026-08-09 (operator, 2nd ruling): "Build it, keep the guard active."** Answers the conflict
+      above -- selects option (a): the `NAUTILUS_UNSUPPORTED_VENUES` + UAC-capability-declaration bridging code may be
+      written and merged now (satisfies the earlier 2026-08-09 "bridge the gates" ruling), but it MUST ship gated
+      OFF/inert until backfill=paper=live is separately proven for tradfi
+      (`tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 1, still open per the 2026-08-04 proof audit). Do not
+      remove or bypass the existing runtime guard -- the two 2026-08-03 code comments in
+      `nautilus_compatibility.py`/`_tradfi.py` stay in place until that proof lands. **Mechanism analysis (read before
+      dispatching, per this ruling's own instruction to flag ambiguity rather than guess)**: both existing gate sites
+      are ALLOW-LIST ABSENCE checks, not a separate toggle --
+      `execution-service/execution_service/utils/nautilus_compatibility.py`'s `NAUTILUS_UNSUPPORTED_VENUES` frozenset
+      membership, and `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_tradfi.py`'s
+      absence of `SourceCapability` entries for CME/CBOE/NASDAQ/NYSE/ICE/FX (checked by
+      `manual_instruction_api.py::_get_supported_venues()`; note even "ibkr" itself isn't a `TRADFI_VENUES` key in
+      `execution-service/execution_service/trade_execution/factory.py`, a third gate). Populating these allow-lists
+      **is** the definition of "reachable" for these two gates -- there is no independent boolean layered on top of them
+      that can keep them simultaneously populated and inert. Checked for an existing decoupled guard to hang "gated off"
+      on: `execution-service/execution_service/engine/kill_switch.py` exists, but its
+      `activate()`/`deactivate()`/`is_active()` are GLOBAL (no `asset_group`/venue scoping) -- using it would block ALL
+      live trading, not just tradfi, a materially different (and likely unwanted) blast radius than "keep tradfi gated
+      while other asset groups trade live." **Conclusion: the "keep gated off" mechanism is NOT trivial** -- it requires
+      either (i) a NEW tradfi-scoped feature flag/guard introduced as part of this same bridging work (checked at
+      `factory.py::TRADFI_VENUES` construction or the strategy pre-load path, decoupled from the two allow-lists), or
+      (ii) restructuring the bridge as two stages (populate capability/venue metadata now, gate the actual
+      `factory.py::TRADFI_VENUES` adapter wiring -- the step that makes adapters constructible/routable -- behind a
+      follow-on todo gated on the paper/live proof). Not deciding between (i)/(ii) here -- that's an implementation
+      design call for the AO-dispatched engineer, scoped in the new todo below. Real-money-path order-routing code; not
+      hand-implemented in this pass per this session's own instruction -- reclassified for AO dispatch below.
+- [ ] [CODE] P1. **AO-DISPATCHABLE (per 2026-08-09 2nd ruling above)**: implement the `NAUTILUS_UNSUPPORTED_VENUES` +
+      UAC-capability-declaration bridging for the 6 tradfi venues (CME/CBOE/NASDAQ/NYSE/ICE/FX), decoupled from actual
+      live order placement per the mechanism analysis above -- i.e. populate
+      `execution-service/execution_service/utils/nautilus_compatibility.py` (move the 6 venues out of
+      `NAUTILUS_UNSUPPORTED_VENUES` or otherwise mark them Nautilus-reachable),
+      `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_tradfi.py` (add `SourceCapability`
+      entries for the 6 venues, matching the `_IBKR` entry's shape), AND
+      `execution-service/execution_service/trade_execution/factory.py`'s `TRADFI_VENUES`, but introduce a decoupled
+      guard (tradfi-scoped feature flag or a staged/gated `TRADFI_VENUES` wiring -- see design options (i)/(ii) above,
+      worker's call which to implement, document the choice in the Progress Log) so tradfi live order placement stays
+      structurally blocked until `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 1 (backfill=paper=live
+      proof) closes. Update the 2026-08-03 code comments in both gate files to reflect the new state
+      (bridged-but-guarded, cite this todo) rather than deleting them. **Do not remove the existing
+      `NAUTILUS_UNSUPPORTED_VENUES`/capability-absence guard outright** -- the new guard must independently block live
+      execution even after these allow-lists are populated. Needs its own code review given the live-money-path blast
+      radius; scope to execution-service + unified-api-contracts only (no service→service dep).
 
 ## Progress Log
 
@@ -182,3 +216,23 @@ worse than just fixing the citation once the source is confirmed or the decision
   is not safely bounded until this conflict is resolved (dispatching an unattended bridge of a live order-routing gate
   while its own precondition is unmet would be exactly the kind of silent-regression risk `task_template.md` finding V
   warns about). Doc stays `assigned_vm: NA`.
+- **RULED 2026-08-09 (operator, 2nd ruling)**: "Build it, keep the guard active." Resolves the conflict flagged above --
+  selects option (a) from the prior todo's branching (proceed with the code-level bridge, decoupled from live order
+  placement). Read both existing guard sites (`execution-service/execution_service/utils/nautilus_compatibility.py`,
+  `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_tradfi.py`) plus
+  `factory.py::TRADFI_VENUES` and `execution-service/execution_service/engine/kill_switch.py` before deciding how to
+  keep it inert, per this session's own instruction not to guess if the mechanism is non-trivial. **Found it IS
+  non-trivial**: both existing gates are allow-list-absence checks (a venue's membership/non-membership IS the
+  reachability signal), not a scalar toggle -- so "bridge the gates" and "keep it gated off" are in tension unless a NEW
+  decoupled guard is introduced. The one existing candidate (`kill_switch.py`) is a GLOBAL kill-switch (no
+  asset_group/venue scoping) -- reusing it would block all live trading fleet-wide, not just tradfi, a different and
+  likely-unwanted blast radius. Documented two implementation-design options (new tradfi-scoped feature flag vs. a
+  staged/gated `TRADFI_VENUES` wiring) in the new todo above rather than picking one myself -- that's an implementation
+  call for the AO-dispatched engineer, not a citation-provenance or operator-gating question. Retagged the resolved todo
+  `[OPERATOR]` -> `[CODE]` and flipped it done (the question is answered); filed the actual bounded engineering work as
+  a new `[CODE]` P1 todo. **Reclassified `assigned_vm: NA` -> `planning`** (+ `execution_scope: local-only` ->
+  `orchestrator-agent`) so AO can pick up the now-safely-scoped bridging work -- did NOT hand-implement the
+  order-routing code myself (real-money-path change, needs its own AO-dispatched implementation
+  - review, per this session's explicit instruction). This is an issue doc under `plans/active/issues/`, not scanned by
+    `check_finalize_plan_coverage.py`, so no finalize-plan companion is needed for this reclassification (precedent:
+    `aws_codebuild_terraform_import_pending_2026_07_22.md`).
