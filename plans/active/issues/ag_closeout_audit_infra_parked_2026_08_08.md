@@ -184,14 +184,24 @@ orphaned_never_touched, 1 orphaned_partial_coverage, 0 conflict-clear-bounded, 0
       `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md`** from `[infrastructure]` to
       `[defi, infrastructure]` or bare `[defi]` (finding 22) — recommendation B, not acted on given low confidence; a
       human content read would settle it faster than another audit pass.
-- [ ] [DOCS] P3. **Flip the stale checkbox on
-      `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`'s item 1** citing
-      `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s 2026-08-07 17:26Z evidence (finding 21) — a mechanical
-      stale-checkbox correction for whoever next touches that doc (defi tranche's own audit or `/plan-reconcile`), not
-      infra's file to write.
+- [x] ✅ [DOCS] P3. **DONE 2026-08-09 (stale-check re-verify, KEEP-NA staleness pass).** Flipped the stale checkbox on
+      `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`'s item 1, citing
+      `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s 2026-08-07 17:26Z evidence (finding 21) —
+      `unified-trading-pm@f0f31575378191a457a95f3e53e5a34a0eefbcf7`. Note: the 2026-08-09 `/ag-closeout-audit infra`
+      run's own successor report (`ag_closeout_audit_infra_parked_2026_08_09.md`, finding 7) re-read the source doc's
+      latest prose and concluded it had "evolved further" rather than closed — that read missed
+      `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s own dated completion evidence (the 09:17Z dispatch-#7 failure
+      it saw was superseded by a later same-day success at 17:26Z). The flip above is correct per the direct evidence,
+      not a mechanical pointer handoff.
 
 ## Progress Log
 
+- **stale-check re-verify 2026-08-09 (infra tranche, KEEP-NA staleness re-check)**: flipped todo 4 (the
+  defi_gas_fees_legacy_purge stale-checkbox pointer) — the underlying fix was applied directly with real evidence
+  (`unified-trading-pm@f0f31575378191a457a95f3e53e5a34a0eefbcf7`). The doc's other 3 open items (findings 12, 13, 22 —
+  self_dispatched_orphan_count tooling, CITE_RE scoping, low-confidence defi retag) remain genuinely open, independently
+  reconfirmed unchanged by the 2026-08-09 `/ag-closeout-audit infra` successor run
+  (`ag_closeout_audit_infra_parked_2026_08_09.md`). This doc is not an ARCHIVE candidate (3 items still open).
 - **2026-08-08** — `/ag-closeout-audit infra` run (autonomous mode, scheduled daily run, slot 3, dispatch agt-50ee67).
   Phase 0: re-derived covering set (10 covering docs incl. the dependency-graph-only
   `infra_capture_and_devops_leftovers` pair; 48 members, 10 never-cited, up from 08-07's 7 mainly due to 2 covering docs
