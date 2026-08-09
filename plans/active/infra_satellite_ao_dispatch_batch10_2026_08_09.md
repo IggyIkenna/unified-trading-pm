@@ -143,13 +143,13 @@ their own. This batch extracts exactly those sub-items, leaving each source doc'
       current fleet of launchers (a fresh baseline if needed), and fails on a synthetic unregistered-launcher test case.
       Source: `issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md` (the `[SCRIPT] P2` todo, filed
       2026-08-08 off operator item-78's ruling). (repo: deployment-service, unified-trading-pm for the codex doc)
-- [ ] [INFRA] P2. **Find what writes `manifest-consolidate-*` scratch to the orchestrator VM and stop it, or give it a
-      reaper.** Per `/codex/05-infrastructure/manifest-consolidator-ssot.md` the manifest consolidator runs on Cloud Run
-      / Batch-Fargate, NOT a VM — scratch of this shape (`duckdb_temp_storage_DEFAULT-*.tmp` spill files + intermediate
-      `shards/*.parquet` + a `legacy_seed/` dir) should never accumulate on the orchestrator box, and nothing currently
-      owns cleaning it (175G across 3 dirs found + manually removed 2026-08-08; agents can DETECT but not autonomously
-      clear this — `block_destructive_commands.py` correctly refuses recursive `rm` regardless of reversibility, so this
-      needs automation, not another manual find-and-delete). Either (a) find what actually writes
+- [x] ✅ [INFRA] P2. **Find what writes `manifest-consolidate-*` scratch to the orchestrator VM and stop it, or give it
+      a reaper.** Per `/codex/05-infrastructure/manifest-consolidator-ssot.md` the manifest consolidator runs on Cloud
+      Run / Batch-Fargate, NOT a VM — scratch of this shape (`duckdb_temp_storage_DEFAULT-*.tmp` spill files +
+      intermediate `shards/*.parquet` + a `legacy_seed/` dir) should never accumulate on the orchestrator box, and
+      nothing currently owns cleaning it (175G across 3 dirs found + manually removed 2026-08-08; agents can DETECT but
+      not autonomously clear this — `block_destructive_commands.py` correctly refuses recursive `rm` regardless of
+      reversibility, so this needs automation, not another manual find-and-delete). Either (a) find what actually writes
       `manifest-consolidate-*` on the orchestrator VM (something running the consolidator locally, or a VM-side helper
       spilling there) and stop/fix it at the root, or (b) if a legitimate VM-side spill is unavoidable, build a TTL
       reaper (delete any `manifest-consolidate-*` dir older than 48h with zero holding process — `lsof +D` clean — same
@@ -161,7 +161,33 @@ their own. This batch extracts exactly those sub-items, leaving each source doc'
       discovery), removed 2026-08-08 (root disk went 533G/145G free 79% → 359G/319G free 54%). Source:
       `issues/shared_host_home_filesystem_full_2026_07_26.md` § "Orphaned manifest-consolidator scratch on the
       orchestrator VM" (`[INFRA] P2` todo, filed 2026-08-08). (repo: identify the writer first — likely
-      agent-orchestrator or a deployment-service VM script)
+      agent-orchestrator or a deployment-service VM script) **DONE 2026-08-09** — `unified-trading-pm@b277df233`.
+      Root-caused (a): the sole in-repo writer of the `manifest-consolidate-` prefix is `unified-trading-library`'s
+      `_duckdb_merge_payload` (`tempfile.TemporaryDirectory(prefix="manifest-consolidate-")`), which per
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` runs ONLY inside the ephemeral per-AG Cloud Run Job —
+      confirmed via `deployment-service/scripts/recovery/relaunch_consolidator.py`, the sole re-execute path, which
+      re-runs the Cloud Run Job via the GCP SDK and never invokes the merge code locally. No deterministic in-repo bug
+      produces a host-side accumulation; the historical path
+      (`/home/ubuntu/tmp/manifest-consolidate-{eph5a0bh,1g6s1s8z,zuntwmoh}`, per the source doc) implies a one-off
+      manual/local invocation with `TMPDIR` pointed at a home-dir scratch path (the same tmpfs-avoidance idiom
+      `cleanup-stale-qg-tmp.sh`'s own precedent fix established for `shared_host_tmp_tmpfs_exhaustion_2026_07_08`) — not
+      a recurring writer to patch at the source, so (b) is the correct resolution path. Shipped a TTL reaper pair
+      (`scripts/dev/cleanup-stale-manifest-consolidate-tmp.sh` + its cron installer), mirroring
+      `cleanup-stale-qg-tmp.sh`'s proven liveness-check pattern (48h age threshold via `-mmin`). **Caught + fixed a real
+      bug during this session's own synthetic-trigger verification**: an `lsof +D`-based liveness check (the todo's own
+      suggested mechanism) exits non-zero on this host even when it DOES find an open fd, because of an unrelated
+      `tracefs`-stat WARNING that makes `lsof` report its own output "incomplete" — this would have silently swept
+      genuinely-live scratch had it shipped. Switched to `fuser`-based liveness (the SAME primary mechanism
+      `cleanup-stale-qg-tmp.sh` already uses), re-verified: a stale (old-mtime, no holder) synthetic dir is removed, a
+      live (old-mtime, open-fd-held) synthetic dir is skipped until the fd closes, a fresh (recent-mtime) synthetic dir
+      is never touched regardless of holder. Dry-run against the real host roots (`/tmp`, `~/tmp`) confirms zero false
+      positives on current state (0 `manifest-consolidate-*` dirs exist anywhere on this host right now). **Cron
+      installation is an explicit operator action**, not run by this worker session — this host's crontab spool isn't
+      writable from a worker's sandboxed session (`crontab -l` → `Permission denied`; confirmed this is consistent with
+      `cleanup-stale-qg-tmp.sh`'s OWN installer doc header, "Operator runs this ONCE per host" — the same convention,
+      not a new gap this todo introduces). Operator follow-up (one command, one-time):
+      `bash unified-trading-pm/scripts/dev/install-cleanup-stale-manifest-consolidate-tmp-cron.sh` from the root PM
+      clone.
 - [ ] [INFRA] P3. **Add a free-space alert for the orchestrator VM root.** Both the 2026-06-28 full-disk wedge (which is
       why `setup-tab-worktrees.sh` carries a slot cap at all) and the 2026-08-08 175G `manifest-consolidate-*` find (see
       the todo above) were caught by a human looking at the disk, not a monitor. Add a standing free-space alert on the
@@ -202,3 +228,10 @@ independently conflict-checked against the full active corpus with zero competin
   `vm_launcher_prefix_registration_baseline.yaml` per the todo's own "fresh baseline if needed" allowance; only a
   brand-new unregistered launcher fails the check outright going forward. Todos 2-3 remain open (untouched, different
   files, no conflict).
+- **2026-08-09 (slot 33)** — Todo 2 shipped: `unified-trading-pm@b277df233`. Root-caused the writer (the Cloud Run Job's
+  own merge step; no in-repo recurring bug, historical evidence points to a one-off manual local invocation) and shipped
+  a TTL reaper mirroring `cleanup-stale-qg-tmp.sh`'s pattern. Caught + fixed a real liveness-check bug (`lsof +D`
+  false-negatives on this host) during synthetic-trigger verification before shipping — see the todo's own evidence
+  block for the full account. Cron install left as an explicit operator follow-up (worker sessions lack crontab spool
+  write access on this host, same as the qg-tmp precedent). Todo 3 (free-space alert) remains open, different files, no
+  conflict.
