@@ -287,3 +287,8 @@ captured rows). The ~29-day stall is broken; live capture resumed same-day as la
   2 still open) — all three consistent, no drift. Left unchecked; not reclassified. Doc stays NA.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-09 (prediction tranche)**: KEEP-NA-STALE-DUPLICATE, re-verified — unchanged since the
+  2026-08-07 marker (only intervening commit is today's context-scout refresh). The sole open item (Kalshi
+  paper-order-flow end-to-end verification) remains correctly duplicate-tracked at
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5, itself gated on
+  `kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`'s `BLOCKED-OPERATOR-DECISION` item. Doc stays NA.

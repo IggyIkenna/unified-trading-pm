@@ -207,3 +207,8 @@ in the deployment-ui panel; the sentinel fan-out is verified to emit honest 0% r
   archived by this pass — `locked_by: live-defi-rollout` (`locked_since: 2026-06-20`) blocks archival per CLAUDE.md's
   plan-completion-and-archival-discipline HARD RULE (`[unlock-plan]` requires an explicit operator ask, never
   autonomous). Flagging for the next operator-present session to unlock + archive.
+- **na-eligibility-audit 2026-08-09 (prediction tranche)**: ARCHIVE CANDIDATE, re-confirmed — 0 open todos (11/11 done),
+  unchanged since this morning's staleness re-check. `locked_by: live-defi-rollout` (`locked_since: 2026-06-20`) still
+  blocks autonomous archival — `[unlock-plan]` requires an explicit operator ask, not taken autonomously by this
+  scheduled dispatch. Flagging again in this run's final report for operator action. Doc stays NA (blocked-archival, not
+  a reclassify).

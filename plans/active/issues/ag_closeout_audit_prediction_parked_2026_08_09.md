@@ -238,3 +238,11 @@ covers 3a+3b before treating the residual as fully closed.
   non-batchable, parked as Findings 1-4 above. 1 fresh checkbox-provenance concern (Finding 5) flagged, not acted on
   (would risk a duplicate-dispatch collision if wrong). parked_findings ledger: 5 findings this doc == 5 entries written
   above. Balanced.
+
+- **na-eligibility-audit 2026-08-09 (prediction tranche)**: KEEP-NA, valid — first audit pass (doc created today). 5
+  open `[DOC] P3` items: 3 are informational watch-items gated on external/operator decisions (Finding 1 = operator
+  decision pending among 3 options; Finding 3 = re-check when `sports_master:Group E` clears; Finding 4 = `infra`/`ci`
+  tranche scope, not this tranche's to fix), 1 is a closeable-once-dependent bookkeeping note (Finding 2, folds into
+  `batch10_finalize`), 1 is a genuine bounded verification task (Finding 5: confirm `instruments-service@62a8b1d8`
+  covers fixture-pairing parts 3a/3b). The mix of externally-gated items means the whole-doc RECLASSIFY bar is not
+  cleared — one bounded item among several genuinely-gated ones does not flip a whole doc. Doc stays NA.

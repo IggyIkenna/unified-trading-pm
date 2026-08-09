@@ -186,3 +186,9 @@ Two directions, both viable, not adjudicated by this doc:
   verification path") is not yet mirrored into batch6 todo 5, which as of its own last update still shows the
   pre-ruling, unresolved question — a sync gap for whichever pass next touches batch6. Doc stays NA.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-09 (prediction tranche)**: KEEP-NA-STALE-DUPLICATE, re-verified — the `[DATA] P1` item
+  stays `BLOCKED-OPERATOR-DECISION`, still correctly duplicate-tracked at
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 (confirmed still
+  `assigned_vm: planning`/`status: active`, todo 5 still open). The 2026-08-07 marker's flagged sync-gap (the 2026-08-06
+  "no live order, find a non-live path" ruling not yet mirrored into batch6 todo 5) is still unresolved — not this doc's
+  fix to make (batch6 is its own owner's file). Doc stays NA.

@@ -300,3 +300,10 @@ paired `_finalize` sibling will show the same gap; prediction is a confirmed liv
   `tests/unit/test_generate_ag_closeout_audit_candidates.py`. Doc stays NA.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **na-eligibility-audit 2026-08-09 (prediction tranche)**: KEEP-NA, valid — re-verified, 1 open, unchanged since the
+  2026-08-07 marker (only intervening commit is today's context-scout refresh, no content change). Finding 1's
+  `[DOC] P3` item remains informational-only; today's sibling `/ag-closeout-audit prediction` run's own parked-findings
+  doc (`ag_closeout_audit_prediction_parked_2026_08_09.md` Finding 2) independently confirms Finding 1's wait-condition
+  on the 2 linked adapter dead-code docs is now satisfied (both operator-ruled DELETE 2026-08-07, extracted to
+  `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` todos 3/4) but folds the reconciliation into
+  `batch10_finalize` rather than this doc directly. Doc stays NA.

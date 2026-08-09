@@ -132,3 +132,9 @@ to confirm the doc is back under the soft cap (not just barely under the hard ca
   (the 5→3 open-item drop since then was two unrelated closures via batch4's 2026-08-07 finalize, not new
   na-eligibility-audit work).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-09 (prediction tranche)**: KEEP-NA, valid — re-verified, 1 open, unchanged. The source
+  doc (`prediction_cross_venue_arb_and_coverage_2026_07_24.md`) is now 1009 lines (was 999 on 2026-08-08) — WORSE, not
+  better, due to today's batch9 extraction annotations adding lines rather than removing them — underscoring this doc's
+  own remediation is still needed. `prediction_satellite_ao_dispatch_batch8_2026_08_08.md`'s extraction todo remains
+  `status: active` (operator-approved 2026-08-08) but not yet executed. Doc stays NA; this run wrote its own marker onto
+  the source doc via the documented SCOPED-mode append exception (0 deletions, <10 lines, no checkbox touched).

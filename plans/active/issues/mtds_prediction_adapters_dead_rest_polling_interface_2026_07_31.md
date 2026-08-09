@@ -147,3 +147,9 @@ Not adjudicated here (genuine judgment call on scope, not auto-resolved):
 - **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: RULED — delete (option
   A). See Todos section above for the full ruling + rationale.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-09 (prediction tranche)**: KEEP-NA — re-verified, 1 open. Same shape as the sibling
+  `is_polymarket_dead_fixture_cross_reference_2026_07_31.md`: the 2026-08-07 operator ruling (DELETE, option A) makes
+  this bounded in isolation, but today's sibling `/ag-closeout-audit prediction` run already extracted this exact
+  deletion into `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` todo 4 (`status: draft`, verbatim source
+  citation), gated for reconciliation via `batch10_finalize`. Not independently reclassified — would create a duplicate
+  AO-dispatch surface. Doc stays NA pending batch10's operator-approved dispatch + execution.
