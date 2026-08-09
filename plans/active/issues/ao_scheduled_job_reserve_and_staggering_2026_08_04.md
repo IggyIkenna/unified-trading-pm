@@ -391,10 +391,11 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       `tuning.watchdog_scheduled_heartbeat_timeout` (3600s) for scheduled/one_shot workers, resolved via the SAME
       `find_active_agent_for_session` lifecycle lookup `health.py` already uses for its 25-min stale-flip exemption, so
       the two stay in lockstep. A frozen pane past the bar is still reaped and tmux_pruner's `has_session` sweep still
-      catches dead sessions — neither carve-out removes a safety net. Operator ruling 2026-08-08 ("scheduled tasks
-      should be raised to 60 mins, and add an `_is_actively_thinking` guard"; VM-waiters may wait as long as they are
-      looping). Evidence: `quality-gates.sh` green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262
-      vitest. (repo: agent-orchestrator)
+      catches dead sessions — neither carve-out removes a safety net. Operator ruling 2026-08-08 (recorded in this doc,
+      `ao_scheduled_job_reserve_and_staggering_2026_08_04.md`, this Progress entry — "scheduled tasks should be raised
+      to 60 mins, and add an `_is_actively_thinking` guard"; VM-waiters may wait as long as they are looping). Evidence:
+      `quality-gates.sh` green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262 vitest. (repo:
+      agent-orchestrator)
 - [x] ✅ [CODE][OPERATOR] P1. **Planning-worker capacity 8 → 12 without touching either reserve; fleet-cap off-by-one
       fixed; slot guard made capacity-derived.** Three linked changes, all live on the central VM 2026-08-08. (a)
       **Off-by-one** (agent-orchestrator@665e5d0c9): `_apply_fleet_cap` clamped to `len(non_review_slots) - reserve`,
@@ -418,9 +419,10 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       free). Orchestrator restarted → `seed_worker_slots_from_tabs: registered 19 worker slot(s)`. **Verified live**:
       `AutoSpawn fleet cap: configured=15 CLAMPED to 12 by slot arithmetic (configured_slots=19 - reserve=7 [ci=3 +     scheduled=4])`.
       Reserves shift automatically with the fleet (they are the highest-numbered N slots): CI/data- pipeline now 18-20,
-      scheduled now 14-17, backlog pool 2-13. Disk 54% / 318G free after. Operator ruling 2026-08-08. Evidence:
-      `quality-gates.sh` green — 2684 python (2 new), basedpyright 0/0, tsc clean, 262 vitest. (repo:
-      agent-orchestrator, unified-trading-pm)
+      scheduled now 14-17, backlog pool 2-13. Disk 54% / 318G free after. Operator ruling 2026-08-08 (recorded in this
+      doc, `ao_scheduled_job_reserve_and_staggering_2026_08_04.md`, this Progress entry). Evidence: `quality-gates.sh`
+      green — 2684 python (2 new), basedpyright 0/0, tsc clean, 262 vitest. (repo: agent-orchestrator,
+      unified-trading-pm)
 - [x] ✅ [CODE] P1. **All 8 timer installers converted to `systemd --user` — the re-install below is the LAST one that
       needs sudo** — agent-orchestrator@c3a85c3b4. Root cause of this todo being `[OPERATOR]` at all was WHERE the
       installers wrote (`/etc/systemd/system`, `/usr/local/bin`), never what they did: the dispatch scripts only
@@ -436,16 +438,20 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       vitest; `bash -n` clean on all 9 files. Codex SSOT `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`
       updated (its "re-run `sudo bash …`" HARD RULE was made wrong by this change). (repo: agent-orchestrator)
 - [ ] [OPERATOR] P1. **RE-INSTALL ALL SEVEN timer units on the orchestrator VM — nothing from the 2026-08-06 slot-3
-      batch is live until this runs.** `sudo bash scripts/install-<each>-timer.sh` for all 7. The earlier re-install
-      todo above IS done, but it ran at 15:04 UTC — BEFORE agent-orchestrator@5f15d0a (16:21, shard + Saturday) and
-      @4a77bfe (17:00, shared guard + `ui` + UTC day-check). A `git pull` does not regenerate an installed systemd unit
-      or the script in /usr/local/bin, so right now the repo is correct and the live fleet still runs the OLD dispatch
-      scripts. Concretely still-not-live: the `ui` tranche does not dispatch (verified 2026-08-06 17:15 via
-      `scripts/orchestrator/check-scheduled-job-health.sh runs` — 9/9 tranches, no `ui`); a run that dies mid-flight
-      still blocks its own same-day retry; plan-reconciler still runs unsharded. Each installer now also copies
-      `scripts/scheduled_job_already_ran.py` to /usr/local/bin, so a PARTIAL re-install is fine (the file is identical
-      from whichever installer writes it last) but a ZERO re-install leaves every fix inert. `[OPERATOR]` because it
-      needs sudo on the VM. (repo: agent-orchestrator)
+      batch is live until this runs.** `bash scripts/install-<each>-timer.sh` (NO `sudo` — **corrected 2026-08-09,
+      plan_reconciler agt-fe4564**: as of the `[x]` todo directly above, these installers now write `systemd --user`
+      units and their own `user-timer-env.sh` preamble hard-ERRORS if invoked under `sudo`; verified live against that
+      script and against `codex/04-architecture/agent-orchestrator-scheduled-jobs.md`'s current "NO sudo" section) for
+      all 7. The earlier re-install todo above IS done, but it ran at 15:04 UTC — BEFORE agent-orchestrator@5f15d0a
+      (16:21, shard + Saturday) and @4a77bfe (17:00, shared guard + `ui` + UTC day-check). A `git pull` does not
+      regenerate an installed systemd unit or the script in /usr/local/bin, so right now the repo is correct and the
+      live fleet still runs the OLD dispatch scripts. Concretely still-not-live: the `ui` tranche does not dispatch
+      (verified 2026-08-06 17:15 via `scripts/orchestrator/check-scheduled-job-health.sh runs` — 9/9 tranches, no `ui`);
+      a run that dies mid-flight still blocks its own same-day retry; plan-reconciler still runs unsharded. Each
+      installer now also copies `scripts/scheduled_job_already_ran.py` to /usr/local/bin, so a PARTIAL re-install is
+      fine (the file is identical from whichever installer writes it last) but a ZERO re-install leaves every fix inert.
+      `[OPERATOR]` because it runs on the VM under the operator's own user account (no agent has an interactive shell
+      there). (repo: agent-orchestrator)
 - [ ] [DATA] P2. Verify agent-orchestrator@4a77bfe actually went green. As of 2026-08-06 17:09 its LDR
       `Deploy Dashboard (Firebase Hosting)` run (31121770442) had been **queued 8+ minutes with no runner**, and the
       three preceding LDR runs of that same workflow all ended `cancelled` at 10-23min — consistent with
