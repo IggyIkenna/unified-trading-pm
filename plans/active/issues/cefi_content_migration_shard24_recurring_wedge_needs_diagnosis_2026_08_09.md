@@ -144,3 +144,23 @@ not `2026-01-07`.
   todo's done-when didn't anticipate. Closing the batch12 todo per its own stated logic (relaunch action already taken
   by another agent, so no duplicate launch from that todo); tracking the actual remaining work (a correctly-checkpointed
   4th attempt + wedge diagnosis if it recurs) here instead.
+- **2026-08-09 21:38Z (slot-9, infra)**: Launched todo 1's 4th checkpoint-resumed attempt:
+  `canonical-migration-cefi-content-apply-20260809-213834` (asia-northeast1-c), verified
+  `RESUME_START_DATE=2026-01-08 RESUME_END_DATE=2026-01-15 RESUME_ASSET_GROUP=cefi-content-apply RESUME_SHARD_OF=1 RESUME_SHARD_INDEX=0`
+  in the launch-time `LAUNCH_PARAMS.json` (correctly resumes from the day AFTER `-133746`'s
+  `last_completed_date=2026-01-07`, not a replay). STARTED confirmed <60s (RUNNING immediately after
+  `gcloud compute instances create` returned). Progress confirmed genuine and ongoing at multiple checkpoints: T+8min
+  5000/85086 files (~10 files/sec), T+15min 7200/85086 files (~9.7 files/sec, `patched=174` — real writes happening, not
+  just already-canonical skips). The tool's own "possible wedged worker" WARNING fires repeatedly even during this
+  confirmed-healthy run (same as the source doc's `-032606`/`-133746` observation) — confirms that warning alone is NOT
+  a reliable wedge signal on its own; only a genuine LOG-LINE STALL (no new `Progress:` line across multiple poll
+  windows) or VM disappearance would indicate a real repeat-wedge. **Todo 1 is NOT yet done** — its own done-when
+  requires a T+90min checkback (completion, active progress past 2026-01-08, or a repeat wedge); at time of this entry
+  the run is only ~15min in. A background watcher (bounded 90min, checks every 10min, exits early on 3 consecutive
+  stalled polls or VM disappearance) is armed to catch a genuine wedge without requiring a human to babysit it; the
+  todo's own checkbox stays unflipped until that verification completes. If this session ends before the watcher
+  reports, the next session (or the operator) should check
+  `gcloud compute instances describe canonical-migration-cefi-content-apply-20260809-213834 --zone=asia-northeast1-c`
+  (RUNNING vs NOT_FOUND) and tail
+  `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-content-apply-20260809-213834/run.log`
+  for the current `Progress:` line before deciding completion vs. a 5th relaunch is warranted.
