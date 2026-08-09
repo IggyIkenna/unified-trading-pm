@@ -11,7 +11,7 @@ summary: >-
   defi_catalog_engine_config_key_contract_drift_2026_07_23.md's RULED todo. This plan wires those numbers into the
   catalog builder and builds the real translation layer so both archetypes produce live AtomicInstruction output and
   RecursiveLoopOrchestrator gets its first real caller.
-status: active
+status: complete # archived 2026-08-09 — all 8 todos done, unlocked; 6-step ritual run
 nature: process
 asset_group: [defi]
 stage: [strategy]
@@ -41,7 +41,7 @@ sequential: true
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: recursive_loop_orchestrator_wiring_finalize_2026_08_09
 resolved_by:
 source: >-
   Operator ruling 2026-08-09 on defi_catalog_engine_config_key_contract_drift_2026_07_23.md's DRAFT PROPOSAL, followed
@@ -66,6 +66,21 @@ context_scope:
 ---
 
 # Wire RecursiveLoopOrchestrator — LTV/depth params + real translation layer
+
+> **✅ ARCHIVED 2026-08-09 — COMPLETE.** All 8 todos shipped and independently re-verified (commits confirmed ancestors
+> of `origin/live-defi-rollout`, full `quality-gates.sh` re-run green on all 3 touched repos): both Family 1/2
+> archetypes now build real `AtomicInstruction` output via `CarryRecursiveStakedEngine.on_tick()`, and
+> `RecursiveLoopOrchestrator` has its first production caller
+> (`execution-service/algo_library/recursive_loop_runner.py`). Todo 6's evidence was reconciled into the source issue
+> doc's `[DESIGN]` todo (`/plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`, flipped
+> `[x]`). Both codex archetype SSOTs
+> (`/codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md`,
+> `/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md`) updated `implementation_status: design` →
+> `code-shipped` with the shipped-commit trail. Todo 7's audit found no suitable existing poller for
+> `PerpHedgeSizer.compute_rebalance()`/`.compute_margin_topup()`; that open decision continues as its own `[DESIGN]`
+> todo on the finalize companion (below), which stays `active` until it's resolved. Archived via the standard 6-step
+> ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). Successor/companion:
+> `/plans/active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`.
 
 ## Background
 
