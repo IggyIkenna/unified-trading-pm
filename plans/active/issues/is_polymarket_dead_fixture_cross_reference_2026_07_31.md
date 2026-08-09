@@ -15,6 +15,7 @@ summary: >-
   the codebase is `_build_sports_id()`'s own docstring, which explicitly calls it "the unused, network-dependent
   `_cross_reference_fixture()`" and states it was deliberately left unwired for capture-throughput reasons.
 status: open
+archive_exempt: true
 nature: issue
 asset_group: [prediction]
 stage: [data]
@@ -126,12 +127,12 @@ Not adjudicated here:
 
 ## Todos
 
-- [ ] [BACKEND] P2. **RULED 2026-08-07 (operator) — DELETE (option A).** Operator's rationale: prediction markets should
-      get fixture availability from the canonical manifest/GCS-objects path (the shipped `PredictionFixtureResolver`
-      mechanism), not direct API-Football calls — consistent with this doc's own finding that the live mechanism already
-      covers this. Delete `PolymarketReferenceDataAdapter._cross_reference_fixture()` + `_fixture_cache` + the
-      `api_football_api_key` constructor param + `factory.py`'s `af_key` threading + the dedicated test class
-      (`TestCrossReferenceFixture`). (repo: instruments-service)
+- [x] ✅ [BACKEND] P2. **RULED 2026-08-07 (operator) — DELETE (option A).** Operator's rationale: prediction markets
+      should get fixture availability from the canonical manifest/GCS-objects path (the shipped
+      `PredictionFixtureResolver` mechanism), not direct API-Football calls — consistent with this doc's own finding
+      that the live mechanism already covers this. Delete `PolymarketReferenceDataAdapter._cross_reference_fixture()` +
+      `_fixture_cache` + the `api_football_api_key` constructor param + `factory.py`'s `af_key` threading + the
+      dedicated test class (`TestCrossReferenceFixture`). (repo: instruments-service)
 
 ## Progress Log
 
@@ -162,3 +163,7 @@ Not adjudicated here:
   reclassifying this doc now would create a duplicate AO-dispatch surface for the identical deletion the moment batch10
   activates — cleared via the shared conflict-check's 4th surface (a `status: draft` sibling batch citing this doc's
   path). Doc stays NA pending batch10's operator-approved dispatch + execution.
+- **batch10 todo executed 2026-08-09 (slot-19, backend_engineer)**: DELETED — `instruments-service@4b55c57b`. Removed
+  `PolymarketReferenceDataAdapter._cross_reference_fixture()`, `_fixture_cache`, the `api_football_api_key` constructor
+  param, `factory.py`'s `af_key` threading, and the dedicated `TestPolymarketCrossReferenceFixture` test class.
+  `quality-gates.sh` green; verified on origin/live-defi-rollout. Todo checkbox flipped above.

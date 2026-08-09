@@ -133,9 +133,10 @@ assumed from the Phase-1 agents' own grep alone).
       affected window's rows are reclassified out of `OTHER` per the fixed classifier, the post-patch distribution check
       is recorded, and the source doc's Phase 6 checkbox is flipped `[x]` citing the evidence.
 
-- [ ] [BACKEND] P2. **Delete Polymarket's dead `_cross_reference_fixture()` capability**, per operator ruling
-      (2026-08-07, option A — prediction markets should get fixture availability from the canonical manifest/GCS-objects
-      path via the already-shipped `PredictionFixtureResolver`, not direct API-Football calls). Delete
+- [x] ✅ [BACKEND] P2. **Delete Polymarket's dead `_cross_reference_fixture()` capability**, per operator ruling (see
+      `issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`) (2026-08-07, option A — prediction markets
+      should get fixture availability from the canonical manifest/GCS-objects path via the already-shipped
+      `PredictionFixtureResolver`, not direct API-Football calls). Delete
       `PolymarketReferenceDataAdapter._cross_reference_fixture()` + `_fixture_cache` + the `api_football_api_key`
       constructor param + `factory.py`'s `af_key` threading + the dedicated `TestCrossReferenceFixture` test class.
       Grepped the full 15-doc covering set for `_cross_reference_fixture`/`api_football_api_key` immediately before
@@ -144,7 +145,10 @@ assumed from the Phase-1 agents' own grep alone).
       resolved that judgment call postdates it and has not yet been executed anywhere. Repo: instruments-service.
       Source: `issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md` (its own sole todo, verbatim). **Done
       when**: the named methods/params/test class are deleted, `quality-gates.sh` is green, and the source doc's
-      checkbox is flipped `[x]` citing the commit SHA.
+      checkbox is flipped `[x]` citing the commit SHA. **DONE — instruments-service@4b55c57b.** Deleted
+      `_cross_reference_fixture()`, `_fixture_cache`, the `api_football_api_key` constructor param, `factory.py`'s
+      `af_key` threading, and `TestPolymarketCrossReferenceFixture` (the dedicated test class). `quality-gates.sh` green
+      (`.qg_last_passed_sha=4b55c57b3ecf51c587441e7017c9c34b992803d0`); verified on origin/live-defi-rollout.
 
 - [ ] [BACKEND] P2. **Delete the dead live-REST-polling interface on the Kalshi + Polymarket MTDS adapters**, per the
       same 2026-08-07 operator ruling (option A) applied to the sibling market-tick-data-service finding: prediction
