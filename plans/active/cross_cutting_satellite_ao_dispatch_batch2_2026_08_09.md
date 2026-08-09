@@ -232,6 +232,19 @@ drift_direction: advance-code
       Done when: the per-cefi delete-list is freshly spot-checked against twin-verify output; `gcs_delete_object` runs
       (in-region VM, workers=32) on the confirmed bare-twin population only; a post-delete scan shows 0 objects deleted
       lacking a verified canonical twin.
+
+      **STATUS 2026-08-09 (slot-16): NOT DONE — re-scoped, do not re-dispatch as-is.** The fresh re-confirm this item
+          calls for surfaced a bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never
+          verified, the only prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety
+          protocol §1 Part 2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category
+          (2351-line hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened
+          `cleanup_legacy_twins.py`: threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete
+          retention gate, dual-schema loader, post-delete verification) and filed
+          `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining todos. Operator
+          confirmed (BLK-b3f5a97d, answer A) this is the right stopping point — actual delete execution deferred to a
+          dedicated VM-launch session. Checkbox stays unchecked until that session's `gcs_delete_object` run + post-delete
+          verification actually complete.
+
 - [ ] [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
       already-shipped `is_model_mvp()` predicate (`unified-api-contracts@0fb9821b`). Both design sub-questions this item
