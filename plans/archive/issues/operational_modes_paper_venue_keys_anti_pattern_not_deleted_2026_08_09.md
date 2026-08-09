@@ -12,7 +12,7 @@ summary: >-
   it was moved/renamed and grew, never deleted. Caught during a routine codex-doc-freshness re-review (2026-08-09, the
   doc crossed the 90-day staleness limit) while verifying claims before re-stamping `last_reviewed` — found the claim
   false, so did NOT rubber-stamp the doc as reviewed-and-accurate.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [meta]
@@ -33,6 +33,13 @@ locked_by:
 locked_since:
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-09** — `status: resolved` with zero open todos; archived per
+> [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md)'s
+> archive-on-resolve rule. Single `[x]` todo resolved via option (b): `unified-trading-pm@527e1831c` updated
+> `codex/04-architecture/operational-modes.md` to reflect that `_PAPER_VENUE_KEYS` was relocated (not deleted) to
+> `adapters/sports_factory.py` and reclassified from mode-detection anti-pattern to a legitimate per-adapter allowlist —
+> no code change needed. See Progress Log below.
 
 # operational-modes.md's anti-pattern-deletion claim is stale
 
@@ -84,7 +91,7 @@ but it is exactly the kind of doc/code divergence `check_codex_doc_freshness.py`
       `operational-modes.md` once the doc matches reality. Done-when:
       `grep -rn _PAPER_VENUE_KEYS     execution-service/execution_service/` shows either zero hits (option a) or the
       doc's claim matches the actual file/entries (option b), and `operational-modes.md`'s `last_reviewed:` is bumped to
-      the fix date. — **Resolved via option (b)**: `unified-trading-pm@<pm-sha>` (see Progress Log).
+      the fix date. — **Resolved via option (b)**: `unified-trading-pm@527e1831c` (see Progress Log).
 
 ## Progress Log
 

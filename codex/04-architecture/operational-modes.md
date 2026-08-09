@@ -152,7 +152,7 @@ that overlapped with `OperationalMode`. Deprecated 2026-05-09:
    `OperationalMode.PAPER` branch is already taken — the set of venue keys the single `PaperBettingAdapter` instance
    registers itself under so any of those venues route to paper. That is a legitimate, permanent lookup, not a parallel
    mode-detection mechanism — reclassified 2026-08-09, not tracked for further deletion.
-   (`plans/active/issues/operational_modes_paper_venue_keys_anti_pattern_not_deleted_2026_08_09.md`, resolved
+   (`plans/archive/issues/operational_modes_paper_venue_keys_anti_pattern_not_deleted_2026_08_09.md`, resolved
    2026-08-09.)
 3. **Parallel `TestingStage` enum** — see deprecation above.
 
