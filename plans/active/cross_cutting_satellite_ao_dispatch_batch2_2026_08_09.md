@@ -316,20 +316,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                                                                  disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                                                                  future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                                                                  bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                                                                  prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                                                                  2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                                                                  hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                                                                  threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                                                                  loader, post-delete verification) and filed
-                                                                  `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                                                                  AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                                                                  actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                                                                  stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                                                                  via that issue doc, not this line.
-                                                                  verification actually complete.
+                                                          disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                                                          future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                                                          bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                                                          prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                                                          2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                                                          hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                                                          threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                                                          loader, post-delete verification) and filed
+                                                          `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                                                          AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                                                          actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                                                          stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                                                          via that issue doc, not this line.
+                                                          verification actually complete.
 
 - [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
@@ -447,12 +447,24 @@ drift_direction: advance-code
       green except 2 confirmed pre-existing unrelated failures (reproduced identically on a clean stash of this diff:
       `test_bucket_resolution_uses_category_tradfi`, `TestKalshiMarket::test_market_validates_against_ac_schema`); full
       `quality-gates.sh` green, sentinel matches `f21ae1eb2fc5456bf9ca48bb7da214ecd66d2148`.
-- [ ] [CODE] P1. CF-5 — make instruments-service writers (non-sports asset_groups) emit typed `EmptyConfirmedReason`
+- [x] ✅ [CODE] P1. CF-5 — make instruments-service writers (non-sports asset_groups) emit typed `EmptyConfirmedReason`
       enum values at every empty-write call site, and route genuine fetch-failures to `attempted_failed` rather than
       `empty_confirmed` (the CF-11 swallow-sweep target). Repo: instruments-service. Source:
       `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (CF-5 item). Done when: non-sports-asset_group
       writers route genuine fetch-failures to `attempted_failed`, not `empty_confirmed`, and emit typed
-      `EmptyConfirmedReason` values at every write call site; a regression test covers both.
+      `EmptyConfirmedReason` values at every write call site; a regression test covers both. —
+      instruments-service@096bc564. Fixed 2 bug classes found via an exhaustive Explore-agent sweep of every non-sports
+      write call site (process_write.py, process_zero_records.py, process_fetch.py, process_completeness.py, writers.py,
+      catalogue.py, venue_core.py, failure.py, process_preflight.py): (1) `non_trading_day_reason()` (TradFi
+      databento/sessions.py) returned bare `"EXPECTED_WEEKEND"`/`"EXPECTED_HOLIDAY"` string literals instead of
+      `EmptyConfirmedReason` members — fixed the root definition + all 4 orchestrator call sites + 2 more direct
+      bare-string literals in process_zero_records.py; (2) DeFi live-mode fetch stamped a venue as `non_error_venues`
+      BEFORE the monotonicity-block check ran, so a venue whose live count regressed below its manifest high-water-mark
+      and got BLOCKED (broken/partial fetch, not a real delisting) still landed in `empty_ok_venues` downstream and was
+      permanently excluded from ever reaching `missing_shards`/`attempted_failed` — fixed by removing blocked venues
+      from `non_error_venues` once monotonicity blocks them. 2 new regression test files (typed-reason +
+      failure-routing, both blocked and control cases); `quality-gates.sh` green, sentinel matches
+      `096bc5647a996576cb13b04c41dea578b3986f03` (QG's own `no_blank_empty_reason` check now passes cleanly).
 - [ ] [REVIEW] P2. Land the bar-edge fallback-to-open fix — the source doc's own text claims it was committed as
       `instruments-service@20a92886`, but that SHA does NOT resolve to a real commit in any local clone (verified
       2026-08-09) — treat the "already committed" claim as unverified, not fact: re-derive whether the fix (raise on
