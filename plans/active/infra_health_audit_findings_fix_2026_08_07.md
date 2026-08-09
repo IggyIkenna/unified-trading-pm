@@ -116,39 +116,53 @@ drift_direction: advance-code
       `gcloud run jobs describe client-reporting-batch --region=asia-northeast1     --format="value(...resources.limits.memory)"`
       returning `2Gi` (2026-08-08). Fix-agent details (source-of-truth IaC change, sizing rationale, execution
       verification) pending its own report; this checkbox reflects the confirmed live GCP state, not just a claim.
-- [ ] [SCRIPT] P1. **Fix `uts-prod-data-status-rollup-svc` OOM at its ceiling — IN PROGRESS, hotfix shipped, NOT yet
-      live-verified.** Status as of 2026-08-09T01:52Z: - **Root cause**: per-service rollup compute already ran in an
-      isolated spawned child (24Gi `RLIMIT_AS`, per `data_status_rollup_worker.py`'s `_run_service_isolated`), but
-      WITHIN that child the ~5 `MarketCategory` asset-groups (CEFI/DEFI/TRADFI/SPORTS/PREDICTION) built serially
-      IN-PROCESS. pandas/pyarrow/numpy's C allocators do not reliably return freed arena memory to the OS between loop
-      iterations, so RSS ratcheted up across categories even though only one was logically alive at a time — pushing the
-      container over 32Gi for the largest services (MTDS, instruments-service). - **Sharding fix (genuine, not a ceiling
-      bump)**: `deployment-api@4c0e039` adds a `_SERIAL_DISPATCH_ISOLATED` toggle so each category now runs in its own
-      throwaway subprocess (reusing the existing `build_category_in_subprocess` / `bounded_subprocess.run_bounded`
-      machinery), so the OS reclaims 100% of a category's memory via full process exit before the next category starts.
-      Reached `main`, deployed live ~2026-08-09T00:20-00:30Z. - **Regression found via live verification** (Cloud
-      Logging on the actual deployed revision, not just "deploy succeeded"): the per-service isolated child is spawned
-      with `daemon=True`; Python's multiprocessing hard-forbids a daemonic process from spawning its OWN children, and
-      the sharding fix made that child do exactly that. Every manifest+coverage rollup for every tracked service failed
-      instantly with "daemonic processes are not allowed to have children" — **0/14 services succeeding, worse than the
-      original OOM** (which let some services through). The container also independently still hit the same "Memory
-      limit of 32768 MiB exceeded with 32983 MiB used" — a separate concern: this "dedicated" rollup service actually
-      runs the full deployment-api app surface (background cache-warming, VM listing, redis, etc.), not a minimal
-      rollup-only process; worth its own follow-up, out of scope here. - **Hotfix shipped**: `deployment-api@e2b9a55`
-      (`daemon=True` → `daemon=False`; safe because the existing explicit `join(timeout=...)`/`terminate()`/`kill()`
-      lifecycle already fully owns the child's teardown) + a regression test
-      (`TestRunServiceIsolated.test_process_is_not_daemonic`). QG green (5247 passed). Pushed directly to LDR at
-      2026-08-09T01:52:45Z (quickmerge's dependency cascade hit an unrelated conflict in `deployment-service`'s
-      `.github/workflows/semver-agent.yml` from a concurrent fleet-workflow rollout, so used the sanctioned dirty-deps
-      carve-out — `Quickmerge: direct-carveout-dirty-deps`). - **Remaining**: as of 2026-08-09T01:58Z, `e2b9a55` is on
-      LDR but NOT yet on `main` (confirmed via direct content check —
-      `git show origin/main:deployment_api/scripts/data_status_rollup_worker.py` still shows `daemon=True`); this repo's
-      LDR→main promotion runs on an external ~hourly cadence outside agent control (last observed promote 00:20:47Z).
-      Once it lands: verify live via Cloud Logging that `SERVICE_PROCESSED` events actually appear for
-      MTDS/instruments-service (not just absence of the daemon error), THEN flip this checkbox with the evidence. Also
-      fixed in passing, unrelated pre-existing drift found while getting a green QG tree:
-      `unified-trading-pm/scripts/quality_gates/read_availability_index_bare_call_baseline.yaml`'s stale line-number
-      reference (449→483) for `_read_index_cached`, shipped separately in that repo.
+- [ ] [SCRIPT] P1. **Fix `uts-prod-data-status-rollup-svc` OOM at its ceiling — round 3 fix shipped to LDR
+      2026-08-09T07:43Z, live verification IN PROGRESS.** Status as of 2026-08-09T07:43Z: - **Rounds 1-2 recap**:
+      per-service isolation (`4c0e039`) + per-category subprocess sharding (`_SERIAL_DISPATCH_ISOLATED`) fixed the
+      ORIGINAL in-process RSS ratchet, and the `daemon=True→False` hotfix (`e2b9a55`) fixed the sharding fix's own
+      regression (0/14 succeeding). Both reached `main`, deployed on revision
+      `uts-prod-data-status-rollup-svc-00360-hkf` (created `2026-08-09T03:43:35Z`, confirmed 100% traffic). - **Round 3
+      finding: the OOM PERSISTED on that revision — measured 10/10 cron cycles over 6h (04:09→07:09Z), every single
+      one**. Pulled the full Cloud Logging history for revision `00360-hkf`: an IDENTICAL pattern on every cycle —
+      `instruments-service` (first in `_DEFAULT_SERVICES`) times out at exactly 420s
+      (`manifest rollup failed for service=instruments-service: timed out after 420s`), then ~100-110s later the WHOLE
+      CONTAINER OOMs ("Memory limit of 32768 MiB exceeded") while the loop is working through the next service. - **Root
+      cause (genuinely new, not the daemon bug)**: `_run_service_isolated`'s 420s timeout-kill path
+      (`process.terminate()`/`process.kill()`, unchanged since before per-category sharding existed) only signals the
+      per-service child's own PID. But under `_SERIAL_DISPATCH_ISOLATED`, that child has itself spawned a per-category
+      GRANDCHILD via `bounded_subprocess.run_bounded` (its own independent 24Gi rlimit, 200s timeout enforced by the
+      now-about-to-die parent). A service's ~5 categories at up to 200s each (up to 1000s) routinely exceed the
+      service's 420s outer ceiling — confirmed the ROUTINE case for instruments-service, not rare — so the timeout-kill
+      fires mid-category. Killing only the parent PID leaves the grandchild ORPHANED: nothing ever signals it, it keeps
+      running and consuming memory (up to its own 24Gi) for the rest of the sweep, while the loop moves on to the next
+      service's fresh compute — the orphan's leftover memory plus the next service's compute pushes the container over
+      32Gi. Confirmed daemon=True's auto-cleanup-on-parent-exit does NOT apply here (that mechanism is an `atexit` hook
+      that only fires on normal Python interpreter shutdown, never on an externally-delivered SIGTERM/SIGKILL, which is
+      exactly how the timeout path kills the child). - **Fix**: `deployment-api` (commit
+      `6ac1c43ff66cbeff4903c6559cbbac70fb1299ec`, landed on LDR 2026-08-09T07:43Z) — the per-service child now calls
+      `os.setpgrp()` as its first statement (becomes its own process-group leader before it can spawn anything), and
+      `_run_service_isolated`'s timeout path now kills the WHOLE process group via `os.killpg()` instead of a single
+      PID, so any grandchild dies atomically with its parent. Applied the same hardening to
+      `bounded_subprocess.run_bounded` itself (defense-in-depth for the shared reusable utility, since it's the exact
+      primitive being nested one level down). 4 files changed (worker + bounded_subprocess + both test files,
+      updated/added regression tests incl. `test_terminates_and_reports_timeout_when_still_alive` now asserting
+      `os.killpg(pid, SIGTERM)`/`SIGKILL` instead of the old single-PID `terminate()`/`kill()`, plus new
+      `test_becomes_process_group_leader_first`/`test_becomes_process_group_leader_before_running_fn` coverage). QG
+      green (5252 passed). Shipped via normal `quickmerge.sh --agent --files` (no carve-out needed this round). -
+      **`--hotfix-to-main` explicitly NOT used**: checked `scripts/quickmerge.sh --help` first — it requires operator
+      env `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` and is explicitly documented "agents cannot self-authorize this path";
+      letting the normal fleet LDR→main promotion (`*/15`) carry it is correct here. - **Correction to the operator's
+      own verification ask**: `log_event("SERVICE_PROCESSED"/"SERVICE_FAILED")` writes ONLY to the GCS `GcsEventSink`
+      (`unified_trading_library.events_interface.log_event` — when a writer is configured it calls
+      `_writer.write_event()` and returns, no console/logger call at all); it NEVER reaches stdout/Cloud Logging, so
+      those event names can't be grepped from Cloud Logging even on a clean success. Ground-truth verification instead
+      reads (a) Cloud Logging for the ABSENCE of "Memory limit" ERROR entries on the new revision (the actual OOM
+      signal), and (b) the GCS rollup blobs' own `updateTime`
+      (`gs://central-element-323112-data-status-rollups/{service}/full.json.gz`) for instruments-service/MTDS
+      specifically, per this workspace's own "check target artifacts, not activity" rule. - **In-flight**: a background
+      verification pipeline (`verify_rollup_fix.sh`) is watching for LDR→main promotion → Cloud Build deploy → new Cloud
+      Run revision → ≥2 full 20-min rollup cron cycles → the Cloud Logging/GCS checks above, then will report a
+      definitive verified-or-not verdict in this same session. This checkbox stays open until that lands with evidence.
 - [x] [SCRIPT] P1. ✅ **Killed the hung idle `mtds-dex-swaps-backfill-2` VM.** Re-confirmed before deleting: no
       `PROGRESS.json` at its GCS log path (404), `run.log` tail (15:15-15:20Z) showed only RESOURCE_SAMPLE/
       PIPELINE_HEARTBEAT lines at ~0-1.4% CPU, no processing activity since the `process_final=True` shard-complete line
@@ -381,3 +395,15 @@ drift_direction: advance-code
   risks a duplicate/competing dispatch racing whichever session is already driving it live. Tagging
   MISCLASSIFIED_LIKELY_AO_ELIGIBLE rather than promoting to a clean RECLASSIFY this pass; re-assess next run against the
   primary RECLASSIFY bar if this item is still open and the doc has gone quiet (no Progress Log edit in the interim).
+- **2026-08-09T07:43Z (round 3)**: the daemon=False hotfix (`e2b9a55`) deployed live 2026-08-09T03:43Z but the OOM
+  PERSISTED — measured 10/10 cron cycles over the following 6h, every single one, via the full Cloud Logging history for
+  revision `uts-prod-data-status-rollup-svc-00360-hkf`. Root-caused to a genuinely different bug: the per-service
+  timeout-kill path (`_run_service_isolated`, unchanged since before per-category sharding existed) only signals the
+  per-service child's own PID, orphaning the per-category grandchild it spawns under `_SERIAL_DISPATCH_ISOLATED` when
+  the (routine, not rare) 420s outer timeout fires mid-category — the orphan keeps consuming memory, uncapped by
+  anything tracking it, until the container tips over 32Gi. Fixed via process-group isolation
+  (`os.setpgrp()`/`os.killpg()`) in `deployment-api@6ac1c43ff66cbeff4903c6559cbbac70fb1299ec`, applied to both the
+  concrete caller (`data_status_rollup_worker.py`) and the shared `bounded_subprocess.run_bounded` utility. QG green,
+  shipped via normal quickmerge (no carve-out), landed on LDR. Live verification pipeline armed and in progress
+  (LDR→main promotion → Cloud Build → new revision → ≥2 rollup cron cycles → Cloud Logging/GCS blob-freshness checks);
+  will update this entry with a definitive verdict once it completes.
