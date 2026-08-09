@@ -122,10 +122,11 @@ the IaC config; the third is a Cloud Run job module removal.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Review the 3 destroys (especially `client-reporting-batch` Cloud Run job + 2 batch-sa Secret IAM
-      members) and confirm they are intentional IaC removals, then run `ENV=prod bash tofu.sh apply` from
-      `deployment-service/terraform/gcp` (backend prefix `terraform/state/prod`). Do NOT delegate to AO — this is a prod
-      infra apply with destructive changes.
+- [ ] [OPERATOR] P1. **RE-SCOPED 2026-08-09 — the plan has grown far beyond "3 destroys" since this todo was written.**
+      A fresh `ENV=prod bash tofu.sh plan` now shows **36 to add, 17 to change, 4 to destroy** (real drift accumulated
+      from active development since 2026-08-07, not a sign of anything wrong). Full analysis in the Progress Log entry
+      below. Awaiting explicit operator go-ahead on `apply` given the scale change from what was originally reviewed —
+      do NOT delegate to AO, still a prod infra apply with destructive changes.
 
 ## Progress Log
 
@@ -134,3 +135,29 @@ the IaC config; the third is a Cloud Run job module removal.
   destructive changes" (3 terraform destroys against live prod state, including a live Cloud Run job with 2890 prior
   executions).
 - **context-scout 2026-08-09**: populated context_scope (4 entries).
+- **2026-08-09 (interactive session)**: operator authorized proceeding on this todo; ran `ENV=prod bash tofu.sh init`
+  (was needed — 3 modules not yet installed on this checkout) then a fresh `plan`. The live plan is dramatically bigger
+  than this doc's original "3 destroys" framing: **36 to add, 17 to change, 4 to destroy**. Full breakdown:
+  - **The originally-reviewed `client-reporting-batch` Cloud Run job destroy is now MOOT** — live-checked via
+    `gcloud run jobs describe uts-prod-client-reporting-batch`: it no longer exists. Someone already applied that part
+    of the drift since this doc was written.
+  - **The 2 Secret IAM member destroys still match** (`t1_batch_gh_pat_accessor`, `t1_batch_slack_webhook_accessor`) —
+    unreviewed by this pass beyond confirming they're still present in the plan.
+  - **2 new, never-reviewed destroys**: `google_cloud_scheduler_job.defi_collect_cron["token-transfers"]` and
+    `module.defi_collect_job["token-transfers"]` — NOT a loss, a deliberate replacement: the plan simultaneously
+    _creates_ `liquidation-events` and `risk-params` scheduler+job pairs (visible in the `defi_collect_cron_names`/
+    `defi_collect_job_names` output diff), consistent with this session's broader DeFi collector restructuring work.
+  - **36 creates are almost entirely additive**: 4 new GCS buckets (`alerting-service-*`, `*-datapoint-validation`,
+    `*-kill-switch-audit-log`, `unified-trading-cicd-events`); 13 new IAM grants (mostly
+    `google_project_iam_member.default_compute_sa_*` — reads as "adopt already-live permissions into Terraform," the
+    same safe pattern used in this session's AWS CodeBuild ruling, not a new grant of access); 6 new monitoring alert
+    policies (crash-loop/memory-high/instance-zero on `central-market-data-tardis-loader`, `market-data-query-service`,
+    `uts-prod-data-status-rollup-svc`); a wholly new `defi_removal_probe` service (SA + Cloud Run job + IAM + scheduler)
+    being stood up.
+  - **17 in-place updates are routine**: label/tag drift, a memory-limit reduction (16Gi→8Gi on
+    `is_daily_enum_job["prediction"]`), new `CONSOLIDATOR_STALL_ALERT_CYCLES` env vars on 3 manifest-consolidator jobs.
+  - **Assessment: this reads as healthy drift from active, unrelated development landing on this repo since 2026-08-07,
+    not a dangerous or suspicious plan.** Full raw plan output not attached here (2394 lines) — re-run
+    `ENV=prod bash tofu.sh plan -no-color` from `deployment-service/terraform/gcp` for the live version before applying;
+    this analysis is a point-in-time read given how fast this repo is moving today. Did NOT run `apply` — left for
+    explicit final operator go-ahead given the scope grew well past what was originally authorized.
