@@ -126,6 +126,20 @@ if [ "$CI_MODE" = "--precommit" ]; then
     python3 "$SCRIPT_DIR/check_terminal_status_archived.py" --quiet --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Terminal-status-archived (staged plans)" \
       || { echo "  ❌ A staged plan/issue doc is terminal-status but not archived — git mv it to plans/archive/[issues/] (see plan-completion-and-archival-discipline.md)"; PF=$(( PF + 1 )); }
+    # Plan-operator-ruling-evidence, --only-scoped (2026-08-09): this ratchet previously lived
+    # ONLY in the full quality-gates.sh, invisible to the docs(plans) fast path (safe-doc-push.sh
+    # -> this precommit sweep, never the full gate) that produces the large majority of this
+    # repo's commit volume — root-caused after the baseline regressed 58->76 in a single day,
+    # entirely via that path, only ever surfacing hours later as a corpus-wide QG failure on an
+    # unrelated code-touching quickmerge. A staged todo/resolved_by: citing 'operator ruling' with
+    # no traceable source is unconditionally wrong regardless of the corpus's pre-existing
+    # backlog — same blast-radius-safe pattern as finalize-plan-coverage/terminal-status-archived
+    # above (--only, no baseline math, a pre-existing unrelated violation elsewhere never blocks
+    # this commit). See plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md
+    # for the incident this was found investigating.
+    python3 "$SCRIPT_DIR/../quality_gates/check_plan_operator_ruling_evidence.py" --quiet --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Plan-operator-ruling-evidence (staged plans)" \
+      || { echo "  ❌ A staged todo/resolved_by: cites 'operator ruling' with no traceable source (/plans/…, /codex/…, or .md doc within 300 chars) — add a specific doc/path reference (see plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md § 'Done when')"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }

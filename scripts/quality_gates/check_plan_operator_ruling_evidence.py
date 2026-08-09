@@ -38,6 +38,19 @@ with --baseline-write ONLY after confirming the flagged violation is pre-existin
 drift, not a new authority bypass.
 
 Exit codes: 0 = at/below baseline; 1 = regression; 2 = arg/IO error.
+
+``--only <paths>`` (2026-08-09, precommit migration — root-caused after this ratchet regressed
+5x in one day, 58->76, entirely via the docs(plans) fast path / safe-doc-push.sh, which runs
+run_hygiene_sweep.sh --precommit and NEVER invoked this script at all): the corpus-wide/baselined
+mode above is precommit-unsafe for the same reason check_terminal_status_archived.py's is — a
+huge pre-existing backlog (58+) would false-block every commit if run as a blocking gate. But an
+unsourced 'operator ruling' citation in a file YOU are actively staging is unconditionally wrong
+regardless of the rest of the corpus's backlog (same reasoning check_terminal_status_archived.py
+--only already established) — no baseline needed for a single-file check. Wired into
+run_hygiene_sweep.sh's STAGED_PLANS precommit block so the fast doc-commit path — the one that
+was actually producing this drift all day, invisible to every code-commit-only quickmerge run
+until hours later — now catches a NEW unsourced citation at commit time instead of letting it
+land and surface as a corpus-wide QG failure someone has to firefight after the fact.
 """
 
 from __future__ import annotations
@@ -214,6 +227,41 @@ def _write_baseline(baseline_path: Path, violations: list[RulingViolation]) -> N
     baseline_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
 
+def _violations_for_file(p: Path) -> list[RulingViolation]:
+    """Shared by the corpus-wide glob and the --only path so the two modes can never
+    silently diverge on what counts as a violation."""
+    try:
+        text = p.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return []
+    out: list[RulingViolation] = []
+    for citation in _iter_frontmatter_ruling_citations(text, p):
+        out.append(RulingViolation(citation=citation))
+    for citation in _iter_todo_ruling_citations(text, p):
+        out.append(RulingViolation(citation=citation))
+    return out
+
+
+def _run_only(paths: list[str], quiet: bool) -> int:
+    """Precommit-scoped mode: check exactly the given staged files, no baseline/ratchet.
+    An unsourced 'operator ruling' citation in a file you're actively staging is
+    unconditionally wrong regardless of the rest of the corpus's pre-existing backlog."""
+    violations: list[RulingViolation] = []
+    for raw in paths:
+        p = Path(raw)
+        if not p.is_absolute():
+            p = Path.cwd() / p
+        violations.extend(_violations_for_file(p))
+
+    if not quiet:
+        for v in violations:
+            print(f"  {v}")
+
+    n = len(violations)
+    print(f"{'✅' if n == 0 else '❌'} check_plan_operator_ruling_evidence (--only): {n} violation(s) in staged files")
+    return 0 if n == 0 else 1
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
@@ -232,6 +280,11 @@ def _parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    quiet = "--quiet" in sys.argv
+    if "--only" in sys.argv:
+        idx = sys.argv.index("--only")
+        return _run_only(sys.argv[idx + 1 :], quiet)
+
     ns = _parse_args()
     workspace_root: Path = cast(Path, ns.workspace_root).resolve()
     baseline_path: Path = cast(Path, ns.baseline_path)
@@ -249,14 +302,7 @@ def main() -> int:
 
     all_violations: list[RulingViolation] = []
     for p in plan_files:
-        try:
-            text = p.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
-            continue
-        for citation in _iter_frontmatter_ruling_citations(text, p):
-            all_violations.append(RulingViolation(citation=citation))
-        for citation in _iter_todo_ruling_citations(text, p):
-            all_violations.append(RulingViolation(citation=citation))
+        all_violations.extend(_violations_for_file(p))
 
     # De-dupe by (path, line_no) — a single block can generate at most one violation.
     seen: set[tuple[Path, int]] = set()
