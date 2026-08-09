@@ -67,16 +67,30 @@ context_scope:
       `run.log` shows the RSS instrumentation firing every poll tick with real climbing values (5632.4MB→13341.9MB,
       +137%). `[DATA] P2` checkbox was already `[x]` and its citation verified accurate — no change needed there. Full
       evidence: source doc's new "Progress Log (finalize-plan review)" section, 2026-08-08.
-- [ ] [DOC] P2. **Archive `plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`**
+- [x] ✅ [DOC] P2. **Archive `plans/active/issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md`**
       via the standard 6-step ritual (per CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked →
       add the archive banner → run the codex-alignment check → grep the corpus for every referrer of
       `mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06` and fix each path to point at the archived
       location → clear `locked_by` (already empty, confirm). **Done when**: the doc is moved to
       `plans/archive/2026_08/`, every corpus referrer resolves to the new path, and this finalize doc itself gets
-      archived alongside it in the same commit.
+      archived alongside it in the same commit. — unified-trading-pm: the 3 "Suggested follow-up" prose bullets on the
+      source doc were all conditioned on the original silent-kill mystery staying unexplained; the 2026-08-08 dedicated-VM
+      OOM finding (rc=137) resolved that mystery, mooting all 3 (confirmed via the source doc's own Progress Log
+      reasoning — a single-tenant dedicated VM rules out both the shared-host-pkill and session-lifetime-cap hypotheses
+      the follow-ups targeted). No Deferred items needed migration. Codex-alignment: no new durable contract — the RSS
+      self-logging fix is a script-local instrumentation addition mirroring an already-established pattern, nothing to
+      migrate to codex (same judgment as the
+      `ag_closeout_audit_sports_tooling_followups_2026_08_06_finalize_2026_08_08.md` precedent for a same-shape small
+      fix). Archival + corpus-wide referrer fixup + this finalize doc's own archival land in the immediately-following
+      `git mv` commit, kept separate from this checkbox-flip commit per RULES.md's never-combine rule.
 
 ## Progress Log
 
 - **2026-08-08 (slot 9, review-craft task)**: todo 1 done — re-verified the source doc's `[DATA] P2` RSS-self-logging
   evidence citation (code + a fresh post-fix reproduction). See the source issue doc's new "Progress Log (finalize-plan
   review)" entry for full detail. Todo 2 (archival) is gated `sequential: true` behind this and not yet started.
+- **2026-08-09 (slot 4)**: todo 2 done — archived the source issue doc + this finalize doc to
+  `plans/archive/2026_08/` (issue doc under `issues/`), fixed every corpus-wide leading-slash/`plans/`-prefixed referrer
+  path, and confirmed no untracked Deferred items remained (see the todo's own evidence note above). This finalize plan
+  now has 0 open todos and no lock, so it archives in the same session per plan-completion-and-archival-discipline's
+  "archive immediately" rule.
