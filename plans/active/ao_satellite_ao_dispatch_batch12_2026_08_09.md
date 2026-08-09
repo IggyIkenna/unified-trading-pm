@@ -161,12 +161,16 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       `/plans/archive/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md:87` (Finding 2 / todo 2
       — Finding 1 was closed as a stale duplicate directly on the source doc, not extracted here). Repo:
       agent-orchestrator (SSM host maintenance).
-- [ ] [BACKEND] P1. **Detect the queued-message state and do not spend the force-compact latch on it.** Add a
-      `pane_has_queued_messages()` probe to `agent-orchestrator/server/tmux_spawn.py` and have `context_lifecycle`'s
+- [x] ✅ [BACKEND] P1. **Detect the queued-message state and do not spend the force-compact latch on it.** Added a
+      `pane_has_queued_messages()` probe to `agent-orchestrator/server/tmux_spawn.py` and had `context_lifecycle`'s
       force-compact path hold the latch un-spent (not re-send) while the target pane shows a queued-not-yet-executed
-      message — a second forced `/compact` would compact twice and lose context unnecessarily. Add a new `_TargetState`
-      field for "submitted but not yet executed". **Done when**: a regression test proves the latch holds instead of
-      re-firing when a pane has a queued message, and `bash scripts/quality-gates.sh` is green. Source:
+      message — a second forced `/compact` would compact twice and lose context unnecessarily. Added a new
+      `_TargetState.queued_since` field for "submitted but not yet executed". `_force_compact_now` now checks
+      `pane_has_queued_messages` first (before either phase's `submit_to_pane` call) and returns without submitting or
+      advancing `precompact_forced_at`/`forced_at` while queued; logs `context_force_compact_queued_hold` activity.
+      `test_worker_force_holds_latch_unspent_while_pane_shows_queued_message` proves the latch holds across 2 queued
+      ticks then submits normally once the queue clears. `bash scripts/quality-gates.sh` green (3022 passed, 2 skipped).
+      Evidence: `agent-orchestrator@a1e2969`. Source:
       `/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md:85` (P1 item 1). Repo:
       agent-orchestrator.
 - [ ] [BACKEND] P1. **Verify forced compaction by its EFFECT, not its submission.** Change forced-compact verification
