@@ -138,3 +138,48 @@ concrete reason not to).
   `BetfairAdapter` imports/exports to both `__init__.py` files (Matchbook left deleted, out of scope). QG green, shipped
   `market-tick-data-service@fc9e36cd`. Todos 2-4 (download_batch shim, fixture_id resolution, live-verify) remain open
   for the next worker.
+- 2026-08-09 (slot-5, backend_engineer): **todo 2 implemented, NOT YET SHIPPED** — checkpointing at context-limit before
+  a forced `/compact`. Chose the `download_batch()`-shim approach per this doc's own recommendation. Work is UNCOMMITTED
+  in this slot's own dedicated worktree (`.tabs/5/market-tick-data-service`, not shared — safe from cross-slot loss) — a
+  fresh session picking up this todo should read the working-tree diff there before re-doing the research below.
+  - `betfair_adapter.py`: `_convert_catalogue_to_market` now also returns `runners` (selection_id + runner_name from the
+    `RUNNER_DESCRIPTION` projection already requested) + `event_type_name`/`competition_name`; `get_markets` gained an
+    optional `market_start_time: (from_iso, to_iso)` window param (Betfair's `listMarketCatalogue` has no historical
+    endpoint — always reflects the live catalogue, so a batch call needs a start-time window, not a date param, to scope
+    to one day). New `download_batch(date, data_types, leagues)`: joins `get_markets()` catalogue+runners against
+    per-market `get_prices()` back/lay levels; `lay_price` populated ONLY when the market's lay book is COMPLETE (every
+    runner with a back price also has a lay price) — a partial book leaves `lay_price` unset for the WHOLE market, per
+    `features-service@d792f421`'s read-side contract. `fixture_id`/`af_fixture_id` are honestly left unresolved
+    (`FixtureMatchStatus.NO_FIXTURE_DATA`, falling back to Betfair's own `event_id`/`market_id` — the same "attempted,
+    unresolved" pattern `OddsApiAdapter` itself uses) — real fixture resolution stays todo 3's scope, confirmed
+    genuinely hard: a VCR-cassette-recorded real catalogue response shows Betfair match-odds runners are generic
+    "Home"/"Draw"/"Away" labels, not team names — team names only exist as free text in `event.name` ("Man Utd v
+    Liverpool"), no established parser.
+  - `factory.py`: added `"betfair": ("sports", BetfairAdapter)` to `VENUE_REGISTRY`, removed the old
+    `"betfair": "prediction_market"` entry from `PLANNED_VENUES`.
+  - `umi_tick_provider.py`: fixed the ACTUAL dispatch blocker todo 2's own text didn't anticipate — `_route_sports()`'s
+    `cast(OddsApiAdapter, ...)` was a type-hint only (no runtime effect, widened to `OddsApiAdapter | BetfairAdapter`),
+    but `_SPORTS_VENUES = frozenset({"ODDS_API"})` (a hardcoded gate BEFORE `_route_sports` is ever called) would have
+    silently dropped every `--venue betfair` capture call even with the factory wired — added `"BETFAIR"` to that set.
+    Without this fix the factory wiring alone would NOT have made Betfair capture actually dispatchable.
+  - **New open question for todo 4 (live-verify), NOT resolved this session**: UAC's registries
+    (`_sports_venue_constants.py`, `_odds_api_maps.py`, `data_availability.py`) already reference
+    `BETFAIR_EX_UK`/`BETFAIR_EX_EU` as the canonical per-region data-axis venue names for the exchange (bare `BETFAIR`
+    described elsewhere as "operator-group parent, not data-axis" — `representative_sample.py`), separate from
+    Odds-API's own aggregated view of Betfair prices (different pipeline). This todo's own instruction said literally
+    `"betfair"` for the `VENUE_REGISTRY` key, which is what's implemented — but todo 4's live-verify pass should confirm
+    whether the manifest/asset-group/bucket routing expects bare `BETFAIR` or the region-qualified
+    `BETFAIR_EX_UK`/`EX_EU` forms before trusting a live capture's shard path is correct, not just that the HTTP calls
+    succeed.
+  - Tests: `tests/unit/test_betfair_adapter.py` (9 tests, all passing via a direct `.venv` pytest run — complete/partial
+    lay-book gating, no-back-price skip, leagues filter, shard-level isolation on a `get_prices` exception, honest
+    fixture_id fallback, factory registration). NOT yet verified via the canonical `quality-gates.sh` gate — the full
+    run hit the SAME shared-host contention (load avg 20-28, many concurrent slots' QG runs) that repeatedly killed
+    background QG processes on this host earlier today; one full run DID complete and caught one real lint fix (a bare
+    `# noqa` ruff flagged as unused — fixed), but the re-run after that fix was killed mid-run before completion.
+  - **Next step for whoever resumes**: re-run `bash scripts/quality-gates.sh --no-fix` from
+    `.tabs/5/market-tick-data-service` (retry if killed again — this is host contention, not a code defect signal); on
+    green, commit + quickmerge + flip this doc's todo 2 + `/done` the dispatched task
+    (`prediction_satellite_ao_dispatch_batch6-a878572ff8da`,
+    `plan_ref: plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md` — per slot-17's scope-correction
+    note, the PARENT plan's todo stays unchecked; only this issue doc's todo 2 flips).
