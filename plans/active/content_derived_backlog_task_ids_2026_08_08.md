@@ -221,11 +221,44 @@ Both were established by reading the code, and both are silent — neither raise
       `test_derived_keys_for_row_computes_all_five_deterministic_pairs`,
       `test_derived_keys_for_row_handles_missing_plan_ref`. Evidence: agent-orchestrator@84e8c98 (verified ancestor of
       origin/live-defi-rollout). Repo: agent-orchestrator.
-- [ ] [BACKEND] P2. **Make the migration idempotent + resumable.** Follow the existing `_migrate_*` convention
-      (`bootstrap.py:147-159`) with a sentinel so a second run no-ops. Batch with a resumable checkpoint rather than one
-      giant transaction across ~1,728 rows (SQLite single-writer; reuse the `busy_timeout=120000` pattern `_prune_stale`
-      already uses). Persist the full old→new map BEFORE applying so the inverse can be replayed. **Do NOT wire it into
-      `create_all_tables()`'s automatic on-every-boot sequence.** (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-09 (slot-22, backend_engineer)** — **Make the migration idempotent + resumable.**
+      Built `scripts/orchestrator/apply_content_id_migration.py`, the standalone APPLY step the two `[OPERATOR]` todos
+      below will invoke (NOT wired into `create_all_tables()`'s boot sequence, per this todo's explicit instruction).
+      Idempotent via a `content_id_migration_progress` sentinel table (`old_id` PRIMARY KEY, inserted in the SAME
+      transaction as the rename it records — "renamed" and "marked applied" can never disagree) plus every individual
+      sub-rename independently no-oping if already applied (belt-and-suspenders for a crash between a file write and the
+      DB commit that would have recorded it). Resumable: batches `--batch-size` rows (default 100) per transaction with
+      `PRAGMA busy_timeout=120000` (mirrors `_prune_stale`'s existing pattern), saving `backlog.yaml` + the two
+      seen-keys files after every batch rather than once at the end. Persists the planned old→new map to `--session-out`
+      BEFORE writing anything (the "so the inverse can be replayed" requirement); `--invert` replays it in reverse,
+      cross-checked against the progress table so only rows ACTUALLY renamed (not merely planned) are eligible to roll
+      back.
+
+      Renames every derived-key namespace `-013`'s `derived_keys_for_row` enumerated: `tasks.task_id`, `backlog.yaml`'s
+          `id:`, `slot_skips.task_id`, `blocked_queue` (`task_id` column + the `BLK-op-` `blocked_id` shape only — a
+          regular blocked question's `blocked_id` is a random UUID and is never touched), `prerequisites.name`
+          (`auto_unpark__` shape) + `backlog.yaml`'s own `prereqs.prerequisites` list entries, `dispatch_cooldowns.key`
+          (`task:` shape), and the two `dedup_state` seen-keys JSON files (one exact remap, one prefix scan for the sixth
+          namespace whose `incoming_brief_hash` suffix is never persisted statically). Also handles a wrinkle `-013`
+          flagged but didn't resolve: an existing `<old_id>--ruling` materialized-operator-ruling task gets its OWN,
+          unrelated content-hash in the map (computed from its own distinct brief) — this script ignores that and instead
+          renames it, in the same pass as its parent, directly to `<new_id>--ruling`, the convention
+          `_materialize_operator_ruling_tasks`'s dedup actually depends on (a naive per-map-entry rename would have
+          stranded the old-named row and caused a duplicate re-materialization on the next regen tick). Hazard 1
+          (dispatched-row deferral) is re-checked FRESH per row at apply time (not trusted from the map's snapshot
+          `status`), deferring anything still in flight to `content_id_migration.py`'s three existing transition-point
+          hooks. Appends a `backlog_task_id_migrated` activity_log row per rename (append-only, matching `-012`'s ruling —
+          never rewrites history).
+
+          15 new tests (idempotency, dispatched-row deferral, dry-run, resumable batching across multiple small
+          transactions, every derived-key namespace, the `--ruling` wrinkle, cross-task `completed_tasks`/`prerequisites`
+          remapping in `backlog.yaml`, activity_log append-only, seen-keys file rewriting, and invert/rollback both for a
+          real prior apply and for a row that was never actually applied) — using the same real-ORM-schema
+          `create_all_tables()` fixture pattern as `test_content_id_migration_wiring.py`, not hand-rolled DDL. QG: 2944
+          passed (full suite), basedpyright 0 errors, ruff clean. Also verified end-to-end via direct CLI invocation
+          (dry-run, apply, idempotent re-apply, invert) against a throwaway scratch DB — all four modes behaved correctly.
+          Evidence: agent-orchestrator@a7dfb9652 (verified ancestor of origin/live-defi-rollout). Repo: agent-orchestrator.
+
 - [ ] [OPERATOR] P1. **Dry-run the migration against a SCRATCH COPY of `state.db`, never the live file.** Operator-gated
       because it requires copying live orchestrator state and reading it outside the service. Assert: row-count
       preserved; `done_sha`/`done_at`/`done_evidence` byte-identical pre/post; every `completed_tasks` reference
