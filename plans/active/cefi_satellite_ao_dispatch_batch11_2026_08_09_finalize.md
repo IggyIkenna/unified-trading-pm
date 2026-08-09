@@ -79,12 +79,23 @@ context_scope:
       Also fixed 2 adjacent defects found during verification: a mislabeled Progress Log section header in
       `cryptovenue_equity_perps_and_tokenized_stocks` (todo 8's entry was headed "todo 6") and a broken cross-reference
       in `cefi_ml_directional_continuous_live` (missing a `_2026` segment, pointed at a nonexistent file).
-- [ ] [DOC] P1. **Re-check any batch11 todo that did NOT land** (e.g. todo 7's oil-perp check resolves negative, or a
-      todo hits a real blocker) for whether it should revert to a `- [ ]` open item in its source doc (if genuinely
-      unresolved) or close via one of the `/done`-time disposition markers (`CANCELLED`, a permanent design-deferral
-      marker, `BLOCKED-ON:`) per `task_template.md` §3 — never leave a citation pointer dangling at a todo that never
-      actually shipped. **Done when**: every one of the 10 todos has either a reconciled-evidence pointer (todo 1 above)
-      or an explicit disposition in its source doc.
+- [x] ✅ [DOC] P1. **DONE 2026-08-09 (slot-18).** Re-checked all 10 batch11 todos for non-landed status — **none
+      found**: every todo's checkbox in `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` is `[x]` with real shipped
+      evidence (verified via direct `grep -n "^- \["` of the plan, not trusted from todo 1's summary alone).
+      Spot-verified 6 of the cited commit SHAs are genuine ancestors of `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor` (unified-api-contracts@{fc1b4897,92a418e5,89de6766,e973c62d},
+      market-tick-data-service@aea655a9, e2e-testing@12d1f3c) — all 6 reachable. The two todos with adjacent
+      complications both closed with a real disposition rather than a dangling pointer: todo 3 (KRX Yahoo backfill) was
+      NARROWED (1h/15m/1m legs correctly dropped per a pre-existing 2026-07-12 operator ruling) with its own follow-up
+      issue doc (`issues/krx_batch11_todo3_intraday_conflicts_with_2026_07_12_ruling_2026_08_09.md`, confirmed present);
+      todo 10 (coverage measurement) resolved NOT-COMPLETE (48.90%) but that IS its done-when (a measurement result, not
+      a pass/fail gate) with its own follow-up issue doc
+      (`issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md`, confirmed present). Todo 5
+      (Barchart removal) shows an interim "research DONE, implementation DEFERRED" Progress Log entry from slot-6, but a
+      later slot-17 entry confirms it was subsequently implemented + shipped (unified-api-contracts@fc1b4897,
+      market-tick-data-service@aea655a9) — the deferral was resolved, not left dangling. **Done when** condition met:
+      every one of the 10 todos carries a reconciled-evidence pointer (todo 1 above); zero need a revert-to-open or a
+      CANCELLED/BLOCKED-ON marker.
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch11_2026_08_09.md`** via the standard 6-step ritual: confirm
       no separate migration is needed for informational content → add the archive banner → run the codex-alignment check
       (this batch creates no new durable contract) → grep the corpus for every referrer of
@@ -107,3 +118,9 @@ context_scope:
   batch11's own Progress Log; reconciled all 3 source docs' EXTRACTED-pointer lines to the real shipping evidence (see
   each todo's own entry above for the full detail). Todos 2 (disposition check) and 3 (archival) remain — both gated
   behind this one per `sequential: true`.
+- **2026-08-09 (slot-18) — todo 2 DONE.** Independently re-checked all 10 batch11 todos for non-landed status (did not
+  trust todo 1's summary alone) — grepped the live checkbox states directly, confirmed all `[x]`, and spot-verified 6
+  cited SHAs across 3 repos are real ancestors of `origin/live-defi-rollout`. No todo needs reversion or a
+  CANCELLED/BLOCKED-ON marker; the 2 todos with adjacent complications (todo 3's narrowing, todo 10's not-complete
+  measurement result) each already have a real disposition + a filed follow-up issue doc, confirmed present on disk.
+  Todo 3 (archival) remains, now unblocked by `sequential: true`.
