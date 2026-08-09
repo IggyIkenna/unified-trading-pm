@@ -559,3 +559,11 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   — genuine movement, though at this rate full convergence is ~14h out (this is by far the largest remaining AF entity,
   expect a long haul, not a quick tick-over- tick drop like FIXTURE_LINEUPS showed). STANDINGS (271) and TEAMS (96)
   unchanged, as expected (not independently tracked unless they stall). No intervention needed.
+- **22:46Z — Both fleets healthy, INJURIES rate accelerated sharply.** `af-backfill-20260809-222924`: real progress
+  2021-01-17→2021-11-04 since last check, writing genuine injury rows (e.g. 125 for 2021-11-04), new
+  `[[VM_PROGRESS]] last_completed_date=... monotonic=true` marker observed (useful ground-truth signal for future
+  ticks). `smallchunk14`: cleared chunk 17 cleanly, now in chunk 18 with 1 expected OOM-retry (EPL, self-recovering, not
+  actionable) on LA_LIGA, RSS climbing (24.8GiB, approaching but not yet OOM range), heartbeat fresh (~54s old). Census:
+  INJURIES needed **60,733 → 52,494** (-8,239 in ~43min, ~11,497/hr — up sharply from ~4,391/hr last tick; ETA to
+  convergence now ~4.6h at this rate, down from the earlier ~14h estimate). STANDINGS/TEAMS unchanged as expected. No
+  intervention needed.
