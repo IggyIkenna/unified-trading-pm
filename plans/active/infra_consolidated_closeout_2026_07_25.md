@@ -277,7 +277,7 @@ not data-pipeline).
   **29 orphaned** (28 `orphaned_never_touched` + 1 `orphaned_partial_coverage`), 5 not orphaned (the generated inventory
   dashboard, `task_template.md`, the self-referential rollout meta-plan, and the two operator-decision registers). Phase
   3 drafted
-  [infra_satellite_ao_dispatch_batch1_2026_07_26.md](/plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md) +
+  [infra_satellite_ao_dispatch_batch1_2026_07_26.md](/plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md) +
   [infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md](/plans/active/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md)
   — **25 todos from 17 source docs, both `status: draft` (NOT ingested; the flip to `active` is the operator's call)**.
   The HARD conflict check ran against all 93 existing batch/finalize/closeout plans plus pairwise across the 25 drafted

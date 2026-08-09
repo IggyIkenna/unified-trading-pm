@@ -25,7 +25,7 @@ related:
     /plans/active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
     /plans/archive/2026_08/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md,
     /plans/active/issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_09.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,

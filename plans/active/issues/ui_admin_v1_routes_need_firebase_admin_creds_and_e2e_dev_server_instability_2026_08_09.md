@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [e2e, playwright, testing-infra, firebase-admin, ci, dev-server-stability]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md,
     unified-trading-system-ui/tests/e2e/user-management.spec.ts,
     unified-trading-system-ui/lib/firebase-admin.ts,

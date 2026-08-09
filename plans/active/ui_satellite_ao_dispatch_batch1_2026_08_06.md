@@ -29,7 +29,7 @@ related:
   [
     /plans/active/ui_consolidated_closeout_2026_07_30.md,
     /plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md,
     /plans/active/artifact_pipeline_observability_2026_07_17.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,

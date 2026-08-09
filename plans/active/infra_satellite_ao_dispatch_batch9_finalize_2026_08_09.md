@@ -21,7 +21,7 @@ related:
   [
     /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-09"

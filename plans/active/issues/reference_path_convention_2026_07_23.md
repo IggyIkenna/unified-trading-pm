@@ -222,7 +222,7 @@ convention's scope).
   blocker; line 194: the 2026-08-03 baseline-drift item directly above) do NOT structurally depend on the
   archival-policy answer — this doc's own history already closed materially similar dangling-ref regressions (items 7
   and 9, plus the sports_shard_enumeration fix a concurrent session just closed today, line ~106 above, without waiting
-  on the policy ruling) and `/plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md` (an active
+  on the policy ruling) and `/plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md` (an active
   `assigned_vm: planning` doc) independently assessed this exact backlog as real, appropriately-scoped corpus-cleanup
   work — parking it only for collision-timing against concurrently-running tranche audits, not for being unbounded. So 4
   of 5 open items are bounded work sitting idle, but the doc cannot cleanly roll up to RECLASSIFY as a whole (line 85 is

@@ -28,7 +28,7 @@ scope: [engineer]
 tags: [vm-launcher-runbook, spot-preemption, setup-script-freshness, gcs-staleness, fleet-wide]
 related:
   [
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md,
     /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
     /plans/archive/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md,
@@ -57,7 +57,7 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     deployment-service/scripts/vm/lib/launcher_common.sh,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
 ---
 

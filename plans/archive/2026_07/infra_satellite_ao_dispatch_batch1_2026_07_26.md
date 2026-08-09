@@ -674,7 +674,7 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       `origin/live-defi-rollout` otherwise) correct both by source read and by this run's own `base-verified: yes`.
       **Verdict: classifier trustworthy: YES** (zero false positives found; caveat: redundant-class n=1, re-verify when
       the pile's redundant count grows). Full report:
-      `plans/active/issues/stash_audit_reports/stash-audit-ip-172-31-5-118-20260804.md`. No stash dropped, popped, or
+      `plans/archive/issues/stash_audit_reports/stash-audit-ip-172-31-5-118-20260804.md`. No stash dropped, popped, or
       applied. Repo: unified-trading-pm. Source: `stash_pile_workspace_cleanup_2026_06_03.md`.
 
 - [x] ✅ [INFRA] P3. **DONE 2026-07-30 — `unified-trading-pm@59756e802`.** Folded a WARNING-only `--max-stash-age`-style

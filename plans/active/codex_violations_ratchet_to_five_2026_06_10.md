@@ -40,7 +40,7 @@ drift_direction: advance-code
 context_scope:
   [
     /codex/06-coding-standards/quality-gates.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     features-service/features_service/delta_one/app/features/registry.py,
     instruments-service/instruments_service/engine/orchestrator/,
   ]
