@@ -172,12 +172,12 @@ Both were established by reading the code, and both are silent — neither raise
       (`bootstrap.py:710-727` — backlog.yaml is gitignored, no VCS history, no archive writer, activity_log never stored
       the brief), so they can never get a content id. This mirrors the already-ruled "(c) accept permanently" decision
       for that tail; it is not reopened here. Report the count. (repo: agent-orchestrator) — agent-orchestrator@b143bf5
-- [ ] [BACKEND] P1. **Write the pre/post prereq-remap assertion — hazard 2's gate.** Diff every
-      `completed_tasks`/`prerequisites` array before and after the proposed map and assert each old id is either
-      remapped or was ALREADY legitimately absent pre-migration. A missed remap does not error at runtime
-      (`_completed_task_satisfied` treats absent as satisfied) — it silently un-gates. This assertion is the only thing
-      that catches it. Done-when: the check runs against the Phase-2 map artifact and reports zero unexplained entries.
-      (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-09 (slot-23, content_derived_backlog_task_ids-010)** — **Write the pre/post
+      prereq-remap assertion — hazard 2's gate.** Diff every `completed_tasks`/`prerequisites` array before and after
+      the proposed map and assert each old id is either remapped or was ALREADY legitimately absent pre-migration. A
+      missed remap does not error at runtime (`_completed_task_satisfied` treats absent as satisfied) — it silently
+      un-gates. This assertion is the only thing that catches it. Done-when: the check runs against the Phase-2 map
+      artifact and reports zero unexplained entries. (repo: agent-orchestrator) — agent-orchestrator@d86827b
 - [ ] [BACKEND] P1. **Enforce the dispatched-row deferral — hazard 1's gate.** The migration must SKIP any row whose
       status is `dispatched` and defer its rename to the transition points that already fire on terminal state
       (`done_slot` finalization, `_prune_stale`'s cancel path, `/skip-current-task`'s release). With this ordering
@@ -428,3 +428,30 @@ Both were established by reading the code, and both are silent — neither raise
   no-slug), 0 collisions, 0 slug mismatches. Output written to a scratch path outside the repo (this script never writes
   to a root clone; the checked-in artifact from `-008` is unchanged). QG: 2840 passed (full suite, basedpyright clean,
   ruff clean). Evidence: agent-orchestrator@b143bf5 (verified ancestor of origin/live-defi-rollout before this flip).
+
+- **2026-08-09 (slot-23, content_derived_backlog_task_ids-010, Phase 2 todo 3)**: Built
+  `scripts/orchestrator/verify_prereq_remap_coverage.py` (+ `tests/test_verify_prereq_remap_coverage.py`, 12 tests).
+  Classifies every `completed_tasks`/`prerequisites` reference in the live `backlog.yaml` against the proposed
+  id-migration map into 4 buckets: **remapped** (genuine rename in the map — asserted to resolve to the new id),
+  **unchanged** (accounted for in the map but keeps its id — passthrough / permanently-excluded NULL-brief_hash tail /
+  unrecoverable no-slug row), **legit_absent** (not a live `tasks` row at all, checked fresh against `--db` — the exact
+  case `_completed_task_satisfied` already tolerates), **unexplained** (IS a live row but the map doesn't account for it
+  — the map is stale relative to the live corpus; this is the only classification that fails the gate, exit 1).
+  Schema-tolerant of both the pre- and post-`-009` artifact shapes (the checked-in artifact predates `-009`'s
+  `excluded_null_brief_hash` split — malformed/missing fields are defensively dropped, not raised, mirroring
+  `server/dedup_state.py`'s best-effort JSON-state convention, rather than trusting `json.loads`'s `Any` return).
+
+  **First live run surfaced real staleness, not a script bug**: running against the checked-in `-008`-era artifact (last
+  regenerated 2026-08-08T23:06Z) reported **82 unexplained references** — every one a `completed_tasks` entry pointing
+  at a task Phase 1's live content-id minting created in the ~9h since the artifact was built (e.g.
+  `sports_taxonomy_p1_capture_and_contracts-<hex>`, satellite-batch finalize chains). This is squarely hazard 2's real
+  failure mode (a map that doesn't know about a live row), so per this script's own docstring guidance ("Rebuild it with
+  build_content_id_migration_map.py before trusting this map"), re-ran `build_content_id_migration_map.py` against the
+  LIVE `state.db`/`backlog.yaml` (2026-08-09T01:20Z) to refresh the checked-in artifact — now 2452 entries + 11
+  permanently-excluded (2463 total, matches live `tasks` count exactly), 0 collisions. Re-running the new assertion
+  against the refreshed artifact: **1198 references checked, 966 remapped, 106 unchanged, 126 legit_absent, 0
+  unexplained** — done-when met. Refreshing the artifact also incidentally closes the `-009` Progress Log's noted gap
+  ("the checked-in artifact from -008 is unchanged") — it now matches the current script's schema. QG: 2852 passed, 2
+  skipped (full suite, basedpyright clean, ruff clean — pre-existing unrelated thread-exception warnings in
+  `test_operator_gated_blocked` and JWT short-key warnings in `test_internal_auth_asymmetric`, not touched by this
+  change). Evidence: agent-orchestrator@d86827b (verified ancestor of origin/live-defi-rollout before this flip).
