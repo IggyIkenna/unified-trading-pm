@@ -131,10 +131,11 @@ operator/architecture call, not a mechanical fix.
       derivative_ticker) capturing real data on the same VM in the same window — compare against the REST-verified book
       depth from `book_microstructure_connectivity_check.py` to isolate whether the WS subscription/parse path is
       silently dropping real depth updates. Repo: market-tick-data-service.
-- [ ] [CODE] P2. Debug why `DeribitDepth10WSConnector` (deribit_book_ticker_ws.py) produces ZERO `depth_of_book_10`
+- [x] ✅ [CODE] P2. Debug why `DeribitDepth10WSConnector` (deribit_book_ticker_ws.py) produces ZERO `depth_of_book_10`
       manifest rows at all (not even `empty_confirmed`) despite `derivative_ticker` capturing 2,997 rows on the same
       venue/VM/window — check whether the connector even registers a flush-triggering instrument window for this
-      data_type. Repo: market-tick-data-service.
+      data_type. Repo: market-tick-data-service. — market-tick-data-service@90e2336c (see Progress Log for root cause +
+      live-reproduction evidence).
 - [ ] [CODE] P2. Debug why `CoinbaseDepth10WSConnector` (coinbase_book_ws.py) produces only `empty_confirmed` rows (424
       in ~30 min) — this is COINBASE-SPOT's first-ever live dispatch on this VM (no prior working baseline for
       comparison), so also verify the venue's `level2` subscription itself is actually receiving book-diff messages, not
@@ -156,3 +157,42 @@ operator/architecture call, not a mechanical fix.
   @778ee0e3, Terraform `persist-cefi-depth-of-book-10` topic+subscription applied to prod) end-to-end for
   BINANCE-FUTURES, and discovering the other 4 venues do not yet produce real captured rows. See
   `cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 2's Progress Log for the full session narrative.
+- **2026-08-09, slot-27**: root cause found + fixed for the DERIBIT `depth_of_book_10` todo, confirmed live against the
+  real Deribit WS API (not simulated). `DeribitBookWSConnector._open_and_subscribe`/`subscribe`/`unsubscribe` (the base
+  class `DeribitDepth10WSConnector` inherits without override) build ONE combined `public/subscribe` JSON-RPC request
+  listing a `book.*` channel for EVERY instrument in the venue's IS-resolved universe. `cefi/DERIBIT`'s real live
+  universe resolves to **2,997 instruments** (verified via `read_is_universe_sync` against the live IS bucket) — exactly
+  the row count the issue's own `derivative_ticker` evidence cites (one row per instrument, all almost certainly
+  `empty_confirmed` for the same underlying reason, not real ticker data — the manifest-write path working is real,
+  "capturing real data" was not verified). Live reproduction against `wss://www.deribit.com/ws/api/v2` (public,
+  unauthenticated, read-only):
+  - A `public/subscribe` request with the full 2,997 real `book.{instrument}.none.20.100ms` channels (131KB payload)
+    gets the WHOLE WebSocket connection closed by Deribit's server with close code **1009 (MESSAGE_TOO_BIG)** before any
+    response arrives — zero channels ever subscribed.
+  - Binary-searching the channel count found Deribit's JSON-RPC layer itself rejects anything above ~700-800 channels in
+    one request with a clean `{"error": {"code": -32600, "message": "request entity too large"}}` response (channels
+    1-700 subscribed fine; 800+ → the whole batch, not just the excess, is rejected).
+  - So `DeribitDepth10WSConnector`'s single-message subscribe-the-whole-universe approach NEVER succeeds against
+    DERIBIT's real instrument count — every reconnect attempt resends the identical oversized request and fails
+    identically, so the connector never receives a single depth-10 update. (The runner's window/buffer registration
+    itself is unaffected — `self._buffers` populates from IS resolution independent of subscribe success — so the "not
+    even empty_confirmed" symptom is consistent with `derivative_ticker`'s sibling `DeribitTickerWSConnector` having the
+    SAME defect and its 2,997 rows actually being empty, not real data; not independently re-verified against live prod
+    capture_status here.)
+  - **Fix** (market-tick-data-service, `deribit_book_ticker_ws.py`): batch the channel list into chunks of
+    `_MAX_CHANNELS_PER_SUBSCRIBE_MSG = 200` (well under the measured ~700-channel-OK boundary) and send one
+    `public/subscribe`/`public/unsubscribe` RPC per chunk instead of one giant request. Applied to BOTH
+    `DeribitBookWSConnector` (used by `book_snapshot_5` + inherited by `DeribitDepth10WSConnector`) and
+    `DeribitTickerWSConnector` (`derivative_ticker`) — same file, same root-cause pattern, same fix shape
+    (findings-triage "in your file → fix in same commit").
+  - **Re-verified live post-fix**: instantiated the real `DeribitDepth10WSConnector` class with the actual
+    2,997-instrument production IS universe, called `connect()` + drained `stream()` for 12s against live Deribit —
+    received **7,344 real depth-10 ticks** (previously 0). `connect()` returns cleanly, WS stays open.
+  - Added 2 unit tests (`tests/unit/test_deribit_book_ticker_ws_coverage.py`) asserting `subscribe()` splits a large
+    instrument set into multiple `<= _MAX_CHANNELS_PER_SUBSCRIBE_MSG`-sized `public/subscribe` messages, for both
+    connector classes. Full existing suite (69 tests) green.
+  - **Not yet done**: redeploying the live `mtds-live-cefi-consolidated-*` VM to pick up this fix, and re-verifying real
+    `capture_status=captured` manifest rows for DERIBIT `depth_of_book_10` in prod (this repo's fix is code-level; a VM
+    cycle deploys it — out of this todo's DETERMINABLE-by-worker-alone scope, the remaining
+    BYBIT-FUTURES/COINBASE-SPOT/OKX-SWAP todos on this issue doc still need debugging, and this issue doc should stay
+    open until all 4 are resolved + prod-verified).
