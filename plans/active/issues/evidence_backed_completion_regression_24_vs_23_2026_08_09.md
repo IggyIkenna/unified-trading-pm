@@ -111,10 +111,17 @@ false-positive and reworded) or the baseline is reviewed-and-ratcheted (only aft
       `check_evidence_backed_completion.py` post-fix: sub-rule B dropped to 20 claims-without-evidence (well under the
       baseline of 24; this specific line no longer appears in the violation list), sub-rule A 0 violations (cited build
       resolves SUCCESS).
-- [ ] [SCRIPT] P2. Once both todos above land (or are confirmed false-positive and reworded), re-run
+- [x] ✅ [SCRIPT] P2. Once both todos above land (or are confirmed false-positive and reworded), re-run
       `check_evidence_backed_completion.py --baseline-write` to ratchet `claim_without_evidence_baseline` back down to
       the resolved count — never leave the baseline absorbing this regression once it's addressed. Repo:
-      unified-trading-pm.
+      unified-trading-pm. — **DONE**: fresh-pulled `origin/live-defi-rollout`, re-ran the checker — both prerequisite
+      todos confirmed landed. First pass measured 18 (down from 24), but a same-branch archival commit
+      (`ci_satellite_ao_dispatch_batch1_2026_07_26.md` → `plans/archive/2026_08/`) landed mid-task via `git pull --rebase`,
+      moving 4 of that count's flagged claims out of the active corpus — re-ran fresh against the post-rebase HEAD before
+      writing: live count 14. Ran `--baseline-write`: wrote `claim_without_evidence_baseline: 14` to
+      `evidence_backed_completion_baseline.yaml`. Re-verified: checker exits 0 with sub-rule B at 14/baseline 14, sub-rule
+      A 0. All 3 todos in this issue doc are now `[x]` — eligible for archival per the
+      plan-completion-and-archival-discipline SSOT.
 
 ## Progress Log
 
@@ -136,3 +143,9 @@ false-positive and reworded) or the baseline is reviewed-and-ratcheted (only aft
   the corpus (17 hits of "success-reporting" alone). Shipped `unified-trading-pm@c9b1b6016` via the standard Pass-1 QG →
   quickmerge flow. Both todos 1 and 2 are now `[x]`; todo 3's gate is clear for whoever picks it up next (not bundled
   into this task).
+- **cicd-worker slot 10, 2026-08-09**: resolved todo 3 (final) — fresh-pulled `origin/live-defi-rollout`, re-ran
+  `check_evidence_backed_completion.py`: first pass measured 18 (down from the regressed 24), sub-rule A 0. A rebase onto
+  a newly-landed archival commit (`ci_satellite_ao_dispatch_batch1_2026_07_26.md` moved to `plans/archive/2026_08/`)
+  shifted the live corpus mid-task, dropping 4 more flagged claims — re-measured against post-rebase HEAD before writing:
+  14. Ran `--baseline-write`: `claim_without_evidence_baseline` ratcheted 24→14. Post-write re-run confirmed exit 0
+  (14/14). All 3 todos now `[x]` — this doc is archival-eligible.
