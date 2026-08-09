@@ -325,20 +325,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                                                                          disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                                                                          future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                                                                          bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                                                                          prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                                                                          2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                                                                          hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                                                                          threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                                                                          loader, post-delete verification) and filed
-                                                                          `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                                                                          AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                                                                          actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                                                                          stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                                                                          via that issue doc, not this line.
-                                                                          verification actually complete.
+                                                                              disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                                                                              future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                                                                              bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                                                                              prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                                                                              2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                                                                              hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                                                                              threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                                                                              loader, post-delete verification) and filed
+                                                                              `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                                                                              AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                                                                              actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                                                                              stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                                                                              via that issue doc, not this line.
+                                                                              verification actually complete.
 
 - [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
@@ -510,7 +510,7 @@ drift_direction: advance-code
       when: per-asset_group `--dry-run` sizing checks land in the expected ballpark; `--apply-write` runs on VM(s) per
       the vm-launcher-runbook (SPOT); post-run verification shows `expected_unattempted` counts in range with captured
       rows preserved and the consolidator green.
-- [ ] [CODE] P2. Fix TradFi FX/FRED instrument-write schema validation failure — both venues fetch successfully from
+- [x] ✅ [CODE] P2. Fix TradFi FX/FRED instrument-write schema validation failure — both venues fetch successfully from
       their sources but 100% of their instrument records are rejected at write time with
       `SCHEMA_VALIDATION_FAILED …     reason=timezone required for TradFi`, so
       `uts-prod-instruments-service-tradfi-t1-recon` writes 0 captured rows for FX/FRED every run despite the job itself
@@ -521,7 +521,26 @@ drift_direction: advance-code
       instruments-service. Done when: FX and FRED instrument records pass validation and write captured rows (either the
       validator's timezone requirement is relaxed for these 24/7 non-exchange venues, mirroring their
       `_STATIC_24_7_VENUES` calendar treatment, or the adapters are fixed to stamp a timezone) — verified via a fresh
-      dated run log showing FX/FRED captured counts > 0.
+      dated run log showing FX/FRED captured counts > 0. — `instruments-service@4c0411b76` (2 commits: `f7707918` stamps
+      `timezone="UTC"`/`holiday_calendar=<venue>` on both `FxReferenceDataAdapter`/`FredReferenceDataAdapter` mirroring
+      the `_STATIC_24_7_VENUES` treatment; `4c0411b7` fixes a SECOND validator rejection (`tick_size must be positive`)
+      uncovered by the first fix's own regression test — neither adapter set `tick_size`/`min_size`/`contract_size`
+      either, so clearing the timezone rejection just exposed the next one). 8 new/updated unit tests run the real
+      `validate_instrument_records()` against every emitted record; full `quality-gates.sh` green (115s, sentinel
+      `4c0411b76`). **Live-verified, not just unit-tested** (same recipe as item 6): manually rebuilt the image from
+      this fix
+      (`gcloud builds triggers run instruments-service-build --region=asia-northeast1 --branch=live-defi-rollout`, build
+      `c4abc0c6-dd9c-41a9-83cb-792d6b48b996` SUCCESS, resolved SHORT_SHA=8c79c51 — `4c0411b76` confirmed an ancestor,
+      pushed `:latest`), then executed the live job against the fresh image
+      (`gcloud run jobs execute uts-prod-instruments-service-tradfi-t1-recon --region=asia-northeast1`, execution
+      `uts-prod-instruments-service-tradfi-t1-recon-lp5fx`, 2026-08-09 22:40-22:44 UTC, succeeded exit 0). Logs:
+      `FX: fetched 11 static spot-pair instruments` / `FRED: fetched 28 static KEY_SERIES instruments`, both pass the
+      date filter, **zero** `SCHEMA_VALIDATION_FAILED`/`SHARD FAILED` for either venue (the exact failure mode this todo
+      exists to fix, confirmed absent by a full-log grep) — final summary
+      `instruments: date=2026-08-09 wrote 40     records across 7 venues`, which is exactly ICE(1)+FX(11)+FRED(28)=40
+      (CBOE/KRX/NASDAQ/NYSE correctly pre-stamped `empty_confirmed` on a non-trading day, contributing 0 real records;
+      CME still fails on the separate, unrelated `ADAPTER_ERROR` this plan's next todo covers). FX/FRED captured counts:
+      11 and 28 — both > 0, done-when satisfied.
 - [ ] [CODE] P3. Fix the CME COMBO malformed-symbol `ADAPTER_ERROR` in `build_instrument_id` — symbol
       `UD:1N: 12 2518307` (instrument_type=COMBO) carries an embedded `:`, the canonical id's own VENUE:TYPE:SYMBOL
       delimiter, so id construction fails with a classified `ADAPTER_ERROR (permanent)`. Found 2026-08-09 alongside the
@@ -536,31 +555,31 @@ drift_direction: advance-code
       it as the live index" — is not directly achievable safely).
 
       Findings: (1) `rebuild_defi_manifest.py --apply` (mtds@3f5cc6e/cf63cf6, already shipped) UPSERTS by cell key
-                          (date, venue, data_type, instrument_type, instrument_id, underlying) — a freshly canonical-spelled row lands as a
-                          NEW key alongside the stale legacy-spelled row instead of removing it, so a plain re-run cannot achieve
-                          "replace, not merge". (2) UTL's real wholesale-replace primitive is deliberately NOT used bucket-wide by
-                          `rebuild_mtds_manifest.py` (uses an additive merge helper instead) because the DeFi tick bucket co-locates MDPS
-                          candle rows under the same index — a bucket-wide replace would silently delete every candle-manifest row (see
-                          `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`).
+                              (date, venue, data_type, instrument_type, instrument_id, underlying) — a freshly canonical-spelled row lands as a
+                              NEW key alongside the stale legacy-spelled row instead of removing it, so a plain re-run cannot achieve
+                              "replace, not merge". (2) UTL's real wholesale-replace primitive is deliberately NOT used bucket-wide by
+                              `rebuild_mtds_manifest.py` (uses an additive merge helper instead) because the DeFi tick bucket co-locates MDPS
+                              candle rows under the same index — a bucket-wide replace would silently delete every candle-manifest row (see
+                              `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`).
 
-                          Correct design mirrors the sports K1K2 casing-revert manifest-swap script's ADD+REMOVE CAS-protected pattern
-                          (`scripts/sports/k1k2_casing_revert_2026_07_27/`), precisely scoped: ADD = fresh canonical rows from a
-                          `rebuild_defi_manifest.py --dry-run --beta-manifest-out` projection (needs `--chunk-days` and
-                          `--beta-manifest-out` made compatible — currently mutually exclusive — to avoid the OOM class already fixed for
-                          the non-projection path, `mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md`); REMOVE =
-                          ONLY the legacy-spelled/uppercase-itype/chain-polluted rows whose canonical replacement is confirmed present in
-                          that same projection (never "every stale row" — mirrors the K1K2 script's report-scoped-REMOVE invariant, so a
-                          captured cell is never orphaned).
+                              Correct design mirrors the sports K1K2 casing-revert manifest-swap script's ADD+REMOVE CAS-protected pattern
+                              (`scripts/sports/k1k2_casing_revert_2026_07_27/`), precisely scoped: ADD = fresh canonical rows from a
+                              `rebuild_defi_manifest.py --dry-run --beta-manifest-out` projection (needs `--chunk-days` and
+                              `--beta-manifest-out` made compatible — currently mutually exclusive — to avoid the OOM class already fixed for
+                              the non-projection path, `mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md`); REMOVE =
+                              ONLY the legacy-spelled/uppercase-itype/chain-polluted rows whose canonical replacement is confirmed present in
+                              that same projection (never "every stale row" — mirrors the K1K2 script's report-scoped-REMOVE invariant, so a
+                              captured cell is never orphaned).
 
-                          Sub-steps: (a) make `--chunk-days` and `--beta-manifest-out` compatible; (b) build a new
-                          `defi_manifest_venue_itype_canon_swap.py` (mirrors the K1K2 script skeleton) with a dry-run default, an
-                          apply-prod-plus-confirm gate, and a mandatory pre-write snapshot; (c) run the chunked dry-run projection on a
-                          dedicated VM (corpus-scale GCS walk, never the shared host) and diff it against live; (d) run the
-                          pre-migration drain gate plus snapshot; (e) apply and post-verify (0 stale rows remaining, 0 captured-to-failed
-                          mass flip). Repo: market-tick-data-service. Done when: the live defi index has 0 legacy-spelled/uppercase-itype/
-                          chain-polluted rows AND 100% of their canonical twins present with matching row_count, verified via a fresh
-                          post-apply GCS-sampled re-audit (mirrors the N6r 2026-06-18 post-apply verification already done for the
-                          index-walk fix).
+                              Sub-steps: (a) make `--chunk-days` and `--beta-manifest-out` compatible; (b) build a new
+                              `defi_manifest_venue_itype_canon_swap.py` (mirrors the K1K2 script skeleton) with a dry-run default, an
+                              apply-prod-plus-confirm gate, and a mandatory pre-write snapshot; (c) run the chunked dry-run projection on a
+                              dedicated VM (corpus-scale GCS walk, never the shared host) and diff it against live; (d) run the
+                              pre-migration drain gate plus snapshot; (e) apply and post-verify (0 stale rows remaining, 0 captured-to-failed
+                              mass flip). Repo: market-tick-data-service. Done when: the live defi index has 0 legacy-spelled/uppercase-itype/
+                              chain-polluted rows AND 100% of their canonical twins present with matching row_count, verified via a fresh
+                              post-apply GCS-sampled re-audit (mirrors the N6r 2026-06-18 post-apply verification already done for the
+                              index-walk fix).
 
 ## Codex SSOTs
 
@@ -681,3 +700,15 @@ drift_direction: advance-code
   `git rev-list --count HEAD ^origin/live-defi-rollout` = 0 in market-tick-data-service. This todo and the plan's
   overall batch item are DONE — proceeding to `/done` for task
   `cross_cutting_satellite_ao_dispatch_batch2-8c28b6763ac3`.
+- **2026-08-09 (slot-27, data_engineering) — FX/FRED schema-validation item DONE.** Root cause was two independent
+  missing-required-field gaps in `FxReferenceDataAdapter`/`FredReferenceDataAdapter` (`instruments-service`), not a
+  validator bug: neither set `timezone`/`holiday_calendar` (the todo's stated symptom) NOR `tick_size`/`min_size`/
+  `contract_size` (a second rejection the first fix's own regression test uncovered, previously masked by the timezone
+  rejection firing first in `_check_record`'s short-circuit order). Fixed both in 2 commits (`f7707918`/`4c0411b7`,
+  shipped together as `instruments-service@4c0411b76`), with unit tests that exercise the real
+  `validate_instrument_records()` rather than asserting on individual fields. Live-verified against
+  `uts-prod-instruments-service-tradfi-t1-recon` (not just unit-tested) by manually rebuilding the image
+  (`instruments-service-build` trigger, `asia-northeast1`, build `c4abc0c6`) and executing the job (execution `-lp5fx`)
+  — see the todo's own DONE note for the full log evidence. Full detail on the two-fix discovery
+  - the trigger-region gotcha (triggers live in `asia-northeast1`, not global — `gcloud builds triggers list` with no
+    `--region` silently returns zero results) is in the todo body, not repeated here.
