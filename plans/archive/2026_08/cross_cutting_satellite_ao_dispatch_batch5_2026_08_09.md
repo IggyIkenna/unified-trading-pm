@@ -11,7 +11,7 @@ summary: >-
   "re-check for supersession first" gate; the other is a hybrid — its confirm-half is already resolved (flagged STALE
   for the source doc's own maintainer pass, not actioned here) and its wiring-half is dependency-blocked on an unshipped
   upstream feature.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -22,7 +22,7 @@ related:
   [
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch5_2026_08_09_finalize.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch5_2026_08_09_finalize.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"
@@ -54,7 +54,11 @@ drift_direction: advance-code
 
 # Cross-cutting satellite AO batch 5 (features_and_ml_master) — bounded-item extraction
 
-> **Status: active.** Both todos below are same-priority-independent and touch distinct files — no
+> **ARCHIVED 2026-08-09 -- COMPLETE.** Both todos shipped. Finalize plan
+> `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09_finalize.md` (source-doc reconciliation + this archival)
+> completed and archived alongside in the same commit set. Successor: none.
+
+> **Status (historical): active.** Both todos below are same-priority-independent and touch distinct files — no
 > `sequential`/`gate_on_depends` needed.
 
 ## Todos

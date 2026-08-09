@@ -28,7 +28,7 @@ scope: [engineer]
 tags: [manifest, mtds, mdps, cefi, bitget, raw-tick-gap, honest-absence, backfill]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md,
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/availability-manifest-and-data-status.md,

@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [defi, onchain, lst-yields, staking-apy, annualization, data-quality, carry-staked-basis]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md,
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
     /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
     /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
@@ -50,7 +50,7 @@ source: >-
   staked-basis e2e dry-run + IS_TEST_RUN=true run + read-back assertion).
 context_scope:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md,
     features-service/features_service/onchain/engine/lst_features.py,
   ]
 ---
@@ -110,8 +110,8 @@ within normal LST peg noise) compounds to -18% to -35% "APY".
 
 ## Todos
 
-- **[DIAG] P2. EXTRACTED 2026-08-09 — moved to `defi_satellite_ao_dispatch_batch12_2026_08_09.md` todo 1 for AO
-  dispatch (parent_epic: features_and_ml_master). See that doc for the live checkbox + evidence.** (Confirm whether
+- **[DIAG] P2. EXTRACTED 2026-08-09 — moved to `defi_satellite_ao_dispatch_batch12_2026_08_09.md` todo 1 for AO dispatch
+  (parent_epic: features_and_ml_master). See that doc for the live checkbox + evidence.** (Confirm whether
   `CARRY_STAKED_BASIS` consumes `staking_apy_bps` raw or through a smoothing/clamping layer already — if already
   smoothed, downgrade this to a cosmetic-only note; if raw, treat as the P1 half of this finding. Repo:
   strategy-service.)
@@ -127,8 +127,8 @@ within normal LST peg noise) compounds to -18% to -35% "APY".
   empty_confirmed for this window; health_factor honestly attempted_failed — see the batch plan's Progress Log for the
   full run evidence). This doc covers only the `staking_apy_bps` plausibility finding. No fix applied; no code changed.
 - **round9-reclassify-satellite-sweep 2026-08-09** (defi tranche): per-item satellite-extraction — todo 1 ([DIAG] P2)
-  cleared the bounded/worker-determinable bar (a grep-and-read diagnostic with a stated done-when) independently of
-  todo 2, which stays `assigned_vm: NA` on this doc — it remains an explicit quant-math methodology design call ("a
+  cleared the bounded/worker-determinable bar (a grep-and-read diagnostic with a stated done-when) independently of todo
+  2, which stays `assigned_vm: NA` on this doc — it remains an explicit quant-math methodology design call ("a
   strategy-math judgment call... out of data_engineering craft scope"), not worker-determinable as written. Extracted
   todo 1 into `/plans/active/defi_satellite_ao_dispatch_batch12_2026_08_09.md` (parent_epic: features_and_ml_master),
   gated finalize twin authored. Conflict-check clear: the only other corpus reference to this doc is

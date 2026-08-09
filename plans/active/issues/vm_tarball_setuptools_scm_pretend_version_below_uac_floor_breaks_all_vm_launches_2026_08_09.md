@@ -31,7 +31,7 @@ related:
   [
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/05-infrastructure/vm-tarball-deployment.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md,
   ]
 created: 2026-08-09
 last_updated: 2026-08-09
