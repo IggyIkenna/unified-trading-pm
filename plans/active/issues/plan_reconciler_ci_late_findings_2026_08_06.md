@@ -96,11 +96,10 @@ failure (75 orphans vs 69 baseline).
       prose at the line-cap-remediation split banner) to their leading-slash archive paths; `check_reference_paths.py`
       clean (both format + existence checks under baseline, no new violations). Evidence: unified-trading-pm (this
       commit).
-- [ ] [DOC] P1. **`qg_host_adaptive_resource_governor_2026_07_14.md`** — 4 refs to
-      `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md` (archived; only at
-      `plans/archive/issues/`). Repoint. **Re-verified still-open 2026-08-09 (round-9 sweep)** — confirmed archived at
-      exactly `plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md`. **Extracted to
-      `ci_satellite_ao_dispatch_batch9_2026_08_09.md` todo 1.**
+- [x] [DOC] P1. ✅ — Fixed all 4 refs in `qg_host_adaptive_resource_governor_2026_07_14.md` (`related:`, `source:`,
+      Codex-SSOTs inline, Phase-6 body) — repointed from the stale `plans/active/issues/...` path to
+      `/plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md`, verified with
+      `check_reference_paths.py --only`. Via `ci_satellite_ao_dispatch_batch9_2026_08_09.md` todo 1.
 
 ---
 

@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [infra, quality-gates, host-contention, governor, resource-admission, cross-host]
 related:
   [
-    plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md,
+    /plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md,
     /codex/06-coding-standards/quality-gates.md,
     scripts/quality-gates-base/qg-host-governor.sh,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
@@ -39,7 +39,10 @@ supersedes:
 superseded_by:
 depends_on: []
 source:
-  [plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md, scripts/quality-gates-base/qg-host-governor.sh]
+  [
+    /plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md,
+    scripts/quality-gates-base/qg-host-governor.sh,
+  ]
 context_scope:
   [
     /codex/06-coding-standards/quality-gates.md,
@@ -63,8 +66,8 @@ context_scope:
   around the heavy phases; `QG_PROFILE` handling; the `MAX_DURATION` meta-gate.
 - `scripts/quality_gates/profile_qg_resources.py` + `scripts/dev/measure-qg-baseline.sh` — the tree-RSS profiler and
   baseline recorder that feed per-repo costs; `scripts/dev/qg_resource_baseline.json` is the data file.
-- `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md` — the open issue whose 4 todos this plan
-  resolves (K-floor policy, MAX_DURATION counts queue-as-work, light-slice queues needlessly, fairness/starvation gap).
+- `/plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md` — the issue whose 4 todos this plan resolves
+  (K-floor policy, MAX_DURATION counts queue-as-work, light-slice queues needlessly, fairness/starvation gap).
 
 ## Problem
 
@@ -335,8 +338,8 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       `/codex/06-coding-standards/quality-gates.md` — the dual-gate model + the corrected heavy-tier order (UTL →
       instruments → execution → …; the stale "execution/features = #2" fixed).
 - [x] [INFRA] P2. ✅ PM@6402f6cd8 (`status: resolved` + `resolved_by:` + ✅ banner; all 4 issue todos were already
-      `[x]`) — Close the 4 todos in `issues/qg_host_governor_severe_contention_2026_07_13.md` (this plan resolves all
-      four) and banner the issue resolved.
+      `[x]`) — Close the 4 todos in `/plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md` (this plan
+      resolves all four) and banner the issue resolved.
 
 ### Phase 6 — Cross-host verification
 

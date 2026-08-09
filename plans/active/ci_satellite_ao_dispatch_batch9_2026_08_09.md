@@ -75,8 +75,9 @@ Todos 1 and 2 touch disjoint files (`qg_host_adaptive_resource_governor_2026_07_
 
 ## Todos
 
-- [ ] 1. [DOC] P2. **Repoint 4 stale `plans/active/issues/` refs in `qg_host_adaptive_resource_governor_2026_07_14.md`
-      to the archived path.** The target, `qg_host_governor_severe_contention_2026_07_13.md`, is archived at
+- [x] 1. ✅ [DOC] P2. **Repoint 4 stale `plans/active/issues/` refs in
+      `qg_host_adaptive_resource_governor_2026_07_14.md` to the archived path.** The target,
+      `qg_host_governor_severe_contention_2026_07_13.md`, is archived at
       `plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md` (verify fresh with
       `find plans/active plans/archive -iname "qg_host_governor_severe_contention_2026_07_13.md"` before editing, in
       case it has moved again since 2026-08-09). Fix all 4 occurrences in
@@ -91,6 +92,11 @@ Todos 1 and 2 touch disjoint files (`qg_host_adaptive_resource_governor_2026_07_
       file is clean. Flip the source finding's checkbox in `issues/plan_reconciler_ci_late_findings_2026_08_06.md` (P1,
       "`qg_host_adaptive_resource_governor_2026_07_14.md` — 4 refs …") with the commit cited.
   - Source: `issues/plan_reconciler_ci_late_findings_2026_08_06.md`, P1 finding 2.
+  - **Done** — all 4 occurrences (`related:`, `source:`, Codex-SSOTs inline ref, Phase-6 body ref) repointed to
+    `/plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md` (leading-slash convention per
+    `check_reference_paths.py`). Verified: stale-count grep = 0, archived-count grep = 4,
+    `check_reference_paths.py --only` clean. Source finding flipped in
+    `issues/plan_reconciler_ci_late_findings_2026_08_06.md`. — unified-trading-pm@PENDING_SHA
 
 - [ ] 2. [DOC] P2. **Fix the stale `status: active` for `mtds_retry_safe_default_audit_2026_07_14` in
       `plans/epics/infrastructure_master.md` (around L595-597, re-locate by grepping the slug fresh — the epic file
