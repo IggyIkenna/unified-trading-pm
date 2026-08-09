@@ -41,7 +41,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-07
-last_updated: 2026-08-07
+last_updated: 2026-08-09
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -185,10 +185,31 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
       (re-verified fresh this session: both `gcloud scheduler jobs describe ... --location=asia-northeast1` calls return
       `PAUSED`). Pausing is not full retirement — decommission both scheduler resources (and confirm neither Cloud Run
       Job `catalogue-regen`/`instrument-catalogue-regen` is still referenced elsewhere) as their own step.
-- [ ] [OPERATOR] P2. **STILL OPEN, not yet addressed** — repoint candidate (4): confirm
-      `uts-prod-features-sports-t1-schedule` is genuinely superseded by the `features-service-sports-daily-trigger`
-      Workflow path before considering it safe to leave permanently paused/delete later. No ruling yet — this one
-      remains a real open decision.
+- [x] ✅ [DOC] P2. **CONFIRMED 2026-08-09 — repoint candidate (4): superseded, RULED retire.** Read
+      `deployment-service/terraform/gcp/t1_batch_scheduler.tf` lines 66-75: the
+      `uts-prod-features-sports-service-t1-recon` target (this scheduler's dead target) is explicitly documented as
+      never having existed as a real function in ANY tier -- "the sports-features t1-recon target job doesn't exist in
+      ANY tier (dev or prod) -- that scheduler entry was already dead," per an explicit operator ruling dated 2026-07-14
+      (`bucket_estate_consolidation_to_sub100_2026_07_13.md`). Separately read
+      `deployment-service/terraform/services/features-service-sports/gcp/main.tf` lines 1-15, 296-312: the CURRENT live
+      sports feature-generation path is a distinct, later-generation stack (`features-service-sports-job` +
+      `features-service-sports-daily` Workflow + `features-service-sports-daily-trigger` scheduler, consolidated
+      2026-07-15, confirmed healthy via a real scheduled fire that SUCCEEDED, kept ENABLED) that itself superseded an
+      intermediate LEGACY `features-sports-service-job` + its own daily-trigger scheduler -- fully retired/deleted via
+      `tofu state rm` + `gcloud delete` on 2026-07-15, all 404-confirmed. So there are three generations here
+      (dead-from-birth t1-recon -> retired-and-deleted legacy daily -> current live daily), not two coexisting functions
+      that both need to exist -- t1-recon and the current `features-service-sports-daily` path are NOT functionally
+      distinct; t1-recon was never a real function for sports feature generation at all. Retagged `[OPERATOR]` ->
+      `[DOC]` and flipped done; added to the same Terraform-retirement-pending bucket as repoint candidates (1) and (3)
+      below (RULED-retire, decommission not yet executed) for consistency.
+- [ ] [OPERATOR] P2. **STANDING-ACTION — repoint candidate (4) RULED, Terraform retirement not yet executed.**
+      `uts-prod-features-sports-t1-schedule` (asia-northeast1): RETIRE it -- its target
+      (`uts-prod-features-sports-service-t1-recon`) never existed as a real function (dead-from-birth per the 2026-07-14
+      ruling cited above), and the live sports feature-generation path
+      (`features-service-sports-daily`/`-daily-trigger`) is a fully separate, later-generation stack that doesn't need
+      this scheduler at all. This scheduler is currently `PAUSED` (from the bulk-pause below) but pausing alone is NOT
+      full retirement -- the actual Terraform/infra resource still needs to be decommissioned. Track and execute that
+      decommission as its own step.
 - [ ] [DIAG] P3. For the 34 non-repoint dead-target schedulers (dev/staging-tier `*-t1-schedule`s +
       `central-market-data-service-scheduler-trigger`): confirm with each owning service team/repo whether the
       dev/staging-tier T1-recon Cloud Run Job was deliberately decommissioned (in which case these schedulers should
@@ -205,3 +226,15 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
   (discovered `gcloud scheduler jobs describe` clears `status`/`lastAttemptTime` once a job is `PAUSED` — noted in
   Method for future reference). No code changes — infra-only (no repo owns these scheduler resources).
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (2 entries), still accurate.
+- **RULED 2026-08-09 (operator)**: "Confirmed — retire it." Per the ruling's own flagged spot-check, read
+  `deployment-service/terraform/gcp/t1_batch_scheduler.tf` (lines 66-75) and
+  `deployment-service/terraform/services/features-service-sports/gcp/main.tf` (lines 1-15, 296-312) to confirm whether
+  t1-recon and the live `features-service-sports-daily` Workflow are the same function or two genuinely distinct ones.
+  Confirmed same function across three successive generations: (1) `uts-prod-features-sports-service-t1-recon` --
+  dead-from-birth, never materialized in any tier, per an explicit 2026-07-14 operator ruling
+  (`bucket_estate_consolidation_to_sub100_2026_07_13.md`); (2) a LEGACY `features-sports-service-job` + daily-trigger --
+  fully retired/deleted via `tofu state rm` + `gcloud delete` on 2026-07-15, all 404-confirmed; (3) the CURRENT
+  `features-service-sports-job` + `features-service-sports-daily` Workflow + `-daily-trigger` scheduler -- live,
+  ENABLED, confirmed via a real scheduled fire that SUCCEEDED. Retagged the todo `[OPERATOR]` -> `[DOC]`, flipped done,
+  and filed a new `[OPERATOR]` STANDING-ACTION todo for the actual Terraform decommission (pause is not full
+  retirement), matching repoint candidates (1) and (3)'s existing pattern for consistency.
