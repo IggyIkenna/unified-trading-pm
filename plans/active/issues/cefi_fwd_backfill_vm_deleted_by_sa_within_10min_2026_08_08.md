@@ -230,7 +230,7 @@ before launch.
       pointer to `infra.md` STEP 0.65's 3-signal staleness check ("construct the delete command by hand — this refusal
       intentionally does not print one to copy-paste"). Verified via `bash -n` on all 62 changed files + full
       `quality-gates.sh` green (sentinel bc48b09b) + quickmerge landed on live-defi-rollout, ancestry-verified.
-- [ ] [INFRA] P1. **NEW 2026-08-09 (found while re-checking the contamination-doc gate for task -014).** The DAILY
+- [x] ✅ [INFRA] P1. **NEW 2026-08-09 (found while re-checking the contamination-doc gate for task -014).** The DAILY
       `launch-cefi-forward-poll.sh` cron (separate from the one-off VM-4 backfill above, which correctly stopped at its
       target end-date 2026-08-05) appears to have STOPPED FIRING as of 2026-08-06 — a live, still-open gap, not
       historical. Evidence: (1) `probe_cefi_perp_funding_raw_coverage.py --start 2026-05-16 --end 2026-08-09` (fresh
@@ -242,15 +242,47 @@ before launch.
       (`cefi-fwd-daily-cron-20260809-084100`, launched 08:42Z today) is RUNNING and its crontab installed correctly, but
       by 10:20Z — 80 min past its own `0 9 * * *` fire time — its own heartbeat log still reads "no fires yet" and no
       new `cefi-fwd-*` data-capture VM has been launched (`gsutil ls .../vm-logs/ | grep cefi-fwd-20260809` = empty).
-      Root cause NOT diagnosed (out of data_engineering craft scope — this is the cron-host relaunch mechanism /
-      crond-inside- VM reliability, `deployment-service` infra territory, same repo/craft as this doc's other `[INFRA]`
-      items). Direct consequence: contamination doc `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s task -014
-      step 1 gate ("`funding_window()` returns non-empty CURRENT observations, not just historically-backfilled ones")
-      is NOT met even after task -011's corpus recompute runs over the now-complete historical window — recompute would
-      still honest-skip everything from 08-06 forward. **Repo: deployment-service** (`launch-cefi-forward-poll.sh` /
-      `cefi-fwd-daily-cron` host boot script / whatever relaunches the cron-host VM) — diagnose why the host isn't being
-      relaunched daily and why today's host's own internal crontab didn't fire by T+80min past due, then verify a fresh
-      `cefi-fwd-*` VM lands 08-06→today data.
+      **Root cause diagnosed + fixed (slot-18, 2026-08-09) — deployment-service@0395764a.** The 08-06/08-07/08-08
+      host-relaunch gap is the zombie watchdog, not a crond/cron-host reliability bug: `cefi-fwd-daily-cron-*` boots a
+      long-lived host that installs the crontab then sleeps forever (`VM_LIFECYCLE_CLASS=SCHEDULED_RECURRING`, confirmed
+      via `gcloud logging read` audit trail) but its startup script never writes a `vm-heartbeat/<vm_name>.txt` blob —
+      it only logs to `run.log` hourly. `vm_zombie_watchdog.py`'s `PREFIX_IDLE_THRESHOLDS` has no entry more specific
+      than `"cefi-fwd-"` (30min heartbeat window, sized for the WORKER VM's continuous heartbeat sidecar), so the
+      longest-prefix match applies that window to the cron HOST too; with the heartbeat blob permanently absent, the
+      watchdog's own `zombie_no_heartbeat` verdict fires once VM age passes `min_age` (15min) and it deletes the host
+      via its own GCE default compute SA identity — confirmed by the audit log: the 2026-08-06 05:42Z host was deleted
+      05:58Z (16min later) by `1060025368044-compute@developer.gserviceaccount.com` (the watchdog's own principal, not
+      `unified-trading-sa`/ `uts-prd-sa`), and nobody manually relaunched it until this session found the gap 08-09.
+      **Same latent bug confirmed in 3 sibling launchers** (`launch-tradfi-fwd-daily-cron-vm.sh`,
+      `launch-cefi-onchain-fwd-daily-cron-vm.sh`, `launch-cefi-perp-funding-daily-cron-vm.sh` — all share the identical
+      sleep-forever/no-heartbeat/ `SCHEDULED_RECURRING` pattern; the two other `*-cron-vm.sh` launchers,
+      `batch-live-recon-cron` and `funding-ensemble-paper-cron`, do NOT share this pattern —
+      one-shot/`EPHEMERAL_EXPERIMENT`, not persistent hosts — and were left alone). **Fix**: added the watchdog's own
+      documented opt-out label, `tier=daemon` (`vm_zombie_watchdog.py`'s `DAEMON_TIER_LABELS`/`_is_daemon()` —
+      "canonical: long-lived poll loops with no fixed deadline"), to all 4 launchers' `LABELS=`. Shipped
+      `quality-gates.sh` green (sentinel 0395764a) + `quickmerge --agent`, ancestry-verified on `live-defi-rollout`.
+      Also applied `tier=daemon` directly ( `gcloud compute instances add-labels`) to the currently-RUNNING
+      `cefi-fwd-daily-cron-20260809-110236` host (launched 11:02Z by another session applying the separate MTDS-script
+      fix `a779b475` — pre-dates this label fix, so it needed the label added live) so it survives to fire tomorrow
+      08-10T09:00Z and every day after. **Verification of "fresh VM lands 08-06→today data" is DEFERRED — new todo
+      below**: attempted `launch-cefi-forward-poll.sh --data-types derivative_ticker 2026-08-06 2026-08-09`, refused by
+      `tardis-concurrency-guard.sh` (hard cap 1 concurrent Tardis VM, correctly enforced) —
+      `cefi-queue-heavy-binancefutu-x17-20260809-083733` (VM_TASK=cefi-coverage-backfill, VM_START_DATE=2019-01-01,
+      VM_END_DATE=2026-08-08, VM_DATA_TYPES=trades;book_snapshot_5 — an unrelated multi-year historical backfill, NOT
+      `derivative_ticker`, so it does not itself close this gap) currently holds the single slot. Did not `FORCE=1`
+      override — that is the exact 403-storm/false-`attempted_failed`-row failure mode the cap exists to prevent, not a
+      judgment call this task should make unilaterally.
+- [ ] [INFRA] P1. **NEW 2026-08-09 (blocked follow-up from the todo above).** Backfill the live `derivative_ticker`
+      forward gap for CARRY_BASIS_PERP venues, 2026-06-05→2026-08-05 confirmed complete but 2026-08-06→today still 0
+      objects across all 6 venues (`probe_cefi_perp_funding_raw_coverage.py --start 2026-08-06 --end <today>`). Once
+      `cefi-queue-heavy-binancefutu-x17-20260809-083733` (or whichever Tardis-consuming VM holds the slot at check time
+      —
+      `gcloud compute instances list --filter='name~"^(cefi|tradfi)-.*-(heavy|light)-|^cefi-queue-|^mtds-backfill-cefi-"' --zones=asia-northeast1-c --project=central-element-323112'`)
+      finishes/frees the single Tardis slot, run
+      `bash deployment-service/scripts/vm/launch-cefi-forward-poll.sh --data-types derivative_ticker 2026-08-06 <today>`
+      (adjust the end date to whatever "today" is at run time — the daily cron's own 08-10+ fires will have already
+      covered any days ≥08-10 via the `tier=daemon` fix above, so only re-check the specific still-empty days first).
+      Verify via `probe_cefi_perp_funding_raw_coverage.py` before flipping this todo — do not flip on VM-STOPPED alone.
 
 ## Progress Log
 
@@ -446,3 +478,15 @@ before launch.
   unflipped this session; no code shipped (investigation + doc-tracked finding only, per this workspace's findings-
   triage rule). Full gate-check detail + probe evidence cross-referenced in
   `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s own Progress Log, same timestamp.
+- **slot-18 (infra) 2026-08-09**: root-caused + fixed the daily-cron host-relaunch gap (see the flipped todo above for
+  full evidence): the zombie watchdog's `"cefi-fwd-"` heartbeat-threshold prefix match applies the WORKER VM's 30min
+  heartbeat window to the cron HOST too, which never writes a heartbeat blob — so the host is reliably zombie-killed
+  once past `min_age`, confirmed via the audit log (2026-08-06 host deleted 16min after launch by the watchdog's own GCE
+  default compute SA identity). Fixed by adding the watchdog's documented `tier=daemon` opt-out label to all 4 affected
+  persistent-cron-host launchers (`cefi-fwd`, `tradfi-fwd`, `cefi-onchain-fwd`, `cefi-perp-funding`) —
+  `deployment-service@0395764a`, `quality-gates.sh` green + `quickmerge --agent`, ancestry-verified on
+  `live-defi-rollout`. Also live-labelled the currently-running `cefi-fwd-daily-cron-20260809-110236` host so it
+  survives to its 08-10T09:00Z fire without waiting for a relaunch. The immediate 08-06→08-09 `derivative_ticker` gap
+  backfill is a separate, now-tracked follow-up todo (added above) — blocked on the Tardis single-VM concurrency cap,
+  currently held by an unrelated multi-year `cefi-queue-heavy-binancefutu-x17` historical backfill; did not `FORCE=1`
+  past the cap (that bypasses the exact 403-storm protection the cap exists for).
