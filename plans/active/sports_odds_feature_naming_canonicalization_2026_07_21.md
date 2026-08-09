@@ -310,3 +310,12 @@ work doesn't reintroduce a 5th convention.
   against `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s Conflict-gated entry for this same item (its holding
   premise — "the still-unshipped migration" — confirmed stale: todos 1-6 above are all `[x]`). Todo 10 (`[REVIEW] P3`,
   cross-reference against the wire-sports-end-to-end plan) stays open here, untouched. Doc stays `assigned_vm: NA`.
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: todo 10 (the last remaining open checkbox) resolved by
+  citation — its cross-reference target, `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`,
+  is `status: resolved`/archived (2026-07-25), so there is nothing active left to cross-reference; the sequencing
+  concern it guarded against is satisfied in substance (this doc's consumer-migration commits landed at/before that
+  resolution). **This doc now has ZERO open `- [ ]` checkboxes** — the one remaining tracked item (naming-parity test)
+  is prose-cited to `sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2, not a checkbox here. Flagging for a
+  future `/archive-candidates-audit` pass rather than archiving in this sweep (archival's referrer-sweep ritual is
+  out of scope for a citation-fix pass, and batch11's extracted todo hasn't landed yet — premature to archive while
+  the extraction is still in flight).
