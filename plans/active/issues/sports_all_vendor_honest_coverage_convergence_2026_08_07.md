@@ -928,3 +928,5 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **23:02Z** — smallchunk9 healthy, chunk 7/451, zero OOMs, fresh. Still pre-midnight-UTC — FIXTURE_LINEUPS probe not
   due yet.
 - **23:34Z** — smallchunk9 healthy, chunk 14/451, still zero OOMs, fresh. Still pre-midnight-UTC.
+- **00:06Z (2026-08-09)** — smallchunk9 healthy, chunk 17/451, still zero OOMs, fresh, entering chunk 18 next.
+  FIXTURE_LINEUPS probe target still ~1h away (~01:00Z).
