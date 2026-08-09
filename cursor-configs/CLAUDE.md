@@ -386,7 +386,9 @@ architecture (L0–L4)".
   reusable `notify-slack.yml` carrier (read-back dedup: `dedup_key`+`cooldown_min`, `recovery`-gated all-clears,
   fail-open); cooldowns track a condition's MEASURED delivery cadence, not its declared cron (GH throttles `schedule:`
   well below the declared rate — measured rates + dates in the SSOT, re-measure before trusting an old %). SSOT:
-  `/codex/04-architecture/ci-alerting.md`.
+  `/codex/04-architecture/ci-alerting.md`. **Need to READ a channel directly (not just receive alerts)?**
+  `scripts/dev/slack-read-channel.py` already has it (GSM + gcloud ADC, zero setup, every slot/VM/AO) — check before
+  assuming no access. SSOT: `/codex/05-infrastructure/agent-slack-read-access.md`.
 - **Runbooks**: declare `owner`/`cadence`/`verifier`/`last_executed` (missing = review-blocking). **Cross-plan
   banners**: launching a VM / in-flight refactor → add `> **🟢/🟡 …**` to every affected plan.
 
