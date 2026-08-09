@@ -49,7 +49,15 @@ related_plans:
   - ../active/stash_pile_workspace_cleanup_2026_06_03.md
   - ../active/ui_build_warm_cache_2026_06_17.md
   - ../archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md
-last_updated: 2026-07-14 # was: 2026-07-12 — stale vs. the body's own 2026-07-13 addendum (10-way utl_reuse phase split), never bumped when added [finding 83, synced 2026-07-14]. Prior: was 2026-06-19 — stale vs. related_plans' cicd_mvp_ldr_to_main_pipeline_2026_06_30 entry (added without a bump); corrected alongside the body edits below [finding 69, §A2 B-queue]
+last_updated:
+  2026-08-09 # was: 2026-07-14 — stale ~26 days; plan_reconciler agt-a398c9 (infra tranche) fixed the
+  # IN-FLIGHT REFACTOR banner (1 of 5 sibling copies, this file's own), 2 dangling ../active/ links now pointing at
+  # their real plans/archive/ locations, the mtds_retry_safe_default_audit status mismatch, and the "Referenced
+  # sub-plans (active...)" heading vs. all-archived table body mismatch; flagged (not fixed — corpus-wide script,
+  # out of tranche scope) the "19 active plans" count now reading 58 live. Prior: was 2026-07-12 — stale vs. the
+  # body's own 2026-07-13 addendum (10-way utl_reuse phase split), never bumped when added [finding 83, synced
+  # 2026-07-14]. Prior: was 2026-06-19 — stale vs. related_plans' cicd_mvp_ldr_to_main_pipeline_2026_06_30 entry
+  # (added without a bump); corrected alongside the body edits below [finding 69, §A2 B-queue]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -102,14 +110,6 @@ locked_since: 2026-05-07
     smoke) likely still pending per the plan text.
 
 # Infrastructure Master — shard / data-status / deployment-build umbrella
-
-> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation** (guardrails phase:
-> [`utl_reuse_phase0_guardrails_2026_07_13`](../archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md); compose
-> phases: `utl_reuse_phase1_strategy_risk_hwm_2026_07_13` (strategy risk/HWM),
-> `utl_reuse_phase3_ml_model_registry_2026_07_13` (ml ModelRegistry),
-> `utl_reuse_phase4_features_builder_registry_2026_07_13` (features builder_registry)). Concurrent slots: do not
-> re-touch the strategy risk-eval, ml-registry, or features-builder-registry surfaces until those phase plans land —
-> check them first.
 
 ## Scope
 
@@ -498,6 +498,13 @@ sub-plan; this section is a pointer.
 _19 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order
 (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
+> **STALE COUNT (flagged 2026-08-09, plan_reconciler agt-a398c9, not auto-fixed — corpus-wide script run is outside this
+> run's infra-tranche scope):** a live `--dry-run` of the populator this run shows **58** active plans now declare
+> `parent_epic: infrastructure_master`, not 19 — the list below has not been regenerated since
+> `last_updated: 2026-07-14`. The populator's `--apply` mode regenerates ALL 23 epics in one pass (no per-epic filter
+> exists), so running it is out of scope for a single-tranche reconciler run; filed as a routed finding recommending a
+> dedicated corpus-wide run (see `plan_reconciler_findings_infra_2026_08_09.md`).
+
 ## P0 — must complete before next foundation gate
 
 ### [`bucket_estate_consolidation_closeout_2026_07_24`](../active/bucket_estate_consolidation_closeout_2026_07_24.md)
@@ -527,9 +534,10 @@ per-AG (features-{ag}-{env}-{pid})
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Bucket IAM write-protection —
 per-tier/per-domain SAs replace the project-wide god-SA (§8 implementation)
 
-### [`candle_canonical_path_migration_execution_2026_07_24`](../active/candle_canonical_path_migration_execution_2026_07_24.md)
+### [`candle_canonical_path_migration_execution_2026_07_24`](../archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md)
 
-**status**: active · **estimate**: 4.0 cal AI-days (class: infra)
+**status**: archived (link + status corrected 2026-08-09, plan_reconciler agt-a398c9 — was a dangling `../active/...`
+link; file lives at `plans/archive/2026_07/`) · **estimate**: 4.0 cal AI-days (class: infra)
 
 ### [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](../archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
 
@@ -594,7 +602,8 @@ cache warm so only changed code rebuilds
 
 ### [`mtds_retry_safe_default_audit_2026_07_14`](../archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md)
 
-**status**: active · **estimate**: 0.4 cal AI-days (class: refactor)
+**status**: complete (archived — corrected 2026-08-09, plan_reconciler agt-a398c9; was "active", the linked file's own
+frontmatter reads `status: complete`) · **estimate**: 0.4 cal AI-days (class: refactor)
 
 ### [`stash_pile_workspace_cleanup_2026_06_03`](../active/stash_pile_workspace_cleanup_2026_06_03.md)
 
@@ -733,15 +742,18 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
 
 - Master plan: [`master_to_live_defi_2026_05_23.md`](../archive/2026_07/master_to_live_defi_2026_05_23.md).
 - Write-gate cluster:
-  [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md).
+  [`writegate_honest_coverage_endtoend_2026_05_06.md`](../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
+  (link corrected 2026-08-09, plan_reconciler agt-a398c9 — was a dangling `../active/...` link; file lives at
+  `plans/archive/2026_05/`, `status: drafted`).
 - Asset_group vocabulary:
   [`venue_axis_asset_group_vocabulary_2026_04_25.md`](../archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md).
 - Per-asset-group umbrellas: `cefi_master`, `defi_master`, `tradfi_master`, `sports_master`, `predictions_master`.
 - Manifest SSOT codex: `/codex/02-data/availability-manifest-and-data-status.md`.
 
-## Referenced sub-plans (active, added 2026-05-14)
+## Referenced sub-plans (added 2026-05-14, all since archived — heading corrected 2026-08-09, plan_reconciler agt-a398c9)
 
-Active sub-plans owned by or closely coordinated with this epic:
+Sub-plans originally owned by or closely coordinated with this epic (table body already correctly shows each as
+archived; only this heading's stale "active" framing needed fixing):
 
 | Plan                                                                                                                                             | Role                                                                                                                                                                                     | Status                                                                                                                                                                                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -769,11 +781,14 @@ Active sub-plans owned by or closely coordinated with this epic:
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
-- [ ] [VERIFY] P1. **PARTIALLY DONE 2026-07-27**: the tracker
+- [ ] [VERIFY] P1. **PARTIALLY DONE 2026-07-27, banner removal 1/5 DONE 2026-08-09**: the tracker
       (`plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md`) and its whole split family are now
       archived (operator `[unlock-plan]` granted, `june_2026_vintage_audit_findings_2026_07_27.md` §5#34) — the 10 split
-      children were already archived, this was the last one. **STILL OPEN**: remove the 5 Phase-0 in-flight banners
-      (`> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation**`, still present in `infrastructure_master.md`,
-      `strategy_master.md`, `features_and_ml_master.md`, `execution_master.md`, `orchestrator_master.md` as of
-      2026-07-27) + run plan-hygiene + active-inventory regen. (FOLDED IN from
+      children were already archived, this was the last one. This epic's own copy of the Phase-0 in-flight banner
+      (`> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation**`) removed 2026-08-09 by plan_reconciler (agt-a398c9,
+      infra tranche) — verified all 4 named phase plans archived under `plans/archive/2026_07/` first. **STILL OPEN (4
+      of 5 remaining, outside infra-tranche scope — a sibling tranche's reconciler or a future `all` pass should close
+      these)**: the same banner is still present in `strategy_master.md`, `features_and_ml_master.md`,
+      `execution_master.md`, `orchestrator_master.md` as of 2026-07-27 (unconfirmed whether still current as of today —
+      re-check before removing) + run plan-hygiene + active-inventory regen once all 5 are clear. (FOLDED IN from
       utl_reuse_phase8_codex_ssot_archive_2026_07_13, 2026-07-15, plan-reconcile §6 operator ruling)
