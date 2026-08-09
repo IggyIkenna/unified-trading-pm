@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 306 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 299 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (31)
+### cefi (29)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -586,7 +586,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (63)
+### cross-cutting (61)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -669,13 +669,6 @@ by hand._
   — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 22 todos are done. Reconciles each of the 6 distinct `instruments_master` source
   docs'…
-- [`cross_cutting_satellite_ao_dispatch_batch4_2026_08_09`](./cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md)
-  — Fourth AO-dispatch batch for the cross-cutting tranche, produced by the same 2026-08-09 satellite-batch-extraction
-  pass as batches 2-3 — this one pulls 3 bounded items out of `infrastructure_master` source docs:…
-- [`cross_cutting_satellite_ao_dispatch_batch4_2026_08_09_finalize`](./cross_cutting_satellite_ao_dispatch_batch4_2026_08_09_finalize.md)
-  — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until all 3 todos are done. Reconciles both `infrastructure_master` source docs' checkboxes,
-  then…
 - [`cross_cutting_satellite_ao_dispatch_batch6_2026_08_09`](./cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md)
   — Sixth AO-dispatch batch for the cross-cutting tranche, produced by the round9 2026-08-09 RECLASSIFY +
   satellite-extraction sweep (a follow-up to yesterday's 4-batch pass, run because 5 Slack alerting webhooks + a
@@ -804,7 +797,7 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (41)
+### ao (40)
 
 - [`ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08`](./ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md)
   — Gated closeout for `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md` — machine-held via
@@ -921,9 +914,6 @@ by hand._
   — Two tracks. (A) Drain the 25 remaining plan_reconciler review-branch PRs stuck open since 2026-08-02 (0 merged, 0
   reviewed) after graduating plan_reconciler to steady-state direct-push — each needs real per-PR judgment (rebase +
   re-verify…
-- [`autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08_finalize_2026_08_08`](./autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08_finalize_2026_08_08.md)
-  — Gated closeout for `autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until its sole todo (root-cause the AutoSpawn refill SLA gap) is done. Reconciles the…
 - [`content_derived_backlog_task_ids_2026_08_08`](./content_derived_backlog_task_ids_2026_08_08.md) —
   `regen_backlog_from_plan` derives a task id as `slug` + next free positional index, so a todo's id is a function of
   its POSITION among that plan's todos, not its text. When earlier todos are checked off and their yaml entries pruned,…

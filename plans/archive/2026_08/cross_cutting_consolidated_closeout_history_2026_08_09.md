@@ -37,7 +37,8 @@ superseded_by:
 depends_on: []
 source: >-
   2026-08-09 line-cap trim of `cross_cutting_consolidated_closeout_2026_07_25.md` (1007 lines, over the 1000L hard cap;
-  target ~700L after the trim), dispatched via `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` todo 2.
+  target ~700L after the trim), dispatched via
+  `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` todo 2.
 ---
 
 # Cross-cutting consolidated close-out — condensed history

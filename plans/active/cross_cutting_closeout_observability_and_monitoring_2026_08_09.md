@@ -89,7 +89,7 @@ gate_on_depends:
 source: >-
   2026-08-09 line-cap trim of `cross_cutting_consolidated_closeout_2026_07_25.md` (1007 lines, over the 1000L hard cap;
   target ~700L after the trim). This fork carries Tracks 14/18-22 verbatim in substance, dispatched via
-  `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` todo 2.
+  `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` todo 2.
 ---
 
 # Cross-cutting closeout — observability, self-monitoring, data-status + alerting family

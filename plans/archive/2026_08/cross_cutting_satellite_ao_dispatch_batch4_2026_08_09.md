@@ -15,7 +15,7 @@ summary: >-
   state). `bucket_estate_consolidation_closeout_2026_07_24.md` and
   `cross_cutting_strategy_execution_determinism_2026_07_26.md` (also `infrastructure_master`) yielded zero extractable
   items — see the Progress Log below.
-status: active
+status: complete # archived 2026-08-09 — every todo done; close-out verified by finalize plan
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -27,7 +27,7 @@ related:
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md,
     /plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09_finalize.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09_finalize.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"
@@ -41,7 +41,7 @@ estimate_calibrated_ai_days: 0.72
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: cross_cutting_satellite_ao_dispatch_batch4_2026_08_09_finalize
 depends_on: []
 context_scope:
   [
@@ -133,3 +133,7 @@ drift_direction: advance-code
   un-escalated as of this sweep.
 - **2026-08-09**: Shipped the P3 `[SCRIPT]` membership-widening todo — unified-trading-pm@3829eea18. Full details on the
   flipped checkbox above; QG green, 9/9 unit tests pass.
+
+> **ARCHIVED 2026-08-09** — all 3 todos done, `locked_by` empty. Archived via the standard 6-step ritual per
+> `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09_finalize.md`. superseded_by:
+> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09_finalize`.

@@ -76,7 +76,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md,
     /plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md,
   ]
 created: 2026-07-25
 last_updated: "2026-08-09"
@@ -128,8 +128,8 @@ source: >-
 ## Split notice (2026-08-09 — plan-hygiene line-cap remediation)
 
 > **This plan was trimmed from 1007 lines and forked 2 ways**, dispatched via
-> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` todo 2, mirroring the split pattern already used by
-> `tradfi_consolidated_closeout_2026_07_18.md` / `sports_consolidated_closeout_2026_07_19.md` /
+> `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` todo 2, mirroring the split pattern
+> already used by `tradfi_consolidated_closeout_2026_07_18.md` / `sports_consolidated_closeout_2026_07_19.md` /
 > `prediction_consolidated_closeout_2026_07_18.md`. Every Track and every Progress Log line was moved **verbatim** to
 > its destination, nothing was summarized, rewritten, or dropped.
 >
@@ -709,9 +709,10 @@ batch)
 > [`cross_cutting_consolidated_closeout_history_2026_08_09.md`](/plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md)
 > (2026-08-09 line-cap trim) — verbatim, nothing summarized or dropped. New entries append here going forward.
 
-- **2026-08-09** — Line-cap trim (dispatched via `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` todo 2;
-  parent had grown to 1007 lines, over the 1000L hard cap). Forked Tracks 14/18-22 (still-open, observability/
-  self-monitoring-themed) verbatim into
+- **2026-08-09** — Line-cap trim (dispatched via
+  `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` todo 2; parent had grown to 1007
+  lines, over the 1000L hard cap). Forked Tracks 14/18-22 (still-open, observability/ self-monitoring-themed) verbatim
+  into
   [cross_cutting_closeout_observability_and_monitoring_2026_08_09.md](/plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md);
   forked Track 15 (closed/retriage-only) + the full 2026-07-25 through 2026-08-08 Progress Log verbatim into
   [cross_cutting_consolidated_closeout_history_2026_08_09.md](/plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md).

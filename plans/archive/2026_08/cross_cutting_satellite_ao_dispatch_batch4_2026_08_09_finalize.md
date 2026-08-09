@@ -5,7 +5,7 @@ summary: >-
   Gated closeout for `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 3 todos are done. Reconciles both `infrastructure_master` source docs' checkboxes,
   then archives the batch doc via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -14,7 +14,7 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, close-out, batch-4, satellite-docs, archival]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md,
     /plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md,
   ]
@@ -33,7 +33,6 @@ supersedes:
 superseded_by:
 depends_on: [cross_cutting_satellite_ao_dispatch_batch4_2026_08_09]
 gate_on_depends: true
-archive_exempt: true
 source: >-
   Satellite-batch-extraction sweep 2026-08-09, per `task_template.md` §4's finalize-plan-coverage rule.
 assigned_role: infra
@@ -42,7 +41,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md,
     /plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md,
   ]
@@ -84,3 +83,10 @@ context_scope:
   `deployment_api_prod_disable_auth_true` retag in the ag_closeout doc; the 2 code-fix `[INFRA]` todos in the gcloud
   doc), matching this todo's own prediction — both stay `status: open`, not resolved. Todo 2 (archival) is
   `sequential: true`-gated on this todo and now unblocked for the next dispatch.
+- **2026-08-09 (slot 14, infra)**: Shipped todo 2 — the standard 6-step archival ritual. `locked_by` confirmed empty on
+  the source doc. No codex-alignment change needed (routine batch closeout, no new contract). Both the source plan and
+  this finalize doc moved to `plans/archive/2026_08/`; all 8 corpus referrers repointed to the new paths.
+
+> **ARCHIVED 2026-08-09** — this finalize plan completed its gated closeout of
+> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`. Both checkboxes verified done; source plan resides in
+> `plans/archive/2026_08/`. superseded_by: N/A (finalize plan, not superseded).
