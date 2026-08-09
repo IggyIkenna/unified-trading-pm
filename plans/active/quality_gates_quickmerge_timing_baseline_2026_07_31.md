@@ -518,6 +518,84 @@ analyze it).
 **Note for a future re-run**: use an _existing_ doc for the docs-only trigger (append a transient HTML comment, Phase-1
 style) rather than a brand-new scratch file, to avoid the frontmatter-schema false-positive above.
 
+### Contention delta analysis (2026-08-09) — per-phase delta, Phase 1 vs Phase 2
+
+**Per-variant total-time delta** (the 10 flag/script variants present in both tables; Phase 1 = Results table 2,
+this-host idle baseline; Phase 2 = the planning-vm real-concurrent-load table above), ranked by degradation multiplier
+(Phase 2 ÷ Phase 1) descending:
+
+| Variant                                   | Phase 1 (s) | Phase 2 (s) | Δ abs   | Δ mult    |
+| ----------------------------------------- | ----------- | ----------- | ------- | --------- |
+| Full default (all phases)                 | 59.6        | 262.67      | +203.07 | **4.41x** |
+| `--quick`                                 | 77.5        | 154.74      | +77.24  | 2.00x     |
+| `--fast` (full tests, no codex-grep tier) | 100.9       | 186.11      | +85.21  | 1.84x     |
+| `--skip-codex`                            | 105.8       | 180.73      | +74.93  | 1.71x     |
+| `--lint` (lint-only)                      | 56.6        | 96.71       | +40.11  | 1.71x     |
+| `--test` (test-only)                      | 99.3        | 158.48      | +59.18  | 1.60x     |
+| `--skip-version-alignment`                | 53.1        | 84.10       | +31.00  | 1.58x     |
+| `--skip-tests`¹                           | 64.2        | 100.27      | +36.07  | 1.56x     |
+| Docs-only auto-path²                      | 56.3        | 87.59       | +31.29  | 1.56x     |
+| `--skip-typecheck`                        | 99.0        | 147.57      | +48.57  | 1.49x     |
+| `--skip-lint`                             | 101.1       | 144.70      | +43.60  | **1.43x** |
+
+¹ Table 2 has no `--skip-tests` row; using Table 1's 64.2s full-green number (same post-actionlint-fix tree, measured
+before Table 2 was assembled as its own table). ² Phase 2's docs-only run exited 1 on a frontmatter-schema methodology
+artifact (a brand-new scratch trigger file, not a QG code defect) — wall-clock is still valid since the failure landed
+at the final post-gate check, after the full pipeline ran.
+
+**Per-phase presence-cost** (Phase-2 self-consistent subtraction, `full_default − skip_<phase>`, all rows from the same
+sequential planning-vm sweep):
+
+| Phase             | Presence cost (Phase 2) | % of Phase-2 total               |
+| ----------------- | ----------------------- | -------------------------------- |
+| tests             | 162.40s                 | 62%                              |
+| version-alignment | 178.57s                 | 68% — **unreliable, see caveat** |
+| lint              | 117.97s                 | 45%                              |
+| typecheck         | 115.10s                 | 44%                              |
+| codex-compliance  | 81.94s                  | 31%                              |
+
+**Caveat (load-drift confound)**: the Phase-2 sweep ran sequentially over ~27 minutes with the host's own load average
+trending DOWN across the window (28.71 → 27.81 → 25.16 → 23.47 → ~24 → 22.33 → 19.90 → 13.29 → 21.26 → 21.18 → 14.37,
+per that table's own before/after columns). `--skip-version-alignment` happened to run during the quietest window of the
+entire sweep (load 14.37 vs. full-default's 28.71), so its subtracted "178.57s cost" compares a high-load baseline
+against a low-load variant, not a clean phase isolation — discount that row. The other four presence-costs are less
+exposed (measured earlier/mid-sweep, closer in load to the full-default baseline) but not immune either; a genuinely
+clean per-phase delta needs `profile_qg_resources.py` run directly on the planning-vm under load (single-core-pinned,
+immune to which-row-ran-when), not a sequential wall-clock sweep — see the new follow-up todo below.
+
+**Named delta per phase — which phases scale WORST under load**: two distinct signals point at different phases for
+different reasons.
+
+- **By absolute cost under load, TESTS dominates** (162.40s / 62% of the full-default total) — by far the largest single
+  phase, matching the hypothesis's "tests" candidate. But its degradation multiplier (1.56x, via footnote¹) is only
+  mid-pack, not the worst of the 10 variants — tests are simply expensive everywhere (a long-running, I/O-bound suite),
+  not disproportionately WORSENED by contention specifically.
+- **By contention-SENSITIVITY, LINT and TYPECHECK stand out**: `--skip-lint` (1.43x) and `--skip-typecheck` (1.49x) are
+  the two LOWEST degradation multipliers of any variant — removing either phase makes the remaining work noticeably more
+  resilient to host load than removing codex (1.71x) or version-alignment (1.58x, itself confounded). This matches the
+  existing profiler finding ("Results table 2 rigor follow-up" above): lint is dominated by ~25 small, sequential,
+  interpreter-startup-bound checks — exactly the shape of work most sensitive to OS scheduling/queueing delay on an
+  oversubscribed host, since each small subprocess independently pays a scheduling-wait tax. Typecheck (a single larger
+  `basedpyright` process) is the second-most sensitive by this measure.
+- **Codex-compliance and version-alignment read as comparatively resilient**, but with a caveat each: `--skip-codex`'s
+  high multiplier (1.71x) is attributable to that variant KEEPING lint (the most sensitive phase) in scope, not to codex
+  itself; version-alignment's own number is confounded by the load-drift above and shouldn't be trusted at face value.
+
+**Conclusion for the follow-up improvement plan**: the highest-leverage contention fix is reducing LINT's per-check
+subprocess-launch overhead — the same target as the already-in-flight `check_pm_script_path_refs.py` optimization (28%
+of an idle run) but this analysis adds a NEW reason to prioritize it: under contention it is now shown to be the most
+disproportionately load-sensitive phase, not just an idle-host cost center. Batching/parallelizing the ~25 remaining
+small `STEP 5.xx` lint checks (per-check Python interpreter startup, not real work, per the profiler) is the concrete
+next lever. TYPECHECK is the second target. TESTS remain the largest absolute cost and should be pursued separately
+(sharding/parallelizing the suite) — the data does not support "tests scale disproportionately under load" as the
+primary contention finding; LINT does.
+
+- [ ] [INFRA] P3. Run `profile_qg_resources.py` directly on the planning-vm during real concurrent AO load
+      (single-core-pinned, immune to which-variant-ran-when) to get a load-drift-free per-phase breakdown that validates
+      or replaces this todo's wall-clock-based contention-sensitivity ranking (lint/typecheck inferred as most
+      load-sensitive — see "Contention delta analysis" above). Done-when: a per-check wall-time table analogous to
+      "Results table 2 rigor follow-up," captured on the planning-vm under measured concurrent load, not this host.
+
 - [x] [INFRA] P2. ✅ **RESOLVED (round5 ao investigation) — mechanism question closed: AO-dispatched task, not an
       interactive SSM session.** A prior 2026-08-06 na-eligibility-audit pass had added a "DEFAULT-RULED" annotation
       here without removing the original ask-the-operator sentence, leaving the todo self-contradictory (a caveat worth
@@ -540,9 +618,16 @@ style) rather than a brand-new scratch file, to avoid the frontmatter-schema fal
       wall-clock/exit/load-avg/concurrent-qg-proc-count, plus a stated concurrent-agent-count (33 slot dirs, 5-22
       concurrent `quality-gates.sh` procs, load avg 13.29-28.71 on 16 cores) at measurement time. —
       unified-trading-pm@(this commit)
-- [ ] [DOC] P2. Compare the two tables and write the observed contention delta (which phases scale worst under load —
+- [x] ✅ [DOC] P2. Compare the two tables and write the observed contention delta (which phases scale worst under load —
       typecheck/tests/lint are the likely CPU-bound candidates given the shared-host QG cap in CLAUDE.md) as the input
-      to a follow-up improvement plan. Done-when: a named delta per phase, not just a total-time comparison.
+      to a follow-up improvement plan. Done-when: a named delta per phase, not just a total-time comparison. **Done**:
+      see "### Contention delta analysis (2026-08-09)" above — per-variant Δ/multiplier table (10 shared variants), a
+      per-phase presence-cost table, and a contention-sensitivity ranking: LINT + TYPECHECK scale worst (lowest
+      degradation multiplier when removed, 1.43x/1.49x — matches the profiler's small-subprocess-startup finding), TESTS
+      dominate by absolute cost (162.4s/62% of total) but not by sensitivity (1.56x, mid-pack), CODEX and
+      VERSION-ALIGNMENT read as comparatively resilient but the latter is load-drift-confounded (flagged, not trusted at
+      face value). One new tracked follow-up todo added (planning-vm profiler run) rather than leaving the gap as prose.
+      — unified-trading-pm@(this commit)
 
 ## Deferred work after 2026-07-31
 
@@ -637,3 +722,18 @@ solo work.
   trivial, <30min findings-triage bucket per CLAUDE.md § Findings triage). Todo (line ~493, "Re-run every Phase-1
   flag/script combination...") flipped `[x]`. The comparison todo (line ~496, "[DOC] P2. Compare the two tables...") is
   a separate todo — left open, out of this task's scope (brief was the re-run + record, not the analysis).
+- **2026-08-09 (slot-28, AO-dispatched, `quality_gates_quickmerge_timing_baseline-004`)**: compared Phase 1's Results
+  table 2 (this-host idle baseline) against Phase 2's planning-vm real-load table — see "### Contention delta analysis
+  (2026-08-09)" above. Two independent per-phase signals: (1) presence-cost via Phase-2 self-consistent subtraction
+  (`full_default − skip_<phase>`) shows TESTS as the largest absolute cost (162.40s, 62% of total), though
+  version-alignment's 178.57s number is flagged unreliable — the sweep's own load-avg columns show a decreasing-load
+  drift across the ~27min measurement window that confounds any subtraction using the last-measured (quietest) row; (2)
+  contention-SENSITIVITY via each skip-variant's own Phase2/Phase1 degradation multiplier shows LINT (1.43x) and
+  TYPECHECK (1.49x) as the two most load-sensitive phases — removing either yields the mildest degradation of any
+  variant, consistent with the existing profiler finding that lint is dominated by ~25 small, interpreter-startup-bound
+  subprocess launches (the shape of work most hurt by OS scheduling delay under an oversubscribed host). Reconciled:
+  tests dominate by absolute cost but are not disproportionately WORSENED by contention (mid-pack 1.56x multiplier);
+  lint/typecheck are the phases that scale worst RELATIVELY. Added one new tracked follow-up todo (profiler run directly
+  on planning-vm under load, for a load-drift-free confirmation) rather than leaving it as prose, per the
+  findings-triage hard rule. Todo (line ~543, "[DOC] P2. Compare the two tables...") flipped `[x]`. No code change —
+  doc-only (analysis of already-recorded data). — unified-trading-pm@(this commit)

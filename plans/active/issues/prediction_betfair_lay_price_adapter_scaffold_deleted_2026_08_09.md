@@ -24,6 +24,9 @@ priority: P2
 resolved_by:
 locked_by:
 source: [prediction_satellite_ao_dispatch_batch6_2026_07_29.md item under "Two-sided Betfair odds"]
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # What I found
