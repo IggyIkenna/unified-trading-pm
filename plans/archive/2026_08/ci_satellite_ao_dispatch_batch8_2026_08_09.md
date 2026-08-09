@@ -10,7 +10,7 @@ summary: >-
   frontmatter-hygiene fix (invalid `assigned_role: devops` value) that happens to have been surfaced by a
   `ci`-tranche-adjacent audit pass. See batch 7's own Progress Log for the full 15-doc disposition ledger; not
   duplicated here.
-status: active
+status: complete
 nature: process
 asset_group:
   [ci] # corrected 2026-08-09 (/ag-closeout-audit ci) -- was [ci, cross-cutting]; batch-extraction docs are single-
@@ -61,6 +61,13 @@ source: >-
 ---
 
 # CI satellite AO batch 8 (agent_operating_framework_master group)
+
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** The single todo (corpus-wide `assigned_role: devops` retag, 15 docs) shipped
+> (`unified-trading-pm@987cb5734`), `grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md`
+> confirmed zero results. Archived in the same session per the archival HARD RULE
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). Finalize plan
+> `ci_satellite_ao_dispatch_batch8_finalize_2026_08_09.md` (source-doc reconciliation + this archival) completed and
+> archived alongside. Successor: none.
 
 > **Why this is a separate doc from batch 7.** Both batches came out of the same 2026-08-09 pass over the same 15
 > `ci`-tranche candidate docs. This item's own source doc frontmatter names a different `parent_epic`
@@ -123,4 +130,4 @@ source: >-
   promote/SIT/quickmerge/ci_status pipeline mechanics — `todo_cancelled_disposition_format_...md` matches cicd.md's own
   `plan_health` wall-type todo-regression handling).
   `grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md` now returns zero results — done-when
-  met. Evidence: `unified-trading-pm@<sha, see commit below>`.
+  met. Evidence: `unified-trading-pm@987cb5734`.

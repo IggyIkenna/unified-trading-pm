@@ -29,7 +29,7 @@ related:
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch7_2026_08_09.md,
-    /plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch8_2026_08_09.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -288,7 +288,7 @@ whole-tranche case):
    [/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md](/plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md),
    [/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md](/plans/active/issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md),
    and the
-   [/plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md](/plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md)
+   [/plans/archive/2026_08/ci_satellite_ao_dispatch_batch8_2026_08_09.md](/plans/archive/2026_08/ci_satellite_ao_dispatch_batch8_2026_08_09.md)
    - finalize pair (batch-extraction docs are single-tranche by construction, per SKILL.md's own authoring discipline).
      Per SKILL.md's "necessary but not sufficient" warning, re-ran `check_ag_closeout_linkage.py` after retagging:
      `image_build_validate_stranded_on_deregistered_glue_runners` surfaced as a newly-orphaned-within-`ci` doc (the
