@@ -102,6 +102,14 @@ features-service-cross-cutting consumer group "features-cross-cutting"
   └─ XADD streaming.cross_cutting.features_computed FeaturesComputedEvent
 ```
 
+**Not every live-captured `data_type` enters this cascade.** `CandleBoundaryCrossedEvent.data_type` is typed against the
+MDPS candle-schema `DataType` enum, which only covers `data_type`s with a registered MDPS `CandleAdapterRegistry` entry.
+`LiveWebsocketRunner` checks `is_candle_boundary_eligible(data_type)` before publishing and no-ops otherwise — e.g.
+`depth_of_book_10` (L2 order-book microstructure) has no candle adapter and is consumed directly by
+`market_tick_data_service.derived.book_microstructure_compute`, never entering the MTDS→MDPS boundary-event path at all.
+See `cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md` (archived) for the incident this
+codified.
+
 ## UTC midnight alignment + service-start-order independence
 
 Live = batch by construction. MTDS waits for the next aligned candle boundary on startup; never emits partial windows.

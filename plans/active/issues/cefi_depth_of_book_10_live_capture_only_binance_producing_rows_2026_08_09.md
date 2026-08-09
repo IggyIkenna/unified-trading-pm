@@ -36,6 +36,7 @@ source: >-
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true
 ---
 
 # cefi depth_of_book_10 live wiring shipped; 4/5 venues not producing real rows
@@ -212,15 +213,41 @@ operator/architecture call, not a mechanical fix.
       (merged/reconciled with the concurrent `52383e877` fix's own 2 regression tests, kept theirs + added coverage for
       the inbound direction). VM cycle to pick up this code in prod is still the one remaining step to confirm
       `capture_status=captured` manifest rows land — same caveat as BINANCE-FUTURES/BYBIT-FUTURES/DERIBIT above.
-- [ ] [CODE] P3. Resolve whether `depth_of_book_10` (and its L2-microstructure siblings `queue_position`/
+- [x] ✅ [CODE] P3. Resolve whether `depth_of_book_10` (and its L2-microstructure siblings `queue_position`/
       `order_flow_imbalance`) should be added to
       `unified_api_contracts.internal.domain.market_data_processing.candle_schema.DataType` (feeding MDPS candle
       aggregation the way `book_snapshot_5` does) or whether `websocket_runner.py`'s `_publish_boundary_event` should
       skip data_types outside the MDPS candle-eligible set — currently every flush cycle for all 5 depth_of_book_10
       venues logs a caught-but-noisy `pydantic.ValidationError` traceback. Repo: unified-api-contracts (enum) or
-      market-tick-data-service (`live/websocket_runner.py`, caller-side skip).
+      market-tick-data-service (`live/websocket_runner.py`, caller-side skip). — **DONE 2026-08-09, slot-22,
+      `market-tick-data-service@55fac6f5`.** Decision: skip on the caller side, do NOT add to the MDPS enum. Grepped
+      MDPS's `CandleAdapterRegistry.register(...)` call sites across the whole repo — every currently-registered
+      (asset_group, data_type) pair (trades/book_snapshot_5/derivative_ticker/liquidations/futures_chain/
+      options_chain/... across cefi/defi/tradfi/prediction/sports) has a real adapter; `depth_of_book_10` has none and
+      none is referenced anywhere in MDPS. It's consumed directly by
+      `market_tick_data_service.derived.book_microstructure_compute`/`BookMicrostructureHandler`, not candle-aggregated
+      — adding it to the enum would create a phantom candle-eligible type with no adapter ever built for it. Fix:
+      `LiveWebsocketRunner._publish_boundary_event` now checks `is_candle_boundary_eligible(self._data_type)` before
+      constructing `CandleBoundaryCrossedEvent` and no-ops for ineligible data_types (currently just `depth_of_book_10`
+      in practice — `queue_position`/`order_flow_imbalance` are derived-only and never reach this live WS runner as a
+      `data_type` param at all). Extracted the eligibility check + the event build/publish/log into
+      `_ws_window_helpers.py` (mirrors the existing `record_flush_captured`/`record_flush_failed` extraction in that
+      same file) to keep `websocket_runner.py` under the 900-line QG file-size cap — it was exactly at 900 lines
+      pre-change, zero slack. New regression test
+      `test_flush_window_skips_boundary_publish_for_non_candle_eligible_data_type` (asserts capture/empty manifest
+      recording is unaffected, only the boundary-event publish is skipped) + all 39 existing `test_websocket_runner.py`
+      tests pass; full repo `quality-gates.sh` green on the committed SHA.
 
 ## Progress Log
+
+- **2026-08-09, slot-22**: closed the P3 MDPS-enum todo (the last open item on this doc). See the todo's own entry above
+  for the root-cause/decision detail. `archive_exempt: true` is a TEMPORARY bridge for this commit only — this doc is
+  genuinely archival-eligible (0 open todos, unlocked) and IS being archived in the immediately-following commit
+  (status→resolved + banner + `git mv`); the flip and the archival move are split into two commits per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "never combine the checkbox flip with the
+  `git mv` in one commit" rule (this doc's own path is the orchestrator task's `plan_ref`, so `/done`'s M3 check needs
+  the flip visible at this still-active path first). The remaining VM-redeploy + re-verify pass across all 5 venues is
+  tracked on `/plans/active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 2, not as a new todo here.
 
 - **2026-08-09, slot 6**: Closed the COINBASE-SPOT `[CODE] P2` todo. Live-verified against the real Coinbase Exchange WS
   API (unauthenticated `level2` subscribe → rejected with an `error` frame the connector never logged) that the root

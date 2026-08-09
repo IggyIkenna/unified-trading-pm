@@ -72,19 +72,19 @@ context_scope:
       `tests/unit/test_ledgers_taker_vwap.py` (5 cases) verifies `_vwap_walk` against hand-computed VWAPs for synthetic
       order books (single-level, multi-level partial-fill, thin-book, empty-book). `quality-gates.sh` green (174
       passed), sentinel `e9c6ce78f64142a2dfe9f3fb909eea9ad448cb33`.
-- [ ] [SCRIPT] P2. BLOCKED-ON:cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09 **Wire
-      `depth_of_book_10` into the CeFi live event-log capture dispatcher** (market-tick-data-service) for the 5
-      already-capable venues (COINBASE-SPOT, BYBIT, DERIBIT, BINANCE-FUTURES, OKX-SWAP) so it lands under
-      `gs://central-element-323112-events/live-events/warm/cefi/` alongside the 4 data_types already wired there
-      (`book_snapshot_5`, `derivative_ticker`, `liquidations`, `trades`) — locate how those 4 are enumerated in the live
-      capture dispatcher/connector registry and mirror the pattern for `depth_of_book_10` (the WS connectors themselves
-      already shipped, `market-tick-data-service@15f5657b` — this is purely the live-capture wiring gap, not an operator
-      question: the source doc's own 2026-08-08 finding confirmed the pipeline is live and healthy, `depth_of_book_10`
-      was simply never wired into the new event-log-based dispatcher). Repo: market-tick-data-service. Source:
-      `l2_book_microstructure_capture_2026_07_13.md` todo 7 (line 232). **Done when**: `depth_of_book_10` appears as a
-      5th data_type under that GCS prefix after the next capture cycle (a maintenance-window restart of the live-capture
-      process to pick up the change is fine per CLAUDE.md's pre-live-trading carve-out, not an operator-scheduling
-      gate), and a live manifest read confirms `depth_of_book_10` rows landing for at least the 5 capable venues.
+- [ ] [SCRIPT] P2. **Wire `depth_of_book_10` into the CeFi live event-log capture dispatcher**
+      (market-tick-data-service) for the 5 already-capable venues (COINBASE-SPOT, BYBIT, DERIBIT, BINANCE-FUTURES,
+      OKX-SWAP) so it lands under `gs://central-element-323112-events/live-events/warm/cefi/` alongside the 4 data_types
+      already wired there (`book_snapshot_5`, `derivative_ticker`, `liquidations`, `trades`) — locate how those 4 are
+      enumerated in the live capture dispatcher/connector registry and mirror the pattern for `depth_of_book_10` (the WS
+      connectors themselves already shipped, `market-tick-data-service@15f5657b` — this is purely the live-capture
+      wiring gap, not an operator question: the source doc's own 2026-08-08 finding confirmed the pipeline is live and
+      healthy, `depth_of_book_10` was simply never wired into the new event-log-based dispatcher). Repo:
+      market-tick-data-service. Source: `l2_book_microstructure_capture_2026_07_13.md` todo 7 (line 232). **Done when**:
+      `depth_of_book_10` appears as a 5th data_type under that GCS prefix after the next capture cycle (a
+      maintenance-window restart of the live-capture process to pick up the change is fine per CLAUDE.md's
+      pre-live-trading carve-out, not an operator-scheduling gate), and a live manifest read confirms `depth_of_book_10`
+      rows landing for at least the 5 capable venues.
 
 ## Codex SSOTs
 
@@ -128,9 +128,10 @@ context_scope:
 - **2026-08-09, slot-23** — Todo 2 worked; **the dispatcher-wiring gap itself is CLOSED and verified end-to-end**, but
   the done-when's second half ("rows landing for at least the 5 capable venues") is only proven true for 1 of 5, so the
   checkbox stays correctly unflipped. Full detail + the 4 remaining per-venue debug todos:
-  [`issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md`](issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md).
-  Summary: the connector-registry factories for all 5 venues already dispatched `depth_of_book_10` correctly (confirmed
-  by direct read — no code change needed there); the actual gap was (a) the live-capture VM's shard launcher
+  [`issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md`](issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md)
+  (archived later the same session — see the 2026-08-09 slot-22 entry below for the post-archival path). Summary: the
+  connector-registry factories for all 5 venues already dispatched `depth_of_book_10` correctly (confirmed by direct
+  read — no code change needed there); the actual gap was (a) the live-capture VM's shard launcher
   (`deployment-service/scripts/vm/setup-cefi-live-consolidated-vm.sh`) never had a `depth_of_book_10` entry — fixed,
   `deployment-service@28e64163`; (b) an adjacent `FORCE` env-var bug in the sibling launcher script, found+fixed in the
   same pass — `deployment-service@778ee0e3`; (c) a SECOND wiring gap only visible once the shards actually ran: the
@@ -162,3 +163,10 @@ context_scope:
   per-venue connector bugs are now code-fixed but NONE have been live-verified past deploy yet — a VM cycle + fresh
   manifest read across all 5 venues is still needed before this todo's done-when ("rows landing for at least the 5
   capable venues") is actually met. See the issue doc for the full per-venue fix ledger.
+- **2026-08-09, slot-22**: closed the issue doc's last open todo (the P3 MDPS `DataType`-enum question — decision: skip
+  on the caller side, `market-tick-data-service@55fac6f5`) and archived the issue doc per the 6-step ritual (all its own
+  todos done, unlocked). Removed the now-stale `BLOCKED-ON:` tag from this todo's own line above — the blocker
+  (per-venue debugging) is resolved, so this todo is now unblocked and can proceed. **This todo's own done-when is still
+  NOT met**: the actual VM cycle + fresh manifest read across all 5 venues (BYBIT-FUTURES/DERIBIT/
+  COINBASE-SPOT/OKX-SWAP still unverified past their code fixes) remains this todo's own remaining work — the archived
+  issue doc's Progress Log carries the full per-venue fix ledger for whoever picks this up next.
