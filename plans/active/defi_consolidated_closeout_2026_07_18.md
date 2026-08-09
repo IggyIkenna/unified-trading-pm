@@ -396,7 +396,8 @@ Discriminator = **does a manifest row exist**.
 > writer-order bug) + the stale-codex-docs correction, both done; full text verbatim in
 > [`defi_consolidated_closeout_history_2026_07_25.md`](/plans/archive/defi_consolidated_closeout_history_2026_07_25.md).
 
-- [ ] [DATA] P1. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — operator ruling 2026-07-28
+- **[DATA] P1. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Retagged from
+      `[OPERATOR]` (2026-07-28 gate-cleanup pass) — operator ruling 2026-07-28
       (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended): whole-bucket destroys are now
       reversibility-qualified the same way plain object deletes already were, PROVIDED a fresh
       `gcs_bucket_soft_delete_retention_seconds()` check on the target bucket clears (>=604800s) — the "never

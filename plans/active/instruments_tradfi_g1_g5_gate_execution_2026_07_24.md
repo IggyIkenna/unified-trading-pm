@@ -610,7 +610,8 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       full re-fetch — filed as a NEW P2 finding (§ "Deferred work after 2026-07-26") for a dedicated future backfill
       plan; a full re-fetch of that range is a real campaign, not "small sample" scope, and was not attempted here.
       Repo: instruments-service. (MIGRATED FROM: same.)
-- [ ] [SCRIPT] P3. **RULED 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — GO AHEAD**, conditional on
+- **[SCRIPT] P3. EXTRACTED 2026-08-09 → `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md`.** RULED 2026-08-07
+      (operator, via consolidated NA-blocker-digest audit) — GO AHEAD, conditional on
       the doc's own pre-existing gate: physical-GCS cleanup of old ICE-Databento instrument parquets, approved once
       tombstone reconciliation confirms 0 consumers (twin-verify still required before delete — operator approval covers
       the delete itself, not a waiver of the twin-verify safety check). Repo: deployment-service + instruments-service.

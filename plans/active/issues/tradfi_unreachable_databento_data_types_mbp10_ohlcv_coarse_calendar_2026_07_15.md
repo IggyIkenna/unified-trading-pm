@@ -244,7 +244,8 @@ these 5 cells.
       `attempted_failed`; DP-FETCH-009's no-recency-window count separately explains why they keep paging today. Both
       apply. No code changes shipped (read-only trace). Source: `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`
       todo 9.
-- [ ] [DESIGN] P2. **RULED 2026-08-07 — YES, build it, MDPS-owned** (not a features-service resampler on `vix_features`
+- **[DESIGN] P2. EXTRACTED 2026-08-09 → `tradfi_satellite_ao_dispatch_batch9_2026_08_09.md`.** RULED 2026-08-07 —
+      YES, build it, MDPS-owned (not a features-service resampler on `vix_features`
       alone): aggregate `ohlcv_1m` up to `ohlcv_15m`/`ohlcv_24h` once, upstream of every consumer. Delta-one groups need
       `ohlcv_24h`; reuse `candle_resampler.py`'s logic if it fits; general-purpose.
 - [x] ✅ [DATA] P2. `"YAHOO_FINANCE"` is declared as a literal TradFi venue (`VENUES_BY_ASSET_GROUP["tradfi"]`,

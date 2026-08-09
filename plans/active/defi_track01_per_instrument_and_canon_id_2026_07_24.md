@@ -238,7 +238,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
   checkpoint recorded, so a future `defi-per-instrument` re-run (e.g. for a NEW year added to the corpus) doesn't pay
   this same growing-listing-to-OOM cost on already-done years — not fixed here (would need a code change + QG cycle, out
   of scope for a one-shot infra-relaunch escalation; tracked as a new todo below).
-- [ ] [DATA] P2. **NEW 2026-08-06 (DP-VM-003, slot-7 data_pipeline_failure escalation agt-ef3dd8).** Skip
+- **[DATA] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** NEW 2026-08-06
+      (DP-VM-003, slot-7 data_pipeline_failure escalation agt-ef3dd8). Skip
       `migrate_defi_batch_to_per_instrument.py`'s per-year `discover_bundled()` full listing for years that already have
       a recorded `[[VM_PROGRESS]] last_completed_date=` monotonic checkpoint (or an equivalent already-migrated marker)
       instead of re-walking the whole `raw_tick_data/by_date/day=*` tree for that year every single relaunch. Two
@@ -317,7 +318,9 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       the 32 addresses known at ONE 2026-07-20 snapshot; any new high-TVL pool pairing a major/non-major asset going
       forward silently drops again until someone notices and manually extends `DEFI_FORCE_INCLUDE_POOLS`. (repo:
       instruments-service, unified-api-contracts)
-- [~] [BACKEND] P0. **Catalogue-venue gap — ROOT CAUSE FIXED + SHIPPED (`unified-api-contracts@f7314dc2`, 9/9
+- **[BACKEND] P0. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`** (the remaining
+      deploy-check + re-enum/re-rollup sub-scope)**. Catalogue-venue gap — ROOT CAUSE FIXED + SHIPPED
+      (`unified-api-contracts@f7314dc2`, 9/9
   acceptance: 7 new venues + cbETH/wBETH ACCEPT, COINBASE-SPOT/BINANCE-FUTURES stay CEFI; whole defi universe validates,
   was 26 rejected). SOLANA-NATIVE kept (documented canonical spelling; validator now parses the TRAILING chain segment).
   DEPLOY-GATED re-enum+re-rollup remains.** NOT deploy-lag/creds/silent-[] (deployed image HAS 89 venues + adapters DO
@@ -455,7 +458,8 @@ instruments in one `instruments.parquet` with `available_from/to`).
       unified-api-contracts) **RATIFIED (operator, 2026-08-08)**: yes to both — `derivative_ticker` is the single
       canonical raw-funding home for all DeFi perps, and `lst`/`staking`/`yield_bearing` are ratified canonical
       `InstrumentType` grains. Filed the implementation as a new `[SCRIPT] P1` todo below.
-- [ ] [SCRIPT] P1. **Implement the derivative_ticker/InstrumentType ratification** (per the 2026-08-08 ruling above):
+- **[SCRIPT] P1. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Implement the
+      derivative_ticker/InstrumentType ratification (per the 2026-08-08 ruling above):
       drop the Drift-only 24h/7d/30d window aggregates in favor of `derivative_ticker` as the sole raw-funding capture
       path for all DeFi perps; confirm `lst`/`staking`/`yield_bearing` carry no remaining case-variant/alias drift
       anywhere they're consumed (repos: market-tick-data-service, unified-api-contracts).
@@ -490,7 +494,8 @@ instruments in one `instruments.parquet` with `available_from/to`).
       non-canonical bare `SUSHISWAP`/`UNISWAP` originals purged once the canonical twins are verified. This is the same
       avoid-two-sources-of-truth standard as the sibling SUSHISWAP-alias ruling in
       `defi_venue_lst_rates_residual_2026_07_24.md` — not a forward-only labeling fix.
-- [ ] [SCRIPT] P1. **Wire RPC `factory()` lookup for the 206,107 bare SUSHISWAP/UNISWAP rows, register the missing
+- **[SCRIPT] P1. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Wire RPC `factory()`
+      lookup for the 206,107 bare SUSHISWAP/UNISWAP rows, register the missing
       Sushi-Arbitrum UAC venues, then migrate + purge the historical objects/manifest to canonical venue+chain naming**
       (per the 2026-08-08 ruling above): (1) enumerate the unique `pool_address` set from the raw MTDS parquet for these
       206,107 rows, (2) RPC `factory()` lookup per pool (needs an RPC provider — build the adapter scaffold now
@@ -550,7 +555,9 @@ instruments in one `instruments.parquet` with `available_from/to`).
       data_engineering)... Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing combo builders
       (cefi/deribit_combo_adapter.py, cefi/tardis/combos.py)... Evidence: instruments-service@9416be7d." Confirmed
       ancestor of `origin/live-defi-rollout`.
-- [ ] [BACKEND] P0. **NEW 2026-07-21 (operator ruling) — eliminate the address/UUID fallback in
+- **[BACKEND] P0. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`** (the sole remaining
+      sub-scope — re-ship the already-coded+tested (2)/(4) diff; sub-items (1)/(3)/(5) below are already shipped)**.
+      NEW 2026-07-21 (operator ruling) — eliminate the address/UUID fallback in
       `canonical_instrument_id` for POOL + LENDING; resolve token symbols for real, don't fall back.** Operator: "it
       needs to be fully canonical no fallback and migrated." Does NOT touch the two-id model or the machine
       `instrument_id` (`pool_address.lower()` stays — 2026-07-18 ruling unchanged, `engine/defi_catalog_reader` still

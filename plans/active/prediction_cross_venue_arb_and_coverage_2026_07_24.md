@@ -699,7 +699,8 @@ live `status=open` is unauth-OK so live wasn't broken by it — the `/historical
       `timestamp+method+path` (PSS/SHA256, DIGEST_LENGTH salt), headers `KALSHI-ACCESS-KEY/-SIGNATURE/-TIMESTAMP`.
       Replace the bogus `Authorization: Bearer` in `_get_headers` (make it method/path-aware). Repo: instruments-service
       (+ mirror in MTDS `kalshi_adapter.py` for historical trade fetch).
-- [ ] [SCRIPT] P1. e2e-testing/instruments-service — **series-scoped historical backfill — DEEP CORPUS DONE;
+- **[SCRIPT] P1. EXTRACTED 2026-08-09 → `prediction_satellite_ao_dispatch_batch9_2026_08_09.md`.** e2e-testing/
+      instruments-service — series-scoped historical backfill — DEEP CORPUS DONE;
       recent-window LAUNCHED; the 2025-10→2026-04 mid-gap is the precise residual (2026-06-23)**: (1) **DEEP CORPUS
       LANDED + VERIFIED** — the Jon-Becker free 36 GiB Parquet seed (mtds@74a2dd7 converter + deployment@2e37dcd VM)
       wrote **1,553,117 canonical `venue=KALSHI` trades parquets** to
@@ -760,7 +761,8 @@ live `status=open` is unauth-OK so live wasn't broken by it — the `/historical
       path = day/pipeline_mode/asset_group/venue/instrument_type/data_type), so existing trade/book parquets do not
       move. — tarball@21:08Z + 2 VMs relaunched + T+9min verified. Provenance: operator partition-completeness Q
       2026-06-23.
-- [~] [SCRIPT] P1. **cqg partition-completeness — BATCH re-classification re-walk** — **script bug FIXED (mtds@24db3f16,
+- **[SCRIPT] P1. EXTRACTED 2026-08-09 → `prediction_satellite_ao_dispatch_batch9_2026_08_09.md`.** cqg
+      partition-completeness — BATCH re-classification re-walk — script bug FIXED (mtds@24db3f16,
   ✅); `--apply` operational run REMAINS (now safe, non-corrupting).** Shipped the venue-aware classifier routing:
   `compute_object_atom(..., venue)` routes KALSHI tickers via `classify_kalshi_to_canonical_group(ticker=cid)` (one
   object = one ticker = one constant group), POLYMARKET via the tuple path; 2 regression tests

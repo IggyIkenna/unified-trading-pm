@@ -404,7 +404,8 @@ a migration gap). Probe basis: `gcloud storage` bucket sweep + `market-data-tick
       filed immediately below); the other 8 stay deprioritized scaffolds unless the operator says otherwise. Coverage
       matrix table above updated to match.
 
-- [ ] [DATA] P2. **Wire a real source for `liquidation_events` (MVP scope, 2026-08-08 operator ruling)** — distinct from
+- **[DATA] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Wire a real source for
+      `liquidation_events` (MVP scope, 2026-08-08 operator ruling) — distinct from
       the already-migrated `liquidations` data_type (which carries protocol-level liquidation EVENT SUMMARIES from the
       dedicated `liquidations-central` bucket); `liquidation_events` is the currently-unproduced per-event scaffold (no
       GCS data at all today, handler-if-any produces nothing). Determine the real on-chain source (Aave/Compound/Morpho
@@ -414,12 +415,14 @@ a migration gap). Probe basis: `gcloud storage` bucket sweep + `market-data-tick
       `record_captured`/`record_zero_rows`/`record_failed` honest-absence contract every other DeFi handler uses. Repo:
       market-tick-data-service. parent_epic: defi_master. Done-when: a real `liquidation_events` manifest row lands for
       at least one live venue/day.
-- [ ] [DATA] P2. **Wire a real source for `token_transfers` (MVP scope, 2026-08-08 operator ruling)** — currently a
+- **[DATA] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Wire a real source for
+      `token_transfers` (MVP scope, 2026-08-08 operator ruling) — currently a
       no-data scaffold. Determine the real source (EVM `Transfer` event logs via existing Alchemy/RPC access, or a
       subgraph if one of the already-registered `SUBGRAPH_IDS` protocols exposes transfer history) and wire a collector
       writing real rows via the standard `record_captured`/honest-absence contract. Repo: market-tick-data-service.
       parent_epic: defi_master. Done-when: a real `token_transfers` manifest row lands for at least one live venue/day.
-- [ ] [DATA] P2. **Wire a real source for `governance_events` (MVP scope, 2026-08-08 operator ruling)** — currently a
+- **[DATA] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Wire a real source for
+      `governance_events` (MVP scope, 2026-08-08 operator ruling) — currently a
       no-data scaffold. Determine the real source (on-chain governance-contract event logs — proposal
       created/voted/executed — for the DeFi protocols this asset_group already tracks governance for, e.g. via the
       existing `_defi_chain_data`/`SOLANA_RPC_TEMPLATES`-style RPC registry, or a governance subgraph) and wire a

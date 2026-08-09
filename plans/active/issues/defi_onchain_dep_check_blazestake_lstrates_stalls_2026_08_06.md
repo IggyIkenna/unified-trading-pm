@@ -142,7 +142,8 @@ BLAZESTAKE still blocking — Option A still needed).
       scheduling/trigger/cron-registration issue rather than a code-level capture bug. Read-only diagnosis is
       AO-dispatchable (a checkable root-cause question, not an operator judgment call); any actual fix (e.g.
       re-registering a stalled cron/Workflow trigger) may still need an `[OPERATOR]` follow-up once the cause is known.
-- [ ] [SCRIPT] P3. **RULED 2026-08-08 (operator), option (c): reclassify the 1,404 BLAZESTAKE retirement markers OUT of
+- **[SCRIPT] P3. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** RULED 2026-08-08
+      (operator), option (c): reclassify the 1,404 BLAZESTAKE retirement markers OUT of
       `attempted_failed` entirely** — the previously-open options (a)/(b) are superseded by this ruling. Disposition
       evidence: slot-6 escalation agt-d87c1c, 2026-08-06. **Scoping read of `attempted_failed_staleness.py` (2026-08-08,
       before filing this todo)**: that module is a pure staleness-LABELING helper

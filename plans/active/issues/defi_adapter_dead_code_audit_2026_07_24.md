@@ -435,7 +435,8 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       a transient clean working-tree read (corrected below) — actually shipped `market-tick-data-service@4e5d8b475`,
       verified via `git show origin/live-defi-rollout:market_tick_data_service/market_interface/__init__.py` (0 refs)
       and `git cat-file -e` on the deleted file (confirmed absent), not `git status` on a shared clone.
-- [ ] [SERVICE] P2. **RULED 2026-08-08 (operator): consolidate onto `HeliusSolanaAdapter`, delete
+- **[SERVICE] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** RULED 2026-08-08
+      (operator): consolidate onto `HeliusSolanaAdapter`, delete
       `native_staking_handler.py`'s hand-rolled implementation.** market-tick-data-service. **2026-08-07 note
       (unchanged)**: the `BLOCKED-CREDENTIALS` framing in § 2.2 is STALE — `helius-api-key` was approved + provisioned
       2026-05-15 (confirmed live in `/codex/05-infrastructure/credentials-matrix.md`); not credential-blocked.

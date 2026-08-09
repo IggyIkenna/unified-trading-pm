@@ -233,7 +233,8 @@ Two genuinely different directions, not mutually exclusive with the naming recon
       5/5 most recent runs `completed success` (2026-08-07T20:19Z..23:02Z), so the 2026-08-06 01:35Z CI-red note below
       is stale/self-resolved and no longer blocking promotion. The remaining action is a mechanical ops-check, not an
       operator judgment call — reclassified below.
-- [ ] [SCRIPT] P2. **Confirm the live IS Cloud Run revision actually serves `instruments-service@main` HEAD** (i.e. the
+- **[SCRIPT] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Confirm the live IS
+      Cloud Run revision actually serves `instruments-service@main` HEAD (i.e. the
       deployed image includes the `6fbaae90`/content-equivalent PYTH_PRICE_FEEDS fix, not a stale pre-fix image) — a
       mechanical ops-check, not a redeploy-authorization judgment call (the code question above is closed). Read the
       active Cloud Run revision's deployed image digest/commit label
