@@ -546,50 +546,51 @@ traffic to count until the migration is finished. What is certain is that their 
       recheck (mentioned in the original finding) also still needs doing.
 
       **operator ruling 2026-08-08**: will do it later — leave BOTH sub-parts blocked for now, do not execute either
-      autonomously. Preparing the exact ready-to-run steps below so both are a single click/paste next time the
-      operator is available; nothing below was applied this session.
+          autonomously. Preparing the exact ready-to-run steps below so both are a single click/paste next time the
+          operator is available; nothing below was applied this session.
 
-      **Sub-part (2) — the exact click-through (unchanged from above, restated for a fast pickup):**
-      `github.com/IggyIkenna/unified-trading-pm` → **Settings → Actions → General** → scroll to **"Fork pull request
-      workflows"** → select **"Require approval for all outside collaborators."** → Save. Verified live 2026-08-08
-      this is STILL the current exposure (re-checked `gh api repos/IggyIkenna/unified-trading-pm/actions/permissions`
-      → `{"enabled":true,"allowed_actions":"all","sha_pinning_required":false}` — `allowed_actions` unchanged from the
-      2026-08-06 finding, and the fork-PR-approval setting itself is still web-UI-only, no API surface found).
+          **Sub-part (2) — the exact click-through (unchanged from above, restated for a fast pickup):**
+          `github.com/IggyIkenna/unified-trading-pm` → **Settings → Actions → General** → scroll to **"Fork pull request
+          workflows"** → select **"Require approval for all outside collaborators."** → Save. Verified live 2026-08-08
+          this is STILL the current exposure (re-checked `gh api repos/IggyIkenna/unified-trading-pm/actions/permissions`
+          → `{"enabled":true,"allowed_actions":"all","sha_pinning_required":false}` — `allowed_actions` unchanged from the
+          2026-08-06 finding, and the fork-PR-approval setting itself is still web-UI-only, no API surface found).
 
-      **Sub-part (1) — the allow-list, now actually enumerated (2026-08-08) so the command below is ready-to-paste,
-      not a placeholder:** scanned every `uses:` line across `.github/workflows/*.yml` +
-      `scripts/workflow-templates/*.yml*` (the fleet template sources). Local composite-action refs (`./...`) need no
-      allow-list entry — only externally-hosted actions do. Full external set, 12 actions:
-      `actions/cache`, `actions/checkout`, `actions/create-github-app-token`, `actions/download-artifact`,
-      `actions/github-script`, `actions/setup-python`, `actions/upload-artifact`, `astral-sh/setup-uv`,
-      `aws-actions/configure-aws-credentials`, `google-github-actions/auth`, `google-github-actions/setup-gcloud`, plus
-      the org's own reusable-workflow refs `IggyIkenna/unified-trading-ci` and `IggyIkenna/unified-trading-pm` (PM
-      calling its own reusable `python-quality-gates-v2.yml`). Ready-to-run (NOT executed this session — operator
-      deferred both sub-parts):
+          **Sub-part (1) — the allow-list, now actually enumerated (2026-08-08) so the command below is ready-to-paste,
+          not a placeholder:** scanned every `uses:` line across `.github/workflows/*.yml` +
+          `scripts/workflow-templates/*.yml*` (the fleet template sources). Local composite-action refs (`./...`) need no
+          allow-list entry — only externally-hosted actions do. Full external set, 12 actions:
+          `actions/cache`, `actions/checkout`, `actions/create-github-app-token`, `actions/download-artifact`,
+          `actions/github-script`, `actions/setup-python`, `actions/upload-artifact`, `astral-sh/setup-uv`,
+          `aws-actions/configure-aws-credentials`, `google-github-actions/auth`, `google-github-actions/setup-gcloud`, plus
+          the org's own reusable-workflow refs `IggyIkenna/unified-trading-ci` and `IggyIkenna/unified-trading-pm` (PM
+          calling its own reusable `python-quality-gates-v2.yml`). Ready-to-run (NOT executed this session — operator
+          deferred both sub-parts):
 
-      ```bash
-      gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions \
-        -f allowed_actions=selected
+          ```bash
+          gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions \
+            -f allowed_actions=selected
 
-      gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions/selected-actions \
-        -f github_owned_allowed=true \
-        -f verified_allowed=true \
-        -f 'patterns_allowed[]=astral-sh/setup-uv@*' \
-        -f 'patterns_allowed[]=aws-actions/configure-aws-credentials@*' \
-        -f 'patterns_allowed[]=google-github-actions/auth@*' \
-        -f 'patterns_allowed[]=google-github-actions/setup-gcloud@*' \
-        -f 'patterns_allowed[]=IggyIkenna/unified-trading-ci@*' \
-        -f 'patterns_allowed[]=IggyIkenna/unified-trading-pm@*'
-      ```
+          gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions/selected-actions \
+            -f github_owned_allowed=true \
+            -f verified_allowed=true \
+            -f 'patterns_allowed[]=astral-sh/setup-uv@*' \
+            -f 'patterns_allowed[]=aws-actions/configure-aws-credentials@*' \
+            -f 'patterns_allowed[]=google-github-actions/auth@*' \
+            -f 'patterns_allowed[]=google-github-actions/setup-gcloud@*' \
+            -f 'patterns_allowed[]=IggyIkenna/unified-trading-ci@*' \
+            -f 'patterns_allowed[]=IggyIkenna/unified-trading-pm@*'
+          ```
 
-      `github_owned_allowed=true` covers every `actions/*` action (checkout/cache/setup-python/upload-download-artifact
-      /create-github-app-token/github-script — all GitHub-owned) without needing individual patterns;
-      `verified_actions=true` is intentionally NOT set (none of the 12 are in GitHub's "verified creator" program, so it
-      would add nothing) — the 6 explicit `patterns_allowed` entries above cover every remaining non-GitHub-owned action
-      actually in use. **Before running**: re-derive the `uses:` scan fresh (a workflow may have added a new action
-      since 2026-08-08) — `grep -rhoE "uses:\s*[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+" .github/workflows/*.yml
-      scripts/workflow-templates/*.yml* | sed 's/uses:\s*//' | sort -u` — and diff against the 12 above before
-      applying, so a newly-added action isn't silently locked out mid-CI-run.
+          `github_owned_allowed=true` covers every `actions/*` action (checkout/cache/setup-python/upload-download-artifact
+          /create-github-app-token/github-script — all GitHub-owned) without needing individual patterns;
+          `verified_actions=true` is intentionally NOT set (none of the 12 are in GitHub's "verified creator" program, so it
+          would add nothing) — the 6 explicit `patterns_allowed` entries above cover every remaining non-GitHub-owned action
+          actually in use. **Before running**: re-derive the `uses:` scan fresh (a workflow may have added a new action
+          since 2026-08-08) — `grep -rhoE "uses:\s*[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+" .github/workflows/*.yml
+          scripts/workflow-templates/*.yml* | sed 's/uses:\s*//' | sort -u` — and diff against the 12 above before
+          applying, so a newly-added action isn't silently locked out mid-CI-run.
+
 - [x] ✅ [INFRA] P0. **Fix the 6 failing plan-hygiene ratchets.** PM's LDR→main promotion is blocked and re-fails every
       ~15 min. Not I/O — the `checks` slice fails in 2m44s on content. Exact list in Finding 4. **DONE — closed
       2026-08-07 (na-eligibility-audit)**: fixed twice, once per recurrence — `unified-trading-pm@b30fb5267`
@@ -674,9 +675,10 @@ traffic to count until the migration is finished. What is certain is that their 
       `ubuntu-latest`)" — the state this todo asks for already holds; nothing actionable remains unless/until a future
       repo-visibility change (the conditional "if ever made private" clause, which is not this checkbox's scope).
 
-- [ ] [DOC] P2. **Update stale codex docs.** `central-vm-relaunch-glue-runner-reinstall.md` (full rewrite — runners no
-      longer on the planning VM); `self-hosted-runner-security-posture.md` (dedicated VM **and** the public-repo threat
-      model); `agent-orchestrator-deploy.md` (AO instance size once the downsize resolves).
+- **[DOC] P2. EXTRACTED 2026-08-09 — see `ci_satellite_ao_dispatch_batch7_2026_08_09.md` todo 1.** ~~Update stale codex
+  docs.~~ `central-vm-relaunch-glue-runner-reinstall.md` (full rewrite — runners no longer on the planning VM);
+  `self-hosted-runner-security-posture.md` (dedicated VM **and** the public-repo threat model);
+  `agent-orchestrator-deploy.md` (AO instance size once the downsize resolves).
 
 - [x] ✅ [OPERATOR] P3. **DONE 2026-08-07 — already executed before being re-asked.** `i-0c9b283b31d6b5ca7` downsized
       `m8i.4xlarge` → `m8i.2xlarge` (see `plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`,
@@ -705,6 +707,10 @@ background of that work.
 
 ## Progress Log
 
+- **2026-08-09 (satellite-batch extraction)**: Part 8's `[DOC] P2` "Update stale codex docs" item extracted verbatim
+  into `ci_satellite_ao_dispatch_batch7_2026_08_09.md` todo 1 (checkbox above replaced with a citation pointer, per the
+  `ci`-tranche satellite-batch-extraction pattern). Every other open item in this doc was re-assessed and left behind —
+  see batch 7's own Progress Log for the full per-item reasoning.
 - **2026-08-08 (interactive session)**: Also right-sized the AO/planning VM's EBS volume (`i-0c9b283b31d6b5ca7`,
   `agent-orchestrator-vm-1`, `vol-0b4f0237fa0f5cd0f`) while auditing AWS spend more broadly — this VM is out of this
   doc's own CI-VM scope but the same live-CloudWatch-data method applies, recorded here as the closest existing home.
@@ -799,17 +805,17 @@ all 15 open items end-to-end. Closed 2: "Fix the 6 failing plan-hygiene ratchets
 todo" (already true — `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 19 confirms `ui-quality-gates-v2.yml`
 was already correctly `ubuntu-latest` through the revert). 13 remain genuinely open — operator-gated, judgment-call, or
 duplicate-tracked-elsewhere-so-not-closable-here (item 6, "Complete public-repo migration," and item 9, "Cut
-sibling-clone I/O," are cross-referenced in sibling NA docs, not done). No `assigned_vm` change.
-**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-derived the open-item count fresh
-and cross-checked `/ag-closeout-audit ci`'s own fresh same-day 42-agent sweep
+sibling-clone I/O," are cross-referenced in sibling NA docs, not done). No `assigned_vm` change. **na-eligibility-audit
+2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-derived the open-item count fresh and cross-checked
+`/ag-closeout-audit ci`'s own fresh same-day 42-agent sweep
 (`plans/active/issues/ag_closeout_audit_ci_parked_2026_08_08.md`), which independently classified this doc
-`orphaned_never_touched` and extracted exactly ONE item as AO-eligible — the time-gated job-minutes re-measurement —
-now claimed by `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 1 (dispatched, `status: active`); flipping this
-doc's own copy of that item would create a competing dispatch path, so it stays KEEP-NA-STALE (already-claimed) on
-citation. The remaining open items (investigate CI volume; the `[OPERATOR]`-tagged fork-PR-approval item, itself
-carrying a fresh 2026-08-08 operator ruling to defer both sub-parts; re-baseline `qg_resource_baseline.json`; stagger
-the promote-fleet fan-out; the fleet-wide concurrency cap, deferred by the same sweep as D6-22, a genuine judgment call
-per its own 2 prior na-eligibility-audit verdicts; cut sibling-clone I/O; reap the governor marker-file leak; decide
-`content-gate`'s runner; update 3 stale codex docs) were each checked against today's 9 operator-Q&A precedents — none
-apply. Deferring to the same-day sibling audit's judgment on AO-eligibility rather than re-litigating in a second pass
-the same day. No `assigned_vm` change.
+`orphaned_never_touched` and extracted exactly ONE item as AO-eligible — the time-gated job-minutes re-measurement — now
+claimed by `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 1 (dispatched, `status: active`); flipping this doc's
+own copy of that item would create a competing dispatch path, so it stays KEEP-NA-STALE (already-claimed) on citation.
+The remaining open items (investigate CI volume; the `[OPERATOR]`-tagged fork-PR-approval item, itself carrying a fresh
+2026-08-08 operator ruling to defer both sub-parts; re-baseline `qg_resource_baseline.json`; stagger the promote-fleet
+fan-out; the fleet-wide concurrency cap, deferred by the same sweep as D6-22, a genuine judgment call per its own 2
+prior na-eligibility-audit verdicts; cut sibling-clone I/O; reap the governor marker-file leak; decide `content-gate`'s
+runner; update 3 stale codex docs) were each checked against today's 9 operator-Q&A precedents — none apply. Deferring
+to the same-day sibling audit's judgment on AO-eligibility rather than re-litigating in a second pass the same day. No
+`assigned_vm` change.
