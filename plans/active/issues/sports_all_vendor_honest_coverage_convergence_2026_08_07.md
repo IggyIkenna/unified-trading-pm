@@ -948,3 +948,4 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   26, 34 `CHUNK_FAILED` (in-range), heartbeat ~6.5min old (well within normal). Both healthy, no action.
 - **04:13Z** — smallchunk9 still chunk 26, 40 `CHUNK_FAILED` (in-range), heartbeat live (~19s). FIXTURE_LINEUPS
   run.log/heartbeat both live, fresh fetches. Both healthy, no action. (Doc near cap again, ~52 lines left.)
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

@@ -139,3 +139,4 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
   underlying gap (a dispatched-but-not-yet-`done` task isn't excluded from being handed to a second free slot). Relevant
   to todo 2's `skip-current-task` gap discussion: the fix there should also cover "already dispatched to another live
   slot," not just "repeat-skipped," since this case never skipped once before duplicating.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

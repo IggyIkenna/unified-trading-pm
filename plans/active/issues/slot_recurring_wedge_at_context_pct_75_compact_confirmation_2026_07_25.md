@@ -412,3 +412,7 @@ data.
       fleet with no slot above ~60%.** The first run's headline number (4 wedges) is dominated by inherited saturation
       and understates the fix; a clean-start window is the only way to measure the steady state honestly. Baseline to
       beat: forces in 60-85, zero wedges.
+
+## Progress Log (cont.)
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
