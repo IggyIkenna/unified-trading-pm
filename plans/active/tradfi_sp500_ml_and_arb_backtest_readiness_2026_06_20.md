@@ -266,3 +266,4 @@ here.
   on independent merits, but the fresh 08-07 marker already itemized and re-affirmed it as genuine, unblocked
   engineering work (only a single-day smoke has ever landed for the sibling P0 items, real multi-file risk) -- not
   overridden this pass. Doc stays NA.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

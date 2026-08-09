@@ -99,3 +99,4 @@ superseded_by:
   `issues/tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08.md`. Authored `status: active` per
   the established no-double-gate precedent; `gate_on_depends: true` already machine-holds every task here until the
   source doc's own extraction todo is done.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

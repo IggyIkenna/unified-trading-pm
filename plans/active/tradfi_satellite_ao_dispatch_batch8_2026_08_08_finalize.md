@@ -106,6 +106,7 @@ context_scope:
 ## Progress Log
 
 - **2026-08-08 (ag_closeout_auditor, slot 6)**: created alongside batch8, same run.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
 
 ## Codex SSOTs
 

@@ -326,3 +326,4 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   genuine per-doc judgment on the same cross-tranche-ownership candidates (unchanged since 2026-08-07). Todo 6 correctly
   still unchecked: `/ag-closeout-audit ui` has now run 4 times (08-06/07/08/09) but `/plan-reconcile ui` has still never
   run on this tranche. No reclassification, no citation fix, no archival warranted.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
