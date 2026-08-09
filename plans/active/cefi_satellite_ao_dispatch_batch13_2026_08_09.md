@@ -125,3 +125,28 @@ context_scope:
   `_vwap_walk` against 5 hand-computed synthetic order books (single-level, multi-level, thin-book, empty).
   `quality-gates.sh` green, 174 passed. Todo 2 (this doc's `depth_of_book_10` wiring item) is untouched by this change —
   no file overlap, per the doc's own conflict-check above.
+- **2026-08-09, slot-23** — Todo 2 worked; **the dispatcher-wiring gap itself is CLOSED and verified end-to-end**, but
+  the done-when's second half ("rows landing for at least the 5 capable venues") is only proven true for 1 of 5, so the
+  checkbox stays correctly unflipped. Full detail + the 4 remaining per-venue debug todos:
+  [`issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md`](issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md).
+  Summary: the connector-registry factories for all 5 venues already dispatched `depth_of_book_10` correctly (confirmed
+  by direct read — no code change needed there); the actual gap was (a) the live-capture VM's shard launcher
+  (`deployment-service/scripts/vm/setup-cefi-live-consolidated-vm.sh`) never had a `depth_of_book_10` entry — fixed,
+  `deployment-service@28e64163`; (b) an adjacent `FORCE` env-var bug in the sibling launcher script, found+fixed in the
+  same pass — `deployment-service@778ee0e3`; (c) a SECOND wiring gap only visible once the shards actually ran: the
+  `persist-cefi-depth-of-book-10` Pub/Sub topic + GCS warm-sink subscription had never been created (Terraform,
+  `deployment-service/terraform/gcp/live_event_log/{main.tf,warm_sink.tf}`) — added + applied to live prod
+  (`2 to add, 1 to change, 0 to destroy`; the issue doc has a caution for future appliers of this module about its
+  `create_bq_external_tables` var-default trap). Cycled the live `mtds-live-cefi-consolidated-*` VM (old instance
+  confirmed healthy via fresh heartbeat + active writes before deletion, per infra.md's staleness-check discipline —
+  this was a deliberate deploy-cycle, not a stale-VM cleanup) to pick up both fixes; verified real
+  `capture_status=captured` rows landing in the manifest AND real parquet objects landing under
+  `gs://central-element-323112-events/live-events/warm/cefi/depth_of_book_10/` for BINANCE-FUTURES. The other 4 venues
+  (BYBIT-FUTURES/DERIBIT/COINBASE-SPOT/OKX-SWAP) are confirmed connected and flushing on the same VM in the same window
+  (their OTHER data_types capture normally) but produce only `empty_confirmed`/zero rows specifically for
+  `depth_of_book_10` — a venue-connector-level data-correctness bug the wiring fix surfaced, not a wiring problem itself
+  (this is the first time any of these 5 connectors has ever run live, per the source plan's own todo-6 note). Also
+  found, non-fatal: `CandleBoundaryCrossedEvent` publish fails every flush cycle for all 5 venues because
+  `depth_of_book_10` isn't in the MDPS `DataType` enum — caught+logged, doesn't block persistence, but is a real open
+  design question (does depth_of_book_10 feed MDPS candles or not) captured as a P3 todo in the issue doc rather than
+  guessed at inline.
