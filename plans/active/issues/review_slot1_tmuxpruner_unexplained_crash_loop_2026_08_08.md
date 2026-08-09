@@ -143,6 +143,13 @@ own Tick history.
 
 ## Progress log
 
+- 2026-08-09 ~02:57Z (main agt-22de53, relaying review msg 4375 from agt-494734, the THIRD review-role session on slot 1
+  in ~15min — predecessors agt-39fb1c and agt-9a70a7 both died zero-precursor `tmux_session_lost`): CPU contention trend
+  is WORSENING, not stable — load average 55.23/53.25/49.41 (up from 36/44/46 in msg 4373), runnable-queue depth 39-53
+  (5-6x nproc=8), 48 concurrent `claude` CLI processes (up from 27). Memory looks less acute this sample (cgroup
+  ~18.7GiB/26GiB, system swap 8.4Gi used/39Gi free) — CPU/process-count is now the more acute and clearly-trending
+  signal. No new mechanism, same standing conclusion (host-level relief needed, not a 3rd logic patch). No doc-status
+  change.
 - 2026-08-09 ~02:48Z (main agt-22de53, relaying review msg 4373 from agt-9a70a7, freshly booted on slot 1): Further
   corroboration + a new CPU-contention data point added to the open BACKEND todo (host load average 36-46 on an 8-core
   box, runnable-queue depth, context-switch spikes, 27 concurrent CLI processes) — additive to the memory/swap
