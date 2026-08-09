@@ -9,12 +9,16 @@ summary:
   override. The consolidator's dedup tie-break (attempted_at -> written_at DESC NULLS LAST) resolves an exact tie by
   scan order, not correction-wins — confirmed live 2026-08-09: N1b's apply uploaded a clean shard but the next
   consolidator merge recorded rows_added=0 and the canonical kept the stale attempted_failed rows. Fixed for cefi
-  (instruments-service@42b9319b). The sibling defi corrector
-  (instruments-service/scripts/reconcile_correct_legacy_blank_misflips_2026_05_13.py:301-303) has the SAME class of
-  defect via a different mechanism — it sets attempted_at=None on correction, and NULLS LAST means a null attempted_at
-  always loses to a row carrying a real timestamp — so any defi corrections already applied via this script may also
-  have silently failed to merge into the canonical. NOT independently verified live for defi in this session (out of
-  N1b's cefi-only scope) — flagging for operator triage rather than assuming either outcome."
+  (instruments-service@159c0ebe0, amend of the original 8cf44c665 fix commit). A SECOND, independent bug surfaced on
+  re-apply: the fixed shard carried only the bulk-scan's column-pruned 10/42 columns, missing service_name (part of the
+  consolidator's dedup key base) -- would have landed as a duplicate row rather than an overwrite. Caught live before
+  the next consolidator cycle could merge it (broken shard deleted directly via the SDK at 2026-08-09T12:00:05Z) and
+  fixed by re-fetching full columns for corrected rows via DuckDB (instruments-service@159c0ebe0, same commit). The
+  sibling defi corrector (instruments-service/scripts/reconcile_correct_legacy_blank_misflips_2026_05_13.py:301-303) has
+  the SAME class of defect via a different mechanism — it sets attempted_at=None on correction, and NULLS LAST means a
+  null attempted_at always loses to a row carrying a real timestamp — so any defi corrections already applied via this
+  script may also have silently failed to merge into the canonical. NOT independently verified live for defi in this
+  session (out of N1b's cefi-only scope) — flagging for operator triage rather than assuming either outcome."
 status: open
 nature: issue
 asset_group: [cefi, defi]
@@ -70,11 +74,32 @@ scanned and counted as "changed" but contributed zero new rows. Direct compariso
 `attempted_at`/`written_at` identical to the microsecond (`2026-07-28T14:28:57.682261+00:00` etc.) to the canonical's
 still-`attempted_failed` rows for the same key. The canonical never updated.
 
-**Fix**: `instruments-service@42b9319b` — the apply loop now stamps a single fresh `datetime.now(UTC).isoformat()` onto
+**Fix**: `instruments-service@8cf44c665` — the apply loop now stamps a single fresh `datetime.now(UTC).isoformat()` onto
 both `attempted_at` and `written_at` for every corrected row, and `_NEEDED_COLUMNS` now includes both fields (they were
 previously excluded from the column-pruned read entirely, which would have produced a NULL-column shard on any future
 run of the pruned-read version — an even more certain tie-break loss). Regression test added:
 `test_apply_flips_bumps_timestamps_past_original_row`.
+
+## Second bug, caught on re-apply — column-pruned shard would have caused duplicate rows
+
+Re-applying with the timestamp fix above uploaded a new shard (`slot6-n1b-corrector-cefi-retry-1786276.parquet`) that
+turned out to carry only the bulk-scan's column-pruned 10/42 columns (`_download_manifest`'s `_NEEDED_COLUMNS` subset) —
+missing `service_name`, which per `manifest-consolidator-ssot.md` "Dedup key" is PART of the consolidator's dedup key
+base (`date, venue, data_type, service_name`). A shard row missing that column is NULL-padded on the UNION-ALL
+projection, so it would fail to match the canonical row's real `service_name` and land as a **duplicate row instead of
+an overwrite** — a different failure mode from the timestamp bug (corruption via doubling, not silent no-op).
+
+Caught before the 2026-08-09 12:00 UTC hourly consolidator cycle could merge it: the broken shard was deleted directly
+via the `google.cloud.storage` SDK (`blob.delete()`, GCS soft-delete retention applies) at 2026-08-09T12:00:05Z.
+**Fix**: `instruments-service@159c0ebe0` — the apply path now re-fetches full columns for exactly the corrected rows via
+DuckDB predicate-pushdown off the local downloaded manifest (the same memory-safety pattern the consolidator's own merge
+engine uses), so the shard carries every canonical column rather than just the candidate-scan subset. Regression tests
+added: `test_apply_flips_bumps_timestamps_past_original_row` (extended) and an `instrument_type` propagation assertion
+in `test_apply_flips_corrects_pre_listing_row_only`.
+
+**Broader implication for the "verify defi" todo below**: if defi's corrector also does a column-pruned bulk scan (check
+`_download_manifest` there), a defi fix needs BOTH the timestamp bump AND the full-column re-fetch — fixing only the
+timestamp tie-break would trade "silent no-op" for "silent duplicate row", not actually resolve anything.
 
 ## Why defi is at risk (NOT independently verified — flagging, not asserting)
 
@@ -119,9 +144,12 @@ this as its own follow-up if the defi check above confirms live impact.
       corrections actually merged into the canonical `_index`** (same live-comparison method as this issue's evidence
       section). — instruments-service
 - [ ] [SCRIPT] P2. **If defi impact is confirmed (or as a preventive fix regardless): stamp fresh
-      attempted_at/written_at in `reconcile_correct_legacy_blank_misflips_2026_05_13.py`'s apply path**, mirroring
-      `instruments-service@42b9319b`. Add a regression test analogous to
-      `test_apply_flips_bumps_timestamps_past_original_row`. — instruments-service
+      attempted_at/written_at in `reconcile_correct_legacy_blank_misflips_2026_05_13.py`'s apply path, AND check whether
+      its bulk scan is also column-pruned** (if so it needs the DuckDB full-column re-fetch too — see "Second bug"
+      section above; fixing only the timestamp issue would trade a silent no-op for a silent duplicate row). Mirror
+      `instruments-service@159c0ebe0`. Add regression tests analogous to
+      `test_apply_flips_bumps_timestamps_past_original_row` and the `instrument_type` propagation assertion. —
+      instruments-service
 - [ ] [DATA] P3. **Audit other per-VM-shard-writing correction scripts workspace-wide for the same tie-break defect**
       (any script that mutates `capture_status` on an existing row without bumping `attempted_at`/`written_at`). —
       cross-cutting
