@@ -303,3 +303,9 @@ transcript available in that session's Progress Log entry on
   `orphan-sweep`'s exact shape (curls `VM_BACKFILL_CMD`, `cd $WORKSPACE/instruments`, `_launch_with_tee`). No GCS data
   was written by the failed run (it died during dependency install, before the census script itself ever executed) —
   nothing to clean up. Re-launching `instruments-store` with the fix next.
+
+  **Fix shipped + confirmed landed**: `deployment-service@9ad75ec3`
+  (`fix(vm): add missing VM_TASK=sports-schema-census dispatch branch`) — full `quality-gates.sh` green (286s, sentinel
+  `b95410648ddb3229a70f08dfb8a540868a007847`) before shipping; quickmerge push confirmed landed on
+  `origin/live-defi-rollout` (`git rev-list --count origin/live-defi-rollout..HEAD` = 0, working tree clean).
+  Relaunching `instruments-store` next.
