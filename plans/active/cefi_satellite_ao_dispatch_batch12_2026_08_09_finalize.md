@@ -58,7 +58,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 3 source docs' checkboxes with real evidence**: (1)
+- [x] ✅ [REVIEW] P1. **Reconcile all 3 source docs' checkboxes with real evidence**: (1)
       `issues/mdps_features_deadcode_consolidation_2026_07_20.md` todo 1 (S1-a, line 87 as of drafting) — replace the
       citation-pointer line with the shipping commit; (2) `aster_and_cefi_rolling_adv_feature_2026_07_21.md` Phase 3
       (line 215 as of drafting) — replace the citation-pointer line with the shipping commit; (3)
@@ -70,7 +70,18 @@ context_scope:
       `deployment-service@c79f984c` per batch12's Progress Log finding — this is a doc-hygiene correction, not new work,
       cite the existing commit). **Verify each cited commit is reachable on `origin/live-defi-rollout` before citing
       it.** **Done when**: all 3 landed todos' pointers are replaced with verified commits + evidence, the S1-c stale
-      checkbox is corrected, and each source doc's remaining-open count is explicitly re-stated.
+      checkbox is corrected, and each source doc's remaining-open count is explicitly re-stated. — **DONE 2026-08-09**:
+      (1) `unified-trading-pm` — `mdps_features_deadcode_consolidation_2026_07_20.md` todo 1 flipped `[x]` citing
+      `deployment-service@4150c6c2` (verified reachable on origin); (2) same doc, todo 3 (S1-c) flipped `[x]` as a
+      doc-hygiene correction citing `deployment-service@c79f984c` (verified reachable, content-confirmed it registers
+      `mdps-sports-` in both registries); doc's remaining-open count re-stated as 2 (S1-b todo 2, S3-b todo 8); (3)
+      `aster_and_cefi_rolling_adv_feature_2026_07_21.md` Phase 3 pointer replaced with `strategy-service@73aa792f`
+      (verified reachable), doc's remaining-open count re-stated as 1 (the `book_depth.py` P3 stretch item); (4)
+      `issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md` found ALREADY flipped `[x]` +
+      ALREADY archived to `plans/archive/2026_08/issues/` by a prior agent (slot-8, same-day) as part of shipping
+      batch12 todo 3 — confirmed via `git log` on `origin/live-defi-rollout`
+      (`ae682c7b99 docs(plans): archive cefi_content_migration_shard24_early_preemption_false_page — all todos     resolved`);
+      doc's remaining-open count = 0 (fully resolved, archived). No further action needed on (3).
 - [ ] [REVIEW] P2. **Re-check `issues/mdps_features_deadcode_consolidation_2026_07_20.md`'s remaining open items**
       (S1-b, still design-gated by real successor work per batch12's Progress Log; S3-b, still a genuine sports-dual-
       entrypoint design adjudication) for whether either has newly cleared — if S1-b's design question (repoint to
@@ -93,3 +104,6 @@ context_scope:
 
 - **2026-08-09** — drafted alongside batch12; `status: active` from the start, machine-held by `gate_on_depends: true`
   until batch12's todos are done.
+- **2026-08-09 (review, slot 13)** — todo 1 done. Reconciled all 3 source docs' checkboxes with verified commits (see
+  the todo's own `DONE` note above for the per-doc detail). Doc 3 (shard24) turned out already fully reconciled +
+  archived by a prior agent before this task picked up — no edit was needed there, only verification.
