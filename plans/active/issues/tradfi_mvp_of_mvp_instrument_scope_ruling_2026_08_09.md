@@ -116,13 +116,23 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Fix `wave_launcher.py`'s `running_cell_keys` dedup check so it matches the per-single-root CME
-      dispatch candidate keys it computes internally, instead of only matching a VM-name-parsed "root group" label —
-      currently causes CME launches to duplicate 3-13x per shard (measured: 167 stray VMs from one erroneous wave, per
-      "Disposition of currently-running infra" above). Any relaunch of the in-scope CME cells (ES, BTC/ETH futures)
+- [ ] [SCRIPT] P1. **RECURRENCE CONFIRMED LIVE (2026-08-09, later same day)** — raised P2→P1. Fix `wave_launcher.py`'s
+      `running_cell_keys` dedup check so it matches the per-single-root CME dispatch candidate keys it computes
+      internally, instead of only matching a VM-name-parsed "root group" label — currently causes CME launches to
+      duplicate 3-13x per shard (measured: 167 stray VMs from one erroneous wave, per "Disposition of currently-running
+      infra" above). **Confirmed still happening after the kill+scope-ruling landed**: observed
+      `tradfi-bf-cme-ohlcv-1m-     g01-es-es-2020-*`, `-eth-eth-2022-*`, and `-met-met-2023-*` each running as TWO
+      separate VMs ~3 hours apart for the identical shard. Any relaunch of the in-scope CME cells (ES, BTC/ETH futures)
       needs this fixed first, or must bypass `wave_launcher.py` per the manual-check workaround already noted in "Known
       relaunch gotchas" above. **(na-eligibility-audit 2026-08-09, tradfi tranche, dispatch agt-3df41f: converted from
       prose-only "Known relaunch gotchas" text to a tracked checkbox — same finding, not new scope.)**
+- [ ] [DATA] P1. **NEW FINDING (2026-08-09)** — `tradfi-bf-nyse-ohlcv-1m-2023-d01-*` was observed RUNNING live, i.e. an
+      autonomous dispatch (likely `wave_launcher.py`'s gap-driven scan, which is scope-blind — it only reads "is this
+      cell a manifest gap", not this doc's ruling) launched NYSE equities for **2023**, directly violating the "equities
+      = 2026 ONLY" scope above. Needs a live decision: kill it (wastes whatever progress it's made) or let it finish
+      (it's not wrong data, just out-of-priority-order right now) — either way, this confirms `wave_launcher.py` itself
+      needs a scope-awareness gate reading this doc (or an equivalent config), not just the dedup-key fix above, or
+      every future gap-scan will keep re-violating this ruling. Repo: deployment-service (`scripts/wave_launcher.py`).
 
 ## Progress Log
 

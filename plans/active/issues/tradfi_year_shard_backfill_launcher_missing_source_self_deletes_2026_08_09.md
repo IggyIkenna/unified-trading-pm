@@ -151,11 +151,14 @@ underlying pattern: liveness-by-log-silence is not liveness).
       add incremental progress logging inside the per-date Databento fetch so liveness is visible during a legitimately
       slow (not hung) call. Repo: deployment-service (`vm_zombie_watchdog.py` + `vm-exec-with-gcs-tee.sh`) +
       market-tick-data-service (Databento adapter fetch path, if adding progress logging there).
-- [ ] [INFRA] P2. **Audit whether this same `VM_TASK=cefi-backfill` bug affects other callers of
-      `launch-tradfi-backfill-vm.sh`** (BTC/ETH crypto-basis tier-plan, ad-hoc single-window mode) and whether any
-      historical ES/BTC/ETH TradFi manifest data that appears "captured" actually came through THIS launcher (broken
-      since some unknown-but-possibly-long-ago point) versus a different path. Repo: deployment-service +
-      market-tick-data-service (manifest cross-check).
+- [ ] [INFRA] P2. **PARTIALLY DONE (2026-08-09, separate session, deployment-service@391ff7f5)** — confirmed
+      `_tradfi-ohlcv-launcher-lib.sh` (NASDAQ/NYSE/CME-grouped/KRX launchers) was already correctly wired
+      (`VM_TASK=mtds-backfill` + `VM_SOURCE`, not affected). A different agent independently found + fixed the SAME bug
+      in `launch-targeted-options-chain-backfill.sh` (CME-OPTIONS/CBOE-VIX-OPTIONS shards,
+      `deployment-service@acf965d9`) concurrently with this doc's own fix — both landed together after resolving a real
+      git stash conflict (identical fix, different comments). Remaining, NOT done: the historical-manifest-provenance
+      cross-check (did any already-"captured" ES/BTC/ETH row actually come through this broken launcher). Repo:
+      deployment-service + market-tick-data-service (manifest cross-check).
 - [ ] [CODE] P3. **Wire `VM_FORCE_WINDOW` into the `mtds-backfill` branch** (or document why it's intentionally scoped
       only to the generic fallback) — currently silently ignored for every `mtds-backfill`-routed launch, including this
       one. Repo: deployment-service, `scripts/vm/setup-data-pipeline-vm.sh`.
@@ -171,3 +174,14 @@ underlying pattern: liveness-by-log-silence is not liveness).
   well past the "≤2 full QGs at once" norm — a fleet-wide contention issue, not specific to this change). Quickmerge's
   own internal re-gate also hit the same wall once (626s) before a clean run finally shipped. No content changes were
   needed across any of these attempts — every failure was purely the resource-drift timing gate under contention.
+- **2026-08-09, separate session (interactive, MVP-of-MVP scope-narrowing work)**: independently rediscovered this exact
+  bug via live smoke-testing (per `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s
+  relaunch-verification requirement) — two of my own test launches and a THIRD agent's real ES_OPT dispatch all hit it
+  the same way. Also found this launcher's `MACHINE_TYPE` was still the undersized `e2-standard-4` default (never
+  received the `e2-highmem-4` bump the exact-same OOM-hang class already got elsewhere, see
+  `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`) — live-reproduced a 9.2GB RSS climb within seconds of boot
+  on a narrow ad-hoc test before killing it. Fixing this collided with a 4th agent's concurrent fix for the SAME
+  `VM_TASK` bug in a SIBLING launcher (`launch-targeted-options-chain-backfill.sh`) via a real git stash conflict
+  (`||||||| Stash base` / `Updated upstream` vs `Stashed changes`) — both fixes were functionally identical, resolved
+  cleanly, all tests green (including this doc's own regression test class + the sibling's), shipped together:
+  `deployment-service@391ff7f5` (parents: `c99ab99b8`, `acf965d9`). Ancestry-verified on `origin/live-defi-rollout`.
