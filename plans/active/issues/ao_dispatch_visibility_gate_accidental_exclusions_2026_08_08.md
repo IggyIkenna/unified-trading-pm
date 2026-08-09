@@ -175,18 +175,14 @@ human already made the call and the fleet still never executes it.
       longer appears anywhere in the block. Verify:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
       no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in `plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md`.**
-      Its checkbox reads (truncated): "[DIAG] P3. Delete the 916 HYPERLIQUID + 642 ASTER redundant legacy
-      `defi`/`perp_funding` rows and rebuild the defi" — the marker trips `_is_non_dispatchable`
-      (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its own line, so
-      `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is genuinely still
-      blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to the start of its
-      own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation line) so it reads
-      as a declared hold. If it is already resolved (several of these carry a dated `RULED`/`DESIGN DECIDED` note — read
-      the full todo before acting), rewrite the trigger phrase so the marker no longer appears anywhere in the block.
-      Verify:
-      `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-24, infra).** Triage accidental exclusion in
+      `plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md`. Already fixed by another session, not hand-fixed
+      here: the flagged todo's trigger phrase (`...batch5_2026_07_27.md`'s earlier BLOCKED-OPERATOR-DECISION
+      classification of this same...`) was rewritten to `...previously operator-decision-gated classification of this
+      same...`in`unified-trading-pm@84f363ff6`(slot-2, laptop, 2026-08-09 10:07 UTC+1) — an incidental fix bundled     inside an unrelated 20-file sweep titled "reclassify prek_stash_restore_race NA->planning". No live    `BLOCKED-<TOKEN>`/permanent-deferral marker remains anywhere in the block; the todo was never actually re-blocked     after the 2026-07-28 operator ruling this doc itself describes. Verified:     `cd
+      agent-orchestrator && uv run python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm
+      --json`    shows`defi_satellite_ao_dispatch_batch6_2026_07_30.md`with`disk_open=1, backlog_open=1, excluded=[]` —
+      the todo is correctly dispatchable, no rewrite needed. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md`.** Its checkbox reads (truncated): "[DOC]
       P2. **Re-check the Deferred items**: (a) the 2 conflict-parked BLOCKED‑OPERATOR-DECISION items" — the marker trips
@@ -497,3 +493,10 @@ human already made the call and the fleet still never executes it.
   note to re-run the live report rather than trust the stale enumeration — confirmed
   `disk_open=1, backlog_open=1, excluded=[]` for that doc (its remaining open todo, `[DOC] P2. Archive.`, is correctly
   dispatchable, not excluded).
+- **2026-08-09 (slot 24, infra)** — Fixed the `defi_satellite_ao_dispatch_batch6_2026_07_30.md` todo. A different flavor
+  of "already resolved elsewhere": not a checked-off todo this time, but the trigger phrase itself
+  (`earlier BLOCKED-OPERATOR-DECISION classification`) was already rewritten to non-marker prose
+  (`previously operator- decision-gated classification`) by `unified-trading-pm@84f363ff6` (slot-2, laptop, 2026-08-09),
+  an incidental fix bundled inside an unrelated 20-file doc sweep. Confirmed via `dispatch_visibility_report --json`:
+  `disk_open=1, backlog_open=1, excluded=[]` for that doc — its sole open todo is correctly dispatchable, no rewrite
+  needed here.
