@@ -135,18 +135,15 @@ human already made the call and the fleet still never executes it.
       `cd agent-orchestrator && uv run python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`:
       `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` now reports `disk_open=3, backlog_open=3, excluded=[]` — no
       rewrite needed. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`.** Its
-      checkbox reads (truncated): "[VERIFY] P1. **Re-measure the billed notify/glue cost — the 3-5 day window has long
-      passed.** The mover flip" — the marker trips `_is_non_dispatchable`
-      (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its own line, so
-      `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is genuinely still
-      blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to the start of its
-      own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation line) so it reads
-      as a declared hold. If it is already resolved (several of these carry a dated `RULED`/`DESIGN DECIDED` note — read
-      the full todo before acting), rewrite the trigger phrase so the marker no longer appears anywhere in the block.
-      Verify:
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-23).** Triage accidental exclusion in
+      `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`. Moot, not accidental: the flagged todo
+      (`[VERIFY]     P1. Re-measure the billed notify/glue cost`) was independently completed and checked off `[x]` by
+      slot 31 on 2026-08-09, and the whole doc — every todo now done — was archived to
+      `plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md` (`status: complete`, 0 remaining `- [ ]`).
+      No open todo remains on disk for the gate to misclassify, so no rewrite needed. Verified:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+      no longer lists `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` at all (doc no longer has any open
+      todos to report on). (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in `plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md`.** Its
       checkbox reads (truncated): "[VERIFY] P0. **Time-gated billing/capacity re-measurement sweep — 4 items in" — the
       marker trips `_is_non_dispatchable` (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its
@@ -491,3 +488,8 @@ human already made the call and the fleet still never executes it.
   do not work from this doc's existing 25-item enumeration alone, it predates the rule change.
 
 - **context-scout 2026-08-09**: populated context_scope (4 entries).
+- **2026-08-09 (slot 23, infra)** — Fixed the `ci_satellite_ao_dispatch_batch1_2026_07_26.md` todo. Moot, not
+  accidental: its sole flagged todo was already checked off by slot 31 on 2026-08-09, and with every todo in the doc now
+  done it was archived to `plans/archive/2026_08/` (`status: complete`). Confirmed via
+  `dispatch_visibility_report --json`: the doc no longer appears in the report at all (zero open todos left to
+  misclassify).
