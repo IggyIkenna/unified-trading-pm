@@ -270,3 +270,6 @@ This plan's own "Model-improvement backlog" section remains the owner until a su
   hard-stop. No cheat-sheet precedent from today applies (not a delete, not IAM, not a script-flag gap).
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — locked (live-defi-rollout); permanent
+  human-only hard-stop (wallet/kill-switch for real capital, reaffirmed 2026-08-08) + operator-scheduled backtest grid +
+  deferred research.

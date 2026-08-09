@@ -245,3 +245,7 @@ argument for that issue's Option A). Cross-linked from there.
   `locked_since: 2026-05-21`, noted but not touched (no archival attempted here).
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — sole item's closure is gated on
+  cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md's still-open [REVIEW] P2 re-verification todo (that
+  todo explicitly re-checks the manifest and conditionally closes this doc; verified `- [ ]` open, not yet executed as
+  of this run). Not yet ready to close here ahead of that gate.

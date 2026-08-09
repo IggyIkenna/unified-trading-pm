@@ -225,3 +225,6 @@ someone checks.
   is re-read.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — sole remaining item ([SCRIPT] P3,
+  relaunch shard 24) explicitly self-documents as staying open until cefi_satellite_ao_dispatch_batch12_2026_08_09.md
+  todo 3 actually lands (verified still `- [ ]` open as of this run) — citation already correct, not yet ready to close.

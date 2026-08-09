@@ -215,6 +215,11 @@ reasoning above.
   not handle `_XPERP` infix — 104/139 OKX-FUTURES contracts fall through to passthrough or generate a non-existent
   subscribe instId; parity test (`market-tick-data-service@d964dce4`) tests wrong wire format for AAPL. New `[DATA] P1`
   (needs `[OPERATOR]` decision on xperp-vs-linear disambiguation) added above.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — verified
+  cefi_satellite_ao_dispatch_batch8_2026_08_06_finalize.md todo 1 (status: complete, archived): its own reconciliation
+  deliberately left the [SCRIPT] P1 checkbox open ('checkbox left open per plan') even though both sub-parts are
+  resolved/moot — an established, cited ruling, not new staleness. No action needed; [DATA] P1 (xperp wire-format) is
+  genuine operator-gated design work.
 
 ## Progress Log (context-scout)
 

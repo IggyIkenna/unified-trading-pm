@@ -238,3 +238,8 @@ exposed to this class before the veto shipped.
   Line-187 `[SCRIPT]` P3 item remains explicitly time-gated/opportunistic, not blocking. Doc stays NA; the 2026-08-07
   conflict citation and this run's independent reaffirmation both hold.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — root-cause fix (is_spot veto) shipped
+  and live-confirmed. TOCTOU singleton-lock item (line 182) is correctly cited as claimed by
+  cefi_satellite_ao_dispatch_batch9_2026_08_07.md todo 2 — verified that todo is still `- [ ]` open as of this run (fix
+  not yet shipped), so this doc's checkbox correctly stays open per its own 'flip both together' instruction. Not yet
+  ready to close.

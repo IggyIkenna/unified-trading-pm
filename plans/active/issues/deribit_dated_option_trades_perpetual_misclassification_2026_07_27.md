@@ -241,3 +241,6 @@ Objects: 28158  Days: 497  Bytes: 1060914050589 (988.05 GB)
   stated done-when beyond 'find the bug.'" Reaffirms 4 prior passes (2026-07-30, 2026-08-04, 2026-08-06, 2026-08-07).
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — execution_scope: human, explicitly
+  declared. Sole todo bundles an untraced root-cause investigation (no code path identified) plus a ~988GB/497-day
+  reclassification migration gated on that root cause.

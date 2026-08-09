@@ -247,3 +247,7 @@ noted here only so the two aren't conflated.
   whole-doc worker-determinable. No cheat-sheet ruling matches directly. Reaffirms the concurrent verdict on independent
   grounds.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — sole open item is a well-specified
+  6-step batching plan (2026-08-08 operator ruling: widen to full ~47-bucket matrix, batch the walks) with one residual
+  judgment step (GCS QPS concurrency-cap selection) on a single-walk-discipline-sensitive path. 2 independent same-day
+  (2026-08-08) passes already scrutinized this exact tension and landed KEEP-NA; concurring.

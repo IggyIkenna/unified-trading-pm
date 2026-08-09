@@ -610,3 +610,6 @@ Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, S
   cheat-sheet rulings; none apply to a corpus of alpha-research strategy-desk judgment calls (execution-config sweeps,
   leg re-specs, allocator design, universe construction, all `[RESEARCH]`/`[STRATEGY]`). This is the archetypal
   trading-judgment content the NA classification exists for — reaffirms the 2026-07-30 verdict, no change.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms 2026-08-08 round7 verdict;
+  16/22 open items map onto the doc's own operator-gated §C register (PERMANENT hard-stop, 2026-07-28), remaining 6 are
+  RESEARCH refinements. 3 lower-confidence MISCLASSIFIED_LIKELY_AO_ELIGIBLE items noted, not enough to flip the doc.

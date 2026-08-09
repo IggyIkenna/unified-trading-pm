@@ -198,3 +198,6 @@ of a venue-day outage.
   same `[DESIGN] P1` gap-closure, plus the separate v2 dedup `--apply` landing). Neither clears the bounded-outcome bar.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — design 'APPROVED-IN-PRINCIPLE, not
+  ready to implement' pending 3 adversarially-confirmed architecture gaps. Both open items are real design/judgment
+  work, not worker-determinable.

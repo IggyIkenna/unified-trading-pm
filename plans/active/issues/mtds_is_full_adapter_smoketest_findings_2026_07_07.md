@@ -671,3 +671,6 @@ the todos already promised.
   an unscoped drilldown-mockup update), all judgment/research-class with no stated done-when. Reaffirms 3 prior
   2026-07-30 passes.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — full 673-line read of the 59-bug
+  master findings ledger; only 3 items genuinely still open, all open-ended research with no stated done-when beyond
+  'investigate'.

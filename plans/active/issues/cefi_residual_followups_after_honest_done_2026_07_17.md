@@ -757,3 +757,6 @@ pairs stay honest-unresolved (reported, never guessed).
   `FORCE` default-value item (line 709) reads as an isolated, unclaimed RECLASSIFY candidate on its own — not actioned
   this run since it doesn't change the doc-level verdict.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — full 759-line read, 6 open items
+  confirmed, each requiring a real scoping/design decision before it's worker-determinable. 1 small item (VM-launcher
+  FORCE default) flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE by a prior pass and reaffirmed here, not claimed on its own.

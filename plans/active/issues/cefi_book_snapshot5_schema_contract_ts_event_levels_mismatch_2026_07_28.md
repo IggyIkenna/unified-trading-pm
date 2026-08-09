@@ -897,3 +897,5 @@ against the reproduction script.
   re-audit), which lists this exact doc under "Deferred — human-only": "2 self-declared design/maintainer-judgment calls
   (choosing between two engineering approaches for the schema contract)." No reclassification.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — read the full ~900-line, 25+-dispatch
+  escalation history for a RE-TRIAGE trap; found none. Both remaining items are self-declared design/maintainer calls.

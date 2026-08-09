@@ -216,3 +216,6 @@ workspace).
   misreads as fully resolved to a future archive-candidate sweep. `locked_by: live-defi-rollout` unchanged — no archival
   action taken or implied.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — sole item is an explicit [OPERATOR]
+  P3 delete-vs-keep decision over 490 GCS-confirmed-duplicate objects (market-tick-data-service@1a32b6e7, DONE
+  2026-08-06), correctly gated by the delete-safety protocol.

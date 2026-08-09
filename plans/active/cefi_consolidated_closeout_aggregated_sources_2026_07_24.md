@@ -846,3 +846,6 @@ here is NOT dispatch, per this doc's own standing convention.
   section (6 new cefi-tagged linkage-orphan docs) doesn't change this: those docs are the index's OWN new content
   (already linked in the body), not reading-list prerequisites for touching this doc itself. Parent closeout plan + the
   line-cap-remediation source doc remain the right minimal set; still genuinely code-free (discoverability-index doc).
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — discoverability-index doc by design
+  (non-checkbox markers for cited content, deliberately un-ingestable by AO's parser per its own frontmatter). Sole real
+  checkbox is a standing sync-maintenance duty with no terminal done-state. Reaffirmed across 6+ prior passes.

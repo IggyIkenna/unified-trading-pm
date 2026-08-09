@@ -151,6 +151,9 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
   `mdps_cefi_candle_manifest_never_emitted_2026_07_26` issue). `assigned_vm` stays `NA` — flipping to `planning` needs a
   gated finalize companion plan (`task_template.md` §4, plan-hygiene-enforced) which is out of scope for a single-item
   ruling application; a future scoping pass can flip it together with authoring that companion.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — Phases 1-2 shipped; Phase 3 backend
+  already extracted 2026-08-09 to cefi_satellite_ao_dispatch_batch12_2026_08_09.md todo 2. Sole remaining open item is
+  an explicit judgment-call stretch item (book_depth.py).
 
 ## Phase 1 — ADV consumer (scaffold against MDPS's existing schema)
 

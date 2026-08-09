@@ -616,3 +616,6 @@ longer has its own download button.
   judgment-call/operator-gated design items (mockup re-verification cadence, parquet resharding design gated on operator
   sign-off, etc.), none a bounded worker-determinable fact-check.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — KNOWN UNDER-READ-RISK doc (a prior
+  pass found only 6/14 items); this pass read all 618 lines end-to-end and grep-verified exactly 8 open items, matching
+  the doc's own count — no gap this time. All 8 are judgment-call/operator-gated design items.

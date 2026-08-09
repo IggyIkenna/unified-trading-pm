@@ -170,3 +170,6 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
   performed here since it changes doc structure beyond a citation/marker touch.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms round7 (2026-08-08)
+  whole-doc-only-flip ruling: todo 8 (sports dual-entrypoint) remains an un-superseded design adjudication that traps
+  otherwise-bounded todos 1-3.

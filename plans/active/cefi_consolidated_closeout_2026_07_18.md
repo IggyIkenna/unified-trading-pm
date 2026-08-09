@@ -136,9 +136,13 @@ context_scope:
 - **[SCRIPT] P0. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 for AO
   dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Propagation ops B1/B3/B4 —
   IS→catalogue→enumerator→MTDS wave chain for the new Binance tradfi-perp cash-twin equities. Source: Phase 1b.)
-- [ ] [DATA] P2. **BLOCKED-DATA — source a Korea-equity vendor** for HYUNDAI/SAMSUNG/SK-Hynix cash-twin coverage (no
-      US-listed twin on Databento DBEQ.BASIC; neither current vendor covers KRX). Repo: instruments-service (vendor ask
-      → operator). Source: Phase 1b.
+- [x] ✅ [DATA] P2. ~~**BLOCKED-DATA — source a Korea-equity vendor** for HYUNDAI/SAMSUNG/SK-Hynix cash-twin coverage
+      (no US-listed twin on Databento DBEQ.BASIC; neither current vendor covers KRX). Repo: instruments-service (vendor
+      ask → operator). Source: Phase 1b.~~ **CLOSED — na-eligibility-audit 2026-08-09.** Embedded mirror of the
+      identical item closed 2026-08-08 citing a 2026-08-07 operator ruling documented in
+      `/plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` (line 662): "daily from yahoo finance
+      is enough" — `unified-api-contracts@844c5ee6b` + `instruments-service@1ba5da4b`. This embedded copy was never
+      flipped to match; fixed now.
 - [ ] [SCRIPT] P1. **Capture Binance/OKX/Bybit `indexPrice`/`markPrice`/`fundingRate`** for the equity-perps as a
       first-class data_type (rides the existing premiumIndex/funding endpoints). Repo: market-tick-data-service. Source:
       Phase 1b.
@@ -640,3 +644,8 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
   measurement, Barchart removal) are candidates for a future satellite-batch extraction (mirroring the established
   `cefi_satellite_ao_dispatch_batchN` pattern) — not executed in this pass, out of this sweep's whole-doc-flip
   mechanism.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, stale-items — closed the Korea-equity-vendor
+  mirror item (line 139 area; source doc cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md already closed the
+  identical item 2026-08-08 citing a 2026-08-07 operator ruling). Remaining items: Track 1 correctly follows-the-fleet
+  per a 2026-08-02 operator ruling (not independently reclassify-able), 2 dependency-blocked backfill-verification
+  gates, rest genuine coordination/judgment work.

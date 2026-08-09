@@ -170,6 +170,10 @@ context_scope:
   `_PATH_RE`, the 658-key dedup, the DERIBIT combo design) as DONE, left the enumeration-vs-fix item open with a
   clarifying note (measurement done, fix not), and left 2 (LIGHTER-ZKSYNC symbol map, PACIFICA-SOLANA quarantine
   registration) open — could not confirm either resolved.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — sole open item carries a redirect
+  banner to a sibling doc's own live todo (citation verified). Caught a real checkbox-vs-prose trap: this doc's top
+  checklist reads 0-open (already flagged as a false archive-candidate 2026-08-09), but its own 'Deferred work' table
+  further down still carries this genuine open item.
 
 ## PRE-COMPACT RESUMPTION CHECKPOINT — 2026-07-22 ~05:00Z (3rd checkpoint, post would_patch-ALL_DONE)
 

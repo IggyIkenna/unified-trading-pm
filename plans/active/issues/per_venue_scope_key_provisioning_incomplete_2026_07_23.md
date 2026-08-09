@@ -214,3 +214,6 @@ All three are real design/priority calls, not something determinable from code o
   reclassifies existing docs whole, not decomposes them). No conflict found in
   `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` (lists this doc as "no new work landed," consistent).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms
+  2026-07-30/08-04/08-06/08-07/08-08 verdicts. Item 1 needs the operator's own Bybit exchange-side API-key login (not
+  GCP-IAM-self-serviceable); items 2-3 are credential/design-scoping calls.

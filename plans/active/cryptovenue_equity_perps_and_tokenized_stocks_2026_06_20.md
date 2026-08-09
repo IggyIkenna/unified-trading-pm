@@ -588,6 +588,10 @@ dropped. The CME-b tradfi close-out is the linchpin that unlocks the DBEQ 3-data
 - **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — 22 open items are dominated by
   open-ended strategy-archetype/hedge-venue/universe-construction [DESIGN]/[RESEARCH] calls, not bounded deterministic
   work.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — 15 open items, majority genuine
+  strategy-design/research work or explicitly flagged as needing their own scoped build plan before AO dispatch. 7 items
+  flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE as future-extraction candidates (mirrors this doc's own 2026-08-09 extraction
+  pattern for 4 other items), not enough to flip the whole doc.
 
 ## Temporary states + their canonical follow-up plans
 
