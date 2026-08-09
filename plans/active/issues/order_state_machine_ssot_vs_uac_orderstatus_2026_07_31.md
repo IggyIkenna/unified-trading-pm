@@ -123,3 +123,12 @@ Interim mitigation already applied: both codex docs now carry a ⚠️ block sta
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-03 (unchanged): item 1 is an undecided
   breaking-vs-non-breaking UAC contract design call (A/B/C), item 2 sequentially depends on item 1's ruling.
+- **round11 RECLASSIFY sweep 2026-08-09**: NOT reclassified — found item 1's own opening text ("RULED 2026-08-06
+  (operator), option A: advance the contract") directly contradicts its own closing text ("Rule between A / B / C above
+  for the order-lifecycle enum") and this SAME doc's own 2026-08-06 audit entry immediately above, which still calls
+  item 1 "an undecided breaking-vs-non-breaking UAC contract design call." No Progress Log entry anywhere records an
+  actual ruling. Filed
+  `issues/two_issue_docs_claim_2026_08_06_operator_ruling_with_no_corroborating_evidence_2026_08_09.md` (a sibling doc,
+  `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`, has the identical malformed pattern) rather than acting on
+  the unverified "RULED" text — this is a breaking, fleet-wide, execution-critical UAC contract change, too
+  consequential to dispatch on contradictory self-reported text. Doc stays `assigned_vm: NA`.

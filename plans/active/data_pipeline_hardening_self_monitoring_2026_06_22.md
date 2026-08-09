@@ -32,13 +32,13 @@ related:
   ]
 created: 2026-06-22
 parent_epic: observability_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 18
-last_updated: 2026-07-24
+last_updated: 2026-08-09
 locked_by:
 locked_since:
 supersedes:
@@ -586,3 +586,16 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — reaffirms 2026-08-06 (unchanged): sole open P0 todo's execution
   mechanism was deliberately routed to `/vm-preemption-billing-waste-audit` by batch2; this doc retains ownership of the
   todo itself, not re-litigating that routing.
+- **round11 RECLASSIFY sweep 2026-08-09**: **RECLASSIFY — `assigned_vm: NA` → `planning`.** Re-tested the sole open P0
+  todo ("9 live data VMs frozen... zero capture") against today's accumulated precedents. The 2026-07-25 partial
+  re-verification attempt stalled specifically because `storage.buckets.list` was **denied (403) for the
+  `unified-trading-sa` service account** — that was the actual reason the Done-when (name the current live VMs + cite a
+  fresh manifest/GCS recency figure, OR confirm capture genuinely stopped) was never completed, not a routing gap (the
+  routing to `/vm-preemption-billing-waste-audit` by batch2 remains correct and unchanged). Per the 2026-08-08/09
+  operator ruling that both cloud identities are IAM-self-service, an AO worker hitting this exact 403 should grant
+  itself the missing permission (e.g. a project-level `roles/storage.objectViewer`/`storage.buckets.list`-carrying role
+  for `unified-trading-sa`) rather than treating it as a dead end — this was the one thing blocking the doc's sole
+  Done-when. Conflict-checked against all active `cross_cutting_satellite_ao_dispatch_batch*` docs and
+  `cross_cutting_consolidated_closeout_2026_07_25.md` — no doc claims ownership of this specific todo,
+  `/vm-preemption- billing-waste-audit` remains the named execution mechanism, this doc retains it. No finalize twin
+  needed — this is the doc's own existing plan, not a new extraction; it dispatches as-is.

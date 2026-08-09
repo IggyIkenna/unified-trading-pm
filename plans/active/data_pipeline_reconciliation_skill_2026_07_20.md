@@ -923,16 +923,18 @@ residual: the manifest-row registration follow-up.
 already in GCS, and it is a live honest-coverage hole; OR, if the operator OKs it, launch the orphan VM for the 4
 blocked AGs first so the whole-estate orphan picture is complete before back-filling.
 
-- [ ] [DATA] P1. **Sports orphan back-fill (214,319 rows) + legacy-dup triage (34,385)** — per the "Deferred work after
-      2026-07-21" table above, this is still "Not done" (real data-correctness work; the audit parquets are already in
-      GCS); pick up `estate_orphan_assessment_2026_07_21` todos 1-2. (The table above lists 7 more still-"Not done"
-      items from the same deferral — this is the recommended-next one, not the only one.) **na-eligibility-audit
-      2026-08-03 (blocker-currency check): the named dependency is now STALE — `estate_orphan_assessment_2026_07_21.md`
-      todos 1 and 2 are both `[x]` DONE 2026-07-22** (odds: 4 cells recorded via `record_captured`; reference: 97,606
-      cells recorded, 0 errors; legacy-dup triage: 5-part-proof run, 0 of 34,385 rows passed for delete). This todo's
-      own text was never updated to reflect that — the "pick up ... todos 1-2" instruction now points at already-closed
-      work. Leaving the checkbox open here since this doc's own item is a distinct citation, not itself flipped, but the
-      next reader should re-verify against the source doc rather than re-running the backfill.
+- [x] ✅ [DATA] P1. **Sports orphan back-fill (214,319 rows) + legacy-dup triage (34,385)** — **CLOSED 2026-08-09
+      (round11 RECLASSIFY sweep), verified stale-citation, not new work.** Per the "Deferred work after 2026-07-21"
+      table above, this todo pointed at `estate_orphan_assessment_2026_07_21.md` todos 1-2 as the pending
+      real-data-correctness work. Direct read of that doc today confirms both are already `[x]` DONE 2026-07-22: todo 1
+      "Back-fill the 214,319 sports ORPHAN_REAL rows via `record_captured`" is `[x]`, and todo 2 "Triage the 34,385
+      sports LEGACY_DUPLICATE" is `[x]` — the exact row counts (214,319 and 34,385) match this todo's own text verbatim,
+      confirming these are the same rows, not a coincidence. The 2026-08-03 na-eligibility-audit pass had already
+      flagged this as stale (citing the same evidence: 4 cells + 97,606 cells recorded via `record_captured` for the
+      odds/reference legs, 0 of 34,385 rows passed the 5-part delete-proof) but left the checkbox open pending a
+      dedicated re-verification pass against the source doc; that re-verification is done now, so the checkbox flips.
+      The other 7 still-"Not done" items in the "Deferred work after 2026-07-21" table are unaffected — not re-triaged
+      in this pass.
 - [ ] [DATA] P2. **Measure the historical per-venue non-canonical row count for the 8 CeFi live spot venues fixed in
       `cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md`** (archived, resolved) — that issue's own
       code-level fix (BINANCE/COINBASE/OKX/UPBIT/BITFINEX/BITGET/BYBIT/KRAKEN-SPOT now emit canonical `SPOT_PAIR` +
@@ -975,3 +977,11 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
   standing reference surface (entry #10 option A) with a long, sensitive execution history — not flipping `assigned_vm`
   on it in this pass; a future dedicated pass could reclassify that one item on its own if desired. `assigned_vm`
   untouched.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09**: two actions, doc stays `assigned_vm: NA` (standing
+  reference surface, unchanged). (1) Flipped the "Sports orphan back-fill" checkbox `[x]` — the 2026-08-03 pass's
+  stale-citation finding is now independently re-verified (see the flipped checkbox for the evidence); this is a
+  citation fix, not new work. (2) Extracted the "Measure the historical per-venue non-canonical row count for the 8 CeFi
+  live-spot venues" item to
+  [`cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md)
+  (+ gated finalize twin) — this is exactly the "future dedicated pass" the 2026-08-03 entry above anticipated. This
+  doc's own checkbox for that item stays open here until the batch's finalize twin reconciles it.

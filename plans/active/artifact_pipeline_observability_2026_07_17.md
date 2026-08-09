@@ -991,3 +991,7 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
   RECLASSIFY candidate — this doc's satellite-batch extraction is already handled incrementally by
   `/ag-closeout-audit ui`'s batch1/batch2 mechanism (see `ui_consolidated_closeout_2026_07_30.md`), not this skill's
   remit.
+- **round11 sweep 2026-08-09**: extracted 3 meta/doc items (tarball-bucket-resolution issue doc, AR/ECR scan-status
+  check, misattributed-VM-origin correction) to `ui_satellite_ao_dispatch_batch3_2026_08_09.md` (+ finalize twin) — same
+  class batch1 already validated safe here. 7 implementation-shaped items stay deferred per batch1's precedent. Doc
+  stays NA; source checkboxes stay open until batch 3's finalize twin reconciles them.

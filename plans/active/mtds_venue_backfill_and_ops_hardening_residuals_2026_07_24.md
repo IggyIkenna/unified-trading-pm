@@ -598,3 +598,18 @@ Two genuine hits in this plan:
   ratchet re-baseline) read as independently bounded/mechanical with no operator or credential gate of their own — a
   candidate for a future doc-split (mirroring how this doc's own siblings were split out of
   `instruments_mtds_subset_consistency_remediation_2026_06_17.md`), not executed this run.
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09**: this is that future doc-split. Extracted 11 of the
+  ~10-12 items the 2026-08-07 entry above named to
+  [`cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch11_2026_08_09.md)
+  (+ gated finalize twin): prediction status-bucket fix, DeFi venue-grain adapter alignment, B3 e2e-data canonical copy,
+  Extended public backfill, Extended candle sharp-edge hardening, Extended candle path consolidation, sports mvp-column
+  fix, SFI hang diagnosis, sfi/sports parallelization, both VM-launcher script fixes, and the UEI ratchet re-baseline.
+  **"Wire Kalshi into the pipeline" was checked but NOT extracted** — live evidence in
+  `data_completion_to_100_all_ag_2026_06_21.md` (Kalshi deep-history seed VMs ran, `live_kalshi` present/captured) and
+  `prediction_live_clob_depth_capture_2026_07_24.md` (Kalshi trades-adapter URL fix shipped+verified) strongly suggests
+  this checkbox is stale, not open — flagged for the batch 11 finalize twin to re-verify against current manifest state
+  and flip or correct, rather than re-dispatched as fresh work. **`ohlcv-1s`/`BarTimeframe` was also checked but NOT
+  extracted** — on full read it is a multi-service, one-commit closed-set schema extension (UAC + MTDS +
+  features-service + every OHLCV write-callsite), too broad a blast radius for a single bounded AO todo; left as-is. Doc
+  stays `assigned_vm: NA` (the remaining ~10 open items are genuinely credential/dependency/design-gated, per the
+  entries above). Extracted items' source checkboxes stay open here until batch 11's finalize twin reconciles them.
