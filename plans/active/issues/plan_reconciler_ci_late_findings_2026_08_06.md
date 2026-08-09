@@ -78,8 +78,8 @@ failure (75 orphans vs 69 baseline).
 
 ## P1 — Dangling `/plans/active/` refs (targets archived)
 
-- [ ] [DOC] P1. **`monitoring_control_plane_master_2026_06_10.md`** — 6 `plans/active/` refs whose targets are archived:
-      `ci_dashboard_deployment_ui_2026_06_10.md`, `fleet_git_health_orchestrator_2026_06_10.md`,
+- [x] ✅ [DOC] P1. **`monitoring_control_plane_master_2026_06_10.md`** — 6 `plans/active/` refs whose targets are
+      archived: `ci_dashboard_deployment_ui_2026_06_10.md`, `fleet_git_health_orchestrator_2026_06_10.md`,
       `ci_status_firestore_side_store_2026_06_10.md`, `cicd_contract_hardening_2026_06_01.md`,
       `plan_line_cap_remediation_2026_07_23.md`, `dashboard_promotion_drain_visibility_2026_06_11.md`. Repoint to
       `plans/archive/` paths. **Re-verified still-open 2026-08-09 (round-9 sweep)** — exact current paths confirmed:
@@ -91,7 +91,11 @@ failure (75 orphans vs 69 baseline).
       `plans/archive/issues/dashboard_promotion_drain_visibility_2026_06_11.md`. **Extracted to
       `ci_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1** — separate batch number from the other 2 extracted items
       below because this doc's own `parent_epic: observability_master` differs from theirs (`infrastructure_master`),
-      per the established batch7/batch8 parent_epic-grouping precedent.
+      per the established batch7/batch8 parent_epic-grouping precedent. **DONE 2026-08-09 (slot 31)**: all 6 refs
+      repointed in `monitoring_control_plane_master_2026_06_10.md` (5 in the `related:` frontmatter list, 1 inline body
+      prose at the line-cap-remediation split banner) to their leading-slash archive paths; `check_reference_paths.py`
+      clean (both format + existence checks under baseline, no new violations). Evidence: unified-trading-pm (this
+      commit).
 - [ ] [DOC] P1. **`qg_host_adaptive_resource_governor_2026_07_14.md`** — 4 refs to
       `plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md` (archived; only at
       `plans/archive/issues/`). Repoint. **Re-verified still-open 2026-08-09 (round-9 sweep)** — confirmed archived at
