@@ -140,7 +140,7 @@ remain exactly as they were before Script 1 ran, for every shard where the exclu
    `day=*` partitions: **28,158 option-shaped objects** across **497 distinct days**, totalling **≈988 GB**. Affected
    period: **2024-03-08 to 2026-05-01** (not "2019-present" — no such objects exist before March 2024). Affected base
    assets: AVAX_USDC, MATIC_USDC, TRX_USDC, XRP_USDC. Source:
-   `/plans/active/cefi_satellite_ao_dispatch_batch6_2026_08_02.md` todo 2.
+   `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch6_2026_08_02.md` todo 2.
 3. **Backfill/reclassify pass** — once the writer bug is fixed going forward, already-captured mis-classified objects
    need their own migration (split the merged file back into per-instrument `option/` objects, or reclassify+recanon in
    place) — likely mirroring the `--exclude-venues`-then-dedicated-pass pattern already used for HYPERLIQUID/ASTER in
@@ -232,11 +232,10 @@ Objects: 28158  Days: 497  Bytes: 1060914050589 (988.05 GB)
   census now cited 3 times in this doc's own text (todo 2's completion note, Evidence §2, and the Progress Log entry
   above); the prior 4 entries re-verified, still resolve, unchanged.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid - the sole open todo still bundles an
-  untraced writer-side classification root-cause with the (now-blocked-on-that-root-cause) backfill/reclassify
-  migration and the DERIBIT-specific Script-1 re-run; "find the writer-side bug" has no stated done-when a worker can
-  hit deterministically. No cheat-sheet precedent from today's rulings applies (not an IAM/credential gate, not a
+  untraced writer-side classification root-cause with the (now-blocked-on-that-root-cause) backfill/reclassify migration
+  and the DERIBIT-specific Script-1 re-run; "find the writer-side bug" has no stated done-when a worker can hit
+  deterministically. No cheat-sheet precedent from today's rulings applies (not an IAM/credential gate, not a
   reversibility-qualified delete, not a self-service script-flag gap). Independently corroborated by
   `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s "Deferred — human-only" section (same-day, separate
-  `/ag-closeout-audit` run): "the root-cause item is open-ended investigation into an untraced adapter/code path with
-  no stated done-when beyond 'find the bug.'" Reaffirms 4 prior passes (2026-07-30, 2026-08-04, 2026-08-06,
-  2026-08-07).
+  `/ag-closeout-audit` run): "the root-cause item is open-ended investigation into an untraced adapter/code path with no
+  stated done-when beyond 'find the bug.'" Reaffirms 4 prior passes (2026-07-30, 2026-08-04, 2026-08-06, 2026-08-07).
