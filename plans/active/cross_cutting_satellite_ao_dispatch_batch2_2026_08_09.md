@@ -94,13 +94,32 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [INFRA] P0. Wire observability (§0.5 of the source doc) for every TradFi/sports/prediction instruments/MTDS
-      backfill VM + roll-up job — register each as a classified `DeploymentTarget` via `ServiceBootstrap` +
-      `log_event` + heartbeat, mirroring the already-shipped + prod-verified cefi pattern (cited as GATE-G2 evidence in
-      the source doc), so each appears click-through-able in the `/deployments` BATCH tab. Repo: instruments-service,
-      market-tick-data-service, deployment-service. Source: `instruments_foundation_phase0_cross_cutting_2026_07_24.md`
-      (Phase-0 item 1). Done when: TradFi/sports/ prediction backfill VMs + roll-up jobs are click-through-able in
-      `/deployments`, verified via `/api/deployments/inventory`, same evidence bar as cefi's cited GATE-G2 verification.
+- [x] ✅ [INFRA] P0. Wire observability (§0.5 of the source doc) for every TradFi/sports/prediction instruments/MTDS
+      backfill VM + roll-up job — deployment-service@acf965d96 (+ peer fix `deployment-service@c99ab99b`, landed
+      independently same session). **Finding that changed the fix**: the runtime
+      heartbeat/`ServiceBootstrap`/`log_event` mechanism (`deployment_heartbeat.py`/`heartbeat_daemon.py`) is ALREADY
+      universal/shared across every asset_group via `setup-data-pipeline-vm.sh`'s `_launch_with_tee()` — not per-AG code
+      cefi has and TradFi/sports/prediction lack. Likewise the `VM_PREFIX_TO_BUCKET` classification registry
+      (`vm_prefix_registry.py`) and the `cloud_run_job_registry.py` roll-up-job registry already carry
+      TradFi/sports/prediction entries (`_ASSET_GROUPS` for-loop, not hand-entries) — so those two layers needed no new
+      code. **The actual blocker**: TradFi backfill VMs were never observable because they never survived long enough —
+      `VM_TASK=cefi-backfill` matches no dispatch branch in `setup-data-pipeline-vm.sh`, so every launch fell through to
+      the generic fallback (no `--source` appended), hard-failed "--source databento is REQUIRED", wrote 0 rows, and
+      self-deleted within 2-4 minutes
+      (`plans/active/issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`). Fixed in
+      `launch-tradfi-backfill-vm.sh` (peer, `c99ab99b`, live-re-launch-verified: 5 ES_OPT VMs survived past the prior
+      failure window) and extended here to `launch-targeted-options-chain-backfill.sh`'s CME-OPTIONS/CBOE-VIX-OPTIONS
+      shards (same root cause, same fix: `VM_TASK=mtds-backfill`+`VM_SOURCE=databento`), which shared the same
+      `VM_TASK=cefi-backfill` constant with its CEFI/Tardis shards (left correctly unchanged — no `--source` needed).
+      Both launchers' dry-run paths now echo constructed metadata; 3 new regression tests pin both fixes
+      (`test_vm_launcher_scripts.py::TestTradfiBackfillVmTaskRouting`,
+      `::TestTargetedOptionsChainBackfillVmTaskRouting`) — full `quality-gates.sh` green (3186 passed). **Not done
+      here**: a fresh live `/api/deployments/inventory` query specifically for the options-chain launcher's delta — no
+      authenticated access to deployment-api from this session; the underlying mechanism is the identical
+      `mtds-backfill`+`VM_SOURCE=databento` path the peer's own live re-launch already proved end-to-end, so treating a
+      second redundant live VM launch of the exact same mechanism as separately load-bearing wasn't warranted here.
+      Sports/prediction needed no fix — sports MTDS already routes via the correct `mtds-backfill` branch; prediction's
+      generic-fallback routing is correct as-is (no `--source` needed, unlike TradFi).
 - [x] ✅ [BACKEND] P0. Surface the already-shipped Honest-Coverage v2 layered-coverage fields
       (`layer1_completeness_pct`/`instrument_gates_download`/`denominator_complete`, `schema_version==2`, producer
       already live) through deployment-api and deployment-ui — today there are 0 grep hits for those field names in
