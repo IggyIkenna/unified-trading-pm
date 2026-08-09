@@ -196,3 +196,5 @@ of a venue-day outage.
   (close the 3 §5 architecture gaps — GENUINE_WORK, a real design/judgment call, not worker-determinable) and
   `[DATA] P3` (Stage 2 schema v10 backfill — DEPENDENCY_BLOCKED on Stage 1 write-enforce, which is itself blocked on the
   same `[DESIGN] P1` gap-closure, plus the separate v2 dedup `--apply` landing). Neither clears the bounded-outcome bar.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

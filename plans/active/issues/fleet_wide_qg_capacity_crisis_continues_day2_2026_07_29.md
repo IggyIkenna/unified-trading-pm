@@ -536,3 +536,5 @@ assembles a ci satellite batch once this doc's Progress Log stabilizes.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — evolving incident log, OPERATOR OOM-dmesg, design tradeoff
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

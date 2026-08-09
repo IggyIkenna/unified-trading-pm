@@ -43,6 +43,12 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+context_scope:
+  [
+    /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
+    /plans/active/issues/features_service_clean_check_dangling_revert_of_hyperliquid_cefi_bucket_fix_2026_08_03.md,
+    features-service/.github/workflows,
+  ]
 ---
 
 ## What was found
@@ -77,3 +83,4 @@ with a real message + a Progress Log entry in the dedup plan), or (c) already su
 - **2026-08-07 (slot 8, autonomous)**: Found + stashed during unrelated task `defi_satellite_ao_dispatch_batch9-018`.
   Filed this doc per the RED-git-status auto-nudge + existing worktree precedent. Not investigated further -- primary
   task (gas_fees purge VM monitoring, time-critical 45-min threshold validation) resumed immediately.
+- **context-scout 2026-08-09**: populated context_scope (3 entries).

@@ -40,6 +40,14 @@ source: >-
   Isolated by the post-deploy validation windows for the context-measurement fix (2026-08-08 interactive session, slot
   1).
 depends_on: []
+context_scope:
+  [
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
+    agent-orchestrator/server/tmux_spawn.py,
+    agent-orchestrator/server/context_probe.py,
+    agent-orchestrator/server/context_lifecycle.py,
+  ]
 ---
 
 # Forced /compact reports submitted=True but never executes
@@ -98,3 +106,4 @@ never executed". With forces now firing from 60, the two separate cleanly — an
 - **2026-08-08 (interactive session, slot 1)**: Isolated while validating the context-measurement fix. The measurement
   fix did not cause this — it uncovered it. Mitigated in the same session by `agent-orchestrator@989592628`, which stops
   a slot with headroom from being recycled over a compaction that will not run; that is a containment, not the fix.
+- **context-scout 2026-08-09**: populated context_scope (5 entries).

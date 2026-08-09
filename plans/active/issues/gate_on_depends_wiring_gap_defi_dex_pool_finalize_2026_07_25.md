@@ -779,3 +779,5 @@ reflect this (see `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`'s 
 evidence) — a genuine content correction, not a false-completion claim. Declining to flip the finalize plan's `[REVIEW]`
 checkbox (the gate is still genuinely unmet even after narrowing); not touching the `[DOC]` archival todo. Skipping this
 task rather than forcing it through, per this doc's established disposition.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
