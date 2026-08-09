@@ -98,6 +98,11 @@ _(pending Phase 4/5 — filled in as STEP 4 confirms candidates)_
    `agent-orchestrator/server/role_registry.py`, `unified-trading-pm/agents/{infra,review,backend_engineer}.md` — all
    read this run).
 
+- [ ] [OPERATOR] P0. Resolve the `effort: max` policy-vs-code contradiction above (BLK-e02c6622, asked 2026-08-09) —
+      apply whichever of options A/B/C the operator rules, across every affected role file / CLAUDE.md line / the 23
+      itemized infra docs (+ likely more corpus-wide; a future `all` unsharded run or another tranche's reconciler
+      should re-run `check_effort_signal_ratchet.py --only` against its own tranche to size the full blast radius).
+
 ## Doc-drift
 
 _(pending)_
