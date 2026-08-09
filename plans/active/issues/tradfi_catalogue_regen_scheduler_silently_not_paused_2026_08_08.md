@@ -142,6 +142,21 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
   completed successfully (see `instruments_completion_tracker_2026_07_06.md`'s todo for full evidence). This doc tracks
   the residual root-cause fix (build-time filter) + re-enable path, kept separate from the purge todo itself since it's
   a distinct, cross-cutting infra-correctness finding.
+- **2026-08-09 (cross-check, this session)**: An operator batch-ruling session tasked filing a NEW issue doc for
+  "`lifecycle-catalogue-regen-tradfi-daily` paused sometime between 08-08's run and today, no documented reason found
+  anywhere in the corpus (grepped, no hits)" — live-verified `lifecycle-catalogue-regen-tradfi-daily` IS currently
+  `PAUSED` while its 4 siblings (prediction/sports/cefi/defi) are `ENABLED`
+  (`gcloud scheduler jobs list --location=asia-northeast1 --project=central-element-323112` grep, 2026-08-09), matching
+  the premise exactly. But a grep for `lifecycle-catalogue-regen` across `codex/`+`plans/active/` immediately surfaces
+  THIS doc, which already documents the identical event in full: both `lifecycle-catalogue-regen-tradfi-daily` and
+  `lifecycle-catalogue-full-tradfi-weekly` were protectively paused 2026-08-08 (todo 1 above) as a direct consequence of
+  the tradfi §8 4-leg catalogue retirement purge — the reason is not "unexplained," it's the G1-pollution re-baking risk
+  described in full above. Filing a second duplicate issue doc would have fragmented this exact finding across two
+  trackers; not filed. This doc's own todo 4 (DIAG P2, "determine WHEN the daily job actually got re-enabled") already
+  covers the deeper "was the 2026-06-25 pause ever real" question, and todo 3 (re-enable once the build-time filter
+  ships) already covers the path back to `ENABLED`. No new tracked work added here — this entry exists so a future
+  cold-start agent hitting the same "unexplained pause" premise finds the answer immediately via context_scope/grep
+  instead of re-investigating or re-filing.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
 - **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:5dc4d63f3807f9b1]:
   **KEEP-NA-STALE (already-duplicated), first audit -- 1 citation added.** All 4 open items read end-to-end via a
