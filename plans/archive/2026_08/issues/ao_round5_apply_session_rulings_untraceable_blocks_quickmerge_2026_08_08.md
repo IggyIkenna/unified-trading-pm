@@ -11,7 +11,7 @@ summary: >-
   quality-gates.sh re-gates the WHOLE tree, every agent's `quickmerge.sh` in unified-trading-pm now fails on an
   inherited red, regardless of what they changed. Needs the authoring session (or the operator) to name where those
   rulings are recorded; a third party cannot add the citation without fabricating the evidence the gate exists to catch.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -20,8 +20,8 @@ scope: [admin]
 tags: [quality-gates, plan-hygiene, operator-ruling, evidence, shipping-blocker, findings-triage]
 related:
   [
-    /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
-    /plans/active/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md,
+    /plans/archive/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
+    /plans/archive/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md,
   ]
 created: 2026-08-08
 parent_epic: agent_operating_framework_master
@@ -31,6 +31,8 @@ priority: P1
 assigned_role: admin
 drift_direction: advance-docs
 resolved_by:
+  "sibling cicd escalation agt-9bdc09, unified-trading-pm@25630ed1e+eb6555578; independently re-verified green
+  2026-08-09 by na-corpus-hygiene pass"
 locked_by:
 source:
   "slot-3 interactive, 2026-08-08 — hit while shipping the AO dispatch-visibility gate; quickmerge re-gate failed on an
@@ -42,8 +44,8 @@ depends_on: []
 
 ## What happened
 
-While shipping `/plans/active/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md`'s gate, a
-full `bash scripts/quality-gates.sh --no-fix` ran GREEN (exit 0). `quickmerge.sh` then did its STAGE 0.4
+While shipping `/plans/archive/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md`'s gate,
+a full `bash scripts/quality-gates.sh --no-fix` ran GREEN (exit 0). `quickmerge.sh` then did its STAGE 0.4
 `git pull --rebase`, pulled in peer commits, re-gated the resulting tree, and failed:
 
 ```
@@ -74,7 +76,7 @@ that **"ao round-5 apply session" is not a traceable source**: `rg "round-5 appl
 citing todos themselves — there is no session doc, no plan, no issue, no codex entry recording those rulings. An
 `item N` index into a document nobody can open is exactly the authority-bypass shape
 `check_plan_operator_ruling_evidence.py` was built for (see
-`/plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`).
+`/plans/archive/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`).
 
 Affected docs (at least): `deepseek_flash_ab_routing_test_2026_08_05.md`,
 `issues/context_scope_consumption_enforcement_2026_07_30.md`,
@@ -102,14 +104,12 @@ stall, not a local one. Pure-doc pushes via `scripts/dev/safe-doc-push.sh` (prek
 
 ## Resolution
 
-- [ ] [OPERATOR] P1. **Name where the "ao round-5 apply session" rulings are recorded, or confirm they should be
-      re-derived.** If a session doc exists, its path goes into each of the 5 citing todos (within 300 chars of the
-      ruling phrase) and the gate clears on its own. If the rulings were only ever spoken in a chat session with no
-      durable record, that is itself the finding — the decisions need a home before the todos citing them can claim
-      done. Either way the authoring session should make the edit; this doc exists so the blocker is tracked rather than
-      absorbed by the next agent to hit it. **Done when**:
-      `python3 scripts/quality_gates/check_plan_operator_ruling_evidence.py --workspace-root ..` reports ≤ 58 with the
-      baseline untouched. Repo: unified-trading-pm.
+- [x] ✅ [OPERATOR] P1. **RESOLVED BY EVENTS 2026-08-09.** A concurrent cicd escalation (agt-9bdc09, tracked in
+      `/plans/archive/2026_08/issues/plan_operator_ruling_evidence_blocks_quickmerge_under_race_2026_08_08.md`, itself
+      archived 2026-08-09) root-caused these citations and built a traceable index, landed
+      unified-trading-pm@25630ed1e+eb6555578, verified via quality-gates-v2 gate run 31262418685. Independently
+      re-verified fresh 2026-08-09: check_plan_operator_ruling_evidence.py exit 0, 39 < baseline, zero "round-5" hits.
+      Done-when (<=58, baseline untouched) is met with margin.
 
 ## Progress Log
 

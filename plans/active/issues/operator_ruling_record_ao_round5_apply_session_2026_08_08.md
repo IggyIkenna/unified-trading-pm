@@ -17,9 +17,9 @@ scope: [admin]
 tags: [operator-ruling, evidence, plan-hygiene, quality-gates, findings-triage]
 related:
   [
-    /plans/active/issues/ao_round5_apply_session_rulings_untraceable_blocks_quickmerge_2026_08_08.md,
+    /plans/archive/2026_08/issues/ao_round5_apply_session_rulings_untraceable_blocks_quickmerge_2026_08_08.md,
     /plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
-    /plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
+    /plans/archive/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
   ]
 created: 2026-08-08
 parent_epic: agent_operating_framework_master
@@ -47,7 +47,7 @@ The reason this doc exists at all: the six todos applying these rulings cited
 `check_plan_operator_ruling_evidence.py` correctly flagged that as unsourced (58 → 63 violations), and because
 `quality-gates.sh` gates the whole tree, every agent's `quickmerge.sh` in this repo failed on an inherited red
 regardless of what they changed. Details:
-`/plans/active/issues/ao_round5_apply_session_rulings_untraceable_blocks_quickmerge_2026_08_08.md`.
+`/plans/archive/2026_08/issues/ao_round5_apply_session_rulings_untraceable_blocks_quickmerge_2026_08_08.md`.
 
 **What this doc does and does not settle.** It settles _traceability_: a reader can now find every ruling in one place
 and see exactly which todo claims it. It does **not** settle _authenticity_ — only the operator can confirm these were
@@ -82,11 +82,11 @@ a third party cannot tell which from the outside). The confirmation todo below s
 - **Item 6 — context_scope enforcement track** — _"AO-dispatched plan (operator general preference noted: default to
   AO-dispatched plans going forward when this LOCAL-vs-AO framing recurs). Mechanism choice itself not specified — use
   engineering judgment among task-brief rendering / RULES.md STEP0 / QG-style gate."_ Cited by
-  `/plans/active/issues/context_scope_consumption_enforcement_2026_07_30.md` (~line 105).
+  `/plans/archive/2026_08/issues/context_scope_consumption_enforcement_2026_07_30.md` (~line 105).
 - **Item 15 — slot-collision policy** — _"Build a collision-warning mechanism (detect + warn when 2 sessions share a
   slot, not a hard block)."_ Cited by
-  `/plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md` (~line 202), which reads it
-  as explicitly NOT a hard each-slot-ONE-agent enforcement policy.
+  `/plans/archive/2026_08/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md` (~line 202), which
+  reads it as explicitly NOT a hard each-slot-ONE-agent enforcement policy.
 
 **The item numbering is not contiguous here.** Items 1-6 and 15 are the ones found by grepping the corpus for citations
 of this session; the gap (7-14) means either those rulings were applied to docs that cite the session differently, or

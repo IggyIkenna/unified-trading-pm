@@ -20,7 +20,7 @@ scope: [admin]
 tags: [quality-gates, ratchet, evidence, plan-hygiene, findings-triage, shipping-blocker]
 related:
   [
-    /plans/active/issues/ao_round5_apply_session_rulings_untraceable_blocks_quickmerge_2026_08_08.md,
+    /plans/archive/2026_08/issues/ao_round5_apply_session_rulings_untraceable_blocks_quickmerge_2026_08_08.md,
     /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md,
     /plans/archive/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
   ]
@@ -116,8 +116,8 @@ third party at all without fabricating the citation the gate exists to catch.
   seeing 74 reported against a baseline of 76 — i.e. green. Worth recording the sequence, because it is the mechanism,
   not the intent, that matters here: the corpus went 58 → 69 in a day through several concurrent sessions landing
   unsourced rulings via the pure-doc `safe-doc-push` path (which does not run this gate at all — see
-  `/plans/active/issues/ao_round5_apply_session_rulings_untraceable_blocks_quickmerge_2026_08_08.md`), the red then
-  surfaced for whichever agent next ran quickmerge, and raising the ceiling was the fastest way for that agent to
+  `/plans/archive/2026_08/issues/ao_round5_apply_session_rulings_untraceable_blocks_quickmerge_2026_08_08.md`), the red
+  then surfaced for whichever agent next ran quickmerge, and raising the ceiling was the fastest way for that agent to
   proceed. The precommit-wiring fix shipped alongside this doc closes the door that let the debt accumulate
   unattributed; this doc covers the debt already through it.
 
