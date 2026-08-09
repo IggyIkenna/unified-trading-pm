@@ -705,22 +705,29 @@ def _apply_field_defaults(  # noqa: C901
         if val and val not in VALID_ASSIGNED_VM:
             print(f"  WARN {filename}: assigned_vm={val!r} is not in {VALID_ASSIGNED_VM} - leaving as-is")
 
-    # 15. execution_scope
+    # 15. execution_scope — derive the default FROM assigned_vm (assigned_vm: NA means "not
+    # dispatched", so its default must be local-only, never orchestrator-agent; blindly
+    # defaulting to orchestrator-agent regardless of assigned_vm previously produced the exact
+    # NA + orchestrator-agent contradiction manually corrected once already, see
+    # plans/active/issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md
+    # referenced in _clear_field_continuations's docstring above).
+    assigned_vm_val = get_field_value(new_fm, "assigned_vm") or ""
+    default_execution_scope = "local-only" if assigned_vm_val == "NA" else "orchestrator-agent"
     cleaned = _clear_field_continuations(new_fm, "execution_scope")
     if cleaned != new_fm:
         new_fm[:] = cleaned
         changes.append("stripped stray execution_scope continuation lines")
     if not has_field(new_fm, "execution_scope"):
-        new_fm.append("execution_scope: orchestrator-agent\n")
-        changes.append("added execution_scope=orchestrator-agent")
+        new_fm.append(f"execution_scope: {default_execution_scope}\n")
+        changes.append(f"added execution_scope={default_execution_scope}")
     elif is_field_empty(new_fm, "execution_scope"):
         new_fm[:] = [
-            re.sub(r"^execution_scope:\s*$", "execution_scope: orchestrator-agent\n", ln)
+            re.sub(r"^execution_scope:\s*$", f"execution_scope: {default_execution_scope}\n", ln)
             if re.match(r"^execution_scope:\s*$", ln)
             else ln
             for ln in new_fm
         ]
-        changes.append("set execution_scope=orchestrator-agent")
+        changes.append(f"set execution_scope={default_execution_scope}")
 
     # 16. priority
     if not has_field(new_fm, "priority"):
