@@ -49,6 +49,7 @@ source:
   per the audit's own §9 follow-up flag (not yet its own issue at audit time); code-verified against the current
   market-tick-data-service vault_share_price_handler.py + _defi_manifest.py"
 resolved_by:
+archive_exempt: true # temporary — all 5 todos done 2026-08-09 but 2 corpus referrers (batch10, consolidated_closeout) are grace-window-locked this run; archive once a future pass can repoint them in the same commit
 context_scope:
   [
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py,
@@ -165,9 +166,14 @@ vault-share-price collector) end-to-end:
       same-day fix rather than a deferred multi-source design decision). Verified live 2026-08-08 against
       `unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py:344-357` — the code
       comment there cites this exact todo and confirms the rename rationale.
-- [ ] 5. [DATA] P3. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note (the
+- [x] ✅ 5. [DATA] P3. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note (the
       audit run flagged this as not-yet-registered and deferred it) — repo: unified-trading-pm,
-      `/codex/02-data/non-canonical-path-inventory.md` or the register doc F10 belongs under.
+      `/codex/02-data/non-canonical-path-inventory.md` or the register doc F10 belongs under. **DONE — verified
+      2026-08-09 (plan_reconciler agt-2d9a32)**: F10 is present in `/codex/02-data/canonical-cutover-register.md:136`.
+      Shipped `unified-trading-pm@0c4172c31` (2026-07-26, via `defi_satellite_ao_dispatch_batch2_2026_07_26.md`),
+      verified reachable on `origin/live-defi-rollout` via `git merge-base --is-ancestor`. This checkbox was already
+      identified as stale by `defi_satellite_ao_dispatch_batch10_2026_08_06.md`'s own todo, which never got dispatched
+      to actually flip it — see that doc for the cross-reference (now also flipped).
 
 ## Progress Log
 
@@ -195,3 +201,11 @@ vault-share-price collector) end-to-end:
   already shipped 2026-07-26." Reclassifying this doc now would open a second, redundant dispatch path the moment
   batch10 executes its own copy of the same fix. Correct owner is batch10; this doc's checkbox stays as the citation
   anchor per this corpus's own convention. Doc stays `assigned_vm: NA`.
+- **plan_reconciler 2026-08-09 (agt-2d9a32, defi tranche)**: flipped todo 5 `[x]` — verified F10 genuinely present in
+  `/codex/02-data/canonical-cutover-register.md:136`, shipped `unified-trading-pm@0c4172c31` (2026-07-26). All 5 todos
+  now `[x]` — this doc is fully done and unlocked, normally an immediate archive candidate. **Not archived this run**:
+  10 corpus referrers found, 2 of them (`defi_satellite_ao_dispatch_batch10_2026_08_06.md`,
+  `defi_consolidated_closeout_2026_07_18.md`) are inside the 12h grace window and cannot be repointed in the same commit
+  — archiving now would leave dangling refs in docs I cannot currently touch. Set `archive_exempt: true` (temporary) per
+  the pre-commit gate's own escape hatch; a future reconciler pass should archive this doc once those 2 referrers clear
+  grace (or once their own next edit repoints them proactively).
