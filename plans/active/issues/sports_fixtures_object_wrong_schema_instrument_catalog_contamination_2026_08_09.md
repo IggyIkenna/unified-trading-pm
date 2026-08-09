@@ -284,3 +284,22 @@ transcript available in that session's Progress Log entry on
   (avoid compounding an untested launch). Todo 1 checkbox stays open — the report doesn't exist yet; this session's
   contribution is the tooling + the launch, not the completed census (corpus-scale walk, expected to run longer than one
   interactive dispatch — same multi-session pattern the sibling league-vocabulary census followed).
+
+- **2026-08-09 (slot-16, data_engineering, continued)**: the armed watchdog reported the launched VM terminated within
+  ~2.5min. **Root-caused directly (not the `uts-prd-sa`-external-reaper pattern flagged elsewhere)**:
+  `gcloud logging read` on the raw (non-audit) instance logs shows the VM's own `setup-data-pipeline-vm.sh` printed
+  `ERROR: VM_TASK=sports-schema-census has no dedicated dispatch branch in this script... SETUP FAILED rc=1 — uploading log + EXIT_STATUS, scheduling self-delete`
+  at T+2min, then self-deleted via its own attached prod-tier service account (`uts-prd-sa` — confirmed this is the VM's
+  OWN runtime SA per `lc_tier_service_account`, not an external actor; the `gcloud compute instances.delete` audit-log
+  entry's `from-script/True interactive/False` matches a startup-script- issued self-delete, not a human/agent action).
+  This is the SAME recurring bug class already documented inline in `setup-data-pipeline-vm.sh` for
+  `sports-v9-migration` (2026-07-12), `defi-paper` (2026-07-13), `datapoint-validation` (2026-07-21), and
+  `orphan-sweep`/`feature-orphan-sweep`/`ml-orphan-sweep` (2026-07-22/08-03): a new launcher's `VM_TASK` value needs its
+  OWN `elif` dispatch branch in `setup-data-pipeline-vm.sh` even when all it does is run `VM_BACKFILL_CMD` as-is — my
+  `launch-sports-reference-schema-census-vm.sh` (previous entry) never added one, so the VM correctly refused to fall
+  through to the generic `--operation` dispatch and self-deleted per that fallback's own documented safety net, rather
+  than silently crashing deep in an unrelated CLI's argparse. **Fixed**:
+  `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` — added a `sports-schema-census` dispatch branch mirroring
+  `orphan-sweep`'s exact shape (curls `VM_BACKFILL_CMD`, `cd $WORKSPACE/instruments`, `_launch_with_tee`). No GCS data
+  was written by the failed run (it died during dependency install, before the census script itself ever executed) —
+  nothing to clean up. Re-launching `instruments-store` with the fix next.
