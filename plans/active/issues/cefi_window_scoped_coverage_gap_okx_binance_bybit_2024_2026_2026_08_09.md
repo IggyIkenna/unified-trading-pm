@@ -169,16 +169,21 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
       once items 1 and 3 above determine whether this is a live-capture fix, a historical backfill, or both. Repos:
       deployment-service (VM launch), market-tick-data-service. **Done when**: a re-run of this same window-scoped
       measurement shows OKX-SPOT and BYBIT `trades`/`book_snapshot_5` coverage materially improved (cite the new %).
-- [ ] [DATA] P2. **Audit whether the SAME canonical-write-only manifest-routing bugs fixed for item 2 above (itype-
-      vocabulary mismatch in `record_shard_count`/`record_instrument`, the UAC-vocabulary-mismatched
-      `BUNDLED_DATA_TYPES` manifest gate, missing cluster/envelope bookkeeping — all fixed in
-      market-tick-data-service@e24199df) also affect OTHER CeFi venues' options_chain/futures_chain shards written via
-      `TardisAdapter.finalise_and_write_cefi_shards`** (e.g. DERIBIT, if/when its options_chain capture ever falls back
-      to this per-instrument path instead of Tardis's working grouped `OPTIONS.csv.gz` bulk endpoint — this issue only
-      measured OKX/BINANCE/BYBIT, DERIBIT's own honest-coverage was out of scope here). Repo: market-tick-data-service
-      (read-only audit + a window-scoped honest-coverage re-measurement for DERIBIT/other affected venues if found).
-      **Done when**: confirmed either (a) no other venue currently exercises this path for a chain-bundle itype in
-      practice, or (b) a follow-up fix/todo is filed (own issue doc) for any venue found to be affected.
+- [x] ✅ [DATA] P2. **DONE 2026-08-09 (slot-12, data_engineering)** — Audit whether the SAME canonical-write-only
+      manifest-routing bugs fixed for item 2 above also affect OTHER CeFi venues' options_chain/futures_chain shards
+      written via `TardisAdapter.finalise_and_write_cefi_shards`. **Result: branch (b) — DERIBIT IS affected.** DERIBIT
+      futures_chain exercises the identical vulnerable path (Tardis has no working grouped FUTURES endpoint for DERIBIT
+      either, per `tardis_bulk_download.py`'s own docstring, confirmed by `configs/venue_data_types.yaml` listing
+      DERIBIT under `folders: [..., futures_chain, ...]`) and its manifest still shows the same 0%-captured signature
+      (423 attempted_failed, 16,695 empty_confirmed, 0 captured as of the 2026-08-09T20:08Z snapshot) — unconfirmed
+      against the fix since that fix was only unit/synthetic-verified (no live Tardis credentials in the dev sandbox).
+      Also found DERIBIT-futures_chain is undeclared in the UAC `DataTypeCapability` registry despite being
+      config-enabled and actively attempted (registry drift). By contrast,
+      KRAKEN-FUTURES/BITGET-FUTURES/BITFINEX-FUTURES/COINBASE-FUTURES (branch (a)) have ZERO manifest rows for
+      futures_chain/options_chain — registered capability, no live exposure to confirm or fix today. Follow-up fix +
+      registry-drift todos filed in a new own issue doc per this todo's own instruction:
+      `issues/cefi_deribit_futures_chain_canonical_write_path_exposure_2026_08_09.md`. Read-only audit — no code
+      shipped, per this todo's scope. unified-trading-pm@<sha>
 
 ## Progress Log
 
@@ -386,3 +391,18 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
     condition), so this todo and track2's own broader 6-venue supplement (todo 6 there) both become dispatchable the
     moment a genuine slot-opening is confirmed. Todo checkbox left UNCHECKED (no coverage-% improvement is measurable
     yet — flipping it now would misrepresent progress the same way the operator's park precedent exists to prevent).
+
+- **2026-08-09 (slot-12, data_engineering, item 4 audit)** — Confirmed DERIBIT futures_chain exercises the SAME
+  vulnerable canonical-write-only path (`_download_futures_per_instrument` -> `finalise_and_write_cefi_shards`) fixed
+  for BINANCE-FUTURES/BYBIT — Tardis has no working grouped FUTURES endpoint for DERIBIT either (per
+  `tardis_bulk_download.py`'s own docstring), and `configs/venue_data_types.yaml` confirms DERIBIT futures_chain is a
+  real, config-enabled capture surface. Manifest snapshot (2026-08-09T20:08Z) shows DERIBIT still at the same
+  0%-captured signature (423 attempted_failed, 16,695 empty_confirmed, 0 captured) as the pre-fix state — unconfirmed
+  against the 2026-08-09 fix (only unit/synthetic-verified, no live Tardis creds available). Also found
+  DERIBIT-futures_chain undeclared in the UAC `DataTypeCapability` registry despite being real and actively attempted
+  (registry drift vs. `configs/venue_data_types.yaml` + the manifest ground truth).
+  KRAKEN-FUTURES/BITGET-FUTURES/BITFINEX-FUTURES/COINBASE-FUTURES: zero manifest rows for futures_chain or options_chain
+  — capability-registered but no live capture attempt has reached the manifest yet, so no exposure to confirm/fix there
+  today. Filed follow-up fix + registry-drift todos in a new issue doc per this todo's own instruction:
+  `issues/cefi_deribit_futures_chain_canonical_write_path_exposure_2026_08_09.md`. Read-only audit — no code shipped,
+  per this todo's scope.
