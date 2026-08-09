@@ -1606,15 +1606,43 @@ PIP=$(codex_rg "^RUN pip install|^RUN python -m pip" --glob "**/Dockerfile" --gl
     | grep -v "uv pip install" | grep -v "pip install uv" | grep -v "#" || :)
 [[ -n "$PIP" ]] && { log_fail "Use 'uv pip install' not 'pip install'"; echo "$PIP" | head -3; V=$(( V + 1 )); } || log_success "No bare pip install"
 
-BE_EXTRA_GLOBS=()
-for g in ${BE_EXCLUDE_GLOBS[@]+"${BE_EXCLUDE_GLOBS[@]}"}; do
-    BE_EXTRA_GLOBS+=(--glob "!$g")
-done
-BE=$(codex_rg "except Exception:" --type py --glob "!tests/**" ${BE_EXTRA_GLOBS[@]+"${BE_EXTRA_GLOBS[@]}"} "$SOURCE_DIR/" 2>/dev/null || :)
-# Bypass: add --glob exclusions for files in QUALITY_GATE_BYPASS_AUDIT.md §1.1
-[[ -n "$BE" ]] && { log_warn "broad except Exception — document in QUALITY_GATE_BYPASS_AUDIT.md"; echo "$BE" | head -5; V=$(( V + 1 )); } || log_success "No broad except Exception"
+# STEP 5.5 — broad `except Exception[ as X]:` ratchet (AST-based; mirrors
+# check_no_fallback_imports.py). Replaces the old literal-substring regex
+# (`codex_rg "except Exception:"`), which was blind to the `except Exception as
+# X:` binding form — the ` as <name>` text between `Exception` and the trailing
+# colon meant that form never matched at all, not merely bypassed via
+# BE_EXCLUDE_GLOBS. See
+# plans/active/issues/broad_except_as_binding_form_blind_spot_2026_08_09.md.
+_BE_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_broad_except.py"
+if [ -f "$_BE_CHECKER" ]; then
+    _BE_REPO=$(basename "$PROJECT_ROOT")
+    _BE_WS="$REPO_ROOT"
+    _BE_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _BE_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    _BE_LOG="${TMPDIR:-/tmp}/broad_except_qg.log.$$"
+    if $PYTHON_CMD "$_BE_CHECKER" \
+            --workspace-root "$_BE_WS" --scope "$_BE_REPO" "${_BE_SRC_ARG[@]}" >"$_BE_LOG" 2>&1; then
+        if grep -q '^\[WARN\]' "$_BE_LOG" 2>/dev/null; then
+            log_warn "STEP 5.5: below the broad-except baseline — ratchet broad_except_baseline.yaml DOWN (re-run --update-baseline)"
+        else
+            log_success "STEP 5.5: No new broad except Exception[ as X] sites (baseline-ratchet)"
+        fi
+    else
+        log_fail "STEP 5.5: NEW broad except Exception[ as X] site(s) above the per-repo baseline. Narrow to the specific exception type(s), or add '# noqa: broad-except' with a one-line reason:"
+        cat "$_BE_LOG"
+        log_fail "         Baseline: unified-trading-pm/scripts/quality_gates/broad_except_baseline.yaml (NEVER raise a count)"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_broad_except.py --workspace-root $_BE_WS --scope $_BE_REPO"
+        V=$(( V + 1 ))
+    fi
+    rm -f "$_BE_LOG" 2>/dev/null
+else
+    log_success "STEP 5.5: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
 
-# Swallowed errors — except that silently passes/returns None
+# Swallowed errors — except that silently passes/returns None (still a literal
+# regex — this specifically targets the pass/return-None BODY shape after a
+# literal-colon `except Exception:`, orthogonal to the broad-except site count
+# above; the `as X:` binding form's swallow shape is covered by the AST check).
 SWALLOWED=$(codex_rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" -A 2 2>/dev/null \
     | grep -E "^[[:space:]]+(pass|return None)$" || :)
 [[ -n "$SWALLOWED" ]] && { log_fail "Swallowed errors — use @handle_api_errors or re-raise"; V=$(( V + 1 )); } || log_success "No swallowed errors"
