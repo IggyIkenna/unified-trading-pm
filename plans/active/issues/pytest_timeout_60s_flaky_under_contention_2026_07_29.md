@@ -889,3 +889,16 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   itself) — same known ratchet class this doc has repeatedly ruled out, not the tracked flake. Zero pytest-timeout
   recurrence anywhere in this survey. Window NOT yet closed (day ~4 of ~14, closes ~2026-08-20); releasing via
   skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per slot-32's fix.
+- **slot-19 2026-08-09 ~22:21Z (twentieth pass, same task) — first pass after slot-11's cooldown, ~3h gap (cooldown
+  expired ~22:12Z, legitimate redispatch)**: surveyed latest 3 `quality-gates-v2` runs across all 10 tracked repos (runs
+  spanning ~21:10Z-22:19Z 2026-08-09). 9 service repos: 25/27 terminal runs `conclusion=success` (unified-api-contracts
+  `31338655363`/`31336325200`/`31336304233`; instruments-service `31338643578`/`31338267386`/`31338158000`;
+  features-service `31338639749` success, 2 still `in_progress` at survey time; market-data-processing-service
+  `31339064695`/`31338967909`/`31338646441`; unified-trading-api `31325728289`/`31323952849`/`31323934892`;
+  deployment-service `31338634537`/`31338546530`/`31338319121`; ml-service `31331153567`/`31330710404`/`31330530860`;
+  client-reporting-api `31331132600`/`31328419255`/`31328397339`; market-tick-data-service
+  `31339103408`/`31338791754`/`31338648467`). unified-trading-pm: 2 of 3 latest runs `conclusion=failure` — job-level
+  check of both (`31338658483`, `31336133970`) confirms `QG slice (checks): failure`, `QG slice (tests): success` on
+  each — same known ratchet class this doc has repeatedly ruled out, not the tracked flake. Zero pytest-timeout
+  recurrence anywhere in this survey. Window NOT yet closed (day ~4 of ~14, closes ~2026-08-20); releasing via
+  skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per slot-32's fix.
