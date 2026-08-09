@@ -83,10 +83,19 @@ standard "check `git status`, check `git stash list`" recovery ritual actively c
 - [ ] [BACKEND] P1. **Reproduce deterministically** — two concurrent prek runs in one checkout with an interleaved edit
       to a third file, and confirm the restore reverts it. Needed before any fix, since the mechanism above is inferred
       from three consistent observations plus prek's own log lines, not from a controlled repro.
-- [ ] [BACKEND] P1. **Serialise prek per checkout** — a simple flock around the hook invocation in
-      `scripts/dev/safe-doc-push.sh` and `scripts/quickmerge.sh` would close the interleaving window without touching
-      prek itself. Verify it does not deadlock when quickmerge invokes prek twice in one run (it does today: the commit
-      retry re-runs the whole hook batch).
+- [x] [BACKEND] P1. ✅ **Serialise prek per checkout** — `unified-trading-pm@d38f16f66`. Added `locked_git_commit()` /
+      `_qm_locked_git_commit()` to `scripts/dev/safe-doc-push.sh` / `scripts/quickmerge.sh` — a flock scoped to the
+      checkout's own `.git` dir, held only around the single `git commit` call, wired into every commit call site in
+      both scripts (incl. quickmerge's amend path + both retry paths). Mirrors quickmerge's existing cascade-lock
+      convention (same FD-open/flock/unlock/FD-close shape + degrade-to-unlocked-if-flock-unavailable), a distinct lock
+      file for a distinct critical section. Verified via a new regression test
+      (`scripts/quality-gates-base/tests/test-quickmerge-commit-lock.sh`, following the existing
+      `test-quickmerge-cascade-lock.sh` pattern — extracts the REAL functions from both scripts, not a replica): (1) two
+      concurrent commits, one from each script, on the same checkout never interleave their pre-commit hook invocations
+      (confirmed via a negative control that the same test correctly FAILS against the pre-fix unlocked call sites —
+      proof the test would have caught the original bug), and (2) three sequential locked-commit calls in one process
+      complete without a self-deadlock, directly answering this todo's own "does not deadlock when quickmerge invokes
+      prek twice (up to 15x) in one run" requirement. QG green, landed + ancestry-verified on origin.
 - [ ] [BACKEND] P2. **Make the loss loud** — have the wrapper checksum each unstaged file before the stash and compare
       after the restore, failing the run when a file changed underneath it. Even without a fix, a loud failure beats
       silent reversion.
@@ -111,3 +120,12 @@ standard "check `git status`, check `git stash list`" recovery ritual actively c
   `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` §5 — no open-ended judgment call. No
   `locked_by`; the only cross-reference is an `[OPERATOR]` attention-nudge in
   `operator_action_items_consolidated_2026_08_08.md` ("worth a priority look"), not a competing work claim.
+- **2026-08-09, slot-22 (backend_engineer), task `prek_stash_restore_race_destroys_shared_checkout_wip-e67fac2fe47f`**:
+  shipped the "Serialise prek per checkout" todo — `unified-trading-pm@d38f16f66`, checkbox flipped above with full
+  evidence. Live-witnessed the exact race mechanism firsthand while shipping this same commit (prek's own "Unstaged
+  changes detected... Restored unstaged changes" lines fired twice mid-session on an unrelated frontmatter-auto-fixer
+  byproduct file, harmlessly in that case, but the identical mechanism). The other 3 todos (deterministic repro,
+  checksum-verify the stash/restore, scratchpad-backup-rule doc addition) remain open — not attempted this session, each
+  is independently scoped per the file-collision discipline (repro needs no code change and doesn't touch either script;
+  the checksum-verify todo touches the SAME two scripts this fix just changed, so should be sequenced after this todo
+  rather than run concurrently with it — which is exactly what happened).
