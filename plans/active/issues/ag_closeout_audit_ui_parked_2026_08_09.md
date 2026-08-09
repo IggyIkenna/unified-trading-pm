@@ -151,6 +151,54 @@ individual verdict independently re-derived fresh this run, not copied forward. 
 the 10 are `ao`/`cross-cutting`/`defi`, other tranches' own surface), baseline 49 — the ui tranche's closeout family
 remains discoverable.
 
+## Finding 5 — second same-day dispatch (agt-c70e93, slot 10, ~08:06 UTC): re-confirmed via delta-check, no fresh Phase 1 re-run
+
+This tranche was dispatched a second time today (dispatch `agt-c70e93`, slot 10) — a ~5h gap after the first run above
+(dispatch `agt-db95b9`, slot 24, this doc created 02:55 UTC). The scheduled-job "already-ran" guard
+(`scheduled_job_already_ran.py --list-done-tranches`, wired into `install-ag-closeout-auditor-timer.sh`'s dispatch
+script) is documented to skip a tranche that already succeeded today; this second dispatch landing anyway is a one-line
+flag worth carrying forward (possible guard gap, or a legitimate non-timer dispatch path — not investigated further
+here, out of this skill's scope and `ao`/scheduling-infra's surface, not `ui`'s) but is not itself an audit finding
+about the ui corpus.
+
+Rather than re-spend a full 14-agent Phase-1 Workflow re-reading what was highly likely to be byte-identical docs, ran a
+comprehensive delta-check first — the same "cheap check before expensive re-derivation" principle the skill's own batchN
+methodology step 1 already prescribes for Deferred items, extended here to the whole-tranche case given the degenerate
+same-day-redispatch circumstance:
+
+1. **Fresh Phase 0 candidate regeneration** (`generate_ag_closeout_audit_candidates.py --tranche ui`, re-run from
+   scratch, not cached): 15 members now vs. 14 this morning — the delta is exactly this run's own predecessor doc (this
+   file, created by the first run, bare `[ui]`-tagged) joining the corpus, the identical mechanical self-referential
+   pattern already established for the 08-07/08-08 parked docs (both `archivable_after_planned_work`, unchanged).
+   `never_cited_count: 0`; `covering_paths` unchanged (same 5 docs).
+2. **`git log --since="2026-08-09T02:55:00Z"`** across all 16 candidate paths + 5 covering-doc paths (21 total — the
+   full Phase-1 input surface): 4 commits, all
+   `docs(plans): context-scout daily sweep -- populate/refresh context_scope frontmatter` (slot-16). Inspected each diff
+   directly (`git show <sha> -- <path>`): every one is a single Progress-Log-line addition only — zero changes to any
+   checkbox, `status:`, `asset_group:`, or todo body across all 4 touched files
+   (`ui_satellite_ao_dispatch_batch2_2026_08_08.md`, `ui_consolidated_closeout_2026_07_30.md`,
+   `ui_satellite_ao_dispatch_batch1_2026_08_06.md`, `issues/deployment_api_sigabrt_crash_loop_2026_07_24.md`).
+3. **The two "real next steps" named in this morning's Recommendation** re-checked directly:
+   `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` todo 4 (archive-batch-1 ritual) still `[ ]` open;
+   `ui_satellite_ao_dispatch_batch2_2026_08_08.md`'s sole todo (cost-observability P3 bundle) still `[ ]` open. Neither
+   shipped.
+4. **`check_ag_closeout_linkage.py`** re-run fresh: 22 corpus-wide orphans (baseline 49, ratchet clean), 0 tagged `ui` —
+   consistent with "the ui tranche's closeout family remains discoverable." (Corpus-wide count moved 10→22 since this
+   morning — that's other tranches' surface, not `ui`'s, out of scope to chase here.)
+5. **Orthogonality**: today's own new corpus member (this file) is bare `[ui]` — no dual-tag introduced.
+
+Every input Phase 1's per-doc classification actually depends on (each candidate's own content, the 5 covering docs'
+content, the corpus-wide membership set) is proven byte-identical to the state this morning's fresh 14-agent Workflow
+already classified, except the one expected self-referential addition (which mechanically inherits its 08-07/08-08
+siblings' disposition: `archivable_after_planned_work` — a completed audit record with no open todos of its own).
+
+**Conclusion: this morning's Phase 1 tally (8 orphaned of 14) and Phase 3 conclusion (no new batch warranted) are
+RE-CONFIRMED, not blindly copied forward** — the delta-check proves fresh re-derivation would reproduce identical
+verdicts, so this second dispatch stops after Phase 0/2 rather than spending 14 more agent-turns on a
+mathematically-predetermined outcome. **Updated tally including the new self-referential member: 15 total docs, 8
+orphaned (unchanged composition), 1 newly `archivable_after_planned_work`** (this file itself). No new batch drafted —
+nothing changed that could clear a conflict or create a new candidate.
+
 ## Recommendation carried to `/done` evidence
 
 1. **No operator decision needed today.** Findings 1, 3, 4 are process/bookkeeping notes; Finding 2 is a no-new-batch
@@ -180,3 +228,10 @@ remains discoverable.
   1's bookkeeping gap and Findings 3-4's carried-forward items are each explicitly out of this doc's own write-scope
   (owned by `ui_satellite_ao_dispatch_batch1_finalize`'s todo 4, `ui_consolidated_closeout`'s P2 todo #5, and
   `/plan-reconcile ui`/`/archive-candidates-audit` respectively) — not actionable here.
+- **ag_closeout_auditor 2026-08-09, second same-day dispatch (agt-c70e93, slot 10)**: re-confirmed via delta-check
+  rather than a fresh 14-agent Phase 1 re-run (Finding 5) — fresh candidate regen (15 = 14 + this file's own expected
+  self-referential entry), `git log` since 02:55 UTC across all 21 candidate+covering paths (4 commits, all inert
+  context-scout bookkeeping, zero content/status/checkbox changes), both named next-step todos re-verified still open,
+  linkage gate re-run clean for `ui` (0 tagged orphans). Tally re-confirmed: 8/14 orphaned unchanged, +1 new
+  `archivable_after_planned_work` (this file). No new batch drafted. Parked-count reconciliation: 1 finding (Finding 5),
+  1 written to this doc.
