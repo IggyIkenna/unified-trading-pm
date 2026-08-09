@@ -250,18 +250,19 @@ human already made the call and the fleet still never executes it.
       remaining exclusion being an unrelated, correctly-declared item
       (`[SCRIPT] P1. DEFERRED-BY-DESIGN. Phase 5 — canonical-groups backfill...`, `"declared": true`) — no rewrite
       needed. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in
-      `plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md`.** Its checkbox reads (truncated):
-      "[DATA] P3. Reconcile `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` — once batch-10 todo 1" — the
-      marker trips `_is_non_dispatchable` (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its
-      own line, so `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is genuinely
-      still blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to the start
-      of its own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation line) so it
-      reads as a declared hold. If it is already resolved (several of these carry a dated `RULED`/`DESIGN DECIDED` note
-      — read the full todo before acting), rewrite the trigger phrase so the marker no longer appears anywhere in the
-      block. Verify:
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-3, infra).** Triage accidental exclusion in
+      `plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md`. Same "already resolved elsewhere"
+      pattern as the `defi_satellite_ao_dispatch_batch6`/`sports_fast_t1_recon_oom_live_capture_outage` fixes above and
+      by the SAME commit: the flagged todo's trigger phrase
+      (`...or its remaining open item is a stated     BLOCKED-OPERATOR hold.`) was rewritten to non-marker prose
+      (`...or its remaining open item is a stated     operator-hold.`) in `unified-trading-pm@84f363ff6` (slot-2,
+      laptop, 2026-08-09 10:07 UTC+1) — the same incidental 20-file "reclassify prek_stash_restore_race NA->planning"
+      sweep already noted for the two sibling findings. No live `BLOCKED-<TOKEN>`/permanent-deferral marker remains
+      anywhere in the block. Verified:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+      shows `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md` with
+      `disk_open=5, backlog_open=5,     excluded=[]` — all 5 open todos in that doc, including this one, are correctly
+      dispatchable, no rewrite needed. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md`.** Its checkbox reads (truncated):
       "[DOC] P1. **BLOCKED 2026-07-29 (slot-8, `data_engineering`) — batch5 is NOT archivable yet; premature (operator"
@@ -543,3 +544,10 @@ human already made the call and the fleet still never executes it.
   on 2026-08-09 before this triage dispatched. Confirmed via `dispatch_visibility_report --json`:
   `disk_open=2, backlog_open=1` for that doc, with the sole remaining exclusion an unrelated, correctly-declared
   DEFERRED-BY-DESIGN Phase-5 item (`"declared": true`) — no rewrite needed.
+- **2026-08-09 (slot 3, infra)** — Fixed the `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md` todo. A THIRD
+  todo resolved by the same `unified-trading-pm@84f363ff6` incidental sweep (alongside the
+  `defi_satellite_ao_dispatch_batch6` and `sports_fast_t1_recon_oom_live_capture_outage` fixes above): the flagged
+  todo's trigger phrase (`...or its remaining open item is a stated BLOCKED-OPERATOR hold.`) was rewritten to
+  `...or its remaining open item is a stated operator-hold.`. Confirmed via `dispatch_visibility_report --json`:
+  `disk_open=5, backlog_open=5, excluded=[]` for that doc — all 5 open todos, including this one, are correctly
+  dispatchable, no rewrite needed here.
