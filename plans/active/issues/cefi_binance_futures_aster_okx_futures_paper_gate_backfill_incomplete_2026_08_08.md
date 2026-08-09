@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [cefi, honest-coverage, backfill, completeness, paper-trading-gate, data-correctness]
 related:
   [
-    /plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
+    /plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
   ]
@@ -51,7 +51,7 @@ superseded_by:
 resolved_by:
 context_scope:
   [
-    /plans/active/issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
+    /plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]

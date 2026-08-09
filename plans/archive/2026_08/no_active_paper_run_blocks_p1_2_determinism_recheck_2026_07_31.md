@@ -12,7 +12,7 @@ summary: >-
   by two workers (slot-14 earlier today, this worker at 2026-07-31T22:03Z) on the live project. Starting/confirming such
   a run is a strategy-desk decision, not a data-pipeline task, so it is out of scope for the warm-sink plan itself and
   needs its own home.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [strategy]
@@ -56,6 +56,14 @@ context_scope:
 ---
 
 # No active paper-trading run for BINANCE-FUTURES/ASTER/OKX-FUTURES
+
+> **🟢 ARCHIVED 2026-08-09** — all 3 todos complete (DIAG finding: NO active paper deployment covers these venues;
+> DECISION: operator ruled "start it, conditionally"; DIAG P1: venue-scoped completeness check ran, verdict NOT CLEAN).
+> The still-open follow-on work (backfill/IS completeness gap for BINANCE-FUTURES/ASTER/OKX-FUTURES that blocks the
+> paper-run start) is tracked in its own doc, not here:
+> `/plans/active/issues/cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete_2026_08_08.md`. Moved to
+> `plans/archive/2026_08/` alongside its finalize plan
+> (`no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31_finalize_2026_08_08.md`) in the same commit.
 
 ## What I found
 

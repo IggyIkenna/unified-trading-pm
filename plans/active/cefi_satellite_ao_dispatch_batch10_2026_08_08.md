@@ -219,8 +219,10 @@ context_scope:
   residual prose item is operator-judgment-gated, not a fresh worker task.
 - **`issues/fail_hard_canonical_enforcement_design_2026_07_20.md`** — `[DESIGN] P1` item is an undecided
   architecture/design call (reconciling two id-derivation paths, a new column-value gate, a new on-disk convention).
-- **`issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`** — `[OPERATOR]`-tagged strategy-desk
-  judgment call on committing capital/infra to an active paper run.
+- **`/plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`** — RESOLVED + archived
+  2026-08-09 (superseded this listing; see that doc's finalize plan). The `[DECISION]` was ruled by the operator
+  2026-08-08 ("start it, conditionally"); the follow-on completeness gate is now tracked in
+  `/plans/active/issues/cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete_2026_08_08.md`.
 - **`issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md`** — `[OPERATOR]`-tagged, explicitly needs a
   decision among 3 named options before implementation.
 - **`issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`** — all 3 items human-gated (operator's own

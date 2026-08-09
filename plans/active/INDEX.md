@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 300 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 294 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (36)
+### cefi (33)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -89,13 +89,6 @@ by hand._
   — Finalize twin for `cefi_satellite_ao_dispatch_batch13_2026_08_09.md`. Reconciling 2 source docs'
   (`crypto_alpha_research_2026_07_24.md`, `l2_book_microstructure_capture_2026_07_13.md`) checkbox pointers once
   batch13's 2 todos land, and…
-- [`cefi_satellite_ao_dispatch_batch14_2026_08_09`](./cefi_satellite_ao_dispatch_batch14_2026_08_09.md) — Fourteenth
-  AO-dispatch batch for cefi, sibling of `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` (same item-level-extraction
-  run, same 19-doc candidate list — see that doc for the full methodology). This batch is the `parent_epic:…
-- [`cefi_satellite_ao_dispatch_batch14_2026_08_09_finalize`](./cefi_satellite_ao_dispatch_batch14_2026_08_09_finalize.md)
-  — Finalize twin for `cefi_satellite_ao_dispatch_batch14_2026_08_09.md`. Reconciling
-  `issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`'s checkbox pointer once batch14's 1 todo lands, and
-  archiving batch14 via the 6-step…
 - [`cefi_satellite_ao_dispatch_batch9_2026_08_07`](./cefi_satellite_ao_dispatch_batch9_2026_08_07.md) — Ninth
   AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-07 (scheduled autonomous dispatch,
   tranche=cefi, slot 4, dispatch agt-ed7b44). Phase 0 re-derived the covering-plan set via…
@@ -136,10 +129,6 @@ by hand._
   — Gated closeout for issues/mtds_pipeline_check_process_killed_during_skip_leg_poll_2026_08_06.md — machine-held via
   depends_on + gate_on_depends: true until that doc's sole `[DATA] P2` todo (RSS self-logging in the
   pipeline_e2e_check.py…
-- [`no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31_finalize_2026_08_08`](./no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31_finalize_2026_08_08.md)
-  — Gated closeout for issues/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md — machine-held via
-  depends_on + gate_on_depends: true until that doc's sole `[DIAG] P1` todo (venue-scoped completeness check, then a
-  conditional…
 - [`prediction_capture_incident_remediation_2026_07_06`](./prediction_capture_incident_remediation_2026_07_06.md) —
   "Actionable remediation for the 2026-07-01→07-06 prediction-universe-capture outage (diagnosis + root-cause evidence:
   issue doc prediction_universe_capture_dead_since_07_01_2026_07_06). Two workstreams: (A) harden the capture path —
@@ -836,7 +825,7 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (33)
+### ao (34)
 
 - [`ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08`](./ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md)
   — Gated closeout for `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md` — machine-held via
@@ -956,8 +945,12 @@ by hand._
   bootstrap/watchdog/memory-guardrail hardening and VM-from-scratch e2e validation — split out of
   monitoring_control_plane_master_2026_06_10.md as a file-disjoint scope-creep section (agent-orchestrator internals,
   not the…
+- [`review_agent_evidence_gated_write_capability_2026_08_09`](./review_agent_evidence_gated_write_capability_2026_08_09.md)
+  — Review is currently pure-advisory (chat-only) even when its own LIGHT-tier PR review concludes a claimed-done task
+  does NOT satisfy its done_definition — today the only action is a conversational ping. This plan gives review two
+  narrow,…
 
-### ci (16)
+### ci (12)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -966,19 +959,6 @@ by hand._
 - [`ci_pipeline_speed_and_cost_redesign_2026_08_05`](./ci_pipeline_speed_and_cost_redesign_2026_08_05.md) — Operator
   target: LDR→main should take 3-5 minutes regardless of repo when little has changed, cross-repo workflow triggering
   should fire only when genuinely needed, and fleet CI cost (AWS self-hosted + GitHub Actions billing) should track…
-- [`ci_satellite_ao_dispatch_batch1_2026_07_26`](./ci_satellite_ao_dispatch_batch1_2026_07_26.md) — First AO-dispatch
-  batch for the `ci` topic tranche, produced by `/ag-closeout-audit ci` (autonomous mode, 2026-07-26) after
-  `/plan-reconcile ci` had just cleaned the same corpus. Phase 0 found the tranche has NO dispatch vehicle at all —…
-- [`ci_satellite_ao_dispatch_batch1_finalize_2026_07_26`](./ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md) —
-  Gated closeout for ci_satellite_ao_dispatch_batch1_2026_07_26.md — machine-held via depends_on + gate_on_depends: true
-  until all 29 of that plan's todos are done. Carries the ONE piece of work the batch deliberately could not contain:
-  the…
-- [`ci_satellite_ao_dispatch_batch4_2026_07_31`](./ci_satellite_ao_dispatch_batch4_2026_07_31.md) — Fourth AO-dispatch
-  batch for the `ci` topic tranche, produced by `/ag-closeout-audit ci` (autonomous mode, 2026-07-31,
-  ag_closeout_auditor scheduled worker, slot 12). Phase 0 re-checked batch1's still-open conflict-gated Deferred items…
-- [`ci_satellite_ao_dispatch_batch4_finalize_2026_07_31`](./ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md) —
-  Gated closeout for ci_satellite_ao_dispatch_batch4_2026_07_31.md — machine-held via depends_on + gate_on_depends: true
-  until all 9 of that plan's todos are done. Reconciles each distinct source doc's checkboxes/prose independently,…
 - [`ci_vm_exposure_remediation_2026_08_06`](./ci_vm_exposure_remediation_2026_08_06.md) —
   ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md's own fixes (IOPS bump, resource-cap removal)
   worked, but it left 3 exposure items unaddressed on the dedicated CI runner VM (i-042a6332509482556): no swap safety
