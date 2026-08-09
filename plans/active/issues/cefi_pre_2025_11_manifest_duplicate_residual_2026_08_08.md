@@ -100,9 +100,19 @@ rows and stale parquet columns remain from an era predating this session's scope
       Overwhelmingly a stale `attempted_failed` wire-form placeholder coexisting with a `captured` canonical-form row
       for the same shard (not two competing real captures — see Progress Log for the full venue breakdown + sample
       evidence). See Progress Log entry below for evidence + method.
-- [ ] [DATA] P2. **Re-run the Surface-C dedup apply (or a scoped equivalent) for the pre-2025-11-01 range** once
-      characterized, then re-run `verify_cefi_canonical_4surface_2026_07_20.py` to confirm PASS. (repo:
-      market-tick-data-service, deployment-service)
+- [x] [DATA] P2. ✅ **Re-run the Surface-C dedup apply (or a scoped equivalent) for the pre-2025-11-01 range** —
+      instruments-service@e7d070c3, deployment-service@149aca1a. **Pre-2025-11-01 population fully collapsed, verified
+      two ways**: (1) the apply's own post-write gate re-scanned all 6 blobs and reported
+      `POST-APPLY GATE     GREEN: 0 pre-cutoff duplicate groups remain`; (2) a direct manifest query post-apply for the
+      exact two wire-forms `verify_cefi_canonical_4surface_2026_07_20.py` originally flagged (`ADAF0:USTF0`,
+      `AVAX_USDC-PERPETUAL`) confirms every SURVIVING occurrence of either form is dated 2026-05-23 through 2026-07-26 —
+      100% post-cutoff, zero pre-cutoff residual. Re-running the verify script still returns `OVERALL:     FAIL`
+      (Surface B/C), but for a DIFFERENT reason than todo 2 targeted: a separate, already-tracked, out-of-scope
+      post-cutoff population (dated well after 2025-11-01) accounts for 100% of the remaining duplicates on these two
+      probes — see `/plans/active/issues/cefi_chain_drop_v2_dedup_stop_on_surprise_198k_lossy_groups_2026_08_08.md`
+      (which this same session expanded to cover it). This todo's own scope (the pre-2025-11-01 range) is fully closed;
+      a corpus-wide verify PASS depends on that separate issue's resolution, not on anything further here. See Progress
+      Log for full evidence.
 
 ## Progress Log
 
@@ -183,3 +193,22 @@ rows and stale parquet columns remain from an era predating this session's scope
   pre-cutoff dataframe rather than restricting it to the todo-1-characterized 6,575 spelling-variant groups
   specifically. Fixing now: scope the collapse to touch ONLY rows belonging to those 6,575 groups, leaving every other
   pre-cutoff row (including the newly-found 98,188-group population) completely untouched.
+
+- **2026-08-09 (slot 3, closing)** — Shipped the fix (`instruments-service@e7d070c3`, updated
+  `unified-trading-pm@088e59ce0` merges slot 14's concurrent Finding 11 root-cause into the sibling doc). Re-ran the
+  scoped dry-run (`canonical-migration-cefi-dedup-apply-scoped-20260809-003610`): clean —
+  `groups_duplicate=6575 rows_collapsed=6575 multi_captured_lossy_groups=0 drop_set_captured=0`, exit 0. Paused
+  `uts-prod-manifest-consolidator-market-data-cefi-cron`, verified `PAUSED` via direct `gcloud scheduler jobs describe`,
+  THEN launched the drained `--apply` on `e2-standard-16`
+  (`canonical-migration-cefi-dedup-apply-scoped-20260809-004017`, matching Finding 7's precedent for the
+  `--apply`-loads-full-schema OOM risk). Result: snapshotted all 6 blobs first
+  (`_index/snapshots/pre_d4_20260809T004232Z/`), wrote all 6,
+  `POST-APPLY GATE GREEN: 0 pre-cutoff duplicate groups remain`, exit 0, VM self-deleted. Resumed the cron, verified
+  `ENABLED` via direct `gcloud scheduler jobs describe`. Re-ran `verify_cefi_canonical_4surface_2026_07_20.py`: still
+  `OVERALL: FAIL` (Surface B/C) on the SAME two probes — investigated directly via a manifest query for the exact
+  wire-forms (`ADAF0:USTF0`, `AVAX_USDC-PERPETUAL`): all 23 surviving rows are dated 2026-05-23 through 2026-07-26, 100%
+  post-cutoff. This confirms the pre-2025-11-01 apply worked completely (nothing pre-cutoff survives for either
+  instrument) and the verify script's continued FAIL is driven entirely by the separate, already-tracked post-cutoff
+  population — not a gap in this todo's own work. Both todos done; this doc's remaining open item (a corpus-wide verify
+  PASS) depends on `cefi_chain_drop_v2_dedup_stop_on_surprise_198k_lossy_groups_2026_08_08.md`'s resolution, tracked
+  there.
