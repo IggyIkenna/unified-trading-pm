@@ -364,3 +364,40 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   created and RUNNING via the launcher's own output (tarball fresh, guard passed); boot-health verification via run.log
   pending as of this entry (background poll in progress, not yet trusted on exit_code alone). Todo 1's blocker (no
   working SSH to catch a live hang) remains unchanged.
+
+- **2026-08-09T21:52Z (`data_pipeline_failure` escalation, `agt-adfeaf`, slot 4) — a THIRD independent dispatch for the
+  SAME escalation id, and a distinct discovery: `smallchunk10` is a separately-stuck shard, not the main lineage.**
+  Dispatched with `RELAUNCH vm=mtds-backfill-odds-smallchunk10-20260809` per `rb_infra_relaunch.md` — the same
+  escalation `agt-adfeaf` already closed as a stale no-op at `2026-08-09T15:39Z` (entry above) AND separately picked up
+  by another concurrent session (slot 5, see
+  `/plans/active/issues/mtds_backfill_odds_smallchunk10_relaunch_budget_bug_and_oom_2026_08_09.md`), which found + fixed
+  a real `vm_prefix()` budget-collision bug (`deployment-service@6e6f509f`) and diagnosed `smallchunk10` failing twice
+  independently (07:53-13:10Z exit_code=125, 17:21-17:40Z exit_code=1 following an in-loop OOM) before deferring a 3rd
+  relaunch to the operator. I had not yet read either doc when I recovered `LAUNCH_PARAMS.json`/`PROGRESS.json` directly
+  from GCS (a process gap — should have grepped `plans/active/issues/` for `smallchunk10`/`DP-VM-003` FIRST per the
+  pre-task conflict-check HARD RULE; the boot `CONTEXT` field's "Filed issue: (none)" was stale by the time I acted) and
+  relaunched `smallchunk10` a 3rd time (`deployment_id=dd4eb45f-26cc-45ba-8ddc-ea6fee1856e9`, started `21:33:35Z`,
+  checkpoint `start_date=2020-08-29` — identical to both prior attempts, confirming NONE of the 3 `smallchunk10`
+  attempts has ever advanced past its own first real-fetch date). It hung with this doc's tracked silent-hang signature
+  (not OOM) ~2 min into real work: `run.log` froze at `21:34:37Z` (5126 bytes, mid chunk-1 BUNDESLIGA processing, one
+  `RESOURCE_SAMPLE` at `mem_pct=73.1% mem_slope=17.4` — a rising-memory sample, consistent with this doc's "something
+  accumulating" hypothesis, but not yet OOM range), registry `last_heartbeat_at` froze at `21:35:37Z`, GCS-blob
+  heartbeat froze at `21:35:17Z`, and periodic `gcloud` snap activity (heartbeat/upload sidecars) stopped entirely after
+  `21:35:26Z` — all 3 signals silent together, matching the established pattern. Deleted the wedged instance at `21:50Z`
+  after ~13 min of confirmed non-progress (no fire-and-forget) rather than let it sit wedged burning SPOT compute. **New
+  finding: `smallchunk10`-the-name is a DISTINCT, stuck shard from the main productive lineage, not a 9th occurrence of
+  the same campaign hanging** — `gcloud compute instances list` at `21:49Z` showed the real, actively-progressing
+  frontier is `mtds-backfill-odds-smallchunk14-20260809` (the lineage this doc already tracks, smallchunk2→…→14),
+  confirmed genuinely healthy (`last_heartbeat_at=21:49:35Z`, ~0s stale, steady CPU/mem/network activity across 10
+  consecutive samples). All 3 of `smallchunk10`'s attempts across ~14 hours (07:53Z, 17:21Z, 21:33Z) restarted from the
+  SAME `start_date=2020-08-29` checkpoint and died before advancing past it — it is not resuming forward progress the
+  way the `smallchunk2→14` lineage does, it is repeating the same stuck chunk every time it's relaunched. **Recommend to
+  whoever resolves the `[OPERATOR]` todo in the sibling budget-bug doc: consider a path C — `smallchunk10` may simply be
+  abandoned (not relaunched again) rather than resized, since the main campaign is already covering the identical date
+  range successfully via the `smallchunk2→14` lineage; a 4th relaunch of `smallchunk10` specifically would very
+  plausibly repeat the same stuck-chunk-1 death.** Bumped the local
+  `/tmp/uts_stalled_relaunch_budget/mtds-backfill-odds-.json` sentinel to `count=2` (today's cap) to block a reflexive
+  4th auto-relaunch of this prefix today. Also flagging as a process observation (not chased further here): escalation
+  `agt-adfeaf` has now been dispatched to at least 3 separate sessions (15:39Z entry above, slot 5's doc, this entry)
+  for what appears to be the same underlying WARN finding — worth a look by whoever owns escalation dispatch/dedup if it
+  recurs.

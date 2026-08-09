@@ -134,3 +134,16 @@ Two independent paths, not mutually exclusive:
   underlying shard has independently OOM'd twice today at the launcher's already-reduced `CHUNK_SIZE=5` safeguard,
   meeting the runbook's "re-fails the same way twice" stop condition; paging the operator (todo 2) rather than guessing
   between a machine resize and a deeper odds_api memory-growth investigation.
+
+- **2026-08-09T21:52Z (`data_pipeline_failure` worker, slot 4, ALSO dispatched for `agt-adfeaf` — a 3rd concurrent
+  dispatch for the same escalation)**: had not read this doc before acting (process gap — see the full account in
+  `/plans/active/issues/mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`'s matching entry). Relaunched
+  `smallchunk10` a 3rd time from GCS-recovered `LAUNCH_PARAMS.json`/checkpoint (same `start_date=2020-08-29` as both
+  prior attempts here); it hung again ~2 min into real work, this time via the OTHER doc's tracked silent-hang signature
+  (not OOM) — a 3rd independent failure, now spanning both known failure modes for this exact shard. Deleted the wedged
+  instance after ~13 min of confirmed non-progress. Confirmed the main campaign (`smallchunk2→14` lineage, tracked in
+  the sibling doc) is healthy and unaffected, currently `smallchunk14`, fresh heartbeat. Bumped the local
+  relaunch-budget sentinel to today's cap (blocks a reflexive 4th auto-relaunch). Does not resolve todo 2 below — adds a
+  3rd data point (now via a different failure mode) supporting the same "don't blindly relaunch again" conclusion, plus
+  a path-C suggestion (abandon `smallchunk10` specifically rather than resize/investigate it, since the main lineage
+  already covers its date range) in the sibling doc's new entry.
