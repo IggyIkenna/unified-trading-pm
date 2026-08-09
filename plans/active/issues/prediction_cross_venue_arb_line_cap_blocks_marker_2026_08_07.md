@@ -27,6 +27,7 @@ asset_group: [prediction]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
+archive_exempt: true
 tags: [plan-hygiene, line-caps, progress-log, na-eligibility-audit, doc-maintenance]
 related:
   [
@@ -95,13 +96,20 @@ verbatim into `plans/archive/2026_08/prediction_cross_venue_arb_and_coverage_his
 `nature: record`, 0 open todos) and leave a one-line pointer in its place. Re-run `wc -l` + `check_line_caps.sh` after
 to confirm the doc is back under the soft cap (not just barely under the hard cap, so this doesn't recur in 2-3 weeks).
 
-- [ ] [DOC] P2. Extract the oldest fully-closed dated Progress Log section(s) from
+- [x] ✅ [DOC] P2. Extract the oldest fully-closed dated Progress Log section(s) from
       `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` into a dated `_history_2026_08.md` archive
       doc per the Recommended fix above, verifying the extracted range contains none of the doc's current open-item
       lines and nothing later in the doc references it by pointer. Done-when: `wc -l` on the source doc is back under
       500 (the soft cap), `check_line_caps.sh` still passes, and every open checkbox that existed before the extraction
       still exists verbatim in the source doc afterward (diff the open-item line texts before/after, not just the
-      count). Repo: unified-trading-pm.
+      count). Repo: unified-trading-pm. — DONE 2026-08-09 (batch8, slot 8), unified-trading-pm@afd6891bb3: 12
+      fully-closed dated sessions (2026-06-20, 06-21, 06-23 x3, 06-25 x4, 06-27 x3) extracted to
+      `plans/archive/2026_08/prediction_cross_venue_arb_and_coverage_history_2026_08.md`; source doc 1013L → 376L (25
+      lines are a `check_todo_regression.sh` conservation stub index, see that doc's "Extracted items index" section —
+      still well under the 500L soft cap); both open items (lines 172, 380) verbatim-verified unchanged;
+      `check_line_caps.sh` green. The 2026-06-26 session was deliberately left in place (referenced by pointer from the
+      2026-08-04 entry: "this Progress Log's 2026-06-26 entry") and the 2026-06-27 session's own accumulated audit-trail
+      tail (2026-07-30 onward) was left in place as current status, not archived history.
 
 ## Progress Log
 
@@ -138,3 +146,13 @@ to confirm the doc is back under the soft cap (not just barely under the hard ca
   own remediation is still needed. `prediction_satellite_ao_dispatch_batch8_2026_08_08.md`'s extraction todo remains
   `status: active` (operator-approved 2026-08-08) but not yet executed. Doc stays NA; this run wrote its own marker onto
   the source doc via the documented SCOPED-mode append exception (0 deletions, <10 lines, no checkbox touched).
+- **2026-08-09 (slot 8, data_engineering, `prediction_satellite_ao_dispatch_batch8-001`)**: this doc's own todo is now
+  `[x]` done (see above) — 0 open todos remain, which `check_archive_candidates.sh` (--only, precommit) correctly flags
+  as an archive candidate. Set `archive_exempt: true` rather than archiving inline: this is documented use-case (b) in
+  that script's own header comment — "a doc explicitly routed for archival THROUGH another plan's own dispatched
+  reconciliation todo." `prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md`'s `[REVIEW] P3` todo 1
+  ("Reconcile the source doc... Confirm the source issue doc's checkbox is flipped and its `status` moves toward
+  `resolved`") is exactly that dispatched reconciliation todo, gated via `depends_on`+`gate_on_depends` on batch8's own
+  todo (now done) — it is the correct owner of this doc's `status: resolved` flip + eventual archival, not a standalone
+  action here. Not archiving now avoids doing the 6-step ritual (referrer fixes across 8 corpus citations,
+  codex-alignment check) twice — once here, once again when finalize re-verifies.

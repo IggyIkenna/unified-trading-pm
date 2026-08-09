@@ -104,6 +104,27 @@ documented as the correct mechanism in `task_template.md` and still not exempted
       runs `--only` on STAGED files today, so a prior conversion that landed via a path that skipped this hook — e.g.
       `safe-doc-push.sh` before its own recent hardening, or a raw push — could be sitting unnoticed). Not urgent; a
       hygiene sweep item.
+- [ ] [DEVOPS] P2. **Second, independently-found trigger for the SAME root cause — Finding-J archival extraction has no
+      exemption either.** `check_todo_regression.sh` also has no special-case for `task_template.md` finding J's OTHER
+      documented, sanctioned mechanism: extracting a fully-closed dated Progress Log section verbatim into an
+      archive-bound companion doc (`plans/archive/<YYYY_MM>/<slug>_history_<date>.md`) and leaving a one-line pointer. A
+      legitimate extraction necessarily removes N already-`[x]` checkbox lines from the live doc, which this checker
+      reads as `lost=N` — identical failure shape to the CANCELLED-format case above, just a different sanctioned
+      workflow tripping it. Live repro 2026-08-09 (`prediction_satellite_ao_dispatch_batch8-001`, slot 8): extracting 12
+      fully-closed sessions from `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (1013L → 339L, 25
+      already-closed items moved to `plans/archive/2026_08/prediction_cross_venue_arb_and_coverage_history_2026_08.md`)
+      failed with `origin=27 current=2 lost=25`. Workaround used (not a fix): appended a 25-line "Extracted items index"
+      section to the live doc — one-line `- [x]` conservation stub per moved item, clearly labeled as a mechanical
+      index, not live work — so the total checkbox count matches origin (376L final, still well under the 500L soft
+      cap). This directly undercuts the whole point of the line-cap remediation workflow (the doc still carries N lines
+      of checkbox-shaped content for every extraction, just shorter ones) and will recur on every future Finding-J
+      extraction until fixed. **Proposed real fix** (more involved than the CANCELLED case, needs cross-file awareness):
+      when `_check_one()` finds `cur_total < gh_total` for a staged plan, check whether the SAME staged changeset also
+      touches/creates a `plans/archive/**/*_history_*.md` file that is listed in the plan's own `related:` frontmatter
+      and whose OWN checkbox total grew by at least the shortfall — if so, treat as conserved (moved, not lost), not a
+      violation. Until fixed, every Finding-J extraction either eats the stub-index tax above or hand-waives the gate
+      some other way — worth resolving alongside the CANCELLED-format fix above since both todos touch the same
+      function.
 
 ## Progress Log
 
@@ -111,3 +132,11 @@ documented as the correct mechanism in `task_template.md` and still not exempted
   `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`'s two stale P2 items for AO-dispatch eligibility.
   Worked around it in that doc (kept checkbox format, retagged to `[OPERATOR]`) rather than force the CANCELLED
   conversion through; this doc tracks the real fix.
+- **2026-08-09 (slot 8, data_engineering, `prediction_satellite_ao_dispatch_batch8-001`)**: independently hit the same
+  root cause via a different trigger (Finding-J archival extraction, not CANCELLED-format conversion) while executing
+  `prediction_satellite_ao_dispatch_batch8_2026_08_08.md`'s line-cap-remediation todo. Appended the second todo above
+  rather than filing a new doc — same script, same function, same underlying gap. Worked around it in
+  `prediction_cross_venue_arb_and_coverage_2026_07_24.md` with a stub-index tax (see that doc's own "Extracted items
+  index" section for the mechanism); did not attempt the real cross-file fix here — out of this task's scope (a
+  data-pipeline plan-hygiene fix isn't this todo's `[DOC]`/`[SCRIPT]` scope, and the proposed fix needs design judgment
+  on the cross-file correlation logic, not a mechanical one-liner).
