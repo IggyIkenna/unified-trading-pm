@@ -247,22 +247,22 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                  disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                  future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                  bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                  prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                  2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                  hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                  threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                  loader, post-delete verification) and filed
-                  `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                  AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                  actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                  stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                  via that issue doc, not this line.
-                  verification actually complete.
+                      disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                      future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                      bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                      prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                      2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                      hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                      threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                      loader, post-delete verification) and filed
+                      `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                      AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                      actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                      stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                      via that issue doc, not this line.
+                      verification actually complete.
 
-- [ ] [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
+- [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
       already-shipped `is_model_mvp()` predicate (`unified-api-contracts@0fb9821b`). Both design sub-questions this item
       was previously blocked on are resolved per the source doc's own inline 2026-08-08 note: `TrainingGridConfig`
@@ -272,7 +272,18 @@ drift_direction: advance-code
       `mvp_scope_catalogue_tagging_2026_06_08.md` (P2b-2 item). Done when: a new/extended endpoint carries a
       `scope=mvp|could_exist|all` param over ml-service model output, filtering via `is_model_mvp()` with
       `TrainingGridConfig` as the could-exist universe and `ModelRegistry.list_models()` as the captured set; a parity
-      test asserts `mvp <= could_exist <= all` monotonicity (mirroring `test_route_venue_year_coverage_scope.py`).
+      test asserts `mvp <= could_exist <= all` monotonicity (mirroring `test_route_venue_year_coverage_scope.py`). —
+      ml-service@a24a0bb0, deployment-api@90b51dfe. New `GET /training/model-coverage` in ml-service enumerates the
+      could-exist universe via `TrainingGridConfig` (PRODUCTION_GRID + TRADFI_PRODUCTION_GRID; sports excluded — no
+      clean `(asset, timeframe)` pairing / no `target_types` axis for `is_model_mvp`, honest omission not fabrication)
+      using the grid's own `generate_model_id()` + `parse_model_id()` round trip, looks up `captured` via
+      `ModelRegistry.list_models()`, and filters `scope=mvp` through UAC `is_model_mvp()`. deployment-api adds a
+      byte-for-byte HTTP passthrough at `GET /api/data-status/model-coverage` (no ml-service package dependency, per
+      tier-and-import-architecture.md's no-service-to-service-import rule — mirrors the honest-coverage GCS-read
+      passthrough shape from item 2 of this batch). 11 new ml-service unit tests (scope-param acceptance,
+      `mvp <=     could_exist <= all` monotonicity via a deterministic patched `is_model_mvp`, captured-lookup,
+      sports-exclusion) + 4 new deployment-api unit tests (scope forwarding, default scope, 502 on unreachable,
+      error-status relay) — both repos' full `quality-gates.sh` green.
 - [ ] [CODE] P1. Fix `_fetch_earliest_funding_date` (instruments-service `cefi/aster.py`) to exclude the synthetic
       pre-launch placeholder funding rows (flat `0.0001` rate) before deriving `available_from_datetime` — these rows
       currently pull ASTER's stamped genesis date earlier than the true launch. Repo: instruments-service. Source:
@@ -388,3 +399,6 @@ drift_direction: advance-code
   re-audited both repos (converged on the same candidate set as slot 25's prior pass — cross-validates the enumeration)
   and shipped the issue doc's Betfair item (`instruments-service@b8668094`). Checkbox flipped; see the item body for the
   full duplicate-dispatch reconciliation note.
+- **2026-08-09 (item P2b-2, slot 17)**: shipped `GET /training/model-coverage` (ml-service@a24a0bb0) + its
+  deployment-api byte-for-byte passthrough (deployment-api@90b51dfe), both `quality-gates.sh` green, both ancestry-
+  verified on `origin/live-defi-rollout`. See the item body for the full design summary. Checkbox flipped.
