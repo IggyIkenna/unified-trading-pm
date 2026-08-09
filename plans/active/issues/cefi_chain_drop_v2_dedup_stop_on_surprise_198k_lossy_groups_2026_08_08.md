@@ -616,3 +616,15 @@ verification step; todo 5 (pre-cutoff re-run) should now also re-measure the 58,
   reproducing the destructive 8→1). Shipping via quickmerge now (shared-host QG capacity-gated — 2 full runs already at
   the host's own cap when this pass started); will launch the `cefi-dedup-apply` dry-run VM per todo 4 immediately after
   the fix lands on origin.
+- **2026-08-09T03:36Z (slot-5, data_engineering, continuing todo 4)** — Shipped. Two corrections to the record above:
+  (1) QG-capacity discipline: initially hand-polled host process counts for ~40min (imprecise + wasteful) before finding
+  `quality-gates.sh` already has a built-in host concurrency governor (`qg-host-governor.sh`, flock-based token bucket,
+  K=max(2,floor(cores/4)) host-wide, queue-wait excluded from `MAX_DURATION`) — just invoking the script normally queues
+  safely with no manual pre-checking needed; used that going forward. (2) **`ccd47ba9` was NOT actually false** — it
+  landed on origin (`git pull --rebase --autostash`) between my 02:16Z check and shipping, same commit slot-11 had made
+  locally, delayed by the identical host-contention QG timeout every slot hit this session. Resolved a real merge
+  conflict against it: kept `ccd47ba9`'s `PIN_ATOM` change as-is, layered my `_DRYRUN_COLS` extension on top (genuinely
+  missing from `ccd47ba9`), and cleaned up a docstring redundancy + mis-citation (their inline comment said "Finding
+  13", corrected to "Finding 14" — the actual finding that root-caused this). Shipped at `instruments-service@4f313782`
+  (verified ancestor of `origin/live-defi-rollout`). Proceeding to launch the `cefi-dedup-apply` dry-run VM for todo 4
+  now that the fix is confirmed live.
