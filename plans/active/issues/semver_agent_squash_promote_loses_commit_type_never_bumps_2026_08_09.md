@@ -245,3 +245,20 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent (hand off, don't
   chase serially). Skipped the linked INFRA todo in `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md` again
   with `reason_code: GATED`.
+- **2026-08-09 (infra worker, slot 10, todo 2 re-check)**: Re-verified from scratch once more —
+  `git merge-base --is-ancestor 30ed07eff origin/main` on `unified-trading-pm` still returns NO
+  (`origin/main..origin/live-defi-rollout` now 769 commits, up from 712 at slot 13's check), and
+  `unified-trading-library`'s latest tag reachable from `origin/main` is still `v0.77.0` (`git describe` =
+  `v0.77.0-1-ge94be221`; `git tag --contains 609299adf4bf49d5b027fd21289d6abd60a8bcfa` = empty). The prior open promote
+  PR (#2705) has since been superseded by a fresh auto-drain attempt, PR #2706 (opened 2026-08-09T21:30Z) — watched it
+  land (not busy-polled: one status check at open, one ~90s later) and its `QG slice (checks)` job (run `31336986549`,
+  job `93304415192`) FAILED with the exact same two hard ratchet failures as every prior attempt:
+  `No prettier proseWrap continuation-padding (ratchet)` and `assigned_vm:NA corpus size (docs + open todos, ratchet)`
+  (now 34 new NA docs / 97 new open todos vs `origin/main`, up from slot 20's 33/96) — confirmed via the live job log
+  (`gh api .../actions/jobs/93304415192/logs`). Same blocker, same root cause
+  (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent (hand off, don't
+  chase serially — that doc's own scope, not this INFRA todo's). No alternate lever still: `Semver Agent`'s caller stub
+  on `unified-trading-library` has no `workflow_dispatch` trigger, and the reusable workflow's classifier-script fetch
+  is unpinned to PM's live default branch, so nothing short of PM's `main` actually advancing past `30ed07eff` moves
+  this forward. Leaving todo 2 open/unchecked; skipping this task with `reason_code: GATED` again so it doesn't
+  re-dispatch to the next heartbeat while the real blocker (PM's promote pipeline) remains unresolved elsewhere.
