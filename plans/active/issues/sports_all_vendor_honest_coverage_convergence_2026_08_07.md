@@ -964,3 +964,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   non-historically-dangerous chunk). Relaunched as **`mtds-backfill-odds-smallchunk10-20260809`** (timestamp-suffixed
   this time, per the naming lesson from the last incident). Full detail:
   `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`.
+- **07:54Z — smallchunk10 launch confirmed genuine** (retried once the unrelated concurrent session's dirty
+  `deployment-service` file resolved on its own) — chunk 1/451, correct 5-day chunking, skip-fasting cleanly, real boot
+  banner. FIXTURE_LINEUPS needed **43,518 → 41,381** (-2,137, fast real progress), heartbeat live. Both healthy.
