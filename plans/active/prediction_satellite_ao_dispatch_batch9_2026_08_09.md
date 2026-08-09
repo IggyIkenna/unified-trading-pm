@@ -118,7 +118,7 @@ child plans, none of which are in this run's 18-doc scope) and contributed nothi
       mocked-response assumptions — the adapter code was built + unit-tested against the documented/inferred Kalshi
       schema without a live credentialed call in the dev sandbox; if a real response shape differs, fix the adapter
       parsing before the full run, don't launch blind. Requires `kalshi-api-credentials` (Secret Manager) for the
-      `/historical/*` signed tier — if inaccessible from the VM's identity, status `BLOCKED-CREDENTIALS` and self-grant
+      `/historical/*` signed tier — if inaccessible from the VM's identity, record the credential gap and self-grant
       per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` (do not pause). Done when: a manifest
       read confirms real `captured`/`empty_confirmed` rows for KALSHI trades across the full 2025-10→2026-04 window (the
       todo-1 script's own "done when"), closing the previously-empty mid-gap — cite the manifest read + VM
