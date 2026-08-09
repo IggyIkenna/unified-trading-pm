@@ -154,3 +154,4 @@ Two independently-shippable angles:
   needs a design call on threshold/signal per its own text; todo 2 ([DATA] P1, relaunch the dex_swaps fold) is
   dependency-blocked on the DeFi consolidator genuinely catching up (the concurrent `canonical-migration-defi-rebuild`
   VM finishing or the cron resuming) — neither is worker-determinable today.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.

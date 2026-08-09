@@ -140,3 +140,4 @@ Missing: market-tick-data-service-perp
   backfill run. Two real script bugs found + fixed (`features-service@00b399d7a`); the actual compute then blocked on
   the two upstream dependency gaps documented above. Did not chase either gap further this session (out of scope for the
   backfill-script task — each is its own real investigation). No data written; no GCS/manifest mutation made.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.

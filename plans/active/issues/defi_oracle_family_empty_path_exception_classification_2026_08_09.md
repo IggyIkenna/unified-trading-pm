@@ -43,8 +43,8 @@ depends_on: []
 context_scope:
   [
     /codex/02-data/honest-absence-downstream-handling.md,
-    /plans/active/task_template.md,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/_aave_oracle_collection.py,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_aave_oracle_collection.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py,
   ]
 ---
@@ -118,3 +118,7 @@ P3.
   `defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md` (all 6 of its own todos done, unlocked —
   archival-eligible per the codex ritual). That doc's checkboxes 2-3 each described a genuine follow-up only in prose;
   migrated both here as real todos before the archival landed.
+- **context-scout 2026-08-09**: re-scouted; fixed a wrong path (`_aave_oracle_collection.py` actually lives under
+  `cli/handlers/`, not `market_interface/adapters/defi/`), swapped `/plans/active/task_template.md` for
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (cited in the doc's own "Codex SSOTs" section
+  but missing from context_scope), context_scope now 4 entries.

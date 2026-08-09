@@ -195,3 +195,4 @@ vault-share-price collector) end-to-end:
   already shipped 2026-07-26." Reclassifying this doc now would open a second, redundant dispatch path the moment
   batch10 executes its own copy of the same fix. Correct owner is batch10; this doc's checkbox stays as the citation
   anchor per this corpus's own convention. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

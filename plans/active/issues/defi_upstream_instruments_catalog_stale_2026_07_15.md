@@ -541,3 +541,4 @@ mode-threading residual and `[DESIGN] P3` completion-signal items remain genuine
   since the 2026-08-04 audit (context-scout metadata only, per git log). Sole open item ([DESIGN] P3,
   IS-catalogue-completion-signal retry-sweep) remains a lower-priority design task with no concrete done-when; every
   other item already resolved with evidence. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

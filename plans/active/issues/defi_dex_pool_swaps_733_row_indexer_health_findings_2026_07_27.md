@@ -810,3 +810,5 @@ absorb the actual remediation work.
   `origin/slot5-stalled-head-test`, no action needed there. Updated the todo above with all 3 candidates and review's
   finding that `RB-04b8981e` no longer appears in the live open repo-blockers list (possible landing-blocker clear) —
   actual diff/pick/land work left for whoever picks up the todo next, not attempted by main.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate — the new candidate
+  commits noted above live on branches/refs, not new source files.

@@ -956,3 +956,4 @@ should flip `defi_onchain_v10_universe_v2_seed_or_backfill_progressed→true` on
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — gate_on_depends on data_completion_defi_2026_07_15
   re-verified still open today.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
