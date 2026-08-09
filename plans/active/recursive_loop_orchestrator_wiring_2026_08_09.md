@@ -145,12 +145,13 @@ Progress Log) confirmed, with exact file:line citations:
       strategy-service. Done-when: a new unit test drives `on_tick()` for `CARRY_RECURSIVE_BORROW_LENDING_ONLY` with
       real catalog params and asserts a non-empty, correctly-shaped `AtomicInstruction` (leg count = `n_loops` ×
       legs-per-loop, correct `action`/`instrument`/`size_units` progression), and `quality-gates.sh` is green.
-- [ ] [BACKEND] P1. Implement Family-2 (`CARRY_BASIS_PERP_INV`) real `on_tick()` leg construction in the same file: the
-      same lending-loop legs as the prior todo, plus a perp-hedge leg using `PerpLegConfig`
+- [x] ✅ [BACKEND] P1. Implement Family-2 (`CARRY_BASIS_PERP_INV`) real `on_tick()` leg construction in the same file:
+      the same lending-loop legs as the prior todo, plus a perp-hedge leg using `PerpLegConfig`
       (`unified_api_contracts.internal.architecture_v2.recursive_loop_orchestrator.PerpLegConfig`) sized via
       `unified_trading_library.risk.net_delta.residual_hedge_size()` (operator-ruled formula, already shipped — do not
       re-derive). Repo: strategy-service. Done-when: a new unit test drives `on_tick()` for `CARRY_BASIS_PERP_INV` and
       asserts a non-empty `AtomicInstruction` including the correctly-sized hedge leg, and `quality-gates.sh` is green.
+      — strategy-service@f2ac7fdf
 - [ ] [BACKEND] P1. Build the `RecursiveLoopRequest` construction + `RecursiveLoopOrchestrator.open()`/`.unwind()` call
       site in execution-service — candidate home:
       `execution-service/execution_service/algo_library/leveraged_leg_controller.py` (or a new sibling module if that
@@ -214,3 +215,21 @@ Progress Log) confirmed, with exact file:line citations:
   STAKE→TRANSFER→LEND→BORROW spec exactly; `[]` when already positioned; `[]` when `perp_leg_enabled=true` (Family 2
   still out of scope). `quality-gates.sh` green on strategy-service (full run, no skip flags).
   strategy-service@817bb4e0.
+- **2026-08-09 (slot 22, backend_engineer)**: Todo 5 shipped — added
+  `CarryRecursiveStakedEngine._on_tick_family2_basis_perp_inv()` +
+  `_build_perp_hedge_leg()`/`_build_family2_instruction()` to `recursive_staked.py`. Reuses Family 1's
+  `_build_family1_loop_legs()` for the lending loop unchanged, then appends one CeFi perp-hedge `AtomicLeg`
+  (`action=TRADE, side="SELL"`) built from a real `PerpLegConfig`
+  (`unified_api_contracts.internal.architecture_v2.recursive_loop_orchestrator`) and sized via
+  `unified_trading_library.risk.net_delta.residual_hedge_size(target_equity, target_net_delta)` — per
+  carry-basis-perp-inv.md's Phase 1 derivation, `E_actual` (gross underlying exposure) at opening equals `target_equity`
+  because the recursive loop's net on-chain delta is invariant to `d`/`ltv`; live rebalancing against the
+  actually-on-chain-read `E_actual` remains `PerpHedgeSizer`'s job (todo 6, not yet wired). This replaces the `[]` stub
+  for `CARRY_BASIS_PERP_INV` (`perp_leg_enabled=true`). New test file `test_carry_basis_perp_inv_family2_on_tick.py` (6
+  tests) drives `on_tick()` with the real `aave_v3/ethereum/wsteth/weth/hyperliquid` catalog row and asserts: non-empty
+  `AtomicInstruction`; leg count == `n_loops`(5) × 4 + 1 hedge leg == 21; hedge leg is a `SELL` `TRADE` sized via
+  `residual_hedge_size`; lending-loop legs match Family 1's exact progression; `[]` when already positioned; `[]` on an
+  unrecognised `perp_venue`. Also updated the now-stale Family-1 test that asserted `perp_leg_enabled=true` stayed
+  stubbed (it now correctly routes to — and no-ops within, since Family-1 catalog rows carry no `perp_venue`/`perp_pair`
+  — the real Family-2 path). `quality-gates.sh` green on strategy-service (full run, no skip flags, 5836 passed).
+  strategy-service@f2ac7fdf.
