@@ -202,13 +202,38 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
       unfixed) for whichever year is actively fetching when the lock clears. Re-run the CORRECTED manifest count-check
       (`underlying in (SP500, ES)`, not the old 11-id filter) after any retry to measure the actual delta. Repo:
       unified-trading-pm (progress tracked in `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`, not duplicated here).
-- [ ] [INFRA] P1. **Confirm + fix the zombie-watchdog false-positive on a legitimately-slow ES_OPT fetch** (see
-      corrected hypothesis above) — first CONFIRM `vm_zombie_watchdog.py` is the actual actor (check its own audit trail
-      / logs for a kill event matching one of these VM names + timestamps, don't just trust the timing match), then
-      either raise its `--min-age` for `mtds-backfill`+`VM_ASSET_GROUP=TRADFI`+options-chain launches specifically, or
-      add incremental progress logging inside the per-date Databento fetch so liveness is visible during a legitimately
-      slow (not hung) call. Repo: deployment-service (`vm_zombie_watchdog.py` + `vm-exec-with-gcs-tee.sh`) +
-      market-tick-data-service (Databento adapter fetch path, if adding progress logging there).
+- [ ] [INFRA] P1. **RE-INVESTIGATED 2026-08-09 (slot 9, infra) — "false-positive" hypothesis does NOT hold; this was a
+      genuine hang on the pre-fix undersized machine type, already root-caused by `deployment-service@391ff7f5`; no
+      watchdog-side change is evidenced as needed.** Confirmed `vm_zombie_watchdog.py` IS the actual actor for the
+      relevant wave (5 ES_OPT VMs inserted 2026-08-09T03:08-03:09Z, deleted 03:30-03:51Z) — NOT via timing alone: the
+      delete audit-log entries' principal (`1060025368044-compute@developer.gserviceaccount.com`) and `callerIp`
+      (`35.221.90.79`) match, exactly, the currently-running watchdog VM's own attached service account and external IP
+      (`gcloud compute instances describe vm-zombie-watchdog-20260807-075242` → same SA, same NAT IP), and — distinctly
+      from a self-delete pattern — all 5 kills share that ONE IP rather than each VM's own unique IP (the self-delete
+      wave from this doc's first finding, by contrast, shows 5 DIFFERENT callerIps, one per VM, confirmed via a separate
+      `gcloud logging read` pull). But the premise that these 5 were "legitimately slow (not hung)" is contradicted by
+      their own `run.log` + heartbeat-blob evidence: all 5 show the SAME signature — RSS climbing from ~500MiB to
+      8.4-10.3GiB within ~30-90s of the fetch starting, cpu pinned at ~100%, and then BOTH `run.log` (the
+      `ResourceProfiler`/`PIPELINE_HEARTBEAT` emitters) AND the separate heartbeat-sidecar blob (`vm-heartbeat/<vm>.txt`
+      — created once at ts, never updated again, confirmed via `gsutil stat`) go silent in lockstep at the same moment,
+      not just the main fetch process. A live, merely-slow-but-alive process would not also freeze its own independent
+      60s-interval heartbeat subprocess. This is the same OOM/thrash-hang class the doc's own third finding already
+      flagged ("MACHINE_TYPE was still the undersized e2-standard-4 default... live-reproduced a 9.2GB RSS climb").
+      Confirmed via `git log`: these 5 launches (03:08-03:09Z) predate `deployment-service@391ff7f5` (07:38:54Z same
+      day), the commit that bumped `launch-tradfi-backfill-vm.sh`'s `MACHINE_TYPE` default from a hardcoded undersized
+      value to `${MACHINE_TYPE:-e2-highmem-4}` specifically so a same-machine OOM relaunch doesn't just re-OOM — so this
+      wave ran on the OLD, undersized machine type, not the fixed one. No ES_OPT VM has launched since 07:38Z (checked
+      live fleet + `gcloud logging read` for post-fix deletes — zero), so there is no post-fix evidence either way;
+      deliberately did NOT relaunch ES_OPT myself to test this (a fresh 5-VM launch here would risk colliding with the
+      concurrent in-scope CME root-campaign fleet + singleton-lock activity this same doc's own dual-watcher caution
+      warns about, and is out of this action item's narrow scope). Leaving unchecked — narrowed to a real,
+      evidence-gated remaining step below — rather than inventing a watchdog `--min-age`/progress-logging change the
+      evidence doesn't support. Repo: deployment-service (`vm_zombie_watchdog.py`, investigated only; no code
+      changed). - [ ] [DATA] P2. Once the next ES_OPT launch happens post-`e2-highmem-4` fix (2025+2026 gap per the
+      third finding), check whether the same RSS-spike/heartbeat-freeze signature recurs. If it does NOT recur, this
+      action item closes with "machine-type fix was sufficient, no watchdog change needed." If it DOES recur (even on
+      the bigger machine), THEN implement one of the two original remedies (raise `--min-age` for this launcher class,
+      or add incremental per-date progress logging) against real post-fix evidence.
 - [ ] [INFRA] P2. **PARTIALLY DONE (2026-08-09, separate session, deployment-service@391ff7f5)** — confirmed
       `_tradfi-ohlcv-launcher-lib.sh` (NASDAQ/NYSE/CME-grouped/KRX launchers) was already correctly wired
       (`VM_TASK=mtds-backfill` + `VM_SOURCE`, not affected). A different agent independently found + fixed the SAME bug
@@ -223,6 +248,13 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
 
 ## Progress Log
 
+- **2026-08-09, slot-9 (infra)**: Worked the zombie-watchdog P1 action item. Confirmed `vm_zombie_watchdog.py` is the
+  actor (SA + callerIp match against the live watchdog VM), but found the "legitimately-slow, not hung" premise is wrong
+  for this wave — all 5 ES_OPT VMs show an RSS-spike-to-8-10GiB/cpu-100% signature followed by BOTH run.log and the
+  independent heartbeat sidecar going silent together, and the wave predates `deployment-service@391ff7f5`'s
+  `e2-highmem-4` machine-type fix. No watchdog-side code change is evidenced as necessary; narrowed the action item to a
+  post-fix re-observation step instead of shipping an unsupported change. No code shipped this pass (investigation + doc
+  update only). Did not relaunch ES_OPT (out of scope, singleton-lock collision risk with concurrent fleet work).
 - **2026-08-09, slot-28**: Discovered + root-caused + fixed live while executing batch6 todo #2. Fix committed
   `deployment-service@6b1057cc`; re-launch in progress, VMs surviving past the previous failure window at time of
   filing.
