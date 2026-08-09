@@ -80,8 +80,9 @@ internal dep floor yet), not an operator-named pain point.
 - [ ] [SCRIPT] P3. Add `dedup_key` + `cooldown_min` to `ldr-to-main-promote-fleet.yml`'s `notify` (conflict) and
       `notify-arm-failed` jobs, and to `ldr-to-main-promote.yml`'s `notify-arm-failed` job — see finding 1 above for the
       exact done-when and regression-test requirement. (repo: `unified-trading-pm`)
-- [ ] [SCRIPT] P3. Add an `ar-lag-notify-resolved` job to `branch-health.yml` (state-diffed, mirrors
-      `lag-notify-     resolved`) — see finding 2 above for the exact done-when. (repo: `unified-trading-pm`)
+- [x] ✅ [SCRIPT] P3. Add an `ar-lag-notify-resolved` job to `branch-health.yml` (state-diffed, mirrors
+      `lag-notify-     resolved`) — see finding 2 above for the exact done-when. (repo: `unified-trading-pm`) —
+      unified-trading-pm@b8b22a36d
 
 ## Progress Log
 
@@ -89,3 +90,16 @@ internal dep floor yet), not an operator-named pain point.
   were mentioned in that todo's source doc Progress Log entry as prose ("not fixed here") without a tracked checkbox,
   which is a workspace hard-rule violation (every deferral needs a `- [ ]`, not just prose). Filing this doc closes that
   gap; no code changed here yet.
+- **slot-19 2026-08-09 (finding 2, `ci_monitor_recovery_bookend_residual_gaps-5def2dadfe34`) — SHIPPED**: `ar-lag`'s
+  scan step now persists its lagging-repo set (`.ar-lag-state.json`, `actions/cache`, same convention as `lag-monitor`'s
+  `.lag-state.json`) and diffs prev→current to detect a genuine per-repo clear, emitting
+  `cleared`/`cleared_key`/`cleared_report` outputs. A new `ar-lag-notify-resolved` job (severity INFO, `recovery: true`,
+  per-cleared-set `dedup_key`, `cooldown_min: 30`) fires on that transition, mirroring `lag-notify-resolved`. Verified:
+  YAML parses (`python3 -c "import yaml; yaml.safe_load(...)"` + quality-gates.sh's own
+  `workflow-yaml: 59 workflows parse` check both green), the state-diff bash logic unit-tested standalone against 3
+  scenarios (repo currently lagging + stays lagging, repo previously lagging + now clears → `cleared=true`/correct
+  `cleared_key`/`cleared_report`, no prior state file → no false-positive clear on first run). Shipped via Pass-1
+  `quality-gates.sh` (green, sentinel matched HEAD) → Pass-2 `quickmerge --agent` → `unified-trading-pm@b8b22a36d`,
+  verified ancestor of `origin/live-defi-rollout`. Finding 1's todo above was already shipped by a different slot
+  (`fb2b8ab39`, landed just before this one) but its own checkbox flip was not observed in this pull — left as-is (not
+  this task's scope; a future pass should flip it if it's genuinely still unflipped).
