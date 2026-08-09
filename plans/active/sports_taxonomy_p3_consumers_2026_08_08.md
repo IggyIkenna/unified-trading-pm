@@ -146,11 +146,24 @@ spelling variant survives, which is the entire point of the panel". It does not.
 
 ### ML
 
-- [ ] [CODE] P0. **Wire ml-service `--family` to actually scope SPORTS training** (operator ruling 2026-08-08). Today it
-      is REQUIRED and validated for `--asset-group SPORTS` but `grep '\.family'` returns zero hits outside argparse —
-      all 5 documented family values produce identical behaviour. Each family must scope leagues and target-types (e.g.
+- [x] ✅ [CODE] P0. **Wire ml-service `--family` to actually scope SPORTS training** (operator ruling 2026-08-08, see
+      `/plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`). Today it is
+      REQUIRED and validated for `--asset-group SPORTS` but `grep '\.family'` returns zero hits outside argparse — all 5
+      documented family values produce identical behaviour. Each family must scope leagues and target-types (e.g.
       `pregame_clv_family` → CLV targets over the pre-match horizon set). Resolves
-      `/plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`'s sole open todo.
+      `/plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`'s sole open todo. —
+      **DONE 2026-08-09** (slot-22, `backend_engineer`): `ml-service@bfdcff2`. Added
+      `SPORTS_FAMILY_LEGACY_TARGET_TYPES` + `legacy_target_types_for_families()` in `family_router.py`, mapping each of
+      the 5 `SportsMLPresets` families to the legacy `target_type` key(s) it owns (`pregame_xg_family`→xg,
+      `pregame_clv_family`→clv, `ht_xg_family`→ht_delta; `ht_clv_family`/`meta_family` raise — no legacy single-output
+      builder exists for halftime-market-CLV or OOF meta yet, so they fail loud instead of silently mis-mapping to
+      `ht_delta`). `train_handler.py::_generate_sports_variants` now scopes `target_types` to `--family` by default and
+      intersects with an explicit `--target-types` filter (verified the already-working
+      `--family pregame_clv_family --target-types clv` retrain invocation from the resolved issue doc keeps working
+      unchanged). `pipeline_handler.py::_build_pipeline_config` validates the single `--target-type` against the family
+      scope for parity. 9 new unit tests (family-scoping + error cases) in `test_family_router.py` +
+      `test_cli_handlers_coverage.py`; `quality-gates.sh` green (2177 passed, 4 skipped, sentinel-verified on
+      `bfdcff2`).
 - [ ] [CODE] P0. **Add BOTH T-2h and T-6h as MODEL horizons** (operator ruling 2026-08-08). Current set is
       `['T-10m','T-1h','T-24h']`; both new horizons already have data (T-2h 14,209 shards, T-6h 14,217) and ~2.7x the
       fixture coverage of T-24h, both safely pre-match. Retrain the sports models against the changed feature set and
