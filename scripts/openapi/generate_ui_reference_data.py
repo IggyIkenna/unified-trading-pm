@@ -61,7 +61,7 @@ def extract_uac_registries() -> dict[str, object]:
     """Extract all registry data from unified-api-contracts."""
     data: dict[str, object] = {}
 
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.registry import (  # noqa: qg-deep-import
             CLOB_VENUES,
             DEX_VENUES,
@@ -84,7 +84,7 @@ def extract_uac_registries() -> dict[str, object]:
         data["sports_venues"] = sorted(str(v) for v in SPORTS_VENUES)
         data["zero_alpha_venues"] = sorted(str(v) for v in ZERO_ALPHA_VENUES)
 
-        try:
+        try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
             from unified_api_contracts.registry import (  # noqa: qg-deep-import
                 DEFI_PROTOCOLS,
                 DEFI_VENUE_TO_PROTOCOL,
@@ -100,7 +100,7 @@ def extract_uac_registries() -> dict[str, object]:
         except (ImportError, AttributeError, TypeError) as e:
             logger.warning("  Failed to extract DeFi protocol registry: %s", e)
 
-        try:
+        try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
             from unified_api_contracts.registry import CHAIN_RPC_TEMPLATES  # noqa: qg-deep-import
 
             data["chain_rpc_templates"] = {str(k): str(v) for k, v in CHAIN_RPC_TEMPLATES.items()}
@@ -108,7 +108,7 @@ def extract_uac_registries() -> dict[str, object]:
         except (ImportError, AttributeError, TypeError) as e:
             logger.warning("  Failed to extract CHAIN_RPC_TEMPLATES: %s", e)
 
-        try:
+        try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
             from unified_api_contracts.registry import SOLANA_DEFI_PROTOCOLS  # noqa: qg-deep-import
 
             data["solana_defi_protocols"] = {
@@ -118,7 +118,7 @@ def extract_uac_registries() -> dict[str, object]:
         except (ImportError, AttributeError, TypeError) as e:
             logger.warning("  Failed to extract SOLANA_DEFI_PROTOCOLS: %s", e)
 
-        try:
+        try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
             from unified_api_contracts.registry import DEFI_POOL_PAIRS  # noqa: qg-deep-import
 
             data["defi_pool_pairs"] = [{"base": p[0], "quote": p[1]} for p in DEFI_POOL_PAIRS]
@@ -153,7 +153,7 @@ def extract_uac_registries() -> dict[str, object]:
 def extract_uac_enums() -> dict[str, list[str]]:
     """Extract all enum values from UAC (auto-discovered)."""
     enums: dict[str, list[str]] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         import unified_api_contracts as uac
 
         for name in sorted(dir(uac)):
@@ -177,7 +177,7 @@ def extract_uic_enums() -> dict[str, list[str]]:
     import importlib
 
     # Root-level UIC exports
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         import unified_api_contracts.internal as uic
 
         for name in sorted(dir(uic)):
@@ -196,7 +196,7 @@ def extract_uic_enums() -> dict[str, list[str]]:
     ]
     before = len(enums)
     for mod_path in arch_v2_submodules:
-        try:
+        try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
             mod = importlib.import_module(mod_path)
             for name in sorted(dir(mod)):
                 obj = getattr(mod, name, None)
@@ -219,7 +219,7 @@ def extract_uic_enums() -> dict[str, list[str]]:
 def extract_architecture_v2_capability_registry() -> dict[str, object]:
     """Serialise ARCHETYPE_CAPABILITY_REGISTRY deterministically (sorted by archetype_id)."""
     result: dict[str, object] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.internal.architecture_v2.archetype_capability import (  # noqa: qg-deep-import
             ARCHETYPE_CAPABILITY_REGISTRY,
         )
@@ -276,7 +276,7 @@ def extract_config_schema_universe() -> dict[str, object]:
     configs: dict[str, object] = {}
 
     # UCI UnifiedCloudConfig fields
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_trading_library import UnifiedCloudConfig
 
         fields = {}
@@ -295,7 +295,7 @@ def extract_config_schema_universe() -> dict[str, object]:
         logger.warning("  Failed to extract UnifiedCloudConfig: %s", e)
 
     # UCI validation constants
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts import (
             VALID_ALGORITHMS,
             VALID_ASSET_GROUPS,
@@ -437,7 +437,7 @@ def extract_strategy_configs(ui_root: Path, uac_root: Path) -> list[dict[str, ob
 def extract_execution_algos() -> dict[str, object]:
     """Extract execution algorithm definitions from UAC trading_validation."""
     algos: dict[str, object] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts import (
             VALID_ALGORITHMS,
             VALID_BOOK_TYPES,
@@ -465,7 +465,7 @@ def extract_execution_algos() -> dict[str, object]:
 def extract_sports_bookmaker_registry() -> dict[str, dict[str, object]]:
     """Extract the full bookmaker registry from UAC."""
     registry: dict[str, dict[str, object]] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts import BOOKMAKER_REGISTRY
 
         for key, info in BOOKMAKER_REGISTRY.items():
@@ -492,7 +492,7 @@ def extract_sports_bookmaker_registry() -> dict[str, dict[str, object]]:
 def extract_defi_protocol_capabilities() -> dict[str, object]:
     """Extract DeFi protocol registry and venue-to-protocol mapping from UAC."""
     capabilities: dict[str, object] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.registry.defi_protocol_registry import (  # noqa: qg-deep-import
             DEFI_PROTOCOLS,
             DEFI_VENUE_TO_PROTOCOL,
@@ -509,7 +509,7 @@ def extract_defi_protocol_capabilities() -> dict[str, object]:
         logger.warning("  Failed to extract DeFi protocol capabilities: %s", e)
 
     # Solana DeFi protocols
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.registry.capability_declarations import SOLANA_DEFI_PROTOCOLS  # noqa: qg-deep-import
 
         capabilities["solana_protocols"] = {name: dict(info) for name, info in SOLANA_DEFI_PROTOCOLS.items()}
@@ -523,7 +523,7 @@ def extract_defi_protocol_capabilities() -> dict[str, object]:
 def extract_tradfi_exchange_calendars() -> dict[str, dict[str, object]]:
     """Extract TradFi exchange session times from UAC session_times registry."""
     calendars: dict[str, dict[str, object]] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.registry.session_times import _EXCHANGE_SESSIONS  # noqa: qg-deep-import
 
         for exchange, session in _EXCHANGE_SESSIONS.items():
@@ -546,7 +546,7 @@ def extract_tradfi_exchange_calendars() -> dict[str, dict[str, object]]:
 def extract_venue_data_availability() -> dict[str, dict[str, object]]:
     """Extract provider timing metadata (when data arrives post-T) from UAC."""
     availability: dict[str, dict[str, object]] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.registry import VENUE_DATA_AVAILABILITY  # noqa: qg-deep-import
 
         for venue_name, entry in VENUE_DATA_AVAILABILITY.items():
@@ -574,7 +574,7 @@ def extract_jurisdiction_overlay() -> dict[str, object]:
     jurisdictions, policies, allowed_venues_by_jurisdiction.
     """
     overlay: dict[str, object] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.internal.architecture_v2.jurisdiction_overlay import (  # noqa: qg-deep-import
             JURISDICTION_VENUE_POLICIES,
             KNOWN_VENUE_IDS,
@@ -613,7 +613,7 @@ def extract_jurisdiction_overlay() -> dict[str, object]:
 def extract_venue_coordinates() -> dict[str, dict[str, float]]:
     """Extract stadium geographic coordinates from UAC."""
     coordinates: dict[str, dict[str, float]] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.registry import VENUE_COORDINATES  # noqa: qg-deep-import
 
         for venue_id, coord in VENUE_COORDINATES.items():
@@ -632,7 +632,7 @@ def extract_venue_coordinates() -> dict[str, dict[str, float]]:
 def extract_tradfi_tick_data_windows() -> list[dict[str, str]]:
     """Extract date windows for expensive tick data collection from UAC."""
     windows: list[dict[str, str]] = []
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.registry import TRADFI_TICK_DATA_WINDOWS  # noqa: qg-deep-import
 
         windows = list(TRADFI_TICK_DATA_WINDOWS)
@@ -646,7 +646,7 @@ def extract_tradfi_tick_data_windows() -> list[dict[str, str]]:
 def extract_mvp_cme_exchange_codes() -> list[str]:
     """Extract MVP CME exchange codes from UAC."""
     codes: list[str] = []
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.registry import MVP_CME_EXCHANGE_CODES  # noqa: qg-deep-import
 
         codes = sorted(MVP_CME_EXCHANGE_CODES)
@@ -660,7 +660,7 @@ def extract_mvp_cme_exchange_codes() -> list[str]:
 def extract_strategy_registry() -> dict[str, object]:
     """Extract the full strategy registry from UAC (families, categories, archetypes, execution modes)."""
     registry: dict[str, object] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.strategy import STRATEGY_REGISTRY  # noqa: qg-deep-import
 
         registry = STRATEGY_REGISTRY.to_dict()
@@ -676,7 +676,7 @@ def extract_strategy_registry() -> dict[str, object]:
 def extract_client_registry() -> dict[str, object]:
     """Extract the client registry from UAC (client allocations, strategy assignments)."""
     registry: dict[str, object] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.strategy import CLIENT_REGISTRY  # noqa: qg-deep-import
 
         registry = CLIENT_REGISTRY.to_dict()
@@ -692,7 +692,7 @@ def extract_client_registry() -> dict[str, object]:
 def extract_strategy_instance_catalogue() -> dict[str, object]:
     """Extract the 5-dim strategy-instance catalogue (Plan A — archetype x venue-set x share-class)."""
     catalogue: dict[str, object] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.internal.domain.strategy_service import (
             STRATEGY_INSTANCE_CATALOGUE,
         )
@@ -710,7 +710,7 @@ def extract_strategy_instance_catalogue() -> dict[str, object]:
 def extract_venue_set_variants() -> list[dict[str, object]]:
     """Extract the venue-set variant ladder (Plan A — per-archetype named venue-set tiers)."""
     variants: list[dict[str, object]] = []
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.internal.domain.strategy_service import (
             VENUE_SET_VARIANTS,
         )
@@ -736,7 +736,7 @@ def extract_venue_set_variants() -> list[dict[str, object]]:
 def extract_lifecycle_enums() -> dict[str, list[str]]:
     """Extract Plan A lifecycle enum values (StrategyMaturityPhase, ProductRouting, AccountType)."""
     result: dict[str, list[str]] = {}
-    try:
+    try:  # noqa: fallback-import — best-effort registry extraction — missing symbol degrades to a warning
         from unified_api_contracts.internal.domain.strategy_service import (
             AccountType,
             ProductRouting,
