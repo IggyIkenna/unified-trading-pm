@@ -544,3 +544,13 @@ Two secondary findings:
   (HYPERLIQUID k-prefix coin-case, P3) still needs the canonical-vs-native coin-case convention resolved first
   (shard-key-mismatch risk) — a genuine judgment call. Doc stays `assigned_vm: NA` as a whole (mixed-eligibility rule,
   one genuine judgment item is enough).
+- **round11-sweep 2026-08-09** (defi tranche, satellite-extraction + RECLASSIFY re-check): re-read end to end (3 open
+  items at entry). Re-verified the 2 duplicate-claim citations live: `defi_satellite_ao_dispatch_batch6_2026_07_30.md`
+  line ~453 still carries the identical open `[DIAG] P3` todo (unchecked — delete the 916 HL + 642 ASTER legacy
+  `defi/perp_funding` rows + relax RULE 11), same source-doc citation — not stale, genuinely still in-flight there.
+  Checked all 3 open items against every accumulated round11 precedent (IAM self-service, D16 all-repos, S5.1 tiering,
+  plan-destination-defaults-AO-dispatched, escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM
+  secret + 5 Slack webhooks now existing) — none apply: the 2 duplicate items are already dispatched elsewhere
+  (flipping here would open a second dispatch path), and the HYPERLIQUID k-prefix item is still a genuine
+  coin-case-convention design call, untouched by any round11 precedent. No satellite-extraction candidate found. Doc
+  stays `assigned_vm: NA` (KEEP-NA valid, round11).
