@@ -97,12 +97,21 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
 
 ## Todos
 
-- [ ] [TEST] P2. **Add a unit test in `agent-orchestrator/server/autospawn.py` proving N consecutive DeepSeek dispatches
-      split ~50/50 across pro/flash variants, reproducibly across a process restart.** Exercise the full
+- [x] ✅ [TEST] P2. **Add a unit test in `agent-orchestrator/server/autospawn.py` proving N consecutive DeepSeek
+      dispatches split ~50/50 across pro/flash variants, reproducibly across a process restart.** Exercise the full
       `select_account_for_spawn` path (per the source doc's 2026-08-05 ratio-skew Progress Log finding), not just the
       `_deepseek_flash_should_route` accumulator in isolation. **Done when**: the test passes deterministically across 3
       consecutive local runs and `bash scripts/quality-gates.sh` is green in `agent-orchestrator/`. Source:
-      `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:79` (todo 2). Repo: agent-orchestrator.
+      `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:79` (todo 2). Repo: agent-orchestrator. —
+      agent-orchestrator@4d27bc1. 6 new tests in `test_deepseek_provider_routing.py`, all exercising
+      `select_account_for_spawn` end-to-end (not the accumulator in isolation): exact 50/50 alternation with active-slot
+      counts held equal, reproducibility across a simulated process-restart (both split accumulators reset to their
+      literal module-level 0.0), determinism across 3 independent fresh-state runs, degrade-to-pro when the flash pool
+      is empty, and a regression test locking in the KNOWN ratio-skew itself (an unfiltered pick can still return flash
+      even with `wants_flash` permanently False, when flash has fewer active slots — exactly the behavior the source
+      finding warned a strict-alternation-only test would miss). Full `quality-gates.sh` green (3065 pytest + 262
+      vitest + tsc + basedpyright + ruff, run twice — once pre-commit, once re-verified on the exact committed SHA per
+      the sentinel-ordering rule), ancestry-verified on `origin/live-defi-rollout`.
 - [ ] [UI] P2. **Write the missing Playwright regression spec (`pw:L2`, per
       `/codex/06-coding-standards/ui-testing-layers.md`) for the already-shipped per-model pro/flash filter toggle in
       `agent-orchestrator/dashboard/src/TaskUsageWindows.tsx`** (the `_FILTER_OPTIONS` UI change from
