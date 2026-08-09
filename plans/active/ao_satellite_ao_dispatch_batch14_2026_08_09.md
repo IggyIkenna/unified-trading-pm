@@ -111,19 +111,19 @@ A 1-item batch is sanctioned by `task_template.md` §4 ("Fewer is fine; group RE
       surfaced).
 
       Re-sourced via `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest
-          --secret=deepseek-v4-pro-api-key --project=central-element-323112)"` (mirrors
-          `agent-orchestrator/scripts/refresh_env_from_sm.sh`'s pattern). Verification (the literal "successful spawn"
-          bar in this todo's original text is currently unreachable for EITHER the old or new config — the account has
-          $0 balance, tracked as its own fresh finding in the source doc below, not a re-sourcing defect): (1) SHA-256 hash
-          of the GSM secret value == hash of the prior literal token, byte-identical; (2) a live `claude -p` auth probe
-          under this account returns the IDENTICAL `API Error: 402 Insufficient Balance` on both the pre-change backup file
-          and the post-change indirection file — proving the token reaches the API identically either way (a real auth
-          failure would read 401/403, not 402). Literal key removed from the live file; a `chmod 600` backup
-          (`deepseek-v4-pro.env.bak-presm-1786317618`) kept in `~/.claude-accounts/` as the reversible fallback until a
-          genuine post-topup successful spawn is confirmed (operator's own security call whether/when to shred it).
-          `unified-trading-pm@<pending>` (this doc + source doc updates). Source:
-          `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md:440`. Repo: agent-orchestrator (env-file
-          change is host-local config, not a repo commit — no agent-orchestrator sha for this todo itself).
+              --secret=deepseek-v4-pro-api-key --project=central-element-323112)"` (mirrors
+              `agent-orchestrator/scripts/refresh_env_from_sm.sh`'s pattern). Verification (the literal "successful spawn"
+              bar in this todo's original text is currently unreachable for EITHER the old or new config — the account has
+              $0 balance, tracked as its own fresh finding in the source doc below, not a re-sourcing defect): (1) SHA-256 hash
+              of the GSM secret value == hash of the prior literal token, byte-identical; (2) a live `claude -p` auth probe
+              under this account returns the IDENTICAL `API Error: 402 Insufficient Balance` on both the pre-change backup file
+              and the post-change indirection file — proving the token reaches the API identically either way (a real auth
+              failure would read 401/403, not 402). Literal key removed from the live file; a `chmod 600` backup
+              (`deepseek-v4-pro.env.bak-presm-1786317618`) kept in `~/.claude-accounts/` as the reversible fallback until a
+              genuine post-topup successful spawn is confirmed (operator's own security call whether/when to shred it).
+              `unified-trading-pm@b3d909979` (this doc + source doc updates). Source:
+              `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md:440`. Repo: agent-orchestrator (env-file
+              change is host-local config, not a repo commit — no agent-orchestrator sha for this todo itself).
 
 ## Codex SSOTs (read before starting)
 
