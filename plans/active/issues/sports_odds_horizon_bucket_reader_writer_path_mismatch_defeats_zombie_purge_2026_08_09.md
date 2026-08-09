@@ -185,14 +185,33 @@ This needs a human/cross-repo design call, not a mechanical fix — three shapes
       See "Likely root cause found" in What I found above. Not re-opening the closed cutover plan myself (its own todos
       are all done by its own record) — flagging here for whoever picks up todo 2 below to decide whether it also needs
       a note added to that archived doc.
-- [ ] [CODE] P1. **Design + ship the reader/writer reconciliation** per one of the 3 shapes above (or a better one a
-      human decides), THEN re-attempt `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s purge todo. Repo:
-      market-data-processing-service + features-service.
+- [x] ✅ [CODE] P1. **Design + ship the reader/writer reconciliation** — operator ruling 2026-08-09 (verbatim answer
+      transcribed in `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s Progress Log): option B
+      (`gcs_reader.py::read_bucketed_odds()`'s fallback, lowest blast-radius / read-path only). Implemented
+      `_canonical_odds_horizon_bucket_attempted(date)`: reads the SAME coarse manifest row `reprocess_sports_odds.py`'s
+      own pre-flight (`_coarse_row_key`, `service_name="market-data-processing-service"`) writes — any capture_status
+      present means MDPS has attempted this date's canonical derive, so an empty canonical result is now trusted as
+      honest absence instead of silently re-triggering the legacy-shard fallback. Fails closed (returns False, i.e.
+      legacy fallback still available) on a manifest-lookup error. 6 new/updated unit tests in
+      `test_read_bucketed_odds.py` cover: manifest-row-present → no legacy fallback even when a legacy shard still
+      physically exists (the exact zombie scenario); manifest-row-absent → legacy fallback preserved; lookup exception →
+      fails closed. Repo: features-service.
 - [ ] [DATA] P2. Once the reconciliation fix lands, re-run the read-only sweep
       (`sweep_sports_odds_horizon_bucket_zombie_contamination_2026_07_27.py`) against BOTH path shapes (canonical +
       legacy) to get an accurate, current contamination count before re-attempting the purge — the sweep script itself
       only checks canonical today and would need the same dual-prefix probe `gcs_reader.py` already has. Repo:
       market-tick-data-service.
+- [ ] [DATA] P2. **Re-attempt `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s zombie-tick purge todo** (parts a +
+      b: purge/re-derive the contaminated shards via `reprocess_sports_odds.py --force` using todo 2 above's updated
+      dual-prefix contamination count, then re-run `verify_ml_readiness.py` and confirm the 17-date failure set
+      clears/shrinks) now that the reader/writer mismatch this issue documents is fixed. Repo: market-data-processing-
+      service.
+- [ ] [REVIEW] P2. **Option C follow-up (non-blocking, operator ruling 2026-08-09 — same
+      `sports_satellite_ao_dispatch_batch5_2026_07_26.md` Progress Log entry cited in todo 1 above)**: locate and
+      re-engage whatever effort owns "the bucket-cutover lane" (referenced by name in `reprocess_sports_odds.py`'s
+      comment, `ceadb45c`/2026-07-16) to formally close out the ~90,947 preserved-not-migrated `odds_horizon_bucket`
+      objects, or confirm the comment is stale — useful cleanup but explicitly NOT a prerequisite for the option-B fix
+      above (which already shipped without touching the legacy shard at all). Repo: market-data-processing-service.
 
 ## Progress Log
 
@@ -204,3 +223,9 @@ This needs a human/cross-repo design call, not a mechanical fix — three shapes
   prefix with no effect either way, giving false confidence the purge "ran"). Filing `/blocked` on the batch5 task
   rather than force through a mechanical fix attempt on live production paths given the explicit "must never be touched
   from here" guard already in the code.
+- **2026-08-09 (slot 26, data_engineering)**: Operator answered the BLOCKED question (BLK-f47d53d1): option B. Shipped
+  the `gcs_reader.py` fallback fix (todo 1 above) + 6 unit tests, features-service. Added the still-open follow-up work
+  as explicit todos (re-run the dual-prefix sweep, re-attempt the actual purge, and the non-blocking option-C
+  bucket-cutover-lane cleanup) rather than leaving them as prose in "Recommended decision." The batch5 plan's
+  zombie-tick checkbox itself stays unflipped — the reader/writer mismatch is fixed but the purge has not actually been
+  re-run yet and `verify_ml_readiness.py` has not been re-verified.
