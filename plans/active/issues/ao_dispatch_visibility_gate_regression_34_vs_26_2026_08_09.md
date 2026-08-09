@@ -143,11 +143,24 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
       `accidental_exclusions` 25→23, gate exit 0.
 - [ ] [DOCS] P2. Fix the 2 defi-tranche accidental exclusions: `defi_satellite_ao_dispatch_batch6_2026_07_30.md`,
       `defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md`. Same remedy as above. Repo: unified-trading-pm.
-- [ ] [DOCS] P2. Fix the 3 infra-tranche accidental exclusions: `infra_capture_and_devops_leftovers_2026_07_06.md` (2 —
-      incl. the genuinely-live-but-mispositioned `BLOCKED-PREREQUISITES` status spot-checked above; re-verify whether
+- [x] ✅ [DOCS] P2. Fix the 3 infra-tranche accidental exclusions: `infra_capture_and_devops_leftovers_2026_07_06.md` (2
+      — incl. the genuinely-live-but-mispositioned `BLOCKED-PREREQUISITES` status spot-checked above; re-verify whether
       the named prereqs have since landed before deciding declare-vs-remove),
       `infra_capture_and_devops_leftovers_finalize_2026_07_25.md`, `infra_satellite_ao_dispatch_batch1_2026_07_26.md`.
-      Repo: unified-trading-pm.
+      Repo: unified-trading-pm. **Done**: diagnosed all 3 docs first
+      (`infra_capture_and_devops_leftovers_2026_07_06.md`'s 2 markers were genuinely stale, not live —
+      `BLOCKED-PREREQUISITES` from 2026-07-07 superseded by the 2026-07-25 confirmation both named prereqs landed; the
+      `BLOCKED-OPERATOR-DECISION` mid-paragraph mentions superseded by the 2026-07-28 freeze-lift ruling + the
+      2026-08-06 "RULED ... AUTHORIZED" note already in the same todos. The finalize sibling's
+      `BLOCKED-OPERATOR-DECISION` mention was the same false-positive shape, quoting the parent's pre-2026-08-06 status.
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s `BLOCKED-PLAYWRIGHT` mention was an illustrative
+      downstream-consequence example inside backticks, not a live hold on that todo) and paraphrased all 3 locally to
+      drop the literal token, no content/decision change. On `git pull --rebase --autostash` before shipping, hit 3-way
+      conflicts on all 3 plan docs — another slot had independently landed equivalent (same-shape, slightly different
+      wording) fixes on origin first. Took origin's already-pushed version for all 3 (`git checkout HEAD -- <3 files>`
+      post-rebase) rather than re-landing a duplicate — same intent, no need to race a second edit onto the same lines.
+      Re-ran `check_ao_dispatch_visibility_gate.py --json` after reconciling: all 3 docs show `excluded: []`, gate exit
+      0 (fleet-wide `accidental_exclusions` now measures 0).
 - [x] ✅ [DOCS] P2. Fix the 1 prediction-tranche accidental exclusion (2 markers in the same doc):
       `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`. Same remedy as above. Repo: unified-trading-pm. **Done —
       already moot, resolved by another slot before this todo was picked up (2026-08-09).** Commit `84f363ff6`
@@ -195,6 +208,10 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
 
 ## Progress Log
 
+- **infra-worker slot 8, 2026-08-09**: fixed the infra-tranche todo (3 docs) — diagnosed + paraphrased all 3 stale/
+  false-positive markers locally, then hit a rebase conflict on every one of them (another slot landed an equivalent fix
+  on origin first); took origin's version rather than duplicate-race a second edit. Verified via
+  `check_ao_dispatch_visibility_gate.py --json`: all 3 docs `excluded: []`, fleet-wide `accidental_exclusions` now 0.
 - **cicd-worker slot 30, 2026-08-09**: filed while blocked shipping an unrelated archival (promote-ref-orphan issue
   resolution). Did not attempt to fix the 8+ individual docs myself — out of scope (spans tranches I don't own, not
   small/quick per the fix-vs-file-and-wait triage). Retrying my own blocked quickmerge periodically; will update this
