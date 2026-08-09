@@ -48,7 +48,7 @@ related:
     /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/active/is_catalogue_g1_root_audit_log_2026_07_24.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md,
   ]
@@ -161,13 +161,23 @@ drift_direction: advance-code
       highest-confidence/highest-risk live caps are fixed; `quality-gates.sh` stayed green throughout (5266 passed); the
       remaining lower-priority/higher-risk items (P2/P3, needing live-schema verification before touching) are tracked
       as their own actionable todos in the issue doc rather than blocking this item, per the findings-triage HARD RULE.
-- [ ] [DATA] P1. Register the TradFi Databento cost/entitlement-boundary case (~241k cells beyond the free window) in
+- [x] ✅ [DATA] P1. Register the TradFi Databento cost/entitlement-boundary case (~241k cells beyond the free window) in
       the already-shipped `COVERAGE_EXCLUSIONS` registry, using the already-shipped
       `EmptyConfirmedReason.EXPECTED_UPSTREAM_OUT_OF_BOUNDS` reason class — the mechanism exists, this one
       already-quantified case is simply unregistered. Repo: unified-api-contracts. Source:
       `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (Phase-0 item 10). Done when: `COVERAGE_EXCLUSIONS`
       carries a TradFi entry with a valid `evidence_uri` + re-runnable `evidence_probe`; the ~241k cells report
-      `EXPECTED_UPSTREAM_OUT_OF_BOUNDS` instead of a plain gap.
+      `EXPECTED_UPSTREAM_OUT_OF_BOUNDS` instead of a plain gap. — unified-api-contracts@c839a47d. Two entries added (CME
+      `trades` + `tbbo`, the only in-scope TradFi L1 data_types — every other TradFi data_type in
+      `EXPECTED_COVERAGE_BY_ASSET_GROUP` is L0/free full-history), `reason=SUBSCRIPTION_GAP`, `start=2020-01-01`
+      (matches the existing `TRADFI_SOURCE_COVERAGE_START` CME floor, so this declaration doesn't shadow the more
+      specific `EXPECTED_PRE_SOURCE_COVERAGE_START` gate for pre-2020 dates), `end=2025-08-06` (day before the L1
+      367-day free floor, live-measured 2026-08-09 via `metadata.get_cost` in `databento_subscription_allowlist.py`).
+      Live-verified via `expected_coverage("tradfi", "CME", "trades"/"tbbo",     <in-window date>)` →
+      `EXPECTED_EMPTY`/`EXPECTED_UPSTREAM_OUT_OF_BOUNDS` (was `SHOULD_HAVE_DATA`/`None`, a plain gap); L0 `ohlcv_1m` and
+      pre-2020 dates confirmed unaffected. 4 pre-existing `TestUsTradfiCalendar` tests fixed (they used
+      `(CME, trades, 2024-dates)`, now legitimately inside this window — switched to `ohlcv_1m`, unrelated to
+      calendar-gate semantics); 4 new regression tests added; full `quality-gates.sh` green (12,573 passed).
 - [x] ✅ [INFRA] P0. Rebuild the IS daily-definition producer for TradFi/sports/prediction, mirroring the
       already-shipped and prod-verified cefi + defi producers (24/53 venues verified) — the tradfi child plan confirms
       tradfi/sports/prediction currently have NO prod daily producer at all. Repo: instruments-service. Source:
@@ -247,20 +257,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                      disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                      future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                      bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                      prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                      2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                      hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                      threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                      loader, post-delete verification) and filed
-                      `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                      AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                      actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                      stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                      via that issue doc, not this line.
-                      verification actually complete.
+                          disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                          future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                          bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                          prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                          2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                          hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                          threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                          loader, post-delete verification) and filed
+                          `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                          AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                          actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                          stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                          via that issue doc, not this line.
+                          verification actually complete.
 
 - [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
@@ -402,3 +412,11 @@ drift_direction: advance-code
 - **2026-08-09 (item P2b-2, slot 17)**: shipped `GET /training/model-coverage` (ml-service@a24a0bb0) + its
   deployment-api byte-for-byte passthrough (deployment-api@90b51dfe), both `quality-gates.sh` green, both ancestry-
   verified on `origin/live-defi-rollout`. See the item body for the full design summary. Checkbox flipped.
+- **2026-08-09 (Databento cost-boundary item, slot 2)**: shipped `unified-api-contracts@c839a47d` — two
+  `COVERAGE_EXCLUSIONS` entries (CME `trades`+`tbbo`, 2020-01-01→2025-08-06, `SUBSCRIPTION_GAP`). Only CME carries
+  in-scope TradFi L1 data_types in `EXPECTED_COVERAGE_BY_ASSET_GROUP`; every other TradFi entry is L0/free full-history,
+  so no other venue needed a declaration. Fixed 4 pre-existing calendar-gate tests whose fixed 2024 dates now
+  legitimately fall inside the new window (switched to the unaffected `ohlcv_1m` data_type); added 4 new regression
+  tests proving the oracle now returns `EXPECTED_UPSTREAM_OUT_OF_BOUNDS` in-window, leaves pre-2020/L0 cells alone, and
+  doesn't shadow `EXPECTED_PRE_SOURCE_COVERAGE_START`. Full `quality-gates.sh` green (12,573 passed), ancestry-verified
+  on `origin/live-defi-rollout`. Checkbox flipped.
