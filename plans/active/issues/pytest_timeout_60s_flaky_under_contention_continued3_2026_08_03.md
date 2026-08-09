@@ -516,3 +516,15 @@ items; prior verdict stands (2026-08-04 audit: "all 3 open todos fail the worker
 still open per `continued2`'s own last check (a brief runner-idle window observed once, did not hold); todo 2 is the
 `[OPERATOR]`-tagged cooldown-guard item; todo 3 gated on todo 1. No RE-TRIAGE section, no prose-only work outside the 3
 checkboxes. No `assigned_vm` change.
+
+- **2026-08-09 ~02:20-03:15Z (slot 22, data_engineering, task
+  `defi_dex_pool_swaps_733_row_indexer_health_findings-c4893c5446f8`)**: another corroborating occurrence,
+  `market-tick-data-service` (no `PYRIGHT_TIMEOUT` override — consistent with the established "don't pre-emptively raise
+  it" practice above). A local `quality-gates.sh` run repeatedly died with no visible error until the log tail was
+  checked directly: `❌ Type check FAILED/timeout (exit=143)` — `[4/6] TYPE CHECK` hitting the bare 120s
+  `PYRIGHT_TIMEOUT` default under this session's measured heavy host contention (9+ concurrent `quality-gates.sh`
+  processes host-wide at points, `free -h` showing 5.7-8.4GiB swapped throughout, `qg-host-governor.sh --status`
+  reporting only 4 physical cores on this box). Worked around with a one-shot `PYRIGHT_TIMEOUT=600` env override for
+  this session's own runs only — did NOT add a permanent repo override, per this doc's established precedent that MTDS's
+  occurrence rate doesn't yet warrant one. No new todo — same root cause, same `[OPERATOR]`-gated capacity question
+  already tracked by todo 1.
