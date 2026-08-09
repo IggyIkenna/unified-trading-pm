@@ -332,13 +332,13 @@ capacity risk, not just reliability — see Progress Log 2026-08-07.
       `ineffective_forces` -> terminal wedge. Detect the queued-messages state and hold the latch un-spent until the
       queue drains, rather than re-sending (which would compact twice). Lower priority now that forces fire with real
       headroom instead of at 99%.
-- [ ] [BACKEND] P2. **Port the measured signal to the local watcher.**
-      `unified-trading-pm/scripts/dev/precompact-     watcher.py` still derives context% purely from the pane
-      (`read_pct()`), so it carries BOTH defects fixed here: it is blind mid-range, and its `_TOKEN_USAGE_RE` fallback
-      divides by a hardcoded `_DEFAULT_CONTEXT_WINDOW_K = 1000`. It should read the session transcript and learn the
-      window the same way. Note the `UserPromptSubmit` hook `cursor-configs/hooks/context-threshold-nudge.sh` already
-      does the transcript half correctly (measured `message.usage`, windowed at the last `compact_boundary`) — reuse its
-      approach, but it only fires on user prompt submission, so it cannot cover an autonomous loop.
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-08 — `unified-trading-pm@8bff8f5792`** ("fix(precompact): measure local context
+      from the transcript, learn the window per model", verified ancestor of `origin/live-defi-rollout`). **Port the
+      measured signal to the local watcher.** `scripts/dev/precompact-watcher.py` now reads the session transcript and
+      learns the per-model window the same way `context_probe.py` does (was pane-only + a hardcoded
+      `_DEFAULT_CONTEXT_WINDOW_K = 1000` divisor). Verified end-to-end against a real local session per this doc's own
+      Progress Log entry above (cwd encoding resolves to the true project dir; 24% reading for a `claude-opus-5` session
+      at 239,867 tokens).
 - [ ] [BACKEND] P3. **Re-check the learned windows once the fleet is fully on sonnet-5.** The high-water mark only ever
       rises, which is the safe direction, but a model whose sessions never run long keeps an under-estimated window and
       will compact earlier than necessary. `learned_context_windows.json` sits next to `state.db`; deleting it is safe
