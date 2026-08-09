@@ -2225,8 +2225,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.77.1.dev1+ge94be2210",
-      "published_at": "2026-08-09T17:16:58Z",
+      "version": "0.77.1.dev2+gf2544c6a1",
+      "published_at": "2026-08-09T23:21:09Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
