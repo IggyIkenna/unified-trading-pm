@@ -126,11 +126,11 @@ pull any specific checkout's full table back up if you want it before deciding.
 - [ ] [OPERATOR] P2. **Honest-coverage mockup design reviews** (4 related sub-questions, paced to your own cadence):
       re-verify the SPORTS/PREDICTION leaf model, approve CEFI instrument-type groupings, + 2 others in the same thread.
       You said you need to review these yourself. `plans/active/cefi_consolidated_closeout_2026_07_18.md`.
-- [ ] [OPERATOR] P2. **Sign off on making `quality-gates-v2`'s content-sentinel dependency-content-aware** (key on
-      own-tree-hash + resolved-UAC/UTL-content). Highest-blast-radius change to the fleet's core CI gate cache — a full
-      technical walkthrough of the current code + 3 candidate keying implementations with tradeoffs is already written
-      into `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`, ready for a fast
-      sign-off. Nothing shipped, as instructed.
+- [x] ✅ [DOCS] P2. **See `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` — RULED
+      2026-08-09.** Option 2 approved (hash UAC's + UTL's resolved git ref/commit) — the doc's own stated
+      recommendation. Full ruling + a mixed-eligibility cleanup found while reclassifying the doc for AO dispatch are
+      recorded there, not re-litigated here. Nothing shipped yet — implementation is now AO-dispatchable
+      (`assigned_vm: planning`), not hand-implemented in this pass (highest-blast-radius fleet CI gate).
 - [x] ✅ [DOCS] P3. **See `plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md` —
       RULED 2026-08-09.** Bridge the gates (option A). Full ruling + a newly-found conflict with an unproven
       backfill=paper=live precondition are recorded there, not re-litigated here.
