@@ -466,3 +466,30 @@ transcript available in that session's Progress Log entry on
   something this session can shortcut). Next session picking up todo 3 once the census completes: apply the SAME
   disposition logic per affected triple (check for a canonical twin first; quarantine-not-refetch when one exists with
   real data; only fall through to a fresh api_football fetch when no canonical twin exists) rather than re-deriving it.
+
+- **2026-08-09 (slot-16, data_engineering, continued monitoring todo 1)**: both census VMs have now each exhausted
+  and been re-armed through multiple bounded watchdog cycles (`MAX_ROUNDS=9 × SLEEP_SECS=180`, ~27min each), always
+  with `status=RUNNING` and `stall_count=0` throughout — normal, expected exhaustion of a corpus-scale walk, not a
+  stall or failure. instruments-store frontier progressed `day-frontier 2020-06-28 → …` with `validated` climbing
+  steadily past 21,500; features-sports `validated_lines` climbed 15→283 across its first 9-round cycle before
+  re-arming, and a subsequent re-arm cycle also completed cleanly (VM still `RUNNING`, non-stalled). Live
+  `gcloud compute instances describe` reconfirms both VMs `RUNNING` as of this entry — neither has reached
+  `NOT_FOUND`. **Promoted the bounded-watchdog pattern to a reusable script**:
+  `scripts/vm/watch-bounded-vm-progress.sh` (generic, parameterized by VM name/zone/log URI/report URI/rounds/sleep —
+  was hand-duplicated per-VM in scratchpad across several re-arm cycles, worth a proper home since the async-wait
+  HARD RULE requires this pattern for every future VM launch, not just this census). **Two operational mistakes
+  caught and corrected same-session**: (1) one re-arm was launched via `nohup ... & disown` with output to
+  `/dev/null` "for safety" — this made the `run_in_background` harness see the *launcher* exit immediately (task
+  reported "completed") while the actual watchdog ran on invisibly with no tracked output; killed the orphaned PID
+  (VM itself untouched — the watchdog only observes) and relaunched the script directly under `run_in_background`
+  with no detach wrapper, now called out in the promoted script's header comment so it isn't repeated. (2) shipping
+  the promoted script via `quickmerge.sh` hit a 5-minute tool timeout during its internal
+  `pull --rebase --autostash` cycling (this doc was concurrently edited by another slot mid-run, forcing repeat
+  reconciliation passes) — the timeout killed the shell before the final autostash pop restored a staged doc edit
+  to this same Progress Log, silently dropping it from both the working tree and HEAD even though `git status`
+  looked clean afterward. Recovered by diffing HEAD against the intended content and re-appending the missing
+  paragraph (this one) rather than trusting a stale stash-blob restore, since 50+ unrelated `autostash` entries had
+  accumulated across the shared checkout's history and blindly popping the wrong one risked reintroducing foreign
+  WIP. **Lesson for future sessions**: after any `quickmerge.sh` invocation that times out or is interrupted
+  mid-run, always re-diff the target file(s) against `origin/<branch>` before assuming "clean status" means "my
+  edit landed" — a killed autostash cycle can silently swallow a staged edit with no error surfaced.
