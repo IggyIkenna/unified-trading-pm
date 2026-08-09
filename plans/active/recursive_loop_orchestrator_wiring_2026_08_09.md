@@ -113,7 +113,7 @@ Progress Log) confirmed, with exact file:line citations:
       `get_emode_params()`/`get_morpho_market_lltv()` functions — do not re-derive the numbers, only add the
       string-to-lookup indirection. Repo: unified-api-contracts. Done-when: a new unit test resolves all 3 tokens to the
       operator-ruled values (0.93/0.945/0.86) and `quality-gates.sh` is green.
-- [ ] [BACKEND] P1. Wire the resolver from the prior todo into
+- [x] ✅ [BACKEND] P1. Wire the resolver from the prior todo into — strategy-service@b98f74fb
       `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog_carry.py`'s
       `build_carry_recursive_borrow_lending_only()` (`:621-662`) and `build_carry_basis_perp_inv()` (`:670-719`):
       replace the currently-unread `"ltv_mode": mode` catalog param with a real resolved
