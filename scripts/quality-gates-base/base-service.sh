@@ -3802,15 +3802,17 @@ fi
 # _MAX_RETRIES for no benefit (the kalshi_perp mtds_perp_funding_backfill_hang_2026_07_14 bug
 # class). Convention (shard-level-failure-isolation.md): unclassified -> retry_safe = False
 # (never default-retry unknowns); branch on HTTP status directly BEFORE ever consulting the
-# classifier for the permanent-vs-transient split. Single global ratchet (baseline=2) covers
-# the whole fleet today: market-tick-data-service's onchain/{glassnode,helius_solana}.py kept
-# `else True` deliberately for their non-status aiohttp.ClientError/asyncio.TimeoutError branch
-# (transient-by-EXCEPTION-TYPE, permanent-status class already intercepted above) — annotated
-# `# QG-allow: retry-safe` with the rationale inline. A NEW unmarked site fails immediately; a
-# NEW marked site above the baseline fails too (a whitelist growth needs an explicit baseline
-# bump in this comment + the plan doc, not a silent add).
+# classifier for the permanent-vs-transient split. Single global ratchet (baseline=3, bumped
+# 2026-08-09 for kaiko.py — cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md Step-4
+# Kaiko scaffold) covers the whole fleet today: market-tick-data-service's
+# onchain/{glassnode,helius_solana,kaiko}.py kept `else True` deliberately for their non-status
+# aiohttp.ClientError/asyncio.TimeoutError branch (transient-by-EXCEPTION-TYPE, permanent-status
+# class already intercepted above) — annotated `# QG-allow: retry-safe` with the rationale
+# inline. A NEW unmarked site fails immediately; a NEW marked site above the baseline fails too
+# (a whitelist growth needs an explicit baseline bump in this comment + the plan doc, not a
+# silent add).
 _RSD_PATTERN='classification\.retry_safe if classification( is not None)? else True'
-_RETRY_SAFE_DEFAULT_BASELINE=2
+_RETRY_SAFE_DEFAULT_BASELINE=3
 _RETRY_SAFE_DEFAULT_HITS=$(grep -rn -E "${_RSD_PATTERN}" "${SOURCE_DIR}" --include="*.py" 2>/dev/null | grep -v '__pycache__' || :)
 if [ -z "${_RETRY_SAFE_DEFAULT_HITS}" ]; then
     log_success "STEP 5.104: retry_safe unclassified-default fallback OK (0/${_RETRY_SAFE_DEFAULT_BASELINE})"
