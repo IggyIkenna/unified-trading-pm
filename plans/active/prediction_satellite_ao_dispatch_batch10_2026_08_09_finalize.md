@@ -60,7 +60,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile `prediction_live_clob_depth_capture_2026_07_24.md`**: confirm its `DEFERRED-CROSS-DEP`
+- [ ] [REVIEW] P1. **Reconcile `prediction_live_clob_depth_capture_2026_07_24.md`**: confirm its "DEFERRED-CROSS-DEP"
       checkbox (`book_snapshot_5` batch row-proof) is flipped `[x]` with batch10 todo 1's commit/evidence citation.
       Repo: unified-trading-pm. Done when: the checkbox is closed-by-citation, no orphaned "still looks open" gap.
 - [ ] [REVIEW] P1. **Reconcile `prediction_capture_incident_remediation_2026_07_06.md`**: confirm Phase 6's second

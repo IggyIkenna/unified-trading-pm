@@ -97,14 +97,14 @@ assumed from the Phase-1 agents' own grep alone).
       `prediction_live_clob_depth_capture_2026_07_24.md`'s own 2026-08-07 finalize-reconciled Progress Log entry
       ("Reconciled 2026-08-07 (finalize P1)... that gate has now cleared... yet the re-enum+backfill itself has NOT been
       dispatched/run"). Grepped batch4/6/7/8/9 + all 5 finalizes + all 4 Phase A-E children + the consolidated closeout
-      for `book_snapshot_5`/`DEFERRED-CROSS-DEP`/`clob_token_ids` immediately before drafting this todo: the only other
+      for `book_snapshot_5`/"DEFERRED-CROSS-DEP"/`clob_token_ids` immediately before drafting this todo: the only other
       `book_snapshot_5` hits are unrelated (batch7's `available_at`-consumer-check todo, already closed;
       `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s broader all-green MVP-backfill gate, still blocked
       on upstream A-D — not this narrower row-proof). Repos: instruments-service (re-enumerate) + deployment-service
       (re-launch the enumeration + backfill). Source: `prediction_live_clob_depth_capture_2026_07_24.md` (its own
-      `DEFERRED-CROSS-DEP` checkbox, verbatim) + `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s Deferred
+      "DEFERRED-CROSS-DEP" checkbox, verbatim) + `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s Deferred
       section (same item). **Done when**: a manifest read confirms `row_count>0` for `book_snapshot_5` on the
-      re-enumerated date, and `prediction_live_clob_depth_capture_2026_07_24.md`'s `DEFERRED-CROSS-DEP` checkbox is
+      re-enumerated date, and `prediction_live_clob_depth_capture_2026_07_24.md`'s "DEFERRED-CROSS-DEP" checkbox is
       flipped `[x]` citing the evidence.
 
 - [ ] [DATA] P2. **Kalshi historical `OTHER`-bucket CQG reclassify backfill, now declassified from an operator/architect
