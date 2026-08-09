@@ -27,6 +27,7 @@ summary: >-
   before reaching them), so this is a strength-of-signal note, not a confirmed count.
 status: open
 nature: issue
+archive_exempt: true
 asset_group: [ao]
 scope: [engineer]
 stage: [meta]
@@ -148,3 +149,9 @@ context_scope:
   verification is outside `backend_engineer` craft scope. All 3 todos in this doc are now checked; final archival
   decision (checking whether `status: open` should flip and this doc should be archived) is left to that finalize plan's
   own todo 3 (REVIEW-role, source-doc archival sweep) rather than done here, to avoid duplicating that gated ritual.
+- **cicd escalation agt-558c62 2026-08-09**: 0 open todos, flagged by `check_archive_candidates.sh`'s ratchet, but per
+  this doc's own note directly above, archival is explicitly owned by
+  `/plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`'s still-open `[REVIEW] P0` todo ("Archive every
+  source doc that has reached zero open todos, and repoint any referrer") — a live, dispatched, in-chain reconciliation
+  step, not a forgotten completion. Set `archive_exempt: true` rather than duplicate-archive here. Un-set once that
+  finalize plan's archival todo actually runs (it will naturally pick this doc up).
