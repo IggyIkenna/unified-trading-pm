@@ -32,6 +32,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
 assigned_role: infra
+thinking_tier: medium # 2026-08-09 agt-a398c9 — infra role's own default, made explicit; see BLK-e02c6622
 drift_direction: advance-code
 depends_on: [ci_runner_fleet_split_and_vm_rightsizing_2026_08_03]
 context_scope:
@@ -204,7 +205,13 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       that correctly triggered the existing Slack CRITICAL alert — the alerting pipeline itself working as designed, not
       a symptom of the reduction. Not a "steady-state" measurement (that needs real multi-day load data this session
       can't produce) — a single verified-working dispatch immediately after the cut, which is the minimum bar for
-      "didn't break anything," not the rightsizing plan's own longer-window todo.
+      "didn't break anything," not the rightsizing plan's own longer-window todo. **SUPERSEDED 2026-08-07 (2026-08-09
+      note, plan_reconciler agt-a398c9)**: PM's self-hosted glue pool described here (5→3 runners) no longer exists —
+      `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24 reverted PM's own `quality-gates-v2.yml` to
+      `ubuntu-latest` entirely 2026-08-07 (PM was found accidentally PRIVATE 2026-08-06, flipped back PUBLIC, and the
+      self-hosted cost rationale no longer applied once public). This doc's Progress Log never acknowledged the revert —
+      a reader stopping here would believe PM still runs a 3-runner self-hosted pool with `self_hosted_runner_labels`
+      set. Live-verified this run: `self-hosted-qg-repos.txt`'s active entries no longer include `unified-trading-pm`.
 - [x] ✅ [INFRA] P2. **Re-evaluate + re-add `unified-trading-library` and `e2e-testing` to self-hosted — SHIPPED
       2026-08-05.** Live host check at re-add time: load average 4.08/4.92/6.24 (vs. the 90+ that caused both prior
       reverts) and 18% swap (vs. 87%) — healthy headroom, not just "should be fine" hope. Allowlist updated
@@ -212,7 +219,14 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
       `rollout-workflow-templates.sh --repo <name> --template     quality-gates-v2.yml` (pre-flight action-pin check
       passed cleanly), shipped per-repo: `unified-trading-library@9f309cb0`, `e2e-testing@ccda667`. Both
       watched-not-guaranteed — this is the 2nd/3rd cycle for each repo, so if the same starvation/SIGALRM signature
-      recurs, revert per the same precedented per-repo playbook (not a new investigation).
+      recurs, revert per the same precedented per-repo playbook (not a new investigation). **SUPERSEDED same day
+      (2026-08-09 note, plan_reconciler agt-a398c9)**: both repos were reverted back to `ubuntu-latest` hours later by
+      `self_hosted_runner_public_repo_revert_2026_08_05.md` (a separate, billing-motivated initiative — UTL and
+      e2e-testing are PUBLIC repos, so GH-hosted CI is free regardless of capacity headroom;
+      `unified-trading-library@2b83764f`). Live-verified this run: UTL's current `quality-gates-v2.yml` on `main` runs
+      `ubuntu-latest` everywhere, and neither repo appears in the active (uncommented) entries of
+      `scripts/workflow-templates/self-hosted-qg-repos.txt`. This todo's own SHIPPED claim was accurate at the time; the
+      doc was never updated to note the same-day supersession.
 - [x] ✅ [INFRA] P2. **Check whether `glue-runner-crash-loop-watchdog.sh` actually paged — CONFIRMED IT DIDN'T, FOUND
       AND FIXED THE ROOT CAUSE, 2026-08-05.** `unified-trading-pm@6d1ae8463`, deployed live to
       `/usr/local/sbin/glue-runner-crash-loop-watchdog.sh` (MD5-verified). Confirmed on the live host: the
