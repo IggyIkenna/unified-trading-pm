@@ -65,14 +65,21 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P3. Widen `generate_ag_closeout_audit_candidates.py`'s cross-cutting tranche membership test (currently
-      `parent_epic in DATA_EPICS or basename in cited`) so it no longer silently excludes never-cited docs carrying a
-      non-data `parent_epic` from the candidate pool — the doc's own Process finding 2 diagnosed this exact class of
-      previously-invisible candidate. Repo: unified-trading-pm. Source:
+- [x] ✅ [SCRIPT] P3. Widen `generate_ag_closeout_audit_candidates.py`'s cross-cutting tranche membership test
+      (currently `parent_epic in DATA_EPICS or basename in cited`) so it no longer silently excludes never-cited docs
+      carrying a non-data `parent_epic` from the candidate pool — the doc's own Process finding 2 diagnosed this exact
+      class of previously-invisible candidate. Repo: unified-trading-pm. Source:
       `issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md` (membership-test-widening item). Done when: the
       generator's membership test captures the diagnosed class (docs `check_ag_closeout_linkage.py`'s reachability check
       flags as members but today's narrower test misses), verified by re-running Phase 0 and confirming those
-      previously-invisible candidates now appear in the member list.
+      previously-invisible candidates now appear in the member list. — unified-trading-pm@3829eea18. Membership test for
+      `t == "cross-cutting"` is now plain `"cross-cutting" in asset_group` (matching every other tranche), dropping the
+      `parent_epic in DATA_EPICS` gate + the now-unused `DATA_EPICS` constant; citation status still drives the
+      cited/never-cited split via `cited_in_covering_doc`, not membership. Verified: `--tranche cross-cutting --json`
+      `total_members` 103→130, `never_cited_count` 19→34 on the live corpus (27 newly-visible docs, e.g.
+      `plans/active/ag_closeout_audit_rollout_2026_07_25.md`). New regression test
+      `test_cross_cutting_membership_not_gated_on_data_epic_or_citation` added; all 9 tests in
+      `tests/unit/test_generate_ag_closeout_audit_candidates.py` pass; full `quality-gates.sh` green.
 - [x] ✅ [DOC] P2. Line-cap-split `cross_cutting_consolidated_closeout_2026_07_25.md` (999/1000 lines, 1 line of margin
       after its latest addition) — fork a Track/phase-named child doc with `depends_on` pointing back, mirroring how the
       other 5 asset-group consolidated-closeout docs were already split. Repo: unified-trading-pm. Source:
@@ -120,3 +127,5 @@ drift_direction: advance-code
   Cloud Run exposure) as unretagged for 3+ consecutive days — this is a pre-existing, already-tracked finding this sweep
   did not originate; surfacing it here only because it recurred across 2 of this batch's source docs and appears
   un-escalated as of this sweep.
+- **2026-08-09**: Shipped the P3 `[SCRIPT]` membership-widening todo — unified-trading-pm@3829eea18. Full details on the
+  flipped checkbox above; QG green, 9/9 unit tests pass.
