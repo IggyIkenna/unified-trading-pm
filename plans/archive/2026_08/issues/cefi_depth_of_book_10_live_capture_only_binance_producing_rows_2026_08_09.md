@@ -9,7 +9,7 @@ summary: >-
   data-correctness gap the fix surfaced: BYBIT-FUTURES/DERIBIT/COINBASE-SPOT/OKX-SWAP produce only empty_confirmed/zero
   depth_of_book_10 manifest rows on live WS traffic despite their other data_types capturing normally on the same
   venues/VM/window — the first live dispatch any of these 5 connectors has ever had.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -27,7 +27,7 @@ assigned_vm: planning
 parent_epic: infrastructure_master
 priority: P2
 locked_by:
-resolved_by:
+resolved_by: cefi_depth_of_book_10_live_capture_only_binance_producing_rows-f2e44d1a47db (slot 22, 2026-08-09)
 source: >-
   Discovered while executing cefi_satellite_ao_dispatch_batch13_2026_08_09.md todo 2 ("wire depth_of_book_10 into the
   CeFi live event-log capture dispatcher"). The dispatcher-wiring gap itself is now fully fixed and verified end-to-end
@@ -36,10 +36,15 @@ source: >-
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true
 ---
 
 # cefi depth_of_book_10 live wiring shipped; 4/5 venues not producing real rows
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED.** All 4 per-venue debug todos + the wiring gap + the P3 MDPS-enum question are
+> shipped. Codex updated at `/codex/05-infrastructure/live-pipeline-architecture.md` § "Trigger cascade". Remaining work
+> (VM cycle + fresh manifest read across all 5 venues to prove real captured rows) is tracked on
+> `/plans/active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 2 (its `BLOCKED-ON:` tag on this doc was cleared
+> in the same session — see that plan's Progress Log).
 
 ## What I found
 

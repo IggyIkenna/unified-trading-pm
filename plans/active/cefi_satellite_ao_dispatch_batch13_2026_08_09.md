@@ -127,11 +127,11 @@ context_scope:
   no file overlap, per the doc's own conflict-check above.
 - **2026-08-09, slot-23** — Todo 2 worked; **the dispatcher-wiring gap itself is CLOSED and verified end-to-end**, but
   the done-when's second half ("rows landing for at least the 5 capable venues") is only proven true for 1 of 5, so the
-  checkbox stays correctly unflipped. Full detail + the 4 remaining per-venue debug todos:
-  [`issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md`](issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md)
-  (archived later the same session — see the 2026-08-09 slot-22 entry below for the post-archival path). Summary: the
-  connector-registry factories for all 5 venues already dispatched `depth_of_book_10` correctly (confirmed by direct
-  read — no code change needed there); the actual gap was (a) the live-capture VM's shard launcher
+  checkbox stays correctly unflipped. Full detail + the 4 remaining per-venue debug todos (now archived — see the
+  2026-08-09 slot-22 entry below):
+  [`/plans/archive/2026_08/issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md`](/plans/archive/2026_08/issues/cefi_depth_of_book_10_live_capture_only_binance_producing_rows_2026_08_09.md).
+  Summary: the connector-registry factories for all 5 venues already dispatched `depth_of_book_10` correctly (confirmed
+  by direct read — no code change needed there); the actual gap was (a) the live-capture VM's shard launcher
   (`deployment-service/scripts/vm/setup-cefi-live-consolidated-vm.sh`) never had a `depth_of_book_10` entry — fixed,
   `deployment-service@28e64163`; (b) an adjacent `FORCE` env-var bug in the sibling launcher script, found+fixed in the
   same pass — `deployment-service@778ee0e3`; (c) a SECOND wiring gap only visible once the shards actually ran: the
