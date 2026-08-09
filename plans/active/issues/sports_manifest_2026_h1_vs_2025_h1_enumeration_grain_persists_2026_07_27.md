@@ -480,8 +480,30 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   heartbeat monitor armed (sends /progress every 5 min). Chunks 3-7 (2022..2026-04-09) not yet reached — this entry
   captures the start state; will update on completion.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **infra worker (slot 33) 2026-08-09**: picked up chunk 3/7 (2022-01-01..2022-12-31). Found + fixed a real, unrelated
+  launcher bug blocking every tarball auto-republish (`create-code-tarballs.sh`'s `GCS_UPLOAD_PY` fell back to bare
+  `python3` — missing `deployment_service` — whenever `deployment-service/.venv` didn't already exist on the slot; now
+  resolves via `uv run --project`) — shipped + verified on origin: deployment-service@0f4e22fa5482. After the fix, ran
+  10 consecutive successful launcher attempts (all `EXIT_STATUS=5`, the documented halt-safety trip) but then discovered
+  via direct per-VM shard content comparison that the retries are **NOT converging** — every attempt wrote the exact
+  same 1,000,000-row set (100% key overlap across 2 independent attempt-pairs, verified at the enumerator's own
+  present-set grain). Root-caused to a structural livelock in the sports v2 generator (several deterministic
+  empty_confirmed branches never check `present_set` before yielding, so they regenerate identically every run and
+  consume the entire `max_writes_per_run` cap before any new candidate is ever reached) — filed as its own issue with
+  full evidence + 3 candidate fix directions, left for operator triage:
+  `/plans/active/issues/sports_expected_universe_v2_halt_safety_livelock_no_present_set_gate_2026_08_09.md`. Chunk 3's
+  own done-when (EXIT_STATUS=0) is **not reachable** under the current code without one of that issue's fixes — did not
+  flip chunk 3's todo below; converting it to a blocked state instead (see banner). Did not touch chunks 4-7 pending the
+  operator's fix-direction decision.
 
 ## Follow-ups
+
+> **🔴 BLOCKED-OPERATOR 2026-08-09 (slot 33)**: chunk 3/7 below (and likely chunk 4-7, and possibly the
+> never-EXIT_STATUS=0-confirmed chunk 2) cannot reach `EXIT_STATUS=0` under the current code — retries are a livelock,
+> not a slow convergence. See
+> `/plans/active/issues/sports_expected_universe_v2_halt_safety_livelock_no_present_set_gate_2026_08_09.md` for full
+> evidence + fix options. Do NOT keep blindly retrying chunk 3-7 until that issue's `[OPERATOR]` todo picks a fix
+> direction.
 
 - [ ] [DATA] P2. Launch + verify chunk 3/7 (2022-01-01..2022-12-31) of the job (2) historical `expected_unattempted`
       backfill: invoke the child launcher directly
