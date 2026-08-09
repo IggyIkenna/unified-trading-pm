@@ -158,6 +158,45 @@ else
         --quiet 2>/dev/null && log_ok "Tools installed (ruff==0.15.0, basedpyright==1.38.2)" || log_warn "Tool install had issues (non-fatal)"
 fi
 
+# ── [5.5] COLLECT PER-REPO uv OVERRIDES ─────────────────────────────────────
+# Each workspace repo may declare its own [tool.uv].override-dependencies in
+# pyproject.toml (CVE-floor bumps, the requests>=2.33.0-vs-betfairlightweight
+# conflict, etc — see
+# .cursor/rules/dependencies/requests-betfairlightweight-workspace-resolution.mdc).
+# `uv pip install -e <path>` installs each repo standalone with no calling-project
+# [tool.uv] context, so neither the target's own override nor a sibling repo's is
+# consulted — the exact gap every ad-hoc `uv pip install -e ../<dep>` sibling-install
+# in this workspace already works around by declaring its own copy of the override
+# (see the comment in features-service/pyproject.toml). Union every repo's overrides
+# once so the fix applies uniformly across the editable-install loop below.
+OVERRIDES_FILE=""
+if [ "$CHECK_ONLY" != true ]; then
+    log_step "Collecting per-repo uv overrides"
+    OVERRIDES_FILE=$(mktemp)
+    trap 'rm -f "$OVERRIDES_FILE"' EXIT
+    "$PYTHON_CMD" - "$WORKSPACE_ROOT" <<'PYEOF' > "$OVERRIDES_FILE"
+import glob
+import os
+import sys
+import tomllib
+
+workspace_root = sys.argv[1]
+seen = set()
+for pp in sorted(glob.glob(os.path.join(workspace_root, "*", "pyproject.toml"))):
+    try:
+        with open(pp, "rb") as f:
+            data = tomllib.load(f)
+    except Exception:
+        continue
+    for line in data.get("tool", {}).get("uv", {}).get("override-dependencies", []):
+        if line not in seen:
+            seen.add(line)
+            print(line)
+PYEOF
+    N_OVERRIDES=$(wc -l < "$OVERRIDES_FILE" | tr -d ' ')
+    log_ok "$N_OVERRIDES override(s) collected across workspace repos"
+fi
+
 # ── [6] INSTALL WORKSPACE REPOS AS EDITABLE ─────────────────────────────────
 # Read all repos from workspace-manifest.json in topological order and install
 # each one that has a pyproject.toml as editable. Editable install means Python
@@ -246,7 +285,11 @@ print(entry.get('folder_name', ''))
             EDITABLE_SKIP=$((EDITABLE_SKIP + 1))
         fi
     else
-        if uv pip install --python "$VENV_PYTHON" -e "$REPO_PATH" --reinstall --quiet 2>/dev/null; then
+        EXTRA_INSTALL_ARGS=()
+        if [ -n "$OVERRIDES_FILE" ]; then
+            EXTRA_INSTALL_ARGS=(--overrides "$OVERRIDES_FILE")
+        fi
+        if uv pip install --python "$VENV_PYTHON" -e "$REPO_PATH" --reinstall --quiet "${EXTRA_INSTALL_ARGS[@]}" 2>/dev/null; then
             EDITABLE_OK=$((EDITABLE_OK + 1))
         else
             log_warn "$repo editable install failed (non-fatal)"
