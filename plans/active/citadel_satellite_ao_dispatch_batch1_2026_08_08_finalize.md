@@ -2,12 +2,12 @@
 doc_type: plan
 title: Citadel satellite AO batch 1 — finalize (reconcile source doc + re-check the held-back conflict + archive)
 summary: >-
-  Gated closeout for citadel_satellite_ao_dispatch_batch1_2026_08_08.md — machine-held via depends_on +
-  gate_on_depends: true until that plan's 7 todos are done. Mirrors the prediction/cefi/defi/sports satellite-batch
-  finalize pattern (reconcile the source doc's checkboxes/register, re-check the deferred/held-back population for
-  cleared gates, then archive). Authored `status: active` (not draft) per the 2026-07-30 no-double-gate finding —
-  `gate_on_depends` alone already machine-holds every task here until batch1's own todos land, regardless of batch1's
-  own draft/active status; a finalize plan carries no independent judgment call.
+  Gated closeout for citadel_satellite_ao_dispatch_batch1_2026_08_08.md — machine-held via depends_on + gate_on_depends:
+  true until that plan's 7 todos are done. Mirrors the prediction/cefi/defi/sports satellite-batch finalize pattern
+  (reconcile the source doc's checkboxes/register, re-check the deferred/held-back population for cleared gates, then
+  archive). Authored `status: active` (not draft) per the 2026-07-30 no-double-gate finding — `gate_on_depends` alone
+  already machine-holds every task here until batch1's own todos land, regardless of batch1's own draft/active status; a
+  finalize plan carries no independent judgment call.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -55,8 +55,9 @@ context_scope:
 # Citadel satellite AO batch 1 — finalize
 
 > **Machine-gated on `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`** (`depends_on` + `gate_on_depends: true`) —
-> the dispatcher will not queue any todo below until all 7 tasks of that plan are `done`. `sequential: true` because
-> todo 2 (archival) must run after todo 1 (reconciliation).
+> the dispatcher will not queue any todo below until all 7 tasks of that plan are `done`. `sequential: true` serializes
+> all 3 todos below (corrected 2026-08-09, plan_reconciler agt-733350: archival is todo 3, not todo 2 as previously
+> stated here — `sequential: true` already covered the real ordering correctly regardless).
 
 ## Todos
 
@@ -83,21 +84,21 @@ context_scope:
       reason) has become executable now that the P2.11.15 gate's status is known — if the retrain has landed, note
       whether P2.11.18's full original scope (including the retrain) should be considered complete too, or whether a
       follow-up todo is still needed; file a new tracked `- [ ]` todo (never prose) in the appropriate plan if one is.
-      **Done when**: this plan's own Progress Log records the checked status of both the P2.11.15 gate and any
-      resulting follow-up action (checkbox flip, new todo filed, or explicitly "still open, no action").
+      **Done when**: this plan's own Progress Log records the checked status of both the P2.11.15 gate and any resulting
+      follow-up action (checkbox flip, new todo filed, or explicitly "still open, no action").
 
 - [ ] [DOC] P3. **Archive batch1 + this finalize plan.** Once the source doc is confirmed reconciled (todo 1) and the
-      held-back conflict is re-checked (todo 2), archive both
-      `citadel_satellite_ao_dispatch_batch1_2026_08_08.md` and this finalize doc to `plans/archive/2026_08/` per the
-      6-step archival ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — update every
-      referrer (this doc's own `related:`, `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s `related:` if it
-      names batch1, `plans/epics/batch_live_symmetry_master.md` if it enumerates satellite batches). **Done when**: both
-      files are in `plans/archive/2026_08/`, `regenerate_active_plan_inventory.py` shows 0 orphaned referrers, and
+      held-back conflict is re-checked (todo 2), archive both `citadel_satellite_ao_dispatch_batch1_2026_08_08.md` and
+      this finalize doc to `plans/archive/2026_08/` per the 6-step archival ritual
+      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — update every referrer (this doc's own
+      `related:`, `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s `related:` if it names batch1,
+      `plans/epics/batch_live_symmetry_master.md` if it enumerates satellite batches). **Done when**: both files are in
+      `plans/archive/2026_08/`, `regenerate_active_plan_inventory.py` shows 0 orphaned referrers, and
       `run_hygiene_sweep.sh` is green.
 
 ## Progress Log
 
-- 2026-08-08 (interactive session): drafted alongside batch1, per the finalize-plan-coverage rule. `status: active`
-  from the start (not draft) — `gate_on_depends: true` already fully holds every todo above until batch1's own 7 todos
-  are `done`, so no second manual flip is needed later (2026-07-30 no-double-gate finding,
+- 2026-08-08 (interactive session): drafted alongside batch1, per the finalize-plan-coverage rule. `status: active` from
+  the start (not draft) — `gate_on_depends: true` already fully holds every todo above until batch1's own 7 todos are
+  `done`, so no second manual flip is needed later (2026-07-30 no-double-gate finding,
   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`).

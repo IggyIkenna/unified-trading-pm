@@ -186,18 +186,17 @@ and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI
       measures **29** `cross-cutting` orphans, matching this doc's manually-enumerated 29-doc list below by name to a
       very high degree (spot-checked). No third blind spot found — the graph-BFS + body-text-mention signal converges
       with the manual investigation's result.
-- [ ] [DOCS] P2. **RULED 2026-08-06 (operator), option A [WORKER REC]: one scoped retag pass between scheduled auditor
-      cycles.** `[DOCS]` tag (was `[OPERATOR]`), AO-dispatchable — reuse the 2026-07-27 pass's mechanism, paired with
-      widening `check_ag_closeout_linkage.py`'s coverage per the doc's own recommendation. **Rule the A/B/C retag
-      question in this doc's own `## BLOCKED-OPERATOR-DECISION` section below** — ~20 of the 28 never-cited
-      cross-cutting docs are `ci`/`ao` content carrying a habitual `asset_group:     [cross-cutting]` tag. Options A
-      (one scoped retag pass BETWEEN scheduled auditor cycles) [WORKER REC] / B (opportunistic per-tranche retag) / C
-      (accept cross-cutting as the de-facto home and widen its closeout Sources) are stated in full there with the
-      trade-offs. **Filed as a checkbox 2026-08-02 (`/na-eligibility-audit     cross-cutting`)**: the decision was
-      prose-only, so this doc read as 4-of-4-todos-done to every open-todo count and to `check_archive_candidates` —
-      i.e. it looked archivable while carrying a live, unanswered operator question. Converting it per the workspace
-      HARD RULE "every follow-up is a `- [ ] ` todo, never prose". Done-when: an option is picked and the retag pass it
-      implies is either executed or filed as its own tracked plan. (repo: `unified-trading-pm`)
+- [ ] [DOCS] P2. **Execute the operator-ruled option A retag pass (ruled 2026-08-06): one scoped retag pass between
+      scheduled auditor cycles.** `[DOCS]` tag (was `[OPERATOR]`), AO-dispatchable — reuse the 2026-07-27 pass's
+      mechanism, paired with widening `check_ag_closeout_linkage.py`'s coverage per the doc's own recommendation. **Per
+      the already-ruled option A** (full A/B/C trade-off record preserved in this doc's own
+      `## BLOCKED-OPERATOR-DECISION` section below, for context only — NOT a reopened choice): ~20 of the 28 never-cited
+      cross-cutting docs are `ci`/`ao` content carrying a habitual `asset_group: [cross-cutting]` tag. **Filed as a
+      checkbox 2026-08-02 (`/na-eligibility-audit cross-cutting`)**: the decision was prose-only, so this doc read as
+      4-of-4-todos-done to every open-todo count and to `check_archive_candidates` — i.e. it looked archivable while
+      carrying a live, unanswered operator question. Converting it per the workspace HARD RULE "every follow-up is a
+      `- [ ] ` todo, never prose". Done-when: an option is picked and the retag pass it implies is either executed or
+      filed as its own tracked plan. (repo: `unified-trading-pm`)
 - [x] [DOC] P3. Correct `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s classification-mechanism section, which
       currently tells the reader `check_ag_closeout_linkage.py` "remains the safety net" for tag/Sources disagreements —
       true only for the 5 real AGs today. **DONE 2026-07-30** (operator ruling this session authorised the SKILL.md

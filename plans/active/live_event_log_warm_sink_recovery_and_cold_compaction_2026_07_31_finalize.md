@@ -29,7 +29,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.16
 assigned_role: infra
-sequential: false
+sequential: true
 drift_direction: advance-code
 depends_on: [live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31]
 gate_on_depends: true
@@ -59,7 +59,9 @@ context_scope:
 
 - [ ] [REVIEW] P2. **Evidence-verify the parent's checkboxes before any archival.** (Ported 2026-08-06 from the
       duplicate `..._finalize_2026_07_31.md` when that plan was superseded — BLK-5eeacb63; this check existed only
-      there, so a plain supersede would have dropped it.) Once every todo in
+      there, so a plain supersede would have dropped it. **`sequential: true` set 2026-08-09** [plan_reconciler
+      agt-733350] — was `false`, which let the archival todo below dispatch concurrently with or ahead of this
+      verification, defeating the exact false-progress-before-archival check this todo exists for.) Once every todo in
       `/plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md` is `[x]`, re-verify each
       carries REAL evidence — the cited `terraform plan`/`apply` output, `gcloud pubsub subscriptions list` count,
       `gcloud run jobs describe`/`executions list` output, epsilon=0 determinism report path — rather than a
