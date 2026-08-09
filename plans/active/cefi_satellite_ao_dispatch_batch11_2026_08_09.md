@@ -172,11 +172,32 @@ context_scope:
       (line 173, cites source Phase 5). **Done when**: no Barchart code/test references remain in either repo,
       `quality-gates.sh` green. **DONE 2026-08-09** — unified-api-contracts@fc1b4897, market-tick-data-service@aea655a9.
       See Progress Log for full deletion list + scope boundary.
-- [ ] [DATA] P2. **Extend market-tick-data-service's existing CeFi live-ws order-book connectors to also record live
+- [x] ✅ [DATA] P2. **Extend market-tick-data-service's existing CeFi live-ws order-book connectors to also record live
       BBO+depth for the crypto-venue equity-perp instruments** (Binance/OKX/Bybit), for basis-arb slippage calibration.
       Repo: market-tick-data-service. Source: `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` line 175.
       **Done when**: live BBO+depth is captured and persisted for at least one equity-perp instrument per venue,
-      mirroring the existing non-equity-perp live-book capture shape, `quality-gates.sh` green.
+      mirroring the existing non-equity-perp live-book capture shape, `quality-gates.sh` green. — **DONE 2026-08-09 — NO
+      CODE CHANGE NEEDED, live-verified**. Read every layer of the capture path
+      (`binance_futures_book_ticker_ws.py`/`okx_futures_book_ticker_ws.py`/`bybit_futures_book_ticker_ws.py`'s
+      `book_snapshot_5` connectors, `derive_base_token`/`derive_settlement_dimensions` (`tardis_margin_marker.py`), the
+      OKX/Bybit canonical-id builders, and `LiveWebsocketRunner._resolve_is_universe`): all are symbol-generic (string
+      suffix/prefix stripping, no crypto-only whitelist), and `AAPL` etc. are already unioned into
+      `CEFI_EQUITY_PERP_BASE_UNIVERSE` → MVP scope (`_mvp_scope_rules.py`) → IS catalogue as ordinary `PERPETUAL` rows,
+      so the existing connectors already cover equity-perp bases with zero special-casing. Proved this live rather than
+      trusting the read: real-queried `fapi/v1/exchangeInfo` (Binance)/`public/instruments?instType=SWAP`
+      (OKX)/`v5/market/instruments-info?category=linear` (Bybit) to confirm `AAPL` is actively trading on all 3 venues,
+      then ran the real `--mode live --operation websocket-streaming --shard-spec cefi:<VENUE>:book_snapshot_5` CLI
+      (IS_TEST_RUN=true, test-bucket-routed — the sanctioned "bounded, test-bucket-routed live smoke check" pattern the
+      CLI's own `--max-duration-seconds` help text documents) against an ephemeral local Redis
+      (`docker run redis:7-alpine`, only needed for the boundary-event publisher; torn down after), for real
+      real-money-free live BBO+depth capture of `AAPL-USDT`/`AAPL-USDT-SWAP` for ~20-25s per venue. **Result — all 3
+      venues wrote a genuine `captured` manifest row to `market-data-tick-cefi-test-central-element-323112`'s
+      `_index/availability_index.parquet`**: `BINANCE-FUTURES:PERPETUAL:AAPL-USDT@LIN` row_count=13,
+      `OKX-SWAP:PERPETUAL:AAPL-USDT` row_count=9, `BYBIT:PERPETUAL:AAPL-USDT@LIN` row_count=18 — all
+      `capture_status=captured`, `pipeline_mode=live_{binance,okx,bybit}`, written 2026-08-09T13:23-13:28 UTC, identical
+      shard-atom/manifest shape to any non-equity-perp live book_snapshot_5 capture. No
+      connector/base-universe/IS-resolution code changed (none was needed); `market-tick-data-service` worktree stayed
+      clean — `quality-gates.sh` N/A (no diff to gate).
 - [x] ✅ [DATA] P1. **Query OKX/Bybit/Hyperliquid's public instrument-listing endpoints for a WTI or Brent crude-oil
       perpetual contract**; if one exists, add it to the CeFi instrument universe (unified-api-contracts) mirroring how
       the existing commodity perps (XAU/XAG/COPPER) are registered. Repo: unified-api-contracts. Source:
@@ -417,3 +438,12 @@ context_scope:
   than clean anything up. Also left every "RETIRED 2026-06-24"-style historical-provenance comment in place per
   CLAUDE.md's own framing. Both repos: `quality-gates.sh` green, shipped via `quickmerge --agent`, post-push ancestry
   verified on `live-defi-rollout`.
+- **2026-08-09** — todo 6 (extend live-ws order-book connectors for crypto-venue equity-perp BBO+depth) DISPATCHED +
+  DONE, no code change: read the full capture path top to bottom (per-venue `book_snapshot_5` connectors → base-token
+  derivation → canonical-id builders → `LiveWebsocketRunner._resolve_is_universe`) and confirmed every layer is
+  symbol-generic with equity-perp bases already in the MVP-scoped IS universe, then proved it live rather than trusting
+  the read — ran the real `--mode live --operation websocket-streaming` CLI (IS_TEST_RUN=true, an ephemeral local Docker
+  Redis standing in only for the boundary-event publisher) against a live-verified `AAPL` equity-perp on all 3 venues.
+  All 3 wrote a genuine `captured` manifest row (13/9/18 rows respectively) to the `-test-` bucket, byte-for-byte the
+  same shard-atom shape as any non-equity-perp live book_snapshot_5 capture. Full evidence + exact manifest values in
+  todo 6's own entry above.
