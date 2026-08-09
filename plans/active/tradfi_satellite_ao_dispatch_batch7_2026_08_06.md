@@ -401,6 +401,30 @@ mirroring the batch1-6 finalize pattern.
   actively growing — ~50K rows/day written across the broader unscoped population in the days immediately before this
   session). Filed as `issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md` rather than fixed here (outside
   this todo's literal "CME futures_chain/options_chain shards" wording; different, not-yet-understood root cause).
+- **slot-3 worker 2026-08-09** (task `tradfi_satellite_ao_dispatch_batch7-002`, IN PROGRESS — not yet flippable, both
+  fixes committed locally but NOT YET PUSHED): both hardening fixes (`_rel()` quarantine-prefix guard +
+  `_VENUE_REMAP`-equivalent validation) implemented in `migrate_tradfi_canonical_2026_07.py` with 33 tests (12 new), all
+  passing — committed as `market-tick-data-service@ff6c2f4a`. A separate, unrelated pre-existing STEP 5.95 TID251
+  ratchet regression (in `scripts/one_offs/verify_defi_glued_ids_2026_07_24.py`, a DeFi one-off — not part of this
+  todo's scope) blocked Pass-1 QG on this repo; root-caused as a `noqa: TID251` comment landing on the wrong physical
+  line of a multi-line/parenthesized `google.cloud import storage` — fixed by collapsing to one line
+  (`market-tick-data-service@8c5fe244`, second attempt — see trap below). **Trap hit twice, worth flagging for anyone
+  else who touches a `noqa: TID251`/`noqa: DTZ00x` comment near this repo's 120-char ruff line-length**: a single-line
+  import + a sufficiently long noqa reason exceeds the line-length limit, so ruff's own formatter (which pre-commit runs
+  automatically) silently re-wraps the import into multi-line parenthesized form — which moves the noqa comment off the
+  diagnostic's anchor line and **reintroduces the exact ratchet violation the fix was meant to close**, with no error at
+  commit time (ruff's formatter treats it as a normal reformat, not a lint failure). First attempt at fixing this file
+  looked correct standalone (`ruff check` passed) but broke again the moment `git commit` ran pre-commit's auto-format
+  hook. Fix: keep the noqa reason short enough that `import line + comment` stays under the line-length limit as a
+  single physical line (verified via `ruff format --diff` showing zero diff, not just `ruff check` passing — the format
+  check is the one that actually predicts what pre-commit will do to the line). **Status at time of this note**: a fresh
+  Pass-1 `quality-gates.sh` re-run is in progress (background, `PYRIGHT_TIMEOUT=420` per the same host-contention
+  mitigation used for todo 1's basedpyright timeouts) to re-validate against the new HEAD before quickmerge; both
+  commits are ahead of `origin/live-defi-rollout` by 2, not yet pushed. Next worker/session: check `.qg_last_passed_sha`
+  in market-tick-data-service against current HEAD — if it matches, proceed straight to
+  `scripts/quickmerge.sh --agent --files 'scripts/one_offs/verify_defi_glued_ids_2026_07_24.py'` (ships both commits),
+  verify `git rev-list --count origin/live-defi-rollout..HEAD == 0`, then flip todo 2 above with both SHAs (`ff6c2f4a` +
+  `8c5fe244`) and call `/done` for `tradfi_satellite_ao_dispatch_batch7-002`.
 
 ## Codex SSOTs
 
