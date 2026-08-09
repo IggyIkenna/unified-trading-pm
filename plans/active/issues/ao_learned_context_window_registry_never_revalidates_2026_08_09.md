@@ -84,9 +84,9 @@ as 71%, which is below the recycle logic's expectations even though it clears th
       `calibrated_window` by more than a configurable tolerance, REPLACE it (in either direction) rather than keeping
       the larger. Preserve the monotonic behaviour for the WATERMARK, which is a genuine lower bound. Done-when: a unit
       test proves a later authoritative reading lowers an over-large `calibrated_window`. — agent-orchestrator@50e91cb69
-- [ ] [BACKEND] P1. Emit an activity event + log line whenever `_calibration_is_plausible` REJECTS a calibration — today
-      it only logs a warning, so a caller regression that keeps feeding bad values is invisible in the dashboard.
-      Done-when: the event appears in `GET /api/activity` and a unit test asserts it.
+- [x] ✅ [BACKEND] P1. Emit an activity event + log line whenever `_calibration_is_plausible` REJECTS a calibration —
+      today it only logs a warning, so a caller regression that keeps feeding bad values is invisible in the dashboard.
+      Done-when: the event appears in `GET /api/activity` and a unit test asserts it. — agent-orchestrator@4aabab446
 - [ ] [BACKEND] P2. Neutralise the opus-5 single-hit watermark before it can confirm: either require the confirming hits
       to come from DISTINCT sessions, or discard a watermark whose hits all came from one `claude_session_id`.
       Done-when: a unit test proves three observations from ONE session do not saturate a watermark, and three from
@@ -110,3 +110,12 @@ as 71%, which is below the recycle logic's expectations even though it clears th
   `test_small_calibration_disagreement_still_only_raises` (a within-tolerance disagreement does not churn the stored
   value). Full QG green (2971 backend + 262 dashboard tests); landed on `live-defi-rollout`, verified as an ancestor of
   origin.
+- 2026-08-09 — Todo 2 shipped (`agent-orchestrator@4aabab446`). `_calibration_is_plausible` now also writes a
+  `context_calibration_rejected` `ActivityRow` (model, calibrated_window, reference, overshoot_ratio, max_overshoot)
+  alongside the existing `logger.warning`, so a rejection is visible via `GET /api/activity` instead of only a log line.
+  The DB write is best-effort (mirrors `_save_learned`'s catch-and-degrade posture for its sidecar file write) — a DB
+  hiccup must not turn a correctly rejected calibration into an unhandled exception, and it keeps this module's existing
+  DB-free unit tests unaffected. New unit test: `test_rejected_calibration_emits_an_activity_event` (spins up an
+  isolated sqlite DB via `db.reset_for_tests` + `create_all_tables`, triggers a rejection, asserts the row via
+  `list_activity`). Full QG green (2961 backend + 262 dashboard tests); landed on `live-defi-rollout`, verified as an
+  ancestor of origin.
