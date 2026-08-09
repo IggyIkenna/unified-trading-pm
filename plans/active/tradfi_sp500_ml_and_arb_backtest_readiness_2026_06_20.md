@@ -192,8 +192,8 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       `{trades, ohlcv_1s, ohlcv_1m, tbbo}` (`unified_api_contracts/registry/market_data_categories.py:1432` — no
       `ohlcv_1h`), so rather than widen the shared storage policy for one consumer, `compute_vix_features()` now derives
       its `vix_contango_proxy` 1h close by resampling `candles_1m` in-process when `candles_1h` is omitted, instead of
-      leaving the feature permanently NaN. Shipped: `features-service` (`vix_calculator.py`, `test_vix_calculator.py`) —
-      see `/plans/active/issues/plan_reconciler_findings_tradfi_2026_08_09.md` for the commit SHA.
+      leaving the feature permanently NaN. Shipped: `features-service@94f88283cffde06cb13eee94b02d21d613d8cd1e`
+      (`vix_calculator.py`, `test_vix_calculator.py`).
 
 ## P3 — S&P ML + arb backtest exploration (gated on data-clean above)
 

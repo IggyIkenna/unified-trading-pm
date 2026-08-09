@@ -204,9 +204,10 @@ applied every CONFIRMED-mechanical fix not blocked by grace, in 6 checkpointed c
 2. **VIX 1h-grain architecture question** (`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` open P2 todo) —
    routed to operator via `/blocked` (BLK-345eb7ce): widen `(tradfi,futures_chain)` registry policy vs. add a resample
    step vs. accept permanent NaN. **RESOLVED**: operator ruled option B (add a resample step, do not widen the shared
-   storage policy for one consumer) — implemented + shipped this session in `features-service` (`vix_calculator.py` +
-   `test_vix_calculator.py`, QG-green, `.qg_last_passed_sha` sentinel-verified before commit). Caveat note in the plan
-   doc updated to record the resolution.
+   storage policy for one consumer) — implemented + shipped: `features-service@94f88283cffde06cb13eee94b02d21d613d8cd1e`
+   (`vix_calculator.py` + `test_vix_calculator.py`, QG-green, `.qg_last_passed_sha` sentinel-verified before commit,
+   post-push ancestry verified against `origin/live-defi-rollout`). Caveat note in the plan doc updated to record the
+   resolution.
 3. **Redispatch gap: operator-approved 81,454-row `--apply` has no active dispatch vehicle** (see Contradictions #1) —
    `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md` todo 1. This is execution, not a fresh decision
    (the operator already ruled GO-AHEAD 2026-08-07) — recommend the next `/ag-closeout-audit tradfi` or tradfi
