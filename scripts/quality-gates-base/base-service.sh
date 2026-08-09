@@ -481,23 +481,10 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     # swallowing the exit status) directly under `set -e`, so on every macOS slot the WHOLE gate script
     # aborted right after the dep-content gate with NO error output at all (grep's usage error went to
     # stderr but the script exit trapped silently) — blocking ALL local QG runs host-wide, not just this
-    # repo. `rg --pcre2` is byte-identical local↔CI (ripgrep's bundled PCRE2, not the platform grep).
+    # repo. `rg --pcre2` is byte-identical local↔CI (ripgrep's bundled PCRE2, not the platform grep) and
+    # already a hard QG dependency (see the "[9] ripgrep" setup.sh check), so it adds no new tool.
     _uv_pm_root="${WORKSPACE_ROOT:-$(cd "${_uv_repo_root}/.." && pwd)}"
-<<<<<<< Updated upstream
     _uv_pin="$(rg --pcre2 -o '^UV_VERSION = "\K[^"]+' "${_uv_pm_root}/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null || :)"
-||||||| Stash base
-    _uv_pin="$(grep -oP '^UV_VERSION = "\K[^"]+' "${_uv_pm_root}/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null)"
-=======
-    # Portable BRE (sed), NOT grep -P (2026-08-09 fix): PCRE (-P) is a GNU-grep-only
-    # extension. macOS ships BSD grep with no -P support at all ("grep: invalid
-    # option -- P", its own exit 2) and this host has no GNU/homebrew grep on PATH —
-    # under `set -e` that failing command substitution silently aborted this whole
-    # script (exit 2, no visible error) the moment this repo's local checkout picked
-    # up this line (landed live mid-session, confirmed via `bash -c` reproducing the
-    # exact failure outside the interactive shell's ugrep-shimmed `grep` function,
-    # which had been masking it in every DIRECTLY-typed terminal test).
-    _uv_pin="$(sed -n 's/^UV_VERSION = "\([^"]*\)"/\1/p' "${_uv_pm_root}/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null)"
->>>>>>> Stashed changes
     command -v uv &>/dev/null || pip install "uv${_uv_pin:+==$_uv_pin}" --quiet
     # uv-version drift-guard — WARN-ONLY (never blocking; the fix is a one-line realign, not a gate).
     # The workspace uv pin above (uv_lockfile_determinism_2026_06_02.md — committed uv.lock files
