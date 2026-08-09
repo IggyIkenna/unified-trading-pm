@@ -108,12 +108,17 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
 - [ ] [BACKEND] P1. Measure for >=6h with the instrumentation live: how many ticks had main/review deadline-past, how
       many times the gate OPENED, and the dominant blocking signal. Record the counts in this doc's Progress Log.
       Done-when: the Progress Log carries open-vs-blocked counts for both roles.
-- [ ] [BACKEND] P1. Make main's terminal wedge-recovery reachable when no force ever fired.
+- [x] ✅ [BACKEND] P1. Make main's terminal wedge-recovery reachable when no force ever fired.
       `_rearm_if_force_ineffective` returns early on `state.forced_at is None`, so the kill + `claude_session_id`
       clear + keeper respawn path cannot arm for a main that the idle gate never let through. Add a saturation-based
       entry (main above `resume_fresh_context_pct` with no `context_compact_observed` for a sustained window) that
       reaches the SAME recovery. Done-when: a unit test in `tests/test_context_lifecycle.py` proves recovery arms for a
-      main target whose `forced_at` was never set.
+      main target whose `forced_at` was never set. — agent-orchestrator@29f29f9 (new
+      `_maybe_recover_unforced_saturation`, wired into `_tick_target` scoped to `role == "main"` only — review/worker
+      keep their own separately-tested behavior, per todo 5's explicit operator-ruling gate; a first attempt applying it
+      to every role broke 4 review-saturation tests by killing the session before the idle-gated force ever got a
+      chance, caught by the full suite before shipping); new test
+      `test_main_wedge_recovery_arms_even_when_the_force_never_fires`; full QG green (2984 passed).
 - [ ] [BACKEND] P2. Give main a real `context_pressure` instead of the hardcoded `"low"` in `_read_pct`, so the Tier-2
       `pressure == "thrashing"` immediate-recycle trigger is reachable for main at all. Derive it the same way the
       SlotRow value is derived. Done-when: a unit test proves a thrashing main recycles without waiting for
@@ -134,6 +139,12 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
   learned context window (separate issue, fixed and shipped); this doc captures the structural gaps underneath it that
   the measurement bug was masking. Live counts at filing time: 4.3h `/api/activity` window, `role=worker` = 132
   context-lifecycle events, `role=main` = 1.
+- 2026-08-09 (slot 22) — Shipped todo 3 (agent-orchestrator@29f29f9): added `_maybe_recover_unforced_saturation`, a new
+  saturation-based entry that reaches the same kill + `claude_session_id`-clear recovery `_rearm_if_force_ineffective`
+  already provides, but for the complementary case where `state.forced_at` was NEVER set (the force never even
+  submitted). Scoped to `role == "main"` only after an initial all-roles version broke 4 existing review-saturation
+  tests (a saturated review target got recovered before its own idle-gated force ever had a chance to try) — caught by
+  the full `test_context_lifecycle.py` suite pre-ship, not shipped broken.
 - 2026-08-09 (slot 19) — Dispatched todo 1 independently and implemented the same instrumentation, then found slot 15
   had already shipped an equivalent, already-QG-green version at `agent-orchestrator@279e07b` (a known double-dispatch
   pattern per `/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`). Skipped my
