@@ -479,3 +479,8 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   confirmed resuming cleanly. Fresh census: FIXTURE_LINEUPS needed **11,257 → 8,332** (-2,925 in ~32min, rate
   accelerated to ~5,484/hr vs ~3,275/hr last tick) — still not at the near-zero INJURIES-launch trigger, but closing in
   (~1.5h out at this rate if it holds). Both fleets healthy, no further intervention needed this tick.
+- **18:42Z — Both fleets steady, no incidents.** `smallchunk13`: chunk 7/451 (`2020-07-06→2020-07-10`), zero OOMs,
+  healthy skip-fast pace, fresh timestamps. `af-backfill-20260809-180612`: actively fetching current fixtures
+  (~1.35-1.39M range), fresh. Census: FIXTURE_LINEUPS needed **8,332 → 6,334** (-1,998 in ~31min, ~3,750/hr — steady,
+  89% converged from the 58,523 campaign start). Still not at the near-zero INJURIES trigger (targeting a floor similar
+  to FIXTURE_STATS's own 116-shard honest-absence residual); no intervention needed.
