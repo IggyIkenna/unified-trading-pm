@@ -202,6 +202,16 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
       unfixed) for whichever year is actively fetching when the lock clears. Re-run the CORRECTED manifest count-check
       (`underlying in (SP500, ES)`, not the old 11-id filter) after any retry to measure the actual delta. Repo:
       unified-trading-pm (progress tracked in `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`, not duplicated here).
+- [x] [DATA] P2. ✅ **2026-08-09, slot 3** — fixed the committed watcher's over-broad launch scope + ungated
+      checkbox-flip bug found while re-arming it for this P1 item. Was unconditionally relaunching all 5 ES_OPT years
+      (2022-2026) every run and flipping the plan checkbox the moment any VM ran once, regardless of measured coverage.
+      Fixed `deployment-service@77a95833` (QG green, quickmerge landed + ancestry-verified on
+      `origin/live-defi-rollout`): launch loop now targets only `YEARS_TO_LAUNCH` (2025, 2026) sequentially, manifest
+      query reports per-year coverage, and the plan-checkbox flip (both this doc's P1 item above and batch6 todo #2) is
+      now GATED on measured coverage (2025>=90% AND 2026>=95%) instead of firing unconditionally. Re-armed the corrected
+      watcher (PID 1962373, verified PGID=SID=PID isolated). This item is the concrete, verifiable deliverable of this
+      session — the P1 item above stays open since the actual retry (singleton lock clearing + the 2025/2026 launches
+      completing) has not happened yet. Repo: deployment-service.
 - [x] [INFRA] P1. ✅ **RE-INVESTIGATED 2026-08-09 (slot 9, infra) — "false-positive" hypothesis does NOT hold; this was
       a genuine hang on the pre-fix undersized machine type, already root-caused by `deployment-service@391ff7f5`; no
       watchdog-side change is evidenced as needed.** Confirmed `vm_zombie_watchdog.py` IS the actual actor for the
