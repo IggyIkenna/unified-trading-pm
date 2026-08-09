@@ -115,9 +115,11 @@ within normal LST peg noise) compounds to -18% to -35% "APY".
   `CARRY_STAKED_BASIS` consumes `staking_apy_bps` raw or through a smoothing/clamping layer already — if already
   smoothed, downgrade this to a cosmetic-only note; if raw, treat as the P1 half of this finding. Repo:
   strategy-service.)
-- [ ] [DESIGN] P2. Decide + implement the annualization-noise fix for `lst_features.py`'s `staking_apy_bps` calc (widen
+- [ ] [DESIGN] P1. Decide + implement the annualization-noise fix for `lst_features.py`'s `staking_apy_bps` calc (widen
       lookback / rolling-window fit / clamp+flag) — a quant-math methodology call, not a data-pipeline bug fix. Repo:
-      features-service (`features_service/onchain/engine/lst_features.py`).
+      features-service (`features_service/onchain/engine/lst_features.py`). **Retagged P2→P1 2026-08-09**
+      (`defi_satellite_ao_dispatch_batch12_2026_08_09.md` todo 1 verdict): `CARRY_STAKED_BASIS` consumes the raw
+      single-day value directly with no smoothing/clamp — see that doc's Progress Log for the file:line citations.
 
 ## Progress Log
 
