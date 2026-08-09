@@ -137,16 +137,71 @@ context_scope:
     has since landed.
   - No new doc has claimed any of D4-1/D4-4's underlying work since batch4 was drafted; D4-2/D4-3 were claimed and
     completed by batch5, as detailed above.
-- [ ] [REVIEW] P2. **Re-verify the operator-gated (D4-5 through D4-18), live-incident (D4-19), and needs-re-scoping
-      (D4-20) Deferred items have not silently changed state.** In particular: has the operator ruled on D4-10 (the
-      `pm_bats_tests` base-service.sh plan-destination question, escalated below)? Has
-      `github_actions_billing_wall_recurrence_2026_07_29.md` (D4-19) self-resolved or been operator-closed since
-      2026-07-31 — if so, note it is ready for a future batch's fresh triage of its 3 remaining bounded items (2-4), do
-      NOT draft them here even if it has resolved. Has `aws_codebuild_terraform_import_pending_2026_07_22.md`'s D1-D4
-      rulings table (D4-6) received an answer? For every other item (D4-5, D4-7 through D4-9, D4-11 through D4-18,
-      D4-20): confirm no new doc has claimed them and no operator ruling has landed that would newly unblock them.
-      **Done when**: each is re-confirmed still in its recorded state, or flagged if changed (flag only — do not
-      draft/dispatch a follow-up from this reconciliation todo).
+- [x] ✅ [REVIEW] P2. **DONE 2026-08-09 (slot 7, review→cicd craft).** Re-verified all 16 items (D4-5 through D4-20)
+      against live doc state. **7 of 16 have materially changed since batch4 was drafted (2026-07-31) — flagged only, no
+      follow-up drafted, per this todo's own scope:**
+  - **D4-5** (`orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`) — **operator RULED 2026-08-08** (option
+    (b), a non-shared credential file per job). The head `[OPERATOR-DECISION]` gate is closed; 2 implementation todos
+    are now open+unblocked directly in the source doc (still `assigned_vm: NA` there). Nothing to draft here — already
+    tracked in the source doc's own todos.
+  - **D4-6** (`aws_codebuild_terraform_import_pending_2026_07_22.md`) — **operator RULED all 4 rows (D1-D4) 2026-08-09**
+    (D1 keep the IAM wildcard; D2 delete the 18 webhook TF resources; D3 adopt live config into TF; D4 fix both
+    live-side drifts), reclassified `assigned_vm: NA → planning`. 2 dispatchable todos (`main.tf` reconciliation +
+    guarded `terraform import`) now live directly in the doc. Nothing to draft here.
+  - **D4-10** (`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`) — **operator answered the authority/scope
+    question via the 2026-08-08 round7 corpus-wide precedent** ("plan-destination questions default to AO-dispatched"),
+    reclassified `assigned_vm: NA → planning`; a paired finalize doc
+    (`pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md`) already exists. Both todos
+    (warn-only BATS phase + re-harden) are dispatchable as-is. Nothing to draft here.
+  - **D4-11** (`ldr_to_main_promote_churn_fix_verification_2026_07_27.md`) — **resolved 2026-08-05**: found the
+    operator-gated blocker had already been satisfied a week earlier (quickmerge.sh's Option-B direct-PR-open step no
+    longer fires in the normal path; live-measured 0/20 churning-shape PRs). `status: resolved`, archived, zero open.
+  - **D4-15** (`provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md`) — already closed by THIS
+    finalize plan's own todo 1 (2026-08-09): sole remaining checkbox flipped, doc reached zero-open, archived (see that
+    entry below). D4-15's "spot-check or just close" judgment call resolved itself by reaching zero-open.
+  - **D4-16** (`sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md`) — same doc as D4-4 (already
+    confirmed resolved via this plan's todo 2): batch1's stuck-gate-monitor todo landed
+    (`unified-trading-pm@409c35437`), doc `status: resolved`, archived, zero open. D4-16's direction-ruling question is
+    moot — the doc closed without needing it.
+  - **D4-19** (`github_actions_billing_wall_recurrence_2026_07_29.md`) — **RESOLVED 2026-07-31** (item 1: operator
+    cleared the billing block, live-verified). Items 2-4 (the "3 remaining bounded items" batch4 flagged for future
+    triage) were **already MIGRATED 2026-08-02** into `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Migrated
+    prevention todos from resolved incidents" section (operator ruling,
+    `plan_reconcile_parked_operator_decisions_2026_08_02.md` §3) — already extracted elsewhere; nothing left to draft
+    from this doc, per this todo's own instruction.
+  - **D4-20** (`cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md`) — **re-scoped, dispatched,
+    and fully shipped**: archived + resolved 2026-08-07, all todos closed, end-to-end proof via
+    `ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 1. The re-scoping this item needed (name the actual mechanism,
+    since the 2026-07-28 drift-checker now correctly refuses 15/19 consumers) happened and the work shipped.
+
+  **9 of 16 re-confirmed unchanged** (still in their batch4-recorded state — no new ruling, no new claiming doc, no
+  reclassification):
+  - **D4-7** (`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`) — both residuals still correctly
+    not-auto-queued; a reconciliation note flags Residual 1 as "worth a RECLASSIFY look" but explicitly declined to act
+    this round (docs-only batch scope) — an open suggestion, not yet a state change.
+  - **D4-8** (`build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`) — sole remaining item (#3) still
+    under the explicit "Page-first, do NOT fix here" operator instruction; KEEP-NA re-confirmed round7 (2026-08-08).
+  - **D4-9** (`breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`) — still parked as batch2's Deferred
+    E8, still unruled.
+  - **D4-12** (`mtds_deployment_env_race_survives_single_worker_2026_07_23.md`) — still a genuinely-unbounded
+    investigation, KEEP-NA re-confirmed 2026-08-06.
+  - **D4-13** (`uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`) — items [A]/[B] still require operator
+    sign-off, unchanged; a _separate_ extracted design-call clause (not part of [A]/[B]) was ruled 2026-08-07 (yes) but
+    still needs its own bounded-outcome scoping — noted, not a state change to D4-13's own item.
+  - **D4-14** (`post_cutover_silent_assumption_sweep_2026_07_23.md`) — still 5 open items, all operator-/design-gated
+    (kill-switch time-gate, tag-minting judgment call, F4 cron disposition, `digest-drift-sweep` non-convergence);
+    KEEP-NA re-confirmed round7 (2026-08-08).
+  - **D4-17** (`qg_sentinel_environment_blind_2026_07_23.md`) — still open, operator sequencing ruling + cross-doc MTDS
+    blockers unchanged, re-confirmed 2026-08-06.
+  - **D4-18** (`silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md`) — still open, operator-gated P0 (the
+    crash-looped `|| true` fix needing a `--selfcheck` mode + staged roll), re-confirmed 2026-08-06.
+
+  No follow-up drafted from this todo per its own scope. **Implication for todo 4 (archival)**: D4-11/D4-15/D4-16/D4-19/
+  D4-20 are fully resolved/migrated-elsewhere — no migration needed. D4-5/D4-6/D4-10 are operator-ruled and now
+  independently tracked as dispatchable todos in their own source docs — not batch4's concern to re-track. The remaining
+  9 (D4-7/8/9/12/13/14/17/18) still need archival-time migration to a tracked follow-up per todo 4's own instruction,
+  since they remain genuinely open and unclaimed by any active plan.
+
 - [ ] [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch4_2026_07_31.md`** via the standard 6-step ritual (CLAUDE.md §
       plan archival): migrate any still-unresolved Deferred item to a tracked follow-up (todos 2-3 above should have
       re-confirmed D4-1 through D4-20 — verify none silently vanishes) → add the archive banner → run the
@@ -196,3 +251,12 @@ context_scope:
   superseded-by-completion, nothing to extract. D4-4: batch1's "still-open" todo has since landed
   (`unified-trading-pm@409c35437`, live-verified ancestor; source doc archived + `status: resolved`, zero open) — fully
   resolved, not open. Todos 3-4 (D4-5..D4-20 re-verify + archival) remain — not in this todo's scope.
+- **2026-08-09 (slot 7, review→cicd craft)** — Completed todo 3 (D4-5 through D4-20 re-verify). Read all 16 source docs
+  live: 7 have materially changed since batch4 was drafted — D4-5/D4-6/D4-10 operator-ruled and reclassified to
+  `assigned_vm: planning` (dispatchable todos now live directly in each source doc, nothing to draft here); D4-11
+  resolved 2026-08-05 (blocker turned out already satisfied); D4-15/D4-16 already closed by this finalize plan's own
+  todos 1/2; D4-19 resolved 2026-07-31 with items 2-4 already migrated 2026-08-02 into batch1; D4-20 re-scoped,
+  dispatched, and shipped via batch5, archived 2026-08-07. The other 9 (D4-7/8/9/12/13/14/17/18) re-confirmed unchanged
+  — still in their batch4-recorded operator-/design-gated state, no new claiming doc or ruling. Full per-item detail in
+  the todo 3 checkbox above. Flagged only, no follow-up drafted, per this todo's own scope. Todo 4 (archival) remains —
+  not in this todo's scope.
