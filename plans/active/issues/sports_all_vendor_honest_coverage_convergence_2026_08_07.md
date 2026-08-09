@@ -500,3 +500,10 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   variable tick-to-tick, re-estimate fresh each time rather than trusting the last reading). Getting close to the
   ~100-500 near-zero floor now (~46min out at this rate, though the rate itself may shift again) — not yet triggering
   the INJURIES launch, watching very closely next tick for genuine convergence. Both fleets healthy, no intervention.
+- **20:08Z — smallchunk13 entered chunk 18 as expected; hit 3 OOM-retries so far (EPL, LA_LIGA, BUNDESLIGA, now on
+  SERIE_A) — this is the established, self-recovering, NOT-actionable pattern, not a repeat of the tracked silent-hang
+  bug** (chunk 17 cleared cleanly first, heartbeat fresh at 20:08:14Z, ~23s old at check time). FIXTURE_LINEUPS hitting
+  API rate limits (`sleeping 59s to next minute`), a normal self-throttle, not a failure. Census: FIXTURE_LINEUPS needed
+  **3,462 → 1,326** (-2,136 in ~24min, ~5,340/hr) — very close to the ~100-500 near-zero floor now but still just above
+  the >1000 hold-off threshold, so NOT launching INJURIES yet. Expect genuine convergence within the next tick or two at
+  this rate. Both fleets healthy, no intervention needed.
