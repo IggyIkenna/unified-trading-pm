@@ -282,41 +282,41 @@ item here.
       non-canonical originals are purged with the cited soft-delete value ≥604800s.
 
       **2026-08-09 (slot 16) — sub-item (3) CLOSED (no real cohort exists); sub-items (1)-(2) script written +
-                                  dry-run-validated, NOT applied. Not flipping — scope incomplete.** (3) Ran
-                                  `resolve_dex_pool_factory_addresses_2026_08_09.py --venue UNISWAP --chain ETHEREUM` as instructed: the
-                                  instruments-service defi lifecycle catalogue has **zero bare `UNISWAP` rows on any chain** — UNISWAP is already
-                                  fully version-split (`UNISWAP_V2`/`UNISWAP_V3`/`UNISWAP_V4`, 24,555 rows total across ETHEREUM/ARBITRUM/BASE/
-                                  OPTIMISM/POLYGON). Cross-checked directly against the MTDS raw manifest (`market-data-tick-defi-prd-...`
-                                  `availability_index.parquet`, bounded pushdown read): `venue=UNISWAP, chain=ETHEREUM` has exactly 7,625 rows, ALL
-                                  `capture_status=empty_confirmed` / `error_reason=EXPECTED_INSTRUMENT_NOT_LISTED`, blank `instrument_id`, dated
-                                  `2018-01-01..2018-11-01` (pre-Uniswap-V2-mainnet-launch honest-absence scaffolding, not real captured pool data —
-                                  the `13,420` figure this todo's text cites is from the 2026-07-21 source doc and is stale/pre-cleanup; the current
-                                  live count is 7,625 and none of it is a genuine factory-resolution gap). **Nothing to migrate for UNISWAP** — this
-                                  sub-item is closed on a negative finding, not deferred.
-                                  (1)-(2) Wrote + dry-run-validated `market-tick-data-service/scripts/one_offs/relabel_retire_sushiswap_v2_arbitrum_venue_2026_08_09.py`
-                                  (`market-tick-data-service@107e1f18c`) — mirrors the proven `relabel_retire_blazestake_venue_2026_08_06.py`
-                                  two-phase pattern (Phase A: per-object copy+relabel with `venue`/`instrument_id` content-column rewrite,
-                                  registered via `ManifestWriter`; Phase B: row-group-at-a-time retirement of the legacy rows in
-                                  `_index/availability_index.parquet`), generalized for this corpus's multiple `instrument_type`/`data_type` combos
-                                  (read off each object's own GCS path rather than hardcoded, unlike BLAZESTAKE's single `lst_rates`/`lst`
-                                  pairing). Dry-run validated against real prod GCS+manifest data: 195 objects correctly identified + path/filename
-                                  transforms verified correct across 3 known-captured legacy days (`dex_pool_state` files with the embedded
-                                  `SUSHISWAP-ARBITRUM:POOL:...` filename tag correctly swapped to `SUSHISWAP_V2-ARBITRUM:POOL:...`;
-                                  `dex_pool_swaps`' pool-address-keyed files and the `_migrated_sushiswap_*` marker correctly left filename-unchanged,
-                                  only the `venue=` path segment moves). One real finding from the dry-run pass: the discovery step's first draft
-                                  (mirroring BLAZESTAKE's full-local-download pattern) hit `OSError: No space left on device` — the manifest is
-                                  2.87GB and this shared host's `/tmp` tmpfs had only 860MB free; fixed by switching discovery to a bounded
-                                  pushdown read (`pyarrow.dataset` + `GcsFileSystem`, column+filter pushed to the scan, no full local download) —
-                                  worth flagging for whoever revisits `relabel_retire_blazestake_venue_2026_08_06.py`-style scripts in the future,
-                                  the same OOM/disk-space class STEP 0.56 warns about applies to `tempfile.mktemp()`-based manifest downloads too,
-                                  not just in-memory loads. **NOT applied to prod this session** — the real target is 618,655 manifest rows
-                                  (486,290 `captured` + 112,687 `empty_confirmed` + 18,133 `expected_unattempted` + 1,545 `attempted_failed`)
-                                  across ~2,200 distinct captured days; per `/codex/05-infrastructure/vm-launcher-runbook.md` this is VM-scale
-                                  heavy I/O, not an interactive-session operation. **Next steps for whoever resumes**: launch the script with
-                                  `--apply` on a dedicated VM (day-batched via `--limit-days` if chunking is needed, mirroring the odds_api
-                                  backfill's chunk-size lessons in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`), verify canonical
-                                  twins land + the manifest retirement completes cleanly, THEN this checkbox is flippable (UNISWAP sub-item is
-                                  already closed, no further action needed there).
+                                      dry-run-validated, NOT applied. Not flipping — scope incomplete.** (3) Ran
+                                      `resolve_dex_pool_factory_addresses_2026_08_09.py --venue UNISWAP --chain ETHEREUM` as instructed: the
+                                      instruments-service defi lifecycle catalogue has **zero bare `UNISWAP` rows on any chain** — UNISWAP is already
+                                      fully version-split (`UNISWAP_V2`/`UNISWAP_V3`/`UNISWAP_V4`, 24,555 rows total across ETHEREUM/ARBITRUM/BASE/
+                                      OPTIMISM/POLYGON). Cross-checked directly against the MTDS raw manifest (`market-data-tick-defi-prd-...`
+                                      `availability_index.parquet`, bounded pushdown read): `venue=UNISWAP, chain=ETHEREUM` has exactly 7,625 rows, ALL
+                                      `capture_status=empty_confirmed` / `error_reason=EXPECTED_INSTRUMENT_NOT_LISTED`, blank `instrument_id`, dated
+                                      `2018-01-01..2018-11-01` (pre-Uniswap-V2-mainnet-launch honest-absence scaffolding, not real captured pool data —
+                                      the `13,420` figure this todo's text cites is from the 2026-07-21 source doc and is stale/pre-cleanup; the current
+                                      live count is 7,625 and none of it is a genuine factory-resolution gap). **Nothing to migrate for UNISWAP** — this
+                                      sub-item is closed on a negative finding, not deferred.
+                                      (1)-(2) Wrote + dry-run-validated `market-tick-data-service/scripts/one_offs/relabel_retire_sushiswap_v2_arbitrum_venue_2026_08_09.py`
+                                      (`market-tick-data-service@107e1f18c`) — mirrors the proven `relabel_retire_blazestake_venue_2026_08_06.py`
+                                      two-phase pattern (Phase A: per-object copy+relabel with `venue`/`instrument_id` content-column rewrite,
+                                      registered via `ManifestWriter`; Phase B: row-group-at-a-time retirement of the legacy rows in
+                                      `_index/availability_index.parquet`), generalized for this corpus's multiple `instrument_type`/`data_type` combos
+                                      (read off each object's own GCS path rather than hardcoded, unlike BLAZESTAKE's single `lst_rates`/`lst`
+                                      pairing). Dry-run validated against real prod GCS+manifest data: 195 objects correctly identified + path/filename
+                                      transforms verified correct across 3 known-captured legacy days (`dex_pool_state` files with the embedded
+                                      `SUSHISWAP-ARBITRUM:POOL:...` filename tag correctly swapped to `SUSHISWAP_V2-ARBITRUM:POOL:...`;
+                                      `dex_pool_swaps`' pool-address-keyed files and the `_migrated_sushiswap_*` marker correctly left filename-unchanged,
+                                      only the `venue=` path segment moves). One real finding from the dry-run pass: the discovery step's first draft
+                                      (mirroring BLAZESTAKE's full-local-download pattern) hit `OSError: No space left on device` — the manifest is
+                                      2.87GB and this shared host's `/tmp` tmpfs had only 860MB free; fixed by switching discovery to a bounded
+                                      pushdown read (`pyarrow.dataset` + `GcsFileSystem`, column+filter pushed to the scan, no full local download) —
+                                      worth flagging for whoever revisits `relabel_retire_blazestake_venue_2026_08_06.py`-style scripts in the future,
+                                      the same OOM/disk-space class STEP 0.56 warns about applies to `tempfile.mktemp()`-based manifest downloads too,
+                                      not just in-memory loads. **NOT applied to prod this session** — the real target is 618,655 manifest rows
+                                      (486,290 `captured` + 112,687 `empty_confirmed` + 18,133 `expected_unattempted` + 1,545 `attempted_failed`)
+                                      across ~2,200 distinct captured days; per `/codex/05-infrastructure/vm-launcher-runbook.md` this is VM-scale
+                                      heavy I/O, not an interactive-session operation. **Next steps for whoever resumes**: launch the script with
+                                      `--apply` on a dedicated VM (day-batched via `--limit-days` if chunking is needed, mirroring the odds_api
+                                      backfill's chunk-size lessons in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`), verify canonical
+                                      twins land + the manifest retirement completes cleanly, THEN this checkbox is flippable (UNISWAP sub-item is
+                                      already closed, no further action needed there).
 
 - [x] ✅ [SERVICE] P1. **Verify current shipped state, then ship the already-coded+tested BALANCER/ORCA/RAYDIUM
       token-symbol-resolution diff** if it hasn't landed since 2026-08-03 — first check via `git log` whether
@@ -339,7 +339,7 @@ item here.
       2026-08-09T10:11:18Z). Associated tests present at
       `tests/unit/reference_data/adapters/defi/test_dex_metadata_population.py` and
       `tests/unit/test_defi_adapters_comprehensive.py`. No code change made — nothing to ship.
-- [ ] [SCRIPT] P2. **Check whether the catalogue-venue gap fix (`unified-api-contracts@f7314dc2`) has reached the
+- [x] ✅ [SCRIPT] P2. **Check whether the catalogue-venue gap fix (`unified-api-contracts@f7314dc2`) has reached the
       deployed instruments-service image**, and if so, run the deploy-gated re-enum+re-rollup.** The fix (26 new DeFi
       venues registered in the UAC validation allowlist, e.g. RENZO-ETHEREUM) is shipped on LDR but the re-enum/
       re-rollup was explicitly noted as
@@ -350,7 +350,25 @@ item here.
       not force a manual redeploy here — a stale image is a distinct, separately-trackable finding). Repos:
       instruments-service, unified-trading-pm. Source: `defi_track01_per_instrument_and_canon_id_2026_07_24.md`, R2
       ("Catalogue-venue gap" todo). Done when: a dated note states the live revision's commit/digest, whether it matches
-      `origin/main`, and (if matching) the re-enum/re-rollup's resulting venue count.
+      `origin/main`, and (if matching) the re-enum/re-rollup's resulting venue count. **2026-08-09 (slot 16) — deployed
+      image confirmed carrying the fix; re-enum + re-rollup triggered and verified, no code shipped.** `f7314dc2`
+      (2026-07-19) is not a direct ancestor of `origin/main` (promotion squashes into `chore(promote)` commits) but its
+      exact file content IS on main (`git diff origin/main origin/live-defi-rollout -- instrument_validation.py` empty)
+      since the promote commit `2399ffd7` (2026-07-25), well inside the released `v0.73.0`+ range (latest `v0.107.0`,
+      satisfying instruments-service's `>=0.106.0,<1.0.0` pin). The two Cloud Run Jobs
+      (`is-daily-enum-defi`/`lifecycle-catalogue-full-defi`) both run image tag `:latest`, which resolved to digest
+      `sha256:b2a00b3e0a34...` at check time — built from `instruments-service@2972f54d`, itself `origin/main` HEAD
+      (`git rev-parse origin/main` == `2972f54d`), confirming the deployed image matches main. Triggered both jobs live:
+      `is-daily-enum-defi-6n58b` (20:30:01Z→20:42:00Z, `succeededCount=1`, 0 `unknown venue` rejections for any of the
+      26 R2 venues — 1 unrelated `AAVE_V3-PLASMA` unknown-chain warning, out of this todo's scope, not investigated) →
+      `lifecycle-catalogue-full-defi-4dgnv` (20:44:43Z→21:18:12Z, `CATALOGUE_ROLLUP_COMPLETED rows=78294 exit_code=0`).
+      Post-rollup bounded pushdown read of `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`
+      (rewritten `2026-08-09T21:18:06Z`, matching the rollup's completion) confirms all 14 spot-checked R2 venue
+      prefixes present in the live `venue` column: BEEFY, CONVEX, IDLE, JITORESTAKING, KARAK, KELPDAO, PENDLE, PUFFER,
+      RENZO, ROCKETPOOL, SANCTUM, SOLBLAZE, SYMBIOTIC, YEARN_V3 (61 total distinct venues) — identical to the pre-rollup
+      snapshot, indicating these venues were already enumerating successfully via the routine daily/weekly cron cadence
+      sometime after the 2026-07-25 promote (this dispatch's live-triggered runs re-confirm rather than newly unblock).
+      No code change needed — verification + a fresh dated confirmation run, not a migration.
 - [ ] [SERVICE] P2. **Consolidate `native_staking_handler.py` onto `HeliusSolanaAdapter`** per the 2026-08-08 operator
       ruling (delete the hand-rolled RPC plumbing) — not a clean 1:1 swap: (a) add `get_vote_accounts()` to
       `HeliusSolanaAdapter` mirroring `_fetch_vote_accounts`'s shape/limit (currently missing from the adapter); (b)
@@ -512,3 +530,9 @@ item here.
   logic in isolation (3 scenarios: mid-range resume, normal fresh launch, fully-done checkpoint) before shipping.
   `quality-gates.sh` green. Commit: `deployment-service@66803f0c5500e59c0a3f2904428b60f1c99bd964`. Full evidence in the
   flipped checkbox above.
+- 2026-08-09 (slot 16, data_engineering worker): Todo (catalogue-venue gap deploy check) closed — deployed IS image
+  confirmed matching `origin/main` HEAD (content-equivalent to `unified-api-contracts@f7314dc2`, live since promote
+  `2399ffd7` 2026-07-25). Triggered `is-daily-enum-defi` (succeeded, 0 unknown-venue rejections for the 26 R2 venues)
+  then `lifecycle-catalogue-full-defi` (succeeded, 78,294 rows) live via `gcloud run jobs execute`; post-rollup
+  catalogue read confirms all 14 spot-checked R2 venues enumerate. No code shipped — a live ops-check + confirmation
+  run. Full evidence in the flipped checkbox above.
