@@ -55,3 +55,7 @@ with zero deletions — a same-line path-swap (1 line deleted, 1 line added) doe
       `check_line_caps.sh`'s SCOPED-mode exception to cover a bounded reference-path-only swap (no other content change)
       on an already-over-cap doc, then make the swap. Done-when: the stub file no longer exists and
       `python3 scripts/run_validators.py --scope all` stays green.
+
+## Progress Log
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (1 entry).

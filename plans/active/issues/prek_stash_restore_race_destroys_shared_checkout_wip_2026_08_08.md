@@ -104,3 +104,4 @@ standard "check `git status`, check `git stash list`" recovery ritual actively c
 - **2026-08-08 (interactive session, slot 1)**: Filed after losing the same file three times while shipping the AO
   context-probe fix. Root cause inferred from prek's own stash/restore log lines bracketing every hook batch. Work was
   recovered from a session scratchpad backup and landed as `unified-trading-pm@8bff8f5792`.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

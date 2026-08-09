@@ -135,3 +135,4 @@ context_scope: [agent-orchestrator/server/dirty_state.py, agent-orchestrator/ser
   risk on a liveness-protection mechanism) justifies immediate dispatch over an ask-first NA default.
 - 2026-08-09 (slot 19, backend_engineer): Landed todo 2 — agent-orchestrator@9a5506f. See the checkbox above for the
   full implementation summary.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).

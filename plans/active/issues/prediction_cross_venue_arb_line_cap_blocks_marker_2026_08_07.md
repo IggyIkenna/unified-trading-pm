@@ -131,3 +131,4 @@ to confirm the doc is back under the soft cap (not just barely under the hard ca
   line 702) were independently re-checked and remain genuinely open, unchanged in substance since the 2026-08-06 marker
   (the 5→3 open-item drop since then was two unrelated closures via batch4's 2026-08-07 finalize, not new
   na-eligibility-audit work).
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

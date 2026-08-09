@@ -188,3 +188,5 @@ this tranche. Clear — flipping this doc directly (retroactive reclassification
 (b)) resolves batch4 D4-10's escalation rather than competing with it; paired finalize doc authored:
 `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md`. Both existing todos (warn-only BATS
 phase + re-harden-after-clean-baseline) stay unchanged in content, now dispatchable as-is.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
