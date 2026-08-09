@@ -12,7 +12,7 @@ summary: >-
   below). Item 3 (shard24 relaunch) resolves a same-day conflict flagged by that source doc's own round7 RECLASSIFY
   sweep (batch10's operator-gated characterization was stale, predating the doc's own round5 resolution of its blocking
   item).
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [meta]
@@ -59,8 +59,21 @@ context_scope:
 
 # CeFi satellite AO batch 12 — item-level extraction (infrastructure_master group)
 
-> **Status: ACTIVE.** Conflict-checked 2026-08-09 — see Progress Log for the per-todo verification (each todo's target
-> file/mechanism grepped against the full active-plan corpus; the one genuine near-miss, a sibling doc
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 3 todos shipped/measured with real evidence (see Progress Log), reconciled
+> against their 3 source docs (`issues/mdps_features_deadcode_consolidation_2026_07_20.md`,
+> `aster_and_cefi_rolling_adv_feature_2026_07_21.md`,
+> `issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md`) and independently re-verified by
+> finalize-plan todos 1-2. Archived per the 6-step ritual
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); a codex staleness found in the process — 2
+> refs to the now-deleted `launch-prediction-features-vm.sh` (todo 1, `deployment-service@4150c6c2`) — was corrected in
+> `/codex/05-infrastructure/vm-launcher-runbook.md` + `/codex/05-infrastructure/vm-tarball-deployment.md`. Finalize plan
+> `cefi_satellite_ao_dispatch_batch12_2026_08_09_finalize.md` (source-doc reconciliation + this archival) completed and
+> archived alongside this doc. No new deferred item migrated — the two forward-pointers in this doc's own Progress Log
+> (the `features-cross-instrument-service` cleanup, the S1-b citation-reconciliation) were already real tracked `- [ ]`
+> todos in their source docs. Successor: none.
+>
+> **Status: ACTIVE (historical).** Conflict-checked 2026-08-09 — see Progress Log for the per-todo verification (each
+> todo's target file/mechanism grepped against the full active-plan corpus; the one genuine near-miss, a sibling doc
 > `ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md` referencing the SAME "pending
 > operator A/B/C" framing for todo 1's target, was confirmed stale — it predates the 2026-08-08 round5 declassification
 > and names a DIFFERENT pair of launchers, not this todo's target). **Cross-todo file-collision check**: todo 1 edits

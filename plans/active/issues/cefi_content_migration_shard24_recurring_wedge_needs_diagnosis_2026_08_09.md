@@ -30,7 +30,7 @@ tags: [cefi, migration, vm, wedge, stall, canonical-migration, data-pipeline]
 related:
   [
     /plans/archive/2026_08/issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch12_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch12_2026_08_09.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-08-09

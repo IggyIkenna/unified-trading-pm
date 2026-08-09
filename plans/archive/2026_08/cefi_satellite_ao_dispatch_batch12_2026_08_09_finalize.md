@@ -8,7 +8,7 @@ summary: >-
   todos land, checking whether the mdps doc's now-2-remaining-open-items (S1-b, S1-c) changed status, and archiving
   batch12 via the 6-step ritual. `status: active` from the start; `gate_on_depends: true` machine-holds every todo until
   batch12's own tasks are done.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [meta]
@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-12, finalize, item-level-extraction]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch12_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch12_2026_08_09.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -38,7 +38,6 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-archive_exempt: true
 depends_on: [cefi_satellite_ao_dispatch_batch12_2026_08_09]
 gate_on_depends: true
 source: >-
@@ -46,16 +45,24 @@ source: >-
   task_template.md §4's finalize-plan-coverage rule.
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch12_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch12_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
 # CeFi satellite AO batch 12 — finalize
 
-> **Status: active from the start.** `gate_on_depends: true` machine-holds every todo below until batch12's own 3 tasks
-> are `done`. **Machine-gated on `cefi_satellite_ao_dispatch_batch12_2026_08_09.md`.** `sequential: true` because todo 2
-> depends on todo 1's reconciliation, and todo 3 (archival) must run last.
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 3 todos done: source-doc pointer reconciliation, independent re-check of
+> batch12's 2 remaining open items, and the archival itself (this doc +
+> `cefi_satellite_ao_dispatch_batch12_2026_08_09.md`, moved to `plans/archive/2026_08/` in the same commit as this
+> banner). Every active-corpus referrer repointed to the archive path; no deferred item needed migrating (both
+> forward-pointers were already real tracked todos in their source docs, not prose); a codex staleness found and fixed
+> (`/codex/05-infrastructure/vm-launcher-runbook.md`, `/codex/05-infrastructure/vm-tarball-deployment.md`). Successor:
+> none.
+>
+> **Status: active from the start (historical).** `gate_on_depends: true` already machine-held every todo below until
+> batch12's own 3 tasks were `done`. **Machine-gated on `cefi_satellite_ao_dispatch_batch12_2026_08_09.md`.**
+> `sequential: true` because todo 2 depends on todo 1's reconciliation, and todo 3 (archival) had to run last.
 
 ## Todos
 
