@@ -12,7 +12,7 @@ summary: |
   exits 0 off staging — and staging is bypassed fleet-wide), AND the /git-commit skill mandated the exact opposite of
   the CLAUDE.md HARD RULE ("never quickmerge by default — direct push is the rule"). Both are now fixed and verified;
   this doc is the surviving audit trail for the 33 laundered commits, since the machine record no longer shows them.
-status: open
+status: resolved
 resolved_by:
 nature: process
 asset_group: [ci]
@@ -58,6 +58,10 @@ source:
 ---
 
 # Provenance-gate override + the hook that was never installed
+
+> **✅ RESOLVED + ARCHIVED (2026-08-09, plan_reconciler agt-c80749)** — all 5 todos done, 0 open. This doc remains the
+> permanent audit trail for the 33 laundered commits (see the banner below); archived out of `plans/active/issues/` for
+> corpus hygiene, not because the audit-trail purpose is retired.
 
 > **Read this before trusting a ✅ from `check_strict_quickmerge.py` on mtds or deployment-api for anything dated ≤
 > 2026-07-16.** The gate reads clean there because the baseline moved past the violations, not because they were ever
