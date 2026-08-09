@@ -41,18 +41,23 @@ related:
     /plans/archive/2026_08/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md,
     /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
+    /plans/active/infra_satellite_ao_dispatch_batch11_2026_08_09.md,
+    /plans/active/infra_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
     /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
     /plans/active/issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md,
     /plans/active/issues/operator_action_items_consolidated_2026_08_08.md,
     /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md,
     /plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
+    /plans/active/issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-09"
-author: slot-22 (ag_closeout_auditor, infra tranche, dispatch agt-3b6f6b)
+author:
+  "slot-22 (ag_closeout_auditor, infra tranche, dispatch agt-3b6f6b) + slot-9 (ag_closeout_auditor, infra tranche,
+  dispatch agt-c74a01, second run same day)"
 last_updated: "2026-08-09"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -181,6 +186,12 @@ shipped draft artifact, not an unresolved item) — **balanced**.
       — 4 todos: UV-version-pin centralization (6 files) + 3 conflict-clear fixes extracted from
       `codex_drift_followups_dual_cloud_image_builds_2026_08_08.md`. Flip to `status: active` to dispatch; its finalize
       twin is already `status: active` and correctly gated either way.
+- [ ] [OPERATOR] P2. **Review + approve (or reject) `infra_satellite_ao_dispatch_batch11_2026_08_09.md`** (status:
+      draft, drafted by this run's own second dispatch) — 2 todos: generalize `generate_na_doc_tranche_inventory.py`'s
+      `body_content_hash()` marker-stripping to cover `/context-scout`'s own body-level Progress Log line (measured 44%
+      false-positive rate on one tranche, one run) + a SKILL.md cross-reference. Flip to `status: active` to dispatch;
+      its finalize twin is already `status: active` and correctly gated either way. Source:
+      `issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md`.
 - [x] ✅ [DOCS] P3. **STALE — already flipped, this finding was itself reading stale prose.** Direct read of
       `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md` (na-eligibility-audit infra
       tranche, 2026-08-09) confirms its `[DATA] P1` item is `- [x]` — closed by that doc's own "stale-check re-verify
@@ -189,8 +200,60 @@ shipped draft artifact, not an unresolved item) — **balanced**.
       which was accurate when finding 21/7 was first written but predates the same-day flip. Item 2 (`[DATA] P2`, update
       the sibling dispatch doc's stale numbers) remains genuinely open in that doc; not this todo's scope.
 
+## Second run this same day — 2026-08-09 (slot 9, dispatch agt-c74a01)
+
+A second `/ag-closeout-audit infra` dispatch landed hours after the first (slot 22, dispatch agt-3b6f6b, above). Rather
+than re-running a full fresh Phase-1 triage over the whole candidate set (low marginal value against a same-day prior
+run — the candidate-generator script's own design intent per its docstring: "docs cited somewhere were very likely
+already resolved by a prior round... re-reading all of them from scratch is low marginal value"), this run re-derived
+the live candidate set and diffed it against the first run's reported findings:
+
+- Live re-run of `generate_ag_closeout_audit_candidates.py --tranche infra`: 50 members, 13 covering docs, 12
+  never-cited (vs the first run's reported post-run 49/11/11 — corpus moved slightly under concurrent multi-agent edits
+  in the intervening hours, expected).
+- Cross-checked all 12 never-cited candidates against every dated `ag_closeout_audit_infra_parked_*.md` (2026-08-01
+  through today) and every `infra_*batch*`/`*finalize*` doc (active + archived): **11 of 12 were already addressed** in
+  a prior day's report or an archived batch (`ci_pipeline_speed_and_cost_redesign_2026_08_05`,
+  `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06`,
+  `lc_verify_tarball_freshness_auto_mode_ silent_dirty_skip_2026_08_06`,
+  `na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29`,
+  `s5_7_required_docs_gaps_2026_07_29`, `self_hosted_runner_public_repo_revert_2026_08_05`,
+  `shared_ci_workflow_repo_extraction_2026_08_06` — plus the 4 already covered above in today's own report:
+  `ag_closeout_audit_infra_parked_2026_08_08`, `defi_gas_fees_legacy_purge_...`,
+  `defi_manifest_allow_stale_fallback_...`, `operator_action_items_consolidated_2026_08_08`).
+- **Exactly one candidate was genuinely new**:
+  `issues/na_eligibility_hash_blind_to_context_scout_progress_log_line_ 2026_08_09.md`, filed 06:05Z today by the
+  na-eligibility-audit tradfi-tranche run (dispatch agt-3df41f) — AFTER the first infra run had already closed out.
+  Direct-read in full (single net-new candidate — mirrors the first run's own "direct-read the net-new candidates"
+  pattern rather than spinning up a Workflow for one doc). Both its todos (generalize `body_content_hash()`'s
+  marker-stripping past na-eligibility-audit's own marker to also cover `/context-scout`'s body-level Progress Log line,
+  which was causing a measured 44% false-positive re-triage rate on one tranche's Phase 0; add a SKILL.md
+  cross-reference) are bounded/deterministic. Conflict-checked against `infra_consolidated_closeout_2026_07_25.md`, all
+  `infra_*batch*`/`*finalize*` docs (active + archived, including today's own batch9), and a corpus-wide grep for the
+  target function/regex names — the only prior hit is `infra_satellite_ao_dispatch_batch7_2026_08_04.md`'s own
+  already-`[x]`-done todo, which shipped the ORIGINAL frontmatter-blind hash (a different specific gap:
+  na-eligibility-audit's own marker, not context-scout's) — no live claim, conflict-clear. Drafted
+  `infra_satellite_ao_dispatch_batch11_2026_08_09.md` + finalize twin (status: draft, awaiting operator review — see the
+  new todo above). Validated both against `check_frontmatter_schema.py`, `check_todo_format.sh`, `check_line_caps.sh`,
+  and `check_finalize_plan_coverage.py` (all pass) and confirmed `check_ag_closeout_linkage.py` shows zero new
+  `[infrastructure]`-tagged orphans (21 orphans corpus-wide vs baseline 49, 0 infra — same 0-infra result as the first
+  run today, corpus improved elsewhere in the interim).
+- Re-verified batch9 (first run's draft): still `status: draft`, unchanged, still awaiting operator review — no action
+  needed, already tracked above.
+- No new operator-decision-requiring findings this second run.
+
+**Ledger (second run)**: 0 new operator-decision-requiring findings + 0 new parked items (11/12 never-cited candidates
+already tracked, re-confirmed unchanged) + 1 batch drafted (not counted as a parked finding — a shipped draft artifact,
+per the same convention the first run's ledger used) — **balanced**.
+
 ## Progress Log
 
+- **2026-08-09 (second run, slot 9, dispatch agt-c74a01)**: `/ag-closeout-audit infra` re-dispatched same day. Live
+  re-derived candidate set (50/13/12), diffed against the first run's reported findings rather than re-triaging from
+  scratch, found exactly 1 genuinely new candidate (na-eligibility-audit's context-scout body-hash-blind-spot doc, filed
+  after the first run closed), conflict-checked it clean, drafted `infra_satellite_ao_dispatch_batch11_2026_08_09.md` +
+  finalize twin (status: draft). See "Second run" section above for full detail. Ledger: 0 new parked + 1 batch drafted
+  — balanced.
 - **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:cb055f139fa75091]: KEEP-NA, stale-items — closed todo 5
   above (the "evolved further" read was itself stale; the target doc's item was independently confirmed already `[x]`
   via direct read, `market-tick-data-service@eb380b71b`). Doc stays NA on the 4 remaining items (findings 12/13
