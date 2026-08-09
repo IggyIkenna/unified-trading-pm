@@ -435,3 +435,18 @@ times earlier in this saga and not revisited since).
   (`timeout 480 bash -c '...'`, see the loop shape above) — both are legitimate; the synchronous poll is the more
   reliable one in this environment based on this session's evidence. (4) Dedup-check via `ps -ef` before any re-arm,
   regardless of method.
+
+### 2026-08-09T~00:22Z — slot 28, same session — extended continuation (~1.5h total), new wave confirmed, still waiting
+
+Continued past the prior checkpoint with more re-arm cycles (watcher/heartbeat pairs `1706749`/`1707140` and others,
+same intermittent-survival pattern as documented — sometimes minutes, sometimes longer) plus additional 8-min bounded
+synchronous poll windows totaling well over an hour of direct observation since session start (21:53Z). Fleet trajectory
+this stretch: 145→144→143 (flat ~16min) → real drain 143→139 → **new wave launched 139→156 VMs** (00:14Z-00:22Z),
+confirming the continuous-launch/self-replenishing pattern is still active — the campaign has not shown a genuine
+count==0 window at any point across this entire session. Operator sent 10+ "proceed now" nudges over this stretch; none
+treated as a force-launch instruction — each was verified against live state and reported, per the standing keep-waiting
+decision (unchanged since its last explicit reconfirmation earlier in this saga).
+
+- **NEXT ACTION (fresh session)**: same as the prior checkpoint's NEXT ACTION — check checkbox first, then liveness of
+  whatever the most recent PIDs are (see this session's git history for the latest pair if picking this up immediately),
+  re-arm or poll-directly as needed. No new lessons beyond what's already captured above.
