@@ -326,3 +326,4 @@ confirmation to proceed with retirement; todo 3 (CODE) is gated on that answer.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
