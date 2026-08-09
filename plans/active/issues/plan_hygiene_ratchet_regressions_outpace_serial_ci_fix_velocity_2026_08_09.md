@@ -134,3 +134,10 @@ words: "this branch is churning faster than one CI worker can chase serially").
   finding extends to the NA-corpus check as well — 5 distinct ratchet checks now observed regressing under concurrent
   commit load: `codex-doc-freshness`, `effort-signal-ratchet`, `archive-candidates`, `dangling-reference-paths`,
   `assigned_vm:NA corpus size`.
+- 2026-08-09 (slot 30, same task, later tick): PR #2648 was superseded (closed unmerged) by a fresh fleet-bot PR #2651
+  (head `36541f9c1`, still carries `dbaa7b463`); #2651 also failed `QG slice (checks)` — same race, no new distinct
+  check identified this cycle, so not logged as a 6th entry. Tooling note for whoever picks up the P2 structural-fix
+  todo: the `qg-slice-failed-checks` artifact GH Actions uploads on failure is **not diagnostic** — it contains only the
+  literal string `"checks failed"` (168 bytes), not which check(s) failed; identifying the actual failing check requires
+  either `gh run view --log-failed` (verbose, slow) or reading the job's raw log for the checker script's own output.
+  `dbaa7b463` still not on `origin/main` as of this tick; continuing to wait rather than intervene.
