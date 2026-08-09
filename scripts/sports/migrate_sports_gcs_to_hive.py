@@ -175,7 +175,7 @@ def migrate_odds_data(dry_run: bool = True, date_range: tuple[str, str] | None =
                 try:
                     df = pd.read_parquet(league_path)
                     dfs.append(df)
-                except Exception:
+                except (OSError, ValueError):
                     pass
 
             if dfs:

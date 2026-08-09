@@ -138,7 +138,7 @@ def extract_uac_registries() -> dict[str, object]:
                     "access_mode": str(getattr(spec, "access_mode", "")),
                     "data_types": [str(dt) for dt in getattr(spec, "data_types", [])],
                 }
-            except Exception:
+            except (TypeError, AttributeError):
                 endpoint_data[str(key)] = "EXTRACTION_ERROR"
         data["endpoint_registry"] = endpoint_data
 

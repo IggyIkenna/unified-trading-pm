@@ -115,7 +115,7 @@ def _current_branch(repo_path: Path) -> str:
             text=True,
             timeout=5,
         ).strip()
-    except Exception:
+    except (subprocess.SubprocessError, OSError):
         return "(unknown)"
 
 

@@ -339,7 +339,7 @@ def load_policy_service_names(workspace_root: Path) -> frozenset[str]:
                 services = _parse_service_names_from_uac(candidate)
                 if services:
                     return frozenset(services)
-            except Exception:
+            except (OSError, UnicodeDecodeError, SyntaxError):
                 pass
 
     # Hard-coded fallback (stable subset from the 2026-05-12 seed).

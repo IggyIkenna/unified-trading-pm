@@ -815,7 +815,7 @@ def detect_stale_quarantine(now: _dt.datetime, stale_min: int = 120) -> list[dic
     try:
         with open("workspace-manifest.json") as fh:
             manifest = json.load(fh)
-    except Exception:
+    except (OSError, json.JSONDecodeError):
         return []
 
     quarantine: dict[str, dict[str, object]] = manifest.get("promotion_quarantine") or {}
@@ -830,7 +830,7 @@ def detect_stale_quarantine(now: _dt.datetime, stale_min: int = 120) -> list[dic
             continue
         try:
             since_ts = _parse_ts(since_raw)
-        except Exception:
+        except ValueError:
             continue
         if since_ts >= cutoff:
             continue  # recent quarantine — not yet stale

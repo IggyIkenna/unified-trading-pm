@@ -297,7 +297,7 @@ def extract_service_spec(service_name: str, module_path: str, app_attr: str) -> 
     except json.JSONDecodeError as e:
         logger.error("  INVALID JSON from %s: %s", service_name, e)
         return None
-    except Exception:
+    except (OSError, AttributeError, TypeError):
         logger.error("  FAILED to extract %s:", service_name)
         traceback.print_exc()
         return None
@@ -464,7 +464,7 @@ def run_orphan_audit(spec: dict[str, object], workspace_root: Path) -> list[str]
                 # Check if it's a Pydantic model class (not instance, not function)
                 if isinstance(obj, type) and hasattr(obj, "model_fields") and name not in schema_names:
                     orphans.append(f"UAC: {name}")
-            except Exception:
+            except AttributeError:
                 pass
         logger.info("UAC audit: %d exports checked", len(uac_all))
     except ImportError:
@@ -480,7 +480,7 @@ def run_orphan_audit(spec: dict[str, object], workspace_root: Path) -> list[str]
                 obj = getattr(unified_api_contracts.internal, name)
                 if isinstance(obj, type) and hasattr(obj, "model_fields") and name not in schema_names:
                     orphans.append(f"UIC: {name}")
-            except Exception:
+            except AttributeError:
                 pass
         logger.info("UIC audit: %d exports checked", len(uic_all))
     except ImportError:

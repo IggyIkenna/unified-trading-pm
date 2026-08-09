@@ -94,7 +94,7 @@ def main() -> int:
                     if any(p in py_file.read_text() for p in patterns):
                         found = True
                         break
-                except Exception:
+                except (OSError, UnicodeDecodeError):
                     continue
             if found:
                 break

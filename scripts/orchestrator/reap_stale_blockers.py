@@ -90,7 +90,7 @@ def _load_backlog_yaml(path: Path) -> list[dict]:
 
         tasks = load_backlog(path)
         return [t.model_dump() for t in tasks]
-    except Exception:
+    except (ImportError, OSError, ValueError, AttributeError):
         pass
 
     print(
