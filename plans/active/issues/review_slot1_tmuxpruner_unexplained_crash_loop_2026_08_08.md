@@ -109,7 +109,7 @@ own Tick history.
       roles; (c) exempt `pane_state=="idle"` the same way `"working"` already is. Repo: agent-orchestrator. —
       agent-orchestrator@dd01255 (option (b), code-only fix, covers every chat-loop role uniformly regardless of pane
       state) + Progress Log entry below.
-- [ ] [BACKEND] P1. **Both prior fixes (`e32d962` debounce + `dd01255` heartbeat-exempt) confirmed live but the crash
+- [x] ✅ [BACKEND] P1. **Both prior fixes (`e32d962` debounce + `dd01255` heartbeat-exempt) confirmed live but the crash
       rate is UNCHANGED (msg 4372)** — review traced `GET /api/activity?slot=1` across a fresh 87min window
       (01:08-02:35Z, well after both fixes' restart) and found ~100% of review-role sessions still died via
       `tmux_session_lost` with zero `context_recycle_requested` precursors, survival 47s-14m12s, no improving trend.
@@ -157,7 +157,28 @@ own Tick history.
       is not automatically proof the governor itself is broken; unverified whether that many are concurrently holding a
       heavy-phase token vs sitting in lighter setup/lint phases. New todo added below to determine whether
       total-instance count (not just heavy-phase count) also needs a cap, since even light-phase QG steps compound with
-      the ~20+ concurrent Claude CLI sessions already driving the CPU/memory picture documented above.
+      the ~20+ concurrent Claude CLI sessions already driving the CPU/memory picture documented above. **RESOLVED
+      (backend, slot 23, agent-orchestrator@5a163e7)**: found the ACTUAL first detector (not TmuxPruner —
+      `reap_orphan_agents`, undebounced, fires 30-45s earlier every time) and fixed it, then used a live PID capture to
+      settle the false-positive-vs-genuine-death question this todo left open. Full method + evidence in the Progress
+      Log entry below. Short version: the death IS genuine (process confirmed gone, not just detached from tmux), OOM
+      and every AO-Python-code kill path are ruled out with hard evidence, and the fix shipped closes a real
+      previously-unpatched gap but does not by itself explain the underlying death — see the new todo below.
+- [ ] [BACKEND] P1. **New leading hypothesis from the resolution above — does Claude Code's `/loop <N>s <task>` (a FIXED
+      interval; review.md's own boot prompt, `config.review_loop_seconds()` defaults to 900s) legitimately terminate the
+      underlying OS process between ticks, relying on some mechanism outside this repo to relaunch it into the SAME tmux
+      pane?** Every AO-Python-code-level kill mechanism is now conclusively ruled out (Progress Log below) — the
+      remaining candidate is CLI-level `/loop` behavior itself. Cheap, deterministic test: spawn a throwaway tmux
+      session running `claude ... --session-id <x>`, issue `/loop 60s <trivial no-op command>`, capture the pane's PID
+      right after the first tick completes and again after the second. If the PID changes (or the process disappears and
+      something external relaunches it) between ticks, that CONFIRMS the hypothesis and the fix is a `review.md`
+      boot-prompt change (e.g. the self-paced/dynamic `/loop` form — documented as using an external resume contract
+      rather than a fixed in-process sleep — or a different polling pattern proven not to exit the process). If the PID
+      is stable across ticks, this hypothesis is falsified and the next step is getting read access to
+      `dmesg`/`journalctl -k` from a worker sandbox (every session so far, review AND backend, has hit
+      `Operation not permitted` on both) to directly check for a kernel-level kill this repo's own userspace logging
+      can't see. Repo: agent-orchestrator (if a code-side fix) or unified-trading-pm (`agents/review.md`, if a
+      boot-prompt fix) — whoever picks this up should confirm which before assuming.
 - [x] ✅ [DOCS] P3. Correct the ~00:22Z progress-log entry below (12-slot simultaneous burst) — review (msg 4361) showed
       it's a batch-processing artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick,
       NOT a tmux-server-level event as originally hypothesized; only the review-role entry in that burst was a real loss
@@ -171,7 +192,7 @@ own Tick history.
       working as designed, cap is just too permissive) or running ungated in lighter phases (governor scope gap). Repo:
       unified-trading-pm (`scripts/quality-gates-base/qg-host-governor.sh`). Cross-reference the standing
       CPU-contention/respawn-loop hypothesis above — likely the SAME underlying host-capacity crisis, not a separate
-      one. — unified-trading-pm@dab21e39c + @478105857 + Progress Log entry below (GOVERNOR SCOPE GAP confirmed, fixed).
+      one. — unified-trading-pm@413f5aad3 + @f8fcd10f1 + Progress Log entry below (GOVERNOR SCOPE GAP confirmed, fixed).
 - [x] ✅ [OPERATOR] P1. `agent-orchestrator@e32d962` (the TmuxPruner debounce fix) was committed but not loaded — the
       live uvicorn process (PID 885271) started at 23:15:22Z, ~11min BEFORE the 23:26:25Z commit. Main could not restart
       it (sandbox permission boundary: `sudo`/non-interactive `systemctl restart` both blocked). RESOLVED —
@@ -181,7 +202,87 @@ own Tick history.
 
 ## Progress log
 
-- 2026-08-09 ~08:55Z (backend, slot 15, unified-trading-pm@dab21e39c + @478105857): Resolved the qg-host-governor
+- 2026-08-09 ~09:16Z (backend, slot 23, agent-orchestrator@5a163e7): Picked up the standing "both prior fixes confirmed
+  live but crash rate UNCHANGED" BACKEND P1 todo. Found + fixed the actual FIRST detector, then used a live empirical
+  capture to settle the false-positive-vs-genuine-death question this doc had been circling for hours.
+
+  **Method — the actual first detector.** Direct read-only SQLite query against the live `agents` table (every review
+  incarnation is its own row — a fresh `register_agent` call with no known `agent_id` always inserts, never updates)
+  shows EVERY observed non-superseded review-agent archival across the checked multi-hour window has
+  `exit_reason='dead-tmux-session'` — the reason string ONLY `reap_orphan_agents` (`server/state_store/agents.py`)
+  emits. Cross-checked against `journalctl -u orchestrator`: the "AgentKeeper reaped 1 orphan agent record(s):
+  [('agt-...', 'dead-tmux-session')]" log line fires 30-45s BEFORE TmuxPruner's own "TmuxPruner cleared N stale
+  tmux_session reference(s)" line, every single time sampled (checked 3 consecutive cycles: 08:10:18/08:11:02,
+  08:17:56/08:18:58, 08:31:58/no separate cap-log that cycle — all same shape). `reap_orphan_agents` is called from
+  `main_agent_keeper.AgentKeeper.tick_once()` (every ~60s, `main_agent_interval_seconds`) with
+  `is_session_live=tmux_spawn.has_session` — the BARE, single-shot probe. TmuxPruner's own probe was debounced by
+  `e32d962` (2-check, 0.25s apart); this parallel call site, doing the exact same "is this tmux session gone" job, was
+  never patched — the same transient-miss class, unguarded, and (per the consistent 30-45s-earlier timing) the one
+  actually driving every observed archival, not TmuxPruner.
+  (`spawn_retry_cap_reached`/`spawn_heartbeat_timeout_pane_ working`, the `_auth_failover.py`/`dd01255` code path,
+  checked too — their own `pane_state`/`session_alive` fields at fire-time show they're observing an ALREADY-dead
+  session moments after the fact, i.e. lagging artifacts of the same death, not a second independent cause.)
+
+  **Fix shipped (agent-orchestrator@5a163e7)**: added `tmux_spawn.has_session_debounced()` (shared SSOT, same
+  0.25s-recheck-on-miss shape as TmuxPruner's existing debounce) and wired `main_agent_keeper.py`'s `reap_orphan_agents`
+  call to it instead of the raw probe. 4 new tests (3 direct debounce-behavior tests in
+  `test_tmux_spawn_has_session_debounce.py` + 1 wiring-regression guard in `test_main_agent_keeper.py` confirming
+  `tick_once` actually passes the debounced variant, not just that `reap_orphan_agents` itself is debounce-capable).
+  Full local `quality-gates.sh` green (2893 passed, 2 skipped, ruff/basedpyright clean).
+
+  **Method — genuine death vs. false positive, settled empirically.** Set up a bounded (`run_in_background`, 30-min cap)
+  monitor watching review's actual pane PID (755317, confirmed via the pane's start command using `exec claude ...` —
+  the pane's shell IS the claude process, no wrapper to survive its exit) across a full death cycle: poll
+  `tmux has-session` every 5s; the instant it misses, snapshot `kill -0 <PID>`, `/proc/<PID>/status`, `dmesg`,
+  `journalctl -k`, and the orchestrator's own log for the preceding 90s. Result at 09:04:42Z: **PID 755317 IS GONE** (no
+  `/proc` entry at all — the process genuinely exited, not merely detached from tmux). This definitively answers the
+  false-positive-vs-genuine-kill branch in favor of genuine death — but genuine death by WHAT, since nothing in this
+  repo's own code called `kill_session` on orch-slot-1 anywhere in the exact window (confirmed: OTHER slots'
+  `kill_session(...)` calls in the SAME journal window ARE visible — orch-slot-31, orch-slot-8, orch-slot-11 — so this
+  isn't a logging gap swallowing the evidence).
+
+  **Ruled out, with hard evidence, not guesses:**
+  - **OOM killer (kernel or cgroup)**, for the exact captured death:
+    `cat /sys/fs/cgroup/system.slice/orchestrator.service/memory.events` → `oom_kill 0`, `oom_group_kill 0`, `max 0`
+    (the cgroup never hit its hard ceiling, let alone triggered a kill) — `high 20580` confirms real, frequent soft-
+    threshold PRESSURE (matches every prior "pressure=high" reading in this doc) but pressure alone kills nothing.
+    Host-wide `/proc/vmstat` also read `oom_kill 0`. `systemctl is-active systemd-oomd.service` → `inactive`. **Caveat
+    on scope**: `orchestrator.service` restarted at 09:00:24Z (4 min before the captured death) and the host itself has
+    been up only since 08:31:14Z — both counters are fresh since those resets, so this is airtight for the 09:04:42Z
+    death specifically but does NOT retroactively contradict the operator's independently-confirmed genuine OOM activity
+    at 03:14Z (msg 4377 above) — that was a real event, from before this restart/reboot, at a much higher load (63-65
+    vs. today's much calmer host). Two different windows, both readings stand.
+  - **resource-watchdog** (the systemd RSS/swap/cpu killer, `scripts/infra/resource-watchdog/`): `claude` is NOT on its
+    allowlist (`orchestrator uvicorn resource-watchdog pytest prek ruff basedpyright mypy npm vitest tsc` only), so it
+    CAN target a claude process in principle — but live `ps` shows every `claude` CLI process on this host running
+    ~250-400MB RSS, nowhere near its 4GB-at-high-pressure / 10GB-at-normal-pressure thresholds. 24h of
+    `journalctl -u orchestrator` kill-relay logs show exactly 2 slots ever killed (14, 26) — both heavy
+    `market_tick_data_service`/data-pipeline Python scripts, zero for slot 1, ever.
+  - **Every explicit `kill_session()` call site in the codebase** (grepped all ~15): `WorkerLivenessWatchdog` explicitly
+    exempts `review_slot_ids()` in its main reap loop AND `_reclaim_idle_lingering_sessions` AND
+    `_release_prereq_blocked_slots`; `main_agent_keeper.py`'s own `kill_session` calls are ALL scoped to
+    `MAIN_SESSION_NAME`; `ensure_review_agents`'s own heartbeat-silent killer (`review_agent_heartbeat_silent_respawn`)
+    fired ZERO times across the full ~20h activity window checked (`GET /api/activity?slot=1&limit=500`).
+
+  **Net effect**: the fix shipped closes a confirmed, real, previously-unpatched gap and should measurably reduce churn
+  from the transient-miss class `e32d962` was built for (this call site had ZERO protection until now, not just a
+  shorter debounce window) — but it does NOT explain, and will NOT fully resolve, the underlying genuine process death,
+  since that death is now shown to originate OUTSIDE this repo's own Python code. Leading remaining hypothesis (Claude
+  Code's fixed-interval `/loop` possibly tearing down the process between ticks) + a cheap deterministic test for it:
+  new todo added above. Todo 3 (REVIEW re-verify) should stay open against a FRESH post-`5a163e7` window — expect the
+  unexplained-kill RATE to drop (fewer `reap_orphan_agents`-driven pre-emptive archivals racing ahead of TmuxPruner) but
+  likely not to zero, since the genuine-death mechanism itself is still unidentified.
+
+  **Unrelated in-file fix while shipping the above**: the plan-hygiene commit-SHA-evidence pre-commit hook rejected this
+  commit over slot 15's `unified-trading-pm@dab21e39c + @478105857` citation below (2 occurrences) — neither SHA
+  resolves in this repo. `git log` shows the real commits are `413f5aad3` ("gate TOTAL quality-gates.sh instances, not
+  just heavy phase") and `f8fcd10f1` ("wire the total-instance gate into base-service.sh/base-library.sh"), both
+  timestamped 09:08:05Z — i.e. they landed ~13min AFTER slot 15's own 08:55Z doc-flip commit, so the citation was very
+  likely written against a not-yet-landed SHA and never corrected once the real one existed. Corrected both citations in
+  place (small, in-file, evidenced — findings-triage "in your file → fix in same commit"); no content/claim change, just
+  the SHA.
+
+- 2026-08-09 ~08:55Z (backend, slot 15, unified-trading-pm@413f5aad3 + @f8fcd10f1): Resolved the qg-host-governor
   BACKEND P1 todo (msg 4377). **Diagnosis (first step the todo asked for): GOVERNOR SCOPE GAP, not "cap too
   permissive."** Read `qg_governor_acquire`'s call site in `base-service.sh` — it brackets ONLY phase [3] TESTS + [4]
   TYPECHECK; BOOTSTRAP (uv sync), [1] AUTO-FIX, [2] LINT, and the large [5] CODEX COMPLIANCE phase (~2800 lines, lines
