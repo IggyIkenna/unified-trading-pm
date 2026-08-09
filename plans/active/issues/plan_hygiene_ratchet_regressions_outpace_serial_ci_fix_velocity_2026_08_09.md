@@ -88,7 +88,7 @@ words: "this branch is churning faster than one CI worker can chase serially").
       resolves this facet too (a grandfather/baseline mode for `--only`, or moving these two checks to periodic/batched
       sweep, would both fix it) — track under the same resolution, don't design a separate fix.
 - [x] [BACKEND] P2. ✅ Consider one or more structural fixes so ratchet regressions don't outrace serial fixing on a
-      high-churn branch — `unified-trading-pm@<pending-sha>` (see Progress Log entry below for the exact commit and what
+      high-churn branch — `unified-trading-pm@36eb05954` (see Progress Log entry below for the exact commit and what
       shipped: option (c)'s diff-scoping applied to `check_reference_paths.py`, mirroring the already-proven
       `check_archive_candidates.sh --diff-base` pattern, plus a latent fail-unsafe bug fixed in that same pattern for
       the periodic cron path). Follow-up P2/P3 todos below track the checks this dispatch did NOT convert.
@@ -300,3 +300,21 @@ words: "this branch is churning faster than one CI worker can chase serially").
   (origin=3 current=2) from a concurrent agent's commit — not mine, not fixed this dispatch (tracked in the
   todo-regression follow-up above), but direct live confirmation the systemic pattern is still active and this fix
   targets a real, currently-firing failure mode.
+- 2026-08-09 (backend_engineer, slot 7, same dispatch, shipping): landed `unified-trading-pm@36eb05954`. Hit the exact
+  race this doc documents twice more on the way out: (1) two consecutive `git pull --rebase --autostash` cycles (18 then
+  12 commits behind) before a clean commit window, one with a real conflict in
+  `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` (slot 23 independently fixed the SAME fabricated-SHA
+  citation I'd found, more accurately — took theirs, dropped my redundant edit); (2) quickmerge's re-gate then failed on
+  an UNRELATED regression, `check_cloudbuild_template_drift.py` (client-reporting-api 4 markers > baseline 3, confirmed
+  genuine via matched-HEAD sibling clone — not a stale-clone false positive), a hard post-gate outside
+  `run_hygiene_sweep.sh`'s scope entirely (this doc's fix doesn't cover it) that blocks EVERY `unified-trading-pm`
+  commit regardless of diff. Filed
+  `plans/active/issues/cloudbuild_template_drift_client_reporting_api_regression_2026_08_09.md`
+  (`unified-trading-pm@5c25acbbb`) and declared repo-blocker `RB-b7866b60` per RULES.md § 4b rather than chase it myself
+  (outside craft/scope — needs Cloud Build template-vs-repo intent judgment). A subsequent retry landed clean
+  (`36eb05954` verified via `git merge-base --is-ancestor` against `origin/live-defi-rollout`) even though the checker
+  itself still failed when run standalone afterward — quickmerge's own re-gate apparently didn't re-hit this specific
+  check on that attempt (content-hash/cache short-circuit, not a real fix); `RB-b7866b60` stays open for the other
+  registered waiter (slot 24) since the underlying drift is still live. Net: this dispatch's own P2 deliverable is
+  shipped and verified; the cloudbuild-drift regression is a SEPARATE, now-tracked problem for someone else's dispatch,
+  not a blocker on calling this one done.
