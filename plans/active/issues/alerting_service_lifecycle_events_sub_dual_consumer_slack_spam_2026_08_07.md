@@ -69,14 +69,19 @@ related:
     /plans/active/issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md,
   ]
 created: 2026-08-07
+last_updated: "2026-08-09"
 author: unknown
-priority: P1
+priority: P3
 parent_epic: observability_master
 source: >-
   Traced from a live #data-pipeline-alerts Slack reconciliation session, 2026-08-07 — the mirror_live fix
   (unified-api-contracts@8f670c459 + alerting-service@60d525fc6) was verified correct in code but ineffective live.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+estimate_class: infra
+estimate_baseline_ai_days: 0.2
+estimate_calibrated_ai_days: 0.16
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 locked_by:
