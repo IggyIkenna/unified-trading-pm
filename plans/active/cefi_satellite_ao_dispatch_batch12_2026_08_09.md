@@ -117,7 +117,7 @@ context_scope:
       mirroring the calculator's verified-correct logic locally instead. Clamp + fail-closed (missing instrument
       context, `INSUFFICIENT_HISTORY`, `NO_DATA`) covered by 8 new/updated unit tests; `quality-gates.sh` green
       (sentinel-verified, sha=73aa792fb5a68429f08783b2e69910376f20e6fb).
-- [ ] [SCRIPT] P3. **Check canonical-migration-cefi-content-24's current manifest `capture_status` and `vm-logs/` GCS
+- [x] ✅ [SCRIPT] P3. **Check canonical-migration-cefi-content-24's current manifest `capture_status` and `vm-logs/` GCS
       prefix for any launch since `-065001` (2026-07-31)**; if shard 24 is still incomplete and hasn't already been
       relaunched by another agent, launch its checkpoint-resumed 3rd attempt:
       `launch-canonical-migration-vm.sh cefi-content-apply 2026-01-07 2026-01-15 full` (the exact window `-065001` was
@@ -135,7 +135,15 @@ context_scope:
       decision" item 2). **Done when**: shard 24's `canonical-migration-cefi-content-24-*` vm-logs show a completed or
       actively-progressing 3rd-attempt run (`PROGRESS.json` advancing past `last_completed_date=2026-01-07`), OR the
       check confirms shard 24 already completed via another path, in which case the todo closes as verified-complete
-      with no relaunch needed.
+      with no relaunch needed. — **CLOSED 2026-08-09 (slot-8, infra) per the todo's own precondition, not the done-when
+      disjunction**: the checkpoint-resumed 3rd attempt was ALREADY launched by another agent before this check
+      (`canonical-migration-cefi-content-24-relaunch20260731-133746`, inserted 13:37Z,
+      `RESUME_START_DATE=2026-01-06     RESUME_END_DATE=2026-01-15`) — so "hasn't already been relaunched by another
+      agent" is false and no launch was due from this todo. That 3rd attempt itself did NOT reach either done-when
+      disjunct (not complete, not actively progressing — it wedged at 33,800/108,441 files, `last_completed_date` frozen
+      at `2026-01-07`, VM self-deleted 2026-07-31 with no clean exit marker) — full evidence + the
+      correctly-checkpointed 4th-attempt follow-up filed at
+      `issues/cefi_content_migration_shard24_recurring_wedge_needs_diagnosis_2026_08_09.md`.
 
 ## Codex SSOTs
 

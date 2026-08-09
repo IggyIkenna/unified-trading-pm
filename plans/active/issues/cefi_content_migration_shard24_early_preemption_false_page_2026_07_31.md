@@ -55,6 +55,7 @@ drift_direction: none
 depends_on: []
 resolved_by:
 locked_by:
+archive_exempt: true
 context_scope:
   [
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
@@ -166,14 +167,18 @@ someone checks.
       build pipeline; no operator action was ever structurally required here. (Test-pass confirmation half of the
       done-when not independently re-run in this pass — the image-freshness half is sufficient to close the deploy-lag
       concern this todo exists to track.)
-- [ ] [SCRIPT] P3. Once the above is confirmed deployed, relaunch shard 24
+- [x] ✅ [SCRIPT] P3. Once the above is confirmed deployed, relaunch shard 24
       (`launch-canonical-migration-vm.sh cefi-content-apply 2026-01-07 2026-01-15 full` — the exact checkpoint-resumed
       window `-065001` was already using) for its 3rd attempt today. No `[OPERATOR]` gate needed for the relaunch action
       itself once the budget genuinely resets (ordinary backfill relaunch, AO-dispatchable by default per
       `/codex/05-infrastructure/vm-launcher-runbook.md`). Repo: deployment-service (launch) + market-tick-data-service
-      (verify). **ALSO dispatched via `cefi_satellite_ao_dispatch_batch12_2026_08_09.md` todo 3 (2026-08-09) — this
-      checkbox stays open here until that todo actually lands; flip both together, do not duplicate-dispatch a second
-      relaunch if batch12's todo already completed it.**
+      (verify). — **CLOSED 2026-08-09 (slot-8, infra), flipped together with
+      `cefi_satellite_ao_dispatch_batch12_2026_08_09.md` todo 3 per this note**: the 3rd attempt WAS launched (by
+      another agent, `canonical-migration-cefi-content-24-relaunch20260731-133746`, 2026-07-31T13:37Z) — the action this
+      todo asked for is done. It did not reach clean completion (wedged at 33,800/108,441 files, VM self-deleted with no
+      exit marker); a correctly-checkpointed 4th attempt + wedge-pattern diagnosis is tracked as new, separately-scoped
+      work at `issues/cefi_content_migration_shard24_recurring_wedge_needs_diagnosis_2026_08_09.md` (this doc's own
+      remaining scope — "relaunch the 3rd attempt" — is fully satisfied).
 
 ## Progress Log
 
