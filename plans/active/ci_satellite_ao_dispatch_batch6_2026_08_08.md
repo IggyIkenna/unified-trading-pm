@@ -114,14 +114,11 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
 
 ## Todos
 
-- [ ] 1. [INFRA] P0. **Re-measure fleet CI job-minutes 24h after the runner-checkout cache fix.** The 24h time-gate
-      (cache fix landed 2026-08-06) has elapsed as of this batch's authoring date. Run
-      `bash scripts/cicd/measure-ci-job-minutes.sh` and record the delta against the stated 5,875 min/24h baseline in
-      the source doc's own dated Progress Log entry (do not edit this plan's body). **Done when**: the delta is recorded
-      with real numbers (or recorded as blocked on credentials if the measurement source is unreachable — do not
-      estimate; the literal marker token is deliberately NOT written here, see the note under todo 12). Source:
-      `issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` (Part 8 line 523) — never cited by any
-      covering doc.
+- [x] ✅ 1. [INFRA] P0. **Re-measure fleet CI job-minutes 24h after the runner-checkout cache fix.** Re-measured
+      2026-08-09: **3,972 min/24h**, down from the 5,875 min/24h baseline (**-1,903 min, -32.4%**). Full per-repo delta
+      recorded in the source doc's Progress Log entry (2026-08-09, "post-cache-fix re-measure"), same commit as this
+      checkbox flip. Source: `issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` (Part 8 line
+      523).
 
 - [x] ✅ 2. [BACKEND] P2. **Ship the stranded, already-diagnosed-good `features-service` `PYRIGHT_TIMEOUT` fix.** Rebase
       `origin/wip-preserve/slot-4-features-service-diverged-20260803T171854Z` onto current `origin/live-defi-rollout`
