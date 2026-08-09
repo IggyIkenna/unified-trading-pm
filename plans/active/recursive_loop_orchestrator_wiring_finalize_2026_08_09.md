@@ -94,18 +94,18 @@ context_scope:
       plan) is filed against that ruling.
 
       **RULED 2026-08-09 (main, via BLK-b0af53e2, slot 4)**: option (1) — clone the `HealthFactorMonitor` pattern into a
-                  new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
-                  Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
-                  (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
-                  perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
-                  (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
-                  rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
-                  service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
-                  code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
-                  opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
-                  docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
-                  would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
-                  requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
+                      new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
+                      Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
+                      (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
+                      perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
+                      (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
+                      rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
+                      service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
+                      code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
+                      opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
+                      docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
+                      would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
+                      requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
 
 - [x] ✅ [BACKEND] P2. Implement the `HealthFactorMonitor`-pattern asyncio poller CLASS for `PerpHedgeSizer` (Family-2
       `CARRY_BASIS_PERP_INV`), per todo 4's 2026-08-09 ruling (option A). Build a new `PerpHedgeMonitor` class in
@@ -162,13 +162,14 @@ context_scope:
       `quality-gates.sh` full green (169s) on the committed HEAD (commit-before-QG ordering rule followed — first pass
       ran pre-commit on the dirty tree and its sentinel didn't carry forward, re-ran post-commit).
 
-- [ ] [BACKEND] P3. Add unwind/close consumption to `Family2PositionRegistry` (todo 6) once strategy-service's
-      `recursive_staked.py` ships a real Family-2 close/unwind emission path — today `_on_tick_family2_basis_perp_inv()`
-      never emits one (confirmed via todo 6's own investigation), so every observed Family-2 open event is, correctly
-      for now, treated as currently-open; that assumption goes stale the moment a real unwind path exists unless this
-      follow-up ships alongside it. Repo: execution-service. Done-when: the registry also consumes a Family-2
-      close/unwind event (correlating on `correlation_id`/`instruction_id`) and retires the matching open position from
-      `enumerate_open_positions()`'s output; unit test covers the retire path.
+- [x] ✅ [BACKEND] P3. **SPLIT 2026-08-09 (BLK-0fb75f8f, main ruling, option A)** — Add unwind/close consumption to
+      `Family2PositionRegistry` (todo 6). Was gated in-place on strategy-service's `recursive_staked.py` shipping a real
+      Family-2 close/unwind emission path, which does not exist yet and had no tracked prerequisite anywhere in the
+      corpus. Rather than build the consumer against a speculative event schema, split into a dedicated gated plan pair:
+      `/plans/active/strategy_service_family2_close_unwind_emission_2026_08_09.md` (prerequisite — ships the real
+      emission path) → `/plans/active/family2_position_registry_unwind_consumption_2026_08_09.md` (`depends_on` +
+      `gate_on_depends: true` on the prerequisite — the actual registry-consumption work). This todo's own disposition
+      is closed (split, not built here); the two linked plans are where the work actually dispatches from.
 
 - [ ] [DESIGN][BACKEND] P3. Add a genuine per-position wallet attestation to the Family-2 `AtomicInstruction` pipeline —
       today neither the instruction nor its attestations carry a wallet identifier anywhere (confirmed via todo 6's
@@ -273,3 +274,15 @@ context_scope:
   registry reuses that module's own `ATOMIC_INSTRUCTION_DATA_TYPE`/`ATOMIC_INSTRUCTION_SOURCE` constants and reads the
   same shard via the UTL `EventTransport` facade. Filed the two honest interim-source gaps as real todos (8, 9) per the
   done-when's own escape hatch, rather than leaving them as docstring prose.
+- **2026-08-09 (slot 33, backend_engineer)**: Picked up the "Add unwind/close consumption to `Family2PositionRegistry`"
+  todo and, before implementing, re-read `recursive_staked.py` fresh — confirmed the prerequisite it names
+  (strategy-service shipping a real Family-2 close/unwind emission path) still does not exist, and a corpus-wide grep
+  found no tracked plan/todo anywhere covering that prerequisite work. Escalated via `/blocked` (BLK-0fb75f8f) rather
+  than guess a schema. **Main ruled option A**: split into a dedicated gated plan pair instead of building the consumer
+  speculatively or folding the strategy-service work into this execution-service-scoped todo. Authored
+  `/plans/active/strategy_service_family2_close_unwind_emission_2026_08_09.md` (the prerequisite, ungated) and
+  `/plans/active/family2_position_registry_unwind_consumption_2026_08_09.md` (the consumer,
+  `depends_on: [strategy_service_family2_close_unwind_emission_2026_08_09]` + `gate_on_depends: true`), replaced this
+  todo's checkbox with a bold digest pointer (not real checkbox syntax, per task_template.md §3 finding H) to the two
+  new plans, and released this task (`skip-current-task`, `reason_code: GATED`) since the underlying work no longer
+  lives here.
