@@ -259,10 +259,14 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
       2026-07-30 (see Progress log) — measured 114,318 candidates, 81,454 confirmed safe (real captured twin found),
       CBOE 100% clean, CME's 32,864-row unresolved residual deliberately left untouched by design (not part of this
       approval — only the 81,454 confirmed-safe rows). Operator go-ahead now recorded — ready to `--apply` + self-verify
-      0 remaining among the confirmed-safe population. **Live-dispatch note**: this exact todo is duplicated verbatim in
-      `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` (`status: active`, `assigned_vm: planning`, its own combined
-      extraction-todo already `[x]`) — that's the actual dispatch vehicle; this doc stays NA per the standing
-      KEEP-NA-STALE citation above, do not also flip this doc's `assigned_vm`.
+      0 remaining among the confirmed-safe population. **Live-dispatch note — CORRECTED 2026-08-09 (plan_reconciler
+      agt-a3e83c)**: the "batch5 is the live dispatch vehicle" claim below (unchanged since 2026-08-02, re-asserted by 5
+      subsequent na-eligibility-audit passes through 2026-08-08 without checking batch5's live frontmatter) is STALE —
+      `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` was archived `status: complete` on 2026-08-05
+      (`unified-trading-pm@dc6d1e1be`), and its own combined extraction-todo closed WITHOUT running `--apply` (dry-run
+      only, same as this doc). **No currently-active plan carries the operator-approved (2026-08-07) 81,454-row
+      `--apply` forward** — this doc stays the only record of the approval. Needs a fresh AO-dispatch todo (or a new
+      satellite batch item) to actually execute it; flagged as a plan_reconciler finding, not resolved in this pass.
 - [x] ✅ [SCRIPT] P1. Harden `market_tick_data_service/scripts/_rebuild_tradfi_cf11.py::_handle_srz_tradfi_row` to check
       for an existing correctly-keyed captured shard before reclassifying a historical
       `empty_confirmed[SOURCE_RETURNED_ZERO]` row to `attempted_failed` — prevents this false-positive class recurring
@@ -371,3 +375,9 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   `status: active`, `assigned_vm: planning`); correctly not flipped independently. Todo 3 stays conditionally-scoped
   ("if it is found to cause its own denominator/accounting issues" -- trigger condition not yet evaluated); todo 4 stays
   DEPENDENCY_BLOCKED, sequenced after todo 1's `--apply` landing. Nothing to reclassify.
+- **plan_reconciler 2026-08-09** (tradfi tranche, dispatch agt-a3e83c): adversarially verified + corrected the stale
+  "batch5 is the live dispatch vehicle" claim (see the Live-dispatch note above) — batch5 archived `status: complete`
+  2026-08-05, `--apply` never ran there either. 6 prior na-eligibility-audit passes (2026-08-02 through 2026-08-08) all
+  re-asserted the stale claim without checking batch5's live frontmatter. The operator's 2026-08-07 GO-AHEAD is
+  therefore currently unexecuted with no active dispatch vehicle — filed as a redispatch finding (see
+  `plan_reconciler_findings_tradfi_2026_08_09.md`).

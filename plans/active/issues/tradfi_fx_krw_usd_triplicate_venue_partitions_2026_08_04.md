@@ -193,4 +193,6 @@ This is a genuinely new cluster, not covered by any existing tracked finding:
 
 > **2026-08-06 archive-candidate audit**: Doc's own Progress Log (context-scout 2026-08-06): 'a repeat occurrence is not
 > structurally prevented until that gap is closed' — the root cause (missing _VENUE_REMAP in the July migration
-> executor) was identified but never fixed, and that gap is not a tracked - [ ] todo.
+> executor) was identified — now tracked as the P3 `_VENUE_REMAP` follow-up todo directly above (**corrected 2026-08-09,
+> plan_reconciler agt-a3e83c** — this note previously said the gap "is not a tracked - [ ] todo", written in the same
+> commit that added that exact todo).

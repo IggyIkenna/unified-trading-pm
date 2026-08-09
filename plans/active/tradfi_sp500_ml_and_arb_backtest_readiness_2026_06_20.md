@@ -187,7 +187,14 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       `/plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md`) instead of a VIX cash-index IS entry /
       Yahoo-Barchart VIX-index OHLCV path (no such series exists — it was deleted 2026-06-23): derive VIX-equivalent
       features from VX futures OHLCV. Steps (3)/(4) (add `"vix"`/`"realized_vol_vix"` to `FEATURE_GROUPS` + dispatch in
-      `feature_group_service._calculate_features`) are unchanged and still open.
+      `feature_group_service._calculate_features`) are unchanged and still open. **Caveat (plan_reconciler 2026-08-09,
+      agt-a3e83c)**: `("tradfi","futures_chain")` is policy-restricted to `{trades, ohlcv_1s, ohlcv_1m, tbbo}` only
+      (`unified_api_contracts/registry/market_data_categories.py:1432` — no `ohlcv_1h`), but `compute_vix_features()`'s
+      `vix_contango_proxy` needs a `candles_1h` input, and every sibling volatility calculator sources candles via
+      direct storage lookup at the requested timeframe (no resample step). Implementing this todo via that established
+      pattern would leave `vix_contango_proxy` permanently NaN — conflicting with this doc's own "no NaN-blanket"
+      success criterion below — unless the registry policy is widened or a resample step is added. Architecture/scope
+      call, not resolved here.
 
 ## P3 — S&P ML + arb backtest exploration (gated on data-clean above)
 
