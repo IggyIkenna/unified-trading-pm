@@ -172,7 +172,7 @@ transcript available in that session's Progress Log entry on
       recoverable, else quarantine/delete per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`), gated on the
       two todos above. (repo: instruments-service / market-tick-data-service). **Done when**: a fresh scoped check of
       the affected (day, pipeline_mode, entity) triples returns 0 schema-mismatched objects.
-- [ ] [SCRIPT] P2. `deployment-service/scripts/vm/lib/launcher_common.sh`'s `lc_verify_setup_script_freshness()`
+- [x] ✅ [SCRIPT] P2. `deployment-service/scripts/vm/lib/launcher_common.sh`'s `lc_verify_setup_script_freshness()`
       defaults to `LC_SETUP_SCRIPT_FRESHNESS=warn`, which lets a Pattern-A VM boot and fetch a stale GCS-published
       `setup-data-pipeline-vm.sh` even when the fix already landed in git — the exact race that hit this issue's own
       relaunch #1 (`sports-schema-census-instruments-store-20260809-222731`, same
@@ -182,7 +182,9 @@ transcript available in that session's Progress Log entry on
       session by passing `LC_SETUP_SCRIPT_FRESHNESS=enforce` explicitly on relaunch. (repo: deployment-service). **Done
       when**: either the default mode is reconsidered (`warn`→`enforce` or `auto`) with the tradeoffs documented, or
       every fix-then-relaunch call site across `scripts/vm/launch-*.sh` is audited for whether it should pass
-      `LC_SETUP_SCRIPT_FRESHNESS=enforce` explicitly rather than relying on the silent-warn default.
+      `LC_SETUP_SCRIPT_FRESHNESS=enforce` explicitly rather than relying on the silent-warn default. **RESOLVED
+      (2026-08-09, slot-15)** — `deployment-service@7407554a` reconsidered the default to `auto`, see the Progress Log
+      entry below.
 
 ## Progress Log
 
@@ -360,3 +362,35 @@ transcript available in that session's Progress Log entry on
   `gs://features-sports-prd-central-element-323112/_index/audit/sports_reference_schema_census_sports-schema-census-features-sports-20260809-225453.parquet`
   once complete. Both halves of todo 1's scope will be done once this run terminates successfully — then the two reports
   get consolidated and todo 1 checked off.
+
+- **2026-08-09 (slot-15, data_engineering)**: resolved the `[SCRIPT] P2` `lc_verify_setup_script_freshness` default-mode
+  todo above.
+
+  **Fix chosen**: reconsidered the default (the todo's first option) rather than auditing every `scripts/vm/launch-*.sh`
+  call site (the second option) — `lc_verify_setup_script_freshness` is invoked automatically from inside
+  `lc_gcloud_create` (line ~568 of `launcher_common.sh`), not per-launcher, so a default-mode fix covers every current
+  AND future `lc_gcloud_create` caller in one change, while a per-call-site audit would need re-doing every time a new
+  launcher is added.
+
+  **Why `auto`, not `enforce`**: `lc_verify_setup_script_freshness`'s own docstring already documents
+  `LC_TARBALL_FRESHNESS` (the sibling stale-code-tarball guard) as having "same semantics" — checked its actual code
+  (`launcher_common.sh:1009`) and found its REAL default is `${LC_TARBALL_FRESHNESS:-auto}`, not `warn` as an adjacent
+  comment claims (a pre-existing doc/code mismatch, out of this todo's scope to fix). `auto` self-republishes the stale
+  object via `gcloud storage cp` and returns 0 (or 1 only if the republish itself fails) — it never blocks a launch the
+  way `enforce` would, so it closes the race with strictly less operational risk than flipping to `enforce` (which could
+  newly block launches for genuinely-benign staleness, e.g. a local-only script edit not yet meant to ship). Verified
+  the tarball guard's `auto` branch has one documented pitfall
+  (`lc_verify_tarball_freshness_auto_mode_silent_dirty_skip_2026_08_06.md` — `create-code-tarballs.sh` can exit 0 on a
+  dirty-tree skip without actually republishing) that does NOT apply here: the setup-script guard's `auto` branch is a
+  single unconditional `gcloud storage cp <local> <gcs_url>` of one file, not a git-tracked build step that can silently
+  no-op, so no re-verify-after-republish loop was needed to close an equivalent gap.
+
+  **Shipped**: `deployment-service@7407554a` (`fix(vm): default LC_SETUP_SCRIPT_FRESHNESS to auto, not warn`) — flipped
+  `mode="$(printf '%s' "${LC_SETUP_SCRIPT_FRESHNESS:-warn}" | ...)"` → `${LC_SETUP_SCRIPT_FRESHNESS:-auto}` and updated
+  the function's docstring to match; added `test_default_mode_is_auto_and_republishes_stale_script` to
+  `tests/unit/test_vm_launcher_scripts.py` (mirrors the existing explicit-mode tests, asserts the unset-env-var path
+  takes the `auto`/"auto-republishing" branch and returns 0). Confirmed no existing test asserted the old `warn` default
+  (every existing test in `TestSetupScriptFreshnessGuard` passes its mode explicitly), so this is additive, not a
+  behavior-changing edit to covered tests. Full `quality-gates.sh` green (415s, sentinel
+  `7407554a4779c04e4ef3fc2790b39b6e68c22ee5`); quickmerge push confirmed landed
+  (`git merge-base --is-ancestor 7407554a origin/live-defi-rollout` → true).
