@@ -62,7 +62,7 @@ context_scope:
 > **✅ OPERATOR RULING 2026-08-08 — DISPATCH APPROVED, gated on the taxonomy contracts phase.** The
 > fixture-grain-vs-league-grain decision was already ruled 2026-07-14 ("FIXTURE-GRAIN WANTED"); only dispatch routing
 > was outstanding. Ruled: **dispatch, with `depends_on` on
-> `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`** — the catalogue is downstream of the
+> `/plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`** — the catalogue is downstream of the
 > venue/data_type/horizon axes that phase changes, so building it first would guarantee a rebuild. All 4 open todos are
 > carried by `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` and flipped by its finalize sibling.
 
@@ -158,9 +158,10 @@ honest-coverage denominator math, not a same-file fix.
       for full evidence.
 - [x] [DATA] P1. ✅ Decide, with the operator: does the "could-exist" catalog / honest-coverage system for Sports NEED
       fixture/team/player grain at all, or is league-grain the permanently-correct scope? — **OPERATOR RULING
-      2026-07-14: FIXTURE-GRAIN WANTED.** The fixture-grain todos below (manifest schema extension design, fixture
-      catalogue builder, adapter invocation) are now this plan's active scope; the league-grain-permanent todo is VOIDED
-      by this ruling.
+      2026-07-14: FIXTURE-GRAIN WANTED** (see this doc's own Progress Log,
+      `sports_catalog_league_grain_only_scope_2026_07_08.md`'s 2026-07-14 entry, for the interactive-Q&A record). The
+      fixture-grain todos below (manifest schema extension design, fixture catalogue builder, adapter invocation) are
+      now this plan's active scope; the league-grain-permanent todo is VOIDED by this ruling.
 - [ ] [DATA] P2. **(ACTIVE scope — fixture-grain CONFIRMED by operator ruling 2026-07-14)** Design the manifest schema
       extension needed to track per-fixture capture presence (today's atom is `(league_id, data_type, date)`) without
       breaking the existing league-grain honest-coverage denominator for in-flight consumers.
@@ -177,8 +178,9 @@ honest-coverage denominator math, not a same-file fix.
 - [x] [DATA] P3. ~~If league-grain IS confirmed as the permanent, correct scope: update
       `instruments-service/docs/SPORTS_INSTRUMENTS.md`'s "11-step pipeline" section so it no longer implies the catalog
       itself carries fixture/team/player-grain `instrument_id`s~~ — **VOIDED by operator ruling 2026-07-14
-      (FIXTURE-GRAIN WANTED; league-grain is NOT the permanent scope). Not executed — kept for the record, do not
-      revive.**
+      (FIXTURE-GRAIN WANTED; league-grain is NOT the permanent scope — see this doc's own Progress Log,
+      `sports_catalog_league_grain_only_scope_2026_07_08.md`'s 2026-07-14 entry). Not executed — kept for the record, do
+      not revive.**
 - [ ] [REVIEW] P3. Post-decision codex alignment check: if the manifest/catalog grain changes,
       `/codex/02-data/availability-manifest-and-data-status.md` and `/codex/02-data/honest-coverage-model.md` need a
       corresponding update (this is the HARD RULE "post-phase codex audit" — do not skip it if this plan's scope changes
@@ -209,13 +211,13 @@ honest-coverage denominator math, not a same-file fix.
   todo would update).
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 4 open items, all dependency-blocked.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA-STALE, already-duplicated — all 4 open todos
-  are now resolved by the dated `✅ OPERATOR RULING 2026-08-08` banner at the top of this doc ("DISPATCH APPROVED,
-  gated on the taxonomy contracts phase... All 4 open todos are carried by
+  are now resolved by the dated `✅ OPERATOR RULING 2026-08-08` banner at the top of this doc ("DISPATCH APPROVED, gated
+  on the taxonomy contracts phase... All 4 open todos are carried by
   `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md` and flipped by its finalize sibling") and that plan's
   "Catalogue, browser, dependency" section's first todo names this doc verbatim as what it resolves. Conflict-check:
-  `sports_taxonomy_p3_consumers_2026_08_08.md` is `assigned_vm: planning`, status: active, same `parent_epic:
-  sports_master` — flipping this doc too would dispatch a duplicate. Doc stays NA; checkboxes flip via that plan's
-  finalize sibling once shipped. Citation-only, no reclassification.
+  `sports_taxonomy_p3_consumers_2026_08_08.md` is `assigned_vm: planning`, status: active, same
+  `parent_epic: sports_master` — flipping this doc too would dispatch a duplicate. Doc stays NA; checkboxes flip via
+  that plan's finalize sibling once shipped. Citation-only, no reclassification.
 
 - **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA-STALE, re-confirmed — unchanged since the round7 2026-08-08
   verdict. All 4 open todos remain resolved by the dated `✅ OPERATOR RULING 2026-08-08` banner and carried by

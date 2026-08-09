@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [defi, venue-registry, silent-default, asset-group-resolution, shard-level-failure-isolation, data-correctness]
 related:
   [
-    /plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
+    /plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
     /codex/04-architecture/shard-level-failure-isolation.md,

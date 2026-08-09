@@ -11,7 +11,7 @@ summary: >-
   un-overloads `timeframe`, `arbitrage_opportunity` leaves the data layer, exchange_odds/fixed_odds is derived from the
   venue rather than stamped, markets/outcomes/settlements are retired, and the whole sports data_type vocabulary merges
   to one lowercase form. Contracts only — no GCS or manifest mutation happens in this phase.
-status: active
+status: complete # (was: active) 2026-08-09 — all todos done, archived via the standard 6-step ritual
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -67,6 +67,16 @@ source: ["sports venue/data-type audit, 2026-08-08 interactive session — 27 op
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-09.** All todos done (Block A capture restoration + staleness guard, Block B contracts —
+> venue/executable split, `odds`+`horizon`+`in_play` axes, retired `markets`/`outcomes`/`settlements`, retired
+> `exchange_odds`/`fixed_odds`). Finalize twin
+> (`plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08_finalize.md`) independently reconciled
+> every source doc this phase closed, re-verified the staleness guard live (found + fixed a wrong-bucket bug in it),
+> confirmed the P2/P3 `gate_on_depends` gates already released legitimately against the shipped UAC contracts, then
+> archived this doc alongside itself. Superseded by nothing — P2/P3/P4 carry the physical migration forward from these
+> contracts; see `/codex/02-data/sports-data-types-catalog.md` and
+> `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md` for the durable record.
 
 # Sports taxonomy P1 — capture restoration + contracts
 

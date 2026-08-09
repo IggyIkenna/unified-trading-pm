@@ -27,7 +27,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
     /codex/02-data/sports-data-types-catalog.md,
-    /plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
+    /plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
   ]
 created: 2026-08-08
 authoritative_for:

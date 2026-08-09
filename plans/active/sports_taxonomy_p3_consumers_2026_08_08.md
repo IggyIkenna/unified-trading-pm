@@ -30,7 +30,7 @@ scope: [engineer]
 tags: [sports, consumers, distinct-values, ml, clv, arbitrage, betfair, catalogue, horizon]
 related:
   [
-    /plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
+    /plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
     /plans/archive/2026_08/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
     /plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md,

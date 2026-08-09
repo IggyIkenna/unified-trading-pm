@@ -21,7 +21,7 @@ related:
     /codex/02-data/sports-scheduling-and-sharding.md,
     /codex/02-data/sports-fixtures-lifecycle.md,
     /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
-    /plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
+    /plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
     /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
   ]
 created: 2026-05-24
@@ -53,7 +53,7 @@ code_refs:
 >    (375,257 captured shards — the largest population in the estate) or `trades_inplay`, and listed
 >    `markets`/`outcomes`/`settlements` as "Production" when all three have **0 rows ever written**.
 >
-> Governing plans: `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` (contracts) and
+> Governing plans: `/plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` (contracts) and
 > `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md` (physical migration). **This rewrite documents the decided
 > TARGET model. Physical GCS and manifest migration happens in P2.**
 
@@ -96,8 +96,8 @@ aggregator-fanned venues are `executable=False` — we receive via aggregator, n
 
 `BETFAIR` (bare, without region suffix) is the operator-group parent, not a data-axis venue. It does not appear in
 `VENUES_BY_ASSET_GROUP["sports"]`. The three exchange venues (`BETFAIR_EX_UK`, `BETFAIR_EX_EU`, `BETFAIR_EX_AU`) roll up
-to it in the venue→operator hierarchy. **P1 todo still in flight** — see
-`/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`.
+to it in the venue→operator hierarchy. **Landed** — `unified-api-contracts@49e83239` (P1, archived 2026-08-09:
+`/plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`).
 
 ---
 
@@ -178,7 +178,7 @@ points. See § "Snapshot vs Candle Discriminator" below for how this reconciles 
 
 ## Snapshot vs Candle Discriminator (P1 decision, 2026-08-08)
 
-> Resolves `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`'s "Decide and record the
+> Resolves `/plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`'s "Decide and record the
 > snapshot-vs-candle discriminator on the collapsed model" todo. `odds_snapshot` and `odds_movement` are two DIFFERENT
 > computations over the same raw `odds` ticks at the same grain, so `timeframe` alone cannot distinguish them once the
 > raw `odds_snapshot`/`odds_movement` `data_type` names are retired from the RAW MTDS vocabulary (done in the prior P0
@@ -377,9 +377,10 @@ predicate above).
 
 ### `exchange_odds` / `fixed_odds` instrument_type retirement
 
-The `exchange_odds`/`fixed_odds` `instrument_type` split is being retired in P1 (todo in flight). Exchange vs fixed-odds
-is a property of the venue (encoded in `SportsVenueType`), not the instrument type. Derive at read time from the venue.
-All sports rows use `instrument_type=odds`.
+The `exchange_odds`/`fixed_odds` `instrument_type` split's retirement contract landed in P1 —
+`unified-api-contracts@56f20ad0` (`derive_sports_odds_instrument_type(venue)`). Exchange vs fixed-odds is a property of
+the venue (encoded in `SportsVenueType`), not the instrument type. Derive at read time from the venue. All sports rows
+use `instrument_type=odds`.
 
 ---
 
@@ -486,5 +487,6 @@ consumers in the same change. Consumers for the `trades → odds` rename (P2 sco
 - `/codex/02-data/sports-2020-06-data-floor.md` — data floor governing all sports captures
 - `/codex/02-data/availability-manifest-and-data-status.md` — manifest v9 honest-coverage schema
 - `/codex/04-architecture/shard-level-failure-isolation.md` — per-shard error handling invariant
-- `/plans/active/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` — contracts phase (this rewrite's plan)
+- `/plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md` — contracts phase (this rewrite's
+  plan)
 - `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md` — physical migration of GCS objects + manifest rows

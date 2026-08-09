@@ -6,7 +6,7 @@ summary: >-
   resolve open items in SEVERAL source docs, so this finalize reconciles each source doc's own checkbox (not just P1's),
   checks whether reconciling left any source doc at zero open todos and therefore archivable in its own right, confirms
   the capture-outage issue docs are genuinely closed rather than assumed, and only then archives P1.
-status: active
+status: complete # (was: active) 2026-08-09 — all todos done, archived via the standard 6-step ritual
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -46,12 +46,14 @@ context_scope:
   ]
 source: >-
   task_template.md §4's finalize-plan-coverage rule — every AO-dispatched plan needs a companion gated finalize plan.
-archive_exempt:
-  true # temporary 2026-08-09 — bridges the one-commit gap between this flip and the very next
-  # commit's git-mv archival (see Progress Log); removed once archived.
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-09.** All 6 todos done: source-doc reconciliation (todo 1), zero-open-todos sweep (todo 2),
+> live-capture + staleness-guard re-verification (todo 3, found + fixed a wrong-bucket bug), the exchange/fixed-odds
+> fork re-check (todo 4), the P2/P3 gate-release confirmation (todo 5), and this archival itself (todo 6) — alongside
+> `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`, archived in the same commit.
 
 # Sports taxonomy P1 — finalize
 
@@ -107,9 +109,9 @@ locked_since:
       corroborating, not duplicate, evidence).
 
       **Net**: no false-done claims found in any of the four source docs; every commit P1 or its sources cite resolves
-                                              to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
-                                              capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
-                                              (unrelated, already-tracked) chains finish.
+                                                  to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
+                                                  capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
+                                                  (unrelated, already-tracked) chains finish.
 
 - [x] ✅ [REVIEW] P1. **Check whether reconciling left any source doc at zero open todos**, and if so run the same
       6-step archival ritual on it — a finalize that closes only its own plan while leaving a now-fully-done source doc
@@ -180,13 +182,13 @@ locked_since:
       (`975f0191`) — imported `DATA_TYPES_BY_ASSET_GROUP["sports"]` live: all three tokens absent.
 
       Cross-checked against the LIVE AO gate mechanism itself (`GET /api/backlog`), not just the plan file: every
-                          currently-queued `sports_taxonomy_p2_migration-*` task's `blocked_reason` cites only the SECOND gate
-                          (`sports_af_full_entity_completion_2026_08_03` prereqs) — none cite P1 or an upstream-open-todos reason on P1
-                          anymore, confirming the `gate_on_depends` on P1 has ALREADY mechanically released. Same for
-                          `sports_taxonomy_p3_consumers-*`: the still-queued tasks are gated on unrelated `auto_unpark__*` prerequisites and
-                          a fleet cooldown, not on P1. Also confirmed P1's own plan file has ZERO remaining `- [ ]` todos and
-                          `status: active` / unlocked (`locked_by:` empty) — the gate's source-of-truth is genuinely fully done, not a
-                          false-done checkbox. **Net**: no blocking gap. Both gates release legitimately.
+                              currently-queued `sports_taxonomy_p2_migration-*` task's `blocked_reason` cites only the SECOND gate
+                              (`sports_af_full_entity_completion_2026_08_03` prereqs) — none cite P1 or an upstream-open-todos reason on P1
+                              anymore, confirming the `gate_on_depends` on P1 has ALREADY mechanically released. Same for
+                              `sports_taxonomy_p3_consumers-*`: the still-queued tasks are gated on unrelated `auto_unpark__*` prerequisites and
+                              a fleet cooldown, not on P1. Also confirmed P1's own plan file has ZERO remaining `- [ ]` todos and
+                              `status: active` / unlocked (`locked_by:` empty) — the gate's source-of-truth is genuinely fully done, not a
+                              false-done checkbox. **Net**: no blocking gap. Both gates release legitimately.
 
 - [x] ✅ [DOC] P2. **Archive `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`** via the standard 6-step ritual,
       including the codex-alignment check (P1 CREATES codex docs — the rename/split process rule — and SUPERSEDES

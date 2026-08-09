@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 312 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 309 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -363,7 +363,7 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (39)
+### sports (37)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -464,14 +464,6 @@ by hand._
   — Gated closeout for sports_satellite_ao_dispatch_batch9_2026_08_04.md — machine-held via depends_on +
   gate_on_depends: true until all 30 of that plan's todos are done. Mirrors the batch2-8-finalize pattern: reconcile
   each of the 17 distinct…
-- [`sports_taxonomy_p1_capture_and_contracts_2026_08_08`](./sports_taxonomy_p1_capture_and_contracts_2026_08_08.md) —
-  Phase 1 of the sports venue/data-type canonicalisation chain authored from the 2026-08-08 live audit. Two blocks, in
-  order. Block A restores raw sports capture, which has been DEAD since 2026-07-26 while the derived layer kept
-  computing…
-- [`sports_taxonomy_p1_capture_and_contracts_2026_08_08_finalize`](./sports_taxonomy_p1_capture_and_contracts_2026_08_08_finalize.md)
-  — Gated closeout for sports_taxonomy_p1_capture_and_contracts_2026_08_08.md. P1 is a batch-style phase whose todos
-  resolve open items in SEVERAL source docs, so this finalize reconciles each source doc's own checkbox (not just P1's),
-  checks…
 - [`sports_taxonomy_p2_migration_2026_08_08`](./sports_taxonomy_p2_migration_2026_08_08.md) — Phase 2 of the sports
   canonicalisation chain — the data migration that makes the P1 contracts true on disk. Re-stamps the largest population
   in the sports estate (375,257 `trades` shards over 6 years → `odds`), lowercases the whole…
@@ -611,7 +603,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (64)
+### cross-cutting (63)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -709,9 +701,6 @@ by hand._
   — Gated closeout for `cross_cutting_satellite_ao_dispatch_batch6_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 3 todos are done. Reconciles the 2 source docs' checkboxes, then archives the batch
   doc via…
-- [`cross_cutting_satellite_ao_dispatch_batch7_2026_08_09`](./cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md)
-  — Seventh AO-dispatch batch for the cross-cutting tranche, produced by the round9 2026-08-09 RECLASSIFY +
-  satellite-extraction sweep. Pulls 1 bounded item out of…
 - [`cross_cutting_strategy_execution_determinism_2026_07_26`](./cross_cutting_strategy_execution_determinism_2026_07_26.md)
   — Extracted 2026-07-26 from `cross_cutting_consolidated_closeout_2026_07_25.md` Track 24 (resolved
   `autonomous_session_operator_decisions_2026_07_25.md` entry #19) — a genuinely different angle from that doc's other
