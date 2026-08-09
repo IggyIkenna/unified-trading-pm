@@ -250,14 +250,28 @@ drift_direction: advance-code
       memory issue (`defi_v2_expected_universe_enumerator_oom_2026_08_01.md`, its `V2_STREAM_CHUNK_SIZE` fix already
       shipped) — not a re-opened gap in this todo's scope. No `instruments-service` commit needed; this plan-flip is the
       only change.
-- [ ] [INFRA] P2. Move the research availability index off the legacy `perp-funding`/`lst-rates` buckets onto their
-      `-prd-` twins — add the 4 named `manifest_consolidator_buckets` Terraform entries + IAM, repoint
-      `record_research_perp_ctx_manifest.py`'s `INDEX_BUCKET` via `resolve_bucket_name`, one-shot seed-copy the legacy
-      `_index` to the `-prd-` twins, verify post-copy freshness. Repo: deployment-service, instruments-service. Source:
-      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` (steps 1-4 of the 5-step item; step 5, a future
-      delete, is out of scope here). Done when: the 4 Terraform entries + IAM bindings land; `INDEX_BUCKET` resolves via
-      `resolve_bucket_name`; the legacy `_index` is seeded onto both `-prd-` twins; freshness on each bucket is under
-      the staleness threshold.
+- [x] ✅ [INFRA] P2. Move the research availability index off the legacy `perp-funding`/`lst-rates` buckets onto their
+      `-prd-` twins — **STALE PREMISE, no Terraform/IAM/consolidator change made (verification-only).** Both the legacy
+      (`perp-funding-central-element-323112`, `lst-rates-central-element-323112`) AND the canonical `-prd-` twins
+      (`perp-funding-prd-central-element-323112`, `lst-rates-prd-central-element-323112`) are **confirmed DELETED**
+      (`gcloud storage buckets describe` → 404 on all 4, re-verified 2026-08-09 by this session; also cross-checked via
+      `gcloud storage buckets list` fleet-wide — zero `perp`/`lst`/`funding`/`rate`-matching buckets exist in the
+      project). There is no legacy `_index` to seed-copy and no `-prd-` twin to add a consolidator entry for. This is
+      NOT a fresh finding — independently corroborated by ≥4 pre-existing docs spanning 2026-07-14→2026-08-06:
+      `data_completion_defi_2026_07_15.md` L419 ("perp-funding-prd... re-confirmed 404"),
+      `issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` L80/125 ("confirmed DELETED"),
+      `defi_satellite_ao_dispatch_batch9_2026_08_06.md` L278 (companion-script dead-code DIAG todo, still open) and
+      `defi_satellite_ao_dispatch_batch2_2026_07_26.md` L120 ("dex-pools-prd/lst-rates-prd/perp-funding-prd are deleted"
+      — delete-when condition satisfied). Data is NOT lost: the historical perp_daily_ctx/perp_mark_price/ perp_funding
+      corpus was carried into the shared `market-data-tick-defi` bucket by the 2026-07-13
+      dedicated-bucket-to-shared-bucket migration before these buckets were removed (same 2026-08-04 issue doc).
+      **Adjacent fix made** (in-scope, the exact file this todo names): `record_research_perp_ctx_manifest.py`'s
+      docstring updated — e2e-testing@44b46eb — to record that its target bucket is confirmed deleted (dead code, do not
+      attempt to repoint `INDEX_BUCKET`), matching the disposition already proposed for its companion
+      `copy_research_perp_ctx_to_canonical.py` in `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s still-open DIAG
+      todo (not executed here — left bundled with that todo to avoid inconsistent partial cleanup of the 2 companion
+      scripts). Original repo list (deployment-service, instruments-service) was itself imprecise — the actually
+      affected script lives in e2e-testing. — e2e-testing@44b46eb
 - [ ] [DATA] P3. Verify-then-delete the ~122 genuinely-legacy-only TradFi stragglers in
       `market-data-tick-tradfi-prd-central-element-323112` — named bucket, TWIN-VERIFIED-SAFE-only scope, GCS
       soft-delete retention already confirmed >= 604800s (reversibility-verified per
@@ -302,20 +316,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                                              disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                                              future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                                              bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                                              prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                                              2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                                              hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                                              threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                                              loader, post-delete verification) and filed
-                                              `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                                              AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                                              actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                                              stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                                              via that issue doc, not this line.
-                                              verification actually complete.
+                                                  disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                                                  future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                                                  bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                                                  prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                                                  2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                                                  hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                                                  threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                                                  loader, post-delete verification) and filed
+                                                  `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                                                  AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                                                  actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                                                  stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                                                  via that issue doc, not this line.
+                                                  verification actually complete.
 
 - [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
@@ -494,6 +508,10 @@ drift_direction: advance-code
   cited commit already covers prediction/sports (see item body for the full finding + live-verification evidence against
   real prod catalogues/manifests for cefi/sports/prediction this session, tradfi via item 6 same-day, defi via its
   2026-06-26 prod catalogue regen). Checkbox flipped; no instruments-service commit, plan-flip only.
+- **2026-08-09 (research availability index item, slot 31)**: stale premise, no Terraform/IAM change — all 4 candidate
+  buckets (legacy + `-prd-` twins, both perp-funding and lst-rates) confirmed deleted (404), independently corroborated
+  by 4+ pre-existing docs 2026-07-14→2026-08-06. See item body for full evidence + the adjacent docstring fix shipped
+  (e2e-testing@44b46eb). Checkbox flipped; no deployment-service/instruments-service commit needed.
 - **2026-08-09 (F1 KRAKEN-SPOT/FUTURES backfill item, slot 15)**: fresh bounded manifest scan (row-group-pushdown
   filtered read, no full-corpus walk) of
   `gs://instruments-store-cefi-prd-central-element-323112/_index/availability_index.parquet` for
