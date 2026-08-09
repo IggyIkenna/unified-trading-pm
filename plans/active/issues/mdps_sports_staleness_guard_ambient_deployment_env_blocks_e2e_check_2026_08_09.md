@@ -116,17 +116,35 @@ this touches shared dependency-checker code used by every SPORTS derived-candle 
 
 ## Todos
 
-- [ ] [CODE] P2. Implement the ruled option (A recommended) so `pipeline_e2e_check.py`'s SPORTS legs can verify a
+- [x] ✅ [CODE] P2. Implement the ruled option (A recommended) so `pipeline_e2e_check.py`'s SPORTS legs can verify a
       genuinely-captured prod date without the staleness guard false-tripping on the ambient staging-tier manifest.
       Done-when: a from-scratch `pipeline_e2e_check.py --asset-group SPORTS --data-types odds_horizon_bucket` run
       against day=2026-04-14 (or any other date with confirmed prod SPORTS capture) no longer emits "SPORTS staleness
-      guard: refusing derived output" and proceeds to real per-cell processing. (repo: market-data-processing-service)
+      guard: refusing derived output" and proceeds to real per-cell processing. (repo: market-data-processing-service) —
+      market-data-processing-service@d653a42 (slot-29). Implemented Option A by pinning
+      `check_sports_raw_source_captured`'s `resolve_bucket_name(...)` call to `deployment_env="prod"` explicitly (rather
+      than threading a param through the CLI/launcher across repos) — MTDS only ever captures raw SPORTS ticks into the
+      PROD instruments-store bucket, so this manifest read should never depend on the ambient `DEPLOYMENT_ENV` a
+      derive-write process happens to be using for its own output tier. Verified locally
+      (`resolve_bucket_name(..., deployment_env="prod")` resolves the `-prd-` bucket even with `DEPLOYMENT_ENV=staging`
+      in the shell) + 2 unit tests added/updated in `test_sports_staleness_guard.py`. **Live evidence**: from-scratch
+      `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket --legs force` run
+      (VM `mdps-backfill-sports-pipelinecheck-20260809-221454-d0c755`) — zero occurrences of "SPORTS staleness
+      guard"/"refusing derived output" in the run.log (previously the FIRST thing logged), and processing proceeded to
+      14 real `POLARS AGGREGATED` candle computations. Done-when met.
 - [ ] [DATA] P2. Once the above lands, re-run the exact verification
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md` Finding 5's `[CODE] P2` todo was
       dispatched for (`pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket`,
       force+skip legs) and confirm 0 `[partition_mismatch]` rejects for the SPORT888/BETONLINEAG/CORAL
       (`US_CATANZARO_1929-MODENA`) and UNIBET (`SOUTHAMPTON-BLACKBURN`) cells — then flip that todo's checkbox with this
-      run's evidence. (repo: market-data-processing-service)
+      run's evidence. (repo: market-data-processing-service) **Heads-up for the worker who picks this up**: the todo-1
+      verification run above (force leg only) already got PAST the staleness guard and hit `[partition_mismatch]`
+      rejects — but BROADLY across the shard (dozens of venue/instrument_type combos in the
+      `SERIE_B:US_CATANZARO_1929-MODENA` and `CHAMPIONSHIP:PORTSMOUTH-IPSWICH` / `SOUTHAMPTON-BLACKBURN` matches alone),
+      not narrowly scoped to the 2 example cells this todo names. The `market-data-processing-service@551ca82`
+      venue-derivation fix this todo is meant to confirm does NOT appear to have resolved partition_mismatch broadly as
+      of this run — expect this todo's done-when to currently FAIL; investigate `551ca82`'s actual coverage before
+      re-running rather than assuming a clean pass.
 
 ## Progress Log
 
@@ -138,3 +156,10 @@ this touches shared dependency-checker code used by every SPORTS derived-candle 
   resolved first, and this task's own P1 code fix was already a distinct, complete unit of work. Left Finding 5's
   `[CODE] P2` todo unchecked (its own done-when's e2e leg is now blocked on this doc) rather than premature-flip it —
   see that doc's Progress Log for the parallel entry.
+- 2026-08-09 (slot-29, data_engineering): implemented + shipped Option A (`market-data-processing-service@d653a42`, QG
+  green, quickmerge-landed on `live-defi-rollout`, ancestry-verified on origin). Live-verified via a real
+  `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket --legs force` VM run
+  (`mdps-backfill-sports-pipelinecheck-20260809-221454-d0c755`) — staleness guard confirmed NOT firing, 14 real
+  candle-aggregation cells computed. Run then failed on the pre-existing, already-tracked `[partition_mismatch]` issue
+  (todo 2 below) — added a heads-up note there since the broken-out failures span far more cells than the 2 the todo
+  names, so its done-when will likely need re-scoping or `551ca82` needs a follow-up fix first.
