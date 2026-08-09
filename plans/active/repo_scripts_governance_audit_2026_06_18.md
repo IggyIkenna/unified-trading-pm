@@ -40,6 +40,7 @@ source:
     plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md § D16,
   ]
 assigned_role: infra
+thinking_tier: medium # 2026-08-09 agt-a398c9 — infra role's own default, made explicit; see BLK-e02c6622
 drift_direction: correct-codex
 context_scope:
   [
@@ -65,9 +66,13 @@ context_scope:
    surfaced by the Phase-1 audit.
 3. **`tests/` stays AS-IS** — essential; ruff-linted + pytest-run on every QG (local + CI + staging); deliberately
    **no** basedpyright (noise > help on test code); naturally no coverage. No change.
-4. **D16 — the strict-quickmerge `scripts/` carve scope (PM-only vs all-repos) is PENDING this audit.** Verified: the
-   carve only affects **provenance** (the `Quickmerge:` trailer + dep-gate pre-flight), NOT content-gating — `scripts/`
-   is QG-unchecked either way. Decide after the audit shows what service-repo `scripts/` actually contain.
+4. **D16 — the strict-quickmerge `scripts/` carve scope (PM-only vs all-repos) — DECIDED + DONE 2026-08-08** (operator
+   ruling, Q&A round5 item 79; see Phase 3 + Progress Log below): **all-repos**, matching what
+   `check_strict_quickmerge.py`'s `CARVE_PREFIX` already did in practice (a bare path-prefix match with no
+   repo-awareness) — only the codex/CLAUDE.md prose was stale. Verified: the carve only affects **provenance** (the
+   `Quickmerge:` trailer + dep-gate pre-flight), NOT content-gating — `scripts/` is QG-unchecked either way.
+   _(2026-08-09 fix, plan_reconciler agt-a398c9: this top-of-doc "Decisions" line still read PENDING 13 days after Phase
+   3 below resolved it — updated to match.)_
 5. **Every script declares a lifecycle marker (operator 2026-06-18)** — a 3-line greppable comment header (works for
    `.sh` + `.py`): `Epic:` (owning epic), `Lifecycle:` (`permanent | campaign | oneoff`), `Delete-when:` (required +
    present on ALL scripts, `NA` for `permanent` — was: "completion condition, required for `campaign`/`oneoff`",
@@ -220,9 +225,12 @@ a verdict). Heaviest:
 
 ## Phase 3 — D16 strict-quickmerge carve scope [P2]
 
-- [x] ✅ [SCRIPT] P2. **DECIDED + DONE 2026-08-08 — operator ruling: all-repos.** Extend the carve to all-repos
-      formally, matching what `check_strict_quickmerge.py`'s `CARVE_PREFIX` already does in practice. Confirmed by
-      reading the actual current code: `CARVE_PREFIX = (".github/", "scripts/", "plans/", "codex/", "docs/")`
+- [x] ✅ [SCRIPT] P2. **DECIDED + DONE 2026-08-08 — operator ruling: all-repos** (see this doc's own Progress Log entry
+      below, "operator Q&A round5, infra tranche, item 79"; also codified in `/CLAUDE.md` § "Git discipline + shipping
+      pipeline" — "any repo's `scripts/**`... D16, operator-ruled 2026-08-08 — all-repos"). Extend the carve to
+      all-repos formally, matching what `check_strict_quickmerge.py`'s `CARVE_PREFIX` already does in practice.
+      Confirmed by reading the actual current code:
+      `CARVE_PREFIX = (".github/", "scripts/", "plans/", "codex/", "docs/")`
       (`scripts/cicd/check_strict_quickmerge.py:52`) is a bare path-prefix match with zero repo-awareness — each repo's
       own pre-push hook/CI run of this script operates on ITS OWN relative commit paths, so `scripts/` is already carved
       out uniformly for every repo's own commit range, not scoped to PM. No code change needed (the decision matches
@@ -254,19 +262,18 @@ a verdict). Heaviest:
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — unchanged mixed shape. Re-read
-  end-to-end; `grep -cE '^- \[ \]'` = 7, down from 8 (today's item-79 operator ruling closed the D16 carve-scope
-  todo, already reflected above). Checked the remaining 7 against today's operator-Q&A cheat sheet: none matches. The
+  end-to-end; `grep -cE '^- \[ \]'` = 7, down from 8 (today's item-79 operator ruling closed the D16 carve-scope todo,
+  already reflected above). Checked the remaining 7 against today's operator-Q&A cheat sheet: none matches. The
   enforcement-wiring item (line ~160) duplicates the folded-in `[SCRIPT] P1` item (line ~385) in substance — both
   BLOCKED on the same unmet fleet-wide precondition (the 2026-08-02 measurement found 96 invalid-`Epic:` + 136
   invalid-`Lifecycle:` + 2 `Delete-when:NA`-misuse files, "gate-clearable: NO"). The DEPRECATE-remediation item (line
-  ~197) is CONFLICT-GATED — re-confirmed still claimed by
-  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (k) ("cloud-agnostic sweep of ~60 scripts... Same
-  fix class, wider scope, already claimed"), matching this doc's own prior audits' citation. The ruff-lint + TID251
-  items (lines ~209/~214) are explicitly sequenced AFTER the DELETE-execution item, which is itself campaign-gated.
-  The Delete-EXECUTION item (line ~190) bundles a genuinely bounded sub-list (the "immediately-safe ~40") with a
-  campaign-gated cohort in one checkbox — same bundling-blocks-whole-doc-flip pattern seen elsewhere this sweep. No
-  clean whole-doc RECLASSIFY; `assigned_vm: NA` correct, consistent with every prior audit of this doc since
-  2026-07-30.
+  ~197) is CONFLICT-GATED — re-confirmed still claimed by `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`
+  item (k) ("cloud-agnostic sweep of ~60 scripts... Same fix class, wider scope, already claimed"), matching this doc's
+  own prior audits' citation. The ruff-lint + TID251 items (lines ~209/~214) are explicitly sequenced AFTER the
+  DELETE-execution item, which is itself campaign-gated. The Delete-EXECUTION item (line ~190) bundles a genuinely
+  bounded sub-list (the "immediately-safe ~40") with a campaign-gated cohort in one checkbox — same
+  bundling-blocks-whole-doc-flip pattern seen elsewhere this sweep. No clean whole-doc RECLASSIFY; `assigned_vm: NA`
+  correct, consistent with every prior audit of this doc since 2026-07-30.
 - **2026-08-08 (operator Q&A round5, infra tranche, item 79)**: Operator ruled the D16 carve scope: all-repos, matching
   what `check_strict_quickmerge.py`'s `CARVE_PREFIX` already does in practice. Read the actual current `CARVE_PREFIX`
   logic (`scripts/cicd/check_strict_quickmerge.py:52`) before closing — confirmed it's a bare path-prefix match with no
