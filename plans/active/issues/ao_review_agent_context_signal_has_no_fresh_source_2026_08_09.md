@@ -80,11 +80,12 @@ That reasoning is now questionable for two measured reasons:
       a fresh `context_probe` read of the same session, and record both plus the age of the last write to the column.
       Done-when: the Progress Log carries the DB-vs-measured delta for each review slot over at least 3 samples an hour
       apart. — See Progress Log entry below (agent-orchestrator, read-only measurement, no code shipped for this todo).
-- [ ] [BACKEND] P1. Give review a fresh, self-owned source on the policy's own cadence — extend `_read_pct`'s same-tick
-      out-of-band read to `role == "review"` (a plain context%% parse, never `classify_pane` /
+- [x] ✅ [BACKEND] P1. Give review a fresh, self-owned source on the policy's own cadence — extend `_read_pct`'s
+      same-tick out-of-band read to `role == "review"` (a plain context%% parse, never `classify_pane` /
       `_pane_has_child_processes`, so review's idle-VERDICT contract is untouched), persisting ratchet-up only exactly
       as the worker path does. Done-when: a unit test proves a review target whose SlotRow is stale still reads the
-      measured value, and `tests/test_context_lifecycle.py`'s idle-check ban still passes.
+      measured value, and `tests/test_context_lifecycle.py`'s idle-check ban still passes. — agent-orchestrator@c5be809
+      (see Progress Log below).
 - [ ] [BACKEND] P2. Emit a `context_signal_stale` activity event when any target's stored pct has not moved for longer
       than a configurable window while its transcript shows the session growing. Done-when: the event fires in a unit
       test for a frozen-column target and is visible in `GET /api/activity`.
@@ -127,3 +128,24 @@ That reasoning is now questionable for two measured reasons:
   categorical, not a marginal, delta — tighter hourly spacing would not have changed the verdict, only added more
   identical rows. Raw samples: `review_context_samples.tsv` (scratch, not committed — the table above is the durable
   record).
+
+- **2026-08-09 (slot 20)** — Todo 2 shipped: the `_read_pct`/module-docstring/test extension itself (`_read_pct`'s
+  `if role in ("worker", "review"):` out-of-band branch and the "EXTENDED TO REVIEW" module-docstring section) was
+  already present at HEAD when this session booted — inherited as `chore(orphan-wip)` commit `398c9af` from a
+  predecessor session on this slot's clone, carrying 3 new review-path tests
+  (`test_review_role_pct_picks_up_fresh_out_of_band_pane_sample`,
+  `test_review_role_out_of_band_pane_sample_never_lowers_context_used_pct`,
+  `test_review_role_idle_gated_force_path_still_never_consults_idle_verdict_from_read_pct`). Auditing that WIP found a
+  real gap: 5 review-role tests (the 2 new `_read_pct`-direct tests plus 3 pre-existing `_tick_target` tests —
+  `test_main_review_force_is_still_idle_gated`, `test_idle_gate_blocked_events_name_the_signal`, and one of the
+  saturation-detector tests before its neighbors' existing `_forbid_idle_checks` calls were confirmed to already cover
+  it) never mocked `context_probe.context_used_pct`. On this shared, multi-slot host that path resolves REAL
+  `orch-slot-N` transcripts (confirmed live: `~/.claude-configs/orch-slot-{2,6,9}` all have real, growing transcript
+  files) and persists calibration state to the live, gitignored `data/state/learned_context_windows.json` registry per
+  slot clone — exactly the cross-session-pollution class `_forbid_idle_checks`'s own docstring already warns about for
+  the worker path ("fails only on such a host; a clean CI runner has no matching dir, so this gap was invisible there").
+  Fixed by mirroring the same guard (`_forbid_idle_checks` for the two direct `_read_pct` tests, a targeted
+  `_measured_pct` mock for the two `_tick_target` tests that still need `_pane_has_child_processes` controllable) onto
+  the review-path tests. Full `bash scripts/quality-gates.sh` green both before and after rebasing onto a same-day
+  upstream `context_probe.py` commit (2974 passed, 2 skipped). Shipped via quickmerge — agent-orchestrator@c5be809,
+  verified ancestor of `origin/live-defi-rollout`.
