@@ -174,6 +174,12 @@ path, not a one-off.
   `ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md` (todo 1 omitted a distinct sub-instruction entirely, todo 3
   truncated mid-citation with the entire 6-step procedure continuation-only). All rewritten so the complete instruction
   fits on line 1. unified-trading-pm@28e6b883c.
+- **AO-dispatch-scope-eligibility (dispatch-scope eligibility rule)** —
+  `credential_ask_orphan_checker_ping_format_stale_2026_07_27.md`'s sole open todo is an open-ended naming/design
+  question ("consider whether... should be tagged...") with no data-derivable answer, `assigned_vm: planning` despite
+  that. Per SKILL.md hunter 5's own "pulled out into a LOCAL/human plan" resolution path (no prior operator ruling on
+  record for this specific question), reclassified `assigned_vm: planning` → `NA` / `execution_scope` → `local-only`.
+  Also fixed the same todo's line-1-truncation defect. unified-trading-pm@a28f647cd.
 
 ## Filed
 
@@ -229,12 +235,33 @@ SKILL.md Phase 4's auto-fix table — no operator gate needed for an unlocked, v
    verifier): different axes (repo-visibility vs runner-placement), 3 distinct dated events, no doc is factually wrong
    about its own claim. See Contradictions #6.
 
-_(populated in STEP 4)_
-
 ## Coverage (hunters / batches / docs)
 
-_(populated in STEP 7)_
+- **Hunters**: 9 total. Wave 1 (parallel): 5 batch hunters (comprehensive per-doc: contradictions, claims digest,
+  codex-alignment, missed-flips, AO-dispatch-readiness, zero-checkbox, hedge-pointers, prose-structural-integrity) + 1
+  topic hunter (cross-batch CI/CD-pipeline-shape claims) + 1 moved-doc-referrer hunter. Wave 2 (parallel): 2 dedicated
+  adversarial verifiers for the 2 hunter-flagged-uncertain findings (digest_drift/semver mechanism link, "PM public
+  flip" tension) — both resolved with live-verified definitive verdicts (1 CONFIRMED, 1 REFUTED).
+- **Batches**: 5 non-grace batches (~235KB / 6-9 docs each) covering all 35 non-grace docs, sized by greedy bin-pack for
+  balanced hunter load.
+- **Docs read in full**: 35/35 non-grace ci-tranche docs (100% of the actionable set) + the 24 grace-set docs read as
+  context where a hunter's cross-check needed them (never written). Plus: `task_template.md` §3/§4 (full),
+  `PLAN_FORMAT.md` (partial, archival-ritual sections), 15+ codex docs opened for alignment checks, live `gh`/`git`
+  verification against `client-reporting-api`, `unified-trading-pm`, and several `.github/workflows/*.yml` files across
+  repos.
+- **Phase 5.9(a) ledger** (routed == parked, reconciled as numbers, not eyeballed): `routed_to_operator = 4` (1
+  `/blocked` question `BLK-987241fb` + 3 filed-only systemic/drift findings) == `parked_in_issue_doc = 4` (all 4
+  recorded under `## Filed` above). **Balanced.**
+- **Phase 5.9(b) ledger**: `agent_skips = 0` — no hunter or verifier reported a skip this run (all 9 sub-agents returned
+  complete findings within their assigned scope). Nothing to enumerate.
+- **Verified confirmed / refuted**: 3 missed-flip candidates confirmed + flipped (all HARD-evidence-backed); 1
+  contradiction candidate refuted (PM public flip, see Refuted above); all other applied fixes (banner/table/
+  citation/format corrections) were either self-evident from direct re-verification (re-summed counts, re-read raw line
+  breaks, live `gh api`/`git show` checks) or corroborated independently by 2+ hunters.
 
 ## Plans not reached
+
+None — 100% of the 35-doc non-grace actionable set was read in full by a hunter and had every applicable check run
+against it.
 
 _(populated if applicable)_
