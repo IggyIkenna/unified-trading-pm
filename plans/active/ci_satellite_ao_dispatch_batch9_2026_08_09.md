@@ -96,7 +96,7 @@ Todos 1 and 2 touch disjoint files (`qg_host_adaptive_resource_governor_2026_07_
     `/plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md` (leading-slash convention per
     `check_reference_paths.py`). Verified: stale-count grep = 0, archived-count grep = 4,
     `check_reference_paths.py --only` clean. Source finding flipped in
-    `issues/plan_reconciler_ci_late_findings_2026_08_06.md`. — unified-trading-pm@PENDING_SHA
+    `issues/plan_reconciler_ci_late_findings_2026_08_06.md`. — unified-trading-pm@89925f0c6
 
 - [ ] 2. [DOC] P2. **Fix the stale `status: active` for `mtds_retry_safe_default_audit_2026_07_14` in
       `plans/epics/infrastructure_master.md` (around L595-597, re-locate by grepping the slug fresh — the epic file
