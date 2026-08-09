@@ -469,10 +469,10 @@ achieved by exclusion, not canonicalisation.**
       genuinely green (sentinel-verified on the shipped SHA): 10198 passed, 0 failed, 28 skipped. The broader "sweep for
       other `.get(..., <default asset_group>)` lookups across MTDS/MDPS/IS" this todo also called for is tracked as its
       own follow-up todo below (found ~15 more sites; fixing all of them was outside this todo's 1h estimate).
-- [ ] [CODE] P2. **Sweep the other `.get(venue, "cefi")`-style silent-default resolvers found across MTDS/IS during the
-      2026-08-08 `_asset_group_for_venue` enumeration pass** (same bug class as the fixed todo above — a wrong bucket is
-      a silent wrong answer). Concrete sites found (not exhaustive — re-grep `VENUE_TO_ASSET_GROUP.get(` before
-      starting): `market-tick-data-service/market_tick_data_service/engine/orchestrator/preflight.py:428`
+- [x] ✅ [CODE] P2. **Sweep the other `.get(venue, "cefi")`-style silent-default resolvers found across MTDS/IS during
+      the 2026-08-08 `_asset_group_for_venue` enumeration pass** (same bug class as the fixed todo above — a wrong
+      bucket is a silent wrong answer). Concrete sites found (not exhaustive — re-grep `VENUE_TO_ASSET_GROUP.get(`
+      before starting): `market-tick-data-service/market_tick_data_service/engine/orchestrator/preflight.py:428`
       (`cat = _orch.VENUE_TO_ASSET_GROUP.get(venue, "cefi")`),
       `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py:195,375`
       (`ag = _orch.VENUE_TO_ASSET_GROUP.get(venue_name, "cefi").lower()`, two call sites),
@@ -483,6 +483,34 @@ achieved by exclusion, not canonicalisation.**
       still correct there. NOT in scope: `instruments-service/.../process_write.py::_asset_group_for_venue` (a
       deliberately different, already-reasoned resolver defaulting to `"sports"`, not `"cefi"` — see its own docstring).
       **Done when**: each listed site is either converted to fail-loud or has a recorded reason it's a genuine default.
+      — **DONE 2026-08-09 (data_engineering, slot 20)**: `market-tick-data-service@8ba50fac`,
+      `instruments-service@aecd1242`. Re-grepped `VENUE_TO_ASSET_GROUP.get(` live — confirmed the 4 named sites are the
+      complete set (no drift since the todo was written). Measured a REAL live gap enabling the default: UAC
+      `VENUES_BY_ASSET_GROUP["defi"]` (103 venues) is missing 33 members of `ALL_DEFI_VENUES` (135 venues) — all
+      legitimate pipeline-mode-only DeFi venues (ALCHEMY-\*/FLASHBOTS-ETHEREUM/MORPHO-ARBITRUM/etc). Because
+      `VENUE_TO_ASSET_GROUP` derives from `VENUES_BY_ASSET_GROUP`, these 33 venues returned `None` (not `"defi"`) and
+      silently escaped MTDS `_build_active_venues_for_date`'s DeFi-strip filter (a bare
+      `VENUE_TO_ASSET_GROUP.get(v) == "defi"` check), falling through into the CeFi tick-fetch path where the 3 MTDS
+      `.get(venue, "cefi")` sites would then hit. **Fixed the escape hatch** (`market-tick-data-service@8ba50fac`): the
+      strip filter now also checks `v in _VENUE_MAPPING.all_defi_venues`. **None of the 4 sites converted to a raise** —
+      determined unsafe on isolation grounds, not just correctness grounds: MTDS's 3 sites sit inside `_process_venue`,
+      gathered via `asyncio.gather(*tasks)` with NO `return_exceptions=True`, so a raise would abort the WHOLE date's
+      fetch run for every venue, not just the misclassified one; IS's `_classify_venue_write` (writers.py:286) is called
+      from a bare `for venue_name, venue_df in df.groupby("venue")` loop in `process_write.py` with no per-venue
+      try/except, same blast-radius problem. This violates the shard-level-failure-isolation architecture
+      (`/codex/04-architecture/shard-level-failure-isolation.md`) the `reader.py` precedent's synchronous single-read
+      context didn't have to worry about. Instead: kept the default at each site but added a `logger.warning` breadcrumb
+      that fires whenever the default is actually hit (upgrades silent → visible without changing blast radius), plus an
+      inline comment recording the per-site reachability analysis (IS site: effectively dead code today — CeFi/TradFi/
+      prediction venues reaching it are already correctly registered, DeFi venues bypass the `.get()` entirely via the
+      `manifest_chain`-truthy branch; MTDS bundle-shard site: dead code today — bundle itypes are TradFi/CeFi-only; MTDS
+      general-shard site: the one genuinely-reachable site pre-fix, now closed by the strip-filter fix above). Filed
+      `/plans/active/issues/uac_venue_to_asset_group_defi_registry_gap_2026_08_09.md` for the two real follow-ups this
+      sweep surfaced but did not fix in-scope: (1) close the UAC registry gap itself (add the 33 venues to
+      `VENUES_BY_ASSET_GROUP["defi"]`), (2) add per-venue exception isolation to the two unisolated loops so these 4
+      sites can later follow the `reader.py` precedent and become typed raises. Both repos' full `quality-gates.sh`
+      green (MTDS 299s / 10367 passed; IS 148s), verified landed on `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor`. unified-trading-pm
 - [x] ✅ [CODE] P1. **Update `venue_data_types.yaml` in the SAME change as the markets/outcomes/settlements deletion.**
       — unified-trading-pm@\<pending\>, market-tick-data-service@\<pending\>. Fixed via the `ldr_qg_failure` escalation
       (agt-fecbe9): UAC commit `1f5879fc` (2026-08-08) collapsed `odds_snapshot`/`odds_movement` out of
