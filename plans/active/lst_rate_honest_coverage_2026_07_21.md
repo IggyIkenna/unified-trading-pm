@@ -370,7 +370,16 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       open.** #2 DEX fill — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
       ~~`BLOCKED-CREDENTIALS`~~). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped
       this session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
-      launch as a normal backfill. **LAUNCHED (2026-07-22, operator-acked)** — see Progress Log entry.
+      launch as a normal backfill. **LAUNCHED (2026-07-22, operator-acked)** — see Progress Log entry. **Status update
+      2026-08-09 (stale-check-defi-tranche)**: the "-1/-2 still RUNNING" framing above is from 2026-07-29 and is now
+      stale — per `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` Todo 3 (2026-08-07,
+      `defi_satellite_ao_dispatch_batch10-009`), both `-1` and `-2` had COMPLETED by 2026-08-07 ("No sibling VMs running
+      at launch time — both `-1` and `-2` had completed"); `-3` was separately found FAILED (`exit_code=137`,
+      2026-07-27, silent 6+ day stall — never relaunched until then) and was relaunched 2026-08-07
+      (SPOT, SHARD_INDEX=6, `--start 2025-12-15 --end 2026-07-21`), health-verified RUNNING at T+10min (95,236 swap rows
+      in the first shard). Not independently re-verified live in this pass whether `-3` has since reached its window end
+      (~2 days elapsed since relaunch) — this todo stays open pending that confirmation, but the accurate current state
+      is "2 of 3 shards done, 1 relaunched and healthy as of 2026-08-07," not the stale "-1/-2 still running" text above.
 
 ## Phase 6 — Interest PnL on honest data (the payoff; see pnl_interest_accrual doc)
 

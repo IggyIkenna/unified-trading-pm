@@ -196,10 +196,11 @@ consider extracting it into an AO-dispatch batch once `bd153821` deploys.
 
 ## Todos
 
-- [ ] [DATA] P2. Once `market-tick-data-service@bd153821` reaches `main`/production (verify via
-      `git merge-base --is-ancestor bd153821 origin/main`), re-run the bounded, column-pruned
-      `read_availability_index(..., filters=[("venue","==","kamino_lending")])` check for any `venue=KAMINO_LENDING`
-      rows captured between 2026-08-05 (the last retire run) and deploy day. If any exist, re-run
+- [ ] [DATA] P2. **Precondition CLEARED 2026-08-09 (see Progress Log) — the fix reached `main` via `f706456a` on
+      2026-08-06T08:29:26Z, not "not yet deployed" as the 2026-08-07 audit believed.** Re-run the bounded,
+      column-pruned `read_availability_index(..., filters=[("venue","==","kamino_lending")])` check for any
+      `venue=KAMINO_LENDING` rows captured in the now-bounded accumulation window 2026-08-05T17:42Z (last retire run)
+      through 2026-08-06T08:29Z (deploy landed) — a ~15h window, not open-ended. If any exist, re-run
       `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` (already-proven, idempotent) to retire them. Done when:
       the check returns zero rows (either because none accumulated, or because the re-run retired them), with the row
       count cited here.
@@ -232,3 +233,22 @@ consider extracting it into an AO-dispatch batch once `bd153821` deploys.
     to confirm concretely (via git) that the risk is real and unresolved, not just a stale process artifact. Doc stays
     `assigned_vm: NA`, `status: open`.
 - **context-scout 2026-08-07**: populated context_scope (6 entries).
+- **stale-check-defi-tranche 2026-08-09**: correction, not a closure — the 2026-08-07 audit's "NOT yet on main" verdict
+  was itself a false negative caused by the verification METHOD, not a real deploy gap. `git merge-base --is-ancestor
+  bd153821 origin/main` still returns false today (2026-08-09), but that is because `ldr-to-main-promote` rewrites
+  commit SHAs on promotion (Option-B direct, non-fast-forward) — checking ancestry by the ORIGINAL pre-promotion SHA
+  against `origin/main` is the wrong test for this repo's promotion model. Content-based verification
+  (`git log origin/main -S canonical_lending_venue -- market_tick_data_service/cli/handlers/_lending_grain.py`) finds
+  the fix landed on `main` via `f706456a` ("chore(promote): LDR → main (Option-B direct)"), committed
+  **2026-08-06T08:29:26Z** — a full day BEFORE the 2026-08-07 audit ran and concluded the deploy hadn't happened yet.
+  `origin/main:market_tick_data_service/cli/handlers/_lending_grain.py` confirmed live-read to contain
+  `canonical_lending_venue()` today. **Net effect**: the todo's blocking precondition ("once bd153821 reaches
+  main") has been satisfied since 2026-08-06 — two days earlier than the corpus believed. The todo's SECOND half (the
+  actual bounded `read_availability_index` re-check for `venue=KAMINO_LENDING` rows accumulated 2026-08-05→deploy-day,
+  and a `retire_kamino_lending_legacy_venue_2026_08_05.py --apply` re-run if any are found) is still genuinely NOT
+  done — no evidence of that check or script re-run anywhere in the corpus as of this pass — so the todo stays open,
+  just re-scoped: the accumulation window to check is now bounded (2026-08-05 17:42 UTC → 2026-08-06 08:29 UTC, ~15h),
+  not open-ended. **Process finding for the wider corpus**: any future "has fix X reached main" check in this workspace
+  should verify by CONTENT (grep/`-S` pickaxe on `origin/main`) or via the `ci_status` Firestore-SSOT, never by
+  `git merge-base --is-ancestor <pre-promotion-sha> origin/main` alone — that check systematically false-negatives
+  under the `ldr_main` promotion model and produced this doc's incorrect blocker.

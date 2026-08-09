@@ -178,9 +178,18 @@ original audit and this measurement, not a discrepancy in method; both counts de
 
 ## Todos
 
-- [ ] [DATA] P2. **Land factory-address capture (Option A or B) + register the missing UAC SushiSwap-Arbitrum venues** —
-      the resolver built in this doc resolves 0 of 206,107 bare SUSHISWAP/UNISWAP rows today because no factory-address
-      data is captured anywhere and UAC has no `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` registry entries.
+- [x] ✅ [DECISION] P2. **RULED 2026-08-08 (operator, recorded in `defi_track01_per_instrument_and_canon_id_2026_07_24.md`,
+      `unified-trading-pm@a55b820b76`): Option (b) — on-chain RPC `factory()` lookup**, not Option A's live-schema-probe
+      subgraph augmentation. Operator also extended scope beyond forward-only capture: the 206,107-row historical
+      residual must be migrated (GCS objects + manifest rows rewritten to the resolved canonical venue+chain, legacy
+      bare forms purged once canonical twins are verified) — not just a go-forward labeling fix. This closes the
+      "Option A-vs-B design fork is still unruled" premise this doc's prior KEEP-NA verdicts (through 2026-08-07) relied
+      on.
+- [ ] [SCRIPT] P1. **Execute the 2026-08-08 ruling** — wire RPC `factory()` lookup for the 206,107 bare SUSHISWAP/UNISWAP
+      rows, register the missing `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` UAC venues, then migrate + purge the
+      historical objects/manifest to canonical venue+chain naming. **Execution tracked at
+      `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s own `[SCRIPT] P1` todo (same source,
+      2026-08-08 ruling section) — work the fix there, not a second copy here; close both together once it ships.**
 
 ## Progress Log
 
@@ -211,3 +220,12 @@ original audit and this measurement, not a discrepancy in method; both counts de
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — doc's own redirect banner still names
   defi_track01_per_instrument_and_canon_id_2026_07_24 as the doc to work; close all three together, not from here alone.
+- **stale-check-defi-tranche 2026-08-09**: the "Option A-vs-B design fork is still unruled" premise every KEEP-NA
+  verdict above relied on (2026-07-30 through 2026-08-07) went stale ONE DAY after the last of them: the operator ruled
+  2026-08-08 (option b, on-chain RPC lookup, plus an extended scope covering the historical 206,107-row migration+purge)
+  — recorded in `defi_track01_per_instrument_and_canon_id_2026_07_24.md`, `unified-trading-pm@a55b820b76` (confirmed
+  ancestor of `origin/live-defi-rollout`). Flipped the `[DECISION]` todo `[x]` by citation and rewrote the execution
+  todo to point at the now-ruled scope. The doc stays `assigned_vm: NA` and `status: open` — the actual RPC-lookup +
+  UAC-registration + historical-migration EXECUTION has not shipped anywhere in the corpus yet (checked: no matching
+  commits in instruments-service/market-tick-data-service/unified-api-contracts since 2026-08-08), so this is a
+  citation fix, not a completion claim.
