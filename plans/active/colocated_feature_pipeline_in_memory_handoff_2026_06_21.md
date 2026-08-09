@@ -38,7 +38,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
     /plans/epics/features_and_ml_master.md,
     features-service/features_service/delta_one/,

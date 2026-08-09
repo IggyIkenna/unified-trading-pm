@@ -39,6 +39,7 @@ locked_by:
 locked_since:
 resolved_by:
 source: "plan_reconciler dispatch agt-a40e5f — sharded ui tranche run 2026-08-07"
+depends_on: []
 ---
 
 # plan_reconciler findings — ui tranche, 2026-08-07

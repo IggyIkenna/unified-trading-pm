@@ -43,6 +43,8 @@ author: slot 18
 source: ["plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md"]
 resolved_by:
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found

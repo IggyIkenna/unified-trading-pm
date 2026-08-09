@@ -26,7 +26,7 @@ related:
   [
     /plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md,
     /plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
   ]
 created: 2026-07-26
 author: unknown
@@ -49,7 +49,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
     /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
     /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,

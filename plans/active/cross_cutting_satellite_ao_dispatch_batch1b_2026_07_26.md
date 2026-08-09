@@ -32,7 +32,7 @@ tags: [cross-cutting, ao-dispatch, close-out, batch-1, satellite-docs, fresh-tri
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
@@ -58,7 +58,7 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md,
   ]
