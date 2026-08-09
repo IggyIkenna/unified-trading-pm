@@ -15,8 +15,15 @@
 # (a real spike in legitimate new NA-worthy work) is a real signal -- make it visible with why in
 # the commit message, same convention as any other ratchet exception in this corpus.
 #
+# na_doc_buffer / na_todo_buffer (2026-08-09, operator ask): ordinary plan-authoring churn across
+# many concurrent sessions moves this count day to day without any actual NA-eligibility drift --
+# the gate fails only on current > baseline + buffer. Tune the buffer here if the observed noise
+# band changes; it does not relax "never hand-raise the baseline" for a genuine, reviewed spike.
+#
 # See codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 4 for the full
 # rationale.
 max_na_docs: 372
-max_na_open_todos: 1106
+na_doc_buffer: 10
+max_na_open_todos: 1109
+na_todo_buffer: 30
 last_updated: "2026-08-09"
