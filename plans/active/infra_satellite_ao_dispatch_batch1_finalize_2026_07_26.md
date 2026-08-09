@@ -127,30 +127,103 @@ source: >-
       not be flipped for lack of a match** — every batch-1 todo's target checkbox was found in its named doc except the
       (nonexistent) one this discrepancy concerns.
 
-- [ ] [REVIEW] P1. **Re-check batch 1's 10 CONFLICT-GATED deferrals — the only category that clears without a ruling.**
-      For each, go read the specific competing claim named in batch 1's `## Deferred` and determine whether it has since
-      shipped, been superseded, or otherwise resolved; if it has, the conflict is CLEAR and the item becomes a batch-2
-      candidate with zero new investigation (this is the cheap path the `/ag-closeout-audit` methodology depends on).
-      The 10 and their named competing claims: (1) `PYTEST_UNIT_DIR` vs
-      `/plans/archive/issues/mtds_ungated_test_families_2026_07_17.md`'s two `[BACKEND] P1` test-fix gates — **ANSWERED
-      (na-eligibility-audit ci tranche, 2026-07-31): fixed, cefi's narrower approach won.** Doc archived, all 5 todos
-      done (`market-tick-data-service@4849d4f6` + `unified-trading-pm@5e1d7786a`/`bf583ea3b`); the competing
-      `codex_violations_ratchet_to_five_2026_06_10.md` todo was rewritten as a pointer back in 2026-07-26
-      (`unified-trading-pm@36c5433eb`) and its own checkbox flipped `[x]` same date as this archival. No batch-2
-      candidate needed — already fully resolved, not just conflict-cleared; (2)+(3) the 4
-      `base-service.sh`/`base-library.sh` items vs `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3)
-      and `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` — check whether both have landed; (4)
-      `DATA_PIPELINE_SERVICES` vs `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (B)'s `DataStatusTab`
-      change; (5) `managed-by` label vs the wave-launcher terraform item in cross-cutting batch1b; (6) repo_scripts
-      DEPRECATE remediation vs cross-cutting batch1 item (k)'s ~60-script cloud-agnostic sweep; (7) the
-      fastapi/starlette + pyarrow/twisted/mako/ ujson dep work vs whoever last touched `workspace-constraints.toml` /
-      `canonical-dependency-manifest.json`; (8) MTDS >900 tail vs cefi batch1 + defi batches 2/3/4's `market_interface/`
-      edits; (9) the corpus-wide sweeps vs the concurrent per-tranche reconcile/audit runs; (10) the two sports-doc
-      line-cap splits vs sports batches 3 and 5. For each cleared conflict write an explicit batch-2 candidate line
-      (source doc + the specific todo + the evidence the conflict cleared); for each still-conflicting one, restate the
-      live competing claim so batch 2 does not have to re-derive it. **Done when**: all 10 carry a dated
-      CLEARED-or-STILL-CONFLICTING verdict with evidence, and the cleared set is written up as the batch-2 candidate
-      list. Repo: unified-trading-pm.
+- [x] ✅ **DONE 2026-08-09 (slot-24, review-craft-per-task).** Re-checked batch 1's 10 CONFLICT-GATED deferrals — the
+      only category that clears without a ruling. For each, read the specific competing claim named in batch 1's
+      `##     Deferred` and determined whether it has since shipped, been superseded, or otherwise resolved. **Verdicts
+      (all dated 2026-08-09, evidence-cited, key shas re-verified via `git merge-base --is-ancestor` against
+      `origin/live-defi-rollout`):**
+
+      **(1) `PYTEST_UNIT_DIR` vs `mtds_ungated_test_families_2026_07_17.md` — ALREADY RESOLVED** (per this todo's own
+          prior text, na-eligibility-audit ci tranche 2026-07-31): fixed, cefi's narrower approach won; doc archived, all 5
+          todos done. No batch-2 candidate needed.
+
+          **(2)+(3) the 4 `base-service.sh`/`base-library.sh` PM items (domain-client retarget, pip floor bump,
+          cryptography/idna re-check, uv drift-guard) + the `0.10.8` constant move — CLEARED.** Both competing edits have
+          landed: `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s MP3 lint-generalization item is `[x]` ✅ DONE
+          (STEP 5.104 added to `base-service.sh`, `unified-trading-pm@4d3713ade`, ancestor-verified);
+          `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` is fully archived (its `base-library.sh` sentinel-contract
+          touch shipped). Matches the independent 2026-08-08 na-eligibility-audit finding on `codex_violations_ratchet_to_five_2026_06_10.md`
+          verbatim ("appears CLEARED"). **Batch-2 candidate**: bundle all 5 as ONE `sequential: true` unit (both files are a
+          shared hotspot) per operator ruling `autonomous_session_operator_decisions_2026_07_25.md` entry #36 option A —
+          source docs unnamed in the deferred text but findable via the 4 named fix categories.
+
+          **(4) `DATA_PIPELINE_SERVICES` vs cross-cutting batch1 item (B) — RESOLVED BY LOGIC, already shipped (not merely
+          cleared).** Fixed independently by `infra_satellite_ao_dispatch_batch5_2026_08_01.md`'s own G-UI gap item —
+          `deployment-ui@fecd67c` (2026-08-06, ancestor-verified) replaced the stale `features-cefi/defi/tradfi/prediction-service`
+          names with the current FOLD A family names and added the missing `strategy-service`/`ml-service` entries; live
+          `DATA_PIPELINE_SERVICES` set confirmed current. No batch-2 candidate needed.
+
+          **(5) `managed-by` launcher label standardization vs the wave-launcher terraform item in cross-cutting batch1b —
+          CLEARED.** The competing item is `[x]` ✅ DONE, re-verified live 2026-08-01 (slot 11): the runtime-pin-vs-terraform-default
+          split this item warned about no longer exists (`uts-prod-tradfi-wave-launcher`'s Cloud Run job resolves directly
+          to `deployment-service:latest`), so a `tofu apply` is harmless — no contention remains on the Cloud-Run terraform
+          side. **Batch-2 candidate**: `managed-by` launcher label standardization (`deployment-service/scripts/vm/launch-*.sh`),
+          low value per the source doc (`launched_by` already answers "who launched this").
+
+          **(6) repo_scripts DEPRECATE remediation vs cross-cutting batch1 item (k)'s ~60-script cloud-agnostic sweep —
+          STILL-CONFLICTING.** Item (k)'s outer checkbox reads `[x]` in the archived doc, but a live grep
+          (`grep -rl 'from google\.cloud import\|import boto3' --include='*.py' */scripts/`) still finds 113 files with
+          direct cloud-SDK imports fleet-wide, and the most recent independent audit
+          (`repo_scripts_governance_audit_2026_06_18.md`'s na-eligibility-audit round7 sweep, 2026-08-08) explicitly
+          re-confirmed this item is "CONFLICT-GATED — re-confirmed still claimed by
+          `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` item (k)". **Restated live competing claim for batch
+          2**: item (k)'s checkbox is prematurely flipped relative to actual sweep completion; do not draft a competing
+          todo — either wait for item (k)'s claim to be honestly closed out or file a stale-checkbox finding against the
+          archived doc first.
+
+          **(7) fastapi/starlette + pyarrow/twisted/mako/ujson dep work vs `workspace-constraints.toml` /
+          `canonical-dependency-manifest.json` churn — PARTIALLY CLEARED.** The fastapi/starlette cap-lift half is DONE and
+          shipped (`fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` archived `status: resolved`,
+          "RATIFIED 2026-07-28 — direction A confirmed complete"; live `workspace-constraints.toml` shows
+          `fastapi>=0.137.0`/`starlette>=1.3.1` with the `_IncludedRouter` fix noted). The ujson/twisted/msgpack pip-audit
+          follow-ups are covered by `cve_affected_pinned_deps_remediation_2026_06_18.md` (active, `assigned_vm: planning`).
+          **STILL-CONFLICTING residual**: pyarrow/mako are covered by NEITHER doc — confirmed via today's (2026-08-09)
+          `codex_violations_ratchet_to_five_2026_06_10.md` Progress Log entry, which independently reached the same
+          "genuinely blocked, pyarrow/mako uncovered" verdict same-day. **Restated live competing claim for batch 2**: the
+          pyarrow 23.0.0→24.0.0 fix needs a coordinated PM canonical-cap widen (`workspace-constraints.toml:80` currently
+          caps `<24.0.0`) plus the twisted 25.5.0→26.4.0 major-bump (via binance-futures-connector) and mako 1.3.12 in-range
+          bump — genuinely unowned, no fresh todo drafted here per the "too large for a batch todo" finding already on
+          record.
+
+          **(8) MTDS >900-line tail (12 modules) vs cefi batch1 + defi batches 2/3/4's `market_interface/` edits —
+          CLEARED.** All 4 named competing batches have shipped their `market_interface/` edits:
+          `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` archived; `defi_satellite_ao_dispatch_batch3_2026_07_26.md` and
+          `defi_satellite_ao_dispatch_batch4_2026_07_26.md` both archived; `defi_satellite_ao_dispatch_batch2_2026_07_26.md`
+          down to its 1 remaining open item (a KALSHI_PERP scope-audit gate, unrelated to `market_interface/`). Corpus-wide
+          grep of `plans/active/*.md` found no other open checkbox touching `market_interface/` splitting work. **Batch-2
+          candidate**: split the 12 named MTDS `market_interface/` modules currently over the 900-line soft tail, now with
+          low collision risk.
+
+          **(9) the corpus-wide sweeps (zero-checkbox sweep + reference-path `format_count`/`existence_count` baseline
+          drains) vs the concurrent per-tranche reconcile/audit runs — STILL-CONFLICTING.** Both source docs remain open:
+          `issues/zero_checkbox_sweep_all_tranches_2026_07_31.md` (`status: open`, 1 checkbox unresolved) and
+          `reference_path_convention_2026_07_23_finalize_2026_08_08.md`/`issues/reference_path_convention_2026_07_23.md`
+          (`status: active`/`open`, 3+4 open checkboxes). Per-tranche `/plan-reconcile` + `/ag-closeout-audit` +
+          na-eligibility-audit runs are demonstrably still concurrently active as of TODAY (2026-08-09) — e.g. this same
+          finalize session found a fresh 2026-08-09 na-eligibility-audit entry on `codex_violations_ratchet_to_five_2026_06_10.md`.
+          **Restated live competing claim for batch 2**: do not draft a new whole-corpus multi-hundred-file sweep todo
+          while daily per-tranche audits are still running; re-check once that cadence quiets.
+
+          **(10) the two sports-doc line-cap splits vs sports batches 3 and 5 — PARTIALLY CLEARED, both sub-items resolved
+          differently than anticipated.** (a) `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` — CLOSED via a
+          workaround, not a split: the blocked reference was repointed to the archive path without needing the split
+          (`unified-trading-pm@ca9551fbc`, 2026-07-29, ancestor-verified; confirmed live by `reference_path_convention_2026_07_23.md`'s
+          own 2026-08-03 na-eligibility-audit close). No batch-2 candidate needed. (b) `sports_satellite_ao_dispatch_batch2_2026_07_24.md`
+          — the blocking condition changed: the doc is now itself ARCHIVED (`plans/archive/2026_07/`, 999 lines, no longer
+          an active-plan touched-file), so `check_line_caps.sh`'s no-exceptions rule no longer applies the same way it did
+          when the doc sat active at exactly 1000 lines. The reference-repoint fix itself (in
+          `reference_path_convention_2026_07_23.md`) is still `[ ]` open — no evidence either sports batch 3 or 5 explicitly
+          performed a split (grepped both for "split"/"1000"/"line-cap" against this doc, no hits). **Batch-2 candidate**:
+          small, now-unblocked fix — repoint the stale `fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`
+          reference inside the archived `sports_satellite_ao_dispatch_batch2_2026_07_24.md` to its archive path (1 line of
+          slack remains at 999/1000, so verify post-edit length before shipping).
+
+          **Batch-2 candidate summary (7 items, in priority order)**: (2)+(3) base-service.sh/base-library.sh bundled unit
+          [P2]; (8) MTDS >900-line market_interface/ split, 12 modules [P2]; (5) managed-by launcher label standardization,
+          low value [P3]; (10b) sports batch2 doc reference repoint, 1-line-slack [P3]. **Still-conflicting, no todo
+          drafted**: (6) repo_scripts DEPRECATE remediation (stale item-(k) checkbox); (7) pyarrow/mako dep-manifest
+          residual; (9) corpus-wide sweeps (daily per-tranche audits still active). **Already resolved, no action**: (1)
+          PYTEST_UNIT_DIR; (4) DATA_PIPELINE_SERVICES; (10a) sports blowup-doc reference.
 
 - [ ] [REVIEW] P1. **Re-measure the infra tranche's orphan count and close the coverage-gap that made batch 1
       necessary.** Two parts. (a) Re-run the `/ag-closeout-audit infra` classification over the tranche's now-updated
@@ -218,4 +291,8 @@ the orphan count look better while leaving the mechanism that produced it untouc
   `vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md` alone fully sources it. Full detail in the
   todo's own RESULT note above. Todo 1 done; todos 2-4 remain (this plan is `sequential: true`, so todo 2 unblocks
   next).
+- **2026-08-09 (slot-24, review-craft-per-task)** — Worked todo 2 (re-check the 10 CONFLICT-GATED deferrals). 4 CLEARED
+  outright (2+3, 5, 8) + 1 already resolved-by-logic/shipped (4) + 1 partially cleared with a small residual (10) + 3
+  STILL-CONFLICTING with the live claim restated for batch 2 (6, 7-residual, 9). Wrote up a 4-item batch-2 candidate
+  list in priority order. Todo 2 done; todos 3-4 remain (`sequential: true`, so todo 3 unblocks next).
 - **context-scout 2026-08-03**: re-scouted; context_scope refreshed (6 entries) — finalize gate, code-free by design.
