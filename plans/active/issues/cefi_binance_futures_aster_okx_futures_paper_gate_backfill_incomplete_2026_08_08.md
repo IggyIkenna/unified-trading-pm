@@ -198,3 +198,16 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   to disk at all). Cross-referencing there rather than duplicating a new doc, since that is the standing SSOT for this
   bug class; out of craft scope for a data_engineering worker to root-cause the AO dispatch code itself. Skipping this
   dispatch back to the dispatcher; no code/check re-run performed. This Progress Log entry is the only change this turn.
+
+- **2026-08-09 (slot 4, data_engineering craft, 4th stale re-dispatch of the same already-parked task)**: Same pattern a
+  4th time — `/boot` returned `already_in_progress: true` / `dispatch_reason: "resume"`; `GET /api/backlog/parked`
+  confirmed `reason_code: "PARKED"`, `skip_count: 2` at boot time (unchanged from slots 29/20's reads). Re-verified the
+  gate independently: `gcloud compute instances list --filter="name~cefi-queue-heavy"` shows the SAME instance
+  (`cefi-queue-heavy-binancefutu-x17-20260809-083733`, still `RUNNING`, created 2026-08-09T01:37Z) — the backfill has
+  not terminated since slot 20's check; the gate condition remains unmet. Declining to redo the venue-scoped
+  completeness check for the same stale-baseline reason given 3 times above. Re-`skip-current-task`ing with
+  `reason_code: "PARKED"` + `park_now: true` to reinforce the durable park rather than let it silently expire. No new
+  cross-reference filed — `/plans/active/issues/backlog_regen_reverted_p1_2_park_2026_08_01.md` already tracks this
+  exact bug class (API-park `resume`-bypass variant) as its still-open `[SCRIPT] P2` item 3; this is corroborating
+  evidence of the same pattern (now 4 touches post-park: slot 19 park -> slots 29, 20, 4 all `resume`), not a new
+  finding. No code/report changes; this Progress Log entry is the only change this turn.
