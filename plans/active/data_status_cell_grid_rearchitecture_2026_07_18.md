@@ -22,7 +22,7 @@ related:
     /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-18
+last_updated: 2026-08-09
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -31,6 +31,7 @@ estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3
 assigned_role: backend_engineer
+thinking_tier: medium
 drift_direction: advance-code
 depends_on: []
 source: "deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md §4 (operator ruling 2026-07-18: SCHEDULE)"
@@ -62,12 +63,29 @@ built by reading the ENTIRE per-service availability manifest into memory per re
 deployment-api OOM incidents). The near-term mitigation is a per-request OOM guard + a 90-day UI default window; the
 real fix is to never load the whole manifest per request.
 
-## Design directions (to be chosen in the design task)
+## Design directions
+
+> **[⚠️ CORRECTED 2026-08-09, plan-reconcile]** — this section originally framed all three directions as an undecided
+> design choice for todo 2. **Precompute is NOT hypothetical — it already shipped** (predates this plan):
+> `deployment_api/scripts/data_status_rollup_worker.py` runs on a Cloud Scheduler cron
+> (`deployment-service/terraform/gcp/data_status_rollup_scheduler.tf`, confirmed live) and writes a full-history
+> `gs://{project}-data-status-rollups/{service}/full.json.gz` that `_manifest_status_rollup_fast_path` reads for any
+> **unfiltered** request (<500ms, down from 310-410s) — see its own plan
+> `plans/ai/data_status_offline_rollup_2026_05_06.plan.md`. Separately, **Bound already shipped too** for the
+> `/coverage-grid` endpoint specifically (date-window row-group pushdown, ~14.86 GiB → ~5 MB per this doc's own
+> 2026-08-08 measurement entry below). **The real remaining gap is narrower than "pick one of three":** any request
+> carrying a venue/`pipeline_mode`/other row filter bypasses BOTH shipped fast paths and still falls through to the
+> OOM-risk live-build path this plan exists to fix. Todos 2 and 4 below are corrected to target that specific gap, not a
+> green-field 3-way choice.
 
 - **Bound** — the read is always windowed (never whole-corpus); the UI requests a window, the backend reads only it.
+  **Shipped for `/coverage-grid`** (date-only filter); not yet extended to `_build_manifest_category`/
+  `_get_manifest_status_sync` or to venue/`pipeline_mode` filters anywhere.
 - **Stream** — build the grid via a streaming/aggregating pass rather than materialising the full manifest in memory.
+  Not shipped; still a live option for the filtered-request gap.
 - **Precompute** — an offline job (the hourly consolidator or a sibling) materialises a compact per-window cell-grid
-  projection the API reads cheaply (the manifest stays the SSOT; this is a read cache/projection).
+  projection the API reads cheaply (the manifest stays the SSOT; this is a read cache/projection). **Shipped for
+  unfiltered full-history requests** (`data_status_rollup_worker.py`); not yet extended to filtered requests.
 
 ## Codex SSOTs (read before designing)
 
@@ -82,13 +100,19 @@ real fix is to never load the whole manifest per request.
 - [x] ✅ [BACKEND] P1. **Measure + profile** — instrument the current cell-grid build to confirm the per-service memory
       footprint + the exact read pattern (which manifest columns/partitions a full-history request touches). Baseline
       the numbers this plan must beat. — deployment-api@8a36931
-- [ ] [BACKEND] P1. **Design doc — bound vs stream vs precompute** — evaluate the three directions against the
-      single-walk discipline (no new whole-corpus walk), Cloud Run memory, and UI latency; pick one (or a hybrid) and
-      record the decision + the projection schema. This is the design gate.
-- [ ] [BACKEND] P1. **Implement the bounded read** — the API cell-grid endpoint reads ONLY the requested window from the
-      manifest (or the precomputed projection), never the whole corpus; column-pruned + TTL-cached.
-- [ ] [BACKEND] P2. **Precompute projection (if chosen)** — an offline job materialises the per-window cell-grid
-      projection (respecting single-walk); the API reads it; manifest stays SSOT + fallback.
+- [ ] [BACKEND] P1. **Design doc — extend bound/precompute to FILTERED requests** — Bound (`/coverage-grid`) and
+      Precompute (`data_status_rollup_worker.py`) already ship for their respective unfiltered/date-only cases (see
+      "Design directions" above); evaluate bound vs stream vs extending the precompute rollup against the single-walk
+      discipline, Cloud Run memory, and UI latency SPECIFICALLY for a request carrying a venue/`pipeline_mode`/other row
+      filter (the one case that still falls through to the live-build path); pick one (or a hybrid) and record the
+      decision + the projection schema. This is the design gate.
+- [ ] [BACKEND] P1. **Implement the bounded read for `_build_manifest_category`/`_get_manifest_status_sync`** — extend
+      the SAME date-window row-group pushdown `/coverage-grid` already proved (~14.86 GiB → ~5 MB) to the cell-grid's
+      own endpoint, and to filtered requests specifically; column-pruned + TTL-cached.
+- [ ] [BACKEND] P2. **Extend the precompute rollup to filtered requests (if chosen)** — `data_status_rollup_worker.py`
+      already materialises the unfiltered full-history projection; extend it (or add a sibling) to cover
+      venue/`pipeline_mode`-filtered requests too (respecting single-walk); the API reads it; manifest stays SSOT +
+      fallback.
 - [ ] [UI] P2. **Lift the 90-day default** — once the backend is bounded/precomputed, allow full-history windows in the
       UI without the OOM-guard stopgap; add a pw:L2 regression spec for a full-history render.
 - [ ] [BACKEND] P2. **Load-test at full history** — prove a full-history cell-grid request stays within Cloud Run memory
@@ -171,7 +195,20 @@ real fix is to never load the whole manifest per request.
     are still OOM-dangerous — hence the `live_build_guard.py` pre-flight refusal.
   - Target for todo 2 design: bounded/streamed/precomputed approach must keep peak RSS < 4 GiB even for a full-history
     request at MTDS's worst-case rate (5.19 MB/day/category).
+
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
-  todo 2 is still an unresolved DESIGN GATE (bound vs stream vs precompute) every later todo depends on; a
-  genuine architecture choice among 3 directions with different Cloud-Run-memory/single-walk-discipline
-  implications, not a cheat-sheet-matched default.
+  todo 2 is still an unresolved DESIGN GATE (bound vs stream vs precompute) every later todo depends on; a genuine
+  architecture choice among 3 directions with different Cloud-Run-memory/single-walk-discipline implications, not a
+  cheat-sheet-matched default.
+- **plan_reconciler 2026-08-09 (ui tranche, dispatch agt-0c9e3f)**: codex-alignment hunter found this plan's own "Design
+  directions" framing stale — Precompute and (for one endpoint) Bound are not hypothetical, both already shipped.
+  Independently verified myself, not just from the hunter's report: read
+  `deployment_api/scripts/data_status_rollup_worker.py` directly (docstring confirms Cloud Scheduler cron + the
+  `full.json.gz` full-history rollup + the <500ms fast path), confirmed
+  `deployment-service/terraform/gcp/data_status_rollup_scheduler.tf` exists live (schedule `*/20 * * * *` — note the
+  worker's own docstring claims "every 5 min," a minor code-comment/terraform drift, flagged but out of this PM-doc-only
+  run's scope to fix), and confirmed `plans/ai/data_status_offline_rollup_2026_05_06.plan.md` (a pre-existing, separate
+  plan for this exact rollup) exists. Corrected the "Design directions" section + todos 2 and 4 to target the real
+  remaining gap (filtered requests bypass both shipped fast paths), not a green-field 3-way choice —
+  na-eligibility-audit's own "genuine architecture choice among 3 directions" framing above is now superseded by this
+  correction, not restated as still-accurate. No todo flipped — real work remains, just correctly scoped now.

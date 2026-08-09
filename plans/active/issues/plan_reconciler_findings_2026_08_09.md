@@ -105,7 +105,36 @@ depends_on: []
 
 ## Doc-drift
 
-(populated as verified)
+1. **[FIXED, plan-side] `data_status_cell_grid_rearchitecture_2026_07_18.md` — "Design directions" + todos 2/4 treated
+   Precompute (and Bound, for one endpoint) as an undecided 3-way choice; both already shipped.** Codex-alignment hunter
+   found `/codex/05-infrastructure/deployment-observability.md` already documents a live precompute rollup worker;
+   independently verified myself (not just trusting the hunter) by reading
+   `deployment_api/scripts/data_status_rollup_worker.py` directly, confirming
+   `deployment-service/terraform/gcp/data_status_rollup_scheduler.tf` exists live, and finding the rollup's own
+   pre-existing plan `plans/ai/data_status_offline_rollup_2026_05_06.plan.md`. The plan was the stale side, not codex —
+   corrected in place (no todo flipped; the real remaining gap — filtered requests bypass both shipped fast paths — is
+   still genuine open work, now correctly scoped instead of re-litigating a settled choice). Side-finding, NOT fixed
+   (outside PM-doc-only scope): the worker's own docstring claims "every 5 min" but the live terraform schedule is
+   `*/20 * * * *` — a minor code-comment/config drift in `deployment-api`, flagged here for a future code-touching
+   session, not actionable by this skill.
+2. **[ROUTED — see Filed] `/codex/05-infrastructure/deployment-observability.md` — "defaults to Firestore on GCP" (P0)
+   reads as settled/operative with zero caveat that the cutover is under an active, still-unlifted 2026-07-14 operator
+   HALT** (dual-write never ran on the live fleet; GCS remains operationally authoritative; latest remeasurement only
+   27% Firestore↔fleet overlap). Codex is the stale/premature side — the plan-sanctioned path to fix this exact section
+   (`deployment_registry_firestore_p5_verify_2026_07_14.md` todo 3) is itself still blocked on P3. Codex edits are NEVER
+   autonomous in this skill — filed + alerted per STEP 6, not applied.
+3. **[ROUTED — see Filed] `/codex/03-deployment/data-status-ui-surface.md` — stale re: `HonestCoverageCard` behavior
+   (P1).** Describes the card rendering raw `coverage_pct` verbatim; a `deriveCoverage()` recompute fix shipped
+   `deployment-ui@7007529` (2026-06-17, over a month ago) that codex never absorbed (`last_reviewed:` blank since
+   creation). Filed + alerted, not applied.
+4. **[ROUTED — see Filed] `/codex/11-project-management/issue-doc-lifecycle.md` vs recurring
+   `ag_closeout_audit_ui_parked_*.md` docs (P1/P2, ambiguous).** Both `_2026_08_07.md` and `_2026_08_08.md` self-declare
+   fully-actioned/0-open-todos yet sit `status: open` in `plans/active/issues/` rather than archiving per the codex's
+   "archive immediately once acked" rule — but this may be a legitimate doc-class exception (a recurring dated
+   audit-trail record functioning more like a decision log) rather than a genuine gap; the codex-alignment hunter
+   explicitly declined to assert either reading. Also confirmed cross-tranche (a sibling
+   `ag_closeout_audit_defi_parked_2026_08_07.md` shows the same pattern) — wider than this shard can resolve. Filed +
+   alerted for an operator/skill-maintainer ruling.
 
 ## Hygiene fixes
 
