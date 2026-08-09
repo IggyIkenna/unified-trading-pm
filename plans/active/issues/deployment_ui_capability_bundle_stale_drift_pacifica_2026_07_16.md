@@ -52,7 +52,7 @@ context_scope:
     /codex/06-coding-standards/script-homes.md,
     /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
   ]
-execution_scope: local-only
+execution_scope: orchestrator-agent # corrected 2026-08-09 (plan_reconciler agt-2d9a32) -- was local-only, mismatched with assigned_vm: planning since the 2026-08-08 flip (see Progress Log line ~428)
 model_tier: sonnet-doable
 thinking_tier: medium
 estimate_class: refactor
