@@ -159,6 +159,13 @@ jobs:
         needs.promote-ldr-to-main.outputs.conflicted_count }} conflicted (repos: ${{
         needs.promote-ldr-to-main.outputs.ldr_main_repos }}). Conflict resolver dispatched for: ${{
         needs.promote-ldr-to-main.outputs.conflicted }}. WS-L Phase-0 canary — SSOT: ldr-to-main-promote-fleet.yml.
+      # Standing condition on a `*/15` cron — job-level key (not per-repo: the message already
+      # aggregates every currently-conflicted repo into one post, and the conflicted-repo set can
+      # shift tick-to-tick, so "any conflict exists in the fleet" is the condition worth deduping,
+      # matching promote-fleet-startup-failure-monitor.yml's single-key pattern). Without this a
+      # standing conflict re-paged every 15 min (ci_monitor_recovery_bookend_residual_gaps finding 1).
+      dedup_key: ldr-main-conflict
+      cooldown_min: 60
     secrets: inherit
 
   # Hardening (2026-08-02, ci_satellite_ao_dispatch_batch1 [CI] P1 — MTDS auto-merge-arm
@@ -181,4 +188,8 @@ jobs:
         ${{ needs.promote-ldr-to-main.outputs.arm_failed }} — PR exists + provenance-clean but needs a MANUAL `gh pr
         merge --auto` (or plain merge once green); check repo `allow_auto_merge` + branch protection. WS-L Phase-0
         canary — SSOT: ldr-to-main-promote-fleet.yml.
+      # Standing condition on a `*/15` cron — see the `notify` job's comment above for the
+      # job-level-vs-per-repo dedup rationale (ci_monitor_recovery_bookend_residual_gaps finding 1).
+      dedup_key: ldr-main-arm-failed
+      cooldown_min: 60
     secrets: inherit

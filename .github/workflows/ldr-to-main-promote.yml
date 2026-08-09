@@ -494,4 +494,9 @@ jobs:
         PM LDR→main auto-drain bot: auto-merge ARM FAILED for ${{ needs.promote-ldr-to-main.outputs.pr }} — PR exists +
         provenance-clean but needs a MANUAL `gh pr merge --auto` (or plain merge once green); check repo
         `allow_auto_merge` + branch protection. SSOT: ldr-to-main-promote.yml.
+      # Standing condition on a `*/15` cron — without a dedup_key a stuck arm-failed PR re-paged
+      # every 15 min (ci_monitor_recovery_bookend_residual_gaps finding 1). This workflow promotes
+      # only unified-trading-pm itself, so the key is stable without needing a repo suffix.
+      dedup_key: ldr-main-arm-failed-pm
+      cooldown_min: 60
     secrets: inherit
