@@ -152,16 +152,25 @@ Progress Log) confirmed, with exact file:line citations:
       re-derive). Repo: strategy-service. Done-when: a new unit test drives `on_tick()` for `CARRY_BASIS_PERP_INV` and
       asserts a non-empty `AtomicInstruction` including the correctly-sized hedge leg, and `quality-gates.sh` is green.
       — strategy-service@f2ac7fdf
-- [ ] [BACKEND] P1. Build the `RecursiveLoopRequest` construction + `RecursiveLoopOrchestrator.open()`/`.unwind()` call
-      site in execution-service — candidate home:
-      `execution-service/execution_service/algo_library/leveraged_leg_controller.py` (or a new sibling module if that
-      file's existing responsibility doesn't fit) — that receives the `AtomicInstruction` produced by the prior 2 todos
-      (routed via `execution-service/execution_service/v2/atomic_instruction_router.py:35`), reconstructs a
-      `RecursiveLoopRequest` from its legs/params, and invokes `RecursiveLoopOrchestrator.open()` on entry / `.unwind()`
-      on exit. This is `RecursiveLoopOrchestrator`'s first real production caller. Repo: execution-service. Done-when: a
-      new integration-style unit test feeds a real `AtomicInstruction` (as produced by the prior 2 todos' new tests)
-      through this call site and asserts `RecursiveLoopOrchestrator.open()` is invoked with a correctly-populated
-      `RecursiveLoopRequest`, and `quality-gates.sh` is green.
+- [x] ✅ [BACKEND] P1. Build the `RecursiveLoopRequest` construction + `RecursiveLoopOrchestrator.open()`/`.unwind()`
+      call site in execution-service — execution-service@2352a17e new
+      `execution_service/algo_library/recursive_loop_runner.py` (sibling to `leveraged_leg_controller.py`, whose own
+      responsibility — drift computation + rebalance-instruction EMISSION — is the opposite direction from this module's
+      AtomicInstruction CONSUMPTION -> orchestrator call). `build_recursive_loop_request()` reconstructs a
+      `RecursiveLoopRequest` from a Family 1/2 `AtomicInstruction`'s legs/attestations (start_amount from the leading
+      STAKE leg, lending_protocol from that leg's venue, ltv_per_loop/n_loops/collateral_asset/debt_asset from
+      attestations, share_class_coin from `identity.share_class`, opening_mode via the documented 5-ETH FLASH/
+      PERSISTENT crossover, perp_leg_config reconstructed for Family 2); `open_recursive_loop_position()` /
+      `unwind_recursive_loop_position()` call `RecursiveLoopOrchestrator.open()`/`.unwind()` — its first real production
+      caller. Not wired into `atomic_instruction_router.py` (that router's `AtomicLegExecutor` bridges only
+      `LEADER_HEDGE`/sports; `ATOMIC_ON_CHAIN` dispatch-by-mode routing is a separate follow-up, outside this todo's
+      done-when). Repo: execution-service. Done-when: a new integration-style unit test feeds a real `AtomicInstruction`
+      (as produced by the prior 2 todos' new tests) through this call site and asserts
+      `RecursiveLoopOrchestrator.open()` is invoked with a correctly-populated `RecursiveLoopRequest`, and
+      `quality-gates.sh` is green. New test file `tests/unit/algorithms/test_recursive_loop_runner.py` (13 tests,
+      hand-built `AtomicInstruction` fixtures mirroring strategy-service's exact shape — no cross-repo import, per the
+      NO service↔service deps rule) covers both families, request-field correctness, opening-mode crossover, and error
+      paths. `quality-gates.sh` green on execution-service (full run, no skip flags).
 - [ ] [BACKEND] P2. Audit execution-service for an existing periodic-poller/scheduler mechanism suitable for
       `PerpHedgeSizer.compute_rebalance()`/`.compute_margin_topup()` (its own docstring states "designed for 5-min poll
       cycle", `perp_hedge_sizer.py:60-63`) — grep for existing Cloud Scheduler-triggered or in-process poll loops in
@@ -233,3 +242,22 @@ Progress Log) confirmed, with exact file:line citations:
   stubbed (it now correctly routes to — and no-ops within, since Family-1 catalog rows carry no `perp_venue`/`perp_pair`
   — the real Family-2 path). `quality-gates.sh` green on strategy-service (full run, no skip flags, 5836 passed).
   strategy-service@f2ac7fdf.
+- **2026-08-09 (slot 20, backend_engineer)**: Todo 6 shipped — new
+  `execution_service/algo_library/recursive_loop_runner.py` (sibling to `leveraged_leg_controller.py`, whose
+  drift-computation/rebalance-emission responsibility is the opposite direction from this module's AtomicInstruction
+  CONSUMPTION -> orchestrator call). `build_recursive_loop_request()` reconstructs a `RecursiveLoopRequest` from a
+  Family 1/2 `AtomicInstruction`'s legs (leading STAKE leg's `size_units`/`venue` -> `start_amount`/
+  `lending_protocol`) + attestations (`ltv_per_loop`/`n_loops`/`collateral_asset`/`debt_asset`, `perp_venue`/
+  `perp_pair`/`target_net_delta` for Family 2) + `identity.share_class` -> `share_class_coin`; `opening_mode` derived
+  via the orchestrator's own documented 5-ETH-equivalent FLASH/PERSISTENT crossover on Ethereum/Base.
+  `open_recursive_loop_position()`/`unwind_recursive_loop_position()` call `RecursiveLoopOrchestrator.open()`/
+  `.unwind()` — its first real production caller. Deliberately NOT wired into `atomic_instruction_router.py`: that
+  router's `AtomicLegExecutor` only bridges `LEADER_HEDGE` (sports) instructions, a different execution surface from
+  this `ATOMIC_ON_CHAIN` one — dispatch-by-`execution_mode` routing is a separate wiring concern the todo's own
+  done-when doesn't require. New test file `tests/unit/algorithms/test_recursive_loop_runner.py` (13 tests) builds
+  Family 1/2 `AtomicInstruction` fixtures BY HAND (mirroring strategy-service's real builder logic exactly) rather than
+  importing strategy-service, per execution-service's NO service↔service deps rule — covers both families' request-field
+  reconstruction, the FLASH/PERSISTENT crossover (amount + chain), perp_leg_config reconstruction (including the
+  `usdc_margin_buffer_min_pct` schema-default fallback, since Family 2's attestations don't carry it), and error paths
+  (wrong `instrument_type`, missing chain, unknown `lending_protocol`). `quality-gates.sh` green on execution-service
+  (full run, no skip flags). execution-service@2352a17e.
