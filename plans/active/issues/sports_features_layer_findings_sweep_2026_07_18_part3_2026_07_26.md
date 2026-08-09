@@ -937,3 +937,7 @@ overwrite.
   marker also tracked are both now `[x]` in this doc (shipped since) — not part of today's open count. No
   reclassification: this doc's remaining open work is a citation, not new dispatchable content.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA-STALE, valid — reconfirmed both open `[DIAG] P0` todos
+  (line ~407, ~462) still correctly cite `sports_consolidated_closeout_2026_07_19.md` Track E as the owning doc; that
+  Track's matching `[CODE] P1` ("repoint the remaining stale `entity=fixtures` consumers, 7-file list") re-verified
+  still `- [ ]` open there (live-read today). No new work surfaced; doc stays `assigned_vm: NA`.
