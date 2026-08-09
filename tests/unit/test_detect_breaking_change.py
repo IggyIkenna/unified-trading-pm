@@ -23,6 +23,7 @@ _spec.loader.exec_module(_mod)
 
 extract_surface = _mod.extract_surface
 diff_surfaces = _mod.diff_surfaces
+registry_value_changes = _mod.registry_value_changes
 
 
 BASE = '''
@@ -407,6 +408,87 @@ VENUES_BY_ASSET_GROUP: dict[str, list[str]] = {
 """
     surf = extract_surface(src, "m")
     assert surf.registry["VENUES_BY_ASSET_GROUP"] == {"cefi": ["BINANCE-SPOT"]}
+
+
+def test_registry_value_removal_is_decoupled_from_is_breaking():
+    """uac_value_only_config_change_breaks_utl_untested_2026_07_20.md instance 1:
+    `massive` removed from tradfi SOURCE_PRIORITY. The decoupled signal must catch it;
+    `is_breaking` (`diff_surfaces`) must NOT — the export name + shape are unchanged."""
+    base = """
+SOURCE_PRIORITY: dict[tuple[str, str], list[str]] = {
+    ("tradfi", "ohlcv_15m"): ["databento", "yahoo"],
+    ("tradfi", "trades"): ["databento", "massive"],
+}
+"""
+    new = """
+SOURCE_PRIORITY: dict[tuple[str, str], list[str]] = {
+    ("tradfi", "ohlcv_15m"): ["databento", "yahoo"],
+    ("tradfi", "trades"): ["databento"],
+}
+"""
+    old_surf = extract_surface(base, "m")
+    new_surf = extract_surface(new, "m")
+    assert not diff_surfaces(old_surf, new_surf)
+    assert registry_value_changes(old_surf, new_surf) == ["SOURCE_PRIORITY"]
+
+
+def test_registry_value_dict_key_reorder_is_not_flagged():
+    """Order-normalizing canonicalizer: a pure dict-key reorder is not a value change."""
+    base = """
+VENUE_TO_ADAPTER_KEY: dict[str, str] = {
+    "BINANCE-SPOT": "binance",
+    "OKX-SPOT": "okx",
+}
+"""
+    new = """
+VENUE_TO_ADAPTER_KEY: dict[str, str] = {
+    "OKX-SPOT": "okx",
+    "BINANCE-SPOT": "binance",
+}
+"""
+    old_surf = extract_surface(base, "m")
+    new_surf = extract_surface(new, "m")
+    assert registry_value_changes(old_surf, new_surf) == []
+
+
+def test_registry_value_priority_list_reorder_is_flagged():
+    """List order IS preserved: reordering a priority list is itself a behavior change,
+    unlike a dict-key reorder above."""
+    base = """
+SOURCE_PRIORITY: dict[tuple[str, str], list[str]] = {
+    ("tradfi", "trades"): ["databento", "yahoo"],
+}
+"""
+    new = """
+SOURCE_PRIORITY: dict[tuple[str, str], list[str]] = {
+    ("tradfi", "trades"): ["yahoo", "databento"],
+}
+"""
+    old_surf = extract_surface(base, "m")
+    new_surf = extract_surface(new, "m")
+    assert registry_value_changes(old_surf, new_surf) == ["SOURCE_PRIORITY"]
+
+
+def test_registry_value_unchanged_is_not_flagged():
+    src = """
+VENUE_TO_ADAPTER_KEY: dict[str, str] = {
+    "BINANCE-SPOT": "binance",
+}
+"""
+    surf = extract_surface(src, "m")
+    assert registry_value_changes(surf, surf) == []
+
+
+def test_non_allowlisted_constant_value_change_is_not_tracked():
+    """A plain constant NOT in CROSS_REPO_REGISTRY_ALLOWLIST (e.g. a benign
+    recalibration like EMISSION_LATENCY_MS_BY_SOURCE) gets neither is_breaking NOR the
+    decoupled signal — this differ only tracks the narrow, explicit allowlist."""
+    base = "EMISSION_LATENCY_MS_BY_SOURCE: dict[str, int] = {'yahoo': 900_000}\n"
+    new = "EMISSION_LATENCY_MS_BY_SOURCE: dict[str, int] = {'yahoo': 840_000}\n"
+    old_surf = extract_surface(base, "m")
+    new_surf = extract_surface(new, "m")
+    assert not diff_surfaces(old_surf, new_surf)
+    assert registry_value_changes(old_surf, new_surf) == []
 
 
 if __name__ == "__main__":
