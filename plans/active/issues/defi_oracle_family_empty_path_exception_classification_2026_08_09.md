@@ -96,14 +96,19 @@ P3.
       `defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md`'s already-resolved item 5 pattern. THEN file the
       scoped CODE todo(s) against that decision (market-tick-data-service: `_aave_oracle_collection.py` +
       `oracle_prices_handler.py`'s Chainlink leg).
-- [ ] [CODE] P2. **Thread Pyth's already-in-hand HTTP status into the clean-empty path** (market-tick-data-service):
+- [x] [CODE] P2. **Thread Pyth's already-in-hand HTTP status into the clean-empty path** (market-tick-data-service):
       widen `_fetch_pyth_prices`/`_fetch_pyth_prices_at_timestamp`'s return signature to also carry the resolved
       `http_status` (200 on the normal empty-after-filter path, 404 on the Hermes no-data-at-timestamp case), and thread
       it into `_emit_pyth_manifest`'s `record_zero_rows` call via
       `build_fetch_evidence(http_status=...,     source="pyth_hermes")` instead of falling through to the generic
       synthesized 200. **Done when**: a test proves a simulated Hermes 404 (no data at timestamp) records
       `http_status == 404` on the clean-empty path, and a genuine empty-after-filter 200 response still records
-      `http_status == 200`; existing behavior otherwise unchanged.
+      `http_status == 200`; existing behavior otherwise unchanged. — **market-tick-data-service@480e76dd**
+      (`live-defi-rollout`, verified ancestor of origin). Implemented per operator-approved option A (see Progress Log):
+      the 404 signal folds into `_collect_pyth_rows()`'s existing boolean return slot rather than widening
+      `_emit_pyth_manifest`/`process` (both were already at their exact 900-line-file/50-line-method QG caps — any
+      net-positive line addition there broke the gate; `_collect_pyth_rows()` had headroom). 62/62 tests green, QG
+      sentinel `480e76dd7…` == HEAD, quickmerge Pass 2 landed + ancestry-verified.
 
 ## Codex SSOTs
 
@@ -122,3 +127,67 @@ P3.
   `cli/handlers/`, not `market_interface/adapters/defi/`), swapped `/plans/active/task_template.md` for
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (cited in the doc's own "Codex SSOTs" section
   but missing from context_scope), context_scope now 4 entries.
+- **2026-08-09, slot-7 (dispatched todo P2 — Pyth http_status threading)**: **BLOCKED — the todo's own "no new
+  exception-narrowing needed" premise is wrong; implementing it literally would introduce a live regression, not a
+  fix.** Traced the full path: `record_zero_rows(fetch_evidence=...)` → `_resolve_zero_rows_reason_and_evidence`
+  (`_defi_manifest.py`) resolves reason to `SOURCE_RETURNED_ZERO` for Pyth (no launch-date match) → `record_empty`
+  passes the evidence to `ManifestWriter.record_empty`, which is KEYSTONE-gated: for `reason="SOURCE_RETURNED_ZERO"` it
+  REQUIRES `FetchEvidence.proves_honest_absence()` (`unified_api_contracts/canonical/crosscutting/honest_coverage.py`)
+  else hard-raises `UnprovenHonestAbsenceError` (only `EXPECTED_*` reasons are exempt). `proves_honest_absence()` hard-
+  gates `200 <= http_status < 300` — there is NO way to pass a raw `http_status=404` through this specific path (SOURCE_
+  RETURNED_ZERO) without it being rejected, regardless of `error_signal`. So threading the real Hermes 404 straight into
+  `build_fetch_evidence(http_status=404, ...)` → `record_zero_rows(fetch_evidence=...)` as the todo literally describes
+  would convert every genuine "Hermes has no data at this exact timestamp" case (existing, deliberate, tested behavior —
+  `test_historical_404_returns_empty`, docstring "HTTP 404 from historical endpoint returns empty list (honest
+  absence)") from a clean zero-row record into a crashed `process()` call. Cross-checked against
+  `/codex/02-data/honest-absence-downstream-handling.md`'s own Class-2 examples (dex-swaps schema-error 404, Understat
+  2019 404) — those are the OPPOSITE case (a 404 that WRONGLY got treated as clean empty, fixed by routing it to
+  `record_failed`); Pyth's archive-404 is architecturally different — Hermes uses 404 to mean "no price existed at this
+  specific instant," which for a point-in-time query IS a legitimate honest-absence answer, not a fetch failure, and the
+  existing code/tests already encode that deliberately. The real gap the issue's summary correctly identifies (a genuine
+  404 recorded as a fabricated 200) is real, but literally threading the raw status through the existing
+  `SOURCE_RETURNED_ZERO` path is not a safe fix for it. **Options** (filing `/blocked`, not deciding unilaterally — this
+  is a manifest-reason/downstream-analytics classification call, not a mechanical threading exercise):
+  - A (recommended): for the archive-404-specifically case, call
+    `recorder.record_empty(reason= "EXPECTED_KNOWN_SOURCE_GAP", ...)` DIRECTLY in `_emit_pyth_manifest` — bypassing
+    `record_zero_rows`'s automatic `SOURCE_RETURNED_ZERO` reason resolution — mirroring the exact pattern this same
+    function already uses one branch above for `pyth_pre_archive`. `EXPECTED_*` reasons are keystone-exempt (no
+    `FetchEvidence` required), so this both avoids the crash AND correctly distinguishes "Hermes confirmed no data at
+    this instant" from the routine "queried successfully, genuinely zero after IS-filter" `SOURCE_RETURNED_ZERO` case —
+    arguably a MORE honest fix than the literal todo, since it changes the recorded `capture_status` reason (not just an
+    evidence field) to reflect that this is a known, permanent, source-native gap shape rather than an ordinary empty
+    query.
+  - B: ship only the harmless half — thread `http_status=200` explicitly through the already-200-only success path (no
+    behavior change, since it was already implicitly 200) — and leave the archive-404 case's `http_status=200`
+    misrecording exactly as-is (defer the actual correctness fix). Minimal/safe but does not close the issue's own
+    stated gap.
+  - C: relax `FetchEvidence.proves_honest_absence()` in `unified_api_contracts` to accept a narrower
+    source-native-confirmed-empty 4xx allowlist — a cross-repo UAC contract change, out of this task's single-repo scope
+    and a bigger blast radius (affects every `SOURCE_RETURNED_ZERO` caller fleet-wide). Recommend A: smallest,
+    single-repo, safe, and reuses an established pattern already in the same function. Did NOT implement any of the
+    three — filing `/blocked` for the reason-classification call per the craft rule (data- correctness surprise the plan
+    didn't anticipate → escalate, don't absorb). No code shipped this pass.
+- **2026-08-09, slot-7 — operator answered `BLK-7eaa58e4`: option A confirmed** (route the archive-404 case through
+  `record_empty(reason="EXPECTED_KNOWN_SOURCE_GAP", ...)`, keystone-exempt; explicitly rejected B — "CLAUDE.md always
+  prefers the fuller solution over shipping only the harmless half" — and C — cross-repo UAC blast radius too big for a
+  single-source quirk). **Implemented in market-tick-data-service** (2 commits locally,
+  `fix(defi): thread Pyth Hermes archive http_status into the empty-path manifest classification` +
+  `refactor(defi): fold Pyth 404-known-gap into _collect_pyth_rows's existing boolean, back within line caps`):
+  `_fetch_pyth_prices`/`_fetch_pyth_prices_at_timestamp` widened to return `(rows, http_status)`; `_collect_pyth_rows`
+  folds `http_status == 404` into its existing boolean return slot (renamed in spirit to "known_source_gap" — same tuple
+  position, no signature change needed downstream) so `_emit_pyth_manifest` and `process()` need ZERO changes and stay
+  at their pre-existing 50-line-cap / 900-line-cap ceilings (both were already AT the cap before this todo — the first
+  implementation attempt threading a new `pyth_http_status` param straight into `_emit_pyth_manifest` blew both caps by
+  several lines and needed reworking). 62/62 targeted unit tests pass (`test_oracle_prices_handler.py` +
+  `test_cf11_swallow_remediation.py`), including 3 new tests proving the "Done when" acceptance criteria: a simulated
+  Hermes 404 records `http_status == 404` (`_fetch_pyth_prices_at_timestamp` return value) and folds into
+  `known_source_gap=True`; a genuine 200 keeps `known_source_gap=False`; and
+  `_emit_pyth_manifest(pyth_pre_archive=True, ...)` (the shared code path both cases now route through) records
+  `reason="EXPECTED_KNOWN_SOURCE_GAP"` via `record_empty`, never `record_zero_rows`. Full `quality-gates.sh` (Pass 1)
+  was queued/running on this extremely-loaded shared host at compaction time — NOT yet confirmed green, NOT yet shipped
+  via quickmerge. **P2 checkbox intentionally left unflipped** — `done_definition` requires "checkbox flipped in plan +
+  code shipped", and code is committed locally only, not yet on `origin/live-defi-rollout`. Next session/tick: re-run
+  `bash scripts/quality-gates.sh` in `market-tick-data-service`, fix anything genuinely red (the two known-baseline `⚠️`
+  warnings — STEP 5.5 broad-except, STEP 5.101 empty-string-fallback — are pre-existing and not from this diff, do not
+  treat as blocking), ship via `quickmerge --agent --files` once green, THEN flip this checkbox with the
+  `market-tick-data-service@<sha>` evidence.
