@@ -216,7 +216,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 
 ## Deferred — data-correctness finding surfaced during this audit (flagged, not batchable here)
 
-- **`/plans/active/issues/context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today" section asserts two
+- **`/plans/archive/2026_08/issues/context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today" section asserts two
   claims that are FALSE as measured live during this run (2026-07-31):** (1) it claims "the field is now REQUIRED
   (`docspec.py`, `plan`/`issue` doc_types) and `check_frontmatter_schema.py` fails PM QG on a missing one" — but
   `scripts/docs/docspec.py:136,160` both still read `FieldSpec("context_scope", Req.E, "free_list")` (elective, not
@@ -490,3 +490,9 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
   2026-08-06 marker. Sole open todo (corpus-wide `context_scope` backfill) remains corpus-scale, incrementally
   progressing work correctly not bounded to a single-worker AO dispatch.
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — re-checked against the full round7-10 precedent set
+  (IAM self-service default, D16 all-repos carve, S5.1 repo-type tiering, plan-destination-defaults-AO-dispatched,
+  escalation-N=3-days, reversibility-qualified deletes, Option B retirement, DeepSeek/Slack-webhook credential
+  provisioning, self-service-on-sibling-precedent) — none apply; this is genuinely unbounded, ongoing corpus-scale work
+  (the backfill target moves as the corpus itself grows), not a defaulted judgment call. No whole-doc RECLASSIFY, no
+  extractable sub-item (the single todo IS the corpus-wide sweep itself, not a list of discrete items).

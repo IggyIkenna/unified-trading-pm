@@ -386,3 +386,7 @@ cleanly instead of ending on an issue-doc corroboration.
   `/done`-endpoint identity-matching change (needs a `DoneRequest` schema addition + full slot-reuse-lifecycle tracing,
   touching every worker's completion path fleet-wide) — unchanged since the 2026-08-06 marker, still `sequential: true`
   behind no unresolved prerequisite.
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — checked against the round7-10 precedent set; none
+  apply (this is fleet-wide `/done`-endpoint surgery, explicitly declined for rushed scoping, not a defaulted judgment
+  call). Corroborated same-day: `/ag-closeout-audit ao` batch12 independently lists this doc under too-large-or-risky
+  (1).

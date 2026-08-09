@@ -739,3 +739,16 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   checkboxes deliberately left unflipped per the doc's own honest-accounting convention, the Phase-2 batch-consolidation
   fork, and the `lst_rate_honest_coverage` line-cap-gated citation) remain genuine judgment/ongoing-incremental work,
   unchanged since 2026-08-03.
+
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — read end-to-end; `grep -c '^- \[ \]'` = **13**,
+  matching. Re-examined the 2026-08-07 marker's own flagged pair (line ~239 cross-cutting-membership fix, line ~246
+  staleness-script-cadence wiring) against the round7-10 precedent set, including "plan-destination defaults to
+  AO-dispatched going forward" — that is a DEFAULT for cases never explicitly decided; this whole PLAN already has an
+  explicit, dated, case-specific operator choice (2026-07-26, asked directly, chose LOCAL/human "since this is real
+  per-doc judgment work") that a later general default does not override, same reasoning already applied elsewhere in
+  this tranche (see `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`'s round11 marker for the
+  identical specific-ruling-beats-later-default logic). The 2026-08-07 marker's own caution — treating the LOCAL framing
+  as doc-level, not item-level — stands; not overriding it on a symmetric re-read. No other round7-10 precedent (IAM
+  self-service, D16, S5.1, escalation-N, reversibility-qualified deletes, Option B retirement, DeepSeek/Slack
+  credentials) touches any of the 13 open items. Remaining 11 items unchanged, genuine per-tranche
+  audit/consolidation/line-cap-gated work.

@@ -128,3 +128,12 @@ yet reproduced against a live prod row; scenario is grounded in code reachabilit
 Populated/refreshed context_scope (6 entries) — swapped `orm.py` (generic, never named in the doc's own body) for
 `blocked_reconcile.py`, which both open todos explicitly name by function (`auto-answer paths`,
 `classify_retirement()`).
+
+### na-eligibility-audit 2026-08-09 (round11)
+
+KEEP-NA, valid — re-checked the sole open todo (`[INFRA] P3`, resolve-or-flag orphaned `BlockedRow`s at reassign time)
+against the round7-10 precedent set; none apply. The doc's own text states a preference for option (a) now that todo 1
+landed, but choosing + implementing a NEW retirement disposition in `classify_retirement()` remains a real judgment call
+(per the 2026-08-07 marker's own reasoning), not a fully-specified mechanical follow-on — no done-when is stated either.
+Corroborated same-day: `/ag-closeout-audit ao` batch12 independently lists this doc under operator-gated (22), declined
+zero-extraction.

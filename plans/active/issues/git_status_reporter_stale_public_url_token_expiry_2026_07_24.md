@@ -147,6 +147,9 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
       near expiry so the dashboard can surface it; (c) mint reporter tokens with a role-scoped, long-lived credential
       instead of a 30-day operator JWT. (a) is the smallest and needs no new credential surface. **Do NOT just raise the
       TTL** — that trades a 30-day treadmill for a 365-day one and makes the eventual outage harder to recognise.
+      **EXTRACTED 2026-08-09 (round11 na-eligibility-audit satellite-extraction)** — see
+      `/plans/active/ao_satellite_ao_dispatch_batch16_2026_08_09.md` todo 1. This checkbox stays open here pending that
+      batch's own gated finalize reconciling real completion evidence back onto it.
 
 - [ ] [INFRA] P3. **Ghost host rows: `ip-172-31-0-185` is permanently `reporter_stale`/`ff_cron_stale` for a VM that no
       longer exists.** Measured 2026-08-06 from `/api/fleet/git-health`: host `ip-172-31-0-185` (`vm_id: planning`)
@@ -202,3 +205,14 @@ must not also destroy a working (or merely soon-to-expire) credential — the sc
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **na-eligibility-audit 2026-08-09 (round11)**: satellite-extraction, partial — re-read end-to-end (the prior 6 markers
+  on this doc were generic boilerplate that never quoted either open item's actual text). The `[INFRA] P2` "30-day
+  treadmill" item is NOT a genuine design fork on closer read: the doc's own text already picks option (a) ("is the
+  smallest and needs no new credential surface") with a concrete done-when — extracted to
+  `/plans/active/ao_satellite_ao_dispatch_batch16_2026_08_09.md`. This doc was excluded from the same-day
+  `/ag-closeout-audit ao` batch12 run's fresh 36-doc scan because it's cited by
+  `ao_satellite_ao_dispatch_batch2_2026_07_30.md` — but that citation only covers 2 OTHER, already-closed items, not
+  this one; a citation-based pre-filter isn't the same as content coverage. Doc stays `assigned_vm: NA` overall: the
+  remaining `[INFRA] P3` "Ghost host rows" item is a genuine unresolved design call (the doc's own text explicitly asks
+  the worker to "decide which" of prune-vs-tombstone) — no whole-doc RECLASSIFY, per-item extraction only.

@@ -142,3 +142,10 @@ operator glancing at the dashboard into suspecting stuck/idle workers that are n
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
   2026-08-06 marker. `[UI] P2`/`[DATA] P3` pair remains non-parallelizable (dependent todos, cannot flip as one unit);
   `[BACKEND] P3` remains not-actionable pending an upstream Claude Code CLI change.
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — checked the split-into-Plan-A/Plan-B-via-
+  depends_on+gate_on_depends pattern (now well-established elsewhere in this tranche, e.g. batch16/finalize) against
+  this doc specifically: the `[DATA] P3` prerequisite item itself is not yet bounded (it only says "prefer (b) IF it
+  proves reliable enough" — an open reliability question, not a resolved preference like batch16's source item), so
+  splitting into a gated pair would still leave an undetermined-outcome todo in Plan A. Stays whole-doc NA. Other
+  round7-10 precedents (credentials, delete-safety, IAM) do not apply. Corroborated same-day: `/ag-closeout-audit ao`
+  batch12 lists this doc operator-gated (22), "also human/upstream-CLI-gated."

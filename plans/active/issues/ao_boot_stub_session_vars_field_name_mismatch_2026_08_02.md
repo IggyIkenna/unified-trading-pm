@@ -194,3 +194,10 @@ Two independent, complementary fixes — either alone helps, both together close
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — Prior verdict re-verified — content unchanged since the
   2026-08-06 marker. All 3 open todos remain in the fleet-wide worker-boot critical path the 2026-07-31 operator
   directive (`unified-trading-pm@14478ca26`) routed to `execution_scope: local-only`.
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — checked against the round7-10 precedent set (including
+  plan-destination-defaults-AO-dispatched); it does not override the standing, dated, case-specific 2026-07-31 operator
+  directive routing live-dispatch-critical-path work (this doc's exact class) to local-only — a general forward-looking
+  default does not re-litigate an existing specific ruling, per this skill's own never-re-litigate convention. All 3
+  todos still touch `_compose()`/`_session_vars_block()`/`BootRequest`, the fleet-wide worker-boot path every slot spawn
+  reads first. Corroborated same-day: `/ag-closeout-audit ao` batch12 independently lists this doc under operator-gated
+  (22).

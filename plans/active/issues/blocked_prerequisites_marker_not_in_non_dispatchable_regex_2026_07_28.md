@@ -238,3 +238,11 @@ same-corpus dependencies). Instead:
   judgment (external-gate mislabel vs. same-corpus dependency, per the doc's own "Important nuance" section) and the
   slot-6 disposition record confirms the structural fix needs an operator plan-destination decision, not a worker's
   unilateral call. No content drift since the last marker.
+- **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — this doc is the clearest candidate the round7
+  "plan-destination defaults to AO-dispatched" ruling could apply to (the slot-6 disposition explicitly names a
+  plan-destination decision as the blocker), so checked closely. NOT reclassifying: the same-day (2026-08-09)
+  `/ag-closeout-audit ao` batch12 run — a fresh 36-agent Workflow fan-out that post-dates the round7 ruling and would
+  have applied it — independently re-classified this exact doc as operator-gated (22), zero extraction. Per this skill's
+  own precedent-currency rule, a same-day, more-thorough, independent re-audit's verdict is not second-guessed on a
+  symmetric read of the same text; the per-occurrence external-gate-vs-same-corpus-dependency classification (the doc's
+  own todo 1) remains genuine judgment regardless of the plan-destination sub-question's resolution.
