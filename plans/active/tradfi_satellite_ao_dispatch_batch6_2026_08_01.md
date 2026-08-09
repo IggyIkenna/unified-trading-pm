@@ -450,3 +450,19 @@ decision (unchanged since its last explicit reconfirmation earlier in this saga)
 - **NEXT ACTION (fresh session)**: same as the prior checkpoint's NEXT ACTION — check checkbox first, then liveness of
   whatever the most recent PIDs are (see this session's git history for the latest pair if picking this up immediately),
   re-arm or poll-directly as needed. No new lessons beyond what's already captured above.
+
+### 2026-08-09T~01:47Z — slot 28, same session — ~2h mark, new fleet peak (167 VMs), still waiting
+
+Continued the 8-min bounded synchronous poll pattern through several more windows since the prior checkpoint (~01:39Z
+onward), driven by explicit operator "send a /heartbeat and continue" instructions each cycle. Fleet trajectory:
+150→149→143→134 (real drain) → **new wave 134→168 VMs** (01:28Z-01:39Z) → plateaued at **167 VMs**, the largest fleet
+size observed across this entire ~2h session (prior peak was 156-163 in earlier stretches, per the condensed saga
+summary at the top of this section). Singleton lock remains continuously held; still zero genuine count==0 window across
+~2h of this session's direct observation (on top of the ~2.5 days already documented before this session started). No
+change in operating posture: not force-launching, continuing to verify-and-report each check-in.
+
+- **NEXT ACTION (fresh session)**: same as all prior checkpoints in this saga — check checkbox first (if `[x]`, done and
+  this whole watch is over); if `[ ]`, verify current fleet state directly
+  (`gcloud compute instances list --filter='name~"^tradfi-bf-"'`) and either re-arm a background watcher or run a
+  bounded synchronous poll loop, whichever is available/preferred at that time. No lessons beyond what's already
+  captured in this doc's condensed saga summary + the background-mechanism-unreliability findings above.
