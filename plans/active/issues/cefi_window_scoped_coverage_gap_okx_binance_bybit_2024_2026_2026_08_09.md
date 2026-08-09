@@ -44,6 +44,10 @@ related:
     /plans/active/cefi_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /codex/02-data/honest-coverage-model.md,
+    /plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md,
+    /plans/active/issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md,
+    /plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md,
+    /plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md,
   ]
 created: "2026-08-09"
 author: slot-5
@@ -131,13 +135,19 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
 
 ## Action items
 
-- [ ] [DATA] P0. **Investigate why trailing-90d `trades`/`book_snapshot_5` coverage for OKX-SPOT/-SWAP/-FUTURES,
+- [x] ✅ [DATA] P0. **Investigate why trailing-90d `trades`/`book_snapshot_5` coverage for OKX-SPOT/-SWAP/-FUTURES,
       BINANCE-SPOT/-FUTURES, BYBIT is WORSE than the full 2024-2026 window average** (24.70% vs. 48.90% overall, every
       venue individually worse in the recent window than its own full-window number). Check whether the live/
       near-real-time capture cron/scheduler for these venue+data_type combos is degraded, under-scoped, or was recently
       changed — this is a distinct question from "was 2024/2025 ever backfilled." Repo: market-tick-data-service. **Done
       when**: root cause identified (live-capture config/cron issue vs. genuine venue-side outage vs. something else)
-      and either fixed or filed as its own more specific issue if the fix is large.
+      and either fixed or filed as its own more specific issue if the fix is large. — unified-trading-pm (2026-08-09,
+      investigation only, no code shipped). **Root cause: NOT a single cause — a cluster of independently-confirmed
+      live-capture-path failures, all concentrated inside the trailing-90-day window, none of them a "descope"** (scope
+      itself — all 6 venues × both data_types — is unchanged in code today). See Progress Log for the full multi-cause
+      writeup + evidence; every cause is already tracked (and several already fixed) as its own open/resolved issue doc
+      (cross-linked above in `related:`) — no new issue filed, per the done_definition's "or filed as its own more
+      specific issue" branch (already satisfied by the existing docs).
 - [ ] [DATA] P1. **Root-cause the 0.00% `futures_chain` coverage for BINANCE-FUTURES (228 attempted_failed) and BYBIT
       (1,251 attempted_failed)** — every attempt failed, 0 captured, 0 expected_unattempted. Check the adapter/endpoint
       for a broken auth path, changed API contract, or misrouted request. Repo: market-tick-data-service. **Done when**:
@@ -168,3 +178,75 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
   Venue+data_type scope matches exactly; reaching the 2024-2026 window organically does not on any near-term timeline.
   Filed the targeted supplement todo in the track2 plan (not here, per that todo's own instruction). See item 3's flip
   above for the full verdict.
+- **2026-08-09 (slot-13, item 1 investigation, read-only — no code shipped)**: root-caused via direct code/git-history
+  tracing (`market-tick-data-service`, `deployment-service`) + live `gcloud`/`gsutil` checks against
+  `central-element-323112` + a cross-read of the active plans/issues corpus. **Confirmed: nothing was descoped.** All 6
+  target venues (OKX-SPOT/-SWAP/-FUTURES, BINANCE-SPOT/-FUTURES, BYBIT) and both `trades`/`book_snapshot_5` are still
+  fully in scope in `configs/venue_data_types.yaml` + UAC `VENUES_BY_ASSET_GROUP["cefi"]` today — the 2026-08-04 removal
+  of the bare `"OKX"` key was a denominator-correctness cleanup (0 real captures under that key since 07-10/07-21), not
+  a capture-scope reduction. Instead, the trailing-90d regression is a **cluster of independently-confirmed
+  live-capture- path failures**, all concentrated inside the window (2026-05-11→present), which is exactly why every
+  venue's trailing-90d number reads worse than its 2-year average even though the code-declared scope hasn't shrunk:
+  1. **Daily forward-poll cron reliability gap — root-caused AND FIXED same-day by a parallel session (slot-18,
+     `deployment-service@0395764a`, see `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`'s own Progress
+     Log).** `trades`/`book_snapshot_5` recent-day rows come from the daily `cefi-fwd-daily-cron-*` host VM
+     (`launch-cefi-fwd-daily-cron-vm.sh`, installs a `0 9 * * *` crontab firing `launch-cefi-forward-poll.sh` for a T-1
+     day capture across ALL 6 venues × ALL data_types in one run). Live GCS check (2026-08-09) showed cron-HOST
+     relaunches on 08-04/08-06/08-09 but none for 08-07/08-08, and a hard cliff to 0 new objects for all 6 target venues
+     on 08-06/07/08/09. TRUE root cause (found + fixed same day, after my own investigation window):
+     `vm_zombie_watchdog.py`'s `PREFIX_IDLE_THRESHOLDS` had no entry more specific than the generic `"cefi-fwd-"` (a
+     30min heartbeat window sized for the WORKER VM's continuous heartbeat sidecar); the cron-HOST VM boots, installs
+     its crontab, then sleeps forever WITHOUT ever writing a `vm-heartbeat/<vm_name>.txt` blob — so the watchdog
+     misclassified the healthy, sleeping host as a zombie and deleted it ~16min after every relaunch, silently starving
+     the daily fire. Fixed by adding the watchdog's own `tier=daemon` opt-out label to the launcher (and 3 sibling
+     `*-fwd-daily-cron-vm.sh` launchers sharing the identical pattern). Two compounding sub-causes also confirmed, both
+     already tracked in that same doc: (a) 3 separate incidents (08-06, 08-08 ×2) of a fresh `cefi-fwd-*` WORKER VM
+     (distinct from the cron host) being deleted 8-17 min after launch by a Claude Code agent copy-pasting the
+     singleton-lock refusal's raw delete command — already hardened (`deployment-service@bc48b09b` removed the
+     copy-pasteable command); (b) a confirmed, still-OPEN MTDS code bug at
+     `market_tick_data_service/engine/orchestrator/venue_fetch.py:526-552` — when a Tardis CeFi venue (ALL 6 target
+     venues qualify via `_VENUES_NEEDING_INSTRUMENT_PREFLIGHT`, confirmed in `engine/orchestrator/preflight.py:294-297`)
+     has real instruments-service data available but no explicit `--instrument-ids` was passed (the daily cron's normal
+     invocation shape), the code is MISSING the positive branch that populates `venue_instrument_ids` from IS — it stays
+     `None`, so the atom-coverage pre-flight filter computes an empty expected-set, which trivially satisfies "already
+     covered" and silently zero-writes a day that looks superficially covered (fires whenever ANY prior manifest row
+     exists for that venue+date, e.g. from an earlier partial/retried run). Did not attempt this fix here — it requires
+     new code to fetch+shape the correct instrument-id vocabulary from the IS parquet matching the existing atom-
+     coverage contract, it's non-trivial, and it's already tracked as its own scoped `[CODE]` P2 todo in that doc.
+  2. **Structural Tardis single-IP concurrency starvation (ongoing, by design, confirmed still live as of this
+     writing).** `launch-cefi-forward-poll.sh` calls a hard cap=1 concurrent-authenticated-Tardis-IP guard and refuses
+     outright (does not queue) whenever any historical CeFi Tardis backfill VM already holds the slot. Confirmed
+     currently holding the slot: `cefi-queue-heavy-binancefutu-x17-20260809-083733`
+     (VM_DATA_TYPES=trades;book_snapshot_5, VM_START_DATE=2019-01-01) — i.e. the SAME `trades`/`book_snapshot_5`
+     chronological backfill item 3 above cross-references. The trailing-90-day window has been saturated with
+     long-running CeFi Tardis backfill campaigns holding that single slot for days-to-weeks at a stretch, so the daily
+     forward-poll has been starved by design for a meaningful fraction of the window — a dynamic that doesn't apply (or
+     applies far less) over the full 2024-2026 average.
+  3. **Confirmed regression with an un-backfilled historical scar
+     (`cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`, still open).** 2026-07-27
+     (`market-tick-data-service@3169d25e`) flipped `validate=True` unconditionally on the CeFi Tardis write path on a
+     false code-comment premise that `book_snapshot_5` had no registered UAC schema contract — it does, and the real
+     contract required a fictional serialized-string column no writer ever produced, so 2026-07-27→28 **every
+     `book_snapshot_5` write for essentially every CeFi venue FATAL-failed write-time validation** (~299,467
+     `attempted_failed` rows, accelerating 2,563→4,809/day before being caught). Fixed in code 2026-07-28 + 2026-08-02,
+     but the ~300k poisoned historical rows were explicitly never retroactively re-fetched — a permanent coverage drag
+     for those specific dates, sitting inside the trailing-90-day window, tracked as that doc's own open re-backfill
+     todo.
+  4. **Corroborating, separate mechanism (`tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md`, still
+     open).** A ~47.5h code-tarball-refresh outage (2026-07-30T13:02Z→08-01T12:42Z) left the always-on live-WS leg
+     (`mtds-live-cefi-consolidated-*`) running stale code missing fixes for two real connector bugs (an ASTER
+     SUBSCRIBE-frame size cliff + a per-connection 200-stream cap), independently confirmed via the manifest:
+     `BINANCE-FUTURES book_snapshot_5` 100% empty on 07-30, `OKX-FUTURES book_snapshot_5`/`derivative_ticker` 100% empty
+     07-30 then only ~24% recovered through 08-02 — both inside the trailing-90-day window, both since fixed in code but
+     with no retroactive backfill of the affected dates either. Also corroborating (archived, same failure class, not
+     separately actioned): `tardis_concurrent_ip_lockout_2026_07_12` and
+     `cefi_high_attempted_failed_batch_cluster_2026_07_23` independently document chronic Tardis 403 concurrent-IP
+     lockout storms driving 28.7%/34.4% `attempted_failed` for `trades`/`book_snapshot_5` respectively as of
+     2026-07-22/23 — same single-IP-contention mechanism as cause 2 above, recurring rather than one-off. **None of the
+     4 causes is "just an unfinished historical backfill"** — all are dated, live-capture-path health problems, which is
+     why the trailing window has been getting worse even as the historical 2024-2025 backfill (item 3 of this issue)
+     continues to close the older gap; cause 1's cron-reliability half is now fixed (2026-08-09), but causes 2-4 remain
+     live/open and cause 1's MTDS preflight-bug half is also still open. Cross-reference note appended (not overwritten)
+     to `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`'s own Progress Log, same session, flagging that
+     its open preflight-bug + backfill-verification todos also gate this P0 backtest-fidelity blocker, not just its
+     original contamination-plan scope.

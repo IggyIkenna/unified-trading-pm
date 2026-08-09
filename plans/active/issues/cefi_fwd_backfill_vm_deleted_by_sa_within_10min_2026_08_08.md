@@ -29,6 +29,7 @@ related:
     /plans/active/issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md,
     /plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/issues/cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md,
   ]
 created: "2026-08-08"
 author: slot-17
@@ -490,3 +491,18 @@ before launch.
   backfill is a separate, now-tracked follow-up todo (added above) — blocked on the Tardis single-VM concurrency cap,
   currently held by an unrelated multi-year `cefi-queue-heavy-binancefutu-x17` historical backfill; did not `FORCE=1`
   past the cap (that bypasses the exact 403-storm protection the cap exists for).
+- **slot-13 2026-08-09 (cross-reference, appended — not replacing anything above)**: this doc's cron-reliability gap
+  (root-caused + fixed above by slot-18) and its still-open `venue_fetch.py:526-552` preflight bug (open `[CODE]` P2
+  todo above) are BOTH data-type-agnostic — `launch-cefi-forward-poll.sh` covers ALL 6 CeFi Tardis venues × ALL
+  data_types in one daily run, and `_VENUES_NEEDING_INSTRUMENT_PREFLIGHT` (`preflight.py:294-297`) includes every Tardis
+  CeFi venue. Confirmed both are root-cause contributors (among a 4-cause cluster, see that doc's own writeup) to a
+  SEPARATE, higher-priority P0 finding: `cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md` item
+  1 — trailing-90d `trades`/`book_snapshot_5` coverage for OKX-SPOT/-SWAP/-FUTURES, BINANCE-SPOT/-FUTURES, BYBIT
+  measuring WORSE (24.70%) than the 2024-2026 full-window average (48.90%), which is itself the blocking prerequisite
+  for `cefi_ml_directional_continuous_live_2026_06_20.md`'s live-capital backtest-fidelity gate. Also independently
+  confirmed live (2026-08-09): the Tardis single-IP concurrency slot this doc's own backfill-verification todo is
+  blocked on is currently held by `cefi-queue-heavy-binancefutu-x17-20260809-083733`
+  (`VM_DATA_TYPES=trades;book_snapshot_5`) — the SAME chronological historical backfill the P0 doc's item 3 already
+  cross-references, so both docs are watching the same VM for the same reason. Raises the priority/blast-radius of the
+  still-open `[CODE]` P2 preflight-bug todo above beyond its original `defi_cefi_venue_chain_axis_contamination-014`
+  scope — no new todo added here (it's already correctly scoped + open), this is visibility only.
