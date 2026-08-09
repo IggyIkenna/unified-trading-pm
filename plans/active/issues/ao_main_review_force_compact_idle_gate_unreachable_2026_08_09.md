@@ -119,10 +119,16 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
       to every role broke 4 review-saturation tests by killing the session before the idle-gated force ever got a
       chance, caught by the full suite before shipping); new test
       `test_main_wedge_recovery_arms_even_when_the_force_never_fires`; full QG green (2984 passed).
-- [ ] [BACKEND] P2. Give main a real `context_pressure` instead of the hardcoded `"low"` in `_read_pct`, so the Tier-2
-      `pressure == "thrashing"` immediate-recycle trigger is reachable for main at all. Derive it the same way the
-      SlotRow value is derived. Done-when: a unit test proves a thrashing main recycles without waiting for
-      compaction-count or the 24h age clock.
+- [x] ✅ [BACKEND] P2. Give main a real `context_pressure` instead of the hardcoded `"low"` in `_read_pct`, so the
+      Tier-2 `pressure == "thrashing"` immediate-recycle trigger is reachable for main at all. Derive it the same way
+      the SlotRow value is derived. Done-when: a unit test proves a thrashing main recycles without waiting for
+      compaction-count or the 24h age clock. — agent-orchestrator@45868bc (`_read_pct` now takes `now`/`state` and, for
+      the slot-less main path, derives pressure via `state_store.derive_context_pressure(pct, compactions_last_hour)` —
+      the SAME function `record_slot_progress` uses for `SlotRow.context_pressure` — counting `state.compactions` in the
+      trailing 1h since main has no `CompactionRow` history; new test
+      `test_main_thrashing_pressure_triggers_recycle_without_compaction_count_or_age` proves the Tier-2 recycle fires on
+      `pressure == "thrashing"` alone, with `context_recycle_compactions` raised to 100 and a fresh episode so the other
+      two Tier-2 triggers are structurally ruled out); full QG green (3003 python + 262 dashboard tests).
 - [ ] [BACKEND] P2. Re-arm Tier-1 guidance on a timer as well as on an observed compaction: today `guidance_sent_at`
       clears only when a compaction is detected, so a main that silently ignores one nudge is never nudged again for the
       rest of the episode. Done-when: a unit test proves a second guidance message is enqueued after a configurable
@@ -166,3 +172,9 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
   > (this slot or another) should read this timestamp and query `/api/activity` (`context_force_idle_gate_blocked` /
   > `forced_precompact` / `forced_compact`, `role in {main, review}`, `ts >= 2026-08-09T18:00:24Z`) once the window has
   > actually elapsed to fill in todo 2's open-vs-blocked counts.
+- 2026-08-09 (slot 8) — Shipped todo 4 (agent-orchestrator@45868bc): `_read_pct` now derives main's `context_pressure`
+  via `state_store.derive_context_pressure` instead of the hardcoded `"low"`, using `state.compactions` (in-memory, same
+  list every role's compaction-detection block already maintains) for the trailing-1h `compactions_last_hour` count,
+  since main has no `CompactionRow` history. Session resumed mid-task after a prior death; WIP was intact on re-boot, so
+  no rework needed. Todos 2 and 5 remain open (2 needs the >=6h measurement window from the 2026-08-09 slot-15 note
+  above; 5 is the explicit operator ruling gate).
