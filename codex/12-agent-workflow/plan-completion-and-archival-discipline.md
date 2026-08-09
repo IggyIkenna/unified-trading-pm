@@ -110,6 +110,27 @@ commit.** This is a distinct, earlier failure mode from the `git commit --only` 
 section's guidance governs the SHAPE of the archival commit once you're doing steps 5-6 as a combined move; this rule
 governs whether the flip and the move should even be in the same commit at all — they should not be).
 
+### `archive_exempt: true` is the sanctioned bridge when a doc's own last todo IS its archival trigger (RULED 2026-08-09)
+
+The two-commit split above conflicts with `check_archive_candidates.sh`'s `--only` precommit mode (added 2026-08-09):
+that mode unconditionally flags ANY staged `plans/active/*.md` doc that reaches 0 open todos + some done + unlocked +
+not `archive_exempt`, regardless of whether THIS commit is what brought it there. For a doc whose own LAST open todo is
+its own archival trigger, that leaves no legal single commit — the flip-only commit (correct per the rule above) trips
+`--only`'s immediate-archival demand, but doing the `git mv` in that same commit is exactly the banned combination.
+Found live 2026-08-09 archiving `sports_taxonomy_p1_capture_and_contracts_2026_08_08_finalize.md`
+(`check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md`).
+
+**Fix: set `archive_exempt: true` in frontmatter on the flip-only commit, then drop it as part of the immediately
+following `git mv` archival commit.** No new mechanism — `--only` mode already treats `archive_exempt: true` as a skip
+(the same field § 1's `locked_by`/`gate_on_depends` neighbours use for a different false-positive class); this just
+names the field as the sanctioned bridge for this specific two-commit shape so future agents don't have to re-derive the
+workaround. The field is moot once the doc is archived (an archived doc is outside `--only`'s scanned population
+entirely), so drop it as routine hygiene in the archival commit rather than leaving a dead frontmatter line behind. If
+the follow-up `git mv` is ever forgotten, the doc is still caught — just not at commit time: the corpus-wide baseline /
+`--diff-base` modes (run in the full `quality-gates.sh`, the daily hygiene cron, and the LDR→main promote gate) re-scan
+and flag it as a NEW candidate above baseline the next time either runs. Regression coverage:
+`tests/test_check_archive_candidates_flip_then_mv.bats`.
+
 ### The line-cap does NOT block archival of an already-done doc (RULED 2026-07-30)
 
 **A doc with ZERO open todos archives via the normal 6-step ritual regardless of how far over the line-cap it is.**

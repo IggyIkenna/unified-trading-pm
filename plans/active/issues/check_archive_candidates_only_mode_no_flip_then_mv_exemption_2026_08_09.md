@@ -44,6 +44,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true
 ---
 
 # check_archive_candidates.sh --only mode conflicts with the flip-then-mv archival rule
@@ -86,8 +87,29 @@ archived by then). Alternative: formally document `archive_exempt: true` as the 
 two-commit pattern (update the script's own header comment + the archival-discipline SSOT to name it explicitly), so
 future agents don't have to re-derive the same workaround independently.
 
-- [ ] [SCRIPT] P2. Add an exemption to `scripts/plan-hygiene/check_archive_candidates.sh`'s `--only` mode for a doc
+- [x] ✅ [SCRIPT] P2. Add an exemption to `scripts/plan-hygiene/check_archive_candidates.sh`'s `--only` mode for a doc
       whose staged diff is a pure checkbox-transition edit (no rename, no `git mv`) — OR update the script's own header
       comment plus `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` to formally document
       `archive_exempt: true` as the sanctioned temporary bridge between the flip commit and the immediately-following
-      archival commit. Add a regression test covering the flip-then-mv two-commit sequence. (repo: unified-trading-pm)
+      archival commit. Add a regression test covering the flip-then-mv two-commit sequence. (repo: unified-trading-pm) —
+      **Took the documentation option** (Option B): no new script logic needed, `--only` mode already treats
+      `archive_exempt: true` as a skip. Updated `check_archive_candidates.sh`'s own header comment to name the field as
+      the sanctioned bridge, added the same ruling to
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 1, and added
+      `tests/test_check_archive_candidates_flip_then_mv.bats` (5 tests, all passing against a standalone bats-core
+      binary: un-exempted flip-only IS flagged, exempted flip-only is NOT flagged, the follow-up `git mv` naturally
+      clears `--only`'s scope, and the exemption is content-agnostic). Also fixed an unrelated pre-existing shellcheck
+      SC2168 (`local` used outside a function) found in the same file's `--diff-base` branch while verifying shellcheck
+      was clean. `archive_exempt: true` set on THIS doc's own frontmatter above, in this same commit — this doc's own
+      last todo is its own archival trigger, i.e. this fix is dogfooding itself; will be dropped in the
+      immediately-following archival `git mv` commit.
+
+## Progress Log
+
+- **2026-08-09 (slot 27)**: fixed as described above (Option B — `archive_exempt: true` formally documented as the
+  sanctioned bridge, no new script logic). `archive_exempt: true` added to this doc's own frontmatter is the reason the
+  script's header comment requires citing: this doc's own last open todo is its own archival trigger, so the
+  checkbox-flip commit needs the bridge to pass `check_archive_candidates.sh --only` without illegally combining the
+  flip with the `git mv` in one commit. Will archive this doc (drop `archive_exempt: true`, `git mv` to
+  `plans/archive/issues/`, add the archive banner, fix corpus referrers) in a separate follow-up commit per the very
+  rule this fix documents.
