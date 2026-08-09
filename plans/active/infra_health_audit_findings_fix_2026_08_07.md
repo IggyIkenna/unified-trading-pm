@@ -295,3 +295,15 @@ drift_direction: advance-code
   than its siblings — not promoted to RECLASSIFY this run since the doc's other 6 items don't clear the bar and a
   whole-doc flip would dispatch those too, but worth a second look if it's still open next pass. Doc stays NA as a
   whole; still genuinely live `/autonomous` work, not defaulted/unassessed.
+- **2026-08-09**: Confirmed the "tracked elsewhere" `mdps-backfill-cefi-20260807-130321` action (todo above, line
+  ~225) was actually executed, not just referenced. Independently re-verified the old VM is genuinely gone (404 on
+  `gcloud compute instances describe`, only `insert`+`compute.instances.preempted` ops, no successor — matches this
+  todo's own finding) and relaunched it (`mdps-backfill-cefi-20260808-095136`, SPOT e2-standard-8, launched
+  2026-08-08T08:56:57Z, confirmed STARTED + still RUNNING, actively progressing, no preemption op). While verifying,
+  found concurrent slot-16/slot-7/slot-26 work had already landed on the SAME VM + the same underlying bug: `--force`
+  was silently dropped in MDPS's per-date subprocess spawner (root-caused + fixed,
+  `market-data-processing-service@e9f9819`; writeup `issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md`)
+  — this pre-fix VM will not itself fix the BYBIT bundles even at completion; a per-day-scoped relaunch is already
+  queued in `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md` for once it reaches terminal state. No
+  duplicate relaunch performed. Full detail: `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` todo 3 (already
+  flipped `[x]`) and the Track-7 issue doc's "2026-08-08 84-cell audit" section.
