@@ -39,6 +39,7 @@ execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true # flip-only bridge; dropped in the immediately-following archival commit
 ---
 
 # agent-orchestrator: main <-> live-defi-rollout workflow-file drift, caught by the new parity check
@@ -106,7 +107,7 @@ header comment).
       decision" above for the full command) after the above lands and confirm the parity check reports 0 mismatches for
       agent-orchestrator. Record the result in this doc's Progress Log. Repo: unified-trading-pm. — result: 2/3 now
       match, 1 genuine remaining mismatch that is NOT simple content drift (see Progress Log + new todo below).
-- [ ] [CICD] P2. Migrate agent-orchestrator `main`'s `.github/workflows/main-backmerge-to-ldr.yml` and
+- [x] ✅ [CICD] P2. Migrate agent-orchestrator `main`'s `.github/workflows/main-backmerge-to-ldr.yml` and
       `semver-agent.yml` to the thin `uses: IggyIkenna/unified-trading-ci/.github/workflows/<name>.yml@main` caller
       stubs that `live-defi-rollout`'s copies already use (per
       `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` — every other fleet repo + `live-defi-rollout`
@@ -118,7 +119,8 @@ header comment).
       way removes the need for a local `notify-slack.yml` on `main` too, closing the asymmetry at its root instead of
       maintaining two copies of a file most of the fleet already deleted. Verify via `quality-gates-v2` + a live
       triggered run of both workflows (a backmerge PR / a version-bump event) before merging — these are functional, not
-      cosmetic, workflows. Repo: agent-orchestrator.
+      cosmetic, workflows. Repo: agent-orchestrator. — `agent-orchestrator@2e43e4f8` (PR #820, squash-merged); see
+      Progress Log.
 
 ## Progress Log
 
@@ -158,3 +160,21 @@ header comment).
   every other fleet repo) rather than force a wrong reconciliation just to zero the counter — this is a distinct,
   judgment-requiring, functional-workflow change (not a doc/comment port like the 3 fixed here) and deserves its own
   dispatch + live-triggered verification.
+- 2026-08-09 ~22:30-22:40Z (slot-19, this task) — root fix shipped: migrated `main`'s `main-backmerge-to-ldr.yml` and
+  `semver-agent.yml` to the same thin `unified-trading-ci` caller stubs `live-defi-rollout` already uses (byte-identical
+  trigger config in both old/new versions — `push: [main]` for both workflows, plus `workflow_dispatch` for the
+  backmerge — so no behavior change expected, only where the job logic lives). Also removed `main`'s now-dead local
+  `notify-slack.yml`: confirmed via grep it was the old `main-backmerge-to-ldr.yml`'s only local caller and nothing else
+  in `.github/workflows/` referenced it; deleting it closes the asymmetry at its root rather than leaving a dead copy or
+  re-adding one to LDR, per the "Recommended decision" section's own reasoning. Verified before opening the PR: both
+  changed files YAML-syntax-clean (`yaml.safe_load`), no other workflow references `notify-slack.yml`, and
+  `unified-trading-ci@main` actually has both `main-backmerge-to-ldr.yml`/`semver-agent.yml` reusable workflows (ref
+  resolves). Opened `agent-orchestrator` PR #820 from a `git worktree` off `origin/main` (did not touch the slot's
+  LDR-checked-out clone, same pattern as PR #818). Both required checks (`image-build-gate`, `quality-gates-v2`) passed;
+  squash-merged to `main@2e43e4f8`. **Live-triggered verification (the "functional, not cosmetic" bar this todo set)**:
+  the merge push itself triggered both migrated workflows for real — `Semver Agent` run `31339836768` and
+  `main-backmerge-to-ldr` run `31339836820`, both `conclusion=success`. Re-ran
+  `rollout-workflow-templates.sh --dry-run --repo agent-orchestrator`'s post-rollout parity check: **0 mismatches across
+  all 3 tracked files** (`image-build-gate.yml`, `quality-gates-v2.yml`, `notify-slack.yml` — the last now correctly
+  absent on BOTH branches instead of mismatched). This closes the doc's last open todo; no further reconciliation needed
+  for the 3 originally-flagged files.
