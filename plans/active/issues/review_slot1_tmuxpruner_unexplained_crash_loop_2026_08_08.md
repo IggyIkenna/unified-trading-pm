@@ -13,6 +13,7 @@ summary: >-
   host-level contention, per prior review/main joint findings on the tardis wedge cluster) cannot be ruled out without
   reading TmuxPruner/keeper source directly.
 status: open
+archive_exempt: true
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -294,14 +295,14 @@ own Tick history.
       wired into both. Full detail in the Progress Log below. **Shipped**: `agent-orchestrator@c9dad3e`
       (ancestry-verified), `quality-gates.sh` green (2995 passed), 6 new + 12 updated tests. **Not yet loaded**: live
       orchestrator started before this commit — follow-up todo below. Repo: agent-orchestrator.
-- [ ] [BACKEND] P1. **Follow-up to the remain-on-exit fix above (slot 33, 2026-08-09).** (1) Confirm live orchestrator
-      restarted since `c9dad3e` (`GET /api/state` → `server_started` after 2026-08-09T20:21:42Z; if not, needs
-      operator/self-pull cron — never a manual `systemctl restart`, fleet-disruptive + outside sandbox permission). (2)
-      Smoke-verify on a fresh spawn `remain-on-exit on` is actually live (code-changed ≠ took-effect, per this exact
-      bug). (3) Before the (now correctly-composed) reaper clears the next genuine slot-1 death, capture
-      `tmux display-message -p -t '=<session>:' '#{pane_dead_status} #{pane_dead_signal}'` — the final answer to this
-      todo's original question. (4) A genuine external-kill signal with still no AO/kernel/systemd source escalates to a
-      deeper hypothesis (e.g. claude CLI exiting non-crash-like). Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P1. **DONE (slot 11, 2026-08-09 ~21:30Z) — all 4 parts resolved: (1) live orchestrator confirmed
+      restarted post-`c9dad3e` (`server_started` 20:30:36Z, deployed code verified directly on the VM, not just the
+      misleading version string). (2) `remain-on-exit on` confirmed live on 4 fresh spawns. (3) Caught the next genuine
+      slot-1 death live — an EXTERNAL capture attempt still loses the race (session name reused within ~12s by
+      AutoSpawn's respawn). (4) Root-fixed instead of re-racing: capture now runs INSIDE `TmuxPruner.prune_once()` at
+      confirm-time, persisted into `tmux_session_lost`'s `pane_death_info` — no more race to win on the next death.
+      Shipped**: `agent-orchestrator@5daa375`, `quality-gates.sh` green (3001 passed, 6 new tests). Full detail in
+      Progress Log. Repo: agent-orchestrator.
 
 ## Progress log
 
