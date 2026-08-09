@@ -985,3 +985,16 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
   [`cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch10_2026_08_09.md)
   (+ gated finalize twin) — this is exactly the "future dedicated pass" the 2026-08-03 entry above anticipated. This
   doc's own checkbox for that item stays open here until the batch's finalize twin reconciles it.
+- **batch-10 measurement landed 2026-08-09**: historical per-venue non-canonical population for the 8 CeFi live-spot
+  venues fixed in `cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md` is now measured. Method: one
+  column-pruned, filtered read of the consolidated cefi `availability_index.parquet` (single-walk-exempt), scoped to
+  `capture_status != attempted_failed` + `instrument_type == SPOT_PAIR`, then `is_canonical_instrument_id()` run against
+  each row's manifest `instrument_id` -- the plain `instrument_type`-axis census alone reads **zero** non-canonical
+  (that structural column was already `SPOT_PAIR` everywhere; the defect lives in the id/filename STRING, so id-form was
+  the only way to see it). **Result** (of 1,957,165 total SPOT_PAIR rows across the 8 venues): **2,197 rows confirmed
+  non-canonical `instrument_id`** + 6,251 undetermined (missing `instrument_id`, legacy pre-column rows) -- a bounded,
+  low-risk repair population, materially smaller than the original 4,923-row `instrument_type=spot`-axis estimate (a
+  different, coarser, all-cefi axis). Per-venue (non-canon/undetermined/total): BINANCE-SPOT 36/1,666/391,024 -
+  COINBASE-SPOT 7/994/114,249 - OKX-SPOT 1,089/917/324,359 - UPBIT 1,046/1,379/348,092 - BITFINEX-SPOT 12/455/145,060 -
+  BITGET-SPOT 6/784/222,701 - BYBIT-SPOT 1/0/185,979 - KRAKEN-SPOT 0/56/225,701. No repair executed -- measurement only,
+  per todo scope.

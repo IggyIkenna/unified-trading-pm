@@ -64,20 +64,24 @@ drift_direction: advance-docs
 
 ## Todos
 
-- [ ] [DATA] P2. **Measure the historical per-venue non-canonical row count for the 8 CeFi live-spot venues fixed in
-      `cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md`** (archived, resolved). Source:
-      `data_pipeline_reconciliation_skill_2026_07_20.md`'s `[DATA] P2` "Measure the historical per-venue non-canonical
-      row count..." todo. That issue's code-level fix (BINANCE/COINBASE/OKX/UPBIT/BITFINEX/BITGET/BYBIT/KRAKEN-SPOT now
-      emit canonical `SPOT_PAIR` + `BASE-QUOTE` ids) shipped without ever measuring the SIZE of the pre-fix
-      non-canonical population — the census that originally found the class only measured the aggregate
-      `instrument_type=spot` lowercase axis (4,923 rows across ALL cefi), never the id-FORM/hyphenation dimension per
-      venue. Run the `/data-pipeline-reconciliation` skill's distinct-value census (§ 3f, `get_axis_value_census`)
-      scoped to `asset_group=cefi`, filtered to these 8 venues, comparing `is_canonical_instrument_id()` pre-fix-shape
-      vs post-fix-shape row counts — read-only, manifest-driven, no new whole-corpus GCS walk. Done when: a real,
-      per-venue non-canonical-row-count number is produced and written back into
-      `data_pipeline_reconciliation_skill_2026_07_20.md`'s Progress Log (the number this todo exists to produce), sized
-      enough to inform any future historical backfill/repair decision. Repo: e2e-testing (skill invocation) /
-      market-tick-data-service (if a repair follow-on is later filed — NOT this todo's scope, measurement only).
+- [x] ✅ [DATA] P2. **Measure the historical per-venue non-canonical row count for the 8 CeFi live-spot venues fixed in
+      `cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md`** (archived, resolved) — **2026-08-09,
+      `unified-trading-pm` (this batch, docs-only).** Source: `data_pipeline_reconciliation_skill_2026_07_20.md`'s
+      `[DATA] P2` "Measure the historical per-venue non-canonical row count..." todo. That issue's code-level fix
+      (BINANCE/COINBASE/OKX/UPBIT/BITFINEX/BITGET/BYBIT/KRAKEN-SPOT now emit canonical `SPOT_PAIR` + `BASE-QUOTE` ids)
+      shipped without ever measuring the SIZE of the pre-fix non-canonical population — the census that originally found
+      the class only measured the aggregate `instrument_type=spot` lowercase axis (4,923 rows across ALL cefi), never
+      the id-FORM/hyphenation dimension per venue. Ran a manifest-driven, filtered, column-pruned read of the
+      consolidated cefi availability index (`venue`/`instrument_type`/`instrument_id`/`capture_status` only,
+      `venue in <8 venues>` — single-walk-exempt, no GCS listing), then `is_canonical_instrument_id()` (id-FORM oracle)
+      against each row's `instrument_id` (the plain `instrument_type`-axis census alone reads zero — the manifest
+      structural column was already `SPOT_PAIR` everywhere; the defect lives in the id/filename STRING, so id-form was
+      the only way to see it). **Result: 2,197 rows confirmed non-canonical id-form + 6,251 rows with a missing
+      `instrument_id` (undetermined, legacy rows predating that manifest column) out of 1,957,165 total SPOT_PAIR rows
+      across the 8 venues** — full per-venue breakdown + sample bad ids + method written to
+      `data_pipeline_reconciliation_skill_2026_07_20.md`'s Progress Log (the number this todo exists to produce).
+      Measurement only, per scope — no repair executed. Repo: e2e-testing (skill invocation) / market-tick-data-service
+      (if a repair follow-on is later filed — NOT this todo's scope).
 
 ## Codex SSOTs
 
@@ -92,3 +96,9 @@ drift_direction: advance-docs
   sibling open item (sports orphan back-fill) was verified this same sweep to be a stale citation (the referenced
   `estate_orphan_assessment_2026_07_21.md` todos 1-2 are both already `[x]` DONE 2026-07-22, exact row-count match:
   214,319 + 34,385) and corrected directly in the source doc, not extracted here.
+- **2026-08-09 (cont.)**: sole todo done. Ran the id-form census (manifest-driven, single-walk-exempt) against the 8
+  target venues' `SPOT_PAIR` rows in the prod cefi manifest — 2,197 confirmed non-canonical `instrument_id` rows + 6,251
+  undetermined (missing `instrument_id`, legacy) out of 1,957,165 total. Full per-venue table + method + sample bad ids
+  written to `data_pipeline_reconciliation_skill_2026_07_20.md`'s Progress Log. Read-only measurement; no repair
+  executed (out of this todo's scope). Checkbox flipped; this batch is now ready for its gated finalize twin
+  (`cross_cutting_satellite_ao_dispatch_batch10_2026_08_09_finalize.md`) to reconcile the source doc + archive.
