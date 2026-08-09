@@ -201,3 +201,27 @@ words: "this branch is churning faster than one CI worker can chase serially").
   `codex-doc-freshness`, `effort-signal-ratchet`, `archive-candidates`, `dangling-reference-paths`,
   `assigned_vm:NA corpus size`, now `todo-regression-vs-origin`. `dbaa7b463` still not on `origin/main` as of this tick;
   continuing to wait for a future green promote cycle rather than intervening.
+- 2026-08-09 (cicd agt-5fbb07, slot 4, dispatched for `ldr_main_qg_failure` on PR #2662 / run `31299049023`, 8th
+  dispatch in this lineage): by the time I picked this up, PR #2662 was already auto-superseded/closed (expected
+  `ldr-to-main-promote` behavior) and its originally-named blocker (`assigned_vm:NA corpus size`) had already
+  self-resolved — confirmed independently via a local `check_na_corpus_ratchet.py` run against synced HEAD (`5fde96a5d`:
+  371 docs/1102 todos ≤ baseline 372/1106, the baseline slot-21 justifiably bumped via `ca2cb02f9`). Successor PR #2665
+  (head `76b4b7bed`) was then blocked on exactly the `todo-regression-vs-origin` failure slot-30 logged above as
+  "undetermined" — I can now resolve that: it is NOT a deletion.
+  `git log 76b4b7bed..origin -- plans/active/quality_gates_quickmerge_timing_baseline_2026_07_31.md` shows exactly one
+  intervening commit, `44629d243` ("reconcile batch6 source docs — flip stale checkboxes, correct citations"), which
+  legitimately ADDED a todo (13→14) to that file after PR #2665's snapshot was already cut. Nothing was ever lost from
+  the doc's actual history at any single commit — `check_todo_regression.sh` is comparing a frozen PR-head snapshot
+  against a `origin/live-defi-rollout` ref that had already moved past it by fetch-time, which is the same
+  snapshot-vs-live-tip race as the other 6 checks, not a distinct 7th failure mode. Also directly confirms slot-11's
+  "`ag_closeout_audit_<tranche>_parked_<date>.md` pileup" lead: the branch tip two fetches later (`ecc6e870b`, ~60s
+  after `8f714a2ed`) had appended MORE open todos to two existing `assigned_vm: NA` docs
+  (`ag_closeout_audit_infra_parked_2026_08_09.md`, `..._ui_parked_2026_08_09.md`) — a live example of the exact growth
+  pattern flagged as a plausible NA-corpus-ratchet contributor. No doc content needed fixing this dispatch (both named
+  checks are transient races against a snapshot, not genuine regressions) — per this lineage's established,
+  5x-reaffirmed "hand off, don't keep serially chasing" ruling, not attempting another fix-and-retrigger cycle.
+  `AUTHORING_SLOT=ldr-to-main-promote` sentinel (not a numbered slot) — no slot-ping applicable. Completing via `/done`.
+  This is the 8th consecutive dispatch into the same race; reinforcing the standing recommendation that the P2
+  structural-fix todo (debounce/batch/move-to-periodic for the corpus-wide, ambient-drift-prone ratchet checks
+  specifically) is the only remedy that actually converges — the serial chase-and-fix model has now failed to converge
+  8/8 times at current fleet commit velocity.
