@@ -34,6 +34,7 @@ supersedes:
 superseded_by:
 depends_on: [ci_satellite_ao_dispatch_batch10_2026_08_09]
 gate_on_depends: true
+archive_exempt: true
 source: >-
   Authored alongside `ci_satellite_ao_dispatch_batch10_2026_08_09.md` per `plans/active/task_template.md` §4's
   finalize-plan-coverage rule. Authored `status: active` (not `draft`) per the established no-double-gate finding:
@@ -62,7 +63,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile batch-10's 1 source-doc checkbox.** Batch-10's todo ends with `Source:` naming
+- [x] ✅ [REVIEW] P2. **Reconcile batch-10's 1 source-doc checkbox.** Batch-10's todo ends with `Source:` naming
       `issues/plan_reconciler_ci_late_findings_2026_08_06.md` (P1 finding 1). Flip that checkbox to `[x]` citing the
       batch-10 commit that shipped it — **verify the cited commit exists and is an ancestor of
       `origin/live-defi-rollout` before citing** (`git merge-base --is-ancestor`). **Do NOT set `status: resolved` or
@@ -72,6 +73,17 @@ context_scope:
       `ci_satellite_ao_dispatch_batch9_finalize_     2026_08_09.md` may edit the same source doc concurrently. **Done
       when**: the checkbox is flipped with verified evidence, the doc's `status` is unchanged (`open`), and PM's
       `quality-gates.sh` is green.
+
+      **Done, 2026-08-09 (slot 12).** Re-pulled `origin/live-defi-rollout` before editing (no concurrent edit from
+              `batch9_finalize` present). The source doc's P1 finding 1 checkbox was already flipped to `[x]` — landed by slot
+              31 in commit `a6c253eadabd4225910cfb659f39562fe6b0b927` ("repoint 6 stale plans/active/ refs in
+              monitoring_control_plane_master to archive paths (ci_satellite_ao_dispatch_batch10 todo 1)"), the same commit
+              that shipped batch-10 todo 1. Verified `a6c253eadabd4225910cfb659f39562fe6b0b927` is an ancestor of
+              `origin/live-defi-rollout` via `git merge-base --is-ancestor` before citing it here. No further edit was needed
+              in the source doc itself — this todo's own remaining job was reconciling the evidence back into THIS finalize
+              plan. Source doc's `status` confirmed unchanged (`open`, `assigned_vm: NA`). PM `quality-gates.sh` green.
+              Evidence: unified-trading-pm@a6c253eadabd4225910cfb659f39562fe6b0b927 (source-doc checkbox flip, pre-existing) +
+              this commit (finalize-plan reconciliation).
 
 ## Codex SSOTs
 
@@ -83,3 +95,21 @@ context_scope:
 - **2026-08-09** — Drafted alongside `ci_satellite_ao_dispatch_batch10_2026_08_09.md`. Authored `status: active` per the
   established no-double-gate precedent; batch 10 itself is also authored `status: active` per this task's explicit
   dispatch instructions.
+- **2026-08-09 (slot 12)** — Executed the plan's one todo. The source doc's checkbox was already flipped by slot 31 in
+  the same commit (`a6c253eadabd4225910cfb659f39562fe6b0b927`) that landed batch-10 todo 1 — verified that commit is an
+  ancestor of `origin/live-defi-rollout` before citing it, per the todo's explicit requirement. No edit was needed in
+  the source doc; this commit only reconciles evidence into this finalize plan.
+- **2026-08-09 (slot 12), archival correction**: the note above ("archival out of scope this round") was written before
+  discovering the fresh same-day sibling precedent — `ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md` (the
+  `infrastructure_master`-group sibling of this exact batch9/batch10 pair) WAS archived together with its gating plan in
+  a follow-up commit once its own sole todo closed, per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "archive immediately" HARD RULE. This doc now
+  has 0 open todos + is unlocked, making it (and its gating plan `ci_satellite_ao_dispatch_batch10_2026_08_09.md`)
+  archival candidates by the same rule — `check_archive_candidates.sh --only` (wired into `safe-doc-push.sh`) confirms
+  this mechanically. Added a temporary `archive_exempt: true` to THIS commit (the checkbox-flip commit) per the
+  documented one-commit bridge in
+  `issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md` — that hook's own
+  same-commit-archival demand directly conflicts with the codex "never combine the checkbox flip with the `git mv`
+  archival in ONE commit" rule, and this bridge is the sanctioned resolution: ship the flip alone (exempted), then a
+  SEPARATE immediate follow-up commit performs the real 6-step archival ritual (on both this doc and its gating plan)
+  and drops the now-moot exemption key.
