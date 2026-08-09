@@ -156,10 +156,24 @@ drift_direction: advance-code
       `Image '...' not found` on all 5 most-recent executions per job (2026-08-03 through 2026-08-07);
       `gcloud scheduler jobs list --location=europe-west1 --project=central-element-323112` showed all 3 `state: PAUSED`
       post-fix. (repo: unified-trading-pm, no code repo — infra-only)
-- [ ] [SCRIPT] P1. **Fix `live-event-log-compactor` daily OOM** — 4Gi limit, OOM every scheduled 02:00 UTC run for 7
-      straight days despite an already-generous limit; data growth is outpacing capacity. Investigate whether this is
-      unbounded growth (a leak / missing retention/compaction elsewhere) before just raising the limit again — raising
-      the ceiling on a growth trend just delays the next OOM.
+- [x] ✅ [SCRIPT] P1. **Fix `live-event-log-compactor` daily OOM** — DONE (multi-slot effort 2026-08-07/08, re-verified
+      live 2026-08-09). Root cause was two compounding bugs, not simple undersizing: (1) warm GCS objects are NDJSON
+      (multiple `CanonicalPersistEnvelope` per file) but the compactor parsed each file as a single JSON document —
+      every envelope failed validation, so cold compaction had silently written ZERO cefi cold data since inception,
+      masking the shard's true memory requirement; (2) once NDJSON parsing was fixed, `(cefi, book_snapshot_5)` proved
+      to be genuinely large (~204GiB/day) — real organic growth, not a leak. Fix: NDJSON per-line parsing
+      (deployment-service@d5f850f1), schema-drift + column-order handling (@5281cb0a0, @d304c0ba), per-file batching to
+      cut Arrow overhead (@e57441c0), memory raised in verified steps 512Mi(implicit default; never actually
+      4Gi)→4Gi→16Gi + CPU 2→4 (@5e23a7b0, @454cccd9c), task timeout extended 3600s→28800s(8h) to match real compaction
+      time (@6edec6b9, @e584b559, @4648b5ea), plus a COMPACTION_DATE backfill mechanism (@9e1ab495) — this already gives
+      per-date chunking (one execution per day, not the whole log at once) on top of the per-file streaming write path.
+      Backfill: all 7 missed dates (2026-08-01→2026-08-07) × 4 cefi data_types backfilled — 28 cold parquet objects
+      confirmed via `gcloud storage ls gs://central-element-323112-events/live-events/cold/cefi/**`. Live verification:
+      the next scheduled 02:00 UTC run (`live-event-log-compactor-9z2tv`, 2026-08-08T02:00:04Z) completed successfully
+      in 2h49m35s with zero OOM — first clean scheduled run after the 7-day OOM streak (2026-08-01 through 2026-08-07,
+      all `The configured memory limit was reached`). Full incident:
+      `/plans/archive/issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md` (status: resolved).
+      (repo: deployment-service)
 - [ ] [SCRIPT] P2. **Reduce `mtds-backfill-odds-401-retry` memory footprint** — OOM every 7-9 min but self-recovers and
       keeps progressing; wasteful, not broken. The sibling `mtds-backfill-odds-smallchunk-20260807` run (smaller chunks,
       far fewer OOMs) is a working precedent — apply the same chunk-size mitigation here.
