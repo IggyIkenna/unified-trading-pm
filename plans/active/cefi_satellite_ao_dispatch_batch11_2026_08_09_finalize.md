@@ -8,6 +8,7 @@ summary: >-
   land, and archiving batch11 via the 6-step ritual. `status: active` from the start per the 2026-07-30 no-double-gate
   ruling; `gate_on_depends: true` machine-holds every todo until batch11's own tasks are done.
 status: active
+archive_exempt: true
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -96,12 +97,29 @@ context_scope:
       market-tick-data-service@aea655a9) — the deferral was resolved, not left dangling. **Done when** condition met:
       every one of the 10 todos carries a reconciled-evidence pointer (todo 1 above); zero need a revert-to-open or a
       CANCELLED/BLOCKED-ON marker.
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch11_2026_08_09.md`** via the standard 6-step ritual: confirm
-      no separate migration is needed for informational content → add the archive banner → run the codex-alignment check
-      (this batch creates no new durable contract) → grep the corpus for every referrer of
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch11_2026_08_09.md`** via the standard 6-step ritual:
+      confirm no separate migration is needed for informational content → add the archive banner → run the
+      codex-alignment check (this batch creates no new durable contract) → grep the corpus for every referrer of
       `cefi_satellite_ao_dispatch_batch11_2026_08_09` and repoint each to the archived path → clear `locked_by` (already
       empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus referrer resolves to
       the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside it in the same
+      commit. — **DONE 2026-08-09 (slot 11)**: the "no new durable contract" assumption in this todo's own text was
+      WRONG — the codex-alignment check found `/codex/02-data/tradfi-databento-sourcing-ssot.md`'s Databento
+      lookback-floor table still cited batch11 todo 4's PRE-measurement conservative constants (L1 365d, L2/L3 30d);
+      corrected to the measured values (L1 367d, L2/L3 33d, L0's true no-rolling-boundary behavior) in the same session.
+      One deferred item (deployment-ui Barchart-label spot-check, flagged but never checked in todo 5's Progress Log)
+      migrated to a tracked todo: `/plans/active/issues/deployment_ui_barchart_label_spotcheck_2026_08_09.md`. Grepped
+      the full corpus for every leading-slash structural referrer of both
+      `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` and its `_finalize.md` twin (10 hits across 6 active docs) and
+      repointed each to `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09{,_finalize}.md`; left
+      bare-filename prose mentions in Progress Log history untouched (historical narration, not structural links) and
+      left already-archived sibling docs (batch14 + its finalize) untouched (frozen historical record, matching existing
+      precedent — batch14 itself already cites batch11 by its pre-archive path unchanged). `locked_by` confirmed empty
+      on both docs. Both docs `git mv`'d to `plans/archive/2026_08/` as a separate follow-up commit from this checkbox
+      flip (per the "never combine flip + mv in one commit" rule). **This doc's own `archive_exempt: true`** (set in
+      THIS same commit, alongside this flip) is a deliberate, narrow, TEMPORARY use of the check_archive_candidates
+      escape hatch — this doc genuinely has 0 open todos as of this commit, but the git-mv archival commit is the very
+      next commit in this same session, not a real standing exemption; `archive_exempt` is removed in that follow-up
       commit.
 
 ## Codex SSOTs
