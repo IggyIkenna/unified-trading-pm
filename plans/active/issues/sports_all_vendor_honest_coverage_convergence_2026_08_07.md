@@ -494,3 +494,9 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   shifting into slower enrichment-only territory). At this new rate, ~5.2h to the near-zero floor (was ~1.7h estimate
   last tick) — re-estimating each tick rather than trusting the old rate. Not yet at the INJURIES trigger, no
   intervention needed.
+- **19:44Z — smallchunk13 reached chunk 17/451 (doorstep of the chunk-18 danger zone), zero OOMs across the entire run
+  so far — genuinely clean. FIXTURE_LINEUPS rate sped back up sharply.** Census: FIXTURE_LINEUPS needed **5,741 →
+  3,462** (-2,279 in ~30min, ~4,558/hr — back up from the prior tick's slower ~1,112/hr; the rate has been genuinely
+  variable tick-to-tick, re-estimate fresh each time rather than trusting the last reading). Getting close to the
+  ~100-500 near-zero floor now (~46min out at this rate, though the rate itself may shift again) — not yet triggering
+  the INJURIES launch, watching very closely next tick for genuine convergence. Both fleets healthy, no intervention.
