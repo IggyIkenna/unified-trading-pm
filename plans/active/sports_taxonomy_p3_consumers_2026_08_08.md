@@ -321,3 +321,23 @@ spelling variant survives, which is the entire point of the panel". It does not.
   `origin/live-defi-rollout` via `git log`. No recompute possible or needed since the historical baseline never
   contained the bug's population. No code shipped — this is a pure documentation closure, mirroring the finalize doc's
   own precedent that "a measured zero is a result, not a skip."
+
+- **2026-08-09 (slot 22, backend_engineer)** — Dispatched the ML section's "Move the sports feature loader off its
+  PATH-PREFIX read of bucketed odds" todo, but it is genuinely premature — the same authoring-gap pattern slot 15
+  already flagged for the Arbitrage sub-chain (no `sequential`/`gate_on_depends` between a P3 consumer todo and its hard
+  P2 content-dependency). Verified live, not just re-read from this doc: P2
+  (`/plans/active/sports_taxonomy_p2_migration_2026_08_08.md`) todo "Move `odds_horizon_bucket` (135,980 shards) onto
+  the `odds` + `horizon` model" is still unchecked, and its own gating "Consumer enumeration" todo (which explicitly
+  names `sports_feature_loader._ODDS_BUCKETED_PREFIXES` as a todo target) is also still unchecked. Confirmed the
+  physical write side has not moved either:
+  `market-data-processing-service/app/adapters/sports/ bucket_assignment_adapter.py:696` still hard-codes
+  `data_type = "odds_horizon_bucket"` for the registered candle adapter (grepped the whole repo for a `horizon=` GCS
+  path segment or any new physical shape — none exists anywhere in MDPS, features-service, or UAC). UAC's P1-landed
+  `SPORTS_HORIZONS`/`is_valid_horizon()` (`market_data_categories.py`) is a VALUE-vocabulary SSOT only — no
+  path-template constant for the new horizon-axis physical shape exists in any repo. There is therefore no new canonical
+  prefix in existence anywhere for the loader to "move onto" — the P3 todo's own text ("must move in the same change as
+  the rename") makes the move a joint change with P2's physical re-stamp, which has not landed. Skipping back to the
+  queue (`reason_code: GATED`) rather than fabricating a speculative path shape nothing writes yet or silently no-op-ing
+  the todo. Recommend whoever picks up P2's `odds_horizon_bucket` re-stamp todo apply this loader migration as part of
+  that same change (per the todo's own instruction), or the operator add `depends_on`/`gate_on_depends` wiring from this
+  specific P3 todo onto P2's re-stamp todo to stop repeat premature dispatch.
