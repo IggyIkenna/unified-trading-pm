@@ -120,27 +120,27 @@ concrete reason not to).
       `PLANNED_VENUES`). (repo: market-tick-data-service)
 
       Implemented via `get_markets()`+`get_prices()` (catalogue's `RUNNER_DESCRIPTION` projection extended to surface
-                  `runner_name`/`selection_id`; `get_markets` gained an optional `market_start_time` window since Betfair's
-                  catalogue has no historical endpoint). `lay_price` gated at MARKET level (every runner with a back price must
-                  also have a lay price, else the whole market's `lay_price` stays unset) — exactly the completeness contract
-                  `_row_for_runner`/`_rows_for_market` implement. `fixture_id`/`af_fixture_id` are honestly left unresolved
-                  (`NO_FIXTURE_DATA`, falling back to Betfair's own `event_id`/`market_id`) — real fixture resolution is todo 3
-                  below, confirmed genuinely hard (a real Betfair catalogue response shows match-odds runners are generic
-                  "Home"/"Draw"/"Away" labels, not team names). Also fixed the ACTUAL dispatch blocker this todo's own text didn't
-                  anticipate: `umi_tick_provider.py`'s `_SPORTS_VENUES` was hardcoded to `{"ODDS_API"}` — without adding
-                  `"BETFAIR"` there, the factory wiring alone would never have been reached by a live `--venue betfair` capture
-                  call. 9 new unit tests (`tests/unit/test_betfair_adapter.py`); 1 pre-existing test fixed
-                  (`test_prediction_market_venue_wiring.py::test_remaining_planned_venues` asserted the old
-                  `betfair in PLANNED_VENUES` state). Full `quality-gates.sh` green (`ALL QUALITY GATES PASSED`, sentinel matched
-                  `06387b04` before the ship rebase).
+                          `runner_name`/`selection_id`; `get_markets` gained an optional `market_start_time` window since Betfair's
+                          catalogue has no historical endpoint). `lay_price` gated at MARKET level (every runner with a back price must
+                          also have a lay price, else the whole market's `lay_price` stays unset) — exactly the completeness contract
+                          `_row_for_runner`/`_rows_for_market` implement. `fixture_id`/`af_fixture_id` are honestly left unresolved
+                          (`NO_FIXTURE_DATA`, falling back to Betfair's own `event_id`/`market_id`) — real fixture resolution is todo 3
+                          below, confirmed genuinely hard (a real Betfair catalogue response shows match-odds runners are generic
+                          "Home"/"Draw"/"Away" labels, not team names). Also fixed the ACTUAL dispatch blocker this todo's own text didn't
+                          anticipate: `umi_tick_provider.py`'s `_SPORTS_VENUES` was hardcoded to `{"ODDS_API"}` — without adding
+                          `"BETFAIR"` there, the factory wiring alone would never have been reached by a live `--venue betfair` capture
+                          call. 9 new unit tests (`tests/unit/test_betfair_adapter.py`); 1 pre-existing test fixed
+                          (`test_prediction_market_venue_wiring.py::test_remaining_planned_venues` asserted the old
+                          `betfair in PLANNED_VENUES` state). Full `quality-gates.sh` green (`ALL QUALITY GATES PASSED`, sentinel matched
+                          `06387b04` before the ship rebase).
 
-                  **Open caveat for todo 4 (live-verify), NOT resolved this session**: UAC's registries
-                  (`_sports_venue_constants.py`, `_odds_api_maps.py`, `data_availability.py`) reference `BETFAIR_EX_UK`/
-                  `BETFAIR_EX_EU` as the canonical per-region data-axis venue names for the exchange (bare `BETFAIR` described
-                  elsewhere as "operator-group parent, not data-axis"). This todo's own instruction said literally `"betfair"`
-                  for the `VENUE_REGISTRY` key, which is what's implemented — but the live-verify pass should confirm whether the
-                  manifest/asset-group/bucket routing expects bare `BETFAIR` or the region-qualified forms before trusting a live
-                  capture's shard path is correct, not just that the HTTP calls succeed.
+                          **Open caveat for todo 4 (live-verify), NOT resolved this session**: UAC's registries
+                          (`_sports_venue_constants.py`, `_odds_api_maps.py`, `data_availability.py`) reference `BETFAIR_EX_UK`/
+                          `BETFAIR_EX_EU` as the canonical per-region data-axis venue names for the exchange (bare `BETFAIR` described
+                          elsewhere as "operator-group parent, not data-axis"). This todo's own instruction said literally `"betfair"`
+                          for the `VENUE_REGISTRY` key, which is what's implemented — but the live-verify pass should confirm whether the
+                          manifest/asset-group/bucket routing expects bare `BETFAIR` or the region-qualified forms before trusting a live
+                          capture's shard path is correct, not just that the HTTP calls succeed.
 
 - [x] ✅ [BACKEND] P2. **DONE 2026-08-09 (slot-26, backend_engineer) — `market-tick-data-service@766e776d`.** Resolve
       Betfair `market_id`/`selection_id` → canonical `fixture_id` — check whether `fixture_id_resolver.py`'s existing
@@ -148,46 +148,51 @@ concrete reason not to).
       unresolved Betfair rows under a parallel identifier space. (repo: market-tick-data-service)
 
       **Answer: the existing `FixtureIdResolver.resolve(af_league_id, home_id, away_id, day)` needed no changes at
-              all** — wired `BetfairAdapter` into the SAME resolver instance `OddsApiAdapter` uses (added a lazy
-              `fixture_resolver` property, identical `resolve_bucket_name(kind="instruments-store", asset_group="sports")`
-              pattern), fed by a new Betfair-specific projection: `_parse_market_teams()` splits `event_name`'s free-text
-              "Team A v Team B" via UAC's already-shipped-but-unused `parse_betfair_event_teams()` (found during this
-              session — no caller existed anywhere in the codebase before this); `_canonical_team_ids()` runs both names
-              through the SAME `validate_team_resolution()` alias index `OddsApiAdapter._build_fixture_rows()` uses (`provider=`
-              is informational-only, confirmed by reading `team_mappings.py`); a new `_resolve_af_league_id()` matches
-              `competition_name` against UAC's `LEAGUE_REGISTRY.display_name` (exact match first, substring fallback,
-              `event_country`-disambiguated when the bare name collides — confirmed live: bare "Premier League" alone
-              substring-matches ~40 leagues worldwide (English/Russian/Ukrainian/Egyptian/Kazakhstan/...), so without a
-              country hint it honestly returns `None` rather than risking a wrong join; "English Premier League" or
-              "Premier League"+`event_country="GB"` both resolve cleanly to af_league_id=39). One resolution per MARKET (not
-              per runner, since every runner in a match-odds market shares one fixture) via new
-              `_resolve_fixture_for_market()`, called once in `download_batch`'s loop before `_rows_for_market`.
-              `fixture_id` now prefers the resolved `af_fixture_id`, falling back to Betfair's own `event_id`/`market_id`
-              only when honestly unresolved — the exact same pattern `OddsApiAdapter` already uses, no parallel identifier
-              space. `home_team`/`away_team`/`league_id` columns (previously always `None`) now populate from the same
-              resolution. 9 new/updated unit tests (6 new + existing 15 kept green) — the existing tests' `_MARKET` fixture
-              uses the deliberately-ambiguous bare "Premier League" competition_name (no `event_country`), so they stay
-              `NO_FIXTURE_DATA` unchanged AND never touch `fixture_resolver` (no live GCS I/O in the pre-existing suite);
-              new tests inject a `_FakeFixtureResolver` via `adapter._fixture_resolver` (mirrors
-              `test_odds_api_fixture_id_join.py`'s DI pattern) to prove the matched path, the unresolved-team-name path
-              (confirms `fixture_resolver.resolve()` is never called when team resolution fails — no wasted GCS read), and
-              `_resolve_af_league_id`'s exact/ambiguous/country-disambiguation/non-football-gate behavior directly.
-              Full `quality-gates.sh` PASSED (267s, 10409 passed/0 failed; sentinel matched HEAD `651156eb`). Shipped
-              `market-tick-data-service@766e776d`, verified ancestor of `origin/live-defi-rollout`.
+                      all** — wired `BetfairAdapter` into the SAME resolver instance `OddsApiAdapter` uses (added a lazy
+                      `fixture_resolver` property, identical `resolve_bucket_name(kind="instruments-store", asset_group="sports")`
+                      pattern), fed by a new Betfair-specific projection: `_parse_market_teams()` splits `event_name`'s free-text
+                      "Team A v Team B" via UAC's already-shipped-but-unused `parse_betfair_event_teams()` (found during this
+                      session — no caller existed anywhere in the codebase before this); `_canonical_team_ids()` runs both names
+                      through the SAME `validate_team_resolution()` alias index `OddsApiAdapter._build_fixture_rows()` uses (`provider=`
+                      is informational-only, confirmed by reading `team_mappings.py`); a new `_resolve_af_league_id()` matches
+                      `competition_name` against UAC's `LEAGUE_REGISTRY.display_name` (exact match first, substring fallback,
+                      `event_country`-disambiguated when the bare name collides — confirmed live: bare "Premier League" alone
+                      substring-matches ~40 leagues worldwide (English/Russian/Ukrainian/Egyptian/Kazakhstan/...), so without a
+                      country hint it honestly returns `None` rather than risking a wrong join; "English Premier League" or
+                      "Premier League"+`event_country="GB"` both resolve cleanly to af_league_id=39). One resolution per MARKET (not
+                      per runner, since every runner in a match-odds market shares one fixture) via new
+                      `_resolve_fixture_for_market()`, called once in `download_batch`'s loop before `_rows_for_market`.
+                      `fixture_id` now prefers the resolved `af_fixture_id`, falling back to Betfair's own `event_id`/`market_id`
+                      only when honestly unresolved — the exact same pattern `OddsApiAdapter` already uses, no parallel identifier
+                      space. `home_team`/`away_team`/`league_id` columns (previously always `None`) now populate from the same
+                      resolution. 9 new/updated unit tests (6 new + existing 15 kept green) — the existing tests' `_MARKET` fixture
+                      uses the deliberately-ambiguous bare "Premier League" competition_name (no `event_country`), so they stay
+                      `NO_FIXTURE_DATA` unchanged AND never touch `fixture_resolver` (no live GCS I/O in the pre-existing suite);
+                      new tests inject a `_FakeFixtureResolver` via `adapter._fixture_resolver` (mirrors
+                      `test_odds_api_fixture_id_join.py`'s DI pattern) to prove the matched path, the unresolved-team-name path
+                      (confirms `fixture_resolver.resolve()` is never called when team resolution fails — no wasted GCS read), and
+                      `_resolve_af_league_id`'s exact/ambiguous/country-disambiguation/non-football-gate behavior directly.
+                      Full `quality-gates.sh` PASSED (267s, 10409 passed/0 failed; sentinel matched HEAD `651156eb`). Shipped
+                      `market-tick-data-service@766e776d`, verified ancestor of `origin/live-defi-rollout`.
 
-              **Open for todo 4 (live-verify)**: this resolution has only been exercised against a synthetic test fixture
-              (`"Man Utd v Liverpool"` / `"Premier League"` + `event_country="GB"`) — a real Betfair catalogue response's
-              actual `competition.name`/`event.countryCode` values (does Betfair send bare "Premier League" or already
-              country-qualified names? is `countryCode` reliably populated for every competition?) are UNVERIFIED against
-              the live API. Todo 4's live-verify pass should confirm the resolver actually matches real captured markets,
-              not just that the wiring compiles.
+                      **Open for todo 4 (live-verify)**: this resolution has only been exercised against a synthetic test fixture
+                      (`"Man Utd v Liverpool"` / `"Premier League"` + `event_country="GB"`) — a real Betfair catalogue response's
+                      actual `competition.name`/`event.countryCode` values (does Betfair send bare "Premier League" or already
+                      country-qualified names? is `countryCode` reliably populated for every competition?) are UNVERIFIED against
+                      the live API. Todo 4's live-verify pass should confirm the resolver actually matches real captured markets,
+                      not just that the wiring compiles.
 
-- [ ] [BACKEND] P2. Live-verify: using the now-live `betfair-session-token` GSM secret (`execution-service@7e03bf7b`),
-      call the restored adapter's `get_markets()`/`get_prices()` (or the new `download_batch()`) against a real sampled
-      in-play Betfair market, confirm both `backs` and a populated `lay_price` persist through the normal MTDS capture
-      write path (not a standalone script bypassing it), and flip this satellite plan's original P2 item +
+- [ ] [BACKEND] P2. **BLOCKED-OPERATOR-DECISION 2026-08-09 (slot-8) — premise invalidated, see Progress Log.** The
+      `betfair-session-token` secret was NOT actually live (execution-service@7e03bf7b shipped only the refresh
+      mechanism, never ran it) and, once provisioned, Betfair's interactive-login endpoint hard-rejects this workspace's
+      ONLY current network egress (the single orchestrator VM's Tokyo/`asia-northeast1` IP) as geo/traffic-restricted.
+      Live-verify: using a working `betfair-session-token` GSM secret, call the restored adapter's
+      `get_markets()`/`get_prices()` (or the new `download_batch()`) against a real sampled in-play Betfair market,
+      confirm both `backs` and a populated `lay_price` persist through the normal MTDS capture write path (not a
+      standalone script bypassing it), and flip this satellite plan's original P2 item +
       `prediction_arb_live_execution_bridge_2026_07_20.md` item [5] to done citing the commit SHA + the sampled market's
-      evidence. (repo: market-tick-data-service)
+      evidence. (repo: market-tick-data-service) — cannot proceed until the operator decides how to obtain
+      Betfair-accepted network egress; see Progress Log for the full finding + options.
 
 ## Progress Log
 
@@ -277,3 +282,49 @@ concrete reason not to).
   git-verified ancestor of `origin/live-defi-rollout` and the full `tests/unit/test_betfair_adapter.py` suite (15 tests)
   passes clean at that HEAD. No further action needed on todo 3. Todo 4 (live-verify, incl. the `BETFAIR_EX_UK`/`EX_EU`
   venue-naming question) remains the sole open item.
+- 2026-08-09 (slot-8, backend_engineer): dispatched to todo 4 (live-verify). **Premise invalidated, same pattern as
+  slot-17's original scope-correction** — the dispatched task text asserted `betfair-session-token` was "now-live"
+  citing `execution-service@7e03bf7b`, but that commit only shipped the refresh SCRIPT
+  (`execution-service/scripts/refresh_betfair_session_token.py`); nobody had ever actually run it, and the
+  `betfair-session-token` secret did not exist in GSM at all (confirmed via both
+  `gcloud secrets list --project central-element-323112` and the codebase's own
+  `unified_trading_library.cloud_interface.get_secret` — "Secret 'betfair-session-token' not found"). Also found the
+  script's `_PROJECT` default was wrong (`unified-trading-prd`, a project this workspace has no access to / that may not
+  exist) — the real project is `central-element-323112` (confirmed against
+  `unified_trading_library/instruments_catalog_reader.py::PROJECT_ID` and every other GSM-reading script in the
+  workspace). Fixed that default and shipped it (`execution-service@b97abbd9`, full `quality-gates.sh` green, verified
+  ancestor of origin) — a real, if small, bug: without it the script silently targets an inaccessible project unless the
+  operator remembers to set `GCP_PROJECT`.
+
+  With the default fixed, self-serviced the actual provisioning gap per RULES.md's IAM-self-service pattern (had
+  `roles/secretmanager.admin` on the ambient `unified-trading-sa` identity already) — created the empty
+  `betfair-session-token` secret container
+  (`gcloud secrets create betfair-session-token --project central-element-323112`), then ran the refresh script. **It
+  failed — not on credentials, on network.** Betfair's `identitysso.betfair.com/api/loginInteractive` (and `/api/login`)
+  endpoints returned HTTP 403 with an explicit Betfair-authored "Restricted" page: _"Our Software detects that you may
+  be accessing the Betfair website from a country that Betfair does not accept bets from or the traffic from your
+  network was detected as being unusual."_ Verified this is not a `betfairlightweight`-wrapper artifact by hitting the
+  raw endpoint directly with `requests` — identical 403 + body. The egress IP is `13.113.200.22` — per
+  `runtime-deployment-topology.md` this is literally the single orchestrator VM's EIP (`asia-northeast1`/Tokyo), i.e.
+  this workspace's ONLY current live network egress path for ANY worker session, not something scoped to this slot.
+  `betfair-username`/`betfair-password`/`betfair-app-key` all load fine (so this is not a credential problem) — the
+  account itself may simply never have logged in from a non-UK/EU IP before and Betfair's fraud/geo heuristic is
+  rejecting the whole request before credentials are even checked.
+
+  **Why this is BLOCKED-OPERATOR-DECISION, not a worker judgment call**: fixing this means either (a) provisioning new
+  network egress in a Betfair-accepted jurisdiction — the workspace already has GCP infra in `europe-west4`
+  (`/codex/05-infrastructure/launcher-script-ssot.md`, `/codex/05-infrastructure/agent-orchestrator-deploy.md`) that's a
+  plausible candidate, but standing up a new egress path (proxy/relay/VM) for a real gambling-account login is a cost +
+  compliance decision (accessing a betting account from a jurisdiction/IP it's never used before risks the account's OWN
+  fraud/ToS triggers on Betfair's side, separate from this workspace's infra) — not something a worker should decide
+  unilaterally per `/codex/04-architecture/capital-structure-and-regulatory.md`'s jurisdiction-sensitivity around this
+  exact account; or (b) contacting Betfair support to whitelist/confirm the account for this access pattern, which is an
+  operator/account-holder action by definition. Neither is a checkable-fact/small-scoped-change a worker can resolve
+  alone.
+
+  **Left the created `betfair-session-token` secret container in place** (empty, zero versions — harmless, and it's the
+  correct provisioning step regardless of how the network question resolves; the source-credential secrets it depends on
+  were unaffected). Did NOT touch factory.py/adapter code (todos 1-3's shipped work is unaffected and correct — this is
+  purely a network-reachability blocker on the verification step, not a defect in the adapter itself). Filed `/blocked`
+  for the operator's network-routing decision. Todo 4 stays unchecked; the satellite plan's original P2 item and
+  `prediction_arb_live_execution_bridge_2026_07_20.md` item [5] stay untouched pending its resolution.
