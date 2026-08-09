@@ -31,6 +31,7 @@ source: [codex_doc_freshness ratchet review, slot 30, 2026-08-09]
 resolved_by:
 locked_by:
 locked_since:
+depends_on: []
 ---
 
 # operational-modes.md's anti-pattern-deletion claim is stale
