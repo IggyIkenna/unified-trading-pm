@@ -511,6 +511,16 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   universe" for 2023, present-set at launch already 13,490,496 rows. 2023 was apparently already fully seeded (no new
   per-VM shard written). `start_date`/`end_date` confirmed respected in the `ENUMERATOR_STARTED` event. Flipped chunk
   4's todo. Chunk 5/7 (2024) next.
+- **data_engineering worker (slot 32) 2026-08-09**: launched chunk 5/7 (2024-01-01..2024-12-31) in tmux
+  `orch-slot-32:backfill`. Retry 1 (VM `expected-universe-v2-sports-20260809-200656`) hit the expected `EXIT_STATUS=5`
+  halt-safety trip (`would-write 1000001 > max_writes_per_run 1000000`) — retriable per the known pattern, not a new
+  incident. Relaunched the same chunk; retry 2 (VM `expected-universe-v2-sports-20260809-201517`) converged in one
+  further attempt: `EXIT_STATUS=0`, `ENUMERATOR_COMPLETED` with 420,881 candidate rows written across 2 per-VM shard
+  parts
+  (`gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/expected-universe-v2-sports-20260809-201517-part0000{1,2}.parquet`),
+  25.1s enumeration time. Confirms the slot-33 present_set-gating fix (instruments-service@0d66cb926e0b) is working as
+  intended for chunk 5 too (fast 2-attempt convergence vs. the pre-fix livelock). Flipped chunk 5's todo. Chunk 6/7
+  (2025) next.
 
 ## Follow-ups
 
@@ -549,9 +559,12 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       13,490,496 rows (main + per-VM shards), so 2023 was already fully seeded (likely incidental coverage from an
       earlier full-range/overlapping run). No new per-VM shard written (nothing to write). `run.log` confirms
       `start_date: '2023-01-01', end_date: '2023-12-31'` was respected. Done-when (EXIT_STATUS=0) satisfied.
-- [ ] [DATA] P2. Launch + verify chunk 5/7 (2024-01-01..2024-12-31) of the same backfill — same launcher invocation,
+- [x] ✅ [DATA] P2. Launch + verify chunk 5/7 (2024-01-01..2024-12-31) of the same backfill — same launcher invocation,
       halt-safety/gcloud-clobber handling, and done-when as chunk 3's todo above, with
-      `ENUM_START_DATE=2024-01-01 ENUM_END_DATE=2024-12-31`. (repo: deployment-service)
+      `ENUM_START_DATE=2024-01-01 ENUM_END_DATE=2024-12-31`. (repo: deployment-service) — ✅ VM
+      `expected-universe-v2-sports-20260809-201517` (retry 2, after an expected `EXIT_STATUS=5` halt-safety trip on
+      retry 1), `EXIT_STATUS=0`, 420,881 rows across 2 per-VM shard parts at
+      `gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/expected-universe-v2-sports-20260809-201517-part0000{1,2}.parquet`.
 - [ ] [DATA] P2. Launch + verify chunk 6/7 (2025-01-01..2025-12-31) of the same backfill — same launcher invocation,
       halt-safety/gcloud-clobber handling, and done-when as chunk 3's todo above, with
       `ENUM_START_DATE=2025-01-01 ENUM_END_DATE=2025-12-31`. (repo: deployment-service)
