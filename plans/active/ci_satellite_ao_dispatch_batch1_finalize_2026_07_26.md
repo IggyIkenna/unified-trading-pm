@@ -88,7 +88,7 @@ context_scope:
       does not turn red on day-one pre-existing debt. **Done when**: `bash scripts/quality-gates.sh --no-fix` on PM is
       GREEN with all three wired, each checker is proven to fail the gate on a synthetic new violation, and the three
       baselines are committed.
-- [ ] [REVIEW] P1. **Reconcile all 29 todos' source docs.** Each batch-1 todo ends with `Source:` naming one or more
+- [x] ✅ [REVIEW] P1. **Reconcile all 29 todos' source docs.** Each batch-1 todo ends with `Source:` naming one or more
       docs (five todos cite two sources each — the `check_strict_quickmerge` pair, the `full-workspace-sit` pair, the
       cloudbuild-template pair, the fleet version/tag census pair, and the codex `ci-cd-flow.md` todo which cites FOUR).
       For each: flip the corresponding checkbox or annotate the corresponding prose section in EVERY cited doc, citing
@@ -97,21 +97,24 @@ context_scope:
       now has zero open work **in checkbox AND prose form** — 12 of this tranche's orphans express all their remaining
       work as numbered prose with no checkboxes, so a checkbox count is not an answer. Only set `status: resolved` on a
       doc that genuinely reaches zero. **Done when**: every cited doc is flipped/annotated with verified evidence, and
-      each doc that genuinely reaches zero open work is `status: resolved`.
-  - **⚖️ OPERATOR RULING 2026-07-30 — THIS TODO IS EXEMPT FROM THE `gate_on_depends` HOLD; APPLY IT INCREMENTALLY.**
-    Reconciliation of an individual source doc may proceed the moment that item's own batch-1 work is verifiably done —
-    it does NOT have to wait for all of batch 1 to finish. The rationale is that a batch-1 item that shipped weeks ago
-    but whose source-doc checkbox is still `[ ]` is exactly the false-progress this rule exists to prevent, and holding
-    the flip behind an unrelated sibling todo manufactures that state. **The `gate_on_depends: true` frontmatter is
-    deliberately UNCHANGED** — it still correctly holds todos 1, 3 and 4 (the single QG-registration commit, the
-    deferral re-check, and archival), all of which genuinely need the whole batch done first. The carve-out is scoped to
-    this todo only. Per-item rule when applying it: verify the cited commit is a real ancestor of
-    `origin/live-defi-rollout` BEFORE flipping, and do not mark this parent todo `[x]` until every one of the 29 has
-    been reconciled.
-  - **Discharged so far (28 of 29 items) — verified/fixed 2026-08-09 (this session, via 10 parallel read-only research
-    agents covering every one of the 29 `Source:` citations, plus the original 3 verified 2026-08-02). Recorded here so
-    this todo's remaining scope is honest rather than re-derived from scratch. Items 4-28 below were newly reconciled
-    this session; where a source doc's own citation was missing/placeholder/WRONG, it was fixed in this session's commit
+      each doc that genuinely reaches zero open work is `status: resolved`. **DONE 2026-08-09** — all 29 of 29 items
+      reconciled (see the discharge list below); evidence unified-trading-pm@8750f0106 (25 items advanced this
+      session) + this commit (item 30 resolved-with-no-edit-needed, parent checkbox flipped).
+  - **⚖️ OPERATOR RULING 2026-07-30** (recorded in this doc's own Progress Log,
+    `ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`, 2026-08-02 entry) **— THIS TODO IS EXEMPT FROM THE
+    `gate_on_depends` HOLD; APPLY IT INCREMENTALLY.** Reconciliation of an individual source doc may proceed the moment
+    that item's own batch-1 work is verifiably done — it does NOT have to wait for all of batch 1 to finish. The
+    rationale is that a batch-1 item that shipped weeks ago but whose source-doc checkbox is still `[ ]` is exactly the
+    false-progress this rule exists to prevent, and holding the flip behind an unrelated sibling todo manufactures that
+    state. **The `gate_on_depends: true` frontmatter is deliberately UNCHANGED** — it still correctly holds todos 1, 3
+    and 4 (the single QG-registration commit, the deferral re-check, and archival), all of which genuinely need the
+    whole batch done first. The carve-out is scoped to this todo only. Per-item rule when applying it: verify the cited
+    commit is a real ancestor of `origin/live-defi-rollout` BEFORE flipping, and do not mark this parent todo `[x]`
+    until every one of the 29 has been reconciled.
+  - **All 29 of 29 items discharged — verified/fixed 2026-08-09 (this session, via 10 parallel read-only research agents
+    covering every one of the 29 `Source:` citations, plus the original 3 verified 2026-08-02). Recorded here so this
+    todo's completion is auditable rather than a bare checkbox flip. Items 4-30 below were newly reconciled this
+    session; where a source doc's own citation was missing/placeholder/WRONG, it was fixed in this session's commit
     (noted per item):**
     1. `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` `[DEVOPS] P1` ("Ban the `|| true`
        credential idiom") — flipped `[x] ✅` in the source doc. Evidence re-verified: `unified-trading-pm@c91844b09`,
@@ -219,10 +222,15 @@ context_scope:
         session, no edit needed.
     29. `plans/archive/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md` — already correctly
         archived/resolved, content matches batch-1's claim (live-verified `SKIPPED` not `FAILURE`). No edit needed.
-    - **Remaining (1 of 29, NOT yet reconciled)**: batch-1's `check_dispatch_listeners.py` GHA `${{ }}`-expression fix
-      (batch-1 line ~272-284, `Source:` this plan's own todo 2 + `post_cutover_silent_assumption_sweep_2026_07_23.md`
-      `[REVIEW] P3` "discovered while closing it") — no research agent covered this item this session; carry forward to
-      the next incremental pass. Do not mark this parent todo `[x]` until it too is reconciled.
+    30. batch-1's `check_dispatch_listeners.py` GHA `${{ }}`-expression fix (batch-1 line ~272-284) — **re-checked and
+        already fully satisfied, no edit needed anywhere.** Its two cited `Source:`s are (a) "this plan's own todo 2" —
+        self-referential, batch-1 IS the record, nothing external to flip; (b)
+        `post_cutover_silent_assumption_sweep_2026_07_23.md` `[REVIEW] P3` "discovered while closing it" — this is the
+        SAME `[REVIEW] P3` checkbox as item 3 above (hardcode the PM dispatch target in
+        `agent-runner.yml`/`sit-gate.yml`, `unified-trading-pm@cb5e944f0`), not a distinct sub-item: the GHA-expr bug
+        was found as a side-discovery while working that item, and that checkbox was already correctly flipped `[x] ✅`
+        in the 2026-08-02 baseline pass. No separate doc-side action exists to take.
+  - **All 29 of 29 items now reconciled (2026-08-09).**
 - [ ] [REVIEW] P1. **Re-check the 6 conflict-gated Deferred items (D1-D6) and the 2 time-gated ones (D29-D30).** Each
       names the specific competing claim it collided with, so this is a few greps and reads, not fresh investigation. D1
       is discharged by todo 1 above. For D2-D6: has the competing side shipped, been superseded, or been ruled on? In
@@ -255,11 +263,12 @@ context_scope:
 
 ## Progress Log
 
-- **2026-08-09 (this session)** — Todo 2 advanced from 3/29 to 28/29 discharged items. Dispatched 10 parallel read-only
-  research agents, one per source-doc group, each verifying its assigned batch-1 claims against the actual source doc
-  and checking cited-commit ancestry via `git merge-base --is-ancestor`. Applied the fixes their reports surfaced:
-  filled 3 unfilled-placeholder commit citations (`cloudbuild_template_behind_repos_rollout_would_regress_fleet`'s P1
-  item, `d13_orphaned_version_readers_and_manifest_drift`'s steps-3+7 item,
+- **2026-08-09 (this session)** — Todo 2 advanced from 3/29 to 29/29 discharged items — **DONE, checkbox flipped
+  `[x]`**. Dispatched 10 parallel read-only research agents, one per source-doc group, each verifying its assigned
+  batch-1 claims against the actual source doc and checking cited-commit ancestry via `git merge-base --is-ancestor`.
+  Applied the fixes their reports surfaced: filled 3 unfilled-placeholder commit citations
+  (`cloudbuild_template_behind_repos_rollout_would_regress_fleet`'s P1 item,
+  `d13_orphaned_version_readers_and_manifest_drift`'s steps-3+7 item,
   `provenance_gate_override_and_unenforced_quickmerge_hook`'s two generic-deferral items); added 2 missing citations to
   already-`[x]` items (`cloudbuild_template...`'s P3 item, `cassette_drift_check_calls_deleted_script_and_swallows_it`);
   appended 2 resolution notes for census-addendum rows that were stuck at "followup filed" despite the followup having
@@ -271,10 +280,12 @@ context_scope:
   table row); fixed 2 stale contradicting spots in the same doc where the D2 event-ledger-consumer resolution wasn't
   reflected outside its own already-correct checkbox; flipped
   `cloudbuild_template_behind_repos_rollout_would_regress_fleet`'s frontmatter `status: open` → `resolved` (already
-  archived with a RESOLVED banner, all todos `[x]`, the frontmatter had simply never caught up). The remaining 20 of 28
-  discharged items were already correctly reconciled pre-session — verified, not re-touched. **1 of 29 items remains
-  unreconciled**: the `check_dispatch_listeners.py` GHA `${{ }}`-expression fix (no agent covered it this session) —
-  carried forward; this parent todo stays `[ ]` until it too is done, per the operator ruling below.
+  archived with a RESOLVED banner, all todos `[x]`, the frontmatter had simply never caught up). 20 of the first 28
+  items were already correctly reconciled pre-session — verified, not re-touched. The 29th item
+  (`check_dispatch_listeners.py`'s GHA `${{ }}`-expression fix) needed no agent/edit at all on a closer re-read: both
+  its cited `Source:`s resolve to work already accounted for (a self-reference to batch-1's own record, and the SAME
+  already-`[x]` `[REVIEW] P3` checkbox as item 3 — the bug was a side-discovery while closing that item, not a distinct
+  doc entry). All 29 of 29 now genuinely reconciled; parent todo flipped `[x]`.
 - **2026-07-26** — Drafted alongside `ci_satellite_ao_dispatch_batch1_2026_07_26.md` by `/ag-closeout-audit ci`
   (autonomous mode). Both are `status: draft`; neither is dispatched. Todo 1 exists because the batch's conflict-check
   found PM `scripts/quality-gates.sh` claimed by three separate new checkers — the documented remedy for
