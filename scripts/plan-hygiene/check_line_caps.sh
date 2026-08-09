@@ -140,7 +140,7 @@ for f in "${TARGETS[@]}"; do
       DELETED="$(echo "$DIFF_NUMSTAT" | awk '{print $2}')"
       if [ -n "$ADDED" ] && [ -n "$DELETED" ] && [ "$DELETED" = "0" ] && [ "$ADDED" -le 10 ] 2>/dev/null; then
         PRE_COMMIT_LINES=$(( lines - ADDED ))
-        if [ "$PRE_COMMIT_LINES" -gt "$PLAN_HARD_CAP" ]; then
+        if [ "$PRE_COMMIT_LINES" -ge "$PLAN_HARD_CAP" ]; then
           ADDED_CHECKBOX_LINES="$(git -C "$PM_DIR" diff --cached -- "$f" 2>/dev/null | grep -cE '^\+\s*-\s*\[.\]' || true)"
           ADDED_CHECKBOX_LINES="${ADDED_CHECKBOX_LINES:-0}"
           [ "$ADDED_CHECKBOX_LINES" = "0" ] && SMALL_MARKER_APPEND="1"
