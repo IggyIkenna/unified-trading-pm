@@ -140,10 +140,36 @@ stale copy.
    `june_2026_vintage_audit_findings_2026_07_27.md` — `check_plan_operator_ruling_evidence.py --only` blocks any staged
    file carrying such a violation regardless of whether this run introduced it.
 
+## STEP 8 — self-resolution (2h, zero operator engagement)
+
+All 4 `/blocked` alerts sat for ~2 hours with no genuine operator reply (only the generic automated `GIT STATUS RED`
+git-hygiene nudge, unrelated to any of the 4 questions). Per the plan-reconcile SKILL's calibration section ("a marked
+recommendation is usually ratified... continuing to wait indefinitely on low-stakes/already-reasoned items has
+diminishing value"), self-resolved using each question's marked `[WORKER REC]`:
+
+- **BLK-fea4bd0f** → applied. Gated `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s delete-risk todo —
+  `unified-trading-pm@e25f1be94`. **Correction to my own recommendation during execution**: the WORKER REC said "add a
+  BLOCKED-ON marker", but re-checking `_BLOCKED_TOKEN_RE` (the same regex behind this run's `BLOCKED-PREREQUISITES`
+  finding) showed a bespoke `BLOCKED-ON` token isn't recognized either — used `BLOCKED-OPERATOR-DECISION` instead, the
+  token that's actually mechanically functional. Also fixed 3 unrelated pre-existing gate violations surfaced by
+  touching that file.
+- **BLK-3860911c** → applied. Filed `plans/active/issues/cross_cutting_closeout_track_map_coverage_gaps_2026_08_09.md` —
+  `unified-trading-pm@dd71e6c56`.
+- **BLK-1a00c3ce** → applied, with a correction. Attempted to file the spot-check as a todo directly on
+  `pipeline_mode_partition_migration_2026_06_01.md` per the WORKER REC's literal text, then discovered that plan is
+  `locked_by: live-defi-rollout` — reverted that edit (never landed) and filed
+  `plans/active/issues/pipeline_mode_on_disk_partition_codex_disagreement_2026_08_09.md` standalone instead, per the
+  never-touch-a-locked-plan-without-an-operator-ruling HARD RULE — `unified-trading-pm@dd71e6c56`.
+- **BLK-af5841d0** → applied (prose-conversion half only). Filed
+  `plans/active/issues/capability_wizard_analysis_findings_prose_only_work_2026_08_09.md` —
+  `unified-trading-pm@dd71e6c56`. The unlock-plan-ask half (2 locked archive-eligible docs) is intentionally NOT
+  self-resolved — it already reads as a durable pointer in the Archive candidates section below, and unlocking/archiving
+  a `locked_by:` plan is excluded from self-resolution regardless of elapsed wait time.
+
 ## Filed
 
 Every item below is ALSO an active `/blocked` alert (BLK-id noted) unless marked FYI-only (no operator judgment needed,
-just a pointer for the owning tranche).
+just a pointer for the owning tranche). **All 4 are now resolved — see "STEP 8 — self-resolution" above.**
 
 1. **BLK-fea4bd0f** — `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md:110`'s open `[SCRIPT] P2` todo is a
    judgment-call + delete-risk residual scope (fleet-wide script classify/delete/relocate sweep) with NO gating marker,
