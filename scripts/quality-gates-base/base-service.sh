@@ -1094,6 +1094,33 @@ PYEOF
 )
     [[ -n "$SKIP_NO_REASON" ]] && { log_fail "pytest.mark.skip without reason comment — add '# reason: ...' above"; echo "$SKIP_NO_REASON" | head -3; exit 1; }
     log_ok "All pytest.mark.skip have reason comments"
+
+    # ── BATS SHELL TESTS (warn-only, transitional) ──────────────────────────
+    # `.bats` shell-test suites (per-tab-worktree invariants, FF-pull starvation
+    # detection, git-status dirty-count integrity, etc.) were written but never
+    # actually invoked by this gate — CI installs bats-core into the tool cache
+    # but no step ever called `bats tests/`, so a regression in any of them went
+    # undetected. WARN-ONLY initially (mirrors the actionlint transitional
+    # pattern at [5.5] below) since the fleet-wide pass/fail baseline across
+    # every repo's `.bats` files has never been measured; re-harden to a hard
+    # failure once a clean baseline run is confirmed.
+    # SSOT: plans/active/issues/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md
+    _BATS_FILES=()
+    while IFS= read -r -d '' _bf; do _BATS_FILES+=("$_bf"); done \
+        < <(find tests -name "*.bats" -type f -print0 2>/dev/null)
+    if [ "${#_BATS_FILES[@]}" -gt 0 ]; then
+        log_section "BATS SHELL TESTS"
+        if command -v bats &>/dev/null; then
+            if bats "${_BATS_FILES[@]}" 2>&1; then
+                log_ok "BATS tests PASSED (${#_BATS_FILES[@]} file(s))"
+            else
+                log_warn "BATS: ${#_BATS_FILES[@]} file(s) — one or more tests failed (NON-FATAL transitional — re-harden to hard-fail once a clean fleet baseline is confirmed)"
+            fi
+        else
+            log_warn "bats not found on PATH — skipping shell tests (${#_BATS_FILES[@]} .bats file(s) present); install: https://github.com/bats-core/bats-core"
+        fi
+    fi
+
     qg_prof end tests
 fi
 # QG_SLICE=tests finishes here (its one phase is the pytest run above).
