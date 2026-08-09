@@ -21,7 +21,7 @@ summary: >-
   mutation, confirmed via a post-push `git status --short` showing the same 4 modified files unchanged). Reported by
   review (agt-e817dd, msg 4357, 2026-08-08T23:24:25Z), read-only investigation (git status/log only, no writes to slot
   12).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -44,10 +44,20 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-last_updated: 2026-08-08
+  "fix agent-orchestrator@07894aa (_default_worker_alive death-signal cross-check) + reconciliation
+  agent-orchestrator@9a5506f (orphaned-sibling-dirty-repo flag) + backup-branch superseded-verification (slot 5) +
+  post-fix fleet-wide verification (slot 17, 2026-08-09) confirming no recurrence"
+last_updated: 2026-08-09
 locked_since:
 context_scope: [agent-orchestrator/server/dirty_state.py, agent-orchestrator/server/watchdog.py]
 ---
+
+> **ARCHIVED 2026-08-09** — all 4 todos resolved: fixed `_default_worker_alive` to cross-check
+> `tmux_session_lost`/`slot_resume_exhausted`/`spawn_retry_cap_reached` activity events against `last_ping`
+> (`agent-orchestrator@07894aa`), added orphaned-sibling-dirty-repo detection (`agent-orchestrator@9a5506f`), verified
+> the mtds backup branches were superseded by independently re-landed work (no cherry-pick needed), and confirmed
+> post-fix via `/api/activity` that no dead session has since been misclassified `liveness:live`. Original path:
+> `plans/active/issues/protected_live_peer_liveness_misclassifies_dead_session_stranded_wip_2026_08_08.md`.
 
 # `protected_live_peer` liveness check misclassified a confirmed-dead slot-12 session as live, stranding real WIP
 
@@ -145,9 +155,28 @@ context_scope: [agent-orchestrator/server/dirty_state.py, agent-orchestrator/ser
       redundant given the existing type contract, not a bugfix. **Conclusion: zero unique work survives in either backup
       branch — everything is already on `live-defi-rollout`, in equal-or-better form.** No cherry-pick routed; no worker
       dispatch needed. Branches left in place (harmless, non-destructive) — verifying slot 5, 2026-08-09.
-- [ ] [REVIEW] P3. Once todo 1 lands, verify: re-check `/api/activity` for the next slot that hits `tmux_session_lost`
-      -> `slot_resume_exhausted` while dirty, confirm `slot_dirty_state_resolved` no longer classifies it
-      `liveness:live`.
+- [x] ✅ [REVIEW] P3. Once todo 1 lands, verify: re-check `/api/activity` for the next slot that hits
+      `tmux_session_lost` -> `slot_resume_exhausted` while dirty, confirm `slot_dirty_state_resolved` no longer
+      classifies it `liveness:live`. — **Confirmed fixed**, agent-orchestrator@07894aa (landed 2026-08-08 23:52:16Z).
+      Cleanest post-fix case: slot 8, `market-tick-data-service` dirty (2 uncommitted-then-committed files pending),
+      `tmux_session_lost` + `slot_resume_exhausted` (2/2) fired simultaneously at `2026-08-09T01:40:50Z` (task
+      `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02-001` released). The next two `slot_dirty_state_resolved`
+      events for slot 8 — `01:46:49Z` (`action: quarantined`) and `01:46:54Z` (`action: inherited`, orphan commit
+      `b21992e1` pushed) — both classified `liveness: dead`, with **no intervening `live` misfire** in the ~6-minute gap
+      (contrast the original incident: `protected_live_peer`/`live` fired TWICE, including ~14 min after confirmed
+      death). Cross-checked ~18 `slot_resume_exhausted` events fleet-wide since the fix landed (slots
+      4/5/8/10/11/12/14): the large majority (11/18) go straight to a correct `dead`/`absent` classification with zero
+      intervening `live` reads (e.g. slot 12: 4 separate exhaustion cycles between 09:15Z-12:02Z, every one resolved
+      `dead`). A handful of `protected_live_peer`/`live` reads did occur within ~30-60s of an exhaustion event (slots
+      4/5/12/14) — traced each to `classify_maker_liveness`'s separate, pre-triangulation `has_session(claim_session)`
+      short-circuit (`server/worktree_clean_check/_liveness.py`): a `slot_resume_respawned`/`autospawn`/
+      `kick_escalation` cycle had already put a NEW tmux session on the same `orch-slot-N` name by the time the check
+      ran, so the claim's owning session genuinely still existed — a legitimately-live respawn, not the fixed
+      last-ping-override bug (that path never calls `_default_worker_alive` at all). Consistent with that read: every
+      one of those cases self-corrected to `dead`/`absent` within 1-3 min once the fresh attempt also failed (e.g. slot
+      5: `live` at `10:27:54Z` -> `quarantined`/`absent` by `10:29:54Z`; slot 14: `live` at `13:55:10Z`/`13:55:46Z` ->
+      `inherited`/`dead` by `13:58:14Z`) — no case left a confirmed-dead session stranded as `live` indefinitely, the
+      specific work-loss failure mode this issue tracks. No code changes; verification-only.
 
 ## Progress log
 
@@ -170,3 +199,10 @@ context_scope: [agent-orchestrator/server/dirty_state.py, agent-orchestrator/ser
   entry, audit-doc row, an equivalent exception-consolidation helper) or redundant given `_execute_subgraph_query`'s own
   `dict | None` return-type contract. Verdict: SUPERSEDED, safe to drop, no cherry-pick routed. See the checkbox above
   for full citation. `market-tick-data-service` unmodified (verification-only task).
+- 2026-08-09 (slot 17, review-craft worker): Landed todo 4 — all todos now closed (verification only, no code shipped).
+  Confirmed via `/api/activity` that `agent-orchestrator@07894aa` fixed the misclassification: the cleanest post-fix
+  dead-session case (slot 8, `2026-08-09T01:40:50Z` exhaustion) resolved `dead` with zero intervening `live` misfires,
+  and a fleet-wide sweep of ~18 post-fix exhaustion events found no case where a confirmed-dead session was left
+  stranded as `live` (a few near-simultaneous `live` reads traced to the separate `has_session()` fresh-respawn
+  short-circuit, not the fixed bug, and all self-corrected to `dead` within minutes). See the checkbox above for full
+  citation.

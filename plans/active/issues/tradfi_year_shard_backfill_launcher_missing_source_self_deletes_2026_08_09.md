@@ -132,8 +132,8 @@ with every observed death landing at 15-23 min post-last-log-line. **Not yet con
 this can't be verified post-hoc for this run) — this is the best-fit hypothesis from timing alone, not a traced code
 path. If confirmed, this is a genuine **false-positive zombie classification**: the watchdog can't distinguish
 "legitimately silent mid-fetch" from "actually dead," and kills real, live, in-progress work — the same class of bug as
-`issues/protected_live_peer_liveness_misclassifies_dead_session_stranded_wip_2026_08_08.md` (a different subsystem, same
-underlying pattern: liveness-by-log-silence is not liveness).
+`/plans/archive/2026_08/issues/protected_live_peer_liveness_misclassifies_dead_session_stranded_wip_2026_08_08.md`
+(archived, resolved — a different subsystem, same underlying pattern: liveness-by-log-silence is not liveness).
 
 ## Third finding (2026-08-09T~08:38-09:15Z, slot-22) — manifest count-check query was itself broken (false 0-row absence), true current coverage is far better than "all 5 died" implies
 
