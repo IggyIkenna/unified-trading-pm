@@ -104,13 +104,20 @@ and only needed a spot-check.
 
 # Recommended decision
 
-- [ ] [INFRA] P1. Confirm whether
+- [x] ✅ [INFRA] P1. Confirm whether
       `gs://market-data-tick-cefi-prd-central-element-323112/_index/audit/legacy_dup_delete_list_cefi.parquet` currently
       exists (single `gcs_describe_object` call). If absent, run
       `migration_orphan_sweep.py --asset-group cefi --workers 32 --report-out gs://.../orphan_sweep_cefi_fresh_<date>.parquet`
       on an in-region VM (this IS the sanctioned single-walk tool for this exact purpose, CF-17) to regenerate a
       trustworthy class-B candidate list — this alone is a multi-hour run given cefi's corpus size. Repo:
-      instruments-service.
+      instruments-service. — **EXISTS** (confirmed via a live `gcs_describe_object` call, slot-14, 2026-08-09):
+      `size=33860018` bytes, `last_modified=2026-07-02T20:39:21.182000+00:00`, `crc32c=g+UWHw==`,
+      `generation=1781804372051559`. Object is present so the "if absent" regenerate branch does not trigger — no
+      `migration_orphan_sweep.py` VM run needed for THIS todo. Caveat for the next todo (VM-launcher wiring + dry-run):
+      this list's `last_modified` (2026-07-02) predates the 2026-07-13 re-audit that excluded cefi from scope, so its
+      content freshness is still UNVERIFIED beyond bare existence — the dry-run's own verify pass (fresh
+      `gcs_describe_object` + crc32c re-check per object, per `cleanup_legacy_twins.py`) is what actually re-validates
+      it, not this existence check alone.
 - [ ] [INFRA] P1. Add a new `cefi-legacy-dup-cleanup` category to `launch-canonical-migration-vm.sh` (reuses the
       already-registered `canonical-migration-cefi-` VM_PREFIX_TO_BUCKET prefix, no new registry entry): dry ->
       `cleanup_legacy_twins.py --asset-group cefi --report-uri <candidate-list> --workers 32` (no `--apply`); full ->
@@ -135,3 +142,9 @@ and only needed a spot-check.
   dispatcher handed it to slot-11 anyway even though its done_definition (cite a completed full-run's post-delete
   verification) is unsatisfiable right now. Filed BLK-33bbcb2a recommending a dependency gate be added rather than
   fabricating a flip. Checkbox intentionally left unflipped.
+- 2026-08-09 (slot-14, task `cefi_legacy_dup_delete_tooling_gap-d2c76ca9ef30`): ran the single `gcs_describe_object`
+  call on `legacy_dup_delete_list_cefi.parquet` — it EXISTS (33,860,018 bytes, `last_modified=2026-07-02T20:39:21Z`,
+  `crc32c=g+UWHw==`, generation `1781804372051559`). Flipped todo 1. No `migration_orphan_sweep.py` VM run was triggered
+  since the "if absent" branch didn't fire. Flagged for the next todo: the list's mtime predates the 2026-07-13 re-audit
+  that excluded cefi, so freshness beyond bare existence is still unverified — that's the dry-run verify pass's job, not
+  this todo's.
