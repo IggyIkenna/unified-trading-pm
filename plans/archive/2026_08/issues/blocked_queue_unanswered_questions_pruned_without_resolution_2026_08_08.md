@@ -26,7 +26,7 @@ summary: >
   RULES.md §5 tells workers NOT to do ("don't re-ask a pending question"). This also means any workspace metric counting
   "resolved blocked-questions" from the absence of a blocked_id in the live queue would be silently wrong —
   pruned-unanswered and answered-and-cleared are indistinguishable from the outside.
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -52,7 +52,7 @@ source:
   data_engineering worker slot-19, 2026-08-08, discovered while working the `defi_expected_unattempted_backlog_1m`
   finalize plan's `[DOC]` archival todo — 4th consecutive dispatch to hit the same locked-plan unlock gate, 3rd
   consecutive `/blocked` question filed against it.
-resolved_by:
+resolved_by: agent-orchestrator@eba48f0
 depends_on: []
 locked_by:
 context_scope:
@@ -133,11 +133,19 @@ explicitly expired-with-signal.
       mechanism exists anywhere in `blocked_reconcile.py`/`activity.py`/`orm.py`. (The separate `classify_timeout` path,
       `:319-344`, kills the SLOT and requeues the TASK but explicitly does NOT touch `answered_at` —
       `_timeout_blocked_slot`'s docstring, line 391 — so it does not explain the disappearance.)
-- [ ] [BACKEND] P1. If a prune/expiry mechanism is confirmed: add a notification path so the filing slot/task learns its
-      question expired unanswered (a message on the slot's next `/progress`/`/heartbeat`, analogous to how an answer is
-      currently delivered), instead of silent disappearance. If the removal is a bug rather than a designed behavior,
+- [x] ✅ [BACKEND] P1. If a prune/expiry mechanism is confirmed: add a notification path so the filing slot/task learns
+      its question expired unanswered (a message on the slot's next `/progress`/`/heartbeat`, analogous to how an answer
+      is currently delivered), instead of silent disappearance. If the removal is a bug rather than a designed behavior,
       fix the condition so `answered_at: null` entries are never removed except by an explicit expiry-with-signal path.
-      (repo: agent-orchestrator)
+      (repo: agent-orchestrator) — agent-orchestrator@eba48f0: `reconcile_once()`'s retirement branch
+      (`blocked_reconcile.py`) now calls `enqueue_message()` right after `answer_blocked(..., "auto-retire")`, mirroring
+      the sync-path pattern immediately below it — a retired question now delivers
+      `"[auto-retire] BLOCKED Q retired:     <retire_text>"` to the filing slot/task on its next
+      `/progress`/`/heartbeat`, same delivery channel an answer already uses. Root cause was never a prune/TTL/size-cap
+      (todo 1 already established that) — it's `classify_retirement()`'s three machine-checkable triggers auto-answering
+      a row with no notification at all; this todo closes that specific gap. New regression test:
+      `test_retirement_enqueues_a_message_to_the_filing_slot_and_task` (tests/test_blocked_reconcile.py). Full local QG
+      green (2914 passed).
 
 ## Progress Log
 
@@ -177,3 +185,17 @@ explicitly expired-with-signal.
   retirement branch to enqueue a message to `row.slot_id`/`row.task_id` carrying the `retire_text` reason, mirroring the
   sync path's existing pattern, so a retirement becomes visibly distinguishable from silent loss. Handing off todo 2 to
   the next dispatch with this citation — out of scope for this task (scoped to todo 1 only per its brief).
+- **2026-08-09 (slot 18, backend_engineer)**: Completed todo 2 — shipped `agent-orchestrator@eba48f0`: the retirement
+  branch in `reconcile_once()` now calls `enqueue_message()` immediately after `answer_blocked(..., "auto-retire")`,
+  identical in shape to the sync-path call a few lines below it, so a retired `BlockedRow` delivers
+  `"[auto-retire] BLOCKED Q retired: <retire_text>"` to the filing slot/task on its next `/progress`/`/heartbeat` — the
+  same channel an answered question already uses. Added regression test
+  `test_retirement_enqueues_a_message_to_the_filing_slot_and_task`. Full local `quality-gates.sh` green (2914 passed);
+  post-push ancestry verified on `live-defi-rollout`. Both todos now done, doc unlocked (`locked_by:` empty) — running
+  the 6-step archival ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) in the same
+  session: no deferred items to migrate; no codex contract change (the fix is an internal implementation detail already
+  documented in `blocked_reconcile.py`'s own docstrings, not a tracked SSOT contract); one corpus referrer
+  (`plans/active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md`, a bare path citation, no fact
+  to migrate) repointed to the archive path in the same session; archiving to
+  `plans/archive/2026_08/issues/blocked_queue_unanswered_questions_pruned_without_resolution_2026_08_08.md` as a
+  separate follow-up commit per the "never combine checkbox flip with git mv" rule.
