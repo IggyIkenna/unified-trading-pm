@@ -861,3 +861,12 @@ offered to the queue once these are the only real blockers.
   sole open todo (Track H's honest-coverage denominator) remains gated on 2 prerequisites that don't exist yet
   (`odds_horizon_bucket` MDPS reprocess re-run, `batch_footystats` copy+swap apply script) — confirmed still outstanding
   per this doc's own 2026-07-28 re-dispatch checks, no newer evidence contradicts that.
+
+- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — re-checked against today's accumulated
+  precedents. The sole open todo (ship Track H's denominator once its 2 blockers land) is already tracked via the
+  dedicated `sports_track_h_denominator_gated_2026_07_28.md` / `sports_track_h_denominator_prereqs_2026_07_28.md` pair,
+  itself dependency-gated on an unrelated `market-tick-data-service` QG-red repo-blocker (`RB-166e706f`) not yet
+  confirmed cleared — per `plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md`'s "Parked —
+  dependency-gated" entry (today). That same ledger separately flags this doc's own untracked residual (the human-gated
+  final delete of ~256,954 old non-canonical objects) for a future dedicated delete-safety pass, not a batch todo — a
+  new finding, not a reason to flip. No flip, no extraction (would duplicate the tracked prereqs pair).

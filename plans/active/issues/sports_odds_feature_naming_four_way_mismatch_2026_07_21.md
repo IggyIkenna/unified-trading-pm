@@ -171,3 +171,10 @@ should be tracked via the (still all-open) canonicalization plan.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (sports tranche) — re-verified, unchanged since 2026-08-01; sole
   open todo remains a status pointer at the sibling `sports_odds_feature_naming_canonicalization_2026_07_21.md`
   migration plan (itself correctly `assigned_vm: NA`), no independent dispatchable content here.
+
+- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — re-checked against
+  `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s explicit "Time-gated"/"Too-large-or-risky-for-a-batch-todo"
+  classification of this exact doc: the sole open todo is a status pointer at the real 3-repo migration
+  (`sports_odds_feature_naming_canonicalization_2026_07_21.md`, 8/9 todos still open) — a cross-repo schema change with
+  real blast radius (UAC schema + features-service producer + ml-service loader + strategy-service consumers), needing
+  its own dedicated migration plan, not a bounded satellite-batch item. No flip, no extraction.

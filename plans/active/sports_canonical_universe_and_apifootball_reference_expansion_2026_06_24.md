@@ -594,3 +594,12 @@ materialized.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item remains dependency-blocked. Note: `locked_by`
   carries a branch name rather than an agent/slot id — a tooling anomaly worth a separate check, not blocking.
+
+- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — the sole open E8 legacy-delete todo is split: the
+  safe prep half (register a `sports-drop-stale` launcher category + run a real dry-run census) was already extracted
+  into `sports_satellite_ao_dispatch_batch12_2026_08_09.md` (today) with its finalize twin's own reconciliation todo
+  (`sports_satellite_ao_dispatch_batch12_2026_08_09_finalize.md`); the actual `--drop-stale`/`--apply` firing remains a
+  genuine operator sign-off residual per `plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md`'s "Parked
+  — operator-gated" entry (hard-stop #2, reversibility-qualified per §3a but not yet exercised for this specific
+  population — needs the dry-run census's Part-5 twin-coverage proof first). No flip, no further extraction (would
+  duplicate batch12).

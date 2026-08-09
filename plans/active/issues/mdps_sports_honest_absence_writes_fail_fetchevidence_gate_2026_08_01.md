@@ -469,3 +469,14 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   `results=50 failed=0`. Both match the post-fix expectation. No code change needed in this pass — the fix was already
   shipped (`market-data-processing-service@33b323c`); this pass closes the findings-3+4 investigation the batch9 [DIAG]
   P1 todo tracked.
+
+- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — re-checked all 4 open items against today's
+  accumulated precedents (RECLASSIFY-eligibility, not just staleness). All 4 are already extracted and actively
+  dispatched via `sports_satellite_ao_dispatch_batch9_2026_08_04.md`: the `[DATA] P2` implement-option-A todo and the
+  combined finding-5 `[CODE] P2` fix+grep todo are both still open there, in-flight; the `[SCRIPT] P3` no-relaunch hold
+  is correctly NOT batched (a standing prohibition, not itself executable work) and stays sequenced behind that same
+  batch9 item. Independently reconfirmed the same day by
+  `plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md`'s "Parked — dependency-gated" entry ("its
+  `[SCRIPT] P3` relaunch-and-confirm todo is explicitly sequenced after its own `[DATA] P2` fix, which is itself already
+  claimed by an active `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo. Re-check once batch9 lands."). Flipping
+  or re-extracting here would duplicate live AO dispatch. No flip.

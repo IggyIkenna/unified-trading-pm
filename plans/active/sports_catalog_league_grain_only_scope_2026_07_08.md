@@ -216,3 +216,9 @@ honest-coverage denominator math, not a same-file fix.
   `sports_taxonomy_p3_consumers_2026_08_08.md` is `assigned_vm: planning`, status: active, same `parent_epic:
   sports_master` — flipping this doc too would dispatch a duplicate. Doc stays NA; checkboxes flip via that plan's
   finalize sibling once shipped. Citation-only, no reclassification.
+
+- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA-STALE, re-confirmed — unchanged since the round7 2026-08-08
+  verdict. All 4 open todos remain resolved by the dated `✅ OPERATOR RULING 2026-08-08` banner and carried by
+  `sports_taxonomy_p3_consumers_2026_08_08.md`, independently re-confirmed today by
+  `sports_satellite_ao_dispatch_batch11_2026_08_09.md` ("all 4 open todos resolved by a dated..."). Checkboxes flip via
+  that plan's finalize sibling. No flip here.
