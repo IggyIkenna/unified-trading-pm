@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 307 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 306 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -131,7 +131,7 @@ by hand._
   via depends_on + gate_on_depends: true until that doc's 2 remaining todos (P0 vendor-catalog request gate; P1
   `--apply`…
 
-### defi (38)
+### defi (37)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -249,10 +249,6 @@ by hand._
 - [`lst_rate_honest_coverage_2026_07_21`](./lst_rate_honest_coverage_2026_07_21.md) — Operator-directed (2026-07-21)
   build to bring the four LST exchange-rate surfaces to HONEST COVERAGE end-to-end so the DeFi interest PnL can sit on
   real data. #1 CEX spot = a Tardis backfill (denominator already complete — adding pairs is…
-- [`recursive_loop_orchestrator_wiring_2026_08_09`](./recursive_loop_orchestrator_wiring_2026_08_09.md) —
-  CARRY_RECURSIVE_BORROW_LENDING_ONLY and CARRY_BASIS_PERP_INV are fully catalogued but permanently stubbed —
-  CarryRecursiveStakedEngine.on_tick() returns [] whenever staking_yield_enabled=false, which both archetypes' catalog
-  rows always…
 - [`recursive_loop_orchestrator_wiring_finalize_2026_08_09`](./recursive_loop_orchestrator_wiring_finalize_2026_08_09.md)
   — Gated finalize companion to recursive_loop_orchestrator_wiring_2026_08_09.md. Reconciles every completed todo's
   evidence back into the source issue doc's [DESIGN] todo, re-checks the Family-2 hedge-poller audit's deferred outcome,
