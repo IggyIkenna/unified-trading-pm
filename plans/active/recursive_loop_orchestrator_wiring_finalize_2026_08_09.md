@@ -58,11 +58,17 @@ context_scope:
       `RecursiveLoopOrchestrator` translation-layer todo — flip it `[x]` done, citing every repo@sha this plan produced.
       Repo: unified-trading-pm. Done-when: the source doc's todo is flipped with a full evidence trail, and re-running
       each cited test independently still passes.
-- [ ] [REVIEW] P2. Re-check the Family-2 hedge-poller audit todo's outcome (recursive_loop_orchestrator_wiring's 6th
+- [x] ✅ [REVIEW] P2. Re-check the Family-2 hedge-poller audit todo's outcome (recursive_loop_orchestrator_wiring's 6th
       todo): if it found no suitable poller existed and filed a follow-up `[DESIGN]` todo, confirm that follow-up was
       actually filed (not just mentioned in prose) as a real `- [ ]` item somewhere trackable — file it now if it was
       described but never actually written as a checkbox. Repo: unified-trading-pm. Done-when: the follow-up either
-      doesn't apply (a poller was found and wired) or exists as a real tracked `- [ ]` todo.
+      doesn't apply (a poller was found and wired) or exists as a real tracked `- [ ]` todo. — unified-trading-pm.
+      Independently re-verified 2026-08-09 (slot 29, review): the parent plan's todo 6 outcome is
+      `(b) no suitable     poller exists` (confirmed via the parent plan's own Progress Log + Todos section —
+      `HealthFactorMonitor` has zero production callers, no Cloud-Scheduler endpoint exists); the required follow-up
+      `[DESIGN]` todo IS a real trackable `- [ ]` checkbox in this same file (todo 4 below, "Decide + scope the RIGHT
+      mechanism..."), not prose-only — confirmed via direct grep of the live file content, not a trust of the prior
+      session's claim.
 - [ ] [DOC] P1. Run the standard 6-step archival ritual on `recursive_loop_orchestrator_wiring_2026_08_09.md` once every
       one of its todos is `[x]` and unlocked: move it to `plans/archive/2026_08/`, fix every corpus referrer path
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), and confirm `run_hygiene_sweep.sh` stays
@@ -112,3 +118,6 @@ context_scope:
   trail. Found + recorded (non-blocking) two minor evidence-line inaccuracies in the parent plan's Progress Log: the
   Family-1 `on_tick()` test file has 5 tests not the claimed 6; `test_recursive_loop_runner.py` has 11 tests not the
   claimed 13 — both files are correct and complete, only the narrated counts were off; not worth a follow-up todo.
+- **2026-08-09 (slot 29, review)**: Todo 2 shipped — independently re-checked the parent plan's todo 6 (Family-2
+  hedge-poller audit) outcome and confirmed the required follow-up `[DESIGN]` todo (todo 4 in this file) is a genuine
+  tracked `- [ ]` checkbox, not prose-only. No new todo needed — slot 8 already filed it correctly on 2026-08-09.
