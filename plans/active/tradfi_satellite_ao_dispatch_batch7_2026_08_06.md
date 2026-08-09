@@ -148,22 +148,24 @@ pass (not a delta) per this dispatch's autonomous-mode instructions. batch6 itse
       `issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md`. Source:
       `issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`.
 
-- [ ] [DATA] P2. **Harden `migrate_tradfi_canonical_2026_07.py` against 2 confirmed recurrence risks — combined into ONE
-      todo because both edit the same file.** (1) `_rel()` (lines ~159-163) unconditionally does `path.find(marker)`
-      with no `_quarantine/`-prefix guard, so re-running the migration against an already-quarantined object silently
-      reverts its computed rel-path to the pre-quarantine location instead of recognizing it's already quarantined —
-      confirmed still live via direct source read 2026-08-06. Add a `_quarantine/`-prefix-aware branch so an
-      already-quarantined object's rel path is computed correctly. This bug is inherited by
-      `rebundle_tradfi_chains_2026_07.py` too (confirmed: it imports `_rel` directly from this module), so the one-file
-      fix closes both. (2) The script has zero venue-token validation against `VENUES_BY_ASSET_GROUP['tradfi']` — unlike
-      its predecessor `migrate_tradfi_to_hive.py`, which has a `_VENUE_REMAP` dict (confirmed via grep diff 2026-08-06:
-      zero hits in the current script, present in the predecessor) — so a future run that encounters a wrong/stray venue
-      token (as already happened once for the KRW-USD FX case) would again promote it verbatim into a canonical GCS
-      path + manifest row with no guard. Add a `_VENUE_REMAP`-equivalent normalization/validation step mirroring the
-      predecessor's pattern. Repo: market-tick-data-service. **Done when**: both fixes are shipped with regression tests
-      (one exercising an already-quarantined-object `_rel()` call, one exercising a non-canonical venue token being
-      rejected/remapped instead of silently promoted), and `quality-gates.sh` is green. Source:
-      `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md`,
+- [x] ✅ [DATA] P2. **DONE 2026-08-09 — `market-tick-data-service@ff6c2f4a` (hardening) +
+      `market-tick-data-service@e72feb7c` (unrelated STEP 5.95 unblock, pushed sha for the locally-committed `8c5fe244`,
+      amended by quickmerge to add the `Quickmerge:` trailer).** Harden `migrate_tradfi_canonical_2026_07.py` against 2
+      confirmed recurrence risks — combined into ONE todo because both edit the same file.** (1) `_rel()` (lines
+      ~159-163) unconditionally does `path.find(marker)` with no `_quarantine/`-prefix guard, so re-running the
+      migration against an already-quarantined object silently reverts its computed rel-path to the pre-quarantine
+      location instead of recognizing it's already quarantined — confirmed still live via direct source read 2026-08-06.
+      Add a `_quarantine/`-prefix-aware branch so an already-quarantined object's rel path is computed correctly. This
+      bug is inherited by `rebundle_tradfi_chains_2026_07.py` too (confirmed: it imports `_rel` directly from this
+      module), so the one-file fix closes both. (2) The script has zero venue-token validation against
+      `VENUES_BY_ASSET_GROUP['tradfi']` — unlike its predecessor `migrate_tradfi_to_hive.py`, which has a `_VENUE_REMAP`
+      dict (confirmed via grep diff 2026-08-06: zero hits in the current script, present in the predecessor) — so a
+      future run that encounters a wrong/stray venue token (as already happened once for the KRW-USD FX case) would
+      again promote it verbatim into a canonical GCS path + manifest row with no guard. Add a `_VENUE_REMAP`-equivalent
+      normalization/validation step mirroring the predecessor's pattern. Repo: market-tick-data-service. **Done when**:
+      both fixes are shipped with regression tests (one exercising an already-quarantined-object `_rel()` call, one
+      exercising a non-canonical venue token being rejected/remapped instead of silently promoted), and
+      `quality-gates.sh` is green. Source: `issues/tradfi_recovery_quarantine_registration_gap_2026_07_27.md`,
       `issues/tradfi_fx_krw_usd_triplicate_venue_partitions_2026_08_04.md`.
 
 - [ ] [DATA] P2. **Investigate why the tradfi legacy-twin bucket-delete dry-run measures 0% canonical-twin coverage
@@ -425,6 +427,16 @@ mirroring the batch1-6 finalize pattern.
   `scripts/quickmerge.sh --agent --files 'scripts/one_offs/verify_defi_glued_ids_2026_07_24.py'` (ships both commits),
   verify `git rev-list --count origin/live-defi-rollout..HEAD == 0`, then flip todo 2 above with both SHAs (`ff6c2f4a` +
   `8c5fe244`) and call `/done` for `tradfi_satellite_ao_dispatch_batch7-002`.
+- **slot-3 worker 2026-08-09** (task `tradfi_satellite_ao_dispatch_batch7-002`, DONE): fresh Pass-1 `quality-gates.sh`
+  re-run (`PYRIGHT_TIMEOUT=420`) went fully green against HEAD `8c5fe244` — STEP 5.95 (TID251 ratchet) explicitly passed
+  this time, sentinel `.qg_last_passed_sha` written matching HEAD. Pass-2
+  `scripts/quickmerge.sh --agent --files 'scripts/one_offs/verify_defi_glued_ids_2026_07_24.py'` shipped both commits;
+  quickmerge amended the tip commit to add the missing `Quickmerge: agent` trailer (local `8c5fe244` → pushed
+  `e72feb7c`, content unchanged — verified via `git show --stat HEAD`: 1 file, 1 insertion/3 deletions, matches the
+  intended noqa-shortening diff exactly, despite quickmerge's own benign message-mismatch WARN which only flags the
+  commit SUBJECT text, not tree content). Post-push: `git rev-list --count origin/live-defi-rollout..HEAD` = 0,
+  `git status --porcelain` empty. Both fixes (quarantine-prefix `_rel()` guard + `_VENUE_REMAP`-equivalent venue
+  validation, 33 tests) and the STEP 5.95 unblock are now on `origin/live-defi-rollout`.
 
 ## Codex SSOTs
 
