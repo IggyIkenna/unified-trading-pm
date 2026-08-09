@@ -24,7 +24,7 @@ stage: [data]
 repos:
   [unified-trading-pm, unified-trading-library, deployment-service, features-service, execution-service, ml-service]
 scope: [engineer]
-tags: [bucket-canonicalisation, quality-gate, ratchet, baseline, tech-debt, gcs]
+tags: [bucket-canonicalisation, quality-gate, ratchet, baseline, tech-debt, gcs, round-9-reclassify]
 related:
   [
     ../sports_legacy_bucket_cutover_2026_07_16.md,
@@ -35,8 +35,8 @@ created: 2026-07-16
 author: unknown
 last_updated: 2026-07-16
 parent_epic: sports_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 1
@@ -121,7 +121,13 @@ is in this cutover's delete scope** (`instruments-store-sports` / `market-data-t
 
 - [ ] [INFRA] P2. **Pay down the 15 baselined legacy bucket-name TEMPLATE literals** (features-onchain/calendar/
       store/sports + instruments-store-tradfi) — route each through `resolve_bucket_name(...)` and remove its baseline
-      entry as that asset group reaches its own legacy-bucket decommission; none has been paid down yet.
+      entry. **Timing-gate CLEARED 2026-08-09 (round-9 sweep)**: all 5 flat legacy bucket names are confirmed 404 (live
+      `gcloud storage buckets describe`, re-verified this pass — matches `bucket_estate_consolidation_closeout_2026_07_24.md`'s
+      2026-07-31 finding) — the code paths referencing these literals are dead/unreachable, so this is now a pure,
+      zero-live-risk code cleanup (repoint each of the 15 (file, literal) locations at
+      `check_no_explicit_project_id_bucket_baseline.json` through `resolve_bucket_name(...)`, remove the corresponding
+      baseline entry, confirm `check_no_explicit_project_id_bucket.py` still passes with a shrunk baseline). Done when:
+      baseline JSON is empty (or reduced to only genuinely-still-live entries, if any surface) and the QG passes clean.
 
 ## Progress Log
 
@@ -134,3 +140,21 @@ is in this cutover's delete scope** (`instruments-store-sports` / `market-data-t
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item remains dependency-blocked.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **round-9 RECLASSIFY sweep 2026-08-09**: RECLASSIFY — `assigned_vm: NA → planning`,
+  `execution_scope: local-only → orchestrator-agent`. The sole open todo's timing-gate ("as each asset group reaches
+  its own legacy-bucket decommission") was carried forward as still-open by every prior audit
+  (na-eligibility-audit 2026-07-30/08-07, infra_consolidated_closeout 2026-08-01) — but
+  `bucket_estate_consolidation_closeout_2026_07_24.md`'s 2026-07-31 todo already found all 5 flat legacy bucket names
+  (`features-onchain`/`features-calendar`/`features-store`/`features-sports`/`instruments-store-tradfi`-
+  central-element-323112) return 404 live, and this pass independently re-verified the same result today (fresh
+  `gcloud storage buckets describe` on all 5, all 404). No prior pass connected that finding to THIS doc's own gate —
+  it was recorded as a reason the risk class is lower, not as clearing the blocker. Re-reading the Disposition section:
+  the gate's purpose was to avoid touching code for a bucket an asset group might still be actively reading/writing
+  during its own migration; with the buckets already deleted, that risk no longer exists — the remaining work is a
+  pure, zero-live-risk code cleanup (repoint 15 literal locations through `resolve_bucket_name(...)`, shrink the
+  baseline). **Conflict-check**: no `assigned_vm: planning` plan or `infra_satellite_ao_dispatch_batch*` doc
+  (batch6/7/9/10/11/12, the current corpus) claims this item; `infra_consolidated_closeout_2026_07_25.md` only
+  name-checks this doc for linkage-discoverability, does not claim the work. Single-todo doc — per the established
+  "single-todo carve-out" precedent (`infra_consolidated_closeout_2026_07_25.md`'s batch4 note: "no finalize twin per
+  the single-todo carve-out"), no separate finalize twin authored; this doc IS the dispatchable unit and archives
+  directly once its one todo lands.
