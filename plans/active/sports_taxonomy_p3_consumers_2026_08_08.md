@@ -237,3 +237,26 @@ spelling variant survives, which is the entire point of the panel". It does not.
   commit's own already-QG-green unit tests exercising cefi/defi/tradfi through the identical function, and confirming
   all four sibling AGs are fully registered in UAC's `VENUES_BY_ASSET_GROUP`/ `DATA_TYPES_BY_ASSET_GROUP`. No follow-up
   issue docs filed (nothing material to track).
+
+- **2026-08-09 (slot 15)** — Dispatched the Arbitrage section's second todo ("Make the relocated series consume the
+  CORRECTED operator-group guard"), but its prerequisite — the FIRST todo in the same section ("Relocate
+  `arbitrage_opportunity` from market-data to the signals/features layer with a real multi-venue key") — is still
+  unchecked and genuinely not done:
+  `market-data-processing-service/market_data_processing_service/app/adapters/sports/ arbitrage_adapter.py::SportsArbitrageAdapter`
+  still writes the `arbitrage_opportunity` MDPS candle with a single-venue stamp
+  (`venue_arr = info.get("venue", "UNKNOWN")`) and picks best-odds-per-outcome across ALL bookmakers with **no**
+  operator-group filtering at all — the "relocated series" this second todo needs to modify does not exist yet. (Two
+  pre-existing, unrelated arb code paths were checked and ruled out as candidates: (1)
+  `strategy-service/strategy_service/adapters/sports/arbitrage_detector.py` is a live signals-layer 3-way detector that
+  already imports `arb_legs_are_independent` from the CURRENT `unified-api-contracts` `arb_config.py` (which already
+  carries both e080ef74 and b9a0be80, plus a later prune commit `1a96c482`) — it is correctly guarded today, but it is
+  not the 13-day `arbitrage_opportunity` history series this plan's first todo is about relocating; (2)
+  `features-service/features_service/sports/arb/{arb_calculator.py,vig.py}` computes unrelated per-fixture ML features
+  (`arb_percent`/`eligible_pair_count`/`arb_duration_seconds`) with zero operator-group awareness — also not the
+  relocated series.) This plan has no `sequential: true` and no per-todo prereq syntax (CLAUDE.md: prereqs come only
+  from `sequential`/`gate_on_depends`), so the two todos dispatch independently even though the second is a hard
+  content-dependency on the first's output — an authoring gap in this specific arb sub-chain, not a data problem.
+  Skipping this todo back to the queue (`reason_code: GATED`) rather than absorbing the much larger P0 relocation scope
+  into a 1h P1 task. Whoever picks up the first todo should apply the operator-group guard (`arb_config.py`'s
+  `arb_legs_are_independent`, already correct) to the new series AS PART of building it, which would satisfy both todos
+  in one pass — or a future dispatch of this second todo should re-check whether the first has landed since this note.
