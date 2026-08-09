@@ -926,25 +926,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   periodically by a separate consolidator job, not live per-VM shards — a flat reading with fresh run.log activity is
   expected lag, NOT a stall; only flag if it stays flat across 2+ consecutive ticks. smallchunk9 cleared chunk 18→ now
   chunk 22/451, still 26 total `CHUNK_FAILED` (zero new). Both healthy, no action.
-- **02:56Z — did a milestone-compaction pass** (this doc had hit 947/1000 lines): consolidated 2 long runs of routine
-  tick-by-tick entries (17:10-20:52Z, 23:02-00:38Z) into 2 summary paragraphs, freed ~19 lines. Also: real forward
-  movement confirmed (census flat-reading concern from 02:10Z resolved) — needed **48,566 → 48,521** (-45, consolidator
-  catchup). smallchunk9 chunk 25/451, still 26 total `CHUNK_FAILED` (zero new), fresh — right at the edge of chunk 26
-  (the most-recurring death site, 3x). Also this tick: recovered a genuine push-integrity issue on this heavily
-  multi-agent-contended checkout (a stale duplicate commit with wrong content had landed on origin from an earlier
-  confused retry, plus an untracked-file path collision blocked the rebase) — verified content match against origin
-  directly (`ahead=0/behind=0`) rather than trusting `safe-doc-push.sh`'s own success message, which has a blind spot
-  when a file is already committed locally but unpushed.
-- **03:22Z-04:13Z (3 routine ticks, compacted).** smallchunk9 stayed in chunk 26 throughout (`date=2020-10-09`),
-  climbing 29→40 `CHUNK_FAILED` (in-range/expected); each check's heartbeat BLOB confirmed genuinely alive even when
-  run.log text looked briefly stale (GCS flush-buffering, not a hang — this is now the standing diagnostic: trust the
-  heartbeat blob over run.log text staleness). FIXTURE_LINEUPS stayed flat at needed=48,521 all 3 ticks despite
-  confirmed fresh `ManifestWriter` writes each check — initially attributed to simple consolidator lag.
-- **04:40Z-05:11Z — census flat-streak investigated then SELF-RESOLVED (compacted).** Traced the ~2h15m-flat reading to
-  the consolidator (`uts-prod-manifest-consolidator-instruments-sports`): real merges take ~11-12min vs its ~1min cron,
-  so most ticks no-op on a held lock; found a `shards_listed=12`→`shards_downloaded=7` gap in one cycle (cause
-  unresolved, not chased further — data itself confirmed safe via genuine per-VM shard writes throughout). At 05:11Z
-  needed finally moved (48,521→48,432) — confirms it was just an unusually long delay, not a bug. No further action.
+- **02:56Z-05:11Z (compacted further).** Push-integrity issue recovered (verify `ahead=0/behind=0` independently, don't
+  trust `safe-doc-push.sh` alone). smallchunk9 climbed chunk 25→26 cleanly through the death chunk (29→51
+  `CHUNK_FAILED`, in-range), heartbeat blob confirmed alive throughout even when run.log text briefly lagged (standing
+  diagnostic: trust heartbeat blob over run.log staleness). FIXTURE_LINEUPS's ~2h15m flat census traced to the
+  consolidator (real merges ~11-15min due to lock contention; found an unresolved `shards_listed=12`→`downloaded=7` gap,
+  data itself confirmed safe) — self-resolved at 05:11Z (48,566→48,432 net).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
 - **05:39Z — `smallchunk9` was silently replaced by an AUTOMATED relaunch; cause of the original's death is
   UNKNOWN/unrecoverable, and both forensic logs were destroyed by the reuse.** Found via
@@ -965,3 +952,15 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   will skip-fast re-verify that stretch, no data loss, just some redundant work). No relaunch action needed from me —
   already recovered. FIXTURE_LINEUPS needed **48,432 → 47,947** (-485, real, lag fully resolved), heartbeat live. Both
   healthy.
+- **07:15Z — NEW failure mode found: run.log's GCS-tee upload can silently stall while the VM stays genuinely alive by
+  every other signal — killed and relaunched (unverifiable, not confirmed-dead).** New smallchunk9's `run.log` content
+  froze at `05:59:40Z` (confirmed via direct object metadata, `Update Time` unchanged) — but its `WATCHDOG_TRACE.log`
+  (separate GCS path) showed continuous LOCAL file-size growth up to `07:15:16Z` (essentially live), meaning the on-VM
+  process was very likely still running — just its upload of `run.log` to GCS had broken, specifically. This is DISTINCT
+  from both prior patterns: unlike a silent hang, the heartbeat blob AND watchdog trace stayed live; unlike simple GCS
+  flush-lag (usually <10min), this was 76+min. Without SSH, I could not distinguish "still making real chunk progress,
+  just blind to me" from "stuck in some other loop that keeps churning local log bytes" — killed it rather than keep
+  trusting an unverifiable signal (9 `CHUNK_FAILED` already on chunk 1 was also unusually high for a
+  non-historically-dangerous chunk). Relaunched as **`mtds-backfill-odds-smallchunk10-20260809`** (timestamp-suffixed
+  this time, per the naming lesson from the last incident). Full detail:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`.

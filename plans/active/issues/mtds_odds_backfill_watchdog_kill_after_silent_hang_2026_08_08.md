@@ -271,3 +271,26 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   this campaign**: reintroduce a timestamp suffix (matching the original `smallchunk2-20260807` convention) so
   same-named auto-relaunches don't erase the evidence trail — this directly affects todo 1's feasibility (catching a
   live hang is moot if the evidence gets overwritten before anyone reads it).
+
+- **2026-08-09T07:15Z — a GENUINELY NEW failure mode, distinct from both the silent-hang pattern above AND the OOM-retry
+  pattern: `run.log`'s own GCS-tee upload can silently stall while every other liveness signal stays live.** The
+  (auto-relaunched) `smallchunk9` from the entry above had its `run.log` GCS object frozen at `2026-08-09T05:59:53Z`
+  (confirmed via direct `gcloud storage ls -L` object metadata, not just eyeballing content) — yet its
+  **`WATCHDOG_TRACE.log`** (a separate GCS object, `mode=size` iterations tracking the LOCAL on-VM file's byte count)
+  showed continuous growth up to `07:15:16Z`, essentially live, ~76 minutes AFTER `run.log` stopped updating. This means
+  the underlying VM process was very likely still running (something kept writing to the local log file the watchdog
+  measures) — but the **upload path** that streams that local file to the `run.log` GCS object
+  (`vm-exec-with-gcs-tee.sh`, per the file's own name) had broken specifically. The heartbeat blob (a third, even
+  simpler mechanism) also stayed live throughout. **This is a blind spot in every diagnostic this doc has established so
+  far**: "trust the heartbeat blob over run.log text staleness" (established after occurrence-adjacent false alarms)
+  assumed run.log lag was always cosmetic/short — but here NONE of the 3 remote signals (run.log content, heartbeat
+  blob, watchdog trace) could distinguish "genuinely still making chunk progress, just blind to me" from "stuck in a
+  loop that keeps writing local bytes without real progress" — chunk 1 already had 9 `CHUNK_FAILED` (unusually high for
+  a chunk that isn't 18/26) before the run.log freeze, adding to the uncertainty. Without SSH access (todo 1's standing
+  blocker), there was no way to resolve this remotely. **Decision: killed the VM rather than continue trusting an
+  unverifiable signal** — same billing-waste-avoidance reasoning as the FIXTURE_LINEUPS quota-exhaustion kill.
+  Relaunched as `mtds-backfill-odds-smallchunk10-20260809` (timestamp-suffixed, preserving forensic history this time).
+  **New open question for whoever investigates todo 1 next**: is the `run.log` GCS-tee upload mechanism itself prone to
+  silently dying independent of the main backfill process? If so, `run.log` freshness alone is an insufficient health
+  signal — the watchdog's own trace log (or a similar local-size-based check) may need to become part of the standard
+  diagnostic, not just heartbeat blob + run.log content.
