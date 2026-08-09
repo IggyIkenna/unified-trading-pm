@@ -195,7 +195,7 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
       mid-continuation-block but none of them are currently mismatched against the backlog (disk_open == backlog_open
       for both), so no doc edit was needed — same "already fixed by another slot / corpus moved past it before this todo
       was picked up" shape as the `ci_satellite_ao_dispatch_batch6` finding above. No content change required.
-- [ ] [DOCS] P2. Fix the 10 `plans/active/issues/` accidental exclusions:
+- [x] ✅ [DOCS] P2. Fix the 10 `plans/active/issues/` accidental exclusions:
       `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
       ~~`ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md`~~ (already resolved +
       archived 2026-08-09 — its flagged todo was its own "grep the corpus" todo, now `[x]`; archived docs drop out of
@@ -210,7 +210,14 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
       `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` (1 each),
       `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` (2),
       `vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`. Same remedy as above. Repo:
-      unified-trading-pm.
+      unified-trading-pm. **Done — moot, already resolved by fleet drift before pickup (2026-08-09, cicd-worker
+      slot 14)**: fresh `origin/live-defi-rollout` pull (corpus now 283 docs) +
+      `check_ao_dispatch_visibility_gate.py     --json` measures fleet-wide `accidental_exclusions: 0`. Checked all 10
+      named docs individually: 8 show `excluded: []` (no flagged todos at all);
+      `capability_wizard_analysis_findings_2026_06_11.md` and `deribit_combo_perpetual_partition_move_2026_07_21.md`
+      still carry `BLOCKED-` markers but both report `declared: true` (the marker opens its own checkbox line — a
+      legitimate declared exclusion, not an accidental one). No doc content edit needed — same "self-resolved by
+      concurrent fleet commits ahead of pickup" shape noted by every other tranche's fix in this doc's Progress Log.
 - [ ] [SCRIPT] P3. Once all 8 remediation todos above land (accidental_exclusions measures at/near 0 on a fresh pull),
       re-run `check_ao_dispatch_visibility_gate.py --update-baseline` to ratchet `max_accidental_exclusions` back down
       from 34 toward 0 — never leave the baseline sitting at absorbed debt once the debt is paid off. Repo:
@@ -245,3 +252,12 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
   before this task dispatched. Verified live via `check_ao_dispatch_visibility_gate.py --json`: corpus-wide
   `accidental_exclusions` is now 0 (down from 34 at filing); this doc's only excluded todo is `declared: true`. No new
   doc edit needed for the marker fix itself — flipped this todo's checkbox citing the evidence.
+- **cicd-worker slot 14, 2026-08-09**: picked up the `plans/active/issues/` tranche todo (10 named docs). Same
+  self-resolved shape as every prior tranche: fresh pull (corpus now 283 docs) +
+  `check_ao_dispatch_visibility_gate.py --json` measures fleet-wide `accidental_exclusions: 0`. Per-doc check confirmed
+  all 10 named docs are clean — 8 with zero flagged todos, 2 (`capability_wizard_analysis_findings_2026_06_11.md`,
+  `deribit_combo_perpetual_partition_move_2026_07_21.md`) with `declared: true` markers (legitimate, not accidental). No
+  content edit needed; flipped the checkbox. **All 8 per-tranche remediation todos are now done.** The remaining P3 todo
+  (re-run `--update-baseline`) is separate scope — the current baseline (`max_accidental_exclusions: 28`, already
+  ratcheted down from 34 by an earlier slot) still tolerates well above the live-measured 0, so the gate stays green
+  regardless; leaving the baseline ratchet-down itself for whichever slot picks up that todo.
