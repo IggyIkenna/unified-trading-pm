@@ -530,6 +530,18 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   (`gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/expected-universe-v2-sports-20260809-203205-part0000{1,2}.parquet`),
   24.6s enumeration time. `start_date`/`end_date` confirmed respected in the `ENUMERATOR_STARTED` event. Flipped chunk
   6's todo. Chunk 7/7 (2026, rolling boundary) next.
+- **data_engineering worker (slot 15) 2026-08-09**: launched chunk 7/7 (2026-01-01..rolling-boundary−1day) in tmux
+  `orch-slot-15:backfill`, invoking the child launcher directly per the todo's instruction. Rolling boundary computed
+  live at launch time: `2026-04-11` (`date -u -d '-120 days'` against the real 2026-08-09 clock), so
+  `ENUM_END_DATE=2026-04-10`. VM `expected-universe-v2-sports-20260809-205224` reached `EXIT_STATUS=0` on the FIRST
+  attempt — no halt-safety retry needed. Enumerator found 0 candidate rows: "manifest already covers the expected
+  per-instrument universe" for this window (present-set at launch already 16,526,548 rows). This mirrors chunk 4/2023's
+  result — the recurring daily job's own rolling `today-120d` window (job (1), deployment-service@1d8ede9) already
+  overlaps and keeps 2026-01-01..2026-04-10 seeded, so no new per-VM shard was needed. Flipped chunk 7's todo. **All 7
+  chunks (2020-06-06..2026-04-10) now confirmed EXIT_STATUS=0** — job (2)'s historical backfill launch phase is
+  complete. Did NOT pick up the post-run cell-seeding ratio re-check todo below in this same session (per
+  /boot-per-shippable-unit discipline — one task per session; the dispatcher will assign it as its own backlog task, now
+  unblocked).
 
 ## Follow-ups
 
@@ -583,11 +595,20 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       `gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/expected-universe-v2-sports-20260809-203205-part0000{1,2}.parquet`,
       24.6s enumeration time. `run.log`'s `ENUMERATOR_STARTED` event confirms
       `start_date: '2025-01-01', end_date:     '2025-12-31'` was respected. Chunk 7/7 (2026) next.
-- [ ] [DATA] P2. Launch + verify chunk 7/7 (2026-01-01..rolling-boundary−1day, i.e. `today − 120d` computed LIVE at
+- [x] ✅ [DATA] P2. Launch + verify chunk 7/7 (2026-01-01..rolling-boundary−1day, i.e. `today − 120d` computed LIVE at
       launch time — do NOT reuse the stale `2026-04-04`/`2026-04-09` dates recorded earlier in this doc's Progress Log)
       of the same backfill — same launcher invocation, halt-safety/gcloud-clobber handling, and done-when as chunk 3's
       todo above, with `ENUM_START_DATE=2026-01-01` and `ENUM_END_DATE` set to the freshly-computed rolling boundary.
-      (repo: deployment-service)
+      (repo: deployment-service) — ✅ VM `expected-universe-v2-sports-20260809-205224`, `EXIT_STATUS=0` on the FIRST
+      attempt (no halt-safety retry needed), rolling boundary computed live as `2026-04-11` so
+      `ENUM_END_DATE=2026-04-10`. Enumerator found **0 candidate rows** ("manifest already covers the expected
+      per-instrument universe" for this window) — present-set at launch was already 16,526,548 rows (main + per-VM
+      shards), so 2026-01-01..2026-04-10 was already fully seeded (the recurring daily job's own rolling `today-120d`
+      window, deployment-service@1d8ede9, overlaps this exact range and keeps it covered). No new per-VM shard written
+      (nothing to write). `run.log`'s `ENUMERATOR_STARTED` event confirms
+      `start_date: '2026-01-01', end_date:     '2026-04-10'` was respected. **All 7 chunks now EXIT_STATUS=0** — job
+      (2)'s historical backfill launch phase is complete; the post-run cell-seeding ratio re-check todo below is now
+      unblocked.
 - [ ] [DATA] P2. Once chunks 3-7 above are ALL done: run the post-run cell-seeding ratio re-check (same read-only method
       as this issue's own H1 measurement — single manifest read, columns projected to
       `date`/`data_type`/`capture_status`/`league_id`/`source`, count total rows per `data_type` for the matched H1
