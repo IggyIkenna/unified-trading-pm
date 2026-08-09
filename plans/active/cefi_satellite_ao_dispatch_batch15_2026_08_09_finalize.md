@@ -50,27 +50,28 @@ context_scope:
 
 # CeFi satellite AO batch 15 — finalize
 
-> **Status: active from the start.** `gate_on_depends: true` machine-holds every todo below until batch15's own 2
-> tasks are `done`. **Machine-gated on `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`.** `sequential: true`
-> because todo 2 depends on todo 1's reconciliation, and todo 2 (archival) must run last.
+> **Status: active from the start.** `gate_on_depends: true` machine-holds every todo below until batch15's own 2 tasks
+> are `done`. **Machine-gated on `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`.** `sequential: true` because todo 2
+> depends on todo 1's reconciliation, and todo 2 (archival) must run last.
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile the source doc's checkbox pointers with real evidence**:
-      `issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md` todos 1 and 2 —
-      flip both `[x]` citing batch15's landed commits, and update its own stale "fold into the same A/B/C decision
-      already open for S1-a" cross-reference to note the decision resolved 2026-08-08 and this work shipped via
-      batch15. **Verify each cited commit is reachable on `origin/live-defi-rollout` before citing it.** If the
-      source doc reaches 0 open todos, flip its `status` accordingly and check whether it's now archive-eligible (do
-      not archive here if it still needs a separate corpus-referrer sweep — file that as a follow-up instead of
-      skipping it). **Done when**: both landed todos' pointers are replaced with verified commits + evidence, and the
-      source doc's remaining-open count is explicitly re-stated.
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`** via the standard 6-step ritual: add
-      the archive banner → confirm no new durable contract needs codex-alignment → grep the corpus for every referrer
-      of `cefi_satellite_ao_dispatch_batch15_2026_08_09` and repoint each to the archived path → clear `locked_by`
-      (already empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus referrer
-      resolves to the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside it in
-      the same commit.
+- [x] ✅ [REVIEW] P1. **Reconcile the source doc's checkbox pointers with real evidence** —
+      unified-trading-pm@PENDING_SHA. Verified both commits (`deployment-service@082a5eda`,
+      `deployment-service@03b10e46`) `git merge-base --is-ancestor`-reachable on `origin/live-defi-rollout`, then in
+      `issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`: flipped todos 1 and
+      2 to real `[x]` checkboxes citing the verified commits + evidence directly (replacing the redirect-only "EXTRACTED
+      — see that doc" pointers), and updated the "Recommended decision" section's stale "fold into the same A/B/C
+      decision" framing to state it resolved 2026-08-08 and both items shipped independently via batch15. Source doc did
+      NOT reach 0 open todos: filed a new todo 3 (archival + 7-referrer corpus sweep) as a tracked follow-up rather than
+      skipping it, per this todo's own instruction — remaining open count is 1, explicitly re-stated in that doc's
+      Progress Log. `status` left `open` (accurate — 1 todo remains).
+- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`** via the standard 6-step ritual: add the
+      archive banner → confirm no new durable contract needs codex-alignment → grep the corpus for every referrer of
+      `cefi_satellite_ao_dispatch_batch15_2026_08_09` and repoint each to the archived path → clear `locked_by` (already
+      empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus referrer resolves to
+      the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside it in the same
+      commit.
 
 ## Codex SSOTs
 
@@ -81,3 +82,5 @@ context_scope:
 
 - **2026-08-09** — drafted alongside batch15; `status: active` from the start, machine-held by `gate_on_depends: true`
   until batch15's todos are done.
+- **2026-08-09** — todo 1 done (see checkbox evidence above). Todo 2 (archive batch15) unlocked by `sequential: true`
+  now that todo 1 is flipped; dispatch to the next available worker.

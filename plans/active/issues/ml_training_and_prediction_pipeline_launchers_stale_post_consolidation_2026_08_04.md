@@ -115,23 +115,45 @@ delta_one sequencing has no consolidated equivalent yet).
 
 ## Recommended decision
 
-Operator/main to fold into the same A/B/C decision already open for S1-a/S1-b in
-`mdps_features_deadcode_consolidation_2026_07_20.md`, or triage separately — recommend (A) extend that doc's existing
-decision to cover both new launchers found here (same root cause, same consolidated-launcher-coverage question), since
-splitting into a third parallel decision thread on the same theme adds coordination overhead for no benefit.
+**RESOLVED 2026-08-09.** The sibling S1-a/S1-b A/B/C decision this doc's "fold into" framing depended on was
+declassified 2026-08-08 (round5-cefi-question-resolution, `mdps_features_deadcode_consolidation_2026_07_20.md`) —
+neither item here was actually a business/spend judgment, credential gate, or reversibility-failed destroy, so the
+"operator/architect call" framing no longer held. Both items were extracted verbatim into
+`cefi_satellite_ao_dispatch_batch15_2026_08_09.md` and shipped independently (see Todos above) rather than folded into
+the sibling doc's own decision thread — todo 1 needed no A/B/C fold-in at all (a direct module-path repoint), and todo
+2's own verification determined the sibling's keep/delete precedent doesn't apply (no consolidated launcher covers its
+3-step chunked sequencing), so it was fixed in place on its own merits.
 
 ## Todos
 
-- **1. [SCRIPT] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch15_2026_08_09.md` todo 1 for AO
-  dispatch (parent_epic: infrastructure_master). See that doc for the live checkbox + evidence.** (Verify
-  `ml_service`'s actual training CLI surface against `launch-ml-training-vm.sh`'s assembled args; rewrite the
-  launcher or build the `setup-data-pipeline-vm.sh` `VM_TASK=ml-training` Phase B branch; no longer gated on the
-  sibling S1-a A/B/C decision — that decision was declassified 2026-08-08, round5-cefi-question-resolution.)
-- **2. [SCRIPT] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch15_2026_08_09.md` todo 2 for AO
-  dispatch (parent_epic: infrastructure_master). See that doc for the live checkbox + evidence.** (Determine whether
-  `launch-features-vm.sh --feature-family cross_instrument|delta_one --asset-group PREDICTION` covers
-  `launch-prediction-pipeline-vm.sh`'s 3-step chunked sequencing; fold into the same declassified S1-a keep/delete
-  precedent or fix the embedded import-verify in place.)
+- [x] ✅ 1. [SCRIPT] P2. **`launch-ml-training-vm.sh`'s dead `ml_training_service` module path fixed.** —
+      deployment-service@082a5eda (verified reachable on `origin/live-defi-rollout`, landed 2026-08-09 via
+      `cefi_satellite_ao_dispatch_batch15_2026_08_09.md` todo 1). Repointed `ML_CMD` to `python -m ml_service.training`
+      (verified importable), set `VM_SERVICE=ml_service`, removed the dead `ml_training_service` metadata + stale
+      Phase-B-pending comments; `quality-gates.sh` green. No longer gated on the sibling S1-a A/B/C decision — that
+      decision was declassified 2026-08-08 (round5-cefi-question-resolution) and this item was extracted + dispatched
+      through the resolved framing, not folded into a still-open sibling decision.
+- [x] ✅ 2. [SCRIPT] P2. **`launch-prediction-pipeline-vm.sh`'s dead pre-consolidation feature-service import paths
+      fixed.** — deployment-service@03b10e46 (verified reachable on `origin/live-defi-rollout`, landed 2026-08-09 via
+      `cefi_satellite_ao_dispatch_batch15_2026_08_09.md` todo 2). Determined `launch-features-vm.sh` does NOT cover this
+      launcher's 3-step MDPS→cross_instrument→delta_one chunked sequencing (no MDPS candle-derivation step, no per-stage
+      differential date windowing) — fixed in place rather than folding into the S1-a delete decision: repointed the
+      packaged `REPOS`/`uv pip install` loop, the embedded import-verify step, and the STAGE 2/3 runtime CLI invocations
+      to the consolidated `features-service` package/dispatcher; verified both import paths resolve live and
+      `quality-gates.sh` is green. Same sibling A/B/C decision context as todo 1 above — resolved 2026-08-08, this item
+      was fixed on its own merits (not a keep/delete fold-in) once verification showed no consolidated equivalent covers
+      its sequencing.
+- [ ] [DOC] P3. **Archive this doc via the 6-step ritual**
+      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) now that both substantive todos above are
+      done and unlocked — this doc has 7 active corpus referrers that a genuine archival needs to repoint in the same
+      commit, out of scope for a plain checkbox-reconciliation pass:
+      `plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`,
+      `plans/active/cefi_satellite_ao_dispatch_batch12_2026_08_09.md`,
+      `plans/active/issues/ag_closeout_audit_defi_parked_2026_08_08.md`,
+      `plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md`,
+      `plans/active/cefi_satellite_ao_dispatch_batch15_2026_08_09.md`,
+      `plans/active/cefi_satellite_ao_dispatch_batch15_2026_08_09_finalize.md`, `plans/active/INDEX.md`. **Done when**:
+      doc moved to `plans/archive/2026_08/`, every listed referrer repointed, `run_hygiene_sweep.sh` green.
 
 ## Progress Log
 
@@ -142,16 +164,25 @@ splitting into a third parallel decision thread on the same theme adds coordinat
   doc's own text states the correct fix needs a design call this P3 mechanical-deletion todo didn't scope; both open
   items redirect to the same still-open A/B/C decision pending in `mdps_features_deadcode_consolidation_2026_07_20.md`
   (independently verified: that doc is still `status: open`, unlocked, todos unchecked).
-- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: this doc's own gate (the sibling
-  A/B/C decision in `mdps_features_deadcode_consolidation_2026_07_20.md`) was declassified 2026-08-08
+- **round11 RECLASSIFY + satellite-extraction sweep 2026-08-09 (cefi tranche)**: this doc's own gate (the sibling A/B/C
+  decision in `mdps_features_deadcode_consolidation_2026_07_20.md`) was declassified 2026-08-08
   (round5-cefi-question-resolution — applying `task_template.md` finding U's positive test, neither item is a
   business/spend judgment, a credential gate, nor a whole-bucket destroy/failed reversibility check, so the prior
   "operator/architect call" framing no longer holds). `cefi_satellite_ao_dispatch_batch12_2026_08_09.md` (drafted the
-  same day, extracting the sibling S1-a item) independently flagged this doc's own cross-reference as stale and
-  "out of this todo's stated single-file scope... flagging for whoever next touches that doc." Conflict-checked
-  clean (grepped `plans/active/` for both named launcher files — only this doc and an unrelated Class-B stall-kill
-  finding reference them). Both items extracted verbatim into `cefi_satellite_ao_dispatch_batch15_2026_08_09.md`
-  (`status: active`, `assigned_vm: planning`) + its gated finalize twin. This doc's own `assigned_vm` stays `NA` —
-  per the established corpus convention (see `mdps_features_deadcode_consolidation_2026_07_20.md`'s own S1-a
-  extraction), the satellite batch is the live AO-dispatch surface; this doc becomes a historical redirect once its
-  batch lands.
+  same day, extracting the sibling S1-a item) independently flagged this doc's own cross-reference as stale and "out of
+  this todo's stated single-file scope... flagging for whoever next touches that doc." Conflict-checked clean (grepped
+  `plans/active/` for both named launcher files — only this doc and an unrelated Class-B stall-kill finding reference
+  them). Both items extracted verbatim into `cefi_satellite_ao_dispatch_batch15_2026_08_09.md` (`status: active`,
+  `assigned_vm: planning`) + its gated finalize twin. This doc's own `assigned_vm` stays `NA` — per the established
+  corpus convention (see `mdps_features_deadcode_consolidation_2026_07_20.md`'s own S1-a extraction), the satellite
+  batch is the live AO-dispatch surface; this doc becomes a historical redirect once its batch lands.
+- **finalize-reconciliation 2026-08-09** (`cefi_satellite_ao_dispatch_batch15_2026_08_09_finalize.md` todo 1): both
+  `cefi_satellite_ao_dispatch_batch15_2026_08_09.md` todos landed (deployment-service@082a5eda,
+  deployment-service@03b10e46) — both SHAs independently verified `git merge-base --is-ancestor`-reachable on
+  `origin/live-defi-rollout` before citing. Replaced the redirect-only "EXTRACTED — see that doc" pointers above with
+  real `[x]` checkboxes citing the verified commits + evidence directly in this doc, and updated the "Recommended
+  decision" section's stale "fold into the same A/B/C decision already open for S1-a" framing to state the decision
+  resolved 2026-08-08 (round5-cefi-question-resolution) and both items shipped independently via batch15. **Remaining
+  open count: 1** (a new todo 3, filed as a follow-up rather than skipped — archiving this doc needs a corpus-referrer
+  sweep across 7 active referrers, out of this reconciliation pass's scope). Doc's own substantive work (todos 1-2) is
+  fully resolved; `status` stays `open` pending todo 3's archival sweep.
