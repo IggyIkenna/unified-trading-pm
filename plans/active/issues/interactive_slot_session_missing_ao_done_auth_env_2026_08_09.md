@@ -21,7 +21,7 @@ asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer]
-tags: [ao-done, worker-auth, slot-18, blocked-operator-decision, interactive-session]
+tags: [ao-done, ao-heartbeat, worker-auth, slot-18, blocked-operator-decision, interactive-session]
 related: [/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md]
 created: 2026-08-09
 author: slot-18, task cross_cutting_satellite_ao_dispatch_batch2-8c28b6763ac3
@@ -51,6 +51,9 @@ set (`env | grep -Ei "server_url|slot_id|ao_token|auth_token|worker_token"` retu
 checks across `/pre-compact` ritual passes). No alternative AO-aware tool (checked via `ToolSearch`) exposes a
 `/done`-equivalent call — the available `TaskList`/ `TaskGet`/`TaskOutput` tools are this Claude Code harness's own
 generic task tracker, unrelated to the AO backlog/dispatch system, and `TaskList` returns zero tasks in this session.
+**Confirmed the same gap also blocks `/heartbeat`** (2026-08-09, later same session): the identical env-var grep came
+back empty, and `find agent-orchestrator/scripts -iname "*heartbeat*"` found nothing — so this is not `/done`-specific,
+it blocks every AO worker-lifecycle call this interactive session might need to make.
 
 ## Why it matters
 
