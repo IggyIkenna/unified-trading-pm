@@ -121,12 +121,16 @@ Two independent tracks:
 
 ## Todos
 
-- [ ] [BACKEND] P2. Widen `scripts/quality-gates-base/base-service.sh`'s broad-except detection
+- [x] ✅ [BACKEND] P2. Widen `scripts/quality-gates-base/base-service.sh`'s broad-except detection
       (`codex_rg "except Exception:"`) to also catch the `except Exception as X:` binding form — either a widened regex
       or an AST-based rewrite (mirror `check_no_fallback_imports.py`'s approach). Convert `CODEX_MAX_VIOLATIONS` for
       this specific check to a ratchet-baselined count (seed baseline = current corpus count) rather than a hard `0`, so
       widening the regex doesn't instantly red every repo the moment it lands — narrow the baseline down as track-2
-      todos below land. Repo: unified-trading-pm (`scripts/quality-gates-base/`).
+      todos below land. Repo: unified-trading-pm (`scripts/quality-gates-base/`). — unified-trading-pm@abe617a1b (AST
+      rewrite: `scripts/quality_gates/check_broad_except.py`, shrinking-ratchet baseline
+      `scripts/quality_gates/broad_except_baseline.yaml`, wired into STEP 5.5 in place of the old literal-substring
+      `codex_rg "except Exception:"`; catches both `except Exception:` and `except Exception as X:` via AST
+      `ast.ExceptHandler` inspection, immune to false positives from string literals/comments).
 - [ ] [BACKEND] P2. Narrow all `except Exception as X:` occurrences in `scripts/openapi/generate_ui_reference_data.py`
       (26×) to the specific exception type(s) each UAC/UIC registry-extraction block actually expects (mirror the
       pattern already used for that file's one literal-colon occurrence, fixed 2026-08-09). Repo: unified-trading-pm.
@@ -140,3 +144,8 @@ Two independent tracks:
   `ci_failure_watcher.py` that was invisible to the gate's literal-colon regex; corpus sweep found 77 more. Fixed the
   one found in-file; the rest tracked here per findings-triage (outside my primary task's scope, genuinely new per-file
   review work).
+- **2026-08-09 (slot-33, backend_engineer)**: Todo 1 verified already shipped by a prior slot (code present on
+  `live-defi-rollout` at boot, fresh-pulled this session) — `check_broad_except.py` (unified-trading-pm@18c3e65ff) + the
+  STEP 5.5 wiring commit (unified-trading-pm@abe617a1b) together deliver the AST-based widen + shrinking-ratchet
+  baseline the todo called for; checkbox was never flipped, so flipping it now. Todos 2-3 remain open (per-file
+  narrowing work, separate from this task's scope).
