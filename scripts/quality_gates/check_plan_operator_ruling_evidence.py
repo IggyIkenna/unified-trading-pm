@@ -276,6 +276,17 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--baseline-path", type=Path, default=DEFAULT_BASELINE_PATH)
     parser.add_argument("--baseline-write", action="store_true")
+    parser.add_argument(
+        "--only",
+        nargs="*",
+        default=None,
+        help=(
+            "Blast-radius-safe precommit mode (RULE-11, mirrors check_finalize_plan_coverage.py): still "
+            "scans the whole corpus, but only reports/fails on violations among these specific paths — a "
+            "pre-existing violation in an unrelated plan never blocks an unrelated commit. No baseline "
+            "comparison in this mode; any violation among --only paths fails immediately."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -314,6 +325,26 @@ def main() -> int:
         seen.add(key)
         deduped.append(v)
     violations = deduped
+
+    only = cast("list[str] | None", ns.only)
+    if only is not None:
+        # Precommit scoping: the author who writes an unsourced ruling citation is the one who
+        # should fix it. Before this existed, these gates ran ONLY inside the full
+        # quality-gates.sh, so `safe-doc-push` (prek-only, the sanctioned pure-doc fast path)
+        # let an unsourced citation land freely and the red surfaced later for whichever OTHER
+        # agent next ran quickmerge — measured 2026-08-08/09, baseline 58 -> 76 in a day with
+        # the cost landing on bystanders. Same blast-radius-safe shape as
+        # check_finalize_plan_coverage.py: full corpus scan, narrowed reporting, no ratchet math.
+        only_resolved = {Path(o).resolve() for o in only}
+        violations = [v for v in violations if v.citation.path.resolve() in only_resolved]
+        if not violations:
+            print("✅ plan-operator-ruling-evidence (--only): clean.")
+            return 0
+        print("❌ Unsourced 'operator ruling' citation(s) in staged plan(s) — cite the doc that records the ruling")
+        print("   (/plans/…, /codex/…, or a .md filename) within 300 chars of the ruling phrase:")
+        for v in violations:
+            print(f"  - {v.citation.path}:{v.citation.line_no}: {v.citation.context[:120]}")
+        return 1
 
     print(
         f"Scanned {len(plan_files)} plan(s) — "

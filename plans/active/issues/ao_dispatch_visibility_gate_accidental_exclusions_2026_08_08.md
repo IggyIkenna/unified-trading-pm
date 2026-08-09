@@ -447,3 +447,42 @@ human already made the call and the fleet still never executes it.
   mentions later in the same block to the non-breaking-hyphen spelling so they stay documentation-only. Verified via
   `dispatch_visibility_report --json`: the doc's todo now shows `"declared": true` (still correctly excluded — genuinely
   blocked, not a false negative). Fleet-wide accidental count 26→25.
+
+- **2026-08-09 (slot 3, interactive)** — **The accidental count moves 25 → 34, and none of the increase is new debt.**
+  Read this before triaging further, or the jump looks like a regression.
+
+  Two implementations of this gate shipped in parallel on 2026-08-08 (slot 3 and slot 4 both worked
+  `ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md`; the operator was shown the collision and
+  chose to let both run). They were merged into one 2026-08-09 — `agent-orchestrator@03e1809`, plus the redundant second
+  PM script deleted — keeping this module's `_plan_contributes_briefs` scope filter and folding in three changes from
+  the other implementation. Two of them change the numbers in this doc:
+
+  1. **The declaration rule tightened to the checkbox line's head only.** It previously also honoured a marker at the
+     head of a CONTINUATION line. Measured against the live corpus, that absolved the wrong todos: of 9 exclusions
+     declared on that basis, **7 were prettier 120-char soft-wraps landing mid-sentence** (e.g.
+     `BLOCKED-OPERATOR-DECISION item)? (b) has ...`), and **2 of those 7 were RESOLUTION notes** saying the marker no
+     longer applied (`` `BLOCKED-CREDENTIALS` is now STALE, clearing it ``). Prose wrapping is a formatting artifact, so
+     a rule keyed on "starts a line" is satisfiable by accident — which rebuilds the false-absolution this gate exists
+     to catch, inside the gate. So ~10 todos previously counted DECLARED are now correctly ACCIDENTAL. **They were
+     always accidental; the detector just could not see them.** That is the whole of the 25 → 34 move, and it is the
+     opposite of a baseline raise absorbing debt (contrast
+     `/plans/active/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`, which is the bad kind).
+  2. **A third finding exists now: ineffective declarations**, with its own `max_ineffective_declarations` baseline
+     (currently **4**, all `BLOCKED-PREREQUISITES`). These are the INVERSE failure and are NOT in this doc's 25 — a
+     marker in the correct structural position whose token is absent from `_BLOCKED_TOKEN_RE`, so nothing excludes the
+     todo and AO dispatches it while every human reads it as held. That is
+     `/plans/active/issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md`, still live. Any
+     check that only inspects EXCLUDED todos is structurally blind to it, which is why it survived three prior fixes.
+     They need a decision, not a rewording: add the token to the dispatcher's vocabulary, or retag to an existing one.
+     Note `/plans/active/sports_closeout_track_s2_foldin_2026_07_25.md` argues its `BLOCKED-PREREQUISITES` items are not
+     accurately described by any existing token — an argument for adding it upstream.
+
+  Also: `_raw_open_todos` (a hand-mirrored copy of `_parse_open_todos`'s frontmatter/fence/strikethrough walk) was
+  deleted in favour of a recording spy on `_is_non_dispatchable`, so the real walk now reports every block it evaluates.
+  ~70 lines of duplicated oracle gone — a second copy of the parser was the exact drift risk the source issue warned
+  about. Tests 9 → 14, covering the soft-wrap and resolution-note regressions and all three ineffective-declaration
+  cases.
+
+  **Triage impact**: the ~10 newly-visible accidental exclusions are not yet enumerated as todos in this doc. Re-run
+  `python -m server.dispatch_visibility_report --pm-path <pm> --json` for the current per-doc list before continuing —
+  do not work from this doc's existing 25-item enumeration alone, it predates the rule change.

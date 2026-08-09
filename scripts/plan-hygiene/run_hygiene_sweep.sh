@@ -116,6 +116,20 @@ if [ "$CI_MODE" = "--precommit" ]; then
     python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --workspace-root "$(dirname "$PM_DIR")" --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Finalize-plan coverage (staged plans)" \
       || { echo "  ❌ Finalize-plan coverage — a staged assigned_vm:planning plan has no gated finalize companion (task_template.md §4)"; PF=$(( PF + 1 )); }
+
+    # Evidence gates, --only-scoped (2026-08-09). These lived ONLY in the full quality-gates.sh,
+    # so the CLAUDE.md-sanctioned pure-doc fast path (safe-doc-push.sh -> prek only) could land an
+    # unsourced operator-ruling citation or an unresolvable <repo>@<sha> with nothing objecting.
+    # The debt then surfaced for whichever OTHER agent next ran quickmerge, which re-gates the whole
+    # tree — measured 2026-08-08/09: the ruling baseline went 58 -> 76 in a day, with the cost
+    # landing on bystanders and one baseline RAISE absorbing 18 real violations rather than fixing
+    # them. Author-pays, same blast-radius-safe --only shape as finalize-plan-coverage above.
+    python3 "$SCRIPT_DIR/../quality_gates/check_plan_operator_ruling_evidence.py" --workspace-root "$(dirname "$PM_DIR")" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Operator-ruling evidence (staged plans)" \
+      || { echo "  ❌ Operator-ruling evidence — a staged todo claims an 'operator ruling' with no traceable source doc"; PF=$(( PF + 1 )); }
+    python3 "$SCRIPT_DIR/../quality_gates/check_plan_commit_sha_evidence.py" --workspace-root "$(dirname "$PM_DIR")" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Commit-SHA evidence (staged plans)" \
+      || { echo "  ❌ Commit-SHA evidence — a staged todo cites <repo>@<sha> that does not resolve to a real commit"; PF=$(( PF + 1 )); }
     # Terminal-status-archived, --only-scoped (2026-08-07): a staged doc that's
     # status:resolved/complete/etc with all todos done but still physically under
     # plans/active/[issues/] is unconditionally wrong regardless of the corpus-wide

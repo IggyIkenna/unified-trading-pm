@@ -53,9 +53,10 @@ implements_in: plans/archive/2026_07/master_to_live_defi_2026_05_23.md
 > **Canonical 2026-05-10.** Per-venue paper-target policy + simulate-first-floor / testnet-upgrade-where-credentials-
 > exist mechanics live in
 > [`/codex/05-infrastructure/per-venue-paper-policy.md`](/codex/05-infrastructure/per-venue-paper-policy.md) (the
-> `paper_target_registry` SSOT). Solana paper for non-EVM uses devnet / localnet / surfnet per the same registry.
-> Consumer-site implementation (Group F sub-items `pvl-p17a` / `pvl-p17b` / `pvl-p17c` / `pvl-p17d` / `pvl-p20a..c`)
-> owned by `master_to_live_defi_2026_05_23.md`.
+> `PAPER_EXECUTION_TARGETS` SSOT — the name `paper_target_registry` used in these docs matches no code symbol; see the
+> note below). Solana paper for non-EVM uses devnet / localnet / surfnet per the same registry. Consumer-site
+> implementation (Group F sub-items `pvl-p17a` / `pvl-p17b` / `pvl-p17c` / `pvl-p17d` / `pvl-p20a..c`) owned by
+> `master_to_live_defi_2026_05_23.md`.
 
 ## TL;DR
 
@@ -64,7 +65,7 @@ sits exclusively in execution-service:
 
 - **Batch**: matching engine produces fills against historical replay.
 - **Paper**: matching engine produces fills against live ticks (simulate-first floor) OR real venue testnet / forked
-  chain (testnet upgrade per `paper_target_registry`).
+  chain (testnet upgrade per `get_paper_target()`).
 - **Live**: real venue API + real capital + real fills.
 - **Manual**: real venue API + real capital, but operator pulls the trigger per instruction.
 
@@ -113,7 +114,7 @@ Execution-service routes per `decompose(mode)`:
     ├─ target == SIMULATION ──▶ matching engine (5 matchers: L0 Sports TOB, L1 TradFi,
     │                                              L2 CeFi, AMM, ALPHA_ZERO benchmark)
     │
-    ├─ target == TESTNET ─────▶ paper_target_registry[venue/chain] →
+    ├─ target == TESTNET ─────▶ get_paper_target(venue_or_chain) →
     │                              EVM: Tenderly fork
     │                              Solana: devnet/localnet/surfnet
     │                              Deribit: testnet endpoint
@@ -157,4 +158,25 @@ remain the open `pvl-p21a` extension.
 - [`operational-modes.md`](operational-modes.md) — the canonical mode enum + decompose helper.
 - [`batch-live-architecture.md`](batch-live-architecture.md) — broader batch=live SSOT this doc specialises.
 - [`/codex/05-infrastructure/per-venue-paper-policy.md`](/codex/05-infrastructure/per-venue-paper-policy.md) — the
-  `paper_target_registry` SSOT.
+  `PAPER_EXECUTION_TARGETS` / `get_paper_target()` SSOT.
+
+## Review note — 2026-08-09 (code-verified)
+
+Reviewed against the live code rather than date-bumped. What was checked and found:
+
+- ✅ **The instruction carries the mode.** `mode: OperationalMode` is a real field on `StrategyInstruction`
+  (`unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/_instruction_base.py`, ~line 308), with
+  its own unit tests — the `pvl-p17d` claim above holds.
+- ✅ **The matching engine and its ALPHA_ZERO benchmark matcher exist**
+  (`unified_api_contracts/internal/domain/matching_engine/`).
+- ❌ **`paper_target_registry` is not a real symbol.** Every reference in this doc has been renamed to the actual API:
+  `PAPER_EXECUTION_TARGETS` (a `dict[str, ExecutionTarget]`) and `get_paper_target(chain_or_venue)`, both in
+  `unified_api_contracts/internal/paper_execution_targets.py`. The old name appears only in PM docs — 7 doc hits, 0 code
+  hits — so anyone grepping the codebase for it found nothing and had no way to tell whether the registry was unbuilt or
+  merely misnamed. It is built; it was misnamed here.
+- ⚠️ **`ExecutionTarget.FORK` matters to this doc's seam diagram.** `get_paper_target("ethereum")` returns `FORK`, not
+  `TESTNET`, so the EVM/Tenderly path is a distinct target rather than a flavour of testnet. See
+  `/codex/04-architecture/operational-modes.md`'s corrected schema block (same review pass) for the full enum.
+
+Sibling corrections from the same pass — including three "deleted" anti-patterns that are still live — are tracked in
+`/plans/active/issues/operational_modes_antipatterns_not_actually_deleted_2026_08_09.md`.

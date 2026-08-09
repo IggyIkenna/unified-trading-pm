@@ -16,4 +16,5 @@
 # commit message, same convention as every other ratchet in this corpus.
 max_accidental_exclusions: 34
 max_zero_dispatchable_docs: 26
+max_ineffective_declarations: 4
 last_updated: "2026-08-09"

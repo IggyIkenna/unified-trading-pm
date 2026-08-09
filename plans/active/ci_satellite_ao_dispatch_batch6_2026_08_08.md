@@ -169,10 +169,12 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       fires on a synthetic resolved-condition case and stays silent while the condition persists. Source:
       `issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md` (`## Still open`, sole [INFRA]
       P3 item) — never cited by any covering doc (created 2026-08-07, after every prior sweep). **DONE 2026-08-09,
-      unified-trading-pm@c717af0fd** — enumerated all 27 schedule-active workflows; the source doc's own
-      "`overnight-dead-man-switch.yml` confirmed present" premise was STALE (re-verified: it has no dedup_key/cooldown
-      and no resolved job — a one-shot nightly liveness check, not a re-nagging standing-condition monitor, correctly
-      excluded from the fix). Found 6 LIVE standing-condition monitors genuinely missing the pattern
+      unified-trading-pm@4bd8a11d0b** _(citation corrected 2026-08-09: `c717af0fd` resolved to no commit in this repo —
+      a pre-rebase SHA. The real work is `4bd8a11d0b` "feat(cicd): add state-diffed recovery/all-clear bookend to 6 CI
+      monitors", the commit immediately preceding this flip.)_ — enumerated all 27 schedule-active workflows; the source
+      doc's own "`overnight-dead-man-switch.yml` confirmed present" premise was STALE (re-verified: it has no
+      dedup_key/cooldown and no resolved job — a one-shot nightly liveness check, not a re-nagging standing-condition
+      monitor, correctly excluded from the fix). Found 6 LIVE standing-condition monitors genuinely missing the pattern
       (`fix-approval-timeout.yml`, `ldr-docs-gate.yml`, `freeze-deferred-build-replay.yml`,
       `promote-fleet-startup-failure-monitor.yml`, `ruleset-drift-alert.yml`, `sit-gate-stuck-detector.yml`) and added
       the recovery bookend to each via a new shared, unit-tested `scripts/cicd/alert_recovery.py` (10 regression tests:

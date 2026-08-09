@@ -317,6 +317,17 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--baseline-path", type=Path, default=DEFAULT_BASELINE_PATH)
     parser.add_argument("--baseline-write", action="store_true")
+    parser.add_argument(
+        "--only",
+        nargs="*",
+        default=None,
+        help=(
+            "Blast-radius-safe precommit mode (RULE-11, mirrors check_finalize_plan_coverage.py): still "
+            "scans the whole corpus, but only reports/fails on violations among these specific paths — a "
+            "pre-existing violation in an unrelated plan never blocks an unrelated commit. No baseline "
+            "comparison in this mode; any violation among --only paths fails immediately."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -371,6 +382,20 @@ def main() -> int:
             sha_cache[key] = _resolves_to_commit(repo_path, c.sha)
         if not sha_cache[key]:
             violations.append(ShaViolation(citation=c))
+
+    only = cast("list[str] | None", ns.only)
+    if only is not None:
+        # See check_plan_operator_ruling_evidence.py's --only comment: precommit scoping so a
+        # fabricated/unresolvable SHA fails for its author, not for the next agent to ship.
+        only_resolved = {Path(o).resolve() for o in only}
+        violations = [v for v in violations if v.citation.path.resolve() in only_resolved]
+        if not violations:
+            print("✅ plan-commit-sha-evidence (--only): clean.")
+            return 0
+        print("❌ Unresolvable <repo>@<sha> citation(s) in staged plan(s):")
+        for v in violations:
+            print(f"  - {v.citation.path}:{v.citation.line_no}: {v.citation.repo}@{v.citation.sha}")
+        return 1
 
     checked = sum(1 for c in citations if c.repo in repos)
     print(
