@@ -316,6 +316,42 @@ remains exactly as defeatable as the 2026-07-26 incident. Regression coverage: `
 
 ---
 
+## Fleet-wide in-flight-task double-dispatch guard + abandoned-claim threshold (2026-08-06/09)
+
+**The gap this closes.** A resumable long-running todo (a GCS backfill/migration whose real-world work can outlive its
+owning slot's tracked session — the triggering incident, `prediction_trades_migration_concurrent_dispatch_2026_07_28.md`
+— a slot's session ended with no closing Progress Log entry) could be re-dispatched to a SECOND slot while the first was
+still genuinely working, because the backlog dispatcher's existing `status == 'queued'` precondition doesn't by itself
+catch a task whose `TaskRow` bookkeeping reads free but whose owning `SlotRow` is still actively working it.
+
+**The guard (`agent-orchestrator@9e28a36`, 2026-08-06).** A FLEET-scope `in_flight_elsewhere` eligibility filter in
+`server/dispatch.py`'s `_FILTERS` table: if a `SlotRow` still shows a task as its `current_task` with a live heartbeat,
+no OTHER slot may claim the same task id, even if the `TaskRow`'s own `status`/`dispatched_to` reads free. Wired into
+`_detailed_fleet_reasons` so `/api/backlog/{id}/blockers` reports the block by name. The staleness threshold is an
+INJECTED tuning parameter, `tuning.in_flight_task_owner_stale_after_seconds` (env-free — change the code default +
+redeploy, `.env.local` silently no-ops) — never hardcoded into the filter logic. Regression:
+`tests/ test_dispatch_in_flight_elsewhere.py` (live-owner blocks a second slot; stale-owner releases it; the owning slot
+may still claim its own task; threshold configurable via `set_tuning`; a live-owned in-flight task excluded from the
+spawn budget).
+
+**Operator ruling 2026-08-09 (`prediction_trades_migration_concurrent_dispatch_2026_07_28.md` todo 3) — both open
+questions now resolved:**
+
+1. **Threshold: 900s, ratified.** The shipped default was already this value — it's the exact number BOTH the precedents
+   that motivated the knob (`TuningDefaults.watchdog_heartbeat_timeout`, `server/config.py:473`, and
+   `one_shot_stale_grace_minutes`=15min, `…/config.py:664`) independently agree on. No code change required — the ruling
+   confirms the existing default is correct, it doesn't change it.
+2. **Stale-claim takeover rule: merge, preferring the higher-progress checkpoint.** When a second slot resumes a task
+   whose prior owner went stale, it does NOT blindly adopt the dead slot's checkpoint as-is, and does NOT always
+   re-verify from zero — it merges the available checkpoint(s) and prefers the entry with the higher progress count.
+   This mirrors the triggering incident's own ad-hoc fix (three report files merged by day, preferring the higher
+   `canonical_enriched` count) — a working pattern already proven under the exact failure this guard exists for, rather
+   than a fresh design. Any resumable todo whose checkpoint format supports a monotonic progress count should implement
+   takeover this way; a format without one should state its own equivalent (e.g. latest-mtime-wins) rather than
+   defaulting to blind adopt-or-discard.
+
+---
+
 ## Slack alert paths
 
 | Event                   | Alert                                                                                                | Severity                        |

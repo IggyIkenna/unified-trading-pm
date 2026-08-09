@@ -15,7 +15,7 @@ summary: >-
   writes to the same object converge to identical content) — the cost is wasted GCS list/read calls and wall-clock, not
   correctness. Slot 8 merged all 3 slots' report files (dedup by day, preferring the entry with the higher
   canonical_enriched count) and resumed from the merged 140-day checkpoint rather than restarting from zero.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [data]
@@ -58,6 +58,13 @@ context_scope:
     agent-orchestrator/server/config.py,
   ]
 ---
+
+> **✅ RESOLVED + ARCHIVED 2026-08-09** — all 3 todos done. Todos 1+2 (shared checkpoint convention, dispatcher
+> in-flight guard) shipped `agent-orchestrator@9e28a36` 2026-08-06. Todo 3 (heartbeat-staleness threshold + stale-claim
+> takeover rule) ruled 2026-08-09 by the operator: 900s threshold (ratifies the already-shipped default), takeover =
+> merge preferring higher-progress checkpoint. Durable record:
+> `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Fleet-wide in-flight-task double-dispatch guard +
+> abandoned-claim threshold".
 
 ## What I found
 
@@ -149,19 +156,13 @@ One or both of:
       tests: live-owner blocks a second slot; stale-owner releases it; the owning slot may still claim its own task; the
       threshold is configurable via `set_tuning`; a live-owned in-flight task is excluded from the spawn budget) — full
       `quality-gates.sh` green (2572 passed, 2 skipped) both pre- and post-commit. (repo: `agent-orchestrator`)
-- [ ] [OPERATOR] P2. **Define the heartbeat-staleness threshold that marks an in-flight attempt ABANDONED, so a second
-      slot knows it is safe to resume.** Todo 2 deadlocks without this: slot 7's session ended with no closing Progress
-      Log entry, so under a naive "is it still live?" gate its claim reads in-flight FOREVER and permanently blocks
-      re-dispatch of a task nobody is working — trading this doc's duplicate-dispatch waste for a silent stall. Decide
-      the threshold and whether it reuses an existing knob or needs its own; the live precedents are
-      `TuningDefaults.watchdog_heartbeat_timeout` (900s, `agent-orchestrator/server/config.py:473`) and
-      `one_shot_stale_grace_minutes` (15.0, `…/config.py:664`) — note `tuning.*` knobs are env-free (change the code
-      default + redeploy; `.env.local` silently no-ops). Must ALSO state what the resuming slot does with a stale
-      claim's partial checkpoint (adopt it vs re-verify from zero) — this incident's own ad-hoc answer was to merge the
-      3 report files by day, preferring the entry with the higher `canonical_enriched` count. **Done-when**: the
-      threshold value, the knob that carries it, and the stale-claim takeover rule are written down in
-      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (or the worker-liveness SSOT it cites).
-      (repo: `agent-orchestrator` + `unified-trading-pm`)
+- [x] ✅ [OPERATOR] P2. **RULED 2026-08-09 (operator, interactive session — recorded in
+      `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Fleet-wide in-flight-task double-dispatch
+      guard + abandoned-claim threshold" per this todo's own done-when): threshold = 900s (ratify the already-shipped
+      default, no code change), takeover rule = merge preferring the higher-progress checkpoint** (mirrors this
+      incident's own ad-hoc fix — 3 report files merged by day, preferring higher `canonical_enriched`). Note: todos 1+2
+      (the actual dispatcher guard) already shipped 2026-08-06 (`agent-orchestrator@9e28a36`) using this exact 900s
+      value as its default — this ruling formally ratifies what was already live, not a new behavior.
 
 ## What I did NOT do
 

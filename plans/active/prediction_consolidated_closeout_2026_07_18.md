@@ -371,7 +371,7 @@ fixture-linked before MVP backfill.
     — **added to this index 2026-07-31** (Finding 3 fix). 3 open P3, self-dispatching (`assigned_vm: planning`); its
     higher-value item is already substantively closed via `data_pipeline_check_mdps_features_2026_07_20.md`, only a
     small currently-unreachable volatility-module echo remains.
-  - [`plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`](/plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md)
+  - [`plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`](/plans/archive/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md)
     — **added to this index 2026-07-31** (Finding 3 fix). 2 prose-only recommended fixes, no checkboxes; dual-tagged
     `[prediction, ao]`, `parent_epic: orchestrator_master` — genuinely owned by the `ao` tranche's own closeout
     (dispatcher/checkpoint architecture, not prediction data work), not re-drafted here per the primary-owner rule for
