@@ -130,16 +130,38 @@ clean+reset-away tree are indistinguishable without checking `git log` against t
       (independent of reflog expiry), loudly logged with the exact recovery command, no-op for the common no-local-ahead
       case. Verified against a real git fixture reproducing the exact incident. `slot-cron-ff-pull.sh` itself needed no
       change (confirmed already safe by construction — see todo 1).
-- [ ] 3. [REVIEW] P2. Audit whether other repos' clones show the same pattern (this was only directly observed on
-      `unified-trading-library`; `features-service` and `instruments-service` did NOT lose their equivalent commits
-      during the same session window, which may mean this clone specifically is shared by more concurrent
-      sessions/agents than the others, or has a different cron/automation footprint). **Note (2026-07-22)**: with the
-      root cause now identified as `cascade_dep_branch`, this audit question changes shape — the exposure is any
-      ancestor repo that (a) is a transitive internal dependency of something being shipped with `--dep-branch`, and (b)
-      has concurrent agents landing local commits on the same branch name in its shared clone at the same time.
-      `features-service`/`instruments-service` not losing work is consistent with them not being on an ancestor path any
-      concurrent `--dep-branch` cascade walked through that session, not necessarily a different cron/automation
-      footprint.
+- [x] 3. [REVIEW] P2. ✅ **AUDITED 2026-08-09 (slot-2).** Yes — confirmed extensively fleet-wide, but via **≥4 distinct
+      mechanisms** that all produce the identical `branch: Reset to origin/<branch>` reflog signature, not a single
+      recurring bug. Corpus survey (10 related issue docs, `plans/archive/issues/`) found: **(a)**
+      `cascade_dep_branch()` (this doc's own mechanism, human `--dep-branch`-only) also hit `unified-trading-pm` /
+      `features-service` (`branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`) and
+      `unified-trading-library` again (`slot_cron_ff_pull_toctou_reset_race_2026_07_27.md`, initially misattributed to
+      `slot-cron-ff-pull.sh` then re-traced here); **(b)** `heal_dead_slot_branch_quarantine()` in agent-orchestrator's
+      `_branch_state.py` (a dead-slot liveness misclassification, NOT quickmerge) hit `unified-trading-library`,
+      `unified-api-contracts`, `agent-orchestrator`, `instruments-service`, `execution-service`, `client-reporting-api`,
+      `strategy-service`, `deployment-service` across 10 slots / 63 commits
+      (`slot11_silent_branch_reset_data_loss_2026_07_13.md`, `slot6_git_reset_dataloss_2026_07_13.md`,
+      `slot_branch_realign_discards_uncommitted_worktree_2026_07_17.md`); **(c)** the unguarded sibling-realign path in
+      `_orphan.py`'s `commit_and_push_dirty_repos()` hit `unified-api-contracts`
+      (`slot_double_reset_dataloss_race_2026_07_25.md`); **(d)** quickmerge's own STAGE 5 branch-selection `checkout -B`
+      (agent-mode sentinel-retry path — a DIFFERENT call site than `cascade_dep_branch`) hit `unified-api-contracts`
+      (`quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`). **All 4 mechanisms were independently
+      root-caused and fixed** (preserve-ref+flock for (a); 900s min-ahead-age + HeadBackwardCanary + dirty-worktree
+      guard for (b); shared realign cooldown + hoisted age guard for (c); STAGE-5 no-regression guard (`f93a618e6`) +
+      the mandatory `git merge-base --is-ancestor` pre-`/done` verify step (now in RULES.md §2 / worker.md) for (d)) —
+      `slot-cron-ff-pull.sh` was independently exonerated twice (docs (b)/(a) above) and is confirmed NOT a cause of any
+      of these. **Fan-in exposure** (`workspace-manifest.json`, 26 repos total): for mechanism (a) specifically,
+      `unified-trading-library` and `unified-api-contracts` are TIED at fan-in=19 (every other repo depends on both) —
+      the two maximally-exposed ancestors, consistent with UTL being the repo this doc's own incident hit; next tier
+      `strategy-service`/`execution-service` (fan-in=2); every other repo fan-in≤1 (only cascaded when its one direct
+      dependent ships `--dep-branch`). **Residual open question** (not a new bug, see todo 9):
+      `plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` reports the identical "Reset to
+      origin" symptom recurring on 7-of-24 repos in a 2026-08-06 session — AFTER every fix above had shipped —
+      attributed by that session to the already-"resolved" STAGE-5 mechanism (d); every instance was recoverable via
+      `git cherry-pick` (zero permanent loss, matching every other doc in this survey), so the existing
+      verify-before-`/done` mitigation is holding, but whether the STAGE-5 no-regression guard itself still has a gap
+      under extreme concurrent fan-out was not re-verified by that session and no dedicated issue doc tracks it —
+      captured as new todo 9 below rather than left as prose.
 - [x] 6. [INFRA] P1. **RECURRED 2026-07-28 (found by slot-1, audited by slot-7).** Same exact mechanism, same repo
       (`unified-trading-library`), 5 days after the preserve-fix (`06dc7632`) landed: `61efd2e5` (23:04:17) and
       `dbb93c3a` (23:10:30) both discarded (`branch: Reset to origin/live-defi-rollout` reflog, matching signature
@@ -181,13 +203,27 @@ clean+reset-away tree are indistinguishable without checking `git log` against t
       race-prone band-aid, not a fix, because it re-implements the SAME check-then-act shape as the original 2026-07-22
       bug, just one level in. Repro script + scratch fixtures kept in this session's scratchpad (not committed — no
       product code changed by this todo, root-cause only; the fix itself is todo 8's scope, not duplicated here).
-- [ ] 8. [INFRA] P2. **AUTHORIZED 2026-08-08 (operator ruling, ao round-5 apply item 16): "Authorize all 3."** Given
-      todo 7 shows preserve-only is not proven reliable, consider a stronger prevention (not just recovery) fix for
-      `cascade_dep_branch`: e.g. skip the `checkout -B` entirely (log + leave the ancestor clone alone) when local has
-      commits ahead of origin, rather than resetting-then-preserving — the cascade's whole purpose is to align an
-      ancestor's branch name for a _different_ repo's dependency check; forcibly moving a SHARED clone's branch ref out
-      from under a concurrent agent's in-flight commit is arguably never the right default behavior, preserve-net or
-      not.
+- [x] 8. [INFRA] P2. ✅ **Already shipped by the time of the 2026-08-08 authorization — checkbox was stale.** Found
+      during the todo-3 audit (2026-08-09, slot-2): `scripts/quickmerge.sh` already carries the atomic fix as of
+      `unified-trading-pm@1d82f66451` (2026-08-05, "close cascade_dep_branch's TOCTOU data-loss race with a lock, not a
+      skip") — confirmed live on current HEAD (`git merge-base --is-ancestor 1d82f66451 HEAD` ✅) and matches the code:
+      `flock` on `$ancestor_path/.git/quickmerge-cascade.lock` serializes concurrent cascades, and the preserve
+      (`git update-ref refs/wip-preserve/cascade-...`) + `checkout -B` are now two back-to-back plumbing calls with no
+      variable-length computation between them (closes the O(history) `rev-list` TOCTOU window todo 7 reproduced), per
+      the shipping commit's own inline code comment, which attributes the direction (atomic-preserve, not
+      skip-the-reset) to a 2026-08-05 decision predating this doc's own 2026-08-08 "authorize all 3" note by 3 days — no
+      separate traceable plan/codex doc records that earlier decision, only the code comment itself; the 2026-08-08
+      entry on todos 4/5 below was re-confirming scope for those two, not re-authorizing this one from scratch. No
+      further action needed.
+- [ ] 9. [REVIEW] P3. **NEW (found during the todo-3 audit, 2026-08-09).** Re-verify the STAGE-5 no-regression guard
+      (`unified-trading-pm@f93a618e6`, closes `quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md`)
+      against the evidence in `plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` (items
+      5/6/9), which reports the identical "Reset to origin" symptom recurring on 7-of-24 repos in a single 2026-08-06
+      session, AFTER the guard had shipped. Every instance there was recoverable via `git cherry-pick` (no permanent
+      loss) and the mandatory verify-before-`/done` step caught it, so this is NOT urgent — but confirm whether the
+      bats-test coverage for the STAGE-5 guard exercises high-fan-out concurrent-push contention (many repos shipping
+      near-simultaneously), and if it doesn't, extend it or file a fresh root-cause doc. Target repo:
+      `unified-trading-pm` (`scripts/quickmerge.sh` + its bats suite).
 
 ## Related QG-infra findings this session (worktree isolation vs the QG harness)
 
@@ -241,3 +277,13 @@ single canonical clone per repo and behaves incorrectly under multi-clone (workt
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **2026-08-09 (slot-2, todo 3 audit — closed)**: surveyed the fleet's `workspace-manifest.json` (fan-in analysis:
+  `unified-trading-library`/`unified-api-contracts` tied at fan-in=19, the two maximally-exposed `cascade_dep_branch`
+  ancestors) and 10 related archived issue docs; confirmed the "Reset to origin" symptom has recurred fleet-wide via ≥4
+  independently root-caused mechanisms (this doc's `cascade_dep_branch`, agent-orchestrator's
+  `heal_dead_slot_branch_quarantine`, `_orphan.py`'s unguarded realign, quickmerge's STAGE-5 checkout), all fixed,
+  `slot-cron-ff-pull.sh` exonerated twice. Todo 3 flipped with the full breakdown. Also found todo 8's fix already
+  shipped (`1d82f66451`, 2026-08-05) with a stale checkbox — flipped it too (same doc, same session, in-scope per
+  findings-triage "in your file → fix in same commit"). Opened new todo 9 (P3) for a residual, non-urgent open question:
+  whether the STAGE-5 guard's test coverage handles the high-fan-out recurrence reported 2026-08-06 in
+  `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`.
