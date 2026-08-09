@@ -122,22 +122,31 @@ pass (not a delta) per this dispatch's autonomous-mode instructions. batch6 itse
 
 ## Todos
 
-- [ ] [DATA] P2. **Build + run a manifest-metadata reconciliation script for CME chain-bundle rows with a blank
-      `instrument_id`.** Confirmed 28,307 `ohlcv_1m` + 111 `ohlcv_1s` rows for ES alone (same pattern confirmed present
-      for CL/GC/HG/NG/SI, exact per-root counts not yet censused) — these predate the 2026-07-30
-      `_resolve_chain_bundle_manifest_id` writer fix (`market-tick-data-service@65beaeaf`), which only prevents new
-      occurrences going forward. None of the 3 existing tradfi migration scripts
-      (`recover_tradfi_garbage_underlying_2026_07.py` / `migrate_tradfi_canonical_2026_07.py` /
-      `rebundle_tradfi_chains_2026_07.py`) touch manifest metadata — they operate on GCS parquet objects only, so this
-      is net-new tooling, not a re-run. Build a script that: (1) reads the manifest index
-      (`_index/availability_index.parquet`), (2) selects rows where `instrument_id==""` AND `row_count>0` AND a valid
-      `underlying` for CME futures_chain/options_chain shards, (3) derives the canonical per-(venue,underlying) bundle
-      id via the already-shipped `_resolve_chain_bundle_manifest_id(venue, instrument_type, underlying, data_type)`
-      (e.g. `CME:FUTURE:SP500`), (4) CAS-rewrites (`if_generation_match`) those manifest rows — dry-run first, `--apply`
-      only after a snapshot-before-write. Repo: market-tick-data-service. **Done when**: a full per-root census (ES +
-      all other affected CME roots) is recorded, the script exists with a dry-run mode, and after `--apply` a fresh
-      census shows 0 remaining blank-`instrument_id` rows for the affected (venue, data_type) shards, with
-      `quality-gates.sh` green. Source: `issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`.
+- [x] ✅ [DATA] P2. **DONE 2026-08-09 — `market-tick-data-service@63cff354`.** Build + run a manifest-metadata
+      reconciliation script for CME chain-bundle rows with a blank `instrument_id`. **Live census (2026-08-09) differs
+      materially from this todo's original 28,307+111-for-ES-alone figure**: a fresh count against the LIVE manifest
+      (not the 2026-07-30 snapshot) found only 3,267 candidate rows across 41 distinct (underlying, data_type) roots —
+      10 days of continued backfill/recapture activity with the fixed writer had already superseded most of the original
+      population with correctly-tagged twins (confirmed: 2,492 of the 3,267 restamped rows deduped against a
+      pre-existing correctly-tagged row for the same (date, data_type, instrument_id) key). Full per-root breakdown in
+      the Progress Log below. Script: `scripts/restamp_tradfi_cme_chain_bundle_blank_instrument_id_2026_08_09.py` —
+      reads the manifest index, selects `venue=CME` + `instrument_type in {futures_chain, options_chain}` +
+      `data_type in {ohlcv_1m, ohlcv_1s}` + `capture_status=captured` + blank `instrument_id` + non-blank `underlying` +
+      `instrument_count>0`, derives the canonical bundle id via the already-shipped
+      `_resolve_chain_bundle_manifest_id(venue, instrument_type, underlying, data_type)`, CAS-rewrites
+      (`if_generation_match`) with a pre-write snapshot
+      (`_index/backups/availability_index.pre_cme_chain_bundle_blank_id_restamp_20260809T144613Z.parquet`). Applied to
+      production: 3,267/3,267 resolved (0 quarantined), 2,492 deduped, generation `1786286566278323→1786286789218193`.
+      **Fresh independent post-apply census confirms 0 remaining blank-`instrument_id` rows** for this exact scope and 0
+      duplicate (date, data_type, instrument_id) keys. 12 regression tests added
+      (`tests/unit/scripts/test_restamp_tradfi_cme_chain_bundle_blank_instrument_id_2026_08_09.py`), `quality-gates.sh`
+      green. Repo: market-tick-data-service. **Scope note — 2 adjacent larger populations found, deliberately NOT
+      touched**: `instrument_type=combo` (~301K rows) is by-design id-less (confirmed via `_tradfi_manifest_shard.py`'s
+      own comment — a spread bundle has no single resolvable per-bundle id); `instrument_type=FUTURE` (~19.6K rows,
+      singular/canonical-cased — a DIFFERENT, non-chain-bundle write path) is a distinct root cause outside this todo's
+      literal wording ("CME futures_chain/options_chain shards") — follow-up issue doc:
+      `issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md`. Source:
+      `issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`.
 
 - [ ] [DATA] P2. **Harden `migrate_tradfi_canonical_2026_07.py` against 2 confirmed recurrence risks — combined into ONE
       todo because both edit the same file.** (1) `_rel()` (lines ~159-163) unconditionally does `path.find(marker)`
@@ -365,6 +374,33 @@ mirroring the batch1-6 finalize pattern.
   own "Codex SSOTs" list to stay within the 6-entry cap — this batch's 4 todos are post-capture manifest/migration
   fixes, not databento vendor-sourcing content.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **slot-15 worker 2026-08-09** (task `tradfi_satellite_ao_dispatch_batch7-001`): shipped todo 1
+  (`market-tick-data-service@63cff354`). Full per-root census (live manifest, immediately pre-apply,
+  `venue=CME`/`instrument_type in {futures_chain,options_chain}`/`data_type in {ohlcv_1m,ohlcv_1s}`/`capture_status= captured`/blank
+  `instrument_id`/non-blank `underlying`/`instrument_count>0`), 3,267 rows / 41 roots: `SP500` ohlcv_1m=797 ohlcv_1s=797
+  · `BTC` ohlcv_1m=221 ohlcv_1s=145 · `ETH` ohlcv_1m=206 ohlcv_1s=145 · `COPPER` ohlcv_1m=145 ohlcv_1s=146 · `CRUDE`
+  ohlcv_1m=146 ohlcv_1s=145 · `GOLD` ohlcv_1m=145 ohlcv_1s=146 · `MET` ohlcv_1m=34 · `MBT` ohlcv_1m=24 · then 27 roots
+  at 1 row each (AUD/CORN/EC6E/ECCL/ECGC/ECNQ/ECRTY/EUR/
+  GASOLINE/HEATINGOIL/JPY/MICRO-SP500/MXN/NATGAS/SILVER/SOYBEAN/SOYMEAL/SOYOIL/TBOND×2/TNOTE10Y×2/TNOTE2Y/TNOTE5Y/ WHEAT
+  — mostly options_chain, ohlcv_1m and ohlcv_1s each). This is dramatically smaller than the todo's own
+  28,307+111-for-ES-alone figure (from the issue doc's 2026-07-30 investigation) — re-verified this is NOT a methodology
+  gap: the 10 days between that snapshot and this run saw substantial CME backfill/recapture activity with the
+  already-fixed writer, naturally superseding most of the original blank-id population with fresh correctly-tagged twins
+  for the same (date, underlying, data_type) keys (confirmed directly: 2,492 of 3,267 restamped candidates deduped
+  against exactly such a pre-existing twin). Applied 100% resolved / 0 quarantined; independent fresh post-apply census
+  (separate `read_availability_index_safe` call, not just the script's own self-report) confirms 0 remaining in-scope
+  blank rows, 0 duplicate keys. Memory note: the live manifest is ~7.02M rows/~50 cols — an early unbounded local run
+  (before the fix below) climbed to ~9.5GB RSS and was killed on this shared host; root cause was a defensive
+  `df.copy()` plus several redundant full-column `.map()` re-computations in my own first draft, not the underlying data
+  volume — fixed by narrowing to cheap categorical masks before any per-row string coercion and mutating the manifest
+  DataFrame in place; both the dry-run and the real `--apply` then completed cleanly under `run-bounded-analysis.sh`
+  (10G/14G caps, peak measured ~9.4GB). **Side-finding, NOT part of this todo**: the same live query surfaced two
+  adjacent blank-`instrument_id` populations in the identical (CME, ohlcv_1m/1s, captured) shape —
+  `instrument_type=combo` (~301K rows, confirmed BY DESIGN id-less per `_tradfi_manifest_shard.py`'s own comment, not a
+  bug) and `instrument_type=FUTURE` (~19.6K rows, singular/ canonical-cased, a DIFFERENT non-chain-bundle write path,
+  actively growing — ~50K rows/day written across the broader unscoped population in the days immediately before this
+  session). Filed as `issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md` rather than fixed here (outside
+  this todo's literal "CME futures_chain/options_chain shards" wording; different, not-yet-understood root cause).
 
 ## Codex SSOTs
 
