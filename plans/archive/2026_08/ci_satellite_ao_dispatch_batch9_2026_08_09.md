@@ -110,6 +110,12 @@ Todos 1 and 2 touch disjoint files (`qg_host_adaptive_resource_governor_2026_07_
     file; `a52672b6d` is the actual shipping commit, matching this todo's content and verified an ancestor of
     `origin/live-defi-rollout`)
 
+    **Independently confirmed, 2026-08-09 (slot 12):** reached the identical conclusion (same real commit,
+    `a52672b6de60b62e98b5362c30155456f82e92f3` — `a52672b6d` and `a52672b6de` are both valid prefixes of it) via a
+    separate content-match + ancestor-verify pass, before discovering this correction had already landed. See
+    `plans/archive/issues/pm_qg_red_audit_batch10_finalize_2026_08_09.md` for the broader citation-drift finding (2
+    other mis-cited SHAs corrected the same way, in `quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md`).
+
 - [x] 2. ✅ [DOC] P2. **Fix the stale `status: active` for `mtds_retry_safe_default_audit_2026_07_14` in
       `plans/epics/infrastructure_master.md` (around L595-597, re-locate by grepping the slug fresh — the epic file
       churns).** The plan itself is archived at `plans/archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md` with

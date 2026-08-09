@@ -26,6 +26,9 @@ source: >-
   Flagged, not checked, in cefi_satellite_ao_dispatch_batch11_2026_08_09.md todo 5's Progress Log entry (slot-6,
   2026-08-09): "deployment-ui may have Barchart source-name labels in UI dropdowns — worth a manual spot-check... check
   before calling the todo's 'no Barchart references remain' done-when fully satisfied."
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
 ---
 
 # deployment-ui Barchart label spot-check

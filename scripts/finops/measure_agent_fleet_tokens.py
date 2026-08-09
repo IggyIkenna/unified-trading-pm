@@ -62,7 +62,7 @@ for fp in glob.glob(os.path.join(ROOT, "**", "*.jsonl"), recursive=True):
                 continue
             try:
                 t = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
-            except (ValueError, TypeError):
+            except (ValueError, TypeError, AttributeError):
                 continue
             if t < cut:
                 continue

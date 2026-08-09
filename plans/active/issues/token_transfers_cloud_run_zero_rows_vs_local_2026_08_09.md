@@ -31,6 +31,8 @@ estimate_calibrated_ai_days: 0.3
 assigned_role: data_engineering
 resolved_by:
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # token_transfers: Cloud Run executions consistently return 0 rows; direct code-level test does not

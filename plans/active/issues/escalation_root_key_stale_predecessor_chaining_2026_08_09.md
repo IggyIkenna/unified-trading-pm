@@ -163,4 +163,6 @@ Shipped together with the sibling false-resolution fix in the same commit: `agen
   operator gate. Conflict-check: no other active plan references `_resolve_root_key`/
   `reconcile_stale_unresolved_escalations` (grepped `plans/active/`). Carries 2 open todos, so NOT exempt from
   `check_finalize_plan_coverage.py`'s single-open-todo carve-out — authored the gated finalize twin
-  `escalation_root_key_stale_predecessor_chaining_finalize_2026_08_09.md` in the same commit.
+  `escalation_root_key_stale_predecessor_chaining_finalize_2026_08_09.md` in the same commit (renamed 2026-08-09 to
+  match the `<slug>_YYYY_MM_DD.md` filename convention — `check_plan_discipline.py` B-issue-filename; fixed
+  independently by two concurrent sessions, converged on the same target name).

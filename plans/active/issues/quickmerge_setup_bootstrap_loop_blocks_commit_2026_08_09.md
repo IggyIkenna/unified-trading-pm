@@ -62,7 +62,10 @@ depends_on: []
 
 `unified-trading-pm@c389fe9dc` — _"fix(scripts): portable UV_VERSION parse (grep -oP -> sed -E) + host-scoped push
 governor"_ — touching `scripts/setup.sh`, `scripts/quickmerge.sh`, `scripts/quality-gates-base/base-library.sh`,
-`scripts/dev/safe-doc-push.sh`.
+`scripts/dev/safe-doc-push.sh`. (SHA corrected 2026-08-09 — originally cited as `a766aabc8d`, which does not resolve to
+a real commit in this clone; content-matched against the actual git log and confirmed `c389fe9dc...`, ancestor-verified,
+is the real commit that shipped this exact change — fixed independently by two concurrent sessions, converged on the
+same commit. See `plans/archive/issues/pm_qg_red_audit_batch10_finalize_2026_08_09.md`.)
 
 **`grep -oP` is a GNU extension and does not exist in macOS BSD grep.** The UV_VERSION parse in `setup.sh` therefore
 failed on this host, `[3] Bootstrap uv` never completed, and the script re-entered env-prep — which is exactly the
@@ -106,17 +109,18 @@ quickmerge attempts had produced no diagnostic at all. Do that FIRST next time.
 ## Open work
 
 - [x] [DEVOPS] P1. ✅ **Diagnosed and FIXED — `grep -oP` is GNU-only, absent in macOS BSD grep**
-      (unified-trading-pm@c389fe9dc, peer session). Original text: **Diagnose why quickmerge re-enters setup.sh after
-      Stage 2 and exits silently** — instrument with `bash -x`, or bisect the stage that returns control to env-prep.
-      The silent exit with no error is the worst part: an agent cannot distinguish "blocked" from "succeeded" without
-      checking `git ls-files` afterwards.
+      (unified-trading-pm@c389fe9dc, peer session; SHA corrected 2026-08-09, was mis-cited as `a766aabc8d`). Original
+      text: **Diagnose why quickmerge re-enters setup.sh after Stage 2 and exits silently** — instrument with `bash -x`,
+      or bisect the stage that returns control to env-prep. The silent exit with no error is the worst part: an agent
+      cannot distinguish "blocked" from "succeeded" without checking `git ls-files` afterwards.
 - [ ] [DEVOPS] P2. **Make quickmerge fail loudly when it exits without committing** — a non-zero exit and a printed
       reason. A silent no-op that leaves files untracked is how work gets lost.
-- [x] [DEVOPS] P2. ✅ **Commit the pending finops files** blocked by this — three tools in `scripts/finops/`
-      (`measure_agent_fleet_tokens.py`, `cloud_spend_forecast_2026_08.py`, `llm_and_research_unit_economics.py`). They
-      sit in the working tree, validated (`ast.parse` clean, lifecycle markers present), untracked. The docs half of
-      that change landed separately via `scripts/dev/safe-doc-push.sh`. — **DONE**: all three landed
-      `unified-trading-pm@0f6087516` (finops tooling commit); `git ls-files scripts/finops/` confirms all three tracked.
+- [x] [DEVOPS] P2. ✅ **Done — stale on re-check 2026-08-09.** All three `scripts/finops/` tools
+      (`measure_agent_fleet_tokens.py`, `cloud_spend_forecast_2026_08.py`, `llm_and_research_unit_economics.py`) are now
+      tracked and committed — confirmed via `git ls-files` (all three present) and `git log` (landed together in
+      `unified-trading-pm@0f6087516f`, "docs(finops): three-year tapering GCP proposal + DART-led restructure + finops
+      tooling", verified ancestor of `origin/live-defi-rollout`). No action needed; this todo was simply not reconciled
+      after a later session landed the files by another path.
 - [ ] [DEVOPS] P3. **Check whether this is host-specific** — if it reproduces on the AO VM it blocks the whole agent
       commit flow, not just interactive work from this laptop.
 
