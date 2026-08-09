@@ -55,12 +55,19 @@
 # that carve-out. Do NOT use this for source/code changes: quality-gates.sh is mandatory
 # there and this script never runs it. Run from the target repo's root.
 #
-# EXIT CODES: 0 success (incl. "nothing to commit" -- another slot already landed the
-# identical content). 2 bad usage. 3 unresolved rebase conflict (real content collision,
-# needs a human). 4 push rejected for a non-drift reason. 5 exhausted retries under
-# sustained contention (transient -- just re-run). 6 commit rejected by a pre-commit hook
-# for a DETERMINISTIC content reason (plan-hygiene, conflict markers, frontmatter schema,
-# terminal-status-archived, ...) -- fix the content; re-running cannot help. Added
+# EXIT CODES: 0 success -- verified end-to-end (incl. "nothing to commit" -- another slot
+# already landed the identical content; every success path, including that fallback, only
+# reports 0 after independently confirming `git log --oneline -1 -- <path>` is non-empty for
+# every named file and, post-push, that `git branch -r --contains HEAD` includes the target
+# branch -- see verify_committed/verify_pushed below). 2 bad usage. 3 unresolved rebase
+# conflict (real content collision, needs a human). 4 push rejected for a non-drift reason, OR
+# `git push` exited 0 but verify_pushed found origin/<branch> does not actually contain HEAD.
+# 5 exhausted retries under sustained contention (transient -- just re-run). 6 commit rejected by a pre-commit hook
+# for a DETERMINISTIC content reason (plan-hygiene, conflict markers,
+# frontmatter schema, terminal-status-archived, ...) -- fix the content; re-running cannot
+# help -- OR `git commit` exited 0 but verify_committed found no commit reachable from HEAD
+# touching a named file (a stubbed/mocked commit call, or a deeper git-state anomaly; added
+# 2026-08-09, safe_doc_push_reports_success_having_committed_nothing_2026_08_09 todo 2). Added
 # 2026-08-08: exit 5 was previously returned for this case too, which told the next agent
 # to retry something that could never succeed (see commit_failure_is_retriable below).
 
@@ -171,6 +178,37 @@ files_exist_in_head() {
   for _f in "${FILES[@]}"; do
     git cat-file -e "HEAD:$_f" 2>/dev/null || return 1
   done
+  return 0
+}
+
+# verify_committed -- ground truth for "is this file genuinely committed", independent of any
+# git command's exit code. safe_doc_push_reports_success_having_committed_nothing_2026_08_09
+# (todo 2): a `git commit`/fallback path can report success (a 0 exit, or a "nothing to commit"
+# message) for reasons that have nothing to do with the named files actually landing -- a
+# stubbed/mocked commit call, or a deeper git-state anomaly. `git log --oneline -1 -- <path>` is
+# the actual history check: non-empty means SOME commit reachable from HEAD touches this path;
+# empty means it never did, no matter what the commit step's own exit code claimed.
+verify_committed() {
+  local _f _log
+  for _f in "${FILES[@]}"; do
+    _log="$(git log --oneline -1 -- "$_f" 2>/dev/null)"
+    if [[ -z "$_log" ]]; then
+      echo "  ❌ verification failed: no commit reachable from HEAD touches named file: $_f" >&2
+      return 1
+    fi
+  done
+  return 0
+}
+
+# verify_pushed -- ground truth for "did this actually land on the target branch", independent
+# of `git push`'s own exit code. `git branch -r --contains HEAD` lists every remote-tracking
+# branch whose history includes the current HEAD commit -- origin/$BRANCH must be among them, or
+# the push did not genuinely land there regardless of what the push command reported.
+verify_pushed() {
+  if ! git branch -r --contains HEAD 2>/dev/null | grep -qF "origin/${BRANCH}"; then
+    echo "  ❌ verification failed: origin/${BRANCH} does not contain HEAD after push" >&2
+    return 1
+  fi
   return 0
 }
 
@@ -457,18 +495,25 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
     else
       echo "  nothing staged for the named files -- checking if content already matches HEAD"
       if git diff --quiet -- "${FILES[@]}" 2>/dev/null && files_exist_in_head; then
-        echo "✅ Named files already match HEAD (a concurrent session landed identical content) -- treating as success."
-        final_ok=true
-        break
+        if verify_committed && verify_pushed; then
+          echo "✅ Named files already match HEAD (a concurrent session landed identical content) -- treating as success."
+          final_ok=true
+          break
+        fi
+        echo "  files_exist_in_head passed but end-to-end verification failed -- not trusting the fallback; retrying"
+      else
+        echo "  at least one named file is absent from HEAD -- staging genuinely failed, not already-landed; retrying"
       fi
-      echo "  at least one named file is absent from HEAD -- staging genuinely failed, not already-landed; retrying"
     fi
 
     if ! locked_git_commit -q -m "$MSG" 2>/tmp/_sdp_commit_err; then
       if grep -qi "nothing to commit" /tmp/_sdp_commit_err; then
-        echo "✅ Nothing to commit -- already landed. Treating as success."
-        final_ok=true
-        break
+        if verify_committed && verify_pushed; then
+          echo "✅ Nothing to commit -- already landed. Treating as success."
+          final_ok=true
+          break
+        fi
+        echo "  git reported nothing-to-commit but end-to-end verification failed -- not trusting it; retrying" >&2
       fi
       if grep -qi "index.lock" /tmp/_sdp_commit_err; then
         echo "  index.lock contention (another process is writing this instant) -- short wait, retry"
@@ -500,13 +545,21 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       backoff "$attempt"
       continue
     fi
+    if ! verify_committed; then
+      echo "❌ git commit exited 0 but the named file(s) have no commit reachable from HEAD -- refusing to report success (a mocked/stubbed commit call, or a deeper git-state anomaly)." >&2
+      exit 6
+    fi
     committed=true
   fi
 
   if git push origin "HEAD:${BRANCH}" 2>/tmp/_sdp_push_err; then
-    echo "✅ Pushed $(git rev-parse --short HEAD) -> ${BRANCH}"
-    final_ok=true
-    break
+    if verify_pushed; then
+      echo "✅ Pushed $(git rev-parse --short HEAD) -> ${BRANCH}"
+      final_ok=true
+      break
+    fi
+    echo "❌ git push exited 0 but origin/${BRANCH} does not contain HEAD -- refusing to report success." >&2
+    exit 4
   fi
 
   if grep -qiE "non-fast-forward|rejected|fetch first" /tmp/_sdp_push_err; then
