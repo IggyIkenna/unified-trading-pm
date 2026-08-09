@@ -155,13 +155,19 @@ drift_direction: advance-code
       next manifest-consolidator Cloud Run cycle merges these per-VM shards — reading it directly right after the
       backfill is a known reader gap, self-shard-only merge on a still-fresh consolidated blob, not a data-loss signal;
       the per-VM shard read above is the writer's own authoritative record.)
-- [ ] [CODE] P2. **Harden MTDS Extended candle sharp edge (silent truncation).** Source: same doc. The live
-      `_umi_extended.py` candle fetch sends `{interval, limit:1440, endTime}` with NO `startTime`; the API caps a single
-      response at ~2800-3000 rows and returns the most-recent `limit` ending at `endTime`, so any window needing more
-      than one page silently drops the earlier rows. Per-day shards (PT1M, 1440 bars) are currently safe, but add
-      `startTime` + window-aware `limit` + a LOUD truncation warning so a multi-day/finer-interval call can never
-      under-capture silently. Done when: a deliberately-oversized window request either pages correctly or loudly warns
-      instead of silently truncating (regression test). Repo: mtds.
+- [x] ✅ [CODE] P2. **Harden MTDS Extended candle sharp edge (silent truncation) — STALE PREMISE, already shipped
+      (regression test added).** Source: same doc. The todo's premise ("the live `_umi_extended.py` candle fetch sends
+      `{interval, limit:1440, endTime}` with NO `startTime`") was already stale: `_extended_candle_params()`
+      (`market_tick_data_service/adapters/_umi_extended.py:67-82`) already startTime-bounds the request, caps `limit` to
+      the page cap, and LOUDLY `logger.warning`s on an oversized window — shipped `market-tick-data-service@3b9b27e`
+      ("fix(extended): window-aware candle params — guard silent truncation") on 2026-06-22, 48 days before this batch
+      was authored. Both candle-fetch call sites (`_fetch_extended_candles_for_symbol`, `fetch_extended_candles`)
+      already use it. The one real gap was the done-condition's required regression test — added
+      `test_extended_candle_params_within_cap_no_truncation_warning` +
+      `test_extended_candle_params_oversized_window_warns_loudly_instead_of_silent_truncation` to
+      `tests/unit/test_extended_candles.py`, locking in the startTime-bound + capped-limit + loud-warning behavior for
+      both the within-cap and oversized-window cases. Repo: market-tick-data-service@f8d9033b5. Evidence: QG green
+      (sentinel-verified on HEAD), 6/6 tests in `test_extended_candles.py` pass, landed on `live-defi-rollout`.
 - [ ] [CODE] P3. **Align/consolidate the two parallel Extended candle paths.** Source: same doc. The live path is
       `adapters/_umi_extended.py`; `market_interface/adapters/onchain_perps/extended_adapter.py::ExtendedAdapter` is a
       separate, tested-but-unused parallel impl that still carries the global `EXTENDED_DEPLOY_DATE` pre-launch floor
