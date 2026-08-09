@@ -152,25 +152,30 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
       honest-absence-vs-fetch-failure decision is contract-driven rather than string-matched on `"Empty CSV"`. — **DONE
       2026-07-26**: `unified-api-contracts@c144f975` — `140`/`300` registered as `ErrorAction.SKIP`, 2 new unit tests,
       QG green.
-- [ ] [CODE] P2. **Verify the shipped vendor-catalog gate (`tardis_vendor_catalog.py`,
+- [x] ✅ [CODE] P2. **Verify the shipped vendor-catalog gate (`tardis_vendor_catalog.py`,
       `market-tick-data-service@8e406dbb`) reads its `dataTypes`/`availableSince`/`availableTo` from the RIGHT array —
       likely reading the wrong one, which silently degrades the data_type dimension of the 3-condition gate to a no-op
-      (fail-open-safe, not a correctness bug, but an incomplete implementation of this todo's own spec).** Evidence: (1)
-      `_fetch_vendor_catalog` in `tardis_vendor_catalog.py` parses `exchange_info.get("availableSymbols", [])` and reads
-      `sym.get("dataTypes", [])` off THOSE entries — but this issue doc's own "The fix" section (verified live against
-      the real API, 2026-07-17) states the 3-tuple lives under `datasets.symbols[]`, a SEPARATE array, not
-      `availableSymbols[]`. (2) `unified_api_contracts.external.tardis.schemas.TardisAvailableSymbol` (the pre-existing,
-      already-live model for `availableSymbols[]` entries, used by instruments-service's own enumeration) deliberately
-      has NO `dataTypes` field — only `id`/`type`/`availableSince`/`availableTo` — consistent with `dataTypes` genuinely
-      not existing on that array in the real response. (3) The shipped code's own unit tests
-      (`tests/unit/test_tardis_vendor_catalog.py`) mock `availableSymbols[]` entries WITH a fabricated `dataTypes` key
-      to make the tests pass — i.e., the tests validate the code's assumption, not the real API shape, so a live
-      response never exercised this. If confirmed: point the fetch at `datasets.symbols[]` instead (or additionally), or
-      run one live authenticated `GET /v1/exchanges/<venue>` call and diff the two arrays to settle this before touching
-      code. Low severity — the `availableSince`/`availableTo`/symbol-presence dimensions likely still work (those DO
-      exist on `availableSymbols[]`), and the reactive 400 classification (`tardis_csv_transport.is_structural_absence`,
-      already shipped) remains the correctness backstop regardless — this is a missed proactive-optimization dimension,
-      not a denominator-corruption or infinite-retry risk. (repo: market-tick-data-service)
+      (fail-open-safe, not a correctness bug, but an incomplete implementation of this todo's own spec).** — **DONE**:
+      `market-tick-data-service@ca5be7d8` (2026-08-09). **Confirmed live** (unauthenticated
+      `GET     https://api.tardis.dev/v1/exchanges/bybit`, real response, 2026-08-09): `availableSymbols[]` entries
+      carry ONLY `id`/`type`/`availableSince`/`availableTo` — **never** `dataTypes` (checked the union of keys across
+      all 1,812 entries) — while `datasets.symbols[]` entries carry all four fields
+      (`id`/`type`/`dataTypes`/`availableSince`/ `availableTo`), e.g. `AAVEUSDT`:
+      `{"dataTypes": ["trades","incremental_book_L2","quotes","book_snapshot_5",     "book_snapshot_25","derivative_ticker","liquidations","book_ticker"], "availableSince":"2021-05-13T00:00:00.000Z",     "availableTo":"2026-08-09T00:00:00.000Z"}`.
+      This matches finding (2) exactly (`TardisAvailableSymbol` genuinely has no `dataTypes` field) and confirms the
+      suspected bug: `_fetch_vendor_catalog` was reading `dataTypes` off an array that never carries it, so
+      `entry.data_types` was always an empty frozenset and the `data_type not in     entry.data_types` check in
+      `is_allowed_by_vendor_catalog` never fired (silently a no-op, exactly as predicted). **Fix**: pointed the fetch at
+      `exchange_info["datasets"]["symbols"]` instead of `availableSymbols[]` (the
+      `availableSince`/`availableTo`/symbol-presence dimensions were already correct per this todo's own note — no
+      change needed there, `datasets.symbols[]` carries the same values). Updated the module docstring +
+      `VendorSymbolEntry` docstring to name the corrected array. **Tests**: rewrote the `_BYBIT_PAYLOAD` fixture to the
+      real live-verified shape (dataTypes only under `datasets.symbols[]`, not fabricated onto `availableSymbols[]`, per
+      finding (3)'s own callout that the old tests validated the code's wrong assumption); added a new regression test
+      (`test_reads_datasets_symbols_not_available_symbols`) that plants a `dataTypes` key on `availableSymbols[]` and
+      asserts it is IGNORED while the real `datasets.symbols[]` entry governs the gate decision — this pins the fix
+      against a future regression back to the wrong array. All 11 unit tests green; full `quality-gates.sh` green (321s,
+      sentinel `d6b65e6f`); shipped via quickmerge, verified `ca5be7d8` ancestor-of `origin/live-defi-rollout`.
 
 ## Progress Log (append-only)
 
@@ -311,3 +316,9 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
     conditions are now met, so deleted `scripts/reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py` and its
     dedicated unit test (which only exercised this script's own `reclassify()`, with no other callsite).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **2026-08-09 (slot-27, task `tardis_impossible_combinations_recorded_as_attempted_failed-a9c2510c68f9`)**: closed the
+  final `[CODE] P2` todo — `market-tick-data-service@ca5be7d8` fixes `tardis_vendor_catalog.py` to read `dataTypes` from
+  `datasets.symbols[]` instead of `availableSymbols[]`, confirmed live against the real Tardis API (see todo entry above
+  for the full diff evidence). **All 6 todos in this doc are now done and it is unlocked** — archiving in the next
+  commit per the plan-completion-and-archival-discipline HARD RULE (checkbox flip and `git mv` kept as separate commits,
+  per RULES.md § 2's incident note).
