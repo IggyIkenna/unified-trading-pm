@@ -364,6 +364,7 @@ mirroring the batch1-6 finalize pattern.
   is a not-yet-built script with no existing file to cite. Dropped `tradfi-databento-sourcing-ssot.md` from the doc's
   own "Codex SSOTs" list to stay within the 6-entry cap — this batch's 4 todos are post-capture manifest/migration
   fixes, not databento vendor-sourcing content.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
 
 ## Codex SSOTs
 

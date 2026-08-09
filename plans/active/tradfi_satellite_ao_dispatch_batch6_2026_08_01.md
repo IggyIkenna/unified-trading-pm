@@ -561,3 +561,7 @@ commit), but should land properly once host load drops — tracked in the issue 
   (`tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` or the zombie-watchdog P1 in the main
   issue doc) has been resolved by someone else — if the scope violation is confirmed+resolved, the lock may clear
   faster; if the zombie-watchdog is fixed, a retry should actually complete instead of dying again.
+
+### context-scout
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
