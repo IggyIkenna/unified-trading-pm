@@ -453,7 +453,7 @@ flip and is corrected here (slot-14).
 - [ ] [DIAG] P3. Delete the 916 HYPERLIQUID + 642 ASTER redundant legacy `defi`/`perp_funding` rows and rebuild the defi
       index; separately, relax RULE 11 (`_EXTRA_LIVE_PROBE_SOURCES_BY_AG`) to cover cefi CEX venues and re-run the
       phantom-row auditor. Both items were operator-RULED AO-ready on 2026-07-28 (postdating
-      `defi_satellite_ao_dispatch_batch5_2026_07_27.md`'s earlier BLOCKED-OPERATOR-DECISION classification of this same
+      `defi_satellite_ao_dispatch_batch5_2026_07_27.md`'s previously operator-decision-gated classification of this same
       doc — the ruling supersedes that deferral for these 2 items specifically; the HYPERLIQUID k-prefix coin-case
       question in the same doc remains genuinely design-gated and stays deferred below). Repo: market-tick-data-service
       / deployment-api (index rebuild). Done when: both operator-ruled actions are executed and verified. Source:

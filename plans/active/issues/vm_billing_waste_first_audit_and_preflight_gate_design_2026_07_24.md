@@ -70,7 +70,7 @@ context_scope:
       writer/manifest/status/gate/UI invariant (`/codex/02-data/availability-manifest-and-data-status.md`) and a
       single-walk-discipline HARD RULE against whole-corpus rewrites -- adding a new field to that schema would touch
       every writer, every reader, the status/gate computation, and the UI at once, exactly the "schema blast radius"
-      concern batch1's BLOCKED-OPERATOR-DECISION flagged. A side-table (a small, additive, shard-atom-keyed marker store
+      concern batch1's operator-decision hold flagged. A side-table (a small, additive, shard-atom-keyed marker store
       consulted ONLY by the pre-flight gate itself) requires zero changes to the existing manifest
       writers/readers/UI/gate -- pure addition, matching this workspace's general preference for additive mechanisms
       over schema migrations (e.g. `capture_status`'s "trust the actual distribution, not the constant" convention, and

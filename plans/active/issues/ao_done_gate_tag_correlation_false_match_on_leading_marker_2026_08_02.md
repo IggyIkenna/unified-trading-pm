@@ -139,7 +139,8 @@ false-positive surface). Recommend, in order:
       recovery is a bookkeeping-only gap, not a work-completeness gap. (repo: agent-orchestrator)
 - [ ] [INFRA] P2. Widen `_TODO_TAG_PRIORITY_RE` (or add a preprocessing strip) so a `brief`/plan line with a leading
       `BLOCKED-<TOKEN>` (or similar) marker before `[TAG] P<n>.` still extracts tag+priority correctly. Add a regression
-      test using a brief like `"BLOCKED-UPSTREAM-DESIGN [DATA] P2. ..."`. (repo: agent-orchestrator)
+      test using a brief like `"BLOCKED-FOO [DATA] P2. ..."` (an arbitrary marker-shaped token — the bug is about
+      position relative to `[TAG] P<n>.`, not the specific token's semantics). (repo: agent-orchestrator)
 - [x] ✅ [INFRA] P2. **DONE 2026-08-02 (slot-6) — `agent-orchestrator@3511af4`.** Hardened both
       `_brief_is_checked_by_tag_in_text` and `_marker_disposition_in_text`: a `hits == 1` tag+priority correlation now
       also requires at least one shared length->=6 word between `brief`'s own text and the matched line's text (both

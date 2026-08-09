@@ -175,7 +175,7 @@ items already extracted there 2026-07-26. One-line index of what moved (`[TAG] P
 17. `[SCRIPT] P0` — Understat bulk backfill close-out: already complete via a sibling archived plan; 1 registration gap
     freshly shipped.
 18. `[DATA] P1` market-tick-data-service — Sports E8 legacy-delete implementation: DONE-FOR-CODE, `--apply` firing stays
-    BLOCKED-OPERATOR.
+    on an operator hold.
 19. `[UI] P3` deployment-ui — `FixturesBrowser.tsx` `MAX_SPAN_DAYS` cap removal (full-history catalogue source).
 20. `[DATA] P0` unified-api-contracts/market-tick-data-service — sports odds/trades index correctness follow-up: T2.9
     schema-contract drift + T2.10 phantom-row disposition both closed.

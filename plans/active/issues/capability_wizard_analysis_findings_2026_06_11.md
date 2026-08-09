@@ -714,7 +714,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 
 **Tracked, gated (engine — strategy-service LOGIC FREEZE / credentials / operator decision):**
 
-- [ ] [ADAPTER] P1. **F46 — implement binance/bybit/okx perp `place_order`** (scaffolds raise NotImplementedError).
+- [ ] [ADAPTER][BLOCKED-CREDENTIALS] P1. **F46 — implement binance/bybit/okx perp `place_order`** (scaffolds raise NotImplementedError).
       BLOCKED-CREDENTIALS (named venue API creds). Target: execution-service.
 - [x] ✅ [SPEC] P1. **F45 — assign an owner for the exposure-normalization / netting pipeline** (LST→underlying net
       delta; primitives exist, no service owns it; multi-leg inter-leg delta unmanaged). **DONE 2026-06-15** —

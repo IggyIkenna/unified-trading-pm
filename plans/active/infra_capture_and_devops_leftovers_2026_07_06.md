@@ -150,8 +150,8 @@ source:
       always-on ASTER VM arguably cuts AGAINST the cost-consolidation intent (a standalone VM is exactly what
       consolidation is meant to eliminate). This is an operator cost/policy decision, not a data-correctness prereq a
       worker can clear unilaterally. **Guardrails for the next picker-upper**: (1) the ready-to-fire launch command +
-      prereq-met evidence stay documented above so it fires immediately once cleared; (2) task marked
-      BLOCKED-OPERATOR-DECISION, not failed — it is complete except for this gated launch; (3) when the freeze lifts,
+      prereq-met evidence stay documented above so it fires immediately once cleared; (2) task marked as an
+      operator-decision hold at the time, not failed — it is complete except for this gated launch; (3) when the freeze lifts,
       prefer folding ASTER into `launch-mtds-live-cefi-consolidated.sh` over a standalone always-on VM, to honor the
       cost-consolidation intent; (4) main is surfacing the freeze-lift decision to the operator — it is theirs to make.
       **RULED 2026-07-28 (operator general-theme ruling on all remaining gated design-choice decisions, applied here):
@@ -324,12 +324,14 @@ source:
       VENDOR'S rate limits from a disposable IP, which is what this task actually is). The stated `why_operator_only`
       reasoning holds unchanged: running an intentionally adversarial probe against an external vendor's infrastructure
       carries reputational/ToS/abuse-detection exposure that is a business risk-tolerance judgment, not a data-derivable
-      fact or an engineering prerequisite a worker can clear. Left as BLOCKED-OPERATOR-DECISION — this is the one
-      decision in this file's assigned set that the general theme does not determine; it needs the operator's own direct
-      yes/no. **RE-CONFIRMED STILL BLOCKED, checked 2026-08-02 (slot 2, finalize reconciliation)**: grepped the corpus
+      fact or an engineering prerequisite a worker can clear. Left as an operator-decision hold — this was, at the time,
+      the one decision in this file's assigned set that the general theme did not determine; it needed the operator's own
+      direct yes/no. **RE-CONFIRMED STILL BLOCKED, checked 2026-08-02 (slot 2, finalize reconciliation)**: grepped the corpus
       for any operator sanction/answer on the disposable-IP rate-limit probe — none found; only restated (unchanged) in
       `plans/active/instruments_completion_tracker_2026_07_06.md` and
-      `plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`. Genuinely still operator-decision-gated.
+      `plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`. Genuinely still operator-decision-gated as of
+      that check. **RULED 2026-08-06 (operator): AUTHORIZED — proceed with the disposable-IP probe** (see this todo's own
+      head banner above) — the operator-decision hold is cleared; the probe itself has not yet been executed.
 - [x] ✅ [DATA] P1. **CLASSIFICATION ALREADY DECIDED — remaining scope is enumerator/data-status consistency** (was:
       "BLOCKED-OPERATOR-DECISION — CLOB-on-chain asset_group classification (Lighter / Pacifica / Extended): are these
       cefi or a distinct on-chain-CLOB group? Operator classification call." — corrected 2026-07-14, doc-reconciliation

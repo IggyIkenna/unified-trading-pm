@@ -23,8 +23,8 @@ related:
 created: 2026-08-08
 last_updated: "2026-08-08"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
@@ -105,3 +105,9 @@ standard "check `git status`, check `git stash list`" recovery ritual actively c
   context-probe fix. Root cause inferred from prek's own stash/restore log lines bracketing every hook batch. Work was
   recovered from a session scratchpad backup and landed as `unified-trading-pm@8bff8f5792`.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **na-corpus-hygiene 2026-08-09**: RECLASSIFY — `assigned_vm: NA → planning`, `execution_scope → orchestrator-agent`.
+  All 4 remaining todos (deterministic repro, flock-serialize prek, checksum-verify the stash/restore, add the
+  scratchpad-backup rule) are bounded scoped code/doc changes with a stated done-when, per
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` §5 — no open-ended judgment call. No
+  `locked_by`; the only cross-reference is an `[OPERATOR]` attention-nudge in
+  `operator_action_items_consolidated_2026_08_08.md` ("worth a priority look"), not a competing work claim.

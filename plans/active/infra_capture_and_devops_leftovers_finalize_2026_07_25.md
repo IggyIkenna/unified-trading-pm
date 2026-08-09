@@ -186,7 +186,10 @@ source: >-
       on the parent with full citations — see the parent's 2026-08-02 Progress Log entry (parent checkbox count now 6/9
       done, up from 5/9). **3 checkboxes remain genuinely open on the parent** (not 2 — the Live-ODDS item's
       operator-decision component cleared, but its own checkbox stays `[ ]` pending the still-unwired second-source
-      scaffold): **rate-limit-probe VM** (re-confirmed `BLOCKED-OPERATOR-DECISION`, no operator answer found);
+      scaffold): **rate-limit-probe VM** (as of the 2026-08-02 check, re-confirmed operator-decision-gated, no operator
+      answer found — since RULED 2026-08-06 (operator): AUTHORIZED, per
+      `infra_capture_and_devops_leftovers_2026_07_06.md`'s own todo; the operator-decision hold is cleared, the probe
+      itself has not yet been executed);
       **Live-ODDS second-source scaffold** (api_football `/odds` in-play not yet wired — now a plain execution todo,
       tracked in the sibling sports plan, not this doc); **ASTER** (freeze already lifted 2026-07-28, but the "+ live
       VM" data-landing verification remains unconfirmed — spot-check this session found ZERO `live_aster` rows across

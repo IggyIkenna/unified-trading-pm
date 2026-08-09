@@ -117,8 +117,8 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
       matching the other correctly-configured canonical buckets. **If NOT drained**: new churn is still occurring
       despite `retentionDurationSeconds=0` — escalate to writer-side investigation (`LogUploader` re-upload cadence /
       regression, per `/plans/archive/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md`). Repo:
-      deployment-service (verification only, no code path). DEFERRED-BY-DESIGN: date-gated to on/after 2026-08-09 —
-      remove this marker on/after 08-09 to re-arm dispatch.
+      deployment-service (verification only, no code path). This todo was date-gated (self-clearing hold) to on/after
+      2026-08-09; that date has now arrived, so the hold is cleared and this todo is dispatchable.
 
 ## Progress Log (na-eligibility-audit incremental marker)
 

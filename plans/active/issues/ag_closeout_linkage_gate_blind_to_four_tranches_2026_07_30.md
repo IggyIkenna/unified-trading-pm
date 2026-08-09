@@ -189,7 +189,7 @@ and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI
 - [ ] [DOCS] P2. **RULED 2026-08-06 (operator), option A [WORKER REC]: one scoped retag pass between scheduled auditor
       cycles.** `[DOCS]` tag (was `[OPERATOR]`), AO-dispatchable — reuse the 2026-07-27 pass's mechanism, paired with
       widening `check_ag_closeout_linkage.py`'s coverage per the doc's own recommendation. **Rule the A/B/C retag
-      question in this doc's own `## BLOCKED-OPERATOR-DECISION` section below** — ~20 of the 28 never-cited
+      question in this doc's own operator-decision section below** — ~20 of the 28 never-cited
       cross-cutting docs are `ci`/`ao` content carrying a habitual `asset_group:     [cross-cutting]` tag. Options A
       (one scoped retag pass BETWEEN scheduled auditor cycles) [WORKER REC] / B (opportunistic per-tranche retag) / C
       (accept cross-cutting as the de-facto home and widen its closeout Sources) are stated in full there with the

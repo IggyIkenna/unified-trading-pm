@@ -572,7 +572,8 @@ data-pipeline-correctness-hard-rule).
 
 - [ ] [DATA] P2. **RULED 2026-08-06: vendor-verify first (refined option C) — fix root cause if vendor CAN return data,
       only empty_confirmed if vendor confirms genuinely no data, never as a "didn't fetch it" shortcut. Rejects bare
-      option B.** AO-dispatchable. **AF-classification decision (BLOCKED-OPERATOR-DECISION, filed 2026-08-06 slot 13)**:
+      option B.** AO-dispatchable. **AF-classification decision (an operator-decision question filed 2026-08-06 slot 13, RULED per the note above the
+      same day — option C, "vendor-verify first," chosen)**:
       the OOM-gap residual `attempted_failed` is ~99% IN-coverage expected-but-empty —
       `record_zero_rows(was_expected=True)` → `EmptyFromLiveInstrumentError` from the fetch path's guard-rejected
       `record_empty(SOURCE_RETURNED_ZERO)`: the (bookmaker, league) pair IS in the UAC observed-coverage map, a fixture

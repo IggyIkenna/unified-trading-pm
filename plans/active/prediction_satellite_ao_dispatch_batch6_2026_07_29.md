@@ -164,7 +164,7 @@ sports-tranche-owned).
       persist for a sampled Betfair market and the source doc's item [5] is marked shipped with the commit SHA.
 
       **Partial progress 2026-07-31 (slot 7, backend_engineer) — read-side shipped + tested; live capture confirmed
-                                                                                                                                                                                                  BLOCKED-CREDENTIALS, NOT a design gap.** Researched the full chain before writing code: `betfair_yes_bid` is
+                                                                                                                                                                                                  credential-blocked (session token missing), NOT a design gap — see the RESOLVED note below. Researched the full chain before writing code: `betfair_yes_bid` is
                                                                                                                                                                                                   computed in `features-service/features_service/cross_instrument/app/calculators/prediction_cross_venue_betfair.py`
                                                                                                                                                                                                   (`_betfair_yes_bid_ask`), hardcoded to `None` because the persisted sports odds ticks (MTDS's Odds-API aggregator
                                                                                                                                                                                                   path) are BACK-ONLY — the kernel's SELL-Betfair edge (`prediction_cross_venue_dispersion.py::_edge_sell_betfair_expr`)
@@ -182,17 +182,22 @@ sports-tranche-owned).
                                                                                                                                                                                                   REAL live capture, which requires the actual Betfair Exchange API (`listMarketBook`, `availableToLay` — already
                                                                                                                                                                                                   scaffolded, unused, in `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/
                                                                                                                                                                                                   betfair_adapter.py`, confirmed via research to already parse both sides). That call needs a session token.
-                                                                                                                                                                                                  **Confirmed BLOCKED-CREDENTIALS, not self-serviceable**: checked GSM directly (via `unified-trading-sa`
+                                                                                                                                                                                                  **Confirmed credential-blocked at the time, not self-serviceable**: checked GSM directly (via `unified-trading-sa`
                                                                                                                                                                                                   impersonation, not the ambient CI identity, which lacks `secretmanager.secrets.list`) — only 3 Betfair secrets
                                                                                                                                                                                                   exist (`betfair-api-key`, `betfair-app-key`, `betfair-username`); NO `betfair-session-token` (the exact secret
                                                                                                                                                                                                   name execution-service's own `sports_execution/routing.py::_build_betfair` already expects and can't find
                                                                                                                                                                                                   either — execution-service's real-money Betfair execution path is ALSO not live today for the same reason), no
                                                                                                                                                                                                   password secret, no cert-login secret. The MTDS `betfair_ws.py` streaming connector's own docstring independently
-                                                                                                                                                                                                  confirms this: "BLOCKED-CREDENTIALS — 2026-07-07... requires a paid Developer app-key + SSO sessionToken — no
+                                                                                                                                                                                                  confirms this: "credential-blocked — 2026-07-07... requires a paid Developer app-key + SSO sessionToken — no
                                                                                                                                                                                                   public tier." This is a genuine external-credential gap (operator/account-holder action — either add a password
                                                                                                                                                                                                   secret for interactive login or provision cert-based login), not a role/IAM gap I can self-grant per the
                                                                                                                                                                                                   cloud-identity-self-service rule. New follow-up todo below tracks the credential ask + the actual live-wiring
                                                                                                                                                                                                   once it lands; this todo stays open (unchecked) rather than falsely marked done, per the honest-completion rule.
+
+      **RESOLVED 2026-08-05**: the session-token mechanism the paragraphs above describe as missing has since been
+      provisioned — see the P3 `betfair-session-token` todo below (`execution-service@7e03bf7b`). The credential gap
+      that held this todo is cleared; only the `factory.py` `VENUE_REGISTRY` wiring + `lay_price` persistence +
+      live-verification re-run described above remain, as ordinary open engineering work, not a credential hold.
 
 - [x] ✅ [CODE] P3. **DONE 2026-08-05 — `execution-service@7e03bf7b`.** Provision a live Betfair session token so the
       real Exchange API (`listMarketBook`) can be called — needed for BOTH this satellite plan's back+lay-persistence
@@ -263,7 +268,7 @@ sports-tranche-owned).
       captured evidence, and both source-doc todos are flipped citing the SHAs/evidence.
 
       **Todo 1 DONE 2026-07-31**: both secrets provisioned + verified non-empty and byte-identical to source (evidence
-                                                                                                                                                                                                                          in the source doc). **Todo 2 BLOCKED-OPERATOR-DECISION 2026-07-31** — found a real conflict this todo's own text
+                                                                                                                                                                                                                          in the source doc). **Todo 2 was operator-decision-gated as of 2026-07-31** (see RULED note below) — found a real conflict this todo's own text
                                                                                                                                                                                                                           doesn't resolve: this codebase's `OperationalMode.PAPER` never calls any real venue API (routes everything
                                                                                                                                                                                                                           through a simulated `PaperBettingAdapter` — `execution_service/adapters/sports_factory.py`'s `_PAPER_VENUE_KEYS`
                                                                                                                                                                                                                           includes `kalshi`), so "paper order" cannot mean that operational mode. `KalshiAdapter`'s default `base_url` is
@@ -286,6 +291,15 @@ sports-tranche-owned).
 
                                                                                                                                                                                                                           Not attempted pending an answer — filed as the actionable question, not guessed. `can_continue: true`; other
                                                                                                                                                                                                                           backlog work continues in the meantime.
+
+      **RULED 2026-08-06 (operator, on the source doc `kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`):
+      "NO — do not touch the live exchange."** The 2026-07-28 secret-reshape ruling's scope limit stands; placing a real
+      order on `api.elections.kalshi.com` (option B above) remains unauthorized — find a non-live verification path
+      instead (option A, Kalshi's demo host, if it accepts the same credentials; or option C, a mocked-response
+      verification of the order-submit/fill/ack/position-update code path). This resolves the A/B/C question: option B
+      is rejected, pursue A or C. Flagged by two independent na-eligibility-audit passes (2026-08-07, 2026-08-09) as a
+      sync gap — the source doc's ruling had not yet been mirrored here; mirrored now. The actual non-live verification
+      execution (A or C) remains open engineering work, no longer an operator-decision hold.
 
 - [x] ✅ [DIAG] P2. **DONE 2026-08-05 — `unified-api-contracts@42c22278`.** Kalshi mass `attempted_failed`
       unclassified-adapter-error investigation + fix. (1) Recurrence check: queried prediction manifest

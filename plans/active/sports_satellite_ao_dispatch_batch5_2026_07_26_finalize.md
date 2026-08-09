@@ -232,7 +232,7 @@ context_scope:
       ruling Option A, BLK-c6efc083).** `sports_satellite_ao_dispatch_batch5_2026_07_26.md` still carries **2
       genuinely-open active `[ ]` todos** in its `## Todos` section (NOT the Deferred sections todo 3 re-confirmed), so
       archiving it now would violate the plans-run-to-actual-completion HARD RULE ("not smoke-test green"): (line 79)
-      `[DATA] P2` **BLOCKED-CREDENTIALS** odds-api backfill of 3 leagues — odds-api key deactivated, fully tracked in
+      `[DATA] P2` **credential-blocked (at the time)** odds-api backfill of 3 leagues — odds-api key deactivated, fully tracked in
       the now-`/plans/archive/issues/sports_odds_api_key_deactivated_2026_07_26.md` — **UPDATE 2026-07-29: the
       credential itself is now fixed** (operator rotated `odds-api-key` to a new 5,000,000-credits/month-subscription
       key, live-verified HTTP 200) — line 79 is no longer `BLOCKED-CREDENTIALS`/operator-gated, it's a genuinely
