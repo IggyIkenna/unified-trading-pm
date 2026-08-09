@@ -54,8 +54,11 @@ context_scope:
 
 # data_pipeline_check_mdps_features_2026_07_20 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **STATUS: `active` — machine-gated, not yet reconciled (2026-08-09).** Frontmatter is `status: active` per the
+> established no-double-gate precedent (ship the finalize plan active from authoring; `gate_on_depends: true` holds
+> dispatch until the source plan's todos land — see
+> `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md`/`sports_taxonomy_p2_migration_2026_08_08_finalize.md`
+> for the same pattern). The sole todo below is still open.
 
 ## Todos
 

@@ -59,9 +59,8 @@ context_scope:
 
 # Sports closeout Track X — plan/doc hygiene + orphan-satellite reconciliation
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule, flip to `active` only after operator review. All 4 todos
-> below touch distinct files/docs (verified individually per todo) so they are safe to dispatch concurrently once
-> activated — `sequential: false`.
+> **Status: active — 4 of 5 todos done (2026-08-09, verified by plan_reconciler agt-196785).** All todos touch distinct
+> files/docs (verified individually per todo) so they are safe to dispatch concurrently — `sequential: false`.
 >
 > **Overlap reconciliation (2026-07-25)**: `sports_consolidated_native_ao_extract_2026_07_25.md` already extracted 3
 > Track X items verbatim as its own AO-eligible candidates before this split ran — the sports issue-doc index fix (its
