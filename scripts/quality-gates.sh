@@ -348,6 +348,10 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS+=(
     "!**/audit_venue_coverage.py"
     # check_base_image_digest_drift: benign JSON .get("repositories", {}) for manifest parsing.
     "!**/check_base_image_digest_drift.py"
+    # check_extraction_count_regression: benign JSON .get("_meta", {}) / .get("paths", {}) /
+    # .get("configs_by_repo", {}) defaults for config-registry.json / openapi.json parsing —
+    # same category as check_base_image_digest_drift.py above.
+    "!**/check_extraction_count_regression.py"
 )
 EMPTY_STR_EXCLUDE_GLOBS+=(
     # check_base_image_digest_drift: benign JSON .get("name", "") / .get("version", "") for
