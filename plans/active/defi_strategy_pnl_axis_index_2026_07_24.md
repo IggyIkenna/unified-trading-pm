@@ -119,10 +119,12 @@ context_scope:
   flight; Phase 2 = E3 above; Phases 3-5 dated-basis/yield/ liquidation-capture) + 2 unreconciled-registry / dead-code
   side findings. This doc's own RESUME POINT section is the durable source of truth for this whole thread — read it in
   full before resuming.
-- **[[e2e_testing_collateral_validation_dead_import_2026_07_23]]** (`issues/`) — `e2e-testing`'s
-  `test_collateral_validation.py` has imported a module deleted 2026-05-01 for ~2.5 months, 9/9 scenarios dead, zero CI
-  signal; underlying safety property still holds in prod via a newer v2 mechanism. Operator ruling needed: rewrite vs
-  delete vs gate-hardening.
+- **[`e2e_testing_collateral_validation_dead_import_2026_07_23`](/plans/archive/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md)**
+  (archived) — `e2e-testing`'s `test_collateral_validation.py` had imported a module deleted 2026-05-01 for ~2.5 months,
+  9/9 scenarios dead, zero CI signal; underlying safety property still held in prod via a newer v2 mechanism.
+  **Corrected 2026-08-09 by plan_reconciler — this bullet was stale**: RULED 2026-07-29 (operator direct answer): Option
+  A, rewrite against the current v2 mechanism — see this doc's own Todos section below, which already recorded the
+  ruling; this bullet was simply never updated to match.
 - **`/plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`** (archived 2026-07-30, all 9 todos done;
   not defi-scoped itself but directly affected the `dex_pool_swaps` fleet above) —
   `launch-mtds-dex-swaps-backfill-vm.sh` was missing the same SPOT-preemption auto-recovery wiring

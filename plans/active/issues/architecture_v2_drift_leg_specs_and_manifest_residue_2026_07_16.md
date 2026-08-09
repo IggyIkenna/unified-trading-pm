@@ -225,11 +225,15 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
 
 ## Todos
 
-- [ ] [ENGINEER] P1. **Resync UI `venue_set_variants`/`archetype_capability_registry`/`strategy_instance_catalogue` +
-      fix the generator/UI structural skew** — the UAC architecture_v2 source is now clean, but the UI's registry copy
-      (`unified-trading-system-ui/lib/registry/ui-reference-data.json`) and the E2E fixture still reference the removed
-      `drift` venue / `jito-kamino-drift-sol-usdc-prod` slot label, and the sync generator itself is stale against the
-      committed UI shape (see "Recommended next steps" items 2-4 above).
+- [ ] [ENGINEER] P1. **Rescoped 2026-08-09 by plan_reconciler — the `ui-reference-data.json` portion is already
+      shipped.** Live-verified: `unified-trading-system-ui/lib/registry/ui-reference-data.json` has ZERO references to
+      `jito-kamino-drift-sol-usdc-prod` today (fixed by
+      `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`'s 2026-07-26 pass,
+      `unified-trading-system-ui@80bb6a9c`, 0 dangling refs verified via full-tree walk) — do not re-fix it. **Still
+      genuinely open** (live-verified 2026-08-09): `tests/e2e/_shared/strategy-registry.ts:158` still pins
+      `CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod`, and the sync generator (`generate_ui_reference_data.py`)
+      itself is still stale against the committed UI shape (see "Recommended next steps" items 2-4 above). Remaining
+      scope: fix the E2E fixture + the generator/UI structural skew only.
 
 ## Progress Log
 
@@ -244,7 +248,7 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
   structural-skew investigation the doc itself says likely needs its own plan. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (6 entries), unchanged.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
-  since the 2026-08-04 audit (context-scout metadata only, per git log). Sole open todo still bundles a
-  strategy-domain delete-vs-re-leg judgment call (`CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod`) with an
-  open-ended UI/generator structural-skew investigation the doc's own "Secondary finding" says likely needs its own
-  plan. Doc stays `assigned_vm: NA`.
+  since the 2026-08-04 audit (context-scout metadata only, per git log). Sole open todo still bundles a strategy-domain
+  delete-vs-re-leg judgment call (`CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod`) with an open-ended UI/generator
+  structural-skew investigation the doc's own "Secondary finding" says likely needs its own plan. Doc stays
+  `assigned_vm: NA`.

@@ -139,6 +139,11 @@ remaining lower-priority half.
       Golden-swap test_amm_golden_swap_replay[solidly_cl_fork] PASSED. Note: fixtures are synthetic matcher-computed;
       real on-chain archive capture still requires scripts/capture_golden_swaps.py run against an archive node per its
       runbook. (execution-service)
+- [ ] [AGENT] P2. **Added 2026-08-09 by plan_reconciler** — the item above ships harness wiring only; this doc's own
+      Success Criteria (below) requires the golden-swap fixtures to be real on-chain `Swap` events, not synthetic
+      matcher-computed ones (same bar the doc's Phase-D item correctly got a companion re-open todo for, but this item
+      did not). Run `scripts/capture_golden_swaps.py` against an archive node per its runbook to replace the 50
+      synthetic SOLIDLY_CL_FORK fixtures with real captures. (execution-service)
 
 ## Success criteria
 
