@@ -203,9 +203,23 @@ drift_direction: advance-code
       all `The configured memory limit was reached`). Full incident:
       `/plans/archive/issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md` (status: resolved).
       (repo: deployment-service)
-- [ ] [SCRIPT] P2. **Reduce `mtds-backfill-odds-401-retry` memory footprint** — OOM every 7-9 min but self-recovers and
-      keeps progressing; wasteful, not broken. The sibling `mtds-backfill-odds-smallchunk-20260807` run (smaller chunks,
-      far fewer OOMs) is a working precedent — apply the same chunk-size mitigation here.
+- [x] [SCRIPT] P2. **Reduce `mtds-backfill-odds-401-retry` memory footprint** ✅ — root cause: `CHUNK_SIZE` (days per
+      subprocess-per-league in `mtds_chunk_loop.sh`) defaulted to 250 in
+      `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh`, vs. `CHUNK_SIZE=5` on the working
+      `mtds-backfill-odds-smallchunk-20260807` sibling (`LAUNCH_PARAMS.json` diff confirmed — both share the same
+      launcher). A wide chunk lets one subprocess accumulate many real-fetch days' worth of RSS before it exits (the
+      root cause already diagnosed in `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`); live re-check same day:
+      401-retry hit 15 `OOM_KILLED` in ~80min vs. the smallchunk sibling's 2 over the same window. Fix: launcher default
+      changed 250→5 (deployment-service@22f35fa32c7bbcd45429482a1818af53900ad5cb, QG green — `IGNORE_TIMEOUT=true`,
+      sanctioned host-contention override, all substantive gates incl. 3151 tests + 71.76% coverage passed; shipped via
+      quickmerge, landed on `live-defi-rollout`). This is a mitigation, not the confirmed root-cause fix — the
+      underlying native-memory leak investigation stays open in that issue doc. Live-VM check:
+      `mtds-backfill-odds-401-retry` itself is no longer running — it was SPOT-preempted (`compute.instances.preempted`,
+      2026-08-07T16:55Z) and auto-deleted per its own `--instance-termination-action=DELETE`, not OOM-killed into
+      oblivion; no hot-apply path exists (`VM_CHUNK_DAYS` is baked into the boot-time-generated `mtds_chunk_loop.sh`,
+      not re-read from metadata), so no live intervention was needed or attempted. A separate
+      `mtds-backfill-odds-     smallchunk9` VM (started 2026-08-08) is already continuing the backfill with the
+      small-chunk approach.
 - [x] [SCRIPT] P2. **Fix the `dp-alerting-subscriber` GCS 429 retry storm** ✅ on `write_config_snapshot`'s
       `routing_rules.yaml` writes (479 occurrences in one day, separate from the already-fixed `mirror_live` bug) —
       confirmed root cause: `router.route_event()` calls `_persist_config_snapshot()` on every routed event, but
