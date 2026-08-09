@@ -200,10 +200,12 @@ This needs a human/cross-repo design call, not a mechanical fix — three shapes
       (`sweep_sports_odds_horizon_bucket_zombie_contamination_2026_07_27.py`) against BOTH path shapes (canonical +
       legacy) to get an accurate, current contamination count before re-attempting the purge — the sweep script itself
       only checks canonical today and would need the same dual-prefix probe `gcs_reader.py` already has. Repo:
-      market-tick-data-service. **Shipped `market-tick-data-service@926f9b20`/`c2dda59a7`**: dual-prefix `list_blobs`
-      probe + `_path_shape` tagging, QG green. Re-run against production recovered the ORIGINAL 2026-07-27 sizing
-      exactly: 37 contaminated shards / 187 rows across 18 dates (2025-07-31 → 2025-11-13), **100% at the legacy path
-      shape** (0 at canonical) — direct confirmation of this issue's root-cause finding.
+      market-tick-data-service. **Shipped `market-tick-data-service@c2dda59a7`** (correcting an unresolvable `926f9b20`
+      co-citation found by `check_plan_commit_sha_evidence.py` — no such commit exists on this repo; `c2dda59a7` alone
+      covers the whole shipped unit per its own message): dual-prefix `list_blobs` probe + `_path_shape` tagging, QG
+      green. Re-run against production recovered the ORIGINAL 2026-07-27 sizing exactly: 37 contaminated shards / 187
+      rows across 18 dates (2025-07-31 → 2025-11-13), **100% at the legacy path shape** (0 at canonical) — direct
+      confirmation of this issue's root-cause finding.
 - [x] ✅ [DATA] P2. **Re-attempt `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s zombie-tick purge todo** (parts
       a + b: purge/re-derive the contaminated shards via `reprocess_sports_odds.py --force` using todo 2 above's updated
       dual-prefix contamination count, then re-run `verify_ml_readiness.py` and confirm the 17-date failure set
@@ -253,8 +255,8 @@ This needs a human/cross-repo design call, not a mechanical fix — three shapes
   zombie-tick checkbox itself stays unflipped — the reader/writer mismatch is fixed but the purge has not actually been
   re-run yet and `verify_ml_readiness.py` has not been re-verified.
 - **2026-08-09 (slot 26, data_engineering, continued — operator directive to proceed with the full purge)**: Shipped the
-  sweep dual-prefix fix (`market-tick-data-service@926f9b20`/`c2dda59a7`) and re-ran it against production — recovered
-  the exact original 2026-07-27 sizing (37 shards / 187 rows / 18 dates, 100% legacy path shape). Ran
+  sweep dual-prefix fix (`market-tick-data-service@c2dda59a7`) and re-ran it against production — recovered the exact
+  original 2026-07-27 sizing (37 shards / 187 rows / 18 dates, 100% legacy path shape). Ran
   `reprocess_sports_odds.py --force` per-day against all 18 dates (manifest-verified: all 18 now have a coarse
   `captured` row); spot-verified the reader no longer serves the RUSSIA_PREMIER_LEAGUE zombie rows for 2025-09-02.
   Re-ran `verify_ml_readiness.py` — **17-date failure set cleared to 0 FAILED**, gate met YES. Found + documented a new,
