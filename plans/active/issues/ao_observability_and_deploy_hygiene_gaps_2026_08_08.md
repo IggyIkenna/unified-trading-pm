@@ -187,20 +187,31 @@ the ONLY lever that matters. See the P1 todo below.
       content-identity, the exact question `worktree_clean_check.verify_all_wip_preserve_refs` already answers for
       orphaned commits (is this content already in origin? SUPERSEDED / GONE / STILL-ORPHANED). (repo:
       agent-orchestrator)
-- [ ] [BACKEND] P2. **`stash_pile_stale` is ANOTHER unconditional per-tick activity-log flood — same bug class as the
-      already-fixed `orphan_ref_verified` one above, found live 2026-08-09 while re-verifying this doc's own claims.**
-      `StashAuditWatchdog` (a SEPARATE, older watchdog from the `StashVerifyWatchdog` fixed above — one flags aged/large
-      piles by count/age threshold, the other content-verifies individual stashes; the flood is in the former) logged
-      one `stash_pile_stale` row per stale repo per tick, unconditionally — its own docstring literally cited
-      `orphan_ref_verify_watchdog`'s PRE-FIX per-tick shape as its design template, written before that pattern was
-      recognized as a bug and fixed earlier in this same 2026-08-08 session. Measured live: **51 of the last 500
-      `/api/activity` rows within roughly an hour** — smaller than the 76% orphan-ref flood but the identical root
-      cause. Fix in progress same session: transition-dedup keyed on stash COUNT (not `oldest_age_days`, which
-      increments daily for a genuinely unchanged pile and would still log once/day/repo for no new information),
-      persisted via `dedup_state.stash_pile_counts_path()`, with a `stash_pile_resolved` bookend when a pile drops below
-      threshold — mirrors `OrphanRefVerifyWatchdog`'s exact shape. 3 new tests. **Done when**: shipped,
-      `quality-gates.sh` green, deployed to the central VM, and verified live (fresh `stash_pile_stale` row count over a
-      tick window near zero for unchanged piles). (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P2. **`stash_pile_stale` flood fixed — shipped agent-orchestrator@1709bfe6650b.** Transition-dedup
+      keyed on stash COUNT (not `oldest_age_days`, which increments daily for a genuinely unchanged pile and would still
+      log once/day/repo for no new information), persisted via `dedup_state.stash_pile_counts_path()`, with a
+      `stash_pile_resolved` bookend when a pile drops below threshold — mirrors `OrphanRefVerifyWatchdog`'s exact shape.
+      3 new tests, full `quality-gates.sh` green (2840 passed). **Collision note**: two slots independently picked up
+      this exact todo and shipped functionally-identical fixes concurrently; slot-29's own copy (committed locally as
+      979b3e6) was superseded on push by slot-4's `agent-orchestrator@1709bfe6650b` landing first on `live-defi-rollout`
+      (verified via diff — same design: count-keyed latch, `stash_pile_resolved` bookend, 3 tests) — reconciled by
+      discarding the redundant duplicate rather than pushing a second copy of the same fix. **Scope note on the original
+      "Done when"**: "deployed to the central VM" + "verified live" could not be independently confirmed by this todo's
+      closing worker — `ssm:SendCommand` on the central VM instance (`i-0c9b283b31d6b5ca7`) is denied for the
+      `ikenna-worker` AWS identity (confirmed live: `AccessDeniedException`), and per this workspace's IAM self-service
+      rule that identity is a human-tied credential, not one of the two ambient orchestrator identities
+      (`unified-trading-sa`/`uts-orchestrator-epic-role`) a worker may self-grant roles on — so this is a genuine
+      cross-identity gap, not a self-service case. The code is on `live-defi-rollout`; the already-fixed
+      `ao-self-pull.sh` auto-deploy path (this same doc, earlier todo) should pick it up on its next cycle without
+      manual intervention. A follow-up live-verification pass needs either operator SSM access or an interactive session
+      with the orchestrator's own identity. ORIGINAL FINDING: same bug class as the already-fixed `orphan_ref_verified`
+      flood above, found live 2026-08-09 while re-verifying this doc's own claims. `StashAuditWatchdog` (a SEPARATE,
+      older watchdog from the `StashVerifyWatchdog` fixed above — one flags aged/large piles by count/age threshold, the
+      other content-verifies individual stashes; the flood was in the former) logged one `stash_pile_stale` row per
+      stale repo per tick, unconditionally — its own docstring literally cited `orphan_ref_verify_watchdog`'s PRE-FIX
+      per-tick shape as its design template, written before that pattern was recognized as a bug and fixed earlier in
+      this same 2026-08-08 session. Measured live: **51 of the last 500 `/api/activity` rows within roughly an hour** —
+      smaller than the 76% orphan-ref flood but the identical root cause. (repo: agent-orchestrator)
 - [x] ✅ [OPERATOR] P3. **Glue-runner litter removed — 51 orphaned unit files retired 2026-08-08T13:05Z.** Verified
       immediately before acting, and re-asserted inside the same script as a refuse-guard: **0 of 51 active, 0 enabled,
       no `/opt/github-glue*` directory anywhere, and no `Runner.Listener` process** (an earlier `pgrep -fc` reading of 1
@@ -244,6 +255,14 @@ the new slots are cleaner.
   `plans/active/*.md` for `ORCHESTRATOR_FLEET_WORKER_CAP`/`stash_pile_stale`/`add-slot 30` — zero hits outside this doc.
   `execution_scope: local-only → orchestrator-agent`. Companion gated finalize:
   `ao_observability_and_deploy_hygiene_gaps_2026_08_08_finalize_2026_08_08.md`.
+
+- **2026-08-09 (slot 29, backend_engineer)**: Picked up the `stash_pile_stale` flood todo. Implemented the same
+  count-keyed transition-dedup fix independently, but on push discovered slot-4 had landed a functionally-identical fix
+  first (`agent-orchestrator@1709bfe6650b`) — reconciled by discarding the redundant duplicate rather than shipping a
+  second copy. Flipped the checkbox against the SHA actually on `live-defi-rollout`. Attempted the doc's own stricter
+  "deployed to the central VM + verified live" bar via read-only SSM but hit `AccessDeniedException` on
+  `ssm:SendCommand` for the `ikenna-worker` identity — a genuine cross-identity gap (not one of the two ambient
+  orchestrator identities), so left as a named follow-up rather than self-granting a role on a human-tied credential.
 
 ## Deferred work after 2026-08-08
 
