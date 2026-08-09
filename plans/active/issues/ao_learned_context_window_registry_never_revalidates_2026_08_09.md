@@ -87,10 +87,10 @@ as 71%, which is below the recycle logic's expectations even though it clears th
 - [x] ✅ [BACKEND] P1. Emit an activity event + log line whenever `_calibration_is_plausible` REJECTS a calibration —
       today it only logs a warning, so a caller regression that keeps feeding bad values is invisible in the dashboard.
       Done-when: the event appears in `GET /api/activity` and a unit test asserts it. — agent-orchestrator@4aabab446
-- [ ] [BACKEND] P2. Neutralise the opus-5 single-hit watermark before it can confirm: either require the confirming hits
-      to come from DISTINCT sessions, or discard a watermark whose hits all came from one `claude_session_id`.
+- [x] ✅ [BACKEND] P2. Neutralise the opus-5 single-hit watermark before it can confirm: either require the confirming
+      hits to come from DISTINCT sessions, or discard a watermark whose hits all came from one `claude_session_id`.
       Done-when: a unit test proves three observations from ONE session do not saturate a watermark, and three from
-      distinct sessions do.
+      distinct sessions do. — agent-orchestrator@cb5bf0050
 - [ ] [BACKEND] P2. Evaluate whether the effective window is per-session/per-account rather than per-model, using main's
       ~696K-vs-937,882 divergence as the worked example. Done-when: the finding is recorded here and either the registry
       key is widened or the divergence is documented as expected with the AgentRow floor named as the compensating
@@ -119,3 +119,18 @@ as 71%, which is below the recycle logic's expectations even though it clears th
   isolated sqlite DB via `db.reset_for_tests` + `create_all_tables`, triggers a rejection, asserts the row via
   `list_activity`). Full QG green (2961 backend + 262 dashboard tests); landed on `live-defi-rollout`, verified as an
   ancestor of origin.
+- 2026-08-09 — Todo 3 shipped (`agent-orchestrator@cb5bf0050`). `observe()` gains a `claude_session_id` parameter: a
+  watermark hit only confirms the FIRST time a given session contributes one (tracked via a new `watermark_hit_sessions`
+  list alongside the existing int counters in the sidecar registry — `_load_learned`/ `_save_learned` now round-trip
+  both shapes), so N observations from one long-running session (exactly the claude-opus-5 trap —
+  `watermark_tokens: 222121, watermark_hits: 1`) can never saturate a watermark on their own; a higher ceiling still
+  resets the tracked sessions, same as before. `context_used_pct` feeds the transcript filename (the transcript IS named
+  `<claude_session_id>.jsonl`, confirmed in `transcript_log.py`) through as the discriminator. Callers that omit
+  `claude_session_id` (direct-call unit tests, mostly pre-existing ones in this file) keep the prior
+  unconditional-increment behaviour, since there is no session identity to dedupe against. New unit tests:
+  `test_three_hits_from_one_session_do_not_saturate_a_watermark` (the acceptance test), plus
+  `test_three_hits_from_distinct_sessions_do_saturate_a_watermark`,
+  `test_repeat_hits_from_a_returning_session_do_not_double_count`,
+  `test_a_higher_ceiling_still_resets_hit_sessions_even_with_session_ids`, and
+  `test_omitted_session_id_keeps_the_prior_unconditional_increment_behaviour`. Full QG green (2974 backend + 262
+  dashboard tests); landed on `live-defi-rollout`, verified as an ancestor of origin.
