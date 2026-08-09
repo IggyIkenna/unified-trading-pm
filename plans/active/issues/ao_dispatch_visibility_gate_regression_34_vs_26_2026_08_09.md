@@ -115,9 +115,15 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
       marker references (none were genuinely-live blocks) to avoid the literal `BLOCKED-CREDENTIALS` /
       `BLOCKED-OPERATOR-DECISION` token outside a declared position; re-ran `dispatch_visibility_report` — all 3 dropped
       off the flagged list, `check_ao_dispatch_visibility_gate.py` confirms `accidental_exclusions` 34→30, gate exit 0.
-- [ ] [DOCS] P2. Fix the 4 ci-tranche accidental exclusions: `ci_satellite_ao_dispatch_batch1_2026_07_26.md`,
+- [x] ✅ [DOCS] P2. Fix the 4 ci-tranche accidental exclusions: `ci_satellite_ao_dispatch_batch1_2026_07_26.md`,
       `ci_satellite_ao_dispatch_batch4_2026_07_31.md`, `ci_satellite_ao_dispatch_batch5_2026_08_02.md` (1 each),
-      `ci_satellite_ao_dispatch_batch6_2026_08_08.md` (2). Same remedy as above. Repo: unified-trading-pm.
+      `ci_satellite_ao_dispatch_batch6_2026_08_08.md` (2). Same remedy as above. Repo: unified-trading-pm. **Done**:
+      `ci_satellite_ao_dispatch_batch6_2026_08_08.md` was already fixed by another slot (2026-08-09, slot-3, see its own
+      in-doc note) before this task started — dropped off the flagged list independently. Fixed the remaining 3 docs
+      (batch1, batch4, batch5) by rewording their mid-sentence `BLOCKED-CREDENTIALS` mentions (all conditional "record X
+      if the credential is unavailable" instructions, never live holds) to describe the same meaning without the literal
+      marker token. Re-ran `dispatch_visibility_report` — all 3 dropped off the flagged list;
+      `check_ao_dispatch_visibility_gate.py --json` confirms `accidental_exclusions` 28→25, gate exit 0.
 - [ ] [DOCS] P2. Fix the 2 cross_cutting-tranche accidental exclusions:
       `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`,
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`. Same remedy as above. Repo: unified-trading-pm.
