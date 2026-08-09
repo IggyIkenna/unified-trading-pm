@@ -5,7 +5,7 @@ summary: >-
   Gated closeout for `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until all 7 todos are done. Reconciles both `mtds_mdps_master` source docs' checkboxes, then
   archives the batch doc via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -14,7 +14,7 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, close-out, batch-3, satellite-docs, archival]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md,
     /plans/active/data_source_provenance_enforcement_2026_07_24.md,
     /plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md,
   ]
@@ -29,7 +29,6 @@ estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.48
 locked_by:
 locked_since:
-archive_exempt: true
 supersedes:
 superseded_by:
 depends_on: [cross_cutting_satellite_ao_dispatch_batch3_2026_08_09]
@@ -42,7 +41,7 @@ sequential: true
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md,
+    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md,
     /plans/active/data_source_provenance_enforcement_2026_07_24.md,
     /plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md,
   ]
