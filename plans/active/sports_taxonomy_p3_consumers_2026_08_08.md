@@ -36,6 +36,7 @@ related:
     /plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md,
     /plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md,
     /plans/active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md,
+    /plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md,
   ]
 created: 2026-08-08
 last_updated: 2026-08-08
@@ -224,7 +225,16 @@ spelling variant survives, which is the entire point of the panel". It does not.
       2026-08-08), replacing the strict per-day gate that fails near-empty FIFA-international-break days on an exact
       68.6% floor which is honest absence, not a defect. Prerequisite: the P1/P2 zombie-tick fixes in
       `/plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md` must land first — re-run and confirm
-      the floor is gone before switching, so the bar change is not masking a real regression.
+      the floor is gone before switching, so the bar change is not masking a real regression. **STILL BLOCKED (confirmed
+      2026-08-09, slot 18)**: the P2 zombie-tick purge cannot land — a NEW blocking issue,
+      `/plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`,
+      found the purge script is structurally forbidden from touching the legacy GCS path the reader actually falls back
+      to and serves the zombie rows from, so `reprocess_sports_odds.py --force` silently no-ops against the real
+      contamination. That issue's own todo 2 ("design + ship the reader/writer reconciliation") is explicitly scoped as
+      "a human/cross-repo design call, not a mechanical fix" and remains `- [ ]` open — this todo cannot switch the gate
+      without violating the operator ruling's own "not masking a real regression" condition until that reconciliation
+      lands and the re-run confirms the floor is gone. Not attempting a unilateral cross-service design fix inline
+      (outside this todo's craft/scope) — leaving open, cross-linked.
 - [x] ✅ [CODE] P1. **Point the ML label lineage at IS `fixtures_outcomes` / `matches`** now that
       `markets`/`outcomes`/`settlements` are retired as phantom declarations (P1). Document the lineage explicitly in
       codex so the next reader does not re-open "why is there no settlements data_type". — features-service@fa67da20:
