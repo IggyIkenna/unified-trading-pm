@@ -29,10 +29,11 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
+    /plans/active/infra_satellite_ao_dispatch_batch10_2026_08_09.md,
   ]
 created: 2026-07-26
 author: unknown
-last_updated: 2026-07-26
+last_updated: 2026-08-09
 priority: P2
 parent_epic: infrastructure_master
 source:
@@ -84,7 +85,9 @@ in the same way and at the same time when they're the same physical connection.
 
 ## Todos
 
-- [x] ✅ [DATA] P2. **DECIDED 2026-08-08 — operator ruling: (b) wire into the fleet-level `RelaunchPreemptedVm` /
+- [x] ✅ [DATA] P2. **DECIDED 2026-08-08 — operator ruling (item 78, this doc's own Progress Log entry
+      "2026-08-08 (operator Q&A round5, infra tranche, item 78)" below, `session_bound_vm_monitoring_reliability_gap_2026_07_26.md`):
+      (b) wire into the fleet-level `RelaunchPreemptedVm` /
       exit-code-fleet-monitor actuator**, not a documented-best-effort caveat. Scoping read of the actual current code
       (`deployment-service/deployment_service/data_pipeline_monitors/{cli.py,exit_code_fleet_monitor.py,     launcher_registry.py,vm_classification.py}`,
       `deployment-service/scripts/recovery/relaunch_backfill_vm.py`) confirms the fleet-level actuator is **already
@@ -106,32 +109,11 @@ in the same way and at the same time when they're the same physical connection.
       is exactly how `af-backfill-` went unnoticed for ~9 days before the 2026-08-04 fix, and would recur for the next
       novel one-off backfill VM naming scheme) — is filed as the scoped follow-up build below.
 
-- [ ] [SCRIPT] P2. **Build a forward-registration CI guard so a NEW ad hoc/one-off backfill launcher can never launch a
-      VM invisible to the fleet monitor** (closes the residual gap the decision above identified — the runtime actuator
-      is already fleet-wired; what's missing is catching an unregistered launcher BEFORE its first VM ever runs, not
-      after a preemption incident). Concrete integration approach: 1. Add
-      `deployment-service/scripts/quality_gates/check_vm_launcher_prefix_registration.py` (or fold into an existing QG
-      check in that dir): glob every `deployment-service/scripts/vm/launch-*.sh`, grep each for its
-      `VM_NAME=`/`VM_PREFIX=` bash assignment (same derivation method `launcher_registry.py`'s own module docstring
-      already documents doing by hand — mechanize it), and derive the literal/prefix portion (a fixed string prefix
-      before the first `${...}` interpolation). 2. For each derived prefix, FAIL when it is not covered by
-      `vm_classification.is_data_vm(<a synthetic VM name        with that prefix>)` (mirrors the existing
-      `test_data_vm_prefixes_cover_every_relaunchable_launcher` unit-test logic in
-      `tests/unit/test_data_pipeline_monitors_cli.py:77`, but driven from the launcher FILE SET, not the registry's own
-      keys — so a launcher with NO entry anywhere is caught, not just a registry-internal drift) OR when
-      `launcher_registry.resolve_launcher_for_vm(<that prefix>)` returns `None` (unless the launcher script itself
-      carries an explicit `# non-relaunchable: <reason>` marker, mirroring the documented `None` entries in
-      `LAUNCHER_FOR_VM_PREFIX` for fan-out/read-only/live-service launchers). 3. Wire the check into
-      `deployment-service/scripts/quality-gates.sh` (ratcheted the same way STEP 5.94/5.95 checks are — a fleet-wide
-      baseline pass first if any existing launcher fails it, then hard-fail on new violations only) so
-      `bash scripts/quality-gates.sh` — the same gate a new one-off launcher script's own commit must pass — rejects an
-      unregistered launcher at commit time. 4. Update
-      `deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py`'s module docstring +
-      `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md` to state the closed-loop contract: "a new
-      `scripts/vm/launch-*.sh` MUST register its `VM_NAME`/`VM_PREFIX` in `vm_classification.DATA_VM_PREFIXES` +
-      `launcher_registry.LAUNCHER_FOR_VM_PREFIX` (+ `vm_prefix_registry.VM_PREFIX_TO_BUCKET` for umbrella
-      classification) in the SAME commit that adds the launcher, enforced by QG — not a follow-up someone has to
-      remember." (repo: deployment-service, unified-trading-pm for the codex doc)
+- [ ] [SCRIPT] P2. **EXTRACTED 2026-08-09 → `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1.** Build a
+      forward-registration CI guard so a NEW ad hoc/one-off backfill launcher can never launch a VM invisible to the
+      fleet monitor. Full scope (the 4-step `check_vm_launcher_prefix_registration.py` design) now lives in that batch
+      doc — tracked there going forward, not duplicated here; this checkbox flips once the batch's finalize plan
+      reconciles it.
 - [ ] [DATA] P3. **Audit whether the `PREEMPTED` marker's shutdown-script grace period is survivable in practice** — the
       marker write (`gcloud storage cp` of a one-line file) didn't complete before this instance was reclaimed, which is
       the SAME mechanism `zombie_watchdog`/`exit_code_fleet_monitor` rely on to classify a gone VM as a benign
@@ -142,10 +124,15 @@ in the same way and at the same time when they're the same physical connection.
 
 ## Progress Log
 
+- **satellite-batch-extraction 2026-08-09 (infra tranche)**: extracted the `[SCRIPT] P2` forward-registration CI guard
+  into `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (`status: active`, conflict-checked against the full
+  active corpus, zero competing claims found), per the 2026-08-08 `na-eligibility-audit` pass's own "strong RECLASSIFY
+  candidate" flag. Left the `[DATA] P3` PREEMPTED-marker survivability audit untouched — still a genuine undecided
+  design choice between 2 named mitigations. Doc stays `assigned_vm: NA` (1 open item remains, judgment-gated).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid. Re-read end-to-end;
   `grep -cE '^- \[ \]'` = 2, matching (the `[SCRIPT] P2` forward-registration CI guard, and the `[DATA] P3`
-  PREEMPTED-marker survivability audit). The `[SCRIPT] P2` item is very well-specified (4 concrete implementation
-  steps, filed today directly off the operator's item-78 ruling) and is a strong RECLASSIFY candidate on its own — a
+  PREEMPTED-marker survivability audit). The `[SCRIPT] P2` item is very well-specified (4 concrete implementation steps,
+  filed today directly off the operator's item-78 ruling) and is a strong RECLASSIFY candidate on its own — a
   corpus-wide grep found no conflicting active claim on
   `deployment-service/scripts/quality_gates/check_vm_launcher_prefix_registration.py` or the launcher registries it
   touches. However `assigned_vm` flips whole-doc: the `[DATA] P3` item remains a genuine judgment call (its own
