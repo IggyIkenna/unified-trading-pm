@@ -96,15 +96,26 @@ context_scope:
       guarding this exact reader/writer-bucket-parity class going forward. No residual env-LESS site found; nothing to
       redirect.
 
-- **[INFRA] P0. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`** (the
-  `[BLOCKED-INFRA]` tag above is now stale — the operator-decision gate resolved per the round5-cross-cutting- audit
-  2026-08-08 note below; retag on reconciliation). Migration data-copy fan-out — confirm launcher pins correctly (per
-  the now-shipped pin-aware retention mechanism), then re-attempt the 20-VM fan-out. See the batch doc for the full
-  scoped todo; do not duplicate-dispatch from here. Original diagnosis retained: Attempt-1 (20 VMs) all failed exit-2:
-  pulled `mtds-code.tar.gz` lacked the migration script (floating tarball overwritten by a parallel-agent rebuild).
-  **round5-cross-cutting-audit 2026-08-08**: option (a) already shipped as a general mechanism
-  (`/codex/05-infrastructure/vm-tarball-deployment.md` § "Pin-aware retention", `tarball_pins.collect_in_use_pins()`,
-  `unified-trading-library@52ee4056` + `deployment-service@4c6cef9`/`@dfd7608`).
+- **[INFRA] P0. RESOLVED-MOOT 2026-08-09** (extracted 2026-08-09 to
+  `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` as "Migration data-copy fan-out — re-attempt the 20-VM
+  fan-out"; closed out there, not re-dispatched). The `[BLOCKED-INFRA]` tag above was already stale before this
+  extraction — not just because the round5-cross-cutting-audit 2026-08-08 note below resolved the tarball-pin gate, but
+  because **the launcher + its target script no longer exist and there is no source data left to copy**:
+  `launch-legacy-bucket-migration-sharded.sh` (`deployment-service/scripts/vm/`) was deleted 2026-08-03
+  (`deployment-service@d407b8b9`) as confirmed-dead code — its target script
+  `migrate_legacy_tick_buckets_to_canonical.py` was independently deleted 2026-07-25
+  (`market-tick-data-service@4d235caf`/`@f8276e22`) once its own `Delete-when` OR-clause was satisfied by E8's deletion
+  of `market-data-tick-sports-central-element-323112` (per `bucket_iam_write_protection_per_tier_2026_06_09.md`
+  P2.2f/g/i's investigation, done 2026-08-03 — six days before this doc's 2026-08-09 batch-extraction re-surfaced the
+  item as still actionable). Re-verified live 2026-08-09: all 5 legacy flat tick buckets this script's `PAIRS` list
+  covered (`market-data-tick-{cefi,defi,tradfi,sports,prediction}-central-element-323112`) return
+  `BucketNotFoundException: 404` — none exist; their 5 canonical `-prd-`/`pred-prd-` counterparts all exist and are
+  live. The drain→migrate→decommission sequence for the legacy tick buckets is fully complete via a path independent of
+  this launcher — there is nothing to re-attempt. **round5-cross-cutting-audit 2026-08-08**: option (a) (pin-aware
+  retention) also shipped as a general mechanism (`/codex/05-infrastructure/vm-tarball-deployment.md` § "Pin-aware
+  retention", `tarball_pins.collect_in_use_pins()`, `unified-trading-library@52ee4056` +
+  `deployment-service@4c6cef9`/`@dfd7608`) — moot for this item specifically, but real for any other launcher still
+  relying on pin protection.
 
 - [ ] [SCRIPT] P0. **Manifest completion belongs to the canonicalisation plans, NOT this plan.** Canonical `_index` is
       made authoritative by `defi_manifest_canonicalisation_2026_06_01.md` (defi) + the manifest v8/v9 schema

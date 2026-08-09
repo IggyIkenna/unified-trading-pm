@@ -99,13 +99,25 @@ drift_direction: advance-code
       market-tick-data-service, unified-trading-pm. Source: `data_source_provenance_enforcement_2026_07_24.md` (A12a
       remaining-handlers item). Done when: each of the 8 named handlers calls `assert_defi_catalog_fresh(...)` at its
       `process()` chokepoint; their existing tests patch the call to `True`; the codex row is added.
-- [ ] [INFRA] P0. Migration data-copy fan-out — the operator-decision gate that previously blocked this (tarball
-      pin-retention) is resolved per the source doc's own 2026-08-08 note: confirm the launcher correctly uses
-      `tarball_pins.collect_in_use_pins()`/the SHA-pin path, then re-attempt the 20-VM fan-out to completion. Retag the
-      source doc's `BLOCKED-INFRA` marker on this item once confirmed resolved — it is stale relative to the cited
-      2026-08-08 resolution. Repo: deployment-service. Source: `legacy_bucket_dual_write_decommission_2026_07_24.md`
-      (migration data-copy fan-out item). Done when: the launcher's pin usage is verified correct; the 20-VM fan-out is
-      re-launched and completes without exit-2.
+- [x] ✅ [INFRA] P0. Migration data-copy fan-out — **RESOLVED-MOOT, not re-launched: nothing to re-attempt.**
+      Investigated the launcher before verifying pins per the todo's own instructions and found
+      `deployment-service/scripts/vm/launch-legacy-bucket-migration-sharded.sh` was already deleted 2026-08-03
+      (`deployment-service@d407b8b9`, "chore(vm): delete 2 confirmed-dead migration launchers") — its target script
+      `market-tick-data-service/scripts/migrate_legacy_tick_buckets_to_canonical.py` was independently deleted
+      2026-07-25 (`market-tick-data-service@4d235caf`/`@f8276e22`) once its own `Delete-when` clause was satisfied. This
+      was already investigated and closed 2026-08-03 in `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2f/g/i
+      (six days before this 2026-08-09 batch re-surfaced it as a still-actionable fan-out) — that investigation confirms
+      the underlying migration completed via a path independent of this launcher, not that it was abandoned.
+      Live-reverified 2026-08-09: all 5 legacy flat tick buckets the deleted script's `PAIRS` covered
+      (`market-data-tick-{cefi,defi,tradfi,sports,prediction}-central-element-323112`) return
+      `BucketNotFoundException: 404` via `gsutil ls -b` — none exist, so there is no source data left to copy; all 5
+      canonical `-prd-`/`pred-prd-` counterparts exist and are live. There is no launcher to verify pins on and no
+      fan-out to re-launch — the drain→migrate→decommission sequence is already complete. Retagged the source doc's
+      stale marker accordingly (see `legacy_bucket_dual_write_decommission_2026_07_24.md`'s RESOLVED-MOOT entry). Repo:
+      deployment-service (nothing shipped — the launcher is correctly absent, not restored). Evidence:
+      `deployment-service@d407b8b9`, `market-tick-data-service@4d235caf`/`@f8276e22`,
+      `unified-trading-pm/plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2f/g/i, live
+      `gsutil ls -b` 404s on all 5 legacy buckets (2026-08-09).
 - [ ] [INFRA] P0. Remove the 8 already-paused (not-yet-removed) legacy manifest-consolidator cron Terraform blocks for
       cefi/defi/tradfi/sports (prediction's is already removed) from `manifest_consolidator_scheduler.tf` — the
       underlying Cloud Scheduler jobs are already inert ("PAUSED-not-removed"), so this is a reversible config cleanup,
@@ -125,3 +137,6 @@ drift_direction: advance-code
   source docs (5 from `data_source_provenance_enforcement_2026_07_24.md`, 2 from
   `legacy_bucket_dual_write_decommission_2026_07_24.md`). No conflicts found against active `assigned_vm: planning`
   plans in this parent_epic.
+- **2026-08-09 (slot-17)**: Migration data-copy fan-out todo closed as RESOLVED-MOOT, not re-launched — the launcher +
+  its target migration script were already deleted 2026-08-03/2026-07-25 as confirmed-dead, and live GCS checks confirm
+  all 5 legacy flat tick buckets are already gone. See the todo's own entry for full evidence.
