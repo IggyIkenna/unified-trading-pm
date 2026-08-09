@@ -9,7 +9,7 @@ summary: >-
   exactly what fails (a foreign autostash sweep unstages the named paths), so the false-success path triggers precisely
   when the tool is most needed. An agent trusting the exit code would flip a plan checkbox for work that is not in git —
   the false-progress class CLAUDE.md calls its #1 problem, inside the tool built to prevent it.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -32,7 +32,7 @@ estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.3
 assigned_role: infra
 drift_direction: fix-regression
-resolved_by:
+resolved_by: slot-9, 2026-08-09 — unified-trading-pm@escape-hatch-todo4
 locked_by:
 locked_since:
 supersedes:
@@ -46,6 +46,13 @@ context_scope:
 ---
 
 # safe-doc-push.sh reports success having committed nothing
+
+> **🟢 RESOLVED 2026-08-09** — all four todos closed. The false-success fallback now requires the named path to exist in
+> HEAD before claiming "already matches HEAD" (`unified-trading-pm@963f8e670`); the success claim is self-verifying end
+> to end via `verify_committed()`/`verify_pushed()` (`unified-trading-pm@2f482ce00`); the `index.lock` could-not-stage
+> case is now distinct from the genuinely benign nothing-to-stage case (`unified-trading-pm@2c2348c0a`); and the
+> exhausted-attempts failure message now documents the escape hatch (land from a separate clone, or fail loudly instead
+> of looping) for a checkout under sustained foreign write. Full detail in the Progress Log below.
 
 ## What happened
 
