@@ -557,6 +557,29 @@ doc's Progress Log) but do not close every path — a raw/manual `git commit` ou
   original incident's lost work; without it the edit would have been gone with no trace in any commit, stash, or on
   disk.
 
+**5. `gcloud config set account` mutates HOST-WIDE state, not per-slot or per-session state — confirmed live twice in
+one session, 2026-08-04 (`plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`).**
+`~/.config/gcloud/` is deliberately excluded from the per-slot on-demand-artifact purge (§ "On-demand artifact pattern"
+above) so credential files aren't duplicated per slot — but that shared location also holds gcloud's mutable
+ACTIVE-SELECTION property (`core/account` / the active named configuration), not just static credential files. Any
+concurrent slot running `gcloud config set account <x>` (or any tool that mutates the active gcloud config) changes
+which identity EVERY OTHER slot's bare `gcloud` invocations use, immediately and silently — no lock, no warning, no
+per-process scoping. Confirmed live: a production VM-launching backfill's active account flipped between three different
+service accounts at least 4 times across ~2 hours with zero action from the affected session, twice landing on an
+identity that lacked `compute.instances.create` and aborting an in-progress launch mid-run.
+
+- **HARD RULE — prefer a per-invocation identity override over the ambient active account whenever the tooling supports
+  one.** Use `gcloud --account=<sa> ...` (per-command flag, does not mutate shared state) or
+  `CLOUDSDK_CORE_ACCOUNT=<sa>` exported only within the invoking script's own subshell, instead of relying on
+  `gcloud config set account` having "stuck." A per-slot NAMED configuration
+  (`gcloud config configurations create slot-<N>` + `CLOUDSDK_ACTIVE_CONFIG_NAME=slot-<N>`) is a further isolation
+  option where a per-invocation override isn't practical — it scopes the mutable active-selection pointer without
+  duplicating the underlying credential files.
+- **Any other concurrent slot may change the ambient identity at any time.** Never assume the account you last set (or
+  observed via `gcloud config list`) is still active by the time your next `gcloud` call runs — a sibling slot's own
+  legitimate `gcloud config set account` between your calls is enough to flip it out from under you, with no error or
+  warning at the point of mutation.
+
 ## Within-slot ergonomics
 
 Every slot clone's `.envrc` declares:
