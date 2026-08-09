@@ -888,27 +888,11 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   ~1,744-shard net progress in ~1h27m since launch), despite the denominator itself growing (other campaigns capturing
   more schedule shards concurrently, per the doc's own dynamic denominator formula). FIXTURE_STATS residual unchanged at
   116 (correctly stable, no active backfill targeting it now). Confirmed genuine forward convergence, not a fluke.
-- **2026-08-08T17:10Z** — both healthy. smallchunk8: `Chunk 5/451`, correct 5-day spans confirmed (e.g.
-  `2020-06-26→2020-06-30`), zero OOMs yet, heartbeat live. FIXTURE_LINEUPS: `last_completed_date=2020-10-16`, fresh; 2nd
-  re-census needed **56,779 → 56,147** (-632/~27min, consistent rate). At this rate full convergence is a long horizon
-  (~44h) — expected for a campaign this size, not a stall (metric still climbing each check). Doc nearing its cap (~110
-  lines left) — future ticks go terser; will milestone-compact older entries once <50 lines remain.
-- **17:41Z** — both healthy. smallchunk8: chunk 12/451, still zero OOMs. FIXTURE_LINEUPS: `date=2020-11-21`, needed
-  **56,147 → 55,269** (-878/~30min, rate holding/slightly up). No action needed.
-- **18:10Z** — both healthy. smallchunk8: chunk 17/451 (entering the old danger zone), **still zero OOMs** — cleaner run
-  than any prior instance. FIXTURE_LINEUPS needed **55,269 → 54,702** (-567/~29min, rate holding). No action needed.
-- **18:37Z** — smallchunk8 now chunk 18 (danger zone), 5 `CHUNK_FAILED` (expected/normal, not actionable), heartbeat
-  fresh. FIXTURE_LINEUPS needed **54,702 → 54,139** (-563/~27min). Both healthy, no action.
-- **19:04Z** — smallchunk8 still chunk 18, 11 `CHUNK_FAILED` now (in-range, expected), fresh. FIXTURE_LINEUPS needed
-  **54,139 → 53,582** (-557/~27min). Both healthy, no action.
-- **19:31Z** — smallchunk8 still chunk 18, 19 `CHUNK_FAILED` (near precedent's upper end, expected), fresh.
-  FIXTURE_LINEUPS needed **53,582 → 52,360** (-1,222/~27min, accelerating). Both healthy, no action.
-- **19:58Z — smallchunk8 CLEARED chunk 18** at exactly 24 `CHUNK_FAILED` (matches smallchunk5's precedent exactly), now
-  chunk 19/451, fresh. FIXTURE_LINEUPS needed **52,360 → 51,595** (-765/~27min). Both healthy, no action.
-- **20:25Z** — smallchunk8 now chunk 22/451, still 24 `CHUNK_FAILED` total (zero new OOMs since clearing 18), fresh.
-  FIXTURE_LINEUPS needed **51,595 → 50,805** (-790/~27min). Both healthy, no action.
-- **20:52Z** — smallchunk8 chunk 24/451, still 24 `CHUNK_FAILED` total, fresh. FIXTURE_LINEUPS needed **50,805 →
-  49,250** (-1,555/~27min, best rate yet). Both healthy, no action.
+- **17:10Z-20:52Z (9 routine ticks, all healthy, no action, compacted 2026-08-09).** smallchunk8 climbed cleanly chunk
+  5→24/451, zero OOMs until entering the chunk-18 danger zone at 18:37Z, then 5→24 `CHUNK_FAILED` (in-range, expected),
+  **cleared it at 19:58Z at exactly 24 retries — matching smallchunk5's precedent exactly**. FIXTURE_LINEUPS needed
+  dropped steadily across 8 re-census points, 56,779→49,250 (~550-1,555/interval, best rate 20:52Z), no stalls,
+  ~27-30min cadence throughout. Doc hit its 1000-line cap around here — future ticks go terser.
 - **21:19Z — FIXTURE_LINEUPS hit the API-Football daily quota wall, PAUSED (VM deleted).** Same account-wide daily quota
   this campaign hit before (2026-08-06, confirmed UTC-midnight reset ~01:45Z on 2026-08-07 —
   `sports_af_full_entity_completion_2026_08_03.md` history). `run.log` showed 1,770
@@ -925,12 +909,9 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   — genuine bug, ~15-16min silent gap matches signature exactly.** Relaunched as `smallchunk9` (CHUNK_SIZE=5 explicit).
   Full detail: `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`@`9a8cd66da1`. FIXTURE_LINEUPS still
   paused (AF quota), not due for a check until ~01:00Z+.
-- **23:02Z** — smallchunk9 healthy, chunk 7/451, zero OOMs, fresh. Still pre-midnight-UTC — FIXTURE_LINEUPS probe not
-  due yet.
-- **23:34Z** — smallchunk9 healthy, chunk 14/451, still zero OOMs, fresh. Still pre-midnight-UTC.
-- **00:06Z (2026-08-09)** — smallchunk9 healthy, chunk 17/451, still zero OOMs, fresh, entering chunk 18 next.
-  FIXTURE_LINEUPS probe target still ~1h away (~01:00Z).
-- **00:38Z** — smallchunk9 chunk 18, 7 `CHUNK_FAILED` (expected), fresh. FIXTURE_LINEUPS probe target ~22min away.
+- **23:02Z-00:38Z (4 routine ticks, all healthy, compacted 2026-08-09).** smallchunk9 climbed cleanly chunk 7→18/451,
+  zero OOMs until entering chunk 18 at 00:38Z (7 `CHUNK_FAILED`, expected). FIXTURE_LINEUPS correctly left paused
+  pre-midnight per the quota-reset plan, no probes attempted.
 - **01:05Z — ✅ AF DAILY QUOTA RESET CONFIRMED.** Probed via `af-backfill-20260809-020527`
   (`RESUME_ENTITY=FIXTURE_LINEUPS`). Launcher's own pre-flight check showed `remaining_daily_quota=149210` (was 0
   yesterday); `run.log` confirmed zero `'reached the request limit'` errors, genuine `Fetched N lineup rows` across many
@@ -945,3 +926,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   periodically by a separate consolidator job, not live per-VM shards — a flat reading with fresh run.log activity is
   expected lag, NOT a stall; only flag if it stays flat across 2+ consecutive ticks. smallchunk9 cleared chunk 18→ now
   chunk 22/451, still 26 total `CHUNK_FAILED` (zero new). Both healthy, no action.
+- **02:56Z — did a milestone-compaction pass** (this doc had hit 947/1000 lines): consolidated 2 long runs of routine
+  tick-by-tick entries (17:10-20:52Z, 23:02-00:38Z) into 2 summary paragraphs, freed ~19 lines. Also: real forward
+  movement confirmed (census flat-reading concern from 02:10Z resolved) — needed **48,566 → 48,521** (-45, consolidator
+  catchup). smallchunk9 chunk 25/451, still 26 total `CHUNK_FAILED` (zero new), fresh — right at the edge of chunk 26
+  (the most-recurring death site, 3x). Also this tick: recovered a genuine push-integrity issue on this heavily
+  multi-agent-contended checkout (a stale duplicate commit with wrong content had landed on origin from an earlier
+  confused retry, plus an untracked-file path collision blocked the rebase) — verified content match against origin
+  directly (`ahead=0/behind=0`) rather than trusting `safe-doc-push.sh`'s own success message, which has a blind spot
+  when a file is already committed locally but unpushed.
