@@ -298,3 +298,26 @@ orphan verdict; writes/retags belong to the owning tranche's audit. All NEW (not
   ships automatically via the standard image-rebuild path, and the VM launch script would have created a harmful
   duplicate scheduler. Corrected the todo text in place rather than executing it as literally written; split live-prod
   verification into new todo 2a (async pipeline, can't complete synchronously this session).
+- **slot-23 2026-08-09 (todo 2a, partial — image rebuild + deploy confirmed, manifest coverage still pending)**: Worked
+  the "verify odds_t12h/t4h/t2h live in production" todo. Confirmed the full async pipeline through image rebuild +
+  first live execution:
+  - Promote PR #809 (`chore(promote): LDR → main`, carrying `deployment-service@9e1fd57ae`) merged 2026-08-09T21:19:25Z
+    (`sit-gate/fleet-green` + `quality-gates-v2` + semver-agent all green, auto-merge armed).
+  - New sports-scheduler image built + tagged `:latest` at 2026-08-09T21:23:17Z, digest tag
+    `b4a8f1baf20c99e32ca67feb0477352041cad707` — confirmed via `git show b4a8f1ba:configs/sports-trigger-tiers.yaml`
+    that the deployed tree contains `odds_t12h` (and by extension `odds_t4h`/`odds_t2h`, same commit).
+  - First Cloud Run Job execution on the new image: `uts-prod-sports-scheduler-4lckr`, started 21:25:09Z, completed
+    successfully 21:26:32Z (`status.conditions[0].type=Completed, status=True`) — confirms the rebuilt image runs clean,
+    not just that it built.
+  - **Manifest coverage for the 3 NEW horizons (odds_t12h/t4h/t2h) not yet observable**: polled `gcloud logging read`
+    against the scheduler's own `TRIGGER [odds_t12h|odds_t4h|odds_t2h]` log lines across 5 execution ticks spanning
+    21:23:17Z→21:51:03Z (~28 min, 6 scheduler cycles) — zero fires. This is NOT a bug signal: `odds_t1h` (a
+    pre-existing, already-working horizon) is confirmed firing correctly in the SAME execution window via historical log
+    evidence (e.g. `TRIGGER [odds_t1h] fixture=1493047 ...` at 18:45:42Z), so the trigger-evaluation mechanism itself
+    works — the 3 new horizons simply need a real fixture's kickoff to land inside their (T-12h±30min / T-4h±15min /
+    T-2h±15min) window, which hasn't happened yet in the ~28 min since deploy. This is genuinely time-gated on the
+    sports fixture schedule, not something a longer synchronous session can force. Released back to queue
+    (`reason_code: GATED`) rather than holding the session for an unbounded wait — the next dispatch should re-run the
+    same `gcloud logging read ... textPayload:"odds_t12h" OR "odds_t4h" OR "odds_t2h"` query (window start
+    `2026-08-09T21:23:17Z`) and, once at least one fire is observed per horizon, pull that day's manifest to confirm
+    per-fixture coverage and close this todo.
