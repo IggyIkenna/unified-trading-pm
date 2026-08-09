@@ -14,9 +14,9 @@
 #                from a READ-ONLY context (e.g. plan-reconciler STEP 1 input gather) where dirtying
 #                master_to_live_defi_2026_05_23.md is undesirable. Flags may be combined: --ci --no-regen.
 #   --precommit: lean, fast, LOCAL-only gate for the prek hook (fires on staged plans/**) —
-#                runs ONLY the three local hard checks (frontmatter / todo-format / runbook-fields),
-#                NO origin fetch (todo-regression), NO soft/advisory checks, NO inventory regen, so a
-#                plan-touching commit is gated in <1s. The origin-compare + advisory checks stay at
+#                runs the staged-files-only hard checks (frontmatter / todo-format / runbook-fields /
+#                todo-regression / ...), NO soft/advisory checks, NO inventory regen, so a
+#                plan-touching commit is gated in <1s. The corpus-wide advisory checks stay at
 #                the daily cron / CI sweep, never pre-commit. Exit 1 on any hard failure.
 
 set -uo pipefail
@@ -172,6 +172,15 @@ if [ "$CI_MODE" = "--precommit" ]; then
     python3 "$SCRIPT_DIR/check_effort_signal_ratchet.py" --quiet --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Silent-default-effort (staged plans)" \
       || { echo "  ❌ A newly-staged living plan declares assigned_role but no effort:/thinking_tier: — declare it explicitly, or confirm the role's default effort is genuinely right for this plan's complexity"; PF=$(( PF + 1 )); }
+    # Todo regression, --only-scoped (2026-08-09): the module docstring's own precommit-exclusion
+    # rationale ("NO origin fetch") describes a network call this check never actually makes — it
+    # only reads the LOCAL origin/live-defi-rollout ref via `git show`, which is cheap and available
+    # offline. Root-caused after a promote-PR full-QG run caught a plan that lost a todo hours after
+    # it landed via safe-doc-push.sh, which never ran this check at all (unified-trading-pm PR #2670,
+    # 2026-08-09) — same fast-path-blind-to-full-gate pattern as the checks above.
+    bash "$SCRIPT_DIR/check_todo_regression.sh" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Todo regression (staged plans)" \
+      || { echo "  ❌ A staged plan lost todos (total open+done shrank) vs origin/live-defi-rollout — restore the missing line(s), a checkbox flip never shrinks the total"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }
