@@ -376,6 +376,115 @@ repeated same-key writes within one run), independently reproduced here — not 
 eventual writer fix should collapse BOTH populations once shipped, since it is the same call-site defect; a NEW todo
 below tracks the pre-cutoff-side re-verification once that fix lands.
 
+## Finding 14 (2026-08-09, slot 11) — Finding 12's "repeated writer call" theory ALSO REFUTED; real mechanism is a
+
+missing `timeframe` axis in `PIN_ATOM` — NOT a writer bug at all, no MDPS/UTL fix exists to make (answers todo 2; also
+corrects Finding 13's premise for the pre-cutoff population)
+
+**Worked todo 2 as literally worded** ("locate the exact call site... fix it..."). Before searching MDPS for a call
+site, checked what Finding 12's own cited row_count sequences meant: `5760 → 1440 → 288 → 96 → 24 → 6 → 1`
+(ASTER/BNB-USDT) and `3146 → 787 → 158 → 53 → 14 → 4 → 1` (+`9`) (BITFINEX-FUTURES/AAVE-USDT) are **exactly the per-day
+candle counts at the 7 MDPS candle timeframes**: `86400/15=5760` (15s), `/60=1440` (1m), `/300=288` (5m), `/900=96`
+(15m), `/3600=24` (1h), `/14400=6` (4h), `/86400=1` (1d). Pulled the live GCS data again (same bucket Finding 12 used)
+and queried the `timeframe` column specifically for Finding 12's own two cited samples — a column Finding 12's
+"identical full shard-atom key" list never included:
+
+```
+BITFINEX-FUTURES:PERPETUAL:AAVE-USDT@LIN trades 2026-07-24 (8 rows, sorted by row_count desc):
+ timeframe=15s  service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=3146
+ timeframe=1m   service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=787
+ timeframe=5m   service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=158
+ timeframe=15m  service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=53
+ timeframe=1h   service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=14
+ timeframe=None service_name=market-tick-data-service        pipeline_mode=batch_tardis  row_count=9
+ timeframe=4h   service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=4
+ timeframe=1d   service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=1
+
+ASTER:PERPETUAL:BNB-USDT@LIN trades 2024-10-25 (8 rows):
+ timeframe=15s  service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=5760
+ timeframe=1m   service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=1440
+ timeframe=5m   service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=288
+ timeframe=None service_name=market-tick-data-service        pipeline_mode=batch_aster   row_count=176
+ timeframe=15m  service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=96
+ timeframe=1h   service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=24
+ timeframe=4h   service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=6
+ timeframe=1d   service_name=market-data-processing-service  pipeline_mode=batch_tardis  row_count=1
+```
+
+**`timeframe` is the differentiator in every row of both samples — not a repeated-call artifact.** Each row is one
+LEGITIMATE, distinct MDPS candle-timeframe manifest write for that (date, venue, instrument), plus one raw capture row
+from MTDS. There is no "repeated same-key `record_captured` call" — 7 different timeframes is 7 genuinely different
+outputs, one `record_captured` call each.
+
+**Root cause of the false "duplicate" reading**: `close_candle_streaming_writer`
+(`market-data-processing-service/market_data_processing_service/app/core/canonical_writer_streaming.py:528`) overrides
+the manifest `data_type` to the SOURCE data_type per the 2026-07-21 operator ruling ("data_type AXIS = SOURCE
+data_type"): `manifest_rk: dict[str, str] = {**rk, "data_type": ctx.source_data_type}`. Every one of a day's 7 candle
+timeframes for one instrument therefore writes `data_type="trades"` in the manifest — the `ohlcv_15s`/`ohlcv_1m`/etc.
+distinction that used to live in the aggregated mdps key (`mdps_data_type_key`) is intentionally dropped from
+`data_type`. `timeframe` is passed as its own kwarg to `record_captured` and IS stored as a real manifest column (schema
+v9), but this script's `PIN_ATOM = [date, venue, data_type, instrument_type, instrument_id, pipeline_mode]` never
+included it. Result: 7 legitimately-distinct timeframe rows (+ a genuinely-distinct-service MTDS row) collapse onto one
+PIN_ATOM group and read as "duplicate captures with differing row_count."
+
+**Quantified corpus-wide** (main `availability_index.parquet`, 490k+ rows, `capture_status='captured'`, `row_count>0`,
+grouped on PIN_ATOM as currently defined vs. extended):
+
+| key                                          | lossy groups |
+| -------------------------------------------- | -----------: |
+| current PIN_ATOM (no timeframe/service_name) |      115,135 |
+| + `service_name` only                        |       89,805 |
+| + `timeframe` only                           |            0 |
+| + `timeframe` + `service_name`               |            0 |
+
+(115,135 vs. the script's own 198,250 figure differs because this used only the main index, not the 6 per-VM shards the
+real dry-run also loads — same direction, not the same denominator.) `timeframe` alone is the load-bearing fix;
+`service_name` is added too because `manifest_consolidator.consolidate()`'s own **production** dedup key
+(`_BASE_DEDUP_COLS=(date, venue, data_type, service_name)` + `_OPTIONAL_DEDUP_COLS` including `timeframe`) already
+treats both as real shard-atom dimensions — this script's `PIN_ATOM` had drifted from the writer/consolidator's own key,
+which is the actual "shard atom identical across writer/manifest/status/gate/UI" contract this repo is supposed to hold.
+
+**This REFUTES Finding 11 (chain-instability), Finding 12 (repeated same-key MDPS writer calls), AND Finding 13's
+mechanism claim for the pre-cutoff population** — Finding 13 explicitly found "the SAME cascade shape (same absolute
+values: 5760/1440/288/96/24/6/1)" and concluded it was Finding 12's mechanism reproduced pre-cutoff; since that cascade
+is the per-day candle-timeframe count sequence, Finding 13's pre-cutoff 58,682-group figure is almost certainly the SAME
+`timeframe`-missing-from-key false positive, not a second confirmation of a writer bug. Its venue/date/pipeline_mode
+breakdown likely still has diagnostic value (which venues/dates the false-positive count concentrates in) but its
+root-cause conclusion should be treated as superseded by this finding, pending the todo-5 re-run below. There is no
+writer or consolidator bug anywhere in this population — `record_captured` is called exactly once per real (timeframe,
+service) artifact, which is correct. **No fix belongs in `market-data-processing-service` or
+`unified-trading-library`.** The defect is entirely in `instruments-service`'s CeFi dedup migration scripts' analysis
+key.
+
+**Why this matters more than a false-positive nuisance**: `_dedup_blob` (the function that actually COLLAPSES rows, not
+just the STOP-check) uses the same key. Verified directly against the real BITFINEX-FUTURES 8-row sample using the
+actual (unmodified) `v1._dedup_blob`: with the OLD PIN_ATOM it collapses 8 rows → 1, **destroying 7 of 8 real
+per-timeframe candle captures** (kept only the highest row_count, i.e. the 15s candles — the 1m/5m/15m/1h/4h/1d/raw rows
+would all have been silently dropped). If a future `--apply` had ever proceeded past a raised
+`_CHAIN_LOSSY_TOLERANCE_MAX` (which multiple prior findings explicitly warned against, but the tolerance-raise
+temptation was real), this would have been a genuine, large-scale, real-data-loss migration bug — not the "safe
+residual" framing the STOP gate's tolerance discussion assumed.
+
+**Fix shipped this pass**
+(`instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py`@`ccd47ba9`): `PIN_ATOM` extended to
+include `timeframe` and `service_name`. `_effective_dedup_key`/`_dedup_blob` build the key generically off `PIN_ATOM`
+(no other code change needed), and both `complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py` (chain-merge-safety
+STOP gate) and `apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py` (todo 5's script) load `v1`
+dynamically via `importlib` and call `v1._effective_dedup_key`/`v1._dedup_blob` directly, so BOTH automatically inherit
+this fix on their next run — no v2/scoped-script edits needed. Verified against the real 8-row BITFINEX-FUTURES sample
+with the actual (unmodified) `_dedup_blob`: fixed PIN_ATOM → `collapsed=0` (all 8 rows correctly kept); old PIN_ATOM →
+`collapsed=7` (data-loss reproduced). No GCS/manifest mutation made — this changes only the analysis script's Python
+source, not any deployed data. `characterize_cefi_pre_2025_11_manifest_same_spelling_duplicate_rows_2026_08_09.py`
+(Finding 13's script) was not found in this slot's fresh-pulled `market-tick-data-service` clone (may be a
+oneoff-lifecycle script not yet shipped, or already deleted per its lifecycle marker) — could not confirm whether it
+reused `v1._effective_dedup_key` (and would thus auto-inherit this fix) or hand-rolled its own key; flagged for whoever
+runs todo 5.
+
+**Caveat**: verification used the main index only (not the 6 per-VM shards the real dry-run also consolidates) plus a
+hand-reconstructed DataFrame from the live-pulled sample rows, run through the actual unmodified `_dedup_blob`/
+`_effective_dedup_key` functions — not a full VM dry-run of the patched script. Todo 4 below is the full-corpus
+verification step; todo 5 (pre-cutoff re-run) should now also re-measure the 58,682 figure with the fixed key.
+
 ## Todos
 
 - [x] [DATA] P1. ✅ **Root-cause whether ASTER/HYPERLIQUID/EXTENDED-STARKNET manifest writes are appending a NEW row per
@@ -390,27 +499,41 @@ below tracks the pre-cutoff-side re-verification once that fix lands.
       performed (see Finding 11 caveat — venv/duckdb unavailable this slot; code-path evidence judged sufficient).
       **CORRECTED by Finding 12 (slot 13)**: the live GCS pull Finding 11 deferred was performed and REFUTES the
       chain-instability mechanism — see Finding 12 for the real (venue-agnostic, MDPS/`batch_tardis`-sourced) pattern.
-- [ ] [DATA] P1. **Locate the exact `market-data-processing-service` / `pipeline_mode=batch_tardis` / `source=tardis`
+      **FURTHER CORRECTED by Finding 14 (slot 11)**: Finding 12's "repeated writer call" mechanism is ALSO refuted —
+      there is no writer bug at all; the true cause is `timeframe` missing from the dedup script's `PIN_ATOM` key.
+- [x] [DATA] P1. ✅ **Locate the exact `market-data-processing-service` / `pipeline_mode=batch_tardis` / `source=tardis`
       CeFi-trades capture call site that issues multiple `record_captured` calls for the IDENTICAL shard atom within one
-      run (seconds-to-minutes apart, `row_count` decreasing each call — see Finding 12 for the two confirmed samples),
-      fix it to flush once per shard atom (accumulate the full fetch window before writing, or make the writer dedupe
-      safely across same-run repeat flushes), THEN re-run the v2 dry-run** to confirm the lossy-group count drops back
-      toward the historical ~28-group baseline before any `--apply` is attempted again. **Finding 11's original fix
-      candidate (resolve `chain` from a UAC per-venue constant) is CONFIRMED NOT APPLICABLE per Finding 12 — do not
-      implement it; `chain` is not the differentiator.** (repo: market-data-processing-service, unified-trading-library)
+      run...** — See Finding 14: **no such call site exists.** Every row Finding 12 flagged is a genuinely distinct,
+      correctly-single `record_captured` call (one per MDPS candle timeframe, plus one raw MTDS capture); the apparent
+      "duplication" is `instruments-service`'s CeFi dedup script's `PIN_ATOM` key omitting `timeframe`. **Fixed**:
+      `instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py`@`ccd47ba9` `PIN_ATOM` extended
+      with `timeframe` + `service_name` (propagates automatically to the v2 STOP gate and the pre-cutoff scoped script,
+      both of which load `v1` dynamically). Verified against the real 8-row BITFINEX-FUTURES sample: old key collapsed
+      8→1 (would have destroyed 7 real captures under `--apply`); fixed key collapses 0. **Finding 11's original fix
+      candidate (UAC per-venue chain constant) and Finding 12's (locate a writer flush bug) are BOTH confirmed not
+      applicable — no MDPS/UTL code change was needed.** (repo: instruments-service)
 - [x] [DATA] P1. ✅ **Characterize the pre-2025-11-01 same-spelling multi-captured-row population (98,188 groups,
       `drop_set_captured=502,746`)** — market-tick-data-service (new script
       `scripts/characterize_cefi_pre_2025_11_manifest_same_spelling_duplicate_rows_2026_08_09.py`, READ-ONLY). See
       Finding 13: measured 58,682 lossy groups in the consolidated index (scope-discrepancy vs. 98,188 noted, not
-      chased); confirmed the SAME root cause as the post-cutoff population (Finding 12's venue-agnostic MDPS/
-      `batch_tardis` repeated-write mechanism, chain irrelevant — NOT Finding 11's WS-reconnect mechanism), with the
-      identical row_count decreasing-cascade signature and venue/data_type/pipeline_mode breakdown in Finding 13.
-- [ ] [DATA] P2. **After todo 2's writer fix ships, re-run
-      `instruments-service/scripts/apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py`'s dry-run (or a
-      similarly-scoped pre-cutoff dry-run) to confirm the pre-cutoff same-spelling lossy-group count (58,682 per
-      Finding 13) also drops back toward baseline** — since Finding 13 confirms this is the SAME writer defect as the
-      post-cutoff population, todo 2's fix should collapse both; this todo is the pre-cutoff-side verification step.
+      chased); confirmed the SAME cascade signature as the post-cutoff population. **Finding 13's root-cause CONCLUSION
+      (Finding 12's mechanism) is CORRECTED by Finding 14**: the identical cascade values (5760/1440/288/ 96/24/6/1) are
+      the per-day candle-timeframe counts, so this population is almost certainly the same
+      `timeframe`-missing-from-`PIN_ATOM` false positive, not a second confirmation of a writer bug — pending
+      re-measurement in todo 5 below.
+- [ ] [DATA] P1. **Re-run the v2 dry-run** (`complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py`, DRY mode, same VM
+      category `cefi-dedup-apply` as the original 2026-08-08 run) on a fresh `canonical-migration-cefi-dedup-apply-*` VM
+      to confirm the fixed `PIN_ATOM` (Finding 14) drops the corpus-wide lossy-group count from 198,250 back toward the
+      historical ~28-group baseline, using the REAL 7-blob load (main index + 6 per-VM shards) this slot's local
+      verification could not reproduce. Zero mutation expected (dry mode) — no `--apply` in this todo. If the count does
+      NOT drop to ~28 (or a newly-understood small baseline), diagnose the residual before considering this closed.
       (repo: instruments-service)
+- [ ] [DATA] P2. **After todo 4's dry-run confirms the fix, also re-run
+      `instruments-service/scripts/apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py`'s dry-run (or
+      `characterize_cefi_pre_2025_11_manifest_same_spelling_duplicate_rows_2026_08_09.py` if it still exists and can be
+      confirmed to use `v1._effective_dedup_key`) to confirm the pre-cutoff same-spelling lossy-group count (58,682 per
+      Finding 13, likely inflated by the same `timeframe` omission per Finding 14) also drops toward a small baseline.**
+      (repo: instruments-service, market-tick-data-service)
 
 ## Progress Log
 
@@ -446,3 +569,27 @@ below tracks the pre-cutoff-side re-verification once that fix lands.
   Finding 12's exact mechanism and row_count-cascade signature for the pre-cutoff slice — same root cause as
   post-cutoff, not distinct. Added a P2 follow-up todo for post-fix re-verification. No mutation to any GCS bucket or
   manifest — read-only characterization only.
+- **2026-08-09 (slot 11)** — Worked todo 2 ("locate the exact call site... fix it... then re-run the dry-run").
+  Recognized Finding 12's/13's cited row_count cascades (5760/1440/288/96/24/6/1, etc.) as exactly the per-day MDPS
+  candle-timeframe counts, pulled the same live GCS samples and queried the `timeframe` column (which neither Finding 12
+  nor 13 had checked), and confirmed: **there is no writer bug** — every "duplicate" row is a genuinely distinct,
+  correctly-single `record_captured` call for a different candle timeframe (or a different service). The false
+  "duplicate" reading comes from `instruments-service`'s CeFi dedup script's `PIN_ATOM` key omitting `timeframe` (and
+  `service_name`), which the MDPS candle writer's manifest `data_type` override (`data_type` = SOURCE data_type per the
+  2026-07-21 ruling) makes load-bearing — see Finding 14, which corrects both Finding 12 and Finding 13's mechanism
+  conclusion. **Shipped the fix**:
+  `instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py`@`ccd47ba9` `PIN_ATOM` now includes
+  `timeframe` + `service_name` (propagates to the v2 gate and the pre-cutoff scoped script automatically, both load `v1`
+  dynamically). Quantified corpus-wide on the main availability index (115,135 → 0 lossy groups) and verified against
+  the real BITFINEX-FUTURES 8-row sample through the actual unmodified `_dedup_blob` (old key: destructively collapses
+  8→1; fixed key: 0 collapsed). **BIG FINDING** — flagging for operator visibility: this reverses the direction of two
+  prior findings (11, 12, and 13's conclusion) and, more importantly, means the STOP-ON-SURPRISE gate's tolerance
+  discussion in this doc was analyzing a false-positive population; had the tolerance ever been raised to unblock
+  `--apply` per the "just widen `_CHAIN_LOSSY_TOLERANCE_MAX`" temptation multiple findings warned against, it would have
+  silently destroyed millions of real per-timeframe candle manifest rows. No GCS/manifest mutation made this pass — only
+  the analysis script's Python source changed (local main-index copy + 2 small per-VM shard files downloaded to scratch
+  — not the corpus 7-blob set the real dry-run loads). Added todo 4 (re-run the real v2 dry-run on a fresh VM to confirm
+  the fix at full corpus scale) and updated todo 5 (renumbered from the prior P2 follow-up) to also re-measure Finding
+  13's 58,682 figure post-fix. instruments-service pytest suite green (5237 passed, 88.78% coverage) on the first QG
+  pass; that same pass then hit a shared-host basedpyright timeout (exit 124, load avg ~55 on 8 cores, 22 concurrent QG
+  runs fleet-wide) — re-running once load eases before shipping via quickmerge.
