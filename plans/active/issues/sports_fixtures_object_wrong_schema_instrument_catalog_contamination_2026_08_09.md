@@ -237,3 +237,50 @@ transcript available in that session's Progress Log entry on
   existing guard; what remains is the DATA remediation side (snapshot + recover/quarantine this and any other affected
   `entity=fixtures` objects), which is todo 3's scope, gated on todo 1's full-corpus enumeration to know the true count
   beyond this one confirmed instance.
+
+- **2026-08-09 (slot-16, data_engineering)**: built + shipped the bounded VM census tooling for todo 1.
+
+  **Design**: `instruments-service/scripts/census_sports_reference_schema_2026_08_09.py` (shipped
+  `instruments-service@9fac6010`) walks `sports_reference/by_date/` (`instruments-store-sports-prd`) and
+  `sports_features/by_date/` (`features-sports-prd`) once each, per object computing (a) an instrument-catalogue
+  sentinel-column contamination check — mirrors the exact sentinel set (`instrument_key`/`tick_size`/`min_size`/
+  `contract_size`/`base_asset`/`quote_asset`) from the shipped guard `_assert_not_cross_domain_contamination()`
+  (`instruments_service/engine/orchestrator/sink.py`), computed regardless of contract availability — and (b) a UAC
+  `SchemaContract` validation for `instruments-store` objects only, via a VERIFIED entity->(instrument_type, data_type)
+  map for the 10 api-football entities (`fixtures`/`fixtures_schedule`/`fixtures_outcomes`/`injuries`/`fixture_stats`/
+  `fixture_events`/`fixture_lineups`/`player_stats`/`teams`/`standings` — every `CONTRACT_REGISTRY[("sports", ...)]`
+  entry read directly from `unified-api-contracts/internal/schemas/_sports_match_contracts.py` + `_sports_contracts.py`,
+  not guessed; other entities report `NO_CONTRACT_MAPPING` honestly rather than risk a false verdict).
+  `features-sports-prd` uses a DIFFERENT grammar (`feature_group=`/`league=`, not `entity=`/`league=` — confirmed via
+  `features_service/features_service/sports/data/writer.py`'s path templates) with no established per-feature_group
+  contract, so only the contamination check applies there.
+
+  **Bounded-sample verification** (real GCS objects, not corpus-scale): the confirmed contaminated object
+  (`day=2026-04-14/.../league=BOLIVIA_PRIMERA_DIVISION/fixtures.parquet`) correctly returns all 6 sentinel
+  `contamination_codes`. A real clean control object (`day=2026-06-20/.../league=1/fixtures.parquet`) correctly returns
+  EMPTY `contamination_codes` — but ALSO `schema_verdict=FAIL` on `wrong_dtype` for several legitimately all-null
+  optional columns (a pandas/pyarrow round-trip artifact — an all-NaN column reads back as float64/object, not the
+  contract's declared dtype), unrelated to this issue and apparently widespread across genuine fixtures data.
+  **`contamination_codes` is the precise signal for this issue's scope; a bare `schema_verdict=FAIL` is expected to fire
+  broadly on real data and must not be read as contamination evidence** — documented in the script's own docstring so
+  the eventual report consumer doesn't over-count.
+
+  **VM launcher + registry**: `deployment-service/scripts/vm/launch-sports-reference-schema-census-vm.sh` (shipped
+  `deployment-service@0fb6cafe`) — SPOT, singleton-locked per bucket target, tarball-freshness-verified, mirrors
+  `launch-orphan-sweep-vm.sh`'s `bucket=None`/fixed-report-path convention (report lands at
+  `_index/audit/sports_reference_schema_census_{vm}.parquet` inside the walked bucket itself, not a per-VM shard to the
+  separate flat datapoint-validation results bucket — sports_reference/sports_features axes don't fit that script's
+  market-data-tick grammar). Registered `sports-schema-census-instruments-store-` and
+  `sports-schema-census-features-sports-` prefixes in both `vm_prefix_registry.py` and `launcher_registry.py` (verified
+  via the QG `VM-LAUNCHER-REGISTRATION` gate — 0 new unregistered launchers). Both repos' full `quality-gates.sh` green
+  before shipping.
+
+  **VM launched**: `sports-schema-census-instruments-store-20260809-220024` (asia-northeast1-c, SPOT e2-standard-4),
+  campaign `20260809-220024`, RUNNING as of launch — confirmed via `gcloud compute instances create` + a
+  `run_in_background` watchdog armed in the same turn (polls `run.log` growth + instance status; STALL/terminal
+  verification not yet complete as of this entry). Report path:
+  `gs://instruments-store-sports-prd-central-element-323112/_index/audit/sports_reference_schema_census_sports-schema-census-instruments-store-20260809-220024.parquet`.
+  Did NOT yet launch the `features-sports` target — deferred until the `instruments-store` run is confirmed healthy
+  (avoid compounding an untested launch). Todo 1 checkbox stays open — the report doesn't exist yet; this session's
+  contribution is the tooling + the launch, not the completed census (corpus-scale walk, expected to run longer than one
+  interactive dispatch — same multi-session pattern the sibling league-vocabulary census followed).
