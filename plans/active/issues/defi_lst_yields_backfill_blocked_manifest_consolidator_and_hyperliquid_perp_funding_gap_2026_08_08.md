@@ -141,3 +141,14 @@ Missing: market-tick-data-service-perp
   the two upstream dependency gaps documented above. Did not chase either gap further this session (out of scope for the
   backfill-script task — each is its own real investigation). No data written; no GCS/manifest mutation made.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **2026-08-09 (cross_cutting_satellite_ao_dispatch_batch5_2026_08_09 Phase A)**: hit the SAME
+  `ManifestConsolidatorStaleError` class on a DIFFERENT bucket — `features-defi-test-central-element-323112`
+  (consolidated blob age ~289k-290k s, well past the 3600s threshold, while per-VM shards existed), not the
+  `market-data-tick-defi-prd` bucket this doc originally tracked. Confirms the consolidator-staleness class is not a
+  one-off on a single bucket. Used `MANIFEST_ALLOW_STALE_FALLBACK=true` to proceed — judged safe here (unlike Todo 1's
+  caution for the PROD raw-tick bucket) because `features-defi-test-*` is a small, lightly-used `-test-` bucket (38-40
+  total manifest entries observed, not "large"), and the recovery merge completed in seconds with no memory pressure.
+  Did not investigate WHY the `features-defi-test-*` consolidator schedule is behind — plausible it simply isn't
+  scheduled as often as prod tiers for a low-traffic test bucket, but not confirmed. Not chasing further here (out of
+  scope for the Phase-A task) — leaving Todo 1 as-is since it's scoped to the prod bucket; a separate investigation
+  would be needed to say whether the `-test-` tier's consolidator schedule needs its own fix.
