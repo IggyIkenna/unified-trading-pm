@@ -194,10 +194,14 @@ evidence. Summary of what each site currently uses:
       purpose). Post-fix repo-wide grep of all 125 old names across the 4 files: zero functional hits.
       `quality-gates.sh` full run green. Re-verified `10e219f` is a real, current commit in `ml-service` before this
       flip (`git show --no-patch` confirms).
-- [ ] [REVIEW] P3. Once todos 2–6 land, write the FSS-output ↔ ml-service-input ↔ strategy-service-input parity test
-      originally requested by `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` — against the
-      now-real UAC contract. This is the deliverable the parent issue's own todo 2 asked for; it was blocked until this
-      plan's naming decision landed. (repo: features-service, ml-service, strategy-service)
+- **[REVIEW] P3. Extracted to `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2 (2026-08-09,
+      satellite-batch-extraction pass) — todos 1-6 above are all `[x]` shipped, so the FSS-output ↔ ml-service-input ↔
+      strategy-service-input naming-parity test originally requested by
+      `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` is now unblocked. Tracked there
+      (`assigned_vm: planning`), not duplicated here; that batch's finalize sibling reconciles this checkbox once it
+      lands. `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s Conflict-gated section had held this exact item
+      back citing "the still-unshipped migration" — that premise is now stale (see this doc's own 2026-08-08
+      Progress Log entry below, which independently flagged the same staleness).**
 - [ ] [REVIEW] P3. Cross-reference this migration against whichever plan ends up doing the "wire sports end-to-end" work
       (`sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`'s remaining todos) — per the
       operator's sequencing note, this migration should land BEFORE or ALONGSIDE that wiring, never after (a live
@@ -291,3 +295,9 @@ work doesn't reintroduce a 5th convention.
   is stale and the parity test may be ripe for extraction into the next sports satellite batch. Flagging for the next
   `/ag-closeout-audit sports` or batch-drafting pass rather than reclassifying here — this skill's scope is
   in-place verdicts on existing docs, not drafting new satellite-batch content. Doc stays NA, unchanged this pass.
+- **satellite-batch-extraction 2026-08-09 (sports tranche)**: this is exactly that flagged next pass — extracted todo 9
+  (`[REVIEW] P3`, FSS↔ml-service↔strategy-service naming-parity test) into
+  `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2 (`assigned_vm: planning`), conflict-checked
+  against `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s Conflict-gated entry for this same item (its holding
+  premise — "the still-unshipped migration" — confirmed stale: todos 1-6 above are all `[x]`). Todo 10 (`[REVIEW] P3`,
+  cross-reference against the wire-sports-end-to-end plan) stays open here, untouched. Doc stays `assigned_vm: NA`.

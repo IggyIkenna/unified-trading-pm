@@ -140,9 +140,10 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
       VM's `run.log`/heartbeat go quiet, SSH in immediately
       (`gcloud compute ssh ... --command="py-spy dump --pid <pid>"` or `strace -p <pid>`) instead of waiting for the
       watchdog to kill it, to capture the actual hang state.
-- [ ] [SCRIPT] P3. Audit whether `market_tick_data_service`'s `odds_api` HTTP client calls have explicit connect/read
-      timeouts — a hung socket with no timeout is the single most likely mechanism for "total silence, no exception, no
-      OOM."
+- **[SCRIPT] P3. Extracted to `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 (2026-08-09,
+      satellite-batch-extraction pass) — audit whether `market_tick_data_service`'s `odds_api` HTTP client calls have
+      explicit connect/read timeouts, and add them if missing. Tracked there (`assigned_vm: planning`), not duplicated
+      here; that batch's finalize sibling reconciles this checkbox once it lands.**
 - [x] ✅ [SCRIPT] P1. **Third occurrence confirmed 2026-08-08T08:27Z (`smallchunk4`)** — pattern is now real, not
       coincidence (consistent ~16-21 min silent gap across 3 independent VMs/leagues/RSS values). Per this todo's own
       original gate, this crosses into needing a real decision rather than another quiet relaunch: relaunched once more
@@ -246,3 +247,10 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   `smallchunk5` cleared chunk 26 cleanly once. Relaunched immediately as `mtds-backfill-odds-smallchunk9` with
   `CHUNK_SIZE=5` explicit (learned from the smallchunk7 misconfiguration — never trust the launcher default). Still no
   working SSH access this session to catch a live hang — todo 1's blocker unchanged.
+
+- **satellite-batch-extraction 2026-08-09 (sports tranche)**: extracted todo 2 (`[SCRIPT] P3`, `odds_api` HTTP client
+  connect/read-timeout audit+fix) into `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1
+  (`assigned_vm: planning`) — this is exactly the split the 2026-08-08 `na-eligibility-audit` entry above flagged as a
+  good standalone RECLASSIFY candidate but declined to split out unilaterally in that pass. Todo 1 (catch a live hang
+  before the silent window elapses) and todo 4 (`PREFIX_IDLE_THRESHOLDS` tuning, explicitly gated on this audit's
+  finding) remain open here, untouched — doc stays `assigned_vm: NA`.
