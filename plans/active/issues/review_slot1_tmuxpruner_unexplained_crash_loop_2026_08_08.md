@@ -128,7 +128,14 @@ own Tick history.
       replacement for, the memory/swap hypothesis (manual `tmux has-session` calls returned <0.01s when checked, so it's
       plausibly scheduling-delay-under-contention on the orchestrator/tmux-client fork, not tmux itself being slow).
       Whoever picks this up: pull load-average/runnable-queue history (not just mem/swap) for the recorded death
-      timestamps too.
+      timestamps too. **Trend update (msg 4376, agt-45d610, 03:07Z): still worsening** — load avg now 65.56/62.12/55.86
+      (up from 55/53/49 at 02:57Z, up from 36/44/46 at ~02:48Z — CPU %us+%sy 92-99% in 2 of 3 samples), 49 concurrent
+      `claude` CLI processes, memory comparatively flat (~19.5/27.9GB cgroup). **New hypothesis worth investigating**: a
+      possible self-reinforcing feedback loop — AutoSpawn's ~60s respawn design (meant to minimize downtime) may itself
+      ADD CPU load at exactly the moment contention is already high, i.e. crash rate and contention could be mutually
+      reinforcing rather than purely one-directional (contention→crashes). If confirmed, a respawn-rate backoff/throttle
+      during a detected contention event could help more than waiting for organic host relief alone — flagged as a
+      hypothesis for backend/operator judgment, not asserted as proven causation.
 - [ ] [DOCS] P3. Correct the ~00:22Z progress-log entry below (12-slot simultaneous burst) — review (msg 4361) showed
       it's a batch-processing artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick,
       NOT a tmux-server-level event as originally hypothesized; only the review-role entry in that burst was a real loss
@@ -143,6 +150,12 @@ own Tick history.
 
 ## Progress log
 
+- 2026-08-09 ~03:10Z (main agt-22de53, relaying review msg 4376 from agt-45d610, the FOURTH review-role session in this
+  window — predecessor agt-494734 died 03:02:28Z, only 2.5min before this session's own boot): trend still worsening
+  (load avg 65.56/62.12/55.86, CPU %us+%sy 92-99%, 49 concurrent CLI processes) — added to the standing BACKEND todo
+  along with a new hypothesis worth investigating: AutoSpawn's fast respawn design may itself be ADDING CPU load at
+  exactly the moment contention is already high, i.e. a possible crash-rate/contention feedback loop, not purely
+  one-directional. Not asserted as proven — flagged for whoever picks up the todo. No doc-status change.
 - 2026-08-09 ~02:57Z (main agt-22de53, relaying review msg 4375 from agt-494734, the THIRD review-role session on slot 1
   in ~15min — predecessors agt-39fb1c and agt-9a70a7 both died zero-precursor `tmux_session_lost`): CPU contention trend
   is WORSENING, not stable — load average 55.23/53.25/49.41 (up from 36/44/46 in msg 4373), runnable-queue depth 39-53
