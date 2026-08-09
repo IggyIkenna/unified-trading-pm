@@ -65,8 +65,8 @@ estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.3
 assigned_role: data_engineering
 drift_direction: unknown
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 source: [infra_capture_and_devops_leftovers-001 backlog task, slot 3, 2026-08-02]
 resolved_by:
 locked_by:
@@ -153,7 +153,25 @@ history — the "free/no extra cost" framing that motivated the original todo is
 documented, twice-burned data-correctness risk, and the primary `odds_api` source already covers the
 LIVE_ODDS/odds_horizon_bucket gate this todo exists to close.
 
+## Todos
+
+- [ ] [OPERATOR] P1. **Rule on option A vs B above** — proceed carefully with a genuinely-new, isolated api_football
+      live-odds connector (A), or decline and correct the sibling plan's todo to strike the api_football half (B,
+      recommended). Neither option is autonomously determinable — evidence establishes the RISK (twice-burned
+      wrong-source history) but not whether it outweighs the coverage benefit, which is the operator's call. **Done
+      when**: the operator rules, and either the connector work is scoped as its own plan (A) or the sibling plan's todo
+      is corrected + this doc closed (B).
+
 ## Progress Log
+
+- **plan_reconciler 2026-08-09 (agt-196785)**: this doc was `assigned_vm: planning` with zero `- [ ]`/`- [x]` checkboxes
+  anywhere — nothing was actually AO-dispatchable despite the planning assignment (the standing zero-checkbox-sweep trap
+  this skill owns). Flipped to `assigned_vm: NA` / `execution_scope: local-only` (a determinable fact: nothing here is
+  dispatchable code/data work, it's an operator decision) and added a `## Todos` section with an explicit `[OPERATOR]`
+  todo naming the actual open question. This does NOT resolve the underlying api_football second-source question — that
+  stays open for the operator exactly as before (per operator direction on `BLK-43da7ab8`, 2026-08-09: "flipping the
+  zero-checkbox prose-only doc to assigned_vm:NA is a determinable fact... it does not resolve the underlying
+  second-source ruling question, which stays open for the operator exactly as before").
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
