@@ -255,3 +255,19 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   before the silent window elapses) and todo 4 (`PREFIX_IDLE_THRESHOLDS` tuning, explicitly gated on this audit's
   finding) remain open here, untouched — doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **2026-08-09T05:39Z — discovered an AUTOMATED relaunch mechanism, and a naming-convention gotcha that destroys
+  forensic evidence.** `smallchunk9` (which had been cleanly alive through a long chunk-26 OOM-retry stretch, 51
+  `CHUNK_FAILED`, heartbeat confirmed live at 05:11Z) was gone by the next check. `gcloud compute operations list`
+  showed: deleted `05:26:17Z` (within the monitoring gap), then a NEW same-named instance created `05:32:25Z` by
+  **`unified-trading-sa@central-element-323112.iam.gserviceaccount.com`** — a different principal than the
+  `1060025368044-compute@...` account used for every manual action and (per the earlier-established pattern) the
+  zombie-watchdog's own kills. This confirms a genuine, previously-unobserved **automated SPOT-preemption relaunch**
+  (`RelaunchPreemptedVm`, per the launcher's header comment) operates on this campaign — future occurrences may
+  self-heal without manual intervention. **Cannot determine cause of death this time**: `smallchunk8`/`smallchunk9`'s
+  no-timestamp-suffix naming convention means `run.log`/`WATCHDOG_TRACE.log` live at name-keyed GCS paths — the new
+  instance's startup completely overwrote the old one's history, destroying the evidence needed to distinguish this from
+  a genuine silent hang vs an ordinary SPOT preemption. **Not counted as a confirmed 6th occurrence** — genuinely
+  inconclusive, unlike 1-5 which all had clean heartbeat-blob death evidence. **Recommendation for future relaunches in
+  this campaign**: reintroduce a timestamp suffix (matching the original `smallchunk2-20260807` convention) so
+  same-named auto-relaunches don't erase the evidence trail — this directly affects todo 1's feasibility (catching a
+  live hang is moot if the evidence gets overwritten before anyone reads it).

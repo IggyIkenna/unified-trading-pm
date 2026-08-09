@@ -940,22 +940,28 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   run.log text looked briefly stale (GCS flush-buffering, not a hang — this is now the standing diagnostic: trust the
   heartbeat blob over run.log text staleness). FIXTURE_LINEUPS stayed flat at needed=48,521 all 3 ticks despite
   confirmed fresh `ManifestWriter` writes each check — initially attributed to simple consolidator lag.
-- **04:40Z — deeper investigation into the flat census (3rd-4th consecutive flat reading, ~1h44m unchanged) — found a
-  real, unresolved anomaly, not simple lag.** Checked the consolidator directly
-  (`uts-prod-manifest-consolidator- instruments-sports` Cloud Run job): it runs on a ~1min cron but the actual merge
-  takes ~11-12min, so most ticks just no-op on a held lock (`error=locked`) — true merge cadence is ~once per 11-15min,
-  not every minute. A real merge DID complete at `04:37:04Z` (`shards=9 rows_in=10817400 rows_out=10772390`), 3min
-  before this census — yet the count didn't move. Checked `af-backfill-20260809-020527`'s own per-VM shard files
-  directly: they exist and were genuinely updated (`04:34:39Z`, `04:42:24Z`), well within that merge's window. The merge
-  log showed `shards_listed=12` → `shards_downloaded=7` — **5 candidate shards were listed but not processed**; unclear
-  if this VM's shard was one of them or if this is normal filtering (e.g. already-merged skip). **Not chasing further
-  this tick** (would need consolidator source review) — data itself is confirmed safe (real writes landing in per-VM
-  parquets regardless of consolidation timing), so this is a monitoring-visibility question, not a data-loss one. Worth
-  a dedicated look if the census stays flat past another 1-2 merge cycles (~30min). smallchunk9 still chunk 26, 49
-  `CHUNK_FAILED` (in-range), heartbeat live throughout. Both fleets' underlying data pipelines healthy, no action beyond
-  continued watching.
-- **05:11Z — census anomaly SELF-RESOLVED.** Needed moved for the first time in ~2h15m: 48,521→48,432 (-89), confirming
-  the consolidator flat-streak was genuinely just an unusually long delay, not a bug — no further investigation needed.
-  smallchunk9 still chunk 26, 51 `CHUNK_FAILED` (RSS hit 92.8% mem right before this retry, normal trigger), heartbeat
-  fresh. Both healthy.
+- **04:40Z-05:11Z — census flat-streak investigated then SELF-RESOLVED (compacted).** Traced the ~2h15m-flat reading to
+  the consolidator (`uts-prod-manifest-consolidator-instruments-sports`): real merges take ~11-12min vs its ~1min cron,
+  so most ticks no-op on a held lock; found a `shards_listed=12`→`shards_downloaded=7` gap in one cycle (cause
+  unresolved, not chased further — data itself confirmed safe via genuine per-VM shard writes throughout). At 05:11Z
+  needed finally moved (48,521→48,432) — confirms it was just an unusually long delay, not a bug. No further action.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **05:39Z — `smallchunk9` was silently replaced by an AUTOMATED relaunch; cause of the original's death is
+  UNKNOWN/unrecoverable, and both forensic logs were destroyed by the reuse.** Found via
+  `gcloud compute operations list`: the original instance was deleted at `05:26:17Z` (within the 05:11Z→05:39Z
+  monitoring gap), then a NEW instance — same name, same GCP VM ID space — was created at `05:32:25Z` by a **different
+  principal** (`unified-trading-sa@central-element-323112.iam.gserviceaccount.com`, not the `1060025368044-compute@...`
+  account used for every manual action and the zombie-watchdog kills all session) — this is a
+  previously-unobserved-in-this-campaign **automated SPOT-preemption relaunch mechanism** (`RelaunchPreemptedVm`, per
+  the launcher's own header comment), genuinely distinct from anything I did. **Cannot determine whether the original
+  died from the tracked silent-hang bug or a genuine SPOT preemption** — both `run.log` and `WATCHDOG_TRACE.log` live at
+  name-keyed (not timestamp-keyed) GCS paths, so the new instance's startup **completely overwrote** the old one's
+  history (no `CHUNK_FAILED`/chunk-26 content survives). **Not counting this as a confirmed 6th silent-hang occurrence**
+  — genuinely inconclusive, unlike occurrences 1-5 which all had clean heartbeat-blob evidence. **Process lesson**:
+  `smallchunk8`/`smallchunk9`'s no-timestamp-suffix naming (a convention regression from the timestamp-suffixed
+  `smallchunk2-20260807` etc. used earlier) destroys forensic history across same-name relaunches — future relaunches in
+  this campaign should reintroduce a timestamp suffix. New instance confirmed healthy (heartbeat 43s old at last check),
+  fresh at chunk 1/435 (resumed from a checkpoint around `2020-08-29`, ~6wk behind where the old instance had reached —
+  will skip-fast re-verify that stretch, no data loss, just some redundant work). No relaunch action needed from me —
+  already recovered. FIXTURE_LINEUPS needed **48,432 → 47,947** (-485, real, lag fully resolved), heartbeat live. Both
+  healthy.
