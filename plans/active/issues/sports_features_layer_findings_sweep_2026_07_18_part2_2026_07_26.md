@@ -411,7 +411,12 @@ the merge cycle, and the error message ("behind or DOWN") actively misleads the 
       `manifest_consolidator_cadence_cost_audit_2026_07_20.md` (both `status: open`, both about staleness-budget config,
       the closest related docs) — neither addresses this specific error-message-text distinction, and no other doc or
       code hit surfaced for it. The staleness-budget VALUE was already fixed (§ J item above), but the misleading
-      "behind or DOWN" wording itself is unchanged. Not reverified against live code this session.
+      "behind or DOWN" wording itself is unchanged. Not reverified against live code this session. **Already
+      extracted — see `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo (line ~343, `assigned_vm: planning`,
+      still `- [ ]` open there too as of 2026-08-09) — not duplicating here.** Round-9 sweep (2026-08-09) live-verified
+      the code is unchanged: `unified-trading-library/unified_trading_library/manifest_writer/_read_index.py:288`
+      still raises the single generic "the manifest consolidator is behind or DOWN" message unconditionally — the fix
+      is genuinely still needed.
 
 ---
 
@@ -644,7 +649,8 @@ explicitly once the key has a single owner.
       OPEN: no later doc in the corpus reports re-checking this specific 61-row residual from the 2026-07-18
       15:27-15:57Z 5-VM window. Confirming it needs a fresh manifest census on the exact (date, entity) cells, which
       this reconciliation pass did not run (out of scope — this todo is a data-verification action, not a checkbox
-      classification). Left open.
+      classification). Left open. **Already extracted — see `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo
+      (line ~349, `assigned_vm: planning`, still `- [ ]` open there too as of 2026-08-09) — not duplicating here.**
 
 ## M. Why we get rate-limited: the divisor was a PROMISE, not a measurement — **FIXED** (deployment-service@e85d570)
 
@@ -686,7 +692,13 @@ launch.
       that same M-FIXED text explicitly says "already-running VMs keep the budget they computed at their own launch, so
       the key stays oversubscribed until they drain... the remaining fix is runtime re-division" — i.e. a VM that is
       ALREADY mid-flight does not dynamically re-throttle when a later VM joins the fleet. No later doc reports this
-      specific mid-flight rebalancing as shipped. Left open, narrowed to that residual.
+      specific mid-flight rebalancing as shipped. Left open, narrowed to that residual. **Round-9 sweep (2026-08-09,
+      sports tranche): considered for satellite extraction, not extracted.** `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s
+      Deferred ledger considered this item too (its own text is garbled/truncated in that doc, corpus-wide corruption
+      unrelated to this sweep) but did not extract it — consistent with this pass's own read: the fix requires
+      choosing a mechanism (VMs periodically re-polling live fleet size vs. leasing shares from a central budget
+      service) — an architecture/design call, not a mechanical patch, so it stays a genuine judgment-gated item, not
+      AO-eligible as written.
 - [x] [CODE] P1. `RelaunchPreemptedVm` should RE-DERIVE the rate budget on replay rather than replaying the original
       per-VM share — same root cause as § G-ops (replaying stale launch params). — SUPERSEDED: § M-FIXED item 2 below
       (same doc, dated later) — `deployment-service@cb499b7`: `RelaunchPreemptedVm` now STRIPS
@@ -730,7 +742,9 @@ listing, not per-league re-walks), snapshots each parquet to `*.pre_round_backfi
       forfeits presence-skip resume (§ G-ops). — GENUINELY OPEN: grepped `/codex/12-agent-workflow/` and
       `/codex/05-infrastructure/vm-launcher-runbook.md` for this lesson — no hit. Unlike item 2's watchdog-artifact
       lesson (codified into `async-wait-and-poll-discipline.md` + `CLAUDE.md`), this "check for a surgical filler before
-      a full refetch" generalisation was never written into a codex SSOT. Still a live process gap.
+      a full refetch" generalisation was never written into a codex SSOT. Still a live process gap. **Already
+      extracted — see `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo (line ~356, `assigned_vm: planning`,
+      still `- [ ]` open there too as of 2026-08-09) — not duplicating here.**
 
 ## M-FIXED. Both rate-governance gaps CLOSED (operator: "donot just file them fix them")
 
@@ -773,7 +787,9 @@ into the same fix — carried forward here so it isn't lost with the archive:
       FIXTURE_LINEUPS/PLAYER_STATS) this todo names. The two other `emit_empty_gaps_for_entity` hits found elsewhere in
       the corpus (`sports_satellite_ao_dispatch_batch3_2026_07_25.md`,
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`) are about a DIFFERENT concern on the same
-      function (QG function-size decomposition, 89L→≤50L) — unrelated to this denominator bug. Still open.
+      function (QG function-size decomposition, 89L→≤50L) — unrelated to this denominator bug. Still open. **Already
+      extracted — see `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo (line ~363, `assigned_vm: planning`,
+      still `- [ ]` open there too as of 2026-08-09) — not duplicating here.**
 
 ## Progress Log
 
@@ -790,3 +806,11 @@ into the same fix — carried forward here so it isn't lost with the archive:
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 7 open items: 2 dependency-blocked, 2 lower-confidence
   AO-eligible candidates not yet promoted, 1 genuine work, 2 operator questions.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA-STALE, valid — re-verified all 7 open todos. 2
+  (§G "Step 4" line ~211, §G-RESOLVED line ~251) are correctly owned by `sports_consolidated_closeout_2026_07_19.md`
+  Track V (still `- [ ]` open there, unchanged). 4 (§J error-text line ~408, §L rateLimit-residual line ~642,
+  §N PROCESS-codify line ~734, §O emit_empty_gaps line ~764) are already claimed as open todos in
+  `sports_satellite_ao_dispatch_batch9_2026_08_04.md` (`assigned_vm: planning`, status: active, all 4 still `- [ ]`
+  there too) — added inline "Already extracted" citations at each so this doesn't get re-derived as a fresh
+  extraction candidate next pass. 1 (§M Runtime re-division, line ~677) reconfirmed genuinely design-gated (mechanism
+  choice, not a mechanical patch) — not extracted. No new work found; doc stays `assigned_vm: NA`.
