@@ -135,20 +135,29 @@ own Tick history.
       ADD CPU load at exactly the moment contention is already high, i.e. crash rate and contention could be mutually
       reinforcing rather than purely one-directional (contention→crashes). If confirmed, a respawn-rate backoff/throttle
       during a detected contention event could help more than waiting for organic host relief alone — flagged as a
-      hypothesis for backend/operator judgment, not asserted as proven causation. **OPERATOR-CONFIRMED ESCALATION (msg
-      4377, 03:14Z)**: this is now a severe, ACTIVE, human-confirmed incident, not just review-role-scoped. Operator
-      independently reported (and main independently re-confirmed at 03:15Z): 12-19 concurrent `quality-gates.sh`
-      processes, load avg 63.28/60.29/57.11, only 893Mi genuinely free RAM (`free -h`'s "available" 15Gi is reclaimable
-      buff/cache, not true headroom), swap 14Gi/47Gi used. Genuine kernel OOM-killer activity confirmed — the operator's
-      own bare `sleep 60` was killed before completing, meaning the reaper is not QG-specific, it's fleet-wide.
-      Operator's own quickmerge ship is blocked (QG self-aborts via its own `qg-host-governor.sh` RAM watchdog near
-      completion, after passing every substantive gate). **Nuance**: `qg-host-governor.sh`'s documented ≤2 cap
-      (`max(2, floor(physical_cores/4))`) gates only the HEAVY phase (pytest/basedpyright) via flock tokens, not total
-      `quality-gates.sh` script instances — so 12+ running processes is not automatically proof the governor itself is
-      broken; unverified whether that many are concurrently holding a heavy-phase token vs sitting in lighter setup/lint
-      phases. New todo added below to determine whether total-instance count (not just heavy-phase count) also needs a
-      cap, since even light-phase QG steps compound with the ~20+ concurrent Claude CLI sessions already driving the
-      CPU/memory picture documented above.
+      hypothesis for backend/operator judgment, not asserted as proven causation. **KEY UPDATE (msg 4403, agt-f56131,
+      05:23Z): crash rate DECOUPLED from raw contention level.** Host load has eased ~75% since the 03:14Z peak (load
+      avg now 14.29/13.30/18.86 vs 63-65; QG processes 5 vs 12-19; claude CLI processes 37 vs 49; swap 12Gi vs 14Gi) —
+      but the kill CADENCE is completely unchanged: still 16x `tmux_session_lost`/0x `context_recycle_requested` in the
+      ~2h16m window since the 03:07Z checkpoint, landing every ~5-8min regardless (04:39/04:47/04:55/05:03/
+      05:08/05:15Z). This argues against "wait for host relief" being sufficient on its own, and toward either (a) a
+      much lower actual trigger threshold than assumed (today's 2x-core oversubscription is apparently already enough,
+      vs the peak's 7-8x), or (b) the standing feedback-loop hypothesis above (AutoSpawn's own respawn churn sustaining
+      an independent load floor). No dmesg/journalctl access from any review sandbox session (confirmed
+      permission-denied, consistently across sessions) to independently verify current kernel OOM-killer activity.
+      **OPERATOR-CONFIRMED ESCALATION (msg 4377, 03:14Z)**: this is now a severe, ACTIVE, human-confirmed incident, not
+      just review-role-scoped. Operator independently reported (and main independently re-confirmed at 03:15Z): 12-19
+      concurrent `quality-gates.sh` processes, load avg 63.28/60.29/57.11, only 893Mi genuinely free RAM (`free -h`'s
+      "available" 15Gi is reclaimable buff/cache, not true headroom), swap 14Gi/47Gi used. Genuine kernel OOM-killer
+      activity confirmed — the operator's own bare `sleep 60` was killed before completing, meaning the reaper is not
+      QG-specific, it's fleet-wide. Operator's own quickmerge ship is blocked (QG self-aborts via its own
+      `qg-host-governor.sh` RAM watchdog near completion, after passing every substantive gate). **Nuance**:
+      `qg-host-governor.sh`'s documented ≤2 cap (`max(2, floor(physical_cores/4))`) gates only the HEAVY phase
+      (pytest/basedpyright) via flock tokens, not total `quality-gates.sh` script instances — so 12+ running processes
+      is not automatically proof the governor itself is broken; unverified whether that many are concurrently holding a
+      heavy-phase token vs sitting in lighter setup/lint phases. New todo added below to determine whether
+      total-instance count (not just heavy-phase count) also needs a cap, since even light-phase QG steps compound with
+      the ~20+ concurrent Claude CLI sessions already driving the CPU/memory picture documented above.
 - [ ] [DOCS] P3. Correct the ~00:22Z progress-log entry below (12-slot simultaneous burst) — review (msg 4361) showed
       it's a batch-processing artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick,
       NOT a tmux-server-level event as originally hypothesized; only the review-role entry in that burst was a real loss
@@ -172,6 +181,13 @@ own Tick history.
 
 ## Progress log
 
+- 2026-08-09 ~05:25Z (main agt-22de53, relaying review msg 4403 from agt-f56131): Significant update — crash rate is
+  DECOUPLED from raw host contention. Load has eased ~75% since the 03:14Z peak (14-19 vs 63-65) yet the ~5-8min kill
+  cadence is completely unchanged (16 deaths in the ~2h16m window since the 03:07Z checkpoint, still 0
+  `context_recycle_requested` precursors). Weakens "wait for host relief" as a sufficient fix on its own; points toward
+  either a lower actual trigger threshold than assumed, or the standing feedback-loop hypothesis (AutoSpawn respawn
+  churn sustaining its own load floor). Doc updated with full numbers in the BACKEND todo. No action beyond logging —
+  genuinely useful data for whoever picks up the todo, not something main can resolve directly.
 - 2026-08-09 ~03:16Z (main agt-22de53, relaying operator msg 4377): Severe active incident, human-confirmed and
   independently re-verified by main. 12 concurrent `quality-gates.sh` processes, load avg 63.28/60.29/57.11, 893Mi
   genuine free RAM, swap 14Gi/47Gi used, confirmed kernel OOM-killer reaping arbitrary processes (operator's own
