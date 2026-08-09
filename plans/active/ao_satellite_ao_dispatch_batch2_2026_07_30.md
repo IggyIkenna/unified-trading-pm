@@ -206,7 +206,8 @@ other orphaned candidate considered and why it was NOT drafted.
       points (see this plan's Deferred section). **Done when**: the source doc records the fire-completion verdict with
       evidence (dispatch id, timestamps, terminal state). Source:
       `/plans/archive/issues/na_eligibility_auditor_timer_not_yet_installed_2026_07_27.md` (its SCRIPT P3 item only —
-      NOT its P2 timeout-retune item). Repo: agent-orchestrator (read-only).
+      NOT its P2 timeout-retune item). Repo: agent-orchestrator (read-only). **➡️ EXTRACTED 2026-08-09 to
+      `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 — do NOT action here.**
 - [ ] [INFRA] P3. **Re-mint the stale `~/.orch_token` on host `ip-172-31-5-118`.** The public-URL git-status reporter
       path is failing auth on this host because of an expired/rotated token — re-mint it and confirm `reporter_stale`
       clears within one fleet-git-health tick. This is a distinct credential operation from the already-shipped
@@ -246,6 +247,7 @@ other orphaned candidate considered and why it was NOT drafted.
       doc's sibling task recovered `unified-trading-library`'s equivalent ref (fetch the preserved ref,
       cherry-pick/fast-forward it onto current `origin/live-defi-rollout`, ship via quickmerge). **Done when**: the
       ref's disposition (superseded-and-deleted, or recovered-and-shipped) is recorded with evidence in the source doc.
+      **➡️ EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 2 — do NOT action here.**
       Source: `/plans/archive/2026_08/wip_preserve_refs_silently_unrecovered_2026_07_29.md` (its `[DATA] P2` item only —
       its two `[SCRIPT] P3` items, a fleet-wide sweep design and a "consider" post-push verification, are held in this
       plan's Deferred section). Repo: strategy-service.
