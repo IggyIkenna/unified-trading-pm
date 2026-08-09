@@ -35,10 +35,12 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.24
 assigned_role: infra
+thinking_tier: medium # 2026-08-09 agt-a398c9 — infra role's own default, made explicit; see BLK-e02c6622
 sequential: true
 drift_direction: advance-code
 depends_on: [infra_satellite_ao_dispatch_batch6_2026_08_02]
 gate_on_depends: true
+archive_exempt: true # THIS COMMIT ONLY — flip precedes archival per the flip/mv split HARD RULE, see next commit
 locked_by:
 locked_since:
 context_scope:
@@ -88,12 +90,17 @@ skill's no-double-gate mechanism).
       exports to `scripts/setup.sh` + single-repo `nlink>1` verification); cron-install sub-item (a) confirmed correctly
       `[OPERATOR]`-gated (already done). Source doc confirmed NOT an archival candidate — `assigned_vm: NA` unchanged.
       See `issues/host_root_disk_full_transient_2026_07_13.md` Progress Log for the full reconciliation entry.
-- [ ] [DOC] P3. **Archive `infra_satellite_ao_dispatch_batch6_2026_08_02.md`** once both todos above are done and both
-      reconciliations are verified — run the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix
-      every corpus referrer path, confirm `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py` both
-      stay clean). Do this as a SEPARATE commit from the checkbox-flip commits above (never combine a flip + `git mv` in
-      one commit — 2026-07-30 incident, `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). (repo:
-      unified-trading-pm)
+- [x] ✅ [DOC] P3. **Archive `infra_satellite_ao_dispatch_batch6_2026_08_02.md`** once both todos above are done and
+      both reconciliations are verified — run the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`,
+      fix every corpus referrer path, confirm `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py`
+      both stay clean). Do this as a SEPARATE commit from the checkbox-flip commits above (never combine a flip +
+      `git mv` in one commit — 2026-07-30 incident,
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). (repo: unified-trading-pm) — **DONE
+      2026-08-09** (plan_reconciler agt-a398c9, infra tranche): both prerequisite todos confirmed `[x]` with hard
+      evidence, `locked_by:` blank; archived to `plans/archive/2026_08/infra_satellite_ao_dispatch_batch6_2026_08_02.md`
+      in a separate follow-up commit. Corpus referrers are all bare backtick mentions in dated historical audit docs
+      (not live markdown links) — none require repointing. `check_ag_closeout_linkage.py --quiet`: 19 orphans, within
+      baseline 49 — unaffected.
 
 ## Codex SSOTs
 
