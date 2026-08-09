@@ -16,7 +16,7 @@ summary: >-
   the parent plan's "fleet FINISHED" framing, which was VM-lifecycle proof (STARTED/RUNNING/self-deleted cleanly), not
   data-capture proof — exactly the distinction `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` warns about
   (count target artifacts, not activity/VM-completion).
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -58,6 +58,15 @@ context_scope:
     market-tick-data-service/market_tick_data_service/engine/orchestrator/_tradfi_manifest_shard.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED.** All todos + follow-ups done: the P0-P1 zero-capture investigation root-caused
+> and fixed the two infra bugs blocking the 2026-07-21 fleet (`deployment-service@c1e3dc70`,
+> `unified-trading-library@59ed61c9`), the P2 manifest-tagging root cause shipped (`market-tick-data-service@65beaeaf`),
+> and the P3 backfill for the pre-existing blank-`instrument_id` rows this fix didn't retroactively touch shipped
+> 2026-08-09 (`market-tick-data-service@63cff354`, via `/plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`
+> todo 1) with an independent fresh post-apply verification of 0 remaining. 0 open todos, unlocked. A distinct adjacent
+> finding (the `instrument_type=FUTURE` blank-id population) surfaced while shipping the P3 fix is tracked separately,
+> not blocking this archive: `/plans/active/issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md`.
 
 # tradfi CME ES futures ohlcv — manifest-verify shows total capture failure, not a proven backfill
 
@@ -381,9 +390,14 @@ root-cause fix.
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Write and run a dedicated script to backfill the 28,307+111 pre-existing blank-instrument_id manifest
-      rows in market-data-tick-tradfi-prd _index (derive canonical bundle ID via _resolve_chain_bundle_manifest_id and
-      rewrite the rows).
+- [x] ✅ [DATA] P3. **DONE 2026-08-09 — `market-tick-data-service@63cff354`** (via
+      `plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` todo 1). Wrote + ran
+      `scripts/restamp_tradfi_cme_chain_bundle_blank_instrument_id_2026_08_09.py` to backfill the pre-existing
+      blank-instrument_id manifest rows in `market-data-tick-tradfi-prd` `_index` (derives canonical bundle ID via
+      `_resolve_chain_bundle_manifest_id` and CAS-rewrites the rows). **Live count at execution time was 3,267 rows (41
+      roots), not the 28,307+111 figure above** — 10 days of continued backfill activity with the already-fixed writer
+      had superseded most of the original population with correctly-tagged twins; see the plan's Progress Log
+      (2026-08-09 entry) for the full per-root breakdown and the independent post-apply verification (0 remaining).
 
 > **2026-08-06 archive-candidate audit**: The P2 fix (market-tick-data-service@65beaeaf) covers NEW captures only; the
 > P3 todo verified none of the 3 existing migration scripts can reconcile the pre-existing blank-instrument_id rows and

@@ -59,7 +59,7 @@ context_scope:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
     /plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md,
-    /plans/active/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md,
+    /plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md,
     instruments-service/scripts/build_instrument_catalogue.py,
     deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
   ]
@@ -136,10 +136,11 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       This is the activity-vs-target-artifact trap the async-wait-discipline codex SSOT warns about: "fleet FINISHED"
       was VM-completion proof, not data-capture proof. Full evidence + recommended root-cause diagnosis steps (not
       executed here — this is a genuine, uniform zero-yield pattern that needs adapter-level investigation, not a
-      mechanical re-run): `plans/active/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`. **Did NOT update
-      `tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell row this session** — that file had an uncommitted
-      in-progress edit (mtime <120s) from another active session at the time of this check; whoever owns that edit
-      should fold this measured result into the "S&P index futures (ES)" row next (cite this todo + the new issue doc).
+      mechanical re-run): `plans/archive/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md` (archived 2026-08-09,
+      resolved). **Did NOT update `tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell row this session** — that file
+      had an uncommitted in-progress edit (mtime <120s) from another active session at the time of this check; whoever
+      owns that edit should fold this measured result into the "S&P index futures (ES)" row next (cite this todo + the
+      new issue doc).
 - [x] ✅ [DATA] P0. **Operator-ruled 2026-07-29 (interactive decision session): launch ES_OPT now AND wire its
       manifest-verify into Phase-D gate tracking — the singleton Databento lock blocker cleared (confirmed 2026-07-26,
       zero `tradfi-bf-*` instances in any state).** ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched; the stated
