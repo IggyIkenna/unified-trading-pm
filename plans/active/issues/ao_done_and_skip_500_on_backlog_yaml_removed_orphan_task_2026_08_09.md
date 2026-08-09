@@ -119,11 +119,17 @@ guidance) and burn a stale-worker slot indefinitely, or `/blocked` unnecessarily
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. In `server/routes/slots_worker.py::done_slot`, add an explicit early check: if
+- [x] ✅ [BACKEND] P2. In `server/routes/slots_worker.py::done_slot`, add an explicit early check: if
       `backlog.get(req.task_id)` is `None` AND the task is not a `one_shot_complete` / sentinel-sha case, short-circuit
       to the same orphan-cleanup behavior `/reassign` + `DELETE` currently require manually — release the task, delete
       the dead `TaskRow`, and return a clean response (not a 500) telling the worker the task was orphaned and closed
-      out, no further action needed. (repo: agent-orchestrator)
+      out, no further action needed. (repo: agent-orchestrator) — agent-orchestrator@3147392. Extracted into
+      `_maybe_close_orphaned_done_task`/`_resolve_task_def_for_done` (called from `done_slot`) to keep `done_slot`'s
+      C901 complexity within the 26-point gate; `verify._is_sentinel_sha` made public (`is_sentinel_sha`) so the new
+      helper can consult it. Regression tests: `tests/test_done_orphan_task_closed.py` (real-sha orphan closes cleanly +
+      sentinel-sha still falls through to normal completion), plus
+      `tests/test_done_empty_sha_gate.py::test_done_proper_sentinel_sha_not_rejected` extended to cover the sentinel-sha
+      carve-out against an empty backlog. Full `quality-gates.sh` green (2935 passed).
 - [ ] [BACKEND] P2. Fix `skip_current_task`'s `task_orphaned` predicate in `server/routes/slots_ops.py` to also treat
       `backlog_task is None` (fully absent from `backlog.yaml`, not just present-but-undispatchable) as orphaned — route
       it through the existing `session.delete(row)` + `backlog.tasks = [...]` cleanup branch instead of falling into the
@@ -139,3 +145,11 @@ guidance) and burn a stale-worker slot indefinitely, or `/blocked` unnecessarily
   `/skip-current-task` (explicit but inverted-condition handling, still 500) vs `/reassign` (no `backlog.get()`
   dependency at all, worked cleanly). Worked around live via `/reassign` + `DELETE /api/backlog/<id>` — slot freed,
   orphan row gone, task's underlying work (already complete + archived by a prior session) unaffected.
+- **2026-08-09 (slot 3)**: Shipped todo 1. `done_slot` now short-circuits a `backlog.get() is None` + non-sentinel-sha
+  `/done` to an inline orphan-close (release slot to idle, delete the dead `TaskRow`, log
+  `slot_done_orphan_task_closed`, return a clean 200) instead of falling through into the task_def-dependent
+  verification pipeline that previously 500'd. Excludes sentinel-sha calls per the todo's own scoping — those still
+  complete normally even with no backlog entry (a handful of pre-existing tests relied on that permissive fallthrough
+  for unrelated reasons, e.g. sha-gate tests using `Backlog()` as a cheap no-op fixture; verified none of those broke).
+  agent-orchestrator@3147392, quality-gates.sh green (2935 passed, 2 skipped). Todos 2 (`skip_current_task`'s inverted
+  `task_orphaned` predicate) and 3 (end-to-end verify) are separate backend/verify todos, not touched by this task.
