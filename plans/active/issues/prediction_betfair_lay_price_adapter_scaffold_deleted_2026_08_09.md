@@ -108,8 +108,9 @@ concrete reason not to).
       `python3 -c "import market_tick_data_service.market_interface as mi; mi.BetfairAdapter"` resolves cleanly. QG
       green (sentinel matched HEAD `fea84ecd`); shipped via quickmerge (rebased to `fc9e36cd` on push), verified
       ancestor of `origin/live-defi-rollout`.
-- [ ] [BACKEND] P2. Add a `download_batch(date, data_types, leagues)` method to the restored `BetfairAdapter` that calls
-      `get_markets()` then `get_prices()` per discovered market and returns a `pd.DataFrame` shaped compatibly with
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-09 (slot-5, backend_engineer) — `market-tick-data-service@85872cab`.** Add a
+      `download_batch(date, data_types, leagues)` method to the restored `BetfairAdapter` that calls `get_markets()`
+      then `get_prices()` per discovered market and returns a `pd.DataFrame` shaped compatibly with
       `OddsApiAdapter.download_batch`'s output (same column set odds_api emits, e.g. fixture linkage / bookmaker / price
       / side / timestamp columns — read `odds_api_adapter.py`'s row-construction before `pd.DataFrame(all_rows)` at line
       ~520 for the exact target shape), PLUS a `lay_price` column (scalar per row, e.g. best/lowest `availableToLay`
@@ -117,6 +118,30 @@ concrete reason not to).
       `features-service@d792f421`'s read side already expects — a partial book must NOT populate a distorted
       `lay_price`). Add `"betfair": ("sports", BetfairAdapter)` to `factory.py`'s `VENUE_REGISTRY` (removing it from
       `PLANNED_VENUES`). (repo: market-tick-data-service)
+
+      Implemented via `get_markets()`+`get_prices()` (catalogue's `RUNNER_DESCRIPTION` projection extended to surface
+          `runner_name`/`selection_id`; `get_markets` gained an optional `market_start_time` window since Betfair's
+          catalogue has no historical endpoint). `lay_price` gated at MARKET level (every runner with a back price must
+          also have a lay price, else the whole market's `lay_price` stays unset) — exactly the completeness contract
+          `_row_for_runner`/`_rows_for_market` implement. `fixture_id`/`af_fixture_id` are honestly left unresolved
+          (`NO_FIXTURE_DATA`, falling back to Betfair's own `event_id`/`market_id`) — real fixture resolution is todo 3
+          below, confirmed genuinely hard (a real Betfair catalogue response shows match-odds runners are generic
+          "Home"/"Draw"/"Away" labels, not team names). Also fixed the ACTUAL dispatch blocker this todo's own text didn't
+          anticipate: `umi_tick_provider.py`'s `_SPORTS_VENUES` was hardcoded to `{"ODDS_API"}` — without adding
+          `"BETFAIR"` there, the factory wiring alone would never have been reached by a live `--venue betfair` capture
+          call. 9 new unit tests (`tests/unit/test_betfair_adapter.py`); 1 pre-existing test fixed
+          (`test_prediction_market_venue_wiring.py::test_remaining_planned_venues` asserted the old
+          `betfair in PLANNED_VENUES` state). Full `quality-gates.sh` green (`ALL QUALITY GATES PASSED`, sentinel matched
+          `06387b04` before the ship rebase).
+
+          **Open caveat for todo 4 (live-verify), NOT resolved this session**: UAC's registries
+          (`_sports_venue_constants.py`, `_odds_api_maps.py`, `data_availability.py`) reference `BETFAIR_EX_UK`/
+          `BETFAIR_EX_EU` as the canonical per-region data-axis venue names for the exchange (bare `BETFAIR` described
+          elsewhere as "operator-group parent, not data-axis"). This todo's own instruction said literally `"betfair"`
+          for the `VENUE_REGISTRY` key, which is what's implemented — but the live-verify pass should confirm whether the
+          manifest/asset-group/bucket routing expects bare `BETFAIR` or the region-qualified forms before trusting a live
+          capture's shard path is correct, not just that the HTTP calls succeed.
+
 - [ ] [BACKEND] P2. Resolve Betfair `market_id`/`selection_id` → canonical `fixture_id` — check whether
       `fixture_id_resolver.py`'s existing resolver can accept a Betfair market/event name lookup, or whether a new
       resolution path is needed; do NOT emit unresolved Betfair rows under a parallel identifier space. (repo:
@@ -183,3 +208,13 @@ concrete reason not to).
     (`prediction_satellite_ao_dispatch_batch6-a878572ff8da`,
     `plan_ref: plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md` — per slot-17's scope-correction
     note, the PARENT plan's todo stays unchecked; only this issue doc's todo 2 flips).
+- 2026-08-09 (slot-5, backend_engineer, continued after resume — the worktree WIP above was lost when the session died
+  mid-checkpoint; reconstructed verbatim from this Progress Log entry, re-verified via the same 9 local tests, no
+  content drift): full `quality-gates.sh` PASSED on commit `06387b04` (310s). One real pre-existing test failure caught
+  (not host-contention) — `test_prediction_market_venue_wiring.py::test_remaining_planned_venues` asserted the old
+  `"betfair" in PLANNED_VENUES` state; fixed. A second real gate failure caught: `download_batch` (128L) and
+  `get_markets` (59L) exceeded `MAX_METHOD_LINES=50` — refactored (extracted `_post_rpc` shared JSON-RPC helper,
+  `_market_matches_leagues`, `_row_for_runner`, `_rows_for_market`); pure refactor, all 9 tests still passing. **Shipped
+  `market-tick-data-service@85872cab`, verified ancestor of `origin/live-defi-rollout`.** Todo 2 flipped above. Todos 3
+  (fixture_id resolution) and 4 (live-verify, incl. the `BETFAIR_EX_UK`/`EX_EU` venue-naming question) remain open for
+  the next worker.
