@@ -97,7 +97,8 @@ on a `.venv-workspace`-capable CI runner being provisioned (operator action).
       CI runner (operator action). See findings file for full F14 annotation.
 
 **Gate**: `.venv-workspace` provisioned on a CI runner (or a laptop with full workspace) → re-run
-`generate-unified-openapi.sh` end-to-end → `check_openapi_drift.py` exits 0 with all 3 outputs
+`generate-unified-openapi.sh` end-to-end → its wired-in `check_extraction_count_regression.py` checkpoint (see
+`/plans/active/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` todo 2) exits 0 with all 3 outputs
 (`ui-reference-data.json`, `config-registry.json`, `unified-trading-system.openapi.json`) freshly regenerated and
 committed.
 

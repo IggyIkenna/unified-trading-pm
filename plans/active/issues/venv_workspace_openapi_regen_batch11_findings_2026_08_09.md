@@ -124,11 +124,11 @@ ship.
       `workspace-manifest.json` + any `strategy_repo_consolidation` plan/codex doc), and if confirmed, commit the
       regenerated outputs (`config-registry.json`, `unified-trading-system.openapi.json`, `ui-reference-data.json`,
       `system-topology.json`) via quickmerge in `unified-api-contracts`. — unified-api-contracts@7896deda
-- [ ] 2. [SCRIPT] P2. Either build a real drift/regression gate comparing fresh vs. committed `config-registry.json` /
-      `unified-trading-system.openapi.json` extraction counts (formalizing the manual checkpoint used in this session),
-      or correct `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`'s Residual 1 text (and any other
-      citing doc) to stop pointing at the deprecated `check_openapi_drift.py` as the closing Gate. (repo:
-      unified-trading-pm)
+- [x] ✅ 2. [SCRIPT] P2. Either build a real drift/regression gate comparing fresh vs. committed `config-registry.json`
+      / `unified-trading-system.openapi.json` extraction counts (formalizing the manual checkpoint used in this
+      session), or correct `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`'s Residual 1 text (and
+      any other citing doc) to stop pointing at the deprecated `check_openapi_drift.py` as the closing Gate. (repo:
+      unified-trading-pm) — unified-trading-pm@089e89c2a (gate) + unified-trading-pm@fe613ad6b (QG exclude fix)
 - [ ] 3. [INFRA] P3. Investigate the `gs://instruments-store-cefi-central-element-323112` 404 in
       `generate_instrument_snapshot.py` (stale/renamed bucket? check `resolve_bucket_name`/bucket-isolation-model) and
       fix so `generate-unified-openapi.sh` can run genuinely end-to-end including the
@@ -160,3 +160,23 @@ ship.
   `unified-trading-system.openapi.{json,yaml}`, `ui-reference-data.json`, `system-topology.json`, `orphan-report.txt` —
   the last two are same-generator-step companions of the named targets, included to avoid stale-companion drift). QG
   green (301s, sentinel matched HEAD), verified `7896deda` is an ancestor of `origin/live-defi-rollout`.
+- **2026-08-09** — Todo 2 closed (slot-27, infra). Took the "build a real gate" branch of the choice (formalizes the
+  manual checkpoint rather than just correcting doc text). New
+  `scripts/quality_gates/check_extraction_count_regression.py`: compares `config-registry.json`'s
+  `total_configs`/`total_repos` and `unified-trading-system.openapi.json`'s paths/schemas counts against the
+  git-committed baseline (`git show <ref>:<path>`), FAILs (exit 1) if any fresh count drops below baseline — the exact
+  "DO NOT commit" rule from this doc's finding 1, now non-discretionary. Wired into `generate-unified-openapi.sh` as a
+  checkpoint right after both files regenerate (script continues through remaining generator steps but exits non-zero at
+  the end if the checkpoint failed, so a caller/CI sees the failure without losing the other generated artifacts). 7
+  unit tests (real git repos in `tmp_path`, not mocked) cover: no-regression pass, `total_repos`-drop fail (mirrors the
+  exact batch11 failure mode), `paths`-drop fail, `--warn-only`, new-file-no-baseline, missing-fresh-output error,
+  not-a-git-repo error — all pass. Also fixed `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`'s
+  Residual 1 Gate text to stop citing the deprecated `check_openapi_drift.py` (deprecation independently confirmed by
+  `scripts/quality-gates.sh`'s own "OpenAPI drift (Group D) — DISABLED 2026-05-16" comment block) — now points at the
+  new checkpoint instead. Sanity-ran the new checker against the real repo (fresh==committed, clean pass). Hit one real
+  QG false-positive along the way: the new script's benign `.get("_meta", {})`-style JSON-parse defaults tripped the
+  empty-dict-fallback codex check — fixed by adding it to `EMPTY_DICT_LIST_EXCLUDE_GLOBS` in `scripts/quality-gates.sh`
+  (same category as the existing `check_base_image_digest_drift.py` exclusion), shipped as a separate commit. QG green
+  (`ALL QUALITY GATES PASSED`, sentinel matched HEAD `fe613ad6b`). Shipped via quickmerge:
+  `unified-trading-pm@089e89c2a` (gate script + shell wiring + doc fix) and `unified-trading-pm@fe613ad6b` (QG exclude
+  fix) — both verified ancestors of `origin/live-defi-rollout`.
