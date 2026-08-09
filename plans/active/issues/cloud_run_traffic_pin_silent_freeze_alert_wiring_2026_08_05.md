@@ -156,11 +156,10 @@ Run service and alerting on drift beyond some threshold — that's the real rema
       jsonPayload.alert_type="cloud_run_traffic_pinned" · Severity: CRITICAL, autoClose: 24h, rate-limit: 5min Shipped:
       setup-traffic-pin-alert.sh (idempotent setup) + traffic-pin-to-slack-bridge.py (Pub/Sub→Slack bridge). IAM
       self-service: granted roles/monitoring.notificationChannelEditor to unified-trading-sa (was missing from the SA's
-      specific role set despite having alertPolicyEditor — channel create required the separate editor role). NOT DONE
-      (needs operator): (a) store Slack #ci-failures webhook URL in Secret Manager as
-      cloud-monitoring-slack-ci-failures-webhook, (b) deploy the bridge as a Cloud Run service with a push subscription
-      on the Pub/Sub topic, (c) trigger a canary rollback against a disposable/UAT service to verify end-to-end Slack
-      delivery.
+      specific role set despite having alertPolicyEditor — channel create required the separate editor role). Remaining
+      (a)/(b)/(c) items from this todo's original NOT-DONE list are tracked in the "## Follow-ups" section below, not
+      restated here (2026-08-09 cleanup, plan_reconciler agt-a398c9 — this inline list had gone stale once the
+      Follow-ups section took over tracking, see the superseded 2026-08-06 blockquote at the bottom).
 - [x] ✅ [INFRA] P2. Build a periodic drift check — deployment-service@74fb6ac (scheduled job, mirroring the
       `slot_drift_check.py` / `ci-status-consolidator` cadence pattern already used elsewhere) that, for every Cloud Run
       service with a `-main-deploy`-style auto-deploy trigger (`deployment-api`, `deployment-ui`,
@@ -228,6 +227,12 @@ Run service and alerting on drift beyond some threshold — that's the real rema
       — then verify e2e by triggering a canary rollback on a UAT Cloud Run service and confirming the Slack message
       arrives in #ci-failures.
 
-> **2026-08-06 archive-candidate audit**: Todo 1 is flipped [x] but its own body lists 'NOT DONE (needs operator): (a)
-> store Slack webhook, (b) deploy the bridge as Cloud Run, (c) verify end-to-end Slack delivery' — the alert is loggable
-> but not yet paging, and these items have no separate - [ ] todos.
+> **2026-08-06 archive-candidate audit** (SUPERSEDED 2026-08-09, plan_reconciler agt-a398c9 — see below): Todo 1 is
+> flipped [x] but its own body lists 'NOT DONE (needs operator): (a) store Slack webhook, (b) deploy the bridge as Cloud
+> Run, (c) verify end-to-end Slack delivery' — the alert is loggable but not yet paging, and these items have no
+> separate - [ ] todos.
+>
+> **Superseded 2026-08-09**: this audit predates the "## Follow-ups" section (added 2026-08-07), which now tracks
+> (a)/(b) as a real `[x]` todo (bridge deployed, GSM secret shell created) and (c) as a real open `[OPERATOR] P2` todo
+> (webhook population + e2e verification, genuinely credential-gated). Todo 1's own inline NOT-DONE text was cleaned up
+> above to point here instead of restating a now-stale list.
