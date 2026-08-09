@@ -188,3 +188,16 @@ words: "this branch is churning faster than one CI worker can chase serially").
   `/na-eligibility-audit` or `/ag-closeout-audit` run include the parked-doc-pileup lead above, and/or the P2
   structural-fix todo (move this check to periodic/batched rather than per-commit hard-fail) get prioritized so this
   escalation lineage stops re-dispatching identical outcomes.
+- 2026-08-09 (slot 30, task `promote_ref_orphaned_on_manual_pr_close-001`, later tick): the `assigned_vm:NA corpus size`
+  blocker cleared on its own (ambient churn receding) — PR #2665 (head `76b4b7bed9`, still carrying `dbaa7b463`) shows
+  it ✅ PASS on run `31302500998`. But the SAME run failed on a **6th distinct check**, not previously logged here:
+  `check_todo_regression` ("Todo regression vs origin", `scripts/plan-hygiene/` sweep) —
+  `1 plan(s) lost todos (total open+done shrank) vs origin/live-defi-rollout`:
+  `quality_gates_quickmerge_timing_baseline_2026_07_31.md` origin=14 current=13 lost=1. Not a doc I own or touched this
+  session — a different concurrent session evidently deleted/collapsed a todo in that plan between LDR and this PR's
+  snapshot (legitimately or not, undetermined). Per this doc's own established precedent, declining to fix another
+  session's plan myself (outside this task's scope, and the right fix — restore vs. confirm-intentional-and-rebaseline —
+  needs the owning session's context, not a guess). Confirms the systemic finding extends to a 6th distinct check:
+  `codex-doc-freshness`, `effort-signal-ratchet`, `archive-candidates`, `dangling-reference-paths`,
+  `assigned_vm:NA corpus size`, now `todo-regression-vs-origin`. `dbaa7b463` still not on `origin/main` as of this tick;
+  continuing to wait for a future green promote cycle rather than intervening.
