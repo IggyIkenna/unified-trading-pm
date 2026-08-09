@@ -22,8 +22,8 @@ created: "2026-08-09"
 last_updated: "2026-08-09"
 author: slot-5 (data_engineering)
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: refactor
 estimate_baseline_ai_days: 0.05
@@ -83,3 +83,5 @@ lean) without losing any rule, and rerun the checker to confirm `ok`.
 - **2026-08-09 (slot-5, data_engineering)** — Filed as a side finding while verifying an unrelated `CLAUDE.md` edit
   stayed under its own size cap. Not fixed inline (out of scope for that edit, and not urgent — 408 B of real headroom
   remains, well under the hard cap).
+- **na-corpus-hygiene 2026-08-09**: RECLASSIFY — `assigned_vm: NA → planning`. Purely mechanical condense-and-verify
+  task with a stated done-when (checker reports `ok`, not `WARN`) — no design/judgment call, no `locked_by`.

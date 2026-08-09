@@ -23,7 +23,7 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-13, satellite-docs,
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md,
-    /plans/active/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md,
+    /plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md,
     /plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -46,7 +46,7 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md,
+    /plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md,
     scripts/quality_gates/check_plan_operator_ruling_evidence.py,
     /plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
   ]
@@ -96,7 +96,7 @@ both also 1 todo).
       unrecorded and escalate to the operator rather than inventing a citation. Regenerate the baseline via
       `--baseline-write` (never hand-edited). **Done when**: `unsourced_ruling_baseline` reaches 0, or every remaining
       entry is recorded in this todo's evidence as genuinely unrecorded and escalated. Source:
-      `/plans/active/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md:103` (its `[SCRIPT] P2`
+      `/plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md:103` (its `[SCRIPT] P2`
       item). Repo: unified-trading-pm.
 
 ## Codex SSOTs (read before starting)

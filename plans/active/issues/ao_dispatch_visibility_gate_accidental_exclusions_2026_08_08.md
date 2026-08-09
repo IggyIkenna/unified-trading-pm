@@ -473,7 +473,7 @@ human already made the call and the fleet still never executes it.
      to catch, inside the gate. So ~10 todos previously counted DECLARED are now correctly ACCIDENTAL. **They were
      always accidental; the detector just could not see them.** That is the whole of the 25 → 34 move, and it is the
      opposite of a baseline raise absorbing debt (contrast
-     `/plans/active/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`, which is the bad kind).
+     `/plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`, which is the bad kind).
   2. **A third finding exists now: ineffective declarations**, with its own `max_ineffective_declarations` baseline
      (currently **4**, all `BLOCKED-PREREQUISITES`). These are the INVERSE failure and are NOT in this doc's 25 — a
      marker in the correct structural position whose token is absent from `_BLOCKED_TOKEN_RE`, so nothing excludes the

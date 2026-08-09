@@ -209,8 +209,8 @@ Two reasons, mirroring the UTL-34-bypass precedent
   `.stale-pre-history-rewrite-20260805T112618Z` sibling backup clones present in this slot
   (`e2e-testing`/`execution-service`/`instruments-service`/`market-data-processing-service`/`unified-trading-library` —
   exactly 5, matching this doc's own table), AND an independent cross-check from
-  `/plans/active/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md` (filed by a different review
-  pass on a different host, `ip-172-31-5-118` slot 0) which found the IDENTICAL 5 repos showing
+  `/plans/archive/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md` (filed by a different
+  review pass on a different host, `ip-172-31-5-118` slot 0) which found the IDENTICAL 5 repos showing
   `2026-08-05T11:12Z`-timestamped ahead/behind drift-violations from the same rewrite event, with no 6th repo appearing
   in either independent source. Of those 5, this doc's own Progress Log already established 2 (execution- service,
   e2e-testing) self-healed without intervention and 3 (instruments-service, unified-trading-library,

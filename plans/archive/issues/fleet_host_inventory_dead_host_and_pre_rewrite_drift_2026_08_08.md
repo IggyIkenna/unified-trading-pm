@@ -13,7 +13,7 @@ summary: >-
   event (matches the `.stale-pre-history-rewrite-20260805T112618Z` backup markers seen elsewhere in the fleet) — this
   slot's clones predate the rewrite and were never updated, so they can never fast-forward-pull correctly until reset.
   No committed work sits on the wrong branch (nothing to rescue), so this is a clean reset, not a recovery.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -34,6 +34,9 @@ priority: P2
 assigned_role: devops
 drift_direction: advance-process
 resolved_by:
+  "Finding 1: /plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md (already resolved,
+  discovered as a stale duplicate). Finding 2: extracted into
+  /plans/active/ao_satellite_ao_dispatch_batch12_2026_08_09.md for AO dispatch."
 locked_by:
 source:
   "review (agent-orchestrator loop tick, msg 4113, ~2026-08-08T12:58:58Z); main independently corroborated slot 3 state
@@ -88,10 +91,10 @@ unique to lose), so the fix is a clean re-clone/reset of these 5 repos on this s
       2026-08-05 Progress Log entry) for the full resolution trail. This finding (filed 2026-08-08, 5 days later)
       re-discovered the identical stale-host signature without cross-referencing that resolution — no new decision
       needed, decommission is already the executed outcome.
-- [ ] [DEVOPS] P2. Clean-reset the 5 drift-violating repos on ip-172-31-5-118 slot 0 (see table above) onto current
-      post-history-rewrite `live-defi-rollout` — confirmed no committed work sits on the stale base, so this is a
-      re-clone/reset, not a merge. Confirm drift-violation clears afterward (ahead=0/behind=0 or normal small drift).
-      Source: extracted into `/plans/active/ao_satellite_ao_dispatch_batch12_2026_08_09.md`.
+- [x] ✅ [DEVOPS] P2. **KEEP-NA-STALE, citation-closed 2026-08-09 (na-corpus-hygiene pass).** Clean-reset the 5
+      drift-violating repos on ip-172-31-5-118 slot 0 — content already extracted verbatim into
+      `/plans/active/ao_satellite_ao_dispatch_batch12_2026_08_09.md` (per this doc's own 2026-08-09 Progress Log entry
+      below). Tracked there going forward, not duplicated here.
 
 ## Progress Log
 

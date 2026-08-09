@@ -28,7 +28,7 @@ related:
     /plans/active/ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md,
     /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
     /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
-    /plans/active/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md,
+    /plans/archive/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md,
     /plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md,
     /plans/active/ao_satellite_ao_dispatch_batch13_2026_08_09.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -54,7 +54,7 @@ context_scope:
   [
     /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
     /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
-    /plans/active/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md,
+    /plans/archive/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md,
     /plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/tmux_spawn.py,
@@ -156,8 +156,8 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       current post-history-rewrite `live-defi-rollout` — the source doc confirms no committed work sits on the stale
       base (a re-clone/reset, not a rescue-merge). Requires execution access to that specific host/slot via SSM. **Done
       when**: all 5 repos show `ahead=0`/`behind=0` (or normal small drift) after reset. Source:
-      `/plans/active/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md:87` (Finding 2 / todo 2 —
-      Finding 1 was closed as a stale duplicate directly on the source doc, not extracted here). Repo:
+      `/plans/archive/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md:87` (Finding 2 / todo 2
+      — Finding 1 was closed as a stale duplicate directly on the source doc, not extracted here). Repo:
       agent-orchestrator (SSM host maintenance).
 - [ ] [BACKEND] P1. **Detect the queued-message state and do not spend the force-compact latch on it.** Add a
       `pane_has_queued_messages()` probe to `agent-orchestrator/server/tmux_spawn.py` and have `context_lifecycle`'s

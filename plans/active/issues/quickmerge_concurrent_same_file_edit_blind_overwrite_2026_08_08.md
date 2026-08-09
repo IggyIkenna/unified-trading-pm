@@ -48,8 +48,8 @@ related: [/plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md]
 created: 2026-08-08
 author: main (direct instruction, relayed by data_engineering worker slot-7)
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.5
@@ -125,3 +125,6 @@ read, regardless of whether the specific lines textually conflict.
   `sports_taxonomy_p1_capture_and_contracts-019` boot. No investigation performed yet — todo above is unstarted.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).
+- **na-corpus-hygiene 2026-08-09**: RECLASSIFY -- assigned_vm NA to planning. The 1 todo is a bounded
+  investigate-then-fix task with a stated repro method and a clear done-when, per
+  agent-orchestrator-single-vm-architecture.md sec5 -- no locked_by, no design/judgment call.

@@ -11,7 +11,7 @@ summary: >-
   call — 20 violations were fixed outright, so the ratchet went 76 → 53 (below the pre-raise 58) on a green tree, and
   both baseline defects (absolute paths, silent RAISE) are fixed in both evidence gates. One todo remains: ratchet 53 →
   0.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -32,6 +32,8 @@ priority: P1
 assigned_role: admin
 drift_direction: advance-docs
 resolved_by:
+  "76->53 fixed same-day by the filing session; the remaining ratchet-to-0 tail extracted into
+  ao_satellite_ao_dispatch_batch13_2026_08_09.md todo 1 for AO dispatch"
 locked_by:
 source:
   "slot-3 interactive, 2026-08-09 — noticed while re-measuring the same gate after fixing 17 of its violations by hand"
@@ -100,15 +102,9 @@ third party at all without fabricating the citation the gate exists to catch.
       before writing and print `WARNING: <key> RAISED x -> y -- a shrinking ratchet must only go DOWN` to stderr on any
       increase, matching `check_ao_dispatch_visibility_gate.py`'s existing convention. **Verified**: silent on this
       session's legitimate 76 → 53 ratchet-DOWN. Repo: unified-trading-pm.
-- [ ] [SCRIPT] P2. **Keep ratcheting: 53 → 0.** The 20 fixed this session were the ones whose ruling record could be
-      located and VERIFIED; the remaining 53 split into (i) rulings recorded only in a chat session with no durable
-      home, and (ii) citations whose source doc is named but was not checkable in the time available. Neither may be
-      closed by inventing a plausible path — that is the exact failure this gate exists to catch
-      (`/plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`). Work the list from
-      `python3 scripts/quality_gates/check_plan_operator_ruling_evidence.py --only plans/active/*.md     plans/active/issues/*.md`,
-      verifying each source before citing it. **Done when**: `unsourced_ruling_baseline` reaches 0, or every remaining
-      entry is recorded here as genuinely unrecorded and escalated to the operator. Repo: unified-trading-pm. **➡️
-      EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch13_2026_08_09.md` todo 1 — do NOT action here.**
+- [x] ✅ [SCRIPT] P2. **KEEP-NA-STALE, citation-closed 2026-08-09 (na-corpus-hygiene pass).** Keep ratcheting: 53 → 0 —
+      content already extracted verbatim into `ao_satellite_ao_dispatch_batch13_2026_08_09.md` todo 1. Tracked there
+      going forward, not duplicated here.
 
 ## Progress Log
 

@@ -16,7 +16,7 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-13, finalize, satel
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch13_2026_08_09.md,
-    /plans/active/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md,
+    /plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-09"
