@@ -290,6 +290,28 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
 
 ## Progress Log
 
+- 2026-08-09 (slot 9, citadel_satellite_ao_dispatch_batch1-006, "features-service: recompute the corpus for the intraday
+  BTC mean-reversion cs-ML feature"): **item remains OPEN — blocked, not done.** Attempted the `returns` +
+  `statistical_anomaly` backfill for cefi/BTC over the existing paper-trading window (`day=2026-04-22`,
+  `day=2026-05-01..2026-05-03`) and hit a real, cross-cutting correctness bug: the CEFI availability manifest stores
+  BITGET-sourced instrument ids in raw vendor form (`BITGET-FUTURES:PERPETUAL:BTC-USDT@LIN`), while the features
+  MVP-universe filter + the already-shipped feature-output filenames use the canonical form
+  (`BITGET-FUTURES:PERPETUAL:BTCUSDT`) — neither form lets `DependencyChecker`'s lookback pre-flight AND the
+  MVP-universe filter both pass, so the backfill cannot start. Confirmed real candle data exists (both GCS and manifest)
+  for the target window, ruling out an honest-absence explanation. Filed
+  `/plans/active/issues/delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md`
+  (unified-trading-pm@62dff90443) with a P1 fix todo (translate canonical↔raw instrument-id forms in
+  `DependencyChecker._count_candles_for_lookback`) and P2 re-run todos for this item + its sibling P2.11.16. Escalated
+  via `/blocked`; main confirmed (option A): leave this todo open pending the P1 fix landing as its own properly-scoped
+  change, rather than patching the shared dependency-checker inline from this task. Along the way, shipped two small
+  REAL bugs discovered while attempting the live compute (both independent of the id-mapping blocker, both verified via
+  a real preflight run before/after): (1) `features-service@9629787f` — CLI parser's `FEATURE_GROUPS` never listed
+  `statistical_anomaly`, so `--feature-group statistical_anomaly` failed argparse outright; (2)
+  `features-service@af75a3236` — the delta_one orchestrator's own calculator map (distinct from
+  `calculators/__init__.py`'s registry) was still missing the `statistical_anomaly` → `anomaly.StatisticalAnomaly`
+  entry, so even past argparse every date failed with "No calculator for feature group: statistical_anomaly". Both fixes
+  are real prerequisites for this todo's eventual re-run once the id-mapping P1 fix lands, but do not by themselves
+  unblock the backfill.
 - 2026-08-08 (slot 2, citadel_satellite_ao_dispatch_batch1-003): shipped the GroupC smart-fill / execution-alpha P1.6
   todo — execution-service@b2b41038. Verified the shipped `replay_run` Layer-3 entrypoint end-to-end via the e2e-testing
   in-memory proof (real code path, deterministic, all assertions pass). Discovered CRA had no code path actually
