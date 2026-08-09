@@ -13,7 +13,7 @@ summary: >-
   market-tick-data-service dropped both fixes. The template is now forward-ported so a rollout is safe; the remaining
   gap is that NOTHING detects template-vs-repo drift, so the same trap can reopen the moment a repo fixes something the
   template does not learn.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -46,6 +46,7 @@ source:
 locked_by:
 locked_since:
 resolved_by:
+  ci_satellite_ao_dispatch_batch5_2026_08_02.md todo 1 (end-to-end proof build 4d265c51-5ca0-4349-b48f-80d4f7179430)
 context_scope:
   [
     scripts/propagation/rollout-cloudbuild.py,
@@ -122,8 +123,9 @@ silently regresses the fleet again.
       2026-08-06 Progress Log entry for the full classification + evidence (template forward-ports landed in
       `configs/cloudbuild-*-template.yaml`; empty-tag guard hand-applied to all 17 image-building consumers; drift
       baseline ratcheted down to the residual category-(b) set; drift checker GREEN). **Roll the empty-tag guard out to
-      the 19 consumer repos — RE-SCOPED 2026-08-02 per operator ruling into two explicit, ordered steps.** The original
-      one-line wording ("roll the guard out once the drift check exists") assumed a clean
+      the 19 consumer repos — RE-SCOPED 2026-08-02 per operator ruling (source:
+      `/plans/active/ci_satellite_ao_dispatch_batch5_2026_08_02.md` frontmatter `source:` field) into two explicit,
+      ordered steps.** The original one-line wording ("roll the guard out once the drift check exists") assumed a clean
       `rollout-cloudbuild.py --apply` sweep. That mechanism no longer exists: the would-drop-content guard shipped
       2026-07-28 (`unified-trading-pm@ddf0b89f4`) now correctly REFUSES 15 of the 19 consumers, so an `--apply` sweep
       would simply decline most of the fleet. Do the steps in order — step 2 is not startable for a repo until step 1
@@ -361,3 +363,10 @@ isn't actually AO-live anywhere yet. No RECLASSIFY, no ARCHIVE.
 > **2026-08-07 note**: the 2026-08-06 archive-candidate audit's caution above (step-2 done-when "remains outstanding")
 > was already stale at the time it was written — it predates the Follow-up checkbox directly above it, which closes that
 > exact done-when with the cited build `4d265c51-5ca0-4349-b48f-80d4f7179430`. Removed superseded note.
+
+- **2026-08-09 (`ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md` todo 2 — source-doc reconciliation)**: verified
+  every todo above + the Follow-ups checkbox are `[x]` and the archive banner's RESOLVED claim is accurate — this doc
+  genuinely reaches zero open work. Corrected a stale frontmatter mismatch: `status:` had stayed `open` despite the
+  2026-08-07 archival banner; flipped to `resolved` and populated `resolved_by` with the end-to-end proof citation
+  (build `4d265c51-5ca0-4349-b48f-80d4f7179430`). No further action needed — this doc is the reconciled record for
+  batch5 todo 1.

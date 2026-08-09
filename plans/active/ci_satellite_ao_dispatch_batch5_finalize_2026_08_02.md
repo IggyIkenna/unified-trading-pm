@@ -80,16 +80,45 @@ context_scope:
       consumers' committed `cloudbuild.yaml` for the empty-tag guard and list any that lack it. **Done when**: the
       baseline diff is recorded with a per-repo before/after table, every residual is justified, and either all 19
       consumers carry the guard or the exceptions are named with reasons.
-- [ ] [REVIEW] P1. **Reconcile all 6 batch-5 todos' source docs.** Each batch-5 todo ends with `Source:` naming one or
-      more docs (todos 3 and 4 cite two distinct items in the SAME doc — flip them independently, not as one). For each:
-      flip the corresponding checkbox or annotate the corresponding prose section in EVERY cited doc, citing the batch-5
-      commit that shipped it — **verify the cited commit exists and is an ancestor of `origin/live-defi-rollout` before
-      citing it** (`git merge-base --is-ancestor`). Then, per doc, re-check whether it now has zero open work **in
-      checkbox AND prose form**; only set `status: resolved` on a doc that genuinely reaches zero. Note that
-      `post_cutover_silent_assumption_sweep_2026_07_23.md` will NOT reach zero (its superseded/time-gated set stays open
-      by design) and that `github_actions_operator_gated_followups_2026_07_17.md` may be concurrently edited by batch4's
-      todo 9 — re-pull before writing. **Done when**: every cited doc is flipped/annotated with verified evidence, and
-      each doc that genuinely reaches zero open work is `status: resolved`.
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-09 (slot 23, review→backend_engineer craft)** — reconciled all 5 distinct source
+      docs cited by batch5's 6 todos (todos 3 and 4 cite two distinct items in the SAME doc). Per-doc findings + fixes:
+  - `cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` (todo 1) — already `plans/archive/`,
+    every todo + Follow-up `[x]`, genuinely zero open work. **Found + fixed a stale frontmatter mismatch**: `status:`
+    had stayed `open` despite the 2026-08-07 archive banner claiming RESOLVED — flipped to `resolved`, populated
+    `resolved_by` with the end-to-end proof citation. Progress Log entry added.
+  - `github_actions_operator_gated_followups_2026_07_17.md` (todo 2) — both sub-items already correctly flipped `[x]`
+    2026-08-09 by the batch5 todo 2 worker (slot 11), citing `unified-trading-pm@b3d2deacb` — verified ancestor of
+    `origin/live-defi-rollout` ✅. Doc carries many unrelated still-open items (P0/P2/P3 across other sections) so it
+    correctly stays `status: active` — does NOT reach zero. No batch4-todo-9 concurrent-edit collision found on re-pull.
+  - `github_actions_billing_wall_recurrence_2026_07_29.md` (todos 3 + 4) — already `plans/archive/`, `status: resolved`
+    since 2026-07-31; its 3 prevention todos were migrated to `ci_satellite_ao_dispatch_batch1_2026_07_26.md` on
+    2026-08-02, so no live checkbox remained here to flip. **Batch5 todos 3/4 shipped work genuinely beyond what
+    batch1's migrated items covered** — annotated a new Progress Log entry citing both, verified as ancestors:
+    `unified-trading-pm@ba675a148` (todo 3's guard extension to `conflict_resolver.md`/`data_pipeline_failure.md`) and
+    `unified-trading-ci@0afd236` (todo 4's actual outage-aware `quality-gates-v2` suppression — a different mechanism
+    from batch1's `ci_reconcile.py` fix). Doc's own Todos/status unaffected (already zero/resolved).
+  - `ui_build_warm_cache_2026_06_17.md` (todo 5) — already `status: complete`, every todo `[x]`, genuinely zero open
+    work. No action needed.
+  - `post_cutover_silent_assumption_sweep_2026_07_23.md` (todo 6) — **confirmed does NOT reach zero, as this todo's own
+    text predicted.** The F3 item was already annotated by a prior na-eligibility-audit pass (2026-08-07) with the exact
+    batch5 commit (`unified-trading-pm@ead69c37d`, re-verified ancestor of origin ✅); its checkbox correctly stays
+    `- [ ]` because the 24-repo `semver-agent.yml` `schema-changed` dispatch slice (D5-2, conflict-gated on the
+    workflow-template rollout mechanism) remains genuinely open. No hygiene fix needed — reconciliation was already
+    correct on arrival.
+  - **Net result**: 1 doc's frontmatter status corrected (cloudbuild), 1 doc got a new traceability annotation
+    (billing-wall, for genuinely-new batch5 work its migrated copy didn't capture), 3 docs required no change (already
+    correctly reconciled or correctly still-open by design). Zero commits were fabricated or cited without verifying
+    ancestry. ~~[REVIEW] P1. **Reconcile all 6 batch-5 todos' source docs.**~~ (original text preserved below for
+    record) Each batch-5 todo ends with `Source:` naming one or more docs (todos 3 and 4 cite two distinct items in the
+    SAME doc — flip them independently, not as one). For each: flip the corresponding checkbox or annotate the
+    corresponding prose section in EVERY cited doc, citing the batch-5 commit that shipped it — **verify the cited
+    commit exists and is an ancestor of `origin/live-defi-rollout` before citing it** (`git merge-base --is-ancestor`).
+    Then, per doc, re-check whether it now has zero open work **in checkbox AND prose form**; only set
+    `status: resolved` on a doc that genuinely reaches zero. Note that
+    `post_cutover_silent_assumption_sweep_2026_07_23.md` will NOT reach zero (its superseded/time-gated set stays open
+    by design) and that `github_actions_operator_gated_followups_2026_07_17.md` may be concurrently edited by batch4's
+    todo 9 — re-pull before writing. **Done when**: every cited doc is flipped/annotated with verified evidence, and
+    each doc that genuinely reaches zero open work is `status: resolved`.
 - [ ] [REVIEW] P1. **Re-check the Deferred items D5-1 through D5-7 for whether their blocker has cleared.** D5-1
       (quickmerge.sh branch-check broadening) — have BOTH batch4 todo 1 and batch4 todo 2 landed? If so it is
       ready-for-batch-6 extraction; note it, do NOT draft it here. D5-2/D5-3 (F3's semver-agent and cloudbuild halves) —
@@ -189,3 +218,20 @@ context_scope:
   - **Done-when met**: baseline diff recorded with the per-repo before/after table above; every residual justified; all
     17 image-building consumers carry the guard, the 2 non-applicable ones are named with reasons. Evidence:
     `client-reporting-api@b75b798` (fix, verified ancestor of origin), drift checker EXIT 0 post-fix.
+- **2026-08-09 (todo 2, slot 23 — review/backend_engineer craft) — TODO 2 COMPLETE.** Reconciled all 5 distinct source
+  docs cited by batch5's 6 todos (Source: lines). Every cited commit verified via
+  `git merge-base --is-ancestor <sha> origin/live-defi-rollout` before citing: `unified-trading-pm@b3d2deacb` (todo 2,
+  pre-existing, re-verified), `unified-trading-pm@ba675a148` + `unified-trading-ci@0afd236` (todos 3/4, newly cited),
+  `unified-trading-pm@ead69c37d` (todo 6, pre-existing, re-verified). Findings:
+  `cloudbuild_template_behind_repos_ rollout_would_regress_fleet_2026_07_20.md` had a stale `status: open` frontmatter
+  despite its 2026-08-07 archive banner claiming RESOLVED — corrected to `resolved` + populated `resolved_by`.
+  `github_actions_billing_wall_recurrence_2026_07_29.md` had its 3 original prevention todos already migrated to batch1
+  2026-08-02, but batch5 todos 3/4 shipped genuinely additional work (the authoring-slot guard extended to 2 more worker
+  docs; a real outage-aware `quality-gates-v2` suppression, a different mechanism from batch1's `ci_reconcile.py` fix) —
+  annotated a new Progress Log entry there for traceability. `github_actions_operator_gated_followups_2026_07_17.md`,
+  `ui_build_warm_cache_2026_06_17.md`, and `post_cutover_silent_assumption_sweep_2026_07_23.md` were all already
+  correctly reconciled by prior sessions/audits — no changes needed. Zero docs incorrectly marked `resolved`:
+  `post_cutover_silent_assumption_sweep_2026_07_23.md` correctly stays open (D5-2's semver-agent slice genuinely
+  unresolved, as this todo's own text predicted); `github_actions_operator_gated_followups_2026_07_17.md` correctly
+  stays open (many unrelated open items). Full per-doc detail recorded on the todo checkbox itself above. Evidence:
+  `unified-trading-pm@<this commit>` (this session's edits to the 3 touched docs + this plan).
