@@ -124,16 +124,28 @@ already (2026-06-28), which is why `setup-tab-worktrees.sh` carries a slot cap a
 but not clear this: `block_destructive_commands.py` correctly refuses recursive `rm` regardless of reversibility, so
 this needs automation rather than an agent noticing.
 
-- [ ] [INFRA] P2. **EXTRACTED 2026-08-09 → `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 2.** Find what
-      writes `manifest-consolidate-*` scratch to the orchestrator VM and stop it, or give it a reaper. Full scope now
-      lives in that batch doc — tracked there going forward, not duplicated here; this checkbox flips once the batch's
-      finalize plan reconciles it.
-- [ ] [INFRA] P3. **EXTRACTED 2026-08-09 → `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 3.** Add a
-      free-space alert for the orchestrator VM root. Full scope now lives in that batch doc — tracked there going
-      forward, not duplicated here; this checkbox flips once the batch's finalize plan reconciles it.
+- [x] ✅ [INFRA] P2. **EXTRACTED 2026-08-09 → `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 2.** Find what
+      writes `manifest-consolidate-*` scratch to the orchestrator VM and stop it, or give it a reaper. **DONE 2026-08-09
+      — `unified-trading-pm@699f53832`.** Root-caused the writer (the manifest consolidator's own Cloud Run Job merge
+      step via `_duckdb_merge_payload`, `tempfile.TemporaryDirectory(prefix="manifest-consolidate-")`; no recurring
+      in-repo bug, historical accumulation traced to a one-off local invocation with `TMPDIR` pointed at a home-dir
+      scratch path) and shipped a TTL reaper (`scripts/dev/cleanup-stale-manifest-consolidate-tmp.sh` + cron installer)
+      mirroring `cleanup-stale-qg-tmp.sh`'s proven liveness-check pattern. Full scope + verification detail in that
+      batch doc's todo 2.
+- [x] ✅ [INFRA] P3. **EXTRACTED 2026-08-09 → `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 3.** Add a
+      free-space alert for the orchestrator VM root. **DONE 2026-08-09 — `agent-orchestrator@bb85164`.** Shipped
+      `DiskSpaceCanary` (`server/disk_space_canary.py`), wired into `server.py` startup/shutdown, pages
+      `#agent-orchestrator-alerts` at a 60G-free default threshold, verified via a mocked-probe synthetic trigger (20
+      new unit tests). Full scope + verification detail in that batch doc's todo 3.
 
 ## Progress Log
 
+- **2026-08-09 (slot 28, review, finalize `infra_satellite_ao_dispatch_batch10_finalize_2026_08_09.md` todo 2)**:
+  Reconciled both `[INFRA]` todos above now that batch10's todos 2-3 shipped — flipped both to `[x]`, citing
+  `unified-trading-pm@699f53832` (todo 2, manifest-consolidate-* TTL reaper) and `agent-orchestrator@bb85164` (todo 3,
+  free-space alert). Confirmed this doc is NOT an archival candidate: the 2 older `[DATA] P2` open-ended investigation
+  items remain untouched and genuinely open (gated by `block_destructive_commands.py`'s autonomous-cleanup block), so
+  the doc correctly stays `assigned_vm: NA` with 2 open items. (repo: unified-trading-pm)
 - **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:ebde55209df8df2e]: KEEP-NA-STALE (already-duplicated) —
   2 of 4 items. Todos 3-4 are already correctly self-annotated as EXTRACTED into
   `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todos 2-3 (status: active, confirmed). Todos 1-2 remain genuinely

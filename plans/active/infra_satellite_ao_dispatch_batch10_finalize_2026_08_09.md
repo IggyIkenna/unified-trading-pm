@@ -68,14 +68,12 @@ Machine-held via `depends_on` + `gate_on_depends: true` until all 3 of
       survivability audit) untouched — genuine undecided design choice, not this batch's scope. Confirmed the source doc
       is NOT an archival candidate: `[DATA] P3` remains open by design (1 open `- [ ]` left in that doc). (repo:
       unified-trading-pm)
-- [ ] [REVIEW] P2. **Reconcile `issues/shared_host_home_filesystem_full_2026_07_26.md`'s 2 `[INFRA]` todos.** Once
-      batch10's todos 2-3 ship, flip that source doc's matching `- [ ]` checkboxes (§ "Orphaned manifest-consolidator
-      scratch on the orchestrator VM") to `[x]`, citing the batch10 commit SHA(s) for each. Do NOT touch its 2 older
-      `[DATA] P2` items (audit 157G workspace-repos for cleanup headroom; investigate ownership of
-      `mdps_bench_data_fullmonth`/`/home/ubuntu/tmp`) — both stay open, `assigned_vm: NA`, genuinely open-ended
-      investigations gated by `block_destructive_commands.py`'s autonomous-cleanup block, not this batch's scope.
-      Confirm the source doc is NOT an archival candidate afterward (the 2 `[DATA] P2` items remain open by design).
-      (repo: unified-trading-pm)
+- [x] ✅ [REVIEW] P2. **Reconcile `issues/shared_host_home_filesystem_full_2026_07_26.md`'s 2 `[INFRA]` todos.** —
+      `unified-trading-pm` (this commit). Flipped both `[INFRA]` checkboxes (§ "Orphaned manifest-consolidator scratch
+      on the orchestrator VM") to `[x]`, citing `unified-trading-pm@699f53832` (todo 2) and `agent-orchestrator@bb85164`
+      (todo 3). Left the 2 older `[DATA] P2` items untouched (open-ended investigations, gated by
+      `block_destructive_commands.py`'s autonomous-cleanup block). Confirmed the source doc is NOT an archival
+      candidate: the 2 `[DATA] P2` items remain open by design. (repo: unified-trading-pm)
 - [ ] [DOC] P3. **Archive `infra_satellite_ao_dispatch_batch10_2026_08_09.md`** once both reconciliations above are done
       and verified — run the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix every corpus
       referrer path, confirm `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py` both stay clean).
@@ -95,5 +93,10 @@ Machine-held via `depends_on` + `gate_on_depends: true` until all 3 of
   `issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md`'s `[SCRIPT] P2` checkbox, citing
   `deployment-service@c8f1612b`. Confirmed the source doc is not an archival candidate (its `[DATA] P3` item remains
   genuinely open). Todos 2-3 remain open (different files, no conflict).
+- **2026-08-09 (slot 28, review)** — Todo 2 shipped: flipped both `[INFRA]` checkboxes in
+  `issues/shared_host_home_filesystem_full_2026_07_26.md`, citing `unified-trading-pm@699f53832` (todo 2, TTL reaper)
+  and `agent-orchestrator@bb85164` (todo 3, free-space alert). Confirmed the source doc is not an archival candidate
+  (its 2 older `[DATA] P2` items remain genuinely open). Todo 3 (archive the batch10 plan itself) remains open — must be
+  a separate commit from this flip per the never-combine-flip-with-git-mv rule.
 - **2026-08-09** — Authored alongside `infra_satellite_ao_dispatch_batch10_2026_08_09.md` by a manual
   satellite-batch-extraction pass over the infra-tranche NA candidate doc set.
