@@ -297,6 +297,85 @@ registry instead of `tick.chain`) is now confirmed a **no-op** for this populati
 and must NOT be implemented as the fix. Todo 2 below is re-scoped accordingly; the writer-side fix still needs its exact
 call site located (not done this pass) before it can safely ship.
 
+## Finding 13 (2026-08-09, slot 14) — pre-cutoff 98,188-group population CONFIRMED the SAME mechanism as Finding 12's
+
+post-cutoff finding (venue-agnostic MDPS/batch\_tardis repeated writes, chain irrelevant); answers todo 3
+
+**Methodology**: wrote
+`market-tick-data-service/scripts/characterize_cefi_pre_2025_11_manifest_same_spelling_duplicate_rows_2026_08_09.py`
+(READ-ONLY; single-request consolidated-index load mirroring
+`characterize_cefi_pre_2025_11_manifest_duplicates_2026_08_08.py`, reusing its resolver/loader). The group-by
+
+- count-distinct aggregation was pushed into **DuckDB SQL**, not pandas `.groupby()`/`.str.cat()` chains — under this
+  host's measured contention during the run (load avg ~23 on 8 cores from concurrent fleet sessions), the pandas
+  approach did not complete within a 1500s bound across two attempts; the equivalent DuckDB query completed in <30s
+  end-to-end.
+
+**Measured population** (consolidated `_index/availability_index.parquet` only, 5,122,367 pre-cutoff rows, 4,850,394
+distinct effective-dedup-key groups): **58,682 lossy groups / 326,483 rows** — vs. the 98,188-group figure the apply
+script's dry-run reported. That figure sums stats independently across the index PLUS all 6 `_index/per_vm/*.parquet`
+shard blobs (`apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py`'s `main()` loop); those per-VM shards
+are largely pre-consolidation captures of a SUBSET of the same underlying rows, so summing per-blob group counts
+plausibly double-counts overlapping pre-/post-consolidation views of the same groups. The consolidated-index count
+(58,682) is what any downstream reader of "the manifest" actually sees, so it's the number reported here — reconciling
+the exact 98,188 figure is flagged as an open gap, not chased further since the population's ROOT CAUSE (the todo's
+actual question) is answered below.
+
+**Chain is irrelevant — confirms Finding 12, refutes Finding 11 for this population too**: 0% of the 58,682 lossy groups
+have ANY row with a populated `chain`; a chain-DROPPED variant of the dedup key produces the IDENTICAL 58,682-group
+count (delta=0), so `chain` does zero differentiating work here. Every affected row carries
+`pipeline_mode ∈ {batch_tardis, batch_hyperliquid}` — 100% batch, ZERO live pipeline modes — which also rules out
+Finding 11's WS-reconnect mechanism structurally (that mechanism only exists on the MTDS live-capture path).
+
+**Venue / data_type / pipeline_mode breakdown** (lossy groups):
+
+| venue            | groups | venue          | groups |
+| ---------------- | -----: | -------------- | -----: |
+| ASTER            | 39,506 | UPBIT          |    123 |
+| HYPERLIQUID      | 16,416 | COINBASE-SPOT  |    122 |
+| DERIBIT          |    456 | OKX-FUTURES    |    111 |
+| BYBIT            |    372 | OKX-SPOT       |    104 |
+| BINANCE-FUTURES  |    358 | BITFINEX-SPOT  |     66 |
+| BITFINEX-FUTURES |    280 | BITGET-FUTURES |     41 |
+| KRAKEN-FUTURES   |    261 | BITGET-SPOT    |     28 |
+| OKX-SWAP         |    223 | KRAKEN-SPOT    |      8 |
+| BINANCE-SPOT     |    207 |                |        |
+
+data_type: `trades` 56,917 (97%), `derivative_ticker` 731, `book_snapshot_5` 560, `liquidations` 474.
+pipeline_mode/source: `batch_tardis`/`tardis` 42,266 groups, `batch_hyperliquid`/`hyperliquid` 16,416 groups — matches
+ASTER+small-venues vs. HYPERLIQUID exactly. Dates span the full pre-cutoff window (2024-01 through 2025-10), fairly
+evenly spread with a ramp toward 2025-06..2025-10 (7,514 groups in 2025-10 alone, the single largest month).
+
+**Sample evidence (15 sampled groups) reproduces Finding 12's exact signature**: every sample shows multiple `captured`
+rows sharing a byte-identical shard-atom key, `written_at` all within SECONDS to tens-of-seconds of each other (one
+ingestion run, not separate re-runs on different days), `row_count` DECREASING each successive write — e.g.
+`ASTER:PERPETUAL:PYTH-USDT@LIN` 2025-02-22: `5760 → 1440 → 288 → 96 → 24 → 6 → 1`, all within 17 seconds. This is the
+SAME cascade shape (same absolute values: 5760/1440/288/96/24/6/1) Finding 12 independently found for ASTER/BNB-USDT (21
+seconds) on the post-cutoff population — strong corroboration this is one mechanism, not two.
+
+**ACTIVE, not historical**: every sampled `written_at` falls in the narrow window 2026-08-02 to 2026-08-04 (days before
+this characterization ran), even though the shard `date` values span 2024–2025 — a very recent retroactive historical
+backfill campaign (consistent with the per-VM shard blobs observed in the bucket, `cefi-fwd-20260808-123230.parquet` /
+`mdps-backfill-cefi-20260802-140125.parquet`), i.e. this population was still being written within the last week, not a
+static residual.
+
+**Code-path corroboration (Explore sub-agent pass)**: confirms `OnchainPerpBatchHandler`
+(`market_tick_data_service/cli/handlers/onchain_perp_batch_handler.py`) is NOT the exact writer for this
+`batch_tardis`-tagged population (it stamps `BATCH_ASTER`/`BATCH_HYPERLIQUID`, never `batch_tardis` — matches Finding
+12's own elimination of this candidate). It DOES independently confirm two structurally relevant facts in a SIBLING
+onchain-perp pipeline: (a) `shard_exists_prefix()` is hard-overridden to always return `None` ("re-process every date"),
+disabling the framework's normal idempotency/skip-if-fresh guard, and (b) the underlying `ManifestWriter.add()`
+(`unified_trading_library/manifest_writer/_writer_ingest.py`) is a pure APPEND with no dedup/upsert on the shard-atom
+key. Precedent for a no-idempotency-guard, append-only pattern elsewhere in the codebase; the actual `batch_tardis` MDPS
+writer (todo 2's target) still needs its own call-site pin — not attempted here, out of this todo's assigned scope.
+
+**Answer to todo 3's question**: SAME root cause as the post-cutoff population, not a distinct one. The doc's own
+hypothesis ("likely NOT [Finding 11's WS-reconnect mechanism], since pre-cutoff data was probably batch-captured") is
+confirmed correct in the negative, but the affirmative mechanism is Finding 12's (venue-agnostic MDPS/ `batch_tardis`
+repeated same-key writes within one run), independently reproduced here — not a third, separate mechanism. Todo 2's
+eventual writer fix should collapse BOTH populations once shipped, since it is the same call-site defect; a NEW todo
+below tracks the pre-cutoff-side re-verification once that fix lands.
+
 ## Todos
 
 - [x] [DATA] P1. ✅ **Root-cause whether ASTER/HYPERLIQUID/EXTENDED-STARKNET manifest writes are appending a NEW row per
@@ -319,14 +398,19 @@ call site located (not done this pass) before it can safely ship.
       toward the historical ~28-group baseline before any `--apply` is attempted again. **Finding 11's original fix
       candidate (resolve `chain` from a UAC per-venue constant) is CONFIRMED NOT APPLICABLE per Finding 12 — do not
       implement it; `chain` is not the differentiator.** (repo: market-data-processing-service, unified-trading-library)
-- [ ] [DATA] P1. **Characterize the pre-2025-11-01 same-spelling multi-captured-row population (98,188 groups,
-      `drop_set_captured=502,746`)** — same shape as the ASTER/HYPERLIQUID/EXTENDED-STARKNET post-cutoff population,
-      confirmed present pre-cutoff too via `apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py`'s dry-run
-      (`canonical-migration-cefi-dedup-apply-scoped-20260809-001849`, 2026-08-09). Determine venue/date/data_type
-      breakdown (mirror `characterize_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`'s methodology) to
-      confirm whether this is the SAME root cause as the post-cutoff population (Finding 11's WS-reconnect `chain`
-      instability — likely NOT, since pre-cutoff data was probably batch-captured, not live-WS) or a distinct one,
-      before any collapse is attempted. (repo: market-tick-data-service)
+- [x] [DATA] P1. ✅ **Characterize the pre-2025-11-01 same-spelling multi-captured-row population (98,188 groups,
+      `drop_set_captured=502,746`)** — market-tick-data-service (new script
+      `scripts/characterize_cefi_pre_2025_11_manifest_same_spelling_duplicate_rows_2026_08_09.py`, READ-ONLY). See
+      Finding 13: measured 58,682 lossy groups in the consolidated index (scope-discrepancy vs. 98,188 noted, not
+      chased); confirmed the SAME root cause as the post-cutoff population (Finding 12's venue-agnostic MDPS/
+      `batch_tardis` repeated-write mechanism, chain irrelevant — NOT Finding 11's WS-reconnect mechanism), with the
+      identical row_count decreasing-cascade signature and venue/data_type/pipeline_mode breakdown in Finding 13.
+- [ ] [DATA] P2. **After todo 2's writer fix ships, re-run
+      `instruments-service/scripts/apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py`'s dry-run (or a
+      similarly-scoped pre-cutoff dry-run) to confirm the pre-cutoff same-spelling lossy-group count (58,682 per
+      Finding 13) also drops back toward baseline** — since Finding 13 confirms this is the SAME writer defect as the
+      post-cutoff population, todo 2's fix should collapse both; this todo is the pre-cutoff-side verification step.
+      (repo: instruments-service)
 
 ## Progress Log
 
@@ -354,3 +438,11 @@ call site located (not done this pass) before it can safely ship.
   current MDPS call site within this pass (ruled out 2 adjacent candidates, see Finding 12); todo 2 re-scoped to the
   narrower, evidence-backed next step. No mutation to any GCS bucket or manifest in this pass — read-only investigation
   only.
+- **2026-08-09 (slot 14)** — Worked todo 3 (characterize the pre-cutoff 98,188-group population). Wrote
+  `market-tick-data-service/scripts/characterize_cefi_pre_2025_11_manifest_same_spelling_duplicate_rows_2026_08_09.py`
+  (READ-ONLY; DuckDB-based after two pandas-groupby attempts failed to complete in 1500s under heavy host contention).
+  Measured 58,682 lossy groups in the consolidated index (scope-discrepancy vs. 98,188 noted, not chased — likely
+  index+per-VM-shard double-counting in the apply script's own summed stats). See Finding 13: independently reproduces
+  Finding 12's exact mechanism and row_count-cascade signature for the pre-cutoff slice — same root cause as
+  post-cutoff, not distinct. Added a P2 follow-up todo for post-fix re-verification. No mutation to any GCS bucket or
+  manifest — read-only characterization only.
