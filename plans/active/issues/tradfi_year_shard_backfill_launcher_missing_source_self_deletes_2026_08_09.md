@@ -322,3 +322,43 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   (only reactively killed twice so far) — it is the recurring cause of the singleton lock staying held; whoever next has
   bandwidth on that P1 should prioritize the actual fix (pause/fix the cron), not another reactive kill, since it's
   what's blocking every downstream ES_OPT retry attempt.
+- **2026-08-09T~10:19-10:33Z, slot 3 (data_engineering)**: Picked up this `[DATA] P1` action item fresh
+  (`tradfi_year_shard_backfill_launcher_missing_source_self_deletes-cd3da5ea17a9`). Live state at pickup: singleton lock
+  still held (7-8 `tradfi-bf-*` VMs, mix of in-scope CME `g01` shards + leftover out-of-scope NYSE-2023 VMs from the
+  9:00Z `wave_launcher.py` recurrence — no `wave_launcher.py` process currently alive, confirmed via `ps aux`), no
+  `tradfi-bf-es-opt-*` VM running, no live watcher process (`es-opt-backfill-watcher.sh`, `wait_and_launch_es_opt*` —
+  none found via `ps -ef`).
+
+  **Found and fixed a real bug in the committed watcher** (`deployment-service/scripts/vm/es-opt-backfill-watcher.sh`):
+  its Phase 2 launch call (`launch-tradfi-backfill-vm.sh --root-symbol ES_OPT`, no `--year`) unconditionally launches
+  ALL 5 default years (2022-2026) every time it fires — even though this doc's own third finding (above) already
+  established 2020-2024 are 94.8-100% complete and only 2025 (0%) + 2026 (73%) have a real gap. Relaunching all 5 wastes
+  VM-minutes + Databento API calls on already-complete years, working directly against the exact shared-account
+  rate-limit concern that is the stated reason `--force` is banned here (operator ruling,
+  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` "What this todo is waiting on"). Also found the watcher's Phase 5
+  flipped the batch6 plan's checkbox **unconditionally** the moment any ES_OPT VM ran to completion once — not gated on
+  actual measured coverage, contradicting the plan's own "Done when... not just 'ran once'" text, and it never touched
+  this issue doc's own P1 item at all.
+
+  **Fixed** (`deployment-service@77a95833`, QG green 275s, quickmerge landed + ancestry-verified on
+  `origin/live-defi-rollout`): (1) launch loop now targets only `YEARS_TO_LAUNCH` (2025, 2026), sequentially — each
+  year's VM must fully complete before the next launches (they share the singleton lock) — with `--no-force-window`
+  passed for forward-compat (currently a no-op for this launch path per the doc's own known P3 gap: `VM_FORCE_WINDOW`
+  isn't wired into the `mtds-backfill` branch — not fixed here, out of this item's narrow scope); (2) the manifest query
+  now reports a per-year coverage breakdown, not just an aggregate; (3) the plan-checkbox flip is now GATED on measured
+  coverage (2025 coverage >= 90% AND 2026 coverage >= 95%) instead of firing unconditionally; (4) the watcher now also
+  flips/annotates THIS issue doc's P1 item (previously only touched batch6), via a regex verified locally against both
+  docs' real checkbox text before shipping; (5) re-parameterized `SLOT_ID`/`TASK_ID`/`SCRATCHPAD`/`PYTHON` for this
+  session instead of the stale hardcoded slot-11/`batch6-002` defaults.
+
+  **Re-armed the corrected watcher** for this session:
+  `setsid nohup bash scripts/vm/es-opt-backfill-watcher.sh & disown`, `YEARS_TO_LAUNCH="2025 2026"`,
+  `SCRATCHPAD=/home/ubuntu/es-opt-watcher-slot3-20260809T103236Z`. Verified PID 1962373 isolated
+  (`PGID=SID=1962373=PID`, `PPID=1`) and confirmed live in Phase 1 (polling singleton lock, 7 VMs held at last poll).
+  Did NOT flip this item's checkbox — the watcher hasn't reached its gate yet (lock not clear, 2025/2026 launches
+  haven't happened this session). Per this saga's own accumulated lesson (batch6 plan, lesson #6): expect this specific
+  watcher instance may die silently at an unpredictable interval regardless of correct setsid/PGID isolation — **NEXT
+  ACTION for whoever picks this up next**: check this item's checkbox first; if still `[ ]`, check `kill -0 1962373`; if
+  dead, re-arm per the USAGE block at the top of `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (now
+  correctly scoped to 2025+2026 by default — no manual re-narrowing needed). Did not touch `wave_launcher.py`
+  (out-of-scope for this craft/item, tracked separately) or any live VM (no delete, per the staleness-check rule).

@@ -706,3 +706,23 @@ transient, fleet didn't move; not investigated further). No `tradfi-bf-es-opt-*`
   real coverage and 2026 is materially higher, update the closeout plan's "S&P index options" row (reverted/unedited
   this session — that file is at the 1000-line hard cap, needs its own shrink pass before ANY edit can land there, not
   specific to this one) and flip this todo.
+
+### 2026-08-09T~10:19-10:33Z — slot 3 (data_engineering), task
+
+`tradfi_year_shard_backfill_launcher_missing_source_self_deletes-cd3da5ea17a9`
+
+PID `637323` was dead at pickup (`kill -0` failed), no live watcher, no `tradfi-bf-es-opt-*` VM, lock still held (7-8
+VMs — in-scope CME `g01` + leftover out-of-scope NYSE-2023 from the ~09:00Z `wave_launcher.py` recurrence; that process
+itself not currently running). **Found + fixed a real bug in the committed watcher before re-arming**: Phase 2
+unconditionally launched all 5 years (2022-2026) every run and Phase 5 flipped this todo's checkbox unconditionally the
+moment any ES_OPT VM ran once — neither matched the corrected, narrower 2025+2026 gap or this todo's own "not just 'ran
+once'" done-criteria. Fixed `deployment-service@77a95833` (QG green 275s, quickmerge landed + ancestry-verified): launch
+loop now targets only 2025+2026 sequentially, manifest query reports per-year coverage, checkbox flip GATED on measured
+coverage (2025≥90% AND 2026≥95%), and the watcher now also updates the issue doc's own P1 item (previously untouched).
+Re-armed: PID `1962373`, verified isolated (`PGID=SID=PID`, `PPID=1`), confirmed polling Phase 1 live. Did not flip this
+todo (gate not yet reached this session). Full detail:
+`issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`'s matching Progress Log entry.
+
+- **NEXT ACTION (fresh session)**: check todo #2's checkbox first. If `[ ]`: check `kill -0 1962373`; if dead, re-arm
+  per the USAGE block in `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (now correctly defaults to
+  2025+2026, no manual re-narrowing needed) — same recipe as every prior checkpoint in this saga.
