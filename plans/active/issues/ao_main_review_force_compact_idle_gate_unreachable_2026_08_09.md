@@ -129,10 +129,16 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
       `test_main_thrashing_pressure_triggers_recycle_without_compaction_count_or_age` proves the Tier-2 recycle fires on
       `pressure == "thrashing"` alone, with `context_recycle_compactions` raised to 100 and a fresh episode so the other
       two Tier-2 triggers are structurally ruled out); full QG green (3003 python + 262 dashboard tests).
-- [ ] [BACKEND] P2. Re-arm Tier-1 guidance on a timer as well as on an observed compaction: today `guidance_sent_at`
+- [x] ✅ [BACKEND] P2. Re-arm Tier-1 guidance on a timer as well as on an observed compaction: today `guidance_sent_at`
       clears only when a compaction is detected, so a main that silently ignores one nudge is never nudged again for the
       rest of the episode. Done-when: a unit test proves a second guidance message is enqueued after a configurable
-      unacked interval with no compaction observed.
+      unacked interval with no compaction observed. — agent-orchestrator@63b8897 (new
+      `context_compact_guidance_rearm_seconds` tuning knob, default 900s; `_tick_target` now clears `guidance_sent_at`
+      past that interval when `forced_at is None` — no force has fired this episode, the scope this todo covers, since
+      `_rearm_if_force_ineffective` already owns retries once a force DOES fire — so Tier 1 re-fires instead of staying
+      permanently spent for the rest of the episode); 3 new tests in `tests/test_context_lifecycle.py` (rearm fires past
+      the window, does not rearm before it elapses, does not rearm once a force has fired); full QG green (2989 passed,
+      basedpyright clean).
 - [ ] [OPERATOR] P1. Ruling, with todo 2's measured evidence in hand: extend the worker-style unconditional force to
       main/review, or keep them idle-gated. This reverses the stated 2026-08-05 rationale ("never compact mid-work" for
       days-long loop agents), so it is deliberately not a worker's call. Done-when: the ruling is recorded in
