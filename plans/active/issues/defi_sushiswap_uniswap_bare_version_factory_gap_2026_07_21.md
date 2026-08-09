@@ -196,6 +196,14 @@ original audit and this measurement, not a discrepancy in method; both counts de
 
 ## Progress Log
 
+- 2026-08-09 (slot 16, data_engineering worker): Partial execution of the batch11 `[SCRIPT] P1` todo above — RPC
+  `factory()` resolver + resolution script shipped (`instruments-service@fa54f1d8`), UAC `SUSHISWAP_V2-ARBITRUM`/
+  `SUSHISWAP_V3-ARBITRUM` venues registered closing the UAC gap section above (`unified-api-contracts@ed6b4c78`). Live
+  run against SUSHISWAP-ARBITRUM: 12,910/12,910 pool addresses resolved, 100% V2 (classic) factory — first non-zero
+  resolution against this doc's "resolved=0 rows (0.0%)" measured baseline. UNISWAP-ETHEREUM cohort not yet run; the
+  GCS-object/manifest migrate+purge half of the 2026-08-08 ruling is unstarted (split into a new follow-up todo at
+  batch11 — VM-scale full-corpus I/O, out of interactive-session scope). This todo stays `[ ]` — not done, full detail
+  in batch11's Progress Log.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - Option A (subgraph augmentation) vs Option B (on-chain RPC) is
   an explicitly undecided design fork; A needs a live-schema probe per fork before landing
 - **context-scout 2026-08-01**: populated context_scope (5 entries).

@@ -196,7 +196,29 @@ item here.
       `defi_track01_per_instrument_and_canon_id_2026_07_24.md`, Track 1 ("Wire RPC `factory()` lookup for the 206,107
       bare SUSHISWAP/UNISWAP rows" todo). Done when: the unique pool_address set is resolved via factory address, the
       missing UAC venues are registered, historical objects/manifest rows are migrated, and the non-canonical originals
-      are purged with the cited soft-delete value ≥604800s (or explicitly re-gated if below).
+      are purged with the cited soft-delete value ≥604800s (or explicitly re-gated if below). **Partially shipped
+      2026-08-09 (slot 16) — sub-items (1)-(4) done, (5)-(6) split out to the new follow-up todo below**: see Progress
+      Log for full detail; commits `instruments-service@fa54f1d8` (RPC factory()-resolver + resolution script/tests) +
+      `unified-api-contracts@ed6b4c78` (venue registration). Not flipped `[x]` — the GCS/manifest migrate+purge scope
+      (5)-(6) is unstarted and now its own todo.
+- [ ] [SCRIPT] P1. **Migrate + purge the historical SUSHISWAP-ARBITRUM GCS objects/manifest rows to their
+      factory()-resolved canonical venue, and enumerate + resolve the UNISWAP-ETHEREUM bare-row cohort** — follow-up to
+      the todo above, split out because it's the heavier, unstarted half of the original scope. (1) For the 12,910
+      SUSHISWAP-ARBITRUM pool addresses already RPC-resolved (100% `SUSHISWAP_V2-ARBITRUM` per the resolution report at
+      `gs://<instruments-defi-bucket>/_cache/reports/dex_pool_factory_resolution_SUSHISWAP_ARBITRUM.parquet` — bucket
+      via `get_bucket_name("instruments","defi")`), rewrite/migrate the historical GCS objects + manifest rows from the
+      bare `SUSHISWAP-ARBITRUM` path to the canonical `SUSHISWAP_V2-ARBITRUM` path (day-partitioned parquet rewrite —
+      this is full-corpus-touching heavy I/O, run on a VM in-region per
+      `/codex/05-infrastructure/vm-launcher-runbook.md`, never inline in an interactive session). (2) Once canonical
+      twins are verified present, purge the non-canonical originals — cite a fresh
+      `gcs_bucket_soft_delete_retention_seconds()` value ≥604800s before purging (or re-gate `[OPERATOR]` if below), per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. (3) The UNISWAP- ETHEREUM bare-row cohort (13,420
+      rows per the original 206,107-row estimate's residual) was NOT enumerated or RPC-resolved this session — repeat
+      the `resolve_dex_pool_factory_addresses_2026_08_09.py --venue UNISWAP --chain     ETHEREUM --write-report` step
+      first, then fold its migrate+purge into this same todo's scope once resolved. Repos: instruments-service,
+      unified-api-contracts, market-tick-data-service. Source: this plan's todo above (split 2026-08-09). Done when:
+      both cohorts' historical objects/manifest rows are migrated to their resolved canonical venue+chain path and
+      non-canonical originals are purged with the cited soft-delete value ≥604800s.
 - [x] ✅ [SERVICE] P1. **Verify current shipped state, then ship the already-coded+tested BALANCER/ORCA/RAYDIUM
       token-symbol-resolution diff** if it hasn't landed since 2026-08-03 — first check via `git log` whether
       instruments-service's `resolve_evm_token_symbol`/`resolve_solana_token_symbol` wiring into
@@ -311,6 +333,27 @@ item here.
 
 ## Progress Log
 
+- 2026-08-09 (slot 16, data_engineering worker): Todo "Wire RPC `factory()` lookup for the 206,107 bare
+  SUSHISWAP/UNISWAP rows" — sub-items (1)-(4) shipped, (5)-(6) split to a new follow-up todo (not flipped `[x]`, scope
+  incomplete). Built `instruments_service/reference_data/utils/evm_factory_resolver.py` (RPC `eth_call` to `factory()`,
+  selector `0xc45a0155`, GCS-cached, same shape as sibling `evm_creation_resolver.py`/`block_resolver.py`)
+  - `scripts/resolve_dex_pool_factory_addresses_2026_08_09.py` (enumerates unique `pool_address` from the defi lifecycle
+    catalogue — single-walk-compliant, no raw corpus walk — resolves via RPC, writes a resolution report parquet). Ran
+    it live against SUSHISWAP-ARBITRUM: 12,910/12,910 pool addresses resolved, 100% match the V2 (classic) factory
+    (`0xc35DADB65012eC5796536bD9864eD8773aBc74C4`) — corroborated independently by `capability_declarations/_defi.py`
+    documenting the `"sushiswap"` subgraph slug MTDS captures Arbitrum from as legacy-V2-only (Messari
+    `liquidityPoolDailySnapshots` schema), so this is a deterministic 1:1 remap, not a mixed cohort. Registered
+    `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` in UAC `ALL_DEFI_VENUES` (phase="pipeline", not "live" — neither is
+    `_build_defi_venues()`-producible today, matches the METEORA-SOLANA declared-but-not-adapter- backed precedent) +
+    `PROTOCOL_LAUNCH_DATES`/pending-investigation entries. Commits: `instruments-service@fa54f1d8` (resolver + script +
+    tests, landed `origin/live-defi-rollout`), `unified-api-contracts@ed6b4c78` (venue registration + test, landed
+    `origin/live-defi-rollout` — recovered via `git reflog` + `cherry-pick` after the first quickmerge attempt hit the
+    known `quickmerge_agent_regate_resets_branch_loses_local_commit_2026_07_31.md` bug and dropped the original commit
+    `69206506`; re-verified `ed6b4c78` an ancestor of origin independently via `git merge-base --is-ancestor` after the
+    retry, not just trusting quickmerge's own success message). UNISWAP-ETHEREUM cohort (~13,420 rows) was NOT
+    enumerated or resolved this session. The GCS-object/manifest migrate+purge step (5)-(6) is genuinely heavy
+    full-corpus I/O — scoped out as VM-launcher work per the workspace rule, not attempted inline; split into the new
+    follow-up todo above.
 - 2026-08-09 (slot 2, data_engineering worker): Todo 6 (derivative_ticker/InstrumentType ratification) closed on live
   re-verification, not new execution. Drift-only funding window aggregates were already removed
   (`market-tick-data-service@5f659c12`, 2026-07-15) and the whole DRIFT-SOLANA vertical was removed platform-wide the
