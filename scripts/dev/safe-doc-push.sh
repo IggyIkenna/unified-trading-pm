@@ -102,6 +102,26 @@ if [[ ! -d .git ]]; then
   exit 2
 fi
 
+# push-host-governor.sh (2026-08-09, cross-slot push contention): stubs defined FIRST so a
+# missing/stale PM checkout can never break this script (no `set -e` here, but keep the same
+# always-defined convention as quickmerge.sh for consistency) -- source only OVERRIDES them.
+# This script's own header already requires "Run from the target repo's root", so cwd's parent
+# is this host's workspace root (the sibling-repos layout every slot clone shares) -- same rule
+# qg-host-governor.sh's _qg_shared_root and quickmerge.sh's WORKSPACE_ROOT both use.
+push_gov_acquire_validate() { :; }
+push_gov_release_validate() { :; }
+push_gov_acquire_push() { :; }
+push_gov_release_push() { :; }
+_SDP_REPO_NAME="$(basename "$(pwd)")"
+# WORKSPACE_ROOT (not a script-local name): push-host-governor.sh's _push_gov_shared_root
+# reads this exact env var to find the host-shared lock dir -- must be set before sourcing.
+WORKSPACE_ROOT="$(cd .. && pwd)"
+_SDP_PUSH_GOV_FILE="$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/push-host-governor.sh"
+if [[ -f "$_SDP_PUSH_GOV_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$_SDP_PUSH_GOV_FILE"
+fi
+
 for f in "${FILES[@]}"; do
   if [[ ! -e "$f" ]]; then
     # Not on disk -- still acceptable if git knows this path, e.g. the source half of a
@@ -322,6 +342,10 @@ locked_git_commit() {
   local lock_fd=222 lock_file rc before_snapshot race_files
   lock_file="$(git rev-parse --git-dir 2>/dev/null)/quickmerge-commit.lock"
   before_snapshot="$(_prek_race_snapshot)"
+  # push-host-governor.sh (2026-08-09): host-wide validation-phase token (K=8 default) around
+  # the hook-chain-running commit call, nested OUTSIDE the pre-existing per-checkout flock below
+  # (same split as quickmerge.sh's _qm_locked_git_commit).
+  push_gov_acquire_validate
   if [[ -z "$lock_file" || "$lock_file" == "/quickmerge-commit.lock" ]]; then
     git commit "$@"
     rc=$?
@@ -335,6 +359,7 @@ locked_git_commit() {
     git commit "$@"
     rc=$?
   fi
+  push_gov_release_validate
   if [[ -n "$before_snapshot" ]] && ! race_files="$(_prek_race_check "$before_snapshot")"; then
     echo "❌ prek stash/restore race detected — these unstaged file(s) changed content DURING the commit (not something this script did):" >&2
     echo "$race_files" | sed 's/^/  - /' >&2
@@ -348,6 +373,15 @@ locked_git_commit() {
 MAX_ATTEMPTS=6
 committed=false
 final_ok=false
+
+# push-host-governor.sh (2026-08-09): the whole retry loop below IS this script's git-remote
+# critical section (fetch -> reconcile -> commit -> push) -- acquire the per-repo+branch mutex
+# once, outside the loop, so this script's own retries never contend with THEMSELVES, and so
+# every fetch/rebase/push attempt inside sees a base no other slot is concurrently mutating.
+# Released once, right after the loop, on success or exhausted-retries alike; a hard `exit`
+# from inside the loop (rebase conflict, non-drift push failure, a deterministic hook
+# rejection) auto-releases via the OS closing the FD on process death.
+push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
 
 for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   echo "── attempt ${attempt}/${MAX_ATTEMPTS} ──"
@@ -456,6 +490,7 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   echo "❌ Push failed for a non-drift reason:"; cat /tmp/_sdp_push_err >&2
   exit 4
 done
+push_gov_release_push
 
 if [[ "$final_ok" != true ]]; then
   {

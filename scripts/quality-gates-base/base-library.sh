@@ -263,8 +263,13 @@ WORKSPACE_VENV="${REPO_ROOT}/.venv-workspace"
 if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]; then
     unset VIRTUAL_ENV   # never inherit an activated workspace venv from the parent shell
     # Single canonical uv version pin: unified-trading-pm/scripts/workspace/resolve-canonical-versions.py
+    # sed -E, not `grep -oP` (2026-08-09, quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md):
+    # -P is a GNU/PCRE extension; the /usr/bin/grep a bare subprocess resolves to on macOS (BSD grep,
+    # no PCRE) exits 2 on it, which this file's own `set -e` turns into a silent whole-script abort.
+    # sed -E is POSIX-portable across BSD and GNU sed alike. See scripts/setup.sh's sibling fix for
+    # the full incident writeup (same pattern, same root cause, copy-pasted into both files).
     _uv_pm_root="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}"
-    _uv_pin="$(grep -oP '^UV_VERSION = "\K[^"]+' "${_uv_pm_root}/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null)"
+    _uv_pin="$(sed -nE 's/^UV_VERSION = "([^"]+)"/\1/p' "${_uv_pm_root}/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null)"
     command -v uv &>/dev/null || pip install "uv${_uv_pin:+==$_uv_pin}" --quiet
     # uv-version drift-guard — WARN-ONLY (mirrors base-service.sh; same rationale + SSOT).
     _uv_ver="$(uv --version 2>/dev/null | awk '{print $2}')"

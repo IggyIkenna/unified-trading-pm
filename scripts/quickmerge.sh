@@ -96,6 +96,24 @@ WORKSPACE_ROOT="$(cd "$REPO_ROOT/.." && pwd)"
 # Fallback: .act-secrets at repo root (e.g. single-repo dev)
 [ ! -f "${WORKSPACE_ROOT}/.act-secrets" ] && [ -f "${REPO_ROOT}/.act-secrets" ] && WORKSPACE_ROOT="$REPO_ROOT"
 
+# push-host-governor.sh (2026-08-09, cross-slot push contention): stubs defined FIRST,
+# unconditionally, so `set -e` above can never trip on "command not found" if the PM checkout
+# is missing/stale relative to this copy of quickmerge.sh -- source only OVERRIDES them with the
+# real implementation when found. Resolved via WORKSPACE_ROOT/unified-trading-pm (not SCRIPT_DIR)
+# because quickmerge.sh is a per-repo SYMLINK to PM's canonical copy: SCRIPT_DIR resolves to the
+# CALLING repo's scripts/ dir (a real, non-symlinked directory), not PM's -- WORKSPACE_ROOT is the
+# one path that resolves to PM's checkout regardless of which repo's symlink invoked this script
+# (same rule already used by PM_DIR below).
+push_gov_acquire_validate() { :; }
+push_gov_release_validate() { :; }
+push_gov_acquire_push() { :; }
+push_gov_release_push() { :; }
+_QM_PUSH_GOV_FILE="$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/push-host-governor.sh"
+if [ -f "$_QM_PUSH_GOV_FILE" ]; then
+  # shellcheck disable=SC1090
+  source "$_QM_PUSH_GOV_FILE"
+fi
+
 # Act secrets: prefer UNIFIED_TRADING_WORKSPACE_ROOT when set (portable across team); else use computed WORKSPACE_ROOT
 ACT_SECRETS_ROOT="${UNIFIED_TRADING_WORKSPACE_ROOT:-$WORKSPACE_ROOT}"
 [ -f "${ACT_SECRETS_ROOT}/.act-secrets" ] && export ACT_SECRETS_FILE="${ACT_SECRETS_ROOT}/.act-secrets"
@@ -1964,9 +1982,16 @@ _qm_restage_target_files() {
 _qm_locked_git_commit() {
   local lock_fd=222 lock_file rc
   lock_file="$(git rev-parse --git-dir 2>/dev/null)/quickmerge-commit.lock"
+  # push-host-governor.sh (2026-08-09): host-wide validation-phase token (K=8 default) around
+  # the hook-chain-running commit call itself, nested OUTSIDE this pre-existing per-checkout
+  # flock (that one only prevents the prek-stash-restore race WITHIN one checkout; this one
+  # bounds how many checkouts host-wide run prek's synchronous hook chain at once).
+  push_gov_acquire_validate
   if [ -z "$lock_file" ] || [ "$lock_file" = "/quickmerge-commit.lock" ]; then
     git commit "$@"
-    return $?
+    rc=$?
+    push_gov_release_validate
+    return "$rc"
   fi
   if command -v flock >/dev/null 2>&1 && eval "exec ${lock_fd}>\"\$lock_file\"" 2>/dev/null; then
     flock "$lock_fd"
@@ -1974,9 +1999,13 @@ _qm_locked_git_commit() {
     rc=$?
     flock -u "$lock_fd" 2>/dev/null || true
     eval "exec ${lock_fd}>&-" 2>/dev/null || true
+    push_gov_release_validate
     return "$rc"
   fi
   git commit "$@"
+  rc=$?
+  push_gov_release_validate
+  return "$rc"
 }
 
 # Bounded retry for a commit-time branch-drift race (ao_quickmerge_stage5_
@@ -2029,6 +2058,17 @@ if [ -n "$_QM_PRE_HOOK_UNSTAGED" ]; then
 $_QM_PRE_HOOK_UNSTAGED
 EOF
 fi
+
+# push-host-governor.sh (2026-08-09): from here through the post-push ancestry check below is
+# the actual git-remote critical section (commit-retry's own fetch+rebase reconciliation, then
+# push-retry's own fetch+rebase+push) -- everything ABOVE this point (STAGE 0-5, the Pass-1 QG
+# re-verification) stays UNGATED and runs with real cross-slot concurrency, exactly per the
+# operator-agreed split: only the part that actually collides on GitHub's single-writer ref
+# gets serialised. Released once, on the success path after ancestry verification; every exit 1
+# between here and there auto-releases via the OS closing the FD on process death (see the
+# governor file's own header) so a failure never leaves the next queued slot waiting forever.
+push_gov_acquire_push "$REPO_NAME" "$BRANCH"
+
 _QM_FRESH_COMMIT=0
 _QM_COMMIT_RETRY_MAX=15
 _QM_COMMIT_ATTEMPT=0
@@ -2256,6 +2296,7 @@ if ! git merge-base --is-ancestor "$_QM_PUSHED_SHA" "origin/$BRANCH" 2>/dev/null
   exit 1
 fi
 echo "[$REPO_NAME] ✅ post-push ancestry verified — ${_QM_PUSHED_SHA:0:9} is an ancestor of origin/$BRANCH"
+push_gov_release_push
 
 # Extract issue references from commit message for PR body
 ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+" || echo "")

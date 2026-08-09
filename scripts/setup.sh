@@ -445,7 +445,16 @@ log_step "Bootstrap uv"
 # uv is pinned for lockfile determinism — an unpinned uv reformats uv.lock (revision bump)
 # even with identical deps, dirtying trees + jamming the FF-pull cron.
 # SSOT for the pin (single canonical definition): unified-trading-pm/scripts/workspace/resolve-canonical-versions.py
-UV_VERSION="$(grep -oP '^UV_VERSION = "\K[^"]+' "$WORKSPACE_ROOT/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null)"
+# sed -E, not `grep -oP` (2026-08-09, quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md):
+# `grep -P` is a GNU/PCRE extension -- the /usr/bin/grep a bare `bash script.sh` subprocess resolves
+# to on macOS (BSD grep 2.6.0-FreeBSD, no PCRE support) exits 2 on `-P` with "invalid option -- P".
+# Under this script's `set -e` that killed the WHOLE script silently, right after this step's own
+# banner printed, with the venv/QG steps below never running -- reproduced live, byte-for-byte, via
+# `bash -c 'grep -oP ...'` on this host. A human's interactive shell can mask this if a homebrew
+# grep happens to shadow /usr/bin/grep on PATH, but an agent's `bash script.sh` subprocess gets no such
+# shadowing, which is why this only ever bit agent-driven commits. sed -E is POSIX-portable (BSD and
+# GNU sed both support -E), so this works identically regardless of PATH order or host OS.
+UV_VERSION="$(sed -nE 's/^UV_VERSION = "([^"]+)"/\1/p' "$WORKSPACE_ROOT/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null)"
 
 if [ "$IN_CI" = true ]; then
     log_skip "CI mode"
