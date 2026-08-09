@@ -212,11 +212,15 @@ ever applied after an explicit operator ruling — filed here, not edited:
       codex doc's § 3 now lists surface (d): `status: draft` satellite batches from either skill's prior run. The
       originating todo (`na_and_ag_closeout_audit_population_overlap_2026_07_31.md:141`) still tracks the SKILL.md
       cross-reference half of the same fix separately — not duplicated here.
-- [ ] [OPERATOR] P3. `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:159`'s Class-B table says
+- [x] ✅ [DOCS] P3. `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:159`'s Class-B table said
       `plan_reconciler` (this very role) runs "daily 01:00 UTC, opus" — current reality is sharded-by-tranche,
-      hourly-retry-until-capacity, sonnet (per `daily_trading_analyst_llm_job_design_2026_07_29.md`'s 07-28/29 rulings
-      and this dispatch's own MODEL=claude-sonnet-5). Self-referential — worth fixing since it's the SSOT for how this
-      role is supposed to be scheduled.
+      2h-retry-until-capacity Sun-Fri / unsharded `all` Saturday, sonnet (per
+      `daily_trading_analyst_llm_job_design_2026_07_29.md`'s 07-28/29 rulings and this dispatch's own
+      MODEL=claude-sonnet-5). **Fixed 2026-08-09 (interactive session)**: the opus/schedule half was already corrected
+      in `unified-trading-pm@879b8e9907`, but that fix carried this finding's OWN stale "hourly-retry" phrasing forward
+      verbatim — the installer was widened hourly→every-2h on 2026-07-30, before this finding was filed. Corrected in
+      `unified-trading-pm@717a17bdfa`. Separately, `plan_reconciler` itself graduated to STEADY STATE (direct push, no
+      review PR) 2026-08-09 — see `agents/plan_reconciler.md`.
 - [ ] [OPERATOR] P3. `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` self-declares
       `authoritative_for` the archival ritual, but the real "never combine flip+`git mv`" rule lives only in
       `agents/RULES.md`; 10+ plans miscite the source.
