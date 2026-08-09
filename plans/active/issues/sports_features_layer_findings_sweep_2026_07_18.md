@@ -616,7 +616,17 @@ a credential ask.
         `bash deployment-service/scripts/vm/launch-sports-scheduler-vm.sh` (the singleton lock confirms no running
         instance; SPOT OK per the scheduler's GCS-state-backed resume design). (c) Verify via a sample day's manifest
         that all 6 forward horizons (T-24h/T-12h/T-6h/T-4h/T-2h/T-1h) show full per-fixture coverage. (repo:
-        deployment-service). Source: this DIAG's residual finding, 2026-08-04.
+        deployment-service). Source: this DIAG's residual finding, 2026-08-04. **Already extracted — see
+        `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s `[CONFIG] P2` todo (line ~85, `assigned_vm: planning`,
+        still `- [ ]` open there too as of 2026-08-09) — not duplicating here.** Round-9 sweep flag (2026-08-09), for
+        whoever picks up batch10's copy: `sports_satellite_ao_dispatch_batch11_2026_08_09.md`'s Deferred section
+        found this todo's "relaunch the sports-scheduler VM" premise may be stale — 3 independent, more current active
+        docs (`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`,
+        `sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`,
+        `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`) establish `sports-scheduler` actually
+        runs as the Cloud Run Job `uts-prod-sports-scheduler` via `uts-prod-sports-scheduler-cron` (`*/5 * * * *`), not
+        a standalone VM, and that exact job is under active OOM investigation right now — verify the real launch
+        mechanism before executing step (b) as literally written.
 - [x] [CONFIG] P1. Enable the live in-play connector (`market_tick_data_service/live/connectors/odds_api_ws.py`) now
       that credentials exist — this is what populates the HT horizon, which currently emits nothing. HT is already
       declared in `MODEL_HORIZONS` + `FEATURE_HORIZONS`, so it populates with NO contract change. (Its prior
@@ -625,7 +635,10 @@ a credential ask.
       VM, 60s poll) per `sports_live_availability_and_source_latency_2026_07_24.md`'s LIVE_ODDS row and
       `sports_predictions_live_mode_activation_readiness_2026_07_21.md`'s 2026-07-29 update. No action needed here.
 - [ ] [MODEL] P2. Consider adding T-6h or T-2h as a MODEL horizon: both carry 68 fixtures vs T-24h's 25 (2.7x coverage),
-      are safely pre-match, and fall after most team news.
+      are safely pre-match, and fall after most team news. **Resolved by the dated `✅ OPERATOR RULING 2026-08-08`
+      banner at the top of this doc** (add BOTH, not either/or) — implemented by
+      `sports_taxonomy_p3_consumers_2026_08_08.md`'s `[CODE] P0` todo (line ~125, `assigned_vm: planning`, reconfirmed
+      still open/active 2026-08-09). Not duplicating here.
 
 ---
 
@@ -783,3 +796,11 @@ have moved; use the section index above to locate it.
   Neither item is dispatchable from this doc without duplicating an already-active plan in the same `parent_epic` — no
   reclassification, citation-only.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA-STALE, valid — verdict unchanged from 2026-08-08, added
+  inline citations at both open todos (§E `[CONFIG] P2` line ~611, §E `[MODEL] P2` line ~627) rather than only here.
+  New this pass: `sports_satellite_ao_dispatch_batch11_2026_08_09.md`'s Deferred section (dated yesterday/today)
+  flagged the `[CONFIG] P2` item's "relaunch the sports-scheduler VM" premise may be stale (real mechanism is the
+  Cloud Run Job `uts-prod-sports-scheduler`, not a VM script) and conflicts with an active OOM investigation
+  (`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`) — flagged inline at the todo itself for whoever
+  executes batch10's copy; not re-extracted here (already `assigned_vm: planning` there, still open). `[MODEL] P2`
+  reconfirmed still tracked and active in `sports_taxonomy_p3_consumers_2026_08_08.md`. Doc stays `assigned_vm: NA`.
