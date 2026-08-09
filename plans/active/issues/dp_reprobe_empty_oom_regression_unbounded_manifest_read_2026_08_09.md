@@ -157,9 +157,10 @@ Mechanical, bounded fix — mirror the already-proven `daily_digest.py` pattern:
       below is no longer a hedge against "if 32Gi isn't enough" — that condition is now live and confirmed; escalated
       its priority to P1 accordingly. Repo: deployment-service.
 - [x] ✅ [CODE] P1 _(escalated from P2 2026-08-09 — the memory-ceiling path is now confirmed exhausted, not
-      hypothetical; see the INFRA P1 entry above)_. **DONE (code) 2026-08-09 (slot 15) — row-group/column pushdown
-      shipped + measured; LIVE re-trigger in flight, see Progress Log for the Cloud Build ID to check on resume.** The
-      root cause underneath both this doc and `daily_digest.py`'s original fix is the same:
+      hypothetical; see the INFRA P1 entry above)_. **DONE 2026-08-09 (slot 15) — row-group/column pushdown shipped,
+      measured, AND live-verified: `uts-prod-dp-reprobe-empty-zp9h2` completed successfully in 1m46.82s, processing all
+      5 AGs including `defi` (the AG that OOM-killed every prior run) — see Progress Log for the full execution log.**
+      The root cause underneath both this doc and `daily_digest.py`'s original fix is the same:
       `_dp_common.read_manifest_index()` downloads the ENTIRE compressed parquet blob into memory before doing a
       column-restricted decode — the column restriction only bounds the DECODE step, not the download/buffer-retention
       step, so as the underlying manifest grows without bound, every caller's memory floor grows with it regardless of
@@ -315,12 +316,20 @@ Mechanical, bounded fix — mirror the already-proven `daily_digest.py` pattern:
      74 after). Full `quality-gates.sh` green (68s), sentinel matches shipped HEAD.
   5. **Shipped**: `e2e-testing@64d369a` — Pass-1 QG sentinel verified == Pass-2 HEAD; `git merge-base --is-ancestor`
      confirmed on `origin/live-defi-rollout`.
-  6. **Live re-verification**: `uts-prod-dp-reprobe-empty` runs a prebuilt `e2e-audit:latest` image (Cloud Run, not
-     live-source) — rebuilt via
+  6. **Live re-verification — TERMINAL SUCCESS, OOM regression CLOSED.** `uts-prod-dp-reprobe-empty` runs a prebuilt
+     `e2e-audit:latest` image (Cloud Run, not live-source) — rebuilt via
      `gcloud builds submit --config=cloudbuild-e2e-audit.yaml --project=central-element-323112`, build
-     `c37724c7-032c-418f-b77e-cd8f9c495bac` → **SUCCESS**. Manually re-triggered
-     `gcloud run jobs execute uts-prod-dp-reprobe-empty --region=asia-northeast1 --wait` with the new image — result
-     pending at time of this entry; see the immediately-following entry (or check
-     `gcloud run jobs executions list --job=uts-prod-dp-reprobe-empty --region=asia-northeast1 --limit=1` on resume if
-     this session ended before it completed) for the terminal verdict against the todo's own done-when (all 5 AGs
-     complete without "configured memory limit was reached").
+     `c37724c7-032c-418f-b77e-cd8f9c495bac` → SUCCESS. Manually re-triggered
+     `gcloud run jobs execute uts-prod-dp-reprobe-empty --region=asia-northeast1 --wait` with the new image: **execution
+     `uts-prod-dp-reprobe-empty-zp9h2` completed successfully in 1m46.82s**
+     (`status.conditions[type=Completed].message`: "Execution completed successfully in 1m46.82s.",
+     `Container called exit(0)`) — the todo's own done-when (all 5 AGs complete without "configured memory limit was
+     reached") is met. Live log confirms every AG processed, including `defi` (the AG that died every prior run): `cefi`
+     20:42:29 → `defi` 20:43:15 (~46s, previously OOM-killed ~51s into this exact AG) → `tradfi` 20:43:17 → `sports`
+     20:43:18 → `prediction` 20:43:25, each logging "0 new SOURCE_RETURNED_ZERO empties on 2026-08-09". The "0 new"
+     result for `defi` is EXPECTED given the separately-filed date-column bug
+     (`reprobe_date_column_resolution_prefers_blank_available_at_2026_08_09.md` — `available_at` blank means the date
+     filter excludes every row regardless of the OOM fix), not a sign the fix under-selected; the measured 3,897-row
+     `SOURCE_RETURNED_ZERO` population (step 1 above) still exists in the manifest and will surface once that separate
+     bug is fixed. **This CODE P1 todo's own scope — fix the OOM so reprobe completes — is fully done and
+     live-verified.**
