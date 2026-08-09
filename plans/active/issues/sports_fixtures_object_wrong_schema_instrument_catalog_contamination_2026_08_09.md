@@ -338,3 +338,16 @@ transcript available in that session's Progress Log entry on
   OTHER Pattern-A launcher too (fix landed in git ≠ fix live on the GCS-hosted startup script) — worth a todo to
   reconsider the default, or at minimum to make every fresh-fix relaunch pass `LC_SETUP_SCRIPT_FRESHNESS=enforce`
   explicitly rather than relying on the warn-mode default.
+
+- **2026-08-09 (slot-16, data_engineering)**: relaunch #2 (`sports-schema-census-instruments-store-20260809-224053`)
+  **SUCCEEDED**. Watchdog rounds 1-3 showed healthy, monotonically growing progress (`log_bytes`/`validated_lines`
+  climbing, `stall_count` resetting to 0 each round) — well past the ~T+4min point where both prior attempts died with
+  zero log content. Instance self-deleted after `startup-script-url: === VM setup complete ===` (confirmed via
+  `gcloud logging read` serial-port log, no ERROR/FAILED/Traceback lines in the run). Report confirmed present and
+  non-trivial:
+  `gs://instruments-store-sports-prd-central-element-323112/_index/audit/sports_reference_schema_census_sports-schema-census-instruments-store-20260809-224053.parquet`
+  (116775 bytes, verified via `gcloud storage du -s`). This closes the `instruments-store-sports-prd` half of todo 1's
+  scope — the `lc_verify_setup_script_freshness` freshness-race root cause (Progress Log entry above) is now confirmed
+  correct by this clean success under `LC_SETUP_SCRIPT_FRESHNESS=enforce`. **Next**: launching the `features-sports-prd`
+  target VM (same script, `enforce` mode carried forward) to complete the other half of todo 1's scope before the report
+  can be consolidated and the todo checked off.
