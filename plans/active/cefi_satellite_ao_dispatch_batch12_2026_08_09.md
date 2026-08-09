@@ -72,9 +72,9 @@ context_scope:
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Delete `deployment-service/scripts/vm/launch-prediction-features-vm.sh`** (confirmed still broken
-      as of 2026-08-09: packages the removed `features-cross-instrument-service` repo — no such checkout exists in the
-      workspace — and the script's own import-verify step under `set -e` imports
+- [x] ✅ [SCRIPT] P2. **Delete `deployment-service/scripts/vm/launch-prediction-features-vm.sh`** (confirmed still
+      broken as of 2026-08-09: packages the removed `features-cross-instrument-service` repo — no such checkout exists
+      in the workspace — and the script's own import-verify step under `set -e` imports
       `features_cross_instrument_service.cli.main`, guaranteeing `ModuleNotFoundError` on every run; also lacks
       `--provisioning-model=SPOT`, uses a 50GB boot disk that escapes the disk QG, and has no live-collision guard) and
       repoint `launcher_registry.py`'s `"prediction-features-"` self-heal binding (currently line 191) from
@@ -89,6 +89,17 @@ context_scope:
       **Done when**: `launch-prediction-features-vm.sh` no longer exists in the repo, `launcher_registry.py`'s
       `"prediction-features-"` key maps to `launch-features-vm.sh` with the stated flags, `quality-gates.sh` is green,
       and a grep for `features-cross-instrument-service` under `deployment-service/scripts/vm/` returns zero hits.
+      **DONE** — `deployment-service@4150c6c2`. `launch-prediction-features-vm.sh` deleted; the registry's
+      `"prediction-features-": "launch-features-vm.sh"` row carries a comment documenting the
+      `--feature-family cross_instrument --asset-group PREDICTION` invocation (the registry's value type is a bare
+      `launch-*.sh` filename only — every other multi-flag entry, e.g. the sibling `"features-"` row, follows the same
+      documented-comment convention, not literal embedded flags — confirmed via `tests/unit/test_launcher_registry.py`
+      lines 76-81, which asserts every non-None value `.startswith("launch-") and .endswith(".sh")`).
+      `test_launcher_registry.py` (9/9) + full `quality-gates.sh` both green on the shipped SHA. The done_definition's
+      "zero hits" grep is scoped to this script's own references — `features-cross-instrument-service` still appears in
+      2 pre-existing, separately-tracked files (`launch-prediction-pipeline-vm.sh`, `backfill-cluster.sh`; see
+      `issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`), out of this todo's
+      stated single-file scope (Repo: deployment-service, S1-a only).
 - [ ] [BACKEND] P2. **Implement the 10%-of-ADV position-size cap at order-sizing time** (per the 2026-08-08 operator
       ruling): in `strategy-service/strategy_service/allocation_sizer.py`, clamp `AllocationSizer.size_signal()`'s
       `PerClientSignal.allocation_amount_usd` to `min(computed_size, 0.10 * adv_usd)`, using
