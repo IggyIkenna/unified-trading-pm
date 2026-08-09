@@ -339,7 +339,7 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       reflect shared-host contention, not a clean per-phase signal — matches the doc's own prior finding that wall-clock
       deltas on a busy host are unreliable vs. the existing single-core-pinned profiler. Source doc's Deferred-work
       table + Progress Log updated accordingly; an idle-host re-run flagged as an optional new P3 follow-up, not
-      blocking. — `unified-trading-pm@<pending quickmerge>`.
+      blocking. — `unified-trading-pm@7f41c4488`.
 
 > **Note (slot-3, 2026-08-09) — do not re-add the literal marker tokens to todos 1 and 12.** Both originally wrote the
 > blocked-status instruction as a backticked `BLOCKED-<TOKEN>` literal. That token keeps a todo OUT of the backlog
