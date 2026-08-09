@@ -54,6 +54,15 @@ depends_on: []
 - All repos FF-pulled clean at run start (PM was 85 commits behind — the previously-reported FF-PULL-STARVATION dirty
   file had already been resolved by the time this run started; siblings were already current).
 
+## Todos
+
+- [ ] [DOCS] P3. **Repoint `ao_satellite_ao_dispatch_batch5_2026_08_03.md`'s reference to
+      `ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md`** from the old active path to
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` (now archived, this run). Blocked
+      this run by the 12h grace window (`batch5` was 5h old at report time) — pick up once it ages out, or whenever a
+      future `ao`-tranche pass touches it anyway. Single-line fix, closes the `Reference path convention` ratchet
+      regression noted below (86→87). **Done when**: the reference resolves + the existence-check count returns to ≤86.
+
 ## Flips verified
 
 1. **`ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md`** sole open todo (archive the batch4 plan) — already done.
@@ -273,6 +282,21 @@ recommendation; no action needed.
 - **Routed = parked check** (Phase 5.9(a)): 3 `/blocked` alerts posted this round (`BLK-a30d3bc0` locked_by bogus-lock,
   `BLK-a8e76fb3` PR pileup, `BLK-26742a3d` near-complete-docs class question); all 3 also filed durably above
   (`routed == parked`, both = 3).
+
+## Exit-gate hygiene sweep (Phase 5 — `run_hygiene_sweep.sh --ci`, run at report time)
+
+3 hard failures corpus-wide. **2 are pre-existing** — confirmed unchanged from this run's own STEP-1 entry sweep
+(`Silent-default-effort plans`, `Archive candidates` — both already `❌ FAIL` at 2026-08-09T02:58Z, before any edit this
+session; corpus-wide ratchets outside this shard's `ao`-tranche mandate, not investigated further here). **1 is a new,
+understood, temporary regression I caused and cannot fix this run**: `Reference path convention (existence)` went from
+baseline 86 to **87** dangling refs. Root cause: archiving `ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md`
+(Archived section above) turned `ao_satellite_ao_dispatch_batch5_2026_08_03.md`'s existing reference to it into a
+dangling one — but `batch5` itself is a 12h-grace-window doc this run (5h old at report time, still grace-protected), so
+I cannot edit it to repoint the reference without violating the grace-window HARD LIMIT. This is the same gap already
+noted under "Archived" and "Filed" above. **Self-resolves** the moment `batch5` ages out of grace (≈7h from report time)
+and any future `ao`-tranche pass repoints the one reference — a single-line fix, not a design decision. Did not
+re-baseline the ratchet to paper over this (the docstring's own guidance is to re-baseline only pre-existing drift, and
+this is freshly self-caused) — reporting it honestly instead, per Phase 5.9(e).
 
 ## Plans not reached
 
