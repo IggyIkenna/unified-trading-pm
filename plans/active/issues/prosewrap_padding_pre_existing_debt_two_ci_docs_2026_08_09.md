@@ -45,6 +45,7 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true
 ---
 
 ## What I found
@@ -84,7 +85,7 @@ semantic change), confirm `check_prosewrap_padding.sh` passes clean afterward, s
       line's leading-whitespace run to sane indentation. Verify content-only via `git diff -w` (zero semantic change)
       before shipping. **Done when**: `check_prosewrap_padding.sh --only <path>` passes clean on that file. (repo:
       unified-trading-pm)
-- [ ] [BACKEND] P3. Hand-repair the ~61 over-padded continuation lines in
+- [x] ✅ [BACKEND] P3. Hand-repair the ~61 over-padded continuation lines in
       `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (starting ~line 26), collapsing each flagged
       line's leading-whitespace run to sane indentation. Verify content-only via `git diff -w` (zero semantic change)
       before shipping. **Done when**: `check_prosewrap_padding.sh --only <path>` passes clean on that file. (repo:
@@ -102,3 +103,13 @@ semantic change), confirm `check_prosewrap_padding.sh` passes clean afterward, s
   (empty output) and zero remaining lines with >=14 leading spaces in the file. `check_prosewrap_padding.sh --only`
   passes clean. Todo 2 (`uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`) left untouched — out of this
   task's dispatched scope.
+- **2026-08-09 (slot 30, backend_engineer) — todo 2 DONE**: hand-repaired all 91 over-padded continuation lines in
+  `uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (2 blocks: lines 232-325 and 367-378 at the time of
+  the fix — over-indented at 30/46 leading spaces vs the sibling checkbox-continuation convention of 6; count grew from
+  the issue doc's originally-cited ~61 to 91 due to further intervening prettier passes on this doc between filing and
+  this fix). Collapsed each flagged line's leading-whitespace run to 6 spaces (matching adjacent unaffected continuation
+  lines in the same list items). Verified content-only via `git diff -w` (empty output) and 0 remaining lines with >=14
+  leading spaces. `check_prosewrap_padding.sh --only <path>` passes clean. Both todos now closed; this issue doc is now
+  archival-eligible. Set `archive_exempt: true` on this flip-only commit per the documented two-commit bridge
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "archive_exempt: true is the sanctioned
+  bridge") — the immediately-following `git mv` archival commit drops the field.
