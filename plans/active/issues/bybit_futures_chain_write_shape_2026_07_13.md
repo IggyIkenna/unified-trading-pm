@@ -215,3 +215,4 @@ workspace).
   decision (with a Done-when and the delete-safety-protocol cite) instead of leaving it as prose, so the doc no longer
   misreads as fully resolved to a future archive-candidate sweep. `locked_by: live-defi-rollout` unchanged — no archival
   action taken or implied.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

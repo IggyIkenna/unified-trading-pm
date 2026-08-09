@@ -251,3 +251,4 @@ explicitly declined to rule on D1-D4 ("weren't in scope of this governance pass"
 `[OPERATOR]` todo. All 3 open items chained behind the single unruled D1-D4 gate. No `assigned_vm` change.
 
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

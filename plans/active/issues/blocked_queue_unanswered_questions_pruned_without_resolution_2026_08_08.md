@@ -142,3 +142,4 @@ explicitly expired-with-signal.
   consistent with a size-cap/LRU-style eviction (65-66 entries observed live) or some other non-time-uniform mechanism.
   Worth checking entry count/ordering effects, not just age, when doing the `[BACKEND]` code read. No action taken on
   the task itself — still correctly parked, no autonomous unlock, no re-filing.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.

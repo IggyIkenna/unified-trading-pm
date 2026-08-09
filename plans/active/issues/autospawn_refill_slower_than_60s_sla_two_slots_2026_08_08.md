@@ -43,6 +43,13 @@ locked_by:
 source:
   "review (agent-orchestrator loop tick, msg 4091, ~2026-08-08T11:22Z); main independently verified via /api/state read"
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/autospawn.py,
+    /agents/worker.md,
+    /plans/active/issues/one_shot_complete_session_ownership_desync_2026_08_08.md,
+    /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
+  ]
 ---
 
 # AutoSpawn refill slower than documented ~60s SLA — two data points
@@ -136,3 +143,4 @@ impact — both are self-healing idle-capacity gaps, not silent failures.
   10/11/13/16/21's current respawn status was not performed this session. `status` left `open` (unarchived-terminal-
   status is a hard gate; the companion finalize plan verifies the evidence then flips `status: resolved` + archives in
   one step, per convention). Unblocks the companion finalize plan's evidence-check + archival todos.
+- **context-scout 2026-08-09**: populated context_scope (4 entries).

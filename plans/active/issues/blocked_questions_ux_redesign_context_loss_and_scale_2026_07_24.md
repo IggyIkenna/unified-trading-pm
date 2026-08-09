@@ -234,3 +234,5 @@ exists" section together before scoping the workstream.
       derived backlog row (RULES.md §4/§5) once regen re-derives it. Repo: unified-trading-pm (doc restructure) or
       agent-orchestrator (if `regen_backlog_from_plan.py` needs a new per-todo `depends_on_todo` primitive to express
       this without a doc split — worth checking before hand-rolling the split).
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
