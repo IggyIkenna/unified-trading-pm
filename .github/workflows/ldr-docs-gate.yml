@@ -65,6 +65,7 @@ jobs:
       verdict: ${{ steps.gate.outputs.verdict }}
       excerpt: ${{ steps.gate.outputs.excerpt }}
       attribution: ${{ steps.gate.outputs.attribution }}
+      recovered: ${{ steps.recovery.outputs.recovered }}
     steps:
       - name: Checkout live-defi-rollout
         uses: actions/checkout@v5
@@ -77,6 +78,14 @@ jobs:
           # commit even a day or two back (measured ~280 commits/day touching plans/+codex/ ⇒
           # 500 comfortably covers 40+ hours), while staying far short of full history.
           fetch-depth: 500
+
+      - name: Restore ldr-docs-gate alert state cache
+        uses: actions/cache@v5
+        with:
+          path: .ldr-docs-gate-alert-state.json
+          key: ldr-docs-gate-alert-state-${{ github.run_id }}
+          restore-keys: |
+            ldr-docs-gate-alert-state-
 
       - uses: actions/setup-python@v6
         with:
@@ -117,6 +126,18 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           exit "$RC"
 
+      # `if: always()` — the gate step above deliberately exits non-zero on red, which would
+      # otherwise skip every later step in this job (Actions' default `if: success()`).
+      - name: Compute recovery transition (state-diffed)
+        id: recovery
+        if: always()
+        run: |
+          CURRENT_ALERT="false"
+          [ "${{ steps.gate.outputs.verdict }}" = "red" ] && CURRENT_ALERT="true"
+          python3 scripts/cicd/alert_recovery.py \
+            --state-file .ldr-docs-gate-alert-state.json \
+            --current "$CURRENT_ALERT" >> "$GITHUB_OUTPUT"
+
   notify-broken-docs:
     needs: frontmatter-gate
     if: always() && needs.frontmatter-gate.outputs.verdict == 'red'
@@ -134,6 +155,28 @@ jobs:
       # One page per breakage episode, not per subsequent hourly recheck while red.
       dedup_key: "ldr-docs-gate-red"
       cooldown_min: 60
+    secrets: inherit
+
+  # ── RESOLVED bookend (2026-08-08) ──────────────────────────────────────────────────────
+  # Previously only `notify-broken-docs` existed — silence on the NEXT green hourly tick was
+  # the only signal the corpus was fixed. State-diffed via the shared alert_recovery.py helper
+  # (mirrors branch-health.yml's lag-notify-resolved pattern).
+  notify-docs-resolved:
+    name: Slack — ldr-docs-gate RESOLVED
+    needs: frontmatter-gate
+    if: always() && needs.frontmatter-gate.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":ballot_box_with_check: *BROKEN DOC FRONTMATTER RESOLVED* on live-defi-rollout — the corpus frontmatter gate is
+        green again (prior hourly tick was red)"
+      severity: "INFO"
+      conclusion: "success"
+      recovery: true
+      workflow_name: "ldr-docs-gate"
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "ldr-docs-gate-resolved"
+      cooldown_min: 15
     secrets: inherit
 
   escalate-plan-health:

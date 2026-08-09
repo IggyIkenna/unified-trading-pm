@@ -44,11 +44,19 @@ jobs:
       stuck: ${{ steps.scan.outputs.stuck }}
       report: ${{ steps.scan.outputs.report }}
       max_streak: ${{ steps.scan.outputs.max_streak }}
+      recovered: ${{ steps.recovery.outputs.recovered }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
+      - name: Restore sit-gate-stuck alert state cache
+        uses: actions/cache@v5
+        with:
+          path: .sit-gate-stuck-alert-state.json
+          key: sit-gate-stuck-alert-state-${{ github.run_id }}
+          restore-keys: |
+            sit-gate-stuck-alert-state-
       - name: Scan ldr-to-main-promote-fleet.yml for a SIT-gate-block streak
         id: scan
         env:
@@ -67,6 +75,13 @@ jobs:
             echo "$REPORT"
             echo "__EOR__"
           } >> "$GITHUB_OUTPUT"
+
+      - name: Compute recovery transition (state-diffed)
+        id: recovery
+        run: |
+          python3 scripts/cicd/alert_recovery.py \
+            --state-file .sit-gate-stuck-alert-state.json \
+            --current "${{ steps.scan.outputs.stuck }}" >> "$GITHUB_OUTPUT"
 
   notify:
     needs: check
@@ -88,4 +103,26 @@ jobs:
       # dedupes for the full hour.
       dedup_key: sit-gate-stuck-${{ needs.check.outputs.max_streak }}
       cooldown_min: 60
+    secrets: inherit
+
+  # ── RESOLVED bookend (2026-08-08) ──────────────────────────────────────────────────────
+  # Previously no all-clear path — a per-streak-value dedup_key means the alert also never
+  # re-posts on its own once the streak resets to 0, so silence was the only "it cleared"
+  # signal. State-diffed via the shared alert_recovery.py helper.
+  notify-resolved:
+    name: Slack — sit-gate-stuck-detector RESOLVED
+    needs: check
+    if: needs.check.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":ballot_box_with_check: *sit-gate-stuck-detector: RESOLVED* — the SIT-gate-block streak has cleared (prior tick
+        paged WARNING)"
+      severity: INFO
+      conclusion: success
+      recovery: true
+      workflow_name: sit-gate-stuck-detector
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: sit-gate-stuck-resolved
+      cooldown_min: 30
     secrets: inherit
