@@ -476,8 +476,14 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     export UV_CACHE_DIR="${UV_CACHE_DIR:-${_uv_ws_common}/.uv-cache}"
     export UV_LINK_MODE="${UV_LINK_MODE:-hardlink}"
     # Single canonical uv version pin: unified-trading-pm/scripts/workspace/resolve-canonical-versions.py
+    # PORTABILITY (found 2026-08-09, same class as the DI-check fix at line ~1507): macOS `/usr/bin/grep`
+    # (BSD) does NOT support `-P` and exits 2 on it. This line ran unguarded (no `|| :`, no `2>/dev/null`
+    # swallowing the exit status) directly under `set -e`, so on every macOS slot the WHOLE gate script
+    # aborted right after the dep-content gate with NO error output at all (grep's usage error went to
+    # stderr but the script exit trapped silently) — blocking ALL local QG runs host-wide, not just this
+    # repo. `rg --pcre2` is byte-identical local↔CI (ripgrep's bundled PCRE2, not the platform grep).
     _uv_pm_root="${WORKSPACE_ROOT:-$(cd "${_uv_repo_root}/.." && pwd)}"
-    _uv_pin="$(grep -oP '^UV_VERSION = "\K[^"]+' "${_uv_pm_root}/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null)"
+    _uv_pin="$(rg --pcre2 -o '^UV_VERSION = "\K[^"]+' "${_uv_pm_root}/unified-trading-pm/scripts/workspace/resolve-canonical-versions.py" 2>/dev/null || :)"
     command -v uv &>/dev/null || pip install "uv${_uv_pin:+==$_uv_pin}" --quiet
     # uv-version drift-guard — WARN-ONLY (never blocking; the fix is a one-line realign, not a gate).
     # The workspace uv pin above (uv_lockfile_determinism_2026_06_02.md — committed uv.lock files
