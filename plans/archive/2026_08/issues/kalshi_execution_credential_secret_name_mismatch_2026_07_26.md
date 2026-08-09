@@ -14,7 +14,7 @@ summary: >-
   the likely reason the Kalshi execution paper- order flow "was never actually verified end-to-end"
   (kalshi_live_capture_regression_and_drift_ 2026_07_13.md): it is not that nobody got to it, it is that the wiring is
   broken and would fail the moment anyone tried.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [execution]
@@ -133,12 +133,12 @@ Two directions, both viable, not adjudicated by this doc:
       `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, verified live, updated that codex doc's
       grants list. `routing.py`/`sports_factory.py` left unchanged (Option A requires no code change — confirmed by
       reading both files first). (repo: execution-service config only, + GCP Secret Manager; no code shipped)
-- [ ] [DATA] P1. **RULED 2026-08-06 (operator): NO — do not touch the live exchange.** The 2026-07-28 ruling's scope
-      limit stands; placing a real order on `api.elections.kalshi.com` remains unauthorized. The original verification
-      ask (`kalshi_live_capture_regression_and_drift_2026_07_13.md`) stays unfulfillable as literally worded — find a
-      non-live verification path (e.g. a sandbox/testnet host if Kalshi offers one, or verify the
-      order-submit/fill/ack/position-update code path via mocked responses instead of a real venue call) rather than
-      re-asking this question. **BLOCKED-OPERATOR-DECISION 2026-07-31** (see
+- [x] ✅ [DATA] P1. **DONE 2026-08-09 — `execution-service@577b9a884`.** RULED 2026-08-06 (operator): NO — do not touch
+      the live exchange. The 2026-07-28 ruling's scope limit stands; placing a real order on `api.elections.kalshi.com`
+      remains unauthorized. The original verification ask (`kalshi_live_capture_regression_and_drift_2026_07_13.md`)
+      stays unfulfillable as literally worded — find a non-live verification path (e.g. a sandbox/testnet host if Kalshi
+      offers one, or verify the order-submit/fill/ack/position-update code path via mocked responses instead of a real
+      venue call) rather than re-asking this question. **BLOCKED-OPERATOR-DECISION 2026-07-31** (see
       `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 for the full question + options — filed there, not
       duplicated here). Once the credential wiring is fixed, place a real Kalshi paper order through execution-service
       end-to-end (order submit → fill/ack → position update) against the elections-subdomain host and capture
@@ -149,7 +149,14 @@ Two directions, both viable, not adjudicated by this doc:
       codebase's own `OperationalMode.PAPER` never calls any real venue API at all (routes everything through a
       simulated `PaperBettingAdapter`), so "paper order" cannot mean that, and the operator's 2026-07-28 ruling on this
       doc explicitly scoped itself to the secret-reshape todo above ("does not touch the exchange side at all") — it
-      never separately authorized placing a real order on the live exchange. (repo: execution-service)
+      never separately authorized placing a real order on the live exchange. (repo: execution-service) **EXECUTED
+      2026-08-09 (slot 19, data_engineering)**: tried option A (Kalshi demo host) live first — the provisioned
+      `kalshi-api-key-id`/`kalshi-private-key-pem` secrets were rejected by `demo-api.kalshi.co` (HTTP 401, demo needs
+      its own separate account/API key not obtainable here), ruling it out — then shipped option C instead:
+      `execution-service/tests/sports_execution/unit/test_kalshi_adapter.py::TestKalshiEndToEndMockedVerification`, 3
+      new tests loading the real GSM-provisioned credentials and exercising order-submit through fill/ack through
+      position-update with HTTP mocked at the adapter boundary, never contacting any Kalshi host. Full detail and
+      evidence: `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5's "Todo 2 EXECUTED 2026-08-09" note.
 
 ## Progress Log
 
@@ -192,3 +199,6 @@ Two directions, both viable, not adjudicated by this doc:
   `assigned_vm: planning`/`status: active`, todo 5 still open). The 2026-08-07 marker's flagged sync-gap (the 2026-08-06
   "no live order, find a non-live path" ruling not yet mirrored into batch6 todo 5) is still unresolved — not this doc's
   fix to make (batch6 is its own owner's file). Doc stays NA.
+- **2026-08-09 (slot 19, data_engineering)**: both todos now `[x]` — the sole open item (`[DATA] P1`) executed per the
+  2026-08-06 ruling (option C, mocked-response verification; option A tried live first, ruled out — see the todo's own
+  evidence note). `execution-service@577b9a884`. This doc has no open todos remaining.
