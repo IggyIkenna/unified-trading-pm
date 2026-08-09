@@ -30,7 +30,7 @@ related:
 created: "2026-08-09"
 author: data_engineering (slot 15)
 parent_epic: observability_master
-resolved_by:
+resolved_by: e2e-testing@9c75040
 locked_by:
 locked_since:
 source: >-
@@ -42,9 +42,18 @@ execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true
 ---
 
 # reprobe's date-column resolution prefers a blank `available_at` over a populated `written_at`
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED** (status: resolved, 0 open todos, unlocked). Fixed (e2e-testing@9c75040):
+> `_select_new_empties()` now resolves the date column via a new `_resolve_date_column()` helper that picks the first
+> `_DATE_COLUMNS` entry present AND carrying ≥1 non-blank value among the candidate rows, instead of the first present
+> NAME — so a wholesale-blank `available_at` no longer short-circuits past a populated `written_at`. Verified via a
+> regression test (`test_reprobe_prefers_populated_written_at_over_blank_available_at`, `tests/unit/test_dp_audit.py`)
+> reproducing this doc's exact fixture shape, plus a full green QG (178 tests, forced full re-run bypassing the content
+> sentinel).
 
 ## What I found
 
@@ -92,8 +101,14 @@ manifest schema reliably populates) is checked before `available_at`, if `availa
 shape is a crosscutting pattern (not defi-specific) — verify against at least one other AG's real manifest before
 reordering, since a per-AG override could otherwise regress an AG where `available_at` IS populated.
 
-- [ ] [CODE] P2. Fix `_select_new_empties()`'s date-column resolution in `reprobe_new_empty_confirmed.py` so it does not
-      silently pick a present-but-blank `_DATE_COLUMNS` entry over a populated one — verify against the real defi
+- [x] ✅ [CODE] P2. Fix `_select_new_empties()`'s date-column resolution in `reprobe_new_empty_confirmed.py` so it does
+      not silently pick a present-but-blank `_DATE_COLUMNS` entry over a populated one — verify against the real defi
       manifest (today's date filter must actually match `SOURCE_RETURNED_ZERO` rows written today, not return zero
       candidates). Add a regression test using a fixture where `available_at` is present-but-blank and `written_at` is
-      populated. (repo: e2e-testing)
+      populated. (repo: e2e-testing) — e2e-testing@9c75040. Added `_resolve_date_column()` helper: picks the first
+      `_DATE_COLUMNS` entry that is present AND has ≥1 non-blank value among the candidate rows, instead of the first
+      present NAME — the `next(...)` short-circuit no longer stops on a wholesale-blank `available_at` before reaching a
+      populated `written_at`. Regression test `test_reprobe_prefers_populated_written_at_over_blank_available_at` added
+      to `tests/unit/test_dp_audit.py` (blank `available_at` + populated `written_at` fixture, asserts only the row
+      whose `written_at` matches `day` is selected). Full QG (178 tests, forced full re-run bypassing the content
+      sentinel) green on 9c75040.
