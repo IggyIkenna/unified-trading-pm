@@ -74,7 +74,7 @@ source: >-
 
 ## Todos
 
-- [ ] 1. [DOC] P2. **Sync 3 stale CI-infrastructure codex docs to the now-current dedicated-CI-VM state.** All three
+- [x] ✅ 1. [DOC] P2. **Sync 3 stale CI-infrastructure codex docs to the now-current dedicated-CI-VM state.** All three
       describe an infrastructure topology that changed materially in the last 3 weeks and is now stable enough to
       document for real (verify every fact against LIVE state before writing — do not copy the source doc's numbers
       blind, it is itself several days old): (a) `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md` —
@@ -194,3 +194,17 @@ source: >-
 
   **Net: 15 docs read, 2 items extracted total (1 here + 1 in the sibling batch 8), 13 docs contributed zero.** This is
   the honest yield of a corpus this heavily pre-mined — not a shortfall in this pass's thoroughness.
+
+- **2026-08-09 (execution)** — Todo 1 done. All 3 codex docs rewritten with every fact live-verified against AWS
+  (`describe-instances`/`describe-volumes`) and the repo's own workflow-template config, not copied from the source
+  audit doc: CI-runner VM `i-042a6332509482556` confirmed `m8i.2xlarge` (8 vCPU/32GB, downsized 2026-08-08 from
+  `c8i.4xlarge` — the source doc's own agent-orchestrator-deploy.md text had this wrong as `m8i.4xlarge`→`m8i.2xlarge`
+  on the wrong date 2026-08-07, both fixed), root volume `vol-03880fe9bf1ea805b` confirmed 12,000 IOPS/312 MB/s
+  (matching that instance's EBS baseline, not the stale 6,000/500 interim figure); planning VM `i-0c9b283b31d6b5ca7`
+  confirmed `m8i.2xlarge`/running, now stated explicitly as a distinct box from the CI VM; self-hosted repo set
+  re-derived live from `scripts/workflow-templates/self-hosted-qg-repos.txt` (7 private repos, matches the todo's list
+  exactly); the fork-PR security grep re-run live (zero matches); the `unified-trading-pm`-public-with-self-hosted
+  incident updated from "open P0" to "RESOLVED 2026-08-07" with the standing invariant + live check documented.
+  `last_reviewed`/`last_updated` bumped to 2026-08-09 on all three. Files:
+  `codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`,
+  `codex/07-security/self-hosted-runner-security-posture.md`, `codex/05-infrastructure/agent-orchestrator-deploy.md`.

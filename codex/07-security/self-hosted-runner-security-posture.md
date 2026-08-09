@@ -28,7 +28,7 @@ created: 2026-07-17
 authoritative_for: [self-hosted runner ambient-identity posture, glue-runner credential-exposure facts]
 referenced_by: []
 owner:
-last_reviewed: 2026-08-07
+last_reviewed: 2026-08-09
 code_refs: [unified-trading-pm/scripts/self-hosted-runners/]
 ---
 
@@ -37,31 +37,52 @@ code_refs: [unified-trading-pm/scripts/self-hosted-runners/]
 > Provenance: `/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md` (STEP 2 self-hosting migration,
 > 2026-07). Operator directive 2026-07-16: record the posture explicitly — "important, not blocking".
 
-## Dedicated VM (update, 2026-08-05) — mitigation ladder step 3 is now DONE
+## Dedicated VM (update, 2026-08-09) — mitigation ladder step 3 is DONE; box since downsized
 
 The runner pools no longer run on the orchestrator box. They were split onto a dedicated VM, `ci-escalation-runner-vm-1`
-(`i-042a6332509482556`, private IP `172-31-3-59`, `c8i.4xlarge`, SSM-only — no public IP, no SSH), separate from the
-planning VM (`i-0c9b283b31d6b5ca7`, EIP `13.113.200.22`) that runs agent-orchestrator. This was primarily a capacity fix
-(colocation was the root cause of a fleet-wide CI capacity crisis —
-`/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`), and it **completes the
-mitigation ladder's step 3 below** (moving runner pools to their own box). **Correction (2026-08-08): this does NOT
-decouple identity** — the runner VM was launched with the SAME AWS IAM instance profile (`uts-orchestrator-epic`) and
-the SAME GCP service account (`unified-trading-sa`, freshly-keyed but not a distinct/scoped SA) as the orchestrator box
+(`i-042a6332509482556`, private IP `172.31.3.59`, SSM-only — no public IP, no SSH), separate from the planning VM
+(`i-0c9b283b31d6b5ca7`, EIP `13.113.200.22`) that runs agent-orchestrator. Live-confirmed 2026-08-09
+(`aws ec2 describe-instances --instance-ids i-042a6332509482556`): instance type **`m8i.2xlarge`** (8 vCPU / 32 GB) —
+downsized 2026-08-08 from the original `c8i.4xlarge` (16 vCPU / 32 GB) per the CI-VM cost/I/O audit's post-fix load data
+(`/plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` Part 5 + Part 8); state
+`running`, AZ `ap-northeast-1c`. This split was primarily a capacity fix (colocation was the root cause of a fleet-wide
+CI capacity crisis — `/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`), and it
+**completes the mitigation ladder's step 3 below** (moving runner pools to their own box). **This does NOT decouple
+identity** — the runner VM was launched with the SAME AWS IAM instance profile, live-confirmed `uts-orchestrator-epic`
+(`arn:aws:iam::427895769566:instance-profile/uts-orchestrator-epic`, identical to the planning VM's own profile,
+`aws ec2 describe-instances --instance-ids i-042a6332509482556 i-0c9b283b31d6b5ca7`, 2026-08-09) and the SAME GCP
+service account (`unified-trading-sa`, freshly-keyed but not a distinct/scoped SA) as the orchestrator box
 (`/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md` todo 3's evidence). A glue job's
 ambient identity still doubles as the agent-orchestrator's own identity — that decoupling is step 2 below, **not yet
 done**. Deploy reference: `/codex/05-infrastructure/agent-orchestrator-deploy.md` § "CI-runner fleet". Relaunch runbook:
 `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`.
 
-## Public-repo / fork-PR threat model (NOT covered by the posture below — track separately)
+## Current self-hosted repo set (re-derived live, 2026-08-09)
+
+Source of truth: `unified-trading-pm/scripts/workflow-templates/self-hosted-qg-repos.txt`. Exactly **7 repos**, all
+private, remain routed to self-hosted for genuine billing reasons — every other repo the fleet ever routed here (public
+repos get free/unmetered GitHub-hosted minutes, so routing them here only added exposure + contention for no benefit)
+has been reverted to `ubuntu-latest`:
+
+`agent-orchestrator` · `strategy-service` · `e2e-testing` · `features-service` · `market-tick-data-service` ·
+`execution-service` · `ml-service`
+
+## Public-repo / fork-PR threat model — the `unified-trading-pm` exposure is RESOLVED (2026-08-07)
 
 The posture below assumes **every repo routing to self-hosted labels is private, single-org** — that assumption is what
 makes ambient-identity exposure tenable. It does **not** hold for a public repo: a fork PR can trigger a
-self-hosted-routed workflow and run arbitrary code with this box's ambient AWS/GCP identity, a materially different (and
-more severe) threat than anything the mitigation ladder below addresses. `unified-trading-pm` itself was flipped public
-2026-08-06 while still routing ~8 workflows to this pool — tracked as a P0 in
-`/plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24. The durable fix is **not running
-self-hosted on a public repo at all** (revert to `ubuntu-latest`, which is free/unmetered for public repos anyway);
-GitHub's fork-PR approval gate is a partial mitigation only if self-hosted routing is kept for some other reason.
+self-hosted-routed workflow and run arbitrary code with this box's ambient AWS/GCP identity, a materially more severe
+threat than anything the mitigation ladder below addresses. `unified-trading-pm` was flipped public 2026-08-06 while
+still routing ~8 workflows to this pool — a real P0 exposure, live-confirmed CLOSED: PM's ~40 self-hosted-routed
+workflows were fully reverted to `ubuntu-latest` (`unified-trading-pm@c8cd56251e`,
+`/plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md` todo 24), and `self-hosted-qg-repos.txt` itself
+documents PM's removal from the list 2026-08-07. **Standing invariant going forward: never register a self-hosted runner
+pool on a public repo.** The standing live check —
+`grep -lE '^\s*runs-on: \[self-hosted' .github/workflows/*.yml | xargs grep -lE '^\s*(pull_request|pull_request_target):'`
+— must return **zero** matches in any repo before it is added to `self-hosted-qg-repos.txt`; re-verified zero in
+`unified-trading-pm` 2026-08-09 as part of this update. This incident is the concrete lesson behind that invariant — the
+exposure existed for the better part of a day (2026-08-06 → 2026-08-07) before the revert landed, purely because no step
+checked repo visibility before adding a repo to the self-hosted list.
 
 ## TL;DR
 
