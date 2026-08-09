@@ -3,7 +3,7 @@ doc_type: plan
 title: DeFi satellite AO batch 2 — finalize (reconcile source docs + resolve deferrals + archive)
 summary: >-
   Gated closeout for defi_satellite_ao_dispatch_batch2_2026_07_26.md — machine-held via depends_on + gate_on_depends:
-  true until all 23 of that plan's todos are done. Mirrors batch1-finalize's pattern (reconcile each distinct source
+  true until all 22 of that plan's todos are done. Mirrors batch1-finalize's pattern (reconcile each distinct source
   doc's checkboxes independently once its batch-2 todo lands, then re-check the Deferred conflict-gated/
   operator-gated/time-gated/too-large/human-only items for any that have since cleared), then archives batch2 via the
   standard 6-step ritual. Also carries the follow-up for batch2's 3 non-actioned findings (2 mistag retags + 1
@@ -56,7 +56,7 @@ context_scope:
 # DeFi satellite AO batch 2 — finalize
 
 > **Machine-gated on `defi_satellite_ao_dispatch_batch2_2026_07_26.md`** (`depends_on` + `gate_on_depends: true`) — the
-> dispatcher will not queue any todo below until all 23 tasks in that plan are `done`. `sequential: true` because todo 2
+> dispatcher will not queue any todo below until all 22 tasks in that plan are `done`. `sequential: true` because todo 2
 > (deferred re-check) needs todo 1's reconciliation done first, and todo 4 (archival) must run last.
 
 ## Todos
@@ -89,7 +89,14 @@ context_scope:
       `mtds_perp_funding_backfill_hang_2026_07_14.md` (batch2's "Note — 1 doc found archivable_now") via the standard
       6-step ritual. **Done when**: item (1) is retagged with `check_ag_closeout_linkage.py` passing 0 new orphans; item
       (2) is either retagged (lock cleared) or explicitly re-deferred with the lock status re-checked and cited; item
-      (3) is moved to `plans/archive/2026_07/` with every corpus referrer fixed.
+      (3) is moved to `plans/archive/2026_07/` with every corpus referrer fixed. **STATE CHANGE NOTE (2026-08-09,
+      plan_reconciler agt-2d9a32, verified via `find`/`git log`)**: item (3) is ALREADY DONE —
+      `mtds_perp_funding_backfill_hang_2026_07_14.md` is archived at
+      `/plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md` (`unified-trading-pm@bec54efeb`); do not
+      re-run its archival when this todo dispatches. Item (1)'s target has ALSO moved to
+      `/plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` (`status: resolved`,
+      banner "ARCHIVED 2026-07-28") but its `asset_group: [defi]` frontmatter was never corrected — the retag action
+      itself is still valid, just target the new archived path, not the old `plans/active/` one.
 - [ ] [DOC] P1. **Archive `defi_satellite_ao_dispatch_batch2_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have already resolved or re-confirmed all 20 — verify none silently vanish) → add the archive banner → run

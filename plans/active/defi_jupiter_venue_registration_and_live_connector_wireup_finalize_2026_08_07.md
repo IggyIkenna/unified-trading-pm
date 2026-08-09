@@ -53,14 +53,17 @@ Machine-held (`gate_on_depends: true`) until every todo in
 
 ## Todos
 
-- [ ] [REVIEW] P2. Re-verify each of the build plan's 6 todos' cited commits/evidence actually exist
+- [ ] [REVIEW] P2. Re-verify each of the build plan's 8 todos' cited commits/evidence actually exist
       (`git log`/`git show` against a fresh `git pull --ff-only` on each of `unified-api-contracts`,
       `instruments-service`, `market-tick-data-service`, `execution-service`, `unified-trading-pm` — don't trust the
       build plan's own evidence lines uncritically). Confirm todo 6's edits landed correctly: both
       `defi_adapter_dead_code_audit_2026_07_24.md` §6 checkboxes flipped with a real pointer to the build plan (not
       duplicated content), and `/codex/04-architecture/solana-defi-coverage.md`'s JUPITER MTDS-role line updated to
-      reflect the shipped connector. Done-when: all 6 todos' evidence independently re-verified, any mis-citation found
-      is corrected in the build plan directly.
+      reflect the shipped connector. Done-when: all 8 todos' evidence independently re-verified (including todos 7-8,
+      "Close out the audit doc + refresh the Solana-DeFi codex SSOT" and "Capture the two missing WS frame cassettes" —
+      **CORRECTED 2026-08-09 (plan_reconciler agt-2d9a32)**: this line previously said "6 todos", independently
+      recounted at 8 via the live source doc; the original wording risked todos 7-8's evidence never being re-verified
+      once this gate releases), any mis-citation found is corrected in the build plan directly.
 - [ ] [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual (per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` and this finalize doc itself: archive

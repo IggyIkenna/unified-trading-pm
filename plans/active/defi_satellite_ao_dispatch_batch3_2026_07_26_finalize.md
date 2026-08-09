@@ -3,7 +3,7 @@ doc_type: plan
 title: DeFi satellite AO batch 3 — finalize (reconcile source docs + resolve deferrals + archive)
 summary: >-
   Gated closeout for defi_satellite_ao_dispatch_batch3_2026_07_26.md — machine-held via depends_on + gate_on_depends:
-  true until all 12 of that plan's todos are done. Mirrors batch1/batch2-finalize's pattern (reconcile each distinct
+  true until all 13 of that plan's todos are done. Mirrors batch1/batch2-finalize's pattern (reconcile each distinct
   source doc's checkboxes independently once its batch-3 todo lands, then re-check the Deferred
   operator-gated/conflict-gated/non-batchable items for any that have since cleared), then archives batch3 via the
   standard 6-step ritual. Also carries the follow-up for batch3's non-actioned findings (2 archivable_now docs to
@@ -59,7 +59,7 @@ context_scope:
 
 > **🟡 status: draft** — inert until its parent `defi_satellite_ao_dispatch_batch3_2026_07_26.md` is operator-approved
 > (flipped to `active`) and dispatched. **Machine-gated on that plan** (`depends_on` + `gate_on_depends: true`) — the
-> dispatcher will not queue any todo below until all 12 of its tasks are `done`. `sequential: true` because todo 2
+> dispatcher will not queue any todo below until all 13 of its tasks are `done`. `sequential: true` because todo 2
 > (deferred re-check) needs todo 1's reconciliation first, and todo 4 (archival) must run last.
 
 ## Todos

@@ -1,9 +1,9 @@
 ---
 doc_type: plan
-title: DeFi satellite AO batch 9 — finalize (reconcile 17 source docs + archive)
+title: DeFi satellite AO batch 9 — finalize (reconcile 18 source docs + archive)
 summary: >-
   Gated closeout for defi_satellite_ao_dispatch_batch9_2026_08_06.md — machine-held via depends_on + gate_on_depends:
-  true until every one of that plan's 17 todos is done. Mirrors batch1-8-finalize: reconcile each of the 17 source docs
+  true until every one of that plan's 18 todos is done. Mirrors batch1-8-finalize: reconcile each of the 18 source docs
   (flip/cite the item each batch9 todo closed), re-check the 2 conflict-parked Deferred items + the 33 non-batchable
   Deferred items for whether any blocking condition has since cleared, then archive batch9 via the standard 6-step
   ritual.
@@ -53,17 +53,17 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 9 — finalize
 
-**status: active — gated on batch9's 17 todos via `depends_on` + `gate_on_depends: true`; the dispatcher will not
+**status: active — gated on batch9's 18 todos via `depends_on` + `gate_on_depends: true`; the dispatcher will not
 release these until batch9 is fully done.** (Batch9 itself stays `status: draft` until the operator approves dispatch —
 this finalize plan needs no separate flip, `gate_on_depends` holds it correctly either way per the "no double gate"
 finding in `cursor-configs/skills/ag-closeout-audit/SKILL.md`.)
 
 ## Todos
 
-- [ ] [DOC] P1. **Source-doc reconciliation**: for each of batch9's 17 todos, confirm the cited source doc's own open
-      item was actually flipped/closed-by-citation as that todo's Done-when specified (todos 1-17, one check each — most
+- [ ] [DOC] P1. **Source-doc reconciliation**: for each of batch9's 18 todos, confirm the cited source doc's own open
+      item was actually flipped/closed-by-citation as that todo's Done-when specified (todos 1-18, one check each — most
       todos already instruct flipping the source doc's own checkbox/status directly as part of their own Done-when, so
-      this is a verification pass, not new investigation). Repo: unified-trading-pm. Done when: every one of the 17
+      this is a verification pass, not new investigation). Repo: unified-trading-pm. Done when: every one of the 18
       source docs listed in batch9's todos either shows the item closed in its own text, or a citation note pointing
       back at the batch9 todo that closed it, with no orphaned "still looks open" gap.
 - [ ] [DOC] P2. **Re-check the Deferred items**: (a) the 2 conflict-parked BLOCKED-OPERATOR-DECISION items
@@ -88,6 +88,6 @@ finding in `cursor-configs/skills/ag-closeout-audit/SKILL.md`.)
 ## Progress Log
 
 - 2026-08-06 (scheduled `ag_closeout_auditor`, tranche=defi, autonomous, slot 3): Drafted alongside batch9,
-  `status: active`, gated on batch9's 17 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting on
+  `status: active`, gated on batch9's 18 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting on
   batch9's operator-approval flip to `active` and subsequent dispatch.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (5 entries)

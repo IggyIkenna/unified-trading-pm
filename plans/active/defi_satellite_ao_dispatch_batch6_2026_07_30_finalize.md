@@ -3,7 +3,7 @@ doc_type: plan
 title: DeFi satellite AO batch 6 — finalize (reconcile source docs + resolve deferrals + archive)
 summary: >-
   Gated closeout for defi_satellite_ao_dispatch_batch6_2026_07_30.md — machine-held via depends_on + gate_on_depends:
-  true until all 20 of that plan's todos are done. Mirrors batch1-5-finalize's pattern (reconcile each distinct source
+  true until all 26 of that plan's todos are done. Mirrors batch1-5-finalize's pattern (reconcile each distinct source
   doc's checkboxes independently once its batch-6 todo lands, then re-check the Deferred conflict-gated/
   operator-gated/time-gated/too-large/human-only items for any that have since cleared), then archives batch6 via the
   standard 6-step ritual. status: draft until the operator approves batch6 itself.
@@ -59,7 +59,7 @@ context_scope:
 
 ## Todos
 
-- [x] ✅ [DOC] P1. Once all 20 of `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s todos are `[x]`, reconcile each of
+- [x] ✅ [DOC] P1. Once all 26 of `defi_satellite_ao_dispatch_batch6_2026_07_30.md`'s todos are `[x]`, reconcile each of
       the ~21 distinct source docs (see that plan's Todos section, each ending `Source: ...`) — flip/annotate their own
       checkboxes with the batch-6 commit SHA, so a doc read independently (outside this batch) shows accurate state.
       Repo: unified-trading-pm. Done when: all source docs show an annotation citing the batch-6 todo + commit SHA that
@@ -92,7 +92,7 @@ context_scope:
 ## Progress Log
 
 - 2026-07-30 (slot-2, scheduled `ag_closeout_auditor`): Drafted alongside batch6, both `status: draft`, gated on
-  batch6's 20 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting on operator approval of batch6
+  batch6's 26 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting on operator approval of batch6
   first.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — fixed a duplicate `context_scope` frontmatter key.
