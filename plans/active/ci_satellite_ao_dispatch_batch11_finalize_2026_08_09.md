@@ -42,6 +42,7 @@ assigned_role: infra
 effort: low
 sequential: true
 drift_direction: none
+archive_exempt: true
 context_scope:
   [
     /plans/active/ci_satellite_ao_dispatch_batch11_2026_08_09.md,
@@ -57,7 +58,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile the parent doc's Residual-1 checkbox.** Once batch 11's todo lands (either the
+- [x] ✅ [REVIEW] P1. **Reconcile the parent doc's Residual-1 checkbox.** Once batch 11's todo lands (either the
       commit-and-verified-green outcome, or a clean `BLOCKED-*` report), update
       `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md` § "Residual 1": - If batch 11 shipped a real
       commit: flip the `[ ] [SCRIPT] P1.` checkbox to `[x]` ✅, citing the `unified-api-contracts` commit SHA and the
@@ -81,3 +82,15 @@ context_scope:
 - **2026-08-09** — Drafted alongside `ci_satellite_ao_dispatch_batch11_2026_08_09.md`. Authored `status: active` per the
   established no-double-gate precedent; batch 11 itself is also authored `status: active` per this task's explicit
   dispatch instructions.
+- **2026-08-09 (review slot-12)** — ✅ Todo 1 complete. Batch 11's todo landed on its own explicitly-valid
+  `BLOCKED-EXTRACTION-REGRESSION` outcome (not a shipped commit) — per this todo's own instructions, did NOT flip
+  Residual 1's checkbox in the parent doc; instead appended the blocked finding (root cause, before/after counts,
+  pointer to `venv_workspace_openapi_regen_batch11_findings_2026_08_09.md` todo 1 for the next picker-up) directly under
+  Residual 1 in `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`. Verified the one commit cited in
+  that append (`unified-trading-pm@026a84d6f6`, the venv root-cause fix) is a real ancestor of
+  `origin/live-defi-rollout` via `git merge-base --is-ancestor` before citing it. Residual 2 and the doc's overall
+  `assigned_vm`/`status` untouched, per instruction. `archive_exempt: true` added to this frontmatter as the documented
+  one-commit bridge for this exact same-day conflict between `check_archive_candidates --only` and the
+  never-combine-flip-and-mv SSOT — see
+  `issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md` (the `batch9_finalize`
+  precedent). Removed in the immediately-following archival commit, which performs the real 6-step ritual.
