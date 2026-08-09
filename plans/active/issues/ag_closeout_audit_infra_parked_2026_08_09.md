@@ -1,0 +1,212 @@
+---
+doc_type: issue
+title:
+  "Parked findings from the 2026-08-09 /ag-closeout-audit infra run (G1/G2 gate fully resolved — 4/4 G1 items confirmed
+  done via live-source cross-check, G2 extracted as batch9 alongside 3 codex-drift-followup fixes; 0 new
+  operator-decision findings; 2 carried findings unchanged, 1 evolving pointer)"
+summary: >-
+  The 2026-08-09 `/ag-closeout-audit infra` run (scheduled daily run, slot 22, dispatch agt-3b6f6b) re-derived the
+  candidate set via `generate_ag_closeout_audit_candidates.py --tranche infra` (13 never-cited pre-run / 11 post-run, 50
+  members pre-run / 49 post-run, 9 covering docs pre-run / 11 post-run). Step 1 of the iterative-drain methodology
+  re-checked `infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md`'s own gate LIVE against source code, not just doc
+  prose: G1 (the 4-item base-service.sh/base-library.sh bundle) is fully done — all 4 items landed silently over the
+  past 10 days via other channels (the 2026-07-30 domain-client base-gate retarget, `cve_affected_pinned_deps_
+  remediation_2026_06_18.md`'s 2026-07-30 fleet-wide pip/cryptography/idna/pygments ignore-vuln drop, and a pre-existing
+  uv drift-guard) and were never cross-referenced back to the gate doc or to a stale duplicate copy of item 1 in
+  `codex_violations_ratchet_to_five_2026_06_10.md` (both fixed this run). G2 (move the hardcoded UV version pin into a
+  canonical source) is confirmed still open, rescoped from 3 to 6 hardcoded sites on live re-count, and conflict-clear
+  now that G1's claim on the same 2 files has cleared — extracted into
+  `infra_satellite_ao_dispatch_batch9_2026_08_09.md` alongside 3 conflict-clear items from the same-day net-new
+  candidate `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` (stale `_AR_REPO` Cloud Build
+  substitution defaults, a possible orphaned trigger pair, dead `deployed_versions` provenance write-path). The gate doc
+  itself is now archived (0 open todos, unlocked). Classified the other 2 net-new candidates:
+  `operator_action_items_consolidated_2026_08_08.md` is a genuinely multi-tranche all-operator session digest (not a
+  mistag); `ag_closeout_audit_infra_parked_2026_08_08.md` (yesterday's own report) is non-batchable by design, carrying
+  forward unchanged. Findings 12/13 (DOCS P3 tooling/design, carried since 2026-08-03) and 22 (low-confidence retag flag
+  on `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md`, carried since 2026-08-08) re-verified
+  unchanged. Finding 21's pointer doc (`defi_gas_fees_legacy_purge...`) has evolved further since 2026-08-08 (a new
+  dispatch #7 VM failure recorded 2026-08-07) — still not infra's to write. Ran the Orthogonality HARD CHECK against the
+  full 9-tranche peer set: 9 corpus-wide dual-tag hits found (ao×2, ci×4, defi×1, tradfi×2), **zero infra-related** —
+  informational only, not this tranche's to fix. 0 new operator-decision-requiring findings this run.
+status: open
+nature: issue
+asset_group: [infrastructure]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: [infra, ag-closeout-audit, parked-findings, gate-resolution, batch-9, stale-checkbox]
+related:
+  [
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_08.md,
+    /plans/archive/2026_08/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md,
+    /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
+    /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
+    /plans/active/issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md,
+    /plans/active/issues/operator_action_items_consolidated_2026_08_08.md,
+    /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md,
+    /plans/active/issues/defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+    /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
+    /scripts/plan-hygiene/check_ag_closeout_linkage.py,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+  ]
+created: "2026-08-09"
+author: slot-22 (ag_closeout_auditor, infra tranche, dispatch agt-3b6f6b)
+last_updated: "2026-08-09"
+parent_epic: infrastructure_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P2
+estimate_class: infra
+estimate_baseline_ai_days: 0.2
+estimate_calibrated_ai_days: 0.16
+assigned_role: infra
+drift_direction: none
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+resolved_by:
+depends_on: []
+context_scope:
+  [
+    /plans/active/issues/ag_closeout_audit_infra_parked_2026_08_08.md,
+    /plans/archive/2026_08/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md,
+    /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+  ]
+source: >-
+  `/ag-closeout-audit infra` run 2026-08-09 (ag_closeout_auditor scheduled worker, slot 22, dispatch agt-3b6f6b,
+  one-shot). Phase 0 re-derived the covering set via `generate_ag_closeout_audit_candidates.py --tranche infra`.
+  Iterative-drain step 1 re-checked the prior gate doc live against source code before any fresh Phase-1 triage. Phase 1
+  direct-read the 3 net-new candidates. Ran `check_ag_closeout_linkage.py` corpus-wide (10 orphans vs baseline 49, 0
+  infra). Ran the Orthogonality HARD CHECK (comment-stripped, full 9-tranche peer set): 9 hits, 0 infra-related. Phase 3
+  conflict-checked G2 + the 3 codex-drift-followup items (grepped all 9 infra covering docs + corpus-wide per-target
+  greps, including a full read of `deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md` to rule out a
+  false collision between `_AR_REPO` and its own unrelated `_AR_REPO_OVERRIDES`) — all 4 conflict-clear, drafted
+  `infra_satellite_ao_dispatch_batch9_2026_08_09.md` + finalize twin.
+---
+
+# Parked findings — 2026-08-09 `/ag-closeout-audit infra` run
+
+## Resolved this run (not a parked finding — completed work)
+
+1. **`infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md`'s G1 gate (4-item base-service.sh/base-library.sh bundle) —
+   CONFIRMED FULLY DONE, archived.** Re-checked live against source code rather than trusting doc prose: (a)
+   domain-client base-gate retarget — `base-service.sh:1416-1426` reads "RETARGETED 2026-07-30"; (b) pip floor bump
+   (CVE-2026-3219/-6357/PYSEC-2026-196 ignore drops) — `QG_PIP_AUDIT_COMMON_IGNORES` confirmed empty in both files live,
+   landed via `cve_affected_pinned_deps_remediation_2026_06_18.md`'s 2026-07-30 fleet-wide sweep
+   (`unified-trading-pm@af08848b9`); (c) cryptography/idna/CVE-2026-4539 re-check — same sweep, floors bumped
+   2026-07-13/2026-07-30, ignore list empty; (d) uv drift-guard — live in both files, a pre-existing warn-only check.
+   None of these had ever been cross-referenced back to the gate doc. The gate doc is now archived
+   (`plans/archive/2026_08/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md`).
+2. **`codex_violations_ratchet_to_five_2026_06_10.md`'s own stale duplicate of G1 item 1 — flipped `[x]`.** Its
+   domain-client base-gate todo (line 363) still read `- [ ]` with 2026-07-27 "stays open" text, contradicting the live
+   fix above. Reconciled with full evidence this run.
+3. **`infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md`'s G2 gate — extracted, not left open.** See
+   `infra_satellite_ao_dispatch_batch9_2026_08_09.md` todo 1 (status: draft, awaiting operator review).
+
+## Carried forward, still OPEN (re-verified live this run)
+
+4. **[DOCS] P3 — `self_dispatched_orphan_count` tooling addition** (finding 12, carried since 2026-08-03, 7th
+   consecutive appearance) — not implemented
+   (`grep self_dispatched_orphan_count scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py` → no hits).
+   Design/tooling-priority call, not urgent. Unchanged.
+5. **[DOCS] P3 — Scope + conflict-check 2 flagged batch-era candidates** (finding 13, carried since 2026-08-03, 7th
+   consecutive appearance): `CITE_RE` hardening design; `repo_scripts_governance_audit_2026_06_18.md` L208/L213
+   (`status: active`, lines unchanged). Neither ready to batch as-is.
+6. **[OPERATOR] P3 — Low-confidence retag flag on
+   `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md`** (finding 22, carried since 2026-08-08,
+   2nd appearance) — still tagged `[infrastructure]`, not retagged. Unchanged; still not acted on given low confidence.
+
+## Evolving, still not infra's to write
+
+7. **`defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`'s item 1 — moved further, not
+   just stale (finding 21, carried since 2026-08-08).** The 2026-08-08 report described item 1 as done-but-unflipped
+   (citing `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s 2026-08-07 17:26Z evidence). Re-reading the source doc
+   today: it now shows a `[ ] [DATA] P1` entry dated "BLOCKED AGAIN 2026-08-07 (dispatch #7, `data_engineering`, slot
+   10)" — a VM that died ~09:17Z without completing, manifest not modified. This is DeFi-domain, fast-moving,
+   multi-dispatch content (item 2, `[DATA] P2` updating a sibling doc's stale numbers, is also still open) — not infra's
+   file to write per the owning-tranche rule, and not safely summarizable as either "done" or "still the same blocker"
+   without the defi tranche's own domain read. Handing forward unchanged as a pointer, not a decision.
+
+## New classifications this run (informational, not parked)
+
+### 8. `operator_action_items_consolidated_2026_08_08.md` — genuinely multi-tranche, not a mistag
+
+`asset_group: [cross-cutting, ao, cefi, ci, defi, infrastructure, sports]` (7 tags) — a deliberate end-of-session digest
+of every item needing the operator's own hands (secrets, GitHub UI clicks, git-stash human review, judgment calls,
+permanent hard-stops) across a whole 80-item Q&A session. Matches the Orthogonality check's own stated exemption ("the
+legitimate 'spans multiple/all 5 AGs + cross-cutting' pattern... fine as-is"). 100% `[OPERATOR]`-tagged content, zero
+worker-determinable items. No action needed from infra.
+
+### 9. `ag_closeout_audit_infra_parked_2026_08_08.md` — own prior report, non-batchable by design
+
+Yesterday's own output is itself now a corpus member (`assigned_vm: NA`, `status: open`) per the standard
+iterative-drain model. Its remaining open items are findings 12/13/21/22 above, already carried forward. Expected, not a
+defect.
+
+### 10. Orthogonality HARD CHECK — 9 corpus-wide dual-tag hits, 0 infra-related
+
+Ran the comment-stripped dual-tag grep against the full 9-tranche peer set:
+`context_scout_completion_and_ plan_brainstorm_skill_2026_07_30.md` `[ao, cross-cutting]`,
+`issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md` `[ci, cross-cutting]`,
+`issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` `[ao, cross-cutting]`,
+`issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md` `[ci, cross-cutting]`,
+`issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md` `[ci, cross-cutting]`,
+`issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md` `[cross-cutting, defi]`,
+`issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` `[ci, cross-cutting]`,
+`tradfi_unreachable_databento_data_types_line_cap_blocks_marker_2026_08_08.md` + its finalize twin
+`[cross-cutting, tradfi]`. **Zero `[infrastructure, cross-cutting]` hits** — consistent with 2026-08-08's independent
+finding of the same result. Recorded here for the record (not infra's to retag); the owning tranches (ao ×2, ci ×4, defi
+×1, tradfi ×2) should pick these up on their own runs if not already known.
+
+**Ledger**: 0 new operator-decision-requiring findings this run + 3 resolved entries (1-3, a first in a while — most
+runs only carry-forward) + 3 carried-forward items re-verified unchanged (4-6) + 1 evolving pointer re-verified (7) + 3
+informational classifications (8-10, not counted as parked) + 1 batch drafted (not counted as a parked finding — a
+shipped draft artifact, not an unresolved item) — **balanced**.
+
+## Todos
+
+- [ ] [DOCS] P3. **Consider a `self_dispatched_orphan_count` addition to `generate_ag_closeout_audit_candidates.py`**
+      (finding 12, carried, 7th day). Design/tooling-priority call, not urgent.
+- [ ] [DOCS] P3. **Scope + conflict-check the 2 flagged batch-era candidates** (finding 13, carried, 7th day: `CITE_RE`
+      hardening design; `repo_scripts_governance_audit_2026_06_18.md`'s L208/L213) before any future run drafts them.
+- [ ] [OPERATOR] P3. **Low-confidence: consider retagging
+      `defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md`** from `[infrastructure]` to
+      `[defi, infrastructure]` or bare `[defi]` (finding 22, carried, 2nd day) — recommendation B per the 2026-08-08
+      report, not acted on given low confidence.
+- [ ] [OPERATOR] P2. **Review + approve (or reject) `infra_satellite_ao_dispatch_batch9_2026_08_09.md`** (status: draft)
+      — 4 todos: UV-version-pin centralization (6 files) + 3 conflict-clear fixes extracted from
+      `codex_drift_followups_dual_cloud_image_builds_2026_08_08.md`. Flip to `status: active` to dispatch; its finalize
+      twin is already `status: active` and correctly gated either way.
+- [ ] [DOCS] P3. **Flip the stale checkbox on
+      `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`'s item 1 once its real current
+      state is confirmed** (finding 21/7, carried) — the doc has moved past the 2026-08-08 report's "done-but-unflipped"
+      read to a further "BLOCKED AGAIN 2026-08-07 dispatch #7" entry; needs the defi tranche's own domain read to state
+      accurately, not infra's file to write.
+
+## Progress Log
+
+- **2026-08-09** — `/ag-closeout-audit infra` run (autonomous mode, scheduled daily run, slot 22, dispatch agt-3b6f6b).
+  Phase 0: re-derived covering set (9→11 covering docs across the run as batch9 was added and the gate doc archived out;
+  50→49 members; 13→11 never-cited). Iterative-drain step 1: re-checked
+  `infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md` LIVE against source (not doc prose) — G1 fully done (4/4,
+  evidence above), G2 open + rescoped 3→6 sites, conflict-clear. Flipped the gate doc's own todo, archived it (0 open
+  todos, unlocked, 6-step ritual: banner added, referrer in yesterday's report repointed to the new archive path, no
+  codex-contract change needed, no CLAUDE.md change needed). Flipped `codex_violations_ratchet_to_five_2026_06_10.md`'s
+  stale duplicate of G1 item 1. Phase 1: direct-read the 3 net-new candidates
+  (`operator_action_items_consolidated_2026_08_08.md` → genuinely multi-tranche, not a mistag;
+  `ag_closeout_audit_infra_parked_2026_08_08.md` → own prior report, non-batchable by design;
+  `codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` → 4 of 5 findings conflict-clear/bounded, 1 operator-
+  gated). Ran `check_ag_closeout_linkage.py` corpus-wide (10 orphans vs baseline 49, 0 infra-tagged). Ran the
+  Orthogonality HARD CHECK (comment-stripped, full 9-tranche peer set): 9 hits, 0 infra-related (finding 10). Re-
+  verified findings 12/13/22 live, unchanged. Re-read finding 21's source doc — evolved further (new 2026-08-07 dispatch
+  #7 blocker), not infra's to write, handed forward as an updated pointer. Phase 3: conflict-checked G2 + the 3
+  codex-drift-followup items (including a full read of
+  `deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md` to rule out a false
+  `_AR_REPO`/`_AR_REPO_OVERRIDES` collision) — all conflict-clear, drafted
+  `infra_satellite_ao_dispatch_batch9_2026_08_09.md` + finalize twin (status: draft, awaiting operator review).
+  **Ledger**: 0 new operator-decision-requiring findings + 3 resolved + 3 carried-forward unchanged + 1 evolving
+  pointer + 3 informational classifications + 1 batch drafted — balanced.
