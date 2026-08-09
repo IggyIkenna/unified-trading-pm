@@ -74,7 +74,7 @@ context_scope:
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), and confirm `run_hygiene_sweep.sh` stays
       green. Repo: unified-trading-pm. Done-when: the file is under `plans/archive/2026_08/`, `status: complete`, 0
       broken referrer links, hygiene sweep green.
-- [ ] [DESIGN] P2. Decide + scope the RIGHT mechanism to make `PerpHedgeSizer.compute_rebalance()`/
+- [x] ✅ [DESIGN] P2. Decide + scope the RIGHT mechanism to make `PerpHedgeSizer.compute_rebalance()`/
       `.compute_margin_topup()` (Family-2 `CARRY_BASIS_PERP_INV`) live-reachable on its documented 5-min poll cadence
       (`perp_hedge_sizer.py:60-63`). The parent plan's todo 7 audit (2026-08-09, slot 8) confirmed execution-service has
       **no suitable existing poller**: `HealthFactorMonitor` (`defi_execution/monitors/health_factor_monitor.py`) is a
@@ -82,7 +82,7 @@ context_scope:
       `@app.on_event("startup")` or `cli/main.py`); `start_domain_config_reloaders()` (the one live-reachable
       scheduling-adjacent mechanism, `api/app.py:149-152`) wraps UTL's pub/sub event-driven `DomainConfigReloader` —
       wrong shape for a fixed-cadence business-logic tick; no Cloud-Scheduler-triggered HTTP endpoint exists anywhere in
-      the service. Candidate shapes to weigh (operator/main judgment call, not a worker's to freehand): (1) a new
+      the service. Candidate shapes weighed (operator/main judgment call, not a worker's to freehand): (1) a new
       `HealthFactorMonitor`-pattern in-process asyncio poll loop wired at `api/app.py` startup, one instance per open
       Family-2 position; (2) a Cloud-Scheduler-triggered admin HTTP endpoint (5-min cron hitting execution-service,
       mirroring how other periodic jobs in the workspace are wired — see
@@ -92,6 +92,40 @@ context_scope:
       execution-service. Repo: execution-service (+ possibly infra, if Cloud Scheduler is the ruled shape). Done-when:
       the operator/main rules on the mechanism, and a properly-scoped implementation todo (with exact done-when + test
       plan) is filed against that ruling.
+
+      **RULED 2026-08-09 (main, via BLK-b0af53e2, slot 4)**: option (1) — clone the `HealthFactorMonitor` pattern into a
+          new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
+          Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
+          (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
+          perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
+          (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
+          rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
+          service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
+          code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
+          opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
+          docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
+          would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
+          requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
+
+- [ ] [BACKEND] P2. Implement the `HealthFactorMonitor`-pattern asyncio poller for `PerpHedgeSizer` (Family-2
+      `CARRY_BASIS_PERP_INV`), per todo 4's 2026-08-09 ruling (option A). Build a new `PerpHedgeMonitor` class in
+      `execution-service/execution_service/defi_execution/monitors/` (sibling to `health_factor_monitor.py`, same
+      asyncio poll-loop shape: `run()`/`stop()`/`_poll_loop()`, default interval 300s per `perp_hedge_sizer.py:60-63`'s
+      documented 5-min cadence). Each instance owns ONE open Family-2 position (perp_venue + perp_pair + wallet), reads
+      on-chain Aave data + LST exchange rate, calls `PerpHedgeSizer.read_e_from_aave_data()` then
+      `.compute_rebalance()`/`.compute_margin_topup()` each tick, and on a non-NOOP rebalance action or a non-null
+      margin-topup instruction, routes it through the SAME instruction-execution path `recursive_loop_runner.py` already
+      uses — do NOT invent a second dispatch path. Wire lifecycle at `execution-service/execution_service/api/app.py`'s
+      `@app.on_event("startup")`: start one `PerpHedgeMonitor` per currently-open Family-2 position (source the
+      open-position set from the same place `RecursiveLoopOrchestrator`/its callers already track open loops — reuse
+      existing position state, don't invent a new registry), with a matching `@app.on_event("shutdown")` stop-all. Repo:
+      execution-service. Done-when: (1) unit tests cover `PerpHedgeMonitor`'s NOOP/SHORT/COVER rebalance branches +
+      margin-topup triggered/not-triggered, using injected fake `fetch_*` callables (mirrors `HealthFactorMonitor`'s
+      existing test pattern — no live network calls); (2) an integration/wiring test confirms `app.py` startup creates
+      one monitor instance per open Family-2 position and shutdown stops them cleanly; (3) `quality-gates.sh` green on
+      execution-service; (4) confirms the emitted rebalance/topup instructions reach the same execution path as
+      `recursive_loop_runner.py`'s outputs (no second, divergent instruction sink). Codex SSOTs:
+      `/codex/04-architecture/tier-and-import-architecture.md`, `/codex/04-architecture/defi-execution-overview.md`.
 
 ## Progress Log
 
@@ -134,6 +168,15 @@ context_scope:
   `execution-service@2352a17e`) and noting the still-open perp-hedge-poller gap (this file's todo 4). No CLAUDE.md
   change needed — no new cross-cutting HARD RULE, just a domain implementation-status update already covered by the
   existing Strategy domain-index pointer. (5) Corpus-wide referrer sweep
+- **2026-08-09 (slot 4, backend_engineer)**: Todo 4 shipped — this was an explicit operator/main judgment call per its
+  own text ("not a worker's to freehand"), so read the actual code
+  (`perp_hedge_sizer.py`/`recursive_staked.py`/`health_factor_monitor.py`, confirming `PerpHedgeSizer` has zero callers
+  anywhere and Family-2's `on_tick()` only ever opens the position once) and escalated via `/blocked` (BLK-b0af53e2)
+  with 3 options + an evidence-based recommendation (option A). Main ruled A. Recorded the full ruling + rationale
+  inline on todo 4 and flipped it `[x]`; filed the properly-scoped implementation todo (with exact done-when + test
+  plan) as this file's new todo 5, per todo 4's own done-when requirement. Did not implement the poller itself — that is
+  todo 5's own scope, not this todo's.
+
   (`grep -rl 'recursive_loop_orchestrator_wiring_2026_08_09'`) found 5 referrers besides the plan+finalize pair itself:
   `plans/active/INDEX.md` (auto-generated, regenerated via `scripts/plans/regenerate_active_plan_index.py` rather than
   hand-edited), `plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md` (2 prose citations,
