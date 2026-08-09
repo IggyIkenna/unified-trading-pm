@@ -54,16 +54,24 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. Reconcile both source docs' checkboxes against batch 3's 7 now-done todos — flip each corresponding
-      checkbox/section, citing the shipped commit(s) (verify the cited commit exists before citing). While in
-      `data_source_provenance_enforcement_2026_07_24.md`, also correct the stale obsolete-Massive checkbox flagged
-      during the extraction sweep (superseded by the 2026-07-19 TradFi-Massive removal; fold into the doc's existing P0
-      rollup items rather than leaving it as live open work). Re-check each source doc for 0 remaining open todos after
-      flipping; set `status: resolved` only if genuinely 0. Done when: all 7 source-doc checkboxes are flipped with
-      verified evidence and the stale Massive item is corrected.
+- [x] ✅ [REVIEW] P1. Reconcile both source docs' checkboxes against batch 3's 7 now-done todos — flip each
+      corresponding checkbox/section, citing the shipped commit(s) (verify the cited commit exists before citing).
+      **DONE 2026-08-09, slot 15**: `data_source_provenance_enforcement_2026_07_24.md` — flipped all 5
+      `EXTRACTED -> batch3` pointers to `[x]` with verified commit citations (`market-tick-data-service@63776a43`,
+      `market-data-processing-service@c8bece4e8`, `market-tick-data-service@78a8c93b`,
+      `market-tick-data-service@63ce1e05`, all confirmed ancestors of `origin/live-defi-rollout`; the A12a item
+      resolved-moot, no code commit); also flipped the stale obsolete-Massive checkbox (item's own text already
+      explained it's superseded/folded into the P0 rollup below it — only the checkbox itself was stale). 13 open items
+      remain, `status` stays `active`. `legacy_bucket_dual_write_decommission_2026_07_24.md` — flipped the remaining
+      terraform-cron `EXTRACTED -> batch3` pointer to `[x]` (verified-already-done, no code change); the
+      migration-data-copy-fan-out item was already correctly reconciled by a prior session. 8 open items remain,
+      `status` stays `active`. Both source docs' Progress Logs updated with the full breakdown.
 - [ ] [DOC] P1. Archive `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md` via the standard 6-step ritual once
       todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by` (confirm
       already empty). Done when: the plan is moved to `plans/archive/2026_08/`, every referrer resolves to the new path,
       and this finalize doc archives alongside it in the same commit.
 
 ## Progress Log
+
+- **2026-08-09 (todo 1, slot 15)**: Reconciled both source docs against batch3's 7 now-done todos. Full breakdown in
+  todo 1's own entry above and each source doc's Progress Log.
