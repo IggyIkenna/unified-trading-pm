@@ -781,104 +781,124 @@ auto-generated section's own owner script, rather than hand-editing the table) �
       today sets `self.params` once and never rewrites it) still needs to be broken into bounded, AO-dispatchable todos
       against this now-resolved direction. Next step: a LOCAL/human design pass that resolves the feature-naming
       sub-decision and scopes the pollable-registry build into concrete todos — not yet actioned.
-- [ ] [DESIGN] P2. **`RecursiveLoopOrchestrator` translation layer for `CARRY_RECURSIVE_BORROW_LENDING_ONLY` /
+- [x] ✅ [DESIGN] P2. **`RecursiveLoopOrchestrator` translation layer for `CARRY_RECURSIVE_BORROW_LENDING_ONLY` /
       `CARRY_BASIS_PERP_INV`** (both currently `_ALLOWED_EMPTY_ARCHETYPES`, gated on `staking_yield_enabled=false`).
-      **RULED 2026-08-09 (operator, interactive): all 3 numbers in the 2026-08-09 DRAFT PROPOSAL below are ADOPTED
-      as-is** — (a) LTV-per-lending-market-mode: adopt the codex table (Aave e-mode `ETH_CORRELATED`=0.93, Morpho
-      `market_0945`=0.945, `market_086`=0.86, formula `ltv_target = liquidation_threshold - 0.05` for any untabled
-      mode); (b) recursion-depth: keep the already-shipped `recursion_depth_max=5` for both archetypes, chain-uniform —
-      the codex doc's per-chain 8/10/12 figures are explicitly NOT adopted at this time, revisit only after live track
-      record; (c) Family-2 perp-hedge rebalance sizing: use `net_underlying_delta`/`residual_hedge_size`
-      (`unified_trading_library/risk/net_delta.py`) as-is for the ongoing rebalance leg — the SEPARATE initial
-      acquisition/bootstrap-sizing question remains open, not ruled here. Per the "orchestrator-stub: exhaustive
-      investigation, scoped not built" section above: `RecursiveLoopOrchestrator` has no caller for ANY archetype today,
-      and `RecursiveLoopRequest` is schema-incompatible with `AtomicInstruction`/`AtomicLeg`, so a real caller needs an
-      explicit translation layer, not a registry-case addition. **RESOLVED 2026-08-09**: a code-landscape mapping pass
-      confirmed exact file/function targets, and the actual translation-layer build is now tracked as its own
-      AO-dispatched plan: `/plans/active/recursive_loop_orchestrator_wiring_2026_08_09.md` (8 todos, `sequential: true`,
-      gated finalize companion `recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`). This todo stays open until
-      that plan's finalize companion flips it done with full evidence.
+      **RULED 2026-08-09 (operator, interactive, recorded in this doc's own DRAFT PROPOSAL 2026-08-09 subsection below
+      and implemented per `/plans/active/recursive_loop_orchestrator_wiring_2026_08_09.md`): all 3 numbers in the
+      2026-08-09 DRAFT PROPOSAL below are ADOPTED as-is** — (a) LTV-per-lending-market-mode: adopt the codex table (Aave
+      e-mode `ETH_CORRELATED`=0.93, Morpho `market_0945`=0.945, `market_086`=0.86, formula
+      `ltv_target = liquidation_threshold - 0.05` for any untabled mode); (b) recursion-depth: keep the already-shipped
+      `recursion_depth_max=5` for both archetypes, chain-uniform — the codex doc's per-chain 8/10/12 figures are
+      explicitly NOT adopted at this time, revisit only after live track record; (c) Family-2 perp-hedge rebalance
+      sizing: use `net_underlying_delta`/`residual_hedge_size` (`unified_trading_library/risk/net_delta.py`) as-is for
+      the ongoing rebalance leg — the SEPARATE initial acquisition/bootstrap-sizing question remains open, not ruled
+      here. Per the "orchestrator-stub: exhaustive investigation, scoped not built" section above:
+      `RecursiveLoopOrchestrator` has no caller for ANY archetype today, and `RecursiveLoopRequest` is
+      schema-incompatible with `AtomicInstruction`/`AtomicLeg`, so a real caller needs an explicit translation layer,
+      not a registry-case addition. **RESOLVED 2026-08-09**: a code-landscape mapping pass confirmed exact file/function
+      targets, and the actual translation-layer build is now tracked as its own AO-dispatched plan:
+      `/plans/active/recursive_loop_orchestrator_wiring_2026_08_09.md` (8 todos, `sequential: true`, gated finalize
+      companion `recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`). **DONE 2026-08-09** — the wiring plan's
+      finalize companion independently re-verified all 8 todos (commit existence confirmed as ancestors of
+      `origin/live-defi-rollout`, full `quality-gates.sh` re-run green on all 3 touched repos, not just the recorded
+      evidence lines trusted): `unified-api-contracts@547b1d1b` (ltv_mode resolver, `resolve_ltv_mode()` in
+      `defi_reserve_params.py` — 0.93/0.945/0.86 asserted, re-run green); `strategy-service@b98f74fb` (`ltv_per_loop` +
+      `n_loops` catalog wiring in `catalog_carry.py`, both Family-1/2 builders); `strategy-service@817bb4e0` (Family-1
+      `CARRY_RECURSIVE_BORROW_LENDING_ONLY` real `on_tick()` leg construction, STAKE→TRANSFER→LEND→BORROW ×5 loops);
+      `strategy-service@f2ac7fdf` (Family-2 `CARRY_BASIS_PERP_INV` real `on_tick()`, lending loop + perp-hedge leg via
+      `residual_hedge_size()`); `execution-service@2352a17e` (`recursive_loop_runner.py` —
+      `RecursiveLoopOrchestrator.open()`/`.unwind()`'s first real production caller); `strategy-service@d6c86f44`
+      (removed both archetypes' `_ALLOWED_EMPTY_ARCHETYPES` exemptions — confirmed absent from the dict on re-read).
+      Full `quality-gates.sh` (`--no-fix`) re-ran green on all 3 repos independently this session: unified-api-contracts
+      (396s), strategy-service (5836 passed, 199s), execution-service (7895 passed, 226s). Todo 7 (Family-2 hedge-poller
+      audit, no code — outcome (b) no suitable poller exists) re-verified via the exact same greps: results match
+      verbatim; follow-up `[DESIGN]` todo already filed on the finalize plan (see below). Two minor (non-blocking)
+      evidence-line inaccuracies found on re-verification, noted for the record only: the Family-1 `on_tick()` test file
+      (`test_recursive_borrow_lending_only_family1_on_tick.py`) has 5 tests, not the "6 tests" the parent plan's
+      Progress Log claims; `test_recursive_loop_runner.py` has 11 tests, not "13" — both files exist, are correctly
+      scoped, and pass; only the recorded test-count narrative was off. Full re-verification detail:
+      `/plans/active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md` todo 1's evidence trail.
 
       ---
 
-                          ### DRAFT PROPOSAL 2026-08-09 (recording agent, for operator review — NOT yet approved)
+                                  ### DRAFT PROPOSAL 2026-08-09 (recording agent, for operator review — NOT yet approved)
 
-                          Operator asked the recording agent to draft first-pass candidate numbers/formulas for the 3 decisions, grounded
-                          in what already exists in the codebase, explicitly as a starting point for review/adjustment — not a ruling.
-                          This todo stays open pending the operator's actual review. Real leveraged DeFi money-path decision; every number
-                          below is either a DIRECT citation of already-shipped code/config or an already-written codex design doc, not
-                          invented from scratch — confidence and remaining gaps are flagged per item, not overstated.
+                                  Operator asked the recording agent to draft first-pass candidate numbers/formulas for the 3 decisions, grounded
+                                  in what already exists in the codebase, explicitly as a starting point for review/adjustment — not a ruling.
+                                  This todo stays open pending the operator's actual review. Real leveraged DeFi money-path decision; every number
+                                  below is either a DIRECT citation of already-shipped code/config or an already-written codex design doc, not
+                                  invented from scratch — confidence and remaining gaps are flagged per item, not overstated.
 
-                          **(a) Numeric LTV-per-lending-market-mode resolution.**
+                                  **(a) Numeric LTV-per-lending-market-mode resolution.**
 
-                          A fully worked answer to this already exists as a codex SSOT
-                          (`/codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md`, `implementation_status:
-                          design`, `authoritative_for: [CARRY_RECURSIVE_BORROW_LENDING_ONLY archetype specification]` — i.e. it IS this
-                          workspace's designated SSOT for this archetype's numbers, it just hasn't been wired into the catalog/engine
-                          code yet). Its per-cell table (lines 96-104): Aave V3 e-mode `ETH_CORRELATED` = **0.93 LTV**; Morpho
-                          `market_0945` = **0.945 LTV**; Morpho `market_086` = **0.86 LTV**; general rule `ltv_target =
-                          liquidation_threshold - 0.05` (a fixed 5-point safety buffer below the protocol's own liquidation threshold).
-                          This is corroborated by LIVE data, not just the design doc: `market-tick-data-service/market_tick_data_service/
-                          market_interface/adapters/defi/aave_lending.py:127-128` fetches real `ltv`/`liquidation_threshold` from Aave's
-                          own subgraph at runtime, and `aave_utils.py:54-60`'s hardcoded fallback table independently states the same
-                          e-mode figures (0.93 LTV / 0.95 liquidation threshold) for the same wstETH/weETH/ETH pairs — two independent
-                          sources agree. Proposed: adopt the codex table's LTV values directly, with the `ltv_target = liq_threshold -
-                          0.05` rule as the resolution formula for any lending mode not explicitly tabled. **Confidence: HIGH** on the
-                          Aave e-mode figure (0.93, corroborated live); **MEDIUM** on the two Morpho figures (design-doc only, not
-                          independently corroborated by a second live source in this pass). Gap: UAC's shipped
-                          `ArchetypeConfig.safety_buffer_ltv=0.05` (both archetypes, `archetype_config.py:272,304`) already matches the
-                          codex rule's buffer — so this piece may be closer to "already decided, just not consumed by the catalog
-                          builder" than "undecided."
+                                  A fully worked answer to this already exists as a codex SSOT
+                                  (`/codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md`, `implementation_status:
+                                  design`, `authoritative_for: [CARRY_RECURSIVE_BORROW_LENDING_ONLY archetype specification]` — i.e. it IS this
+                                  workspace's designated SSOT for this archetype's numbers, it just hasn't been wired into the catalog/engine
+                                  code yet). Its per-cell table (lines 96-104): Aave V3 e-mode `ETH_CORRELATED` = **0.93 LTV**; Morpho
+                                  `market_0945` = **0.945 LTV**; Morpho `market_086` = **0.86 LTV**; general rule `ltv_target =
+                                  liquidation_threshold - 0.05` (a fixed 5-point safety buffer below the protocol's own liquidation threshold).
+                                  This is corroborated by LIVE data, not just the design doc: `market-tick-data-service/market_tick_data_service/
+                                  market_interface/adapters/defi/aave_lending.py:127-128` fetches real `ltv`/`liquidation_threshold` from Aave's
+                                  own subgraph at runtime, and `aave_utils.py:54-60`'s hardcoded fallback table independently states the same
+                                  e-mode figures (0.93 LTV / 0.95 liquidation threshold) for the same wstETH/weETH/ETH pairs — two independent
+                                  sources agree. Proposed: adopt the codex table's LTV values directly, with the `ltv_target = liq_threshold -
+                                  0.05` rule as the resolution formula for any lending mode not explicitly tabled. **Confidence: HIGH** on the
+                                  Aave e-mode figure (0.93, corroborated live); **MEDIUM** on the two Morpho figures (design-doc only, not
+                                  independently corroborated by a second live source in this pass). Gap: UAC's shipped
+                                  `ArchetypeConfig.safety_buffer_ltv=0.05` (both archetypes, `archetype_config.py:272,304`) already matches the
+                                  codex rule's buffer — so this piece may be closer to "already decided, just not consumed by the catalog
+                                  builder" than "undecided."
 
-                          **(b) Recursion-depth policy.**
+                                  **(b) Recursion-depth policy.**
 
-                          **Found a real, unresolved discrepancy — flagging rather than picking a side.** The same codex SSOT
-                          (`carry-recursive-borrow-lending-only.md:123`) specifies PER-CHAIN depths: `recursion_depth_max`: **8 (ethereum)
-                          / 10 (arbitrum) / 12 (base)** — cheaper L2 gas justifying deeper loops. The sibling `carry-basis-perp-inv.md:132`
-                          states a flat `max_recursion_depth: 8`. But the ALREADY-SHIPPED UAC config
-                          (`archetype_config.py:271,299`) sets `recursion_depth_max=5` for BOTH archetypes, chain-uniform — verified
-                          directly in the source, not secondhand. These disagree by a wide margin (5 vs. 8-12), and 5 is the materially
-                          MORE conservative choice (each additional loop compounds leverage and liquidation-cascade risk). Proposed,
-                          conservatively: **keep the shipped `recursion_depth_max=5` as the initial live value for BOTH archetypes**,
-                          overriding the codex doc's more aggressive per-chain figures, specifically BECAUSE Family 1/2 are explicitly
-                          annotated "not yet live-tested" in the codex doc itself (line 116's own comment on `position_cap_usd`) — a
-                          first live deployment is not the place to run the most aggressive depth in the design doc. The per-chain 8/10/12
-                          figures could be revisited as a follow-on increase once Family 1/2 have live track record. **This is the one
-                          item of the three I have real reservations about proposing a specific alternative number for beyond "start at
-                          the already-shipped conservative 5"** — the codex doc's higher figures may reflect real risk/reward analysis
-                          the recording agent hasn't fully reconstructed; the operator (or whoever wrote that codex table) may have
-                          context this pass doesn't. **Confidence: MEDIUM** on "5 is a safe starting point"; **LOW** on whether 8/10/12
-                          is actually the "right" eventual target vs. just an unvetted design-time guess — genuinely the operator's call.
+                                  **Found a real, unresolved discrepancy — flagging rather than picking a side.** The same codex SSOT
+                                  (`carry-recursive-borrow-lending-only.md:123`) specifies PER-CHAIN depths: `recursion_depth_max`: **8 (ethereum)
+                                  / 10 (arbitrum) / 12 (base)** — cheaper L2 gas justifying deeper loops. The sibling `carry-basis-perp-inv.md:132`
+                                  states a flat `max_recursion_depth: 8`. But the ALREADY-SHIPPED UAC config
+                                  (`archetype_config.py:271,299`) sets `recursion_depth_max=5` for BOTH archetypes, chain-uniform — verified
+                                  directly in the source, not secondhand. These disagree by a wide margin (5 vs. 8-12), and 5 is the materially
+                                  MORE conservative choice (each additional loop compounds leverage and liquidation-cascade risk). Proposed,
+                                  conservatively: **keep the shipped `recursion_depth_max=5` as the initial live value for BOTH archetypes**,
+                                  overriding the codex doc's more aggressive per-chain figures, specifically BECAUSE Family 1/2 are explicitly
+                                  annotated "not yet live-tested" in the codex doc itself (line 116's own comment on `position_cap_usd`) — a
+                                  first live deployment is not the place to run the most aggressive depth in the design doc. The per-chain 8/10/12
+                                  figures could be revisited as a follow-on increase once Family 1/2 have live track record. **This is the one
+                                  item of the three I have real reservations about proposing a specific alternative number for beyond "start at
+                                  the already-shipped conservative 5"** — the codex doc's higher figures may reflect real risk/reward analysis
+                                  the recording agent hasn't fully reconstructed; the operator (or whoever wrote that codex table) may have
+                                  context this pass doesn't. **Confidence: MEDIUM** on "5 is a safe starting point"; **LOW** on whether 8/10/12
+                                  is actually the "right" eventual target vs. just an unvetted design-time guess — genuinely the operator's call.
 
-                          **(c) Family-2 perp-hedge sizing formula.**
+                                  **(c) Family-2 perp-hedge sizing formula.**
 
-                          **This one may already be effectively answered by shipped code** — the issue doc's own earlier investigation
-                          (line ~574-576 above) says "no non-staking hedge-sizing precedent exists," but that claim is about the INITIAL
-                          acquisition/bootstrap sizing (turning starting equity into the held collateral asset — genuinely still
-                          unprecedented, not resolved by anything found this pass), NOT the ONGOING rebalance-sizing formula, which
-                          already exists, is canonical, and is a direct match for what Family 2 needs: UTL
-                          `unified_trading_library/risk/net_delta.py:33-70` — `net_underlying_delta(collateral_qty, debt_qty,
-                          lst_exchange_rate) = collateral_qty * lst_exchange_rate - debt_qty` (net ETH-equivalent exposure, `E_actual`)
-                          and `residual_hedge_size(E_actual, target_net_delta, floor_zero=True) = max(0, E_actual - target_net_delta)`
-                          (hedge notional to drive net delta to target). Both functions' own docstrings say they are the "canonical
-                          extraction of execution-service `PerpHedgeSizer.read_e_from_aave_data`/`compute_rebalance`"
-                          (`execution-service/execution_service/defi_execution/helpers/perp_hedge_sizer.py:90-99`) — i.e. this formula was
-                          built FOR this exact archetype family, already runs in execution-service, and matches the codex SSOT
-                          (`carry-basis-perp-inv.md:87,159`: `perp_short_size = max(0, E_actual - target_net_delta)`, rebalance trigger
-                          `|perp_short_size - E_actual| > 5% x E_actual`) — three independent sources (UTL, execution-service, codex)
-                          agree on the same formula. Proposed: use `net_underlying_delta` + `residual_hedge_size` as-is for the ONGOING
-                          rebalance leg of the `RecursiveLoopOrchestrator` translation layer; the INITIAL acquisition/bootstrap sizing
-                          (Family 1/2's SWAP→STAKE-equivalent first leg) is a SEPARATE, still-genuinely-open design gap this pass did not
-                          resolve — do not conflate the two. **Confidence: HIGH** on the rebalance formula (already shipped, 3-source
-                          agreement); the acquisition-sizing gap is unaddressed, not drafted here (out of scope for "perp-hedge sizing
-                          formula" as literally asked, but flagged so it isn't silently assumed solved).
+                                  **This one may already be effectively answered by shipped code** — the issue doc's own earlier investigation
+                                  (line ~574-576 above) says "no non-staking hedge-sizing precedent exists," but that claim is about the INITIAL
+                                  acquisition/bootstrap sizing (turning starting equity into the held collateral asset — genuinely still
+                                  unprecedented, not resolved by anything found this pass), NOT the ONGOING rebalance-sizing formula, which
+                                  already exists, is canonical, and is a direct match for what Family 2 needs: UTL
+                                  `unified_trading_library/risk/net_delta.py:33-70` — `net_underlying_delta(collateral_qty, debt_qty,
+                                  lst_exchange_rate) = collateral_qty * lst_exchange_rate - debt_qty` (net ETH-equivalent exposure, `E_actual`)
+                                  and `residual_hedge_size(E_actual, target_net_delta, floor_zero=True) = max(0, E_actual - target_net_delta)`
+                                  (hedge notional to drive net delta to target). Both functions' own docstrings say they are the "canonical
+                                  extraction of execution-service `PerpHedgeSizer.read_e_from_aave_data`/`compute_rebalance`"
+                                  (`execution-service/execution_service/defi_execution/helpers/perp_hedge_sizer.py:90-99`) — i.e. this formula was
+                                  built FOR this exact archetype family, already runs in execution-service, and matches the codex SSOT
+                                  (`carry-basis-perp-inv.md:87,159`: `perp_short_size = max(0, E_actual - target_net_delta)`, rebalance trigger
+                                  `|perp_short_size - E_actual| > 5% x E_actual`) — three independent sources (UTL, execution-service, codex)
+                                  agree on the same formula. Proposed: use `net_underlying_delta` + `residual_hedge_size` as-is for the ONGOING
+                                  rebalance leg of the `RecursiveLoopOrchestrator` translation layer; the INITIAL acquisition/bootstrap sizing
+                                  (Family 1/2's SWAP→STAKE-equivalent first leg) is a SEPARATE, still-genuinely-open design gap this pass did not
+                                  resolve — do not conflate the two. **Confidence: HIGH** on the rebalance formula (already shipped, 3-source
+                                  agreement); the acquisition-sizing gap is unaddressed, not drafted here (out of scope for "perp-hedge sizing
+                                  formula" as literally asked, but flagged so it isn't silently assumed solved).
 
-                          **What this draft does NOT resolve**: the initial acquisition/bootstrap-sizing shape for Family 1/2 (turning
-                          starting capital into the held collateral asset) remains genuinely undesigned; the codex doc's per-chain
-                          recursion-depth figures (8/10/12) vs. the shipped conservative 5 needs an explicit operator pick, not just my
-                          conservative default; and none of the above resolves the SEPARATE `RecursiveLoopOrchestrator` translation-layer
-                          / schema-incompatibility build this todo's own first paragraph describes — that remains its own follow-on once
-                          these numbers are ratified.
+                                  **What this draft does NOT resolve**: the initial acquisition/bootstrap-sizing shape for Family 1/2 (turning
+                                  starting capital into the held collateral asset) remains genuinely undesigned; the codex doc's per-chain
+                                  recursion-depth figures (8/10/12) vs. the shipped conservative 5 needs an explicit operator pick, not just my
+                                  conservative default; and none of the above resolves the SEPARATE `RecursiveLoopOrchestrator` translation-layer
+                                  / schema-incompatibility build this todo's own first paragraph describes — that remains its own follow-on once
+                                  these numbers are ratified.
 
 ## Progress Log
 

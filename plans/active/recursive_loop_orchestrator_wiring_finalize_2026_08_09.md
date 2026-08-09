@@ -51,7 +51,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. Re-verify each of `recursive_loop_orchestrator_wiring_2026_08_09.md`'s 8 todos: confirm the cited
+- [x] ✅ [REVIEW] P1. Re-verify each of `recursive_loop_orchestrator_wiring_2026_08_09.md`'s 8 todos: confirm the cited
       commit(s) actually exist and the cited test(s) actually pass green (re-run, don't trust the recorded evidence line
       alone). Reconcile the evidence into
       `plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`'s `[DESIGN]`
@@ -97,3 +97,18 @@ context_scope:
   audit outcome (no suitable existing poller for `PerpHedgeSizer` — full grep evidence in the parent plan's Progress
   Log). This satisfies todo 2 above's "confirm the follow-up was actually filed as a real `- [ ]` item" check in advance
   — filed now rather than left as prose.
+- **2026-08-09 (slot 25, review)**: Todo 1 shipped — independently re-verified all 8 of the parent plan's todos.
+  Confirmed all 6 distinct cited commits exist AND are ancestors of `origin/live-defi-rollout`
+  (`unified-api-contracts@547b1d1b`, `strategy-service@b98f74fb`/`817bb4e0`/`f2ac7fdf`/`d6c86f44`,
+  `execution-service@2352a17e`). Re-ran full `quality-gates.sh --no-fix` (not just the cited unit tests — the full
+  suite, per RULES.md's "never run pytest directly") on all 3 touched repos, all green: unified-api-contracts (396s,
+  includes `resolve_ltv_mode` 0.93/0.945/0.86 assertions), strategy-service (5836 passed, 199s, includes the
+  `n_loops`/`ltv_per_loop` catalog tests + both Family-1/2 `on_tick()` test files), execution-service (7895 passed,
+  226s, includes `test_recursive_loop_runner.py`). Confirmed both archetypes are genuinely absent from
+  `_ALLOWED_EMPTY_ARCHETYPES` (todo 8) via direct dict-content inspection, not just a checkbox read. Re-ran todo 7's
+  audit greps verbatim — findings match exactly (no suitable poller exists; `HealthFactorMonitor` has zero production
+  callers; no Cloud-Scheduler endpoint). Flipped the source issue doc's `[DESIGN]` `RecursiveLoopOrchestrator`
+  translation-layer todo (`defi_catalog_engine_config_key_contract_drift_2026_07_23.md`) to `[x]` with the full evidence
+  trail. Found + recorded (non-blocking) two minor evidence-line inaccuracies in the parent plan's Progress Log: the
+  Family-1 `on_tick()` test file has 5 tests not the claimed 6; `test_recursive_loop_runner.py` has 11 tests not the
+  claimed 13 — both files are correct and complete, only the narrated counts were off; not worth a follow-up todo.
