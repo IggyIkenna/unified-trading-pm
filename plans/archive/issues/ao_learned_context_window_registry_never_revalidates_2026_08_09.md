@@ -9,7 +9,7 @@ summary: >-
   calibration is still permanent. Two live observations remain open underneath it: claude-opus-5 currently sits at
   watermark 222,121 / hits 1 — the exact trap the module docstring warns about — and main's true window measures ~696K
   against a 937,882 corpus figure for the same model, which the per-model design cannot express.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -32,7 +32,7 @@ estimate_baseline_ai_days: 0.8
 estimate_calibrated_ai_days: 0.6
 assigned_role: backend_engineer
 drift_direction: advance-code
-resolved_by:
+resolved_by: agent-orchestrator@50e91cb69, agent-orchestrator@4aabab446, agent-orchestrator@cb5bf0050
 locked_by:
 locked_since:
 supersedes:
@@ -50,6 +50,13 @@ context_scope:
 ---
 
 # The learned context-window registry is write-once-and-forever
+
+> **🟢 RESOLVED 2026-08-09** — all four todos closed. Re-validation + rejection-visibility + session-scoped watermark
+> confirmation shipped (`agent-orchestrator@50e91cb69`, `@4aabab446`, `@cb5bf0050`); the per-model-vs-per-session
+> divergence (todo 4) was found already investigated and closed in
+> `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Context-window learning is per-model; per-session
+> divergence is expected and already floored (2026-08-09)" — no registry-key widening, the AgentRow/SlotRow self-report
+> floor is the compensating control. See the Progress Log below for full detail.
 
 ## The residual weaknesses
 
@@ -91,10 +98,10 @@ as 71%, which is below the recycle logic's expectations even though it clears th
       hits to come from DISTINCT sessions, or discard a watermark whose hits all came from one `claude_session_id`.
       Done-when: a unit test proves three observations from ONE session do not saturate a watermark, and three from
       distinct sessions do. — agent-orchestrator@cb5bf0050
-- [ ] [BACKEND] P2. Evaluate whether the effective window is per-session/per-account rather than per-model, using main's
-      ~696K-vs-937,882 divergence as the worked example. Done-when: the finding is recorded here and either the registry
-      key is widened or the divergence is documented as expected with the AgentRow floor named as the compensating
-      control.
+- [x] ✅ [BACKEND] P2. Evaluate whether the effective window is per-session/per-account rather than per-model, using
+      main's ~696K-vs-937,882 divergence as the worked example. Done-when: the finding is recorded here and either the
+      registry key is widened or the divergence is documented as expected with the AgentRow floor named as the
+      compensating control. — documented, no code change (see Progress Log)
 
 ## Progress Log
 
@@ -134,3 +141,17 @@ as 71%, which is below the recycle logic's expectations even though it clears th
   `test_a_higher_ceiling_still_resets_hit_sessions_even_with_session_ids`, and
   `test_omitted_session_id_keeps_the_prior_unconditional_increment_behaviour`. Full QG green (2974 backend + 262
   dashboard tests); landed on `live-defi-rollout`, verified as an ancestor of origin.
+- 2026-08-09 — Todo 4 evaluated: read `context_probe.py`/`model_tier.py` and traced the compensating floor through
+  `context_lifecycle.py::_main_pct()` (main) and `_read_pct()`'s `max(SlotRow.context_used_pct, probe)` (worker/review).
+  Found the investigation already recorded in `/codex/04-architecture/agent-orchestrator-worker-liveness.md` §
+  "Context-window learning is per-model; per-session divergence is expected and already floored (2026-08-09)" — it
+  independently ruled out account tier as the driver (main's `sub-f-odum2default` account was `max20`, the same tier
+  that built the 937,882 sonnet-5 corpus watermark), named `effort`/`thinking` depth as the better-supported per-session
+  driver (main runs `thinking: high` vs workers' `thinking: medium`), and concluded: **no registry-key widening** —
+  `context_window_for(model)` stays a per-model cold-start fallback, and the per-session/per-account divergence is
+  already compensated for the one target it matters to (that session) by the self-report floor
+  (`AgentRow.context_used_pct` for main, `SlotRow.context_used_pct` for worker/review) — every fleet target today
+  carries one of those two floors, so no session silently under-compacts on a smaller-than-average window. This todo's
+  own done-when ("recorded here … or documented as expected with the AgentRow floor named as the compensating control")
+  is satisfied by that already-shipped codex section; no additional registry change or code needed. Doc-only closure —
+  no `agent-orchestrator` commit.

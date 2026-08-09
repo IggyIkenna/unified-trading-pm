@@ -20,7 +20,7 @@ tags: [agent-orchestrator, context, compaction, main-agent, measurement, worker-
 related:
   [
     /plans/active/issues/ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md,
-    /plans/active/issues/ao_learned_context_window_registry_never_revalidates_2026_08_09.md,
+    /plans/archive/issues/ao_learned_context_window_registry_never_revalidates_2026_08_09.md,
     /plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md,
     /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
   ]
