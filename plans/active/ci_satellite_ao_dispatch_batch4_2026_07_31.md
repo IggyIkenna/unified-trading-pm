@@ -245,9 +245,10 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
   - Source: `issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` ([SCRIPT] P2) — never cited
     by any covering doc.
 
-- [ ] [VERIFY] P0. **Time-gated billing/capacity re-measurement sweep — 4 items in
-      `github_actions_operator_gated_followups_2026_07_17.md`, all now unblocked, combined into one todo per the
-      same-file-contention note above.** Record all 4 findings as ONE dated Progress Log entry in the source doc:
+- [ ] [VERIFY] P0. **Time-gated billing/capacity re-measurement sweep against
+      `github_actions_operator_gated_followups_2026_07_17.md` — 4 items, all now unblocked (2026-08-09: note the "today
+      IS 2026-07-31" gate below is now 9 days past due, this is overdue not merely eligible), combined into one todo per
+      the same-file-contention note above.** Record all 4 findings as ONE dated Progress Log entry in the source doc:
   1. **Phase-5 two-week billing ledger re-pull vs the Phase-0 baseline** (batch1 Deferred D29 — gate was "earliest
      ~2026-07-31"; today IS 2026-07-31). Method + exact commands are already in the doc's 2026-07-23 billing entry —
      re-run verbatim. Target check: fleet ~$1,000/mo → ~$300-400/mo, and whether the +47% non-PM-repo rise masking PM's

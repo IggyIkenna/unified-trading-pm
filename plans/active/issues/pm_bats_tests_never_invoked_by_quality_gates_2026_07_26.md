@@ -110,15 +110,15 @@ todo.
 
 ## Todos
 
-- [ ] [INFRA] P2. Add a BATS test-execution phase to `scripts/quality-gates-base/base-service.sh`: detect `bats` on
-      PATH + any `tests/*.bats` files, run them, and initially treat failures as WARN-ONLY (mirroring the actionlint
-      transitional pattern at base-service.sh [5.5]) since the fleet-wide pass/fail baseline across every repo's `.bats`
-      files (if any exist outside PM) has never been measured. Wire the CI-side bats-core install
-      (`.github/actions/setup-python-tools/action.yml`) so the binary installed there is actually the one
+- [ ] [INFRA] P2. Add a BATS test-execution phase to `scripts/quality-gates-base/base-service.sh` that detects `bats` on
+      PATH + any `tests/*.bats` files, runs them, and initially treats failures as WARN-ONLY, not a hard failure
+      (mirroring the actionlint transitional pattern at base-service.sh [5.5]) since the fleet-wide pass/fail baseline
+      across every repo's `.bats` files (if any exist outside PM) has never been measured. Wire the CI-side bats-core
+      install (`.github/actions/setup-python-tools/action.yml`) so the binary installed there is actually the one
       `quality-gates.sh` finds on PATH inside the same job. (repo: unified-trading-pm)
-- [ ] [INFRA] P3. Once the WARN-ONLY phase above has run clean across a full fleet PR cycle, re-harden it to a hard
-      failure (`exit 1` on any bats test failure), same re-harden-after-baseline pattern used for actionlint. (repo:
-      unified-trading-pm)
+- [ ] [INFRA] P3. Once the WARN-ONLY BATS phase (todo above) has run clean across a full fleet PR cycle, re-harden it to
+      a HARD failure (`exit 1` on any bats test failure) — same re-harden-after-baseline pattern used for actionlint.
+      (repo: unified-trading-pm)
 
 ## na-eligibility-audit verdict
 

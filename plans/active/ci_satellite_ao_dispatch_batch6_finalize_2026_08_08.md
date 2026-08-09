@@ -67,15 +67,15 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 12 batch-6 todos' source docs.** Each batch-6 todo ends with `Source:` naming a doc.
-      For each: flip the corresponding checkbox or annotate the corresponding prose section, citing the batch-6 commit
-      that shipped it — **verify the cited commit exists and is an ancestor of `origin/live-defi-rollout` before citing
-      it** (`git merge-base --is-ancestor`). **Also flip the 2 confirmed-already-done-but-unflipped stale checkboxes
-      batch6's own Phase 1 audit surfaced** (see D6-8, D6-9 in batch6's Deferred table): the ldr-docs-gate-firing
-      verification + the codex staging-re-entry item in `github_actions_operator_gated_followups_2026_07_17.md` (both
-      closed by `unified-trading-pm@97970974e` and a batch1 [VERIFY] P2 todo, 2026-07-26 — verify the ancestor
-      relationship before flipping, do not trust the citation blind), and the F3
-      `cascade-qg-ordering.yml`/`sit-gate.yml` success-reporting item in
+- [ ] [REVIEW] P1. **Reconcile all 12 batch-6 todos' source docs, AND separately flip stale checkboxes D6-8 + D6-9
+      (batch6's own Deferred table) which batch6's Phase 1 audit found already-done-but-unflipped.** Each batch-6 todo
+      ends with `Source:` naming a doc. For each: flip the corresponding checkbox or annotate the corresponding prose
+      section, citing the batch-6 commit that shipped it — **verify the cited commit exists and is an ancestor of
+      `origin/live-defi-rollout` before citing it** (`git merge-base --is-ancestor`). The D6-8/D6-9 stale checkboxes
+      are: the ldr-docs-gate-firing verification + the codex staging-re-entry item in
+      `github_actions_operator_gated_followups_2026_07_17.md` (both closed by `unified-trading-pm@97970974e` and a
+      batch1 [VERIFY] P2 todo, 2026-07-26 — verify the ancestor relationship before flipping, do not trust the citation
+      blind), and the F3 `cascade-qg-ordering.yml`/`sit-gate.yml` success-reporting item in
       `post_cutover_silent_assumption_sweep_2026_07_23.md` (closed by batch5's `[INFRA] P2` todo, 2026-08-07 — same
       ancestor-verify-first rule). Then, per doc, re-check whether it now has zero open work **in checkbox AND prose
       form**; only set `status: resolved` on a doc that genuinely reaches zero. **Done when**: every cited doc (batch-6
@@ -91,15 +91,15 @@ context_scope:
       through D6-29 has either (a) a note that it is ready for batch-7 extraction because its blocker cleared, or (b) a
       re-verified confirmation the blocker is still open. Do NOT draft follow-up todos here — this plan's scope is
       reconciliation, not fresh drafting.
-- [ ] [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch6_2026_08_08.md`** via the standard 6-step ritual (CLAUDE.md §
-      plan archival): migrate any still-unresolved Deferred item to a tracked follow-up (todo 2 above should have
-      re-confirmed D6-1 through D6-29 — verify none silently vanishes) → add the archive banner → run the
-      codex-alignment check (confirm `/codex/08-workflows/ci-cd-flow.md` and `/codex/04-architecture/ci-alerting.md`
-      reflect any new contract this batch's todos established, e.g. the escalation-dispatch cooldown guard in todo 6) →
-      update CLAUDE.md/codex if warranted → grep the corpus for every referrer of
-      `ci_satellite_ao_dispatch_batch6_2026_08_08` and repoint each to the archived path → clear `locked_by` (already
-      empty; confirm). **Done when**: the plan is in `plans/archive/2026_08/`, every corpus referrer resolves,
-      `check_reference_paths.py` has not regressed, and this finalize doc is archived alongside it in the same commit.
+- [ ] [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch6_2026_08_08.md` per CLAUDE.md's 6-step plan-archival ritual.**
+      Migrate any still-unresolved Deferred item to a tracked follow-up (todo 2 above should have re-confirmed D6-1
+      through D6-29 — verify none silently vanishes) → add the archive banner → run the codex-alignment check (confirm
+      `/codex/08-workflows/ci-cd-flow.md` and `/codex/04-architecture/ci-alerting.md` reflect any new contract this
+      batch's todos established, e.g. the escalation-dispatch cooldown guard in todo 6) → update CLAUDE.md/codex if
+      warranted → grep the corpus for every referrer of `ci_satellite_ao_dispatch_batch6_2026_08_08` and repoint each to
+      the archived path → clear `locked_by` (already empty; confirm). **Done when**: the plan is in
+      `plans/archive/2026_08/`, every corpus referrer resolves, `check_reference_paths.py` has not regressed, and this
+      finalize doc is archived alongside it in the same commit.
 
 ## Codex SSOTs
 
