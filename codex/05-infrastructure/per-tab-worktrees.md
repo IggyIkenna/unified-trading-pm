@@ -283,6 +283,25 @@ is a known archived/consolidated repo. SSOT for the incident + remediation:
 | A slot clone's `git fsck` FAILS with `invalid sha1 pointer` / `invalid reflog entry` for an object "missing" from the store (VM git-health guard alerts "genuine missing/broken objects")                                                                                                                              | **Reference-clone prune hazard** (below): the base clone's default auto-gc pruned an unreachable object that a slot's stale ref/reflog still points at. The base's gc has no knowledge of slot refs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | **Prevent:** `git -C <base> config gc.pruneExpire never` on every base (asserted by `setup-tab-worktrees.sh` at clone time + `fleet-git-health-guard.sh` every 15 min). **Repair a broken slot:** reset the stale local ref off the missing object (`git update-ref refs/heads/<b> origin/<b>`) + `git reflog expire --stale-fix --all`, then re-fsck. See § below.        |
 | A repo's test/QG run fails with `ImportError: cannot import name 'X'` (or similar) while importing/probing a **sibling** repo's code (e.g. unified-trading-pm's capability-schema tests reading strategy-service's live engine registry) — even though that sibling's own quality-gates is green on its current branch | **Stale sibling `.venv` on THIS slot**: each slot's sibling clones have fully independent `.venv`s (3-tier isolation above). A fleet-wide dependency bump landing in the sibling's `pyproject.toml`/`uv.lock` does **not** retroactively refresh any slot's already-built venv — only the NEXT `uv sync` in that specific clone does. Confirmed 2026-07-31: `strategy-service/.venv` on slot 2 had `fastapi==0.135.1` installed while its own `pyproject.toml`/`uv.lock` already required `0.140.7` (a fleet-wide CVE-remediation bump shipped 2026-07-28, `plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md`) — a cross-repo probe in unified-trading-pm's tests hit `ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'` purely from the stale venv. | **Self-service first, don't escalate**: `cd <sibling-repo> && uv sync`, then verify — e.g. `.venv/bin/python -c "import <pkg>; print(<pkg>.__version__)"` should match the version pinned in that repo's own `uv.lock`. No code/pyproject change needed; this is a local environment refresh, not a dependency-resolution bug.                                             |
 
+| Repeated `index.lock` contention, edits needing recovery from an autostash TWICE, or a commit landing under the WRONG
+operator's author identity — even though Path-B's separate clones make CROSS-slot collisions unrepresentable |
+**Interactive-session slot collision — a DISTINCT failure mode from the cross-slot collision Path-B's separate clones
+already solve.** AO-dispatched workers get programmatic slot allocation; an INTERACTIVE session (a human opening a
+terminal/IDE tab) has none — the operator just `cd`s into whichever `.tabs/N` they have open, and nothing warns them if
+a different live session already occupies it. Multiple `claude` processes (potentially different operators) then share
+ONE slot's single `.git` — one index, one `HEAD`, one set of refs, and one `user.name`/`user.email` (§ "Commit
+attribution" below assumes one live session per slot — this incident breaks that premise). Confirmed live 2026-08-01: up
+to 6 concurrent `claude` processes on one slot, 3 collisions in ~15 min, one commit mis-attributed to the wrong operator
+despite correct content. Full incident:
+`plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`. | **Recovery**:
+`scripts/dev/safe-doc-push.sh` for the docs-only fast path (CLAUDE.md-mandated default —
+fetch/reconcile/stage-by-name/foreign-content-isolation/bounded retry, the same contention-hardening quickmerge.sh has
+for code). **Prevention (WARN, never hard-block — 2026-08-08 operator ruling)**: a live heartbeat on `.agent-claim`
+(`slot-git-status-report.sh`'s `refresh_agent_claim_heartbeat()`) distinguishes "claimed" from "claimed-and-alive"; a
+`SessionStart` hook (`cursor-configs/hooks/session-start-collision-check.sh`) checks that heartbeat plus a
+`/proc/<pid>/cwd` process scan and warns (non-blocking) naming the live occupant. Operator-side: before opening a new
+session, check `.agent-claim` liveness and pick an unclaimed slot. |
+
 ### Reference-clone prune hazard (codified 2026-07-13)
 
 **Failure mode.** Every slot is a `git clone --reference <base>` sharing the base's object store via
@@ -861,6 +880,13 @@ git config user.email "ikennaigboaka@gmail.com"
 `setup-tab-worktrees.sh` sets this at `--init` / `--add-slot` / `--reset-slot` (clone time). Sub-agents share the slot
 clone → inherit the identity automatically. Do NOT hand-edit `~/.gitconfig`. **Consumers:** CI alert workflows attribute
 via `github.event.head_commit.author.name`; the slot-git-status-report cron can group by slot.
+
+**Caveat — this premise assumes ONE live session per slot.** If two interactive sessions/operators share the same slot's
+checkout (the "Interactive-session slot collision" row in § Troubleshooting above), `.git/config` is shared state too:
+commits from EITHER session land under whichever identity is currently stamped there, regardless of actual author
+(confirmed 2026-08-01 — a session's own content-correct commit landed under the other operator's identity). This is not
+a gap in the per-clone mechanism itself; it is a consequence of the interactive-session-collision gap and is mitigated
+the same way (WARN-only `.agent-claim` liveness + the `SessionStart` collision hook), not solved at the identity layer.
 
 ### Derivation SSOT + checker (rework 2026-07-09 — ao_task_lifecycle plan Phase D)
 
