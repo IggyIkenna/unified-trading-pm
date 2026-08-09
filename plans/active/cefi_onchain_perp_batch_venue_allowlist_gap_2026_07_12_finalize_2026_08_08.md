@@ -62,17 +62,18 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile.** Once the source doc's sole open `[VERIFY]` P1 item lands — re-launch LIGHTER-ZKSYNC
-      `derivative_ticker` via `VENUES="LIGHTER-ZKSYNC" bash scripts/vm/launch-cefi-hl-aster-historical-backfill.sh`
-      (rebuild the code tarball first per the stale-tarball gotcha the doc's own prior sessions hit repeatedly), confirm
-      real rows landed across a full multi-day range (not just the single spot-checked days from the 2026-08-08
-      entitlement re-probe), and re-run `measure_honest_coverage.py` Layer-1 for LIGHTER-ZKSYNC to confirm
-      `present_tuples` moves off 0 — re-verify the cited commit/manifest evidence actually exists (do not trust the
-      source doc's own copy of the evidence line), flip the checkbox if not already `[x]`. Also fix the now-stale
-      `cefi_consolidated_closeout_2026_07_18.md` line-329 citation (the "lighter Tardis entitlement" parenthetical still
-      citing the old credentials-hold marker, scaffold correct) to reflect the resolved entitlement + completed
-      re-launch. **Done when**: the source doc's `[VERIFY]` item is `[x]` with fresh manifest evidence, and the
-      consolidated-closeout citation is updated.
+- [x] ✅ [REVIEW] P2. **Reconcile — DONE 2026-08-09 (slot 28, review craft).** The source doc's sole `[VERIFY]` P1 item
+      was already `[x]` (closed 2026-08-08 by worker slot-12) — independently re-verified its manifest evidence rather
+      than trusting the doc's own copy: fresh `read_availability_index_safe` read against
+      `market-data-tick-cefi-prd-central-element-323112` (`venue=LIGHTER-ZKSYNC, data_type=derivative_ticker`) shows
+      **16,491 `capture_status=captured` rows, 2026-04-17..2026-08-02, 100%
+      `source=tardis`/`pipeline_mode=batch_tardis`** (doc cited 16,484 — the +7 delta is normal ongoing consolidation,
+      not a discrepancy). Re-ran `measure_honest_coverage.py --asset-group cefi` (`run-bounded-analysis.sh`, RSS-poll
+      cap): Layer-1 shows `matched=68/73`, **5 missing tuples = BITGET-FUTURES/OKX-FUTURES only — LIGHTER-ZKSYNC
+      confirmed NOT among them**, matching the source doc's claim exactly. Fixed the stale
+      `cefi_consolidated_closeout_2026_07_18.md` line-334 citation (was still "BLOCKED-CREDENTIALS, scaffold correct")
+      to reflect the resolved entitlement + verified re-launch. No code change needed — this was a verification-only
+      reconcile, the source doc's checkbox was already correctly `[x]`. (repo: unified-trading-pm)
 - [ ] [DOC] P2. **Archive.** Run the standard 6-step archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` once todo 1 confirms it is fully closed — dated
@@ -85,3 +86,8 @@ context_scope:
 
 - **2026-08-08**: authored alongside the source doc's `assigned_vm: NA -> planning` reclassification
   (na-eligibility-audit round7 RECLASSIFY sweep, cefi tranche, batch 2 of 3).
+- **2026-08-09 (slot 28, review craft, task
+  `cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize-515548833c3b`)**: Todo 1 done — independently
+  re-verified the source doc's already-`[x]` VERIFY evidence (fresh manifest read + Layer-1 re-run, both confirm) and
+  fixed the stale `cefi_consolidated_closeout_2026_07_18.md` citation. See todo 1 for full detail. Todo 2 (archive) is
+  next — out of scope for this dispatch, left for a follow-up `[DOC]`-tagged task.
