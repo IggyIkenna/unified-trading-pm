@@ -298,3 +298,24 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+
+- **2026-08-09 (slot-30)** — **FOURTH occurrence, new symptom flavor: two DIFFERENT task_ids concurrently dispatched for
+  the SAME todo, not a sibling-id reset after the fact.** Dispatched
+  `prediction_betfair_lay_price_adapter_scaffold_deleted-caad88819ca3` (todo 2 of
+  `plans/active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md`) at ~14:xx UTC; slot-5 was
+  independently dispatched the SAME todo's content under its own task_id at the same time (`14:45:17Z` per its commit
+  `market-tick-data-service@1200d443`). Both fully implemented + QG-passed the identical `download_batch`/
+  `VENUE_REGISTRY` feature; my quickmerge push hit a real rebase conflict against slot-5's already-merged version
+  (auto-rebase `CONFLICT (content)` on all 3 touched files). Recovered cleanly — `git rebase --abort`, verified slot-5's
+  version satisfied the done_definition, discarded my redundant local commit via `git reset --keep origin/...` (working
+  tree was clean, no data lost, original commit `7fd423579a` recoverable via reflog), called `/done` anyway citing
+  slot-5's SHA. Server confirmed:
+  `"dispatch_reason":"orphan task closed — no backlog.yaml definition found for this task_id"` — my task_id had already
+  fallen out of backlog.yaml by the time I finished (~30min of wall-clock work, ~9 QG retries) purely because of the
+  race window, not because of anything wrong in my execution. This is the same "external race reads a flipped checkbox
+  as unflipped" precondition this doc already names (§ The mechanism) — consistent with regen running against a stale
+  plan-clone read of todo 2 as still `- [ ]` while slot-5's flip was in flight, minting a second live `queued` row under
+  a fresh id for the same brief instead of guard 1 (same-plan brief-keyed reconcile) catching it. No code fix attempted
+  here (this doc's rewrite todo is `assigned_vm: NA`, banner-guarded, operator/local-only-homed) — logging as further
+  evidence the standing P2 content-hash-id rewrite is still needed; cost this time was one full worker-session's wasted
+  compute, not corrupted audit history.
