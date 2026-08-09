@@ -159,7 +159,7 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       confirmed in watchdog comment lines 309–321 (fixed 2026-08-05). Both recorded in source doc Progress Log
       2026-08-08.
 
-- [ ] 4. [INFRA] P3. **Audit which of this repo's standing, schedule-active CI monitors lack a state-diffed
+- [x] ✅ 4. [INFRA] P3. **Audit which of this repo's standing, schedule-active CI monitors lack a state-diffed
       recovery/all-clear post, and add the already-3×-precedented `branch-health.yml` recovery-job pattern (cached
       prior-state diff + `recovery: true` + a short `cooldown_min`) to any LIVE one found missing it.** Confirmed
       present: `branch-health.yml`'s lag-monitor, `overnight-dead-man-switch.yml`. Confirmed absent but currently
@@ -168,7 +168,20 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       every LIVE monitor found missing the pattern has it added, with a regression test proving the recovery/all-clear
       fires on a synthetic resolved-condition case and stays silent while the condition persists. Source:
       `issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md` (`## Still open`, sole [INFRA]
-      P3 item) — never cited by any covering doc (created 2026-08-07, after every prior sweep).
+      P3 item) — never cited by any covering doc (created 2026-08-07, after every prior sweep). **DONE 2026-08-09,
+      unified-trading-pm@c717af0fd** — enumerated all 27 schedule-active workflows; the source doc's own
+      "`overnight-dead-man-switch.yml` confirmed present" premise was STALE (re-verified: it has no dedup_key/cooldown
+      and no resolved job — a one-shot nightly liveness check, not a re-nagging standing-condition monitor, correctly
+      excluded from the fix). Found 6 LIVE standing-condition monitors genuinely missing the pattern
+      (`fix-approval-timeout.yml`, `ldr-docs-gate.yml`, `freeze-deferred-build-replay.yml`,
+      `promote-fleet-startup-failure-monitor.yml`, `ruleset-drift-alert.yml`, `sit-gate-stuck-detector.yml`) and added
+      the recovery bookend to each via a new shared, unit-tested `scripts/cicd/alert_recovery.py` (10 regression tests:
+      transition table + state round-trip + CLI) rather than re-deriving the diff per workflow. 2 smaller gaps found but
+      NOT fixed here (documented, not silently dropped) — `ldr-to-main-promote-fleet.yml`/ `ldr-to-main-promote.yml`'s
+      conflict/arm-failed alerts have no dedup_key at all (a "too spammy" defect, not a "silently resolved" one —
+      different fix), and `branch-health.yml`'s `ar-lag-notify` lacks a resolved sibling (lower-severity WARNING
+      advisory). Full enumeration + per-monitor classification in the source doc's Progress Log 2026-08-09 entry.
+      `quality-gates.sh` green (see commit).
 
 - [x] ✅ 5. [INFRA] P2. **Fleet-wide sweep of `unified-trading-ci/.github/workflows/` for other reusable workflows
       carrying the same still-self-hosted-but-now-stranded `runs-on:` pattern the 2026-08-06
