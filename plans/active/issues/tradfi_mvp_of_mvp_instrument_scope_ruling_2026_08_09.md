@@ -195,9 +195,9 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
       Then launch/verify full-history backfills for the CBOE Treasury yield-curve INDEX and KRW/USD (existing launchers,
       manual invocation per "Known relaunch gotchas"), and DXY once its launcher exists (todo above). **EXTRACTED
       2026-08-09 (round-9 combined RECLASSIFY + satellite-extraction sweep) →
-      `/plans/active/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1** — all 4 cells are Yahoo/FRED-sourced,
-      not gated by the open Databento billing-suspension issue; the DXY launcher shipped same-day (see todo above, now
-      `[x]`). Track completion there, not here.
+      `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (now `[x]` ✅, archived)** —
+      all 4 cells are Yahoo/FRED-sourced, not gated by the open Databento billing-suspension issue; the DXY launcher
+      shipped same-day (see todo above, now `[x]`). Completion recorded there.
 - [x] ✅ [DOCS] P2. **NEW (2026-08-09)** — propagate this scope update to `/codex/02-data/mvp-scope-canonical.md`,
       `/codex/02-data/cross-asset-canonical-target-ssot.md`, and `/codex/09-strategy/mvp-universe-per-asset-group.md`.
       **Shipped `unified-trading-pm@d5d0b75cc` / `@22d0a07d0` / `@ecddf76ad`**. The closeout doc
@@ -266,6 +266,6 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
   SHIPPED by a concurrent session (`deployment-service@bcf55c781`, confirmed ancestor of `origin/live-defi-rollout`) —
   flipped `[x]` with evidence above; the fix landed on the VM-naming side, not `wave_launcher.py` itself. The
   FRED/CBOE/KRW/DXY backfill-verify todo (todo 2) extracted into
-  `/plans/active/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (Yahoo/FRED-sourced, not
-  Databento-billing-gated). This doc stays `assigned_vm: NA` as an SSOT ruling doc — both remaining action items are now
-  tracked/closed elsewhere.
+  `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (Yahoo/FRED-sourced, not
+  Databento-billing-gated; now `[x]` ✅, archived). This doc stays `assigned_vm: NA` as an SSOT ruling doc — both
+  remaining action items are now tracked/closed elsewhere.

@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [tradfi, cboe, discovery-floor, honest-absence, yahoo, data-correctness]
 related:
   [
-    /plans/active/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
@@ -31,8 +31,8 @@ execution_scope: local-only
 priority: P2
 source: >-
   Found while verifying/launching the CBOE Treasury yield-curve INDEX backfill for
-  tradfi_satellite_ao_dispatch_batch10_2026_08_09.md todo 1. After fixing the separate `_resolve_source`
-  --source-required gate bug (CBOE ohlcv_24h missing from the Yahoo-routed venue exemption —
+  `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1. After fixing the separate
+  `_resolve_source` --source-required gate bug (CBOE ohlcv_24h missing from the Yahoo-routed venue exemption —
   market-tick-data-service@af2c53ce), a `--start-floor 2000-01-01` relaunch of the CBOE Treasury-INDEX launcher still
   wrote ZERO real rows for years 2000-2019 (all dates logged `HONEST_ABSENCE: 1 venue(s) below UAC discovery floor ...
   EXPECTED_PRE_SOURCE_COVERAGE_START: ['CBOE']`), while years 2020+ wrote real captured rows correctly
@@ -130,7 +130,7 @@ urgency, and warrants its own scoped implementation + test pass.
 
 ## Progress Log
 
-- 2026-08-09: doc created during `tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (data_engineering worker,
-  slot 17). Root-cause `_resolve_source` bug (separate, already fixed — `market-tick-data-service@af2c53ce`) confirmed
-  working for post-floor (~2020-06+) CBOE dates; this floor-granularity gap is the reason full 2000-history coverage
-  isn't achievable yet even with that fix shipped.
+- 2026-08-09: doc created during `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1
+  (data_engineering worker, slot 17). Root-cause `_resolve_source` bug (separate, already fixed —
+  `market-tick-data-service@af2c53ce`) confirmed working for post-floor (~2020-06+) CBOE dates; this floor-granularity
+  gap is the reason full 2000-history coverage isn't achievable yet even with that fix shipped.

@@ -15,7 +15,7 @@ summary: >-
   other genuinely operator/design-gated content) — only these 2 items extracted. Conflict-checked against
   tradfi_satellite batches 6-9 (all active/complete) and `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` —
   zero collisions.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -27,7 +27,7 @@ related:
     /plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md,
     /plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch9_2026_08_09.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch10_2026_08_09_finalize.md,
+    /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch10_2026_08_09_finalize.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
@@ -63,6 +63,13 @@ drift_direction: advance-code
 ---
 
 # TradFi satellite AO batch 10 — 2026-08-09
+
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** Both todos done + their source-doc checkboxes reconciled by
+> `tradfi_satellite_ao_dispatch_batch10_2026_08_09_finalize.md`'s todo 1. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "archive immediately" HARD RULE (and the
+> `ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md` precedent for this exact batch-N/finalize shape), this doc
+> and its now-done finalize companion archive together in this same follow-up commit — separate from the checkbox-flip
+> commit per that same codex doc's "never combine the flip with the git mv" rule. Successor: none.
 
 Only 2 items qualified from the 2 candidate docs this sweep read in full — both source docs remain genuine mixes with
 other operator/design-gated content untouched. Yield is deliberately thin; reported honestly rather than padded.
