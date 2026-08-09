@@ -55,8 +55,11 @@ context_scope:
 
 # bucket_iam_write_protection_per_tier_2026_06_09 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **STATUS: `active`, machine-held.** `depends_on` + `gate_on_depends: true` hold dispatch until
+> `bucket_iam_write_protection_per_tier_2026_06_09.md`'s todos are done — the dispatcher will not pick this up before
+> then regardless of `status`. (Corrected 2026-08-09, plan_reconciler agt-733350: this banner previously said
+> `draft — NOT dispatched`, which contradicted the frontmatter's own `status: active` and could mislead a reader into
+> thinking a second, `status`-based gate existed on top of the `gate_on_depends` one.)
 
 ## Todos
 

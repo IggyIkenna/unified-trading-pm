@@ -20,8 +20,10 @@ summary:
   rebuild / CF-audit claims are STALE for sports/tradfi/defi (all independently confirmed DONE + GCS-reverified
   2026-07-12) and tradfi's Era-B 242,210 chain-rows is a design-adjudicated non-issue, not remaining work; cefi is NOT
   adjudicated (no fresh CF-audit found). Legacy-BUCKET delete (a distinct axis from in-bucket duplicate cleanup, which
-  is done) remains genuinely open for all four AGs — see the 'Adjudication 2026-07-14' section for the full per-claim
-  evidence.**"
+  is done) — see the 'Adjudication 2026-07-14' section for the full per-claim evidence. **CORRECTED 2026-08-09
+  (plan_reconciler agt-733350): RESOLVED for 3 of 4 AGs (defi/tradfi/sports) 2026-08-08 (operator, NA-corpus blocker
+  digest round 5, id=57) — all 3 remaining buckets confirmed already gone (404 on live probe), the doc's sole todo is
+  `[x]`. Only cefi's status is unadjudicated per this same doc's own text above.**"
 status: open
 nature: notes
 asset_group: [cross-cutting]
