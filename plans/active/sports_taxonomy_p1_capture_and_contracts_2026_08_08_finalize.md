@@ -104,9 +104,9 @@ locked_since:
       corroborating, not duplicate, evidence).
 
       **Net**: no false-done claims found in any of the four source docs; every commit P1 or its sources cite resolves
-                      to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
-                      capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
-                      (unrelated, already-tracked) chains finish.
+                          to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
+                          capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
+                          (unrelated, already-tracked) chains finish.
 
 - [x] ✅ [REVIEW] P1. **Check whether reconciling left any source doc at zero open todos**, and if so run the same
       6-step archival ritual on it — a finalize that closes only its own plan while leaving a now-fully-done source doc
@@ -145,14 +145,19 @@ locked_since:
       MTDS carve-out pattern); added a regression test asserting the correct bucket kind/asset_group. QG: ✅ ALL QUALITY
       GATES PASSED, 10/10 unit tests green (was 9, +1 regression). Verified `631fc4594` is an ancestor of
       `origin/live-defi-rollout`.
-- [ ] [REVIEW] P1. **Re-verify the already-archived exchange/fixed-odds fork pair still resolves.** Both
+- [x] ✅ [REVIEW] P1. **Re-verify the already-archived exchange/fixed-odds fork pair still resolves.** Both
       `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` and its finalize sibling were marked `superseded` and
       **archived to `plans/archive/2026_08/` on 2026-08-08** in the same commit that authored this chain — the parent
       because the operator retired the instrument_type split it exists to implement, the sibling because a
       `gate_on_depends` finalize whose parent went terminal can never fire. Three active-corpus referrers were repathed
       at the time. This todo only re-checks that no NEW referrer has since been authored against the old `plans/active/`
       path (a real risk while this chain is in flight). **Done when**: a corpus-wide grep for either slug shows every
-      referrer resolving to the archived location.
+      referrer resolving to the archived location. — verified 2026-08-09:
+      `grep -rn     "/plans/active/sports_closeout_exchange_fixed_odds_fork" plans/active/` returns zero hits (also
+      checked codex/, scripts/); the only frontmatter path-reference outside the archived pair itself
+      (`sports_consolidated_closeout_2026_07_19.md`) already cites `/plans/archive/2026_08/…`. Every other match across
+      the corpus is a bare-filename historical-narrative mention (Progress Log prose), not a resolvable path citation.
+      No new referrer has been authored against the stale active path.
 - [ ] [REVIEW] P2. **Confirm the P2 and P3 gates can legitimately release.** Both declare `gate_on_depends: true` on P1.
       Verify the contracts they assume actually exist in UAC (venue/executable split, single lowercase `odds`, `horizon`
       axis, retired `markets`/`outcomes`/`settlements`) rather than relying on P1's checkbox state alone. **Done when**:
@@ -166,3 +171,9 @@ locked_since:
 ## Progress Log
 
 - **2026-08-08** — Authored alongside the parent per the finalize-plan-coverage rule.
+- **2026-08-09** — Todo 4 (re-verify the archived exchange/fixed-odds fork pair) done. Corpus-wide grep for
+  `/plans/active/sports_closeout_exchange_fixed_odds_fork` returns zero hits anywhere in `plans/active/`, `codex/`, or
+  `scripts/`. The one active-corpus frontmatter path-citation of the pair (`sports_consolidated_closeout_2026_07_19.md`)
+  already points at `/plans/archive/2026_08/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`. Every remaining
+  corpus match is a bare-filename mention inside Progress Log prose (historical narrative, not a live path reference).
+  Conclusion: no new referrer has been authored against the stale active path since the 2026-08-08 archival.
