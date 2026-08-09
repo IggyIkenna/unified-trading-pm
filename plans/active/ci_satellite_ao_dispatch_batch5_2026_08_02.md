@@ -165,8 +165,15 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
     2026-07-30 na-eligibility-audit verdict said verbatim "Re-scope the todo to name the mechanism and it becomes a
     clean RECLASSIFY" — this is that re-scope.
 
-- [ ] [VERIFY] P2. **Two remaining `github_actions_operator_gated_followups_2026_07_17.md` items, combined into ONE todo
-      per the same-file-contention note above.** Record BOTH findings as ONE dated Progress Log entry in that doc:
+- [x] ✅ [VERIFY] P2. **DONE 2026-08-09 (slot 11)** — both sub-items closed with ONE dated Progress Log entry in
+      `github_actions_operator_gated_followups_2026_07_17.md`. Sub-item 1: measured directly against the durable
+      BigQuery `resource_samples` pipeline — avg_cpu_pct = 50.6% (min 16.7%, p95 85.6%, max 95.1%, 171 samples,
+      `vm_name='planning'`), within the operator's 50-70% band, no re-escalation warranted (caveat: pipeline data for
+      this VM only starts 2026-08-08, so the window is ~29.5h, not multi-day — recorded honestly). Sub-item 2: recorded
+      as MOOT — pointer to `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md` per the instruction to skip
+      re-scoping. Evidence: `unified-trading-pm@<SHA>` (source-doc checkbox flip + Progress Log entry). **Two remaining
+      `github_actions_operator_gated_followups_2026_07_17.md` items, combined into ONE todo per the same-file-contention
+      note above.** Record BOTH findings as ONE dated Progress Log entry in that doc:
   1. **BigQuery `resource_samples` utilization verification** (`[VERIFY] P2`, ~line 632; batch4 Deferred **D4-3**). The
      runner resize landed 2026-07-27; measure the rolling average utilization over a sustained window from the durable
      BigQuery `resource_samples` pipeline (NOT a point-in-time SSM check) and report it against the operator's

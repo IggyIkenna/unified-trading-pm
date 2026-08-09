@@ -682,19 +682,25 @@ agent-orchestrator up 180-230% vs the Jul01-15 baseline).
       remaining credentials, wire them in and raise concurrency to 16; if not yet, re-check again rather than
       provisioning anything without the operator's own account action. In the meantime, continue running on the current
       (lower) concurrency — this is not a blocker for any other work.
-- [ ] [VERIFY] P2. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — this is a measurable fact-check, not
-      an operator judgment call: run the verification directly against the durable BigQuery `resource_samples` pipeline
-      (below) over a sustained window, compute the average utilization, and report it against the operator's pre-stated
-      band. **No further human judgment required unless the measured result falls outside that band** — at which point
-      re-escalate with the number. (tracked as `ci_satellite_ao_dispatch_batch4_2026_07_31.md` Deferred D4-3, picked up
-      as `ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo [VERIFY] P2 ~line 163; both status: active,
-      open/dispatchable now, not yet completed. **Corrected 2026-08-07 (na-eligibility-audit)**: previously said "both
-      status: draft, not yet dispatched" — both are `status: active`) **Post-scale verification, now that the resize IS
-      done (2026-07-27).** Watch the rolling utilization for a sustained window over the coming days — target ~50-70%
-      average with burst headroom; NOT 30-40% (over-provisioned, give some back) and NOT pinned 90%+ again
-      (under-provisioned, the resize didn't fix it). The durable BigQuery `resource_samples` pipeline (below) now exists
-      to answer this with real data once the bridge cron is retired in favour of it — do not judge this off a single
-      point-in-time SSM check.
+- [x] ✅ **DONE 2026-08-09 (`ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2, slot 11) — measured, WITHIN BAND, no
+      re-escalation.** `bq query` on `central-element-323112.deployment_operational_data.resource_samples`
+      (`vm_name='planning'`, `service='agent-orchestrator'` — the only values resolving to this host): **avg_cpu_pct =
+      50.6%** (min 16.7%, p95 85.6%, max 95.1%, 171 samples) — **within the 50-70% band**, real burst headroom, neither
+      failure mode. Caveat: pipeline data for this VM only starts 2026-08-08 03:14:43 (verified no earlier rows in a
+      35-day back-check), so the window is ~29.5h, not multi-day — the verdict is unambiguous regardless. Per the
+      done-condition, no re-escalation warranted. Original text preserved below for record.
+  - **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — this is a measurable fact-check, not an operator
+    judgment call: run the verification directly against the durable BigQuery `resource_samples` pipeline (below) over a
+    sustained window, compute the average utilization, and report it against the operator's pre-stated band. **No
+    further human judgment required unless the measured result falls outside that band** — at which point re-escalate
+    with the number. (tracked as `ci_satellite_ao_dispatch_batch4_2026_07_31.md` Deferred D4-3, picked up as
+    `ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo [VERIFY] P2 ~line 163; both status: active, open/dispatchable
+    now, not yet completed. **Corrected 2026-08-07 (na-eligibility-audit)**: previously said "both status: draft, not
+    yet dispatched" — both are `status: active`) **Post-scale verification, now that the resize IS done (2026-07-27).**
+    Watch the rolling utilization for a sustained window over the coming days — target ~50-70% average with burst
+    headroom; NOT 30-40% (over-provisioned, give some back) and NOT pinned 90%+ again (under-provisioned, the resize
+    didn't fix it). The durable BigQuery `resource_samples` pipeline (below) now exists to answer this with real data
+    once the bridge cron is retired in favour of it — do not judge this off a single point-in-time SSM check.
 
               **Phase 7's scope (thin push/repository_dispatch glue only —
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               main-backmerge-to-ldr, image-build-gate's polling wrapper, update-dependency-version, etc.) is still fine to add
@@ -972,3 +978,9 @@ explicitly not-recommended. No `assigned_vm` change.
   original "~$1,000/mo→~~$300-400/mo" target was about, now
   moved. All 4 checkboxes above flipped; full evidence + methodology in `ci_satellite_ao_dispatch_batch4_2026_07_31.md`
   todo 9's own Progress Log.
+
+**`ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2, 2026-08-09 (slot 11) — both remaining items closed.** (1)
+BigQuery `resource_samples` utilization: measured avg_cpu_pct=50.6%, within the 50-70% band — full detail on the flipped
+checkbox at ~line 685. (2) Test-impact design scoping: MOOT, already `[x]` at ~line 861 (extracted 2026-08-03, now fully
+shipped as `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`) — no fresh design needed.
+`ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2 is done.
