@@ -290,8 +290,13 @@ the todos already promised.
 3. LIGHTER-ZKSYNC's fix (tracked in [[non_tardis_dexperp_venue_data_status_smoketest_2026_07_07]]) exists only as
    uncommitted working-tree changes as of this smoke test — needs commit + plan-flip before it counts as shipped (a
    separate background agent was already dispatched for this fix; status pending as of this doc's filing).
-4. MARGINFI/SOLEND have no reference-data adapter of any kind — worse than the other 5 lending protocols checked; no
-   IS-side coverage plan surfaced.
+4. ~~MARGINFI/SOLEND have no reference-data adapter of any kind — worse than the other 5 lending protocols checked; no
+   IS-side coverage plan surfaced.~~ **STALE — corrected 2026-08-09 (plan_reconciler).** This doc's own later 2026-07-12
+   finding (below, "MARGINFI-SOLANA, SOLEND-SOLANA... all fetch real instruments successfully") confirms adapters DO
+   exist and work for both — the actual gap was a hand-maintained `_DEFI_VENUE_PREFIXES` registry never updated for
+   them, fixed `unified-api-contracts@0250892d`. This open question was never revisited after that fix shipped; also
+   propagated to `instruments_remaining_work_audit_2026_07_10.md` as a stale "no adapter exists" claim (that doc is an
+   explicit historical snapshot, lower-priority to fix, flagged separately).
 5. Whether purging/regenerating the stale TradFi catalogue (ICE 16,146→~1 real rows, CBOE 37,563→~89) is already
    scheduled, or needs a new migration plan — unaddressed.
 6. Whether ODDS_API's total absence from instruments-service (IS has no reference-data adapter for it, only MTDS

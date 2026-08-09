@@ -21,7 +21,11 @@ stage: [data]
 repos: [unified-api-contracts, market-tick-data-service]
 scope: [engineer]
 tags: [data-correctness, cross-repo, ci-red, capability-declarations, protocol-capabilities, sentinel, operator-notify]
-related: [defi_protocol_capabilities_lst_rates_audit_2026_08_05, fred_backfill_early_date_indefinite_stall_2026_07_30]
+related:
+  [
+    /plans/archive/issues/defi_protocol_capabilities_lst_rates_audit_2026_08_05.md,
+    /plans/archive/issues/fred_backfill_early_date_indefinite_stall_2026_07_30.md,
+  ]
 created: 2026-08-05
 priority: P0
 parent_epic: infrastructure_master
@@ -135,7 +139,17 @@ resolution pattern. Evidence backing the decision (verified in-repo, MTDS + UAC 
 
 ## Follow-ups (tracked)
 
-- `- [ ] [UAC] P2. **Remove now-orphaned AAVE `rewards`seed + venue capabilities** — delete the AAVE_V3`rewards`seed in`defi_prediction_instrument_seeds.py:153`and the`rewards`entries for all 10 AAVE_V3 chains in`defi_venue_capabilities.py`, completing the bc397b93-style cross-surface cleanup for the AAVE rewards removal shipped at `5f441e0d`. UAC QG does NOT flag them (verified green with them present), so this is consistency-by-precedent, not gate-driven. Owned by the UAC capability-declaration owners (same workers as `6e791b05`/`b2874193`).`
+- [ ] [UAC] P2. **Remove now-orphaned AAVE `rewards` seed + venue capabilities** — delete the AAVE_V3 `rewards` seed in
+      `defi_prediction_instrument_seeds.py:153` and the `rewards` entries for all 10 AAVE_V3 chains in
+      `defi_venue_capabilities.py`, completing the bc397b93-style cross-surface cleanup for the AAVE rewards removal
+      shipped at `5f441e0d`. UAC QG does NOT flag them (verified green with them present), so this is
+      consistency-by-precedent, not gate-driven. Owned by the UAC capability-declaration owners (same workers as
+      `6e791b05`/`b2874193`). **plan_reconciler 2026-08-09**: this todo was previously wrapped entirely inside a single
+      backtick code span (`` - `- [ ] [UAC] P2. ...` ``), which meant it did not match `- [ ]` at line-start — invisible
+      to any checkbox scanner despite the surrounding text describing it as tracked. Reformatted as a real checkbox;
+      content unchanged. This is the doc's only genuinely open item — the 3 MTDS-QG blockers this doc's title/summary
+      describe are RESOLVED (see the 08-05 17:1xZ entry below), but `status: open` remains correct because of this
+      separate, still-open consistency follow-up.
 
 ## Status / owner
 
@@ -155,7 +169,7 @@ resolution pattern. Evidence backing the decision (verified in-repo, MTDS + UAC 
   must NOT read "blocker absent from UAC main" as resolved; LDR HEAD (`6e791b05`) is the ground truth until an explicit
   revert/scope lands on LDR.
 - **NOTIFIED**: operator via this doc (cross-repo, CI-red — big-finding class,
-  `/codex/11-project-management/ plan-priority-tier-and-dispatch-ordering.md` findings triage).
+  `/codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md` findings triage).
 
 ## ADDENDUM (08-05 16:45Z, slot-7): third MTDS-QG blocker — rule11 DEFI shard-count pin drift (+102)
 
