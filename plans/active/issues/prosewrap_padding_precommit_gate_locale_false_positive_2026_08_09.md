@@ -90,11 +90,21 @@ plausibly hit the same wall silently and either gave up or routed around it some
 
 ## Recommended fix
 
-- [ ] [BACKEND] P2. Add explicit locale pinning (`LC_ALL=C` or equivalent) to every `sort`/`comm` invocation inside
+- [x] ✅ [BACKEND] P2. Add explicit locale pinning (`LC_ALL=C` or equivalent) to every `sort`/`comm` invocation inside
       `check_prosewrap_padding.sh`'s `--only` branch (and check the corpus-wide mode for the same gap), OR set
       `LC_ALL=C` once at the top of the script before any content processing. Verify the fix with a UTF-8-heavy fixture
       (em-dash, checkmark, curly quote) under a non-`C` locale, both before (reproduce the crash) and after (confirm
-      clean).
+      clean). — unified-trading-pm@fa34c097e: added `export LC_ALL=C` right after `set -uo pipefail` (covers the
+      `--only` branch's sort/comm calls; corpus-wide mode never calls sort/comm, so no separate change needed there).
+      Could not reproduce the literal "Illegal byte sequence" crash on this host — the available locales (`C`, `C.utf8`,
+      `POSIX`, `en_US.utf8`) all handled the em-dash/checkmark/curly-quote fixture without erroring
+      (glibc/locale-gen-set difference from the originating session); applied the fix defensively per the issue's own
+      "OR set LC_ALL=C once at the top" option regardless, since it's strictly correct here (only exact-match set
+      membership is needed, never locale-aware ordering) and eliminates the whole failure class. Verified no regression:
+      `--only` still correctly flags a genuinely new over-indent line and still passes a byte-identical HEAD file
+      cleanly (0 new violations) under both `C.UTF-8` and `en_US.utf8`; corpus-wide total is unchanged before/after
+      (4656 vs baseline 4472 — pre-existing debt tracked in
+      `/plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md`, not a regression from this change).
 - [ ] [SCRIPT] P3. Check `sort`'s exit code explicitly wherever this script pipes through it, so a future
       encoding/locale regression fails loudly (a hard error) instead of silently degrading into a false positive that
       looks like a real content issue.
