@@ -5,7 +5,7 @@ summary: >-
   Gated closeout for tradfi_satellite_ao_dispatch_batch10_2026_08_09.md — machine-held via depends_on + gate_on_depends:
   true until both of that plan's todos are done. Reconciles the 2 source docs (flip/cite the item each batch10 todo
   closed), then archives batch10 via the standard 6-step ritual.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -39,9 +39,6 @@ context_scope:
   ]
 depends_on: [tradfi_satellite_ao_dispatch_batch10_2026_08_09]
 gate_on_depends: true
-archive_exempt: true # ONE-COMMIT BRIDGE (see Progress Log) — check_archive_candidates vs. never-combine-flip-and-mv
-# conflict, per issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md; removed in the
-# immediately-following archival commit.
 source: >-
   Round-9 combined RECLASSIFY + satellite-extraction sweep (2026-08-09), per task_template.md §4's
   finalize-plan-coverage rule.
@@ -53,8 +50,13 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 10 — finalize
 
-**status: active — both todos done; batch10 archived. This plan is itself now archival-eligible (see banner once
-moved).**
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** Both todos done (`unified-trading-pm@833c34a05`); archived alongside its
+> now-done base plan, `tradfi_satellite_ao_dispatch_batch10_2026_08_09.md`, in this same follow-up commit — per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "archive immediately" HARD RULE and the
+> `ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md` precedent for this exact batch-N/finalize shape. The
+> checkbox-flip commit shipped separately from this git-mv archival commit per that same codex doc's "never combine"
+> rule — the `archive_exempt: true` bridge used for the flip commit is removed here as moot now that the doc is leaving
+> `plans/active/`. Successor: none.
 
 ## Todos
 
