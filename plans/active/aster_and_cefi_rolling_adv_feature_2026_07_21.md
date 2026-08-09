@@ -212,17 +212,10 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 - [x] ✅ [DESIGN] P2. Design + implement the strategy-side consumption of the ADV signal: position-size cap as a % of
       ADV, and the min-7-day-history-to-trade gate the operator asked for. **RULED (operator, 2026-08-08)**: cap applies
       **at order-sizing time**, ceiling **10% of ADV** — filed as `[BACKEND]` below.
-- [ ] [BACKEND] P2. **Implement the 10%-of-ADV position-size cap at order-sizing time** (per the 2026-08-08 ruling
-      above): the natural integration point is `AllocationSizer.size_signal()` /
-      `strategy-service/strategy_service/allocation_sizer.py` (the per-client sizing entry point that produces each
-      `PerClientSignal.allocation_amount_usd`) — clamp the final order notional to `min(computed_size, 0.10 * adv_usd)`
-      using `RollingAdvReader.compute_rolling_adv()`
-      (`features-service/features_service/cross_instrument/app/calculators/adv.py`, shipped `features-service@8608ea5d`)
-      for the instrument's `adv_usd`. When `AdvStatus` is `INSUFFICIENT_HISTORY` or `NO_DATA` (min-7-day-history gate
-      not yet met, or MDPS candle coverage absent for the venue — e.g. all 4 on-chain-perp venues today), the instrument
-      is **not tradeable** — the cap must fail closed (no ADV data = no trade), not silently pass uncapped. Scope the
-      exact call site (`AllocationSizer` vs. a downstream execution-side check) before estimating; this todo is a
-      genuine build task once Phase 2 candle coverage exists for the relevant venues, not a config-only change.
+- **[BACKEND] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch12_2026_08_09.md` todo 2 for AO
+  dispatch (parent_epic: infrastructure_master). See that doc for the live checkbox + evidence.** (Implement the
+  10%-of-ADV position-size cap at order-sizing time in `AllocationSizer.size_signal()`, per the 2026-08-08 ruling
+  above.)
 - [ ] [DATA] P3. _(stretch, optional)_ Consider whether `book_depth.py`'s currently-unfilled `adv_30d_usd` input should
       be wired to call the SAME Phase-1 utility with `window_days=30`, now that a real producer exists — out of scope
       for this plan, a candidate follow-up once Phase 1 ships.
@@ -238,10 +231,10 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid overall — the Phase-3 `[BACKEND] P2`
   implementation todo is now bounded/deterministic per today's 2026-08-08 ruling (clamp `AllocationSizer.size_signal()`
   to `0.10 * adv_usd`, fail-closed on non-`OK` `AdvStatus`), but the sibling `[DATA] P3` `book_depth.py` stretch item
-  ("consider whether... should be wired") is a genuine open judgment call, not yet decided either way. Per the HARD
-  RULE (`assigned_vm` flips WHOLE-DOC only, every remaining open item must be worker-determinable), the doc cannot
-  flip while that stretch item stays open. Cross-checked against `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`
-  (today's independent full-corpus audit), which reached the same verdict via its own "Deferred — human-only" list.
-  **Recommendation for the next `/ag-closeout-audit` cefi batch (batch11)**: extract the Phase-3 backend todo alone
-  into a satellite AO-dispatch item (leaving this source doc's stretch item open/NA) — not executed in this pass, since
+  ("consider whether... should be wired") is a genuine open judgment call, not yet decided either way. Per the HARD RULE
+  (`assigned_vm` flips WHOLE-DOC only, every remaining open item must be worker-determinable), the doc cannot flip while
+  that stretch item stays open. Cross-checked against `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (today's
+  independent full-corpus audit), which reached the same verdict via its own "Deferred — human-only" list.
+  **Recommendation for the next `/ag-closeout-audit` cefi batch (batch11)**: extract the Phase-3 backend todo alone into
+  a satellite AO-dispatch item (leaving this source doc's stretch item open/NA) — not executed in this pass, since
   satellite-batch authoring is that skill's own numbered sequence, not this sweep's mechanism.
