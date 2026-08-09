@@ -88,8 +88,8 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md,
-    /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
+    /plans/archive/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md,
+    /plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
     /codex/08-workflows/ci-cd-flow.md,
     scripts/orchestrator/ldr-to-main-promote-heartbeat.sh,
     scripts/cicd/promotion_lag_monitor.py,
@@ -139,7 +139,15 @@ historical one.
 - [x] ✅ **MIGRATED 2026-08-02** (operator ruling, `plan_reconcile_parked_operator_decisions_2026_08_02.md` § 3) — both
       prevention todos below moved into `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Migrated
       prevention todos from resolved incidents" section. Original text preserved there verbatim with a source citation
-      back to this doc.
+      back to this doc. **CLOSED 2026-08-09** (`ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md` todo 1
+      reconciliation), per the 2026-07-31 na-eligibility-audit verdict's own "cite/close lines 128 and 132-144"
+      follow-up below: both migrated items shipped — the `[SCRIPT] P2` standing monitor via
+      `unified-trading-pm@ccb1d7b10` (verified ancestor of `origin/live-defi-rollout`;
+      `scripts/cicd/promote_fleet_startup_failure_monitor.py` + `promote-fleet-startup-failure-monitor.yml`, 2026-08-02)
+      and the `[CI] P1` auto-merge-arm fix + `ARM_FAILED`-tally bug via `unified-trading-pm@4bf65b67c` (verified
+      ancestor; 2026-08-02) — both landed via batch1 (batch1's own todos citing this doc as Source, not batch4), which
+      `ci_satellite_ao_dispatch_batch4_2026_07_31.md` todos 7/8 independently confirmed live and correctly marked
+      `DONE-ELSEWHERE` rather than re-shipping. Zero remaining checkbox or prose work in this doc.
 
 - **2026-07-30 (slot-2, data_engineering craft)**: 10th consecutive re-check of the sibling VERIFY-gate todo in
   `defi_venue_pipeline_to_live_ao_build_2026_07_30.md` — identical unmet state, no new information.

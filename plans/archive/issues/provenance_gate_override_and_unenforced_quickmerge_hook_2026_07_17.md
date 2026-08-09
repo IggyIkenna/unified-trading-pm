@@ -12,8 +12,13 @@ summary: |
   exits 0 off staging — and staging is bypassed fleet-wide), AND the /git-commit skill mandated the exact opposite of
   the CLAUDE.md HARD RULE ("never quickmerge by default — direct push is the rule"). Both are now fixed and verified;
   this doc is the surviving audit trail for the 33 laundered commits, since the machine record no longer shows them.
-status: open
-resolved_by:
+status: resolved
+resolved_by: >-
+  All 4 "Remaining / for the operator" items reached [x] -- the dep-order spot-check (operator-ruled clean, 2026-08-08),
+  the two batch1-covered stale-doc items, the husky-UI wiring (2026-08-03), and the redundant-hook deletion
+  (`unified-trading-pm@b02ba28c7`, 2026-08-06, verified live 2026-08-09 during
+  `/plans/active/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md` todo 1 reconciliation). Zero open checkbox or
+  prose work remains.
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -58,6 +63,14 @@ source:
 ---
 
 # Provenance-gate override + the hook that was never installed
+
+> **🗄️ ARCHIVED 2026-08-09** — all "Remaining / for the operator" items are `[x]`, zero remaining (checkbox AND prose),
+> `locked_by:` empty. Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo
+> done archives immediately. Closed during `ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md` todo 1's source-doc
+> reconciliation: the final open item (redundant-hook deletion) shipped `unified-trading-pm@b02ba28c7` (2026-08-06,
+> verified ancestor of `origin/live-defi-rollout`). Referrers fixed:
+> `silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` (2 path-formatted refs repointed to this archived
+> path).
 
 > **Read this before trusting a ✅ from `check_strict_quickmerge.py` on mtds or deployment-api for anything dated ≤
 > 2026-07-16.** The gate reads clean there because the baseline moved past the violations, not because they were ever
@@ -153,33 +166,42 @@ Not rogue agents — **the workspace contradicted itself, and the enforcement wa
 
 ## Remaining / for the operator
 
-- [x] ✅ [DEVOPS] P2. **RESOLVED 2026-08-08 -- operator ruling: run the spot-check. Ran it live; CLEAN, closing
-      this item.** Method (no local checkout of `market-tick-data-service`/`deployment-api` in this session -- used
-      `gh api`/`gh run list`/`gh pr view` against both repos directly): (1) confirmed both repos' `quality-gates-v2` on
-      `main` is green RIGHT NOW, 2026-08-08 -- 5/5 most-recent runs `success` for each repo (mtds newest
-      `99b600c0d9` 2026-08-08T10:07Z; deployment-api newest `af6aaf6e3d` 2026-08-08T12:17Z); (2) the specific residual
-      risk this doc names is dep-ordering -- e.g. mtds/deployment-api `main` code referencing a UTL/UAC symbol not yet
-      on that dep's `main` at promote time (2026-07-16) -- which would surface as an import/collection failure in
-      `QG slice (tests)`, not a silent pass; (3) checked the FULL failure history on `main` for both repos since the
-      bypass (`gh run list --status failure`): **mtds's first failure after 2026-07-16 is 2026-07-31** (15 days later,
-      run `30673172481`/`30658470782` -- checked job breakdown, ordinary `QG slice (tests)`/`(checks)` failures, not a
-      dependency/import error at collection time); **deployment-api's first failure after 2026-07-16 is 2026-07-30**
-      (14 days later). **Zero failures in the immediate aftermath window (2026-07-16 through the first failure two
-      weeks later)** -- the window where a genuine dep-floor mismatch tied to these specific 33 commits would be most
-      likely to surface, before subsequent legitimate quickmerged dep-bumps could mask or coincidentally resolve it.
-      (4) Re-read PR #596's own body: `Tier-A + content + SIT + combination gates passed` -- corroborates this doc's
-      claim that the promote bot's own dep-order-inclusive gate set passed at promote time, independent of the
-      provenance-gate override. **Verdict: no dep-order issue found, live or historical, traceable to the 33 laundered
-      commits.** This doc's own "Nothing automated will ever re-surface them" is still true (the provenance baseline
-      moved past them permanently), but this manual spot-check is the closure this todo asked for -- closing this item
-      for good, not deferring further.
+- [x] ✅ [DEVOPS] P2. **RESOLVED 2026-08-08 -- operator ruling: run the spot-check** (no separate operator-decisions doc
+      exists for this live-session ruling; recorded here, in this doc's own
+      `provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` history, as the sole traceable record).
+      Ran it live; CLEAN, closing this item.** Method (no local checkout of `market-tick-data-service`/`deployment-api`
+      in this session -- used `gh api`/`gh run list`/`gh pr view` against both repos directly): (1) confirmed both
+      repos' `quality-gates-v2` on `main` is green RIGHT NOW, 2026-08-08 -- 5/5 most-recent runs `success` for each repo
+      (mtds newest `99b600c0d9` 2026-08-08T10:07Z; deployment-api newest `af6aaf6e3d` 2026-08-08T12:17Z); (2) the
+      specific residual risk this doc names is dep-ordering -- e.g. mtds/deployment-api `main` code referencing a
+      UTL/UAC symbol not yet on that dep's `main` at promote time (2026-07-16) -- which would surface as an
+      import/collection failure in `QG slice (tests)`, not a silent pass; (3) checked the FULL failure history on `main`
+      for both repos since the bypass (`gh run list --status failure`): **mtds's first failure after 2026-07-16 is
+      2026-07-31** (15 days later, run `30673172481`/`30658470782` -- checked job breakdown, ordinary
+      `QG slice (tests)`/`(checks)` failures, not a dependency/import error at collection time); **deployment-api's
+      first failure after 2026-07-16 is 2026-07-30** (14 days later). **Zero failures in the immediate aftermath window
+      (2026-07-16 through the first failure two weeks later)** -- the window where a genuine dep-floor mismatch tied to
+      these specific 33 commits would be most likely to surface, before subsequent legitimate quickmerged dep-bumps
+      could mask or coincidentally resolve it. (4) Re-read PR #596's own body:
+      `Tier-A + content + SIT + combination gates passed` -- corroborates this doc's claim that the promote bot's own
+      dep-order-inclusive gate set passed at promote time, independent of the provenance-gate override. **Verdict: no
+      dep-order issue found, live or historical, traceable to the 33 laundered commits.** This doc's own "Nothing
+      automated will ever re-surface them" is still true (the provenance baseline moved past them permanently), but this
+      manual spot-check is the closure this todo asked for -- closing this item for good, not deferring further.
 - [x] [DEVOPS] P2. `check_strict_quickmerge.py` **fails OPEN on a bad range** — an unresolvable/invalid range prints "no
       bypassed code commits" (exit 0) rather than erroring. Found while testing the hook with a malformed sha. A typo'd
       range therefore reads as a pass. — already covered by plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md
       (see that doc for execution).
-- [ ] [DEVOPS] P3. `scripts/dev/hooks/pre-push-strict-quickmerge.sh` is now redundant (all three installers point at
-      `scripts/hooks/pre-push`). Still referenced by `migrate-slots-to-pathb.sh`, `quickmerge.sh` and two codex docs —
-      delete + repoint per "delete deprecated code (no shims)".
+- [x] ✅ [DEVOPS] P3. **DONE 2026-08-06** — `unified-trading-pm@b02ba28c7` (verified ancestor of
+      `origin/live-defi-rollout`) deleted `scripts/dev/hooks/pre-push-strict-quickmerge.sh` and repointed its 4 live
+      referrers: `scripts/dev/migrate-slots-to-pathb.sh` (`HOOK_SRC` → `scripts/hooks/pre-push`),
+      `scripts/quickmerge.sh` (stale comment reference), `/codex/08-workflows/ci-cd-flow.md`,
+      `/codex/05-infrastructure/per-tab-worktrees.md`. Re-verified live 2026-08-09: the hook file no longer exists on
+      disk; the only remaining `pre-push-strict-quickmerge` corpus hits are archived/historical doc text (not live code
+      referrers) and this batch's own plan text. `scripts/dev/hooks/pre-push-strict-quickmerge.sh` is now redundant (all
+      three installers point at `scripts/hooks/pre-push`). Was referenced by `migrate-slots-to-pathb.sh`,
+      `quickmerge.sh` and two codex docs — deleted + repointed per "delete deprecated code (no shims)".
+  - Source: `ci_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 (sub-item 2).
 - [x] ✅ [DEVOPS] P3. The two husky UI repos (`deployment-ui`, `unified-trading-system-ui`) are skipped by the self-heal
       (`case "${_hooks_dir}" in */.husky/*) continue`), so they carry no strict guard. Wire it into husky's own
       pre-push. **na-eligibility-audit 2026-08-01: already tracked (not yet done) as an open todo in
@@ -229,3 +251,13 @@ bounded, deterministic deletion task and was considered as a RECLASSIFY candidat
 `ci_satellite_ao_dispatch_batch4_2026_07_31.md` todo 1 owns this exact file (verbatim claim) and is now `status: active`
 (not draft) — a live, current claim. Flipping this doc's copy would draft a competing todo against an already-dispatched
 claim. Stays NA on citation; no `assigned_vm` change.
+
+- **2026-08-09 (slot 2, `ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md` todo 1 reconciliation)**: batch4 todo 1
+  landed (`unified-trading-pm@b02ba28c7`, verified ancestor of `origin/live-defi-rollout`) — the sole remaining `[ ]`
+  (hook deletion + referrer repoint) flipped, live-verified (`scripts/dev/hooks/pre-push-strict-quickmerge.sh` gone, its
+  4 live referrers repointed). `status` flipped to `resolved`, zero open work (checkbox AND prose). Archived per the
+  6-step ritual: archive banner added, `git mv` to `plans/archive/issues/`, corpus-wide grep found 2 path-formatted
+  (`/plans/active/issues/...`) referrers in `silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` —
+  repointed both; every other corpus mention is a bare-filename prose reference (not a path-formatted link
+  `check_reference_paths.py` validates), left as historical text per convention. No new/changed contract this doc's
+  closure surfaces for codex.

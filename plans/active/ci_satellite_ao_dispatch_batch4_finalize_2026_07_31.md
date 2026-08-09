@@ -69,16 +69,41 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 9 batch-4 todos' source docs.** Each batch-4 todo ends with `Source:` naming one or
-      more docs (todo 1 cites two, todo 9 cites one doc's 4 distinct items). For each: flip the corresponding checkbox
-      or annotate the corresponding prose section in EVERY cited doc, citing the batch-4 commit that shipped it —
-      **verify the cited commit exists and is an ancestor of `origin/live-defi-rollout` before citing it**
-      (`git merge-base --is-ancestor`). Then, per doc, re-check whether it now has zero open work **in checkbox AND
-      prose form**. Only set `status: resolved` on a doc that genuinely reaches zero — note that several source docs
-      (e.g. `stale_staging_versions_manifest_2026_07_23.md`, `qg_sentinel_environment_blind_2026_07_23.md`) carry a
-      documented FALSE-CHECKED-checkbox trap; re-verify against live code/state, not just the checkbox glyph, before
-      concluding zero-open. **Done when**: every cited doc is flipped/annotated with verified evidence, and each doc
-      that genuinely reaches zero open work is `status: resolved`.
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-09 (slot 2, review→cicd craft).** Reconciled all 9 batch-4 todos' 8 distinct source
+      docs (todo 1 cites two; todo 9's 4 items share one doc). All 9 commits verified live ancestors of
+      `origin/live-defi-rollout` via `git merge-base --is-ancestor` before citing (`b02ba28c7`, `dc1dc7df`, `445f02081`,
+      `eff7413da`, `917fc626a`, `f83716c0b`, `4bf65b67c`, `ccb1d7b10`, `b3abf1bd5`). Per-doc outcome:
+  - `stale_staging_versions_manifest_2026_07_23.md` — already archived + `status: resolved`, zero-open, correctly cites
+    `b3abf1bd5`. No edit needed.
+  - `provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` — flipped its sole remaining `[ ]` (hook
+    deletion) citing `b02ba28c7`; live-verified the hook file no longer exists and all 4 referrers are repointed;
+    reached zero open work → flipped to `status: resolved`, archive banner added, `git mv`d to `plans/archive/issues/`,
+    2 path-formatted corpus referrers repointed (`silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md`).
+  - `quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md` (todo 2's true source — no explicit `Source:`
+    line existed in the batch4 doc for todo 2; located via corpus grep on the alias-precedence fix) — already correctly
+    reconciled (steps 2+4 done citing `dc1dc7df`/fleet grep, step 3/D4-1 genuinely still open). No edit needed.
+  - `deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md`,
+    `uv_bootstrap_fallback_test_structural_anchor_stale_2026_07_30.md` — both already archived + `status: resolved`,
+    zero-open, correctly cite `445f02081`/`eff7413da`. No edit needed.
+  - `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` — already fully reconciled by a sibling
+    `ci_satellite_ao_dispatch_batch6_finalize` todo 1 worker same-day (checkbox flipped citing `917fc626a`; correctly
+    stays `archive_exempt: true`, not `resolved` — genuine prose-form open work survives, the documented false-zero trap
+    this todo itself warns about). No edit needed.
+  - `pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md` — already fully reconciled (`f83716c0b`
+    confirmed as the actual shipping commit for the Tier-B sign-off log); `status: superseded` (terminal, unrelated
+    billing-premise reason) with 2 remaining checkboxes explicitly marked stale BLOCKED-SUPERSEDED pointers per the
+    doc's own guidance. No edit needed.
+  - `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` — already `status: resolved`/archived; added
+    the closing citation its own 2026-07-31 na-eligibility-audit verdict asked for ("cite/close lines 128 and 132-144...
+    once batch4 ships") — both migrated items shipped via batch1 (not batch4 itself), `ccb1d7b10` ([SCRIPT] P2
+    monitor) + `4bf65b67c` ([CI] P1 auto-merge-arm fix), both verified ancestors; batch4 todos 7/8 correctly found these
+    `DONE-ELSEWHERE` rather than re-shipping.
+  - `github_actions_operator_gated_followups_2026_07_17.md` — todo 9's own worker already flipped all 4 checkboxes
+    inline with a dated 2026-08-09 Progress Log entry (live billing/measurement data, no code commit — correct for a
+    `[VERIFY]` todo). Doc has 5 unrelated open checkboxes, correctly stays `status: active`. No edit needed.
+  - No FALSE-CHECKED-checkbox traps found among the 9 docs beyond the ones already correctly handled by prior
+    reconciliation passes (fleet_wide_qg doc's `archive_exempt`, github_actions_operator_gated_followups' partial-open
+    status).
 - [ ] [REVIEW] P1. **Re-check the conflict-gated Deferred items (D4-1 through D4-4) for whether their blocker has
       cleared.** D4-1 (quickmerge.sh branch-check broadening) — is `scripts/quickmerge.sh` free again (batch-4 todo 1
       landed) AND has batch-4 todo 2's step-2 alias fix landed? If both, D4-1 is ready-for-batch-5 extraction — note it,
@@ -129,3 +154,15 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
 - **context-scout 2026-08-03**: re-confirmed context_scope (6 entries) unchanged -- gated finalize doc, correctly
   code-free (dispatch/archival coordination only), all entries still resolve.
+- **2026-08-09 (slot 2, review→cicd craft)** — Completed todo 1 (source-doc reconciliation, the last blocker before
+  todos 2-4). Batch4's own 9 todos were all already `done` (confirmed via its Progress Log). Verified all 9 cited
+  commits live-ancestor `origin/live-defi-rollout`; found 6 of 8 distinct source docs already fully reconciled by prior
+  sessions (2 archived+resolved outright, 1 correctly reconciled with its genuine remaining item untouched, 1 already
+  reconciled by a sibling `ci_satellite_ao_dispatch_batch6_finalize` worker same-day, 1 `status: superseded` terminal
+  with stale-pointer checkboxes explicitly called out, 1 self-reconciled inline by its own todo-9 worker); made 2 real
+  edits — flipped `provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md`'s sole remaining checkbox
+  (hook deletion, live-verified) to reach zero-open → `status: resolved` → archived (banner + `git mv` to
+  `plans/archive/issues/` + 2 corpus referrers repointed), and added the closing citation
+  `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`'s own 2026-07-31 na-eligibility-audit note
+  asked for. No FALSE-CHECKED-checkbox traps found beyond the ones already correctly flagged/handled elsewhere. Todos
+  2-4 remain (D4-1..D4-20 re-checks + archival) — not in this todo's scope.
