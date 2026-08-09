@@ -8,11 +8,11 @@ summary: >-
   documented-understanding gap the audit exposed — 33 codex/plan contradictions (4 BLOCKING) and 12 missing codex SSOTs
   — because a skill that encodes its own canonical definition is unauditable by the workspace's own SSOT rule.
   **Standing reference surface, not an archival candidate** (resolved
-  `autonomous_session_operator_decisions_2026_07_25.md` entry #10, 2026-07-26, option A) — 0 open / 42 done as of
-  `unified-trading-pm@7ae64f4c2` is expected here, not a lifecycle signal, per
-  `cross_cutting_consolidated_closeout_2026_07_25.md` Track 13, which keeps this "as a pure cross-reference, not
-  something to close" — it is also the cited home of the D1/D2 rulings `cursor-configs/CLAUDE.md`'s reconciliation
-  section leans on. Keep `status: active` in `plans/active/`.
+  `autonomous_session_operator_decisions_2026_07_25.md` entry #10, 2026-07-26, option A; `archive_exempt: true`) — 0
+  open / 43 done as of `unified-trading-pm@d8c682dd5` is expected here, not a lifecycle signal, per
+  `cross_cutting_consolidated_closeout_2026_07_25.md` Track 13 ("a pure cross-reference, not something to close") — also
+  the cited home of the D1/D2 rulings `cursor-configs/CLAUDE.md`'s reconciliation section leans on. Keep `status:
+  active` in `plans/active/`.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -44,6 +44,7 @@ estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
 assigned_role: data_engineering
 drift_direction: advance-docs
+archive_exempt: true # standing reference surface by operator ruling (autonomous_session_operator_decisions_2026_07_25.md entry #10, option A) — 0 open todos is expected here, not a lifecycle signal
 locked_by:
 locked_since:
 supersedes:
@@ -935,7 +936,7 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
       dedicated re-verification pass against the source doc; that re-verification is done now, so the checkbox flips.
       The other 7 still-"Not done" items in the "Deferred work after 2026-07-21" table are unaffected — not re-triaged
       in this pass.
-- [ ] [DATA] P2. **Measure the historical per-venue non-canonical row count for the 8 CeFi live spot venues fixed in
+- [x] ✅ [DATA] P2. **Measure the historical per-venue non-canonical row count for the 8 CeFi live spot venues fixed in
       `cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md`** (archived, resolved) — that issue's own
       code-level fix (BINANCE/COINBASE/OKX/UPBIT/BITFINEX/BITGET/BYBIT/KRAKEN-SPOT now emit canonical `SPOT_PAIR` +
       `BASE-QUOTE` ids) shipped without ever measuring the SIZE of the pre-fix non-canonical population — the census
@@ -943,7 +944,7 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
       ALL cefi), never the id-FORM/hyphenation dimension per venue. Run this skill's distinct-value census (G1, § 3f)
       scoped to `asset_group=cefi`, filtered to these 8 venues, comparing `is_canonical_instrument_id()` pre-fix-shape
       vs post-fix-shape row counts — a real, not-yet-known number needed to size any historical backfill/repair decision
-      (the fix only stops NEW rows from being wrong).
+      (the fix only stops NEW rows from being wrong). Done 2026-08-09 — `d8c682dd5`, result below in the Progress Log.
 
 ## Lessons (do not re-learn)
 
