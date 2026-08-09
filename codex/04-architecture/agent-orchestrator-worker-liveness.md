@@ -31,6 +31,8 @@ code_refs:
     agent-orchestrator/server/dispatch.py,
     agent-orchestrator/server/tmux_pruner.py,
     agent-orchestrator/server/orphan_reap.py,
+    agent-orchestrator/server/context_probe.py,
+    agent-orchestrator/server/context_lifecycle.py,
   ]
 ---
 
@@ -677,3 +679,43 @@ Flow:
   #agent-orchestrator-alerts with an `/accounts` deep-link (sibling of `notify_all_accounts_unusable`).
 
 SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md` § "Operator follow-up (2026-06-22)".
+
+---
+
+## Context-window learning is per-model; per-session divergence is expected and already floored (2026-08-09)
+
+`context_probe.py`'s learned-window registry (`data/state/learned_context_windows.json`, `context_window_for(model)`) is
+keyed **only by model string** — no account or session dimension. Follow-up to
+`ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md`: with the poisoning fixed, main's own
+CLI-rendered figure still showed its TRUE usable window as ~696K (99% at 689,570 tokens) — BELOW both the sonnet-5
+corpus watermark (937,882, the largest context any sonnet-5 session has demonstrably reached) and the `model_tier`
+cold-start prior (1,000,000). Investigated whether the effective window is genuinely per-account/per-session rather than
+per-model.
+
+**Account tier ruled out for this instance, but a real registry blind spot.** `agents/accounts.json`'s `AccountTier`
+field (`pro`/`max5`/`max20`/`team`/`enterprise`/`api`) is declared once per Claude subscription and never reaches
+`context_probe` — every account's sessions blend into one per-model figure regardless of tier. Checked directly against
+the live registry: main's account at the time (`sub-f-odum2default`) is `max20`, the SAME tier as the large majority of
+fleet accounts that built the 937,882 sonnet-5 watermark — so a downgraded account tier does not explain this specific
+gap. The blind spot itself is still real: the fleet carries one `pro`-tier account (`sub-a-ikenna`) whose sessions feed
+the same undifferentiated per-model watermark, so a future genuine tier-driven window difference (if Anthropic's own CLI
+enforces one) would be silently averaged away rather than surfaced.
+
+**`effort`/`thinking` is the better-supported per-session driver.** `agents/main.md` runs `thinking: high`, while the
+ordinary `worker.md` default is `thinking: medium` (confirmed via each role's own frontmatter) — main's session
+population differs systematically in effort/thinking depth from the mostly-worker sessions that built the corpus
+watermark. Higher effort/thinking plausibly reserves more of the CLI's own internal turn budget, which would make the
+CLI itself decide a session is "full" — and render its own "N% context used" — at a lower absolute input-token count
+than an otherwise-identical lower-effort session on the same model. This is Anthropic's own Claude Code CLI internal
+budgeting, opaque to this codebase, so it is the best-supported hypothesis rather than a proven mechanism.
+
+**Conclusion — documented as expected divergence, not a defect; no registry change made.** The per-model
+`context_window_for(model)` figure is intentionally coarse: a COLD-START / no-better-signal fallback, never an override,
+for any target carrying its own self-report. Main's `AgentRow.context_used_pct` (the CLI's own figure, reported every
+tick) already floors the measured probe in `_main_pct()` (`context_lifecycle.py`), and every worker already floors its
+probe with `SlotRow.context_used_pct` the same way — so whatever per-session/per-account variance produces a session's
+true window, the ONE target it matters for (that session) already gets the accurate number via the self-report ratchet,
+not the corpus/model-level estimate. The residual risk is a target with no self-report at all silently under-compacting
+on a smaller-than-average window; none exists in the fleet today (main and every worker/review slot carries a
+self-report). A future per-model-only registry key should stay that way unless a NEW target class appears with no
+self-report of its own.

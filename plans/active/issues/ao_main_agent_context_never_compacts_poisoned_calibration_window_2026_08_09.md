@@ -134,11 +134,18 @@ post-fix reports 68%. Tests: `tests/test_context_probe.py::test_the_measured_poi
       watermark; anything past 1.5x is suspect). The claude-sonnet-5 entry was purged out-of-band on 2026-08-09.
       Done-when: every remaining entry is within the plausibility bound, recorded in the Progress Log. — **AUDITED
       2026-08-09 (slot 18, backend_engineer), no other poisoned entry found.** Full detail in the Progress Log below.
-- [ ] [BACKEND] P1. main's true window is ~696K (99% CLI-reported at 689,570 tokens), while the sonnet-5 `model_tier`
+- [x] ✅ [BACKEND] P1. main's true window is ~696K (99% CLI-reported at 689,570 tokens), while the sonnet-5 `model_tier`
       prior is 1M and the corpus watermark is 937,882 — so even post-fix the probe under-reads main by ~30 points and
       only the AgentRow floor makes it accurate. Determine whether the effective window is per-account/per-session
       rather than per-model. Done-when: the finding is recorded and either the model is corrected or the divergence is
-      documented as expected in `/codex/04-architecture/agent-orchestrator-worker-liveness.md`.
+      documented as expected in `/codex/04-architecture/agent-orchestrator-worker-liveness.md`. — **DOCUMENTED
+      2026-08-09 (slot 19, backend_engineer)**: account tier ruled out for THIS instance (main's account
+      `sub-f-odum2default` is `max20`, same tier as most of the fleet that built the 937,882 watermark); `effort`/
+      `thinking` depth (main runs `thinking: high` vs workers' `thinking: medium`) is the better-supported per-session
+      driver. Documented as expected divergence, not a defect — the per-model registry is a cold-start fallback only,
+      already correctly overridden by each target's own self-report floor (`_main_pct` for main, `SlotRow` for workers).
+      No registry/model change made. Full detail in `/codex/04-architecture/agent-orchestrator-worker-liveness.md` §
+      "Context-window learning is per-model; per-session divergence is expected and already floored".
 - [ ] [DOCS] P1. Post-phase codex audit: fold the calibration-source contract (only CLI-rendered percentages may
       calibrate) and main's AgentRow floor into `/codex/04-architecture/agent-orchestrator-worker-liveness.md`.
       Done-when: the SSOT states both rules and cites this incident.
@@ -162,6 +169,7 @@ post-fix reports 68%. Tests: `tests/test_context_probe.py::test_the_measured_poi
   above, this slot's worktree resolves directly onto the orchestrator VM (root `agent-orchestrator` clone at
   `/home/ubuntu/unified-trading-system-repos/agent-orchestrator`, HEAD `a272e95`), so the sidecar was read straight off
   disk — no SSM round-trip needed. Live content of `data/state/learned_context_windows.json`:
+
   ```json
   {
     "claude-opus-5": { "watermark_hits": 1, "watermark_tokens": 222121 },
@@ -169,6 +177,7 @@ post-fix reports 68%. Tests: `tests/test_context_probe.py::test_the_measured_poi
     "claude-sonnet-5": { "watermark_hits": 1, "watermark_tokens": 933770 }
   }
   ```
+
   Ran the actual `server.model_tier.context_window()` + the same `reference = max(prior, watermark)` /
   `_MAX_CALIBRATION_OVERSHOOT = 1.5` formula `context_probe._calibration_is_plausible()` uses, against the live venv,
   for every entry carrying a `calibrated_window` (the only field this audit's bound applies to — a watermark-only entry
@@ -180,3 +189,18 @@ post-fix reports 68%. Tests: `tests/test_context_probe.py::test_the_measured_poi
     poisoned entry from the root-cause section above really was purged out-of-band and nothing has recalibrated it since
     (the code fix now blocks a bad recalibration at write time regardless). **Conclusion: no other poisoned
     `calibrated_window` entry exists in the live registry.** Every entry is within the plausibility bound.
+
+- **2026-08-09 (slot 19, backend_engineer)** — Closed the "per-account/per-session window" todo. This slot also resolves
+  directly onto the orchestrator VM (root `agent-orchestrator` clone, HEAD `a272e95`). Read
+  `agent-orchestrator/data/config/accounts.json` on disk: 6 anthropic-provider accounts, 5 on tier `max20`
+  (`sub-b-iggy2london`, `sub-c-ikenna-odum`, `sub-d-odum1default`, `sub-e-odum2default`, `sub-f-odum2default`) and 1 on
+  `pro` (`sub-a-ikenna`). Queried the live `AgentRow` table for `role='main'`: the currently-online main (`agt-222944`)
+  runs under `sub-f-odum2default` — `max20`, the same tier as the majority of fleet accounts, ruling out a downgraded
+  account tier as the cause of the specific 696K-vs-937,882 gap this todo names. Compared `agents/main.md`
+  (`thinking: high`) against `agents/worker.md` (`thinking: medium`) frontmatter — a real, confirmed per-role
+  effort/thinking difference between main and the mostly-worker population that built the sonnet-5 corpus watermark, and
+  the best-supported explanation for main's own CLI-reported "full" landing at a lower absolute token count than the
+  corpus watermark. Recorded the full finding (registry design, account-tier check, effort/thinking hypothesis, and why
+  no registry/model change is needed given the existing self-report floor) as a new section in
+  `/codex/04-architecture/agent-orchestrator-worker-liveness.md` — done-when satisfied via the "documented as expected"
+  branch, not a model correction.
