@@ -882,7 +882,7 @@ batch)
   dispatch `agt-06bfb0`, slot 10). **A sibling dispatch (slot-7) had already run this exact tranche ~31 min earlier**
   (`unified-trading-pm@19a014e29`, 04:10 UTC vs this run's 04:41 UTC boot — flagging the apparent double-dispatch for
   the operator/main-agent to check the scheduler for a double-fire on the same tranche) and filed
-  [`issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`](/plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md):
+  [`archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`](/plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md):
   `check_ag_closeout_linkage.py`'s "0 orphans" is a false-clean for cross-cutting/ao/ci/infrastructure (hardcoded
   `REAL_AGS` + a hyphen-vs-underscore glob bug), measuring 29/119 cross-cutting-tagged docs with zero citation anywhere
   (28 with real open work), ~20 of them `ci`/`ao` content under a habitual `cross-cutting` tag, parked as a

@@ -273,7 +273,7 @@ scope on every run. Fix belongs with Finding 3's script todo.
       documented as accepting both. (repo: unified-trading-pm) **Scope extended 2026-08-02 (cross-cutting run): (a) a
       THIRD live shape exists** —
       `### 2026-07-30 (`/na-eligibility-audit`, tranche=cross-cutting, autonomous) — KEEP-NA     verdict` as a heading,
-      found in `issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` and normalized to the
+      found in `archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` and normalized to the
       name-then-date form by that run; whatever filter lands must tolerate the heading shape too, or re-normalize the
       stragglers. **(b) also exclude `plans/active/task_template.md` from the NA inventory population** per Finding 5 —
       mirror `docspec.is_exempt`'s existing `INDEX.md`/`_`-prefix carve-outs in `generate_na_doc_tranche_inventory.py`,

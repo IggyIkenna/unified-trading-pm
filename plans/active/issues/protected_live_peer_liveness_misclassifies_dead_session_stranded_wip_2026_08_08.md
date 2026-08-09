@@ -23,7 +23,7 @@ summary: >-
   12).
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator, market-tick-data-service]
 scope: [engineer, admin]

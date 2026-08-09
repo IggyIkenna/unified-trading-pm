@@ -13,7 +13,7 @@ summary: >-
   filing this as the systemic finding rather than asking for more chase attempts.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]

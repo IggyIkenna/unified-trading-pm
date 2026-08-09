@@ -72,7 +72,7 @@ context_scope:
       RECLASSIFY candidates, conflict-check cleared 7 and found 6 genuine conflicts (see the new todo below — filed per
       protocol, not flipped). Flipped `assigned_vm: NA → planning` on the 7 cleared docs (all `doc_type: issue`, so
       structurally exempt from needing a finalize twin), each citing the specific `RULED 2026-08-06` marker that
-      unblocked it: `issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
+      unblocked it: `archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
       `issues/ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md`,
       `issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`,
       `issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md`,

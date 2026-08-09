@@ -202,7 +202,7 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
       for both), so no doc edit was needed — same "already fixed by another slot / corpus moved past it before this todo
       was picked up" shape as the `ci_satellite_ao_dispatch_batch6` finding above. No content change required.
 - [x] ✅ [DOCS] P2. Fix the 10 `plans/active/issues/` accidental exclusions:
-      `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`,
+      `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md (archived: /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md)`,
       ~~`ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md`~~ (already resolved +
       archived 2026-08-09 — its flagged todo was its own "grep the corpus" todo, now `[x]`; archived docs drop out of
       this gate's scan entirely, see

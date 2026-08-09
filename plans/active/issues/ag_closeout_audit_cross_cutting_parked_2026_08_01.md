@@ -31,7 +31,7 @@ related:
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -63,7 +63,7 @@ context_scope:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md,
-    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
   ]
 ---
 
@@ -157,7 +157,7 @@ prediction/sports business logic.
 
 **Independent corroboration (two separate signals)**: (a) `ao_open_issues_consolidated_close_out_2026_07_17.md`'s
 2026-07-31 audit entry lists this doc BY NAME in the same 23-doc "genuine AO content but asset_group MISTAGGED" bucket
-as finding 2 above; (b) `issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` independently measured
+as finding 2 above; (b) `archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` independently measured
 this doc among its own "29 never-cited docs" under the cross-cutting tag on 2026-07-30 — corroborating this run's direct
 citation-grep finding the same zero-coverage result a day earlier.
 

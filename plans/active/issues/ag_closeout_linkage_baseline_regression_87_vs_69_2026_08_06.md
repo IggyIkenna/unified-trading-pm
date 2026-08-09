@@ -12,7 +12,7 @@ summary: >-
   Per-tranche breakdown of the 87: cross-cutting 36, ao 14, defi 11, ci 10, cefi 7, sports 4, prediction 2,
   infrastructure 2, tradfi 1 (defi/sports/prediction/infrastructure/tradfi numbers not independently re-verified for
   new-vs-pre-existing by this doc — see Todos). This is NOT the same bug as
-  `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` (that doc's bug — the gate structurally skipping 4-5
+  `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md (archived: /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md)` (that doc's bug — the gate structurally skipping 4-5
   tranches entirely — was fixed for real 2026-07-31, commit `3a5b294ef`, and this run's 87-count is measured against
   that FIXED, widened code, not the old broken version). This is a second, independent finding: real NEW docs landing
   since 2026-07-31 without a `related:`/mention link back to their tranche's closeout family, which the ratchet is
@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, ag-closeout-audit, quality-gates, linkage, orphan-detection, ratchet-regression]
 related:
   [
-    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
     /plans/archive/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,
@@ -62,7 +62,7 @@ context_scope:
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,
     /scripts/plan-hygiene/ag_closeout_linkage_baseline.yaml,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
   ]
 ---
 
@@ -154,7 +154,7 @@ family, which is exactly the failure mode this gate exists to catch.
       stay meaningful; not re-opened as a new todo here since no such steady-state has been observed yet.
 - [x] ✅ [DOCS] P2. For every genuinely-new orphan, add the missing `related:` link (or a basename mention in the owning
       tranche's `_consolidated_closeout_aggregated_sources_*.md` digest) to close the linkage gap — mirrors the fix
-      pattern `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`'s own todos used. **Done when**: a fresh
+      pattern `ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md (archived: /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md)`'s own todos used. **Done when**: a fresh
       `check_ag_closeout_linkage.py` run reads <= 69 again (or the baseline is legitimately re-seeded downward per
       `--update-baseline` if some of the 87 turn out to be intentionally-standalone docs with no real closeout-family
       home). **MET 2026-08-08**: fresh run reads **65 (<= 69)** — gate PASSES. Reached via the outcome test, not the

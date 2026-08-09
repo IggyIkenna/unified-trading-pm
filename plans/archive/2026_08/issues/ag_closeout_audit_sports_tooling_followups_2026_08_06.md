@@ -21,7 +21,7 @@ related:
   [
     /plans/active/sports_satellite_ao_dispatch_batch10_2026_08_06.md,
     /plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04.md,
-    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/archive/2026_08/ag_closeout_audit_sports_tooling_followups_2026_08_06_finalize_2026_08_08.md,
   ]
@@ -109,7 +109,7 @@ to re-derive them.
   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) came back CLEAR for both: (a) no
   active `assigned_vm: planning` plan in `parent_epic: sports_master` carries a matching todo —
   `check_ag_closeout_linkage.py` has zero `status`/`EXCLUDED` handling today (independently grepped), and the only prior
-  linkage-gate fix (`ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`, already shipped) was the
+  linkage-gate fix (`ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md (archived: /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md)`, already shipped) was the
   AG-coverage bug, not the status-exclusion bug finding 1 describes; (b) no sibling batch/finalize doc drafted this week
   claims either item; (c) `sports_consolidated_closeout_2026_07_19.md` doesn't touch either. Flipped `assigned_vm: NA`
   -> `planning`, `execution_scope: local-only` -> `orchestrator-agent`, `assigned_role: data_engineering` -> `infra`

@@ -13,7 +13,7 @@ summary: >-
   document the structural gap for whoever eventually revisits the gate's design, since it will recur.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]

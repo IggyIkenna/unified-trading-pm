@@ -43,7 +43,7 @@ related:
     /plans/archive/2026_07/ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
-    /plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
+    /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
@@ -111,7 +111,7 @@ Full list of docs retagged `[cross-cutting]`/`[meta]` → `[ci]` this run, and d
 | `issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md` | ldr-to-main-promote-fleet.yml automation-gap content                            | **Already self-dispatched** (`assigned_vm: planning`, `status: open`).                                                                                                                                                                                                                                                                                                     |
 | `pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md`                         | PM's own self-hosted-runner migration scoping content                           | **Already operator-ruled `assigned_vm: NA`** (main-agent interim guidance on `BLK-7593bf4c`, citing Tier B's trading-safety blast radius) — deliberately human-driven, not AO-dispatchable; re-litigating that ruling is out of this audit's scope.                                                                                                                        |
 
-Cross-reference: `issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` (filed by the sibling
+Cross-reference: `archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` (filed by the sibling
 `cross-cutting` tranche auditor, same day) independently named 5 of these 9 as `ci`-by-content and deliberately left
 them un-retagged pending a scoped follow-up pass — this batch's retags implement that follow-up for the `ci`-bound
 subset (its `ao`-bound examples are the `ao` tranche auditor's own concern).
@@ -200,7 +200,7 @@ not re-escalating duplicates.
   "second/third pattern") found 9 docs carrying real `ci`-tranche content mistagged elsewhere — traced independently via
   (a) batch1's own citation graph (`repo_ci_stuck_in_sit_tristate`, forked from its F5 todo) and (b) cross-referencing
   the sibling `cross-cutting` tranche auditor's own same-day finding
-  (`issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`, which named 5 of these 9 as `ci`-bound
+  (`archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`, which named 5 of these 9 as `ci`-bound
   examples but deliberately left them un-retagged pending a scoped follow-up — see that doc's Progress Log for the
   cross-reference note added this session). All 9 retagged `[ci]`; `check_frontmatter_schema.py` clean on all 9;
   `check_ag_closeout_linkage.py` still reports 0 orphans post-retag, though per the same sibling-filed issue this gate

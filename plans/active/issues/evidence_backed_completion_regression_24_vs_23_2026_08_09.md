@@ -9,7 +9,7 @@ summary: >-
   `scripts/quality_gates/ao_dispatch_visibility_baseline.yaml`) via a fresh `origin/live-defi-rollout` rebase + re-run.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci]
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
