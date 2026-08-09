@@ -150,13 +150,35 @@ spelling variant survives, which is the entire point of the panel". It does not.
     `write_arb_opportunities`) + `--operation arb-detect` CLI handler + `_OPERATIONS` registration + unit tests
     (`tests/sports/unit/arb/test_runner.py`). QG green. Scope excludes the P1 history-migration and old-adapter-deletion
     todos below (unstarted, separate).
-- [ ] [CODE] P1. **Migrate the historical 13 days (2026-07-25 → 08-06) by reprocessing the underlying raw odds/trades
+- [x] ✅ [CODE] P1. **Migrate the historical 13 days (2026-07-25 → 08-06) by reprocessing the underlying raw odds/trades
       ticks** through the new detector (the old MDPS candle output only ever kept the aggregated `arb_margin`, never
       which bookmaker contributed each leg — so a leg-level series must be RECOMPUTED from the raw ticks, not migrated
       from the old rows). Once the live producer above exists and the history is backfilled, delete
       `market-data-processing-service/market_data_processing_service/app/adapters/sports/arbitrage_adapter.py`
       (`SportsArbitrageAdapter`) and its ~23 test references (`test_sports_adapters.py`, `test_schema_robustness.py`,
-      `test_adapter_registry_coverage.py`).
+      `test_adapter_registry_coverage.py`). — **DONE 2026-08-09** (slot-3, `backend_engineer`): added
+      `--date`/`--start-date`/`--end-date` historical-backfill support to the `arb-detect` CLI handler
+      (`features-service@ef25e364`, extracted `_run_historical_backfill()` to stay under the function-size gate; 3 new
+      unit tests) reusing the already-registered `batch_dates_from_args()` date-range resolver rather than a one-off
+      script. Ran it for real against prod GCS over the full 13-day window in one CLI invocation: 4 of the 13 days had
+      upstream bucketed-odds data (07-25: 2487 rows/63 shards → 5 opportunities; 07-26: 1970 rows/35 shards → 3; 07-31:
+      1136 rows/40 shards → 1; 08-01: 2352 rows/53 shards → 3 — 12 total), the other 9 days had no upstream
+      `odds_horizon_bucket` data at all (honest-absence, correctly skipped with a WARNING, nothing fabricated) except
+      08-06 (147 rows/8 shards, 0 opportunities detected — correctly unwritten). Verified all 4 written objects exist on
+      `gs://features-sports-prd-central-element-323112/sports_arb/by_date/day=<date>/tick=<date>T000000Z/opportunities.parquet`
+      and spot-checked one file's content (real multi-bookmaker legs — smarkets/matchbook/betsson/casumo/unibet — no
+      same-operator-group rows, confirming the guard from the todo below already applied). Then deleted
+      `arbitrage_adapter.py` + its registry wiring in both `adapters/__init__.py` files
+      (`market-data-processing-service@23a1306`, follow-up to an incomplete `5afb72a` that a prek unstaged-changes-
+      restore race split into two commits — both landed, tree is complete) and updated the 3 named test files (removed
+      `TestSportsArbitrageAdapter`, the dead `sample_multi_bookmaker_data` fixture, the registry-membership assertions,
+      and `test_league_passthrough.py`'s `TestArbitrageLeaguePassthrough`, which the todo's own file list didn't name
+      but which also imported the deleted class). **Deliberately left `test_schema_robustness.py` UNCHANGED**:
+      `get_schema_for_data_type("arbitrage_opportunity", ...)` is schema-generic, not adapter-registry-gated — it still
+      correctly classifies the historical GCS shape's schema for any future reader, and removing it would have deleted
+      real regression coverage the deletion doesn't require touching. Both repos' `quality-gates.sh` green (MDPS 93s/68s
+      runs, features-service including a real function-size-gate fix), both SHAs verified ancestors of
+      `origin/live-defi-rollout`.
 - [x] ✅ [CODE] P1. **Make the relocated series consume the CORRECTED operator-group guard** shipped in
       `unified-api-contracts@e080ef74` (re-keyed VENUE_OPERATOR_GROUPS, case-insensitive `.upper()` normalisation) +
       `unified-api-contracts@b9a0be80` (OPERATOR_GROUP_VENUES hierarchy — BETFAIR_EX_UK/EU/SB_UK → BETFAIR). Any arb
@@ -522,3 +544,9 @@ spelling variant survives, which is the entire point of the panel". It does not.
   historical 13 days..." todo (still open, immediately above this one) — `store.py`'s `write_arb_opportunities` only
   ever writes the CURRENT tick's day, so the relocated series holds no historical rows yet to recompute or flag; that
   reprocessing pass will apply this same guard automatically once it exists.
+
+- **2026-08-09 (slot 3, backend_engineer)** — Closed the "migrate historical 13 days + delete old adapter" todo (Session
+  2 of slot-16's earlier 2-session plan). Full evidence on the todo line above; summary: real 13-day CLI backfill
+  against prod GCS (4/13 days had upstream data, 12 opportunities written, honest-absence on the rest), then
+  `SportsArbitrageAdapter` + its registry wiring + 3 named test files deleted/updated. `test_schema_robustness.py` left
+  untouched (deliberate — schema-generic, not adapter-gated). Both repos QG green + verified on origin.
