@@ -324,6 +324,22 @@ casing), the pre-floor registry fix, or the shard-enumeration/honest-coverage wo
   context-scout touches since). Both open todos still independently justify NA: the RUSSIA_PREMIER_LEAGUE purge is a GCS
   delete/re-derive operation tagged `[DATA]` not `[OPERATOR]` with no delete-safety-cite or stated safe-idempotent
   justification; the gate-reassessment todo bundles a bounded re-run with an open judgment call.
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA-STALE, already-duplicated — found BOTH open todos
+  (`[DATA] P2` purge, `[DATA] P3` gate-reassessment) are already bundled into ONE combined todo in
+  `sports_satellite_ao_dispatch_batch5_2026_07_26.md` (line ~116, `assigned_vm: planning`, status: active, unlocked,
+  citing `Source: sports_odds_stale_fixture_reinjection_2026_07_14.md`) — "execute the zombie-tick purge/re-derive +
+  close out ML-readiness verification, using batch4's sweep report as input" covers the purge (part a), the
+  `verify_ml_readiness.py` re-run (part b), AND the two-part gate-semantics fix (part c) in one done-when. That
+  extraction predates this doc's widened 18-partition finding (2026-07-30) but explicitly gates on "batch4's... sweep
+  todo... has produced its contamination report" — batch4's sweep (the same one that produced the 18-partition
+  finding, `market-tick-data-service@76ca401f`) is done, so batch5's todo is current, not stale.
+  **Correction to `sports_satellite_ao_dispatch_batch11_2026_08_09.md`'s Deferred-ledger entry for this doc** (which
+  read "not extracted; every prior na-eligibility-audit pass reached the identical conclusion") — that appears to be
+  an oversight; batch5's extraction has existed since 2026-07-26 and was missed. Also ran the delete-safety check
+  batch11 said was blocked by host auth: `gcloud storage buckets describe gs://market-data-tick-sports-prd-central-element-323112`
+  succeeded this session, `softDeletePolicy.retentionDurationSeconds=604800` — exactly meets the ≥604800s
+  reversibility-qualified bar (task_template.md finding O path (c)) for whoever executes batch5's todo; not
+  re-extracting here since batch5 already owns the dispatch. Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, both open todos re-verified, doc stays NA. (1)
   `[DATA] P3` (re-run `verify_ml_readiness.py`, then reassess the strict-per-day-vs-aggregate-≥95% gate) — the judgment
   half is now resolved by the dated `✅ OPERATOR RULING 2026-08-08` banner at the top of this doc ("switch to the
