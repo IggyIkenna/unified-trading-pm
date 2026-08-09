@@ -45,6 +45,7 @@ depends_on: []
 gate_on_depends: false
 supersedes:
 superseded_by:
+archive_exempt: true
 source: >-
   Discovered during `/na-eligibility-audit ci` (2026-08-01) while classifying
   `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`'s own `[DOCS] P3` todo (opened
@@ -95,9 +96,10 @@ context_scope:
       NOT-yet-fixed recurrence of the same bug class in other role files.
 - [x] ✅ [BACKEND] P3→**upgraded to P1, see new todo below** — the speculative "future re-drift" this todo worried about
       is not hypothetical: it is LIVE, in at least 2 other role files, as of this same review pass.
-- [ ] [DOCS] P1. **Audit complete 2026-08-09 (slot 30, backend_engineer/infra crafts, batch9 todo) — checkbox left
-      unflipped per `ao_satellite_ao_dispatch_batch9_2026_08_08.md`'s own "Rules for every worker on this plan"
-      (evidence appended here; the paired finalize plan reconciles the flip back into this doc).** First re-confirmed
+- [x] ✅ [DOCS] P1. **Audit complete 2026-08-09 (slot 30, backend_engineer/infra crafts, batch9 todo) — flip reconciled
+      2026-08-09 (slot 24, review craft, batch9-finalize todo 3): `agent-orchestrator@5353b6b` (cefi one-shot-role fix +
+      regression test) and `unified-trading-pm@6f7ed49c2` (review.md stale-gate-claim fix) both independently
+      re-verified via `git show --stat` against their claimed content before this flip — see below.** First re-confirmed
       live which roles the composer-guard fix now routes to the slot-less register/poll or one-shot branches
       (`server/prompts.py::_REGISTER_POLL_ROLES = {review, main, monitor}`,
       `_ONE_SHOT_ESCALATION_ROLES = {cicd, conflict_resolver, data_pipeline_failure, plan_health, plan_reconciler,     docs_reconciler, ag_closeout_auditor, na_eligibility_auditor, context_scout_auditor,     escalation_queue_reconciler}`
@@ -108,41 +110,43 @@ context_scope:
       required? → file declares it?):
 
       | role | shape | needs worker.md | file declares it |
-              |---|---|---|---|
-              | backend_engineer, infra, quant_dev, ui_developer, data_engineering | craft worker | yes | yes (all 5, already correct) |
-              | review, main, monitor | register/poll | no | review.md corrected this pass (was stale-claiming it, see below); main/monitor never claimed it |
-              | cicd, conflict_resolver, data_pipeline_failure, plan_health, plan_reconciler, docs_reconciler, ag_closeout_auditor, na_eligibility_auditor, context_scout_auditor, escalation_queue_reconciler | one-shot | no | none claim it (already correct) |
-              | cefi_reconciliation_auditor, cefi_mtds_smoke_tester | one-shot (but see finding below) | no | neither claims it (already correct) |
+                      |---|---|---|---|
+                      | backend_engineer, infra, quant_dev, ui_developer, data_engineering | craft worker | yes | yes (all 5, already correct) |
+                      | review, main, monitor | register/poll | no | review.md corrected this pass (was stale-claiming it, see below); main/monitor never claimed it |
+                      | cicd, conflict_resolver, data_pipeline_failure, plan_health, plan_reconciler, docs_reconciler, ag_closeout_auditor, na_eligibility_auditor, context_scout_auditor, escalation_queue_reconciler | one-shot | no | none claim it (already correct) |
+                      | cefi_reconciliation_auditor, cefi_mtds_smoke_tester | one-shot (but see finding below) | no | neither claims it (already correct) |
 
-              **New finding, fixed same pass (was NOT anticipated by this doc):** `cefi_reconciliation_auditor` and
-              `cefi_mtds_smoke_tester` (added to `plan_health.py`'s `_MODE_PROMPT_TEMPLATE`/`_MODE_AGENT_KIND` 2026-08-05,
-              `agent-orchestrator@83314de2`) were never mirrored into `_ONE_SHOT_ESCALATION_ROLES` — a live gap in the exact
-              mechanism this todo audits, so fixed in the same commit rather than filed as a separate issue (findings-triage:
-              "in your file → fix in same commit"). Both roles' own files already correctly document the one-shot contract
-              (`lifecycle: scheduled`, `one_shot_complete: true`); only the composer-side mirror was missing, meaning a real
-              spawn would have been told to `POST /boot` for a task-fetch that doesn't exist for them.
+                      **New finding, fixed same pass (was NOT anticipated by this doc):** `cefi_reconciliation_auditor` and
+                      `cefi_mtds_smoke_tester` (added to `plan_health.py`'s `_MODE_PROMPT_TEMPLATE`/`_MODE_AGENT_KIND` 2026-08-05,
+                      `agent-orchestrator@83314de2`) were never mirrored into `_ONE_SHOT_ESCALATION_ROLES` — a live gap in the exact
+                      mechanism this todo audits, so fixed in the same commit rather than filed as a separate issue (findings-triage:
+                      "in your file → fix in same commit"). Both roles' own files already correctly document the one-shot contract
+                      (`lifecycle: scheduled`, `one_shot_complete: true`); only the composer-side mirror was missing, meaning a real
+                      spawn would have been told to `POST /boot` for a task-fetch that doesn't exist for them.
 
-              **Second finding, fixed same pass:** `review.md`'s STEP-0 still claimed "the live read-confirmation gate enforces
-              `worker.md` for this role's boot path" — true historically (2026-07-27→2026-08-08, the 225+-rejection incident
-              this doc opened with) but stale post-`6166269`: `review` no longer calls `/api/slots/<N>/boot` at all (its
-              composed stub routes to the register/poll shape), so the gate described can't fire for it anymore. Corrected to a
-              historical note; kept the recommendation to read `worker.md` (still useful for review's actual job — auditing
-              workers against the contract worker.md documents — just not because a gate demands it).
+                      **Second finding, fixed same pass:** `review.md`'s STEP-0 still claimed "the live read-confirmation gate enforces
+                      `worker.md` for this role's boot path" — true historically (2026-07-27→2026-08-08, the 225+-rejection incident
+                      this doc opened with) but stale post-`6166269`: `review` no longer calls `/api/slots/<N>/boot` at all (its
+                      composed stub routes to the register/poll shape), so the gate described can't fire for it anymore. Corrected to a
+                      historical note; kept the recommendation to read `worker.md` (still useful for review's actual job — auditing
+                      workers against the contract worker.md documents — just not because a gate demands it).
 
-              **14:30-16:30Z 2026-08-08 recurrence timing, answered:** PREDATES the fix, not a regression of it —
-              `agent-orchestrator@6166269` landed 2026-08-08T19:35:33Z, ~3-5h after the reported window; the earlier
-              `@41da3e578` (one-shot-family extension) landed 08:29:53Z the same day, also before the window. No P0 issue
-              needed. Evidence: `unified-trading-pm@6f7ed49c2` (review.md fix), `agent-orchestrator@5353b6b` (cefi fix +
-              regression test).
+                      **14:30-16:30Z 2026-08-08 recurrence timing, answered:** PREDATES the fix, not a regression of it —
+                      `agent-orchestrator@6166269` landed 2026-08-08T19:35:33Z, ~3-5h after the reported window; the earlier
+                      `@41da3e578` (one-shot-family extension) landed 08:29:53Z the same day, also before the window. No P0 issue
+                      needed. Evidence: `unified-trading-pm@6f7ed49c2` (review.md fix), `agent-orchestrator@5353b6b` (cefi fix +
+                      regression test).
 
-- [ ] [BACKEND] P2. **Regression test shipped 2026-08-09 — checkbox left unflipped per batch9's own rule (see above).**
-      — `agent-orchestrator/tests/test_role_file_worker_md_read_sync.py`: asserts, for every craft role file, its own
-      declared STEP-0 read list (basenames) is a superset of `expected_read_files("worker", <role>)`'s basenames; and,
-      for every register-poll/one-shot role, that it structurally never requires `worker.md` AND its composed stub never
-      references `/boot` — the inverse-drift direction found live in `review.md` this same pass. Also includes a live
-      drift-detector (`test_hardcoded_inventory_matches_loaded_roles`) so a future new role file that isn't classified
-      into either group fails loudly instead of silently going unchecked. `agent-orchestrator@5353b6b`, full
-      `quality-gates.sh` green (3059 tests + 262 dashboard tests). (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P2. **Regression test shipped 2026-08-09 — flip reconciled 2026-08-09 (slot 24, review craft,
+      batch9-finalize todo 3): re-ran `tests/test_role_file_worker_md_read_sync.py` fresh at
+      `agent-orchestrator@5353b6b` — 38/38 passed.** — `agent-orchestrator/tests/test_role_file_worker_md_read_sync.py`:
+      asserts, for every craft role file, its own declared STEP-0 read list (basenames) is a superset of
+      `expected_read_files("worker", <role>)`'s basenames; and, for every register-poll/one-shot role, that it
+      structurally never requires `worker.md` AND its composed stub never references `/boot` — the inverse-drift
+      direction found live in `review.md` this same pass. Also includes a live drift-detector
+      (`test_hardcoded_inventory_matches_loaded_roles`) so a future new role file that isn't classified into either
+      group fails loudly instead of silently going unchecked. `agent-orchestrator@5353b6b`, full `quality-gates.sh`
+      green (3059 tests + 262 dashboard tests). (repo: agent-orchestrator)
 
 ## na-eligibility-audit verdict
 
@@ -237,3 +241,17 @@ pending retag and the ordering risk against `boot_composer`. **C** — keep NA w
   `6166269` (landed 19:35Z that day), not a regression of it — no P0 needed. Regression test shipped:
   `agent-orchestrator/tests/test_role_file_worker_md_read_sync.py` (`agent-orchestrator@5353b6b`, full
   `quality-gates.sh` green). `unified-trading-pm@6f7ed49c2` carries the `review.md` fix + this Progress Log entry.
+
+- **2026-08-09 (slot 24, review craft, `ao_satellite_ao_dispatch_batch9_finalize_2026_08_08.md` todo 3)**: reconciled
+  the verified evidence back into this doc's own checkboxes — flipped `[DOCS] P1` and `[BACKEND] P2` to `[x]`.
+  Independently re-verified both cited commits before flipping (not just re-reading the prior session's self-report):
+  `git show --stat agent-orchestrator@5353b6b` confirmed it touches `server/prompts.py` +
+  `tests/test_role_file_worker_md_read_sync.py` + the 2 cefi fixture files exactly as claimed;
+  `git show --stat unified-trading-pm@6f7ed49c2` confirmed it touches `agents/review.md` + this doc + the batch9 plan,
+  matching the claimed scope; re-ran `tests/test_role_file_worker_md_read_sync.py` fresh — 38/38 passed. No
+  discrepancies found. Both items in this doc are now closed; no other open items remain. Set `archive_exempt: true` on
+  this flip-only commit per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "sanctioned bridge"
+  ruling (2026-08-09) — this doc's own last todo is its own archival trigger, so a flip-only commit would otherwise trip
+  `check_archive_candidates.sh --only`'s immediate-archival demand while combining the flip with the `git mv` in one
+  commit is separately banned. The field is dropped in the immediately-following archival commit (batch9-finalize todo
+  4).

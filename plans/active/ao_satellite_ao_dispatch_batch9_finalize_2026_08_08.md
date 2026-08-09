@@ -79,10 +79,13 @@ source: >-
       `fix(prompts): plan_health-family one-shot     dispatches skip generic /boot`, 2026-08-02T21:44:39Z, touches
       `server/prompts.py`). **Fixed**: corrected the `summary:` field's citation from `@41da3e578` to `@0a8ed16`. **Done
       when**: the wrong SHA is corrected — done, see Progress Log for the commit.
-- [ ] [REVIEW] P0. **Reconcile the verified todo's evidence into
+- [x] ✅ [REVIEW] P0. **Reconcile the verified todo's evidence into
       `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`'s own 2 remaining checkboxes** (`[DOCS] P1` and
       `[BACKEND] P2`), flipping both with the real commit sha(s). **Done when**: both flips are committed with the
-      `docs(plans):` prefix and cite the real commit sha.
+      `docs(plans):` prefix and cite the real commit sha. **DONE (2026-08-09, slot-24, review craft)** — independently
+      re-verified `agent-orchestrator@5353b6b` and `unified-trading-pm@6f7ed49c2` via `git show --stat` against their
+      claimed content (both matched) and re-ran the named regression test fresh (38/38 passed) before flipping; both
+      checkboxes flipped in the same commit as this one. See that doc's Progress Log for the full evidence chain.
 - [ ] [REVIEW] P0. **Archive `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`** once both its checkboxes are
       flipped (it has no other open items) — run the standard 6-step archival ritual (banner, codex-alignment check, fix
       every referrer's path corpus-wide, clear the lock). **Done when**:
@@ -142,3 +145,9 @@ source: >-
     PREDATES the fix, not a live regression). Question was genuinely answered, not deferred.
   - **Net verdict**: every substantive claim in batch9's done-claim holds under independent re-verification. One wrong
     commit-SHA citation found and fixed in the same pass (new todo above, closed inline). No other discrepancies.
+
+- **2026-08-09 (slot-24, review craft) — todo 3 DONE**: flipped
+  `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`'s remaining `[DOCS] P1` and `[BACKEND] P2` checkboxes,
+  independently re-verifying `agent-orchestrator@5353b6b` and `unified-trading-pm@6f7ed49c2` (`git show --stat`, content
+  matched claims) and re-running `agent-orchestrator/tests/test_role_file_worker_md_read_sync.py` fresh (38/38 passed)
+  before flipping. That issue doc now has zero open checkboxes — todo 4 (archive it) is next.
