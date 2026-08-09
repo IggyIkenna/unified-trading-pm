@@ -89,3 +89,10 @@ drift_direction: advance-code
 - 2026-08-09 (ag_closeout_auditor, slot 14, dispatch agt-465129): drafted alongside batch10, `status: active`, gated via
   `depends_on` + `gate_on_depends: true`. No work started — waiting on the operator to approve + flip batch10 to
   `active`, then on its dispatch + completion.
+
+## Deferred work — migrated to:
+
+- N/A — the `DEFERRED-CROSS-DEP` token above (todo 1) is a citation of
+  `prediction_live_clob_depth_capture_2026_07_24.md`'s own deferred checkbox, not a deferral owned by this doc; this
+  plan's own todo tracks reconciling that item, not deferring further work. See that doc's own Deferred section for the
+  live tracking.

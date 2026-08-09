@@ -201,3 +201,10 @@ non-batchable taxonomy:
   against the full 15-doc covering set, re-verified via fresh grep immediately before drafting — not assumed from the
   Phase-1 agents' own grep alone). 4 conflict-clear todos extracted from 4 different source docs, all previously blocked
   and all blockers cleared 2026-08-07/08. `status: draft` — awaiting operator approval to dispatch.
+
+## Deferred work — migrated to:
+
+- N/A — the `DEFERRED-CROSS-DEP` token above (todo 1) is a citation of
+  `prediction_live_clob_depth_capture_2026_07_24.md`'s own deferred checkbox, not a deferral owned by this doc; this
+  plan's own todo tracks completing that item, not deferring further work. See that doc's own Deferred section for the
+  live tracking.
