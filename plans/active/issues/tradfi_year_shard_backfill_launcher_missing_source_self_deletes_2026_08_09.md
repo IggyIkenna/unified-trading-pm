@@ -109,40 +109,48 @@ launcher never sets). For THIS incident's launch this is harmless (0 pre-existin
 pre-flight skip-filter has nothing to skip either way), but it means `--no-force-window` silently has no effect on any
 launch routed through `mtds-backfill`. Not investigated/fixed here — see action items.
 
-## Second finding (2026-08-09, same session, post-relaunch) — stall-timeout reaps VMs on a slow-but-real historical fetch
+## Second finding (2026-08-09, same session, post-relaunch) — something reaps VMs ~15-23min into a slow-but-real historical fetch
 
 After the `VM_TASK`/`VM_SOURCE` fix, all 5 re-launched ES_OPT VMs started genuinely fetching data (confirmed via run.log
-— no more `--source` error). But **4 of 5 (2022, 2023, 2024, 2025) went silent for ~10-18 minutes on their FIRST real
-(non-holiday) trading day and were then externally deleted** (not self-deleted — no `DEPLOYMENT_FAILED`/
-`VM_SHUTDOWN_ON_COMPLETION` line in any of their logs; the log simply stops mid-day, before a `Processed date=...`
-completion line, at RSS ~8-10GiB). Only **2026 succeeded** — it processed multiple real trading days
-(`venue=CME: 24180 rows written`, `Processed date=2026-01-08: 1 venues ok, 0 failed`) with RSS cycling ~2.6GiB→9GiB→
-(presumably down again after each write), never stalling.
+— no more `--source` error). **All 5 (2022-2026) eventually went silent (both `run.log` AND the separate GCS-blob
+heartbeat sidecar froze at the exact same timestamp — this looks like the whole VM stalling, not just the Python
+subprocess) and were then externally deleted** ~15-23 minutes after their last log line, none with a
+`DEPLOYMENT_FAILED`/`VM_SHUTDOWN_ON_COMPLETION` line — always mid-day, before a `Processed date=...` completion line.
+**2026 got furthest** — it processed several real trading days successfully first (`venue=CME: 24180 rows written`,
+`Processed date=2026-01-08: 1 venues ok, 0 failed`, RSS cycling ~2.6GiB→9GiB and back down after each write, proving the
+memory pattern itself is normal, not a leak) before it too froze on a later date and was reaped ~18 min after its last
+log line.
 
-**Working hypothesis (not yet confirmed against dmesg/OOM logs — the VMs are already deleted so this can't be verified
-post-hoc for this run)**: the launcher header's own comment documents `STALL_TIMEOUT_SEC=600` (a 10-minute log-mtime
-watchdog, inherited from `vm-exec-with-gcs-tee.sh`). Fetching a FULL ES_OPT chain (11 underlyings × all
-strikes/expiries) for a single historical date produces no incremental log output while the Databento API call is in
-flight — if that single call takes >10 min for some (older? more-strikes? less-cached?) dates, the stall watchdog kills
-the VM as "hung" even though it's making real, silent progress. 2026 (recent, likely faster/cached Databento response)
-apparently never hit this; 2022-2025 (older, possibly slower) did, but not deterministically — investigate before
-assuming this exact mechanism without direct confirmation (e.g. add a heartbeat/progress log line INSIDE the fetch call,
-or check `STALL_TIMEOUT_SEC` handling for a way to raise it per-launcher).
+**Corrected hypothesis (superseding an earlier, wrong guess in this doc's edit history — do not trust intermediate git
+history for this section, only the current text)**: the in-VM `STALL_TIMEOUT_SEC` log-mtime watchdog
+(`vm-exec-with-gcs-tee.sh`) defaults to **1800s (30 min)**, not the 600s this launcher's own header comment claims (that
+comment is stale/wrong) — my launcher never overrides it, so 30 min is the actual in-VM threshold, and none of my
+observed deaths reached that. The ~15-23 min death window is a much closer match for the SEPARATE, external
+`vm_zombie_watchdog.py` (referenced in `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`), which polls VM
+state from outside and gates on `--min-age` (default 15 min) before considering a VM eligible for reaping — consistent
+with every observed death landing at 15-23 min post-last-log-line. **Not yet confirmed** (the VMs are already deleted so
+this can't be verified post-hoc for this run) — this is the best-fit hypothesis from timing alone, not a traced code
+path. If confirmed, this is a genuine **false-positive zombie classification**: the watchdog can't distinguish
+"legitimately silent mid-fetch" from "actually dead," and kills real, live, in-progress work — the same class of bug as
+`issues/protected_live_peer_liveness_misclassifies_dead_session_stranded_wip_2026_08_08.md` (a different subsystem, same
+underlying pattern: liveness-by-log-silence is not liveness).
 
 ## Action items
 
-- [ ] [DATA] P1. **Verify the ES_OPT backfill eventually completes across all 5 years and write real data** — 2022-2025
-      died mid-fetch (see second finding above); 2026 succeeded. Once the singleton lock is next clear, retry the failed
-      year-shards (idempotent, per this task's own safety framing), then run the manifest count-check (venue=CME ×
-      ohlcv_1m × instrument_type=options_chain × the 11 canonical ES_OPT instrument_ids) per
-      `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2's own done-criteria. Repo: unified-trading-pm
-      (progress tracked in that plan, not duplicated here).
-- [ ] [INFRA] P1. **Investigate + fix the stall-timeout-kills-slow-real-fetch pattern** documented in the second finding
-      above — either raise `STALL_TIMEOUT_SEC` for `mtds-backfill`-routed ES_OPT launches specifically, or add
-      incremental progress logging inside the per-date Databento fetch so the watchdog sees liveness during a
-      legitimately slow (not hung) call. Confirm root cause first (check for an actual OOM-killer dmesg entry vs. a
-      genuine stall-watchdog kill — the two need different fixes) on the NEXT retry before assuming this hypothesis.
-      Repo: deployment-service (`vm-exec-with-gcs-tee.sh`) + market-tick-data-service (Databento adapter fetch path).
+- [ ] [DATA] P1. **Verify the ES_OPT backfill eventually completes across all 5 years and write real data** — all 5 died
+      mid-fetch on some date (see second finding above); 2026 got furthest (several real days written) before it too
+      died. Once the singleton lock is next clear, retry the failed year-shards (idempotent, per this task's own safety
+      framing) — but note retrying alone will likely hit the SAME reaper again until the next action item is fixed. Then
+      run the manifest count-check (venue=CME × ohlcv_1m × instrument_type=options_chain × the 11 canonical ES_OPT
+      instrument_ids) per `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2's own done-criteria. Repo:
+      unified-trading-pm (progress tracked in that plan, not duplicated here).
+- [ ] [INFRA] P1. **Confirm + fix the zombie-watchdog false-positive on a legitimately-slow ES_OPT fetch** (see
+      corrected hypothesis above) — first CONFIRM `vm_zombie_watchdog.py` is the actual actor (check its own audit trail
+      / logs for a kill event matching one of these VM names + timestamps, don't just trust the timing match), then
+      either raise its `--min-age` for `mtds-backfill`+`VM_ASSET_GROUP=TRADFI`+options-chain launches specifically, or
+      add incremental progress logging inside the per-date Databento fetch so liveness is visible during a legitimately
+      slow (not hung) call. Repo: deployment-service (`vm_zombie_watchdog.py` + `vm-exec-with-gcs-tee.sh`) +
+      market-tick-data-service (Databento adapter fetch path, if adding progress logging there).
 - [ ] [INFRA] P2. **Audit whether this same `VM_TASK=cefi-backfill` bug affects other callers of
       `launch-tradfi-backfill-vm.sh`** (BTC/ETH crypto-basis tier-plan, ad-hoc single-window mode) and whether any
       historical ES/BTC/ETH TradFi manifest data that appears "captured" actually came through THIS launcher (broken
