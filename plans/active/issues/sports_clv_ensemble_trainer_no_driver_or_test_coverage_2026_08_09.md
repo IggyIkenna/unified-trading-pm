@@ -89,13 +89,13 @@ work by an order of magnitude — this is closer to shipping a new ML training p
 Split the remaining work into two AO-eligible todos so the driver gets built (and test-covered) before anyone attempts
 the VM-scale run:
 
-- [ ] [CODE] P1. Build a `SportsEnsembleTrainingRunner` (or similar) in `ml-service` that, given a `model_id`, resolves
-      its `SportsModelSpec` + `TrainingGridConfig` (`SPORTS_MODEL_ID_TO_GRID`), loads real features via
+- [x] ✅ [CODE] P1. Build a `SportsEnsembleTrainingRunner` (or similar) in `ml-service` that, given a `model_id`,
+      resolves its `SportsModelSpec` + `TrainingGridConfig` (`SPORTS_MODEL_ID_TO_GRID`), loads real features via
       `SportsFeatureLoaderMixin._query_sports_features` for `training_seasons`/`validation_season`/`test_season`, builds
       CLV targets via `CLVTargetBuilder`, applies feature selection down to `target_feature_count`, and calls
       `SportsModel2ATrainer(model_id).train()` + `.evaluate()` against the held-out test season. Add unit test coverage
       (currently zero) using small synthetic fixtures — do not let this class stay untested. Wire it behind a CLI
-      command/handler so it's actually invocable, not another orphaned class. (repo: ml-service)
+      command/handler so it's actually invocable, not another orphaned class. (repo: ml-service) — ml-service@3232e17
 - [ ] [CODE] P1. Once the driver lands and is unit-tested, launch it on a dedicated VM (per
       `/codex/05-infrastructure/vm-launcher-runbook.md` — this is exactly the multi-year GCS-walk + heavy-compute case
       that rule exists for) for `model_2a`/`model_2b`/`model_2c`/`model_2d`/`model_2e`, and report the measured
@@ -113,3 +113,26 @@ the VM-scale run:
   2's own precondition is unmet. Added `sequential: true` to this doc's frontmatter so the backlog won't dispatch todo 2
   again until todo 1 is checked `done` (`PLAN_FORMAT.md` § sequential — strict N-waits-for-N-1 ordering). Skipping this
   task with `reason_code: GATED`; no code change to ml-service in this session.
+- 2026-08-09 (slot-18): shipped todo 1 — `SportsEnsembleTrainingRunner`
+  (`ml_service/training/app/training/sports_ensemble_training_runner.py`, ml-service@3232e17). Resolves
+  `SportsModelSpec`/`TrainingGridConfig` for the given `model_id`, loads real GCS features for training/validation/test
+  seasons via `CloudFeatureProvider.query_features(..., asset_group="SPORTS")` (the public wrapper around the mixin's
+  `_query_sports_features`), builds CLV targets via `CLVTargetBuilder`, strips leakage columns + non-numeric identifier
+  columns (fixture_id/date/team names), selects down to `target_feature_count`, then calls
+  `SportsModel2ATrainer.train()` + `.evaluate()` against the held-out test season. One real design decision worth
+  flagging: `FeatureSelector`'s LightGBM ranker is hardcoded for a 3-class -1/0/1 drift label (built for
+  `CLVTargetGenerator`'s legacy path) — `CLVTargetBuilder`'s continuous CLV-bps regression target would filter out
+  nearly every row if fed straight in, so the runner bins it into terciles (`_bin_clv_target_for_selection`) purely for
+  ranking; the trainer itself always trains on the untouched continuous target. Also: `training_seasons`/
+  `validation_season`/`test_season` are season-start years with no existing date-mapping convention in this repo — the
+  runner documents + applies the standard European football season convention (Aug(year)–Jul(year+1)); if that's wrong,
+  it's a one-function fix (`_season_date_range`). 11 new unit tests
+  (`tests/training/unit/test_sports_ensemble_training_runner.py`) cover season-range math, the tercile-binning helper,
+  constructor validation, and a full run against synthetic fixtures (train/val/test) with a lightweight `EnsembleConfig`
+  for speed — asserts identifier/leakage columns never survive selection, per-outcome test metrics are produced, and
+  honest-absence (`None`) returns on empty train/test data. Wired behind
+  `--operation sports-ensemble-train --model-id <id>` via `SportsEnsembleTrainModeHandler`
+  (`ml_service/training/cli/handlers/sports_ensemble_train_handler.py`) — bypasses the heavier variant-grid
+  `_MLTrainingModeHandler` machinery since this driver is model-id-driven, not instrument/timeframe-driven. Full
+  `bash scripts/quality-gates.sh` green (2188 passed, 4 skipped, 80.96% coverage). Todo 2 (the VM-scale run) is now
+  unblocked by the `sequential: true` gate.
