@@ -203,6 +203,35 @@ except Exception:
     print(0)' "${FF_RESULT_FILE}" 2>/dev/null || echo 0)
 fi
 
+# Read ONE repo's own dirty_consecutive_ticks out of FF_RESULT_FILE's per-repo
+# repo_dirty_ticks map (0 if the file/repo/field is absent or unparseable). This is
+# the reporter-side counterpart of slot-cron-ff-pull.sh's own _read_repo_dirty_ticks —
+# same FF_RESULT_FILE, same repo_key convention (the repo clone's OWN resolved
+# absolute path, set by classify_repo() via `pwd` post-pushd, matching ff_one()'s
+# `repo_key="$(pwd)"` exactly, so a lookup here always hits the same key the FF-cron
+# wrote). Fixes git_health_not_clean_since_pinned_constant_2026_07_27.md finding
+# (iii): before this, the reporter forwarded only the HOST-WIDE aggregate
+# (FF_DIRTY_CONSECUTIVE_TICKS above), so one repo's confirmed dirty streak could
+# block EVERY repo on the host from clearing not_clean_since. agent-orchestrator's
+# server side (RepoStatus.dirty_consecutive_ticks, _propagate_not_clean_since) already
+# prefers this per-repo value when present — this is the companion reporter change
+# named in that fix's commit message (agent-orchestrator@5d6752b).
+read_repo_dirty_ticks() {
+    local repo_key="$1"
+    if [[ -s "${FF_RESULT_FILE}" ]]; then
+        python3 -c "
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(int(d.get('repo_dirty_ticks', {}).get(sys.argv[2], 0)))
+except Exception:
+    print(0)
+" "${FF_RESULT_FILE}" "${repo_key}" 2>/dev/null || echo 0
+    else
+        echo 0
+    fi
+}
+
 # Defensive instrumentation (ao_remediation_b_code_chain_2026_07_23.md item 2 — the
 # diagnostic half of item 1). Item 1 made dirty_files := len(sample_list), so
 # `dirty_files>0 with an empty sample` is now structurally unreachable through
@@ -227,8 +256,13 @@ log_df_sample_mismatch_if_any() {
 }
 
 # Classify one repo worktree → emits TAB-separated row to stdout:
-#   name<TAB>branch<TAB>state<TAB>dirty_files<TAB>ahead<TAB>behind<TAB>local_sha<TAB>int_branch<TAB>dirty_oldest_iso<TAB>unpushed_plans<TAB>dirty_sample
+#   name<TAB>branch<TAB>state<TAB>dirty_files<TAB>ahead<TAB>behind<TAB>local_sha<TAB>int_branch<TAB>dirty_oldest_iso<TAB>unpushed_plans<TAB>dirty_sample<TAB>repo_dirty_ticks
 #
+# repo_dirty_ticks: THIS repo's own dirty_consecutive_ticks from slot-cron-ff-pull.sh's
+#   repo_dirty_ticks map (see read_repo_dirty_ticks above) — always a non-negative int
+#   (0 when the FF-cron has never observed this specific repo dirty, or hasn't run at
+#   all on this host). Forwarded per-repo in post_snapshot() so the server's confirm-
+#   gate keys on THIS repo's own streak, not the host-wide aggregate.
 # unpushed_plans: pipe-separated list of plan file basenames (plans/active/*.md or
 #   plans/active/issues/*.md) that are dirty or untracked in a unified-trading-pm worktree.
 #   Empty string for all other repos.
@@ -245,15 +279,22 @@ log_df_sample_mismatch_if_any() {
 classify_repo() {
     local repo_dir="$1"
     local repo_name branch local_sha int_branch state dirty_files ahead behind dirty_oldest_iso unpushed_plans dirty_sample
+    local repo_key repo_dirty_ticks
     repo_name=$(basename "${repo_dir}")
     int_branch="${INTEGRATION_BRANCH}"
 
     pushd "${repo_dir}" >/dev/null 2>&1 || return 0
+    # Per-repo identity for the dirty-ticks lookup — the resolved cwd (post-pushd),
+    # same convention slot-cron-ff-pull.sh's ff_one() uses for repo_key, so two
+    # slots' clones of the same repo NAME never collide (see read_repo_dirty_ticks
+    # above).
+    repo_key="$(pwd)"
+    repo_dirty_ticks="$(read_repo_dirty_ticks "${repo_key}")"
     branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "DETACHED")
     local_sha=$(git rev-parse --short=12 HEAD 2>/dev/null || echo "")
 
     if [[ "${branch}" == "DETACHED" || "${branch}" == "HEAD" || -z "${local_sha}" ]]; then
-        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\t\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}"
+        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\t\t%s\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}" "${repo_dirty_ticks}"
         popd >/dev/null || return 0
         return 0
     fi
@@ -335,8 +376,8 @@ classify_repo() {
             behind=$(git rev-list --count "HEAD..${remote_ref}" 2>/dev/null || echo 0)
         else
             state="no-remote-ref"
-            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-                "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}"
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+                "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}" "${repo_dirty_ticks}"
             popd >/dev/null || return 0
             return 0
         fi
@@ -355,8 +396,8 @@ classify_repo() {
         state="clean"
     fi
 
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}" "${repo_dirty_ticks}"
     popd >/dev/null || return 0
 }
 
@@ -415,9 +456,9 @@ for line in sys.stdin:
     if not line:
         continue
     parts = line.split("\t")
-    if len(parts) < 11:
-        parts += [""] * (11 - len(parts))
-    name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest, unpushed_raw, dirty_sample_raw = parts[:11]
+    if len(parts) < 12:
+        parts += [""] * (12 - len(parts))
+    name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest, unpushed_raw, dirty_sample_raw, repo_dirty_ticks_raw = parts[:12]
     repo = {
         "name": name,
         "branch": branch,
@@ -434,6 +475,13 @@ for line in sys.stdin:
         repo["unpushed_plans"] = [p for p in unpushed_raw.split("|") if p]
     if dirty_sample_raw:
         repo["dirty_files_sample"] = [p for p in dirty_sample_raw.split("|") if p]
+    # Per-repo dirty-tick count (git_health_not_clean_since_pinned_constant_2026_07_27.md
+    # finding (iii) fix): keys RepoStatus.dirty_consecutive_ticks so the server
+    # not_clean_since confirm-gate reads this repos own streak, not the host-wide
+    # aggregate below. Always present (classify_repo always computes it, default "0"),
+    # so this branch only skips on a genuinely malformed/short row.
+    if repo_dirty_ticks_raw != "":
+        repo["dirty_consecutive_ticks"] = int(repo_dirty_ticks_raw)
     repos.append(repo)
 ff_last_run = sys.argv[4] if len(sys.argv) > 4 else ""
 ff_last_result = sys.argv[5] if len(sys.argv) > 5 else ""
