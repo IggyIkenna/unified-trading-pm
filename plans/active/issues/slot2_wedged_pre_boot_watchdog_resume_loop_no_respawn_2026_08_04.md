@@ -20,7 +20,11 @@ summary: >-
   unproductive for 1.5h+ and the watchdog is not self-healing it.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-09 (/ag-closeout-audit ao) -- was [cross-cutting]. Content is 100% WorkerLivenessWatchdog/
+  # AutoSpawn slot-wedge mechanics (agent-orchestrator repo, parent_epic: agent_operating_framework_master -- the ao
+  # tranche's own primary epic); flagged but not yet fixed by the 2026-08-08 cross-cutting run, see
+  # plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md finding 3.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [admin]

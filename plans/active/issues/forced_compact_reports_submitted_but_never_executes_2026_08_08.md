@@ -85,14 +85,17 @@ never executed". With forces now firing from 60, the two separate cleanly — an
 - [ ] [BACKEND] P1. **Detect the queued-message state and do not spend the force latch on it.** Add a
       `pane_has_queued_messages()` probe to `server/tmux_spawn.py` and have `context_lifecycle`'s force path hold the
       latch un-spent until the queue drains, rather than re-sending (a second `/compact` would compact twice and lose
-      context unnecessarily). Needs a new `_TargetState` field for "submitted but not yet executed".
+      context unnecessarily). Needs a new `_TargetState` field for "submitted but not yet executed". **➡️ EXTRACTED
+      2026-08-09 to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 9 — do NOT action here.**
 - [ ] [BACKEND] P1. **Verify the compaction by its EFFECT, not by its submission.** The authoritative proof a compaction
       ran is a new `compact_boundary` record in the session transcript — `server/context_probe.py` already parses these
       and exposes `stale_after_compaction`. Confirming the boundary appeared is a far stronger check than a cleared
-      input box, and needs no pane parsing at all.
+      input box, and needs no pane parsing at all. **➡️ EXTRACTED 2026-08-09 to
+      `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 10 — do NOT action here.**
 - [ ] [BACKEND] P2. **Reproduce deliberately** — submit `/compact` to a pane mid-turn and confirm it queues rather than
       executes, and that `submit_to_pane` still returns True. The mechanism above is inferred from a live pane capture
-      plus five consistent ineffective forces, not from a controlled repro.
+      plus five consistent ineffective forces, not from a controlled repro. **➡️ EXTRACTED 2026-08-09 to
+      `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 11 — do NOT action here.**
 - [ ] [BACKEND] P3. **Re-measure the wedge rate once the above lands.** Baseline to beat, measured on the clean fleet
       after `c6e6d982a`/`9b269c0ce`: ~3.5 wedges/hr with forces distributed 62-97. Pre-measurement-fix baseline was
       ~9.7/hr with every force at 91-100.

@@ -87,6 +87,7 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       dedicated unit test was written proving the ~50/50 ratio/reproducibility** — the full QG pass being green does not
       satisfy this todo's own stated done-when, since no new test exercises `_deepseek_flash_should_route` or the
       variant filter in `_pick_headroom_account`. Left unchecked deliberately; real remaining work, see Deferred table.
+      **➡️ EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 1 — do NOT action here.**
 - [x] 3. ✅ [BACKEND] P1. Extend `GET /api/backlog/usage/windows` (and whatever backs `TaskUsageWindowsPanel`) to break
       down spend/tokens by exact `model`, not just `provider` — return per-model rows (deepseek-v4-pro,
       deepseek-v4-flash) AND a combined/aggregated deepseek row, for every window (1h/5h/24h/7d/lifetime). Done-when:
@@ -100,7 +101,8 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       `agent-orchestrator@7d73ded`** (new `_FILTER_OPTIONS` toggle: "DeepSeek (all)" / "· Pro" / "· Flash"), existing
       vitest unit tests (`TaskUsageWindows.test.ts`, 10 tests) still pass — **but no Playwright regression spec was
       written**, so this todo's explicit acceptance bar (`pw:L2` per the UI-testing-layers SSOT) is NOT met. Left
-      unchecked deliberately; real remaining work, see Deferred table.
+      unchecked deliberately; real remaining work, see Deferred table. **➡️ EXTRACTED 2026-08-09 to
+      `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 2 — do NOT action here.**
 - [x] 5. ✅ [INFRA] P1. `bash scripts/quality-gates.sh` green in `agent-orchestrator/`, ship the routing + dashboard
       change via `quickmerge.sh --agent`. — QG green (ruff/basedpyright/2431 pytest/tsc/200 vitest all passed), shipped
       `agent-orchestrator@7d73ded` via quickmerge, landed on `live-defi-rollout`.
@@ -175,7 +177,8 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       currently carries a finding as free-text chat) so future audits (like this plan's todos 10/11) can query real
       review coverage instead of re-deriving it from chat history. **Done when**: the event is written on every review
       finding, a query/report endpoint or script can pull findings by task_id/date range/severity, a regression test
-      proves emission + retrieval, and `quality-gates.sh` is green. Repo: agent-orchestrator.
+      proves emission + retrieval, and `quality-gates.sh` is green. Repo: agent-orchestrator. **➡️ EXTRACTED 2026-08-09
+      to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 3 — do NOT action here.**
 - [ ] 13. [DOC] P2. Write up the final verdict (keep flash / drop it / use it only for a specific task class) in this
       plan's Progress Log, with the real numbers cited, then archive this plan per the standard 6-step ritual.
 - [x] 14. ✅ [BACKEND] [UI] P1. **Per-turn/per-task efficiency metrics** — operator ask (2026-08-05): avg turns/task,
@@ -232,7 +235,8 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       Claude Code CLI's own flag, echoed regardless of provider; unconfirmed whether DeepSeek's API actually honors it
       or silently ignores it. Label the Fleet table's thinking-brain icon honestly either way once known. Not started —
       needs real investigation (does DeepSeek's OpenAI/Anthropic-compatible endpoint accept/use a thinking param?), not
-      a guess.
+      a guess. **➡️ EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 4 — do NOT action
+      here.**
 - [x] 18. ✅ [BACKEND] P1. **Fix cross-account
       $ contamination in the Accounts panel** — operator finding (2026-08-06):
       the Accounts panel's pro/flash lifetime $
@@ -466,7 +470,8 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       candidate with no `SlotHistoryRow` gets matched and backfilled), a live dry-run report is reviewed, then `--apply`
       runs and the affected window's one-off `TaskUsageRow` count is verified non-zero (or genuinely unmatched due to
       transcript rotation — report either way, don't silently drop). Not run yet — the code path needed to run it
-      doesn't exist yet; this is now a concrete, non-operator-gated build+run todo, not an open decision.
+      doesn't exist yet; this is now a concrete, non-operator-gated build+run todo, not an open decision. **➡️ EXTRACTED
+      2026-08-09 to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 5 — do NOT action here.**
 
 ## Codex SSOTs
 

@@ -308,4 +308,12 @@ ledger.
   earlier na-eligibility-audit entry above (unchanged): 2 of 5 open items are cross-tranche retag handoffs
   (owning-tranche's write, not this one's), 1 is an unruled `[OPERATOR]` design question that alone keeps the whole doc
   NA, and the remaining 2 (script fix, line-cap split) don't clear the whole-doc bar on their own.
+- **`/ag-closeout-audit ao` 2026-08-09 (dispatch `agt-41d860`, slot 10)**: closed out the `ao ×3` slice of the todo-4
+  retag (findings 1-3 above). Finding 1 (`ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`) was already retagged
+  by an earlier same-day `/ag-closeout-audit ao` pass. Findings 2
+  (`context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`) and 3
+  (`plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md`) retagged to `[ao]` this
+  run, plus a one-line Sources mention added to each retagged doc's Track in `ao_consolidated_closeout_2026_07_25.md`
+  (Track 2 for slot2_wedged, Track 5 for context_scout) so `check_ag_closeout_linkage.py` clears both (21→19 orphans,
+  still ≤ baseline 49). `ci ×6`/`infrastructure ×3`/`meta ×1` remain for those tranches' own audits.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

@@ -107,7 +107,8 @@ third party at all without fabricating the citation the gate exists to catch.
       (`/plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`). Work the list from
       `python3 scripts/quality_gates/check_plan_operator_ruling_evidence.py --only plans/active/*.md     plans/active/issues/*.md`,
       verifying each source before citing it. **Done when**: `unsourced_ruling_baseline` reaches 0, or every remaining
-      entry is recorded here as genuinely unrecorded and escalated to the operator. Repo: unified-trading-pm.
+      entry is recorded here as genuinely unrecorded and escalated to the operator. Repo: unified-trading-pm. **➡️
+      EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch13_2026_08_09.md` todo 1 — do NOT action here.**
 
 ## Progress Log
 

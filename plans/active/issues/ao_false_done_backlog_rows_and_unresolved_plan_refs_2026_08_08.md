@@ -343,11 +343,13 @@ plan + verifying the `done_sha`, never from the row's status alone.
 - [ ] [BACKEND] P3. **Bound the 12 `UNAUDITABLE` (`brief_hash IS NULL`) rows.**
       `regen_positional_task_ids_not_content_stable_2026_07_17.md` already shipped `agent-orchestrator@aaa2db8` to bound
       this tail and the count still moves — re-measure, and confirm every remaining unhashed row is a `done` row (which
-      is what bounds the exposure).
+      is what bounds the exposure). **➡️ EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 6
+      — do NOT action here.**
 - [ ] [BACKEND] P3. **Decide whether a standing false-done breach should page.** It currently only transitions Slack
       state via `audit_cron_notify.apply_transition` (breach→breach stays silent, by design), so a breach that never
       clears is silent after its first notify while the systemd unit stays red indefinitely. Confirm that matches the
-      actionable-only alerting contract in `/codex/04-architecture/agent-orchestrator-alerting.md`.
+      actionable-only alerting contract in `/codex/04-architecture/agent-orchestrator-alerting.md`. **➡️ EXTRACTED
+      2026-08-09 to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 7 — do NOT action here.**
 
 ## Codex SSOTs
 
