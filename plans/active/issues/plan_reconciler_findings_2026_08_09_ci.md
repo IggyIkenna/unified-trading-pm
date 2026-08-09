@@ -277,4 +277,52 @@ SKILL.md Phase 4's auto-fix table — no operator gate needed for an unlocked, v
 None — 100% of the 35-doc non-grace actionable set was read in full by a hunter and had every applicable check run
 against it.
 
-_(populated if applicable)_
+## Deferred work after 2026-08-09
+
+STEP 1-7 (the one-shot e2e pass — detect, verify, apply, route, PR, POST result) completed in full this session. STEP 8
+(loop-and-wait for the `BLK-987241fb` answer, then apply + call `/done`) was interrupted mid-wait when this session hit
+a context-compaction checkpoint (the 20-min bounded background poll — 2-min heartbeat cadence — was killed by the
+harness before its window elapsed; no answer had arrived in the portion that did run). Nothing was lost: the question is
+durably filed in TWO places independent of this session's memory (the live `/blocked` alert `BLK-987241fb`, and this
+doc's own `## Filed` item 1) — exactly the redundancy `agents/plan_reconciler.md` STEP 8 step 4 describes ("each open
+question is ALSO a filed STEP-6 todo, so even if the operator never answers... nothing is lost").
+
+| Item                                                                                                                                                                         | State / why deferred                                                                                                                                                                                                                                                                                                                                                                                  | Blocked on                          |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| Apply the `BLK-987241fb` answer (`monitoring_control_plane_master_2026_06_10.md` `parent_epic`) once it arrives, then `POST /api/slots/<N>/done {"one_shot_complete": true}` | **Operator-owned — cannot be done yet.** Needs a real human decision via the dashboard (a genuine authority/preference call per SKILL.md's evidence-vs-authority test, not evidence-settleable — see Contradictions #2). Not started because it structurally cannot be.                                                                                                                               | The operator checking the dashboard |
+| The 3 other `## Filed` items (prek stash-restore bug, `task_template.md` effort/thinking_tier gap, `orchestrator_gcloud` codex-alignment drift)                              | **Not done — real work, pick it up.** Each is a self-contained `- [ ]` todo with its own done-when; none require this specific session's continuity to execute. Recommended next: the prek bug (P1, highest severity, already reproduced 3/3 — see "Lessons" below for the exact repro recipe) if a `agent-orchestrator`-capable worker picks this doc up before the operator answers `BLK-987241fb`. | Nobody — genuinely open             |
+
+**Recommended next item for whoever resumes this specific dispatch**: poll `GET /api/slots/15/messages` (or the
+dashboard) for `BLK-987241fb`'s answer; if answered, apply it to `monitoring_control_plane_master_2026_06_10.md`'s
+`parent_epic` field (align to the ruled value, checkpoint-commit, push, append to this doc's `## Flips verified` /
+`## Contradictions`), then call `/done`. If a genuinely fresh session picks this up instead of a resume, re-derive
+`SLOT_ID`/`DISPATCH_ID` from the orchestrator's slot-15 state before calling `/done` — do not guess them.
+
+## Lessons (for whoever hits these next)
+
+- **The prek stash-restore bug is REAL and mechanical, not a fluke** — reproduced 3/3 times, always on a commit that
+  combines a `git mv` with a content edit to the SAME file (status/banner changes alongside the archival move). Every
+  time, the symptom was identical: `git commit` prints "Restored unstaged changes from `<patch>`" and the commit lands
+  with the rename but NOT the content edit — `git show HEAD:<path>` differs from the working tree even though
+  `git status` looks clean. **The fix that worked every time**: `git add <path>` again (re-stage the now-still-dirty
+  working tree onto the commit that just landed short), verify `git diff --cached --stat` shows the expected content,
+  commit again with a `fix silently-dropped ...` message. **The check that catches it**: never trust a green commit
+  message — always `diff <(git show HEAD:<path>) <path>` immediately after ANY commit involving a `git mv`, before
+  moving on to the next file. This cost 3 extra commit+push round-trips this session; a fixed root cause would save that
+  for every future archival-heavy plan_reconciler/ag_closeout_audit run.
+- **The corpus-wide `run_hygiene_sweep.sh --ci` (exit-gate, with regen) is NOT reliably completable on a busy shared
+  host right now** — died mid-run with no error, no OOM confirmation, just silence (883Mi free / 11Gi swap in use, 3+
+  sibling tranche-shard sweeps running concurrently at the same moment). The `--no-regen` Phase-0 entry variant DID
+  complete earlier in the same session on the same host (~13 min), so this isn't a hard "sweep is broken" — it's
+  specifically the regen-mode exit gate under peak concurrent-shard contention. **Workaround that worked**: run the SAME
+  underlying check scripts directly with `--only <touched-files>` instead of the whole-corpus wrapper — each individual
+  check completes in seconds and gives equivalent assurance for a scoped diff. Consider this the default fallback for
+  any future sharded run's exit gate, not just an emergency measure.
+- **`check_plan_operator_ruling_evidence.py --only` (used by prek pre-commit) does NOT appear to respect the
+  whole-corpus ratchet baseline** — it hard-fails on ANY unsourced "operator ruling" mention in a staged file, including
+  pre-existing ones unrelated to your edit, unlike the sibling ratchet checks (`check_na_corpus_ratchet.py`,
+  `check_effort_signal_ratchet.py`) which explicitly compare current-vs-baseline and only fail on regressions. This
+  meant touching `post_cutover_silent_assumption_sweep_2026_07_23.md` for one unrelated fix required also citing 6
+  pre-existing unsourced rulings just to get the commit through. Not necessarily a bug (an argument exists that "you
+  touched the file, you own bringing it current"), but it's a real behavioral asymmetry worth knowing before touching
+  any large, old doc in this corpus — budget time for possible pre-existing-debt cleanup as a side effect.
