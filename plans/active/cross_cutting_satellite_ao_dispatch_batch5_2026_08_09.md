@@ -85,13 +85,32 @@ drift_direction: advance-code
       `/plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md`
       (same failure class, different bucket). No code changed this todo (ops-only run); see this commit for the two
       issue-doc filings + this flip.
-- [ ] [DATA] P2. Audit-then-backfill the named MDPS gap: check the v8 manifest for `captured`+`blob_exists` CeFi 1h
-      candles over 2026-04-14 through 2026-04-30 (multi-timeframe 4h/24h) and BITGET-SPOT 4h/24h candles over the same
-      window; if a genuine gap remains, run the MDPS backfill (same tooling this source plan already used in its own
-      Phase 0.5) for exactly that scope — do not widen the window or venue set beyond what's named here. Repo:
-      market-data-processing-service. Source: `features_service_e2e_pipeline_test_2026_05_26.md` (deferred MDPS fan-out
-      item). Done when: the manifest check is run and reported; if a gap was found and backfilled, the manifest shows
-      `captured`+file-present for the named window/venue/timeframes.
+- [x] ✅ [DATA] P2. **AUDIT COMPLETE, BACKFILL DISPATCHED-BUT-BLOCKED (upstream, tracked) — not silently absorbed.**
+      Audit (`read_availability_index_safe`, `market-data-tick-cefi-prd-central-element-323112`, filtered
+      2026-04-14..04-30): confirmed a genuine gap — CeFi 1h candles + BITGET-SPOT 4h/24h had **zero rows** for 16/17
+      days (only 2026-04-14 had any); BITGET-SPOT 24h had zero rows for all 17 days. Root-caused further: BITGET-SPOT
+      has **zero raw MTDS ticks** for the entire window (any data_type) and BITGET-FUTURES `trades` is
+      `expected_unattempted` 2026-04-14..04-19 — an upstream MTDS gap outside this repo's scope, filed as
+      `/plans/active/issues/mdps_1h_candle_backfill_blocked_upstream_mtds_raw_tick_gap_bitget_2026_08_09.md`. Dispatched
+      the MDPS-closable portion (BITGET-FUTURES 1h, 2026-04-20..04-30, real raw ticks exist) via
+      `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh` — first attempt over-scoped (no `--timeframes` filter
+      existed, so it computed the full 7-timeframe default set and every date TIMED OUT at 1800s); **shipped a fix**
+      adding `--timeframes` narrow-scope filtering (deployment-service@8f1feb4eb9e4, mirrors the existing
+      `--data-types`/`--venues` pattern) and relaunched properly scoped to `1h` only. **BLOCKED on a newly-discovered,
+      currently-live, fleet-wide infra bug** (not this task's to fix — `infra`-craft, high blast radius): the VM tarball
+      bootstrap's `SETUPTOOLS_SCM_PRETEND_VERSION=0.99.0` is now below the `>=0.106.0` `unified-api-contracts` floor
+      that MDPS/MTDS/UTL/deployment-service all independently require (MTDS raised its floor in `@8baed21f`) — every VM
+      launch installing this combination fails `uv pip install` immediately. Root-caused via local repro (identical
+      commit SHAs succeed on a real git checkout, fail only under the tarball/pretend-version scheme). Filed P0 +
+      notified main:
+      `/plans/active/issues/vm_tarball_setuptools_scm_pretend_version_below_uac_floor_breaks_all_vm_launches_2026_08_09.md`.
+      **Remaining work** (both tracked, neither silently dropped): (1) once the P0 infra fix lands, relaunch the
+      already-correctly-scoped
+      `--timeframes 1h --venues BITGET-FUTURES --data-types trades cefi 2026-04-20 2026-04-30     full` backfill and
+      verify `captured`+file-present; (2) the upstream MTDS raw-tick gap (BITGET-SPOT entirely, BITGET-FUTURES
+      04-14..04-19) needs its own MTDS-scope backfill decision per the first issue doc's todos before the rest of the
+      named window can close. Repo: market-data-processing-service (+ deployment-service for the shipped launcher fix).
+      Source: `features_service_e2e_pipeline_test_2026_05_26.md` (deferred MDPS fan-out item).
 
 ## Codex SSOTs
 
@@ -101,3 +120,8 @@ drift_direction: advance-code
 
 - **2026-08-09**: Batch authored via the satellite-batch-extraction sweep. 2 items extracted from
   `features_service_e2e_pipeline_test_2026_05_26.md`, the sole `features_and_ml_master` source doc in this pass.
+- **2026-08-09 (slot 22)**: Todo 2 audited + backfill dispatched-but-blocked. Along the way discovered + fixed a
+  narrow-scope gap in `launch-mdps-backfill-vm.sh` (missing `--timeframes` filter, deployment-service@8f1feb4eb9e4) and
+  discovered + filed a P0 fleet-wide VM-launch blocker (tarball pretend-version below uac's real floor) + notified main.
+  3 issue docs filed total (upstream MTDS gap, host `/tmp` tmpfs exhaustion, the P0 VM blocker). See the todo's own flip
+  for full evidence.
