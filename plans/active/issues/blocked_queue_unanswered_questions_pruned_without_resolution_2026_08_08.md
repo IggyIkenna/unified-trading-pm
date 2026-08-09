@@ -116,10 +116,23 @@ explicitly expired-with-signal.
 
 ## Todo
 
-- [ ] [BACKEND] P1. Read `agent-orchestrator/server/` for the `blocked_queue` storage + removal logic (search for
+- [x] ✅ [BACKEND] P1. Read `agent-orchestrator/server/` for the `blocked_queue` storage + removal logic (search for
       `blocked_queue`, `blocked_id`, `answered_at` read/write sites). Confirm whether unanswered (`answered_at: null`)
       entries are removed by a time-based prune, a size cap, or some other mechanism, and cite the exact code location +
-      condition. (repo: agent-orchestrator)
+      condition. (repo: agent-orchestrator) — agent-orchestrator (no code change, investigation-only; see Progress Log
+      2026-08-09 slot-23 for the full citation). **Not a delete/TTL/size-cap at all** — rows are never removed from the
+      `blocked_queue` table. `GET /api/state` (`server/routes/state.py:111`) only ever returns
+      `ss.list_blocked(session, unanswered_only=True)`, i.e. `WHERE answered_at IS NULL`
+      (`server/state_store/activity.py:130-133`) — any row that gets ANSWERED, by any path, permanently disappears from
+      every future poll even though it still exists in the DB. The actual "removal" is
+      `blocked_reconcile.classify_retirement()` (`server/blocked_reconcile.py:259-311`), called from `reconcile_once()`
+      (`:536-550`) on a periodic sweep (`BlockedQueueReconciler`, `tuning.blocked_reconcile_interval_seconds`): three
+      machine-checkable triggers (`task_terminal`, `doc_archived`, `pr_terminal`) call
+      `answer_blocked(session, row.blocked_id, retire_text, "auto-retire")` (`server/state_store/activity.py:73-105`),
+      which sets `row.answered_at = utcnow()`. That's a genuine UPDATE, not a DELETE/TTL/size-cap eviction — no such
+      mechanism exists anywhere in `blocked_reconcile.py`/`activity.py`/`orm.py`. (The separate `classify_timeout` path,
+      `:319-344`, kills the SLOT and requeues the TASK but explicitly does NOT touch `answered_at` —
+      `_timeout_blocked_slot`'s docstring, line 391 — so it does not explain the disappearance.)
 - [ ] [BACKEND] P1. If a prune/expiry mechanism is confirmed: add a notification path so the filing slot/task learns its
       question expired unanswered (a message on the slot's next `/progress`/`/heartbeat`, analogous to how an answer is
       currently delivered), instead of silent disappearance. If the removal is a bug rather than a designed behavior,
@@ -147,3 +160,20 @@ explicitly expired-with-signal.
   Both todos are bounded: todo 1 is a checkable code-read (cite the exact `blocked_queue` removal condition), todo 2 is
   a scoped follow-on fix/notification-path conditioned on todo 1's finding, per
   `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` §5 — no design/judgment call, no `locked_by`.
+- **2026-08-09 (slot 23, backend_engineer)**: Completed todo 1 — investigation-only, no code change (cited inline on the
+  checkbox above). Root cause identified: `classify_retirement()` (`blocked_reconcile.py:259-311`) auto-answers a row
+  via `answer_blocked(..., "auto-retire")` on 3 machine-checkable triggers
+  (`task_terminal`/`doc_archived`/`pr_terminal`), and `GET /api/state` (`routes/state.py:111`) permanently filters out
+  any row with `answered_at` set — so an auto-retired row is indistinguishable from a deleted one to any worker polling
+  the only surface RULES.md §5 / worker.md §4 tell it to check. Most likely trigger for this doc's specific 3x-vanished
+  pattern: `task_terminal` — the gated task (`defi_expected_unattempted_backlog_1m_2026_07_03_finalize-002`) was
+  re-released to the queue between each of the 4 dispatches (slots 30→29→12→19), and if `TaskRow.status` transiently
+  read a terminal value at any `reconcile_once()` tick in that window, the row auto-retires within one reconcile
+  interval (`tuning.blocked_reconcile_interval_seconds`) — consistent with slot-9's ~44min survival-with-no-prune
+  observation for `BLK-ce0fe830` (that row simply hadn't hit a retirement trigger yet in the window it was watched, not
+  evidence of a longer TTL or a size cap — no such cap exists in code). Confirmed the retirement branch in
+  `reconcile_once()` (`:536-550`) never calls `enqueue_message()` for the filing slot — unlike the plans-corpus sync
+  branch immediately below it (`:575`), which does — so this is also the concrete gap todo 2 needs to close: extend the
+  retirement branch to enqueue a message to `row.slot_id`/`row.task_id` carrying the `retire_text` reason, mirroring the
+  sync path's existing pattern, so a retirement becomes visibly distinguishable from silent loss. Handing off todo 2 to
+  the next dispatch with this citation — out of scope for this task (scoped to todo 1 only per its brief).
