@@ -977,7 +977,7 @@
       <b class="tag">The constraint, stated honestly</b>
       <strong>$300,000 is a budget, not a demand forecast.</strong> Our bottom-up model of what the
       roadmap actually wants to consume over the same twelve months is substantially higher &mdash;
-      the base case runs to roughly $780,000 (<a class="xref" href="#d">appendix&nbsp;D</a>). We are
+      the ambitious case runs to roughly $780,000 (<a class="xref" href="#d">appendix&nbsp;D</a>). We are
       presenting $300,000 because that is what we can responsibly commit to at $5,000 a month net.
       The gap between the two numbers is not padding. It is work that gets deferred, run at a
       narrower universe, or run somewhere cheaper.
@@ -1051,8 +1051,9 @@
     <p class="prose">
       Years 2 and 3 are planning figures, not commitments, and we would rather say so than dress them
       up. What we can say with confidence is the direction: our modelled demand for year one alone is
-      roughly $780,000 (<a class="xref" href="#d">appendix&nbsp;D</a>) against the $300,000 we are
-      planning to consume. The constraint on years 2 and 3 is not whether the workload exists.
+      roughly $780,000 unconstrained (<a class="xref" href="#d">appendix&nbsp;D</a>) against the
+      $300,000 we are committing to. The constraint on years 2 and 3 is not whether the workload
+      exists.
     </p>
 
     <h3>Three things that make this durable</h3>
@@ -1245,7 +1246,7 @@
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Input</th><th class="num">Today</th><th class="num">Base case, month 12</th><th>Note</th></tr>
+          <tr><th>Input</th><th class="num">Today</th><th class="num">Month 12</th><th>Note</th></tr>
         </thead>
         <tbody>
           <tr>
@@ -1327,16 +1328,17 @@
     </div>
 
     <p class="prose">
-      <strong>The committed plan is the conservative case.</strong> $300,000 in year one &mdash;
-      $20,700 a month rising to $28,100 &mdash; is what we are prepared to commit to and what the
-      taper is priced on. The two cases above it are not a gap we are failing to fill. They are the
-      same roadmap running faster, and they are upside for Google.
+      <strong>The base case is the committed plan.</strong> $300,000 in year one &mdash; $20,700 a
+      month rising to $28,100 &mdash; is what we commit to and what the taper is priced on. It is
+      not a floor beneath some other forecast; it <em>is</em> the forecast. <strong>Ambitious</strong>
+      is the same roadmap unconstrained, and is upside for Google rather than a gap we are failing to
+      fill. <strong>No arrangement</strong> is what happens if we cannot make the economics work.
     </p>
 
     <div class="figure">
       <div class="chart-host" id="host-scen">
         <svg id="chart-scen" viewBox="0 0 860 340" role="img"
-             aria-label="Modelled monthly consumption under base and ambitious cases against the plan"></svg>
+             aria-label="Monthly consumption: committed base case, unconstrained ambitious case, and the no-arrangement fallback"></svg>
         <div class="tooltip" id="tt-scen" role="status" aria-live="polite"></div>
       </div>
       <div class="legend" id="legend-scen"></div>
@@ -1345,25 +1347,30 @@
         <div class="table-wrap" id="table-scen"></div>
       </details>
       <p class="fig-cap">
-        <b>Three speeds on one roadmap, September 2026 to August 2027.</b> <b>Committed plan</b> is
-        section 4, and it is deliberately paced to what we can fund at $5,000 a month net.
-        <b>Base</b> assumes the roadmap runs at its natural pace &mdash; live trading from October,
-        eight to twelve instances across four to six mandates, research widening to roughly twenty
-        archetypes. <b>Ambitious</b> assumes the full captured universe across all asset groups at
-        roughly forty archetypes, ten or more mandates, and colocated execution in three regions.
-        The difference between the lines is not scope. It is <em>when</em>.
+        <b>September 2026 to August 2027.</b> <b>Base</b> is the committed plan of section 4,
+        deliberately paced to what we can fund at $5,000 a month net &mdash; live trading from
+        October, research widening steadily, the agent fleet migrating onto Vertex.
+        <b>Ambitious</b> is the same roadmap unconstrained: the full captured universe across all
+        asset groups, more mandates, accelerators in continuous use. The difference between those two
+        is not scope, it is <em>when</em>. <b>No arrangement</b> is a different thing entirely
+        &mdash; not a slower roadmap but a smaller Google Cloud: we hold at roughly what we can self-
+        fund and migrate compute, inference and CI to AWS and Azure, leaving bulk storage behind.
       </p>
     </div>
 
     <div class="note">
       <b class="tag">How this reconciles with the three-year taper</b>
-      These are not competing forecasts &mdash; they are the same curve at different speeds, and that
-      is the clearest way to read the whole proposal. <strong>The base case reaches within twelve
-      months a scale the committed plan does not reach until year two</strong> ($780k against the
-      plan's $600k in year two). <strong>The ambitious case reaches in year one roughly what the plan
-      reaches in year three</strong> ($1.74M against $1.1M). In other words, funding does not change
-      what we build. It changes how quickly Google's consumption arrives &mdash; and under the taper,
-      arriving sooner means Odum paying a larger share of it sooner.
+      Base and ambitious are not competing forecasts &mdash; they are the same curve at two speeds.
+      <strong>The ambitious case reaches within twelve months a scale the committed plan does not
+      reach until year two</strong> ($780k against the plan’s $600k in year two). Funding does not
+      change what we build; it changes how quickly Google’s consumption arrives &mdash; and under
+      the taper, arriving sooner means Odum paying a larger share of it sooner.
+      <br><br>
+      <strong>The third line is the one worth sitting with.</strong> Without an arrangement, Google
+      Cloud consumption over the same twelve months is roughly <strong>$33,000 &mdash; about 11% of
+      the committed case</strong>, and still falling at the end of it. That is not us bluffing about
+      leaving; it is the arithmetic of a firm that cannot carry $25,000 a month gross unsupported and
+      would keep only the part that is genuinely hard to move.
     </div>
 
     <h3>Internal workload view at the $25,000 monthly plan</h3>
@@ -1513,20 +1520,20 @@
   ];
 
   const SCEN = {
-    ambitious: {
-      label: "Ambitious \u2014 full build-out",
-      totals: [32600, 51500, 70200, 86700, 106000, 129100, 153300, 177800, 201800, 223700, 244200, 263500],
-      year: 1740400
-    },
     base: {
-      label: "Base \u2014 the roadmap at its natural pace",
+      label: "Base \u2014 the committed plan, and the basis of this proposal",
+      totals: [20700, 20700, 20700, 24500, 24500, 24500, 26700, 26700, 26700, 28100, 28100, 28100],
+      year: 300000
+    },
+    ambitious: {
+      label: "Ambitious \u2014 the same roadmap, unconstrained",
       totals: [29950, 40700, 47450, 48850, 52600, 59150, 66550, 73850, 80550, 87400, 93550, 99700],
       year: 780300
     },
-    plan: {
-      label: "Committed plan \u2014 conservative, and the basis of this proposal",
-      totals: [20700, 20700, 20700, 24500, 24500, 24500, 26700, 26700, 26700, 28100, 28100, 28100],
-      year: 300000
+    declined: {
+      label: "No arrangement \u2014 Google Cloud reduced to storage",
+      totals: [5000, 4600, 4100, 3600, 3100, 2700, 2300, 2000, 1700, 1450, 1200, 1000],
+      year: 32750
     }
   };
   const SCEN_MONTHS = ["Sep 26", "Oct", "Nov", "Dec", "Jan 27", "Feb",
@@ -1864,9 +1871,9 @@
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     const C = seriesColors();
     const order = [
-      { k: "plan",      c: C[2] },
-      { k: "base",      c: C[0] },
-      { k: "ambitious", c: C[6] }
+      { k: "base",      c: C[2] },
+      { k: "ambitious", c: C[0] },
+      { k: "declined",  c: C[7] }
     ];
 
     const W = 860, H = 340, left = 66, right = W - 14, top = 18, bottom = H - 42;
@@ -1893,7 +1900,7 @@
       svg.appendChild(el("path", {
         d: d, fill: "none", stroke: o.c, "stroke-width": 2,
         "stroke-linejoin": "round", "stroke-linecap": "round",
-        "stroke-dasharray": o.k === "plan" ? "6 4" : "none"
+        "stroke-dasharray": o.k === "base" ? "6 4" : "none"
       }));
       s.totals.forEach(function (v, i) {
         svg.appendChild(el("circle", {
@@ -1950,16 +1957,16 @@
       return { c: o.c, label: SCEN[o.k].label + " \u2014 " + usd(SCEN[o.k].year) + " over 12 months" };
     }));
 
-    let h = '<table><thead><tr><th>Month</th><th class="num">Plan</th>' +
-            '<th class="num">Base</th><th class="num">Ambitious</th></tr></thead><tbody>';
+    let h = '<table><thead><tr><th>Month</th><th class="num">Base (committed)</th>' +
+            '<th class="num">Ambitious</th><th class="num">No arrangement</th></tr></thead><tbody>';
     for (let i = 0; i < n; i++) {
-      h += '<tr><td>' + SCEN_MONTHS[i] + '</td><td class="num">' + usdFull(SCEN.plan.totals[i]) +
-           '</td><td class="num">' + usdFull(SCEN.base.totals[i]) +
-           '</td><td class="num">' + usdFull(SCEN.ambitious.totals[i]) + '</td></tr>';
+      h += '<tr><td>' + SCEN_MONTHS[i] + '</td><td class="num">' + usdFull(SCEN.base.totals[i]) +
+           '</td><td class="num">' + usdFull(SCEN.ambitious.totals[i]) +
+           '</td><td class="num">' + usdFull(SCEN.declined.totals[i]) + '</td></tr>';
     }
-    h += '<tr class="total"><td>12-month total</td><td class="num">' + usdFull(SCEN.plan.year) +
-         '</td><td class="num">' + usdFull(SCEN.base.year) +
-         '</td><td class="num">' + usdFull(SCEN.ambitious.year) + '</td></tr>';
+    h += '<tr class="total"><td>12-month total</td><td class="num">' + usdFull(SCEN.base.year) +
+         '</td><td class="num">' + usdFull(SCEN.ambitious.year) +
+         '</td><td class="num">' + usdFull(SCEN.declined.year) + '</td></tr>';
     h += '</tbody></table>';
     $("table-scen").innerHTML = h;
   }

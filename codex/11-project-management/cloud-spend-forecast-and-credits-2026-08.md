@@ -257,19 +257,32 @@ line is what makes the fallback position coherent — it is the one thing worth 
 Vertex AI / Model Garden · GPU accelerators in `asia-northeast1` · Networking/egress (only material live service with $0
 coverage) · BigQuery. Plus AWS migration support and Spot/Batch job-shaping guidance.
 
-### Scenario model (secondary evidence, `scripts/finops/cloud_spend_forecast_2026_08.py`)
+### Scenario model — RE-ANCHORED 2026-08-09 (operator ruling; supersedes the model's own labels)
 
-| Scenario                              | 12-mo gross | Exit $/mo |
-| ------------------------------------- | ----------: | --------: |
-| Budget-capped (superseded — see note) |     162,860 |    13,830 |
-| Base                                  |     780,300 |    99,700 |
-| Ambitious                             |   1,740,400 |   263,500 |
+**The committed plan IS the base case.** The operator rejected the earlier presentation twice: first because the plan
+sat *below* a "base" case, which reads as asking for less than our own conservative estimate; then again because a
+relabel alone still left three lines. Final structure in the deliverable is exactly three series:
 
-> **NOTE — the model's "conservative" scenario is SUPERSEDED.** It models a
-> $13k/mo self-imposed cap. The operator's
-> actual declined-case position (stated later the same day) is **~$1k/mo,
-> storage only, everything else to AWS+Azure**. The published deliverable uses the $1k figure. If the model is re-run,
-> rebuild that scenario or drop it.
+| Series in the deliverable                     | 12-mo gross | Exit $/mo | What it is                                            |
+| --------------------------------------------- | ----------: | --------: | ----------------------------------------------------- |
+| **Base — the committed plan** (the ask)       |     300,000 |    28,100 | $20.7k→$28.1k/mo; what the taper is priced on         |
+| **Ambitious — same roadmap, unconstrained**   |     780,300 |    99,700 | was the model's "base"; now the upside line           |
+| **No arrangement — GCP reduced to storage**   |      32,750 |     1,000 | $5k/mo decaying to $1k as compute moves to AWS+Azure  |
+
+**Mapping back to `cloud_spend_forecast_2026_08.py`** (the script's labels are now STALE — do not quote them raw):
+
+- script `base` (780,300) → deliverable **"Ambitious"**
+- script `ambitious` (1,740,400) → **DROPPED ENTIRELY.** It dwarfed the other lines, forced the y-axis to $300k and
+  squashed the committed plan onto the axis; it was also never the ask. Dropping it rescaled the chart to $125k and made
+  the plan legible.
+- script `conservative` (162,860, a $13k/mo self-imposed cap) → **DROPPED**, superseded by the measured declined-case
+  position (~$1k/mo storage-only).
+- deliverable **"Base"** (300,000) is NOT in the script at all — it is the quarterly service-family plan from section 4.
+
+**If the script is re-run, re-label its output to match this table** or the deliverable and the tooling will disagree.
+The reconciliation that makes the whole document hang together: *ambitious reaches within twelve months a scale the
+committed plan does not reach until year two ($780k vs the plan's $600k in Y2)* — same roadmap, different speed, so
+funding changes WHEN Google's consumption arrives, not WHAT gets built.
 
 ## 5. Deliverable restructure — DART-led narrative (2026-08-09, second pass)
 
