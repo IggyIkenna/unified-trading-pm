@@ -33,7 +33,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md,
   ]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-22
 code_refs:
 ---
 

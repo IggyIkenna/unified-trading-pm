@@ -32,7 +32,7 @@ authoritative_for:
   ]
 referenced_by: [CLAUDE.md § "Plans — format + authoring discipline", CLAUDE.md § "Governance + safety HARD RULES"]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-27
 code_refs:
 ---
 

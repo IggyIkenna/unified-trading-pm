@@ -19,7 +19,7 @@ authoritative_for:
   [external-data-always-available HARD RULE, BLOCKED-CREDENTIALS/-OPERATOR-DECISION/-UPSTREAM-OUTAGE status taxonomy]
 referenced_by:
 owner:
-last_reviewed:
+last_reviewed: 2026-10-21
 code_refs:
 ---
 

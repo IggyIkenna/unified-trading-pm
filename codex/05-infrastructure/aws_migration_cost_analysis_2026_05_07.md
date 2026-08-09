@@ -20,7 +20,7 @@ created: 2026-05-21
 authoritative_for:
 referenced_by: [/codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-25
 code_refs:
 type: infrastructure
 ---

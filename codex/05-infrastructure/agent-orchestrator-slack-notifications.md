@@ -26,7 +26,7 @@ referenced_by:
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-25
 code_refs:
 ---
 

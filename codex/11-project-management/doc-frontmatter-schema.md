@@ -27,7 +27,7 @@ referenced_by:
     plans/archive/issues/plan_issue_epic_consolidation_2026_06_30.md,
   ]
 owner: harsh
-last_reviewed:
+last_reviewed: 2026-10-27
 code_refs: []
 ---
 

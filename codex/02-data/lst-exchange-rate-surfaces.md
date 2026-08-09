@@ -27,7 +27,7 @@ related:
 created: "2026-07-21"
 referenced_by:
 code_refs:
-last_reviewed:
+last_reviewed: 2026-10-21
 owner:
 last_updated: "2026-07-21"
 parent_epic: infrastructure_master

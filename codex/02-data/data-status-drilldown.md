@@ -41,7 +41,7 @@ referenced_by:
     /codex/06-coding-standards/feature-service-pattern.md,
   ]
 owner:
-last_reviewed: 2026-05-08
+last_reviewed: 2026-10-28
 code_refs:
 ---
 

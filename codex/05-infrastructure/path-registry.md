@@ -18,7 +18,7 @@ created: 2026-05-21
 authoritative_for: [per-environment gcs path and deployment-url registry]
 referenced_by: [/codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-26
 code_refs:
 type: infrastructure
 ---

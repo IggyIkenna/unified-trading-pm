@@ -23,7 +23,7 @@ created: 2026-06-24
 authoritative_for: [CeFi capture universe two-layer model + perp-gate]
 referenced_by: [/codex/02-data/carry-venue-live-integration-reference.md, /codex/02-data/mvp-scope-canonical.md]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-20
 code_refs:
 codified: 2026-06-23
 ---

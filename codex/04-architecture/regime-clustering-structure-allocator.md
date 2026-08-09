@@ -18,7 +18,7 @@ created: 2026-05-30
 authoritative_for: [regime-clustering factor-targeted structure allocator pipeline]
 referenced_by:
 owner:
-last_reviewed:
+last_reviewed: 2026-10-23
 code_refs:
 ---
 

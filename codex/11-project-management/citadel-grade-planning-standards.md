@@ -27,7 +27,7 @@ referenced_by:
     /codex/11-project-management/issue-doc-lifecycle.md,
   ]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-26
 code_refs:
 ---
 

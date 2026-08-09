@@ -27,7 +27,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md,
   ]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-24
 code_refs:
 ---
 

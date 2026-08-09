@@ -18,7 +18,7 @@ created: 2026-05-18
 authoritative_for: [scenario overlay parquet provenance columns, scenario_id propagation contract]
 referenced_by: [/codex/04-architecture/scenario-injection-architecture.md]
 owner:
-last_reviewed:
+last_reviewed: 2026-10-22
 code_refs:
 author: harsh-slot-3
 ---
