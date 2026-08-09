@@ -171,7 +171,7 @@ Progress Log) confirmed, with exact file:line citations:
       hand-built `AtomicInstruction` fixtures mirroring strategy-service's exact shape — no cross-repo import, per the
       NO service↔service deps rule) covers both families, request-field correctness, opening-mode crossover, and error
       paths. `quality-gates.sh` green on execution-service (full run, no skip flags).
-- [ ] [BACKEND] P2. Audit execution-service for an existing periodic-poller/scheduler mechanism suitable for
+- [x] ✅ [BACKEND] P2. Audit execution-service for an existing periodic-poller/scheduler mechanism suitable for
       `PerpHedgeSizer.compute_rebalance()`/`.compute_margin_topup()` (its own docstring states "designed for 5-min poll
       cycle", `perp_hedge_sizer.py:60-63`) — grep for existing Cloud Scheduler-triggered or in-process poll loops in
       `execution-service/execution_service/defi_execution/` and `algo_library/`. If a suitable poller exists, wire
@@ -180,7 +180,8 @@ Progress Log) confirmed, with exact file:line citations:
       bounded todo; file a follow-up `[DESIGN]` todo on this plan's finalize companion instead. Repo: execution-service.
       Done-when: either (a) `PerpHedgeSizer` has a real, tested, live-reachable caller, with a new unit test proving it
       fires on a poll tick, or (b) the audit's finding (no suitable poller exists) is recorded verbatim with the exact
-      grep evidence, and a follow-up todo is filed.
+      grep evidence, and a follow-up todo is filed. **(b) — no suitable poller exists**, evidence in Progress Log;
+      follow-up `[DESIGN]` todo filed on `/plans/active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md`.
 - [ ] [BACKEND] P2. Remove the two `_ALLOWED_EMPTY_ARCHETYPES` entries for `CARRY_RECURSIVE_BORROW_LENDING_ONLY`
       (`:104-108`) and `CARRY_BASIS_PERP_INV` (`:109-112`) in
       `strategy-service/tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py` now that
@@ -261,3 +262,29 @@ Progress Log) confirmed, with exact file:line citations:
   `usdc_margin_buffer_min_pct` schema-default fallback, since Family 2's attestations don't carry it), and error paths
   (wrong `instrument_type`, missing chain, unknown `lending_protocol`). `quality-gates.sh` green on execution-service
   (full run, no skip flags). execution-service@2352a17e.
+- **2026-08-09 (slot 8, backend_engineer)**: Todo 7 audited — **outcome (b): no suitable existing periodic-poller/
+  scheduler mechanism exists in execution-service.** Exact evidence:
+  - `grep -rniE "cloud.?scheduler|periodic|poll_loop|poll_interval|APScheduler|scheduler\.|asyncio\.sleep|while True|@repeat|cron" execution_service/defi_execution/ execution_service/algo_library/`
+    hit exactly 3 files: `leveraged_leg_controller.py` (only `CashSweepPolicy.PERIODIC`, `:323` — a policy enum checked
+    by an external caller's own decision, not a scheduler itself, and nothing in the codebase drives it on a timer
+    either), `health_factor_monitor.py`, `cctp.py` (only an attestation-poll-interval config field, not a running loop).
+  - `HealthFactorMonitor` (`execution_service/defi_execution/monitors/health_factor_monitor.py`) IS a genuine
+    per-instance asyncio poll-loop primitive (`run()`/`_poll_loop()`/`asyncio.sleep(self._interval)`) — structurally the
+    closest match — but it has **ZERO production callers**: `grep -rln "HealthFactorMonitor" execution_service/ tests/`
+    returns only its own file + its own unit test (`tests/unit/defi_execution/test_health_factor_monitor.py`); it is
+    never instantiated or `.run()` in `api/app.py`'s `@app.on_event("startup")` handlers or `cli/main.py`. Wiring
+    `PerpHedgeSizer` into it would not make either primitive live-reachable — same problem this whole plan exists to fix
+    for `RecursiveLoopOrchestrator`.
+  - `start_domain_config_reloaders()` (`config_reloaders.py`, live-reachable via `api/app.py:149-152`'s
+    `@app.on_event("startup")`) is the ONE genuinely live scheduling-adjacent mechanism in the service, but it wraps
+    UTL's `DomainConfigReloader`, which is **pub/sub event-driven config hot-reload** (its own module docstring:
+    "subscribes to per-domain config events... reloads... when notified" —
+    `unified-trading-library/unified_trading_library/domain_config_reloader.py:1-21`), not a fixed-interval
+    business-logic scheduler — semantically wrong for a rebalance check that needs a fresh on-chain/market read every
+    tick regardless of any config diff.
+  - No Cloud-Scheduler-triggered HTTP endpoint exists anywhere in execution-service's API surface:
+    `grep -rln "cloud_scheduler|CloudScheduler|X-CloudScheduler|scheduler_trigger" execution_service/` returns zero
+    hits; `api/app.py` and `api/main.py` carry no scheduler-triggered route.
+  - Follow-up `[DESIGN]` todo filed on `/plans/active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md` per
+    this todo's own instruction (do not freehand-design scheduler infra in this bounded todo). No code shipped this
+    dispatch — audit-only outcome, plan-doc-only commit.
