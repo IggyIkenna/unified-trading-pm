@@ -195,6 +195,16 @@ depends_on: []
 9. **`cost_observability_deferred_followups_2026_07_10.md`** — bumped stale `last_updated` (2026-07-10 → 2026-08-08, its
    own most recent Progress Log entry — a 29-day gap, the largest in the tranche).
 
+## Zero-checkbox sweep (this skill's standing responsibility, per SKILL.md § "4. ZERO-CHECKBOX docs")
+
+3 hits in the `ui` tranche's 20-doc population: `issues/ag_closeout_audit_ui_parked_2026_08_0{7,8,9}.md` — all read in
+full, all genuinely prose-only-by-design audit-record docs (0 fabricated real work found; converting to `- [ ]` todos
+would misrepresent an audit RESULT as open engineering work). Recorded in the standing corpus-wide register
+`/plans/active/issues/zero_checkbox_sweep_all_tranches_2026_07_31.md` § "Measurement 2026-08-09 — /plan-reconcile ui"
+(this register is this skill's own maintained artifact, not one of the 20 ui-tranche docs — updated per its documented
+"standing owner" convention). 0 converted, 0 archived (see Doc-drift item 4 / Filed item 4 for the separate, still-open
+archival-POLICY question this same 3-doc family raises).
+
 ## Filed
 
 Every genuinely-undecidable item below was BOTH alerted (`POST /blocked`, fires a dashboard escalation) AND filed here

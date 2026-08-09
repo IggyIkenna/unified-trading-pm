@@ -30,7 +30,7 @@ related:
   ]
 created: 2026-07-31
 author: unknown
-last_updated: 2026-07-31
+last_updated: "2026-08-09"
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
@@ -127,6 +127,27 @@ and this doc is the register it writes to.
 > **Standing instruction for the next run**: "zero checkboxes" is NOT automatically a defect. Three of the eleven hits
 > above are correct as they are, and one of those three is actively load-bearing. Always read the doc before adding a
 > todo to it.
+
+## Measurement 2026-08-09 — `/plan-reconcile ui` (TOPIC-SCOPED run — NOT the monthly full pass)
+
+First-ever `/plan-reconcile ui` run (the `ui` tranche's own first pass, unrelated to this register's monthly cadence).
+Verifier scoped to the tranche's own 20 `asset_group: [ui]` docs (not a corpus-wide re-run — the monthly full-corpus
+pass is still owed, same gap the 2026-08-06 `ao` measurement below already flagged): **3 hits**, all in the same
+recurring doc family —
+
+| Doc                                                | Class                                           | Disposition                                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `issues/ag_closeout_audit_ui_parked_2026_08_07.md` | `ui` — recurring dated audit-trail record       | **RECORDED, not converted.** Read in full: 3 findings + a Phase-1 tally, all prose by design (a point-in-time audit-record doc, not a work-item doc) — converting to fabricated `- [ ]` todos would misrepresent an audit RESULT as open engineering work. Same disposition class as this register's existing "Genuinely informational" entries. |
+| `issues/ag_closeout_audit_ui_parked_2026_08_08.md` | `ui` — recurring dated audit-trail record       | Same as above — read in full, 0 genuine remaining work, prose is a findings record.                                                                                                                                                                                                                                                              |
+| `issues/ag_closeout_audit_ui_parked_2026_08_09.md` | `ui` — recurring dated audit-trail record (new) | Same as above (this run's own sibling `ag_closeout_auditor` dispatch produced it same-day).                                                                                                                                                                                                                                                      |
+
+**Cross-reference, not duplicated here**: this SAME 3-doc family is ALSO the subject of a separate, more specific open
+question this run filed — whether `/codex/11-project-management/issue-doc-lifecycle.md`'s "archive immediately once
+acked" rule should have an explicit exception for this recurring-dated-audit-trail-record doc class (they function as a
+decision log, cross-referenced by later same-family runs, rather than a traditional unacked issue). That is a DIFFERENT
+question (archival-timing policy) from THIS register's question (is there fabricated-prose real work hiding here) —
+answer to the zero-checkbox question is a clean NO for all 3; the archival-policy question is still open, filed
+separately in `plans/active/issues/plan_reconciler_findings_2026_08_09.md` § Doc-drift item 4 / § Filed item 4.
 
 ## Measurement 2026-08-06 — `/plan-reconcile ao` (TOPIC-SCOPED run — NOT the monthly full pass)
 
