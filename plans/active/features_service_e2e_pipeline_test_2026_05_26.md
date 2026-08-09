@@ -688,11 +688,9 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
 
 ### Open Track-1 todos (narrowed 2-strategy validation — the actual goal)
 
-- [ ] [SCRIPT] P0. **Phase A — features-onchain staked-basis slice e2e.** `--dry-run` smoke (read
-      `lst-rates`+`perp-funding` from prd, compute) then `IS_TEST_RUN=true` run of `lst_yields` / `lst_native_rates` /
-      `perp_funding_rates` / `health_factor` (DEFI, window e.g. 2026-04-07..09) → `features-onchain-defi-test` →
-      read-back assert sane ranges (`lst_native_rate≈1.0–1.2`, staking/funding APY plausible). No MDPS needed. Repo:
-      features-service.
+- **[SCRIPT] P0. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md`.** Phase
+      A — features-onchain staked-basis slice e2e run. See the batch doc for the full scoped todo; do not
+      duplicate-dispatch from here. Repo: features-service.
 - [ ] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol.** Run MDPS for ~2–3 days over
       the perp venues (read raw tick from `market-data-tick-cefi-prd`, write processed*candles to a `-test` bucket via
       `MDPS_OUTPUT_BUCKET*{CAT}`) → run delta_one `funding_oi`+`returns`(realized_vol_20)@1h → `-test` → read-back.
@@ -711,11 +709,9 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
 - [x] ✅ SUPERSEDED, do not dispatch (2026-07-27). **Perf/resource instrumentation.**
       `data_pipeline_check_mdps_features_2026_07_20.md` (active, finalize 2026-07-27) builds a strict superset:
       RX+rows/s+wall-clock benchmark, full-history projection, SPOT cost, across ALL asset_groups.
-- [ ] [INFRA] P2. **DEFERRED (fan-out, not the 2 strategies):** MDPS 1h backfill `2026-04-14→04-30` for mtf 4h/24h; and
-      BITGET-SPOT 4h/24h candles via MDPS (producible gap — see audit above, do NOT `empty_confirmed`). Repo: MDPS.
-      **Re-check before dispatch (2026-07-27):** broad CeFi candle-completion work landed since
-      (`data_completion_cefi_2026_07_15.md`, `cefi_consolidated_closeout_2026_07_18.md`) but this exact
-      date-range/timeframe ask wasn't independently confirmed closed.
+- **[DATA] P2. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md`.** DEFERRED
+      fan-out — audit-then-backfill MDPS 1h `2026-04-14→04-30` (mtf 4h/24h) + BITGET-SPOT 4h/24h candles. See the
+      batch doc for the full scoped todo; do not duplicate-dispatch from here. Repo: MDPS.
 - [ ] [VALIDATE] P2. **`usdc_idle_yield_apy_bps` stub** — confirm leave-as-0-floor (acked) vs wire `venue_funding_yield`
       upstream; folded with the per-service status-calibration audit. Repo: features-service onchain + delta_one.
 

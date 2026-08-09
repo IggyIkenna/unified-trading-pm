@@ -271,16 +271,13 @@ ledger.
       `[cross-cutting]` → `[ui]` — **flagged urgent for the 3rd consecutive day**: live unauthenticated-prod-endpoint
       exposure, all 4 fix-steps still open. Done when: retagged and the `ui` tranche's audit picks it up with priority
       commensurate with a live P1 security hole.
-- [ ] [SCRIPT] P3. `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership test
-      (`parent_epic in DATA_EPICS or basename in cited`) silently excludes never-cited docs with a non-data
-      `parent_epic` from the candidate pool entirely (Process finding 2 above) — consider widening the membership test
-      itself (not just relying on the `check_ag_closeout_linkage.py` cross-check every run) so this class doesn't need
-      manual rediscovery each time. Done when: the generator's membership test has a documented, tested fix, or a
-      recorded decision that the cross-check is sufficient going forward.
-- [ ] [DOC] P2. `cross_cutting_consolidated_closeout_2026_07_25.md` is now at 999/1000 lines (hard cap) after today's
-      "Known non-orphan dispositions" addition — 1 line of margin. Line-cap-split it (fork a Track/phase-named child,
-      `depends_on` back) before the next substantive edit, mirroring how the other 5 AGs' consolidated closeout docs
-      were split. Done when: doc is back under ~700L with a forked child covering the trimmed content.
+- **[SCRIPT] P3. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.**
+      `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership test silently excludes never-cited
+      docs with a non-data `parent_epic`. See the batch doc for the full scoped todo; do not duplicate-dispatch
+      from here.
+- **[DOC] P2. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.**
+      `cross_cutting_consolidated_closeout_2026_07_25.md` is at/near the 1000-line hard cap — line-cap-split it.
+      See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
 - [ ] [OPERATOR] P2. `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` — rule on whether
       `/codex/04-architecture/live-strategy-config-hot-reload.md`'s documented safe-field allow-list/
       `UnsafeConfigChangeError` is the target to BUILD (strategy-service currently ships an unconditional-swap reloader
