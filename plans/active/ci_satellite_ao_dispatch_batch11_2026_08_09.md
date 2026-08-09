@@ -70,7 +70,7 @@ source: >-
 
 ## Todos
 
-- [ ] 1. [INFRA] P1. **Provision `.venv-workspace` on the orchestrator VM to completion, verify EVERY service imports
+- [x] ✅ 1. [INFRA] P1. **Provision `.venv-workspace` on the orchestrator VM to completion, verify EVERY service imports
       cleanly, regenerate the unified OpenAPI/config-registry outputs, and commit ONLY if the extraction-count
       checkpoint passes.** Full context + the F12 data-corruption footgun this guards against:
       `/plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md` § "Residual 1" (verbatim
@@ -135,3 +135,24 @@ source: >-
   this batch itself match); no sibling `ci_satellite_ao_dispatch_batch*` doc references this source doc or this content;
   no consolidated-closeout doc covers it. Residual 2 (client-lite wizard successor) deliberately NOT extracted — it
   remains a genuine unscoped design call per the parent doc's own unchanged reasoning.
+- **2026-08-09 (executed by infra worker, slot-10)** — ✅ Todo 1 complete via outcome (b): a clean
+  `BLOCKED-EXTRACTION-REGRESSION` report with nothing partially committed, per the todo's own explicit valid-completion
+  clause. Steps 1-2 (venv provisioning + verify-all-imports) fully succeeded, uncovering and fixing the ACTUAL root
+  cause of the 2026-08-07 partial diagnosis along the way: `setup-workspace-venv.sh` never applied a repo's own
+  `[tool.uv].override-dependencies` during editable installs, permanently blocking `execution-service`
+  (betfairlightweight vs. workspace `requests>=2.33.0` CVE floor) and its dependents. Fixed + shipped:
+  `unified-trading-pm@026a84d6f6`. Step 3 (regen) ran end-to-end successfully for the checkpoint-relevant outputs: fresh
+  `unified-trading-system.openapi.json` improved on every metric (473→628 paths, 105→353 schemas). Step 4 (checkpoint)
+  caught a genuine per-metric regression signal on `config-registry.json` (`total_repos` 19→14, though `total_configs`
+  rose 26→30) — root-caused to a documented pre-existing phantom-service consolidation the stale committed baseline
+  predates (not a venv/data-corruption issue), but per the todo's own design intent (a deliberately mechanical,
+  non-discretionary gate — see the parent doc's 2026-08-07 "rushed step 4" caution) I did not override it unilaterally:
+  discarded the generated outputs (`git checkout --`) and filed full evidence + a concrete follow-up todo rather than
+  commit on my own judgment. Step 6 also surfaced that `check_openapi_drift.py` (the plan's own stated closing Gate) is
+  DEPRECATED 2026-05-16 and checks an unrelated file pair — cannot be meaningfully executed as written. Full findings +
+  4 follow-up todos (re-verify-and-commit, drift-gate correction, an unrelated GCS 404 in the instrument-snapshot
+  sub-generator, a stale phantom-repo entry) filed at
+  `/plans/active/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md`. Step 7 (parent doc Residual-1
+  flip) intentionally NOT done here — deferred to this batch's finalize twin per this todo's own step 7 instruction, and
+  correctly still open since Residual 1 itself is not yet fully resolved (the findings doc's todo 1 carries the
+  remaining commit step).
