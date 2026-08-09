@@ -157,17 +157,32 @@ spelling variant survives, which is the entire point of the panel". It does not.
       `market-data-processing-service/market_data_processing_service/app/adapters/sports/arbitrage_adapter.py`
       (`SportsArbitrageAdapter`) and its ~23 test references (`test_sports_adapters.py`, `test_schema_robustness.py`,
       `test_adapter_registry_coverage.py`).
-- [ ] [CODE] P1. **Make the relocated series consume the CORRECTED operator-group guard** shipped in
+- [x] ✅ [CODE] P1. **Make the relocated series consume the CORRECTED operator-group guard** shipped in
       `unified-api-contracts@e080ef74` (re-keyed VENUE_OPERATOR_GROUPS, case-insensitive `.upper()` normalisation) +
       `unified-api-contracts@b9a0be80` (OPERATOR_GROUP_VENUES hierarchy — BETFAIR_EX_UK/EU/SB_UK → BETFAIR). Any arb
       whose legs are all one operator must never enter the series. If the historical 13 days contain such rows,
-      recompute or flag them — do not carry a known-wrong population forward as a baseline.
-  - **Done (2026-08-09) for the new detector** — `features_service/sports/arb/detector.py`'s
-    `detect_sports_arbitrage_opportunity` calls `arb_legs_are_independent` and returns `None` (excludes) when legs
-    collapse to one operator group; covered by
-    `tests/sports/unit/arb/test_detector.py::test_same_operator_group_legs_never_enter_the_series`. Checkbox stays open
-    — "the relocated series" isn't live yet (depends on the live-wiring todo above), and the historical-13-day
-    population hasn't been checked/recomputed against this guard yet.
+      recompute or flag them — do not carry a known-wrong population forward as a baseline. — **DONE 2026-08-09**
+      (slot-24, `backend_engineer`): `features_service/sports/arb/detector.py`'s `detect_sports_arbitrage_opportunity`
+      already called `arb_legs_are_independent` (excludes same-operator-group legs) as of the 2026-08-09 detector
+      session, and the live-wiring todo above (`features-service@67de878d`) has since shipped, so `runner.py`'s
+      `run_arb_detection_once`/`run_live_loop` now make "the relocated series" a live, real producer through that same
+      guarded detector — no code change was needed, only end-to-end verification + regression coverage that the guard
+      actually holds through the full chain, not just at the detector's own unit-test boundary.
+      `features-service@50a707a3`: verified both guard commits (`e080ef74`, `b9a0be80`) are ancestors of the current
+      `unified-api-contracts` HEAD that features-service depends on (local path dependency, always current), read
+      `arb_config.py` directly to confirm the BETFAIR_EX_UK/EU/SB_UK→BETFAIR hierarchy + `.upper()` normalisation are
+      the live code, then added
+      `tests/sports/unit/arb/test_runner.py::test_same_operator_group_arb_never_enters_the_series`
+      (`run_arb_detection_once`) and `::test_same_operator_group_arb_writes_nothing_to_store` (`run_live_loop`) — a
+      same-operator-group-only bucketed-odds snapshot (BETFAIR_EX_UK + BETFAIR_EX_EU legs, genuine pre-guard arb) now
+      has explicit runner-level proof it produces zero opportunities and zero GCS writes. Full `quality-gates.sh` green
+      (17/17 arb tests passed), SHA verified ancestor of `origin/live-defi-rollout`. **Historical-13-day clause not yet
+      actionable**: `write_arb_opportunities` (`store.py`) only ever writes the current tick's UTC day
+      (`day=<tick_now.date()>`), so the relocated store holds ZERO historical rows today — there is nothing in "the
+      relocated series" yet to recompute or flag. That population only enters the store once the separate "Migrate the
+      historical 13 days..." P1 todo (immediately below, still open) reprocesses the raw ticks through this same guarded
+      detector — which will apply the guard as a natural consequence of using the already-fixed
+      `detect_sports_arbitrage_opportunity`, not as separate new work.
 - [x] ✅ [REVIEW] P1. **Recompute the arb-decay/alpha-gate baseline on the corrected population** if the bugfix plan's
       blast-radius count comes back non-zero (that plan files this as a follow-up; this todo is its landing site).
       Operator ratified the decay spec as-written on 2026-08-08 — per-leg decay against a shared t=0, gate on p25, edge
@@ -469,3 +484,18 @@ spelling variant survives, which is the entire point of the panel". It does not.
   premature/oversized on inspection this session (after the arb operator-group-guard todo and the PATH-PREFIX
   loader-migration todo, both documented above) — worth an operator pass over the plan's remaining todos for similar
   hidden cross-plan dependencies before further dispatch.
+
+- **2026-08-09 (slot 24, backend_engineer)** — Closed the Arbitrage section's operator-group-guard todo. By the time
+  this dispatch landed, the prerequisite live-wiring todo (immediately above) had already shipped
+  (`features-service@67de878d`), so "the relocated series" is now a live producer — the premise slot-15's earlier note
+  cited for leaving this checkbox open no longer holds. Verified rather than assumed: read `runner.py` directly (calls
+  `detect_sports_arbitrage_opportunity` unconditionally, no bypass path), confirmed both guard commits
+  (`unified-api-contracts@e080ef74`, `@b9a0be80`) are ancestors of the UAC HEAD features-service's local-path dependency
+  resolves to, and read the live `arb_config.py` to confirm the BETFAIR_EX_UK/EU/SB_UK→BETFAIR hierarchy is the actual
+  shipped code, not just the commit message's claim. Added end-to-end regression coverage (`features-service@50a707a3`)
+  proving the guard survives the full chain, not just the detector's own unit test: a same-operator-group-only
+  bucketed-odds snapshot now has explicit `run_arb_detection_once` and `run_live_loop` assertions that it produces zero
+  opportunities and zero GCS writes. The historical-13-day clause is deliberately left for the separate "Migrate the
+  historical 13 days..." todo (still open, immediately above this one) — `store.py`'s `write_arb_opportunities` only
+  ever writes the CURRENT tick's day, so the relocated series holds no historical rows yet to recompute or flag; that
+  reprocessing pass will apply this same guard automatically once it exists.
