@@ -5,8 +5,9 @@
 # install-prune-uv-cache-cron.sh — register the periodic shared `.uv-cache` prune cron.
 #
 # Idempotent: re-runs are safe. Operator runs this ONCE per host (the shared
-# `${WORKSPACE_ROOT}/.uv-cache` is read/written by every slot's `uv sync`, so this is
-# a per-HOST install, not per-slot — mirrors install-cleanup-stale-qg-tmp-cron.sh).
+# `${WORKSPACE_ROOT}/.tabs/.uv-cache` is read/written by every slot's `uv sync`, so this is
+# a per-HOST install, not per-slot — mirrors install-cleanup-stale-qg-tmp-cron.sh). (Relocated
+# INSIDE .tabs/ 2026-08-09 — see tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md.)
 #
 # Usage:
 #   bash unified-trading-pm/scripts/dev/install-prune-uv-cache-cron.sh
@@ -57,7 +58,10 @@ esac
 PM_DIR="${WORKSPACE_ROOT}/unified-trading-pm"
 INTEGRATION_BRANCH="live-defi-rollout"
 PRUNE_SCRIPT="${PM_DIR}/scripts/dev/prune-uv-cache.sh"
-CACHE_DIR="${WORKSPACE_ROOT}/.uv-cache"
+# INSIDE .tabs/ (tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09) — must
+# match base-service.sh's / prune-uv-cache.sh's relocated default, else this cron prunes
+# the (now unused) sibling-of-.tabs cache instead of the one the fleet actually writes to.
+CACHE_DIR="${WORKSPACE_ROOT}/.tabs/.uv-cache"
 
 source "$(dirname "${BASH_SOURCE[0]}")/cron-self-pull-lib.sh"
 SELF_PULL="$(emit_cron_self_pull "${PM_DIR}" "${INTEGRATION_BRANCH}" "scripts/dev/prune-uv-cache.sh")"

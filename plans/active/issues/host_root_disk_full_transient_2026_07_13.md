@@ -30,6 +30,7 @@ assigned_role: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
+archive_exempt: true # 2026-08-09: 0 open todos, full archival deferred -- see Progress Log 2026-08-09
 context_scope:
   [
     /plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md,
@@ -41,6 +42,7 @@ related:
   [
     plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
+    /plans/active/issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md,
   ]
 depends_on: []
 ---
@@ -120,26 +122,40 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
       150-200G `.venv` footprint could shrink dramatically for free; (c) if hardlink-dedup can't be made to work
       cross-slot, a liveness-aware per-slot `.venv` prune (idle-slot detection, same pattern as the VM-collision guard)
       is the real fix for driver #2, not a blanket cron.
-- [ ] [INFRA] P2. **Remaining scope narrowed to the fix-build step only** (reconciled against
-      `infra_satellite_ao_dispatch_batch6_2026_08_02.md@88668b743`'s hardlink-dedup investigation, its `[INFRA] P3`
-      todo, DONE 2026-08-08). (a) ~~operator runs `install-prune-uv-cache-cron.sh`~~ **DONE 2026-08-07**, correctly
-      `[OPERATOR]`-gated at the time (no crontab-write permission for this account) — operator ran it directly on the AO
-      orchestrator VM (`ip-172-31-5-118`, via `ssh agent-orchestrator-vm`); registered `0 */6 * * *` (every 6h, matches
-      the script's default cadence), replacing a stale differing entry. Confirmed via
-      `crontab -l | grep prune-uv-cache`. **(b) INVESTIGATED 2026-08-08, DONE** — batch6's read-only investigation
-      confirmed a fleet-wide (1,800/1,800 sampled `.so` files, all 16 slots) cache→venv hardlink-dedup regression;
-      verdict **FIXABLE, not yet fixed**, with a concrete leading-candidate fix on record: `scripts/setup.sh` never
-      exports `UV_LINK_MODE`/`UV_CACHE_DIR` itself (relies entirely on inherited env) — add explicit
-      `export UV_CACHE_DIR=...; export UV_LINK_MODE=hardlink` directly inside `scripts/setup.sh` (matching
-      `base-service.sh`'s derivation), then re-run `setup.sh` for one repo in one slot and verify `nlink>1` on a shared
-      file before rolling fleet-wide. That fix-build + single-repo verification is a repo-local script edit with no
-      cron/host-level permission required — **no `[OPERATOR]` tag needed** on it (only sub-item (a) above was ever
-      operator-gated, and it is already done). **(c) remains the fallback** — a liveness-aware per-slot `.venv` prune,
-      only if the setup.sh fix above doesn't restore dedup; not yet built, out of batch6's read-only-investigation scope
-      either way.
+- [x] ✅ [INFRA] P2. **CORRECTED VERDICT, 2026-08-09**
+      (`tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`, `unified-trading-pm@<see-below>`) — the
+      leading candidate this todo previously recorded ("`setup.sh` never exports `UV_LINK_MODE`/`UV_CACHE_DIR` itself")
+      was NOT the actual root cause and was never applied (`setup.sh` still does not export those vars today). The REAL
+      root cause: `UV_CACHE_DIR` was derived as `${WORKSPACE_ROOT}/.uv-cache` — a SIBLING of `.tabs/`, not inside it.
+      This host presents `.tabs/` as its own mount/bind boundary; a raw `ln` probe (same methodology as the sibling
+      pnpm-store investigation, `ci_satellite_ao_dispatch_batch6_2026_08_08.md` item 10) confirmed `link()` returns
+      `EXDEV` for ANY path outside `.tabs/` linking into it, even though `stat -c %d` reports an identical device id on
+      both sides — `uv`'s hardlink step was silently falling back to a full copy every time, regardless of
+      `UV_LINK_MODE=hardlink` being correctly set. **Fix shipped**: relocated `UV_CACHE_DIR` to
+      `${WORKSPACE_ROOT}/.tabs/.uv-cache` (inside the mount boundary) in `scripts/quality-gates-base/base-service.sh`,
+      `scripts/dev/install-uv-cache-shell-env.sh`, `scripts/dev/prune-uv-cache.sh`, and
+      `scripts/dev/install-prune-uv-cache-cron.sh`; also fixed the identical bug in
+      `agent-orchestrator/server/tmux_spawn.py` (AO spawn-time export — same sibling-of-`.tabs` derivation, adjacent
+      same-root-cause fix, not scope-limited to this repo since it feeds every AO-spawned worker session). **Verified
+      END-TO-END, not just env-vars**: (1) raw `ln` probe from `.tabs/.uv-cache` into a live slot dir succeeds
+      (identical inode); (2) a real `uv sync` of `unified-api-contracts` against the relocated cache shows **10/10
+      sampled `.so` files at `nlink=2`** (was `nlink=1` fleet-wide, 1,800/1,800, per the 2026-08-08 investigation below)
+      — cache→venv hardlink dedup is genuinely restored, not just configured. **(c) the liveness-aware `.venv` prune
+      fallback is now MOOT** — the mount-boundary fix alone restores dedup; no fallback needed. (a) unchanged, still
+      done 2026-08-07 (see below).
 
 ## Progress Log
 
+- **2026-08-09 (infra, `tabs_mount_boundary_defeats_uv_cache_hardlink_dedup-952b1ea6a09b`).** Closed out this doc's sole
+  remaining `[INFRA] P2` todo — corrected verdict + shipped fix in-place above (real root cause was the `.tabs/` mount
+  boundary, not `setup.sh` env-var propagation; fix relocated `UV_CACHE_DIR` inside `.tabs/` across `base-service.sh`,
+  `install-uv-cache-shell-env.sh`, `prune-uv-cache.sh`, `install-prune-uv-cache-cron.sh`, and the adjacent same-bug
+  `agent-orchestrator/server/tmux_spawn.py`; verified via a real `uv sync` showing `nlink=2`). Full detail + evidence:
+  `/plans/active/issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`. Codex SSOT updated:
+  `/codex/05-infrastructure/per-tab-worktrees.md` § "Shared uv cache". **Both todos now `[x]`, `locked_by` empty — this
+  doc is archival-eligible; leaving the actual archive-and-referrer-sweep (13 corpus referrers, several archived-doc
+  historical mentions) to the next `/ag-closeout-audit infra` or `/na-eligibility-audit` pass rather than absorbing it
+  into this narrowly-scoped fix task.**
 - **infra_satellite_ao_dispatch_batch6_finalize_2026_08_02.md@infra_satellite_ao_dispatch_batch6_finalize-002,
   2026-08-08**: reconciled this doc's `[INFRA] P2` todo against
   `infra_satellite_ao_dispatch_batch6_2026_08_02.md@88668b743`'s hardlink-dedup investigation (verdict: FIXABLE, not yet

@@ -71,7 +71,12 @@ install_block() { # $1 = rc file
 ${MARK_BEGIN}
 # Hand-run uv must hit the same per-host shared cache QG + AO spawns use
 # (base-service.sh derivation); \${VAR:-...} so a pre-set spawn env still wins.
-export UV_CACHE_DIR="\${UV_CACHE_DIR:-${WS_ROOT}/.uv-cache}"
+# INSIDE .tabs/ (tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09):
+# a cache dir sibling of .tabs/ sits on a different mount boundary than
+# .tabs/<N>/<repo>/.venv on this host — hardlink() returns EXDEV across it and
+# uv silently falls back to a full copy per slot. All real work happens inside
+# .tabs/<N>/ (Path-B topology), so the shared cache lives inside .tabs/ too.
+export UV_CACHE_DIR="\${UV_CACHE_DIR:-${WS_ROOT}/.tabs/.uv-cache}"
 export UV_LINK_MODE="\${UV_LINK_MODE:-hardlink}"
 ${MARK_END}
 EOF
@@ -86,7 +91,7 @@ for rc in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
         echo "[uninstalled] managed block removed from $rc"
     else
         install_block "$rc"
-        echo "[installed] $rc → UV_CACHE_DIR=${WS_ROOT}/.uv-cache UV_LINK_MODE=hardlink"
+        echo "[installed] $rc → UV_CACHE_DIR=${WS_ROOT}/.tabs/.uv-cache UV_LINK_MODE=hardlink"
     fi
     changed=1
 done
@@ -97,4 +102,4 @@ if [ "$changed" -eq 0 ]; then
 fi
 
 [ "$UNINSTALL" -eq 1 ] && exit 0
-echo "Verify in a NEW login shell: 'uv cache dir' should print ${WS_ROOT}/.uv-cache"
+echo "Verify in a NEW login shell: 'uv cache dir' should print ${WS_ROOT}/.tabs/.uv-cache"

@@ -468,12 +468,18 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     # every layer agrees. UV_LINK_MODE=hardlink makes any residual cross-device mismatch warn loudly +
     # fall back visibly instead of silently copying. SSOT:
     # plans/archive/issues/slot_venv_duplication_disk_pressure_2026_06_29.md.
+    # NOTE (tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09): a shared cache
+    # dir SIBLING of .tabs/ (i.e. directly under the workspace root) sits on a different
+    # mount boundary than .tabs/<N>/<repo>/.venv on this host — hardlink() returns EXDEV
+    # across that boundary and uv silently falls back to a full per-slot copy, defeating the
+    # dedup this block exists for. Mirrors the .tabs-relocated pnpm store fix in setup.sh:
+    # when the repo IS a per-slot worktree clone, place the cache INSIDE .tabs/ itself.
     _uv_repo_root="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
     case "${_uv_repo_root}" in
-        */.tabs/*) _uv_ws_common="${_uv_repo_root%%/.tabs/*}" ;;
-        *) _uv_ws_common="$(cd "${_uv_repo_root}/.." && pwd)" ;;
+        */.tabs/*) _uv_ws_common="${_uv_repo_root%%/.tabs/*}"; _uv_cache_default="${_uv_ws_common}/.tabs/.uv-cache" ;;
+        *) _uv_ws_common="$(cd "${_uv_repo_root}/.." && pwd)"; _uv_cache_default="${_uv_ws_common}/.uv-cache" ;;
     esac
-    export UV_CACHE_DIR="${UV_CACHE_DIR:-${_uv_ws_common}/.uv-cache}"
+    export UV_CACHE_DIR="${UV_CACHE_DIR:-${_uv_cache_default}}"
     export UV_LINK_MODE="${UV_LINK_MODE:-hardlink}"
     # Single canonical uv version pin: unified-trading-pm/scripts/workspace/resolve-canonical-versions.py
     # PORTABILITY (found 2026-08-09, same class as the DI-check fix at line ~1507): macOS `/usr/bin/grep`

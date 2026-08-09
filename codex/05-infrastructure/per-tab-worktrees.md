@@ -1000,15 +1000,26 @@ which already excludes gitignored content, so on-demand artifacts don't trigger 
 `.agent-claim` ownership file lives at `.tabs/<N>/.agent-claim` (slot root, above repos), never conflicts with per-repo
 build dirs.
 
-## Shared uv cache — one per-host cache, hardlinked venvs (codified 2026-07-17)
+## Shared uv cache — one per-host cache, hardlinked venvs (codified 2026-07-17; relocated INSIDE `.tabs/` 2026-08-09)
 
-**Rule**: `UV_CACHE_DIR = <workspace-root>/.uv-cache` + `UV_LINK_MODE=hardlink`, where `<workspace-root>` is the
+**Rule**: `UV_CACHE_DIR = <workspace-root>/.tabs/.uv-cache` + `UV_LINK_MODE=hardlink`, where `<workspace-root>` is the
 directory holding all repo clones (parent of `unified-trading-pm`). Derived, never a hardcoded home path — the cache
 MUST sit on the same filesystem as the venvs it links into, or hardlinks silently degrade to copies (failure mode B2 in
 `plans/archive/issues/slot_venv_duplication_disk_pressure_2026_06_29.md`; the fleet-wide dedup fix shipped 2026-06-29,
 measured proof: shared `.so` inodes at `links=81`, ~21 GB reclaimed).
 
-Three layers export the same derivation and all respect a pre-set value (`${VAR:-...}`), so whichever layer runs first
+**The cache dir must live INSIDE `.tabs/`, not as its sibling (RULED 2026-08-09,
+`/plans/active/issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`).** This host presents `.tabs/`
+as its own mount/bind boundary — `stat -c %d` reports an identical device id for `.tabs/` and its siblings, but the
+kernel's `link()` syscall still refuses to cross the real boundary between them (`EXDEV`, confirmed via a raw `ln`
+probe; same mechanism independently found for pnpm's default store, `ci_satellite_ao_dispatch_batch6_2026_08_08.md` item
+10). A cache dir placed as a sibling of `.tabs/` (the 2026-07-17-codified `<workspace-root>/.uv-cache`) silently
+degraded every cache→venv install to a full copy — `UV_LINK_MODE=hardlink` being correctly set did NOT save it, because
+the boundary was crossed regardless. Verified fix: a real `uv sync` against the relocated
+`<workspace-root>/.tabs/.uv-cache` shows installed `.so` files at `nlink=2` (was `nlink=1` fleet-wide, 1,800/1,800
+sampled, per the 2026-08-08 investigation this fix corrects).
+
+Four layers export the same derivation and all respect a pre-set value (`${VAR:-...}`), so whichever layer runs first
 wins consistently:
 
 1. **QG runs** — `scripts/quality-gates-base/base-service.sh` (every `quality-gates.sh` invocation, all hosts).
@@ -1016,7 +1027,9 @@ wins consistently:
 3. **Interactive shells** — `scripts/dev/install-uv-cache-shell-env.sh` writes a managed block into the operator's
    `~/.bashrc`/`~/.zshrc`. Run ONCE per host (installed 2026-07-17 on the planning VM + hk dev host); without it,
    hand-run `uv` falls back to `~/.cache/uv`, which on split-filesystem hosts is cross-fs → silent copies + a second
-   cache on the wrong partition. Verify: interactive `uv cache dir` prints `<workspace-root>/.uv-cache`.
+   cache on the wrong partition. Verify: interactive `uv cache dir` prints `<workspace-root>/.tabs/.uv-cache`.
+4. **The prune cron** — `scripts/dev/prune-uv-cache.sh` / `install-prune-uv-cache-cron.sh` — must target the SAME
+   relocated dir, or it silently prunes an empty/unused directory while the real cache grows unbounded.
 
 **Growth is bounded by two crons on the planning VM** (`i-0c9b283b31d6b5ca7`): `vm-disk-guard.sh` (threshold 80%,
 cadence `0 */2` since 2026-07-17 — 6h let the host climb +19 points blind between firings) and

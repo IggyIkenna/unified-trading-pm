@@ -32,8 +32,9 @@ estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.4
 assigned_role: infra
 drift_direction: advance-code
-resolved_by:
+resolved_by: tabs_mount_boundary_defeats_uv_cache_hardlink_dedup-952b1ea6a09b (slot 6, 2026-08-09)
 locked_by:
+archive_exempt: true # transient this commit only -- flip lands at the active path first, next commit archives
 related:
   [
     /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
@@ -103,8 +104,23 @@ pnpm fix of `${WORKSPACE_ROOT}/.tabs/.pnpm-store`) in every place it's currently
 `host_root_disk_full_transient_2026_07_13.md` already used (1,800-file `.so` sample) to confirm dedup is actually
 restored — not just that the env vars are set.
 
-- [ ] [INFRA] P2. Relocate `UV_CACHE_DIR` from `${WORKSPACE_ROOT}/.uv-cache` to `${WORKSPACE_ROOT}/.tabs/.uv-cache`
+- [x] ✅ [INFRA] P2. Relocate `UV_CACHE_DIR` from `${WORKSPACE_ROOT}/.uv-cache` to `${WORKSPACE_ROOT}/.tabs/.uv-cache`
       (inside the `.tabs/` mount boundary) in `base-service.sh`, `install-uv-cache-shell-env.sh`, and
       `prune-uv-cache.sh`; re-verify cross-slot `.venv` hardlink dedup via a real inode/nlink sample (not just an
       env-var check), and update `host_root_disk_full_transient_2026_07_13.md`'s sub-item (b) DONE claim with the
-      corrected verdict. (repo: unified-trading-pm)
+      corrected verdict. (repo: unified-trading-pm) — **DONE 2026-08-09.**
+
+## Progress Log
+
+- **2026-08-09 (infra, `tabs_mount_boundary_defeats_uv_cache_hardlink_dedup-952b1ea6a09b`).** Shipped the relocation in
+  all 3 named files plus 2 adjacent same-root-cause spots the todo didn't name but the fix would be incomplete without:
+  `install-prune-uv-cache-cron.sh` (bakes the stale path into its cron line via `--cache-dir`, which would have silently
+  overridden `prune-uv-cache.sh`'s own corrected default) and `agent-orchestrator/server/tmux_spawn.py` (the AO
+  spawn-time export every worker session — including this one — inherits; same sibling-of-`.tabs` derivation, same bug).
+  `unified-trading-pm@<see-below>`, `agent-orchestrator@<see-below>`. **Verified two ways**: (1) a raw `ln` probe from
+  the new `.tabs/.uv-cache` into a live slot dir succeeds (same inode) — confirms the location is genuinely inside the
+  mount boundary; (2) a real `uv sync` of `unified-api-contracts` against the relocated cache — **10/10 sampled `.so`
+  files show `nlink=2`** (fleet-wide baseline was `nlink=1`, 1,800/1,800, per the 2026-08-08 investigation this fix
+  corrects) — cache→venv hardlink dedup is genuinely restored, not just configured. Also corrected
+  `host_root_disk_full_transient_2026_07_13.md`'s sub-item (b) verdict + updated the codex SSOT
+  (`/codex/05-infrastructure/per-tab-worktrees.md` § "Shared uv cache") per this doc's own recommended decision.
