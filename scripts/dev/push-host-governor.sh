@@ -102,7 +102,7 @@ push_gov_acquire_validate() {
             fi
             eval "exec ${fd}>&-"   # slot busy -- close and try next
         done
-        sleep 2; waited=$(( waited + 2 ))
+        sleep 1; waited=$(( waited + 1 ))
         (( waited % 30 == 0 )) && echo "[push-governor] all ${k} validate tokens busy -- queued ${waited}s" >&2
     done
 }
@@ -138,7 +138,7 @@ push_gov_acquire_push() {
 
     local waited=0
     while ! flock -n "$fd" 2>/dev/null; do
-        sleep 2; waited=$(( waited + 2 ))
+        sleep 1; waited=$(( waited + 1 ))
         (( waited % 30 == 0 )) && echo "[push-governor] queued for the ${repo}@${branch} push slot -- another slot is pushing, ${waited}s" >&2
     done
     _PUSH_GOV_PUSH_HELD=1

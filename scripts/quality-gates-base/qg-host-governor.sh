@@ -98,17 +98,42 @@ _qg_governor_dir() { echo "${QG_GOVERNOR_DIR:-${TMPDIR:-/tmp}/qg-host-governor}"
 # UNGATED, so a host can carry many more live script instances than the heavy-phase K
 # ever caps — 12-19 observed against a live K<=6). Default cap = physical cores (a
 # looser bound than the heavy-phase K, since most of a run's wall-clock is lighter than
-# pytest/basedpyright), floored at 4 for small hosts. Overridable via
-# QG_TOTAL_INSTANCE_CAP; separate lock dir from the heavy-phase token dir above so the
-# two gates never collide.
+# pytest/basedpyright), floored at 6 (operator ruling 2026-08-09, matching the measured
+# safe cross-repo ceiling on the shared dev host — was 4; raised alongside the new
+# per-repo sub-cap below, since the two now compose instead of one flat number doing
+# both jobs). Overridable via QG_TOTAL_INSTANCE_CAP; separate lock dir from the
+# heavy-phase token dir above so the two gates never collide.
 _qg_total_default_cap() {
     local cores; cores="$(_qg_physical_cores)"
     local k="$cores"
-    (( k >= 4 )) || k=4
+    (( k >= 6 )) || k=6
     echo "$k"
 }
 _qg_total_k() { echo "${QG_TOTAL_INSTANCE_CAP:-$(_qg_total_default_cap)}"; }
 _qg_total_dir() { echo "${QG_TOTAL_GOVERNOR_DIR:-$(_qg_shared_root)/.benchmarks/qg-governor-total}"; }
+
+# ── PER-REPO sub-cap (operator ruling 2026-08-09) ────────────────────────────────
+# WHY: the flat total-instance cap above answers "how many quality-gates.sh processes
+# host-wide" but not "how many are the SAME repo" — measured live 2026-08-09: ~24
+# concurrent AO-dispatched slots all committing/QG-running on unified-trading-pm at
+# once produced sustained git-index-lock contention and branch-drift-retry storms this
+# gate alone cannot see (it only counts PROCESSES, not which repo they belong to). PM
+# specifically both tolerates and needs more headroom than a single service repo (its
+# own commit velocity is the fleet's shared bottleneck), so it gets a higher sub-cap;
+# every other (service) repo gets 1 — never two concurrent QG runs on the SAME service
+# repo on one host, since those virtually always collide on the SAME git ref. The two
+# caps COMPOSE (both must have room) rather than replace each other: the per-repo cap
+# stops one repo from monopolising the flat cap; the flat cap stops the WHOLE host from
+# oversubscribing even if every repo's own sub-cap would individually allow it.
+_qg_repo_name() {
+    local root="${REPO_ROOT:-${PROJECT_ROOT:-}}"
+    [[ -n "$root" ]] && basename "$root" || echo "unknown"
+}
+_qg_repo_instance_default_cap() {
+    [[ "$(_qg_repo_name)" == "unified-trading-pm" ]] && echo 4 || echo 1
+}
+_qg_repo_instance_k() { echo "${QG_REPO_INSTANCE_CAP:-$(_qg_repo_instance_default_cap)}"; }
+_qg_repo_instance_dir() { echo "$(_qg_total_dir)/repo/$(_qg_repo_name)"; }
 
 # ── HOST CAPACITY INTROSPECTION (Phase 2) ────────────────────────────────────
 # Reads the host's real capacity so the (Phase-3) admission gates can size
@@ -582,9 +607,51 @@ qg_governor_release() {
     _QG_GOV_FD=""
 }
 
-# Base FD for the total-instance token locks — well clear of the heavy-phase range
-# (200+1..200+K, K bounded by cores/4) and the ledger lock FD (220).
+# Base FDs for the total-instance token locks — well clear of the heavy-phase range
+# (200+1..200+K, K bounded by cores/4) and the ledger lock FD (220). Two ranges: the
+# flat host-wide cap (300+K, K<=~16 in practice) and the per-repo sub-cap (350+K, K<=4
+# today but roomy) — kept separate so a partial-acquire backoff (below) can release
+# just one without disturbing FD bookkeeping for the other.
 _QG_TOTAL_FD_BASE=300
+_QG_REPO_FD_BASE=350
+
+# _qg_try_repo_token / _qg_try_global_token — single non-blocking pass over k numbered
+# lockfiles under a dir, using the GLOBAL _QG_REPO_TOTAL_FD/_QG_TOTAL_FD variables
+# directly (NOT a return-via-$(command substitution) — that would run the exec+flock
+# pair inside a forked subshell, whose exit closes the FD and silently drops the flock
+# the instant the substitution completes, before the caller ever gets to use it; a real
+# bug caught live in this exact function 2026-08-09 by a contention test that showed a
+# same-repo second acquirer sailing straight through instead of queueing). Sets the FD
+# var and returns 0 on success; returns 1 with the var left empty on failure (having
+# closed every FD it opened along the way, so the caller can retry cleanly).
+_qg_try_repo_token() {
+    local dir="$1" k="$2" i fd
+    _QG_REPO_TOTAL_FD=""
+    for (( i=1; i<=k; i++ )); do
+        fd=$(( _QG_REPO_FD_BASE + i ))
+        eval "exec ${fd}>\"\$dir/slot.\$i\"" 2>/dev/null || continue
+        if flock -n "$fd"; then
+            _QG_REPO_TOTAL_FD=$fd
+            return 0
+        fi
+        eval "exec ${fd}>&-"
+    done
+    return 1
+}
+_qg_try_global_token() {
+    local dir="$1" k="$2" i fd
+    _QG_TOTAL_FD=""
+    for (( i=1; i<=k; i++ )); do
+        fd=$(( _QG_TOTAL_FD_BASE + i ))
+        eval "exec ${fd}>\"\$dir/slot.\$i\"" 2>/dev/null || continue
+        if flock -n "$fd"; then
+            _QG_TOTAL_FD=$fd
+            return 0
+        fi
+        eval "exec ${fd}>&-"
+    done
+    return 1
+}
 
 # Acquire a TOTAL-INSTANCE token — gates the WHOLE quality-gates.sh run, held from
 # right after this file is sourced until the caller's EXIT trap releases it (see
@@ -593,37 +660,51 @@ _QG_TOTAL_FD_BASE=300
 # phase. Same flock/explicit-numeric-FD pattern (bash 3.2-safe), separate lock dir +
 # FD range so the two gates coexist — a run holds a total-instance token for its full
 # lifetime AND, later, a heavy-phase token/reservation nested inside it.
+#
+# TWO-PHASE / COMPOSED (operator ruling 2026-08-09, see _qg_repo_name's comment above
+# for the why): admission requires BOTH this repo's own sub-cap AND the flat host-wide
+# cap to have room, checked together each cycle — never hold one while blocked on the
+# other (that would let a repo's own slot sit idle mid-wait, starving same-repo peers
+# for no reason). A cycle that gets the repo token but not the global one releases the
+# repo token immediately and retries both from scratch next tick.
 qg_governor_acquire_total_instance() {
     [[ "${QG_TOTAL_GOVERNOR_DISABLE:-}" == "true" ]] && return 0
     command -v flock >/dev/null 2>&1 || { echo "[qg-governor] flock(1) absent — total-instance gate ungoverned" >&2; return 0; }
     [[ -n "${_QG_TOTAL_FD:-}" ]] && return 0   # already holding (idempotent)
 
-    local k dir fd
-    k="$(_qg_total_k)"; dir="$(_qg_total_dir)"
-    mkdir -p "$dir" 2>/dev/null || { echo "[qg-governor] cannot create $dir — total-instance gate ungoverned" >&2; return 0; }
+    local repo_k repo_dir global_k global_dir repo_name
+    repo_name="$(_qg_repo_name)"
+    repo_k="$(_qg_repo_instance_k)"; repo_dir="$(_qg_repo_instance_dir)"
+    global_k="$(_qg_total_k)"; global_dir="$(_qg_total_dir)"
+    mkdir -p "$repo_dir" "$global_dir" 2>/dev/null \
+        || { echo "[qg-governor] cannot create governor dirs — total-instance gate ungoverned" >&2; return 0; }
 
     local waited=0
     while true; do
-        local i
-        for (( i=1; i<=k; i++ )); do
-            fd=$(( _QG_TOTAL_FD_BASE + i ))
-            eval "exec ${fd}>\"\$dir/slot.\$i\"" 2>/dev/null || continue
-            if flock -n "$fd"; then
-                _QG_TOTAL_FD=$fd
+        if _qg_try_repo_token "$repo_dir" "$repo_k"; then
+            if _qg_try_global_token "$global_dir" "$global_k"; then
                 QG_GOVERNOR_WAIT_SECONDS=$(( ${QG_GOVERNOR_WAIT_SECONDS:-0} + waited ))
-                [[ "$waited" -gt 0 ]] && echo "[qg-governor] total-instance token $i/$k acquired after ${waited}s wait" >&2
+                [[ "$waited" -gt 0 ]] && echo "[qg-governor] total-instance token acquired (${repo_name}: <=${repo_k}, host-wide: <=${global_k}) after ${waited}s wait" >&2
                 return 0
             fi
-            eval "exec ${fd}>&-"   # slot busy — close and try next
-        done
-        sleep 2; waited=$(( waited + 2 ))
-        (( waited % 30 == 0 )) && echo "[qg-governor] all ${k} total-instance tokens busy — queued ${waited}s" >&2
+            flock -u "$_QG_REPO_TOTAL_FD" 2>/dev/null || true
+            eval "exec ${_QG_REPO_TOTAL_FD}>&-" 2>/dev/null || true
+            _QG_REPO_TOTAL_FD=""
+        fi
+        sleep 1; waited=$(( waited + 1 ))
+        (( waited % 30 == 0 )) && echo "[qg-governor] total-instance tokens busy (${repo_name} sub-cap ${repo_k} / host-wide cap ${global_k}) — queued ${waited}s" >&2
     done
 }
 
-# Release the held total-instance token (also auto-freed on process exit — flock
-# auto-drops on fd close). Idempotent, safe no-op if never acquired.
+# Release the held total-instance tokens — BOTH the per-repo sub-cap and the flat
+# host-wide cap (also auto-freed on process exit — flock auto-drops on fd close).
+# Idempotent, safe no-op if never acquired.
 qg_governor_release_total_instance() {
+    if [[ -n "${_QG_REPO_TOTAL_FD:-}" ]]; then
+        flock -u "$_QG_REPO_TOTAL_FD" 2>/dev/null || true
+        eval "exec ${_QG_REPO_TOTAL_FD}>&-" 2>/dev/null || true
+        _QG_REPO_TOTAL_FD=""
+    fi
     [[ -n "${_QG_TOTAL_FD:-}" ]] || return 0
     flock -u "$_QG_TOTAL_FD" 2>/dev/null || true
     eval "exec ${_QG_TOTAL_FD}>&-" 2>/dev/null || true

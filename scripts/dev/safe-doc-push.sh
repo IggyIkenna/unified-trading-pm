@@ -122,6 +122,19 @@ if [[ -f "$_SDP_PUSH_GOV_FILE" ]]; then
   source "$_SDP_PUSH_GOV_FILE"
 fi
 
+# Whole-run validation-phase gate (2026-08-09, operator ruling: "hardening safe-doc-push to
+# look like quickmerge, just less tests, same concurrency rigor"): acquired HERE, covering the
+# entire script from this point through the final exit, NOT just the commit-hook-chain call
+# the way quickmerge.sh's own (narrower) use of this same gate does -- quickmerge already has a
+# SEPARATE, per-repo-aware whole-run gate (qg-host-governor.sh's total-instance gate, PM<=4 /
+# other repos<=1 / host-wide<=6) for its heavy QG phase, so widening ITS use of this gate too
+# would double-count the same contention under two different caps. This script has no such
+# gate of its own -- it IS the fast, low-resource docs path, so it gets its own flat K=8 budget
+# (default; PUSH_GOV_VALIDATE_CONCURRENCY overrides), independent of and not competing with the
+# quality-gates caps. Auto-releases on process exit if the script hits one of its many `exit N`
+# paths before reaching the explicit release near EOF (see push-host-governor.sh's own header).
+push_gov_acquire_validate
+
 for f in "${FILES[@]}"; do
   if [[ ! -e "$f" ]]; then
     # Not on disk -- still acceptable if git knows this path, e.g. the source half of a
