@@ -112,12 +112,21 @@ since the failure mode is specific to the tarball/no-git-history path a local ch
 
 ## Todo
 
-- [ ] [INFRA] P0. **Bump `SETUPTOOLS_SCM_PRETEND_VERSION` in `setup-data-pipeline-vm.sh` past the current real
+- [x] ✅ [INFRA] P0. **Bump `SETUPTOOLS_SCM_PRETEND_VERSION` in `setup-data-pipeline-vm.sh` past the current real
       `unified-api-contracts` floor** (currently >=0.106.0 across MDPS/MTDS/UTL/deployment-service — check for any
       HIGHER floor elsewhere in the fleet before picking the new pretend value) **and add a standing check/comment
       reminder so this doesn't silently regress again as floors keep rising** (e.g. a QG script that greps every repo's
       `pyproject.toml` for its highest `unified-api-contracts>=X` floor and asserts the pretend-version is still above
-      it). Repo: deployment-service.
+      it). Repo: deployment-service. — deployment-service@49b50814. Confirmed max cross-package floor fleet-wide is
+      still `unified-api-contracts>=0.106.0` (grepped every repo's pyproject.toml); bumped `0.99.0` -> `0.199.0` in ALL
+      18 `deployment-service/scripts/vm/*.sh` scripts that share this exact literal (not just
+      `setup-data-pipeline-vm.sh` — they all break the same way). Added
+      `deployment-service/scripts/quality_gates/check_setuptools_scm_pretend_version_floor.py`, wired into
+      `quality-gates.sh`, which re-derives the real floor from every repo's `pyproject.toml` and fails the build if any
+      vm script's pretend version drops to/below it, crosses the 1.0.0 ceiling, or drifts out of sync across scripts —
+      this is the standing check the todo asked for. Note: slot-4 landed a content-identical single-line fix to
+      `setup-data-pipeline-vm.sh` concurrently (`501eb48b`); reconciled via rebase, keeping the fuller comment +
+      extending the fix to the other 17 scripts + the new standing check, which slot-4's commit did not cover.
 - [ ] [INFRA] P0. **After the fix, launch a real verification VM** (mirrors this issue's own repro:
       `market-tick-data-service` + `market-data-processing-service` + `unified-api-contracts` +
       `unified-trading-library`) and confirm `uv pip install` succeeds and the VM reaches real processing, not just that
