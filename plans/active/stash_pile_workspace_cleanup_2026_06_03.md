@@ -228,6 +228,10 @@ surface — do not auto-drop — genuine WIP.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:99ca86720460311c]: KEEP-NA, valid — unchanged since
+  2026-08-08. 5 open items remain: Phase 2 `--apply` sweep (still not a clean RECLASSIFY without an explicit
+  reversibility precedent for local stash refs); 2 laptop sweeps (not workable from this environment); Phase 4
+  owner-review + archive-purge (both downstream-gated on Phase 2).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale items — closed 2 of 7 open todos with
   hard evidence, both cross-referenced duplicates already DONE in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` but
   never reflected back here: the Phase-1 smoke-test (`unified-trading-pm@1fa747856`, 2026-08-04) and the Phase-5

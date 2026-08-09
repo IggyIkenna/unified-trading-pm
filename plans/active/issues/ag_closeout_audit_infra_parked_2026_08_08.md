@@ -196,6 +196,10 @@ orphaned_never_touched, 1 orphaned_partial_coverage, 0 conflict-clear-bounded, 0
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:745ac081812903ad]: KEEP-NA, valid — 3 open items remain
+  (findings 12/13 tooling/design, 7th consecutive day; finding 22 low-confidence retag question). The 4th item was
+  already closed by this doc's own "stale-check re-verify 2026-08-09" entry below, citing
+  `unified-trading-pm@f0f31575378191a457a95f3e53e5a34a0eefbcf7`.
 - **stale-check re-verify 2026-08-09 (infra tranche, KEEP-NA staleness re-check)**: flipped todo 4 (the
   defi_gas_fees_legacy_purge stale-checkbox pointer) — the underlying fix was applied directly with real evidence
   (`unified-trading-pm@f0f31575378191a457a95f3e53e5a34a0eefbcf7`). The doc's other 3 open items (findings 12, 13, 22 —

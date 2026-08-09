@@ -134,6 +134,10 @@ this needs automation rather than an agent noticing.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:ebde55209df8df2e]: KEEP-NA-STALE (already-duplicated) —
+  2 of 4 items. Todos 3-4 are already correctly self-annotated as EXTRACTED into
+  `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todos 2-3 (status: active, confirmed). Todos 1-2 remain genuinely
+  open-ended investigative items, gated by `block_destructive_commands.py`'s autonomous-cleanup block.
 - **satellite-batch-extraction 2026-08-09 (infra tranche)**: extracted both `[INFRA]` todos from the "Orphaned
   manifest-consolidator scratch" section into `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todos 2-3
   (`status: active`, conflict-checked against the full active corpus, zero competing claims found), per the 2026-08-08

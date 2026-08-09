@@ -85,10 +85,10 @@ in the same way and at the same time when they're the same physical connection.
 
 ## Todos
 
-- [x] ✅ [DATA] P2. **DECIDED 2026-08-08 — operator ruling (item 78, this doc's own Progress Log entry
-      "2026-08-08 (operator Q&A round5, infra tranche, item 78)" below, `session_bound_vm_monitoring_reliability_gap_2026_07_26.md`):
-      (b) wire into the fleet-level `RelaunchPreemptedVm` /
-      exit-code-fleet-monitor actuator**, not a documented-best-effort caveat. Scoping read of the actual current code
+- [x] ✅ [DATA] P2. **DECIDED 2026-08-08 — operator ruling (item 78, this doc's own Progress Log entry "2026-08-08
+      (operator Q&A round5, infra tranche, item 78)" below,
+      `session_bound_vm_monitoring_reliability_gap_2026_07_26.md`): (b) wire into the fleet-level `RelaunchPreemptedVm`
+      / exit-code-fleet-monitor actuator**, not a documented-best-effort caveat. Scoping read of the actual current code
       (`deployment-service/deployment_service/data_pipeline_monitors/{cli.py,exit_code_fleet_monitor.py,     launcher_registry.py,vm_classification.py}`,
       `deployment-service/scripts/recovery/relaunch_backfill_vm.py`) confirms the fleet-level actuator is **already
       built and already NOT session-bound**: `cli.py --mode exit-code` runs on a Cloud Scheduler cadence
@@ -124,6 +124,10 @@ in the same way and at the same time when they're the same physical connection.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:53c7ebb01b2b239b]: KEEP-NA-STALE (already-duplicated) —
+  1 of 2 items. Todo 1 is already correctly self-annotated as EXTRACTED into
+  `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (status: active, confirmed). Todo 2 (PREEMPTED marker
+  grace-period survivability) remains a genuine open design choice, unresolved across 4+ prior passes.
 - **satellite-batch-extraction 2026-08-09 (infra tranche)**: extracted the `[SCRIPT] P2` forward-registration CI guard
   into `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 (`status: active`, conflict-checked against the full
   active corpus, zero competing claims found), per the 2026-08-08 `na-eligibility-audit` pass's own "strong RECLASSIFY

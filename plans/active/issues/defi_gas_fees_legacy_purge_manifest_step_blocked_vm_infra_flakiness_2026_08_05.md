@@ -181,21 +181,20 @@ the highest-priority open question.
         2026-08-07T07:30Z; executed by main. Cited here + `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`
         on close.
 - [x] ✅ [DATA] P1. **DONE 2026-08-07 17:26Z — stale-check re-verified 2026-08-09.** The 09:17Z death of VM
-      `canonical-migration-defi-gas-fees-legacy-purge-20260807-082535` (dispatch #7) described below was superseded
-      the SAME day by a later, successful relaunch under the streaming-download fix
-      (`market-tick-data-service@eb380b71b`): VM `canonical-migration-defi-gas-fees-legacy-purge-20260807-170630`
-      completed the purge cleanly — manifest confirmed **0 of 12,425 TARGET rows remain** (index generation
-      `1786119981126589`, read at 17:08:59Z, 0 matching of 75,665,201 total rows); GCS fresh-confirmed 0 objects across
-      all 10 TARGET_VENUES at 17:26Z; consolidator cron re-ENABLED (`*/1 min`) and ran ≥17 clean post-resume
-      `--verify-only` cycles since 17:08Z; heartbeat watcher cron resumed 17:26Z. Closed and cited (with full evidence)
-      by `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s `[DIAG] P1` + `[INFRA] P0` todos
-      (`defi_satellite_ao_dispatch_batch9-018`, infra slot 5) — this doc's own checkbox was simply never flipped to
-      match. **Original (superseded) 09:17Z-death account, kept for the record:** dispatch #7 (`data_engineering`, slot
-      10): VM `canonical-migration-defi-gas-fees-legacy-purge-20260807-082535` (launched by infra dispatch #6) booted
-      cleanly but DIED at ~09:17Z (47 min in) without completing — no EXIT_STATUS written, manifest NOT modified (still
-      from 2026-08-06). Root cause: `_download_index_chunked()`'s range-request approach (20 × 128 MiB chunks × 300s
-      timeout each, 3 outer retry attempts) hung on the 3RD consecutive 2.46 GiB download inside
-      `_purge_manifest_rows()`. The first 2 downloads (`_days_with_legacy_gas_fees()` at 08:29:14Z +
+      `canonical-migration-defi-gas-fees-legacy-purge-20260807-082535` (dispatch #7) described below was superseded the
+      SAME day by a later, successful relaunch under the streaming-download fix (`market-tick-data-service@eb380b71b`):
+      VM `canonical-migration-defi-gas-fees-legacy-purge-20260807-170630` completed the purge cleanly — manifest
+      confirmed **0 of 12,425 TARGET rows remain** (index generation `1786119981126589`, read at 17:08:59Z, 0 matching
+      of 75,665,201 total rows); GCS fresh-confirmed 0 objects across all 10 TARGET_VENUES at 17:26Z; consolidator cron
+      re-ENABLED (`*/1 min`) and ran ≥17 clean post-resume `--verify-only` cycles since 17:08Z; heartbeat watcher cron
+      resumed 17:26Z. Closed and cited (with full evidence) by `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s
+      `[DIAG] P1` + `[INFRA] P0` todos (`defi_satellite_ao_dispatch_batch9-018`, infra slot 5) — this doc's own checkbox
+      was simply never flipped to match. **Original (superseded) 09:17Z-death account, kept for the record:** dispatch
+      #7 (`data_engineering`, slot 10): VM `canonical-migration-defi-gas-fees-legacy-purge-20260807-082535` (launched by
+      infra dispatch #6) booted cleanly but DIED at ~09:17Z (47 min in) without completing — no EXIT_STATUS written,
+      manifest NOT modified (still from 2026-08-06). Root cause: `_download_index_chunked()`'s range-request approach
+      (20 × 128 MiB chunks × 300s timeout each, 3 outer retry attempts) hung on the 3RD consecutive 2.46 GiB download
+      inside `_purge_manifest_rows()`. The first 2 downloads (`_days_with_legacy_gas_fees()` at 08:29:14Z +
       `_assert_sane_target_row_count()` at 08:29:37Z) both completed in ~20s; the 3rd hung for 47 min until timeout
       budget exhausted. `_download_index_chunked()` was designed for operator's local-network 256 MiB proxy cutoff (see
       its own comment) — not for GCS VMs where a single streaming response is more robust. Code fix shipped:
@@ -209,19 +208,24 @@ the highest-priority open question.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:b72408acd156806a]: KEEP-NA, valid — the `[DATA] P1`
+  relaunch item is `[x]` (see stale-check entry below). Sole remaining item (`[DATA] P2`, update the sibling defi-domain
+  doc's numbers) reads as bounded but is flagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` rather than RECLASSIFYed outright —
+  doc is dual-tagged `[defi, infrastructure]` and ownership (infra vs. defi tranche) should be settled before promoting;
+  not actioned this run.
 - **stale-check re-verify 2026-08-09 (infra tranche, KEEP-NA staleness re-check)**: the `[DATA] P1` relaunch todo was
   flipped `[x]` — genuinely done since **2026-08-07 17:26Z**, three separate na-eligibility-audit passes (08-07) never
   caught it because the doc's own text described only the intermediate 09:17Z dispatch-#7 failure, not the later
   same-day successful relaunch. Verified by reading `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s own `[DIAG] P1`
-  + `[INFRA] P0` todos (both `[x]`, evidence: manifest 0/12,425 TARGET rows at 17:08:59Z, GCS 0 objects all 10 venues
-  17:26Z, consolidator cron ≥17 clean cycles since) — commit history confirms `market-tick-data-service@eb380b71b` (the
-  fix that enabled the successful relaunch) is a real ancestor of `origin/live-defi-rollout`. The `[DATA] P2` item
-  (update `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 1) remains genuinely open — re-checked
-  that doc's row 1 directly 2026-08-09, it still shows the old pre-fix text. Doc stays open on that one item. (The
-  2026-08-09 `/ag-closeout-audit infra` run's own parked-findings doc reached a different, more cautious read of this
-  same todo — treating it as "evolved further" rather than closed — but its own text shows it was reading the doc's
-  latest PROSE, not cross-referencing batch9's dated completion evidence the way the 2026-08-08 run's finding 21 did;
-  this entry supersedes that caution with the direct evidence above.)
+  - `[INFRA] P0` todos (both `[x]`, evidence: manifest 0/12,425 TARGET rows at 17:08:59Z, GCS 0 objects all 10 venues
+    17:26Z, consolidator cron ≥17 clean cycles since) — commit history confirms `market-tick-data-service@eb380b71b`
+    (the fix that enabled the successful relaunch) is a real ancestor of `origin/live-defi-rollout`. The `[DATA] P2`
+    item (update `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` row 1) remains genuinely open —
+    re-checked that doc's row 1 directly 2026-08-09, it still shows the old pre-fix text. Doc stays open on that one
+    item. (The 2026-08-09 `/ag-closeout-audit infra` run's own parked-findings doc reached a different, more cautious
+    read of this same todo — treating it as "evolved further" rather than closed — but its own text shows it was reading
+    the doc's latest PROSE, not cross-referencing batch9's dated completion evidence the way the 2026-08-08 run's
+    finding 21 did; this entry supersedes that caution with the direct evidence above.)
 - **interactive session 2026-08-06**: resumed this doc's own P1 todos rather than leave them stale-deferred. Two fresh
   attempts today, each hitting a genuinely NEW failure mode (not the original boot-hang, which did not recur): (1)
   `-155449` hard-aborted cleanly on a pre-existing in-flight consolidator lock (~20min old, expected — waited for it to

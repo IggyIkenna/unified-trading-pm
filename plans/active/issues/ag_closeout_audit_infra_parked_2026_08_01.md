@@ -221,6 +221,9 @@ no drift:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:b96fda14721769a1]: KEEP-NA, valid — unchanged. Sole
+  open item (finding 5, `CITE_RE` self-referential-citation hardening) remains a genuine unresolved shared-tooling
+  design gap, consistent with 8+ prior passes.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — unchanged since 2026-08-07. Re-read
   end-to-end; `grep -cE '^- \[ \]'` = 1, matching (the `CITE_RE` self-referential-citation hardening item, finding 5).
   Checked against today's operator-Q&A rulings cheat sheet: no precedent applies. Also checked the sibling

@@ -35,6 +35,7 @@ source:
     slot-3 fleet audit 2026-06-10 (the grep -P parity fix exposed the true counts; budgets had sprawled to 24),
   ]
 assigned_role: backend_engineer
+effort: medium # explicit 2026-08-09 (check_effort_signal_ratchet --only) — matches backend_engineer's own existing default (agents/backend_engineer.md thinking: medium), no behavior change
 drift_direction: advance-code
 context_scope:
   [
@@ -623,6 +624,10 @@ for a `batch2` on the next pass and rehome then.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:d073265da4a96484]: KEEP-NA, valid — 2 open items remain
+  (pip-audit fleet-wide bump: DEPENDENCY_BLOCKED; Phase 3 schema-provenance migration: GENUINE_WORK, both explicitly
+  too-large-for-a-batch-todo). The stale G1-item-1 duplicate this doc carried was independently closed today by the
+  `/ag-closeout-audit infra` run (dispatch agt-3b6f6b), cross-verified via `base-service.sh:1416-1426`.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale items — closed the UAC
   `defi_position.py` item with hard evidence (`unified-api-contracts@194f3f7f`, ancestor-verified), which was already
   DONE in the cross-referenced `infra_satellite_ao_dispatch_batch1_2026_07_26.md` but never reflected back here. Doc
