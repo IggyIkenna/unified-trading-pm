@@ -27,6 +27,7 @@ assigned_role: infra
 drift_direction: advance-code
 locked_by: plan_reconciler — run in progress
 resolved_by:
+depends_on: []
 ---
 
 # Plan Reconciler Findings — tradfi tranche (2026-08-06)
