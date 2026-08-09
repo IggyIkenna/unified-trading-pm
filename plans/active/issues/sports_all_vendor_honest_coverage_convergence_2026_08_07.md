@@ -946,3 +946,5 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   consolidated manifest the census reads. Going forward: treat `run.log` activity (not the periodic census) as the
   primary per-tick health signal; use the census for milestone tracking on a longer cadence. smallchunk9 still in chunk
   26, 34 `CHUNK_FAILED` (in-range), heartbeat ~6.5min old (well within normal). Both healthy, no action.
+- **04:13Z** — smallchunk9 still chunk 26, 40 `CHUNK_FAILED` (in-range), heartbeat live (~19s). FIXTURE_LINEUPS
+  run.log/heartbeat both live, fresh fetches. Both healthy, no action. (Doc near cap again, ~52 lines left.)
