@@ -135,7 +135,7 @@ than acted on:
       split. Then, either way, land the deferred `/plans/active/lst_rate_honest_coverage_2026_07_21.md` Phase-3
       annotation citing `defi_satellite_ao_dispatch_batch8_2026_08_02.md`, plus that doc's 2026-08-02 KEEP-NA verdict
       marker (both drafted and reverted this run — full text in the Progress Log below). Implemented
-      `unified-trading-pm@<sha>` (2026-08-07). (repo: unified-trading-pm)
+      `unified-trading-pm@cff285743` (2026-08-07). (repo: unified-trading-pm)
 - [ ] [SCRIPT] P3. Report how wide the class is: list every `plans/active/*.md` over 1000L with ≥1 open todo (the docs
       that are currently un-verdictable), so the fix's real blast radius is a measured number rather than this doc's
       single example. (repo: unified-trading-pm)

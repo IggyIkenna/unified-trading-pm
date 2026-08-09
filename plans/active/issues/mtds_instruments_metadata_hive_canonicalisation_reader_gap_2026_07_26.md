@@ -47,7 +47,7 @@ related:
   ]
 created: 2026-07-26
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: defi_master
 assigned_vm: planning
 source: [defi_manifest_no_expected_unattempted_seeder-007 (data_engineering worker investigation)]
 execution_scope: orchestrator-agent

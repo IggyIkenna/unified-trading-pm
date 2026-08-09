@@ -35,7 +35,7 @@ related:
 created: "2026-08-05"
 author: slot-14 (data_engineering craft)
 last_updated: "2026-08-05"
-parent_epic: infrastructure_master
+parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: engineer

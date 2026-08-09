@@ -260,13 +260,12 @@ which value is measured-reality is needed per venue, not a mechanical merge.
 - [x] ✅ [DATA] P2. Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 carries `# TODO verify` while
       `venue_mapping.py`'s 2020-01-01 does not; probe the manifest to confirm 2020-01-01 is correct, update
       `TRADFI_SOURCE_COVERAGE_START["CME"]`, and drop the TODO marker. (repo: unified-api-contracts) —
-      **unified-api-contracts (pending sha, quickmerge in progress 2026-07-25)**: probed live
-      `market-data-tick-tradfi-prd-central-element-323112` manifest (`availability_index.parquet`, 5.8M rows) — earliest
-      CME `capture_status=captured` row is 2020-01-01; every pre-2020 CME date is
-      `empty_confirmed`/`EXPECTED_INSTRUMENT_NOT_LISTED` or `expected_unattempted`, not real data. Confirms
-      `venue_mapping.py`'s 2020-01-01 ("earliest manifest data", no TODO) was correct and `coverage_starts.py`'s
-      2010-01-01 was the unscrutinized value (git-blame: single commit `e81f598b`, never touched since, no rationale
-      comment — unlike the DERIBIT-COMBO near-miss in the sibling shard-dimension doc). Updated
+      **unified-api-contracts@32b2879c (2026-07-25)**: probed live `market-data-tick-tradfi-prd-central-element-323112`
+      manifest (`availability_index.parquet`, 5.8M rows) — earliest CME `capture_status=captured` row is 2020-01-01;
+      every pre-2020 CME date is `empty_confirmed`/`EXPECTED_INSTRUMENT_NOT_LISTED` or `expected_unattempted`, not real
+      data. Confirms `venue_mapping.py`'s 2020-01-01 ("earliest manifest data", no TODO) was correct and
+      `coverage_starts.py`'s 2010-01-01 was the unscrutinized value (git-blame: single commit `e81f598b`, never touched
+      since, no rationale comment — unlike the DERIBIT-COMBO near-miss in the sibling shard-dimension doc). Updated
       `TRADFI_SOURCE_COVERAGE_START["CME"]` to `date(2020, 1, 1)`, dropped the TODO marker.
 - [x] ✅ [DATA] P2. Resolve the POLYMARKET mismatch (2022-11-21 CLOB-launch vs 2025-03-14 first-actual-instrument,
       ~2.3-year gap) — **DONE 2026-08-04 (slot-15) — unified-api-contracts@d1eac060.** Corrected

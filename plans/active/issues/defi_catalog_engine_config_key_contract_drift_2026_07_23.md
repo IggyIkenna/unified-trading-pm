@@ -813,11 +813,11 @@ auto-generated section's own owner script, rather than hand-editing the table) �
   only diff since 2026-08-03 was a context-scout metadata-only touch. Sole open checkbox (5 broken archetypes needing
   human trading-parameter rulings, `xfail(strict=True)`) independently re-verified live against strategy-service's test
   file — still unfixed, still accurate; no active planning doc has claimed it
-  (`defi_satellite_ao_dispatch_ batch3_2026_07_26.md` explicitly says leave xfail'd, don't force-fix). Incidental, not
-  actioned: 2 untracked prose-only design items (RecursiveLoopOrchestrator translation-layer build; 3-repo
-  liquidation-feed integration), both independently spot-checked live and confirmed still real/unbuilt; 1 stale prose
-  fragment (archetype_slots sweep already done 2026-07-27 via batch3, doc text not updated) — hygiene notes only. Doc
-  stays `assigned_vm: NA`.
+  (`/plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md` explicitly says leave xfail'd, don't
+  force-fix). Incidental, not actioned: 2 untracked prose-only design items (RecursiveLoopOrchestrator translation-layer
+  build; 3-repo liquidation-feed integration), both independently spot-checked live and confirmed still real/unbuilt; 1
+  stale prose fragment (archetype_slots sweep already done 2026-07-27 via batch3, doc text not updated) — hygiene notes
+  only. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (6 entries), unchanged.
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — re-confirmed independently; no content change
   since the 2026-08-06 audit (context-scout metadata only, per git log). Sole open checkbox (P0 human design decision
