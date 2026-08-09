@@ -73,11 +73,25 @@ drift_direction: advance-code
       re-classification item cites VM `mtds-prediction-kalshi-cqg-rewalk-20260809-101228` (63/63 chunks,
       `failed_unclassified: 0`) + the beta-preview dry-run confirming non-OTHER. Active source doc unchanged at 381
       lines (well under the 1000-line hard cap); `check_line_caps.sh` run clean.
-- [ ] [DOC] P2. **Re-check the 3 not-extracted items** (tarball-overwrite race, fixture-pairing team-name canonicaliser,
-      and `prediction_consolidated_closeout_2026_07_18.md`'s own 0-todo status) for whether anything has changed — in
-      particular whether `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s team-name-alias work has landed,
-      which would let the fixture-pairing residual's citation be closed at the source. Repo: unified-trading-pm. Done
-      when: an explicit still-held / cleared verdict is recorded for each.
+- [x] ✅ [DOC] P2. **Re-check the 3 not-extracted items** (tarball-overwrite race, fixture-pairing team-name
+      canonicaliser, and `prediction_consolidated_closeout_2026_07_18.md`'s own 0-todo status) for whether anything has
+      changed — in particular whether `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s team-name-alias work has
+      landed, which would let the fixture-pairing residual's citation be closed at the source. Repo: unified-trading-pm.
+      Done when: an explicit still-held / cleared verdict is recorded for each. **DONE 2026-08-09.** Verdicts: (1)
+      tarball-overwrite race — **STILL HELD**, unchanged since the 2026-08-08/09 na-eligibility-audits (genuine
+      open-ended infra design question, two named options, no directive). (2) fixture-pairing team-name canonicaliser —
+      **CLEARED**: batch6's `[DATA] P2` "team-name alias tables" todo is DONE 2026-08-05
+      (`unified-api-contracts@41c13454` verified reachable on origin, `strategy-service@217e5b0e`;
+      `unified_api_contracts/external/sports/team_mappings.py` confirmed present) — closed the citation at the source
+      via a closure note appended to `prediction_cross_venue_arb_and_coverage_2026_07_24.md`'s "Still open" sub-note
+      (the parent fixture-pairing-residual checkbox stays unchecked — a separate, unrelated open provenance question the
+      source doc's own 2026-08-09 na-eligibility-audit flags as "Finding 5" is not resolved by this closure). (3)
+      `prediction_consolidated_closeout_2026_07_18.md`'s 0-todo status — **STILL HELD / VALID**: re-verified live, 0
+      open native todos (`grep -c '^- \[ \]'` = 0), `archive_exempt: true` coordination hub, all 4 child Phase A-E plans
+      (`prediction_phase_ab_residuals_2026_07_24.md`, `prediction_phase_c_data_status_ui_2026_07_24.md`,
+      `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`,
+      `prediction_phase_e_football_arb_live_2026_07_24.md`) confirmed still `status: active` with open todos (7+2+5+3=17
+      total).
 - [ ] [DOC] P1. **Archive `prediction_satellite_ao_dispatch_batch9_2026_08_09.md`** via the standard 6-step ritual (per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): confirm todo 2's verdict is recorded, add
       the archived-banner cross-reference, run the post-phase codex audit, confirm no new CLAUDE.md contract is owed,
@@ -96,3 +110,13 @@ drift_direction: advance-code
   orphaned open reference to either) — appended a `Reconciled 2026-08-09 (finalize P1)` closure note to each stub citing
   batch9's shipped SHAs/VMs, mirroring the doc's own existing reconciliation-note convention. Active source doc line
   count re-verified: 381 lines, well under the 1000-line hard cap; `check_line_caps.sh` clean.
+- 2026-08-09 (todo 2 DONE, slot 11): re-checked all 3 not-extracted items. Tarball-overwrite race — STILL HELD
+  (unchanged design question). Fixture-pairing team-name canonicaliser — CLEARED: confirmed batch6's `[DATA] P2`
+  team-name-alias-tables todo shipped 2026-08-05 (`unified-api-contracts@41c13454` reachable on origin,
+  `team_mappings.py` present on disk); appended a closure note to
+  `prediction_cross_venue_arb_and_coverage_2026_07_24.md` closing that specific citation at the source (left the parent
+  fixture-pairing-residual checkbox unchecked — a separate open provenance question ("Finding 5") in that doc's own
+  2026-08-09 na-eligibility-audit note is untouched by this closure, out of this todo's scope).
+  `prediction_consolidated_closeout_2026_07_18.md`'s 0-todo status — STILL HELD/VALID: re-verified 0 open native todos,
+  `archive_exempt: true`, all 4 child Phase A-E plans confirmed active with 17 open todos combined. Doc line count
+  unaffected (source doc stayed well under cap).

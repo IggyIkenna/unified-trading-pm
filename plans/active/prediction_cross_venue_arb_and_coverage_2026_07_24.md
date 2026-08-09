@@ -246,6 +246,15 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
     this item's own text warns against. Tracked as its own new todo:
     `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s `[DATA] P2` "team-name alias tables" item.
 
+    **Team-name-canonicaliser CLEARED 2026-08-09 (batch9 finalize P2)**: the canonicaliser the "Still open" note above
+    named as the remaining gap has SHIPPED — batch6's `[DATA] P2` "team-name alias tables" todo is DONE 2026-08-05
+    (`unified-api-contracts@41c13454`, `strategy-service@217e5b0e`; SHA verified reachable on origin,
+    `unified_api_contracts/external/sports/team_mappings.py` confirmed present on disk), so the citation above is closed
+    at the source: per-league alias dicts (MLB/NFL/NBA/Tennis) + arb catalogue slots for NFL/NBA/Tennis now exist
+    alongside the pre-existing MLB slot. This does NOT resolve the separate open provenance question this doc's own
+    2026-08-09 na-eligibility-audit note below flags ("Finding 5" — whether `instruments-service@62a8b1d8` covers 3a/3b
+    for every league or MLB only) — parent checkbox stays unchecked pending that independent verification.
+
 ### 2026-06-26 (autonomous /autonomous) — Kalshi fallback path fixed; IS enum + Polymarket book backfill VMs launched; stale-image alert shipped
 
 **Shipped this session (continuation of prior context):**
