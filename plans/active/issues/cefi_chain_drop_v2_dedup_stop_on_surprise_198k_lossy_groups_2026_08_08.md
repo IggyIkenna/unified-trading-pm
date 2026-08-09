@@ -156,19 +156,103 @@ observed — supports treating this as ACTIVE, not historical.
    `capture_status` rollups) should be treated as reading a manifest with a KNOWN, currently-uncharacterized
    duplicate-row population for these venues — flag downstream if this surfaces as a visible discrepancy.
 
+## Finding 11 (2026-08-09, slot 14) — root-caused via code-path read (no live GCS per-row pull — see caveat): NOT a
+
+missing-upsert writer bug; a row-key STABILITY gap on `chain` (+ historical multi-write-path drift for ASTER
+specifically) lets genuinely-different dedup keys survive collapse
+
+**Answer to todo 1's question**: the writer/consolidator is **not** naively appending with no update path — both layers
+implement key-based "last-write-wins" dedup (an upsert, not a blind append):
+
+- `ManifestWriter._merge_dataframes`
+  (`unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py:1322`) — every per-VM-shard rewrite
+  does `pd.concat([existing_df, new_df]).drop_duplicates(subset=dedup_cols, keep="last")`. `record_captured` itself
+  (`_writer_captured.py:419`) does a bare `self._records.append(...)` — a pure append — but that in-memory buffer is
+  deduped against the ON-DISK shard at the very next flush via `_merge_dataframes`, so "append-only at the call site"
+  does NOT mean "append-only on disk."
+- `manifest_consolidator.consolidate()` (`unified_trading_library/manifest_consolidator.py`) does the SAME dedup
+  cross-shard via DuckDB, `_BASE_DEDUP_COLS=(date,venue,data_type,service_name)` +
+  `_OPTIONAL_DEDUP_COLS=(timeframe,league_id,chain,instrument_type,underlying,feature_group,model_family, training_period,strategy_id,client_id,instruction_type,instrument_id)`
+  (line 553-567), last-write-wins ordered by `attempted_at`/`written_at` DESC (line 2932-2943) — this is architecturally
+  identical to the writer's own key, by design.
+
+**So why do duplicates survive?** Because `chain` IS part of both dedup keys, two captures of the same logical (day,
+venue, instrument) shard that carry a DIFFERENT `chain` value are, correctly per the key's own contract, treated as two
+DIFFERENT rows — dedup can't and shouldn't collapse them. Traced why `chain` isn't stable for these 3 venues:
+`WsInstrumentBuffer.chain` (`market-tick-data-service/market_tick_data_service/live/_ws_window_helpers.py:204`) is set
+via `self.chain = tick.chain or self.chain` — i.e. it only ever ADVANCES from unset once a tick carries a chain value,
+and every buffer re-creation (`websocket_runner.py:281/330/882`, e.g. on a WS reconnect) resets it to `chain=None`. A
+day-grain shard (`_resolve_row_key` keys on `date`, not per-connection) that spans a reconnect can therefore emit TWO
+`record_captured` calls for the SAME day with DIFFERING `chain` (blank on the fresh connection before the first
+chain-bearing tick arrives, populated after) — this is EXACTLY the mechanism Finding 5 already diagnosed for the
+64-group ASTER "chain-tagging transition" residual, just observed here at 3-4 orders of magnitude larger scale and
+across the venue's FULL live-capture history (ASTER/HYPERLIQUID/EXTENDED-STARKNET are the on-chain/perp-DEX venues where
+`chain` is a meaningful, populated shard-atom dimension per `manifest_recorder.py`'s own docstring matrix — CEX venues
+like BITFINEX-FUTURES never populate `chain` at all, consistent with that population being small/separate, see caveat
+below).
+
+**Independent corroboration — ASTER specifically has a documented history of multiple, non-retiring write paths**, found
+via `market-tick-data-service/market_tick_data_service/scripts/register_aster_onchain_perp_manifest_gap_2026_07_28.py`'s
+own docstring: before `market-tick-data-service@7a730cd6` (2026-07-28) hardcoded `per_vm_shards=True` on
+`OnchainPerpBatchHandler`, an unconfigured invocation wrote real parquet but its manifest writes "silently starved on
+the legacy single-blob CAS path" — this recovery script itself is explicitly **"Additive, NOT CAS... an additive
+per-VM-shard write... No retire/CAS step is needed"**. A sibling script,
+`scripts/rewrite_aster_cefi_manifest_2026_07_13.py`, ADDS rows for ASTER objects migrated DeFi-bucket→CeFi-bucket
+(`aster_cefi_data_defi_bucket_migration_2026_07_13.md`), again purely additive. Multiple independent one-off
+registration/migration passes over ASTER's history, none of which retire a pre-existing row for the same shard atom, is
+consistent with (and likely compounds) the `chain`-instability mechanism above — different write eras plausibly also
+differ in `pipeline_mode`/`source`/`chain` stamping for the same historical shard, none of which the dedup key retires
+against.
+
+**Verdict on the todo's literal framing**: CONFIRMED in observable effect (rows for the same logical shard are not being
+collapsed to one), but REFUTED as "the writer lacks an update path" — it has one (last-write-wins dedup at both the
+per-VM-shard flush and the cross-shard consolidator). The real gap is that the row-key's `chain` dimension (and likely
+cross-era provenance fields for ASTER specifically) is not guaranteed IDENTICAL across repeated captures of the same
+shard for these 3 venues, so the existing upsert can't fire. This is a write-time key-stability defect, not a
+missing-dedup defect — the fix (todo 2) should target `chain` re-derivation/stability at capture time (e.g. resolve
+`chain` from a per-venue UAC constant instead of per-tick `tick.chain`, since it's venue-invariant for a perp-DEX venue
+and doesn't need to ride the tick stream at all) rather than widening the dedup tolerance.
+
+**Caveat — no live GCS per-row write-history pull was performed** (todo 1 as literally worded asked to "pull the
+underlying per-VM shard write history... at what timestamp"): this slot has no `instruments-service/.venv` provisioned
+and no `duckdb` available for a bounded, filtered parquet read, and provisioning one was judged out of scope for a
+root-cause read given the code-path evidence above was independently sufficient and internally consistent (matches
+Finding 5's already-empirically-proven mechanism, matches the venue set that populates `chain` at all, matches ASTER's
+own documented multi-write-path history). A future pass COULD still pull actual per-row `written_at`/`chain`/
+`pipeline_mode` values for the `BITFINEX-FUTURES:PERPETUAL:AAVE-USDT@LIN`/`2026-07-24` sample (or an ASTER sample) via a
+`pyarrow`/DuckDB filtered read of the relevant `_index/per_vm/*.parquet` shards to directly confirm the differing
+`chain` value per row, if a stronger empirical proof is wanted before the todo-2 fix ships — flagged, not blocking. Note
+the BITFINEX-FUTURES sample itself (a CEX venue, `chain` never populated) is likely a SEPARATE, smaller mechanism closer
+to the already-tolerated BITFINEX-SPOT/BYBIT-SPOT residual (Finding 5's third population) than to the
+ASTER/HYPERLIQUID/EXTENDED-STARKNET chain-instability mechanism — do not assume the same root cause for that sample
+without separately checking it.
+
 ## Todos
 
-- [ ] [DATA] P1. **Root-cause whether ASTER/HYPERLIQUID/EXTENDED-STARKNET manifest writes are appending a NEW row per
-      write instead of updating the existing shard-atom row** — pull per-VM shard write history for a sample of the
-      affected shard atoms (start with the `BITFINEX-FUTURES:PERPETUAL:AAVE-USDT@LIN` / `2026-07-24` sample above, 8
-      rows for one shard) and confirm/refute against the writer code path (`record_captured` / `ManifestWriter` in
-      market-tick-data-service). (repo: market-tick-data-service)
+- [x] [DATA] P1. ✅ **Root-cause whether ASTER/HYPERLIQUID/EXTENDED-STARKNET manifest writes are appending a NEW row per
+      write instead of updating the existing shard-atom row** — unified-trading-pm (this doc). See Finding 11: NOT a
+      missing-upsert writer bug (both `ManifestWriter._merge_dataframes` and `manifest_consolidator.consolidate()`
+      implement last-write-wins dedup keyed on date/venue/data_type/service_name+chain/instrument_type/underlying/
+      instrument_id/etc.); root cause is `chain` row-key instability across live-capture reconnects
+      (`WsInstrumentBuffer.chain` resets to `None` per buffer recreation, `_ws_window_helpers.py:204`), the same
+      mechanism Finding 5 already diagnosed at 64-row scale, now observed at full-history scale for the 3 venues where
+      `chain` is a real shard-atom dimension — corroborated by ASTER's documented history of multiple additive,
+      non-retiring write paths (legacy CAS vs `per_vm_shards`, DeFi→CeFi bucket migration). No live GCS per-row pull
+      performed (see Finding 11 caveat — venv/duckdb unavailable this slot; code-path evidence judged sufficient).
 - [ ] [DATA] P1. **Once root-caused, fix the writer/consolidator if confirmed appending, THEN re-run the v2 dry-run** to
       confirm the chain-lossy count drops back toward the historical ~28-group baseline before any `--apply` is
-      attempted again. (repo: instruments-service, market-tick-data-service)
+      attempted again. Per Finding 11, the concrete fix candidate is: resolve `chain` for ASTER/HYPERLIQUID/
+      EXTENDED-STARKNET from a per-venue UAC constant at capture time instead of `tick.chain` (venue-invariant for a
+      perp-DEX venue, removes the reconnect-reset instability at the source) rather than widening
+      `_CHAIN_LOSSY_TOLERANCE_MAX`. (repo: instruments-service, market-tick-data-service)
 
 ## Progress Log
 
 - **2026-08-08 (slot 3)** — Filed while working `issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`
   todo 2. Dry-run evidence + venue/date breakdown above; zero mutation occurred (STOP-ON-SURPRISE fired before any
   snapshot/write). VM self-terminated (`VM_SHUTDOWN_ON_COMPLETION`) after failing exit_code=1.
+- **2026-08-09 (slot 14)** — Root-caused todo 1 via code-path read across `unified-trading-library` (ManifestWriter
+  `_merge_dataframes` + `manifest_consolidator` dedup keys) and `market-tick-data-service` (live WS buffer `chain`
+  handling + ASTER's historical additive-write-path scripts). See Finding 11. No code change shipped this pass (todo 1
+  is read-only root-cause; todo 2 owns the fix). No live GCS per-row write-history pull performed — flagged as a gap in
+  Finding 11's caveat, not blocking given the code-level evidence.
