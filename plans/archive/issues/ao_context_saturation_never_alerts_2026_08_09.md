@@ -8,7 +8,7 @@ summary: >-
   Detection came from the operator noticing a red bar. A "session above N% with no context_compact_observed for M
   minutes" detector would have caught it in minutes instead of hours, and would equally have caught the two prior
   incidents in this family (slot 3 sailing to the hard limit, slots 7/12 pinned at 100%).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -32,7 +32,11 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 assigned_role: backend_engineer
 drift_direction: advance-code
-resolved_by:
+resolved_by: >-
+  All 5 todos done: saturation-without-compaction detector agent-orchestrator@bb81c7b (todo 1) + Slack routing
+  agent-orchestrator@e8818aa (todo 2); registry rows unified-trading-pm@fec99f14f (todo 4); silent-disarm activity
+  detector agent-orchestrator@55bd730 (todo 3) + registry backfill unified-trading-pm, same commit as this archival flip
+  (todo 5).
 locked_by:
 locked_since:
 supersedes:
@@ -47,6 +51,10 @@ context_scope:
     /codex/04-architecture/agent-orchestrator-alerting.md,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-09** — all 5 todos are `[x]`, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately.
 
 # A saturated agent context pages nobody
 
@@ -105,10 +113,27 @@ that cannot compact is a failure, not a lifecycle event.
       proof the notifiers actually page, mirroring `test_git_staleness_red_pages_with_summary`). All green;
       `basedpyright` clean on the 4 touched files. Todos 3-4 intentionally NOT touched — separate dispatch per this
       issue's own scope.
-- [ ] [BACKEND] P2. Add the inverse detector for the silent-disarm shape specifically: no context-lifecycle activity
+- [x] ✅ [BACKEND] P2. Add the inverse detector for the silent-disarm shape specifically: no context-lifecycle activity
       event of ANY type for a given role for longer than a configurable window while that role has a live session. This
       is the check that would have caught 2026-08-09 directly (`role=main` logged 1 event in 4.3h against
-      `role=worker`'s 132). Done-when: a unit test proves it fires on an all-quiet role with a live session.
+      `role=worker`'s 132). Done-when: a unit test proves it fires on an all-quiet role with a live session. —
+      `agent-orchestrator@55bd730`: pure predicate `_is_activity_silent` + a new `ContextLifecyclePolicy` tick method,
+      `_tick_activity_silence_detector` (runs for every target — main/review/worker — every keeper tick, alongside the
+      existing saturation detector), gated on the pre-added `TuningDefaults.context_activity_silence_alert_seconds`
+      (default 4h). Deliberately queries the activity log directly for the latest matching event per `slot_id`
+      (`_latest_context_lifecycle_activity_ts`, filtered to this module's own event types) rather than tracking an
+      in-memory streak the way the saturation detector does — an in-memory streak resets on orchestrator restart, which
+      would silently un-arm the exact condition this detector exists to catch on a target already quiet before the
+      restart. `slot_id IS NULL` uniquely identifies `role=main` (the only target ticked with no `SlotRow`), so no
+      separate `role` column is needed. Logs a state-transition-deduped `context_activity_silence_detected` /
+      `_resolved` event pair (fires once per silent streak, not per tick); deliberately does NOT page Slack itself — out
+      of this todo's stated scope (unlike todo 1/2, no separate routing todo was authored for this one, so Slack routing
+      is left for a future dispatch if the operator wants it). 6 new tests in `tests/test_context_lifecycle.py` cover
+      the pure predicate (fires/doesn't-fire/disabled) plus the end-to-end fires-on-all-quiet-role,
+      does-not-fire-when-activity-was-logged, and resolves-on-reappearance cases. All 2985 tests green; `basedpyright`
+      clean. Also backfilled todo 4's **PENDING** registry row in
+      `/codex/04-architecture/agent-orchestrator-alerting.md` with real cadence/verifier/code_refs now that the code
+      landed (that todo was already checked off with the PENDING placeholder explicitly left for this moment).
 - [x] ✅ [DOCS] P2. Register both detectors in the alerting SSOT's failure-mode table with owner / cadence / verifier,
       per the runbook declaration rule. Done-when: `/codex/04-architecture/agent-orchestrator-alerting.md` lists them. —
       `unified-trading-pm`: added a new "Self-monitoring detector registry — owner / cadence / verifier" section (per
@@ -121,10 +146,13 @@ that cannot compact is a failure, not a lifecycle event.
       at time of writing) — its row is registered now too (name, owner, trigger shape) with cadence/verifier honestly
       marked **PENDING** rather than fabricated, so the registry itself never silently omits a detector this issue says
       should exist. See todo 5 below for the backfill.
-- [ ] [DOCS] P3. Backfill the context-activity-silence detector's cadence/verifier/code_refs in
+- [x] ✅ [DOCS] P3. Backfill the context-activity-silence detector's cadence/verifier/code_refs in
       `/codex/04-architecture/agent-orchestrator-alerting.md` § "Self-monitoring detector registry" once
       `ao_context_saturation_never_alerts-0c1b3343f4c1` (todo 3) ships — replace the PENDING row with real values
-      mirroring the completed detector-1 row. Done-when: the table has no PENDING cells left in that section.
+      mirroring the completed detector-1 row. Done-when: the table has no PENDING cells left in that section. —
+      `unified-trading-pm`: replaced both PENDING cells with real cadence (every `ContextLifecyclePolicy.tick`) and
+      verifier (the 6 new `test_context_lifecycle.py` tests) values, plus `code_refs` `agent-orchestrator@55bd730`. No
+      PENDING cells remain in that section. Done in the same turn as todo 3, which shipped the code this row describes.
 
 ## Progress Log
 
@@ -163,3 +191,18 @@ that cannot compact is a failure, not a lifecycle event.
   deliberate reading of "register both" given the two todos were dispatched without a `sequential`/`depends_on` gate
   between them (a plan-authoring gap worth noting for future same-issue todo chains) — todo 4's own done-when ("lists
   them") is satisfied literally; todo 5 closes the remaining gap.
+- **2026-08-09 (backend_engineer, slot-31)** — ✅ Todos 3 + 5 shipped. `_is_activity_silent` (pure predicate, not
+  pct-gated unlike the saturation detector — silence itself is the failure regardless of context level) +
+  `ContextLifecyclePolicy._tick_activity_silence_detector`, wired into `_tick_target` alongside the existing
+  saturation-detector call for every target on every tick. Deliberately DB-query-based
+  (`_latest_context_lifecycle_activity_ts`, filtered to this module's own event-type list, keyed by `slot_id` — `None`
+  uniquely identifies `role=main`) rather than an in-memory streak: a streak reset on orchestrator restart would
+  silently un-arm the exact silent-disarm condition this detector exists to catch on a target already quiet before the
+  restart. Baseline is the latest matching activity row, or `state.first_seen_at` when nothing has ever been logged for
+  the target. Logs `context_activity_silence_detected` / `_resolved` with the existing per-streak dedup-latch pattern
+  (`activity_silence_alert_logged`); deliberately does not page Slack (no routing todo exists for this detector — left
+  for a future dispatch if wanted). 6 new tests in `tests/test_context_lifecycle.py` (3 pure-predicate + 3 end-to-end
+  via `_tick_target`: fires-on-all-quiet, does-not-fire-when-activity-logged, resolves-on-reappearance). All 2985 repo
+  tests green; `basedpyright` clean; `agent-orchestrator@55bd730`. Also backfilled todo 5's PENDING registry cells in
+  `/codex/04-architecture/agent-orchestrator-alerting.md` with real cadence/verifier/code_refs in the same turn — no
+  PENDING cells remain in that section.
