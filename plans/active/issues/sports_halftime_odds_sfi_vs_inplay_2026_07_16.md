@@ -199,10 +199,10 @@ in the RE-TRIAGE section below. Full original investigation, evidence, and shipp
       operator scoped this session's manifest work to the FEATURES surface only, and the market-data-sports consolidator
       is owned by the in-flight bucket cutover (its unmerged shard `_index/per_vm/cutover-move-20260716.parquet` must
       not be merged by anyone else).
-- [x] ✅ [ML] P2. **Retrain the CLV models after the ODDS_FEATURES recompute.** The 3 quarantined artifacts stay in place
-      as the reference for what the leak produced. Do not promote or cite them. — **STALE-CHECK CLOSE 2026-08-09**: this
-      retrain was already completed and GCS-verified on 2026-08-03, tracked under a sibling doc's checkbox that this doc
-      itself was never updated to cite.
+- [x] ✅ [ML] P2. **Retrain the CLV models after the ODDS_FEATURES recompute.** The 3 quarantined artifacts stay in
+      place as the reference for what the leak produced. Do not promote or cite them. — **STALE-CHECK CLOSE
+      2026-08-09**: this retrain was already completed and GCS-verified on 2026-08-03, tracked under a sibling doc's
+      checkbox that this doc itself was never updated to cite.
       `/plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`'s own `[ML] P2` todo
       (sourced explicitly from "`sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` Open Todo #5" — i.e. this exact
       checkbox) was closed-by-citation on 2026-08-06 (na-eligibility-audit, KEEP-NA-STALE): 3 CLV model variants trained
@@ -287,8 +287,8 @@ already-fixed-but-unflipped** — every one is genuinely still open.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — open-item count updated 3->2 (the blank-fixture_id item verified
   fixed today); 2 dependency-blocked items remain.
-- **stale-check-sports 2026-08-09**: re-checked both remaining open items against the KEEP-NA-marker's own basis.
-  **[ML] P2 (CLV retrain) closed** — verified genuinely done since 2026-08-03, citation-linked via
+- **stale-check-sports 2026-08-09**: re-checked both remaining open items against the KEEP-NA-marker's own basis. **[ML]
+  P2 (CLV retrain) closed** — verified genuinely done since 2026-08-03, citation-linked via
   `ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md`'s own 2026-08-06 closed-by-citation entry
   (which this doc was never updated to reflect); see the flipped checkbox above for the full evidence chain. **[DATA] P1
   (2,436 deleted T-0 shard reconciliation) stays open, but its stated blocker is itself stale**: the doc's text still
@@ -303,3 +303,11 @@ already-fixed-but-unflipped** — every one is genuinely still open.
   doesn't re-park on a merge that already happened three weeks ago. GCS live-read to independently confirm the shard's
   absence was attempted but blocked by an expired `gcloud`/`gsutil` reauth session in this environment (non-interactive,
   could not complete OAuth) — the finding rests on the dated Progress Log record, not a fresh GCS read.
+- **na-eligibility-audit 2026-08-09**: KEEP-NA, valid — 1 open item remains (the `[DATA] P1` T-0 shard manifest
+  reconciliation todo). Tagging `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` for a closer look next pass rather than RECLASSIFYing
+  now: the stale-check above already found its stated blocker (in-flight cutover) is itself stale, and the outcome (flip
+  2,436 specific shard-keys from `captured` to `empty_confirmed`) reads as bounded/deterministic in principle — but no
+  concretely scoped script/approach is named yet, and this touches the same manifest/consolidator machinery that
+  regressed twice in the sibling `sports_cf8_available_at_backfill_regression_2026_07_13.md` doc, so not pulling the
+  RECLASSIFY trigger without a scoped implementation plan first. Not KEEP-NA-STALE either: this work is not duplicated
+  in any active `assigned_vm: planning` doc.

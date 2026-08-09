@@ -402,15 +402,15 @@ consolidation).
       write made after the rollback. CF-8 remains RED on both surfaces, unchanged from the pre-session baseline.
 
       **DESIGN DIRECTION CONFIRMED 2026-08-07 (operator: "i authorize")** — the per-service_name-scoped write-group
-                      approach above (group target rows by their OWN original `service_name`, write each group through a
-                      `ManifestWriter` constructed with THAT service_name, not the fixed per-surface value) is confirmed as the right
-                      direction. **Design confirmed, NOT yet built/reviewed/executed** — this is still "new, unreviewed engineering"
-                      per the finding above; confirming the direction doesn't skip the actual implementation + review step, nor the
-                      maintenance-window coordination `sports_consolidated_closeout_2026_07_19.md`'s Track H todo above now
-                      authorizes separately. Someone still needs to: (1) implement the per-service_name grouping in
-                      `sports_captured_available_at_targeted_backfill_2026_07_14.py` (currently DO-NOT-RUN-AT-SCALE per its own
-                      docstring), (2) get it reviewed given the 2 prior regressions in this area, (3) run it inside a coordinated
-                      maintenance window with pre-snapshots, matching the 2026-07-14 attempt's own safe rollback pattern.
+                          approach above (group target rows by their OWN original `service_name`, write each group through a
+                          `ManifestWriter` constructed with THAT service_name, not the fixed per-surface value) is confirmed as the right
+                          direction. **Design confirmed, NOT yet built/reviewed/executed** — this is still "new, unreviewed engineering"
+                          per the finding above; confirming the direction doesn't skip the actual implementation + review step, nor the
+                          maintenance-window coordination `sports_consolidated_closeout_2026_07_19.md`'s Track H todo above now
+                          authorizes separately. Someone still needs to: (1) implement the per-service_name grouping in
+                          `sports_captured_available_at_targeted_backfill_2026_07_14.py` (currently DO-NOT-RUN-AT-SCALE per its own
+                          docstring), (2) get it reviewed given the 2 prior regressions in this area, (3) run it inside a coordinated
+                          maintenance window with pre-snapshots, matching the 2026-07-14 attempt's own safe rollback pattern.
 
 - [ ] [INFRA] P1. **STALE-CHECK CORRECTION 2026-08-09 — sub-item (1) below is factually WRONG, already done; only
       sub-item (3) remains.** This todo's own framing ("now design-confirmed but unbuilt") contradicts this SAME doc's
@@ -431,8 +431,8 @@ consolidation).
       regressions, do not skip review; (3) execute inside the coordinated maintenance window authorized by
       `sports_consolidated_closeout_2026_07_19.md`'s Track H todo, with pre-snapshots and the same safe-rollback pattern
       as the 2026-07-14 attempt. Does not scale-test past the ~286K/~652K remaining rows until the rewritten script is
-      reviewed. **What genuinely remains: only sub-item (3), the operator-coordinated maintenance-window execution —
-      the same gate the sibling `[DATA] P1` todo above already tracks.** (repo: market-tick-data-service)
+      reviewed. **What genuinely remains: only sub-item (3), the operator-coordinated maintenance-window execution — the
+      same gate the sibling `[DATA] P1` todo above already tracks.** (repo: market-tick-data-service)
 
 - [x] ✅ [INFRA] P2. Verify whether the row_count-preferring multi-source dedup tie-break (`manifest_consolidator.py`'s
       `CASE WHEN capture_status = 'captured' AND captured_distinct_sources > 1 THEN COALESCE(TRY_CAST(row_count AS BIGINT), 0) ELSE NULL END DESC`)
@@ -972,3 +972,12 @@ at `unified-trading-library@f5f15e3a`/`@9c9cdc50`) is long since resolved and co
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 2 open items, both dependency-blocked. Flag: the newest todo
   (added earlier today) may duplicate already-shipped work from this doc's own 2026-07-14 Progress Log
   (market-tick-data-service@af627b5b) — worth re-verifying before rebuilding.
+- **na-eligibility-audit 2026-08-09**: KEEP-NA, valid — 2 open items (the `[DATA] P1` and `[INFRA] P1` todos above) now
+  reduce to the SAME single remaining action: execute the already-built, already-operator-authorized per-service_name
+  targeted re-emit (`market-tick-data-service@af627b5b`, built+unit-tested 2026-07-14) inside a coordinated maintenance
+  window, still gated on the standing `BLK-d9137d48` STOP + the live backlog parking gate
+  (`sports-cf8-maintenance-window-scheduled`, false as of last check) plus a pre-execution code review ("2 prior
+  regressions, do not skip review"). The 2026-08-07 marker's "may duplicate already-shipped work" flag is now resolved —
+  today's own STALE-CHECK CORRECTION on the `[INFRA] P1` todo already verified `af627b5b` covers sub-item (1) and
+  narrowed both todos to just the operator-scheduled execution step. Not a RECLASSIFY candidate: scheduling + review
+  sign-off are genuine operator-gated actions, not worker-determinable outcomes.
