@@ -320,3 +320,20 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   ~65 min until this was caught and the tarball staleness had cleared; re-triggered — genuine boot/health verification
   still pending as of this entry (not yet trusted on exit_code alone). FIXTURE_LINEUPS unaffected throughout, healthy,
   far advanced.
+
+- **2026-08-09T15:39Z (`data_pipeline_failure` escalation, `agt-adfeaf`, DP_VM_STALL on `smallchunk10` — STALE alert, no
+  action taken).** Dispatched with `RELAUNCH vm=mtds-backfill-odds-smallchunk10-20260809` per `rb_infra_relaunch.md`.
+  Before relaunching, checked live state per the runbook's own "read the registry, don't guess" procedure:
+  `DeploymentsRegistry` shows `smallchunk10` already terminal (`status=failed`, `exit_code=125`,
+  `reap_reason=vm_not_running`, `completed_at=13:10:02Z`) — this is the SAME sixth-occurrence death the entry directly
+  above already documents, not a new one. The fleet had already self-healed past it by the time this escalation ran:
+  `smallchunk11` (the relaunch logged above) has itself since been superseded by **`smallchunk12`**, confirmed
+  `status=running`, `last_heartbeat_at=2026-08-09T15:35:11Z` — only ~4 min stale against `date -u` at check time
+  (`15:39:24Z`), i.e. healthy. This also **closes the "genuine boot/health verification still pending" gap the entry
+  above flagged** — `smallchunk11`→`smallchunk12`'s lineage did boot and is making progress. Confirmed via `run.log`
+  tail for `smallchunk10` that the death mechanism is unchanged from prior occurrences (continuous `PIPELINE_HEARTBEAT`
+  - climbing `RESOURCE_SAMPLE` RSS through chunk 26, one in-loop `CHUNK_FAILED exit=137 OOM_KILLED` retry, then total
+    silence at `12:48:49Z` — no new evidence for the open P1 root-cause investigation). **Action: none** — relaunching
+    an already-archived, already-superseded VM name is a no-op; the correct current state (a healthy `smallchunk12`)
+    already exists. Did not touch `smallchunk12` or the P1 root-cause work. This entry exists so a future reader of this
+    escalation-triggered doc doesn't mistake the stale `smallchunk10` alert for a still-open gap.
