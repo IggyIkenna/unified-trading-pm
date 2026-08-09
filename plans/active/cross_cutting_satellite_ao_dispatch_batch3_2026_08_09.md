@@ -100,18 +100,18 @@ drift_direction: advance-code
       report that as a finding rather than fabricating a passing test.
 
       **Confirmed live for `("cefi", "trades")` — 6 registered sources, `source_required()` returns `True`.** Added
-              `tests/unit/test_cefi_manifest_source_provenance.py` exercising the REAL UAC/UTL gate end-to-end (not mocked),
-              mirroring `unified-trading-library/tests/unit/test_manifest_writer_source.py`'s fixture pattern: (a) omitting
-              `source=` on a `("cefi", "trades")` write raises `MissingSourceError`; (b) `source="tardis"` persists on
-              `writer._records[-1].source`; (c) a synthetic `monkeypatch.setitem(SOURCE_PRIORITY, ...)` key with
-              `["aster", "tardis"]` proves `select_primary_available_source` resolves by priority order (index-0 wins when both
-              available; the sole available source wins by elimination otherwise) — synthetic so the assertion doesn't couple
-              to whichever real cell happens to be 2-source today. All 3 tests green; full repo QG green (10,236 passed).
-              Repo: market-tick-data-service@78a8c93b. Also fixed, same commit series: a `check-import-patterns.py` deep-import
-              violation in the new test file (`unified_trading_library.events` → top-level `unified_trading_library`), and a
-              stale QG STEP 5.95 `_MTDS_TYPE_IGNORE_BASELINE` ratchet (658→662, verified pre-existing drift via
-              `git grep` at HEAD~2 — not introduced by this session; 232 unrelated commits landed since the 2026-08-05
-              catch-up, 0 bare/broad `# type: ignore`, same legitimate-catch-up shape as the prior re-measurement).
+                  `tests/unit/test_cefi_manifest_source_provenance.py` exercising the REAL UAC/UTL gate end-to-end (not mocked),
+                  mirroring `unified-trading-library/tests/unit/test_manifest_writer_source.py`'s fixture pattern: (a) omitting
+                  `source=` on a `("cefi", "trades")` write raises `MissingSourceError`; (b) `source="tardis"` persists on
+                  `writer._records[-1].source`; (c) a synthetic `monkeypatch.setitem(SOURCE_PRIORITY, ...)` key with
+                  `["aster", "tardis"]` proves `select_primary_available_source` resolves by priority order (index-0 wins when both
+                  available; the sole available source wins by elimination otherwise) — synthetic so the assertion doesn't couple
+                  to whichever real cell happens to be 2-source today. All 3 tests green; full repo QG green (10,236 passed).
+                  Repo: market-tick-data-service@78a8c93b. Also fixed, same commit series: a `check-import-patterns.py` deep-import
+                  violation in the new test file (`unified_trading_library.events` → top-level `unified_trading_library`), and a
+                  stale QG STEP 5.95 `_MTDS_TYPE_IGNORE_BASELINE` ratchet (658→662, verified pre-existing drift via
+                  `git grep` at HEAD~2 — not introduced by this session; 232 unrelated commits landed since the 2026-08-05
+                  catch-up, 0 bare/broad `# type: ignore`, same legitimate-catch-up shape as the prior re-measurement).
 
 - [x] ✅ [TEST] P1. Add an `available_at`-parity fixture test: a 2-source fixture (TradFi is the one live 2-source pair
       today) asserts identical `available_at` derivation per cell regardless of which registered source wrote it, so
@@ -121,25 +121,36 @@ drift_direction: advance-code
       entry across both sources for the same cell.
 
       Confirmed `tradfi/ohlcv_15m` is the registered 2-source cell (`SOURCE_PRIORITY` top entry `databento`, second
-          `yahoo`). Both adapters derive `available_at` via the same source-blind UTL helper,
-          `compute_bar_close_boundary(last_tick_ts, timeframe)` (`unified_trading_library/availability_stamping.py:540`) —
-          it takes no `source` parameter, so `available_at == t_close` is purely a function of `(tick_ts, timeframe)`.
-          Added `test_tradfi_available_at_source_parity.py`: drives the REAL `_convert_ohlcv_open_edge_to_close` (databento)
-          and `YahooFinanceAdapter._convert_ohlcv_df_to_records` (yahoo) with the same tick across 3 parametrized cases
-          (mid-bar, day-boundary, non-grid-aligned) and asserts byte-identical close-edge/`available_at`, plus a
-          `get_primary_source("tradfi", "ohlcv_15m") == "databento"` pin on the fixture's premise. 4 tests, all green. Repo:
-          market-tick-data-service@63ce1e05. Evidence: full `quality-gates.sh` green (sentinel 406d6b52, verified ancestor
-          of `origin/live-defi-rollout` post-quickmerge).
+              `yahoo`). Both adapters derive `available_at` via the same source-blind UTL helper,
+              `compute_bar_close_boundary(last_tick_ts, timeframe)` (`unified_trading_library/availability_stamping.py:540`) —
+              it takes no `source` parameter, so `available_at == t_close` is purely a function of `(tick_ts, timeframe)`.
+              Added `test_tradfi_available_at_source_parity.py`: drives the REAL `_convert_ohlcv_open_edge_to_close` (databento)
+              and `YahooFinanceAdapter._convert_ohlcv_df_to_records` (yahoo) with the same tick across 3 parametrized cases
+              (mid-bar, day-boundary, non-grid-aligned) and asserts byte-identical close-edge/`available_at`, plus a
+              `get_primary_source("tradfi", "ohlcv_15m") == "databento"` pin on the fixture's premise. 4 tests, all green. Repo:
+              market-tick-data-service@63ce1e05. Evidence: full `quality-gates.sh` green (sentinel 406d6b52, verified ancestor
+              of `origin/live-defi-rollout` post-quickmerge).
 
-- [ ] [MTDS] P1. A12a — wire the `assert_defi_catalog_fresh(...)` preflight into the 8 still-unwired DeFi collect
-      handlers: `lending_indices_handler`, `liquidations_handler`, `liquidation_events_handler`,
-      `bridge_events_handler`, `token_transfers_handler`, `aggregator_route_handler`, `flash_loan_events_handler`,
-      `solana_defi_handler` — mirror the already-shipped pattern in the 15 sibling handlers wired via
-      `market-tick-data-service@f7d6f5fd` (call at the `process()`/per-shard chokepoint; existing tests patch the call
-      to `True`). Also add the DeFi row to `/codex/04-architecture/instruments-preflight-chain.md`. Repo:
-      market-tick-data-service, unified-trading-pm. Source: `data_source_provenance_enforcement_2026_07_24.md` (A12a
-      remaining-handlers item). Done when: each of the 8 named handlers calls `assert_defi_catalog_fresh(...)` at its
-      `process()` chokepoint; their existing tests patch the call to `True`; the codex row is added.
+- [x] ✅ [MTDS] P1. A12a — **RESOLVED-MOOT on the code side, codex row genuinely added.** Investigated before wiring
+      anything and found all 8 named handlers (`lending_indices_handler`, `liquidations_handler`,
+      `liquidation_events_handler`, `bridge_events_handler`, `token_transfers_handler`, `aggregator_route_handler`,
+      `flash_loan_events_handler`, `solana_defi_handler`) already call `assert_defi_catalog_fresh(...)` at their
+      `process()`/per-shard chokepoint — confirmed via `git log -S"assert_defi_catalog_fresh("` per file: 7 of 8 date to
+      `fca15304` (2026-06-05, "A12a-rollout IS-preflight gate (9 handlers)"), the remaining 1
+      (`lending_indices_handler`) to `b77fba7a` (2026-06-21) — both well before this 2026-08-09 batch and before the
+      `f7d6f5fd` commit this todo cited as "the already-shipped pattern." The source doc's "8 still-unwired" framing was
+      stale by ~2 months; nothing to wire. Also confirmed each of the 8 has an existing test patching the call
+      (`unittest.mock.patch(".../assert_defi_catalog_fresh", return_value=True/False)`) — the done-when's test
+      requirement was already satisfied too. **The one genuinely missing piece — the DeFi row in
+      `/codex/04-architecture/instruments-preflight-chain.md` — did NOT exist** (confirmed via grep before editing);
+      added it (table row + a short explanatory paragraph covering the mode-aware live/batch split, since
+      `assert_defi_catalog_fresh` isn't a literal instance of the UAC `instruments_preflight_dag` the rest of the table
+      describes, just a wrapper around the same `run_preflight` mechanism). Repo: unified-trading-pm (nothing shipped to
+      market-tick-data-service — the wiring was already there). Source:
+      `data_source_provenance_enforcement_2026_07_24.md` (A12a remaining-handlers item — that doc's own entry is already
+      a non-checkbox extraction pointer to this batch doc, not a duplicate checkbox, so no separate retag needed there).
+      Evidence: this commit's own codex-doc edit (added row + paragraph); pre-existing handler wiring cited above via
+      `market-tick-data-service` git history (`fca15304`, `b77fba7a`).
 - [x] ✅ [INFRA] P0. Migration data-copy fan-out — **RESOLVED-MOOT, not re-launched: nothing to re-attempt.**
       Investigated the launcher before verifying pins per the todo's own instructions and found
       `deployment-service/scripts/vm/launch-legacy-bucket-migration-sharded.sh` was already deleted 2026-08-03

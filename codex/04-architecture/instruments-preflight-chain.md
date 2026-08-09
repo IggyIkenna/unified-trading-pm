@@ -46,16 +46,29 @@ missed-fire or a source went degraded.
 The dependency graph lives in `unified_api_contracts/canonical/crosscutting/instruments_preflight_dag.py`.
 Per-(asset_group, downstream-entity-type), it declares the required upstream entity-types + max-staleness-tolerance.
 
-| asset_group | downstream entity     | required upstream                                    | max staleness                 |
-| ----------- | --------------------- | ---------------------------------------------------- | ----------------------------- |
-| cefi        | 15-min OHLCV          | instrument-catalog                                   | 24 h                          |
-| tradfi      | 15-min OHLCV          | instrument-catalog                                   | 24 h                          |
-| prediction  | market-discovery      | canonical_question_group SSOT (UAC-static)           | n/a (static)                  |
-| sports      | lineups               | fixtures-for-the-fixture-day                         | `kickoff − 24 h`              |
-| sports      | weather cascade       | fixtures-for-the-fixture-day                         | `kickoff − 24 h`              |
-| sports      | injuries (event-time) | teams (current-season) AND fixtures (rolling window) | teams: season; fixtures: 24 h |
-| sports      | post-match (any)      | fixtures + lineups (for the fixture)                 | per-fixture                   |
-| sports      | mappings (sfi/tm)     | teams (current-season)                               | season                        |
+| asset_group | downstream entity                                                                                             | required upstream                                    | max staleness                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| cefi        | 15-min OHLCV                                                                                                  | instrument-catalog                                   | 24 h                                                                                                                     |
+| tradfi      | 15-min OHLCV                                                                                                  | instrument-catalog                                   | 24 h                                                                                                                     |
+| prediction  | market-discovery                                                                                              | canonical_question_group SSOT (UAC-static)           | n/a (static)                                                                                                             |
+| sports      | lineups                                                                                                       | fixtures-for-the-fixture-day                         | `kickoff − 24 h`                                                                                                         |
+| sports      | weather cascade                                                                                               | fixtures-for-the-fixture-day                         | `kickoff − 24 h`                                                                                                         |
+| sports      | injuries (event-time)                                                                                         | teams (current-season) AND fixtures (rolling window) | teams: season; fixtures: 24 h                                                                                            |
+| sports      | post-match (any)                                                                                              | fixtures + lineups (for the fixture)                 | per-fixture                                                                                                              |
+| sports      | mappings (sfi/tm)                                                                                             | teams (current-season)                               | season                                                                                                                   |
+| defi        | DeFi collect handlers (pools/markets/LST/lending/liquidations/bridges/transfers/aggregator/flash-loan/solana) | instrument-catalog (IS DeFi catalogue)               | mode-aware: live 24h (manifest-row age via `DEFI_COLLECT_DAILY`), batch = per-`on_date` coverage snapshot (no age check) |
+
+DeFi's gate is `assert_defi_catalog_fresh` (`market_tick_data_service/cli/handlers/_defi_catalog_freshness.py`), a
+mode-aware wrapper around the same `run_preflight`/`instruments_preflight` mechanism — **not** a distinct DAG. `live`
+mode reuses the standard manifest-row-within-24h check (`run_preflight(DEFI_COLLECT_DAILY)`); `batch` mode instead
+asserts the IS catalogue has a per-date availability snapshot covering the historical `on_date` (the 24h-age check is
+structurally wrong for a backfill of a past date — see the function's own docstring for the 2026-06-24 fix history).
+Wired at the `process()`/per-shard chokepoint in every DeFi collect handler (all handlers importing it, including the 8
+named in this doc's own dispatch batch — `lending_indices_handler`, `liquidations_handler`,
+`liquidation_events_handler`, `bridge_events_handler`, `token_transfers_handler`, `aggregator_route_handler`,
+`flash_loan_events_handler`, `solana_defi_handler` — were already wired as of 2026-06-05/06-21, predating this row's
+addition); every FAILED check routes honest absence (`record_failed`/`record_empty`) rather than raising inside a
+per-shard loop.
 
 ## Helpers
 
