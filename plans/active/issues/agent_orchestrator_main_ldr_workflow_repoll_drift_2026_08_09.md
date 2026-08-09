@@ -96,15 +96,29 @@ its job correctly and read-only here); it is stale content on one specific repo'
 push/reconciliation step for by design (operator ruling in the source issue: the script "does not push", per its own
 header comment).
 
-- [ ] [CICD] P2. Open a PR against `agent-orchestrator@main` that adds `.github/workflows/notify-slack.yml` (copy
+- [x] ✅ [CICD] P2. Open a PR against `agent-orchestrator@main` that adds `.github/workflows/notify-slack.yml` (copy
       verbatim from `scripts/workflow-templates/notify-slack.yml` — same content already correctly on
       `live-defi-rollout`) and updates `image-build-gate.yml` + `quality-gates-v2.yml` to match the current
       `live-defi-rollout` render (re-run `rollout-workflow-templates.sh --repo agent-orchestrator` against a
       `main`-checked-out worktree, or hand-port the 3 diffs shown above). Verify via `quality-gates-v2` going green on
-      the PR. Repo: agent-orchestrator.
-- [ ] [CICD] P3. Re-run `rollout-workflow-templates.sh --dry-run --repo agent-orchestrator` (see § "Recommended
+      the PR. Repo: agent-orchestrator. — `agent-orchestrator@c9f9bd1` (PR #818, squash-merged); see Progress Log.
+- [x] ✅ [CICD] P3. Re-run `rollout-workflow-templates.sh --dry-run --repo agent-orchestrator` (see § "Recommended
       decision" above for the full command) after the above lands and confirm the parity check reports 0 mismatches for
-      agent-orchestrator. Record the result in this doc's Progress Log. Repo: unified-trading-pm.
+      agent-orchestrator. Record the result in this doc's Progress Log. Repo: unified-trading-pm. — result: 2/3 now
+      match, 1 genuine remaining mismatch that is NOT simple content drift (see Progress Log + new todo below).
+- [ ] [CICD] P2. Migrate agent-orchestrator `main`'s `.github/workflows/main-backmerge-to-ldr.yml` and
+      `semver-agent.yml` to the thin `uses: IggyIkenna/unified-trading-ci/.github/workflows/<name>.yml@main` caller
+      stubs that `live-defi-rollout`'s copies already use (per
+      `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` — every other fleet repo + `live-defi-rollout`
+      itself already completed this conversion; `main` never did for these 2 files specifically). This is the ROOT fix
+      for the residual `notify-slack.yml` parity mismatch below: `main`'s full-implementation
+      `main-backmerge-to-ldr.yml` calls `uses: ./.github/workflows/notify-slack.yml` locally (confirmed: line 437),
+      which is the ONLY reason `main` needs a local `notify-slack.yml` copy at all — `live-defi-rollout`'s thin-stub
+      version has no such local call and correctly has zero local `notify-slack.yml` copy. Converting `main` the same
+      way removes the need for a local `notify-slack.yml` on `main` too, closing the asymmetry at its root instead of
+      maintaining two copies of a file most of the fleet already deleted. Verify via `quality-gates-v2` + a live
+      triggered run of both workflows (a backmerge PR / a version-bump event) before merging — these are functional, not
+      cosmetic, workflows. Repo: agent-orchestrator.
 
 ## Progress Log
 
@@ -115,3 +129,32 @@ header comment).
   output) before filing. Every other repo in the fleet reported 0 mismatches. Not fixed inline — out of todo 4's own
   scope (which is the check itself, not fleet reconciliation), and fixing agent-orchestrator's `main` branch CI files is
   a distinct, separately-scoped change.
+- 2026-08-09 (slot-12, infra): Worked todo 2 (P2 PR) + todo 3 (P3 re-verify). Correction to the "Recommended decision"
+  wording above: direct verification (`git show origin/<branch>:<path>`, not just the doc's prose) confirmed
+  `notify-slack.yml` was present on `main` and MISSING on `live-defi-rollout` — matching the "What I found" section, not
+  the "Recommended decision" bullet's inverted phrasing ("already correctly on live-defi-rollout"). Rendered all 3 files
+  against the current canonical template (`unified-trading-pm/scripts/workflow-templates/`): `image-build-gate.yml`
+  matched `live-defi-rollout`'s content byte-for-byte (used directly); `notify-slack.yml`'s raw template render carried
+  an un-ported SC2015 shellcheck fix `main`'s copy was missing (used the render); `quality-gates-v2.yml` was copied
+  verbatim from `live-defi-rollout` (a hand-sed render introduced 2 spurious diffs vs LDR's real content — a missing
+  `billing_kill` condition line + an `if:` line-wrap — both explained by prettier's post-commit reformatting, not real
+  template drift, so LDR's actual committed content is the more trustworthy source than a raw re-render). Opened
+  `agent-orchestrator` PR #818 from a `git worktree` off `origin/main` (did NOT touch the slot's own LDR-checked-out
+  clone). Both `image-build-gate` and `quality-gates-v2` required checks passed; squash-merged to `main@c9f9bd1`. Re-ran
+  `rollout-workflow-templates.sh --dry-run --repo agent-orchestrator` (todo 3): `image-build-gate.yml` and
+  `quality-gates-v2.yml` now show 0 diff between `main` and `live-defi-rollout` (independently confirmed via
+  `git show origin/<branch>:<path>` on both). `notify-slack.yml` still reports
+  `[MISMATCH] ... live-defi-rollout: MISSING` — but this is NOT the same class of drift as the original 3: `main`'s
+  `main-backmerge-to-ldr.yml` and `semver-agent.yml` are still the OLD full-content implementations
+  (pre-`fleet_workflow_template_dedup_to_unified_ trading_ci_2026_08_06` migration), and `main-backmerge-to-ldr.yml`
+  genuinely calls the local `notify-slack.yml` file (`uses: ./.github/workflows/notify-slack.yml`, confirmed) — while
+  `live-defi-rollout`'s versions of both files are already thin `unified-trading-ci` stubs with no such local
+  dependency, which is exactly why LDR correctly has zero local `notify-slack.yml` copy (deleted 2026-0x, "zero
+  remaining local callers"). Forcing this mismatch to 0 by either deleting `main`'s copy (breaks
+  `main-backmerge-to-ldr.yml`, a real functional workflow) or adding a dead copy back to `live-defi-rollout` (recreates
+  exactly the dead-code class LDR's deletion commit removed) would both be wrong fixes for a checker signal that is, in
+  this one case, flagging a genuine but LARGER, un-migrated piece of drift rather than simple content staleness. Filed
+  the real root fix as a new P2 todo above (migrate `main`'s 2 full-implementation workflows to thin stubs, matching
+  every other fleet repo) rather than force a wrong reconciliation just to zero the counter — this is a distinct,
+  judgment-requiring, functional-workflow change (not a doc/comment port like the 3 fixed here) and deserves its own
+  dispatch + live-triggered verification.
