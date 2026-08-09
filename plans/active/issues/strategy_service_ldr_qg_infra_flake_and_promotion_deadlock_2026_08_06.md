@@ -400,10 +400,11 @@ fleet bot's own */15 ticks then kept flagging red because the storm runs kept po
       `main`; without it a 2-repo BREAKING-delta tick recurs the 06:45Z 3-dispatch storm (which re-poisons the
       full-workspace-sit top-10 and re-reds fleet-green). It is currently only on LDR + promote PR
       `promote/unified-trading-pm/1dacca9be5e1`. Provenance: agt-e33f21.
-- [ ] [OPERATOR] P2. Investigate the ~15-min `Post Cache uv package cache` save on glue runner `glue-ip-172-31-3-59-1`
-      (performance/cost: ~30 min of runner time per v2 run, shared fleet-wide). Optional: `save: false` on self-hosted,
-      or disk-low detection. NOT a correctness blocker — the save completes (~15 min). Distinct from PR #491's real
-      0MB-disk failure (08-05 06:48Z). Provenance: agt-e33f21.
+- [ ] [CICD] P2. **RULED 2026-08-09 (operator): BOTH** — `save: false` on self-hosted runners AND add disk-low
+      detection, for the ~15-min `Post Cache uv package cache` save on glue runner `glue-ip-172-31-3-59-1`
+      (performance/cost: ~30 min of runner time per v2 run, shared fleet-wide). Was `[OPERATOR]` P2 decide-between. NOT
+      a correctness blocker — the save completes (~15 min). Distinct from PR #491's real 0MB-disk failure (08-05
+      06:48Z). Provenance: agt-e33f21. Retagged to `[CICD]` — implementation, no further decision needed.
 
 ## agt-e33f21 follow-up — glue-runner cache-save hang is SYSTEMATIC (2026-08-06 ~09:15Z)
 

@@ -186,14 +186,16 @@ sufficient.
       `ldr-to-main-promote-fleet.yml`, matching `ldr-to-main-promote-heartbeat.timer`'s already-deterministic `*/15`
       cadence — the native schedule was compensating for GHA's own unreliable delivery, a problem the heartbeat already
       solves; cuts baseline trigger volume with no SLA regression (still ≤15 min worst case).
-- [ ] [OPERATOR] P1 (deferred, conditional). **(a) in-workflow self-debounce** — only build this if the livelock recurs
-      after the above two land. Check via: (i) run history — does `ldr-to-main-promote-fleet.yml` show a sustained run
-      of `conclusion=cancelled` + empty jobs list again on any later date, or (ii) live — if you're investigating a
-      fresh "no repo promoting" report, re-run this doc's own diagnostic steps first before assuming it's this same
-      issue again. If confirmed recurring, add a fast lightweight first job that checks "already-queued/in-progress?"
-      and exits immediately if so, keeping the concurrency-heavy job isolated from dispatch volume — needs care around
-      the existing `needs:`-chained notify/arm-failed jobs, a full QG pass, and live verification under real multi-agent
-      load before shipping.
+- [x] ✅ [OPERATOR] P1 (deferred, conditional). **CHECKED 2026-08-09 (operator-directed, interactive session) — NOT
+      recurred, self-debounce not needed, closing as moot.** Checked live via
+      `gh api     repos/.../actions/workflows/ldr-to-main-promote-fleet.yml/runs?status=cancelled`: 105 historical
+      cancelled runs total, but the most recent is `2026-08-07T17:19:08Z` — BEFORE the 17:42Z zombie-cancel fix (todo
+      2), not after. Zero cancelled runs since. Separately confirmed the 50 most recent runs overall (spanning
+      `2026-08-08T23:57:13Z`→`2026-08-09T08:27:18Z`, ~8.5h) are 100% `success`. ~39 hours clean on the specific
+      cancelled+zero-jobs signature this todo exists to catch. **(a) in-workflow self-debounce is NOT needed** — do not
+      build it absent a fresh recurrence. Note: this closes only THIS narrow "has the livelock signature recurred"
+      question — it does NOT itself clear the broader todo below (the 60-min zero-new-alerts bar spans other
+      sub-incidents this check didn't verify).
 - [x] 2. ✅ [DEVOPS] P1. **Real root cause found + fixed 2026-08-07 ~17:42Z — see section above.** Was a zombie queued
       run (`31176101874`) from a `schedule` trigger that fired against `main` before the `runs-on:` fix had promoted
       there, permanently occupying the workflow's one concurrency slot. Cancelled it; a fresh run immediately reached

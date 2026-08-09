@@ -415,13 +415,28 @@ just belongs on a different layer than instrument_type does, and conflating the 
   captured). Kept out of `EXPECTED_COVERAGE_BY_ASSET_GROUP` intentionally — that update belongs with the deployment-api
   `PREDICTION_DATA_TYPE_META` retirement follow-up. QG green, 2 files touched (8 insertions).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **2026-08-09 (operator ruling, interactive session)**: operator ruled WIRE REAL CAPTURE (not roll-back) for the 8
+  over-claiming (protocol, data_type) pairs. Follow-up todo rewritten from a decision ask into an actionable `[CODE]`
+  task with the ruling recorded inline; the 2 unrelated roll-back-regardless misclassifications
+  (AAVE-ETHEREUM/oracle_prices, MAKER-ETHEREUM/lst_rates) are preserved unchanged. `assigned_vm` was already `planning`
+  — no reclassification needed, this doc was never NA-parked on this item.
 
 ## Follow-ups
 
-- [ ] [OPERATOR] P2. Decide for each over-claiming DeFi (venue, data_type) pair
-      (COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/KAMINO/AAVE_V3/ALCHEMY-*) whether to wire a real MTDS capture handler or
-      roll back the aspirational genesis date (clear roll-back candidates: AAVE-ETHEREUM/oracle_prices,
-      MAKER-ETHEREUM/lst_rates)
+- [ ] [CODE] P2. **RULED 2026-08-09 (operator): WIRE REAL CAPTURE** (not roll-back) for the over-claiming DeFi pairs —
+      was `[OPERATOR]` P2 decide-or-rollback. Wire a real MTDS capture handler for each of the 8 (protocol, data_type)
+      pairs from the 2026-08-05 Progress Log's reconciled table: `oracle_prices` →
+      `spark`/`compound_v3`/`morpho`/`radiant`/`fluid`/`kamino` (6 protocols), `rewards` → `aave_v3`, `gas_fees` →
+      `alchemy_onchain`. Each currently has zero real captured rows (100% `empty_confirmed`) despite a declared genesis
+      date — this is genuine new capture-path engineering per protocol (real on-chain/API source per data type), not a
+      config flip; touches distinct MTDS handler files per protocol, so this is a strong split candidate for parallel AO
+      dispatch rather than one monolithic todo — scope accordingly when dispatched. **Unchanged, roll back regardless of
+      this ruling** (these 2 are misclassifications, not part of the wire-vs-rollback decision):
+      `AAVE-ETHEREUM/oracle_prices` (legacy governance venue, not the V3 lending venue where oracle prices actually live
+      — genesis date likely stamped on the wrong venue key) and `MAKER-ETHEREUM/lst_rates` (Maker is a CDP, not an LST —
+      `lst_rates` doesn't conceptually apply; Maker's real analog is `vault_share_price` via sDAI/DSR). Done-when: all 8
+      pairs show real `captured` rows in the live manifest (not just a declaration), and both roll-back candidates have
+      their genesis date corrected/removed.
 
 > **2026-08-06 archive-candidate audit**: The DESIGN P2 31-pair todo is marked [x] but its own evidence and the
 > 2026-08-05 Progress Log state 'Operator decision still needed: which of the now-reconciled pairs to wire a real

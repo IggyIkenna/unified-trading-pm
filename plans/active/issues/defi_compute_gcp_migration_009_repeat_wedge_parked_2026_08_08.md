@@ -82,8 +82,18 @@ reaching the point where a compact would be needed.
       `defi_compute_gcp_migration-009` shares a workload characteristic (prompt size, tool-call pattern, repo state,
       worktree size, or dispatch-timing proximity to a server restart) that makes it disproportionately likely to
       trigger it. Repo: agent-orchestrator.
-- [ ] [OPERATOR] P2. Decide whether to `unpark` (`POST /api/backlog/defi_compute_gcp_migration-009/unpark`) once the
-      root cause is fixed, or whether the underlying GCP-migration task itself needs rescoping first.
+- [ ] [OPERATOR] P2. **CHECKED 2026-08-09 (operator, interactive session) — NOT YET, stays parked.** Read
+      `agent-orchestrator@dd01255` directly (the fix cited by one prior sub-agent pass): it fixes a DIFFERENT bug —
+      `check_spawn_heartbeat_timeouts()` false-killing chat-loop roles (review/main/typed-one-offs) whose
+      `SlotRow.last_ping` never advances. This task is a standard `/boot→/heartbeat→/progress→/done` worker, not a
+      chat-loop role — `dd01255` does not apply to it at all. The fix that DOES apply to worker wedges,
+      `agent-orchestrator@e32d962` (TmuxPruner has-session debounce, requires 2 consecutive misses before declaring a
+      session dead), is live — but this task's own 3-slot table above shows all 3 failures hit the "total silence, no
+      `forced_compact` at all" signature, which the tmuxpruner doc's own Progress Log explicitly flags as a THIRD,
+      still-unaddressed mechanism (hypothesized AO-server-restart boot-time registration race, not a `has_session()`
+      false-negative — neither shipped fix targets it). Unparking now would very plausibly re-wedge on the same unfixed
+      mechanism. Re-check once the tmuxpruner doc's open `[BACKEND] P1` restart-correlation todo lands, or once this
+      specific mechanism gets its own fix.
 - [ ] [REVIEW] P3. Once unparked and re-dispatched, independently verify via `GET /api/activity` (filtered client-side
       by `task_id` — the `task=` query param does not filter server-side, confirmed 2026-08-08) that it completes a full
       boot->work->done cycle without re-wedging. Repo: unified-trading-pm (verification + checkbox flip only).

@@ -41,8 +41,8 @@ priority: P1
 source:
   sports_af_full_entity_completion_2026_08_03 dispatch, operator follow-up on PLAYER_VALUES transfer-window
   investigation
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
@@ -125,10 +125,16 @@ possibly a rename that ripples into UAC/manifest data_type naming.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Pick a disposition for the PLAYER_VALUES silent-data-loss finding above** — persist per-player
-      values (option 1), persist team-level aggregate only (option 2), rename the entity to reflect what it actually is
-      today (option 3), or park with no change (option 4). Gates any code fix; this doc had no tracked todo for the
-      decision itself before this pass.
+- [ ] [CODE] P1. **RULED 2026-08-09 (operator): Option 1 — persist the full per-player `market_value_eur` list**, not
+      just the team-level aggregate. Was `[OPERATOR]` P1 pick-a-disposition. Implementation: in
+      `instruments_service/engine/orchestrator/transfermarkt.py:530-541`, stop dropping the `players` list — persist
+      each player's `market_value_eur` (drop only genuinely unhelpful nested bio-text fields, per option 1's original
+      scoping). **Also persist `total_market_value_eur` per team while touching this code** — it's already parsed by the
+      adapter (`transfermarkt.py` adapter, line 428) and currently silently lost the same way; keeping it is near-zero
+      incremental cost once the per-player schema change lands, and gives a fast team-level aggregate without re-summing
+      player rows every read. **Done when**: both fields land in the written schema, a fresh snapshot shows non-null
+      `market_value_eur` per player and non-null `total_market_value_eur` per team, and a regression test locks in that
+      neither is dropped in future refactors of this write path.
 
 ## Progress Log
 

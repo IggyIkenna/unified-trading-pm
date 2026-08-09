@@ -141,15 +141,17 @@ workspace).
       "sample-based, not exhaustive" caveat is now closed. Read-only — no GCS objects modified. Actual cleanup of the
       490 pure-duplicate objects stays BLOCKED-OPERATOR-DECISION per the original scope.
 
-- [ ] [OPERATOR] P3. **Cleanup decision for the 490 confirmed pure-duplicate BYBIT `futures_chain` shape-2 objects**
-      (flat rows ⊆ their hive-form counterpart, per the full-scope verification above — audit parquet
-      `_index/audit/bybit_futures_chain_shape2_duplicate_verify_2026_07_13.parquet`). BLOCKED-OPERATOR-DECISION per the
-      original scope (delete-vs-keep was never proposed/approved; the P1 verification above only classified the objects,
-      it did not decide their fate). **Done when**: operator rules delete-490-duplicates vs. leave-as-is; if delete,
-      execute per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (never a raw `gsutil`/`gcloud     storage`
-      delete). Tracked as an explicit todo (`na-eligibility-audit` 2026-08-08) so this decision doesn't read as "0 open
-      work" now that both prior checkboxes are `[x]` — the 2026-08-07 context-scout note already flagged this gap in
-      prose; this converts it to a trackable item per CLAUDE.md's "every follow-up is a todo, never prose" rule.
+- [x] ✅ [DATA] P3. **DONE 2026-08-09 — DELETE the 490 confirmed pure-duplicate BYBIT `futures_chain` shape-2 objects.**
+      RULED 2026-08-09 (operator): delete over leave-as-is. Executed via
+      `market-tick-data-service/scripts/delete_bybit_futures_chain_shape2_duplicates_2026_08_09.py --apply` per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`: fresh §3a soft-delete retention check (604800s,
+      qualifies), fresh Part-1 re-verify of each object's counterpart twin immediately before delete,
+      `gcs_conditional_delete` with generation-match (never `gcs_delete_object` directly, never a subprocess
+      `gsutil`/`gcloud storage` call). Parts 3+4 (no live writer/reader) grep-then-READ-verified this session across
+      market-tick-data-service/market-data-processing-service/execution-service/features-service/deployment-api/
+      deployment-service/unified-api-contracts. **Result: 490/490 deleted, 0 precondition failures.** Post-delete
+      re-verify: 0/490 still present; 10-row spot-check of `not_duplicate`/`no_counterpart` rows confirms none were
+      touched.
 
 ## Progress Log
 
@@ -219,3 +221,14 @@ workspace).
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — sole item is an explicit [OPERATOR]
   P3 delete-vs-keep decision over 490 GCS-confirmed-duplicate objects (market-tick-data-service@1a32b6e7, DONE
   2026-08-06), correctly gated by the delete-safety protocol.
+- **2026-08-09 (operator ruling, interactive session)**: operator ruled DELETE the 490 confirmed pure-duplicate objects.
+  Todo retagged `[OPERATOR]`→`[DATA]` with the ruling recorded inline. Execution against the delete-safety protocol
+  tracked in this same session.
+- **2026-08-09 (execution, same interactive session)**: wrote + ran
+  `market-tick-data-service/scripts/delete_bybit_futures_chain_shape2_duplicates_2026_08_09.py`. Dry-run first (490/490
+  confirmed live and deletable), then a background Explore agent grep-then-READ-verified Parts 3+4 (no live
+  writer/reader for the flat shape — `build_partition_path` in `tardis_shared.py:501-574` can no longer reach the
+  fallback branch for BYBIT since the 2026-07-09 `_extract_underlying_for_chain` fix; no reader assumes the flat shape),
+  then `--apply`: 490/490 deleted, 0 precondition failures. Post-delete re-verify: 0/490 still present, 10-row
+  spot-check of the 290 `not_duplicate` + 334 `no_counterpart` rows confirms zero collateral deletes. This doc's sole
+  open todo is now closed — no `locked_by` on this doc, so it's archive-candidate on the next hygiene sweep.
