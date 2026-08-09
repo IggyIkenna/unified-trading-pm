@@ -278,7 +278,7 @@ not data-pipeline).
   dashboard, `task_template.md`, the self-referential rollout meta-plan, and the two operator-decision registers). Phase
   3 drafted
   [infra_satellite_ao_dispatch_batch1_2026_07_26.md](/plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md) +
-  [infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md](/plans/active/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md)
+  [infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md](/plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md)
   — **25 todos from 17 source docs, both `status: draft` (NOT ingested; the flip to `active` is the operator's call)**.
   The HARD conflict check ran against all 93 existing batch/finalize/closeout plans plus pairwise across the 25 drafted
   todos: 10 further AO-eligible items were deferred conflict-gated (notably `PYTEST_UNIT_DIR`, where a cefi doc

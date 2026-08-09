@@ -81,7 +81,7 @@ locked_since:
 context_scope:
   [
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -99,7 +99,7 @@ source: >-
 # Infra satellite docs — AO dispatch batch 1
 
 > **ARCHIVED 2026-08-09** — All 25 todos shipped and verified. Closed out by
-> `/plans/active/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`, which reconciled all 17 source-doc
+> `/plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`, which reconciled all 17 source-doc
 > checkboxes (todo 1), re-checked all 10 CONFLICT-GATED Deferred items (todo 2), re-measured the infra tranche's orphan
 > count + closed the covering hub's dispatch-vs-digest gap (todo 3), and archived this plan (todo 4). Every Deferred
 > item below was migrated to a real home before archival — see the "Deferred item disposition" note at the end of the
