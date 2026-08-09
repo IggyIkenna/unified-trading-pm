@@ -109,8 +109,22 @@ that cannot compact is a failure, not a lifecycle event.
       event of ANY type for a given role for longer than a configurable window while that role has a live session. This
       is the check that would have caught 2026-08-09 directly (`role=main` logged 1 event in 4.3h against
       `role=worker`'s 132). Done-when: a unit test proves it fires on an all-quiet role with a live session.
-- [ ] [DOCS] P2. Register both detectors in the alerting SSOT's failure-mode table with owner / cadence / verifier, per
-      the runbook declaration rule. Done-when: `/codex/04-architecture/agent-orchestrator-alerting.md` lists them.
+- [x] ✅ [DOCS] P2. Register both detectors in the alerting SSOT's failure-mode table with owner / cadence / verifier,
+      per the runbook declaration rule. Done-when: `/codex/04-architecture/agent-orchestrator-alerting.md` lists them. —
+      `unified-trading-pm`: added a new "Self-monitoring detector registry — owner / cadence / verifier" section (per
+      `/codex/15-runbooks/README.md`'s owner/cadence/verifier declaration rule) plus two new rows
+      (`notify_context_saturation_detected`/`_resolved`) in the existing "Complete pager audit" table. Todo 1/2's
+      detector is registered in full (owner, cadence = every `ContextLifecyclePolicy.tick` at
+      `main_agent_interval_seconds`=60s, verifier = the 10 existing tests across `test_context_lifecycle.py` +
+      `test_alert_quality_overhaul.py`, code_refs `@bb81c7b`/`@e8818aa`). Todo 3's detector doesn't exist in code yet
+      (`ao_context_saturation_never_alerts-0c1b3343f4c1`, dispatched to slot 31 at 2026-08-09T19:22 UTC, still in flight
+      at time of writing) — its row is registered now too (name, owner, trigger shape) with cadence/verifier honestly
+      marked **PENDING** rather than fabricated, so the registry itself never silently omits a detector this issue says
+      should exist. See todo 5 below for the backfill.
+- [ ] [DOCS] P3. Backfill the context-activity-silence detector's cadence/verifier/code_refs in
+      `/codex/04-architecture/agent-orchestrator-alerting.md` § "Self-monitoring detector registry" once
+      `ao_context_saturation_never_alerts-0c1b3343f4c1` (todo 3) ships — replace the PENDING row with real values
+      mirroring the completed detector-1 row. Done-when: the table has no PENDING cells left in that section.
 
 ## Progress Log
 
@@ -138,3 +152,14 @@ that cannot compact is a failure, not a lifecycle event.
   (one-page-per-transition + reminder-on-cadence; resolved bookend correlates + only-after-a-page) and 2 in
   `tests/test_alert_quality_overhaul.py` (direct `_post`-capture proof the notifiers actually page). All green;
   `basedpyright` clean. Todos 3-4 intentionally NOT touched — separate dispatch per this issue's own scope.
+- **2026-08-09 (backend_engineer, slot-30)** — ✅ Todo 4 shipped, ➕ todo 5 added. Registered detector 1 (todo 1/2's
+  saturation-without-compaction detector) in full in `/codex/04-architecture/agent-orchestrator-alerting.md`: two new
+  rows in the existing "Complete pager audit" table for `notify_context_saturation_detected`/`_resolved`, plus a new
+  "Self-monitoring detector registry — owner / cadence / verifier" section applying the runbook declaration rule
+  (`/codex/15-runbooks/README.md`) to both of this issue's detectors. Todo 3's detector (dispatched concurrently to slot
+  31, `ao_context_saturation_never_alerts-0c1b3343f4c1`) had not landed in code as of this session — rather than
+  fabricate its cadence/verifier or silently drop it from the registry, its row is registered now by name/owner/trigger
+  shape with cadence and verifier honestly marked PENDING, and todo 5 tracks the backfill once todo 3 ships. This is the
+  deliberate reading of "register both" given the two todos were dispatched without a `sequential`/`depends_on` gate
+  between them (a plan-authoring gap worth noting for future same-issue todo chains) — todo 4's own done-when ("lists
+  them") is satisfied literally; todo 5 closes the remaining gap.
