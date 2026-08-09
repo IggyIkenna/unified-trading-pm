@@ -128,12 +128,33 @@ drift_direction: advance-code
       migrated off the dedicated buckets 2026-07-13) + cross-refs to the two adjacent already-tracked issues (HL
       forward-capture gap since 2026-06-02; the 2 dead-code companion scripts' disposition in batch9's DIAG todo) rather
       than duplicating either. Repo: e2e-testing@ea38428.
-- [ ] [DATA] P2. **Run the Extended public instrument + perp backfill (UNBLOCKED — no key needed).** Source: same doc.
-      IS daily-listing CLI for EXTENDED-STARKNET (genesis-accurate per-instrument `available_from`, already shipped) +
-      MTDS OHLCV/funding capture over 2024-07-26→yesterday (funding only from 2025-08-01 mainnet). No API key required
-      for market data (verified live — only order placement needs the stark private key). Done when: the honest coverage
-      index shows `expected_unattempted`→`captured` conversion for EXTENDED-STARKNET across the backfill window. Repo:
-      mtds / instruments-service (defi/cefi perp).
+- [x] ✅ [DATA] P2. **Run the Extended public instrument + perp backfill (UNBLOCKED — no key needed).** Source: same
+      doc. IS daily-listing CLI for EXTENDED-STARKNET (genesis-accurate per-instrument `available_from`, already
+      shipped) + MTDS OHLCV/funding capture over 2024-07-26→yesterday (funding only from 2025-08-01 mainnet). No API key
+      required for market data (verified live — only order placement needs the stark private key). Done when: the honest
+      coverage index shows `expected_unattempted`→`captured` conversion for EXTENDED-STARKNET across the backfill
+      window. Repo: mtds / instruments-service (defi/cefi perp). **Done —
+      instruments-service@catalogue-rollup-cefi-20260809T203518Z + market-tick-data-service (13 sharded backfill VMs
+      `cefi-extended-starknet-*-20260809-203922`).** Ran (1) IS
+      `--operation instruments --mode batch --asset-group cefi --venues EXTENDED-STARKNET` (already-fresh listing,
+      genesis-accurate `available_from` confirmed live) → (2) `scripts/build_instrument_catalogue.py`
+      (`--asset-group cefi --mode incremental`, promoted 431,777-row catalogue, 200 distinct EXTENDED-STARKNET
+      instruments now resolve for the `ALL` symbol sentinel with correct per-instrument lifecycle windows) → (3)
+      launched `scripts/vm/launch-cefi-hl-aster-historical-backfill.sh`
+      (`VENUES=EXTENDED-STARKNET SHARD_DAYS=60     CUTOFF_DATE=2026-08-08 SYMBOLS=ALL`) — 13 SPOT VMs sharding
+      2024-10-01→2026-08-08 (the venue's real `_VENUE_LAUNCH`/UAC capability floor; the plan's own 2024-07-26 predates
+      the funding/trades floor and applies only to the OHLCV candle path, which was already fully `captured` with zero
+      `expected_unattempted` before this run — verified, no gap). All 13 VMs confirmed RUNNING then completed +
+      self-deleted (`VM_SHUTDOWN_ON_COMPLETION=true`) within ~45min; one VM's `run.log` spot-checked directly
+      (`OnchainPerpBatch complete ... 5707 rows`, `ManifestWriter: per-VM shard updated`, `exit_code=0`). **Verification
+      (bounded, targeted read of this run's own 677 per-VM manifest shard files — not a whole-corpus walk, ~17MB total,
+      single-walk-discipline-compliant)**: every one of the 677 days 2024-10-01→2026-08-08 is present (0 gaps), and all
+      107,096 attempted (date, symbol, data_type) shards resolved to `captured` (28,922) or `empty_confirmed` (78,174) —
+      **zero `expected_unattempted` remain in the written shards**, i.e. the honest-coverage conversion the done-when
+      clause asks for. (Note: the consolidated `availability_index.parquet` blob itself won't reflect this until the
+      next manifest-consolidator Cloud Run cycle merges these per-VM shards — reading it directly right after the
+      backfill is a known reader gap, self-shard-only merge on a still-fresh consolidated blob, not a data-loss signal;
+      the per-VM shard read above is the writer's own authoritative record.)
 - [ ] [CODE] P2. **Harden MTDS Extended candle sharp edge (silent truncation).** Source: same doc. The live
       `_umi_extended.py` candle fetch sends `{interval, limit:1440, endTime}` with NO `startTime`; the API caps a single
       response at ~2800-3000 rows and returns the most-recent `limit` ending at `endTime`, so any window needing more
@@ -209,6 +230,14 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- **2026-08-09**: EXTENDED-STARKNET perp backfill todo (P2) flipped — ran the IS listing refresh + catalogue rollup then
+  launched 13 sharded SPOT VMs (`cefi-extended-starknet-*`) covering the full 2024-10-01→2026-08-08 window; all
+  completed and self-deleted within ~45min. Bounded, targeted per-VM-shard verification (677 files, ~17MB, not a
+  whole-corpus walk) confirmed 0 date gaps and 0 remaining `expected_unattempted` across 107,096 attempted shards. See
+  the todo's own note for the discrepancy vs the plan's stated 2024-07-26 start (that date is the OHLCV genesis probe
+  floor, not the funding/trades venue-launch floor MTDS actually seeds `expected_unattempted` against) and the
+  consolidated-index reader gap (self-shard-only merge on a fresh-but-stale-relative-to-just-written-per-VM-data blob —
+  not a data-loss signal, just a read-path staleness window until the next consolidator cycle).
 - **2026-08-09**: DeFi venue-grain todo (P2, adapter/writer PROTOCOL-CHAIN shard key) flipped — STALE PREMISE, the fix
   was already shipped `instruments-service@6b7fbadf`/`ec73983e` on 2026-08-05, four days before this batch was authored.
   Verified live against current HEAD (not just the commit log): all 57 non-oracle multi-chain DeFi adapters' `venue`
