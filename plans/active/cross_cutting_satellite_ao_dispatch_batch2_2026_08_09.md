@@ -130,12 +130,18 @@ drift_direction: advance-code
       playwright gate. — deployment-api@5a345de22, deployment-ui@c55ed8256 (route is byte-for-byte passthrough, proven
       by 2 new unit tests; UI gates Layer-2 headline+badge on Layer-1 completeness; Vitest synthetic-gap fixture +
       `pw:L2` regression spec `data_status_coverage_labels.spec.ts` — 5/5 playwright specs green, verified directly).
-- [ ] [SCRIPT] P0. Build the captured∩expected KEY-OVERLAP verification-discipline gate (per-(instrument, day) overlap
-      of captured vs. expected, never a raw VM-exit-code/row-count proxy) that would have caught the 2026-06-24 DeFi
-      silent-stall class. Repo: instruments-service. Source: `instruments_foundation_phase0_cross_cutting_2026_07_24.md`
-      (Phase-0 item 7). Done when: a script/gate computes the `expected_unattempted`-drop /
-      captured∩expected-overlap-climb as the wired backfill-completion verdict, cross-checked against `run.log`
-      `exit_code`, and demonstrably fails on a synthetic "exit 0 but empty" fixture.
+- [x] ✅ [SCRIPT] P0. Build the captured∩expected KEY-OVERLAP verification-discipline gate (per-(instrument, day)
+      overlap of captured vs. expected, never a raw VM-exit-code/row-count proxy) that would have caught the 2026-06-24
+      DeFi silent-stall class. Repo: instruments-service. Source:
+      `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (Phase-0 item 7). Done when: a script/gate computes
+      the `expected_unattempted`-drop / captured∩expected-overlap-climb as the wired backfill-completion verdict,
+      cross-checked against `run.log` `exit_code`, and demonstrably fails on a synthetic "exit 0 but empty" fixture. —
+      instruments-service@ef635e32 (`scripts/backfill_completion_key_overlap_gate_2026_08_09.py`:
+      `evaluate_backfill_completion()` requires BOTH `run.log` `EXIT_STATUS==0` AND at least one previously-pending
+      expected key now `captured` — a large captured-row delta with 0 overlap-climb FAILs, reproducing the DeFi
+      silent-stall signature. 8/8 unit tests green incl. the flagship
+      `test_fails_on_exit_0_but_empty_synthetic_fixture` + a full `main()`-level CLI fixture test; full
+      `quality-gates.sh` green 252s).
 - [ ] [SCRIPT] P0. Run the silent-cap source audit + `FetchEvidence`/`UnprovenHonestAbsenceError` paging sweep across
       every data source (find + fix any REST page-limit/top-N-snapshot/free-tier-window cap that silently truncates,
       mirroring the already-shipped Graph `skip<=5000`-to-cursor fix). Repo: instruments-service,
