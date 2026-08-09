@@ -36,8 +36,8 @@ related:
 created: 2026-08-09
 last_updated: 2026-08-09
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
@@ -153,3 +153,18 @@ this as its own follow-up if the defi check above confirms live impact.
 - [ ] [DATA] P3. **Audit other per-VM-shard-writing correction scripts workspace-wide for the same tie-break defect**
       (any script that mutates `capture_status` on an existing row without bumping `attempted_at`/`written_at`). —
       cross-cutting
+
+## Progress Log
+
+- **round9-reclassify-satellite-sweep 2026-08-09** (cefi tranche): **RECLASSIFY, `assigned_vm: NA -> planning`**
+  (`execution_scope` `local-only -> orchestrator-agent`). All 3 open todos clear the bounded/worker-determinable bar:
+  todo 1 is a live-comparison verification whose exact method this doc's own "Live evidence" section already spells
+  out step-by-step; todo 2 is a mechanical mirror-fix of an already-shipped commit
+  (`instruments-service@159c0ebe0`) — the doc's own "Second bug" section explains precisely what that fix does and
+  why it's needed regardless of todo 1's outcome ("as a preventive fix regardless"); todo 3 is a grep-scoped
+  cross-workspace audit for one named defect pattern. No genuine judgment/design call remains. Conflict-check clear:
+  the only other corpus reference to this doc is
+  `instruments_mtds_consistency_remediation_residuals_2026_07_24.md`'s citation, which is this doc's OWN origin (the
+  N1b session that filed it), not a duplicate extraction or competing dispatch surface. Companion gated finalize plan
+  authored:
+  `/plans/active/corrector_scripts_dedup_tiebreak_timestamp_bug_2026_08_09_finalize_2026_08_09.md`.

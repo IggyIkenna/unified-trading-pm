@@ -937,3 +937,11 @@ auto-generated section's own owner script, rather than hand-editing the table) �
   open and was not resolved here. Wrote the full draft, with per-item confidence levels and explicit gaps, into a new
   "DRAFT PROPOSAL 2026-08-09" subsection under the todo above. **Did NOT flip the todo done** — it stays open pending
   the operator's actual review/adjustment of these draft numbers, per the ruling's own instruction.
+- **round9-reclassify-satellite-sweep 2026-08-09** (defi tranche): KEEP-NA, valid — re-confirmed independently, no
+  whole-doc RECLASSIFY or per-item satellite-extraction found. Both open todos are freshly re-verified same-day as
+  genuinely not-yet-dispatchable: the `[DESIGN]` pollable-candidate-registry item was itself DISPATCHED and then
+  self-corrected back to `assigned_vm: NA` by a `slot-17` session earlier today (see that Progress Log entry above) —
+  a second design sub-decision (features-service's per-candidate feature-naming shape) genuinely remains open; the
+  `[OPERATOR]` RecursiveLoopOrchestrator item has a same-day draft proposal awaiting actual operator ruling, explicitly
+  not yet approved (see the entry immediately above). No new fact from today's sweep (credential/webhook unblocks)
+  touches either item. Doc stays `assigned_vm: NA`.

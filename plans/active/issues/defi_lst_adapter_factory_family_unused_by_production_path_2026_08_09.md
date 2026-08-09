@@ -140,3 +140,8 @@ only). This is the same audit methodology, one layer down: `market_interface/fac
   in-scope); the broader 6-adapter dead-code-or-wire question extracted here as a design call, per this todo's own
   "genuinely-not-built ones are filed as new issue docs (not built here)" instruction — this is the closest-fitting
   disposition for a finding that's neither cleanly "unwired" nor cleanly "not built."
+- **round9-reclassify-satellite-sweep 2026-08-09** (defi tranche): KEEP-NA, valid — the sole open item is explicitly an
+  `[OPERATOR]` (a) delete vs (b) wire-a-real-consumer decision, and the doc's own "Why this doesn't fit the todo's
+  original... binary" section states plainly this is a design call `task_template.md`'s dispatch-scope-eligibility
+  rule reserves for a human, not something a worker can determine from the code alone. No RECLASSIFY or
+  satellite-extraction applies — there is only the one item, and it is not bounded. Doc stays `assigned_vm: NA`.
