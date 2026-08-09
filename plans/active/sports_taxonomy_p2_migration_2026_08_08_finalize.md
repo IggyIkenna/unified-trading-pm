@@ -77,11 +77,18 @@ locked_since:
       to it on 2026-08-08 (`unified-trading-pm@3bb3214bdf`) now that the ordering constraint has been discharged — a
       stale banner is misinformation for the next reader. **Done when**: convergence is evidenced and the banner is
       removed or updated to a past-tense record.
-- [ ] [REVIEW] P2. **Correct the historical record in
+- [x] ✅ [REVIEW] P2. **Correct the historical record in
       `/plans/active/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`.** That doc's
       summary claims "RESOLVED 2026-08-05: live panel confirmed at venues/instrument_types/data_types/chains all 0/0
       non-canonical". The 2026-08-08 audit showed that zero was produced by exclusion sets, not canonicalisation. Add a
-      dated correction so the corpus does not carry a false all-clear. **Done when**: the doc carries the correction.
+      dated correction so the corpus does not carry a false all-clear. **Done when**: the doc carries the correction. —
+      **DONE (verified by plan_reconciler agt-196785, 2026-08-09)**: the target doc already carried a prominent ⚠️
+      CORRECTION 2026-08-08 banner (added before this finalize plan was authored) directly under its frontmatter, but
+      its "Deferred work after 2026-08-05" section still asserted the old uncaveated "fully resolved... 0/0/0/0
+      non-canonical" claim below it — fixed that section to point back to the correction banner instead of repeating the
+      stale claim. The doc no longer carries a false all-clear anywhere in its body. This also resolves the cross-plan
+      tension with `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md` todo 2 (which separately plans to
+      archive this same target doc) — the doc is now internally consistent either way.
 - [ ] [DOC] P2. **Archive `sports_taxonomy_p2_migration_2026_08_08.md`** via the standard 6-step ritual, including the
       codex-alignment check against the four-surface reconciliation and delete-safety SSOTs, the corpus-wide
       referrer-path fixup, and archiving this finalize doc alongside it in the same commit. **Done when**: the plan is

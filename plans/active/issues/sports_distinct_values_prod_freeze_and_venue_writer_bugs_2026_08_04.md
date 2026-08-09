@@ -391,9 +391,13 @@ confirming before scoping a re-stamp for it.
 | `LC_TARBALL_FRESHNESS=enforce` default proposal for `mtds-live-*` | Not done           | Nobody — a scoping/design todo, small.                                          |
 | LDR→main promotion of today's shipped commits                     | Cannot be done yet | Time — auto-drains on the standing 15-30min cron; nothing to do but let it run. |
 
-**This doc's scope is fully resolved** — the sports distinct-values panel is 0/0/0/0 non-canonical across every axis,
-verified live. The one remaining todo (`LC_TARBALL_FRESHNESS=enforce`) is an unrelated small process-hardening proposal
-that doesn't block or affect anything here; pick it up whenever, no urgency.
+**This doc's own remediation scope (the deploy-freeze recovery + the 2 writer-bug fixes + the historical re-stamp) is
+fully shipped and verified live** — see the ⚠️ CORRECTION 2026-08-08 banner at the top for why the "0/0/0/0
+non-canonical, RESOLVED" headline itself is misleading (that count was reached via `_ACCEPTED_EXCEPTIONS`, not genuine
+canonicalisation; the real gap — 21 hidden fan-out bookmakers, `KALSHI`, a blank venue, uppercase `ODDS` — is owned by
+`/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`). The one remaining todo in THIS doc
+(`LC_TARBALL_FRESHNESS=enforce`) is an unrelated small process-hardening proposal that doesn't block or affect anything
+here; pick it up whenever, no urgency.
 
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item is genuine unblocked work.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA-STALE, already-duplicated — verdict unchanged
