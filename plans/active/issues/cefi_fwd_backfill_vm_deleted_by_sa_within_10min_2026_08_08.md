@@ -230,6 +230,27 @@ before launch.
       pointer to `infra.md` STEP 0.65's 3-signal staleness check ("construct the delete command by hand — this refusal
       intentionally does not print one to copy-paste"). Verified via `bash -n` on all 62 changed files + full
       `quality-gates.sh` green (sentinel bc48b09b) + quickmerge landed on live-defi-rollout, ancestry-verified.
+- [ ] [INFRA] P1. **NEW 2026-08-09 (found while re-checking the contamination-doc gate for task -014).** The DAILY
+      `launch-cefi-forward-poll.sh` cron (separate from the one-off VM-4 backfill above, which correctly stopped at its
+      target end-date 2026-08-05) appears to have STOPPED FIRING as of 2026-08-06 — a live, still-open gap, not
+      historical. Evidence: (1) `probe_cefi_perp_funding_raw_coverage.py --start 2026-05-16 --end 2026-08-09` (fresh
+      run, 2026-08-09T10:xxZ) shows ALL 6 CARRY_BASIS_PERP venues at exactly 0 objects for 2026-08-06/07/08/09, a hard
+      cliff immediately after VM-4's 08-05 backfill cutoff — the historical window itself (05-16→08-05) is fully
+      populated, only the FORWARD days are empty. (2) The recurring `cefi-fwd-daily-cron-*` HOST VM (which installs a
+      `0 9 * * *` crontab firing `launch-cefi-forward-poll.sh`, then sleeps) has a launch gap: hosts exist for 08-04 and
+      08-06 but NONE for 08-07 or 08-08 (`gsutil ls .../vm-logs/ | grep cefi-fwd-daily-cron`); the current host
+      (`cefi-fwd-daily-cron-20260809-084100`, launched 08:42Z today) is RUNNING and its crontab installed correctly, but
+      by 10:20Z — 80 min past its own `0 9 * * *` fire time — its own heartbeat log still reads "no fires yet" and no
+      new `cefi-fwd-*` data-capture VM has been launched (`gsutil ls .../vm-logs/ | grep cefi-fwd-20260809` = empty).
+      Root cause NOT diagnosed (out of data_engineering craft scope — this is the cron-host relaunch mechanism /
+      crond-inside- VM reliability, `deployment-service` infra territory, same repo/craft as this doc's other `[INFRA]`
+      items). Direct consequence: contamination doc `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s task -014
+      step 1 gate ("`funding_window()` returns non-empty CURRENT observations, not just historically-backfilled ones")
+      is NOT met even after task -011's corpus recompute runs over the now-complete historical window — recompute would
+      still honest-skip everything from 08-06 forward. **Repo: deployment-service** (`launch-cefi-forward-poll.sh` /
+      `cefi-fwd-daily-cron` host boot script / whatever relaunches the cron-host VM) — diagnose why the host isn't being
+      relaunched daily and why today's host's own internal crontab didn't fire by T+80min past due, then verify a fresh
+      `cefi-fwd-*` VM lands 08-06→today data.
 
 ## Progress Log
 
@@ -411,3 +432,17 @@ before launch.
   partial (OKX=0, KRA=0).** GCS probe gate MET — proceeding to corpus recompute + `funding_window()` verification to
   flip contamination plan -011.
 - **context-scout 2026-08-09**: populated context_scope (5 entries).
+- **slot-2 2026-08-09 (data_engineering, task `defi_cefi_venue_chain_axis_contamination-014`)**: re-checked task -014's
+  own step-1 gate (corpus recompute confirmed fresh/current) before touching its own sequenced cleanup steps. Confirmed
+  VM-4's historical window (05-16→08-09 re-probed fresh, superset of the tracked 06-05→08-05) is fully landed — matches
+  the prior entry's PASSED verdict, independently re-derived. **New finding, not previously tracked**: 2026-08-06 onward
+  is a hard cliff to 0 objects for all 6 CARRY_BASIS_PERP venues — the recurring daily forward-poll cron
+  (`cefi-fwd-daily-cron-*` host → `launch-cefi-forward-poll.sh`) has a live gap (missing host launches 08-07/08-08;
+  today's host up since 08:42Z has not fired its `0 9 * * *` crontab by 10:20Z, 80min overdue). Filed as new `[INFRA]`
+  todo above (deployment-service scope, out of this craft's remit — diagnosis only, no fix attempted). **Consequence for
+  -014**: even once -011's corpus recompute runs over the now-complete historical window, task -014's own step-1 text
+  ("`funding_window()` returns non-empty CURRENT observations, not just historically-backfilled ones") will still NOT be
+  met until this forward-cron gap closes — recompute would honest-skip 08-06→today. -014's checkbox correctly stays
+  unflipped this session; no code shipped (investigation + doc-tracked finding only, per this workspace's findings-
+  triage rule). Full gate-check detail + probe evidence cross-referenced in
+  `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`'s own Progress Log, same timestamp.
