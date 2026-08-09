@@ -55,8 +55,12 @@ context_scope:
 
 # data_completion_cefi_2026_07_15 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **STATUS: `active` (matches frontmatter) — MACHINE-GATED, not yet dispatchable.** `gate_on_depends: true` already
+> holds this plan's tasks until `data_completion_cefi_2026_07_15`'s todos are all done — a `status: draft` double-gate
+> on top is redundant and, per `check_finalize_plan_coverage.py`'s ratchet (2026-07-30 corpus-wide fix), actively wrong:
+> it stops nothing dispatch already prevents and requires a manual flip nothing automates. **Corrected 2026-08-09
+> (plan_reconciler agt-5f7f31)** — this banner previously said `draft`, contradicting the frontmatter's `status: active`
+> above; the frontmatter was the QG-correct side.
 
 ## Todos
 

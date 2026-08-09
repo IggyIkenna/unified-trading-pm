@@ -256,7 +256,17 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       references it only in comments. The 7 attempted_failed rows from 2026-07-26 were a one-off probe during the brief
       v9 window. The Tardis binance-delivery endpoint is real and correctly registered, but the venue_start_dates entry
       at 2020-01-01 is Tardis metadata only (unverifiable). Annotated the comment in venue_mapping.py to document this;
-      kept the entry because is_venue_available_on_date() defaults to True for unknown venues (worse).
+      kept the entry because is_venue_available_on_date() defaults to True for unknown venues (worse). **CORRECTION
+      (2026-08-09, plan_reconciler agt-5f7f31):** a later, same-topic investigation in
+      `/plans/active/issues/coverage_floor_new_backfill_gaps_found_2026_07_27.md` (2026-08-05, slot-5) found this
+      "dead/never-implemented" conclusion was WRONG on the live-fetch question — the forward/cron pipeline STILL
+      attempts BINANCE-DELIVERY daily (704 manifest rows: 669 attempted_failed + 35 empty_confirmed, 2026-05-01 to
+      2026-08-04, 6 data_types, all instrument_count=0.0), because the venue stays in `VENUES_BY_ASSET_GROUP["cefi"]` so
+      it's iterated even though MVP catalog-tagging makes every attempt fail — wasting Tardis API quota daily. The
+      MVP-removal and backfill-launcher-exclusion findings above are still correct; only "has NEVER been fetched" is
+      false. The open remediation (`[INFRA] P3` in the doc cited above, and echoed in
+      `/plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md`) is the live tracking location — no new todo
+      needed here.
 - [x] ✅ [DATA] P2. Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 carries `# TODO verify` while
       `venue_mapping.py`'s 2020-01-01 does not; probe the manifest to confirm 2020-01-01 is correct, update
       `TRADFI_SOURCE_COVERAGE_START["CME"]`, and drop the TODO marker. (repo: unified-api-contracts) —
