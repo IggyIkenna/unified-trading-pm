@@ -523,3 +523,13 @@ before launch.
   external-resource wait should be routed given no existing AO mechanism covers it) recommending the todo stay queued
   as-is so a future dispatch — closer to the ETA — completes the launch+verify in one shorter session, per the
   `/blocked` response for the exact options considered.
+- **slot-17 (infra) 2026-08-09, re-check**: re-dispatched the same final open `[INFRA]` P1 todo ~20min after slot-25's
+  check above. State materially unchanged: `PROGRESS.json` for `cefi-queue-heavy-binancefutu-x17-20260809-083733` still
+  reads `last_completed_date: 2020-05-18` at 12:11Z (same value slot-25 measured), confirmed via a fresh read at 12:31Z
+  — no new checkpoint since, consistent with the ~141 days/hr rate (ETA still ~14-16h out from 08:37Z launch, i.e.
+  ~2026-08-10T02:00-04:30Z). VM still `RUNNING`, still sole occupant of the Tardis single-VM slot. Did not attempt
+  another `run_in_background` hold — slot-25 already proved this doesn't survive the needed duration in this
+  environment, and repeating it would be the exact busy-poll anti-pattern the async-wait SSOT warns against. Not
+  re-filing a duplicate `/blocked` since slot-25's is presumably still open and nothing new to add. Releasing this task
+  via `/skip-current-task` so this slot drains other queued work instead of sitting idle/blocked on an unchanged ~14-16h
+  external wait; task stays queued for a slot dispatched closer to the ETA.
