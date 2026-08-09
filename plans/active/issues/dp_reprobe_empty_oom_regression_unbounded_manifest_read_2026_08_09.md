@@ -177,9 +177,10 @@ Mechanical, bounded fix — mirror the already-proven `daily_digest.py` pattern:
       Pass-2 HEAD, ancestor-of-origin confirmed). Also discovered a SEPARATE, unrelated bug while measuring the real
       manifest — `available_at` (the column reprobe's date filter resolves first) is blank for every empty_confirmed
       row, so `_select_new_empties()` would silently select zero candidates for defi even with the OOM fixed — filed as
-      its own issue, `/plans/active/issues/reprobe_date_column_resolution_prefers_blank_available_at_2026_08_09.md` (NOT
-      fixed here at the time — separate root cause, separate scope; since fixed, e2e-testing@9c75040, doc archived in a
-      follow-up commit). Repo: e2e-testing.
+      its own issue,
+      `/plans/archive/2026_08/issues/reprobe_date_column_resolution_prefers_blank_available_at_2026_08_09.md` (NOT fixed
+      here at the time — separate root cause, separate scope; since fixed + archived, e2e-testing@9c75040). Repo:
+      e2e-testing.
 - [ ] [INFRA] P3. Check whether `uts-prod-dp-manifest-hygiene-changed` and `uts-prod-dp-manifest-hygiene-full` have the
       same unrestricted-columns gap in their own manifest-read call sites — not checked this session. Repo: e2e-testing.
 
@@ -334,6 +335,6 @@ Mechanical, bounded fix — mirror the already-proven `daily_digest.py` pattern:
      `SOURCE_RETURNED_ZERO` population (step 1 above) still exists in the manifest and will surface once that separate
      bug is fixed. **This CODE P1 todo's own scope — fix the OOM so reprobe completes — is fully done and
      live-verified.**
-  7. **Sibling date-column bug (referenced above) is now fixed** —
-     `/plans/active/issues/reprobe_date_column_resolution_prefers_blank_available_at_2026_08_09.md`, e2e-testing@9c75040
-     (doc archived in a follow-up commit).
+  7. **Sibling date-column bug (referenced above) is now fixed + archived** —
+     `/plans/archive/2026_08/issues/reprobe_date_column_resolution_prefers_blank_available_at_2026_08_09.md`,
+     e2e-testing@9c75040.

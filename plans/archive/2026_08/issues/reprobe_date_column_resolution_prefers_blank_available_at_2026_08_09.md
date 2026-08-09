@@ -14,7 +14,7 @@ summary: >-
   every day, even after the OOM is fixed. `written_at` (last in the priority tuple, correctly populated with a real
   timestamp — e.g. `2026-07-28T00:24:48...+00:00`) is the column that actually reflects "when this row was written", but
   never gets picked because `available_at` is present (just empty) and short-circuits the `next(...)` lookup.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -42,7 +42,6 @@ execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true
 ---
 
 # reprobe's date-column resolution prefers a blank `available_at` over a populated `written_at`
