@@ -56,7 +56,6 @@ source: >-
   Audit Logs + Cloud Run revision/traffic inspection, fixed live (traffic released) and in code (canary-deploy.sh
   alert), documented in codex + CLAUDE.md. Operator then asked "did you file this in doc" after I flagged the Slack
   routing as a real follow-up rather than faking it — this doc is that filing.
-assigned_role: infra
 locked_by:
 locked_since:
 supersedes:
