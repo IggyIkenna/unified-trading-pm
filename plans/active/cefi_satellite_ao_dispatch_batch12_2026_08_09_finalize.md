@@ -82,12 +82,16 @@ context_scope:
       batch12 todo 3 — confirmed via `git log` on `origin/live-defi-rollout`
       (`ae682c7b99 docs(plans): archive cefi_content_migration_shard24_early_preemption_false_page — all todos     resolved`);
       doc's remaining-open count = 0 (fully resolved, archived). No further action needed on (3).
-- [ ] [REVIEW] P2. **Re-check `issues/mdps_features_deadcode_consolidation_2026_07_20.md`'s remaining open items**
+- [x] ✅ [REVIEW] P2. **Re-check `issues/mdps_features_deadcode_consolidation_2026_07_20.md`'s remaining open items**
       (S1-b, still design-gated by real successor work per batch12's Progress Log; S3-b, still a genuine sports-dual-
       entrypoint design adjudication) for whether either has newly cleared — if S1-b's design question (repoint to
       `launch-features-vm.sh` vs finish the dispatcher branch) has since been ruled on, record it as a batch13
       candidate. **Done when**: both items have a dated re-check note (cleared → next-batch candidate, or still-blocked
-      → unchanged) in this finalize doc's Progress Log.
+      → unchanged) in this finalize doc's Progress Log. — **DONE 2026-08-09T21:47Z**: S1-b CLEARED (dispatcher branch
+      finished + production-verified via unrelated successor work, CEFI+DeFi live 2026-08-07, zero OOM) — flagged as a
+      batch13 citation-reconciliation candidate. S3-b unchanged (no new ruling found on the dual-entrypoint design
+      question). Both dated notes live in the source doc's own Progress Log (see this doc's Progress Log below for the
+      summary + pointer).
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch12_2026_08_09.md`** via the standard 6-step ritual: add the
       archive banner → confirm no new durable contract needs codex-alignment → grep the corpus for every referrer of
       `cefi_satellite_ao_dispatch_batch12_2026_08_09` and repoint each to the archived path → clear `locked_by` (already
@@ -107,3 +111,14 @@ context_scope:
 - **2026-08-09 (review, slot 13)** — todo 1 done. Reconciled all 3 source docs' checkboxes with verified commits (see
   the todo's own `DONE` note above for the per-doc detail). Doc 3 (shard24) turned out already fully reconciled +
   archived by a prior agent before this task picked up — no edit was needed there, only verification.
+- **2026-08-09T21:47Z (review, slot 17)** — todo 2 done. Re-checked both remaining open items in
+  `issues/mdps_features_deadcode_consolidation_2026_07_20.md`. **S1-b — CLEARED, batch13 candidate**: the "finish the
+  dispatcher branch" option was completed via unrelated successor work
+  (`plans/archive/2026_08/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` +
+  `plans/archive/issues/mdps_features_live_streaming_aggregation_never_actually_invocable_2026_08_04.md`, both archived
+  2026-08-07 with every todo done) — CEFI 117-shard + DeFi 3,535-shard `mdps-features-live` production launches both
+  verified RUNNING with zero OOM. Not flipped here (citation-reconciliation + updating the source doc's stale
+  "Recommended (A): delete" section is its own batch13 todo, mirroring this plan's own todo 1 pattern); full evidence +
+  the dated note live on the source doc's todo 2 + Progress Log directly. **S3-b — unchanged, still genuinely blocked**:
+  grepped the corpus for any newer ruling on the sports dual-entrypoint design question — none found, the
+  `launch-features-sports-backfill-vm.sh` DEPRECATION NOTE is unchanged since 2026-05-08.
