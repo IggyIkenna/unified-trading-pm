@@ -153,6 +153,16 @@ wound), but should be tracked rather than silently absorbed.
       `_quarantine/raw_tick_data/` prefix, 2026-07-20 to 2026-07-27) if definitive identification is desired. The
       `_rel()` bug (stripping `_quarantine/` prefix on already-quarantined objects) is a latent correctness issue — file
       as a separate preventative fix. Repo: market-tick-data-service.
+- [ ] [CODE] P3. **Fix the latent `_rel()` prefix-stripping bug** in `migrate_tradfi_canonical_2026_07.py` (line
+      160-163, `path.find("raw_tick_data/by_date/")`) — for an already-quarantined object
+      (`_quarantine/raw_tick_data/by_date/...`), this strips the `_quarantine/` prefix and computes the WRONG
+      bucket-relative path, causing the apply-phase to silently treat the object as `SRC_ALREADY_GONE` instead of
+      correctly identifying it as already-quarantined and skipping it. Confirmed non-destructive today (traced both
+      `A_COPY`/`A_QUARANTINE` code paths — neither deletes on this bug), but it's a real correctness defect, not just
+      cosmetic. Same bug is inherited by `rebundle_tradfi_chains_2026_07.py` (imports `_rel`) — fix both call sites.
+      Repo: market-tick-data-service. **Done when**: `_rel()` correctly detects the `_quarantine/` prefix (e.g. checks
+      for it explicitly before stripping `raw_tick_data/by_date/`), a regression test covers an already-quarantined
+      input path, and `quality-gates.sh` is green on both files.
 
 ## Progress Log
 

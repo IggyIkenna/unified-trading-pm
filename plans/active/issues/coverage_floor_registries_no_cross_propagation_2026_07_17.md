@@ -325,7 +325,17 @@ which value is measured-reality is needed per venue, not a mechanical merge.
 
 - [ ] [DATA] P3. Investigate why read_availability_index(bucket, columns=[...]) returned an empty DataFrame on
       2026-07-27 (flagged 'worth its own follow-up, not chased here').
+- [ ] [DATA] P3. **Re-verify manifest coverage for Hyperliquid 2023-04-15..2023-12-31** once
+      `DEPLOYMENT_COMPLETED exit_code=0` lands for the `cefi-hyperliquid-2023-*` backfill VM (run-id `20260727-071055`
+      was actively advancing through this window as of 2026-07-27T08:37:45Z, ~88s/day — check current run status, it has
+      had 13 days to complete since). Cross-ref: `cefi_hl_aster_batch_data_gaps_2026_06_22.md` (the live parent doc
+      tracking this fleet). Repo: market-tick-data-service.
 
+> **CORRECTED 2026-08-09 (plan_reconciler)**: the 2026-08-06 audit note below was itself already stale — its first named
+> item (read_availability_index empty-DF) IS tracked above; only the second (re-verify manifest coverage) was genuinely
+> prose-only. Converted to a tracked todo per the CLAUDE.md HARD RULE ("every follow-up is a `- [ ]` todo, never
+> prose").
+>
 > **2026-08-06 archive-candidate audit**: Hyperliquid todo's own text flags 'worth its own follow-up, not chased here to
 > stay in scope' (read_availability_index empty-DF) and a second prose-only 'Follow-up: re-verify manifest coverage for
 > 2023-04-15..2023-12-31 once DEPLOYMENT_COMPLETED exit_code=0 lands' — neither became a `- [ ]` todo.
