@@ -196,9 +196,18 @@ not data-pipeline).
 
 ## Todos
 
+> **Dispatch-vs-digest model: A (real todos on the hub itself), not B (a separate `..._aggregated_sources_*` sibling).**
 > Verification-only — measures whether the tranche is actually done, not new work to dispatch (`assigned_vm: NA`, not
 > itself AO-eligible). Added per `issues/autonomous_session_operator_decisions_2026_07_25.md` entry #38, so the next
-> infra audit measures a real covering set instead of re-deriving the same orphan verdict from a zero-todo hub.
+> infra audit measures a real covering set instead of re-deriving the same orphan verdict from a zero-todo hub. Model A
+> was chosen over Model B (the `<ag>_consolidated_closeout_aggregated_sources_*` sibling the 5 AGs use) because this
+> tranche's own Track close-out criteria (below) ARE genuinely hub-owned work (cross-Track verification, not a single
+> source doc's job) — a separate aggregated-sources sibling would just duplicate the Track membership already listed
+> above without adding a distinct role, whereas the 5 AGs' sibling docs exist because their hubs needed a place to list
+> sources SEPARATELY from dispatchable hub-owned work. Re-confirmed still the right model as of 2026-08-09
+> (`infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` todo 3): re-measured, this hub's 3 open Track todos are
+> what keeps `/ag-closeout-audit infra`'s covering-set discovery non-empty; converting to Model B would remove the only
+> hub-owned dispatchable work without adding new coverage.
 
 - [ ] [REVIEW] P2. Track 1 close-out: all CVE remediations landed (aiohttp/vcrpy, setuptools PYSEC-2026-3447,
       execution-service aioresponses migration); codex-violation ratchet green; `scripts/` governance sweep complete; uv
@@ -529,3 +538,16 @@ not data-pipeline).
 - **context-scout 2026-08-07**: refreshed context_scope (5 entries) — swapped the parked-findings pointer from
   `ag_closeout_audit_infra_parked_2026_08_04.md` to the current `ag_closeout_audit_infra_parked_2026_08_07.md` (the
   08-04 doc's findings are now resolved/superseded by later runs; 08-07 reflects this tranche's live unresolved state).
+- **2026-08-09 (review-craft-per-task, `infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` todo 3)** — Made the
+  dispatch-vs-digest model explicit above (was implicit in the operator-decision citation only): **Model A, re-confirmed
+  correct**. No structural change needed — this hub has carried real Track close-out todos since 2026-07-26 (same day
+  batch1 was drafted), so batch1-finalize's own todo 3(b) premise ("carries ZERO todos, orphaned by construction") was
+  already stale by the time it was read, having been drafted from the same-day pre-fix state. Full re-measurement
+  written up in the finalize plan itself (not duplicated here): orphan count dropped from the 2026-07-26 baseline
+  (29/34) to 0 genuinely-untriaged (11 never-cited-by-covering-doc candidates remain, but 7 are cross-tranche
+  ci/defi-owned mistags and 4 are already-carried, reason-stated parked findings, per today's own
+  `ag_closeout_audit_infra_parked_2026_08_09.md`). `check_ag_closeout_linkage.py` re-run fresh: 0 orphans carry
+  `asset_group=[infrastructure]` (28 orphans corpus-wide, all other tranches); both
+  `session_bound_vm_monitoring_ reliability_gap_2026_07_26.md` and `infra_plan_reconcile_parked_decisions_2026_07_26.md`
+  confirmed already registered above (2026-07-27 entry) with proper `[text](path)` links, not bare filenames — no edit
+  needed there.
