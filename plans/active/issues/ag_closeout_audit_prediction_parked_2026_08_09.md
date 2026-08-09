@@ -246,3 +246,26 @@ covers 3a+3b before treating the residual as fully closed.
   `batch10_finalize`), 1 is a genuine bounded verification task (Finding 5: confirm `instruments-service@62a8b1d8`
   covers fixture-pairing parts 3a/3b). The mix of externally-gated items means the whole-doc RECLASSIFY bar is not
   cleared — one bounded item among several genuinely-gated ones does not flip a whole doc. Doc stays NA.
+
+- **2026-08-09, ~08:38 UTC (slot 29, ag_closeout_auditor, dispatch agt-7d56f5) — delta-only re-audit, no new batch.**
+  Re-dispatched same tranche, same day, ~4.7h after the 03:57 UTC run above (per the pre-task plan/issue conflict-check
+  HARD RULE — grepped `plans/active/`+`issues/` before starting and found this doc + `batch10` already covered today;
+  mirrors the `ci` tranche's own same-day "delta-only re-audit, no new batch" precedent, `2916d4c60`). Skipped a second
+  full Phase-1 Workflow fan-out (the 03:57 run's 37-agent pass already cost ~3.39M subagent tokens; re-running it
+  ~5h later against an all-but-unchanged corpus would not be a responsible use of that budget) in favor of the
+  iterative-drain methodology's step 1 — cheap re-verification: (1) `generate_ag_closeout_audit_candidates.py --tranche
+  prediction` fresh: `total_members=38` (was 37), `never_cited=10` (same count as this morning); (2) read every one of
+  the 10 never-cited docs' `asset_group` frontmatter directly (cheaper than 10 fresh classification agents) — all 10
+  carry 4-6 real peer-AG markers (`cefi`/`defi`/`tradfi`/`sports`/`cross-cutting`), none is a single-tranche+cross-cutting
+  mistag shape, confirming the Orthogonality HARD CHECK result is unchanged and all 10 are correctly
+  `exclude_cross_cutting`; (3) `git log --diff-filter=A` since 03:57 today: zero new prediction-tagged docs filed (the
+  38-vs-37 member delta traces to `prediction_cross_venue_arb_and_coverage_2026_07_24.md`'s na-eligibility-audit touch
+  below — confirmed via `git show` a pure prettier re-wrap + a Progress Log append, not a scope/content change); (4)
+  re-read `batch10`'s own `## Deferred` section — all 4 non-batchable items (too-large Phase-B migration,
+  operator-gated dead-code choice, time-gated `sports_master:Group E`, infra/ci-owned tarball race) confirmed unchanged,
+  nothing cleared since batch10 is still `status: draft`/unshipped, so nothing had a chance to drain; (5) confirmed no
+  commits touched any prediction doc between the na-eligibility-audit run (`9de6fa98c`, 06:08 UTC) and now. **Verdict:
+  0 new orphans, 0 new parked findings, no batch11 drafted** (batch10 hasn't been operator-approved or dispatched yet —
+  drafting a successor before anything drains from the current one would be pure churn, not progress, per the skill's
+  own "stop iterating" guidance). This doc's Findings 1-5 and `batch10`'s Deferred section remain the accurate, current
+  state of the tranche. `parked_findings` ledger for this pass: **0** (nothing new to park) == 0 entries added. Balanced.
