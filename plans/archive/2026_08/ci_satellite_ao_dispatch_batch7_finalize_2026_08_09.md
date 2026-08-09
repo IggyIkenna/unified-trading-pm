@@ -57,7 +57,7 @@ context_scope:
 > dispatch-visibility gate" ratchet flags a plan whose only todo just flipped `[x]` as a new zero-dispatchable doc if
 > left `active` — per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "archive immediately" HARD
 > RULE, both this plan and its now-done sibling archive together rather than waiting for a separate future dispatch).
-> Source doc reconciled (`unified-trading-pm@ca4e44528`); batch-7 archived alongside this doc in the same commit set.
+> Source doc reconciled (`unified-trading-pm@1701f692f`); batch-7 archived alongside this doc in the same commit set.
 > Successor: none.
 
 > **🔒 GATED, not draft (historical).** `depends_on: [ci_satellite_ao_dispatch_batch7_2026_08_09]` +
@@ -68,7 +68,7 @@ context_scope:
 
 - [x] ✅ [REVIEW] P1. **Reconcile batch-7 todo 1's source doc.** Batch-7 todo 1 ends with `Source:` naming
       `issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` (Part 8, `[DOC] P2`, "Update stale
-      codex docs"). Flipped that doc's item to `[x]` citing `unified-trading-pm@ca4e44528` (the batch-7 commit that
+      codex docs"). Flipped that doc's item to `[x]` citing `unified-trading-pm@1701f692f` (the batch-7 commit that
       shipped the 3 codex-doc rewrites) — verified as an ancestor of `origin/live-defi-rollout` via
       `git merge-base --is-ancestor` after this session's own quickmerge push (see Progress Log). The source doc's
       overall open-item count is otherwise unchanged — every other open item in that doc remains, all deliberately left

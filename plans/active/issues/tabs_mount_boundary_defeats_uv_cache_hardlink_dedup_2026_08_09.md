@@ -41,6 +41,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 source: [ci_satellite_ao_dispatch_batch6_2026_08_08.md item 10 (agent slot 24, 2026-08-09)]
+depends_on: []
 ---
 
 # .uv-cache sits outside .tabs/'s mount boundary — cache→venv hardlink dedup is still broken despite a prior DONE claim

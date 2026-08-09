@@ -43,6 +43,8 @@ resolved_by:
 locked_by:
 locked_since:
 context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md]
+drift_direction: advance-code
+depends_on: []
 ---
 
 # TradFi Databento account suspended by vendor for non-payment

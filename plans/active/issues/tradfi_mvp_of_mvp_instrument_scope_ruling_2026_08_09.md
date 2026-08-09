@@ -48,6 +48,8 @@ locked_by:
 locked_since:
 context_scope:
   [/plans/active/tradfi_consolidated_closeout_2026_07_18.md, /codex/02-data/tradfi-databento-sourcing-ssot.md]
+drift_direction: advance-code
+depends_on: []
 ---
 
 # TradFi "MVP-of-the-MVP" instrument scope ruling
