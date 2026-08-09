@@ -940,3 +940,9 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   signal used to diagnose all 5 prior deaths) was 29s old — genuinely alive, run.log content lag is just a GCS
   flush-buffering artifact, not a hang. FIXTURE_LINEUPS needed flat again (48,521→48,521, 1st flat tick since real
   movement — not yet 2-consecutive, not concerning) but `run.log` shows live fresh fetches seconds old. Both healthy.
+- **03:46Z — census flat a 2nd consecutive tick (48,521→48,521), confirmed genuinely a consolidator-lag artifact, not a
+  stall.** `run.log` shows explicit NEW `ManifestWriter` writes (`365 new` entries) at `date=2021-02-27`, heartbeat blob
+  essentially live (<1min), zero quota errors — real work is landing in per-VM shards, just not yet reflected in the
+  consolidated manifest the census reads. Going forward: treat `run.log` activity (not the periodic census) as the
+  primary per-tick health signal; use the census for milestone tracking on a longer cadence. smallchunk9 still in chunk
+  26, 34 `CHUNK_FAILED` (in-range), heartbeat ~6.5min old (well within normal). Both healthy, no action.
