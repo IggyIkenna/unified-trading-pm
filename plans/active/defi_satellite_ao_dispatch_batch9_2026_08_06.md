@@ -282,15 +282,20 @@ over all pending draft batches) that independently spot-verified every todo belo
       closing here on health-verified relaunch + confirmed-real early-window evidence, per this todo's own "documented
       reason it still can't [fully] close [yet]" branch; full-range spot-check filed as a new Follow-up P3 todo in the
       issue doc for once the VM completes. Full detail + evidence: issue doc Progress Log entry "2026-08-09 (slot-26)".
-- [ ] [DATA] P2. **Verify todo 9's deferred smoke-fetch + capture-cycle confirmation**: run a live smoke-fetch of
-      `load_pool_metadata_for_date`/`risk_params_from_catalogue` for solend and marginfi (SOLANA) against the production
-      instrument_availability bucket, and check `read_availability_index` on the DeFi manifest for `risk_params`/venue
-      in [SOLEND-SOLANA, MARGINFI-SOLANA] to confirm `capture_status=captured`, `row_count>0` on or after the next daily
-      capture cycle following `market-tick-data-service@d5882379` (2026-08-05); if still zero-row/absent, file the root
-      cause as a new finding. Repo: market-tick-data-service. Source:
-      `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` (todo 9(b-c)). Done when: both
-      protocols show a verified real (non-catalogue-unreachable) `row_count` in the live manifest, or a new blocking
-      finding is filed.
+- [x] ✅ [DATA] P2. **DONE 2026-08-09 (slot-28, data_engineering)** — Verify todo 9's deferred smoke-fetch +
+      capture-cycle confirmation: ran a live smoke-fetch of `load_pool_metadata_for_date`/`risk_params_from_catalogue`
+      for solend and marginfi (SOLANA) against the production instrument_availability bucket — **PASSED**, real
+      non-empty rows (54-56/day) confirmed 2026-08-04 through 2026-08-09. Checked `read_availability_index` on the DeFi
+      manifest for `risk_params`/venue in [SOLEND-SOLANA, MARGINFI-SOLANA] (+ legacy bare [SOLEND, MARGINFI]) — **still
+      zero-row/absent** (MARGINFI stuck `empty_confirmed`/`row_count=0` since 2026-08-01; SOLEND has zero manifest rows
+      since 2026-07-01). Filed the root cause as a new finding per this todo's own done-when: traced to an
+      already-tracked deploy-lag (canonical-venue fix `bd153821` + `d5882379` both landed in git 2026-08-05, but the
+      risk_params daily Cloud Run Job was only reprovisioned 2026-08-09T14:06 UTC and its `:latest` image only picked up
+      both fixes as of 2026-08-09T22:28 UTC) rather than a new mystery — full evidence + a new dated P2 re-check
+      follow-up (gated on the 2026-08-10T00:50 UTC cron cycle) in
+      `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` (Follow-ups section). Repo:
+      market-tick-data-service (read-only verification, no code changed). Source:
+      `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md` (todo 9(b-c)).
 - [ ] [UAC] P2. **Delete the orphaned AAVE_V3 `rewards` seed entry** at `defi_prediction_instrument_seeds.py:153` and
       the `rewards` entries for all 10 AAVE_V3 chains in `defi_venue_capabilities.py`, completing the
       `bc397b93`-precedent cross-surface cleanup for the AAVE `rewards`/`collect-rewards` removal already shipped at
