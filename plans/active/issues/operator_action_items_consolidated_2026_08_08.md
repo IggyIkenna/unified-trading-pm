@@ -131,8 +131,9 @@ pull any specific checkout's full table back up if you want it before deciding.
       recommendation. Full ruling + a mixed-eligibility cleanup found while reclassifying the doc for AO dispatch are
       recorded there, not re-litigated here. Nothing shipped yet — implementation is now AO-dispatchable
       (`assigned_vm: planning`), not hand-implemented in this pass (highest-blast-radius fleet CI gate).
-- [x] ✅ [DOCS] P3. **See `plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md` —
-      RULED 2026-08-09.** Bridge the gates (option A). Full ruling + a newly-found conflict with an unproven
+- [x] ✅ [DOCS] P3. **See
+      `plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md` — RULED
+      2026-08-09.** Bridge the gates (option A). Full ruling + a newly-found conflict with an unproven
       backfill=paper=live precondition are recorded there, not re-litigated here.
 
 ## 5. Permanent hard-stops (not time-sensitive, listed for completeness)
@@ -165,4 +166,4 @@ pull any specific checkout's full table back up if you want it before deciding.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
 - **2026-08-09 (operator ruling)**: the Finding E-1 item above was ruled — bridge the gates (option A). Marked done here
   as a pointer; full ruling recorded in
-  `plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`.
+  `plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`.

@@ -18,7 +18,7 @@ tags: [operator-ruling, evidence, plan-hygiene, quality-gates, findings-triage]
 related:
   [
     /plans/archive/2026_08/issues/ao_round5_apply_session_rulings_untraceable_blocks_quickmerge_2026_08_08.md,
-    /plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
+    /plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
     /plans/archive/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
   ]
 created: 2026-08-08
@@ -52,7 +52,7 @@ regardless of what they changed. Details:
 **What this doc does and does not settle.** It settles _traceability_: a reader can now find every ruling in one place
 and see exactly which todo claims it. It does **not** settle _authenticity_ — only the operator can confirm these were
 really issued as quoted. That distinction is the whole point of the gate
-(`/plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md` is the precedent: an
+(`/plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md` is the precedent: an
 unsourced ruling citation is ambiguous between a missing-citation bug and a worker overriding an `[OPERATOR]` gate, and
 a third party cannot tell which from the outside). The confirmation todo below stays open until the operator answers.
 
@@ -113,5 +113,5 @@ cannot be audited for completeness.
   go-ahead to fix blocking issues in other plans. Deliberately scoped to transcription: the six rulings are copied
   verbatim from their citing todos and each is attributed to the citing doc + line, so this adds traceability without
   adding authority. Authenticity confirmation is tracked as the open `[OPERATOR]` todo above rather than assumed — per
-  `/plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`, an agent inventing a
-  plausible source for someone else's ruling is the exact failure the evidence gates exist to catch.
+  `/plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`, an agent inventing
+  a plausible source for someone else's ruling is the exact failure the evidence gates exist to catch.

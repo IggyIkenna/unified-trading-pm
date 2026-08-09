@@ -24,7 +24,7 @@ related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch13_finalize_2026_08_09.md,
     /plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md,
-    /plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
+    /plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-09"
@@ -48,7 +48,7 @@ context_scope:
   [
     /plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md,
     scripts/quality_gates/check_plan_operator_ruling_evidence.py,
-    /plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
+    /plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
   ]
 source: >-
   `/ag-closeout-audit ao` Phase 1 run, 2026-08-09 (autonomous, scheduled dispatch `agt-41d860`, slot 10) — see

@@ -19,7 +19,7 @@ summary: >-
   mention of E-1 at all. This is the same finding-class as mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md
   (false/unsourced completion evidence) but for a decision citation rather than a commit SHA — filed per that same
   precedent's findings-triage requirement, not silently absorbed.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -46,12 +46,11 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: none
 depends_on: []
-resolved_by:
+resolved_by: unified-api-contracts@a0c88ce3 + execution-service@fb132832 (tradfi venue allow-list bridge, guard active)
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
-archive_exempt: true
 source:
   "Found while cross-checking Finding E-1's [OPERATOR] status during a 2026-08-03 sweep closing out deferred audit items
   — Finding E-1 had been flipped by slot-9 minutes before this check, unsourced."
@@ -63,6 +62,11 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-09** — every todo resolved. Both operator rulings applied, the AO-dispatchable bridging
+> implemented + shipped (`unified-api-contracts@a0c88ce3` + `execution-service@fb132832`, guard still active pending the
+> backfill=paper=live proof). Original path:
+> `plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`.
 
 # Finding E-1's "operator ruling" citation has no traceable source
 

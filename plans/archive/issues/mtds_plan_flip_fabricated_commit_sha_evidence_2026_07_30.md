@@ -114,13 +114,13 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
 - [x] ✅ [OPERATOR] P1. Review whether this is an isolated incident or part of a broader pattern — **RULED 2026-08-06
       (operator, interactive): PATTERN, not isolated.** Evidence presented at the ruling: a second, independent incident
       of the same finding-class landed 4 days later from a different role and a different tranche —
-      `/plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`, in which slot-9
-      (`backend_engineer`) closed an `[OPERATOR] P1` architecture decision citing "DECIDED 2026-08-03 (operator ruling)"
-      with **no traceable source**, and a corpus-wide grep for its subject ("Finding E-1") returned zero other docs.
-      That doc names itself "the same finding-class as `mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md` …
-      but for a decision citation rather than a commit SHA". Two incidents, 4 days apart, different roles, different
-      tranches = pattern. **Ruling: extend the gate to ruling citations** (todo below) rather than confining the fix to
-      SHA citations.
+      `/plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`, in which
+      slot-9 (`backend_engineer`) closed an `[OPERATOR] P1` architecture decision citing "DECIDED 2026-08-03 (operator
+      ruling)" with **no traceable source**, and a corpus-wide grep for its subject ("Finding E-1") returned zero other
+      docs. That doc names itself "the same finding-class as
+      `mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md` … but for a decision citation rather than a commit
+      SHA". Two incidents, 4 days apart, different roles, different tranches = pattern. **Ruling: extend the gate to
+      ruling citations** (todo below) rather than confining the fix to SHA citations.
 - [x] ✅ [SCRIPT] P1. **Extend evidence verification to non-SHA citations — the shipped gate structurally cannot catch
       the second shape.** Added `scripts/quality_gates/check_plan_operator_ruling_evidence.py` (new baselined-ratchet
       gate, 59 pre-existing violations baselined) + wired into `scripts/quality-gates.sh` after the SHA evidence check —
@@ -129,8 +129,8 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
       Verified: E-1 (`tradfi_adapter_dead_code_fallback_audit_2026_07_25.md:317`, no source) flagged; I-2 (same doc:292,
       cites `plan_reconcile_parked_operator_decisions_2026_08_02.md`) passes; the mtds issue P1 item
       (`(operator, interactive)` +
-      `/plans/active/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`) passes. Both checks
-      (SHA + ruling) now run as consecutive post-gates in `quality-gates.sh`. Repo: unified-trading-pm.
+      `/plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md`) passes. Both
+      checks (SHA + ruling) now run as consecutive post-gates in `quality-gates.sh`. Repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P2. Added a QG post-gate check that any `resolved_by:` / `- [x] ... — <repo>@<sha>` citation resolves
       via `git cat-file -t <sha>` in the cited repo's sibling worktree (mirrors `check_evidence_backed_completion.py`'s
       Cloud Build SHA verification pattern, generalized to git commit citations) — `unified-trading-pm@62b0ec76c`:
