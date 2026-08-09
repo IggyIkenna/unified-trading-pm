@@ -148,11 +148,13 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
       writeup + evidence; every cause is already tracked (and several already fixed) as its own open/resolved issue doc
       (cross-linked above in `related:`) — no new issue filed, per the done_definition's "or filed as its own more
       specific issue" branch (already satisfied by the existing docs).
-- [ ] [DATA] P1. **Root-cause the 0.00% `futures_chain` coverage for BINANCE-FUTURES (228 attempted_failed) and BYBIT
-      (1,251 attempted_failed)** — every attempt failed, 0 captured, 0 expected_unattempted. Check the adapter/endpoint
-      for a broken auth path, changed API contract, or misrouted request. Repo: market-tick-data-service. **Done when**:
-      root cause identified + fixed (or filed separately if genuinely large), and a sample re-attempt for each venue
-      captures successfully.
+- [x] ✅ [DATA] P1. **DONE 2026-08-09 (slot-15, data_engineering)** — Root cause was FIVE compounding bugs in the
+      canonical-write-only path (`TardisAdapter.finalise_and_write_cefi_shards`, used by the futures_chain
+      per-instrument fan-out since Tardis has no working grouped endpoint for it), not a broken auth path/endpoint —
+      every attempt reached Tardis fine; the manifest-write side silently misrouted or crashed after. All 5 fixed;
+      end-to-end verified (real `PartitionedTickWriter` through the real `venue_fetch`/`manifest_finalize` chain, only
+      the GCS byte-write stubbed — no live Tardis credentials in this environment) for BINANCE-FUTURES linear, BYBIT
+      linear, and BYBIT inverse. Full writeup + files + tests in Progress Log below. market-tick-data-service@e24199df.
 - [x] ✅ [DATA] P1. **DONE 2026-08-09 (slot-12, data_engineering)** — Confirmed: **scope matches (all 6 venues + both
       data_types are in the backfill's `heavy|trades;book_snapshot_5` bucket), timing does not** (chronological walk
       from 2019-01-01 is only ~1.5-17% through its ~2769-day span after 8 relaunches over 13 days — reaching 2024-2026
@@ -167,6 +169,16 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
       once items 1 and 3 above determine whether this is a live-capture fix, a historical backfill, or both. Repos:
       deployment-service (VM launch), market-tick-data-service. **Done when**: a re-run of this same window-scoped
       measurement shows OKX-SPOT and BYBIT `trades`/`book_snapshot_5` coverage materially improved (cite the new %).
+- [ ] [DATA] P2. **Audit whether the SAME canonical-write-only manifest-routing bugs fixed for item 2 above (itype-
+      vocabulary mismatch in `record_shard_count`/`record_instrument`, the UAC-vocabulary-mismatched
+      `BUNDLED_DATA_TYPES` manifest gate, missing cluster/envelope bookkeeping — all fixed in
+      market-tick-data-service@e24199df) also affect OTHER CeFi venues' options_chain/futures_chain shards written via
+      `TardisAdapter.finalise_and_write_cefi_shards`** (e.g. DERIBIT, if/when its options_chain capture ever falls back
+      to this per-instrument path instead of Tardis's working grouped `OPTIONS.csv.gz` bulk endpoint — this issue only
+      measured OKX/BINANCE/BYBIT, DERIBIT's own honest-coverage was out of scope here). Repo: market-tick-data-service
+      (read-only audit + a window-scoped honest-coverage re-measurement for DERIBIT/other affected venues if found).
+      **Done when**: confirmed either (a) no other venue currently exercises this path for a chain-bundle itype in
+      practice, or (b) a follow-up fix/todo is filed (own issue doc) for any venue found to be affected.
 
 ## Progress Log
 
@@ -250,3 +262,79 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
      to `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`'s own Progress Log, same session, flagging that
      its open preflight-bug + backfill-verification todos also gate this P0 backtest-fidelity blocker, not just its
      original contamination-plan scope.
+
+- **2026-08-09 (slot-15, data_engineering)** — item 2 (`futures_chain` 0.00% for BINANCE-FUTURES/BYBIT), root-caused +
+  fixed. **Not** a broken auth path or changed API contract per the todo's own hypothesis — every Tardis fetch reached
+  the vendor and returned real rows; the failure was entirely on the manifest-write side, after a successful GCS
+  persist. Found via direct execution tracing (real functions, synthetic data — no live Tardis credentials in this
+  sandboxed dev environment), not log-reading, since the manifest doesn't record which of these mechanisms produced a
+  given `attempted_failed` row. Five compounding bugs, all in the canonical-write-only path
+  (`TardisAdapter.finalise_and_write_cefi_shards` → `_write_one_cefi_shard`, used by the futures_chain per-instrument
+  fan-out in `_download_futures_per_instrument` since Tardis has no working grouped `FUTURES.csv.gz` endpoint):
+  1. **Itype-vocabulary mismatch** — `record_shard_count`/`record_instrument` passed the raw `InstrumentType` enum value
+     ("FUTURE"/"OPTION") instead of the wrapper string ("futures_chain"/"options_chain") `shard.path` actually encodes.
+     `venue_fetch._record_venue_shard_counts`'s `is_derivative` check only recognises the wrapper strings, so every such
+     shard was misclassified as a plain single-instrument shard — its "underlying" grouping discarded, `instrument_id`
+     set to the bare underlying token ("BTC") canonicalised as if it were a raw symbol.
+  2. **`BUNDLED_DATA_TYPES` gate mismatch** — `manifest_finalize._write_shard_counts_to_manifest` additionally required
+     `data_type_key in BUNDLED_DATA_TYPES` (a UAC registry —
+     `unified_api_contracts.canonical.crosscutting. _honest_coverage_clusters` — where `options_chain`/`futures_chain`
+     are literal `data_type` values, alongside
+     `prediction_canonical_question_group`/`sports_fixture_bundle`/`event_contract`). CeFi ALWAYS normalises the chain
+     wrapper's `data_type` to its real schema value ("trades") before writing — `TardisAdapter._canonical_data_type`'s
+     documented, tested contract — which is never itself a `BUNDLED_DATA_TYPES` member. This made the bundle manifest
+     path (`_write_bundle_shard_row`) structurally unreachable for EVERY CeFi Tardis chain-bundle shard, independent of
+     bug 1. Fix: dropped the redundant clause — `itype_key in _UNDERLYING_PARTITIONED_TYPES and itype_key != "combo"`
+     already fully identifies a chain-bundle shard on its own.
+  3. **Missing cluster/envelope bookkeeping** — the canonical-write-only path never populated `cluster_counts` /
+     `chain_available_at_envelope` at all (only the live `write_chunk` path did), so even a correctly-routed shard's
+     manifest row hit `record_failed(error="missing_available_at_envelope")` unconditionally. Fix: new
+     `PartitionedTickWriter.record_cluster_count` (via a `ClusterBookkeepingMixin`, split into
+     `engine/orchestrator/_cluster_bookkeeping.py` — `partitioned_writer.py` was already at the 900-line file-size
+     ratchet cap), called from `_write_one_cefi_shard` alongside the existing `record_shard_count`/`record_instrument`.
+  4. **Wrong cluster-bucket derivation** — the futures_chain cluster key used raw symbols instead of front/back/spread
+     (`FUTURES_CHAIN_BUCKETS`). UAC's `futures_expiry_bucket`/`parse_futures_expiry` only recognise CME-style month-code
+     symbols (`ESM6`) and treat ANY "-" as a calendar-spread marker before even trying to parse it — every CeFi
+     dated-future symbol uses "-"/"_" as its OWN date separator (Binance `BTCUSDT_250627`, Bybit `BTC-07FEB25`/
+     `BTCUSDT-26DEC25`, OKX `BTC-USD-260403`). Fix: new standalone leaf module
+     `market_tick_data_service/cefi_futures_chain_symbology.py` (no imports from `engine`/`market_interface` —
+     `engine.orchestrator`'s own package `__init__.py` transitively imports `market_interface`, so a reverse import from
+     `market_interface` back into any `engine.orchestrator` submodule closes an import cycle; confirmed by hitting it
+     while wiring this up) with a CeFi-aware bucketer, used by both `partitioned_writer.py` (live path) and
+     `tardis_cefi_shards.py` (canonical-write-only path).
+  5. **Expiry-derivation fallback gap** — `tardis_shared._populate_chain_fields`'s futures_chain branch only tried the
+     Deribit/Bybit DDMMMYY-shape parser (`parse_deribit_future_symbol`), never Binance's underscore-YYMMDD shape,
+     leaving `expiry_date` as `pd.NaT` (not absent) for Binance symbols. Because pandas `NaT` satisfies
+     `isinstance(_, datetime.date)`, `derive_row_instrument_id`'s OWN already-correct 3-tier fallback (which reads
+     `row.get("expiry_date")` first) never even ran its `if expiry is None` gate — the `NaT` propagated uncaught into
+     `expiry_date.strftime(...)`, crashing every BINANCE-FUTURES multi-symbol bundle (2+ active quarterly contracts —
+     the normal case, confirmed live Binance USDⓈ-M convention) inside `finalise_rows_and_path`, before ever reaching
+     bugs 1-4. Bybit was unaffected by this specific bug (its DDMMMYY shape already parses via the Deribit-shaped
+     regex). Fix: extended `_populate_chain_fields`'s fallback chain to match `derive_row_instrument_id`'s own tiers
+     (`_parse_numeric_futures_expiry` → `_parse_month_code_futures_expiry`, both already existed + already imported,
+     just never called from this second, independent derivation site).
+
+  **Verification** (no live Tardis credentials in this sandboxed dev environment — direct execution of the real
+  production functions with synthetic input rows is the closest available substitute for "a sample re-attempt captures
+  successfully"): built a real `PartitionedTickWriter` + called the real `TardisAdapter.finalise_and_write_cefi_shards`
+  → real `venue_fetch._record_venue_shard_counts` → real `manifest_finalize._write_shard_counts_to_manifest`, for
+  2-symbol (front+back quarterly) futures_chain bundles on BINANCE-FUTURES linear, BYBIT linear, and BYBIT inverse (all
+  3 documented `derive_settlement_dimensions` margin conventions this task's 2 venues actually use) — every scenario now
+  reaches `record_captured_from_counts` with `observed_clusters={"front": 1, "back": 1}` and the correct
+  `underlying`/`quote_asset`/`margin_type`/`instrument_id` shape, never `record_failed` and never a misrouted `.add()`.
+  Regression-tested with 1 new unit test file (`test_cefi_futures_chain_symbology.py`) + additions to 3 existing test
+  files (cluster-bucketing, the id-derivation crash, and the full manifest-routing chain) + 1 pre-existing test fixed
+  (`test_orchestrator_shard_key_per_instrument. py::test_derivative_emits_bundled_underlying_row` asserted on the OLD,
+  bug-2-shaped `.add()` routing for a DERIBIT options_chain shard — updated to assert on `record_captured_from_counts`
+  instead, which is what a genuine derivative bundle with real cluster/envelope bookkeeping now correctly reaches). Full
+  local `quality-gates.sh` green (10,353 tests passed, 0 failed). **Filed a new P2 follow-up todo above**: bugs 1-3 are
+  NOT futures_chain- specific — they're bugs in the shared canonical-write-only manifest-routing infrastructure any CeFi
+  options_chain/futures_chain shard would hit via this exact code path; this issue only measured OKX/BINANCE/BYBIT, so
+  whether any OTHER venue (DERIBIT, most plausibly) is also silently affected is unconfirmed and worth a follow-up
+  audit, per CLAUDE.md's "big finding... NOTIFY OPERATOR + issue doc" — flagging it here rather than silently absorbing
+  it as out-of-scope.
+
+  Files changed (market-tick-data-service@e24199df): `engine/orchestrator/manifest_finalize.py`,
+  `engine/orchestrator/partitioned_writer.py`, `engine/orchestrator/_cluster_bookkeeping.py` (new),
+  `market_interface/adapters/cefi/tardis_shared.py`, `market_interface/adapters/tradfi/tardis_cefi_shards.py`,
+  `cefi_futures_chain_symbology.py` (new), + the 4 test files above.
