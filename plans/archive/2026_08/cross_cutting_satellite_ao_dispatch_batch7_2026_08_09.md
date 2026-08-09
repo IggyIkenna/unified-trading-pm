@@ -11,7 +11,7 @@ summary: >-
   now-fixed `_poll_wall_resolution` false-resolution bug, now that the code fix has landed
   (`agent-orchestrator@884a9bfe1`). The doc's whole-doc RECLASSIFY bar stays unmet — its sibling `[OPERATOR] P1` todo
   (confirm/relaunch the DP-VM-003 stalled backfill VM) is a genuine operator-tagged item, not extracted here.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,7 +21,7 @@ tags: [cross-cutting, ao-dispatch, close-out, batch-7, satellite-docs, agent-ope
 related:
   [
     /plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md,
+    /plans/active/issues/qg_v2_green_false_resolution_historical_sample_audit_unverified_dp_gaps_2026_08_09.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"
@@ -32,7 +32,6 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.24
-archive_exempt: true
 locked_by:
 locked_since:
 supersedes:
@@ -52,6 +51,10 @@ drift_direction: advance-code
 ---
 
 # Cross-cutting satellite AO batch 7 (agent_operating_framework_master) — bounded-item extraction
+
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE (sole todo `[x]`, unlocked).** Successor: none — this batch's finding is carried
+> forward by
+> [`qg_v2_green_false_resolution_historical_sample_audit_unverified_dp_gaps_2026_08_09.md`](/plans/active/issues/qg_v2_green_false_resolution_historical_sample_audit_unverified_dp_gaps_2026_08_09.md).
 
 > **Status: active.** Single-todo batch — exempt from the finalize-twin requirement per
 > `check_finalize_plan_coverage.py`'s single-open-todo carve-out; archival folds into this todo's own done-when.
@@ -102,3 +105,6 @@ drift_direction: advance-code
   `check_archive_candidates --only` vs. never-combine-flip-and-mv conflict documented in
   `archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`. Dropped again in the immediately
   following archival commit (moot once the doc leaves `plans/active/`).
+- **2026-08-09 (slot-22, backend_engineer)**: Archival commit — `status: active` → `complete`, `archive_exempt:` key
+  removed (moot), archived banner added, `related:` self-reference repointed to the filed findings doc, `git mv` to
+  `plans/archive/2026_08/`. Corpus-wide referrer sweep found no other doc citing this plan's path.
