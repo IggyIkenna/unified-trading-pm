@@ -216,14 +216,21 @@ drift_direction: advance-code
       does not increase 429s (the RapidAPI 4 req/s limit is per-ACCOUNT, not per-worker — cap total concurrent requests
       across all workers, not per-worker). Done when: a backfill run shows reduced wall-clock time with no increase in
       429 rate. Repo: instruments-service (SFI adapter) + market-tick-data-service (sports orchestration).
-- [ ] [SCRIPT] P2. **`launch-sfi-backfill-vm.sh` must DEFAULT SFI to a single stream (or refuse `--chunks N>1`).**
+- [x] ✅ [SCRIPT] P2. **`launch-sfi-backfill-vm.sh` must DEFAULT SFI to a single stream (or refuse `--chunks N>1`).**
       Source: same doc. The RapidAPI key's 4 req/s limit is PER-ACCOUNT, not per-VM — N parallel chunks just multiply
       429 collisions (measured: 4-chunk-parallel sharing one key produced WORSE aggregate throughput than one clean
       stream). The `sfi_chunk_parallel_backfill_2026_04_22` plan's premise (independent per-chunk rate budgets) is
       invalid for a shared key and should be treated as superseded. Optionally tighten the per-instance pace 0.34s→0.25s
       to use the full 4/s on the single stream. Done when: the launcher script either defaults to a single stream or
       hard-refuses `--chunks N>1`. Repo: deployment-service (launcher) + instruments-service (`soccerfootball_info.py`
-      `_min_request_interval`).
+      `_min_request_interval`). **STALE FINDING — already fixed pre-audit.** Verified 2026-08-09:
+      `launch-sfi-backfill-vm.sh` has hard-refused `--chunks N>1` (exact same rationale — per-account rate limit, 429
+      collision storms) since `deployment-service@51cbacd9` (2026-06-19), which predates this residuals doc's 2026-07-24
+      source scan. The `--chunks` flag now only accepts `1`/unset; any `N>1` exits 1 with the refusal message; `CHUNKS`
+      is unconditionally forced to `""` afterward so the dead chunked-fan-out code path below it never executes. No code
+      change needed — flipping as already-shipped, not re-implementing. The optional pace tighten (0.34s→0.25s) was NOT
+      applied (still 0.34s in `soccerfootball_info.py:43`) — left as-is since it's explicitly optional and outside this
+      item's done-when.
 - [ ] [SCRIPT] P3. **`launch-mtds-prediction-backfill-vm.sh` singleton lock must be per-venue.** Source: same doc. The
       lock currently matches `^mtds-prediction-`, so a KALSHI run is blocked by a concurrent POLYMARKET run even though
       they hit different APIs with no shared rate limit. Make the lock per-venue (`^mtds-prediction-{venue}-`);
