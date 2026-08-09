@@ -172,6 +172,17 @@ transcript available in that session's Progress Log entry on
       recoverable, else quarantine/delete per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`), gated on the
       two todos above. (repo: instruments-service / market-tick-data-service). **Done when**: a fresh scoped check of
       the affected (day, pipeline_mode, entity) triples returns 0 schema-mismatched objects.
+- [ ] [SCRIPT] P2. `deployment-service/scripts/vm/lib/launcher_common.sh`'s `lc_verify_setup_script_freshness()`
+      defaults to `LC_SETUP_SCRIPT_FRESHNESS=warn`, which lets a Pattern-A VM boot and fetch a stale GCS-published
+      `setup-data-pipeline-vm.sh` even when the fix already landed in git — the exact race that hit this issue's own
+      relaunch #1 (`sports-schema-census-instruments-store-20260809-222731`, same
+      `VM_TASK=sports-schema-census has no dedicated dispatch branch` error recurring after the dispatch-branch fix was
+      already shipped and pushed). Same failure class as the prior-documented incident
+      `defi_morpho_lending_indices_never_wired_2026_07_12.md`. Discovered 2026-08-09 (slot-16) — worked around this
+      session by passing `LC_SETUP_SCRIPT_FRESHNESS=enforce` explicitly on relaunch. (repo: deployment-service). **Done
+      when**: either the default mode is reconsidered (`warn`→`enforce` or `auto`) with the tradeoffs documented, or
+      every fix-then-relaunch call site across `scripts/vm/launch-*.sh` is audited for whether it should pass
+      `LC_SETUP_SCRIPT_FRESHNESS=enforce` explicitly rather than relying on the silent-warn default.
 
 ## Progress Log
 
@@ -308,4 +319,22 @@ transcript available in that session's Progress Log entry on
   (`fix(vm): add missing VM_TASK=sports-schema-census dispatch branch`) — full `quality-gates.sh` green (286s, sentinel
   `b95410648ddb3229a70f08dfb8a540868a007847`) before shipping; quickmerge push confirmed landed on
   `origin/live-defi-rollout` (`git rev-list --count origin/live-defi-rollout..HEAD` = 0, working tree clean).
-  Relaunching `instruments-store` next.
+
+  **Relaunch #1 (`sports-schema-census-instruments-store-20260809-222731`) hit a SECOND, unrelated failure**: identical
+  `VM_TASK=sports-schema-census has no dedicated dispatch branch` error, despite the fix being landed in git. Root
+  cause: `deployment-service/scripts/vm/lib/launcher_common.sh`'s `lc_verify_setup_script_freshness()` — the pre-launch
+  guard against the exact "GCS-published `setup-data-pipeline-vm.sh` is stale relative to the just-landed fix" race
+  (documented precedent: `defi_morpho_lending_indices_never_wired_2026_07_12.md`) — defaults to
+  `LC_SETUP_SCRIPT_FRESHNESS=warn`, which prints a warning but never blocks the launch. The VM booted and fetched the
+  GCS-hosted startup script before its publish had caught up to `9ad75ec3`, so it ran the pre-fix dispatch logic and hit
+  the same `SETUP FAILED rc=1` self-delete at 2026-08-09T22:31:10Z (confirmed via `gcloud logging read` on the
+  instance's serial-port log — the VM was already gone by the time the watchdog checked,
+  `gcloud compute instances describe` returned "not found"). No data written (same as the first failure — dies during
+  dependency install). **Fixed by**: re-verified `gcloud storage hash` (local) vs
+  `gcloud storage objects describe --format=value(md5Hash)` (GCS) — hashes matched once the earlier republish caught up
+  — then relaunched with `LC_SETUP_SCRIPT_FRESHNESS=enforce` explicitly set, which succeeded:
+  `sports-schema-census-instruments-store-20260809-224053` created and RUNNING, watchdog armed (bounded, ≤27min). **Open
+  follow-up**: `warn` as the default mode for `lc_verify_setup_script_freshness` lets exactly this race recur for every
+  OTHER Pattern-A launcher too (fix landed in git ≠ fix live on the GCS-hosted startup script) — worth a todo to
+  reconsider the default, or at minimum to make every fresh-fix relaunch pass `LC_SETUP_SCRIPT_FRESHNESS=enforce`
+  explicitly rather than relying on the warn-mode default.
