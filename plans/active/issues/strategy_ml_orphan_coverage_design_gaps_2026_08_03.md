@@ -153,11 +153,19 @@ just (c).
       `ml_predictions`/`strategy_instructions` fixes) OR delete the dead code
       (`CloudStrategyStorage.store_positions`/`store_pnl`, `store_orders_batch`, `OrderBatchStorage`) as tech debt.
       Repo: strategy-service. Only once resolved does an orphan sweep for this family become meaningful to build.
-- [ ] 2. [OPERATOR] P2. Decide whether `backtest_results` should get a manifest-WRITE design (new
+      **DECIDED (2026-08-05, operator, BLK-75060009): wire up** — but only the orphan-sweep-extension half shipped (todo
+      4, `strategy-service@4733a7e7`); the "real caller + deployment config" wiring and the PATH_REGISTRY divergence fix
+      this todo also asks for are NOT yet done (verified 2026-08-09, plan_reconciler — no further commit found). Stays
+      open for that remaining scope; not a fresh operator decision anymore, just execution.
+- [x] ✅ 2. [OPERATOR] P2. ~~Decide whether `backtest_results` should get a manifest-WRITE design (new
       `data_type=backtest_results` keyed by `(strategy_id, run_id)`) or is intentionally out of the
-      availability-manifest's scope. Repo: strategy-service.
-- [ ] 3. [OPERATOR] P2. Decide whether `ml_models`/`ml_model_metadata`/`ml_training_artifacts` should get a
-      manifest-WRITE design (keyed by `model_id`) or are intentionally exempt. Repo: ml-service.
+      availability-manifest's scope. Repo: strategy-service.~~ **DECIDED (2026-08-05, operator, BLK-75060009):
+      ephemeral, no sweep** — no manifest-WRITE design needed. Decision recorded in this doc's own Progress Log but the
+      checkbox was never flipped (found 2026-08-09, plan_reconciler).
+- [x] ✅ 3. [OPERATOR] P2. ~~Decide whether `ml_models`/`ml_model_metadata`/`ml_training_artifacts` should get a
+      manifest-WRITE design (keyed by `model_id`) or are intentionally exempt. Repo: ml-service.~~ **DECIDED
+      (2026-08-05, operator, BLK-75060009): ephemeral, no sweep** — exempt from the manifest-WRITE design. Decision
+      recorded in this doc's own Progress Log but the checkbox was never flipped (found 2026-08-09, plan_reconciler).
 - [x] ✅ 4. [SCRIPT] P3. Once any of todos 1-3 resolves toward "wire it up", build the corresponding orphan-sweep
       extension — strategy-service@4733a7e7 (extend `strategy_orphan_sweep.py` for orders/positions/pnl and/or
       backtest_results; `ml_orphan_sweep.py` for models/metadata/training_artifacts) mirroring the A-E taxonomy pattern.

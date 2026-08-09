@@ -255,7 +255,8 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       (`sanitize_file_stem`). Migration population measured 0 (§ 6.1a); reader tolerates the legacy form (§ 6.1b).
 - [x] [SERVICE] P0. Remove the silent `build_instrument_id(venue, itype, symbol)` catalogue-miss fallback that mints the
       double-wrapped `VENUE:ITYPE:<raw wire>` ids — tolerance is the mechanism that polluted the corpus. (Provenance:
-      operator ruling 2026-07-20. Tracked in the batch=live divergence issue doc.) **DONE
+      operator ruling 2026-07-20. Tracked in
+      `plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`.) **DONE
       `unified-api-contracts@502ef57e`**: the actual mechanism lives in the SHARED builder, not any one caller — the
       real caller (`market-tick-data-service/.../adapters/cefi/tardis_shared.py::derive_row_instrument_id`'s bare
       `return build_instrument_id(venue, instrument_type, symbol)` fallback, `[SERVICE]`-tagged as a MTDS file, out of
@@ -297,11 +298,13 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       `(OKX-FUTURES, FUTURE, batch_tardis)`: 224. This is NOT covered by § 7 item 2's `build_instrument_id` colon-guard
       (that guard only fires on a symbol carrying an embedded `:`; a bare symbol like `AAOI` has none, so it
       mints/passes through un-wrapped). Root cause not investigated this session (out of the bounded "restate the
-      verdict" scope) — tracked as a new todo below. - [ ] [SERVICE] P2. Root-cause + fix the batch-side
-      bare-wire-symbol id defect found above (EXTENDED-STARKNET/perpetual, OKX-FUTURES/FUTURE, DERIBIT/FUTURE via
-      `batch_tardis`/`batch_extended`) — likely a catalogue-miss fallback in the MTDS batch writer path that, unlike the
-      colon-embedded case `build_instrument_id` now guards (§ 7 item 2), never wraps a colon-less symbol into
-      `VENUE:ITYPE:SYMBOL` at all. Verify against `derive_row_instrument_id`
+      verdict" scope) — tracked as a new todo below.
+- [ ] [SERVICE] P2. **(corrected 2026-08-09, plan_reconciler — checkbox marker was embedded mid-line after the prose
+      above, invisible to any line-start-anchored todo parser; moved to its own line, no wording changed.)**
+      Root-cause + fix the batch-side bare-wire-symbol id defect found above (EXTENDED-STARKNET/perpetual,
+      OKX-FUTURES/FUTURE, DERIBIT/FUTURE via `batch_tardis`/`batch_extended`) — likely a catalogue-miss fallback in the
+      MTDS batch writer path that, unlike the colon-embedded case `build_instrument_id` now guards (§ 7 item 2), never
+      wraps a colon-less symbol into `VENUE:ITYPE:SYMBOL` at all. Verify against `derive_row_instrument_id`
       (`market-tick-data-service/.../adapters/cefi/tardis_shared.py`) and the EXTENDED adapter's own id derivation.
 - [x] [DATA] P2. Decide the id grammar for `defi` so `_ID_FORM_CHECKED_ASSET_GROUPS` can widen; `prediction` stays out
       of scope (its own future closeout). **DONE `unified-api-contracts@502ef57e`**: not a new decision — the DeFi

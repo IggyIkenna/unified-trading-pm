@@ -144,9 +144,17 @@ context_scope:
       `enumerate_expected_universe.py` v2 tradfi → MTDS wave). Repos: deployment-service, instruments-service. **Done
       when**: the catalogue shows the new MVP tickers; the manifest shows them `expected_unattempted`; a sample equity
       captures non-NaN OHLCV. Source: Phase 1b.
-- [ ] [DATA] P2. **BLOCKED-DATA — source a Korea-equity vendor** for HYUNDAI/SAMSUNG/SK-Hynix cash-twin coverage (no
-      US-listed twin on Databento DBEQ.BASIC; neither current vendor covers KRX). Repo: instruments-service (vendor ask
-      → operator). Source: Phase 1b.
+- [x] ✅ [DATA] P2. ~~**BLOCKED-DATA — source a Korea-equity vendor** for HYUNDAI/SAMSUNG/SK-Hynix cash-twin coverage
+      (no US-listed twin on Databento DBEQ.BASIC; neither current vendor covers KRX). Repo: instruments-service (vendor
+      ask → operator). Source: Phase 1b.~~ **RESOLVED — RULED 2026-08-07 (operator, interactive session, per
+      `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`'s Progress Log)**: no dedicated Korea-equity tick
+      vendor; accept daily-resolution Yahoo/KRX coverage as the cash-twin reference instead — verified live (2026-08-09,
+      plan_reconciler): `unified-api-contracts@844c5ee6b` (reachable on `origin/live-defi-rollout`) registers
+      HYUNDAI/SAMSUNG/SKHYNIX at `venue=KRX`/`source=yahoo`; instruments-service's current tree references them
+      accordingly (`adapters/tradfi/databento/adapter.py`, `scripts/build_instrument_catalogue.py`). Same closure
+      already independently reached for the identical item in the sibling doc
+      `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` (na-eligibility-audit 2026-08-08 round7) — this hub
+      checkbox was simply never flipped when that ruling landed.
 - [ ] [SCRIPT] P1. **Capture Binance/OKX/Bybit `indexPrice`/`markPrice`/`fundingRate`** for the equity-perps as a
       first-class data_type (rides the existing premiumIndex/funding endpoints). Repo: market-tick-data-service. Source:
       Phase 1b.
