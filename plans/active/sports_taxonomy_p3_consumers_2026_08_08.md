@@ -420,3 +420,22 @@ spelling variant survives, which is the entire point of the panel". It does not.
   `POST /api/prerequisites/auto_unpark__sports_taxonomy_p3_consumers-13983a72aba5 {"value": true}` afterward, or this P3
   todo will sit invisibly parked forever — the unpark step has no automatic trigger (`auto_park.py`'s own docstring: the
   reconciler only reacts once the condition is cleared by "an operator or another automated system").
+
+- **2026-08-09 (slot 15)** — Dispatched the Catalogue section's "Dispatch the fixture-grain catalogue build" todo. Its
+  own text resolves ALL 4 open todos of `/plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md` — the
+  biggest of which (design the manifest-schema extension for per-fixture capture tracking) is that plan's OWN P2
+  "design"-class todo, calibrated there at 3 baseline AI-days, not the ~1h this dispatch carries. More materially, that
+  plan carries a live 🟡 SCOPE OVERLAP banner (first flagged 2026-07-23, cross-linked 2026-07-25) explicitly instructing
+  "do not design or ship the manifest-schema extension... against a stale read of either plan" until reconciled against
+  `sports_consolidated_closeout_2026_07_19.md`'s Track E/Track V sections. Checked the closeout doc's CURRENT state
+  directly (not a stale read): the collision note is still live and unresolved — Track V's `league_id` resolution (a
+  dependency of the fixture-grain manifest-schema design) remains open, and the note itself states "Neither doc's design
+  is decided by this note." This is a genuine cross-plan architecture judgment call two independent sessions already
+  flagged as needing reconciliation before any manifest-schema shipping, not a bounded, worker-determinable outcome —
+  and the other 3 sub-todos (fixture catalogue builder, adapter invocation, codex alignment) all chain off this first
+  one landing, so nothing in the bundle is independently shippable right now. Not attempting a unilateral design
+  resolution. Skipping (`reason_code: GATED`, no durable park — the blocking condition is a design decision, not a
+  single trackable landing event). **Pattern note**: this is the THIRD todo in this same P3 plan found
+  premature/oversized on inspection this session (after the arb operator-group-guard todo and the PATH-PREFIX
+  loader-migration todo, both documented above) — worth an operator pass over the plan's remaining todos for similar
+  hidden cross-plan dependencies before further dispatch.
