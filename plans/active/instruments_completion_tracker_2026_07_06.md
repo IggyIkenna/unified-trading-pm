@@ -255,13 +255,10 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       `instruments-service@2fa3877` — new public `filter_manifest_to_expected(ag, df)` applies the MVP cut at READ TIME
       inside `measure_honest_coverage._compute_coverage` for cefi, ZERO manifest mutation (Layer-1 keeps the unfiltered
       df so stray_tuples stay visible); 11 new + 21 existing tests green.
-  - [ ] [CODE] P1. Fix `_fetch_earliest_funding_date`
-        (`instruments-service/instruments_service/reference_data/adapters/cefi/aster.py:247-267`) to exclude the
-        synthetic pre-launch placeholder funding rows (flat `0.0001` rate) before deriving `available_from_datetime` —
-        otherwise ASTER's per-instrument genesis can still stamp a spuriously pre-2023-07-22 date even though the
-        venue-level fallback is correct. Found 2026-07-07 audit. **STILL OPEN (reconciled 2026-07-28)** — no mention in
-        `cefi_layer1_denominator_gaps_2026_07_03.md` or any of this todo's other named archived children; genuinely
-        unaddressed.
+  - **[CODE] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Fix
+        `_fetch_earliest_funding_date` (instruments-service `cefi/aster.py`) to exclude synthetic pre-launch
+        placeholder funding rows before deriving `available_from_datetime`. See the batch doc for the full scoped
+        todo; do not duplicate-dispatch from here.
   - [ ] [DATA] P1. Reconcile ASTER's `trades` genesis cross-registry contradiction (2021-08-30 in
         `expected_start_dates.yaml` vs. 2023-07-22 everywhere else) — see GAP 4 in
         `issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`. Do before any pre-funding-genesis trades
@@ -391,12 +388,10 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s own Phase C todo list — that plan, not this checkbox,
       is where tradfi Layer-1 certification now lives. Leaving unchecked: the item's own Gate ("Certify per-AG Layer-1")
       is worded all-5-AG and tradfi is not yet certified.
-- [ ] [VERIFY] P1. Reconcile ASTER's two disagreeing missing-date counts before certifying: the manifest cell-presence
-      view says 0 missing dates (1,082 consecutive days, 2023-07-22→2026-07-07); the live turbo API says 11 missing /
-      1,071 expected for the same venue+window. Confirm which methodology the re-measure adopts. Found 2026-07-07 audit,
-      `issues/aster_mtds_failure_count_regression_2026_07_07.md` context. **STILL OPEN (reconciled 2026-07-28)** — no
-      resolution found in `layer1_remeasure_and_certify_2026_07_06.md` or any other named archived child; genuinely
-      unaddressed.
+- **[REVIEW] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Reconcile
+      ASTER's two disagreeing missing-date counts (manifest cell-presence view says 0 missing; live turbo API says
+      11 missing/1,071 expected for the same venue+window). See the batch doc for the full scoped todo; do not
+      duplicate-dispatch from here.
 - [x] ✅ [CODE] P1. Close `honest_coverage_v2` remaining (build_expected done in 2a; UI drill-down → Stage 6). **DONE —
       reconciled 2026-07-28 against `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md` (complete, own
       todo `[x]`, CLOSED 2026-07-06 task 008).** Phase 1 `build_expected` consolidation flipped in
@@ -433,7 +428,8 @@ reconciling + signing off, not redoing.)_
       `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling. (was: `- [ ]`
       unchecked.) > **[⚠️ CORRECTION 2026-07-21, plan-reconcile]**: the "G4 ... fully SIGNED OFF" claim above is
       STALE. > `instruments_foundation_completeness_2026_06_24.md:520-527` ran a later verify-rerun (2026-07-13/14,
-      finding > 105) and reversed it: gate G4 enforces Layer-1 AND Layer-2 per operator ruling C4(a) and CANNOT close
+      finding > 105) and reversed it: gate G4 enforces Layer-1 AND Layer-2 per operator ruling C4(a) (cited in
+      `instruments_foundation_completeness_2026_06_24.md:520-527`, referenced above) and CANNOT close
       until D2 > (`cefi_layer1_denominator_gaps`) lands — cefi Layer-1 was measured INCOMPLETE (72.60-73.61%) at that
       time. > `instruments_foundation_completeness` is the actual gate-owning plan; treat **G4 as OPEN pending D2**
       unless the > operator has re-ruled since. This tracker's own Stage 2b ("cefi gate-authority fix" / D2 item) is
@@ -475,13 +471,11 @@ reconciling + signing off, not redoing.)_
       per the digest's literal wording — the NASDAQ/NYSE mis-class SPOT_PAIR (318 rows) and 12 cefi-singles EQUITY rows
       mentioned in the sibling gate-execution doc's fuller list were NOT part of what this item asked/approved, left
       untouched pending a separate explicit ask.
-- [ ] [INFRA] P1. **NEW (filed 2026-08-08, follow-up of the 4-leg purge above)**: add a build-time exclusion filter to
-      `instruments-service/scripts/build_instrument_catalogue.py`'s `build_catalogue_dataframe` (or an equivalent
-      pre-write filter) so `venue=ICE`, `venue=CBOE AND instrument_type IN (OPTION, SPOT_PAIR)`, and the 2 VIX-cash
-      `INDEX` ids are excluded from every future rebuild — the durable fix that lets
-      `lifecycle-catalogue-regen-     tradfi-daily` and `lifecycle-catalogue-full-tradfi-weekly` be safely RE-ENABLED
-      without re-baking the pollution just purged. Until this lands, both schedulers must stay paused (currently paused,
-      this session). Repo: instruments-service.
+- **[INFRA] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Add a
+      build-time exclusion filter to `build_instrument_catalogue.py`'s `build_catalogue_dataframe` for
+      `venue=ICE`/`venue=CBOE`-options/the 2 VIX-cash `INDEX` ids — makes an already-executed one-off purge
+      permanent. See the batch doc for the full scoped todo; do not duplicate-dispatch from here. Repo:
+      instruments-service.
 - [x] ✅ [DESIGN] P1. defi completeness **oracle** design. **DONE — reconciled 2026-07-28 against
       `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md` (`status: complete`, own todo `[x]`,
       2026-07-06).** Design SSOT landed at `/codex/02-data/defi-completeness-oracle.md` (`unified-trading-pm@650c2b881`)
@@ -533,36 +527,11 @@ reconciling + signing off, not redoing.)_
       `VM_SHUTDOWN_ON_COMPLETION=true`, fires `--operation deribit-options-chain --mode batch --asset-group CEFI` with
       today's UTC date; registered in the VM-prefix registry (`deribit-opts-fwd-` → `VmPrefixSpec`, EPHEMERAL_BATCH,
       distinct from the historical `opt-deribit-` Tardis batch prefix).
-- [ ] [SCRIPT] P1. **Systemic unregistered-handler audit** (generalizes the Deribit C5 bug — do BEFORE the Stage-3
-      re-measure). Diff every handler class in `market-tick-data-service/.../cli/handlers/` against the `operations={…}`
-      dispatcher keys in `cli/main.py` to find handlers that are **built but never wired** (silent `captured=0`, same
-      class as Deribit). The MTDS QG live-coverage roll-up flags large `blocked-not-registered` counts (cefi 104 · defi
-      1225 · sports 70 · tradfi 40 cells) — the audit distinguishes **built-but-unwired** (fixable like C5: register +
-      test) from **genuinely-not-built** (needs a new handler / is honest-absence). Running it before the re-measure
-      keeps us from mislabelling a wiring bug as a real coverage gap. Each finding → register-and-test, or file/triage.
-      **Widen scope to the adapter-factory layer too** (found 2026-07-07, later same day, spot-checking RADIANT/RENZO):
-      `market_tick_data_service/market_interface/factory.py` is a SEPARATE registration point from `cli/main.py`'s
-      operations dispatcher. `RENZO` is fully built and registered there (`factory.py:178`, real `RenzoAdapter` class,
-      real UAC capability declared) but has zero hits in `cli/main.py` or any `deployment-service/scripts/vm/` launch
-      script — built, factory-wired, never actually invoked. `RADIANT` is one step further back: its subgraph IDs were
-      verified working via The Graph on Arbitrum + Ethereum 2026-06-02 (`_defi.py:203-210`), but it doesn't even have a
-      `factory.py` adapter entry. Neither is "shouldn't exist" clutter — both have real invested infrastructure sitting
-      inert. The likely-related "defi 1225 blocked-not-registered" count above may already include these; confirm during
-      the audit rather than assuming, and check `factory.py` alongside `cli/handlers/` for every DeFi protocol the audit
-      finds silently zero. **Partial-completion note (2026-07-12, doc-reconciliation autofix findings 358-360,
-      `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling):** re-verification
-      found this item's ORIGINAL scope (the operations-dispatcher Deribit-class audit, first 8 lines above) is DONE —
-      shipped `market-tick-data-service@015abaf5` (register both handlers) + `market-tick-data-service@efd658c8`
-      (regression tests) per `foundation_gates_and_capture_to_100_2026_07_06.md:77-85` (status: complete), plus a DONE
-      follow-up venue-level WSFeedConnector audit (`foundation_gates_and_capture_to_100_2026_07_06.md:86-100`, filed as
-      `issues/wsfeedconnector_phase35_gap_2026_07_06.md`). BUT the **"Widen scope" adapter-factory addendum above was
-      appended 2026-07-07 — AFTER that shipped work — and remains OPEN**: this tracker's own Progress Log (2026-07-07,
-      "round 3" entry) explicitly folds the RENZO/RADIANT/EULER_V2 adapter-factory-layer gap into "the existing
-      RENZO-adjacent unregistered-handler-audit item" as a still-open "finish what's already built" case, tracked in
-      `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md` (not yet swept systematically). Left unchecked
-      rather than flipped — the checkbox governs the item AS CURRENTLY WRITTEN (including the widen-scope addendum), and
-      that portion is not evidenced done; a bare flip would overclaim. NOT auto-fixable to `[x]` under the REFUSAL
-      CONTRACT (re-read partially contradicts the auto_note's "unambiguous" framing for this item).
+- **[SCRIPT] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Systemic
+      unregistered-handler audit, widen-scope-to-adapter-factory-layer remainder (the original operations-dispatcher
+      scope already shipped `market-tick-data-service@015abaf5`/`@efd658c8`; the RENZO/RADIANT/EULER_V2
+      adapter-factory-layer gap, tracked in `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`, is what
+      remains open). See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
 - [ ] [CODE] P1. prediction live token-universe fix (owned by `prediction_live_clob_depth_capture_2026_07_24`, successor
       to `prediction_venue_perps_and_live_clob_depth_2026_06_20` which was split + archived 2026-07-24; live=0 today)
 
@@ -745,8 +714,9 @@ staleness found — doc stays `assigned_vm: NA`.
 content post-line-cap-split.
 
 ## Progress Log
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- this doc self-declares
-  "HUMAN TRACKER -- operator-owned (`assigned_vm: NA`, NOT auto-dispatched)" in its own header; it points at
-  source plans/issues rather than being itself executable, and several open items remain genuine judgment work
-  (Stage-3 Layer-1 re-measure methodology, the systemic unregistered-handler audit's widen-scope addendum) --
-  consistent with the 2026-08-03 verdict.
+
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- this doc self-declares "HUMAN TRACKER
+  -- operator-owned (`assigned_vm: NA`, NOT auto-dispatched)" in its own header; it points at source plans/issues rather
+  than being itself executable, and several open items remain genuine judgment work (Stage-3 Layer-1 re-measure
+  methodology, the systemic unregistered-handler audit's widen-scope addendum) -- consistent with the 2026-08-03
+  verdict.

@@ -195,29 +195,12 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       universe, never grow it — mirrors `deployment-api@3390c98`'s `test_route_venue_year_coverage_scope.py` pattern).
       `MVP_SCOPE_CONFIG_VERSION` 20→21. **The data-status coverage CONSUMER is NOT part of this todo** — split into the
       new P2b-2 todo below (genuine design gap, not guessed at under time pressure).
-- [ ] [IMPLEMENT] P2. **P2b-2 — models data-status coverage consumer (split from P2b, 2026-07-28).** Extend the
-      `scope=mvp|could_exist|all` pattern from `deployment-api@3390c98` to ml-service model output, reading the new
-      `is_model_mvp()` predicate (`unified-api-contracts@0fb9821b`). **Blocked on a real design decision, not a wiring
-      task**: there is no existing ml-service model-OUTPUT tracking/manifest surface to build a coverage endpoint
-      against today (checked 2026-07-28: `manifest_gap_handler.py`/`manifest_inference_guard.py` read the market-data
-      `availability_index` manifest to gate TRAINING on input-data quality — they do NOT track which model_ids have
-      actually been trained/deployed). Before this can be wired, someone needs to decide: (a) what "could exist" even
-      means for models (every theoretical identity-axis combination is combinatorially unbounded unless scoped by a
-      concrete training-grid config), and (b) where trained-model identities get recorded (a new GCS
-      manifest/UTL-`ManifestWriter`-style surface? a training-run registry table? reuse of
-      `ml-service/ml_service/     training/app/core/config_loader.py`'s `TrainingGridConfig` definitions as the "all"
-      (round5-cross-cutting-audit 2026-08-08: RESOLVED -- both sub-questions have live precedent: TrainingGridConfig IS
-      the could-exist bound, and ModelRegistry in unified_trading_library/ml/model_registry.py is already the live write
-      path -- narrows to ordinary wiring, no design session needed first.) "**round5-cross-cutting-audit 2026-08-08**:
-      both sub-questions have live precedent already — (a) `TrainingGridConfig` IS a concrete could-exist bound; (b)
-      `unified_trading_library/ml/model_registry.py`'s `ModelRegistry` (GCS manifest, `list_models(...)`) is already the
-      live write path, consumed by `training_orchestrator.py`. Narrows to ordinary wiring, no design session needed
-      first." universe?). Resolve as a LOCAL/interactive design session first (per
-      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" — an open
-      design call is not an AO-dispatchable todo), THEN dispatch the properly- scoped implementation against that
-      decision. Repos: deployment-api, ml-service, unified-api-contracts (if the design needs a new UAC-level
-      manifest/tracking type). Source: P2b's original consumer-wiring half, descoped 2026-07-28 per this task's own
-      "report as a separate follow-up rather than guessing" instruction.
+- **[IMPLEMENT] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** P2b-2 —
+      models data-status coverage consumer — the design gap this item was previously blocked on (what "could
+      exist" means for models; where trained-model identities get recorded) is resolved per the
+      round5-cross-cutting-audit 2026-08-08 note above (`TrainingGridConfig` = could-exist bound;
+      `ModelRegistry.list_models()` = live write path — narrows to ordinary wiring). See the batch doc for the
+      full scoped todo; do not duplicate-dispatch from here.
 - [ ] [DATA] P2. **Verify**: with MVP ON, data-status shows ~100% for captured MVP cells and does NOT count non-MVP
       catalogued instruments as missing; with MVP OFF, the full could-exist universe is shown (the gap is honest, not
       hidden). **BLOCKED on the held migration (2026-06-17 /autonomous assessment):** unit-level parity is already
@@ -313,11 +296,10 @@ which has no MVP wiring today, and precomputes the sports/prediction catalogue `
   MISCLASSIFIED_LIKELY_AO_ELIGIBLE candidate for a future pass, not reclassified this run since it shares the doc with
   genuinely operator-gated scope.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- flagged-but-deferred, not
-  reclassified. Today's round5-cross-cutting-audit entry resolved the P2b-2 open design call ("both
-  sub-questions have live precedent already... narrows to ordinary wiring, no design session needed first"),
-  which on its face clears 2 of the 3 remaining open todos' judgment-call blockers. Held rather than flipped:
-  `locked_by: live-defi-rollout` (set since creation, 2026-06-08) on a heavily-designed strategy/data-status
-  architecture doc carries real risk if misjudged, and the doc's own multi-week history shows partial-unblocks
-  handled by forking a slice out (P2a already dispatched separately via
-  `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`) rather than a whole-doc flip. Flagging as a
-  promising candidate for a dedicated follow-up pass, not forcing it here.
+  reclassified. Today's round5-cross-cutting-audit entry resolved the P2b-2 open design call ("both sub-questions have
+  live precedent already... narrows to ordinary wiring, no design session needed first"), which on its face clears 2 of
+  the 3 remaining open todos' judgment-call blockers. Held rather than flipped: `locked_by: live-defi-rollout` (set
+  since creation, 2026-06-08) on a heavily-designed strategy/data-status architecture doc carries real risk if
+  misjudged, and the doc's own multi-week history shows partial-unblocks handled by forking a slice out (P2a already
+  dispatched separately via `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`) rather than a whole-doc flip.
+  Flagging as a promising candidate for a dedicated follow-up pass, not forcing it here.
