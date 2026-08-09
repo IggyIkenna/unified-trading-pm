@@ -152,3 +152,18 @@ read-merge-write instead of overwrite) as a new P1 todo here.
   whether BYBIT bundles still show only 1 instrument_id") cannot be evaluated yet. Declining and skipping via
   `reason_code: "GATED"` — no code change made (nothing to check yet); re-dispatch once the per-day relaunch has run and
   its post-completion audit has posted a result.
+
+- **2026-08-09T02:16Z (slot-5, data_engineering, dispatched on the sole todo above)**: Re-checked ~27 min after
+  slot-25's decline — gate still unmet, unchanged: `mdps-backfill-cefi-20260808-095136` still `RUNNING` live
+  (`gcloud compute instances describe`), and the per-day-scoped relaunch todo
+  (`cefi_track7_candle_bundle_regeneration_vm-7eb3b7e1186c`, same todo slot-25 checked) is still
+  `status: queued, dispatched_to: null` per live `GET /api/backlog` — confirmed ELIGIBLE for dispatch to any slot (not
+  itself prereq-gated in the backlog system; the "once the VM reaches terminal state" condition is prose only, so
+  whichever worker eventually picks up THAT todo will need to independently re-verify VM state too, same as this check).
+  This task round-tripped back to a brand-new slot only 27 min after slot-25's identical GATED decline — the exact
+  redispatch churn `park_now` exists to prevent (`server/auto_park.py`), and the real gate here is VM-completion-scale
+  (measured processing rate implies this pre-fix VM won't reach a terminal state for hours-to-days, not minutes), well
+  past the 12-60min dispatch-cooldown windows. Declining via `reason_code: "GATED"` WITH `park_now: true` this time to
+  durably park rather than re-offering this to another fresh slot every cooldown cycle. **To unpark once the per-day
+  relaunch has genuinely run + been audited**:
+  `POST /api/prerequisites/auto_unpark__mdps_multi_instrument_bundle_write_race_hypothesis-c9274b858947 {"value": true}`.
