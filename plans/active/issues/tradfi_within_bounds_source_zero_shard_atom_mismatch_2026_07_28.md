@@ -8,12 +8,12 @@ title:
 summary: >-
   Root-caused the `WithinBoundsTradfiSourceZero` cluster this doc's parent
   (`tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`) filed as a real, open Databento silent-zero-row gap (per
-  `plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s INVESTIGATE todo). It is NOT a vendor issue.
-  Exhaustive live evidence: downloaded and grepped 4 real production VM `run.log`s (CME ES 2019/2020/2026 backfills,
-  most recent as of 2026-07-28) plus the full `DATABENTO_EMPTY_BUT_VALID` GCS structured-events store for the shipped
-  `_emit_empty_but_valid()` event and its precursor log line — ZERO hits anywhere. The Databento SDK is not returning
-  empty responses in production; the `DATABENTO_EMPTY_BUT_VALID` diagnostic aid never fires because there is nothing for
-  it to catch. Direct manifest cross-reference instead proves a shard-atom mismatch: for CME
+  `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s INVESTIGATE todo). It is NOT a vendor
+  issue. Exhaustive live evidence: downloaded and grepped 4 real production VM `run.log`s (CME ES 2019/2020/2026
+  backfills, most recent as of 2026-07-28) plus the full `DATABENTO_EMPTY_BUT_VALID` GCS structured-events store for the
+  shipped `_emit_empty_but_valid()` event and its precursor log line — ZERO hits anywhere. The Databento SDK is not
+  returning empty responses in production; the `DATABENTO_EMPTY_BUT_VALID` diagnostic aid never fires because there is
+  nothing for it to catch. Direct manifest cross-reference instead proves a shard-atom mismatch: for CME
   `attempted_failed(WithinBoundsTradfiSourceZero)` rows whose `instrument_id` maps to a known parent symbol
   (ES/MES/NQ/MNQ/GC/CL/SI/HG/PA/PL/NG/RB/RTY/YM — 69,475 checkable rows), 59.3% (41,210) have a `captured` row with real
   `row_count>0` for the IDENTICAL (date, data_type, chain_type, underlying) cell — 99-100% for the flagship
@@ -77,7 +77,7 @@ locked_by:
 locked_since:
 resolved_by:
 source: >-
-  plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md INVESTIGATE todo (root-cause the
+  /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md INVESTIGATE todo (root-cause the
   WithinBoundsTradfiSourceZero trigger), worked 2026-07-28 (slot 6): live VM run.log + GCS-events grep (0 hits) + direct
   availability_index.parquet cross-reference (59.3-100% false-positive match rate) + code trace
   (instruments-service@f6d479f8, market_tick_data_service/scripts/_rebuild_tradfi_cf11.py).
@@ -196,8 +196,8 @@ The parent doc's original 2026-07-23 snapshot included NASDAQ (36,279 `ohlcv_1s`
 shard-atom-mismatch mechanism does not apply to them; their population is explained by the separate, already-completed
 `tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md` fix (`instruments-service@31cf3952` discovery-floor
 enumerator fix + this session's `--apply` correcting 182,407 cells, see
-`plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s adjacent `[DATA] P1` todo, DONE 2026-07-28 slot-2) —
-NASDAQ/NYSE's pre-2023-04-15 archive-floor cells were the dominant driver there, not this doc's bug.
+`/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s adjacent `[DATA] P1` todo, DONE 2026-07-28
+slot-2) — NASDAQ/NYSE's pre-2023-04-15 archive-floor cells were the dominant driver there, not this doc's bug.
 
 ## Why the original DATABENTO_EMPTY_BUT_VALID / request-arg-diff diagnostic came back empty
 

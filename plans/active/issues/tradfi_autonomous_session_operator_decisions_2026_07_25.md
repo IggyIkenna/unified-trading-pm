@@ -254,11 +254,11 @@ check), confirming the retag introduced no new orphan. Item 20 of the sibling
 
 ## 7. An AO todo that launches a billed VM with neither `[OPERATOR]` nor a stated justification [RECOMMEND OPTION A]
 
-**The two sides.** `plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147` (`assigned_vm: planning`)
-reads: "(1) Verify instruments-service CME (GLBX.MDP3) instrument-definition catalog manifest coverage … **launch a
-backfill shard for any real gap** (never copy definitions between dates — CME futures expire daily)." Against that,
-`cursor-configs/CLAUDE.md` § Plans: "**every AO todo with a GCS delete/`--apply` or VM launch needs
-`[OPERATOR]`+delete-safety-cite OR a stated safe-idempotent justification**". The todo is tagged `[REVIEW] P1` and
+**The two sides.** `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147`
+(`assigned_vm: planning`) reads: "(1) Verify instruments-service CME (GLBX.MDP3) instrument-definition catalog manifest
+coverage … **launch a backfill shard for any real gap** (never copy definitions between dates — CME futures expire
+daily)." Against that, `cursor-configs/CLAUDE.md` § Plans: "**every AO todo with a GCS delete/`--apply` or VM launch
+needs `[OPERATOR]`+delete-safety-cite OR a stated safe-idempotent justification**". The todo is tagged `[REVIEW] P1` and
 carries neither. (The mechanical pre-filter `check_delete_vm_launch_gating.sh` DID flag this doc — adjudicating it is
 this skill's job, and the adjudication is: real, not a false positive. The other two tradfi flags in that run ARE false
 positives: batch1's `[DOC] P1` launcher-naming todo is self-declared "doc-only scoping addition", and batch2's

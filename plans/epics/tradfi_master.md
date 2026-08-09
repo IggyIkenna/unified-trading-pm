@@ -18,7 +18,7 @@ related:
     ../archive/2026_06/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md,
     ../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md,
     ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
-    ../active/tradfi_massive_dual_source_2026_05_28.md,
+    /plans/archive/tradfi_massive_dual_source_2026_05_28.md,
     ../archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md,
     ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
     ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
@@ -30,7 +30,7 @@ created: 2026-05-07
 name: tradfi_master
 tier: L0
 priority: P1
-assigned_vm: vm-tradfi
+assigned_vm: NA
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
@@ -41,7 +41,7 @@ related_plans:
   - /plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md
   - ../active/tradfi_phase_d_terminal_gate_2026_07_24.md
   - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
-last_updated: 2026-06-20
+last_updated: 2026-08-09
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -60,12 +60,17 @@ locked_since: 2026-05-07
 > trading_agent_service_architecture_unlock plan Phase 1+2). Status: TODO post-cutover unless explicitly listed in this
 > plan's May-23 scope.
 
-> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A3 findings for tradfi asset_group**: 7,115 `MISSING_EXPECTED` + 1,546
-> `ATTEMPTED_FAILED` + 1,928 `UNEXPECTED_CAPTURED` cells. Concentrated in: ICE tbbo (1,254) + ICE trades (1,238) + CME
-> tbbo (1,188) + YAHOO_FINANCE ohlcv_15m (938) + NYSE ohlcv_1m (839) + NASDAQ ohlcv_1m (839) + YAHOO_FINANCE ohlcv_24h
-> ATTEMPTED_FAILED (830) — likely rolling-window issue. UNEXPECTED_CAPTURED 1,928 cells = data on dates oracle said
-> EXPECTED_EMPTY (weekend/holiday) — operator review needed (US_MARKET_HOLIDAYS list outdated?). Reassigned slot 9
-> portion per `work_split_2026_05_19_ikenna.md` § "Slot 9 — REASSIGNED"
+> **🔴 P0 ABSORBED 2026-05-20 — mega-audit A3 findings for tradfi asset_group** — **SUPERSEDED (verified by
+> plan_reconciler agt-1a9b86, 2026-08-09)**: this banner's ~3-month-old counts (7,115 `MISSING_EXPECTED` + 1,546
+> `ATTEMPTED_FAILED` + 1,928 `UNEXPECTED_CAPTURED` cells) were never reconciled against this epic's own subsequent, far
+> more granular audits — see `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md` (114,318 CME/CBOE
+> `attempted_failed` candidates root-caused as a shard-atom-mismatch bookkeeping bug, NOT a vendor issue) and
+> `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` (independent, later remediation of
+> overlapping TradFi manifest cells). The banner's own open question ("US_MARKET_HOLIDAYS list outdated?") was never
+> separately answered and is not reasserted by either later audit. Original text (below) retained for archaeology only —
+> do NOT treat these counts as the current picture; see the Workstream-routing table above for live ownership.
+>
+> `original 2026-05-20 text: 7,115 MISSING_EXPECTED + 1,546 ATTEMPTED_FAILED + 1,928 UNEXPECTED_CAPTURED cells. Concentrated in: ICE tbbo (1,254) + ICE trades (1,238) + CME tbbo (1,188) + YAHOO_FINANCE ohlcv_15m (938) + NYSE ohlcv_1m (839) + NASDAQ ohlcv_1m (839) + YAHOO_FINANCE ohlcv_24h ATTEMPTED_FAILED (830) — likely rolling-window issue. UNEXPECTED_CAPTURED 1,928 cells = data on dates oracle said EXPECTED_EMPTY (weekend/holiday) — operator review needed. Reassigned slot 9 portion per work_split_2026_05_19_ikenna.md § "Slot 9 — REASSIGNED"`
 >
 > - CLAUDE.md HARD RULE.
 >
@@ -189,11 +194,11 @@ Covers:
   removed) — there is no more Barchart-vs-Yahoo VIX-15m layering rule to enforce; VIX exposure is **VX-futures-only via
   Databento `XCBF.PITCH`** (matches CLAUDE.md: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). Barchart has **zero
   remaining sanctioned use** in TradFi sourcing. SSOT:
-  [`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md) — **NOTE**: as
-  of 2026-07-14 that codex doc's own §"VIX — futures vs the cash index" (lines 271-275) still describes the retired
-  Barchart+Yahoo VIX-15m cash-index layering as current; it was not updated for the 2026-06-23 deletion and is flagged
-  here as CODEX-GATED (not corrected in this pass — codex edits are out of scope for a plans-reconciliation fix;
-  recommend an operator-approved follow-up to update that codex SSOT).
+  [`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md) — **the
+  2026-07-14 CODEX-GATED note previously here is now stale (verified by plan_reconciler agt-1a9b86, 2026-08-09)**: that
+  codex doc's own §"VIX — futures vs the cash index" was corrected 2026-07-25 (see its own "⚠️→✅ CORRECTED 2026-07-25"
+  banner) — Barchart/Yahoo VIX-15m cash-index layering is no longer described as current there. No further codex
+  follow-up is needed on this point.
 - **Market-hours + holiday calendar SSOT** integration end-to-end (instruments → MTDS → MDPS → features → ML +
   strategy + execution).
 - **S&P 500 ML readiness**: ES futures continuous-series, VIX FUTURE (VX via Databento `XCBF.PITCH`) + features, full
@@ -790,7 +795,7 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
   layering) — 1,621 GCS objects deleted (instruments-service@814b14a), enumerator floor-clipped to drop VIX cash-index
   instruments. There is no more Barchart-vs-Yahoo layering rule to enforce; VIX exposure is VX-futures-only via
   Databento XCBF.PITCH. Corrected per plan-reconciliation finding 303,
-  `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.
+  `/plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.
 - **TradFi futures shard-key matrix**: bundled by root; non-trading days pre-skipped via `venue_trading_calendar` +
   recorded as `empty_confirmed`.
 - **TradFi options 11-cluster taxonomy**: ES + E1A–E5A weeklies + EW1–EW4 + EOM. Cluster validation at `record_captured`
