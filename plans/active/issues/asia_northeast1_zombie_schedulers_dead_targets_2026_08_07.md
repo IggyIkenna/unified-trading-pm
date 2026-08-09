@@ -163,14 +163,32 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Review the 4 repoint candidates above and decide, per one: (1) repoint
-      `uts-prod-client-reporting-hourly-update`→`client-reporting-batch` and re-enable (or just retire it, since
-      `client-reporting-hourly` already covers the function); (2) same call for
-      `uts-prod-client-reporting-daily-snapshot` vs. the europe-west1 `client-reporting-daily-snapshot` twin; (3)
-      `catalogue-regen-nightly` vs. `instrument-catalogue-regen-nightly` (both currently non-functional for different
-      reasons — decide which one is the source of truth going forward); (4) confirm
+- [x] ✅ [DOC] P2. **Repoint candidate (2) RULED + EXECUTED 2026-08-09**: `uts-prod-client-reporting-daily-snapshot`
+      (asia-northeast1) vs. the europe-west1 `client-reporting-daily-snapshot` twin — RE-ENABLE asia-northeast1, PAUSE
+      europe-west1. **Already executed live this session** via `gcloud scheduler jobs resume/pause`; re-verified fresh
+      just now:
+      `gcloud scheduler jobs describe uts-prod-client-reporting-daily-snapshot --location=asia-northeast1     --project=central-element-323112 --format='value(state)'`
+      → `ENABLED`;
+      `gcloud scheduler jobs describe client-reporting-daily-snapshot --location=europe-west1     --project=central-element-323112 --format='value(state)'`
+      → `PAUSED`. Both confirmed live-verified, DONE.
+- [ ] [OPERATOR] P2. **STANDING-ACTION — repoint candidate (1) RULED, Terraform retirement not yet executed.**
+      `uts-prod-client-reporting-hourly-update` (asia-northeast1): RETIRE it — `client-reporting-hourly` (via Cloud Run
+      Job `client-reporting-batch`, identical `5 * * * *` schedule, confirmed succeeding hourly) already covers the
+      function. This scheduler is currently `PAUSED` (from the bulk-pause below) but pausing alone is NOT full
+      retirement — the actual Terraform/infra resource still needs to be decommissioned. Track and execute that
+      decommission as its own step.
+- [ ] [OPERATOR] P2. **STANDING-ACTION — repoint candidate (3) RULED, Terraform retirement not yet executed.**
+      `catalogue-regen-nightly` vs. `instrument-catalogue-regen-nightly`: RETIRE BOTH — a newer per-asset-group
+      `lifecycle-catalogue-regen-{ag}-daily` system (prediction/sports/cefi/defi `ENABLED`, tradfi paused as of
+      2026-08-09 — see `plans/active/issues/lifecycle_catalogue_regen_tradfi_daily_unexplained_pause_2026_08_09.md` for
+      the tradfi leg's own separate investigation) already replaced them functionally. Both are already `PAUSED` live
+      (re-verified fresh this session: both `gcloud scheduler jobs describe ... --location=asia-northeast1` calls return
+      `PAUSED`). Pausing is not full retirement — decommission both scheduler resources (and confirm neither Cloud Run
+      Job `catalogue-regen`/`instrument-catalogue-regen` is still referenced elsewhere) as their own step.
+- [ ] [OPERATOR] P2. **STILL OPEN, not yet addressed** — repoint candidate (4): confirm
       `uts-prod-features-sports-t1-schedule` is genuinely superseded by the `features-service-sports-daily-trigger`
-      Workflow path before considering it safe to leave permanently paused/delete later.
+      Workflow path before considering it safe to leave permanently paused/delete later. No ruling yet — this one
+      remains a real open decision.
 - [ ] [DIAG] P3. For the 34 non-repoint dead-target schedulers (dev/staging-tier `*-t1-schedule`s +
       `central-market-data-service-scheduler-trigger`): confirm with each owning service team/repo whether the
       dev/staging-tier T1-recon Cloud Run Job was deliberately decommissioned (in which case these schedulers should

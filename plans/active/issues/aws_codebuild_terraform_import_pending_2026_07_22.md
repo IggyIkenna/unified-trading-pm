@@ -28,13 +28,13 @@ source:
     "2026-07-22 migrated out of test_fleet_image_builds_from_current_code_2026_06_17.md so that plan could archive clean
     (0 open todos) — this todo remained genuinely unstarted, not folded into any other work this session",
   ]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-30
+last_updated: 2026-08-09
 context_scope:
   [
     deployment-service/terraform/cloud-build/aws/main.tf,
@@ -54,6 +54,21 @@ context_scope:
 > the TF right?" judgment call, which is explicitly NOT AO-dispatchable
 > (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility"). The
 > mechanical import becomes AO-eligible again once the table below is answered.
+>
+> **🟢 STATE 2026-08-09 — D1-D4 RULED, reclassified back to `assigned_vm: planning`.** Operator ruled all 4 rows (full
+> citations in § "Operator decision required" below): **D1** keep live's broad `secretsmanager:secret:*` IAM wildcard,
+> no tightening; **D2** delete the 18 `aws_codebuild_webhook` TF resources (live has none); **D3** adopt live's
+> compute/timeout/clone-depth/logs/tags config INTO Terraform, not the reverse; **D4** fix both live-side drifts (UTL
+> missing `source_version`, instruments-service still on `buildspec.yml`). The residual work — reconcile `main.tf` to
+> these rulings, import, prove a no-op `terraform plan`, pin the provider — is now a determinable, bounded mechanical
+> task, no longer a live judgment call, so `assigned_vm` moves `NA` → `planning`. Checked
+> `scripts/quality_gates/check_finalize_plan_coverage.py` before this reclassification: it globs only
+> `plans/active/*.md`, not the `issues/` subdirectory this doc lives in (0 violations before AND after, confirmed by
+> running it), and the 2 remaining todos are tightly-scoped mechanical follow-through on one already-ruled table for a
+> single terraform module (not a batch-extraction plan needing cross-doc reconciliation) — no separate finalize-plan
+> companion authored; the final remaining todo folds the standard archival ritual into its own done-when instead.
+> **Still do NOT `terraform apply` blind** — reconcile `main.tf` to the rulings FIRST, then import, then prove
+> `terraform plan` is a genuine no-op before any apply.
 
 # terraform import of imperatively-created AWS CodeBuild projects + webhooks (2026-07-22)
 
@@ -165,12 +180,21 @@ on the pre-canonical `buildspec.yml` look like **live** is the side that drifted
 
 - **D1 — IAM policy body**: keep live's broad `secretsmanager:secret:*` (functional, over-broad) or tighten TF's scope
   to the secrets actually read (`GH_PAT`, `github-pat`, `unified-trading/github-actions-sa-key`)? Security-relevant;
-  recommend the explicit-allow-list third option rather than either extreme.
+  recommend the explicit-allow-list third option rather than either extreme. **RULED 2026-08-09 (operator, via main
+  session):** KEEP live's broad `secret:*` wildcard — no tightening. Reconcile `main.tf` to match live as-is; do not
+  narrow to the explicit-allow-list third option.
 - **D2 — webhooks**: delete the 18 `aws_codebuild_webhook` resources from TF (codifying GHA-router dispatch as the only
-  trigger path) or actually create them?
-- **D3 — compute/timeout/clone-depth/logs/tags**: adopt live into TF, or apply TF onto live?
+  trigger path) or actually create them? **RULED 2026-08-09:** DELETE the 18 `aws_codebuild_webhook` TF resources — live
+  has zero webhooks (CodeBuild-side and GitHub-side, per the § "Blocking diffs" measurement above); don't provision
+  unused resources.
+- **D3 — compute/timeout/clone-depth/logs/tags**: adopt live into TF, or apply TF onto live? **RULED 2026-08-09:** ADOPT
+  live's values INTO Terraform across the board (`build_timeout`, `source.git_clone_depth`,
+  `environment.compute_type`/`environment.image` for MTDS+UTL, `logs_config`, `tags`/`default_tags`,
+  `source.git_submodules_config`, `source.report_build_status`, env-var set/ordering) — do not push TF's config onto
+  live.
 - **D4 — the two live-side drifts**: fix UTL's missing `source_version` and instruments-service's `buildspec.yml` on the
-  live projects?
+  live projects? **RULED 2026-08-09:** YES — fix both live-side drifts (set UTL's `source_version` to
+  `live-defi-rollout`; migrate instruments-service off `buildspec.yml` onto the canonical `buildspec.aws.yaml`).
 
 ## Todos
 
@@ -185,33 +209,26 @@ on the pre-canonical `buildspec.yml` look like **live** is the side that drifted
       `aws codebuild start-build --project-name deployment-api`. No change needed.
 - [x] [INFRA] P3. **Measure the true import drift** — all 23 live resources imported into a throwaway local state (never
       written to S3): `Plan: 19 to add, 22 to change, 0 to destroy`. Inventory above.
-- [ ] [OPERATOR] P3. **STILL NEEDS YOUR INPUT — D1-D4's specific rows weren't in the scope of this governance pass, not
-      confident enough to rule blind on IAM-policy-import specifics.** One sub-question I can answer with confidence:
-      the provider-pin question (v5-align vs v6-adopt) — recommend v5-align (`~> 5.82`) for consistency with every
-      sibling module, avoiding a one-off v6 deprecation surface (`data.aws_region.name`) this module alone would carry.
-      D1-D4's IAM-policy-drift specifics need your own read of the table above before ruling. **Rule D1-D4 above** — one
-      ruling per row, so the residual becomes mechanical. Blocks every remaining todo here. **round5-cross-cutting-audit
-      2026-08-08 (id=58, operator-directed relevance check before ruling)**: operator suspected this AWS CodeBuild
-      resource might be MOOT given the trading-infra GCP shift ("AWS scoped down to just CI self-hosted runners + AO") —
-      investigated before ruling. **Verdict: NOT moot, still live and load-bearing.** Evidence:
-      `/codex/05-infrastructure/dual-cloud-image-builds.md` (`status: current`) is the SSOT for a dual-cloud image-build
-      flow where GCP Cloud Build + this exact AWS CodeBuild fleet (18 projects) fire in parallel on every `qg-passed`
-      dispatch, and **both clouds must pass before a staging→main promote PR merges** (`image-build-gate.yml` →
-      `image-build-validate.yml` gate job) — this is a live CI hard-gate, not a dormant resource.
-      `.github/workflows/cloud-build-router-aws.yml` was actively touched as recently as 2026-08-07 (same-day as this
-      audit -1). `/codex/11-project-management/dual-cloud-cost-ops-playbook.md` frames the AWS side as a deliberate
-      "GCP-primary/AWS-backup" resilience posture, not a leftover — the CodeBuild fleet is exactly the mechanism that
-      keeps that backup posture real (an AWS-buildable image on standby). Conclusion: the D1-D4 rows stay genuinely open
-      and operator-gated as before; nothing closes as moot. No ruling was fabricated for D1-D4 itself — it remains a
-      real per-row IAM-policy-drift judgment call only the operator can make.
-- [ ] [INFRA] P3. **Reconcile `main.tf` to the D1-D4 rulings**, then `terraform import` all 23 resources into the live
-      S3 state and prove `terraform plan` is a genuine no-op. Do NOT import before D1-D4 — an imported state plus these
-      diffs is an armed destructive apply.
-- [ ] [INFRA] P3. **Pin the AWS provider deliberately.** This module's `>= 5.0.0` resolves to v6.57.1 while every
-      sibling module pins `~> 5.82` (v5.100.0). v6 also deprecates `data.aws_region.name` (used at `main.tf`
-      `locals.region`). Decide v5-align vs deliberate v6 adoption, then commit a multi-platform `.terraform.lock.hcl`
-      (the repo commits 10 others; this session's local lock was deleted rather than committing darwin-only hashes that
-      would break a linux `init`).
+- [x] ✅ [DOC] P3. **D1-D4 RULED 2026-08-09** (operator, via main session — see the updated § "Operator decision
+      required" rulings above for full per-row text): D1 keep live's IAM wildcard; D2 delete the 18
+      `aws_codebuild_webhook` TF resources; D3 adopt live's compute/timeout/clone-depth/logs/tags config INTO Terraform;
+      D4 fix both live-side drifts (UTL `source_version`, instruments-service `buildspec.yml`). Retagged from
+      `[OPERATOR]` in the same edit the ruling landed, per CLAUDE.md's "retag the moment an `[OPERATOR]` tag resolves"
+      rule. The provider-pin sub-question (v5-align vs v6-adopt) was already self-answered with a recommendation in the
+      next todo and is unchanged by this ruling. — unified-trading-pm
+- [ ] [INFRA] P3. **Reconcile `main.tf` to the D1-D4 rulings** (keep the IAM wildcard; delete the 18
+      `aws_codebuild_webhook` resources; adopt live's compute/timeout/clone-depth/logs/tags/env-var config into TF; fix
+      UTL's `source_version` + instruments-service's `buildspec.aws.yaml` migration live-side), then `terraform import`
+      all 23 resources into the live S3 state and prove `terraform plan` is a genuine no-op. Do NOT import before D1-D4
+      (now ruled, see above) — an imported state plus unreconciled diffs is an armed destructive apply.
+- [ ] [INFRA] P3. **Pin the AWS provider deliberately** (recommended: v5-align, `~> 5.82`, for consistency with every
+      sibling module, avoiding the v6 `data.aws_region.name` deprecation this module alone would carry — not yet an
+      operator ruling, just the standing recommendation; deviate only with a stated reason), then commit a
+      multi-platform `.terraform.lock.hcl` (the repo commits 10 others; this session's local lock was deleted rather
+      than committing darwin-only hashes that would break a linux `init`). **Done-when also includes**: once this todo
+      and the one above are both `[x]`, run the standard 6-step archival ritual on this issue doc (no separate finalize
+      plan — see the 2026-08-09 banner's reasoning) — folded in here since this is genuinely the last unit of work, not
+      a separate followup.
 
 ## na-eligibility-audit verdict
 
@@ -256,3 +273,16 @@ explicitly declined to rule on D1-D4 ("weren't in scope of this governance pass"
 **na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:c69e2d2b0eb20eda]: KEEP-NA,
 valid — re-verified all 3 open items unchanged since the 2026-08-07 marker (only context-scout touches since). D1-D4
 operator-rulings table still unruled, blocks the other 2 mechanically. No `assigned_vm` change.
+
+- **2026-08-09 (operator ruling batch, this session)**: Operator ruled all 4 rows of the D1-D4 table (recorded in §
+  "Operator decision required" + the 2026-08-09 banner above): D1 keep live's IAM wildcard; D2 delete the 18
+  `aws_codebuild_webhook` TF resources; D3 adopt live's config into TF; D4 fix both live-side drifts. Retagged the
+  blocking `[OPERATOR]` todo → `[DOC]` and flipped it `[x]` in the same edit. Reclassified `assigned_vm: NA` →
+  `planning` (residual work is now bounded/mechanical, no longer a live judgment call) and `execution_scope: local-only`
+  → `orchestrator-agent`. Checked `scripts/quality_gates/check_finalize_plan_coverage.py` before reclassifying: it globs
+  only `plans/active/*.md`, not this doc's `issues/` subdirectory (ran it — 0 violations both before and after) — no
+  separate finalize-plan companion authored; folded the archival ritual into the last remaining todo's done-when
+  instead, since both remaining todos are tightly-scoped mechanical follow-through on one already-ruled table for a
+  single terraform module, not a batch-extraction plan needing cross-doc reconciliation. This supersedes every prior
+  KEEP-NA verdict above (2026-07-31 through 2026-08-09) — those were all correct AT THE TIME (D1-D4 genuinely unruled
+  until now).
