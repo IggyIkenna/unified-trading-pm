@@ -315,3 +315,12 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
   `.tabs/3` is deliberately excluded from the blind-loop list above — 39 of its 49 are safe but the other 10 need a
   human decision first (drop-from-the-bottom by content isn't index-safe to script blindly; see the 10 AMBIGUOUS
   entries' descriptions in the audit agent reports for exactly which indices they are at the time you check).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — full re-read. Both remaining
+  `[OPERATOR] P3` todos are explicit "BLOCKED on the re-audit above — do not run as written" mechanical-drop
+  instructions that `git stash drop`/`clear` categorically blocks for agents via the local guardrail hook
+  (`block_destructive_commands.py`) regardless of review outcome — the operator must run the `for` loops directly,
+  outside any agent's tool-gated shell. This is the exact same class of hazard as the sibling doc
+  `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` (confirmed still live today per this
+  sweep's own `SUB_AGENT_MANDATORY_RULES.md`) — reinforces, not weakens, the case for leaving the mechanical drop to
+  the operator with a fresh count check immediately before each loop.

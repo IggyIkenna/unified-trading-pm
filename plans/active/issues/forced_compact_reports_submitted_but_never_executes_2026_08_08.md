@@ -112,6 +112,11 @@ never executed". With forces now firing from 60, the two separate cleanly — an
   are already `KEEP-NA-STALE, citation-closed` (duplicated verbatim into `ao_satellite_ao_dispatch_batch12_2026_08_09.md`
   todos 9-11 by a concurrent same-day pass). The sole remaining item (re-measure the wedge rate) is explicitly gated on
   those 3 landing plus a fresh multi-hour/day fleet-observation window — genuinely time-gated, not bounded today.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — checked
+  `ao_satellite_ao_dispatch_batch12_2026_08_09.md` live: todo 9 (queued-message detection) is `[x]` done
+  (`agent-orchestrator@a1e2969`), but todos 10 (verify-by-effect) and 11 (deliberate repro) are still `[ ]` open there
+  — so this doc's own gate ("re-measure once the above lands") is not yet cleared. Still genuinely time-gated, not
+  bounded today.
 - **Measured 2026-08-09/10 (interactive session, slot 4)**, read-only via `GET /api/activity?limit=4000` over a 3.7h
   window (19:50Z→23:30Z), while root-causing the separate main-agent poisoned-calibration incident:
   `forced_precompact` 68 · `forced_compact` 65 · **`forced_compact_ineffective` 51** · `context_compact_observed` 48,

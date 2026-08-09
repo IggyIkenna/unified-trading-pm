@@ -201,3 +201,7 @@ Two independent, complementary fixes — either alone helps, both together close
   todos still touch `_compose()`/`_session_vars_block()`/`BootRequest`, the fleet-wide worker-boot path every slot spawn
   reads first. Corroborated same-day: `/ag-closeout-audit ao` batch12 independently lists this doc under operator-gated
   (22).
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — re-affirmed on citation alone.
+  The 2026-07-31 operator directive routing this exact live-dispatch-boot-critical-path class to local-only still
+  stands, content unchanged since round11. All 3 todos remain unactioned and still touch the same
+  fleet-wide worker-boot files.

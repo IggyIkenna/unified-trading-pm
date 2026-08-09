@@ -159,3 +159,6 @@ even if nobody revisits it.
 - **na-eligibility-audit 2026-08-09 (round11)**: KEEP-NA, valid — checked against the round7-10 precedent set; none
   apply (this is a dispatcher-internals design fork, not a credential/plan-destination/delete-safety question).
   Corroborated same-day: `/ag-closeout-audit ao` batch12 independently lists this doc under operator-gated (22).
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
+  round11. Both open items remain genuine build-vs-extend dispatcher-design forks (matching heuristic, state-storage
+  choice) per the 2026-08-03 marker's original analysis, still not mechanically specified.

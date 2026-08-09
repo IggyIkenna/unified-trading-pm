@@ -309,3 +309,16 @@ understanding the root cause to be valuable.
   MORE orphaned `autostash` entries still present (pre-dating this incident, from earlier rounds' concurrent
   `--rebase --autostash` pulls) — confirming the latent-risk pattern is ongoing, not a one-off; added as a new P2 todo
   above rather than acted on blind.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — full re-read. Todo 1
+  (recoverability determination) is explicitly opportunistic, needing a live reproduction in progress, not
+  independently schedulable. Todo 3 (candidate mitigations a-d) explicitly reads "do not implement without operator
+  sign-off" on HIGH-RISK shared infra (`quickmerge.sh`/`safe-doc-push.sh`) — a genuine design fork among 4 named
+  options, not a mechanical fix. Todo 4 is downstream of todo 3's decision. The round11-added P2 todo (audit + clear
+  this checkout's orphaned autostash entries) is mechanically bounded in isolation, but deliberately NOT extracted:
+  this exact bug is independently confirmed STILL LIVE today (2026-08-10) per this very sweep's own
+  `SUB_AGENT_MANDATORY_RULES.md` ("a plain `git pull` can silently pop a STALE, unrelated orphaned stash entry and
+  revert your own already-committed work locally") — automating stash-drops in a shared, heavily-contended checkout
+  while the underlying race is still under active, unresolved investigation (todo 1) carries real risk of destroying
+  another concurrent session's genuine uncommitted work, which is precisely what round11's own author chose to log
+  rather than act on blind. Keeping it paired with the todo1/3 investigation is the safer, more conservative call.

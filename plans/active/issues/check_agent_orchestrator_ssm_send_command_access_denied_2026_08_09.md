@@ -113,3 +113,8 @@ on shared AWS infra, not something to self-grant.
   exact same SSM read path to query `escalation_queue` directly (no HTTP endpoint exposes historical/resolved escalation
   rows — only `POST /api/escalate` and `GET /api/escalations/active`, the latter active-only). Flagging the
   cross-dependency here so the `[OPERATOR]` grant below is understood to unblock two independent tasks, not one.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
+  round9. The sole open item is an IAM policy grant to a specific human-named identity (`ikenna-worker`) on shared AWS
+  infra — the doc's own text is explicit this is "not something to self-grant," and the IAM-self-service precedent
+  (orchestrator service accounts granting themselves a missing role) does not extend to a human-named IAM user
+  needing a grant from a different identity, which also cannot read its own attached policies to self-diagnose.

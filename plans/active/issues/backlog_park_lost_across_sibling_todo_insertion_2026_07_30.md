@@ -170,3 +170,6 @@ not the dispatch-tooling gap). Suggested next steps:
   apply ("consider whether to build an alerting surface at all" has no stated done-when, a genuine open question, not a
   defaulted judgment call). Corroborated same-day: `/ag-closeout-audit ao` batch12 independently lists this doc under
   genuinely-human-only (4).
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
+  round11. Sole open item ([BACKEND] P3, whether to build a park-id-change alerting surface at all) remains an
+  undecided open question with no stated done-when.

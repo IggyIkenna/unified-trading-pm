@@ -168,3 +168,8 @@ reliability/escalation shape, not re-running its normal audit content.
 - **2026-08-09 (interactive session)**: plan authored following the operator's explicit "human plan" ruling on this
   exact scope. Track A's 25-PR list and Track B's 7-job list both pulled live from `gh pr list` / the installer-script
   directory listing this same session, immediately before authoring.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — first audit pass on this doc.
+  Its own `source:` frontmatter and body state it was authored "following the operator's explicit 'human plan' ruling
+  on this exact scope" — a citable dated ruling on citation alone. Independently, every open todo is genuine per-item
+  human judgment (Track A: rebase-and-re-verify vs. close-as-superseded per PR, 25 individual calls; Track B: a
+  7-job reliability/escalation-health audit), not mechanical/bounded work.

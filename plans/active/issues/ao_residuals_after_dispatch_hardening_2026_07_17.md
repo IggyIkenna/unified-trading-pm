@@ -206,3 +206,6 @@ source:
   check today. None of IAM self-service/D16/S5.1/plan-destination-default/escalation-N/
   reversibility-qualified-deletes/Option-B-retirement/DeepSeek-Slack-credentials apply. Corroborated same-day:
   `/ag-closeout-audit ao` batch12 lists this doc under operator-gated (22).
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
+  round11; all 3 items remain in the exact same state (citation-fix pending an epic todo, blocked-upstream-design UI
+  item, void-pending-retest l2_book gate). No new facts apply.

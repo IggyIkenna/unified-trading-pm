@@ -119,3 +119,6 @@ cannot be audited for completeness.
   operator-only authenticity confirmation (cannot be worker-determined by design). Item 2 (give future ruling
   sessions a home) requires a genuine convention design decision among 3 named options — a judgment call, not a
   mechanical fix. No new facts apply.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
+  round9. Item 1 remains operator-only-by-design (only the operator can confirm they personally issued a ruling);
+  item 2 remains an unresolved 3-way convention design choice with no stated preference in the doc itself.

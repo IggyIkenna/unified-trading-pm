@@ -108,7 +108,8 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
       commit (wip-preserve ref or slot-4's worktree), confirm it's a real orphan
       (`git merge-base --is-ancestor     036c568 origin/live-defi-rollout` → not-ancestor), reconcile onto LDR tip, QG
       green, quickmerge. Done-when: the 429-avoidance change is an ancestor of origin/live-defi-rollout (or, if it turns
-      out already-superseded/landed, close with that note). (repo: market-data-processing-service)
+      out already-superseded/landed, close with that note). (repo: market-data-processing-service) **➡️ EXTRACTED
+      2026-08-10 to `ao_satellite_ao_dispatch_batch17_2026_08_10.md` todo 1 — do NOT action here.**
 
 - [x] ✅ [BACKEND] P2. **RESOLVED 2026-08-04 (main agt-1756f6 verify) — fix landed independently, b411374c1 moot.** Slot
       6 shipped `market-tick-data-service@b0909a5e` at 02:33:55Z (BEFORE this todo was even written) fixing the EXACT
@@ -181,3 +182,14 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
   checkbox in `ao_satellite_ao_dispatch_batch6_2026_08_04.md` with the same evidence. Remaining open todos (2, 3) are
   the slot-8/slot-4 items, still conditionally gated per the batch6 Deferred section — untouched by this run.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: satellite-extraction, not whole-doc RECLASSIFY
+  — todo 2 (slot-8's `bd0e231f`) is already `[x]` (closed 2026-08-06 by `/plan-reconcile ao` as MOOT, already covered
+  by `market-tick-data-service@b0909a5e`). The sole remaining open item is todo 3 (slot-4's `~036c568` throttle-fix
+  rescue-or-confirm-moot) — this is individually bounded (a clear, outcome-defined git-rescue matching the exact
+  pattern todos 1-2 already used successfully in this same doc), no longer blocked on batch6's own conditional gate
+  (batch6 itself completed all 10 of its own todos 2026-08-08 without drafting this item as one of them — it stayed
+  in batch6's Deferred § "Conditionally gated" list, never independently re-verified there). Extracted to
+  `ao_satellite_ao_dispatch_batch17_2026_08_10.md` todo 1 + gated
+  `ao_satellite_ao_dispatch_batch17_finalize_2026_08_10.md`. Conflict-check: grepped active `assigned_vm: planning`
+  docs + all `ao_satellite_ao_dispatch_batch*` docs for `036c568`/`market-data-processing-service.*throttle` — zero
+  hits besides this source doc, clear to extract.

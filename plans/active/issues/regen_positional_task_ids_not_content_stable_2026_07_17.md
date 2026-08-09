@@ -333,3 +333,9 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
   sibling-id reset) — further evidence the rewrite is still needed, not evidence the doc is now AO-dispatchable. No
   per-item extraction either: all 2 open `[BACKEND] P2` todos are explicitly one indivisible, full-blast-radius rewrite
   by the 2026-07-28 operator ruling ("full completion required, no partial rollout").
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: **DO NOT RECLASSIFY THIS DOC** — per this
+  sweep's own explicit instruction not to re-litigate this exact doc (documented history of 3-4 real mis-dispatch
+  incidents from prior wrongful reclassification). Both hard triggers re-verified present by direct read: the
+  top-of-body "🟢 EXECUTION CONSOLIDATED" banner still reads "Do NOT start work from this doc alone"; the inline
+  `assigned_vm: NA #` comment still states "NOT AO-dispatchable," citing BLK-29884333. Content unchanged since round11.
+  KEEP-NA, valid.

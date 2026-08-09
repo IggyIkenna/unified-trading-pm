@@ -38,8 +38,8 @@ related:
 created: 2026-08-09
 author: data_engineering worker (slot 8, prediction_satellite_ao_dispatch_batch8-001)
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.3
@@ -132,3 +132,19 @@ mitigations, cheapest first:
   this mid-task. Recovered the dropped edits via `git apply` on the orphaned patch file before continuing; did not
   attempt the DEVOPS-scoped fix itself (outside this task's craft/scope — a plan-hygiene tooling defect, not a
   data-pipeline change) — filed here per findings-triage for a same-session fix-vs-file decision.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: RECLASSIFY, conflict-cleared —
+  `assigned_vm: NA -> planning`. First audit pass on this doc (no prior marker). All 3 remaining open todos are
+  bounded/worker-determinable: todo 1 is a deliberate reproduction with a concrete recipe already specified
+  ("stage a file that fails `plan-hygiene` once then passes, with an unrelated unstaged edit present"), todo 2 is a
+  fully-specified, additive (non-destructive) code change to `safe-doc-push.sh`'s own retry loop with a stated
+  done-when, and todo 3 is a conditional next step naturally sequenced after todo 1's diagnostic verdict (file
+  upstream / pin a known-good prek version / document the workaround) — no genuine design ambiguity or operator gate
+  anywhere in the doc. Conflict-check: grepped `plans/active/*.md` for `prek`+`patch`/`safe-doc-push` — no active
+  `assigned_vm: planning` plan or `ao_satellite_ao_dispatch_batch*` doc covers this specific prek-patch-restore-on-retry
+  bug (broad `patch`/`safe-doc-push` hits were unrelated false positives on the common word "patch" or on the
+  already-closed `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01` doc's own, different,
+  already-shipped mis-attribution fix). Also directly relevant: this exact bug class (a concurrent session's git/prek
+  machinery silently discarding uncommitted foreign edits) is called out as a currently-live hazard in this
+  session's own `SUB_AGENT_MANDATORY_RULES.md` — worth fixing at the root rather than leaving as a standing risk.
+  Gated finalize twin authored:
+  `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09_finalize_2026_08_10.md`.

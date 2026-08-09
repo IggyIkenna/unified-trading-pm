@@ -346,3 +346,7 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   disqualified as either status-mismatched or legitimate parent/child splits with proper `related:` cross-links; this is
   the 1 genuine collision). Independently re-verified both docs' `status`/`authoritative_for`/`related` frontmatter live
   before parking, not just trusted from the hunter's report.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — first na-eligibility-audit
+  pass since item 5 was added. Both remaining open items (4: Fireblocks rotation-cadence contradiction; 5:
+  plan-hygiene.md duplication) are explicit `BLOCKED-OPERATOR-DECISION` A/B/C authority calls per the doc's own
+  framing, no evidence-determined single answer for either. Textbook KEEP-NA.

@@ -207,3 +207,9 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
   genuinely open. §4 (flip 6 MOVED items + fix a stale count) is the one purely mechanical item, flagged separately
   below as MISCLASSIFIED_LIKELY_AO_ELIGIBLE — consistent with this doc's own established reasoning that the whole doc
   still correctly stays NA since `assigned_vm` is doc-granular and the other open items are judgment-gated.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — §3 and §4 are both now `[x]`
+  (done 2026-08-08). The sole remaining open item is the standing §2 opportunistic-retag todo, which is explicitly
+  NOT a standalone dispatchable task by its own text ("Do NOT open a doc solely to retag it, and do NOT batch these"
+  — the 2026-08-06 operator ruling specifically chose opportunistic-only over a bulk pass to avoid a 23-file
+  collision magnet). A single-item doc whose only content is an anti-batch instruction cannot be satellite-extracted
+  without violating the instruction itself.

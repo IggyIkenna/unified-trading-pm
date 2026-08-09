@@ -246,3 +246,7 @@ same-corpus dependencies). Instead:
   own precedent-currency rule, a same-day, more-thorough, independent re-audit's verdict is not second-guessed on a
   symmetric read of the same text; the per-occurrence external-gate-vs-same-corpus-dependency classification (the doc's
   own todo 1) remains genuine judgment regardless of the plan-destination sub-question's resolution.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
+  round11. Both open items (the ~13-file per-occurrence audit, and the follow-up re-grep-and-confirm-zero check) remain
+  genuinely per-case judgment (external-gate-mislabel vs. same-corpus-dependency classification), reaffirmed by the
+  same-day `/ag-closeout-audit ao` batch12 independent verdict cited above.

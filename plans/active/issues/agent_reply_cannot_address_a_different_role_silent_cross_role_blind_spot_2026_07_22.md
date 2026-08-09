@@ -260,3 +260,11 @@ too large.
   `agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md`"), gated behind batch5 (both
   currently `status: draft`, pending operator activation) — leaving archival to that plan to avoid a concurrent-archival
   collision once it dispatches.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — the sole remaining item is
+  the "archive this doc" tracking todo, still correctly owned by
+  `ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md` todo 2. Verified live: batch5 and batch5_finalize are now
+  BOTH `status: active`/`assigned_vm: planning` (the operator activation this doc's own note was waiting on has since
+  happened) — batch5_finalize is machine-gated (`gate_on_depends: true`) on batch5's own todos completing first, so
+  this doc's archival will land automatically through that already-dispatched chain rather than needing separate
+  action here. Not reclassifying this doc itself — doing so would create a competing/duplicate archival claim against
+  the plan that already owns it.

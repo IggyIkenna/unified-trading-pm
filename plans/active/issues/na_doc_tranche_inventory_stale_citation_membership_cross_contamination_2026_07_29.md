@@ -250,3 +250,7 @@ class in a third script.
   already-proven-safe rollout on an identical script). Not found in any of batch1-15's citation lists; this is a
   genuine, if minor, gap in the batch series — but the item itself remains a preference, not a bounded task with a
   stated done-when, so no extraction.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — content unchanged since
+  round11. Sole open item ([SCRIPT] P3, bundle-vs-extract-a-shared-membership-test-module) remains a design-preference
+  call with no stated done-when; not found in any active `ao_satellite_ao_dispatch_batch*` citation list through
+  batch17.

@@ -516,3 +516,9 @@ default from an external reference.
   `ao_satellite_ao_dispatch_batch14_2026_08_09.md`. The other 4 items stay KEEP-NA, valid — unaffected by the credential
   fact: 2 operator-review production pilots (time-gated), 1 CLI-version design call, 1
   `accounts.json`-is-gitignored-per-VM data check. Whole-doc RECLASSIFY bar not cleared.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: KEEP-NA, valid — prior verdict re-verified,
+  content unchanged since round9. The re-sourcing todo remains correctly EXTRACTED (do not action here). Of the 4
+  items still open on this doc: 2 are operator-review production pilots (one time-gated week-long comparison, one
+  needing a real Claude-headroom-dependent run this checkout cannot exercise), 1 is a CLI-version/design fix on a
+  fleet-wide worker-boot-critical-path file, 1 is a data check explicitly "not locally doable — `accounts.json` is
+  gitignored/per-VM." None bounded for a background worker today.
