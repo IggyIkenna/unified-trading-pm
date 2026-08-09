@@ -5,11 +5,13 @@ title:
 summary: >-
   Operator ruling 2026-08-09: rather than complete all 6 tradfi MVP cells to 100% right now, immediate backfill work is
   narrowed to exactly the instruments needed for the equities-vs-perps basis strategy (Binance-listed equity perps
-  launched 2026). Completing the REST of the tradfi MVP universe (full-history equities beyond 2026, daily Treasuries,
-  VIX futures, CBOE yield index, FX KRW) to 100% is explicitly GATED until November 2026 — no plan/todo should drive
-  that broader work before then. This doc is the SSOT other tradfi plans point to; it supersedes the "MVP universe"
-  framing in `tradfi_consolidated_closeout_2026_07_18.md` for near-term dispatch purposes only (that doc's full 6-cell
-  definition stays valid as the eventual November target, it is not rewritten).
+  launched 2026), **plus the macro/USD-strength backdrop instruments** (CBOE Treasury yield-curve INDEX, FRED macro
+  series, KRW/USD, DXY) added by the 2026-08-09 (later same day) follow-up ruling below. Completing the REST of the
+  tradfi MVP universe (full-history equities beyond 2026, CME Treasury BOND FUTURES ZN/ZB/ZF/ZT, VIX futures) to 100% is
+  explicitly GATED until November 2026 — no plan/todo should drive that broader work before then. This doc is the SSOT
+  other tradfi plans point to; it supersedes the "MVP universe" framing in `tradfi_consolidated_closeout_2026_07_18.md`
+  for near-term dispatch purposes only (that doc's full 6-cell definition stays valid as the eventual November target,
+  it is not rewritten).
 status: open
 nature: process
 asset_group: [tradfi]
@@ -56,19 +58,32 @@ depends_on: []
 
 ## In scope — proceed now
 
-| Cell                                     | Scope                                                | Data type   | Source                   |
-| ---------------------------------------- | ---------------------------------------------------- | ----------- | ------------------------ |
-| Delta-one single-stock equities          | **Year 2026 only** (not the full multi-year history) | `ohlcv_1m`  | Databento (`DBEQ.BASIC`) |
-| Korean stocks (KRX)                      | Daily proxy only, no intraday                        | `ohlcv_24h` | Yahoo Finance            |
-| S&P 500 futures (ES)                     | Full 6.5-year history (2020-01-01 → now)             | `ohlcv_1m`  | Databento (`GLBX.MDP3`)  |
-| S&P 500 options (ES options)             | Full 6.5-year history (2020-01-01 → now)             | `ohlcv_1m`  | Databento (`GLBX.MDP3`)  |
-| CME BTC/ETH futures (BTC, ETH, MBT, MET) | Full history                                         | `ohlcv_1m`  | Databento (`GLBX.MDP3`)  |
-| BTC/ETH spot ETFs (e.g. IBIT, ETHA)      | Full history                                         | `ohlcv_1m`  | Databento (`DBEQ.BASIC`) |
+| Cell                                                                                             | Scope                                                | Data type                | Source                   |
+| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------- | ------------------------ | ------------------------ |
+| Delta-one single-stock equities                                                                  | **Year 2026 only** (not the full multi-year history) | `ohlcv_1m`               | Databento (`DBEQ.BASIC`) |
+| Korean stocks (KRX)                                                                              | Daily proxy only, no intraday                        | `ohlcv_24h`              | Yahoo Finance            |
+| S&P 500 futures (ES)                                                                             | Full 6.5-year history (2020-01-01 → now)             | `ohlcv_1m`               | Databento (`GLBX.MDP3`)  |
+| S&P 500 options (ES options)                                                                     | Full 6.5-year history (2020-01-01 → now)             | `ohlcv_1m`               | Databento (`GLBX.MDP3`)  |
+| CME BTC/ETH futures (BTC, ETH, MBT, MET)                                                         | Full history                                         | `ohlcv_1m`               | Databento (`GLBX.MDP3`)  |
+| BTC/ETH spot ETFs (e.g. IBIT, ETHA)                                                              | Full history                                         | `ohlcv_1m`               | Databento (`DBEQ.BASIC`) |
+| CBOE Treasury yield-curve INDEX (US3M/US2Y/US5Y/US10Y/US30Y)                                     | Full history                                         | `ohlcv_24h`              | Yahoo Finance            |
+| Macro series (UST curve, TIPS, FedFunds/SOFR, CPI, breakevens, GDP, UNRATE, VIXCLS — ~25 series) | Full history from 2018                               | `yield_curve`/`ohlcv_1d` | FRED                     |
+| KRW/USD spot (FX)                                                                                | Full history                                         | `ohlcv_24h`              | Yahoo Finance            |
+| DXY (US Dollar Index)                                                                            | Full history                                         | `ohlcv_24h`              | Yahoo Finance            |
 
 **Rationale**: Binance listed single-stock equity perps in 2026 — the equities-vs-perps basis strategy this is meant to
 feed only needs 2026-forward equities data to test against. S&P futures+options get the full window because the
 strategy's price-arb/ML backtest (`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`) explicitly runs a
 2020-2026 train/test split. BTC/ETH futures+ETFs are the crypto-adjacent legs of the same basis family.
+
+**Rationale — macro/USD-strength backdrop, added 2026-08-09 (same day follow-up)**: operator ruling — the CBOE Treasury
+yield-curve INDEX, the FRED macro series, KRW/USD, and DXY are macro/rates/USD-strength context instruments for the same
+basis strategy, sourced via Yahoo Finance / FRED (i.e. **not gated by the Databento billing question at all** — see
+"Relationship to the Databento billing-suspension issue" below). Treasuries here means **FRED ∪ Yahoo, union of both
+sources** (not either/or) — FRED and the CBOE-Yahoo yield-curve index are two distinct, already-real pipelines (see
+"Known relaunch gotchas" for the distinction other docs conflate). CME Treasury **bond futures** (ZN/ZB/ZF/ZT) are a
+third, separate Treasury surface (same Databento/CME venue as ES) — operator ruling 2026-08-09: **stays deferred to
+November**, not part of this in-scope list; do not confuse it with the now-in-scope CBOE yield-curve INDEX above.
 
 ## Out of scope — gated until November 2026
 
@@ -76,9 +91,10 @@ Everything else in the 6-cell tradfi MVP universe (`tradfi_consolidated_closeout
 
 - Delta-one single-stock equities for years **other than 2026** (i.e. completing the full historical equities corpus to
   100%).
-- Daily Treasuries (`ohlcv_24h`, FRED).
-- VIX FUTURE (CBOE) + CBOE yield INDEX.
-- FX KRW spot pair, beyond whatever the KRX-daily proxy already covers.
+- CME Treasury **bond futures** (ZN/ZB/ZF/ZT, Databento `GLBX.MDP3`) — distinct from the now-in-scope CBOE Treasury
+  yield-curve INDEX (Yahoo `ohlcv_24h`) above; registered + launcher-ready today (`CME_ROOTS` already has them) but not
+  MVP-tagged in `/codex/02-data/mvp-scope-canonical.md`'s underlier set — deferred, operator ruling 2026-08-09.
+- VIX FUTURE (CBOE).
 - Any FX/commodity futures backfill not named above (the currently-running `tradfi-bf-cme-ohlcv-1m-g0{1,2,3}-*` fleet —
   6A/6B/6C/6E/6J/6L currency futures, 6M/CL/CT/HG commodities — is **entirely out of this scope** and is being killed,
   not relaunched, per this ruling).
@@ -107,6 +123,19 @@ in-scope relaunch this doc authorizes.
 - ES ohlcv_1m capture has a real, confirmed (not vendor-side) gap May-December every year 2020-2026 — live-verified
   against Databento directly. Relaunching ES needs `--force`/`VM_FORCE=true` semantics that don't just skip on a false
   "already captured" read for those months, since the manifest's own `NO_INPUT_AVAILABLE` classification there is wrong.
+- **DXY has no backfill launcher today** — `launch-tradfi-bf-ice-ohlcv-1m.sh` is unrelated dead Databento scaffolding
+  (Brent/Gasoil/Sugar futures, `ICE_ROOTS=()` deliberately empty). A new small launcher is needed, templated off
+  `launch-tradfi-bf-fx-ohlcv-24h.sh` / `launch-tradfi-bf-cboe-indices-ohlcv-24h.sh` (source
+  `_tradfi-ohlcv-launcher-lib.sh`, `VM_VENUE=ICE`, `ohlcv_24h`, no `--source` needed — Yahoo, not Databento).
+- **None of the 4 new cells are `wave_launcher.py`-auto-dispatched.** `LAUNCHER_FOR_VENUE` only drives
+  CME/CBOE/NASDAQ/NYSE (FX/ICE/KRX excluded by design, `wave_launcher.py:19-40` docstring), and `VENUE_DATA_TYPES` is
+  empty so `ohlcv_24h` is never addressable regardless of venue (FX entry removed 2026-06-30, commit `b38dbff8`,
+  "descope FX from tradfi wave-launcher" — reason not re-investigated here). The Treasury-INDEX, FRED, KRW/USD, and
+  (once it exists) DXY backfills all need **manual** launcher invocation, same as the existing FX pattern — do not
+  assume registering an instrument makes it auto-dispatch.
+- **FRED backfill likely already ran** — `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` records
+  the FRED macro backfill launched and verified 2026-07-30 (`tradfi-bf-fred-full-*`). Check the manifest for actual
+  coverage before re-launching; this may already be a completeness-verify task, not a fresh backfill.
 
 ## Disposition of currently-running infra (2026-08-09)
 
@@ -133,6 +162,34 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
       (it's not wrong data, just out-of-priority-order right now) — either way, this confirms `wave_launcher.py` itself
       needs a scope-awareness gate reading this doc (or an equivalent config), not just the dedup-key fix above, or
       every future gap-scan will keep re-violating this ruling. Repo: deployment-service (`scripts/wave_launcher.py`).
+- [ ] [SCRIPT] P1. **NEW (2026-08-09 macro/USD backdrop addition)** — write a new DXY backfill launcher script
+      (`launch-tradfi-bf-ice-ohlcv-24h.sh` or similar), templated off `launch-tradfi-bf-fx-ohlcv-24h.sh` /
+      `launch-tradfi-bf-cboe-indices-ohlcv-24h.sh`: source `_tradfi-ohlcv-launcher-lib.sh`, `VM_VENUE=ICE`, `ohlcv_24h`,
+      no `--source` flag (Yahoo, not Databento). No launcher exists today — see "Known relaunch gotchas". Repo:
+      deployment-service.
+- [ ] [SCRIPT] P2. **NEW (2026-08-09)** — add `("ICE", "INDEX", "DXY")` to `extra_mvp_cells` in UAC's
+      `unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py` so DXY counts toward the tradfi MVP
+      completeness denominator (`is_mvp()` currently returns `False` for it — registered + fetched, but not MVP-tagged).
+      Repo: unified-api-contracts.
+- [ ] [DATA] P1. **NEW (2026-08-09)** — before launching anything: check the manifest for actual FRED coverage (the FRED
+      macro backfill reportedly ran 2026-07-30 per
+      `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` — this may already be a verify-only task).
+      Then launch/verify full-history backfills for the CBOE Treasury yield-curve INDEX and KRW/USD (existing launchers,
+      manual invocation per "Known relaunch gotchas"), and DXY once its launcher exists (todo above).
+- [ ] [DOCS] P2. **NEW (2026-08-09)** — propagate this scope update to: `/codex/02-data/mvp-scope-canonical.md`
+      (document the existing `extra_mvp_cells` — CBOE Treasury INDEX, FX KRW — and add DXY once the UAC todo above
+      ships), `/codex/02-data/cross-asset-canonical-target-ssot.md` (missing DXY canonical-id row), and
+      `/codex/09-strategy/mvp-universe-per-asset-group.md` (stale "fixed-income... post-cutover, out of MVP" claim — now
+      wrong). Repo: unified-trading-pm.
+- [ ] [SCRIPT] P2. **NEW (2026-08-09)** — add `("ICE", "ohlcv_24h")` to `_TRADFI_MVP_SHARDS` in
+      `market-tick-data-service/scripts/pipeline_e2e_check.py:330-338` so the MTDS `--mvp-only` smoke test exercises DXY
+      (Treasury-INDEX/CME and KRWUSD/FX cells are already covered in that hand-listed set). Repo:
+      market-tick-data-service.
+- [ ] [SCRIPT] P3. **NEW (2026-08-09)** — add `IBIT`/`ETHA` to `_DEFAULT_TICKERS` in
+      `features-service/features_service/calendar/cli/handlers/corporate_actions_handler.py:52-75` so the
+      corporate-actions (dividends/splits/earnings) sweep covers the newly-in-scope BTC/ETH spot ETFs — the production
+      sharding config doesn't pass `--tickers`, so it silently falls through to this hardcoded default today. Repo:
+      features-service.
 
 ## Progress Log
 
@@ -150,3 +207,17 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
   `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` reports a live, unresolved possible
   violation of this doc's "year 2026 only" scope contending for the same account-wide Databento lock as the authorized
   ES_OPT launch -- worth a prompt look by whoever owns tradfi triage today.
+- **2026-08-09 (same day, follow-up ruling)**: operator asked for a canonical-vs-conflicting instrument-scope audit (4
+  parallel research agents: doc landscape, backfill-script capability, instruments-service/UAC registry,
+  MTDS/MDPS/features/reconciliation-skill dynamism). Findings: (1) DXY has a near-total documentation gap — shipped in
+  code/features/one prior ruling (`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, 2026-06-25 operator ruling:
+  "DXY canonical along with KRWUSD... not one-offs") but absent from this doc, the code-level `mvp-scope-canonical.md`,
+  and the canonical-id SSOT. (2) This doc's own "Daily Treasuries (ohlcv_24h, FRED)" out-of-scope line conflated two
+  distinct real pipelines — the Yahoo-sourced CBOE yield-curve INDEX and the separate FRED macro-series adapter —
+  corrected below. (3) Operator ruling: Treasuries in scope = the yield-curve INDEX (FRED ∪ Yahoo, union of both), NOT
+  the CME Treasury bond futures (ZN/ZB/ZF/ZT), which stay deferred to November. (4) KRWUSD and the yield-curve INDEX
+  need zero new code (registered, MVP-tagged, launcher-ready) but are NOT `wave_launcher.py`-auto-dispatched (manual
+  launch only, FX/ICE/`ohlcv_24h` excluded by design). DXY needs one new launcher script (genuine gap) + one UAC MVP-tag
+  line. Added these 4 cells to "In scope", corrected the out-of-scope section, and filed 6 new tracked todos (launcher
+  script, UAC MVP-tag, backfill launch/verify, codex doc propagation, MTDS smoke-test entry, features-service
+  corp-actions ticker list).
