@@ -113,17 +113,26 @@ every relaunch, not a one-off.** This looks like the launcher's own singleton-lo
 invocation: a freshly-inserted VM takes some seconds to reach `RUNNING`, so two invocations within that window can both
 see "no existing running VM" and both proceed to create. **Operator-supplied follow-up evidence (same incident window,
 post-fix): a SECOND near-simultaneous double-launch happened on the very relaunch of the first.**
-`cefi-fwd-20260806-064507` (06:45:13/06:45:26Z double-insert, the original false-positive-preempted VM) TERMINATED, then
+`cefi-fwd-20260806-064507` (06:45:13/06:45:26Z, the original false-positive-preempted VM) TERMINATED, then
 `cefi-fwd-20260806-065757` (06:57:57Z — ~12 min later, apparently a relaunch of the first) ALSO TERMINATED, and
-`cefi-fwd-20260806-065837` (06:58:43Z — only **46 seconds** after `-065757`) is the one left RUNNING. So the race fired
-TWICE in one incident window, once per launch attempt — this is a recurring pattern tied to every cefi-fwd launch
-(manual/cron-triggered or relaunch alike), not a rare fluke. I searched `plans/active/issues/` for an existing cefi-fwd
-duplicate-launch doc and found none (the operator's own search also came up empty) — this is a genuinely new
+`cefi-fwd-20260806-065837` (06:58:43Z — only **46 seconds** after `-065757`) is the one left RUNNING.
+
+**Correction (2026-08-09, plan_reconciler, live-verified via `gcloud logging read` on the raw audit trail, same method
+`cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`'s root-cause todo used):** `-064507`'s own
+06:45:13/06:45:26 pair is **NOT** a double-insert — both log lines share one `operation.id`
+(`operation-1785998713266-...`), the standard first/last pairing for a single async insert. So the race did **NOT** fire
+on the original launch as this entry originally claimed. It DID fire once, confirmed, on the relaunch: `-065757` and
+`-065837` carry two DIFFERENT `operation.id`s (`operation-1785999482640-...` / `operation-1785999522316-...`) — two
+genuinely distinct VM-create operations ~33-46s apart. Net: **confirmed ONCE in this incident window, not twice** —
+still worth the scoped fix below (a single duplicate-VM-create is still real launcher-side risk/billing-waste), but
+"recurs on every relaunch"/"deterministic" below overstates the current evidence (n=1 confirmed instance, not a repeated
+pattern) until a second independent occurrence is actually observed. I searched `plans/active/issues/` for an existing
+cefi-fwd duplicate-launch doc and found none (the operator's own search also came up empty) — this is a genuinely new
 observation, not a known/tracked issue. I did NOT fix it here: it is a separate mechanism (a launcher-side TOCTOU race,
 not the classifier) from this doc's false-PREEMPTED-page root cause (the veto closes that regardless of whether the
 duplicate-insert race is ever fixed) — bounding it properly (a short-lived GCS/Firestore lock, or a
 create-then-verify-singleton retry) deserves its own scoped fix rather than a rushed addition here. Upgraded from P3 to
-P2 given it recurs deterministically rather than being a one-off — see the follow-up todo below.
+P2 given a confirmed real duplicate-VM-create, not a one-off misread — see the follow-up todo below.
 
 ## What shipped
 
@@ -166,24 +175,29 @@ exposed to this class before the veto shipped.
 ## Recommended decision
 
 - [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-08 — no trigger needed, already picked up by the routine build cadence.**
-      Once `deployment-service`/`unified-trading-library` land on `live-defi-rollout` and promote to `main`, confirm
-      (or trigger) a fresh `deployment-api` build+deploy so the live `uts-prod-dp-exit-code-monitor` Cloud Run job
-      actually picks up the fix (same deploy-lag gap `cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md`
+      Once `deployment-service`/`unified-trading-library` land on `live-defi-rollout` and promote to `main`, confirm (or
+      trigger) a fresh `deployment-api` build+deploy so the live `uts-prod-dp-exit-code-monitor` Cloud Run job actually
+      picks up the fix (same deploy-lag gap `cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md`
       flagged for the prior preemption fix). Done when
       `gcloud artifacts docker images list asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/deployment-api --include-tags --sort-by=~UPDATE_TIME --limit=1`
       shows an `UPDATE_TIME` after this fix's merge commit. **Live-checked 2026-08-08**: fix commit
       `deployment-service@5bd0017b` landed `2026-08-06T10:53:59+01:00`; the `deployment-api` image has since been
-      rebuilt repeatedly (5 builds on 2026-08-08 alone), latest `sha256:fc6deaf8` tagged `latest`, `UPDATE_TIME
-      2026-08-08T07:23:26` — well after the fix commit. `gcloud run jobs describe uts-prod-dp-exit-code-monitor`
-      confirms the job references `deployment-api:latest`, and Cloud Run Jobs pull the tag fresh per execution, so the
-      live monitor already runs the fixed code. This was never actually an operator-only action — `deployment-api`
-      rebuilds on a routine, frequent cadence (multiple builds/day observed) independent of any manual trigger.
-- [ ] [SCRIPT] P2. Fix the `launch-cefi-forward-poll.sh` singleton-lock TOCTOU race — CONFIRMED RECURRING, not a
-      one-off: it fired on BOTH the original launch (`-064507`/`-064513`/`-064526`, insert timestamps 13s apart) AND its
-      own relaunch 12 minutes later (`-065757` then `-065837`, only 46s apart) in the same incident window. Bound the
-      singleton check with a short-lived GCS/Firestore lock, or accept a brief `sleep`+re-check before create. Repo:
-      deployment-service. Separate from this doc's root-cause fix (the `is_spot` veto is unaffected by whether this race
-      is ever fixed); upgraded from P3 given the confirmed recurrence.
+      rebuilt repeatedly (5 builds on 2026-08-08 alone), latest `sha256:fc6deaf8` tagged `latest`,
+      `UPDATE_TIME     2026-08-08T07:23:26` — well after the fix commit.
+      `gcloud run jobs describe uts-prod-dp-exit-code-monitor` confirms the job references `deployment-api:latest`, and
+      Cloud Run Jobs pull the tag fresh per execution, so the live monitor already runs the fixed code. This was never
+      actually an operator-only action — `deployment-api` rebuilds on a routine, frequent cadence (multiple builds/day
+      observed) independent of any manual trigger.
+- [ ] [SCRIPT] P2. Fix the `launch-cefi-forward-poll.sh` singleton-lock TOCTOU race — **CONFIRMED ONCE (corrected
+      2026-08-09, plan_reconciler, live-verified — was "CONFIRMED RECURRING"/"fired on BOTH"):** the original launch
+      (`-064507`, insert timestamps 13s apart) was NOT a race — both log lines share one `operation.id`, standard
+      single-op async logging. The race DID genuinely fire once, on the relaunch 12 minutes later (`-065757` then
+      `-065837`, two DIFFERENT `operation.id`s, ~46s apart) — a real duplicate-VM-create in this incident window, but
+      n=1 confirmed, not a demonstrated recurring pattern. Still worth fixing (a single duplicate launch is real
+      billing-waste/race risk). Bound the singleton check with a short-lived GCS/Firestore lock, or accept a brief
+      `sleep`+re-check before create. Repo: deployment-service. Separate from this doc's root-cause fix (the `is_spot`
+      veto is unaffected by whether this race is ever fixed); stays P2 given a confirmed real occurrence, though the
+      recurrence claim that justified the P3→P2 bump no longer holds as originally stated.
 - [ ] [SCRIPT] P3. If runtime/serial-console access to a freshly-`instances.stop`'d `cefi-fwd-*` VM is ever available
       before it self-cleans, capture the shutdown-script's own log line
       (`[preemption-shutdown] wrote PREEMPTED signal for ...` vs "FAILED") to pin down whether the false signal came
@@ -225,15 +239,14 @@ exposed to this class before the veto shipped.
 - **round5-cefi-question-resolution 2026-08-08**: line-168 `[OPERATOR]` deploy-confirmation item flipped `[x]` —
   live-checked `gcloud artifacts docker images list` shows `deployment-api` rebuilt `2026-08-08T07:23:26` (well after
   this doc's `2026-08-06T10:53:59+01:00` fix commit), and `gcloud run jobs describe uts-prod-dp-exit-code-monitor`
-  confirms it runs `deployment-api:latest`. This was never a genuine operator-only decision — `deployment-api`
-  rebuilds on a routine multi-times-daily cadence independent of manual triggering.
+  confirms it runs `deployment-api:latest`. This was never a genuine operator-only decision — `deployment-api` rebuilds
+  on a routine multi-times-daily cadence independent of manual triggering.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — never re-litigated (established
   ruling). The remaining line-181 `[SCRIPT]` P2 TOCTOU-race item is still ALREADY claimed by
-  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 2 (confirmed re-checked in that batch's own text, "unclaimed
-  by any other" caveat notwithstanding — this doc IS the claim it's checking against); reclassifying here would
-  create a duplicate-dispatch surface. Independently re-confirmed by
-  `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s "Deferred — operator-gated" section (drafted/activated the
-  same day, a separate `/ag-closeout-audit` run), which lists this exact doc and reaches the identical conclusion
-  ("item 2 is already covered by an active in-flight batch9 todo"). Line-187 `[SCRIPT]` P3 item remains explicitly
-  time-gated/opportunistic, not blocking. Doc stays NA; the 2026-08-07 conflict citation and this run's independent
-  reaffirmation both hold.
+  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 2 (confirmed re-checked in that batch's own text, "unclaimed by
+  any other" caveat notwithstanding — this doc IS the claim it's checking against); reclassifying here would create a
+  duplicate-dispatch surface. Independently re-confirmed by `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s
+  "Deferred — operator-gated" section (drafted/activated the same day, a separate `/ag-closeout-audit` run), which lists
+  this exact doc and reaches the identical conclusion ("item 2 is already covered by an active in-flight batch9 todo").
+  Line-187 `[SCRIPT]` P3 item remains explicitly time-gated/opportunistic, not blocking. Doc stays NA; the 2026-08-07
+  conflict citation and this run's independent reaffirmation both hold.

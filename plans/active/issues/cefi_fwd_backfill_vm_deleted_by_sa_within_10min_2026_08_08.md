@@ -149,18 +149,27 @@ before launch.
       completed). This is standard GCE Cloud Audit Logging behavior for ANY async insert — confirmed by checking the
       SAME window: every one of the ~20 concurrent `tradfi-bf-cme-ohlcv-*` VM creates running at 11:01-11:11 UTC that
       morning shows the identical first/last pairing, and nobody is claiming those are double-launches. Exactly ONE VM
-      (`cefi-fwd-20260808-110409`) was ever created. Same finding for the prior `cefi-fwd-20260806-064507`/`-065837`
-      "13s apart" pairs — also single operations, not two VMs. 2. **Neither guard did it, and neither could have:** -
-      `tardis-concurrency-guard.sh` has no delete code path at all (confirmed by reading the file — only
-      `tardis_concurrency_guard`/`tardis_guard_reserve_slot`, both pre-flight refuse-or-warn, never delete). -
-      `vm_zombie_watchdog.py` (the "zombie watchdog") gates on `--min-age` (default **15 min**) before a VM is even
-      considered — `cefi-fwd-20260808-110409` was deleted at T+10-13min, structurally too young for this watchdog to
-      have acted on it. It also deletes via the Python `compute_v1` client library (`compute_client.delete(...)`), which
-      stamps a distinct User-Agent (`python-requests/...`/google-api-python-client — confirmed by finding real
-      watchdog/self-delete audit entries in the same 7-day window with that exact signature, principal = the GCE default
-      compute SA or `uts-prd-sa`, never `unified-trading-sa` + `agent-name/claude_code`). 3. **The actual deleter,
-      confirmed from the audit log's `requestMetadata.callerSuppliedUserAgent`:** both `v1.compute.instances.delete`
-      calls (11:14:58 first / 11:17:12 last — again one operation, not two) were issued via the **`gcloud` CLI**
+      (`cefi-fwd-20260808-110409`) was ever created. Same finding for `cefi-fwd-20260806-064507`'s own "13s apart" pair
+      (06:45:13/06:45:26, one `operation.id`) — also a single operation, not two VMs. **Correction (2026-08-09,
+      plan_reconciler, live-verified via the same `gcloud logging read` method on the raw audit trail):** this does
+      **NOT** extend to `-065757`/`-065837` as a pair — those are two DIFFERENT VM resources with two DIFFERENT
+      `operation.id`s (`operation-1785999482640-...` for `-065757`, `operation-1785999522316-...` for `-065837`; each
+      individually is a real single first/last-logged op, ~7s and ~14s respectively), created ~33-46s apart. A genuine
+      double-launch DID occur across that pair — this doc's root-cause finding correctly debunks the WITHIN-one-VM-name
+      "double-insert" reading but does not, on its own evidence, debunk the CROSS-VM-name double-launch
+      `cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md`'s todo 2 (the TOCTOU singleton-lock
+      race fix) is about — that todo should stay open pending its own investigation, not be considered resolved by this
+      finding. 2. **Neither guard did it, and neither could have:** - `tardis-concurrency-guard.sh` has no delete code
+      path at all (confirmed by reading the file — only `tardis_concurrency_guard`/`tardis_guard_reserve_slot`, both
+      pre-flight refuse-or-warn, never delete). - `vm_zombie_watchdog.py` (the "zombie watchdog") gates on `--min-age`
+      (default **15 min**) before a VM is even considered — `cefi-fwd-20260808-110409` was deleted at T+10-13min,
+      structurally too young for this watchdog to have acted on it. It also deletes via the Python `compute_v1` client
+      library (`compute_client.delete(...)`), which stamps a distinct User-Agent
+      (`python-requests/...`/google-api-python-client — confirmed by finding real watchdog/self-delete audit entries in
+      the same 7-day window with that exact signature, principal = the GCE default compute SA or `uts-prd-sa`, never
+      `unified-trading-sa` + `agent-name/claude_code`). 3. **The actual deleter, confirmed from the audit log's
+      `requestMetadata.callerSuppliedUserAgent`:** both `v1.compute.instances.delete` calls (11:14:58 first / 11:17:12
+      last — again one operation, not two) were issued via the **`gcloud` CLI**
       (`google-cloud-sdk gcloud/569.0.0 ... agent-name/claude_code        command/gcloud.compute.instances.delete`),
       authenticated as `unified-trading-sa`, from IP `13.113.200.22` (the `planning` orchestrator VM's own EIP). This is
       a **Claude Code agent session running `gcloud compute instances delete` directly**, not any automated safety

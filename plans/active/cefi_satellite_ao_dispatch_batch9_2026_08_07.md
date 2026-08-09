@@ -113,14 +113,16 @@ context_scope:
       when**: the source doc's `[DATA] P3` Follow-ups checkbox is flipped `[x]` citing a confirm/refute verdict backed
       by live manifest + archive-key evidence (or, if confirmed and a fix is out of the audit's scope, a new issue filed
       with the evidence).
-- [ ] [SCRIPT] P2. **Fix the `launch-cefi-forward-poll.sh` singleton-lock TOCTOU double-insert race — CONFIRMED
-      RECURRING** (fired on BOTH the original launch — insert timestamps 13s apart — and its own relaunch 12 minutes
-      later — 46s apart — in the same incident window). Bound the singleton check with a short-lived GCS/Firestore lock
-      or an accepted `sleep`+re-check-before-create, with 2+ regression tests; `quality-gates.sh` green before ship.
-      **Not a conflict with the already-shipped filter fix**: `deployment-service@fa794a1` (2026-08-04) anchored the
-      singleton-lock FILTER on the RUN_TS digit so a cron host no longer collides with the daily worker — that closed a
-      filter-pattern collision, NOT this TOCTOU window between check and insert; this todo is unclaimed by any other
-      plan (verified corpus-wide). Source:
+- [ ] [SCRIPT] P2. **Fix the `launch-cefi-forward-poll.sh` singleton-lock TOCTOU double-insert race — CONFIRMED ONCE**
+      (corrected 2026-08-09, plan_reconciler, live-verified against the source doc — was "CONFIRMED RECURRING"/"fired on
+      BOTH": the original-launch 13s-apart pair shares one `operation.id`, standard single-op logging, not a race; the
+      relaunch 46s-apart pair (`-065757`/`-065837`) has two DIFFERENT `operation.id`s — a genuine single confirmed
+      double-launch, not a demonstrated recurring pattern). Still real, still worth fixing. Bound the singleton check
+      with a short-lived GCS/Firestore lock or an accepted `sleep`+re-check-before-create, with 2+ regression tests;
+      `quality-gates.sh` green before ship. **Not a conflict with the already-shipped filter fix**:
+      `deployment-service@fa794a1` (2026-08-04) anchored the singleton-lock FILTER on the RUN_TS digit so a cron host no
+      longer collides with the daily worker — that closed a filter-pattern collision, NOT this TOCTOU window between
+      check and insert; this todo is unclaimed by any other plan (verified corpus-wide). Source:
       `issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md` (todo 2, line ~175 — the doc's
       items 1 (`[OPERATOR]` deployment-api redeploy confirmation) and 3 (time-gated serial-console capture) stay OPEN in
       the source doc; do not touch them). **Done when**: the fix ships on `live-defi-rollout` via quickmerge with the
