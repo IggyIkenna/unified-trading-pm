@@ -952,3 +952,7 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   ~1,000-2,500/interval), heartbeat live throughout both fleets. No incidents this stretch.
 - **10:49Z** — smallchunk10 still chunk 18, 21 `CHUNK_FAILED` (in-range), heartbeat live. FIXTURE_LINEUPS needed
   **34,003 → 32,547** (-1,456). Both healthy. Did a compaction pass (962→952 lines).
+- **11:04Z** — smallchunk10 chunk 18 finally cleared (26 total `CHUNK_FAILED` before clearing) and moved on to chunk
+  19/451, real forward work (`Odds API batch complete: date=2020-09-07`), heartbeat ~1.5min old, RSS ~1.08GiB/7.7% —
+  healthy, no OOM signature on the new chunk. Full detail:
+  `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`.
