@@ -7,7 +7,7 @@ summary: >-
   resolve-canonical-versions.py, same entry) are now PARTIALLY conflict-clear: the original blocking conditions (batch1b
   BACKEND P3 sub-item 3 + ci-batch2 todos 1/11) have ALL landed. However a NEW claim on base-service.sh has appeared:
   `infra_satellite_ao_dispatch_batch6_2026_08_02.md`'s open `[INFRA] P3` UV_LINK_MODE todo. Re-check after batch6 ships.
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -37,13 +37,17 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "unified-trading-pm (ag_closeout_auditor, infra tranche, dispatch agt-3b6f6b, 2026-08-09)"
 depends_on: []
 source: >-
   Authored by slot-6 as step 1 of the 6-step archival ritual for
   `infra_satellite_ao_dispatch_batch3_finalize_2026_07_30.md` (2026-08-07). Migrates the G1/G2 deferred items from the
   batch3 parent's Deferred table so they are tracked as a `- [ ]` todo, not stranded prose.
 ---
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED** (status: resolved, 0 open todos, unlocked). G1 confirmed fully done (4/4 items,
+> landed via other channels, never cross-referenced back here); G2 extracted into
+> `infra_satellite_ao_dispatch_batch9_2026_08_09.md`. Archived by `/ag-closeout-audit infra` (dispatch agt-3b6f6b).
 
 # Infra batch3 Deferred G1/G2 — gate update
 
