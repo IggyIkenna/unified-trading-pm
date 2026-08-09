@@ -66,12 +66,13 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P0. **Dedicated zombie sweep** — beyond the original audit, specifically hunt for: (a) Cloud Run job
-      EXECUTIONS stuck in a non-terminal state far longer than the job's peers (truly stuck, not the already-found
-      OOM-crash-loops which DO recover), (b) duplicate/orphaned VMs doing redundant work on the same target (the
-      `uts-prod-alerting-paging` dual-consumer pattern from earlier today is the template for this class of bug), (c)
-      any GCE VM with a heartbeat that stopped climbing days ago but the instance is still billably RUNNING. Report only
-      genuinely-zombie findings, not restatement of the original audit.
+- [x] [SCRIPT] P0. ✅ **Dedicated zombie sweep — DONE 2026-08-07.** Bullets (b)/(c) found nothing new beyond what was
+      already tracked (no second dual-consumer pattern; every long-running VM's heartbeat was current within 1-2 min;
+      the fleet's own `vm-zombie-watchdog` independently confirms 0 zombies). Bullet (a) uncovered a much bigger
+      standalone finding instead: ~38 Cloud Scheduler jobs (asia-northeast1 + europe-west1) firing daily/hourly at Cloud
+      Run Job targets that no longer exist — some for 500+ consecutive failed executions (~1.4 years). Triaged +
+      bulk-paused separately (see the "Zombie scheduler triage" work below +
+      `/plans/active/issues/     asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md`).
 - [x] [SCRIPT] P0. ✅ **STALE DUPLICATE — already done, closing 2026-08-07 (na-eligibility-audit).** Alert-coverage
       cross-reference — for every finding below (excluding the DeFi consolidator), check `#data-pipeline-alerts` and
       `#uts-live-alerts` for a matching alert; cross-check against the DP-* registry; produce a finding→alert-fired
