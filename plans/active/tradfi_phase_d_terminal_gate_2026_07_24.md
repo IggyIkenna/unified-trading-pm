@@ -566,7 +566,7 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   independent same-day audits (this doc and the blocker doc itself) now converge on the identical conclusion. Gate
   correctly stays blocked, not prematurely. Nothing to reclassify.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
-- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:cefa9f835d33773a]: **KEEP-NA,
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:adb10cf9ee27521c]: **KEEP-NA,
   stale items -- open-item count corrected 2 -> 4, 1 citation flagged (not corrected).** A dedicated sub-agent hunter
   found 2 ADDITIONAL genuinely-open items (the CboeCorrection-test todo and the retire-phase-candidate-review todo, both
   later in this doc) that were invisible to checkbox tooling because the entire line was wrapped in inline backticks --

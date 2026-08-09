@@ -705,7 +705,7 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   mechanism, not this skill's whole-doc reclassification — recording the match here so the next satellite-batch author
   (who already missed the sibling G1-retirement-purge extraction per the marker above) picks up both together. No
   `assigned_vm` change.
-- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:7b5881adce91dcba]:
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:aec4167a0e2554f0]:
   **KEEP-NA-STALE (already-duplicated), re-confirmed, no changes needed.** All 4 open items re-read end-to-end via a
   dedicated sub-agent hunter; count reconciled (4/4). The 2 items citing
   `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` as their live dispatch vehicle were independently verified against

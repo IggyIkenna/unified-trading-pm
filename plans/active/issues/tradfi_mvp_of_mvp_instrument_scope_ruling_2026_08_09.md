@@ -128,7 +128,7 @@ resumed. See Progress Log below for the kill + scoped-relaunch record.
 
 - 2026-08-09: doc created, scope ruling recorded. Sweep of tradfi plans/issues for regression risk against this scope in
   progress — see this doc's `related` list and the per-doc scope notes added to each.
-- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:6042e905158a4d47]: **KEEP-NA,
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:6648d0c11c478b7d]: **KEEP-NA,
   valid -- first audit, functioning correctly as an SSOT ruling doc.** A dedicated sub-agent hunter read this doc
   end-to-end plus cross-referenced its live consumers (`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
   `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` -- both confirmed already citing this ruling correctly, same day).

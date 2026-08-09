@@ -143,7 +143,7 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
   the residual root-cause fix (build-time filter) + re-enable path, kept separate from the purge todo itself since it's
   a distinct, cross-cutting infra-correctness finding.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
-- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:db26387884d3876e]:
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:5dc4d63f3807f9b1]:
   **KEEP-NA-STALE (already-duplicated), first audit -- 1 citation added.** All 4 open items read end-to-end via a
   dedicated sub-agent hunter; count reconciled (4/4). Item 1 (the build-time exclusion filter) turned out to duplicate
   `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` verbatim (3-way convergence: that plan, this doc, and
