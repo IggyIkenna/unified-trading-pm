@@ -170,12 +170,19 @@ INVERSE case was found and corrected instead (see Contradictions).
 
 Per the Phase-5.9(a) ledger: 3 items routed to the operator this run, 3 filed here — **routed == parked (3 == 3)**.
 
-1. **`BLK-0b3e403d`** — line-cap carve-out (`scripts/plan-hygiene/check_line_caps.sh`, shipped `cff285743`) has a
-   boundary bug: only rescues a file already over-cap pre-edit; a file sitting at EXACTLY 1000 lines making its first
-   marker edit is NOT rescued, reproducing the "permanently unverdictable" bug it was built to fix. Confirmed live via
-   direct read of the script logic + 2 independent docs (`lst_rate_honest_coverage_2026_07_21.md`,
-   `data_pipeline_check_mdps_features_2026_07_20.md`) both sitting at exactly 1000L right now. Fix is outside
-   `plans/**`, cannot self-apply. **[WORKER REC: widen `-gt` to `-ge`]**
+1. **`BLK-0b3e403d`** — ✅ **RESOLVED 2026-08-09 01:01 UTC (operator, disposition: final).** Line-cap carve-out
+   (`scripts/plan-hygiene/check_line_caps.sh`, shipped `cff285743`) had a boundary bug: only rescued a file already
+   over-cap pre-edit; a file sitting at EXACTLY 1000 lines making its first marker edit was NOT rescued, reproducing the
+   "permanently unverdictable" bug it was built to fix. Confirmed live via direct read of the script logic + 2
+   independent docs (`lst_rate_honest_coverage_2026_07_21.md`, `data_pipeline_check_mdps_features_2026_07_20.md`) both
+   sitting at exactly 1000L. **Operator's answer**: option A confirmed, fixed directly (`-gt` → `-ge` at line 143, same
+   bug fixed in the bats test helper, regression test added for the exact-boundary case), shipped
+   `unified-trading-pm@1f65e1464` via the `scripts/**` direct-push carve-out (D16) — **verified by plan_reconciler**:
+   `1f65e1464` confirmed reachable on `origin/live-defi-rollout` via `git merge-base --is-ancestor`, diff content
+   matches the operator's description exactly. (Note: the operator's answer initially landed as
+   `blocked_message_orphaned_by_reassign` — likely caused by a context-compaction event on this slot at ~01:02:18 UTC
+   racing the delivery; recovered via the `/api/activity` feed rather than `/api/slots/2/messages`, which stayed empty
+   throughout.)
 2. **`BLK-d59ebc8e`** — 4 confirmed codex-SSOT staleness items (plans→codex updates never autonomous, need operator
    ruling before any edit): `defi-data-types-catalog.md:267` (staking_yields Status stale, should bump to Production);
    `pnl-attribution.md` lines 637+734 (both mislabel themselves "Hard Rule #4"; the real #4 is at line 82);
