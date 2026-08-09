@@ -253,3 +253,24 @@ in-flight VMs (which stay hands-off per the separate staleness-check rule).
   work is out-of-scope-but-not-wasteful once already in flight). Did not touch any VM or the scheduler job. This P2 todo
   stays open pending the operator's answer — the determination (documented above) is complete, the kill DECISION is not
   mine to make.
+- **2026-08-09 ~13:15Z, slot-7 — operator INTERIM answer on `BLK-19380fd8` (final decision on the non-duplicate VMs
+  still PENDING separately)**: operator split the decision by risk category. (1) **CME duplicate pairs are a
+  DATA-CORRECTNESS issue, not just scope** — two processes concurrently writing the same shard risks a race / silently
+  corrupted or overwritten output, independent of the scope ruling; directed to kill the duplicate side now since the
+  legitimate/already-running `g01-*` side is confirmed progressing and nothing legitimate is lost. (2) The remaining
+  purely-out-of-scope, non-duplicate VMs are a sunk-cost-vs-ongoing-violation budget tradeoff the operator is deciding
+  separately (already flagged to them directly outside this doc) — explicitly NOT auto-resolved by the scope ruling
+  alone; leave them running pending that separate answer. **Action taken**: re-confirmed both duplicate pairs still
+  RUNNING (`tradfi-bf-cme-ohlcv-1m-es-2020-20260809-120142` + `tradfi-bf-cme-ohlcv-1m-met-2023-20260809-120247` were the
+  later-started (`12:0x` UTC) duplicate side vs. the earlier-started (`09:0x` UTC) `g01-*` originals), then
+  `gcloud compute instances delete tradfi-bf-cme-ohlcv-1m-es-2020-20260809-120142 tradfi-bf-cme-ohlcv-1m-met-2023-20260809-120247 --zone=asia-northeast1-c --quiet`
+  — both confirmed `Deleted`. The `g01-es-es-2020` / `g01-met-met-2023` originals are untouched and still RUNNING.
+  **Current fleet for the operator's pending sunk-cost decision (13:16Z, post-dedup-kill)**: 16 `tradfi-bf-*` VMs total
+  — 2 in-scope `g01-*` (keep) + **14 out-of-scope, non-duplicate** (down from the 19 cited to the operator ~15min prior
+  — 5 completed naturally in the interim under the now-paused cron): 3× CME new-year (mbt-2024, met-2024, met-2025) + 6×
+  NASDAQ (2023-d01, 2024-d02/d04/d05, 2025-d02/d04) + 5× NYSE (2023-d01/d03, 2024-d02/d04/d05). All 14 are
+  `e2-highmem-16` (16 vCPU / 128GB) on SPOT provisioning. Rough burn estimate (SPOT e2-highmem-16 list-price-derived,
+  NOT a Billing-API-verified figure): ~$0.25-0.35/VM-hr → **~$3.50-4.90/hr aggregate** for the 14, on top of whatever
+  Databento API-call spend they're each individually accruing (not measured here). No further action taken on these 14 —
+  waiting on the operator's separate answer. This P2 todo's duplicate-VM sub-item is now closed (evidence above); the
+  NASDAQ/NYSE/CME-new-year sub-item stays open pending that answer.
