@@ -101,3 +101,13 @@ The observed NASDAQ/NYSE 2023/2024 VMs match the shape of exactly the out-of-sco
 ## Progress Log
 
 - 2026-08-09: filed as a passive observation during an unrelated ES_OPT monitoring session. Not investigated further.
+- 2026-08-09 ~05:20Z: escalating priority context — this NASDAQ/NYSE wave (5 of the 10 `tradfi-bf-*` VMs still RUNNING)
+  is now directly co-occupying the shared Databento singleton lock with
+  `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` todo #2's operator-authorized, in-scope ES_OPT launch, which has
+  been blocked >1hr this session alone (lock flat at 10 VMs across two full 8-10min poll windows, zero clears).
+  SSH-verified the in-scope CME `g01` shards (ES/ETH/MBT/MET) are alive and genuinely progressing (not zombied —
+  confirmed a fresh 2020-06-03..09 chunk fetch mid-run), so this isn't a stuck-process false lock; it's a real, slow,
+  multi-hour full-year backfill that the out-of-scope NASDAQ/NYSE wave is needlessly extending queue time on. Still not
+  touching these VMs (no kill, no `--force` bypass of the singleton lock — a shared-account rate-limit collision risks
+  corrupting the very run this doc is trying to protect). Flagging that the action item below now blocks P0 authorized
+  work, not just a hygiene concern.
