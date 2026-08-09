@@ -188,7 +188,30 @@ operator/architecture call, not a mechanical fix.
       the established `bybit_ws._instrument_to_bybit_symbol` pattern). 2 new regression tests
       (`test_perpetual_strips_lin_margin_marker`/`test_perpetual_strips_inv_margin_marker`); all 113 OKX connector tests
       pass. **Not yet live-verified past deploy** — like the BINANCE-FUTURES/BYBIT-FUTURES/DERIBIT fixes above, this
-      needs a VM cycle to pick up the code change before a fresh manifest read can confirm real rows landing.
+      needs a VM cycle to pick up the code change before a fresh manifest read can confirm real rows landing. —
+      **CORRECTION, 2026-08-09, slot 6, `market-tick-data-service@98fad5ad`**: the `52383e877` fix above only covers the
+      OUTBOUND half (`_instrument_to_okx_inst_id` stripping the marker before subscribing) — that alone is INSUFFICIENT.
+      `_build_okx_canonical_id` (the INBOUND parse direction, used to turn a real received wire instId back into a
+      canonical instrument_id) was never updated to re-attach the `@LIN`/`@INV` marker, so a real received tick's
+      canonical id (e.g. `OKX-SWAP:PERPETUAL:0G-USDT`, no marker) never matches the IS-universe-derived buffer key
+      (`OKX-SWAP:PERPETUAL:0G-USDT@LIN`, with marker) that `websocket_runner._buffers` is keyed on — `record_tick`'s
+      "unknown/dropped instrument silently skipped" path drops every real tick anyway, even though the subscribe itself
+      now succeeds. Fixed `_build_okx_canonical_id` to derive the same `@LIN`/`@INV` marker from the quote asset
+      (`USD`→`INV`, else `LIN`) on the inbound side too — independently corroborated by
+      `tests/market_interface/adapters/cefi/test_tardis_canonical_output.py`'s pre-existing
+      `OKX-SWAP:PERPETUAL:BTC-USDT@LIN`/`@INV` expectations (instruments-service side, unrelated to this bug, already
+      assumed this exact marker convention). Also added `error`-frame logging to `okx_ws.py` +
+      `okx_futures_book_ticker_ws.py`'s shared `_OKXBaseConnector` (covers book_snapshot_5/derivative_ticker/
+      depth_of_book_10) so a future rejected subscribe is never silent again (same fix shape as the COINBASE-SPOT todo
+      above). **Live-verified without waiting for a VM cycle**: instantiated the real `OKXFuturesDepth10WSConnector`
+      class directly against the actual production IS universe (438 real instruments, read live from
+      `instruments-store-cefi-prd-central-element-323112`) and drained `stream()` against real
+      `wss://ws.okx.com:8443/ws/v5/public` for 15s — **438/438 instruments received real ticks with non-None book
+      levels, with received instrument_ids matching the IS-universe buffer keys exactly** (0/438 would match on the
+      outbound-only fix alone, since the inbound canonical id never carried the marker). 203 connector tests pass
+      (merged/reconciled with the concurrent `52383e877` fix's own 2 regression tests, kept theirs + added coverage for
+      the inbound direction). VM cycle to pick up this code in prod is still the one remaining step to confirm
+      `capture_status=captured` manifest rows land — same caveat as BINANCE-FUTURES/BYBIT-FUTURES/DERIBIT above.
 - [ ] [CODE] P3. Resolve whether `depth_of_book_10` (and its L2-microstructure siblings `queue_position`/
       `order_flow_imbalance`) should be added to
       `unified_api_contracts.internal.domain.market_data_processing.candle_schema.DataType` (feeding MDPS candle
@@ -291,3 +314,23 @@ operator/architecture call, not a mechanical fix.
   BYBIT-FUTURES/DERIBIT/COINBASE-SPOT/OKX-SWAP fixed across `market-tick-data-service@{level2_batch sha}`, `e3bd10b9`,
   `52383e877` + slot-27's Deribit batching fix) — only the P3 MDPS-enum question and a live VM redeploy+re-verify pass
   across all 5 venues remain before this doc (and the parent plan's todo 2) can close.
+- **2026-08-09, slot 6**: dispatched the OKX-SWAP `[CODE] P2` todo independently (arrived after slot-11's `52383e877`
+  had already landed on origin). Found slot-11's outbound-only fix (`_instrument_to_okx_inst_id` stripping the
+  `@LIN`/`@INV` marker before subscribing) was NECESSARY but NOT SUFFICIENT: `_build_okx_canonical_id` (the inbound
+  parse direction) still built a marker-less canonical id from a real received wire instId, which never matches the
+  `@LIN`/`@INV`-carrying IS-universe buffer key `websocket_runner._buffers` is keyed on — `record_tick` silently drops
+  every real tick even after a successful subscribe. Confirmed this independently via a direct live probe (not just
+  static analysis): instantiated `OKXFuturesDepth10WSConnector` against the real 438-instrument production IS universe
+  and drained `stream()` against real OKX WS for 15s BEFORE applying any fix — 0/438 received instrument_ids matched the
+  buffer keys (all real ticks would have been silently dropped by the outbound-only fix alone). Fixed
+  `_build_okx_canonical_id` to derive the same marker from the quote asset (`USD`→`INV`, else `LIN`) on the inbound
+  side, rebased onto `52383e877` (git rebase conflict on `okx_ws.py`/`test_okx_ws_coverage.py`, resolved by keeping
+  slot-11's tests + simpler one-line outbound strip, adding the missing inbound half + my own tests) — same-turn
+  re-verification: 438/438 received instrument_ids now match the IS-universe buffer keys exactly, all with real
+  (non-None) book levels. Also added `error`-frame logging (`okx_ws.py` trades path + `okx_futures_book_ticker_ws.py`'s
+  shared `_OKXBaseConnector`, covering book_snapshot_5/derivative_ticker/depth_of_book_10 uniformly) so a future
+  rejected subscribe is never silent again — the same detection gap that let this bug (and the earlier COINBASE-SPOT
+  bug) go undetected. Shipped `market-tick-data-service@98fad5ad` (QG green: 203 OKX-connector tests pass). **All 4
+  per-venue fixes are now genuinely correct on both directions** (BYBIT-FUTURES/DERIBIT/COINBASE-SPOT already round-trip
+  correctly; OKX-SWAP now does too) — the remaining step across all 5 venues is still the VM redeploy+re-verify pass +
+  the P3 MDPS-enum question.
