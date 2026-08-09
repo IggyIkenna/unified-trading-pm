@@ -190,8 +190,10 @@ Not rogue agents — **the workspace contradicted itself, and the enforcement wa
       manual spot-check is the closure this todo asked for -- closing this item for good, not deferring further.
 - [x] [DEVOPS] P2. `check_strict_quickmerge.py` **fails OPEN on a bad range** — an unresolvable/invalid range prints "no
       bypassed code commits" (exit 0) rather than erroring. Found while testing the hook with a malformed sha. A typo'd
-      range therefore reads as a pass. — already covered by plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md
-      (see that doc for execution).
+      range therefore reads as a pass. — **DONE — `unified-trading-pm@fd52877f6`** (confirmed ancestor of
+      `origin/live-defi-rollout`): `main()` now fails CLOSED (exit 1) on an unresolvable range; confirmed `_backmerge`
+      merge commits are already carve-out-exempt via the existing 2-parent rule. Also covered by
+      plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md (see that doc for full evidence).
 - [x] ✅ [DEVOPS] P3. **DONE 2026-08-06** — `unified-trading-pm@b02ba28c7` (verified ancestor of
       `origin/live-defi-rollout`) deleted `scripts/dev/hooks/pre-push-strict-quickmerge.sh` and repointed its 4 live
       referrers: `scripts/dev/migrate-slots-to-pathb.sh` (`HOOK_SRC` → `scripts/hooks/pre-push`),
@@ -212,8 +214,10 @@ Not rogue agents — **the workspace contradicted itself, and the enforcement wa
       `unified-trading-system-ui@563f6238` that execs the fleet's canonical guard; 15/15 regression cases pass; full
       `quality-gates.sh` green on all three repos.
 - [x] [DEVOPS] P3. `/codex/08-workflows/ci-cd-flow.md:702` still calls the guard "WARN-default" — stale since it now
-      blocks. — already covered by plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md (see that doc for
-      execution).
+      blocks. — **DONE — `unified-trading-pm@97970974e`** (confirmed ancestor of `origin/live-defi-rollout`): corrected
+      L702's WARN-default line, retired the stale staging-as-canonical narrative, and added the staging re-entry
+      procedure. Also covered by plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md (see that doc for full
+      evidence).
 
 ## Lesson (for agents)
 

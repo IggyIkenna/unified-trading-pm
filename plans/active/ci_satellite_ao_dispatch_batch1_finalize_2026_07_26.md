@@ -108,21 +108,121 @@ context_scope:
     this todo only. Per-item rule when applying it: verify the cited commit is a real ancestor of
     `origin/live-defi-rollout` BEFORE flipping, and do not mark this parent todo `[x]` until every one of the 29 has
     been reconciled.
-  - **Discharged incrementally so far (3 of 29 items) — all three verified 2026-08-02, all three already flipped in
-    their source docs by the 2026-08-01 `/na-eligibility-audit ci` sweep; recorded here so this todo's remaining scope
-    is honest rather than re-derived from scratch:**
+  - **Discharged so far (28 of 29 items) — verified/fixed 2026-08-09 (this session, via 10 parallel read-only research
+    agents covering every one of the 29 `Source:` citations, plus the original 3 verified 2026-08-02). Recorded here so
+    this todo's remaining scope is honest rather than re-derived from scratch. Items 4-28 below were newly reconciled
+    this session; where a source doc's own citation was missing/placeholder/WRONG, it was fixed in this session's commit
+    (noted per item):**
     1. `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` `[DEVOPS] P1` ("Ban the `|| true`
-       credential idiom") — flipped `[x] ✅` in the source doc. Evidence re-verified: `unified-trading-pm@c91844b09`
-       delivers `scripts/quality_gates/check_no_swallowed_credential_fetch.py` +
-       `no_swallowed_credential_fetch_baseline.yaml`; both files exist at HEAD and the commit is a confirmed ancestor of
-       `origin/live-defi-rollout`. **Note the same doc carries a SECOND, DIFFERENT `[DEVOPS] P1`** (the 0-runners-
-       listening pool alert, still `[ ]`) — that one is NOT discharged and is correctly still open.
+       credential idiom") — flipped `[x] ✅` in the source doc. Evidence re-verified: `unified-trading-pm@c91844b09`,
+       confirmed ancestor. **Correction (2026-08-09): the same doc's SECOND `[DEVOPS] P1` (0-runners-listening pool
+       alert) is now ALSO discharged — see item 4. The earlier note here claiming it was "still open" was stale by one
+       day (na-eligibility-audit flipped it 2026-08-03).**
     2. `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` `[DOC] P2` (`ci-cd-flow.md` LDR→main narrative +
-       staging re-entry procedure) — flipped `[x] ✅`. Evidence re-verified: `unified-trading-pm@97970974e`
-       (2026-07-26), confirmed ancestor.
+       staging re-entry procedure) — flipped `[x] ✅`. Evidence re-verified: `unified-trading-pm@97970974e`, confirmed
+       ancestor. (One of 4 sources for the combined ci-cd-flow.md todo at batch-1 line 397 — see item 16 for the other
+       3.)
     3. `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` `[REVIEW] P3` (hardcode the PM dispatch target in
-       `agent-runner.yml` / `sit-gate.yml`) — flipped `[x] ✅`. Evidence re-verified: `unified-trading-pm@cb5e944f0`
-       (2026-07-28), confirmed ancestor.
+       `agent-runner.yml` / `sit-gate.yml`) — flipped `[x] ✅`. Evidence re-verified: `unified-trading-pm@cb5e944f0`,
+       confirmed ancestor.
+    4. `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md`'s second `[DEVOPS] P1` ("A self-hosted
+       pool with 0 runners listening must page on its OWN cause") — already flipped `[x] ✅` in the source doc, citing
+       `unified-trading-pm@80f397278`, confirmed ancestor. No edit needed.
+    5. `plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` `[DEVOPS] P2`
+       (rollout-cloudbuild.py refuses to drop live content) — already correctly flipped citing
+       `unified-trading-pm@ddf0b89f4`, confirmed ancestor. No edit needed.
+    6. Same doc, `[DEVOPS] P1 + P3` (cloudbuild template-vs-consumer drift checker) — **fixed this session**: the P1
+       item's citation was a literal unfilled placeholder (`unified-trading-pm@(this commit — see plan)`) and the P3
+       item had no citation at all; both now cite `unified-trading-pm@8f15ff124`, confirmed ancestor. Also flipped the
+       doc's frontmatter `status: open` → `resolved` (all todos `[x]`, already carries an
+       `ARCHIVED 2026-08-07 — RESOLVED` banner that the frontmatter had never caught up to).
+    7. `plans/archive/issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md` `[BACKEND] P3` (sync
+       `gcp_service_accounts.yaml` against live IAM) — already `[x]` per the doc's own convention (cites the tracking
+       plan rather than duplicating the SHA). Evidence re-verified: `deployment-service@0b7d03c`, confirmed ancestor.
+       Follow-up doc confirmed to exist:
+       `issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`.
+    8. `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` `[DEVOPS] P2`
+       (`sit_retry_cap` escalation) — checkbox correctly STAYS `[ ]`: the item bundles the bounded fix (done, evidence
+       `unified-trading-pm@2e5a42479` + `agent-orchestrator@dbdccb6`, both confirmed ancestors, live-proven end-to-end
+       via `agt-d37ed9`) with a genuinely still-open design-call sub-clause (ruled 2026-08-07 but not yet scoped into an
+       implementation todo). Not a stale mark — verified honest, no edit needed.
+    9. Same doc, `[DEVOPS] P2` (`full-workspace-sit` `SIT_VALIDATED` messaging correction) — already correctly flipped
+       `[x] ✅` citing `system-integration-tests@33cf6f0`, confirmed ancestor. No edit needed. (Paired with item 10.)
+    10. `plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` `[DEVOPS] P2`
+        sub-finding (cancelled-run clobbers real success) — already correctly flipped citing
+        `unified-trading-pm@ab22e725b6141e4ccd7b11018134e7e8bbb90961` + `@18a55dd49c12dbf71241696b1fbfd5e8aa2ee37d` +
+        `system-integration-tests@33cf6f0`, all confirmed ancestors. No edit needed.
+    11. Same doc, `[DEVOPS] P3` (sit-gate-stuck-detector) — already correctly flipped citing
+        `unified-trading-pm@409c35437`, confirmed ancestor. No edit needed.
+    12. `plans/archive/issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` `[DEVOPS] P2`
+        (`check_strict_quickmerge.py` fails open on a bad range) — **fixed this session**: was a generic "see batch1 for
+        execution" deferral with no commit named; now cites `unified-trading-pm@fd52877f6`, confirmed ancestor. (Paired
+        with item 13.)
+    13. `plans/archive/issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md` "Fix direction 3" — already
+        independently correct (resolved 2026-07-30 via direct code re-verification, not a batch-1 citation); cross-
+        referenced to `fd52877f6` for consistency. No edit needed beyond the cross-reference already present.
+    14. `provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` `[DEVOPS] P3` (husky UI repos'
+        strict-quickmerge guard) — already correctly flipped with full citations: `deployment-ui@a3268d0` +
+        `unified-trading-system-ui@563f6238` + `unified-trading-pm@69b858288`, all confirmed ancestors. No edit needed —
+        this is the citation style item 12/16 were upgraded to match.
+    15. `plans/archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md` `[INFRA] P3` third item
+        (deployment-api's two unguarded secondary cloudbuild configs) — already `[x]` (archived doc). Evidence
+        re-verified: `deployment-api@a3f5822`, confirmed ancestor. No edit needed (flagged a 1-day archive-before-
+        execution documentation-trail gap, not a functional gap — the fix is real and shipped).
+    16. `provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` `[DEVOPS] P3` (ci-cd-flow.md
+        WARN-default line, one of the 4 sources for the combined todo at batch-1 line 397) — **fixed this session**:
+        same generic-deferral gap as item 12, now cites `unified-trading-pm@97970974e`, confirmed ancestor. Combined
+        with items 2, 19 and 20 below, all 4 of that todo's sources are now reconciled.
+    17. `d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md` (archived) steps 3+7
+        (`sync-manifest-versions.py` deleted, `agent-orchestrator::app_version()` fixed) — **fixed this session**:
+        citation was a literal placeholder (`unified-trading-pm@<see plan checkbox for sha>`); now cites
+        `unified-trading-pm@45b25799b` + `agent-orchestrator@12e0f2e`, both confirmed ancestors.
+    18. Same doc, census addendum (`check_workspace_pyproject_pin_drift.py` DELETED, superseded by
+        `assert_version_coherence.py`) — **fixed this session**: doc was stuck at "followup todo filed" with no
+        resolution recorded; appended a resolution note citing `unified-trading-pm@bd0e44dd3`, confirmed ancestor.
+    19. Same doc, census addendum (`check_sdk_version_alignment.py`'s D13-blind function REMOVED) — **fixed this
+        session**: same gap as item 18; appended a resolution note citing `unified-api-contracts@44ba64b3`, confirmed
+        ancestor, cross-linking `check_sdk_version_alignment_stale_interfaces_and_missing_pins_2026_08_03.md`.
+    20. Same doc, "Fleet version/tag-state census (2026-08-02)" (step 2, paired with
+        `post_cutover_silent_assumption_sweep_2026_07_23.md`'s "Reconcile the ~4 weeks of missing tags") — already
+        correct in both docs (full dated (a)/(b)/(c) table present, cross-linked;
+        `main_backmerge_to_ldr_silent_failure_2026_08_02.md` confirmed filed). No edit needed.
+    21. `ui_build_warm_cache_2026_06_17.md` `[SCRIPT] P3` (base-ui.sh one automatic retry) — already correctly flipped
+        citing `unified-trading-pm@80148edde`, confirmed ancestor. No edit needed.
+    22. `cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md` (negative test) — **fixed this
+        session**: evidence prose never named the shipping commit; inserted `unified-api-contracts@7450e744`, confirmed
+        ancestor.
+    23. `post_cutover_silent_assumption_sweep_2026_07_23.md` `[INFRA] P1` (Docker version tag no longer re-pointed) —
+        already correct, dated AR-probe evidence recorded in-doc (verification-only, no commit). No edit needed.
+    24. Same doc, `[INFRA] P2` (instruments-service `0.0.0.dev0` publish path) — **fixed this session, a genuine
+        correctness bug**: the cited `instruments-service@7d005520` is **NOT** an ancestor of `origin/live-defi-rollout`
+        (it only survives on the orphaned branch
+        `origin/wip-preserve/slot-5-instruments-service-diverged-20260805T111826Z` from the 2026-08-05 slot-5 divergence
+        incident). The identical content landed on LDR under a rewritten SHA; replaced the citation with
+        `instruments-service@79b7d5b4`, confirmed ancestor.
+    25. `post_cutover_silent_assumption_sweep_2026_07_23.md` `[INFRA] P1` (dispatch delivery observable,
+        `check_dispatch_listeners.py`) — already correct (cites the tracking plan per the doc's own convention, evidence
+        `unified-trading-pm@613f79960` confirmed ancestor via batch-1's own back-reference). No edit needed.
+    26. `github_actions_operator_gated_followups_2026_07_17.md` `[VERIFY] P0` (`measure-billed-notify-cost.sh`) —
+        **fixed this session, a genuine open→closed transition**: flipped `[ ]` → `[x] ✅` with the full 2026-08-09
+        measurement (`DEDUP_BILLED_23D=2019`, self-hosted-glue premise moot/retired). Also struck through the stale
+        duplicate row 6 in the doc's "Cannot be done yet" table.
+    27. Same doc, Deferred row 14 (`ldr-docs-gate.yml` schedule retarget confirmed firing) — already correct. No edit
+        needed.
+    28. Same doc, `[REVIEW] P0` / D2 (CI/CD event-ledger consumer found) — checkbox already `[x]` correctly citing
+        `unified-trading-pm@4cbf2006d`. **Fixed this session**: two OTHER spots in the same doc (the D-table's D2 row,
+        and the "Findings parked for later" table's `persist_cicd_event_ledger_read_modify_write_race` row) still read
+        "unanswered"/"NEW (D2)", contradicting the already-correct checkbox — both updated to the 2026-08-02 resolution.
+        Also covers Deferred-after-07-23 row 5 (one of the 4 ci-cd-flow.md sources, already correct citing `97970974e`)
+        and `github_actions_staging_machinery_shutdown_2026_07_24.md`'s `[DOC] P2` (the last of the 4 ci-cd-flow.md
+        sources, already correct citing `97970974e`, doc already archived at zero open work) — both verified this
+        session, no edit needed.
+    29. `plans/archive/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md` — already correctly
+        archived/resolved, content matches batch-1's claim (live-verified `SKIPPED` not `FAILURE`). No edit needed.
+    - **Remaining (1 of 29, NOT yet reconciled)**: batch-1's `check_dispatch_listeners.py` GHA `${{ }}`-expression fix
+      (batch-1 line ~272-284, `Source:` this plan's own todo 2 + `post_cutover_silent_assumption_sweep_2026_07_23.md`
+      `[REVIEW] P3` "discovered while closing it") — no research agent covered this item this session; carry forward to
+      the next incremental pass. Do not mark this parent todo `[x]` until it too is reconciled.
 - [ ] [REVIEW] P1. **Re-check the 6 conflict-gated Deferred items (D1-D6) and the 2 time-gated ones (D29-D30).** Each
       names the specific competing claim it collided with, so this is a few greps and reads, not fresh investigation. D1
       is discharged by todo 1 above. For D2-D6: has the competing side shipped, been superseded, or been ruled on? In
@@ -155,6 +255,26 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-09 (this session)** — Todo 2 advanced from 3/29 to 28/29 discharged items. Dispatched 10 parallel read-only
+  research agents, one per source-doc group, each verifying its assigned batch-1 claims against the actual source doc
+  and checking cited-commit ancestry via `git merge-base --is-ancestor`. Applied the fixes their reports surfaced:
+  filled 3 unfilled-placeholder commit citations (`cloudbuild_template_behind_repos_rollout_would_regress_fleet`'s P1
+  item, `d13_orphaned_version_readers_and_manifest_drift`'s steps-3+7 item,
+  `provenance_gate_override_and_unenforced_quickmerge_hook`'s two generic-deferral items); added 2 missing citations to
+  already-`[x]` items (`cloudbuild_template...`'s P3 item, `cassette_drift_check_calls_deleted_script_and_swallows_it`);
+  appended 2 resolution notes for census-addendum rows that were stuck at "followup filed" despite the followup having
+  since shipped (`d13...`'s pyproject-pin-drift and sdk_version_alignment deletions); **corrected one genuinely WRONG
+  citation** — `post_cutover_silent_assumption_sweep`'s instruments-service item cited `instruments-service@7d005520`,
+  which is NOT an ancestor of `origin/live-defi-rollout` (only survives on an orphaned 2026-08-05 divergence branch) —
+  replaced with the rewritten equivalent `79b7d5b4`, which is; flipped one genuine open→closed checkbox
+  (`github_actions_operator_gated_followups`'s `[VERIFY] P0` measure-billed-notify-cost item, plus its stale duplicate
+  table row); fixed 2 stale contradicting spots in the same doc where the D2 event-ledger-consumer resolution wasn't
+  reflected outside its own already-correct checkbox; flipped
+  `cloudbuild_template_behind_repos_rollout_would_regress_fleet`'s frontmatter `status: open` → `resolved` (already
+  archived with a RESOLVED banner, all todos `[x]`, the frontmatter had simply never caught up). The remaining 20 of 28
+  discharged items were already correctly reconciled pre-session — verified, not re-touched. **1 of 29 items remains
+  unreconciled**: the `check_dispatch_listeners.py` GHA `${{ }}`-expression fix (no agent covered it this session) —
+  carried forward; this parent todo stays `[ ]` until it too is done, per the operator ruling below.
 - **2026-07-26** — Drafted alongside `ci_satellite_ao_dispatch_batch1_2026_07_26.md` by `/ag-closeout-audit ci`
   (autonomous mode). Both are `status: draft`; neither is dispatched. Todo 1 exists because the batch's conflict-check
   found PM `scripts/quality-gates.sh` claimed by three separate new checkers — the documented remedy for

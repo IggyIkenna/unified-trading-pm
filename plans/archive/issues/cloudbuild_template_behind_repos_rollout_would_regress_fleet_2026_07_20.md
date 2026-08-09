@@ -112,9 +112,9 @@ silently regresses the fleet again.
       uses, with a shrinking-ratchet baseline (`cloudbuild_template_drift_baseline.yaml`, seeded 2026-07-28 at the
       fleet's real per-repo counts). **Deliberately NOT wired into `scripts/quality-gates.sh`** — that wiring is its own
       gated finalize-plan todo (`ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`), same pattern as the
-      `check_no_swallowed_credential_fetch.py` checker shipped alongside it. unified-trading-pm@(this commit — see
-      plan). `tests/unit/test_check_cloudbuild_template_drift.py` (14 cases) proves a synthetic template-lags-repo case
-      fails at a seeded baseline, plus the API-template path (not just SERVICE).
+      `check_no_swallowed_credential_fetch.py` checker shipped alongside it. unified-trading-pm@8f15ff124.
+      `tests/unit/test_check_cloudbuild_template_drift.py` (14 cases) proves a synthetic template-lags-repo case fails
+      at a seeded baseline, plus the API-template path (not just SERVICE).
 - [x] ✅ [DEVOPS] P2. **DONE 2026-07-28 (slot-9, infra)** — `rollout-cloudbuild.py` refuses to write a file whose live
       content contains markers absent from the rendered output; default flipped to `--dry-run`, write requires
       `--apply`. unified-trading-pm@ddf0b89f4. Full details + the drift measurement below in the Progress Log; also
@@ -162,6 +162,7 @@ silently regresses the fleet again.
 - [x] ✅ [DEVOPS] P3. **DONE 2026-07-28 (slot-13, infra)** — the new drift checker covers ALL FIVE templates, not just
       SERVICE (see the per-template measurement in the Progress Log below): `-api-`, `-ui-`, `-infra-`, `-sit-` are now
       all measured, matching the checker's default scope (every consumer `rollout-cloudbuild.py --apply` would touch).
+      unified-trading-pm@8f15ff124 (same commit as the P1 item above — one delivery covers both).
 
 ## Progress Log
 
