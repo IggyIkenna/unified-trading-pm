@@ -205,11 +205,12 @@ its own touched subset piecemeal.
       determine whether this is a live write-completion race, a later deletion, or another current-pipeline gap. Do NOT
       relabel the manifest rows until the mechanism is understood. (repo: instruments-service /
       market-tick-data-service) — instruments-service@36b59400 + see Progress Log 2026-08-02 for the root-cause verdict.
-- [x] ✅ [DATA] P3. Once the 2025 mechanism above is understood (and, separately, for the 1,210 2018-2020-era cells
-      already attributed to the Defect-3 writer-generation quirk), decide + execute the actual manifest reconciliation
-      (relabel to an honest `capture_status`, or document why `captured` with no object is the correct historical record
-      for that era) — this is the manifest-mutation action deferred from the 2026-07-26 root-cause census above. (repo:
-      instruments-service) — market-tick-data-service@25c7a3f2
+- [x] ✅ [DATA] P3. **DEFERRED (prod apply): the decision + script half is done, the execution half is not.** Once the
+      2025 mechanism above is understood (and, separately, for the 1,210 2018-2020-era cells already attributed to the
+      Defect-3 writer-generation quirk), decide + execute the actual manifest reconciliation (relabel to an honest
+      `capture_status`, or document why `captured` with no object is the correct historical record for that era) — this
+      is the manifest-mutation action deferred from the 2026-07-26 root-cause census above. (repo: instruments-service)
+      — market-tick-data-service@25c7a3f2
 
 ## Progress Log
 

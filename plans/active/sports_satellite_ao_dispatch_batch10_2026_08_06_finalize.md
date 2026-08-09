@@ -88,8 +88,8 @@ context_scope:
 
 - **context-scout 2026-08-07**: populated context_scope (2 entries) — `*_finalize` gate doc, genuinely code-free (every
   todo is a checkbox-reconciliation against 4 named source docs or the archival ritual itself); the gating parent batch
-  plus the archival-discipline codex doc are the minimal set. Note: this doc's own citations of the archival-discipline
-  doc (line 79's `source:` field and the "Codex SSOTs" section above) both point at
-  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, which does not resolve — the real path is
-  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (used in context_scope above). Not fixed here
-  (out of this skill's scope, a prose correction for `/plan-reconcile`).
+  plus the archival-discipline codex doc are the minimal set.
+- **plan_reconciler 2026-08-09 (agt-196785)**: the note above claimed the archival-discipline codex citation "does not
+  resolve," quoting the SAME path string on both sides of the claim — verified via `ls`, the path resolves correctly
+  (`codex/12-agent-workflow/plan-completion-and-archival-discipline.md` exists). Correcting per this skill's own
+  hedge-pointer/false-citation remit (a `/plan-reconcile` job, not deferred).
