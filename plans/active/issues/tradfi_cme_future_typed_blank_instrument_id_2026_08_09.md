@@ -120,17 +120,92 @@ Not urgent (static, not actively growing) but real and unaddressed.
 
 ## Todos
 
-- [ ] [DATA] P2. Root-cause why `venue_fetch.py`'s non-derivative (`is_derivative=False`) manifest-write branch left
+- [x] [DATA] P2. Root-cause why `venue_fetch.py`'s non-derivative (`is_derivative=False`) manifest-write branch left
       `instrument_id` blank for the 20,254 `venue=CME`, `instrument_type=FUTURE`, `capture_status=captured` rows found
       2026-08-09 (dominated by underlying MICRO-SP500/SP500/ES) — read `_resolve_tradfi_manifest_shard` and the
       `_canonicalize_manifest_instrument_id` fallback against a representative sample, determine whether this is a
       raw-symbol-shape mismatch, an unmapped `itype`, or a `build_instrument_id` failure, and record the finding here
       before scoping a fix. Repo: market-tick-data-service. **Done when**: a dated finding is recorded in this doc's
       Progress Log identifying the actual failing call + why, with enough detail that a follow-up writer-fix +
-      backfill-script todo (if warranted) can be scoped without re-investigating from scratch.
+      backfill-script todo (if warranted) can be scoped without re-investigating from scratch. ✅ — root cause found,
+      see Progress Log 2026-08-09 (slot-22).
+- [ ] [DATA] P2. Fix `rebuild_tradfi_manifest.py::parse_tradfi_path()`'s `_PAT_UNDERLYING_BUNDLE` branch (lines 291-308)
+      to gate its blank-`instrument_id`/bundled classification on `itype.lower() in BUNDLED_ITYPES` — mirroring the
+      check the OTHER precedence branch (`_PAT_PER_INSTRUMENT`, line 332) already applies — instead of matching ANY
+      `instrument_type={IT}/data_type={DT}/underlying={U}/…` path unconditionally. Then re-run (or targeted-rescan) the
+      rebuild for the affected `venue=CME`/`instrument_type=future` dates so the 20,254 rows get a correct per-row
+      canonical `instrument_id` (via `derive_tradfi_row_instrument_id`/`build_instrument_id` against the parquet's own
+      `symbol`+`expiry_date` columns — the rebuild script would need to download+classify each legacy
+      bundled-by-underlying object's rows rather than the current placeholder `row_count=1`/no-download bundled path,
+      since a real per-row id is only resolvable from row content, not the path alone). Repo: market-tick-data-service.
+      **Done when**: `parse_tradfi_path()` no longer classifies a non-`BUNDLED_ITYPES` `instrument_type` as bundled, a
+      regression test covers a `instrument_type=future/underlying=U/` legacy path, and the 20,254 rows are re-verified
+      non-blank (or explicitly re-classified as an intentional bundle-grain row) via a live manifest recount. Static
+      backlog — no urgency, ordinary backlog priority.
 
 ## Progress Log
 
 - **slot-15 worker 2026-08-09** (side-finding during `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` todo 1): filed
   this issue from a live manifest census; population confirmed static (no writes after 2026-08-07) — re-verify freshness
   before treating this as urgent if picked up much later than this filing date.
+- **slot-22 worker 2026-08-09** (root-cause diagnosis, todo 1): **Root cause confirmed** — the 20,254
+  blank-`instrument_id` rows are NOT written by the live per-day fetch path
+  (`venue_fetch.py::_record_venue_shard_counts`); they come from
+  `market_tick_data_service/scripts/rebuild_tradfi_manifest.py`, a standing (undated, reusable) GCS-object-scan
+  manifest-reconstruction script.
+  - **Live re-query** (filters: `venue=CME`, `instrument_type=FUTURE`, `capture_status=captured`, columns-pruned): the
+    blank+`instrument_count>0` subset's `data_type` breakdown is `ohlcv_1s`=14,088, `ohlcv_1m`=5,469, `ohlcv_15m`=696,
+    `trades`=1 (total 20,254) — i.e. almost entirely OHLCV bar data, NOT `trades`. `written_at` clusters on
+    2026-07-31/08-02/08-03/08-04/08-05/08-06/08-07 (11,436 / 3,274 / 4,192 / 692 / 140 / 347 / 173), consistent with
+    several separate re-runs of a recovery/rebuild script across that window rather than one single run. The
+    `underlying` column is POPULATED with real values (MICRO-SP500/SP500/ES/…) even though these rows are
+    `instrument_type=FUTURE` (canonical singular, `is_derivative=False`) — this is the key tell: the live writer
+    (`venue_fetch.py`) NEVER populates `underlying_for_manifest` for a non-derivative shard (always `""`,
+    `venue_fetch.py:379`), so a populated `underlying` on an `instrument_type=FUTURE` row is only possible from a
+    DIFFERENT emitter.
+  - **Ruled out**: `market_tick_data_service/scripts/migrate_cme_monolith_trades_2026_07_26.py` — it has the same
+    "populate `underlying` regardless of derivative-ness, fall back to blank `instrument_id` if the written-back parquet
+    lacks an `instrument_id` column" shape (line 415-416), but it is hardcoded `_DATA_TYPE = "trades"` only (line 136) —
+    contradicted by the data_type breakdown above (only 1 `trades` row in the whole blank subset).
+  - **Confirmed mechanism** (`rebuild_tradfi_manifest.py`):
+    1. `parse_tradfi_path()`'s `_PAT_UNDERLYING_BUNDLE` regex (lines 171-180, matched at 291-308) matches ANY GCS object
+       shaped `.../instrument_type={IT}/data_type={DT}/underlying={U}/{file}.parquet` — it does **not** gate on `IT`
+       being a genuine chain-bundle type
+       (`BUNDLED_ITYPES = {"combo", "futures_chain", "options_chain", "continuous_future"}`, line 126-133); that gate is
+       only applied on the OTHER (`_PAT_PER_INSTRUMENT`) branch, line 332. So a legacy `instrument_type=future`
+       (singular) object stored under an `underlying=` directory — the script's own line 518-521 comment confirms this
+       on-disk shape genuinely exists ("early-databento bundled-by-underlying convention", discovered in a 2026-08-02
+       full 2019-2026 scan) — gets parsed with `instrument_id=""` + `underlying=<stem>` (lines 300-301), exactly like a
+       real chain bundle.
+    2. `_emit_shard_row()` (line 501) then routes purely on `parsed.data_type in BUNDLED_DATA_TYPES` (UAC's closed set —
+       `{options_chain, futures_chain, prediction_canonical_question_group, sports_fixture_bundle, event_contract, odds_snapshot, odds_movement, arbitrage_opportunity}`,
+       confirmed via `unified_api_contracts/canonical/crosscutting/_honest_coverage_clusters.py:27`).
+       `ohlcv_1s`/`ohlcv_1m`/ `ohlcv_15m` (and `trades`) are NOT in that set, so step 1's blank-id "bundled"
+       classification does NOT route through the coverage-gated `record_captured_from_counts`
+       (`_emit_bundled_shard_row`) — it falls through to the plain
+       `target.add(instrument_id=parsed.instrument_id, underlying=parsed.underlying, …)` call (line 538-555), which
+       writes the blank id straight into the manifest as an ordinary `capture_status=captured` row with no validation
+       catching it.
+  - **Net defect**: step 1's mis-classification is harmless for genuine `BUNDLED_DATA_TYPES` (the coverage-gated path is
+    the correct outcome for those anyway) but becomes a silent blank-`instrument_id` captured row whenever it hits a
+    NON-bundled `data_type` (ohlcv_1s/1m/15m/trades) on a legacy `instrument_type=future` bundled-by-underlying object —
+    because step 2's routing gate is keyed on `data_type`, not on whether step 1 classified the shard as bundled. This
+    is a `build_instrument_id`-adjacent failure in the sense the original hypothesis anticipated, but the actual failing
+    call is `parse_tradfi_path()`'s path-shape classifier, not `_resolve_tradfi_manifest_shard`/
+    `_canonicalize_manifest_instrument_id` (those ARE structurally unable to succeed for `instrument_type=future`
+    singles either — see note below — but that's a separate, non-blank-producing defect).
+  - **Secondary, distinct finding (not the blank-id cause, but adjacent)**:
+    `_resolve_tradfi_manifest_shard(False, venue, "future", raw_symbol)` (`_tradfi_manifest_shard.py:88-107`) calls
+    `build_instrument_id(venue, InstrumentType.FUTURE, raw_symbol)` with **no `expiry_date`** — `_build_future()`
+    unconditionally raises `ValueError("FUTURE requires expiry_date")` whenever `expiry_date is None`
+    (`canonical_id_builder.py:379-381`), so this call **always** returns `None` for every non-derivative FUTURE-type
+    shard in the LIVE write path, unconditionally (not input-dependent). The `_canonicalize_manifest_instrument_id`
+    fallback then re-calls the same always-`None` resolver and returns the RAW symbol (not blank) when `third_val` is
+    non-empty — so this defect explains why live-written CME FUTURE singles get an un-canonicalized raw-symbol id
+    instead of a properly-built one, but it does NOT produce a blank id (the live writer's `_get_writer`/
+    `_update_row_and_symbol_counts` never emit an empty `third_val` — falls back to the `"_unknown_"` sentinel, never
+    `""`). Filed here for visibility; not itself the cause of THIS issue's 20,254 rows, and not scoped for a fix in this
+    todo.
+  - **Follow-up todo added above** (fix `parse_tradfi_path()`'s bundled-classification gate + re-derive/backfill the
+    20,254 rows' real per-row `instrument_id`). Population confirmed still static as of this session (query above
+    matches the original filer's count exactly: 20,254).
