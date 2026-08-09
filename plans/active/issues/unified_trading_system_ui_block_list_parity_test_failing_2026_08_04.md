@@ -99,3 +99,4 @@ verification dispatch happened to run on `main` and surfaced it. Did not investi
   edit in an over-cap file has no `check_line_caps.sh` carve-out). Set `archive_exempt: true`, kept `status: open`.
   Un-set once the deadlock doc's operator decision lands and the archival can complete (same batch as the
   disposition-owner's own `[DOCS] P3` todo).
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
