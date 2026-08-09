@@ -165,13 +165,17 @@ findings.
       (`test_get_instruments_paginates_past_first_page` in `test_defi_adapters_comprehensive.py` ×2 and
       `test_spark_metadata.py`) prove a >`_FETCH_LIMIT`-market/reserve universe across a full + short page is fully
       collected, not truncated. Full quality-gates.sh green (155s).
-- [ ] [CODE] P2. **Raydium REST pagination not wired despite a paged API contract.**
+- [x] ✅ [CODE] P2. **Raydium REST pagination not wired despite a paged API contract.**
       `instruments_service/reference_data/adapters/defi/raydium.py` `_fetch_active_pools` hardcodes `page="1"` with no
       loop to `page=2,3,…`, even though the endpoint is an explicit `page`/`pageSize` REST API whose response wrapper
       carries its own `count` total (never compared against `len(pools)` to detect truncation). Repo:
       instruments-service. Done when: the fetcher loops `page += 1` while `len(pools) == pageSize` (or compares against
       the response's `count` field) and a regression test proves a >1-page pool universe is no longer truncated to the
-      first page.
+      first page. — instruments-service@5502e9e7: loop now pages `page += 1` while the page is full
+      (`len(pools) == _RAYDIUM_PAGE_SIZE`) and the response's `count` isn't yet reached, mirroring the for/else
+      cap-exhaustion pattern already shipped for Polymarket/Kalshi this session (`_RAYDIUM_MAX_PAGES=10000` safety-net).
+      New regression test `test_get_instruments_paginates_past_first_page` proves a 2-page/3-pool universe is no longer
+      truncated to the first page. Full quality-gates.sh green (107s).
 - [ ] [SCRIPT] P3. **Coinbase CDE futures-universe cap, no guard.**
       `instruments_service/reference_data/adapters/cefi/coinbase_cde.py` `get_instruments` (`limit="250"`, single GET,
       no offset loop or count check) — docstring claims "ALL 99 real live products" today (well under 250) but no
@@ -265,6 +269,9 @@ findings.
 - 2026-08-09 (slot 24, data_engineering): shipped the `first: 100` lending-market discovery cap todo (compound_v3.py,
   spark.py, aave_v3.py) — see the todo's own evidence line above for detail. instruments-service@58ede81d, QG green
   (155s), quickmerge landed + ancestry-verified on origin/live-defi-rollout. Remaining todos in this doc are still open.
+- 2026-08-09 (slot 31, data_engineering): shipped the Raydium REST pagination todo — see the todo's own evidence line
+  above for detail. instruments-service@5502e9e7, QG green (107s), quickmerge landed + ancestry-verified on
+  origin/live-defi-rollout. Remaining todos in this doc are still open.
 
 ## Codex SSOTs
 
