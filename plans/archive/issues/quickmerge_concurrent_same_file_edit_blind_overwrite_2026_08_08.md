@@ -37,7 +37,7 @@ summary: >
   Blast radius: this affects EVERY repo and every agent using quickmerge for `docs(plans):` commits — any two agents
   editing DIFFERENT sections of the same plan/issue doc within a similar tight window could silently lose one side's
   edits the same way, without any error, warning, or `QUICKMERGE_BLOCKED` signal to either agent.
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -60,11 +60,20 @@ source:
   per direct instruction from main (bypasses backlog — a real, recurring cross-cutting defect for engineering
   investigation; priority P1 given the repeat rate, not urgent-blocking since nothing is currently destroyed in git
   history).
-resolved_by:
+resolved_by: unified-trading-pm@HEAD (this commit)
 depends_on: []
 locked_by:
 context_scope: [/codex/08-workflows/ci-cd-flow.md, unified-trading-pm/scripts/quickmerge.sh]
 ---
+
+> ## ✅ RESOLVED 2026-08-09 — archived (INVESTIGATED, NOT A DEFECT)
+>
+> Reproduced quickmerge's STAGE 0.4 not-behind gate against 3 concurrent-edit shapes in an isolated scratch repo — its
+> rebase-based conflict detection is NOT defective. The live incident's actual mechanism was a content-discipline gap
+> (an author replacing already-landed content instead of appending), not a git/quickmerge mechanism gap. Fix shipped as
+> a new rule in `unified-trading-pm/agents/RULES.md` § 1 (append-not-replace for shared plan/issue doc entries); no
+> `quickmerge.sh` change. See `## Todo` below for the full investigation writeup. All todos closed, no open work
+> remains.
 
 ## What I found
 
@@ -110,14 +119,29 @@ read, regardless of whether the specific lines textually conflict.
 
 ## Todo
 
-- [ ] [BACKEND] P1. Investigate whether quickmerge's rebase-conflict detection correctly flags same-file,
-      non-overlapping-line-range concurrent edits (not just literal same-line conflicts) as requiring a structured
-      merge/`QUICKMERGE_BLOCKED` path instead of a silent last-writer-wins overwrite. Reproduce using two
-      near-simultaneous quickmerge commits to different sections of the same doc file if the mechanism is unclear from
-      reading the `quickmerge.sh` source. If confirmed, the fix likely needs quickmerge to diff the target file's
-      pre-edit state against the actual `origin` HEAD at push time (not just rely on git's line-level rebase conflict
-      detection) and hard-block if the file changed underneath the agent's read, regardless of whether the specific
-      lines textually conflict. (repo: unified-trading-pm)
+- [x] ✅ [BACKEND] P1. Investigated whether quickmerge's rebase-conflict detection correctly flags same-file,
+      non-overlapping-line-range concurrent edits. **NOT DEFECTIVE — confirmed via direct reproduction.** Three isolated
+      scratch-repo scenarios run through quickmerge's exact STAGE 0.4 sequence (`git pull --ff-only` →
+      `git pull --rebase --autostash`): (1) two commits edit the SAME line → correctly CONFLICTS; (2) two commits edit
+      DIFFERENT sections of the same file but share a Progress-Log append anchor → correctly CONFLICTS (git's rebase
+      auto-merges the genuinely non-overlapping section hunks, but flags the shared append point); (3) two commits edit
+      fully independent single lines with no shared anchor → clean rebase, BOTH sides preserved, zero data loss. This
+      directly refutes the "different, non-overlapping line ranges silently slip past detection" hypothesis — git's
+      rebase-based conflict detection is not defective for any of the tested shapes.
+
+      The live incident's actual mechanism was different from a rebase at all: `d52a11058`'s diff is provably built ON
+              TOP OF `c886da0f6`'s own output blob (`bf0d8513e` — the exact same hash appears as `c886da0f6`'s post-commit blob
+              AND as `d52a11058`'s pre-commit blob for this file), meaning no rebase/reconciliation ever ran for that push — it
+              was a plain, valid, sequential commit already built on the latest content. The data loss happened because
+              `d52a11058`'s author READ the file (necessarily fresh — its diff's "before" state is `c886da0f6`'s exact output)
+              and then REPLACED the already-present checkbox annotation + Progress Log entry with their own shorter one, instead
+              of appending alongside it. That is a content-discipline gap, not a git/quickmerge mechanism gap — from git's
+              perspective this was a perfectly valid, non-conflicting commit.
+
+              **Fix shipped**: `unified-trading-pm/agents/RULES.md` § 1 — new rule requiring APPEND, not replace, when a shared
+              plan/issue doc's checkbox/Progress-Log entry already carries content from another author/session. No
+              `quickmerge.sh` change made — its conflict detection is correct as-is; changing it would not have prevented this
+              incident's actual mechanism. (repo: unified-trading-pm)
 
 ## Progress Log
 
@@ -128,3 +152,10 @@ read, regardless of whether the specific lines textually conflict.
 - **na-corpus-hygiene 2026-08-09**: RECLASSIFY -- assigned_vm NA to planning. The 1 todo is a bounded
   investigate-then-fix task with a stated repro method and a clear done-when, per
   agent-orchestrator-single-vm-architecture.md sec5 -- no locked_by, no design/judgment call.
+- **2026-08-09 (slot 24, backend_engineer)**: Investigated per the todo. Read `quickmerge.sh` STAGE 0.4 (Not-Behind
+  Gate) source directly, then reproduced all 3 concurrent-edit shapes in an isolated scratch git repo running the
+  script's exact `git pull --ff-only` → `git pull --rebase --autostash` sequence (no quickmerge.sh mutation, no
+  production repo touched). Separately verified the real incident commits (`git show c886da0f6 -- <path>` /
+  `git show d52a11058 -- <path>`) at the blob-hash level to establish provenance: `d52a11058` built directly on
+  `c886da0f6`'s output (no rebase occurred). Conclusion: quickmerge's conflict detection is sound; root cause is a
+  content-discipline gap now closed by the new RULES.md rule. Todo closed above.
