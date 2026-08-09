@@ -53,7 +53,7 @@ scope: [engineer, admin]
 tags: [ci-cd, provenance, quickmerge, ldr-main, promotion, git-history-rewrite, cross-repo]
 related:
   [
-    /plans/active/issues/instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md,
+    /plans/archive/2026_08/issues/instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md,
     /plans/archive/issues/utl_ldr_main_blocked_34_foreign_quickmerge_bypasses_2026_07_21.md,
     /plans/archive/issues/provenance_gate_squash_perpetual_block_2026_06_17.md,
     /plans/archive/issues/provenance_gate_midhistory_bypass_deadlock_2026_07_17.md,
@@ -79,7 +79,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md,
+    /plans/archive/2026_08/issues/instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md,
     /codex/08-workflows/ci-cd-flow.md,
     unified-trading-pm/scripts/cicd/promote_provenance_range.py,
     unified-trading-pm/scripts/cicd/check_strict_quickmerge.py,
@@ -246,7 +246,7 @@ Two reasons, mirroring the UTL-34-bypass precedent
   - Net: fleet lag dropped from 13 measured pairs (21 in the original alert, partly stale) to 3 — the 2
     provenance-blocked repos tracked here (now with fresher, smaller bypass lists) plus an unrelated
     `unified-trading-ci` promotion-infra gap (filed separately, see
-    `/plans/active/issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`).
+    `/plans/archive/2026_08/issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`).
   - Also fixed, unrelated to this doc's own bug but found while re-verifying: `agent-orchestrator`
     (`promotion_model: ldr_terminal`) was a permanent false-positive in `promotion_lag_monitor.py` — the monitor never
     got a `ldr_terminal` exemption when that promotion model was introduced 2026-08-05. Added `_ldr_terminal_repos()`

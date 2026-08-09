@@ -11,7 +11,7 @@ summary: >-
   was last aligned. The BEHAVIOR is still correct (both fixture cases in the same test file pass — pinned-version
   realignment via the astral installer, pip-last-resort fallback both work); only the anchor's exact-string match is
   stale.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -32,6 +32,8 @@ estimate_baseline_ai_days: 0.1
 estimate_calibrated_ai_days: 0.04
 locked_by:
 resolved_by:
+  unified-trading-pm@eff7413da (2026-08-06, ci_satellite_ao_dispatch_batch4); runtime-verified 2026-08-09 (5 passed / 0
+  failed)
 depends_on: []
 source:
   - "found via git-stash pre-existing-failure baseline check while verifying
@@ -87,9 +89,9 @@ exact quoting/flags), so a genuine future rewording of this line doesn't require
       shipped via `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md`: `unified-trading-pm@eff7413da`
       (2026-08-06T17:18:14Z, "fix(qg): update uv bootstrap fallback test structural anchor to match setup.sh's current
       pip fallback"), confirmed a real ancestor of `origin/live-defi-rollout`. Live-verified 2026-08-09 (stale-recheck
-      sweep): re-ran the test directly — `── result: 5 passed / 0 failed ──`. Batch4's own doc had already flipped
-      this checkbox at the source (`status: active`) — this doc's citation-copy was simply never updated to match;
-      closing that gap now.**
+      sweep): re-ran the test directly — `── result: 5 passed / 0 failed ──`. Batch4's own doc had already flipped this
+      checkbox at the source (`status: active`) — this doc's citation-copy was simply never updated to match; closing
+      that gap now.**
 
 ## na-eligibility-audit verdict
 

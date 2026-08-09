@@ -22,8 +22,9 @@ summary: >-
   fallout, explicitly flagged as a followup in the revert plan's own Progress Log ("glue-pool-starvation-monitor.yml ...
   NOT touched ... flagged here for whoever next touches this plan to consider retiring for the same reason") but not yet
   acted on before this incident materialized.
-status: open # all items resolved (immediate fix 2026-08-07 + the P3 recovery-bookend audit 2026-08-09); archival-eligible
+status: open
 nature: issue
+archive_exempt: true
 asset_group: [ci, cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]
@@ -249,3 +250,11 @@ every healthy tick forever) — that is a real, if modest, additional job
 
   **Verification**: `scripts/cicd/test_alert_recovery.py` green (10/10) standalone; full `quality-gates.sh` run cited
   below.
+
+- **cicd escalation agt-558c62 2026-08-09**: all items resolved (0 open todos), genuinely archival-eligible, but
+  `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` (1007L, already over the 1000L hard line-cap) cites
+  this doc via a markdown-syntax link — archiving would hit the exact deadlock documented in
+  `/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` (a same-line link-repoint
+  edit in an over-cap file has no `check_line_caps.sh` carve-out). Set `archive_exempt: true`, kept `status: open`
+  (terminal status without physical archival would itself fail `check_terminal_status_archived`). Un-set once the
+  deadlock doc's operator decision lands and the archival can complete.

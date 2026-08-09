@@ -28,7 +28,7 @@ related:
     /cursor-configs/skills/docs-reconcile/SKILL.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
     /codex/06-coding-standards/strategy-identity-versioning.md,
-    /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md,
   ]
 created: 2026-07-30
@@ -53,7 +53,7 @@ context_scope:
     /cursor-configs/skills/docs-reconcile/SKILL.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
     /codex/06-coding-standards/strategy-identity-versioning.md,
-    /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
   ]
 supersedes:
 superseded_by:
@@ -350,7 +350,7 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
   structurally excludes the non-AG tranches (`meta`/`infrastructure`/`cross-cutting`/`ao`/`ci`). Two live zero-checkbox
   instances sit in exactly that blind spot, both `asset_group: meta`, both created 2026-07-30: **this doc** (0
   checkboxes, carrying the dated 2026-08-15 `check_codex_doc_freshness.py` 24→~168 hard-gate cliff above) and
-  `/plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md` (1 todo, but its 4 parked decisions are
+  `/plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md` (1 todo, but its 4 parked decisions are
   prose-only). Autonomous-mode parking registers are a recurring source of this class. **Open follow-up for the
   operator/next-toucher**: re-run the zero-checkbox sweep with the population widened to all 9 tranches — it currently
   has no owning active doc.

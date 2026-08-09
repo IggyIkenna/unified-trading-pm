@@ -10,7 +10,7 @@ summary: >-
   (cicd_mvp_ldr_to_main_pipeline_2026_06_30.md's Phase-3 P0 DOCS todo, unified-trading-pm@b9d0b9209) but that plan never
   touched deployment-flow.md, so the two sibling docs (engineer view vs operator view, per each doc's own header) now
   disagree on the actual pipeline shape.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -33,7 +33,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.24
 locked_by:
-resolved_by:
+resolved_by: unified-trading-pm@445f02081 (2026-08-06, ci_satellite_ao_dispatch_batch4 [DOC] P2)
 depends_on: []
 context_scope:
   [
@@ -99,9 +99,9 @@ CLAUDE.md's current § "Git discipline"), so it's AO-dispatchable once picked up
       `/plans/active/ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s `[DOC] P2` item: `unified-trading-pm@445f02081`
       (2026-08-06T17:02:28Z, "docs(codex): rewrite deployment-flow.md pipeline diagram + Gates 1/2/3 for LDR-direct
       model"), confirmed a real ancestor of `origin/live-defi-rollout`. Live-verified 2026-08-09 (stale-recheck sweep):
-      the doc now carries a "Target branch updated for the LDR-direct model" banner and the rewritten pipeline
-      sections. Batch4's own doc had already flipped this checkbox at the source (`status: active`) — this doc's
-      citation-copy was simply never updated to match; closing that gap now.**
+      the doc now carries a "Target branch updated for the LDR-direct model" banner and the rewritten pipeline sections.
+      Batch4's own doc had already flipped this checkbox at the source (`status: active`) — this doc's citation-copy was
+      simply never updated to match; closing that gap now.**
 
 ## na-eligibility-audit verdict
 

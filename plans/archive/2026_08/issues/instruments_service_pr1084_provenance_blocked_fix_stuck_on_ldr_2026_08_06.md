@@ -24,7 +24,7 @@ summary: >-
   of these fixes through a channel other than PR #1084). The real risk is forward-looking: the
   `lifecycle-catalogue-regen-sports` cron re-runs daily at 01:00 UTC — if it hits a corrupted name again before either
   fix reaches main/the deployed image, DP-CATALOG-001 recurs.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [sports, ci] # corrected 2026-08-08 (/ag-closeout-audit ao) -- was [sports, ao]. Content is 100% CI/CD
@@ -56,7 +56,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 source: "main-session live diagnosis while re-checking DP-CATALOG-001 status, 2026-08-06"
-resolved_by:
+resolved_by: db7f7d3b (2026-08-07, LDR->main Option-B direct promote, DP-CATALOG-001 confirmed live on origin/main)
 locked_by:
 locked_since:
 context_scope:
@@ -135,17 +135,17 @@ DP-CATALOG-001 could still recur — but the risk is narrower than "main has no 
       `passed through     quickmerge` (not a violation). PR #1084's closure was NOT caused by `497c4f5e`'s own
       provenance — see the BLOCKED-OPERATOR todo below for the real cause.
 - [x] ✅ [CI] P1. **STALE-CHECK CLOSE 2026-08-09** — superseded by this doc's own 2026-08-08 `✅ RESOLVED` banner at the
-      top of the file, which is the LATEST edit to this doc (commit `6860859a`, 2026-08-08T04:05:30+01:00) — it postdates
-      the `na-eligibility-audit 2026-08-08` entry below (commit `a86c8e1d`, 2026-08-08T02:40:14Z) that still called this
-      blocked, so the banner is the current, correct verdict, not the audit entry. Independently re-verified live
-      2026-08-09: `db7f7d3b` ("chore(promote): LDR → main (Option-B direct)", 2026-08-07T23:02:53Z) is on
+      top of the file, which is the LATEST edit to this doc (commit `6860859a`, 2026-08-08T04:05:30+01:00) — it
+      postdates the `na-eligibility-audit 2026-08-08` entry below (commit `a86c8e1d`, 2026-08-08T02:40:14Z) that still
+      called this blocked, so the banner is the current, correct verdict, not the audit entry. Independently re-verified
+      live 2026-08-09: `db7f7d3b` ("chore(promote): LDR → main (Option-B direct)", 2026-08-07T23:02:53Z) is on
       `origin/main`, and `origin/main:scripts/build_instrument_catalogue.py` contains `junk_name_skips` — the
       DP-CATALOG-001 fix this todo was waiting on IS live on main today, via a later promote (Option-B direct) that
       carried the work through even though PR #1084 itself never merged. **UPDATED 2026-08-06 — root-cause fix already
-      shipped (`unified-trading-pm@7b5390649`), but
-      instruments-service specifically still needs a second, separate step.** `[CI]` tag (was `[BLOCKED-OPERATOR]`) —
-      `commit_reachable()`'s ancestry check is hardened and live; the marker-corruption bug itself is fixed fleet-wide.
-      But per `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`'s own follow-up finding, the
+      shipped (`unified-trading-pm@7b5390649`), but instruments-service specifically still needs a second, separate
+      step.** `[CI]` tag (was `[BLOCKED-OPERATOR]`) — `commit_reachable()`'s ancestry check is hardened and live; the
+      marker-corruption bug itself is fixed fleet-wide. But per
+      `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`'s own follow-up finding, the
       now-CORRECT range computation exposes that instruments-service's real range is a genuine ~19-commit foreign,
       multi-subsystem list — this was never a marker-bug artifact, it's real un-promoted work needing either the owning
       agents to re-ship their own commits or an operator-authorized `reprovenance_bypass.sh` sweep (per the
@@ -224,6 +224,6 @@ real forward-looking risk window, unchanged from the original assessment.
   never merged. Independently re-verified live 2026-08-09: `db7f7d3b` is on `origin/main`, and
   `origin/main:scripts/build_instrument_catalogue.py` contains `junk_name_skips`. Closed the last open `[CI] P1` todo
   citing this. **All todos in this doc are now `[x]` — this doc is an ARCHIVE candidate** (not archived this pass —
-  archival requires the 6-step referrer-fixup ritual, out of scope for a staleness-only sweep; `status:` frontmatter left
-  at `open` rather than `resolved` since `check_terminal_status_archived` hard-fails an unarchived `resolved` doc at
-  commit time — a future archival pass should flip both together).
+  archival requires the 6-step referrer-fixup ritual, out of scope for a staleness-only sweep; `status:` frontmatter
+  left at `open` rather than `resolved` since `check_terminal_status_archived` hard-fails an unarchived `resolved` doc
+  at commit time — a future archival pass should flip both together).

@@ -18,7 +18,7 @@ summary: >-
   min per invocation. Because every quickmerge runs the full gate set, this throttles the whole fleet's ship path and is
   the plausible root cause of the git_red_sustain_secs~5400 (90 min) I observed the same session (commits piling behind
   slow quickmerges).
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ao] # retagged 2026-08-02 from [meta] (operator ruling on
@@ -37,7 +37,7 @@ assigned_vm: NA # left NA for the ao tranche's own dispatch call (per the ruling
 execution_scope: local-only
 drift_direction: advance-code
 source: [main-orchestrator-triage-agt-26fe12, quickmerge-hang-observed]
-resolved_by:
+resolved_by: unified-trading-pm@1762007517 (2026-08-08, rglob replaced with pruning os.walk)
 locked_by:
 locked_since:
 depends_on: []

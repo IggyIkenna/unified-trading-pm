@@ -8,6 +8,7 @@ summary: >-
   GitHub-hosted runner, not the self-hosted glue fleet, so this is not an infra/runner problem.
 status: open
 nature: issue
+archive_exempt: true
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-system-ui]
@@ -24,7 +25,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_vm: NA
-resolved_by:
+resolved_by: runtime-verified 2026-08-09 (npx vitest run -> 4/4 passed, block-list.ts matches codex block-list.md)
 locked_by:
 locked_since:
 context_scope:
@@ -60,15 +61,15 @@ verification dispatch happened to run on `main` and surfaced it. Did not investi
 
 ## Todos
 
-- [x] ✅ [UI] P2. Investigate `BL-12` in `codex/.../block-list.md` (grep for it) vs `block-list.ts` — determine whether the
-      code is missing an entry that should exist (add it) or the codex doc is stale (correct the doc), then fix
+- [x] ✅ [UI] P2. Investigate `BL-12` in `codex/.../block-list.md` (grep for it) vs `block-list.ts` — determine whether
+      the code is missing an entry that should exist (add it) or the codex doc is stale (correct the doc), then fix
       whichever is wrong so both tests pass for the right reason. Gate: `block-list-parity.test.ts` green, `pw:L2 ✓` if
-      the fix touches UI-rendered content per the UI-testing-layers SSOT.
-      **DONE (staleness-recheck 2026-08-09)** — `block-list.ts` carries `BL-12` (comment: "added 2026-08-04, gmx_v2
-      venue removal") and codex `block-list.md` carries `### BL-12: DeFi perp liquidation capture — no venue`; both id
-      sets (`BL-1`..`BL-10`, `BL-12`, 11 total) match exactly. Runtime-verified for real (not just git-evidence, per the
-      2026-08-06 audit's own caveat that this was git-suggestive-but-unverified): `npx vitest run
-      __tests__/scripts/block-list-parity.test.ts` in `unified-trading-system-ui` → **4/4 passed** live.
+      the fix touches UI-rendered content per the UI-testing-layers SSOT. **DONE (staleness-recheck 2026-08-09)** —
+      `block-list.ts` carries `BL-12` (comment: "added 2026-08-04, gmx_v2 venue removal") and codex `block-list.md`
+      carries `### BL-12: DeFi perp liquidation capture — no venue`; both id sets (`BL-1`..`BL-10`, `BL-12`, 11 total)
+      match exactly. Runtime-verified for real (not just git-evidence, per the 2026-08-06 audit's own caveat that this
+      was git-suggestive-but-unverified): `npx vitest run     __tests__/scripts/block-list-parity.test.ts` in
+      `unified-trading-system-ui` → **4/4 passed** live.
 
 ## Progress Log
 
@@ -85,9 +86,16 @@ verification dispatch happened to run on `main` and surfaced it. Did not investi
   (`plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md` line ~228 still carries an open
   `[DOCS] P3` retag+verify todo naming this doc, `assigned_vm: NA` there too — the disposition owner, not a duplicate AO
   dispatch).
-- **staleness-recheck 2026-08-09**: closed the sole todo (BL-12 investigate/fix) — runtime-verified live (`npx vitest
-  run __tests__/scripts/block-list-parity.test.ts` → 4/4 passed in `unified-trading-system-ui`); both `block-list.ts`
-  and codex `block-list.md` already carry matching `BL-12` entries. 0 open todos remain — **ARCHIVE CANDIDATE** (note:
-  the doc's own disposition owner, `ag_closeout_audit_cross_cutting_parked_2026_08_06.md`, still carries an open
-  `[DOCS] P3` retag+verify todo naming this doc — that todo's "verify" half is now satisfied by this recheck; archival
-  itself is out of this recheck's scope).
+- **staleness-recheck 2026-08-09**: closed the sole todo (BL-12 investigate/fix) — runtime-verified live
+  (`npx vitest run __tests__/scripts/block-list-parity.test.ts` → 4/4 passed in `unified-trading-system-ui`); both
+  `block-list.ts` and codex `block-list.md` already carry matching `BL-12` entries. 0 open todos remain — **ARCHIVE
+  CANDIDATE** (note: the doc's own disposition owner, `ag_closeout_audit_cross_cutting_parked_2026_08_06.md`, still
+  carries an open `[DOCS] P3` retag+verify todo naming this doc — that todo's "verify" half is now satisfied by this
+  recheck; archival itself is out of this recheck's scope).
+- **cicd escalation agt-558c62 2026-08-09**: 0 open todos, genuinely archival-eligible, but
+  `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` (1007L, already over the 1000L hard line-cap) cites
+  this doc via a markdown-syntax link — archiving would hit the exact deadlock documented in
+  `/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` (a same-line link-repoint
+  edit in an over-cap file has no `check_line_caps.sh` carve-out). Set `archive_exempt: true`, kept `status: open`.
+  Un-set once the deadlock doc's operator decision lands and the archival can complete (same batch as the
+  disposition-owner's own `[DOCS] P3` todo).

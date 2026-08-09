@@ -23,7 +23,7 @@ related:
   [
     /plans/active/ci_satellite_ao_dispatch_batch6_2026_08_08.md,
     /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
-    /plans/active/issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md,
+    /plans/archive/2026_08/issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"

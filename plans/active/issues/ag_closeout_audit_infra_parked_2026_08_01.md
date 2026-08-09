@@ -29,7 +29,7 @@ related:
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch3_2026_07_30.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch5_2026_08_01.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md,
+    /plans/archive/2026_07/issues/qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -198,13 +198,13 @@ no drift:
       fixture.
 - [x] ✅ [DOCS] P3. Retag `issues/qg_owner_gate_full_workspace_rglob_walk_hangs_quickmerge_2026_07_31.md`'s
       `asset_group` **CLOSED 2026-08-06 (na-eligibility-audit)**: done 2026-08-02 by operator ruling
-      (plan_reconcile_parked_operator_decisions na-eligibility-audit item 19, option A) — live `asset_group: [ao]`,
-      verified. `[meta]` → `[ao]` (finding 6) — owning-tranche fix, leave to the `ao`-tranche's own audit or a
-      corpus-wide `meta`-fold-in pass, not this run. Done when: the tag is corrected and ~~the doc is folded into
-      `ao_consolidated_closeout_2026_07_25.md`'s membership~~. **STALE (na-eligibility-audit 2026-08-03)** —
-      `ao_consolidated_closeout_2026_07_25.md` archived 2026-07-30 (`status: complete`); its own ARCHIVED banner says it
-      no longer tracks live Sources membership (37/44 orphaned as of that date) and redirects membership authority to
-      `ao_satellite_ao_dispatch_batch1_2026_07_26.md` (+ gated finalize) and
+      (`/plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 19,
+      option A) — live `asset_group: [ao]`, verified. `[meta]` → `[ao]` (finding 6) — owning-tranche fix, leave to the
+      `ao`-tranche's own audit or a corpus-wide `meta`-fold-in pass, not this run. Done when: the tag is corrected and
+      ~~the doc is folded into `ao_consolidated_closeout_2026_07_25.md`'s membership~~. **STALE (na-eligibility-audit
+      2026-08-03)** — `ao_consolidated_closeout_2026_07_25.md` archived 2026-07-30 (`status: complete`); its own
+      ARCHIVED banner says it no longer tracks live Sources membership (37/44 orphaned as of that date) and redirects
+      membership authority to `ao_satellite_ao_dispatch_batch1_2026_07_26.md` (+ gated finalize) and
       `ao_open_issues_consolidated_close_out_2026_07_17.md` — `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s own
       2026-08-01 Progress Log independently reached the same conclusion for an identical citation on its own todo 11
       ("editing the literal doc this todo named is moot since it archived 2026-07-30 and its own banner already
@@ -226,9 +226,8 @@ no drift:
   Checked against today's operator-Q&A rulings cheat sheet: no precedent applies. Also checked the sibling
   `ag_closeout_audit_infra_parked_2026_08_03.md`'s finding 13, which carries the SAME item and explicitly states it
   "needs a design decision (e.g., only count a mention inside an actual todo line, or within N lines of a `Source:`
-  marker) that this run did not make" — that doc's own 2026-08-03 na-eligibility-audit verdict independently reached
-  the same conclusion ("neither clears the bounded/deterministic bar for RECLASSIFY"). Consistent, unchanged. NA
-  correct.
+  marker) that this run did not make" — that doc's own 2026-08-03 na-eligibility-audit verdict independently reached the
+  same conclusion ("neither clears the bounded/deterministic bar for RECLASSIFY"). Consistent, unchanged. NA correct.
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06. Re-read end-to-end;
   `grep -cE '^- \[ \]'` = 1, matching. The sole remaining open item (harden `generate_ag_closeout_audit_candidates.py`'s
   `CITE_RE` so a Progress Log narrative mention doesn't count as a citation) is still a genuine, unresolved, corpus-wide

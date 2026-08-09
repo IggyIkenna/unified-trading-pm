@@ -21,7 +21,7 @@ summary: >-
   explicit `promotion_model` manifest field, and unified-trading-ci simply lacks one, same as PM which DOES want normal
   LDR->main monitoring) — so it fires a `PROMOTION LAG > 60m` warning every cycle with no available fix (there's no
   promote-PR mechanism to unblock).
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -50,6 +50,8 @@ drift_direction: advance-code
 depends_on: []
 source: "branch-health promotion-lag re-verification session, 2026-08-07"
 resolved_by:
+  unified-trading-ci@a0561c443/@3d6e25ee1 (2026-08-07 reconciliation); unified-trading-pm@5d16f57f3,
+  deployment-service@00a23128 (2026-08-08 shellcheck fleet propagation)
 locked_by:
 locked_since:
 context_scope:
@@ -134,20 +136,19 @@ silent merge choice here risks dropping one side's fix. Not attempted.
       originally assumed was itself stale (corrected scope investigation:
       `issues/notify_slack_yml_fleet_rollout_scope_contradiction_2026_08_08.md`) — 21 of the 26 manifest repos had
       already had their local `notify-slack.yml` deliberately deleted as dead
-      (`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 6; a blanket rollout would have
-      silently resurrected 20 zombie files). Fix ported into the template + `unified-trading-pm@5d16f57f3` (PM's own
-      deployed copy) + `deployment-service@00a23128` (the sole confirmed remaining legitimate local caller). Template
-      drift baseline ratcheted to 0 entries for this file. `execution-service`/`strategy-service` carry pre-existing
-      zombie copies with zero current callers, left untouched and flagged in the new issue doc for a future cleanup
-      todo — not this fix's scope.
+      (`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 6; a blanket rollout would have silently
+      resurrected 20 zombie files). Fix ported into the template + `unified-trading-pm@5d16f57f3` (PM's own deployed
+      copy) + `deployment-service@00a23128` (the sole confirmed remaining legitimate local caller). Template drift
+      baseline ratcheted to 0 entries for this file. `execution-service`/`strategy-service` carry pre-existing zombie
+      copies with zero current callers, left untouched and flagged in the new issue doc for a future cleanup todo — not
+      this fix's scope.
 
 ## Progress Log
 
 - **stale-recheck 2026-08-09** (KEEP-NA staleness re-audit, `ci` tranche): batch6 todo 9 (SC2015 shellcheck
-  fleet-propagation) shipped 2026-08-08 (`unified-trading-pm@5d16f57f3` + `deployment-service@00a23128`, scope
-  corrected per `notify_slack_yml_fleet_rollout_scope_contradiction_2026_08_08.md`) — flipped this doc's own checkbox
-  to `[x]` with the citation. Both of this doc's todos are now done — **flagging as an ARCHIVE candidate** (0 open
-  todos remain).
+  fleet-propagation) shipped 2026-08-08 (`unified-trading-pm@5d16f57f3` + `deployment-service@00a23128`, scope corrected
+  per `notify_slack_yml_fleet_rollout_scope_contradiction_2026_08_08.md`) — flipped this doc's own checkbox to `[x]`
+  with the citation. Both of this doc's todos are now done — **flagging as an ARCHIVE candidate** (0 open todos remain).
 
 - **2026-08-07**: Found while re-verifying the morning branch-health `PROMOTION LAG > 60m` alert. Not fixed autonomously
   — the correct remedy depends on a design intent only the operator can confirm (does this repo want real promotion

@@ -14,7 +14,7 @@ summary: >-
   "preserved for reference"/superseded; `_checklist-template-enhanced.yaml` = 26 items). Found by docs-reconcile's
   internal-self-consistency hunter (2026-07-24) while checking a narrower single-doc contradiction; escalated to an
   issue doc once the cited backing file turned out to be missing entirely rather than just moved.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -36,7 +36,7 @@ source: >-
   docs-reconcile full-corpus run, 2026-07-24 — self-consistency hunter batch_2 flagged the 51-vs-52-vs-37 mismatch in
   /codex/06-coding-standards/README.md as an internal contradiction; investigating for a mechanical fix found the cited
   backing file itself is missing, which is a bigger and different problem than a stale prose number.
-resolved_by:
+resolved_by: deployment-service@e780ab83 (2026-08-08, ao round-5 item 13, canonical checklist created)
 locked_by:
 assigned_vm: NA
 code_refs: []
