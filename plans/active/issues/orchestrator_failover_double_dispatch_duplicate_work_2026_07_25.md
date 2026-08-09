@@ -313,3 +313,25 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **Incident-7 — 2026-08-09 (self-observed by slot 16) — RESOLVED, earliest-wins held again**:
+  `sports_taxonomy_p3_consumers-004` ("wire the new sports arb detector into a live/batch producer") was live in both
+  slot 16 (this worker) and slot 24 `current_task` simultaneously — this session's own `SessionStart` collision hook had
+  already warned of a second live `claude` process in this slot's cwd, consistent with the general pattern. Both
+  independently built a FULL working implementation from scratch (not doc-only, like Incidents 1/2/4): same 4 files
+  (`features_service/sports/arb/runner.py`, `cli/handlers/arb_detect_handler.py`, `cli/main.py` diff,
+  `tests/sports/unit/arb/test_runner.py`), materially different designs (slot 16 read raw per-bookmaker ticks via
+  `read_odds_data`; slot 24 read MDPS's already-bucketed `read_bucketed_odds` with `scan_days`/dry-run support — the
+  more complete design). Slot 24 won the race: committed + quickmerged `features-service@67de878d` (QG green) and
+  flipped the plan checkbox with evidence at 17:51:01Z, all before slot 16's own QG run (queued ~14min behind a 6-deep
+  host-governor backlog) had even finished. Slot 16 discovered the collision only by chance — a routine pre-commit
+  `git status`/ahead-behind check surfaced `behind=1` against a locally-fetched `origin/live-defi-rollout` moments
+  before its own (still-uncommitted) duplicate would have been shipped on top, which would have produced a same-file
+  conflict-on-push (unlike incidents 1/2/4's doc-only convergence, or 5/6's never-touching-the-same-tracked- file
+  races). Slot 16 discarded its uncommitted duplicate (`git restore` + `rm` the 3 untracked files — safe, never pushed)
+  and fast-forwarded onto slot 24's shipped commit; zero duplicate landed, zero conflict. **New data point vs. Incidents
+  5/6**: this is the closest call yet — the two implementations touched the exact same 4 file paths (unlike 5/6's
+  byte-identical-diff CVE bump or independent single-file features), so a few more minutes' delay on slot 16's QG queue
+  would have turned this into a genuine same-file push conflict rather than a clean discard. Corroborates the root-cause
+  note above: no ping-staleness/silence was involved on slot 16's side (it was actively working, QG running) — this
+  reads as the same concurrent-claim-time race flagged as an open hypothesis under Incident 5, now observed a second
+  time on a CODE task with overlapping file paths.
