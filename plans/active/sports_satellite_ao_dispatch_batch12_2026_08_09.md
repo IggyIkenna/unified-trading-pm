@@ -184,3 +184,16 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
   category (operator-gated / time-gated / dependency-gated / too-large-or-risky / not-this-tranche's-write). **Status
   left `draft`** per this skill's autonomous-mode safety rail — flipping to `active` needs explicit operator approval
   before this batch dispatches.
+- **2026-08-09 (slot-29, todo 1 — PLAYER_STATS reconcile)**: The referenced script
+  (`scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py`, `market-tick-data-service@25c7a3f2`) had
+  a real bug that made every prior dry-run/apply invocation a silent false-clean no-op: `PROD_BUCKET` resolved
+  `kind="market-data"` (→ `market-data-tick-sports-prd-...`, a bucket with ZERO `PLAYER_STATS` rows — its data_types are
+  trades/odds/arbitrage, not sports-reference entities) instead of `kind="instruments-store"` (→
+  `instruments-store-sports-prd-...`, where `PLAYER_STATS` actually lives, matching the sibling
+  `instruments-service/scripts/restamp_orphan_mtds_player_stats_rows_2026_07_13.py`). Fixed + shipped
+  `market-tick-data-service@9678e160`. Re-ran the dry-run against the corrected bucket: 2025-era population confirmed
+  EXACTLY 88/4,437 candidate rows genuinely missing their GCS object (matches the plan's stated "~88" figure) over
+  `2025-09-01..2025-11-30`; the 2018-2020-era population (3,394 raw candidates) was still scanning when this note was
+  written (each candidate needs a live GCS-existence check, not just a manifest read — slow at this row count).
+  Proceeding to complete that scan, then the actual `--apply-prod --confirm-prod-write` execution + post-write
+  verification per the todo's done-when.
