@@ -988,3 +988,13 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   `run.log` appeared clean at T+~4min, real pipeline bootstrap + `SKIP date=2020-06-06: all 1 venues fresh` (correct
   skip-fast resume, no data loss). No setup failure this pass. Full detail:
   `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`.
+- **15:20Z — DEEPER ROOT CAUSE found in parallel: a fleet-wide P0 bug, not tarball staleness or odds-specific.**
+  `setup-data-pipeline-vm.sh:940`'s `SETUPTOOLS_SCM_PRETEND_VERSION="0.99.0"` had fallen below UAC's own real floor
+  (MDPS/MTDS/UTL/deployment-service all now require `unified-api-contracts>=0.106.0`), so `uv pip install` failed ~1s in
+  on **every** VM using the shared Pattern-A bootstrap — confirmed via `uts-prd-sa@...` self-delete audit logs showing
+  dozens of unrelated campaigns (tradfi-bf-*, mdps-backfill-cefi, expected-universe-v2-sports, footystats-fwd) also
+  dying within ~2min of boot in the same window. Fixed: bumped pretend-version to `0.199.0`, shipped
+  `deployment-service@501eb48b8` via quickmerge, verified ancestor-of-origin. **Confirmed working**: the fleet's
+  automated SPOT-relaunch mechanism (`unified-trading-sa@...`) picked up the gap and launched `smallchunk12` unprompted
+  — verified genuinely at chunk 1/452 real work (not just exit_code=0). Odds campaign resumed. Full detail:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`.
