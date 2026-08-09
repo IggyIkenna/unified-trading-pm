@@ -6,7 +6,7 @@ summary: >-
   `BASEDPYRIGHT_MAX_ERRORS` 1511->1517 (later 1523->1539->1555). RESOLVED 2026-06-24 by making basedpyright WARN-ONLY
   for PM `scripts/` (`unified-trading-pm@22b2f89d7`, PR #523), aligning with the lifecycle-marker SSOT (scripts =
   ruff-only); optional debt-paydown / scan-exclusion todos remain P3.
-status: open
+status: resolved
 nature: notes
 asset_group: [infrastructure]
 stage: [meta]
@@ -167,7 +167,8 @@ shipping):
       across 15 repos (dead extraPaths, missing extraPaths, 5 import-vs-manifest gaps) — captured as tracked todos per
       the findings-closure rule:
       `plans/archive/issues/basedpyright_extrapaths_pyproject_migration_findings_2026_08_01.md` (all 14 todos done,
-      archived). Evidence: `unified-trading-pm@<sha>` (this commit). (repo: unified-trading-pm).
+      archived). Evidence: `unified-trading-pm@33de5636c` (this commit) — verified by plan_reconciler agt-42aa39
+      2026-08-09: reachable on `origin/live-defi-rollout`. (repo: unified-trading-pm).
 
 ## Progress Log
 
