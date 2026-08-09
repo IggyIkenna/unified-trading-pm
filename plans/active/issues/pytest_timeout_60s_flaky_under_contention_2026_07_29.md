@@ -830,3 +830,15 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   `QG slice (checks): failure`, `QG slice (tests): success` — same known ratchet class, not pytest-timeout. Zero
   pytest-timeout recurrence anywhere. Window NOT yet closed (day ~4 of ~14, closes ~2026-08-20); releasing via
   skip-current-task per established precedent.
+- **slot-25 2026-08-09 ~12:51Z (sixteenth pass, same task)**: corroborates all prior passes, including slot-10's pass
+  ~6min earlier — surveyed latest 2 `quality-gates-v2` runs across all 10 tracked repos (runs spanning ~08:49Z–12:46Z
+  2026-08-09; a lighter 2-run-per-repo sweep given the prior pass's near-identical timestamp — a fuller 3-run survey is
+  more informative once more time has elapsed). 9 service repos: 18/18 terminal runs `conclusion=success`
+  (unified-api-contracts `31313062103`/`31312851082`; instruments-service `31313483567`/`31313191252`; features-service
+  `31310098159`/`31309460135`; market-data-processing-service `31305503787`/`31304427753`; unified-trading-api
+  `31305515988`/`31259318211`; deployment-service `31313093072` + 1 `in_progress`; ml-service
+  `31307726277`/`31306863522`; client-reporting-api `31312932460`/`31312849529`; market-tick-data-service `31313711456`
+  - 1 `in_progress`). unified-trading-pm: latest 2 runs both `conclusion=failure` — job-level check of the latest
+    (`31314100524`, 12:45Z) confirms `QG slice (checks): failure`, `QG slice (tests): success` — same known ratchet
+    class, not pytest-timeout. Zero pytest-timeout recurrence anywhere. Window NOT yet closed (day ~4 of ~14, closes
+    ~2026-08-20); releasing via skip-current-task per established precedent.
