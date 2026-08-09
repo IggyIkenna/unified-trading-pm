@@ -6,7 +6,7 @@
 # excluded; scripts/ INCLUDED). A repo whose live count EXCEEDS its
 # baseline fails CI — a NEW broad-except site landed; narrow to the
 # specific exception type(s) the block actually expects, or add
-# `# noqa: broad-except` on the except: line with a one-line reason.
+# `# noqa: broad-except` on the `except` line with a one-line reason.
 #
 # LOWER a count (re-run `--update-baseline`) the moment sites are narrowed.
 # NEVER raise a count. Repos not listed default to count=0.
@@ -64,6 +64,6 @@ repos:
   unified-trading-library:
     count: 283
   unified-trading-pm:
-    count: 79
+    count: 51
   unified-trading-system-ui:
     count: 3
