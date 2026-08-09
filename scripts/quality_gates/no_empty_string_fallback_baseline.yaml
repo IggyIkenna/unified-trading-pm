@@ -43,8 +43,8 @@ repos:
   execution-service:
     count: 65
   features-service:
-    commit: 7aca28ce40339cf0bcf0b100f4c848e6d083f772
-    count: 25
+    commit: 5aa50b13711403d5ce9a30c7dcb2f3c398d926a1
+    count: 24
   fund-administration-service:
     count: 0
   greeks-service:
