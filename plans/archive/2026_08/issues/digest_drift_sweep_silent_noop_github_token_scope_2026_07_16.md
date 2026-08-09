@@ -21,7 +21,7 @@ summary: >
   nothing. NOT caused by the CI-cost runner flip (23ce709cc touched only `runs-on:`); the flip merely caused the log to
   be read. The second-order bug: the `POST /dispatches` at :160-176 uses the SAME out-of-scope token, so fixing only the
   fetch would surface a wave of 403/404s at the dispatch step instead.
-status: open
+status: resolved
 nature: notes
 asset_group: [ci]
 stage: [meta]
@@ -81,6 +81,8 @@ depends_on: []
 ---
 
 # digest-drift-sweep: green for 27 days, dispatched nothing
+
+> ## ✅ RESOLVED + ARCHIVED (2026-08-09, plan_reconciler agt-c80749) — all 4 recommendations done, 0 open todos.
 
 > ## 🟢 4-of-4 FIXED (2026-08-09) — token + silent-failure hardening shipped; dormant-cascade question resolved (was
 >
