@@ -51,6 +51,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+archive_exempt: true
 source:
   "Found while cross-checking Finding E-1's [OPERATOR] status during a 2026-08-03 sweep closing out deferred audit items
   — Finding E-1 had been flipped by slot-9 minutes before this check, unsourced."
@@ -159,22 +160,30 @@ worse than just fixing the citation once the source is confirmed or the decision
       follow-on todo gated on the paper/live proof). Not deciding between (i)/(ii) here -- that's an implementation
       design call for the AO-dispatched engineer, scoped in the new todo below. Real-money-path order-routing code; not
       hand-implemented in this pass per this session's own instruction -- reclassified for AO dispatch below.
-- [ ] [CODE] P1. **AO-DISPATCHABLE (per 2026-08-09 2nd ruling above)**: implement the `NAUTILUS_UNSUPPORTED_VENUES` +
-      UAC-capability-declaration bridging for the 6 tradfi venues (CME/CBOE/NASDAQ/NYSE/ICE/FX), decoupled from actual
-      live order placement per the mechanism analysis above -- i.e. populate
-      `execution-service/execution_service/utils/nautilus_compatibility.py` (move the 6 venues out of
-      `NAUTILUS_UNSUPPORTED_VENUES` or otherwise mark them Nautilus-reachable),
-      `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_tradfi.py` (add `SourceCapability`
-      entries for the 6 venues, matching the `_IBKR` entry's shape), AND
-      `execution-service/execution_service/trade_execution/factory.py`'s `TRADFI_VENUES`, but introduce a decoupled
-      guard (tradfi-scoped feature flag or a staged/gated `TRADFI_VENUES` wiring -- see design options (i)/(ii) above,
-      worker's call which to implement, document the choice in the Progress Log) so tradfi live order placement stays
-      structurally blocked until `tradfi_consolidated_native_ao_extract_2026_07_25.md` todo 1 (backfill=paper=live
-      proof) closes. Update the 2026-08-03 code comments in both gate files to reflect the new state
-      (bridged-but-guarded, cite this todo) rather than deleting them. **Do not remove the existing
-      `NAUTILUS_UNSUPPORTED_VENUES`/capability-absence guard outright** -- the new guard must independently block live
-      execution even after these allow-lists are populated. Needs its own code review given the live-money-path blast
-      radius; scope to execution-service + unified-api-contracts only (no service→service dep).
+- [x] ✅ [CODE] P1. **DONE 2026-08-09** — `unified-api-contracts@a0c88ce3` + `execution-service@fb132832`. Bridged both
+      allow-list gates for the 6 tradfi venues (CME/CBOE/NASDAQ/NYSE/ICE/FX): `nautilus_compatibility.py` gained a NEW,
+      decoupled `TRADFI_LIVE_EXECUTION_VENUES` frozenset (kept the 6 venues IN `NAUTILUS_UNSUPPORTED_VENUES` too —
+      genuinely still true that NautilusTrader/Tardis batch-backtest doesn't support them, and
+      `configuration_validator.py`'s batch pre-flight + its test both depend on that staying accurate;
+      `live_execution_handler.py`'s `SUPPORTED_VENUES` now unions the new set, bridging the strategy pre-load gate).
+      UAC's `capability_declarations/_tradfi.py` gained 6 new `SourceCapability` entries (matching `_IBKR`'s shape),
+      bridging the manual/HTTP-path gate via `manual_instruction_helpers.py::_get_supported_venues()`.
+      `factory.py::TRADFI_VENUES` needed no change — it was already fully populated with all 6 venues (a stale
+      assumption in this todo's own text; verified by reading the file before touching it). **Guard mechanism chosen:
+      (i), reusing existing UAC operation-level machinery** rather than a hand-rolled flag — each new capability's
+      `operation_details["place_order"]` is explicitly `supported=False` on BOTH mainnet and testnet, so `factory.py`'s
+      existing `validate_operation(venue, "place_order", env)` call (already wired into `get_order_adapter()`) raises
+      `UnsupportedOperationError` for `mode="real"` before any adapter is constructed — `mode="sim"` (backtest/paper
+      simulator) is unaffected. This reuses the SAME proven mechanism already gating e.g. Hyperliquid's testnet
+      transfer, rather than introducing a new ad-hoc tradfi-only flag; option (ii) (staged `TRADFI_VENUES` wiring) was
+      not needed since `TRADFI_VENUES` was already populated and adapter construction was never the actual choke point —
+      `get_order_adapter()`'s `mode` parameter already is. Updated the 2026-08-03 code comments in all 3 touched files
+      (`nautilus_compatibility.py`, UAC `_tradfi.py`, `factory.py`) plus `ibkr_tradfi.py`'s stale STATUS docstring to
+      reflect bridged-but-guarded state, citing this todo. Did NOT remove `NAUTILUS_UNSUPPORTED_VENUES` membership for
+      these 6 venues. One pre-existing test (`test_tradfi_adapter_default_parameters`, mode="real" default) asserted
+      successful adapter construction for "cme" — updated to assert the new `UnsupportedOperationError` instead (this
+      behavior change is exactly what this todo required); added parametrized coverage across all 6 venues ×
+      mainnet/testnet in both repos. Full test evidence in Progress Log below.
 
 ## Progress Log
 
@@ -236,3 +245,29 @@ worse than just fixing the citation once the source is confirmed or the decision
   - review, per this session's explicit instruction). This is an issue doc under `plans/active/issues/`, not scanned by
     `check_finalize_plan_coverage.py`, so no finalize-plan companion is needed for this reclassification (precedent:
     `aws_codebuild_terraform_import_pending_2026_07_22.md`).
+- **2026-08-09 (slot-2 data_engineering, AO-dispatched)**: Implemented + shipped the last open todo —
+  `unified-api-contracts@a0c88ce3`, `execution-service@fb132832`. QG green both repos (full `quality-gates.sh`,
+  post-commit, sentinel-verified before quickmerge). New/updated tests all green: UAC
+  `tests/unit/test_validate_operation.py` (99 passed, incl. new `TestGatedTradfiVenueOperationDetails` — 12
+  place_order-blocked cases + 6 source-resolves cases) + `tests/unit/test_venue_source_adapter_parity.py` (252 passed,
+  unaffected — different source vocabulary); execution-service `tests/unit/utils/test_nautilus_compatibility.py` +
+  `tests/unit/cli/handlers/test_live_execution_handler.py` +
+  `tests/trade_execution/unit/test_factory_comprehensive.py` + `tests/trade_execution/unit/test_factory.py` +
+  `tests/unit/engine/validation/test_configuration_validator.py` (123 passed, incl. new parametrized guard-blocked tests
+  for all 6 venues × mainnet/testnet). Also ran the broader `tests/trade_execution/` suite (991 passed, 16 skipped, 9
+  pre-existing failures unrelated to this change — verified byte-identical on a clean tree via `git stash`;
+  VCR-cassette/pinnacle-adapter issues, hardcoded to a different host's absolute path). See the todo checkbox above for
+  the full design writeup (guard mechanism choice, why `factory.py::TRADFI_VENUES` needed no change, why
+  `NAUTILUS_SUPPORTED_VENUES` was deliberately NOT touched). Every `assigned_vm: NA` gate on this doc is now resolved
+  and this todo is the last one — doc is eligible for archival next pass (not self-archiving here per the
+  commit-checkbox-flip-then-archive-separately rule, and to leave a clean audit trail on this same commit). **Temporary
+  `archive_exempt: true`** added to frontmatter in THIS commit only: `check_archive_candidates.sh --only` (precommit,
+  2026-08-09) unconditionally blocks committing a staged 0-open/some-done/unlocked doc that isn't archived or exempt in
+  the SAME commit — which is in direct tension with `plan-completion-and-archival-discipline.md`'s "never combine the
+  checkbox flip with the `git mv` archival in ONE commit" rule (needed so the server's M3 `cross_repo_pm_flip_verified`
+  check, which greps the diff at the OLD `plan_ref` path, actually sees the `[ ] → [x]` transition rather than a bare
+  deletion). Resolving the conflict in favor of the two-commit M3-safe shape: this commit lands the flip alone with
+  `archive_exempt: true` as a narrowly-scoped, immediately-superseded bypass (not a standing exemption); the VERY NEXT
+  commit in this same session removes `archive_exempt` and runs the full 6-step archival ritual (banner, `git mv` to
+  `plans/archive/issues/`, referrer sweep). If you are reading this and `archive_exempt: true` is still present with no
+  immediate follow-up archival commit after it, that is a violation of this note and the doc should be archived now.
