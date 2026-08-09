@@ -250,14 +250,20 @@ over all pending draft batches) that independently spot-verified every todo belo
       `defi_track5_coverage_mvp_backfill_2026_07_24.md` (Todo 3 — same launched-fleet-verification ground,
       conflict-check found the "which launcher" half already answered by todo 15's 2026-07-28 launch; merged into one
       todo covering the two genuinely-open halves: terminal-outcome verification + concurrency figure).
-- [ ] [DATA] P2. **Pull the logs for verification VM `features-delta-one-defi-20260805-105902`** (or launch a fresh
+- [x] ✅ [DATA] P2. **Pull the logs for verification VM `features-delta-one-defi-20260805-105902`** (or launch a fresh
       1-day `--feature-group funding_oi` DEFI relaunch if those logs are gone) and confirm the post-fix
       (`features-service@f932908b`) run shows materially fewer "No upstream MDPS data ... (data_type=perp_funding/
       oracle_prices)" DEX-pool-instrument warnings and/or shorter wall-clock than the pre-fix baseline this issue
       documented, then flip the issue's status to resolved with `resolved_by` set. Repo: features-service. Source:
       `delta_one_get_available_instruments_unscoped_candle_data_types_2026_07_30.md`. Done when: log evidence (existing
       or fresh) confirms near-zero DEX-pool-instrument warnings for the funding_oi-scoped launch, and the issue doc's
-      status/`resolved_by` fields are updated to reflect closure.
+      status/`resolved_by` fields are updated to reflect closure. **CLOSED 2026-08-09 (slot 2, data_engineering)** —
+      logs still present in GCS (no relaunch needed); `run.log` shows ZERO DEX-pool-instrument warnings (vs. thousands
+      pre-fix), ~39s wall-clock. Run's own `rc=1` traced to an unrelated, already-resolved cause: HYPERLIQUID was
+      migrated out of `asset_group=defi` entirely on 2026-06-21 (archived
+      `hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md`), so zero `perp_funding` DEFI instruments
+      exist as of the 2026-08-01 test date (honest absence, not a regression). Issue doc flipped to `status: resolved`
+      with `resolved_by` set.
 - [ ] [DATA] P2. **Relaunch `mtds-dex-pools-backfill` (dex_pool_state)** scoped to TRADER_JOE_V2 (ideally all 4
       protocols) across 2026-03-01→2026-07-24 using current code (post-`market-tick-data-service@d4408134` catalogue-TTL
       fix), then GCS-spot-check or manifest-check (same 18-date sampling method as the source doc's own 2026-08-03
@@ -585,3 +591,11 @@ remaining items besides the over-cap-gated one above).
   17:26Z. End state: manifest 0 of 12,425 TARGET rows, GCS 0 objects all venues. Todos 3+4 flipped. Sources:
   `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` +
   `defi_gas_fees_legacy_purge_manifest_step_blocked_vm_infra_flakiness_2026_08_05.md`.
+- **2026-08-09 (slot 2, data_engineering, task `defi_satellite_ao_dispatch_batch9-011`)**: closed the `funding_oi`
+  verification-log todo. `run.log` for VM `features-delta-one-defi-20260805-105902` was still present in GCS (no
+  relaunch needed): zero DEX-pool-instrument warnings (vs. the thousands this doc's source issue documented pre-fix),
+  ~39s wall-clock, confirming `features-service@f932908b`'s scoping fix. The run's own `rc=1` traced (bounded
+  column-pruned manifest read, `data_type=perp_funding venue=HYPERLIQUID`) to HYPERLIQUID's already-complete 2026-06-21
+  removal from `asset_group=defi` — honest absence, not a regression. Issue doc
+  `delta_one_get_available_instruments_unscoped_candle_data_types_2026_07_30.md` flipped to `status: resolved` +
+  `resolved_by` set. No code shipped (log-citation closure only).

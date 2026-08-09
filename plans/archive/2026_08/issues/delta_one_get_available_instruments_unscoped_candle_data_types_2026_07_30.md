@@ -21,7 +21,7 @@ summary: >-
   get processed — but every irrelevant pool instrument costs a real per-instrument lookback/upstream check that can
   never produce data, at DEFI's instrument-count scale (a `dex_pool_swaps` corpus with reportedly 4000+ instruments per
   the onchain IS catalogue count observed the same session: "IS DEFI catalogue: 4367 instruments").
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -52,8 +52,16 @@ context_scope:
     features-service/features_service/delta_one/app/core/data_loader.py,
   ]
 locked_by:
-resolved_by:
+resolved_by: >-
+  defi_satellite_ao_dispatch_batch9-011 (slot 2, data_engineering, 2026-08-09) — closed by log citation, see Progress
+  Log
 ---
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED** (status: resolved, 0 open todos, unlocked). `features-service@f932908b`'s
+> DataLoader scoping fix confirmed via the still-present `run.log` for verification VM
+> `features-delta-one-defi-20260805-105902`: zero DEX-pool-instrument warnings (vs. the flood this doc's "What I found"
+> section documents pre-fix). Archived by `defi_satellite_ao_dispatch_batch9_2026_08_06.md` todo 11 (slot 2,
+> data_engineering, 2026-08-09).
 
 # What I found
 
@@ -172,15 +180,37 @@ group doesn't consume that data_type.
   (--feature-group funding_oi → --dry-run passed to features CLI). Monitor watching VM for runtime throughput evidence.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (3 entries), unchanged.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (3 entries), unchanged.
+- **2026-08-09 (slot 2, data_engineering, task `defi_satellite_ao_dispatch_batch9-011`)**: **RESOLVED.** Pulled the full
+  `run.log` for verification VM `features-delta-one-defi-20260805-105902`
+  (`gs://deployment-scripts-central-element-323112/vm-logs/features-delta-one-defi-20260805-105902/run.log` — still
+  present, no relaunch needed). Confirms the `f932908b` scoping fix: the log contains **zero** occurrences of the
+  pre-fix `No upstream MDPS data for <DEX-pool-instrument>... (data_type=perp_funding/oracle_prices)` warning pattern
+  this doc's "What I found" section documented flooding by the thousands — the only manifest-lookup warning is a single
+  line (`No captured instruments in manifest for DEFI date=2026-08-01 data_type=perp_funding`), i.e. the scoped
+  `candle_data_types` no longer walks `dex_pool_swaps` instruments for a `funding_oi`-only launch. Total wall-clock
+  11:01:29→11:02:08Z (~39s) — far short of the pre-fix multi-thousand-instrument iteration this issue documented. The
+  run itself still exited `rc=1` ("No delta-one instruments available after filtering"), but this is UNRELATED to the
+  scoping bug: a bounded, column-pruned read of the live DEFI `availability_index.parquet`
+  (`data_type=perp_funding AND venue=HYPERLIQUID`, 12,500 rows, all `capture_status=captured`) shows HYPERLIQUID
+  perp_funding coverage stops dead at `2026-06-09` with zero rows of any status after — because HYPERLIQUID was removed
+  from `ALL_DEFI_VENUES`/`DEFI_VENUE_PHASE` on 2026-06-21 and its frozen `asset_group=defi` corpus was migrated to
+  `asset_group=cefi` by the now-complete, archived
+  `plans/archive/2026_08/hyperliquid_aster_defi_to_cefi_asset_group_migration_2026_08_02.md` (status: complete, archived
+  2026-08-07) — so as of the 2026-08-01 test date there is genuinely zero `perp_funding` instrument left under
+  `asset_group=DEFI` (honest absence by design, not a regression from this fix or a new finding). Done-when satisfied:
+  near-zero (here, zero) DEX-pool-instrument warnings confirmed from existing log evidence; status/`resolved_by` updated
+  above.
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Confirm the D1 delta_one leg's real throughput improved materially (fewer log lines / shorter
+- [x] ✅ [DATA] P3. Confirm the D1 delta_one leg's real throughput improved materially (fewer log lines / shorter
       wall-clock for the same date range) — collect runtime evidence from VM features-delta-one-defi-20260805-105902
       once the monitor completes; the f932908b scoping fix is verified but the throughput re-verification itself is
-      still pending
+      still pending. **CLOSED 2026-08-09 (slot 2, data_engineering)** — see Progress Log for the log-citation evidence
+      (zero DEX-pool-instrument warnings vs. this doc's own documented pre-fix flood).
 
 > **2026-08-06 archive-candidate audit**: The [DATA] P3 re-verify todo is marked [x] but its own evidence and the
 > 2026-08-05 Progress Log say the verification VM only confirmed parameter threading and a monitor is still 'active for
 > runtime throughput' — the todo's done-when (throughput improved materially) has not been demonstrated, so the checkbox
-> is premature.
+> is premature. **Superseded 2026-08-09**: full run.log now pulled and cited below — the checkbox is no longer
+> premature.
