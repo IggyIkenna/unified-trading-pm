@@ -21,7 +21,7 @@ summary: >-
   producer (`databento_tradfi_ws` via `launch-mtds-live.sh --asset-group tradfi`) was verified WORKING 2026-06-21 and is
   NOT subscription-blocked — this is an operational gap (nobody relaunched it after it stopped/was preempted), not a
   missing feature.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -57,7 +57,7 @@ context_scope:
     deployment-service/scripts/vm/launch-mtds-live.sh,
     deployment-service/deployment_service/vm_prefix_registry.py,
   ]
-resolved_by:
+resolved_by: deployment-service@9c7a8ace
 source: >-
   data_pipeline_hardening_self_monitoring_2026_06_22.md's 2026-08-09 round11 RECLASSIFY note on the sole open P0 "9 live
   data VMs frozen" todo — its done-when required either naming current live VMs + fresh manifest recency, or filing a
@@ -67,6 +67,14 @@ depends_on: []
 ---
 
 # TradFi live capture (CME trades) has been down since 2026-08-04
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED** (status: resolved, 0 open todos, unlocked). Live producer relaunched
+> (`mtds-live-tradfi-cme-trades-20260809-163443`, verified authenticated + heartbeating), root cause diagnosed (manual
+> `gcloud compute instances delete` 2026-06-30, not preemption), and the systemic gap closed —
+> `deployment-service@9c7a8ace` ships `missing_live_producer_watcher` (DP-LIVE-003), the fleet-monitor check for a
+> registered `LONG_LIVED_LIVE` prefix with zero running instances. The unrelated "who wrote the 24 stale shard rows"
+> aside was migrated to `/plans/active/issues/tradfi_live_shard_atom_unknown_writer_2026_08_09.md` per the archival
+> ritual's todos-not-prose rule.
 
 ## What I found
 
@@ -140,12 +148,21 @@ Relaunch the tradfi live producer and verify it sticks (infra craft, AO-eligible
       `data_pipeline_hardening_self_monitoring_2026_06_22.md` is ARCHIVED, so per CLAUDE.md findings-triage this stays
       in the still-open issue doc that surfaced it rather than reopening an archived plan). (repo: deployment-service,
       unified-trading-pm)
-- [ ] [INFRA] P1. Add a "missing `LONG_LIVED_LIVE` producer" check to `deployment-service`'s fleet monitor sweep: for
-      every `vm_prefix_registry` entry with `lifecycle_class=LONG_LIVED_LIVE` that is NOT itself
-      `# non-relaunchable`/paper-only, verify at least one matching instance is RUNNING in the target cloud/project;
-      zero matches for longer than a reasonable grace window (long enough to cover a deliberate short maintenance
-      restart) is a CRITICAL finding routed through the existing actionable-alert path
-      (`/codex/04-architecture/agent-orchestrator-alerting.md`), not just a silent gap. Cite this issue doc
-      (`/plans/active/issues/tradfi_live_cme_capture_stopped_2026_08_09.md`) as the motivating incident — a producer can
-      be gone for 5+ weeks with zero page because nothing ever checks for absence, only for an unhealthy presence.
-      (repo: deployment-service)
+- [x] ✅ [INFRA] P1. **Shipped `deployment-service@9c7a8ace`.** Added
+      `deployment_service/data_pipeline_monitors/missing_live_producer_watcher.py` (DP-LIVE-003):
+      `live_producer_prefixes()` selects every `vm_prefix_registry.VM_PREFIX_TO_BUCKET` entry with
+      `lifecycle_class=LONG_LIVED_LIVE` EXCLUDING `umbrella=DeploymentUmbrella.PAPER` (the paper-only exclusion —
+      `defi-paper-`/`strategy-paper-` are operator-started/stopped by design, not always-on producers);
+      `check_missing_live_producers()` checks each surviving prefix against the full running-VM census (unfiltered by
+      `is_data_vm` — `strategy-live-`/`greeks-compute-live-`/`defi-recursive-` aren't data VMs but ARE LONG_LIVED_LIVE
+      producers) and pages CRITICAL once absent for `min_consecutive` sweeps (shared `MissTracker`, same grace-window
+      discipline as every other meta-watcher probe — a short deliberate relaunch never false-pages). Reuses
+      `DP_CRON_DID_NOT_FIRE` rather than a new UTL event (cross-repo) — same precedent as DP-FETCH-009 and
+      `live_stream_watcher`'s DP-LIVE-001/002, all of which already reuse this event for "a thing that's supposed to
+      keep existing isn't." Wired into `cli.py`'s `meta` sweep via `missing_live_producer_watcher.run_check(...)` (skips
+      the check entirely — never pages — when the VM census is unavailable, e.g. a compute-API blip). Extracted the
+      pre-existing inline `cron_targets` assembly out of `cli.py` into `meta_targets.cron_targets()` (pure move) to stay
+      under the repo's 960-line file-size QG gate after the new wiring. 6 new unit tests in
+      `tests/unit/test_missing_live_producer_watcher.py` (prefix selection, present/absent, consecutive-miss
+      suppress-then-page, miss-counter reset on recovery, unavailable-census skip) — all green; full `quality-gates.sh`
+      green on the committed SHA (301s local run). (repo: deployment-service)

@@ -91,7 +91,7 @@ context_scope:
 > item, "9 live data VMs frozen 5.5–32h", resolved 2026-08-09 (slot-24): the originally-named VMs are conclusively gone,
 > CeFi live capture is confirmed recovered via the consolidated launcher, and TradFi live capture's separate,
 > currently-live outage was forked to its own P0 issue —
-> `/plans/active/issues/tradfi_live_cme_capture_stopped_2026_08_09.md`. Record-only from here.
+> `/plans/archive/2026_08/issues/tradfi_live_cme_capture_stopped_2026_08_09.md`. Record-only from here.
 
 > **Operator intent (2026-06-22)**: "I can't babysit thousands of data types. Stop running VMs for hours only to realise
 > they're slow / rate-limited / not writing to the right place / marking everything `empty_confirmed` when the data
@@ -553,7 +553,8 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       shows the newest `pipeline_mode~live` row (venue=CME) was written 2026-08-04T08:51:36 UTC — ~5.3 days stale at
       check time. Per the done-when's own branch (b), this is a NEW finding, not evidence against flipping THIS todo
       (whose literal named VMs are confirmed gone either way) — filed as
-      `/plans/active/issues/tradfi_live_cme_capture_stopped_2026_08_09.md` with the relaunch + root-cause todos.
+      `/plans/archive/2026_08/issues/tradfi_live_cme_capture_stopped_2026_08_09.md` with the relaunch + root-cause
+      todos.
     - The 2026-07-25 blocker (`storage.buckets.list` 403 for `unified-trading-sa`) did not reproduce this session —
       `gsutil`/`resolve_bucket_name`-backed reads against both prod buckets succeeded ambiently; no IAM self-grant was
       needed.
@@ -627,16 +628,16 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 - **2026-08-09 (slot-24)**: sole open P0 todo flipped `[x]` — done-when satisfied (cefi live capture confirmed recovered
   via the consolidated launcher; tradfi live capture confirmed genuinely stopped since 2026-08-04, filed as a new P0
   issue doc per the done-when's own branch (b)). See the todo's own annotation for the full evidence trail. New issue:
-  `/plans/active/issues/tradfi_live_cme_capture_stopped_2026_08_09.md`. All open work in this plan is now clear,
-  unlocked, no gating finalize twin — ran the 6-step archival ritual same-turn per the HARD RULE: `status: complete`,
-  ARCHIVED banner added, every live-corpus referrer (16 files: agents/, plans/active/\*, plans/epics/, codex/02-data/\*,
-  codex/05-infrastructure/\*, codex/15-runbooks/incidents/\*) repointed to the new archive path (pre-existing
-  `../`-relative forms converted to the leading-slash absolute convention in the same edit); already-archived docs'
-  frozen historical citations (many pinned to specific line-number anchors describing past content) were deliberately
-  left untouched — rewriting a path inside closed historical record without re-verifying its cited line ranges would
-  misrepresent a re-verification that didn't happen. No codex contract changes needed — this plan's phases were already
-  codex-aligned in earlier rounds; the one net-new fact (tradfi live capture down since 2026-08-04) lives in the new
-  issue doc, not a codex SSOT. `git mv` to `/plans/archive/2026_08/`.
+  `/plans/archive/2026_08/issues/tradfi_live_cme_capture_stopped_2026_08_09.md`. All open work in this plan is now
+  clear, unlocked, no gating finalize twin — ran the 6-step archival ritual same-turn per the HARD RULE:
+  `status: complete`, ARCHIVED banner added, every live-corpus referrer (16 files: agents/, plans/active/\*,
+  plans/epics/, codex/02-data/\*, codex/05-infrastructure/\*, codex/15-runbooks/incidents/\*) repointed to the new
+  archive path (pre-existing `../`-relative forms converted to the leading-slash absolute convention in the same edit);
+  already-archived docs' frozen historical citations (many pinned to specific line-number anchors describing past
+  content) were deliberately left untouched — rewriting a path inside closed historical record without re-verifying its
+  cited line ranges would misrepresent a re-verification that didn't happen. No codex contract changes needed — this
+  plan's phases were already codex-aligned in earlier rounds; the one net-new fact (tradfi live capture down since
+  2026-08-04) lives in the new issue doc, not a codex SSOT. `git mv` to `/plans/archive/2026_08/`.
 - **2026-08-09 (slot-24), M3-verification split-commit recovery**: the combined flip+`git mv` commit above
   (`unified-trading-pm@4f270300b`) hit `/done`'s M3 check with `reason: cross_repo_pm_file_touched_no_checkbox_flip` — a
   diff at the ORIGINAL `plans/active/...` path shows only a deletion (git's rename pairing isn't applied under a
