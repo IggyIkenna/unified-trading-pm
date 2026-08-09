@@ -103,3 +103,19 @@ depends_on: []
 
 - 2026-08-09: Run started. STEP 1 (repo sync) + STEP 2/2b (grace set + findings doc) complete. Proceeding to STEP 3
   (hunter fan-out).
+- 2026-08-09: `run_hygiene_sweep.sh --ci` completed corpus-wide (4 hard failures, 1 soft warning). Verified all 4 hard
+  failures are OUTSIDE the cefi tranche (not introduced by this run, not this shard's to fix per the tranche-ownership
+  boundary): (1) 2 dangling `/plans/...` refs in `infra`-tagged docs
+  (`asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md`,
+  `infra_health_audit_alert_coverage_gaps_2026_08_07.md`, both pointing at a non-existent target — a doc named
+  "infra_health_audit_findings_fix_2026_08_07" under plans/active that does not exist); (2) 1 create-only-archive-commit
+  duplicate pair on `asset_group: [cross-cutting]` doc `escalation_root_key_stale_predecessor_chaining_2026_08_09.md`
+  (exists in BOTH `plans/active/issues/` and `plans/archive/issues/` per a botched `git commit --only` archival — SSOT
+  `plans/archive/issues/git_commit_only_drops_rename_deletions_create_only_archive_2026_08_06.md`); (3) 3 archive
+  candidates, all `sports`/`meta`-tagged (`sports_odds_feature_naming_canonicalization_2026_07_21.md`,
+  `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`,
+  `strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md`). Also noted:
+  `ag_closeout_audit_rollout_2026_07_25.md` (cross-tagged `[cefi, defi, tradfi, prediction, sports, cross-cutting]`) is
+  1003L, over the 1000L HARD line-cap, but is GRACE-protected (last touched ~38 min before run start) and inherently
+  cross-tranche — not actionable by a single shard; left for the weekly `all` run or operator. Proceeding to STEP 3
+  hunter fan-out (launched, awaiting results).
