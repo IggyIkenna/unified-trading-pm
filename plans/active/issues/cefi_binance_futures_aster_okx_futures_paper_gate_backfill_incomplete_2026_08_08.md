@@ -43,7 +43,7 @@ estimate_calibrated_ai_days: 0.3
 drift_direction: none
 parent_epic: batch_live_symmetry_master
 depends_on: []
-last_updated: 2026-08-08
+last_updated: 2026-08-09
 locked_by:
 locked_since:
 supersedes:
@@ -116,6 +116,15 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
       naturally reaches these 3 venues' full chronological range, re-run this exact venue-scoped
       `read_availability_index(columns=, filters=[("venue","in",[...])])` check and cite the fresh reachable-coverage
       numbers here + in the parent doc's Progress Log. Repo: instruments-service.
+- [ ] [OPERATOR] P1. **Purge/reclassify the 2,003 stale ASTER `book_snapshot_5`
+      `attempted_failed[UpstreamTimestampBiasError]` manifest rows** (see 2026-08-09 DP-FETCH-009 Progress Log entry
+      below for full diagnosis) — these represent a structurally-impossible-forever combo (no historical depth endpoint)
+      that the 2026-07-15 operator ruling already says should carry NO manifest row at all
+      (`_onchain_perp_batch_live_only.py` module docstring). Needs a CAS/retire-based manifest correction (an additive
+      `.add()` write cannot delete a row), so it needs delete-safety review before `--apply`, not a blind one-shot edit.
+      Follow the exact safe pattern already proven in
+      `market-tick-data-service/scripts/restamp_cefi_onchain_perp_venue_chain_2026_07_21.py` (dry-run default,
+      `_TEMPORAL_COLS` handling, per-row content-match gate). Repo: market-tick-data-service.
 
 ## Progress Log (append-only)
 
@@ -223,3 +232,56 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   cross-reference filed — corroborating evidence of the same already-tracked bug class in
   `/plans/active/issues/backlog_regen_reverted_p1_2_park_2026_08_01.md` (now 5 touches post-park: slot 19 park -> slots
   29, 20, 4, 9 all `resume`). No code/report changes; this Progress Log entry is the only change this turn.
+
+- **2026-08-09 (slot 4, data_pipeline_failure escalation `agt-e488d1`, DP-FETCH-009 root-cause)**: Dispatched off a
+  `check_high_attempted_failed` page for `asset_group=cefi data_type=book_snapshot_5` (9,883 `attempted_failed` cells of
+  935,767 attempted; 2,193 fresh in the last 1d). Root-caused the dominant slice of the freshness signal — **NOT a live,
+  ongoing fetch failure** — and it directly extends this doc's ASTER coverage-gap population (4,897 ASTER
+  `attempted_failed` rows measured 2026-08-08 above), so recording here rather than filing a new doc.
+  - Queried the live cefi manifest (`gs://market-data-tick-cefi-prd-central-element-323112`,
+    `read_availability_index_safe(columns=, filters=[("data_type","=","book_snapshot_5"),("venue","=","ASTER"), ("capture_status","=","attempted_failed")])`,
+    targeted row-group-pushdown read): 2,003 rows, ALL `error_reason=UpstreamTimestampBiasError`,
+    `service_name=market-tick-data-service`, `transport=rest`, spanning shard `date` 2026-06-23..2026-08-01 (~50
+    instruments/day), with `written_at` overwhelmingly in the last ~24h (2,000 of the 2,003 have
+    `written_at >= 2026-08-08`). This is 91% of the DP-FETCH-009 fresh-window volume (2,000/2,193).
+  - **Confirmed ASTER `book_snapshot_5` is structurally non-batch-fetchable, permanently** (3 independent SSOTs agree):
+    `market-tick-data-service/configs/expected_start_dates.yaml` (`ASTER: book_snapshot_5: null # Live-capture-only`),
+    UAC
+    `unified_api_contracts.registry.market_data_categories.VENUE_DATA_TYPE_NO_BATCH_SOURCE["ASTER"] = frozenset({"book_snapshot_5","liquidations"})`,
+    and `aster_adapter.py::fetch_depth`'s own docstring ("NO historical depth endpoint... live-capture-only"). Aster's
+    REST book endpoint (`/fapi/v1/depth`) only ever returns the CURRENT snapshot — a batch request for any historical
+    day gets back today's timestamps, which correctly fails `raw_tick_hive.validate_day_partition_alignment()` →
+    `UpstreamTimestampBiasError` → `record_failed`. This is the manifest doing its job (Path B of the three-category
+    empty-output decision), not a misclassification.
+  - **Verified the live code (`live-defi-rollout` HEAD, and confirmed on `origin/main` since 2026-07-16T16:32Z, so the
+    fix has been on `main` for 3+ weeks) already excludes this combo from every new fetch attempt** — traced the full
+    call chain: `onchain_perp_batch_handler.py::_process_venue` calls `_batch_data_types_for_venue(venue, data_types)`
+    (`_onchain_perp_batch_live_only.py`) BEFORE any fetch, which calls UAC's
+    `venue_data_type_has_batch_source("ASTER", "book_snapshot_5")` → `False` → dropped, never reaches
+    `_fetch_shard_rows`/`_fetch_aster`. As a second, independent guard, `_fetch_aster()` itself hard-`raise`s
+    `ValueError("Unsupported ASTER data_type: 'book_snapshot_5'")` if ever reached with this data_type (a DIFFERENT
+    error string than what's in the manifest). Also confirmed `aster_adapter.py::fetch_depth` (the only function that
+    could make the live HTTP call) has **zero call sites** anywhere in the repo, and the sibling
+    `_umi_aster.py::fetch_aster_rest` (used by the main `engine/orchestrator` path) only ever fetches
+    `trades`/`derivative_ticker`, never `book_snapshot_5`. No currently running or recently-logged VM matches an
+    onchain-perp-batch/ASTER launch either (`gcloud compute instances list` clean;
+    `gs://deployment-scripts-central-element-323112/vm-logs/` has no `cefi-aster-*`/`cefi-hyperliquid-*` entries newer
+    than 2026-07-30).
+  - **Conclusion: no live/executable code path today can produce a NEW `UpstreamTimestampBiasError` for (ASTER,
+    book_snapshot_5)**. The 2,003 rows are almost certainly PRE-2026-07-13 legacy failure records (from when this combo
+    genuinely was attempted, before the exclusion fix landed) whose `written_at` got refreshed by a
+    manifest-maintenance/migration process, not by a new fetch. Did not conclusively identify which process refreshed
+    `written_at` — checked `restamp_cefi_onchain_perp_venue_chain_2026_07_21.py` (chain-column restamp for this exact
+    venue population, lifecycle `oneoff`, still present — a plausible candidate since it does a `written_at`-aware
+    per-row rewrite) and ruled out the manifest consolidator itself (`manifest_consolidator.py` only ORDERS by existing
+    `written_at`/`attempted_at` to pick a dedup winner, never overwrites them). Did not attempt to pin this further or
+    write a manifest-correction script this turn — a genuine row DELETE/retire (not an additive `.add()`) is needed to
+    match the 2026-07-15 ruling's "no row at all" target, which is a delete-safety-gated change (see new `[OPERATOR] P1`
+    todo above), out of scope for a blind one-shot escalation edit.
+  - **DP-FETCH-009 alert disposition**: the underlying manifest state is stale/legacy, not an active pipeline break — no
+    code fix shipped this turn (there was no live bug to fix; the exclusion code is already correct and has been for 3+
+    weeks). The `check_high_attempted_failed` detector's freshness signal is misleading for any (venue, data_type)
+    population whose `written_at` gets refreshed by an unrelated maintenance/migration write without a corresponding new
+    fetch attempt — flagging as a possible detector gap worth a separate look (not pursued here; out of this
+    escalation's scope). No code/report changes; this Progress Log entry + the new `[OPERATOR] P1` todo are the only
+    changes this turn.
