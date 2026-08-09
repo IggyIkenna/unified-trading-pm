@@ -249,3 +249,7 @@ same CLI path would hit the identical wall.
   the wiring ships. Citation-only, no reclassification.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — reconfirmed `sports_taxonomy_p3_consumers_2026_08_08.md`
+  is still `status: active` / `assigned_vm: planning` with its own open `[CODE] P0` todo ("Wire ml-service `--family`
+  to actually scope SPORTS training", explicitly citing the operator ruling) — the implementing plan is genuinely
+  in-flight, not stalled. No change: this doc's sole open todo stays resolved-by-citation to that plan's finalize.
