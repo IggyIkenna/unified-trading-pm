@@ -78,9 +78,13 @@ consolidation, missing quotes) across the three named files so `lint.yml` goes g
       properly-quoted arg. Verified: downloaded actionlint v1.7.12 locally, 0 findings in this file before push,
       confirmed 0 findings in this file in the LIVE CI run after push (`gh run view 31339579198 --log-failed` — zero
       `semver-agent.yml` mentions in the 21 remaining findings), YAML re-parses cleanly.
-- [ ] [DEVOPS] P3. Fix shellcheck findings in `unified-trading-ci/.github/workflows/update-dependency-version.yml`
+- [x] [DEVOPS] P3. Fix shellcheck findings in `unified-trading-ci/.github/workflows/update-dependency-version.yml`
       (actual live count 2026-08-09: 4 findings, matches this todo's original count — SC2129 ×3, SC2015) so the `lint`
-      actionlint job goes green.
+      actionlint job goes green. ✅ unified-trading-ci@6105330 — 3× SC2129 (two 5-line + one 3-line consecutive
+      `GITHUB_OUTPUT` redirect blocks) grouped into `{ ...; } >> "$GITHUB_OUTPUT"`; 1× SC2015 (`notify-failure`'s Slack
+      best-effort `A && B || C`) converted to a real `if`/`then`/`fi`, same pattern as the semver-agent.yml fix.
+      Verified: actionlint 0 findings in this file after (was 4), YAML re-parses, whole-repo run confirms the remaining
+      17 findings are unrelated (request-major-bump.yml, major-bump-issue-handler.yml — todos 2 and 3).
 - [ ] [DEVOPS] P3. Fix shellcheck findings in `unified-trading-ci/.github/workflows/request-major-bump.yml` (**actual
       live count 2026-08-09: 14 findings, not the 1 originally logged** — this todo's original count was
       stale/undercounted, same class of drift as the semver-agent.yml todo above) so the `lint` actionlint job goes
@@ -104,3 +108,7 @@ consolidation, missing quotes) across the three named files so `lint.yml` goes g
   findings-closure rule rather than silently expanding scope inline. update-dependency-version.yml's original count (4)
   was accurate. Did not attempt todos 2-4 (different files, out of this task's own dispatched scope — brief was
   specifically the semver-agent.yml todo).
+- **2026-08-09 (slot-15, cicd)**: Closed todo 2 (update-dependency-version.yml) — unified-trading-ci@6105330, pushed to
+  both `live-defi-rollout` and `main` (kept the two branches in sync; this repo's `lint.yml` only fires on push to
+  `main`). Todos 3-4 (request-major-bump.yml, major-bump-issue-handler.yml) remain — different files, out of this task's
+  own dispatched scope.
