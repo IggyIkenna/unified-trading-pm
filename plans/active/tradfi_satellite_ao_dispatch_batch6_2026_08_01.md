@@ -377,24 +377,23 @@ Operator keep-waiting decision unchanged, no `--force`.
 Re-armed from committed `deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patched SLOT_ID=28,
 SLOT_TABS=.tabs/28, PYTHON=.tabs/28/market-tick-data-service/.venv/bin/python — slot 28 has its own mtds venv). Watcher:
 **`bztaf4c8p`** (`run_in_background:true`, no `&` inside), poll 1 confirmed = 146 VMs (21:53:32Z, matches direct check).
-Heartbeat: **`bheikwhqr`** (5-min interval loop, no `&` inside). Scratchpad:
-`…/d40b1a94-e6f9-45f9-bb1a-e7f710e205c1/scratchpad/watcher/`.
+Heartbeat: **`bheikwhqr`** (5-min interval loop, no `&` inside). Scratchpad path omitted — session-specific, does not
+survive past this session; superseded entries below carry forward the actually-current state.
 
-- **NEXT ACTION (fresh session)**: (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, run
-  `ps -ef | grep es_opt_watcher | grep -v grep` — dedup-check for more than one live pair (see the 2026-08-08T~11:10Z
-  slot-6 lesson on the dual-watcher race) before doing anything else. (3) If exactly one pair, check liveness via
-  `kill -0 <pid>` against the PID(s) found via the `ps -ef` grep. (4) If zero watcher processes: re-arm via
-  `setsid nohup bash <script> > log 2>&1 < /dev/null & disown` (NOT `run_in_background:true` — see update below),
-  resolve the real PID via `ps -ef | grep <script path> | grep -v grep` (not `$!`), verify PGID=SID=PID. Do NOT re-arm
-  if a live pair already exists.
+- **NEXT ACTION — SUPERSEDED, do not follow this block.** This watcher-arming approach and everything in this entry's
+  original scratchpad references are obsolete: all ES_OPT VMs eventually died to a separate issue (see the
+  2026-08-09T~03:51Z entry far below), the fix for the launch-blocking bug has since shipped
+  (`deployment-service@c99ab99b8`), and the watcher/background-process approach was abandoned in favor of direct bounded
+  polling later the same session. Skip to this doc's LATEST entry for the real current state and NEXT ACTION.
 
 **Update 2026-08-08T22:30Z (same slot-28 session)**: `run_in_background:true` hit the documented rapid-kill pattern 3×
 in ~2 min this session (bztaf4c8p, bj0u96s11, bwjx735ic — each killed within ~30-90s, far faster than the 25-46min
 cadence seen in most prior sessions). Switched to `setsid nohup ... & disown` (the same fix already proven to survive 7+
 hours unattended in the slot-6/`703695`/`703746` lineage). Current live pair, genuinely isolated (confirmed PGID=SID=PID
 for both, per the standard verification): **watcher PID `3762433`, heartbeat PID `3762556`** (started 22:30:37Z, poll 1
-= 157 VMs). PID record: `scratchpad/watcher/watcher.pid`. A fresh session picking this up should check these PIDs first
-via `kill -0` before assuming dead / re-arming.
+= 157 VMs). A fresh session picking this up should check these PIDs first via `kill -0` before assuming dead / re-arming
+— though note this whole watcher lineage is now moot, see the SUPERSEDED note two entries above and the doc's latest
+entry for current state.
 
 **Update 2026-08-08T22:38Z (same slot-28 session) — setsid pair also died, ~7 min after launch, no FATAL entry.**
 Watcher `3762433`/heartbeat `3762556` found DEAD (both `kill -0` failed) after only reaching poll 2 (22:35:41Z, 154 VMs)
