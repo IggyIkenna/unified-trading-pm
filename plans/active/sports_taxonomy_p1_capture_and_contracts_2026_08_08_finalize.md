@@ -104,9 +104,9 @@ locked_since:
       corroborating, not duplicate, evidence).
 
       **Net**: no false-done claims found in any of the four source docs; every commit P1 or its sources cite resolves
-                          to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
-                          capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
-                          (unrelated, already-tracked) chains finish.
+                              to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
+                              capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
+                              (unrelated, already-tracked) chains finish.
 
 - [x] ✅ [REVIEW] P1. **Check whether reconciling left any source doc at zero open todos**, and if so run the same
       6-step archival ritual on it — a finalize that closes only its own plan while leaving a now-fully-done source doc
@@ -158,10 +158,33 @@ locked_since:
       (`sports_consolidated_closeout_2026_07_19.md`) already cites `/plans/archive/2026_08/…`. Every other match across
       the corpus is a bare-filename historical-narrative mention (Progress Log prose), not a resolvable path citation.
       No new referrer has been authored against the stale active path.
-- [ ] [REVIEW] P2. **Confirm the P2 and P3 gates can legitimately release.** Both declare `gate_on_depends: true` on P1.
-      Verify the contracts they assume actually exist in UAC (venue/executable split, single lowercase `odds`, `horizon`
-      axis, retired `markets`/`outcomes`/`settlements`) rather than relying on P1's checkbox state alone. **Done when**:
-      each assumed contract is confirmed present in the shipped UAC, or a blocking gap is filed as a `- [ ]` todo.
+- [x] ✅ [REVIEW] P2. **Confirm the P2 and P3 gates can legitimately release.** Both declare `gate_on_depends: true` on
+      P1. Verify the contracts they assume actually exist in UAC (venue/executable split, single lowercase `odds`,
+      `horizon` axis, retired `markets`/`outcomes`/`settlements`) rather than relying on P1's checkbox state alone.
+      **Done when**: each assumed contract is confirmed present in the shipped UAC, or a blocking gap is filed as a
+      `- [ ]` todo. — **VERIFIED 2026-08-09 (slot 23, review)**. Confirmed all 4 assumed contracts are genuinely live in
+      shipped `unified-api-contracts`, independent of P1's own checkbox prose — cited SHAs verified present + ancestors
+      of `origin/live-defi-rollout` (`git cat-file -e` + `git merge-base --is-ancestor`), then re-derived each contract
+      by importing the live code in the repo's own `.venv` (not re-reading the commit message): 1. **venue/executable
+      split** (`05a709fd`) — `venue_adapter_keys.is_venue_executable()` exists and is exported from
+      `registry/__init__.py`; `VENUES_BY_ASSET_GROUP["sports"]` (31 venues) contains neither `ODDS_API` nor `FOOTYSTATS`
+      (both correctly demoted to source-only). 2. **single lowercase `odds`** (`b2c5197d5`) — imported
+      `SPORTS_ODDS_DATA_TYPE_CANONICAL_FORM` + `canonical_sports_odds_data_type()` from `league_data.py`:
+      `{'trades': 'odds', 'ODDS': 'odds', 'odds': 'odds'}`, both `'trades'` and `'ODDS'` resolve to `'odds'` live. 3.
+      **`horizon` axis** (`685b288a`) — imported `SPORTS_HORIZONS`
+      (`['T-24h','T-18h','T-12h','T-6h','T-4h','T-2h',        'T-1h','T-10m','T-0']`) + `is_valid_horizon()` from
+      `market_data_categories.py`, both live and callable. 4. **retired `markets`/`outcomes`/`settlements`**
+      (`975f0191`) — imported `DATA_TYPES_BY_ASSET_GROUP["sports"]` live: all three tokens absent.
+
+      Cross-checked against the LIVE AO gate mechanism itself (`GET /api/backlog`), not just the plan file: every
+          currently-queued `sports_taxonomy_p2_migration-*` task's `blocked_reason` cites only the SECOND gate
+          (`sports_af_full_entity_completion_2026_08_03` prereqs) — none cite P1 or an upstream-open-todos reason on P1
+          anymore, confirming the `gate_on_depends` on P1 has ALREADY mechanically released. Same for
+          `sports_taxonomy_p3_consumers-*`: the still-queued tasks are gated on unrelated `auto_unpark__*` prerequisites and
+          a fleet cooldown, not on P1. Also confirmed P1's own plan file has ZERO remaining `- [ ]` todos and
+          `status: active` / unlocked (`locked_by:` empty) — the gate's source-of-truth is genuinely fully done, not a
+          false-done checkbox. **Net**: no blocking gap. Both gates release legitimately.
+
 - [ ] [DOC] P2. **Archive `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`** via the standard 6-step ritual,
       including the codex-alignment check (P1 CREATES codex docs — the rename/split process rule — and SUPERSEDES
       `sports-data-types-catalog.md`, so this is a real check, not a no-op), the corpus-wide referrer-path fixup for the
@@ -177,3 +200,9 @@ locked_since:
   already points at `/plans/archive/2026_08/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`. Every remaining
   corpus match is a bare-filename mention inside Progress Log prose (historical narrative, not a live path reference).
   Conclusion: no new referrer has been authored against the stale active path since the 2026-08-08 archival.
+
+- **2026-08-09 (slot 23, review)** — Todo 5 (confirm the P2/P3 gates can legitimately release) done. Independently
+  verified all 4 UAC contracts P2/P3 assume (venue/executable split, single lowercase `odds`, `horizon` axis, retired
+  `markets`/`outcomes`/`settlements`) by importing the live shipped code, not re-reading P1's checkbox prose. Also
+  cross-checked the live AO gate mechanism via `GET /api/backlog`: no queued P2/P3 task cites P1 as a blocking reason
+  anymore, confirming the machine gate already released correctly. No blocking gap found — nothing to file.
