@@ -203,7 +203,7 @@ before launch.
       estimate: **~18-24h was too optimistic** — actual measured throughput at 25h elapsed is ~0.68 days/hour (17 days
       written / 25h), giving a **revised total of ~90h** (~3.75 days, ~65h remaining as of 2026-08-09T13:45Z). GCS tee
       heartbeats (gcloud scopes firing every ~60s on the serial port) confirmed no stall at 17:06Z. VM is **RUNNING**.
-- [ ] [DATA] P1. **Re-run GCS probe to confirm coverage** after backfill VM terminates normally (~2026-08-12T05:00Z
+- [x] ✅ [DATA] P1. **Re-run GCS probe to confirm coverage** after backfill VM terminates normally (~2026-08-12T05:00Z
       estimated based on 0.68 days/hour throughput measured at 25h elapsed). Only then re-dispatch task `-011` (corpus
       recompute). Do NOT flip `-011` done on VM-STOPPED alone — measure GCS coverage. **GCS spot-check prefix** (for
       mid-run progress only, NOT the final gate): bucket=`market-data-tick-cefi-prd-central-element-323112` (via
@@ -216,7 +216,27 @@ before launch.
       are 0 across ALL venues (VM has now processed through 06-23 and returned full coverage at 06-21 → 06-19/06-20 are
       genuine Tardis data absences, NOT a processing order artifact). Also 06-18: OKX-SWAP=0 and KRAKEN=0 only (other 4
       venues have data) — Tardis gap for those two venues on that day. Pre-existing remnants on 06-25 (BYBIT/OKX/KRAKEN
-      ~3 objects each) are NOT from this VM.
+      ~3 objects each) are NOT from this VM. — **FINAL GATE CONFIRMED 2026-08-09T21:3XZ (slot 27, data_engineering)**:
+      ran `probe_cefi_perp_funding_raw_coverage.py --start 2026-06-05 --end 2026-08-09` (the canonical, list-only,
+      reader-exact-path script per this todo's own instruction). Result: **06-05→08-05 is FULLY covered for all 6
+      CARRY_BASIS_PERP venues** (BINANCE-FUTURES/BYBIT/OKX-SWAP/KRAKEN-FUTURES/BITGET-FUTURES/BITFINEX-FUTURES),
+      confirming the already-known 06-19/06-20 Tardis archive gaps and nothing else missing. **08-06→08-09 is 0 across
+      all 6 venues** — this is the ALREADY-TRACKED, separate forward-poll cron gap (the `[INFRA] P1` todo above), not a
+      new finding. **Residual curiosity, not investigated further (out of this todo's scope)**:
+      `gcloud compute operations list --filter='targetLink~cefi-fwd-20260808-123230'` shows this VM was deleted by
+      `uts-prd-sa` at 2026-08-09T02:13:58Z — only ~13h41m after its 12:32:36Z launch, well before the many later
+      Progress Log entries above (25h/28h/30h+/38h "elapsed, VM confirmed alive") and well short of the ~90h the
+      0.68-days/hour throughput estimate implied would be needed to reach 08-05. Yet the GCS data is verified genuinely
+      complete through 08-05 — so either the real throughput was ~6x faster than estimated (all real work landing within
+      VM-4's true ~13.7h lifetime) or the "elapsed" timestamps in the later progress entries are miscalibrated (this doc
+      already flags one confirmed worker-clock-skew note above, '24h behind' — plausibly the same root cause recurring,
+      not a fresh incident). Data ground-truth is what matters for this gate and it is now directly verified, not merely
+      inferred from VM-liveness claims — not chasing the clock-math discrepancy further here. Also corroborates the
+      already-flagged, still-unresolved `uts-prd-sa`-deletes-VM-well-after-launch pattern (2nd confirmed instance after
+      `cefi-fwd-20260806-065837` @ 26h47m, per the P0 diagnosis entry below) — worth a future investigator's attention,
+      not re-opened as a new doc. **Task `-011` (corpus recompute, in
+      `/plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md`) is now unblocked** — did not run it
+      myself (different repo/script, out of this specific todo's scope).
 - [x] ✅ [CODE] P2. **Fix MTDS pre-flight code bug**: `venue_fetch.py:526-552` missing positive `if has_instruments:`
       branch that populates `venue_instrument_ids` from IS data. When IS data IS available, `venue_instrument_ids` stays
       None → empty expected_atoms → false "fully covered" for any venue+date with EXPECTED_* atoms. Fix: fetch IS
