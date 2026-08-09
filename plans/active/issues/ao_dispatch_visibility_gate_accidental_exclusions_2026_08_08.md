@@ -363,18 +363,21 @@ human already made the call and the fleet still never executes it.
       Verify:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
       no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in
-      `plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`.** Its checkbox reads
-      (truncated): "[DATA] P2. **RULED 2026-08-06: vendor-verify first (refined option C) — fix root cause if vendor CAN
-      return data," — the marker trips `_is_non_dispatchable` (`agent-orchestrator/server/regen_backlog_from_plan.py`)
-      but does not open its own line, so `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared:
-      false). If it is genuinely still blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a
-      permanent-deferral tag) to the start of its own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or
-      a dedicated continuation line) so it reads as a declared hold. If it is already resolved (several of these carry a
-      dated `RULED`/`DESIGN DECIDED` note — read the full todo before acting), rewrite the trigger phrase so the marker
-      no longer appears anywhere in the block. Verify:
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-3, infra).** Triage accidental exclusion in
+      `plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`. Already fixed by another
+      session, not hand-fixed here: the flagged todo's trigger phrase
+      (`AF-classification decision     (BLOCKED-OPERATOR-DECISION, filed 2026-08-06 slot 13)`) was rewritten to
+      non-marker prose
+      (`AF-classification     decision (an operator-decision question filed 2026-08-06 slot 13, RULED per the note above the same day —     option C, "vendor-verify first," chosen)`)
+      in `unified-trading-pm@84f363ff6` (slot-2, laptop, 2026-08-09 10:07 UTC+1) — the same incidental fix bundled
+      inside the unrelated 20-file "reclassify prek_stash_restore_race NA->planning" sweep already noted above for the
+      `defi_satellite_ao_dispatch_batch6` todo. No live `BLOCKED-<TOKEN>`/permanent-deferral marker remains anywhere in
+      the block; the todo was never actually re-blocked after the operator's 2026-08-06 RULED decision this doc itself
+      describes. Verified:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+      shows `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` with
+      `disk_open=4, backlog_open=4,     excluded=[]` — all 4 open todos in that doc (incl. this one) are correctly
+      dispatchable, no rewrite needed. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
       `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`.** Its checkbox reads (truncated):
       "[VERIFY] P2. Depends on the P1 backfill above. **Census re-run 2026-07-30 (slot 3) against a snapshotted
@@ -523,3 +526,10 @@ human already made the call and the fleet still never executes it.
   `backlog_open=1, excluded=[]`). Also ran the real QG gate (`check_ao_dispatch_visibility_gate.py`): exit 0, fleet-wide
   `1 accidental exclusion (baseline 0, buffer 5)` — comfortably within the ratchet buffer, no `--update-baseline`
   needed. unified-trading-pm@(pending).
+- **2026-08-09 (slot 3, infra)** — Fixed the `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md` todo. Same
+  "already resolved elsewhere" flavor as the `defi_satellite_ao_dispatch_batch6` fix above and by the SAME commit: the
+  flagged todo's trigger phrase (`AF-classification decision (BLOCKED-OPERATOR-DECISION, filed 2026-08-06 slot 13)`) was
+  rewritten to non-marker prose by `unified-trading-pm@84f363ff6` (slot-2, laptop, 2026-08-09 10:07 UTC+1), the same
+  incidental 20-file sweep. Confirmed via `dispatch_visibility_report --json`:
+  `disk_open=4, backlog_open=4, excluded=[]` for that doc — all 4 open todos, including this one, are correctly
+  dispatchable, no rewrite needed here.
