@@ -132,6 +132,14 @@ capture-scope cap.
 
 ### TradFi (data capture: scoped; backtest scope: same)
 
+> **🟡 Known-stale section (flagged `tradfi_docs_reconciliation_findings_2026_07_21.json`, not yet rewritten below):**
+> VIX 15m and Barchart preload were retired 2026-06-23; CBOE BTC options on IBIT were declined by the operator
+> 2026-07-14. **The "fixed-income... out of MVP" line below is ALSO wrong as of 2026-08-09** — the CBOE daily Treasury
+> yield-curve INDEX and the FRED macro series are both operator-ruled MVP (2026-07-21 "+409 expansion" and 2026-08-09
+> respectively); only CME Treasury **bond futures** (ZN/ZB/ZF/ZT) stay out of MVP. Current SSOT:
+> `/codex/02-data/mvp-scope-canonical.md` and
+> `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`.
+
 **Backtest universe** (operator clarification 2026-05-13: **SPY NOT included** — ES futures has more trading hours; ES
 is the canonical S&P 500 surface):
 
