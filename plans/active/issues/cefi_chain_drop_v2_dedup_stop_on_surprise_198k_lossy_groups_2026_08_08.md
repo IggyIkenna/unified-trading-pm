@@ -255,6 +255,48 @@ tightened to operate ONLY on the narrow, already-characterized 6,575-group spell
 this newly-found population), so `issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md` todo 2 can still
 close safely — this population is added to THIS doc's scope, not absorbed into that todo.
 
+## Finding 12 (2026-08-09, slot 13) — Finding 11's chain-instability theory REFUTED by live GCS data; real mechanism is
+
+repeated same-key `record_captured` writes from `market-data-processing-service`/`batch_tardis`, venue-agnostic
+
+**Did the live GCS per-row pull Finding 11 flagged as missing.** Downloaded the actual `availability_index.parquet`
+(490k+ rows) + all `_index/per_vm/*.parquet` shards from `gs://market-data-tick-cefi-prd-central-element-323112/` and
+queried the exact sample rows via DuckDB (not code-path inference).
+
+**Chain is NOT the differentiator.** Pulled Finding 11's own cited sample (`BITFINEX-FUTURES:PERPETUAL:AAVE-USDT@LIN`
+trades, `2026-07-24`): 8 rows, `chain` is `None`/blank for **every** row — BITFINEX-FUTURES is a plain CEX venue that
+never populates `chain` at all, so a chain-instability mechanism cannot apply to it, yet it shows the identical
+duplicate shape as ASTER. Also confirms `_chain_merge_safety`'s own `n_multichain_rows=0` reading literally (it uses
+`v1._effective_dedup_key`, which folds `chain` in — so a same-chain-value group is exactly what a byte-identical dedup
+key would produce; two DIFFERENT chain values for one shard would have shown up as `n_multichain_rows>0`, and they
+don't).
+
+**The real, verified pattern** (confirmed in 2 independent samples — BITFINEX-FUTURES/AAVE-USDT trades 2026-07-24, and
+ASTER/BNB-USDT trades 2024-10-25): multiple `capture_status='captured'` rows sharing the **identical** full shard-atom
+key (date, venue, data_type, instrument_type, chain, underlying, instrument_id, `service_name`, `pipeline_mode`,
+`source`) — every field byte-identical except `row_count` and `attempted_at`/`written_at` — written **seconds to minutes
+apart** within a single run, with `row_count` **decreasing** each time (e.g. ASTER/BNB-USDT: 5760 → 1440 → 288 → 96 → 24
+→ 6 → 1, all within 21 seconds). Both samples share `service_name=market-data-processing-service`,
+`pipeline_mode=batch_tardis`, `source=tardis` — i.e. this is **MDPS's own Tardis-sourced CeFi trades capture path**, not
+the MTDS live-WS path Finding 11 examined, and it is **venue-agnostic** (BITFINEX-FUTURES has no `chain` concept at
+all), so it affects far more than the 3 on-chain-perp venues Finding 11 scoped to.
+
+**Could not pin the exact current call site within this task's scope** — ruled out two adjacent candidates:
+`OnchainPerpBatchHandler`
+(`market-tick-data-service/market_tick_data_service/cli/handlers/onchain_perp_batch_handler.py`) stamps
+`PipelineMode.BATCH_ASTER/BATCH_HYPERLIQUID/BATCH_EXTENDED`, never `batch_tardis`; and
+`unified-trading-library/scripts/merge_mdps_cefi_manifest.py` (`merge_manifest_from_canonical_paths`) is scoped to
+`processed_candles/by_date` (candle shards) and is genuinely key-deduped (`new_keys = discovered - existing_keys`), not
+raw trades. The pattern (sharply decreasing `row_count` across several same-second-to-minute writes) is consistent with
+a paginated/chunked Tardis fetch that flushes **each chunk** as an independent `record_captured` call instead of
+accumulating the full window before one write — mirroring the ASTER "multiple additive, non-retiring write paths"
+precedent Finding 11 already cited, just from a different (MDPS-owned, Tardis-batch) call site than hypothesized.
+
+**Correction to Finding 11's fix candidate**: the proposed UAC per-venue chain constant (resolving `chain` from a UAC
+registry instead of `tick.chain`) is now confirmed a **no-op** for this population — `chain` is not what's colliding —
+and must NOT be implemented as the fix. Todo 2 below is re-scoped accordingly; the writer-side fix still needs its exact
+call site located (not done this pass) before it can safely ship.
+
 ## Todos
 
 - [x] [DATA] P1. ✅ **Root-cause whether ASTER/HYPERLIQUID/EXTENDED-STARKNET manifest writes are appending a NEW row per
@@ -267,12 +309,16 @@ close safely — this population is added to THIS doc's scope, not absorbed into
       `chain` is a real shard-atom dimension — corroborated by ASTER's documented history of multiple additive,
       non-retiring write paths (legacy CAS vs `per_vm_shards`, DeFi→CeFi bucket migration). No live GCS per-row pull
       performed (see Finding 11 caveat — venv/duckdb unavailable this slot; code-path evidence judged sufficient).
-- [ ] [DATA] P1. **Once root-caused, fix the writer/consolidator if confirmed appending, THEN re-run the v2 dry-run** to
-      confirm the chain-lossy count drops back toward the historical ~28-group baseline before any `--apply` is
-      attempted again. Per Finding 11, the concrete fix candidate is: resolve `chain` for ASTER/HYPERLIQUID/
-      EXTENDED-STARKNET from a per-venue UAC constant at capture time instead of `tick.chain` (venue-invariant for a
-      perp-DEX venue, removes the reconnect-reset instability at the source) rather than widening
-      `_CHAIN_LOSSY_TOLERANCE_MAX`. (repo: instruments-service, market-tick-data-service)
+      **CORRECTED by Finding 12 (slot 13)**: the live GCS pull Finding 11 deferred was performed and REFUTES the
+      chain-instability mechanism — see Finding 12 for the real (venue-agnostic, MDPS/`batch_tardis`-sourced) pattern.
+- [ ] [DATA] P1. **Locate the exact `market-data-processing-service` / `pipeline_mode=batch_tardis` / `source=tardis`
+      CeFi-trades capture call site that issues multiple `record_captured` calls for the IDENTICAL shard atom within one
+      run (seconds-to-minutes apart, `row_count` decreasing each call — see Finding 12 for the two confirmed samples),
+      fix it to flush once per shard atom (accumulate the full fetch window before writing, or make the writer dedupe
+      safely across same-run repeat flushes), THEN re-run the v2 dry-run** to confirm the lossy-group count drops back
+      toward the historical ~28-group baseline before any `--apply` is attempted again. **Finding 11's original fix
+      candidate (resolve `chain` from a UAC per-venue constant) is CONFIRMED NOT APPLICABLE per Finding 12 — do not
+      implement it; `chain` is not the differentiator.** (repo: market-data-processing-service, unified-trading-library)
 - [ ] [DATA] P1. **Characterize the pre-2025-11-01 same-spelling multi-captured-row population (98,188 groups,
       `drop_set_captured=502,746`)** — same shape as the ASTER/HYPERLIQUID/EXTENDED-STARKNET post-cutoff population,
       confirmed present pre-cutoff too via `apply_cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.py`'s dry-run
@@ -298,3 +344,13 @@ close safely — this population is added to THIS doc's scope, not absorbed into
   mutation occurred (dry-run, STOP-ON-SURPRISE fired). Added as a todo above; the scoped script is being tightened to
   exclude this population entirely so it doesn't block the narrow, already-safe todo it exists to close. See
   `issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md` Progress Log for the parallel entry.
+- **2026-08-09 (slot 13)** — Worked todo 2 ("fix the writer/consolidator... then re-run the dry-run"). Performed the
+  live GCS per-row pull Finding 11 flagged as not done (downloaded `availability_index.parquet` + all `_index/per_vm/`
+  shards from the cefi market-data bucket, queried via DuckDB). Result: Finding 11's chain-instability root cause is
+  REFUTED by this data — see Finding 12. The real pattern is venue-agnostic repeated same-key `record_captured` calls
+  from `market-data-processing-service`/`pipeline_mode=batch_tardis`, confirmed in 2 independent samples. Did NOT ship
+  Finding 11's proposed fix (UAC per-venue chain constant) since it's now confirmed a no-op for this population —
+  shipping a fix known not to address the actual defect would be worse than leaving it open. Could not pin the exact
+  current MDPS call site within this pass (ruled out 2 adjacent candidates, see Finding 12); todo 2 re-scoped to the
+  narrower, evidence-backed next step. No mutation to any GCS bucket or manifest in this pass — read-only investigation
+  only.
