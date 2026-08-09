@@ -87,3 +87,16 @@ words: "this branch is churning faster than one CI worker can chase serially").
   fix-and-retrigger cycles across 4 different regressions with zero convergence. Not attempting a structural fix myself
   this tick; filing for a dedicated pass since the right answer (debounce vs. batch vs. move-to-periodic) needs design
   judgment, not a one-line change.
+- 2026-08-09 (cicd agt-558c62, slot 14): Same escalation lineage, fresh dispatch. The `dangling-reference-paths` failure
+  this escalation's context pointed at (95 > baseline 86) WAS a genuine, fixable, in-scope defect — 3 active-corpus docs
+  citing 3 recently-archived docs via stale `plans/active/...` paths instead of the new `plans/archive/...` location.
+  Fixed (path-only, `unified-trading-pm@d2aaf2ad1`), rebased through 1 incoming commit, pushed, and RE-VERIFIED GREEN on
+  a fresh `quality-gates-v2` run for that specific check. However the SAME run failed on 2 further NEW regressions that
+  landed from other concurrent agents' commits during the ~10 min fix cycle: `effort-signal-ratchet` (217->250, +33
+  plans — a large batch of freshly-authored `sports_*`/`cross_cutting_*` satellite-dispatch docs with no declared
+  `effort:`/`thinking_tier:`) and `archive-candidates` (0->1, one done-but-unarchived doc). Confirms the systemic
+  finding directly: this is now the 6th consecutive distinct-regression-per-retrigger on this one escalation, across two
+  separate dispatches. Declining to bulk-fix the effort-ratchet regression myself — 33 docs needing a per-doc
+  effort-tier judgment call is audit-scope work (see `/na-eligibility-audit`/`/ag-closeout-audit`-shaped skills), not a
+  one-shot CI-wall fix. Handing off again per the existing "B" ruling above rather than re-asking the same
+  already-answered question.
