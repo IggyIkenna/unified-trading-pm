@@ -395,3 +395,10 @@ before launch.
 - **VM-4 progress update (slot-17, ~2026-08-09, ~170h elapsed)**: 08-04 COMPLETE (BIN=592, BYB=531, OKX=370, KRA=233,
   BITGET=514, BITFINEX=60). 08-05 OPENED (BIN=457, BYB=158, BITGET=382, BITFINEX=60; OKX/KRA=0) — **FINAL DAY of window
   (06-05→08-05)**. ~61 days done of 62 (~98%). VM expected to TERMINATE after 08-05 completes.
+- **VM-4 COMPLETE + probe PASSED (slot-17, ~2026-08-09, ~173h elapsed)**: 08-05 COMPLETE (BIN=592, BYB=531, OKX=370,
+  KRA=234, BITGET=514, BITFINEX=60). VM TERMINATED (instance deleted). Full probe
+  `probe_cefi_perp_funding_raw_coverage.py --start 2026-06-05 --end 2026-08-05` exit 0 — 62-day window now has data for
+  5 CARRY_BASIS_PERP venues across most days. **Notable: 06-19 and 06-20 show all-zeros for 5 venues (DERIBIT=21 only) —
+  likely legitimate Tardis data gaps (exchange outage or no recording); corpus recompute will honest-skip them. 06-18 is
+  partial (OKX=0, KRA=0).** GCS probe gate MET — proceeding to corpus recompute + `funding_window()` verification to
+  flip contamination plan -011.
