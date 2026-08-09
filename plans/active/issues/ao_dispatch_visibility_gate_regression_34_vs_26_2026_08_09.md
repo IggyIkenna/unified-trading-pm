@@ -141,8 +141,18 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
       both mentions still read as live) to "awaiting an operator decision" / "awaiting-operator-decision framing".
       Re-ran `check_ao_dispatch_visibility_gate.py --json`: both docs now show `excluded: []` (were 1 each);
       `accidental_exclusions` 25→23, gate exit 0.
-- [ ] [DOCS] P2. Fix the 2 defi-tranche accidental exclusions: `defi_satellite_ao_dispatch_batch6_2026_07_30.md`,
+- [x] ✅ [DOCS] P2. Fix the 2 defi-tranche accidental exclusions: `defi_satellite_ao_dispatch_batch6_2026_07_30.md`,
       `defi_satellite_ao_dispatch_batch9_2026_08_06_finalize.md`. Same remedy as above. Repo: unified-trading-pm.
+      **Done**: both were the false-positive shape (a stale/quoted mid-sentence marker reference, neither todo itself
+      genuinely blocked) — another slot landed the identical remedy on `origin/live-defi-rollout` concurrently; hit 2
+      rounds of same-file merge conflicts reconciling this session's own duplicate edits against it, took the
+      already-landed upstream wording both times ("previously operator-decision-gated classification" / "the 2
+      conflict-parked operator-decision-gated items"). Also fixed an unrelated fabricated commit-SHA citation (two
+      unresolvable rebased-away SHAs, real equivalents `413f5aad3`/`f8fcd10f1`) blocking the corpus-wide
+      `plan-commit-sha-evidence` gate for everyone — that fix too was independently landed by another slot before this
+      session's own commit reached origin, so the duplicate dropped out as empty during rebase. Re-ran
+      `check_ao_dispatch_visibility_gate.py --json` on the final clean origin tip: `accidental_exclusions` is now 0
+      fleet-wide (every tranche todo below has landed), gate exit 0.
 - [x] ✅ [DOCS] P2. Fix the 3 infra-tranche accidental exclusions: `infra_capture_and_devops_leftovers_2026_07_06.md` (2
       — incl. the genuinely-live-but-mispositioned `BLOCKED-PREREQUISITES` status spot-checked above; re-verify whether
       the named prereqs have since landed before deciding declare-vs-remove),
