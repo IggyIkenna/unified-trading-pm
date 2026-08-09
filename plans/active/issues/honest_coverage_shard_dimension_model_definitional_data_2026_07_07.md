@@ -378,10 +378,16 @@ longer has its own download button.
       `OKX_FUTURES`) is ALSO confirmed phantom (zero real OPTION rows anywhere in the OKX family) but deliberately NOT
       touched yet — only `SPOT_PAIR` was explicitly requested; `OPTION` tracked as its own follow-up below, pending
       explicit go-ahead.
-- [ ] [CODE] P2. **Remove the phantom `OPTION` declaration from bare `OKX` and `OKX_FUTURES`** — confirmed via the same
-      production-manifest check above (zero real OPTION rows anywhere across bare OKX/OKX-SPOT/OKX-SWAP/ OKX-FUTURES),
-      flagged in the mockup, not yet fixed in code — deliberately deferred pending explicit go-ahead (unlike SPOT_PAIR,
-      this wasn't explicitly requested yet).
+- [x] [CODE] P2. ✅ **DONE 2026-08-04 — `unified-api-contracts@d67a226fc`.** Removed the phantom `OPTION` declaration
+      from bare `OKX` and `OKX_FUTURES` in `unified_api_contracts/registry/venue_constants.py`'s
+      `INSTRUMENT_TYPES_BY_VENUE` (now `OKX_FUTURES: {"PERPETUAL", "FUTURE"}` and `"OKX": {"PERPETUAL"}`, both OPTION
+      members dropped). Commit's own inline comment confirms the same root cause this todo names: "zero real
+      captured/attempted options_chain data was ever tagged venue=OKX-FUTURES... a phantom EXPECTED cell with nothing to
+      match." Landed alongside a broader bare-OKX cleanup (2,475+ permanently-failing capture attempts eliminated).
+      Verified live: `git merge-base --is-ancestor d67a226fc origin/live-defi-rollout` confirms ancestor; re-read the
+      current file to confirm both entries. Flipped by plan_reconciler 2026-08-09 (agt-c3a27f) — a 2026-08-07
+      na-eligibility-audit pass had already re-classified this doc's open items without catching that this specific one
+      had shipped 3 days earlier.
 - [x] [VERIFY] P2. **CLOSED, no code fix — `BINANCE-DELIVERY`'s missing declaration is correct as-is** (Finding 4,
       corrected). Investigated via a 3-way workflow; confirmed MTDS has zero tick-data rows ever for this venue and
       `mvp_scope.py` v10 (2026-06-27) explicitly descopes it from cefi MVP. Not a registry gap — closing this todo.
