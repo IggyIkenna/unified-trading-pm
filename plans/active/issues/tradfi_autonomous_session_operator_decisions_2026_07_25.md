@@ -494,3 +494,4 @@ every day narrows or closes it permanently.
   this pass since the bundle needs decomposing into 3 discrete todos first (a whole-checkbox flip as-is would dispatch a
   3-target compound action, not a single worker-determinable outcome). Recommend a follow-up pass splits items 5/7/8
   into their own checkboxes before considering extraction. `assigned_vm` unchanged.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

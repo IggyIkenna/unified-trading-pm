@@ -137,3 +137,4 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
   completed successfully (see `instruments_completion_tracker_2026_07_06.md`'s todo for full evidence). This doc tracks
   the residual root-cause fix (build-time filter) + re-enable path, kept separate from the purge todo itself since it's
   a distinct, cross-cutting infra-correctness finding.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
