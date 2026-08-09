@@ -169,8 +169,8 @@ except #1):**
 
 1. **[BIG FINDING — codex-vs-codex SSOT drift]** `carry-staked-basis.md` overstates its own live venue-slot count by
    ~50% (still lists removed venue DRIFT as live) — see Doc-drift #1. Needs an operator ruling on which side is
-   authoritative before any codex edit (this run never edits codex per HARD RULE). **Notified via `/blocked` this run**
-   (see below).
+   authoritative before any codex edit (this run never edits codex per HARD RULE). **Filed via `/blocked` this run —
+   `BLK-93641898`** (options A/B/C, recommendation A, `can_continue: true`).
 2. **[Contradiction, currently latent]** `defi_morpho_lending_indices_never_wired_2026_07_12.md`'s
    `depends_on`/`gate_on_depends` chain watches `data_completion_defi_2026_07_15`'s own todo completion, but that plan's
    own text says the real signal moved (twice) to a doc that didn't exist when this gate was authored
