@@ -119,16 +119,67 @@ context_scope:
     by design) and that `github_actions_operator_gated_followups_2026_07_17.md` may be concurrently edited by batch4's
     todo 9 — re-pull before writing. **Done when**: every cited doc is flipped/annotated with verified evidence, and
     each doc that genuinely reaches zero open work is `status: resolved`.
-- [ ] [REVIEW] P1. **Re-check the Deferred items D5-1 through D5-7 for whether their blocker has cleared.** D5-1
-      (quickmerge.sh branch-check broadening) — have BOTH batch4 todo 1 and batch4 todo 2 landed? If so it is
-      ready-for-batch-6 extraction; note it, do NOT draft it here. D5-2/D5-3 (F3's semver-agent and cloudbuild halves) —
-      are the workflow-template rollout mechanism and the consumer `cloudbuild.yaml` files free again (batch-5 todos 4
-      and 1 landed)? If so both are ready-for-batch-6. D5-4 — has the operator ruled on the billing-token fork? D5-5 —
-      confirm batch4 is still the live home for D4-5..D4-18 and none has silently vanished. D5-6 — has
-      `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` left `status: open`? D5-7 — has the pnpm migration
-      been given its own plan? **Done when**: each of D5-1 through D5-7 has either (a) a note that it is ready for
-      batch-6 extraction because its blocker cleared, or (b) a re-verified confirmation the blocker is still open. Do
-      NOT draft follow-up todos here — this plan's scope is reconciliation, not fresh drafting.
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-09 (slot 33, review→cicd craft).** Re-checked all 7 Deferred items D5-1 through
+      D5-7 against live corpus state. Note-only per this todo's scope — nothing drafted here.
+  - **D5-1** (quickmerge.sh branch-check broadening, step 3 of
+    `issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md`) — **blocker cleared.** Both
+    preconditions landed: batch4 todo 1 (`unified-trading-pm@b02ba28c7`, verified ancestor) and batch4 todo 2 step 2
+    (`unified-trading-library@dc1dc7df`, verified ancestor); batch4 itself is now fully done (all 9 todos `[x]`).
+    Already independently re-confirmed by `ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md` todo 2 (also this
+    slot, same session). **Superseded, not a fresh batch-6 candidate**: batch6 (drafted 2026-08-08, before batch4
+    finished) re-deferred this exact item as its own **D6-3** using stale info ("batch4 todo 1 still draft, un-landed").
+    `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md` todo 2 (2026-08-09) has since
+    independently re-cleared D6-3 too, flagging it ready for **batch-7** consideration (with the caveat, per the source
+    doc's own latest note, that step 3 is a genuine design/judgment call, not a rubber-stamp extraction). No action
+    needed here.
+  - **D5-2** (F3 success-reporting — 24 repos' `semver-agent.yml` `schema-changed` dispatch) — **file-contention gate
+    cleared, underlying work still genuinely open.** Batch-5 todo 4 landed done-elsewhere (never touched
+    `scripts/workflow-templates/`) and batch6 todo 9 separately freed the same mechanism (`unified-trading-pm@ec01e4167`
+    per batch6-finalize D6-1/D6-2) — so the contention this item was rationed against no longer exists. But nobody has
+    implemented the actual fix: `post_cutover_silent_assumption_sweep_2026_07_23.md`'s own F3 checkbox still explicitly
+    states "the 24 repos' `semver-agent.yml` `schema-changed` dispatch (D5-2 ... not claimed by batch6 either; still
+    genuinely open)", independently reconfirmed 2026-08-09 by
+    `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md` todo 2's D6-9 entry. Ready for
+    **batch-7** extraction (batch6 had the mechanism free too and still didn't claim it).
+  - **D5-3** (F3 success-reporting — 12+ services' `cloudbuild.yaml`/`buildspec.aws.yaml` `service-deployed` dispatch) —
+    **RESOLVED, no longer a batch-6 candidate.** The fix shipped 2026-08-06 via a different mechanism than the one D5-3
+    was deferred over: a `deployment-service` listener (`deployment-service@5599bda8`) + an explicit-allowlist
+    `deployment-api` override (`deployment-api@7110d2d`), both verified ancestors — it never touched the contended
+    consumer `cloudbuild.yaml`/`buildspec.aws.yaml` files batch-5 todo 1 owned, so the file-contention framing that
+    deferred it never actually applied. Confirmed directly in the source doc
+    (`post_cutover_silent_assumption_sweep_2026_07_23.md`'s F3 checkbox: "`service-deployed → deployment-service` SLICE:
+    DONE 2026-08-06"). Nothing left to extract.
+  - **D5-4** — unchanged, stays RESOLVED (operator ruling `BLK-c099ebe5`, 2026-08-03, captured in batch1's migrated
+    todo). Re-confirmed still `RESOLVED` in batch5's own Deferred table; no new ruling needed or issued.
+  - **D5-5** — confirmed: batch4 (`ci_satellite_ao_dispatch_batch4_2026_07_31.md`) remains the live home for **D4-5
+    through D4-18** — grepped its Deferred table directly, all 14 rows present, none silently vanished. Detailed
+    per-item re-verification (has any individual D4-x's own blocker since cleared) is
+    `ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md` todo 3's own scope (still open `[ ]` there) — not
+    duplicated here.
+  - **D5-6** — confirmed still open: `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` frontmatter reads
+    `status: open` (3 open checkboxes remain), matching the live-incident precedent this item was deferred under.
+    Blocker not cleared.
+  - **D5-7** (pnpm content-addressable-store migration, `ui_build_warm_cache_2026_06_17.md`) — **RESOLVED, no longer
+    needs "its own plan."** The sole remaining sub-part (cross-clone hardlink-dedup verification) shipped via
+    `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md` todo 1 (2026-08-09, slot 31):
+    `deployment-ui@33c6a02`, `unified-trading-system-ui@e70aeeb8`, `unified-trading-pm@e9e344a66`, all verified
+    ancestors. Source doc flipped `status: active` → `complete` (zero open checkboxes/prose). Not yet archived
+    (`locked_by: live-defi-rollout` blocks it pending an `[unlock-plan]` decision — out of this todo's scope).
+  - **Net result**: 2 of 7 (D5-3, D5-7) fully RESOLVED since batch5 was drafted — no longer extraction candidates at
+    all. 2 of 7 (D5-1, D5-2) had their batch5-specific gate clear but were already independently re-triaged by
+    batch6/batch6-finalize, landing as ready-for-**batch-7** (not batch-6, which already came and mostly went). 1 of 7
+    (D5-4) stays RESOLVED, unchanged. 2 of 7 (D5-5, D5-6) reconfirmed still in their recorded state, unchanged. Zero
+    follow-up todos drafted here, per this todo's scope. ~~[REVIEW] P1. **Re-check the Deferred items D5-1 through D5-7
+    for whether their blocker has cleared.**~~ (original text preserved below for record) D5-1 (quickmerge.sh
+    branch-check broadening) — have BOTH batch4 todo 1 and batch4 todo 2 landed? If so it is ready-for-batch-6
+    extraction; note it, do NOT draft it here. D5-2/D5-3 (F3's semver-agent and cloudbuild halves) — are the
+    workflow-template rollout mechanism and the consumer `cloudbuild.yaml` files free again (batch-5 todos 4 and 1
+    landed)? If so both are ready-for-batch-6. D5-4 — has the operator ruled on the billing-token fork? D5-5 — confirm
+    batch4 is still the live home for D4-5..D4-18 and none has silently vanished. D5-6 — has
+    `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` left `status: open`? D5-7 — has the pnpm migration been
+    given its own plan? **Done when**: each of D5-1 through D5-7 has either (a) a note that it is ready for batch-6
+    extraction because its blocker cleared, or (b) a re-verified confirmation the blocker is still open. Do NOT draft
+    follow-up todos here — this plan's scope is reconciliation, not fresh drafting.
 - [ ] [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch5_2026_08_02.md`** via the standard 6-step ritual (CLAUDE.md §
       plan archival): migrate any still-unresolved Deferred item to a tracked follow-up (todo 3 above should have
       re-confirmed D5-1 through D5-7 — verify none silently vanishes) → add the archive banner → run the codex-alignment
@@ -235,3 +286,16 @@ context_scope:
   unresolved, as this todo's own text predicted); `github_actions_operator_gated_followups_2026_07_17.md` correctly
   stays open (many unrelated open items). Full per-doc detail recorded on the todo checkbox itself above. Evidence:
   `unified-trading-pm@<this commit>` (this session's edits to the 3 touched docs + this plan).
+- **2026-08-09 (todo 3, slot 33 — review→cicd craft) — TODO 3 COMPLETE.** Re-checked D5-1 through D5-7 against live
+  corpus state, cross-referencing the sibling `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch6_2026_08_08.md` /
+  `…batch6_finalize_2026_08_08.md` docs (drafted after batch5, so authoritative for what's changed since). Every cited
+  commit verified via `git merge-base --is-ancestor <sha> origin/live-defi-rollout` before citing. **2 items fully
+  RESOLVED since batch5 was drafted** (D5-3 — service-deployed dispatch fixed via a listener, never touched the
+  contended files; D5-7 — pnpm hardlink-dedup shipped via batch6-finalize todo 1). **2 items had their batch5-specific
+  gate clear but are best picked up in batch-7, not batch-6** (D5-1 — already independently re-cleared by
+  batch6-finalize as its own D6-3; D5-2 — mechanism freed twice over (batch5 todo 4 + batch6 todo 9) but the actual
+  24-repo fix remains unclaimed by both batch5 and batch6). **1 item unchanged, stays RESOLVED** (D5-4, prior operator
+  ruling). **2 items reconfirmed still open, unchanged** (D5-5 — batch4 confirmed still home to D4-5..D4-18, all 14
+  present; D5-6 — capacity-crisis doc confirmed still `status: open`). Zero follow-up todos drafted, per this todo's
+  scope. Full per-item detail + citations on the todo checkbox itself above. Evidence:
+  `unified-trading-pm@<this commit>` (this session's edit to this plan only — no code repos touched).
