@@ -403,6 +403,13 @@ below first (cheap — a few greps + reads) since a competing claim may have shi
 and human-only entries need a real ruling, not re-triage. Time-gated entries need elapsed time/credentials, not
 re-triage. Too-large-or-risky entries need their own dedicated plan.
 
+> **⚠️ CORRECTION 2026-08-09 (plan_reconciler agt-196785)**: all 79 `[citation truncated...]` tags below claim
+> "re-verified in batch10 Progress Log (2026-08-06)" — a TEMPLATED claim, not individually true. batch10's own Progress
+> Log names only 3 re-verified examples (halftime fixture_id, parity-test, CLV-retrain) and says the rest were "not
+> fully recoverable." Spot-checked 2 items (`canonical_player_stats_fixture_events_quality_2026_07_16.md`): zero
+> mentions in batch10 — false for these, very likely false for most of the other 77. Treat as UNVERIFIED unless
+> individually re-checked.
+
 ### Operator-gated (undecided design/judgment call or explicit sign-off requirement) (42)
 
 - **canonical_player_stats_fixture_events_quality_2026_07_16.md** — Defect 3: instrument_count manifest-index semantic
