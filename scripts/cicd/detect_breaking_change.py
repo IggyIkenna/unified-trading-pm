@@ -45,6 +45,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
@@ -89,6 +90,46 @@ def _git_changed_py(base_ref: str, head_ref: str, source_dir: str) -> list[str]:
     except subprocess.CalledProcessError:
         return []
     return sorted({ln for ln in out.splitlines() if ln.endswith(".py")})
+
+
+# A changed path matching one of these is DEFINITELY not release-worthy on its own — pure
+# CI/docs/lockfile/metadata churn. Deliberately SHORT and conservative: anything not matched
+# here counts as "real" (biases toward false-positive "something changed", never a silent
+# false-negative miss — the exact failure class this signal exists to close, see
+# `_source_touched`'s docstring).
+_NON_FUNCTIONAL_PATH_RE = re.compile(
+    r"^(\.github/|docs/|\.gitleaks\.toml$|\.gitignore$|README\.md$|CHANGELOG\.md$|"
+    r"uv\.lock$|poetry\.lock$|package-lock\.json$|pyproject\.toml$)"
+)
+
+
+def _source_touched(base_ref: str, head_ref: str) -> bool:
+    """True if ANY file changed between base and head that isn't pure CI/docs/lockfile noise.
+
+    Deliberately REPO-WIDE, not scoped to ``--source-dir`` — unlike every other check in this
+    module. `--source-dir` is derived by convention (``<repo>-name`` -> ``<repo>_name``) and
+    that convention does not hold for every repo (e.g. e2e-testing's real content lives under
+    `scripts/`/`tests/`, not a package dir named `e2e_testing/`); a squash-promote commit
+    (`chore(promote): LDR -> main`) also destroys the individual feat:/fix: commit-message
+    prefixes semver-agent's message-based classifier depends on. Both signals can go blind on
+    the SAME promotion, at which point a repo that keeps shipping real work never tags again —
+    measured live 2026-08-09 as a fleet-wide RELEASE TAG STALL on 6 repos where genuinely
+    nothing shippable changed (correct: no bump) and a 7th (e2e-testing) where real `scripts/
+    *.py` changes were invisible to the source-dir-scoped check (bug: should have bumped).
+    This denylist-based, repo-wide check is the single content-based signal both semver-agent
+    (bump decision) and reconcile_release_tags.py (stall-alert decision) key off of, so the two
+    scripts' notions of "did anything shippable change" cannot silently diverge again.
+    """
+    try:
+        out = subprocess.check_output(
+            ["git", "diff", "--name-only", f"{base_ref}..{head_ref}"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except subprocess.CalledProcessError:
+        return True  # fail-safe: an unresolvable diff must never silently suppress a real signal
+    changed = [ln for ln in out.splitlines() if ln.strip()]
+    return any(not _NON_FUNCTIONAL_PATH_RE.match(p) for p in changed)
 
 
 @dataclass
@@ -515,6 +556,7 @@ def main() -> int:
     new = surface_at(head_ref, scan)
     reasons = diff_surfaces(old, new)
     is_breaking = bool(reasons)
+    source_touched = _source_touched(base_ref, head_ref)
 
     if as_json:
         print(
@@ -527,6 +569,7 @@ def main() -> int:
                     "source_dir": source_dir,
                     "old_export_count": len(old.exports),
                     "new_export_count": len(new.exports),
+                    "source_touched": source_touched,
                 },
                 indent=2,
             )
@@ -539,6 +582,7 @@ def main() -> int:
         else:
             print("non-breaking — no public API/schema surface change detected")
         print(f"is_breaking={'true' if is_breaking else 'false'}")
+        print(f"source_touched={'true' if source_touched else 'false'}")
     return 0
 
 

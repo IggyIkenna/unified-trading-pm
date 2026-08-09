@@ -181,6 +181,15 @@ if [ "$CI_MODE" = "--precommit" ]; then
     bash "$SCRIPT_DIR/check_todo_regression.sh" --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Todo regression (staged plans)" \
       || { echo "  ❌ A staged plan lost todos (total open+done shrank) vs origin/live-defi-rollout — restore the missing line(s), a checkbox flip never shrinks the total"; PF=$(( PF + 1 )); }
+    # Evidence-backed-completion, --only-scoped (2026-08-09): sub-rule B (a `- [x]` runtime-green
+    # claim with no `Evidence: cloudbuild=<id>`) previously had NO precommit-time presence, only
+    # the full corpus-wide baseline mode. Root-caused after a push to live-defi-rollout (sha
+    # 42c50b4b3) blocked on this exact ratchet — a claim added via safe-doc-push.sh sailed through
+    # clean and only surfaced on the next unrelated full CI run. Sub-rule A (Cloud Build API
+    # verification) stays CI-only — needs gcloud/network/auth, incompatible with a <1s local hook.
+    python3 "$SCRIPT_DIR/../quality_gates/check_evidence_backed_completion.py" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Evidence-backed-completion (staged plans)" \
+      || { echo "  ❌ A staged plan's '- [x]' runtime-green claim (build/deploy/promote) has no Evidence: cloudbuild=<id> — add the citation, or confirm this genuinely isn't a runtime claim"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }
