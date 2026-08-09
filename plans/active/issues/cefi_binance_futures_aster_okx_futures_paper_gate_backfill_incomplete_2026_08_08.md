@@ -133,3 +133,21 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   NOT run a dedicated venue-scoped backfill pass. Todo 1 flipped (decision recorded); todo 2's re-check trigger reworded
   to match (no longer conditional on "if option 2"). Doc stays `assigned_vm: planning` — todo 2 remains genuinely open,
   gated on the aggregate backfill's own progress.
+- **2026-08-09 (slot 19, data_engineering)**: Dispatched on todo 2; checked its stated precondition BEFORE re-running
+  the check. Per the sibling backfill plan's own most-recent same-day entry
+  (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s 2026-08-09 cross-reference finding), the in-flight
+  aggregate backfill has NOT reached these 3 venues' full chronological range: it walks chronologically FORWARD from
+  2019-01-01 across all `heavy` venues (incl. BINANCE-FUTURES/OKX-FUTURES; ASTER is a separate CAP-EXEMPT native-REST
+  venue not gated the same way) in lockstep via `SINGLE_VM_QUEUE`, and after 8 relaunches/preemptions over 13 days is
+  only at day ~42-469 of the ~2769-day `2019-01-01..present` span (~1.5-17%) — nowhere near "present." Re-running the
+  venue-scoped completeness check now would just reproduce essentially the same result as the 2026-08-08 baseline
+  (53.54%/83.60%/89.66%) and risks misrepresenting an unfinished backfill's state as a fresh, meaningful re-measurement
+  — the exact data-pipeline-correctness concern the sibling plan already hit and declined to do the same way
+  (2026-07-28, slot-13: declined to re-run that plan's own POST-BACKFILL gate against the same still-mid-run VM).
+  Declining to run the check this turn.
+
+  This task has no machine-level `prereqs.prerequisites` gate (unlike the sibling plan's `-004`/`-005` POST-BACKFILL
+  gate todos, which already carry `prereqs.prerequisites: [cefi-track2-backfill-vm-terminated]`), so absent a durable
+  park it will likely be re-dispatched to a future worker before the backfill actually completes, repeating this same
+  wasted turn — filing `/blocked` recommending main attach that SAME already-existing condition to this task's backlog
+  entry (no new condition needed). No code/report changes made; this Progress Log entry is the only change this turn.
