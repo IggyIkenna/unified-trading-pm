@@ -75,12 +75,24 @@ false-positive and reworded) or the baseline is reviewed-and-ratcheted (only aft
 
 ## Todos
 
-- [ ] [DEVOPS] P1. Investigate `ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md:122` — determine whether the
-      checker firing on this doc-only re-verification "DONE" claim is a genuine missing-evidence gap or a scope
-      false-positive (the checker treating a non-deploy completion as a runtime-green claim). If false-positive, either
-      reword the claim to avoid the trigger phrase or narrow the checker's detection regex (read both sides per
-      findings-triage — don't reflex-narrow the regex without confirming the todo genuinely never claimed a
-      runtime/deploy outcome). Repo: unified-trading-pm.
+- [x] ✅ [DEVOPS] P1. **CONFIRMED scope false-positive, checker narrowed — unified-trading-pm@c9b1b6016.** Root-caused
+      the exact trigger with the checker's own `_iter_todo_blocks`/`_split_into_clauses`: the file moved to
+      `plans/archive/2026_08/ci_satellite_ao_dispatch_batch5_finalize_2026_08_02.md` (line 122→128 after the
+      archive-banner insert), and the flagged clause is the D5-3 sub-bullet "F3 **success-reporting** — 12+ services'
+      `` `cloudbuild.yaml`/`buildspec.aws.yaml` `` `service-deployed` dispatch". Neither token asserts a runtime-passing
+      outcome. The `` `cloudbuild.yaml` `` mention is a bare filename reference (the consumer file batch-5 todo 1 owns).
+      "Success-reporting" is a named dispatch mechanism used 17x across 7 corpus docs — not a claim of any outcome.
+      `_GREEN_TOKEN_RE`'s plain `\b` treated the hyphen in "success-reporting" as a word boundary, so it matched the
+      substring as a standalone token. The block never asserts a Cloud Build, deploy, or promote reached a passing state
+      anywhere in its ~60-line body (only `<repo>@<sha>` code-ship citations, exempt by design). Narrowed
+      `_GREEN_TOKEN_RE` to `(?<!-)\b(?:green|SUCCESS|succeeded)\b(?!-)` (hyphen-guarded both sides) in
+      `scripts/quality_gates/check_evidence_backed_completion.py`, added a regression fixture
+      (`test_hyphenated_success_reporting_compound_term_not_flagged`) to
+      `tests/unit/test_check_evidence_backed_completion.py` mirroring the exact flagged text shape. Verified: existing
+      15 tests still pass + new one passes (16/16); re-ran the full corpus scan post-fix — sub-rule B dropped 24→19
+      (this fix alone resolved several other "success-reporting"/similar-compound false positives corpus-wide, not just
+      this one file); sub-rule A unchanged at 0. Did NOT re-baseline (`--baseline-write`) — that is this doc's own todo
+      3, gated on both todos 1 and 2 landing. Repo: unified-trading-pm.
 - [x] ✅ [DEVOPS] P1. Investigate `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md:171` — determine whether
       `instruments-service@cad1d322`'s deploy to prod has a resolvable Cloud Build id (check
       `gcloud builds list --filter` around the commit's landing time, or the deploy workflow run for that sha). If
@@ -118,3 +130,9 @@ false-positive and reworded) or the baseline is reviewed-and-ratcheted (only aft
   by another slot; verify before re-investigating. Todo 3 (baseline-write) intentionally left open per its own stated
   gate ("once both todos above land") even though the corpus is currently green (20 < baseline 24) — re-baselining is
   that todo's own scope, not bundled into this one.
+- **cicd-worker slot 2, 2026-08-09**: resolved todo 1 — confirmed scope false-positive per slot 13's own note above,
+  root-caused it independently to the `_GREEN_TOKEN_RE` hyphen-boundary bug and narrowed the regex (see checkbox above
+  for full evidence) rather than just rewording the one flagged doc, since the same compound-term shape recurs across
+  the corpus (17 hits of "success-reporting" alone). Shipped `unified-trading-pm@c9b1b6016` via the standard Pass-1 QG →
+  quickmerge flow. Both todos 1 and 2 are now `[x]`; todo 3's gate is clear for whoever picks it up next (not bundled
+  into this task).
