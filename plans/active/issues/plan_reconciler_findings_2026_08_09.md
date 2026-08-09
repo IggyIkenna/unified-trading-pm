@@ -247,6 +247,36 @@ balanced (Phase 5.9(a) ledger check).
 
 (populated if applicable — none yet; this run is still in progress, see § "In-flight verification" below)
 
+## Grace-protected findings (deferred to a future `/plan-reconcile ui` run — HARD LIMIT, not this run's to fix)
+
+The 8 grace-window docs (Scope+method above) were read for cross-check context per the skill's rules, and that read
+surfaced genuine candidate findings this run could NOT act on (newest commit <12h old at run start). Recording them here
+so they aren't silently lost — the next `ui`-tranche run should re-verify each is still current (grace status will have
+cleared) before acting:
+
+1. **`issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` todos at "DEFERRED-BY-DESIGN" and `[REVIEW]` (2 items)** —
+   both cite blockers (the `e8ce86a` stdout-fix rollout, a cold-start issue) that LATER entries in the same doc suggest
+   have since cleared (a "GATE MET" note; "silent since 2026-08-04"), but neither todo was revisited/flipped against
+   that newer evidence. Candidate missed-flip, needs fresh verification (was grace at read time, 6h old).
+2. **`deployment_registry_firestore_p3_cutover_2026_07_14.md`** — `last_updated: "2026-07-14"` stale vs. Progress Log
+   entries through 2026-08-09 (today); also a na-eligibility-audit Progress-Log-shaped entry appears misplaced under a
+   "## Codex SSOTs" heading. Both mechanical, low-risk fixes once grace clears (was 0h old at read time).
+3. **`ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` line ~82** — a formatting glitch (irregular multi-space
+   gaps mid-sentence, reads like copy-paste corruption, not markdown-breaking). Cosmetic, low priority.
+4. **`issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` lines ~748-750/905-907** — cites a companion doc
+   (`/plans/archive/2026_07/deployment_api_cloud_run_coldstart_flaky_exit0_blocks_prd_sa_cutover_2026_07_31.md`) as
+   `"(status: open)"` / `"the live tracker"` while the path is under `/plans/archive/` — worth a quick existence+status
+   re-check (mechanical) once the source doc is out of grace.
+5. **`issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` lines ~455-456** — flags an untracked concurrent
+   investigation (`iam-fix-verify`/`iam-fix-retest` revision tags) with 0 matching plan/issue doc found via a scoped
+   grep. Speculative/unconfirmed — only worth a fresh issue doc if corroborated independently by a future run, not
+   actioned on this single mention.
+
+Not carried forward (self-resolving, no action ever needed): a stale "4 of ~19" Firestore figure in
+`ui_satellite_ao_dispatch_batch1_2026_08_06.md`'s Deferred item 6, and a "9-of-13" vs "8-of-14" orphan-count baseline
+drift between `ui_satellite_ao_dispatch_batch2_2026_08_08.md` and its finalize sibling — both batch docs already cite
+fresher numbers elsewhere in the same covering-set, so no future action is needed on either.
+
 ## In-flight verification (checkpoint note — this run is NOT finished as of this commit)
 
 **Session context checkpoint 2026-08-09 ~04:03 UTC**: this run has 7 commits pushed to `plan_reconciler/agt-0c9e3f` so
