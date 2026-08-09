@@ -180,3 +180,15 @@ tarball-staleness finding if confirmed).
   (~14h+ no recurrence at investigation time), no code change shipped. Filed this doc per the findings-triage "outside
   every plan" rule since no pre-existing issue doc named this exact ASTER-batch/UpstreamTimestampBiasError signature
   (the sibling tarball doc's ASTER finding is a different bug/pipeline_mode). Escalation closes without a code ship.
+- **2026-08-09** — Same escalation id `agt-e488d1` redispatched a second time (data_pipeline_failure, slot 4) — a
+  duplicate dispatch of the already-closed finding above, not a new occurrence (context payload identical: cefi/
+  book_snapshot_5, 9,883 attempted_failed of 935,767 attempted, "2193 attempted_failed row(s) in the last 1d").
+  Independently re-ran the same bounded manifest query (`read_availability_index_safe`,
+  `bucket=market-data-tick-cefi- prd-central-element-323112`,
+  `filters=[data_type=book_snapshot_5, venue=ASTER, capture_status=attempted_failed]`): 2,003 rows, latest
+  `attempted_at=2026-08-09T01:24:28.273974+00:00` — identical to the first investigation's finding, zero rows with a
+  genuinely newer `attempted_at` (the naive `>` string-prefix check against the earlier doc's truncated-to-seconds
+  cutoff initially over-matched 50 same-second microsecond-precision rows from that SAME final batch; re-checked against
+  the full microsecond timestamp and confirmed no new write). Confirms the P3 follow-up condition above ("no
+  recurrence") as of this second check, several hours after the first. No code change needed; closing this dispatch of
+  the escalation without a ship, same conclusion as the first.
