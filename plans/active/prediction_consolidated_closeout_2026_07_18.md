@@ -180,21 +180,26 @@ marked "A0 live read" carry the measured correction (see Progress Log § A0). Wh
 | CQG cluster atom in the live manifest     | **present at `captured`: 17,352 rows** — CORRECTED 2026-07-18 (A0 live read) | A0 measured 80,068 CQG bundle rows (captured 17,352 / empty_confirmed 60,286 / expected_unattempted 2,421 / attempted_failed 9), 81 distinct canonical CQG values — this SUPERSEDES the folded issue's "ZERO at captured" claim; the phantom wipe is fixed or intermittent. **Re-check** `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` status before assuming a wipe (Phase-B item downgraded to verify-not-fix) |
 | Prediction capture liveness               | **was dead 07-01→07-06**                                                     | capture-outage remediation in flight; KALSHI/POLYMARKET-PERP adapters hit the wrong Kalshi host → **fake PERPETUAL contaminated cefi (25,473 rows)** (`prediction_capture_incident_remediation_2026_07_06.md`)                                                                                                                                                                                                                            |
 | MTDS prediction `-test-` bucket isolation | **MISSING (writes to PROD)**                                                 | `_test_bucket("prediction")` has no `-test-` sibling and falls back to the PROD `market-data-tick-prediction` bucket (`market-tick-data-service/scripts/pipeline_e2e_check.py:434-450`) — a prediction force/skip leg would write to PROD, breaking the test-bucket-only invariant cefi/tradfi enjoy                                                                                                                                      |
-| Instrument-id canonical shape             | **partial**                                                                  | adapter `underlying` from `classify_*_to_canonical_group` + `canonical_instrument_id` from cross_venue_mapping are 4/8 done (`prediction_canonical_identity_migration_2026_07_08.md`)                                                                                                                                                                                                                                                     |
+| Instrument-id canonical shape             | **DONE — CORRECTED 2026-08-09**                                              | `prediction_phase_ab_residuals_2026_07_24.md` A2: DONE 2026-07-30 (reconciling `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 7) — 8/8 done, up from this table's stale "4/8" (`prediction_canonical_identity_migration_2026_07_08.md`, now archived)                                                                                                                                                                       |
 | Football fixture ↔ live bookmaker odds    | **joined, ~66%**                                                             | odds ticks carry `af_fixture_id` + `af_fixture_match_status`; ~66% fixture-level match, gap = South-American team-alias hole, not a join bug (`instruments-service/docs/SPORTS_INSTRUMENTS.md`)                                                                                                                                                                                                                                           |
-| Football fixture ↔ Polymarket market      | **string bridge only**                                                       | Polymarket soccer computes the same `build_fixture_id()` string (`LEAGUE:HOME_v_AWAY:YYYYMMDD`) as the sports asset group (`instruments-service/.../reference_data/adapters/prediction/polymarket/parsing.py::_build_sports_id`) — the STRING, not the numeric `af_fixture_id`                                                                                                                                                            |
-| Football fixture ↔ Kalshi market          | **NONE**                                                                     | Kalshi titles are city-level ("Seattle vs Cleveland") with no team registry → no fixture id at all; per-venue Kalshi↔Polymarket sports pairing needs a title-map the schema doesn't persist → honestly absent                                                                                                                                                                                                                             |
+| Football fixture ↔ Polymarket market      | **numeric af_fixture_id resolved — CORRECTED 2026-08-09**                    | `prediction_phase_ab_residuals_2026_07_24.md` A4: RESOLVER + SCHEMA + MATERIALIZATION COMPLETE (instrument-level, 2026-07-18) — Polymarket soccer resolves + stamps a real numeric `af_fixture_id`, up from this table's stale "string bridge only"; the `build_fixture_id()` string bridge still exists alongside it                                                                                                                     |
+| Football fixture ↔ Kalshi market          | **~100% resolved — CORRECTED 2026-08-09**                                    | `prediction_phase_e_football_arb_live_2026_07_24.md` E2: DONE — Kalshi soccer team-name resolution SHIPPED, ~0% → 82.6% → ~100% on 92 live Kalshi fixtures, up from this table's stale "NONE"; live 3-way (Polymarket↔Kalshi↔odds-tick) consistency VERIFICATION still open (Phase E's E1)                                                                                                                                                |
 | Cross-venue arb code                      | **two disconnected paths**                                                   | features-service `cross_venue_arb_detector` (Kalshi↔Polymarket, crypto-oriented in practice) + e2e `live_arb_scanner.py` (bookmakers+Betfair+Polymarket, NO Kalshi, prototype); neither keys on `af_fixture_id`                                                                                                                                                                                                                           |
 
-**Conclusion**: prediction is NOT YET MVP-backfill-ready, but two of the four blockers above are RESOLVED, not open —
-the CQG cluster atom is no longer being wiped (A0 live-read corrected the row above: 17,352 `captured` rows; the
-phantom-wipe issue is downgraded to verify-not-fix) and MTDS prediction `-test-` bucket isolation is FIXED end-to-end
-(`prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, 2026-07-18: `market-tick-data-service@b06d1e6b` /
-`@2e50851d` / `@86d70de9`). What remains genuinely open: capture only just recovered and its hardening is still in
-flight (`prediction_phase_ab_residuals_2026_07_24.md`), the formal post-migration smoke-green + MVP backfill gate itself
-has not yet run (Phase D's remaining P0 todos), and the football fixture identity that would enable
-live-odds-vs-Polymarket-vs-Kalshi arb is still threaded onto Polymarket-as-a-string only and onto Kalshi not at all
-(`prediction_phase_e_football_arb_live_2026_07_24.md`, all 3 items open). This plan scopes the full end-to-end.
+**Conclusion**: prediction is NOT YET MVP-backfill-ready, but **CORRECTED 2026-08-09 — four of the original blockers are
+now RESOLVED, not two.** The CQG cluster atom is no longer being wiped (A0 live-read corrected the row above: 17,352
+`captured` rows; the phantom-wipe issue is downgraded to verify-not-fix), MTDS prediction `-test-` bucket isolation is
+FIXED end-to-end (`prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, 2026-07-18:
+`market-tick-data-service@b06d1e6b` / `@2e50851d` / `@86d70de9`), the instrument-id canonical shape migration is DONE
+8/8 (`prediction_phase_ab_residuals_2026_07_24.md` A2), and the football fixture identity now resolves on BOTH venues —
+Polymarket via a real numeric `af_fixture_id` (A4) and Kalshi via team-name resolution at ~100% on 92 live fixtures
+(`prediction_phase_e_football_arb_live_2026_07_24.md` E2) — up from this Conclusion's stale claim that Kalshi had no
+fixture-linking at all. What remains genuinely open: capture hardening is still in flight
+(`prediction_phase_ab_residuals_2026_07_24.md`), the formal post-migration smoke-green + MVP backfill gate itself has
+not yet run (Phase D's remaining P0 todos), and the LIVE 3-way (Polymarket↔Kalshi↔odds-tick) fixture-id consistency
+check that would enable live-odds-vs-Polymarket-vs-Kalshi arb has not yet been run anywhere in the corpus
+(`prediction_phase_e_football_arb_live_2026_07_24.md` E1, narrowed from its stale "has none today" framing — see E1's
+own text). This plan scopes the full end-to-end.
 
 ### Shard atom for prediction (SSOT-canonical — key is `canonical_question_group`, NOT `(instrument_id OR underlying)`)
 
@@ -783,3 +788,11 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — 0 native open checkboxes, re-confirmed
   (`archive_exempt: true`, `gate_on_depends: false` coordination hub; `depends_on` lists the 4 Phase A-E children, all
   still open under their own docs — this parent has nothing of its own to reclassify). Nothing to reclassify.
+- **plan_reconciler 2026-08-09 (agt-c3a27f, slot 13, prediction tranche)**: the "Ground-truth verdict" table (3 rows)
+  and Conclusion paragraph were stale against later-shipped work in the doc's own declared Phase A-E children —
+  instrument-id canonical shape was "4/8" (now 8/8 per phase_ab_residuals A2), Kalshi fixture-linking was "NONE" and
+  Polymarket was "string bridge only" (both now resolved per phase_ab_residuals A4 + phase_e E2). None of these rows
+  carried the table's own "A0 live read" correction marker, so per the table's own rule they were stale uncorrected
+  pre-2026-07-18 snapshots. Corrected all 3 rows + the Conclusion. Adversarially verified (independent refuter +
+  confirmer, both non-grace) before applying; see
+  `plans/active/issues/plan_reconciler_findings_prediction_2026_08_09.md`.

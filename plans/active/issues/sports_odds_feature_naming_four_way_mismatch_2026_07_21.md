@@ -13,6 +13,7 @@ summary: >-
   schema-agnostic (no field-name check beyond `fixture_id`), so nothing has ever caught this. This is not a "write a
   test" task as scoped — it's a design decision (which naming is canonical) that must precede any real parity test.
 status: open
+archive_exempt: true # cross-tranche shared doc — see Progress Log 2026-08-09 for the archival-caution reasoning
 nature: issue
 asset_group: [sports, prediction]
 stage: [data, strategy]
@@ -128,11 +129,24 @@ scope a design decision first, then a real parity test becomes possible against 
       correctly gated behind that plan's naming-decision + 3-repo migration todos (it cannot be written until those land
       — there is still no real contract to test parity against). Flipping this duplicate closed instead of leaving it
       open prevents the backlog dispatcher from re-queuing a currently-unactionable duplicate of the same work here.
-- [ ] [SCRIPT] P1. The actual four-way naming migration has not started — the two `[x]` todos above only covered the
-      decision/scoping step (operator ruling BLK-a1ce4719 + authoring the migration plan); re-grepped
-      `SportsFeatureVector` across features-service/ml-service/strategy-service on 2026-07-23 and found zero hits,
-      confirming the real 3-repo migration (`sports_odds_feature_naming_canonicalization_2026_07_21.md`, 8 of 9 todos
-      still `[ ]`) is unstarted.
+- [x] [SCRIPT] P1. ✅ **CORRECTED 2026-08-09 (plan_reconciler) — stale since 2026-07-23; the four-way migration is now
+      essentially DONE, not "unstarted."** Independently re-read
+      `sports_odds_feature_naming_canonicalization_2026_07_21.md` in full: **8 of its 9 todos are `[x]` shipped** with
+      real, verified commits across 4 repos — `unified-api-contracts@689efa54` (UAC `OddsFeaturesMixin`/
+      `SportsFeatureVector` renamed to the 2026-07-23-decided scheme), `features-service@b03a6de4`/`0ded2449`/
+      `e240eca2`/`0ab873b3` (per-bookmaker decimal-odds compute + full `ODDS_COLUMNS` migration), `ml-service@07976ae`
+      (closes the silent-agnostic loader gap this issue flagged, with loud schema validation), `ml-service@91f031a`/
+      `10e219f` (loader + remaining call-site migration), `strategy-service@4c55438c` (v2 archetype engines + legacy
+      `sports_feature_subscriber.py`). All four originally-mismatched conventions (FSS output, ml-service loader,
+      strategy-service v2 + legacy, UAC schema) now converge on one canonical UAC-defined naming, and the
+      silent-`.get()`/`KeyError` risk this issue exists to flag is closed. The 9th todo (the FSS↔ml-service↔
+      strategy-service naming-parity test) was extracted 2026-08-09 into
+      `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2 (`assigned_vm: planning`,
+      `status:     active` — actively dispatched, not unstarted). The canonicalization doc's only other open item (P3,
+      cross-reference against the "wire sports end-to-end" plan) is an unrelated sequencing check, not part of the
+      naming migration this todo tracks. All 9 cited commit hashes independently re-verified as real, on-topic,
+      live-ancestor commits (`git cat-file -t` + `git merge-base --is-ancestor`) before this flip — adversarially
+      confirmed by an independent refuter + confirmer pair as well.
 
 ## Codex SSOTs
 
@@ -171,3 +185,10 @@ should be tracked via the (still all-open) canonicalization plan.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid (sports tranche) — re-verified, unchanged since 2026-08-01; sole
   open todo remains a status pointer at the sibling `sports_odds_feature_naming_canonicalization_2026_07_21.md`
   migration plan (itself correctly `assigned_vm: NA`), no independent dispatchable content here.
+- **plan_reconciler 2026-08-09 (agt-c3a27f, slot 13, prediction tranche)**: todo 3's "migration has not started" claim
+  was stale — the sibling `sports_odds_feature_naming_canonicalization_2026_07_21.md` is actually 8/9 shipped across 4
+  repos (real commits independently re-verified live, plus an independent adversarial refuter + confirmer pair), 5 prior
+  audit re-triage passes (07-23 through 08-06) reasserted "unchanged" without re-checking the target doc. Flipped todo 3
+  with the full evidence citation. This leaves all 3 todos `[x]` — set `archive_exempt: true` rather than archiving,
+  since this doc is shared cross-tranche (`[sports, prediction]`) and a single-tranche shard must not unilaterally
+  archive a doc another tranche's docs still reference (see frontmatter comment).

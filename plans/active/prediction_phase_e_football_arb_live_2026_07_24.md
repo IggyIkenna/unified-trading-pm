@@ -105,12 +105,15 @@ context_scope:
 
 ### E1 — Thread the fixture id onto BOTH prediction venues (Leg 1)
 
-- [ ] [BACKEND] P1. **Verified end-to-end fixture link on Polymarket + Kalshi soccer** — confirm A4/B produced a
-      resolved `af_fixture_id` (or `build_fixture_id` string) on Polymarket soccer markets, and BUILT the same for
-      Kalshi (which has none today). Keep the prediction canonical naming; the fixture id is an ADDITIVE attribute.
-      Acceptance: a Polymarket market and a Kalshi market for the same real fixture resolve to the SAME `af_fixture_id`,
-      and both resolve to the same odds-tick `af_fixture_id`. (repos: instruments-service, market-tick-data-service,
-      unified-api-contracts)
+- [ ] [BACKEND] P1. **Verify the live end-to-end cross-venue fixture-id consistency on Polymarket + Kalshi soccer —
+      NARROWED 2026-08-09 (the "BUILT... for Kalshi (which has none today)" framing was stale: Kalshi resolution has
+      since shipped, see E2 below, in the SAME doc).** Both legs are now BUILT — Polymarket resolves + stamps a real
+      `af_fixture_id` (`prediction_phase_ab_residuals_2026_07_24.md` A4) and Kalshi resolves via team-name matching at
+      ~100% on 92 live fixtures (E2). What remains open is the live, MEASURED 3-way consistency check the Acceptance
+      criterion below has always asked for — not yet run anywhere in the corpus. Keep the prediction canonical naming;
+      the fixture id is an ADDITIVE attribute. Acceptance: a Polymarket market and a Kalshi market for the same real
+      fixture resolve to the SAME `af_fixture_id`, and both resolve to the same odds-tick `af_fixture_id`. (repos:
+      instruments-service, market-tick-data-service, unified-api-contracts)
 
 ### E2 — Close the team-name matching gap to ~0% (Leg 2)
 
@@ -181,3 +184,10 @@ context_scope:
   neither gate cleared. 3 open items independently re-verified as a bounded verification (E1) plus genuine
   arb-engine-wiring/correctness-guard design work (E3) — informational only, the gate citation alone already decides the
   verdict. Doc stays NA.
+- **plan_reconciler 2026-08-09 (agt-c3a27f, slot 13, prediction tranche)**: E1 self-contradicted E2 in the same document
+  — E1 (open) said Kalshi fixture resolution "has none today... BUILT" while E2 (done, directly below) documents Kalshi
+  resolution SHIPPED at ~100% on 92 fixtures. Narrowed E1 to its genuinely-remaining scope (a live 3-way
+  Polymarket↔Kalshi↔odds-tick consistency check that no doc in the corpus has yet run) rather than closing it — both
+  legs being BUILT doesn't mean the Acceptance criterion's cross-venue join has been MEASURED. Adversarially verified
+  (independent refuter + confirmer, both non-grace) before applying; see
+  `plans/active/issues/plan_reconciler_findings_prediction_2026_08_09.md`.
