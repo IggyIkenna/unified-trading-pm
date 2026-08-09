@@ -100,15 +100,23 @@ context_scope:
       2 pre-existing, separately-tracked files (`launch-prediction-pipeline-vm.sh`, `backfill-cluster.sh`; see
       `issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md`), out of this todo's
       stated single-file scope (Repo: deployment-service, S1-a only).
-- [ ] [BACKEND] P2. **Implement the 10%-of-ADV position-size cap at order-sizing time** (per the 2026-08-08 operator
-      ruling): in `strategy-service/strategy_service/allocation_sizer.py`, clamp `AllocationSizer.size_signal()`'s
+- [x] ✅ [BACKEND] P2. **Implement the 10%-of-ADV position-size cap at order-sizing time** (per the 2026-08-08 operator
+      ruling — see `aster_and_cefi_rolling_adv_feature_2026_07_21.md` Phase 3): in
+      `strategy-service/strategy_service/allocation_sizer.py`, clamp `AllocationSizer.size_signal()`'s
       `PerClientSignal.allocation_amount_usd` to `min(computed_size, 0.10 * adv_usd)`, using
       `RollingAdvReader.compute_rolling_adv()`
       (`features-service/features_service/cross_instrument/app/calculators/adv.py`, `features-service@8608ea5d`) for
       `adv_usd`. Fail closed (not tradeable) when `AdvStatus` is `INSUFFICIENT_HISTORY` or `NO_DATA`. Repo:
       strategy-service. Source: `aster_and_cefi_rolling_adv_feature_2026_07_21.md` Phase 3 (line 215). **Done when**:
       `AllocationSizer.size_signal()` enforces the clamp + fail-closed behavior, covered by unit tests,
-      `quality-gates.sh` green.
+      `quality-gates.sh` green. — `strategy-service@73aa792f`: implemented via a T4-local
+      `strategy_service/engine/core/rolling_adv_reader.py` rather than importing features-service's `adv.py` directly —
+      cross-service imports are banned by `/codex/04-architecture/tier-and-import-architecture.md` (T4 services have no
+      service-to-service import path), and this repo already has the identical precedent
+      (`canonical_adv_ranked_universe_provider.py`) solving the same features-service-adv-can't-be-imported problem by
+      mirroring the calculator's verified-correct logic locally instead. Clamp + fail-closed (missing instrument
+      context, `INSUFFICIENT_HISTORY`, `NO_DATA`) covered by 8 new/updated unit tests; `quality-gates.sh` green
+      (sentinel-verified, sha=73aa792fb5a68429f08783b2e69910376f20e6fb).
 - [ ] [SCRIPT] P3. **Check canonical-migration-cefi-content-24's current manifest `capture_status` and `vm-logs/` GCS
       prefix for any launch since `-065001` (2026-07-31)**; if shard 24 is still incomplete and hasn't already been
       relaunched by another agent, launch its checkpoint-resumed 3rd attempt:
@@ -161,3 +169,17 @@ context_scope:
   sibling doc (flagging for whoever next touches that doc, out of scope here). **Item 3 additional verification**: read
   `issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md` directly, confirmed its
   round8 launch list (16,17,18,19,21,23,41,42) does not include shard 24 — no double-claim.
+- **2026-08-09** — item 2 (the 10%-of-ADV position-size cap) shipped, `strategy-service@73aa792f`. **Deviation from the
+  todo's literal wording**: the todo names `features-service/features_service/cross_instrument/app/calculators/adv.py`
+  as the `RollingAdvReader` source, but strategy-service and features-service are both T4 services with NO
+  service-to-service import path (`/codex/04-architecture/tier-and-import-architecture.md`) — importing it directly
+  would violate that HARD RULE (and doesn't even resolve: features-service isn't a declared strategy-service
+  dependency). This repo already carries the identical precedent for this exact problem —
+  `strategy_service/engine/core/canonical_adv_ranked_universe_provider.py`'s docstring documents building a T4-local
+  reader instead of importing `adv.py`, for the same reason. Implemented the same way: a new
+  `strategy_service/engine/core/rolling_adv_reader.py` mirrors `adv.py`'s verified-correct (2026-07-29-fixed) logic
+  locally, with one intentional correction carried over from `canonical_adv_ranked_universe_provider.py`'s own finding —
+  defaults `data_type="trades"` instead of `adv.py`'s own `"derivative_ticker"` default, since real CeFi
+  `derivative_ticker` candles carry hardcoded-zero volume (verified against prod GCS by that sibling module, not
+  re-verified here). Intent (10%-of-ADV clamp + fail-closed on `INSUFFICIENT_HISTORY`/`NO_DATA`) matches the todo
+  exactly; only the low-level "which file provides `RollingAdvReader`" detail changed.
