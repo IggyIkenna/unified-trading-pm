@@ -108,7 +108,7 @@ findings.
       regression tests: `test_get_instruments_pages_across_event_types` (2 sports merged),
       `test_get_instruments_logs_page_cap_hit` (ceiling-hit observability),
       `test_get_instruments_partial_event_type_failure_keeps_results` (shard isolation).
-- [ ] [CODE] P2. **TradFi/DeFi Aave-history caps in market-tick-data-service (protocol-outage + risk-parameter blind
+- [x] ✅ [CODE] P2. **TradFi/DeFi Aave-history caps in market-tick-data-service (protocol-outage + risk-parameter blind
       spots).** Two files: (a) `market_interface/adapters/defi/protocol_outage_adapter.py`'s
       `_AAVE_V2_RESERVE_HISTORY_QUERY` (`reserveConfigurationHistoryItems`, whole-history no time filter,
       `orderBy: timestamp asc`, `first: 1000`) — ordered ASCENDING with no window filter means if Aave V2's
@@ -120,7 +120,13 @@ findings.
       rate-index history. Repo: market-tick-data-service. Done when: (a) switches to a `skip`-paginated or
       DESCENDING-ordered query (recent-first) so a cap-hit preserves the operationally-relevant tail; (b) gains a `skip`
       pagination loop mirroring the already-fixed `_dex_swaps_queries.py` timestamp-cursor pattern; both get a
-      regression test proving a >1000-event day is no longer truncated.
+      regression test proving a >1000-event day is no longer truncated. — market-tick-data-service@0b6a13d5: (a) added a
+      genuine `skip`-paginated loop (`_AAVE_V2_HISTORY_MAX_SKIP=5000`, mirrors `uniswap_v2.py`'s proven pattern) so no
+      history is dropped rather than just reordering; cap-exhaustion warning on exhaustion. (b) added timestamp-cursor
+      pagination within the 1-day window (mirrors `_dex_swaps_queries.py`'s `_paginate_swaps`). New regression tests:
+      `test_history_beyond_1000_items_not_truncated` in both `test_protocol_outage_adapter.py` and the new
+      `test_aave_positions.py`, each proving a >1000-item multi-page response is fully collected, not truncated to the
+      first page. Full quality-gates.sh green (10286+ tests passed).
 - [ ] [SCRIPT] P2. **Graph `skip`-based pagination loops in market-tick-data-service treat a skip-cap GraphQL error
       identically to "no more data."** 9 call sites across
       `market_interface/adapters/defi/{curve_adapter,balancer_adapter,uniswapv2_adapter,     uniswap_v3_adapter,uniswapv4_adapter}.py`
@@ -210,6 +216,11 @@ findings.
       market-tick-data-service. Done when: either the function gains real chunking so a future wider-window caller can't
       silently truncate, or (if genuinely out of scope) a code comment states the current call-graph invariant that
       keeps this safe, so a future caller change is forced to notice the constraint.
+
+## Progress Log (append-only)
+
+- 2026-08-09 (slot 30, data_engineering): shipped the Aave-history pagination todo — see the todo's own evidence line
+  above for detail. market-tick-data-service@0b6a13d5. Remaining todos in this doc are still open.
 
 ## Codex SSOTs
 
