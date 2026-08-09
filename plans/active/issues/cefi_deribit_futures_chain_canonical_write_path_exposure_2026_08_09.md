@@ -182,3 +182,16 @@ Fix at the root per the data-pipeline-correctness HARD RULE — no deadline defe
   (EXTENDED-STARKNET doesn't fetch from `datasets.tardis.dev`) and don't count. Todo 1's own precondition ("Once a CeFi
   Tardis capture/backfill slot is available") is unmet — did NOT touch todo 2 (the registry-drift fix), which is a
   separately-dispatchable, non-gated backlog task. Releasing via `/skip-current-task {"reason_code": "GATED"}`.
+- **2026-08-09T22:24Z (slot 8, data_engineering)** — re-dispatched on todo 1, re-checked the precondition using the
+  CANONICAL guard function itself (not just a manual filter) for authoritative confirmation:
+  `source deployment-service/scripts/vm/tardis-concurrency-guard.sh && tardis_running_vm_count asia-northeast1-c central-element-323112`
+  returned `1` (rc=0) — the union of name-pattern + `VM_TARDIS_CONSUMER=1` metadata count is still 1, i.e. cap (1) is
+  fully occupied. `gcloud compute instances list --filter='name~cefi OR name~tardis'` confirms
+  `cefi-queue-heavy-binancefutu-x17-20260809-083733` is still `RUNNING` (same VM slot-27 found ~65 min earlier) — no new
+  slot has opened since. Other CeFi-prefixed VMs currently running
+  (`canonical-migration-cefi-content-apply-20260809-213834`, `cefi-fwd-daily-cron-20260809-110236`,
+  `mdps-backfill-cefi-20260802-140125`, `mdps-backfill-cefi-20260808-095136`, `mdps-features-live-cefi-20260807-031648`,
+  `mtds-live-cefi-consolidated-20260809-121034`) don't match `TARDIS_VM_NAME_PATTERN` and the guard's own union count
+  (which also checks the `VM_TARDIS_CONSUMER=1` metadata stamp) still reads 1, confirming none of them are additional
+  Tardis-consumers. Todo 1's precondition remains unmet — not attempting the capture. Did not touch todo 2 (separately
+  dispatchable). Releasing via `/skip-current-task {"reason_code": "GATED"}` again.
