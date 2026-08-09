@@ -935,17 +935,23 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   confused retry, plus an untracked-file path collision blocked the rebase) — verified content match against origin
   directly (`ahead=0/behind=0`) rather than trusting `safe-doc-push.sh`'s own success message, which has a blind spot
   when a file is already committed locally but unpushed.
-- **03:22Z** — smallchunk9 now IN chunk 26 (`date=2020-10-09`, the death-chunk itself), 29 total `CHUNK_FAILED` (3 new,
-  in-range/expected). `run.log`'s own text looked ~11min stale but the **separate heartbeat blob** (the authoritative
-  signal used to diagnose all 5 prior deaths) was 29s old — genuinely alive, run.log content lag is just a GCS
-  flush-buffering artifact, not a hang. FIXTURE_LINEUPS needed flat again (48,521→48,521, 1st flat tick since real
-  movement — not yet 2-consecutive, not concerning) but `run.log` shows live fresh fetches seconds old. Both healthy.
-- **03:46Z — census flat a 2nd consecutive tick (48,521→48,521), confirmed genuinely a consolidator-lag artifact, not a
-  stall.** `run.log` shows explicit NEW `ManifestWriter` writes (`365 new` entries) at `date=2021-02-27`, heartbeat blob
-  essentially live (<1min), zero quota errors — real work is landing in per-VM shards, just not yet reflected in the
-  consolidated manifest the census reads. Going forward: treat `run.log` activity (not the periodic census) as the
-  primary per-tick health signal; use the census for milestone tracking on a longer cadence. smallchunk9 still in chunk
-  26, 34 `CHUNK_FAILED` (in-range), heartbeat ~6.5min old (well within normal). Both healthy, no action.
-- **04:13Z** — smallchunk9 still chunk 26, 40 `CHUNK_FAILED` (in-range), heartbeat live (~19s). FIXTURE_LINEUPS
-  run.log/heartbeat both live, fresh fetches. Both healthy, no action. (Doc near cap again, ~52 lines left.)
+- **03:22Z-04:13Z (3 routine ticks, compacted).** smallchunk9 stayed in chunk 26 throughout (`date=2020-10-09`),
+  climbing 29→40 `CHUNK_FAILED` (in-range/expected); each check's heartbeat BLOB confirmed genuinely alive even when
+  run.log text looked briefly stale (GCS flush-buffering, not a hang — this is now the standing diagnostic: trust the
+  heartbeat blob over run.log text staleness). FIXTURE_LINEUPS stayed flat at needed=48,521 all 3 ticks despite
+  confirmed fresh `ManifestWriter` writes each check — initially attributed to simple consolidator lag.
+- **04:40Z — deeper investigation into the flat census (3rd-4th consecutive flat reading, ~1h44m unchanged) — found a
+  real, unresolved anomaly, not simple lag.** Checked the consolidator directly
+  (`uts-prod-manifest-consolidator- instruments-sports` Cloud Run job): it runs on a ~1min cron but the actual merge
+  takes ~11-12min, so most ticks just no-op on a held lock (`error=locked`) — true merge cadence is ~once per 11-15min,
+  not every minute. A real merge DID complete at `04:37:04Z` (`shards=9 rows_in=10817400 rows_out=10772390`), 3min
+  before this census — yet the count didn't move. Checked `af-backfill-20260809-020527`'s own per-VM shard files
+  directly: they exist and were genuinely updated (`04:34:39Z`, `04:42:24Z`), well within that merge's window. The merge
+  log showed `shards_listed=12` → `shards_downloaded=7` — **5 candidate shards were listed but not processed**; unclear
+  if this VM's shard was one of them or if this is normal filtering (e.g. already-merged skip). **Not chasing further
+  this tick** (would need consolidator source review) — data itself is confirmed safe (real writes landing in per-VM
+  parquets regardless of consolidation timing), so this is a monitoring-visibility question, not a data-loss one. Worth
+  a dedicated look if the census stays flat past another 1-2 merge cycles (~30min). smallchunk9 still chunk 26, 49
+  `CHUNK_FAILED` (in-range), heartbeat live throughout. Both fleets' underlying data pipelines healthy, no action beyond
+  continued watching.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
