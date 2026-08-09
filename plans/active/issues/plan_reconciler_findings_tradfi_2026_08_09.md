@@ -171,6 +171,16 @@ applied every CONFIRMED-mechanical fix not blocked by grace, in 6 checkpointed c
    regardless" note) and the endpoint rejected both a missing and an empty header. Used the real env var; succeeded.
    Worth a doc fix, not filed as a fresh `/blocked` given the fix is obvious/low-risk (same blast-radius reasoning as
    the filename-collision finding) — noting here for whoever next touches `agents/plan_reconciler.md`.
+5. **`/api/slots/3/messages` (STEP 8 loop-and-wait) never surfaced either operator's `/blocked` answer, despite both
+   existing in the live DB with real `answered_at` timestamps well before the checks.** Polled the standard messages
+   endpoint (and heartbeat/progress) repeatedly after the "Operator answered your BLOCKED question" nudge; it kept
+   returning empty. Worked around via a direct read-only `sqlite3 -readonly` query against the live orchestrator's own
+   `agent-orchestrator/data/state/state.db` (`blocked_queue` table, found by resolving the port-8765 process's cwd via
+   `/proc/<pid>/cwd`), which showed both `BLK-dce00835` and `BLK-345eb7ce` already had `answered_at`/`answer` populated.
+   Root cause not diagnosed (speculation only: `take_pending_messages` may have one-shot/already-consumed semantics, or
+   answer-delivery may not push to a slot's message queue once the slot's `status` has moved past `blocked` back to
+   `working` via an intervening `/progress` call) — flagging for whoever next touches the AO messages-delivery path; not
+   fixed here (out of scope, `agent-orchestrator/**` code, not `plans/**`).
 
 ## Hygiene fixes
 
@@ -187,14 +197,16 @@ applied every CONFIRMED-mechanical fix not blocked by grace, in 6 checkpointed c
 
 ## Filed
 
-1. **Findings-doc filename collision** (see Hygiene fixes #1) — routed to operator via `/blocked` (BLK-dce00835);
-   recommend adding `_<tranche>` to the STEP 2b path template in both `agents/plan_reconciler.md` and
-   `cursor-configs/skills/plan-reconcile/SKILL.md` (defaulting to `all` for an unsharded run, matching this run's
-   workaround).
+1. **Findings-doc filename collision** (see Hygiene fixes #1) — routed to operator via `/blocked` (BLK-dce00835).
+   **RESOLVED**: the operator fixed the underlying collision themselves directly, `unified-trading-pm@205591cff` — no
+   action needed from this session; the doc-fix recommendation (adding `_<tranche>` to the STEP 2b path template in
+   `agents/plan_reconciler.md` + `cursor-configs/skills/plan-reconcile/SKILL.md`) remains open, tracked below.
 2. **VIX 1h-grain architecture question** (`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` open P2 todo) —
    routed to operator via `/blocked` (BLK-345eb7ce): widen `(tradfi,futures_chain)` registry policy vs. add a resample
-   step vs. accept permanent NaN. Caveat note already added to the todo so a future implementer isn't silently bitten
-   regardless of which way the ruling goes.
+   step vs. accept permanent NaN. **RESOLVED**: operator ruled option B (add a resample step, do not widen the shared
+   storage policy for one consumer) — implemented + shipped this session in `features-service` (`vix_calculator.py` +
+   `test_vix_calculator.py`, QG-green, `.qg_last_passed_sha` sentinel-verified before commit). Caveat note in the plan
+   doc updated to record the resolution.
 3. **Redispatch gap: operator-approved 81,454-row `--apply` has no active dispatch vehicle** (see Contradictions #1) —
    `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md` todo 1. This is execution, not a fresh decision
    (the operator already ruled GO-AHEAD 2026-08-07) — recommend the next `/ag-closeout-audit tradfi` or tradfi
@@ -277,13 +289,13 @@ design.
 
 ## Deferred work after 2026-08-09 (pre-compact checkpoint, context ~78%)
 
-| Item                                                              | State / why deferred                                                                           | Blocked on                                         |
-| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| STEP 8 loop-and-wait (this dispatch's final step)                 | **Cannot be done yet** — not blocked on this session, waiting on a human-paced event           | Operator answer to BLK-dce00835 or BLK-345eb7ce    |
-| Redispatch the 81,454-row `--apply` (Follow-up todos #1)          | **Operator-owned / next-audit-owned** — not this role's job to draft AO-dispatch batches       | Next `/ag-closeout-audit tradfi` or satellite pass |
-| `ag_closeout_audit_rollout_2026_07_25.md` close+archive (todo #2) | **Operator-owned / next-tranche-owned** — genuinely multi-AG, outside single-tranche authority | `cross-cutting` tranche's next run                 |
-| `agents/plan_reconciler.md` 2 stale details (todo #3)             | **Operator-owned** — file is outside `plans/**`, this role cannot write it                     | A human or a differently-scoped agent              |
-| T2/T3 grace-blocked fixes (Grace-blocked section above)           | **Cannot be done yet** — 12h HARD LIMIT, docs were <12h old at run start                       | Elapsed time (grace clears ~2026-08-09 14:00 UTC)  |
+| Item                                                              | State / why deferred                                                                                                                                                                                           | Blocked on                                         |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| STEP 8 loop-and-wait (this dispatch's final step)                 | **RESOLVED post-checkpoint** — both operator answers found (via direct SQLite read, see Near-miss #5) and applied: BLK-dce00835 self-fixed by operator, BLK-345eb7ce implemented + shipped in features-service | n/a — both BLKs answered                           |
+| Redispatch the 81,454-row `--apply` (Follow-up todos #1)          | **Operator-owned / next-audit-owned** — not this role's job to draft AO-dispatch batches                                                                                                                       | Next `/ag-closeout-audit tradfi` or satellite pass |
+| `ag_closeout_audit_rollout_2026_07_25.md` close+archive (todo #2) | **Operator-owned / next-tranche-owned** — genuinely multi-AG, outside single-tranche authority                                                                                                                 | `cross-cutting` tranche's next run                 |
+| `agents/plan_reconciler.md` 2 stale details (todo #3)             | **Operator-owned** — file is outside `plans/**`, this role cannot write it                                                                                                                                     | A human or a differently-scoped agent              |
+| T2/T3 grace-blocked fixes (Grace-blocked section above)           | **Cannot be done yet** — 12h HARD LIMIT, docs were <12h old at run start                                                                                                                                       | Elapsed time (grace clears ~2026-08-09 14:00 UTC)  |
 
 **Recommended next action** (for whoever resumes this dispatch, whether via the armed `ScheduleWakeup` or a fresh
 session): re-check `GET /api/slots/3/messages` for the 2 blocked-question answers first — if both are resolved, apply
