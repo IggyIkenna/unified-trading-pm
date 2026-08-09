@@ -144,10 +144,14 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
 
 ## Todos
 
-- [ ] [INFRA] P0. Patch `unified-trading-pm/.github/workflows/semver-agent.yml`'s Step 2/3 commit-range + bump
+- [x] ✅ [INFRA] P0. Patch `unified-trading-pm/.github/workflows/semver-agent.yml`'s Step 2/3 commit-range + bump
       classification per recommendation 1 and/or 2 above, add a regression test/dry-run against a synthetic squash-only
       commit range, then roll out via `scripts/cicd/rollout-workflow-templates.sh` to every repo. Repo:
-      unified-trading-pm (template) + rollout to all.
+      unified-trading-pm (template) + rollout to all. — unified-trading-pm@e02fb076f (see Progress Log for the full
+      trail: recommendation 2 was already live fleet-wide via the sibling
+      `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` fix + its 2026-08-09 `source_touched` refinement;
+      this todo verified it against the real incident SHAs, mirrored it into PM's own standalone copy, and added the
+      regression test.
 - [ ] [INFRA] P1. Once the semver-agent fix is live, manually trigger (or wait for the next `main` push to) re-classify
       `unified-trading-library`'s current `main` HEAD so `609299ad`'s fix actually mints a release — this repo is the
       confirmed live-blocked case and should not silently wait for the next unrelated push to main to accidentally pick
@@ -160,3 +164,28 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   (`gh run view <id> --log`) rather than guessing; confirmed `unified-trading-library@609299ad` reached `main`
   (squashed, trailer-verified) but no new tag was minted, and the run log's own printed verdict
   (`old_export_count==new_export_count`, `BUMP=""`) pinpoints the exact classifier gap in `semver-agent.yml:280-375`.
+- **2026-08-09 (todo 1 closure)**: `unified-trading-pm/.github/workflows/semver-agent.yml` is no longer the fleet's live
+  reusable template — the header comment citing it as "the reusable template every repo's copy is rolled out from" was
+  already stale by the time this issue was filed: `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`
+  todo 5 had already migrated the real logic to `unified-trading-ci/.github/workflows/semver-agent.yml` as a
+  `workflow_call` reusable workflow (every caller, incl. `unified-trading-library`, references it via
+  `uses: IggyIkenna/unified-trading-ci/.github/workflows/semver-agent.yml@main`), and `rollout-workflow-templates.sh`
+  had `semver-agent.yml.tmpl` DELETED from its template dir accordingly (see that script's own header comment).
+  Recommendation 2 (the content-based patch-level fallback) was ALSO already shipped into that file — via the sibling
+  issue `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` (fleet rollout 2026-08-07) and refined
+  same-day-as-this-issue by `unified-trading-ci@2c48c4b` ("base the squash-promote PATCH-fallback on repo-wide
+  `source_touched`, not SOURCE_DIR-prefix", landed on `main` 2026-08-09T10:10 UTC) — before this issue's own 17:16Z
+  incident run, meaning that specific run predates the fix reaching `main`, not a failure of the fix itself. **Verified
+  live** against the real incident SHAs:
+  `python3 scripts/cicd/detect_breaking_change.py --source-dir unified_trading_library --base-ref 7d40c228 --head-ref e94be221 --json`
+  (run from a fresh `unified-trading-library` checkout) now reports `"source_touched": true` — confirming a fresh
+  semver-agent run on that repo's current `main` HEAD resolves `BUMP=patch` instead of skipping. Recommendation 1
+  (trailer-based commit-type resolution) was NOT implemented — the issue's own text says either fix alone closes the
+  specific incident, and recommendation 2 already does. Remaining real work this todo owned: (a) mirrored the same
+  `source_touched`-based fallback into PM's own standalone (non-caller-stub) copy of `semver-agent.yml` for consistency,
+  since PM doesn't call the reusable workflow and was otherwise left as a straggler with the pre-fix classifier; (b)
+  added the regression test the todo explicitly asked for
+  (`tests/unit/test_detect_breaking_change.py::test_source_touched_true_on_squash_only_commit_range_with_real_source_change`
+  - `..._false_on_squash_commit_touching_only_metadata_noise`, a synthetic squash-only commit range against a real temp
+    git repo). Shipped `unified-trading-pm@30ed07eff` (fix + tests, QG green, verified ancestor of origin). Todo 2 (P1,
+    re-trigger `unified-trading-library`'s release) is a separate, not-yet-worked todo — left open.
