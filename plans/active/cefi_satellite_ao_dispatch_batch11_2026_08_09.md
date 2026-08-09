@@ -176,12 +176,24 @@ context_scope:
       Repo: market-tick-data-service. Source: `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` line 175.
       **Done when**: live BBO+depth is captured and persisted for at least one equity-perp instrument per venue,
       mirroring the existing non-equity-perp live-book capture shape, `quality-gates.sh` green.
-- [ ] [DATA] P1. **Query OKX/Bybit/Hyperliquid's public instrument-listing endpoints for a WTI or Brent crude-oil
+- [x] ✅ [DATA] P1. **Query OKX/Bybit/Hyperliquid's public instrument-listing endpoints for a WTI or Brent crude-oil
       perpetual contract**; if one exists, add it to the CeFi instrument universe (unified-api-contracts) mirroring how
       the existing commodity perps (XAU/XAG/COPPER) are registered. Repo: unified-api-contracts. Source:
       `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` line 795. **Done when**: the check result
       (found/not-found, per venue) is recorded; if found, the new perp is added with a passing unit test; if not found,
-      the todo closes citing the negative-result evidence (endpoint responses showing no oil-perp symbol).
+      the todo closes citing the negative-result evidence (endpoint responses showing no oil-perp symbol). — **DONE
+      2026-08-09** — unified-api-contracts@89de6766. Live-queried all 4 venues' public instrument-listing endpoints:
+      **FOUND** on OKX (`CL-USDT-SWAP` WTI since 2026-03-04, `BZ-USDT-SWAP` Brent since 2026-03-24 —
+      `public/instruments?instType=SWAP`, ICE data-partnership index) and Bybit (`CLUSDT`, `BZUSDT` —
+      `v5/market/instruments-info?category=linear`); **NOT FOUND** on Hyperliquid (`info {"type":"meta"}` 232-perp
+      universe has no CL/BZ/oil entry — no commodity perps at all today, XAU/XAG/COPPER also absent). `CL`/`BZ` were
+      already members of `CEFI_EQUITY_PERP_BASE_UNIVERSE` (Binance-sourced 2026-07-08 re-sync) — that filter is
+      venue-agnostic, so no universe-membership change was needed for OKX/Bybit to be admitted. Recorded the per-venue
+      found/not-found result with cited evidence in new module
+      `unified_api_contracts/canonical/crosscutting/oil_perp_venue_coverage.py` (mirrors this batch's todo 2
+      `index_commodity_perp_hedge_link.py` "found/not-found, cite the evidence" convention), added a dated
+      cross-venue-verification comment next to the CL/BZ entries in `cefi_instrument_universe.py`, and added
+      `tests/unit/test_oil_perp_venue_coverage.py` (13 tests). `quality-gates.sh` green (381s).
 - [ ] [DATA] P1. **Re-run e2e-testing's NET-basis backtest with dividend yield priced into the long cash-stock leg** for
       each of the 12 net-profitable single-stock pairs (holding the stock earns dividends, adding to NET; the current
       +5-24% figures are a floor without it) — identify and use an already-available dividend-yield data source (check
@@ -267,3 +279,14 @@ context_scope:
   `LEVEL_MAX_LOOKBACK_DAYS` + all docstrings/inline comments in `databento_subscription_allowlist.py` to the measured
   values; updated `tests/unit/test_databento_subscription_allowlist.py`'s boundary-raise assertions (366d/31d no longer
   raise — they're within the true measured free window now). `quality-gates.sh` green (336s).
+- **2026-08-09** — todo 7 (WTI/Brent oil-perp venue check) DISPATCHED + DONE: `unified-api-contracts@89de6766`.
+  Live-queried OKX/Bybit/Hyperliquid public instrument-listing endpoints. **FOUND** on OKX (`CL-USDT-SWAP` WTI, live
+  since 2026-03-04T12:15Z; `BZ-USDT-SWAP` Brent, live since 2026-03-24T10:00Z — both ICE-data-partnership index-priced)
+  and Bybit (`CLUSDT` since 2026-03-24T07:45Z, `BZUSDT` since 2026-05-13T08:08Z). **NOT FOUND** on Hyperliquid — its
+  live `info {"type":"meta"}` universe (232 perps) carries no commodity perps at all today (no CL/BZ, and no
+  XAU/XAG/COPPER either). `CL`/`BZ` were already in `CEFI_EQUITY_PERP_BASE_UNIVERSE` from a prior Binance-sourced
+  re-sync (2026-07-08); since that base-asset filter is venue-agnostic (unioned into MVP scope), no universe-membership
+  edit was needed for the OKX/Bybit listings to be admitted — the missing piece was the cross-venue verification record
+  itself. New module `oil_perp_venue_coverage.py` (mirrors this batch's todo 2 `index_commodity_perp_hedge_link.py`
+  found/not-found-with-evidence convention) + a dated comment in `cefi_instrument_universe.py` next to the CL/BZ
+  entries + `tests/unit/test_oil_perp_venue_coverage.py` (13 tests). `quality-gates.sh` green (381s).
