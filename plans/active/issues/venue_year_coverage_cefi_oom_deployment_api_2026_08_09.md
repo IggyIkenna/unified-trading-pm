@@ -108,13 +108,37 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
 
 ## Todos
 
-- [ ] [BACKEND] P1. Bound `_live_coverage_venue_year.py`'s `_read_manifest_index(bucket)` call with a `date_window` (or
-      row-cap) so it takes the pyarrow pushdown path instead of the unfiltered full read, for every asset_group the
-      endpoint serves (starting with cefi, tradfi, defi — the ones NOT yet proven safe). Repo: deployment-api. Done
-      when: `GET /api/data-status/venue-year-coverage?asset_groups=cefi&scope=could_exist` (and `=mvp`, `=all`) each
-      return `200` against live prod within a reasonable timeout (<30s), with a cited Cloud Logging check showing no
-      `Memory limit exceeded` / `terminated on signal 9` entries for the request window, and a passing regression test
-      pinning the bounded-read call shape.
+- [x] ✅ [BACKEND] P1. Bound `_live_coverage_venue_year.py`'s `_read_manifest_index(bucket)` call with a `date_window`
+      (or row-cap) so it takes the pyarrow pushdown path instead of the unfiltered full read, for every asset_group the
+      endpoint serves (starting with cefi, tradfi, defi — the ones NOT yet proven safe). Repo: deployment-api. —
+      **deployment-api@049d8d58a** (Quickmerge, verified ancestor of `origin/live-defi-rollout`): added
+      `manifest_source.read_manifest_window()` (pure pyarrow `date_window` pushdown, NEVER falls back to the unfiltered
+      full read — a real landmine `read_manifest_index()`'s own empty-window fallback would have hit on every iteration
+      otherwise); refactored `_live_coverage_venue_year.py` to read each asset_group in yearly `date_window` chunks
+      (2014→today), concatenating venue-year rows (disjoint by year, no merge needed) and summing `source_breakdown`
+      counts across chunks by `(asset_group, pipeline_mode, source, transport, cadence)` (a real correctness landmine
+      the naive per-chunk `provenance_breakdown()` call would otherwise have year-fragmented). An asset_group is
+      `asset_groups_failed` only when EVERY window's read raised (shard-level failure isolation — a transient
+      single-window failure no longer blanks the whole asset_group the way the old single-read design did). Full test
+      suite: **5265 passed** (`--test --quick`); full `quality-gates.sh` (no skip flags) green, sentinel=049d8d58a.
+      New/updated regression coverage: bounded-read call-shape pin (never calls `_read_manifest_index`), a year-boundary
+      aggregation-correctness test (2 years' data via chunked reads matches what a single unwindowed read would have
+      produced), a cross-chunk `source_breakdown` merge test, plus 3 new `read_manifest_window()` unit tests (pushdown
+      columns+filter shape, propagates errors rather than swallowing them, never falls back to the unfiltered read on a
+      genuinely-empty window).
+- [ ] [INFRA] P1. **Live-prod re-verification — deploy-pipeline-pending.** The done-when this todo was originally scoped
+      against (`GET .../venue-year-coverage?asset_groups=cefi&scope=could_exist|mvp|all` returning `200` within <30s
+      against LIVE PROD, with a clean Cloud Logging check) requires deployment-api@049d8d58a to actually be DEPLOYED to
+      the `uts-shared-deployment-api` Cloud Run service — confirmed NOT yet the case as of 2026-08-09~15:35 UTC (the
+      live `latestReadyRevisionName` / 100%-traffic revision `uts-shared-deployment-api-     00490-9gf` was created
+      2026-08-09T13:35:46Z, BEFORE this fix's commit). deployment-api's deploy trigger mechanism wasn't identified in
+      this session (no GH Actions "deploy" workflow found for the repo; no Cloud Build trigger matched a
+      `deployment-api` name filter) — infra/CI/CD is outside `backend_engineer` craft scope
+      (`does_not: Infra provisioning, VM launches, CI/CD, cloud (→ infra)`), so tracking down + waiting out the actual
+      deploy cadence is this todo's own remaining scope, not folded into the code-fix todo above. Done when: confirm
+      deployment-api@049d8d58a (or later) is the live revision, then re-run the 3-scope curl probe (`could_exist`,
+      `mvp`, `all` for `asset_groups=cefi`) and cite the responses + a clean Cloud Logging window (no
+      `Memory limit     exceeded` / `terminated on signal 9` in the request window).
 - [ ] [BACKEND] P2. Audit the container's memory headroom (16GiB) vs. cefi/tradfi/defi's REAL manifest sizes — measure
       peak RSS for an unfiltered full read of each, similar to the RSS-measurement approach the archived
       `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08` issue doc used for `measure_honest_coverage.py` — to
@@ -126,3 +150,7 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
 - **2026-08-09**: Filed during `cross_cutting_satellite_ao_dispatch_batch8_2026_08_09.md`'s real-data verify (findings
   discovered mid-verify, not fixed inline per that todo's own explicit instruction). The batch8 todo itself completed
   successfully using `sports` as the sample asset_group instead (unaffected by this bug).
+- **2026-08-09**: Todo 1 (code fix) done — shipped `deployment-api@049d8d58a`, full test suite + full quality-gates.sh
+  green. Split the original done-when's live-prod leg into its own todo (below) since the fix isn't deployed yet as of
+  this session — the deploy pipeline/cadence for `uts-shared-deployment-api` wasn't identified and is outside this
+  craft's scope to chase down synchronously.
