@@ -57,7 +57,13 @@ resolved_by:
 locked_by:
 locked_since:
 context_scope:
-  [.github/workflows/ldr-to-main-promote-fleet.yml, .github/workflows/promote-fleet-startup-failure-monitor.yml]
+  [
+    .github/workflows/ldr-to-main-promote-fleet.yml,
+    .github/workflows/promote-fleet-startup-failure-monitor.yml,
+    scripts/cicd/glue_pool_starvation_monitor.py,
+    scripts/cicd/promotion_lag_monitor.py,
+    /plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md,
+  ]
 ---
 
 # ldr-to-main-promote-fleet stuck — queued runs cancelled before ever starting
@@ -270,3 +276,5 @@ incident with an explicit operator instruction to keep verifying for a full 60 c
 victory (todo 2). Todo 1 (`[OPERATOR] P1`, deferred/conditional self-debounce) is an explicit operator-gated item. Todos
 3-4 (`[DEVOPS] P2` monitor-hardening fixes) read as bounded/deterministic in isolation but are same-day follow-on
 hardening from this still-active incident's own investigating session — not defaulted-to-NA-and-never-assessed.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

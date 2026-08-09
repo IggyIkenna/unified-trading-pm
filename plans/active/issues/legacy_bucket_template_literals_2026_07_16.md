@@ -133,3 +133,4 @@ is in this cutover's delete scope** (`instruments-store-sports` / `market-data-t
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — sole open item remains dependency-blocked.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

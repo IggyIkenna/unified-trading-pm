@@ -285,3 +285,5 @@ captured rows). The ~29-day stall is broken; live capture resumed same-day as la
   `kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`'s `[DATA] P1` todo (states verbatim "this is the
   ORIGINAL verification ... asked for") <-> batch6 todo 5 (still `assigned_vm: planning` / `status: active`, gated Todo
   2 still open) — all three consistent, no drift. Left unchecked; not reclassified. Doc stays NA.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

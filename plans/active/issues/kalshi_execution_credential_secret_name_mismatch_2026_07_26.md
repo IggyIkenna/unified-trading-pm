@@ -185,3 +185,4 @@ Two directions, both viable, not adjudicated by this doc:
   this doc): the doc's own 2026-08-06 operator ruling text ("NO — do not touch the live exchange... find a non-live
   verification path") is not yet mirrored into batch6 todo 5, which as of its own last update still shows the
   pre-ruling, unresolved question — a sync gap for whichever pass next touches batch6. Doc stays NA.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

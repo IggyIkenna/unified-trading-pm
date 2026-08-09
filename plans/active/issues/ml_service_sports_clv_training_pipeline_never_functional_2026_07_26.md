@@ -247,3 +247,5 @@ same CLI path would hit the identical wall.
   Never-re-litigate + conflict-check both point the same way: do NOT flip this doc to `planning` (would duplicate an
   already-active implementing plan in the same `parent_epic`); checkbox is flipped by that plan's finalize sibling once
   the wiring ships. Citation-only, no reclassification.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

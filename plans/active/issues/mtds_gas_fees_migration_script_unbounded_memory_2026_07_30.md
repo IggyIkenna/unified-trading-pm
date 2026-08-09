@@ -225,3 +225,5 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — both remaining open items remain genuine design
   forks (ManifestWriter safety-check branch choice; per-slot RSS ceiling explicitly out of scope), not
   bounded/deterministic.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
