@@ -394,3 +394,8 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
   `sports_group_c_execution_backtest_harness_2026_07_21.md` (now `assigned_vm: planning`): once that harness ships, Todo
   5 becomes ripe, but is not itself reclassified this pass (still gated on unshipped prerequisite work). Doc stays NA,
   unchanged.
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — reconfirmed both open todos unchanged. Todo 5
+  (archetype-through-promote-workflow) still gated on `sports_group_c_execution_backtest_harness_2026_07_21.md`,
+  re-verified still `status: active` / `assigned_vm: planning` (genuinely in-flight, not stalled) — not yet shipped.
+  Todo 6 (operator go-ahead for live-capital trading) is the permanent human-only hard-stop this sweep's own
+  instructions require to always stay gated — reaffirmed, not retagged. No new work; doc stays `assigned_vm: NA`.
