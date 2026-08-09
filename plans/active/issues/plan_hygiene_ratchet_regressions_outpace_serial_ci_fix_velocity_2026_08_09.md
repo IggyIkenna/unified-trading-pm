@@ -309,7 +309,8 @@ words: "this branch is churning faster than one CI worker can chase serially").
   genuine via matched-HEAD sibling clone — not a stale-clone false positive), a hard post-gate outside
   `run_hygiene_sweep.sh`'s scope entirely (this doc's fix doesn't cover it) that blocks EVERY `unified-trading-pm`
   commit regardless of diff. Filed
-  `plans/active/issues/cloudbuild_template_drift_client_reporting_api_regression_2026_08_09.md`
+  `plans/archive/issues/cloudbuild_template_drift_client_reporting_api_regression_2026_08_09.md` (resolved + archived
+  2026-08-09 — `unified-trading-pm@51808a4a6e` + `client-reporting-api@9b28914`, slot-17)
   (`unified-trading-pm@5c25acbbb`) and declared repo-blocker `RB-b7866b60` per RULES.md § 4b rather than chase it myself
   (outside craft/scope — needs Cloud Build template-vs-repo intent judgment). A subsequent retry landed clean
   (`36eb05954` verified via `git merge-base --is-ancestor` against `origin/live-defi-rollout`) even though the checker

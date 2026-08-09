@@ -16,7 +16,7 @@ summary: >-
   attributes someone else's drift to whoever happens to be pushing" problem that issue documents, just for a check
   outside run_hygiene_sweep.sh's scope (this one's a quality-gates.sh post-gate, checked against sibling-repo clones on
   disk, not the plans corpus).
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -48,6 +48,13 @@ resolved_by: client-reporting-api@9b28914 (slot-17) + unified-trading-pm@51808a4
 last_updated: 2026-08-09
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED.** The single todo is done: `client-reporting-api@9b28914` +
+> `unified-trading-pm@51808a4a6e` (both slot-17) forward-ported the `_RUN_INIMAGE_QG` guard into both the template and
+> the repo's own `cloudbuild.yaml`, landing before this dispatch reached the todo. Answer to the "Recommended decision"
+> below was (a) — universal, forward-ported into the template — not (b) a baseline re-ratchet. Verified live:
+> `check_cloudbuild_template_drift.py` reports `client-reporting-api (cloudbuild-api-template.yaml): 3 (== baseline)`. 0
+> open todos, unlocked.
 
 # cloudbuild-api-template.yaml drift regression — client-reporting-api
 
