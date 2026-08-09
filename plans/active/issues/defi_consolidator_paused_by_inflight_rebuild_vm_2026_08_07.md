@@ -49,6 +49,13 @@ locked_by:
 supersedes:
 superseded_by:
 resolved_by: ""
+context_scope:
+  [
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
+    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
+  ]
 ---
 
 ## What happened
@@ -97,21 +104,21 @@ this is inference from timing + the workspace's own documented operational contr
 
 ## Todos
 
-- [x] ✅ [OPERATOR] P3. **CLOSED 2026-08-09 (stale-check-defi-tranche) — independently confirmed by a separate,
-      same-day escalation-triage doc, not by asking the launcher directly.**
+- [x] ✅ [OPERATOR] P3. **CLOSED 2026-08-09 (stale-check-defi-tranche) — independently confirmed by a separate, same-day
+      escalation-triage doc, not by asking the launcher directly.**
       `plans/archive/issues/dp_consolidator_scheduler_paused_defi_recurrence_2026_08_07.md` (escalation agt-ca5798,
       DP-WATCHER-004, filed + resolved 2026-08-07, status: resolved, archived) independently traced this EXACT pause
-      (same job, same `2026-08-06T20:16:52Z userUpdateTime`, same `unified-trading-sa` principal) to the SAME rebuild
-      VM via live Cloud Audit Logs + the VM's own `run.log` (confirmed RUNNING + actively writing per-VM shards through
+      (same job, same `2026-08-06T20:16:52Z userUpdateTime`, same `unified-trading-sa` principal) to the SAME rebuild VM
+      via live Cloud Audit Logs + the VM's own `run.log` (confirmed RUNNING + actively writing per-VM shards through
       `2026-08-07T00:18:36Z`), correlated it to the owning plan
       (`/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s R3 relaunch chain), and registered a
-      retroactive maintenance window (`scheduler_maintenance ... pause --locked-by
-      defi_track01_per_instrument_and_canon_id_2026_07_24 --ttl-minutes 4320`, i.e. until 2026-08-10T00:20:24Z) rather
-      than resuming — explicitly naming the deferred resume ("whoever next verifies
-      `canonical-migration-defi-rebuild-20260806-223130` completed should resume the cron manually"). This satisfies
-      the substance of this todo (confirm intentional + a named resume owner/mechanism) even though it wasn't a direct
-      answer from the VM's launcher — treating it as a duplicate confirmation, not re-asking. Todo 2 below (verify
-      actual resume once the VM completes) remains the real open item.
+      retroactive maintenance window
+      (`scheduler_maintenance ... pause --locked-by     defi_track01_per_instrument_and_canon_id_2026_07_24 --ttl-minutes 4320`,
+      i.e. until 2026-08-10T00:20:24Z) rather than resuming — explicitly naming the deferred resume ("whoever next
+      verifies `canonical-migration-defi-rebuild-20260806-223130` completed should resume the cron manually"). This
+      satisfies the substance of this todo (confirm intentional + a named resume owner/mechanism) even though it wasn't
+      a direct answer from the VM's launcher — treating it as a duplicate confirmation, not re-asking. Todo 2 below
+      (verify actual resume once the VM completes) remains the real open item.
 - [ ] [SCRIPT] P3. Once the rebuild VM completes/self-deletes, verify the consolidator scheduler was actually resumed
       (state=ENABLED) and `CONSOLIDATOR_DOWN` clears — if it doesn't auto-resume, resume it manually and confirm a real
       consolidator merge cycle runs clean.
@@ -127,19 +134,20 @@ this is inference from timing + the workspace's own documented operational contr
   realistic multi-day ETA; confirmed PagerDuty+email are both failing to deliver this alert (separate finding, not fixed
   here per operator's PagerDuty-deprecation decision the same day).
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — first audit pass, doc filed today. All 3 open
-  todos are genuinely non-worker-determinable right now: todo 1 needs the rebuild VM's actual operator to confirm
-  intent (OPERATOR_QUESTION); todo 2 is DEPENDENCY_BLOCKED on the rebuild VM's own multi-day (4-5+ day) completion,
-  not yet reached; todo 3 is an explicit open alert-routing design question ("not something to change unilaterally").
-  Doc stays `assigned_vm: NA`.
+  todos are genuinely non-worker-determinable right now: todo 1 needs the rebuild VM's actual operator to confirm intent
+  (OPERATOR_QUESTION); todo 2 is DEPENDENCY_BLOCKED on the rebuild VM's own multi-day (4-5+ day) completion, not yet
+  reached; todo 3 is an explicit open alert-routing design question ("not something to change unilaterally"). Doc stays
+  `assigned_vm: NA`.
 - **stale-check-defi-tranche 2026-08-09**: closed todo 1 by citation — a separate same-day escalation-triage doc
-  (`plans/archive/issues/dp_consolidator_scheduler_paused_defi_recurrence_2026_08_07.md`, resolved+archived
-  2026-08-07) independently confirmed the exact same pause/VM correlation this todo asked for, via live Cloud Audit
-  Logs (not just timing inference) — see the flipped checkbox above for the full trail. Not independently re-verified
-  live whether the rebuild VM has since completed (ETA from 2026-08-07 was 4-5+ more days; only ~2 days have elapsed) —
-  todo 2 stays open pending that. Doc stays `assigned_vm: NA` (2 of 3 items still genuinely open).
+  (`plans/archive/issues/dp_consolidator_scheduler_paused_defi_recurrence_2026_08_07.md`, resolved+archived 2026-08-07)
+  independently confirmed the exact same pause/VM correlation this todo asked for, via live Cloud Audit Logs (not just
+  timing inference) — see the flipped checkbox above for the full trail. Not independently re-verified live whether the
+  rebuild VM has since completed (ETA from 2026-08-07 was 4-5+ more days; only ~2 days have elapsed) — todo 2 stays open
+  pending that. Doc stays `assigned_vm: NA` (2 of 3 items still genuinely open).
 - **stale-check-defi-tranche 2026-08-09**: closed todo 1 by citation — a separate same-day escalation-triage doc
-  (`plans/archive/issues/dp_consolidator_scheduler_paused_defi_recurrence_2026_08_07.md`, resolved+archived
-  2026-08-07) independently confirmed the exact same pause/VM correlation this todo asked for, via live Cloud Audit
-  Logs (not just timing inference) — see the flipped checkbox above for the full trail. Not independently re-verified
-  live whether the rebuild VM has since completed (ETA from 2026-08-07 was 4-5+ more days; only ~2 days have elapsed) —
-  todo 2 stays open pending that. Doc stays `assigned_vm: NA` (2 of 3 items still genuinely open).
+  (`plans/archive/issues/dp_consolidator_scheduler_paused_defi_recurrence_2026_08_07.md`, resolved+archived 2026-08-07)
+  independently confirmed the exact same pause/VM correlation this todo asked for, via live Cloud Audit Logs (not just
+  timing inference) — see the flipped checkbox above for the full trail. Not independently re-verified live whether the
+  rebuild VM has since completed (ETA from 2026-08-07 was 4-5+ more days; only ~2 days have elapsed) — todo 2 stays open
+  pending that. Doc stays `assigned_vm: NA` (2 of 3 items still genuinely open).
+- **context-scout 2026-08-09**: populated context_scope (4 entries).

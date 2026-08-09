@@ -351,3 +351,5 @@ still in flight.
   `ao_satellite_ao_dispatch_batch6_2026_08_04.md`'s Deferred section). Query commands + full raw output available on
   request; not pasted here to keep this entry scannable. Source query tool: `sqlite3 "file:<path>?mode=ro"` against
   `agent-orchestrator/data/state/state.db`, read-only throughout, no writes to live server state.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

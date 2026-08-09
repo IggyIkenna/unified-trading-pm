@@ -177,3 +177,4 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
   STARGATE genesis 2022-03-17 will be reached naturally as the VM progresses; the open `- [ ]` todo below is RESOLVED by
   this backfill run — closing it here; the plan checkbox was flipped in
   `defi_satellite_ao_dispatch_batch10_2026_08_06.md`.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

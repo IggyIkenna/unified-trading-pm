@@ -276,3 +276,4 @@ is a human decision wearing a todo's clothes" dispatch-scope bar. It also touche
   per this doc's own "Why NA" framing, unchanged by the writer fix landing go-forward-only). Held at doc-level KEEP-NA
   per the same precedent the 2026-08-06 audit already established for this exact doc (item-4 case) rather than split for
   one small item. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

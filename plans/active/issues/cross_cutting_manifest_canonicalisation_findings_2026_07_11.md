@@ -286,3 +286,4 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
 - **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed, unchanged. Sole open todo
   (whole-standalone-bucket GCS delete for defi/tradfi/sports) is explicitly 'hard-stop, never-autonomous' operator
   sign-off per the delete-safety protocol; `locked_by: live-defi-rollout` noted, not touched.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.

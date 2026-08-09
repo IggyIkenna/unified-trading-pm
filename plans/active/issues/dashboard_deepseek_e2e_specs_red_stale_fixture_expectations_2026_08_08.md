@@ -98,3 +98,7 @@ mechanical fix, which is why this is filed rather than patched.
       automatically. It is currently in no gate: `scripts/quality-gates.sh` runs `tsc` + Vitest only, and
       `quality-gates-v2` does not invoke Playwright — so these two have been red with nothing reporting it. Reference
       `/codex/06-coding-standards/ui-testing-layers.md` § Gate Enforcement by Branch for where L2/L3 is supposed to run.
+
+## Progress Log
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
