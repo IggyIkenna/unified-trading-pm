@@ -454,3 +454,4 @@ Two reasons, mirroring the UTL-34-bypass precedent
   intentional and durable (pending the operator decision tracked on the deadlock doc), not a forgotten completion.
   Un-set this flag once the deadlock doc's `[OPERATOR]`/`[INFRA]` todos land and the deferred archival actually
   completes.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

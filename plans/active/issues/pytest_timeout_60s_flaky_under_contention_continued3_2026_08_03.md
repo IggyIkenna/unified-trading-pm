@@ -528,3 +528,5 @@ checkboxes. No `assigned_vm` change.
   this session's own runs only — did NOT add a permanent repo override, per this doc's established precedent that MTDS's
   occurrence rate doesn't yet warrant one. No new todo — same root cause, same `[OPERATOR]`-gated capacity question
   already tracked by todo 1.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
