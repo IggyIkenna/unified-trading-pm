@@ -2,10 +2,10 @@
 doc_type: issue
 title: Escalation root_key stale-predecessor chaining — finalize (reconcile + archive)
 summary: >-
-  Gated closeout for `escalation_root_key_stale_predecessor_chaining_2026_08_09.md`
-  (`assigned_vm: planning` since the round9 cross-cutting sweep RECLASSIFY, 2026-08-09) — machine-held via `depends_on` +
-  `gate_on_depends: true` until both of that doc's optional maintenance todos are done. Reconciles/archives the source
-  doc once both todos land (or are explicitly declined as genuinely not worth doing, since both are marked "Optional").
+  Gated closeout for `escalation_root_key_stale_predecessor_chaining_2026_08_09.md` (`assigned_vm: planning` since the
+  round9 cross-cutting sweep RECLASSIFY, 2026-08-09) — machine-held via `depends_on` + `gate_on_depends: true` until
+  both of that doc's optional maintenance todos are done. Reconciles/archives the source doc once both todos land (or
+  are explicitly declined as genuinely not worth doing, since both are marked "Optional").
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -35,9 +35,9 @@ superseded_by:
 depends_on: [escalation_root_key_stale_predecessor_chaining_2026_08_09]
 gate_on_depends: true
 source: >-
-  round9 cross-cutting RECLASSIFY + satellite-extraction sweep, 2026-08-09 — per
-  `task_template.md`'s finalize-plan-coverage rule (the source doc carries 2 open todos, past the single-todo
-  carve-out that would otherwise exempt it).
+  round9 cross-cutting RECLASSIFY + satellite-extraction sweep, 2026-08-09 — per `task_template.md`'s
+  finalize-plan-coverage rule (the source doc carries 2 open todos, past the single-todo carve-out that would otherwise
+  exempt it).
 assigned_role: backend_engineer
 effort: low
 sequential: true
@@ -63,8 +63,8 @@ context_scope:
       "Optional" in the source doc — if either is judged genuinely not worth doing (e.g. the historical-record cleanup
       has zero remaining stale rows once checked), record that determination with evidence rather than silently
       skipping. Flip each checkbox in the source doc citing the shipped commit(s)/evidence, or the explicit
-      not-worth-doing determination. Done when: both todos in the source doc are `[x]` (either shipped or
-      explicitly declined with evidence) and the doc reads 0 open todos.
+      not-worth-doing determination. Done when: both todos in the source doc are `[x]` (either shipped or explicitly
+      declined with evidence) and the doc reads 0 open todos.
 - [ ] [DOC] P3. Archive `escalation_root_key_stale_predecessor_chaining_2026_08_09.md` via the standard 6-step ritual
       once todo 1 is done: archive banner → codex-alignment check → fix every corpus referrer → clear `locked_by`
       (confirm already empty). Done when: the doc is moved to `plans/archive/2026_08/`, every referrer resolves to the

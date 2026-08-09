@@ -51,7 +51,7 @@ for fp in glob.glob(os.path.join(ROOT, "**", "*.jsonl"), recursive=True):
                 continue
             try:
                 r = json.loads(line)
-            except Exception:
+            except json.JSONDecodeError:
                 continue
             m = r.get("message") or {}
             u = m.get("usage")
@@ -62,7 +62,7 @@ for fp in glob.glob(os.path.join(ROOT, "**", "*.jsonl"), recursive=True):
                 continue
             try:
                 t = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
-            except Exception:
+            except (ValueError, TypeError):
                 continue
             if t < cut:
                 continue

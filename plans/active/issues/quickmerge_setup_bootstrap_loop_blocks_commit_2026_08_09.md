@@ -5,9 +5,9 @@ summary: >-
   On this host (Ikenna slot-2 macOS), quickmerge.sh clears Stage 1 (path deps) and Stage 2 (quality audit) then
   re-enters "Ensuring env ready (setup.sh)", bootstraps uv repeatedly, and exits WITHOUT reaching the commit stage.
   Reproduced 4/4 times on 2026-08-09, including with --unit-only. Files stay untracked, ahead stays 0, no error is
-  printed. PARTIALLY EXPLAINED 2026-08-09 — the commit being attempted carried invalid YAML frontmatter, which fails
-  the plan-hygiene gate; that accounts for the rejection but NOT for the silent exit or the setup.sh re-entry, which
-  remain real and are the actual bug.
+  printed. PARTIALLY EXPLAINED 2026-08-09 — the commit being attempted carried invalid YAML frontmatter, which fails the
+  plan-hygiene gate; that accounts for the rejection but NOT for the silent exit or the setup.sh re-entry, which remain
+  real and are the actual bug.
 status: open
 nature: issue
 asset_group: [meta]
@@ -20,7 +20,7 @@ created: 2026-08-09
 last_updated: "2026-08-09"
 parent_epic: infrastructure_master
 source: interactive-session
-resolved_by: unified-trading-pm@a766aabc8d (loop); frontmatter fixed in-session
+resolved_by: unified-trading-pm@c389fe9dc (loop); frontmatter fixed in-session
 locked_by:
 assigned_vm: NA
 execution_scope: local-only
@@ -28,6 +28,7 @@ priority: P1
 estimate_class: infra
 assigned_role: devops
 drift_direction: unknown
+depends_on: []
 ---
 
 # quickmerge re-enters setup.sh after the quality audit and exits without committing
@@ -59,7 +60,7 @@ drift_direction: unknown
 
 ## ROOT CAUSE OF THE LOOP — FIXED by a peer session, 2026-08-09
 
-`unified-trading-pm@a766aabc8d` — _"fix(scripts): portable UV_VERSION parse (grep -oP -> sed -E) + host-scoped push
+`unified-trading-pm@c389fe9dc` — _"fix(scripts): portable UV_VERSION parse (grep -oP -> sed -E) + host-scoped push
 governor"_ — touching `scripts/setup.sh`, `scripts/quickmerge.sh`, `scripts/quality-gates-base/base-library.sh`,
 `scripts/dev/safe-doc-push.sh`.
 
@@ -75,11 +76,12 @@ would not have landed the commit.
 ## SECOND, INDEPENDENT BLOCKER — my own payload, 2026-08-09
 
 **Correction to the original report below: it was partly my own fault, and the doc said otherwise.** The commit being
-attempted carried **invalid YAML frontmatter** — `codex/11-project-management/cloud-spend-forecast-and-credits-2026-08.md`
-had a plain-scalar `summary:` containing `": "` (`…the FINAL position taken: an 80% effective discount…`), which YAML
-parses as a mapping. `check_frontmatter_yaml` rejects it, and the issue doc here separately failed
-`check_frontmatter_schema` (`status: active` is not a valid *issue* status; `parent_epic`/`source` missing). Both are
-hard failures in the plan-hygiene pre-commit hook.
+attempted carried **invalid YAML frontmatter** —
+`/codex/11-project-management/cloud-spend-forecast-and-credits-2026-08.md` had a plain-scalar `summary:` containing
+`": "` (`…the FINAL position taken: an 80% effective discount…`), which YAML parses as a mapping.
+`check_frontmatter_yaml` rejects it, and the issue doc here separately failed `check_frontmatter_schema`
+(`status: active` is not a valid _issue_ status; `parent_epic`/`source` missing). Both are hard failures in the
+plan-hygiene pre-commit hook.
 
 So the **rejection** is explained and was legitimate. What is **still unexplained and still a real bug**:
 
@@ -97,21 +99,24 @@ quickmerge attempts had produced no diagnostic at all. Do that FIRST next time.
 - **Not the foreign-staged-file problem.** A concurrent session had staged plan edits, but `--files` scopes staging and
   the run never reached staging.
 - **Not a dirty-dependency block.** Stage 1 explicitly reported no path dependencies.
-- ~~Not a gate failure.~~ **This claim was wrong** — see the partial root cause above. The gates the *visible* stages
+- ~~Not a gate failure.~~ **This claim was wrong** — see the partial root cause above. The gates the _visible_ stages
   ran did pass, which is what misled the original diagnosis; the plan-hygiene gate that actually rejected the commit
   never printed anything.
 
 ## Open work
 
-- [x] [DEVOPS] P1. ✅ **Diagnosed and FIXED — `grep -oP` is GNU-only, absent in macOS BSD grep** (unified-trading-pm@a766aabc8d, peer session). Original text:  **Diagnose why quickmerge re-enters setup.sh after Stage 2 and exits silently** — instrument with
-      `bash -x`, or bisect the stage that returns control to env-prep. The silent exit with no error is the worst part:
-      an agent cannot distinguish "blocked" from "succeeded" without checking `git ls-files` afterwards.
+- [x] [DEVOPS] P1. ✅ **Diagnosed and FIXED — `grep -oP` is GNU-only, absent in macOS BSD grep**
+      (unified-trading-pm@c389fe9dc, peer session). Original text: **Diagnose why quickmerge re-enters setup.sh after
+      Stage 2 and exits silently** — instrument with `bash -x`, or bisect the stage that returns control to env-prep.
+      The silent exit with no error is the worst part: an agent cannot distinguish "blocked" from "succeeded" without
+      checking `git ls-files` afterwards.
 - [ ] [DEVOPS] P2. **Make quickmerge fail loudly when it exits without committing** — a non-zero exit and a printed
       reason. A silent no-op that leaves files untracked is how work gets lost.
-- [ ] [DEVOPS] P2. **Commit the pending finops files** blocked by this — three tools in `scripts/finops/`
+- [x] [DEVOPS] P2. ✅ **Commit the pending finops files** blocked by this — three tools in `scripts/finops/`
       (`measure_agent_fleet_tokens.py`, `cloud_spend_forecast_2026_08.py`, `llm_and_research_unit_economics.py`). They
       sit in the working tree, validated (`ast.parse` clean, lifecycle markers present), untracked. The docs half of
-      that change landed separately via `scripts/dev/safe-doc-push.sh`.
+      that change landed separately via `scripts/dev/safe-doc-push.sh`. — **DONE**: all three landed
+      `unified-trading-pm@0f6087516` (finops tooling commit); `git ls-files scripts/finops/` confirms all three tracked.
 - [ ] [DEVOPS] P3. **Check whether this is host-specific** — if it reproduces on the AO VM it blocks the whole agent
       commit flow, not just interactive work from this laptop.
 
