@@ -605,6 +605,18 @@ if [[ "$final_ok" != true ]]; then
         sed 's/^/   /' "$_last"
       fi
     done
+    echo
+    echo "   ESCAPE HATCH -- if this checkout is under SUSTAINED foreign write (a peer session is"
+    echo "   continuously landing commits/holding the index faster than this script's ${MAX_ATTEMPTS} retries can"
+    echo "   settle), retrying in place cannot converge -- each attempt races the same contention that"
+    echo "   just beat it. Two ways out:"
+    echo "     1. Land from a SEPARATE clone (an isolated checkout with no shared .git/index.lock or"
+    echo "        foreign WIP) -- this is what unblocked the incident this escape hatch documents"
+    echo "        (safe_doc_push_reports_success_having_committed_nothing_2026_08_09.md). Clone fresh,"
+    echo "        copy the named files in, commit + push from there."
+    echo "     2. If a fresh clone isn't practical right now, STOP retrying and fail loudly with this"
+    echo "        message rather than looping -- report the contention (e.g. /blocked or an issue doc)"
+    echo "        instead of burning further attempts against the same shared checkout."
   } >&2
   exit 5
 fi

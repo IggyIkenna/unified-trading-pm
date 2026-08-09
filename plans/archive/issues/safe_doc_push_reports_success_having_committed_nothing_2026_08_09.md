@@ -103,9 +103,9 @@ failure mode `/codex/12-agent-workflow/commit-push-flip-rule.md` exists to preve
       stage" in the log line — the current wording ("nothing staged for the named files") reads as the benign case when
       it is actually a hard failure. Done-when: the two produce distinct messages and distinct exit codes. —
       unified-trading-pm@2c2348c0a
-- [ ] [SCRIPT] P2. Add a documented escape hatch for a checkout under sustained foreign write, since retrying in place
-      cannot converge: land from a separate clone (what unblocked this incident) or fail loudly with that instruction.
-      Done-when: the script prints the recovery path after N failed attempts instead of looping.
+- [x] ✅ [SCRIPT] P2. Add a documented escape hatch for a checkout under sustained foreign write, since retrying in
+      place cannot converge: land from a separate clone (what unblocked this incident) or fail loudly with that
+      instruction. Done-when: the script prints the recovery path after N failed attempts instead of looping.
 
 ## Progress Log
 
@@ -156,3 +156,7 @@ failure mode `/codex/12-agent-workflow/commit-push-flip-rule.md` exists to preve
   `git merge-base --is-ancestor 2c2348c0a origin/live-defi-rollout` and `git branch -r --contains HEAD` both confirm the
   commit is genuinely on `live-defi-rollout`. unified-trading-pm@2c2348c0a (code), unified-trading-pm@8a9046388
   (checkbox flip + this correction).
+- 2026-08-09 (slot 9) — Todo 4 shipped: added an escape-hatch block to the exhausted-attempts failure message (printed
+  after `MAX_ATTEMPTS` non-deterministic retries) instructing the caller to land from a separate, contention-free clone
+  or stop retrying and fail loudly instead of looping against the same shared checkout — the two options this incident's
+  own recovery (`eb2800912f`) already demonstrated.
