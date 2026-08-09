@@ -202,11 +202,25 @@ Both were established by reading the code, and both are silent — neither raise
       asserting the new activity row's `old_id`/`new_id`/`trigger` fields, and that the hazard-1
       "not-cancelled-this-tick" no-op case still logs nothing. QG: 2889 passed, 2 skipped, basedpyright clean, ruff
       clean. Evidence: agent-orchestrator@7eb0203 (verified ancestor of origin/live-defi-rollout before this flip).
-- [ ] [BACKEND] P2. **Cover the derived-identifier namespaces in the map.** An old id surviving as a SUBSTRING of a
-      still-live key is silently orphaned: `BLK-op-{task_id}` (`bootstrap.py:854, :889`), `{task_id}--ruling`
-      (`regen_backlog_from_plan.py:2631`), `auto_unpark__{task_id}` (`auto_park.py:92-96`), `task:{task_id}` cooldown
-      keys (`auto_park.py:110, :192`), and the dedup keys in `dedup_state.py:418, :430`. Enumerate and remap each.
-      (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-09 (slot-4, content_derived_backlog_task_ids-013)** — **Cover the
+      derived-identifier namespaces in the map.** Added `_DERIVED_KEY_NAMESPACES` (all six enumerated:
+      `blocked_row_id`/`BLK-op-{task_id}`, `ruling_task_id_suffix`/`{task_id}--ruling`,
+      `auto_unpark_prereq`/`auto_unpark__{task_id}`, `park_cooldown_key`/`task:{task_id}`,
+      `dispatch_priority_inversion_dedup`/`{plan_ref}:{task_id}`, and
+      `backlog_sibling_reset_guard_dedup`/`{task_id}:{incoming_brief_hash}`) +
+      `derived_keys_for_row(old_id, new_id,     plan_ref)` to `build_content_id_migration_map.py`, computing the
+      concrete old_key/new_key pair for the five DETERMINISTIC namespaces on demand per row (called by the
+      not-yet-written apply step), rather than pre-materializing 6 x ~2 338 extra entries into the checked-in artifact —
+      that would blow well past the 1000 KB pre-commit large-file gate the module's own docstring already flags. The
+      sixth namespace (`backlog_sibling_reset_guard_dedup`) is flagged `exact_remap_possible: false`: its
+      `incoming_brief_hash` (`bootstrap.py:832`'s `current_hash`) is the LIVE checkbox's brief hash at collision time,
+      never the row's own stored `brief_hash` and never persisted anywhere a static artifact can read — documented as
+      requiring an apply-time PREFIX scan of the seen-keys file (`f"{old_id}:"` -> `f"{new_id}:"`) instead of an exact
+      key. QG: 2896 passed, 2 skipped, basedpyright clean, ruff clean. New tests:
+      `test_derived_key_namespaces_enumerated_in_map`,
+      `test_derived_keys_for_row_computes_all_five_deterministic_pairs`,
+      `test_derived_keys_for_row_handles_missing_plan_ref`. Evidence: agent-orchestrator@84e8c98 (verified ancestor of
+      origin/live-defi-rollout). Repo: agent-orchestrator.
 - [ ] [BACKEND] P2. **Make the migration idempotent + resumable.** Follow the existing `_migrate_*` convention
       (`bootstrap.py:147-159`) with a sentinel so a second run no-ops. Batch with a resumable checkpoint rather than one
       giant transaction across ~1,728 rows (SQLite single-writer; reuse the `busy_timeout=120000` pattern `_prune_stale`
