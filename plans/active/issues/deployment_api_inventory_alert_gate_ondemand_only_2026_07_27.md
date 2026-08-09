@@ -54,8 +54,9 @@ related:
     /codex/04-architecture/agent-orchestrator-alerting.md,
   ]
 created: 2026-07-27
+last_updated: "2026-08-06"
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: deployment_and_user_management_master
 priority: P2
 estimate_class: infra
 assigned_role: infrastructure

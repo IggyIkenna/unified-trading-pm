@@ -159,6 +159,33 @@ depends_on: []
    spaces) before fixing.
 4. **Both docs above** — bumped `last_updated` to match each doc's own most recent Progress Log entry (2026-08-08 /
    2026-08-07 respectively; both were stale at their `created:` date).
+5. **`deployment_api_inventory_alert_gate_ondemand_only_2026_07_27.md`** — `parent_epic: infrastructure_master` →
+   `deployment_and_user_management_master` (stale post-retag: `asset_group` was corrected `infrastructure`→`ui`
+   2026-07-30 but `parent_epic` was missed; hub doc's own Track 2 already treats this doc as
+   `deployment_and_user_management_master`-scoped). Also added missing `last_updated` (doc had none; self-flagged as a
+   known gap in its own 2026-08-06 Progress Log entry). Evidence: hunter-B2 finding.
+6. **`consolidator_throughput_backlog_monitor_2026_07_09.md`** — fixed 4 bare (non-`/`-prefixed) references to
+   `issues/phantom_audit_estate_coverage_gap_2026_07_10.md` → `/plans/active/issues/...` (confirmed target resolves at
+   that path before fixing); bumped stale `last_updated` (2026-07-10 → 2026-08-07, its own most recent Progress Log
+   entry); added `thinking_tier: medium` (same silent-default-effort gap).
+7. **`data_status_tab_and_downloads_remediation_2026_06_16.md` (locked — see note below)** — fixed 1 bare reference to
+   the archived `data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md` issue doc (confirmed it resolves
+   under `/plans/archive/issues/`); fixed `assigned_vm: NA` + `execution_scope: orchestrator-agent` mismatch →
+   `local-only` (every sibling ui doc pairs `NA` with `local-only`; `orchestrator-agent` normally correlates with
+   `assigned_vm: planning` — pre-2026-06-27 schema drift never migrated, per hunter-B2); bumped stale `last_updated`
+   (2026-06-27 → 2026-08-07); added `thinking_tier: medium`; also added a missing traceable-source citation
+   (`unified-trading-pm@f9672e180` + self-pointer) to a pre-existing `[x]` todo's "operator ruling 2026-08-07" claim —
+   caught by the pre-commit `check_plan_operator_ruling_evidence` hard gate when staging this doc's other fixes
+   (pre-existing gap, unrelated to my edits, but this doc was staged so the whole-file scan surfaced it; fixed in the
+   same commit per the findings-triage rule rather than leaving the checkpoint blocked).
+   - **Note on the lock**: this doc carries `locked_by: live-defi-rollout`/`locked_since: 2026-06-16` (same day as
+     `created`). Independently investigated (hunter-B2 + my own read of the doc's na-eligibility-audit lineage, 3
+     passes): this is a confirmed-intentional **APPLY GATE** (blocks a class of destructive v9 `--apply` migrations
+     until every projected index is operator-eyeballed) — NOT a stale/general "don't touch this doc" claim, and the doc
+     has been routinely edited by many agents (na-eligibility-audit ×3, context-scout ×4, worker sessions) while under
+     this same lock. The 3 hygiene fixes above are unrelated to the APPLY GATE axis (metadata + a dead-link fix, not a
+     `--apply` migration action), so proceeded without an unlock ask — narrower in scope than the archival HARD LIMIT
+     (`locked_by:` blocks ARCHIVAL without `[unlock-plan]`; this run did not archive this doc).
 
 ## Filed
 

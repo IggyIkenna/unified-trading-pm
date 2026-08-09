@@ -17,12 +17,12 @@ related: []
 created: 2026-06-16
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only
 priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-06-27
+last_updated: 2026-08-07
 locked_by: live-defi-rollout
 locked_since: 2026-06-16
 supersedes:
@@ -36,6 +36,7 @@ source:
     across all asset_groups + fix globally),
   ]
 assigned_role: backend_engineer
+thinking_tier: medium
 drift_direction: advance-code
 context_scope:
   [
@@ -356,9 +357,11 @@ the canon plan; track there, not as duplicate todos:
       resolution (override / kind-only / correct cat enumeration) so their data-status panels are accurate. —
       deployment-api
 - [x] ✅ [DATA] P0. **APPLY GATE sign-off — cefi, tradfi, prediction: DONE, eyeballed by Ikenna (operator ruling
-      2026-08-07).** Projected captured/attempted/empty/failed split confirmed sane (orphan recovery looks right, no
-      phantom over-count) for these 3 AGs under Manifest-beta mode. **TIER 2 `--apply` is UNBLOCKED for cefi, tradfi,
-      prediction** — proceed per the APPLY GATE banner above (per-AG, not a whole-doc gate).
+      2026-08-07, unified-trading-pm@f9672e180 — full narrative in this doc's own
+      data_status_tab_and_downloads_remediation_2026_06_16.md Progress Log entry below).** Projected
+      captured/attempted/empty/failed split confirmed sane (orphan recovery looks right, no phantom over-count) for
+      these 3 AGs under Manifest-beta mode. **TIER 2 `--apply` is UNBLOCKED for cefi, tradfi, prediction** — proceed per
+      the APPLY GATE banner above (per-AG, not a whole-doc gate).
 - [ ] [DATA] P0. **APPLY GATE sign-off — defi, sports: HOLD (operator ruling 2026-08-07).** NOT yet eyeballed — Ikenna
       is still wrestling with agents on manifest canonicalisation for these 2 AGs (see their own outstanding
       canonicalisation todos elsewhere in the corpus); the projected index isn't stable enough to sign off yet. **TIER 2
@@ -408,7 +411,7 @@ the canon plan; track there, not as duplicate todos:
       Cloud Run server-log triage — likely a build OOM/timeout or a sports/tradfi-specific CSV-shape bug). Net: the DeFi
       502 the §A fix targeted does NOT reproduce (DeFi + MTDS-DeFi both 200 real CSV); the break is now sports+tradfi. —
       deployment-api. **RESOLVED 2026-07-20** — filed + fully root-caused + fixed same window, archived:
-      `plans/archive/issues/data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md`
+      `/plans/archive/issues/data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md`
       (deployment-api@`65f5593`). **tradfi** was a real bug (67.41 MiB CSV built as one buffered `Response`, exceeding
       Cloud Run's ~32 MiB buffered cap — the platform rejected it, no Python traceback; fixed by streaming via
       `_iter_catalogue_csv_chunks` + `StreamingResponse`; cefi was 0.7 MiB from the same cliff and is now covered too).
@@ -466,5 +469,5 @@ owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migra
   source targets the remaining open UI/backend todos actually touch.
 - **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, valid — `locked_by: live-defi-rollout`; the 3 UI todos stay
   correctly blocked pending a fresh `pw:L2` full-suite green (the cited nav-regression blocker doc is resolved but no
-  re-run has happened since); the DeFi sub-bucket phantom-row audit + the defi/sports APPLY-GATE sign-off stay
-  correctly HOLD per today's own operator ruling above (Ikenna's canonicalisation work not yet landed).
+  re-run has happened since); the DeFi sub-bucket phantom-row audit + the defi/sports APPLY-GATE sign-off stay correctly
+  HOLD per today's own operator ruling above (Ikenna's canonicalisation work not yet landed).

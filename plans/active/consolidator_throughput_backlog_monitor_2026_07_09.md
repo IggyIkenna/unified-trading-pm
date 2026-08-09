@@ -26,7 +26,7 @@ related:
     /plans/archive/2026_07/deployment_full_estate_cost_provenance_2026_07_09.md,
   ]
 created: "2026-07-09"
-last_updated: "2026-07-10"
+last_updated: "2026-08-07"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -41,6 +41,7 @@ superseded_by:
 depends_on:
 source:
 assigned_role: ui_developer
+thinking_tier: medium
 drift_direction: advance-code
 context_scope:
   [
@@ -163,8 +164,8 @@ context_scope:
 - [x] [BACKEND] P1. ✅ **STALE — already done piecemeal, closing 2026-08-07 (na-eligibility-audit).** Per-run
       output-production verdict endpoint (the seam deployments links to) — a lightweight lookup keyed by the agreed job
       identity → `{last_run_at, partitions_written, rows_written, expected_vs_actual, verdict}`,
-      `verdict ∈ {produced, fired_but_empty, stale_output, ok}`. The 4 concrete sub-todos directly below this one (fired-
-      but-empty detection, per-cadence stale-output budget, dynamic all-consolidator coverage-expansion, and the
+      `verdict ∈ {produced, fired_but_empty, stale_output, ok}`. The 4 concrete sub-todos directly below this one
+      (fired- but-empty detection, per-cadence stale-output budget, dynamic all-consolidator coverage-expansion, and the
       `VerdictBadge` UI surfacing) are ALL individually shipped and checked — `deployment-api@1a505c16`/`@14650f9`,
       `deployment-ui@15832cd`/`@368ea8e6` — and together they ARE this exact seam/verdict ask; the umbrella checkbox was
       simply never flipped alongside its parts.
@@ -282,14 +283,16 @@ context_scope:
 
 > **NOT what the operator redirected #4 to (2026-07-11) — kept as a distinct, still-open item.** This is the
 > phantom-audit + reprobe VISIBILITY (Slack-only results → queryable), independent of the consolidator `latest.json`
-> above and of the phantom estate-COVERAGE issue (`issues/phantom_audit_estate_coverage_gap_2026_07_10.md`, Ikenna's).
+> above and of the phantom estate-COVERAGE issue
+> (`/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`, Ikenna's).
 
 > **Operator GO (2026-07-11): build the visibility (persist `latest.json` → read endpoint → surface). Confirmed this is
-> INDEPENDENT of the still-OPEN estate-coverage issue** (`issues/phantom_audit_estate_coverage_gap_2026_07_10.md`,
-> `status: open`, `resolved_by:` empty as of 2026-07-11 — Ikenna has NOT addressed it). Whether the phantom audit walks
-> 5 or all 47 buckets is a SEPARATE concern (the open issue); we wire the plumbing to surface whatever it CURRENTLY
-> covers, and when coverage expands the same UI shows more. The one requirement: the card states honest coverage/cadence
-> so partial-or-weekly never reads as a false "all clear".
+> INDEPENDENT of the still-OPEN estate-coverage issue**
+> (`/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`, `status: open`, `resolved_by:` empty as of
+> 2026-07-11 — Ikenna has NOT addressed it). Whether the phantom audit walks 5 or all 47 buckets is a SEPARATE concern
+> (the open issue); we wire the plumbing to surface whatever it CURRENTLY covers, and when coverage expands the same UI
+> shows more. The one requirement: the card states honest coverage/cadence so partial-or-weekly never reads as a false
+> "all clear".
 >
 > **Confirmed: the phantom-audit + reprobe DETECTION already exists and is mature — the ONLY gap is that results aren't
 > queryable (Slack-only). So this is "wire a thin persist + read endpoint", NOT "build detection".** Phantom =
@@ -322,11 +325,11 @@ context_scope:
 > **✅ Coverage-gap FINDINGS — VERIFIED 2026-07-10 (operator asked to verify before filing; done by reading source +
 > live `gcloud`). Outcome: ONE genuine gap FILED, two downgraded to by-design:**
 >
-> - **FILED → `issues/phantom_audit_estate_coverage_gap_2026_07_10.md`** (data-pipeline scope, for Ikenna): phantom
->   audit walks only 5 hardcoded buckets (`_BUCKET_KIND_MAP` — market-data-{cefi,defi,tradfi} + instruments-sports +
->   market-data-tick-prediction); the cron never passes `--manifest-bucket`, so the rest of the estate —
->   instruments-{cefi,defi,tradfi} (VERIFIED: the 86,977-row / 64,227-`captured` cefi index I downloaded), market-data-
->   sports, gas-fees, lending-indices, oracle-prices, features/execution/… — is NEVER phantom-checked. Real
+> - **FILED → `/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`** (data-pipeline scope, for
+>   Ikenna): phantom audit walks only 5 hardcoded buckets (`_BUCKET_KIND_MAP` — market-data-{cefi,defi,tradfi} +
+>   instruments-sports + market-data-tick-prediction); the cron never passes `--manifest-bucket`, so the rest of the
+>   estate — instruments-{cefi,defi,tradfi} (VERIFIED: the 86,977-row / 64,227-`captured` cefi index I downloaded),
+>   market-data- sports, gas-fees, lending-indices, oracle-prices, features/execution/… — is NEVER phantom-checked. Real
 >   data-correctness coverage gap.
 > - **WITHDRAWN (verified by-design, NOT bugs)**: (a) tradfi/prediction reprobe hooks never auto-heal — TRUE
 >   (`reprobe_tradfi.py:75` / `reprobe_prediction.py:71` always `reached_source=False`), but deliberate (batch sources)
@@ -523,8 +526,8 @@ context_scope:
   the source + live `gcloud`. Outcome: tradfi/prediction reprobe-stub finding **WITHDRAWN** (mechanically true but
   deliberate design — oracle still detects via `ORACLE_EXPECTS_DATA`, `reprobe_new_empty_confirmed.py:247-250`);
   weekly-cadence **WITHDRAWN** (deliberate cost tradeoff); phantom **ESTATE-COVERAGE gap CONFIRMED + FILED** →
-  `issues/phantom_audit_estate_coverage_gap_2026_07_10.md` (`_BUCKET_KIND_MAP` walks only 5 buckets, cron never passes
-  `--manifest-bucket` → instruments-{cefi,defi,tradfi} incl. the verified 86,977-row cefi index, gas-fees /
+  `/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md` (`_BUCKET_KIND_MAP` walks only 5 buckets, cron
+  never passes `--manifest-bucket` → instruments-{cefi,defi,tradfi} incl. the verified 86,977-row cefi index, gas-fees /
   lending-indices / oracle-prices, features/execution/… never phantom-checked). For Ikenna (data pipeline).
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — LOCAL plan built interactively; both [REVIEW] gates are
@@ -537,7 +540,7 @@ context_scope:
   with both REVIEW gates explicitly deferred by a dated operator decision (2026-07-10, local-dev-only until all cockpit
   plans complete).
 - **context-scout 2026-08-07**: re-scouted; context_scope unchanged (5 entries), still accurate.
-- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, stale item closed — the WS-3 "seam" umbrella todo was
-  stale (its 4 concrete sub-parts are all already individually shipped, see the closed todo above). Doc otherwise stays
-  NA — the 2 remaining open items (WS-1 + WS-3 shipping gates) are both explicitly deferred by the same dated
-  2026-07-10 operator decision (local-dev-only until all cockpit plans complete).
+- **na-eligibility-audit 2026-08-07 (ui tranche)**: KEEP-NA, stale item closed — the WS-3 "seam" umbrella todo was stale
+  (its 4 concrete sub-parts are all already individually shipped, see the closed todo above). Doc otherwise stays NA —
+  the 2 remaining open items (WS-1 + WS-3 shipping gates) are both explicitly deferred by the same dated 2026-07-10
+  operator decision (local-dev-only until all cockpit plans complete).
