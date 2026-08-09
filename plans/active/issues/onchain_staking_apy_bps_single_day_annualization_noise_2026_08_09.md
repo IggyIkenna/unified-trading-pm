@@ -96,11 +96,13 @@ within normal LST peg noise) compounds to -18% to -35% "APY".
   it has; this is a methodology/window-size characteristic, not an implementation defect. The pipeline itself ran
   end-to-end without crashing, and correctly wrote real (non-fabricated) values — this is a data-quality/plausibility
   finding, not a correctness violation of the honest-absence doctrine.
-- **Consumer impact not verified.** `staking_apy_bps` feeds `CARRY_STAKED_BASIS` (per
-  `features_service_e2e_pipeline_test_2026_05_26.md`'s strategy-slice table). Whether the strategy already
-  smooths/filters this field downstream (e.g. a rolling window, a sign/magnitude sanity clamp) was NOT checked — if it
-  does, this finding may be cosmetic; if it consumes the raw single-day value directly, a wobble like this could cause a
-  spurious defensive-mode flip. Left to `quant_dev` craft scope (strategy-math judgment call), not resolved here.
+- **Consumer impact VERIFIED 2026-08-09** (`defi_satellite_ao_dispatch_batch12_2026_08_09.md` todo 1, DIAG verdict) —
+  `CARRY_STAKED_BASIS` consumes `staking_apy_bps` RAW, with no smoothing/clamp layer:
+  `strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py:440` (`_preflight`) reads the
+  feature straight into `net_carry` at line 459 with no rolling window / sign / magnitude clamp anywhere in the file;
+  upstream `features-service/features_service/onchain/engine/lst_features.py:84-91` applies no smoothing before the
+  strategy consumes it either. Per this finding, todo 2 below was retagged P2→P1 — a wobble like the one measured could
+  cause a spurious defensive-mode flip.
 - **Only a 3-day window was sampled** (2026-04-07 to 2026-04-09, per the Phase-A task's scope) — whether this rate is
   representative of the wider corpus (more/fewer negative days, worse outliers) is unknown.
 - **No fix attempted.** Candidate directions (widen the lookback window / apply smoothing or a rolling multi-day fit /
@@ -136,3 +138,8 @@ within normal LST peg noise) compounds to -18% to -35% "APY".
   gated finalize twin authored. Conflict-check clear: the only other corpus reference to this doc is
   `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md`'s citation (this doc's own origin filing, now 0 open
   todos). Doc's own `assigned_vm` stays `NA` — todo 2 alone does not clear the whole-doc bar.
+- **2026-08-09** (`defi_satellite_ao_dispatch_batch12_2026_08_09_finalize.md` todo 1, source-doc reconciliation):
+  confirmed this doc's todo 1 citation and todo 2's P2→P1 retag both already reflect batch12's RAW-consumption verdict
+  correctly. Found + fixed one orphaned gap: the "Why this matters" section's "Consumer impact not verified" bullet
+  still read as an open question after batch12 had already answered it — updated to state the verified RAW finding with
+  the same file:line citations, so no stale "still looks open" text remains.
