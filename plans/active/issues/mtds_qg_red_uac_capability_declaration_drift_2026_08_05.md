@@ -135,7 +135,15 @@ resolution pattern. Evidence backing the decision (verified in-repo, MTDS + UAC 
 
 ## Follow-ups (tracked)
 
-- `- [ ] [UAC] P2. **Remove now-orphaned AAVE `rewards`seed + venue capabilities** — delete the AAVE_V3`rewards`seed in`defi_prediction_instrument_seeds.py:153`and the`rewards`entries for all 10 AAVE_V3 chains in`defi_venue_capabilities.py`, completing the bc397b93-style cross-surface cleanup for the AAVE rewards removal shipped at `5f441e0d`. UAC QG does NOT flag them (verified green with them present), so this is consistency-by-precedent, not gate-driven. Owned by the UAC capability-declaration owners (same workers as `6e791b05`/`b2874193`).`
+- [ ] [UAC] P2. **Remove now-orphaned AAVE `rewards` seed + venue capabilities** — delete the AAVE_V3 `rewards` seed in
+      `defi_prediction_instrument_seeds.py:153` and the `rewards` entries for all 10 AAVE_V3 chains in
+      `defi_venue_capabilities.py`, completing the bc397b93-style cross-surface cleanup for the AAVE rewards removal
+      shipped at `5f441e0d`. UAC QG does NOT flag them (verified green with them present), so this is
+      consistency-by-precedent, not gate-driven. Owned by the UAC capability-declaration owners (same workers as
+      `6e791b05`/`b2874193`). **Markdown syntax fixed 2026-08-09 (plan_reconciler agt-2d9a32)** — this todo was
+      previously wrapped in a stray leading/trailing backtick, making it invisible to every mechanical todo-counting
+      tool (`count_open_tasks.py`'s `^\s*- \[ \]` regex never matched a line starting with a backtick); no content
+      changed, only the markdown structure.
 
 ## Status / owner
 
