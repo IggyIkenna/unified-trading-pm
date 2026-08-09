@@ -35,7 +35,7 @@ priority: P2
 parent_epic: infrastructure_master
 source: "slot-3, codex freshness re-review shard-B, discovered re-reviewing order-state-machine.md, 2026-07-31"
 execution_scope: local-only
-drift_direction: needs-decision
+drift_direction: advance-code
 depends_on: []
 assigned_vm: NA
 resolved_by:
@@ -103,8 +103,10 @@ Interim mitigation already applied: both codex docs now carry a ⚠️ block sta
       `FAIL_OUTBOUND` + `RECONCILED` to UAC `OrderStatus`, rename `PENDING`/`OPEN` → `PENDING_NEW`/`NEW`. This is a
       breaking, fleet-wide UAC change — every consumer of `OrderStatus` needs auditing for the rename, not just an
       additive enum extension. Scope this as its own tracked rollout (consumer audit + migration, not a one-line enum
-      edit) before dispatching. Rule between A / B / C above for the order-lifecycle enum. Provenance: codex freshness
-      re-review shard-B, 2026-07-31.
+      edit) before dispatching. Provenance: codex freshness re-review shard-B, 2026-07-31. **Corrected 2026-08-09**
+      (plan_reconciler agt-733350): the na-eligibility-audit 2026-08-01/08-03/08-06 entries below describing this as
+      still "undecided A/B/C" are STALE — this same-day governance-sweep ruling (`unified-trading-pm@13f80f797`, 18:14
+      UTC+1) landed AFTER the 08-06 audit (`unified-trading-pm@730ea9b21`, 08:45 UTC) in the same day's commit order.
 - [ ] [TEST] P2. Once ruled, create `execution-service/tests/unit/orders/test_state_machine.py` (the doc's declared
       `verifier:`, never written) asserting the enum members match the codex state table, so this cannot silently
       diverge again.

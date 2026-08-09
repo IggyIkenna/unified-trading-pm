@@ -35,7 +35,7 @@ parent_epic: infrastructure_master
 source:
   "slot-3, codex freshness re-review shard-B, discovered re-reviewing live-strategy-config-hot-reload.md, 2026-07-31"
 execution_scope: local-only
-drift_direction: needs-decision
+drift_direction: advance-code
 depends_on: []
 assigned_vm: NA
 resolved_by:
@@ -96,9 +96,13 @@ stating that the allow-list and error type do not exist and that the instrument 
 
 - [ ] [CODE] P2. **RULED 2026-08-06 (operator), option A: implement the documented guard.** `[CODE]` tag (was
       `[OPERATOR]`) — build the safe-field allow-list + `UnsafeConfigChangeError` as originally designed, closing the
-      real gap that any field can currently hot-swap into a live paper/live trading strategy. AO-dispatchable. Rule
-      between A / B / C — specifically, confirm whether a live instrument-universe swap is position-state-safe.
-      Provenance: codex freshness re-review shard-B, 2026-07-31.
+      real gap that any field can currently hot-swap into a live paper/live trading strategy. AO-dispatchable. As part
+      of implementing the allow-list, confirm whether a live instrument-universe swap is position-state-safe and set its
+      allow/deny membership accordingly — this is an implementation detail of option A, not a reopened A/B/C choice.
+      Provenance: codex freshness re-review shard-B, 2026-07-31. **Corrected 2026-08-09** (plan_reconciler agt-733350):
+      the na-eligibility-audit 2026-08-01/08-06 entries below describing this as still "undecided" are STALE — this
+      same-day governance-sweep ruling (`unified-trading-pm@13f80f797`, 18:14 UTC+1) landed AFTER the 08-06 audit
+      (`unified-trading-pm@730ea9b21`, 08:45 UTC) in the same day's commit order.
 - [x] [DOC] P3. Document `VersionGovernanceReloader` + `StrategyDirectiveReloader` in
       `/codex/04-architecture/live-strategy-config-hot-reload.md` — both are shipped and currently absent from the SSOT.
       -- CLOSED (na-eligibility-audit 2026-08-01): already done —
