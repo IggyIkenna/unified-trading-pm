@@ -38,9 +38,10 @@ source: >-
   Discovered while independently verifying a round-9 na-eligibility-audit sweep agent's own incident report (it briefly
   force-deleted `live-defi-rollout` via a retry-loop bug, self-caught and restored in the same turn, no data lost).
   Main-session verification of the recovery surfaced the underlying structural gap.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: infra
+assigned_role: infra
 drift_direction: none
 depends_on: []
 locked_by:
@@ -103,3 +104,18 @@ process observed the deleted state.
   force-deleted via a `git commit-tree` retry-loop bug, self-caught and restored same-turn, no data lost). The recovery
   itself was clean and correct; this doc tracks the underlying structural gap the incident revealed —
   `live-defi-rollout` has no GitHub-side deletion/force-push protection at all.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 2 of 3)**: RECLASSIFY, whole-doc — first audit pass
+  on this doc (`marker_date: None` in the candidate list, never previously touched by `/na-eligibility-audit`). All 3
+  open `[INFRA]` todos are bounded, worker-determinable engineering tasks with no operator/design ambiguity: todo 1
+  names the exact GitHub ruleset mechanism + rule types + a concrete verification step; todo 2 is a mechanical
+  per-repo `gh api` audit; todo 3 (softer "Consider" phrasing, but with a concrete spec — a guard script refusing an
+  empty-refspec push) is a defense-in-depth follow-up in the same vein. None touch prod-bucket deletes or VM launches
+  (the operator-tag categories) — this is GitHub repo-config infra, self-service per the IAM/infra-self-service
+  precedent. Conflict-check: grepped every `status: draft`/`active` `ao_satellite_ao_dispatch_batch*` (1-17, including
+  the concurrently in-flight, not-yet-committed batch17 from a parallel group-1 sweep session sharing this checkout)
+  plus their finalizes, `ao_open_issues_consolidated_close_out_2026_07_17.md`, and
+  `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`, for `live-defi-rollout`/`delete.protection`/`ruleset` —
+  zero hits. Flipped `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`, added
+  `assigned_role: infra`. This is a `doc_type: issue` — per established corpus precedent
+  (`check_finalize_plan_coverage.py` globs only top-level `plans/active/*.md`, never `plans/active/issues/*.md`), issue
+  docs are structurally exempt from the mandatory finalize-plan gate, so no companion finalize doc is authored.

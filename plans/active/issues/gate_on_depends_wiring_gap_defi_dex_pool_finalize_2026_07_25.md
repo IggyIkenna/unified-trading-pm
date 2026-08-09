@@ -813,3 +813,12 @@ done"), independent of the bold/sub-bullet hypotheses already on file.
 Declined to author the reconciliation on the false premise batch11 shipped (no commit exists); recorded the discrepancy
 inline in the finalize plan's own todo 1 + added a new tracked todo there per its done-when clause, rather than
 duplicating a new issue doc. Skipping via `reason_code: GATED` per this doc's established disposition.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **6**, matching. This doc's own Progress Log already cites the 2026-07-31 operator directive
+  (`unified-trading-pm@14478ca26`) routing AO-machinery/dispatch-logic docs to `execution_scope: local-only` — an
+  explicit dated operator ruling, not re-litigated. The sole remaining real todo (root-cause the "zero-derived-parent-
+  row" third mechanism) is live-dispatch-critical-path git/backlog machinery with 2 competing unconfirmed hypotheses
+  (status:draft-upstream non-derivation, markdown-bold/indented-sub-bullet derivation-regex edge cases) still under
+  active investigation via ongoing recurrence notes (most recently 2026-08-09) — genuinely not yet bounded to a single
+  fix, consistent with every prior pass on this doc.

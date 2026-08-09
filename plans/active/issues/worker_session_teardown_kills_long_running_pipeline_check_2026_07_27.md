@@ -488,3 +488,9 @@ tracked here rather than silently claimed complete.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Sole open item (`--resume`/checkpoint capability) remains directly covered by the explicit, dated
+  2026-08-02 operator ruling (option A) keeping `assigned_vm: NA` until the shared-host-RAM-exhaustion mechanism
+  (condition `mdps-e2e-shared-host-teardown-fixed`) also closes — that prerequisite remains unmet (no closure entry
+  found in this doc's Progress Log since the ruling). Not re-litigated.

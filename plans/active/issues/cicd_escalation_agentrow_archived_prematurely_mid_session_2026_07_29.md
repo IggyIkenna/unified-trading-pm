@@ -390,3 +390,8 @@ cleanly instead of ending on an issue-doc corroboration.
   apply (this is fleet-wide `/done`-endpoint surgery, explicitly declined for rushed scoping, not a defaulted judgment
   call). Corroborated same-day: `/ag-closeout-audit ao` batch12 independently lists this doc under too-large-or-risky
   (1).
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Sole open todo remains fleet-wide `/done`-endpoint identity-matching surgery (a `DoneRequest` schema
+  addition + full slot-reuse-lifecycle tracing touching every worker's completion path), explicitly declined for rushed
+  scoping on 2026-07-30 and re-affirmed as still-genuinely-risky across every subsequent pass, most recently round11's
+  corroboration against `/ag-closeout-audit ao` batch12's independent same-day too-large-or-risky classification.

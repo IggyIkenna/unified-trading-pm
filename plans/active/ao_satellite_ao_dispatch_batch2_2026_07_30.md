@@ -388,3 +388,9 @@ never-cited set). This is the same scope boundary the 2026-07-26 and 2026-07-30 
   wip-preserve-ref items were already `EXTRACTED 2026-08-09` to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` by a
   concurrent same-day pass — 0 items remain un-actioned on this doc. Whole-doc RECLASSIFY not applicable (this doc is
   itself a dispatch-coordination artifact, not a source doc).
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **2**, matching. Both visible open lines are citation-pointers already correctly marked
+  `➡️ EXTRACTED 2026-08-09 to ao_satellite_ao_dispatch_batch10_2026_08_09.md` (verified live: that extraction target
+  exists) — per round9's own "0 items remain un-actioned on this doc" verdict, real remaining work here is zero. This
+  is itself a dispatch-coordination satellite artifact (not a source doc), so whole-doc RECLASSIFY doesn't apply; stays
+  `assigned_vm: NA` per the tranche's own 100%-consistent established convention (batch1/3/4 all NA too).

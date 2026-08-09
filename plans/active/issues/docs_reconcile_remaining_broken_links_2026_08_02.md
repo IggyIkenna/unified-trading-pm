@@ -466,3 +466,11 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   stale). Structural-integrity hunters found 8 total candidates across the 69 touched docs (7 fixed above,
   `mvp-universe-per-asset-group.md`'s total-count one filed as a new finding since it needs investigation not a
   mechanical fix) — zero false positives on independent re-verification.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — read end-to-end; `grep -cE
+  '^[[:space:]]*[-*] \[ \]'` = **16**, matching. Confirmed the one item this doc's own text flagged
+  `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` (the `fix_frontmatter.py` truncation-bug item) is already correctly
+  `➡️ EXTRACTED 2026-08-09 to ao_satellite_ao_dispatch_batch11_2026_08_09.md` (verified live: that batch exists,
+  `status: active`, `assigned_vm: planning`, its sole todo still genuinely `- [ ]` open — not a stale/dead pointer).
+  The remaining 15 items are the same accumulated set of genuine VALID_JUDGMENT calls (ambiguous dead-link successors,
+  a root-README pass explicitly scoped out, a design observation the doc's own text says "not proposing a fix here")
+  re-verified across 6+ prior audit passes since 2026-08-02 — no new bounded item found on this independent re-read.

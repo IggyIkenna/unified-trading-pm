@@ -267,3 +267,11 @@ shipped independently or these findings would still be sitting entirely undocume
      normalize-on-load behavior noted in todo 2's entry above — not touched.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **5**, matching. Re-confirms the 2026-08-08 CONFLICT verdict, now with even stronger corroboration: the active
+  `ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md` (`status: active`, `assigned_vm: planning`,
+  `gate_on_depends: true`) is now DIRECTLY performing this doc's own reconciliation work — its own still-open todo 1
+  ("Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)") explicitly names this
+  doc's items 1-3 by path. Flipping this doc's own `assigned_vm` now would dispatch duplicate/conflicting work against
+  an already-active reconciliation in flight. Item 5 (Playwright `webServer` config split) remains an explicit,
+  operator-ask-gated design call per the doc's own text. Doc-level disposition unchanged.

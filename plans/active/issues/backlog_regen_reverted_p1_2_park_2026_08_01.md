@@ -192,3 +192,9 @@ parked-but-not-actually-999 drift) is NOT duplicated by the sibling and remains 
   bypass here is not explained by that prior root-cause. Not reclassifying this doc (still a genuine unscoped design
   fork per the last 3 audit passes) — leaving this as a pointer for whoever eventually scopes item 3, since it's now
   evidence the bug class spans both the hand-edit AND the API-park mechanisms.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Sole open item ([SCRIPT] P2, standing park-drift hygiene assertion) remains an unscoped design fork
+  (repo ownership agent-orchestrator-vs-unified-trading-pm AND mechanism hygiene-sweep-vs-periodic-check both
+  undecided), matching every prior pass and batch6's independent same-day classification. New 2026-08-09 evidence
+  (cross-referenced in this doc, not reclassifying) shows the bug class now spans both the hand-edit AND
+  sanctioned-API-park mechanisms — widening the eventual fix's scope, not narrowing today's classification.

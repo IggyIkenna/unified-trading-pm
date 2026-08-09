@@ -172,3 +172,11 @@ each anti-pattern, and their `last_reviewed` bumped to reflect a review that act
   `ao_satellite_ao_dispatch_batch15_2026_08_09.md`. The other 3 stay KEEP-NA, valid: the `TestingStage` codex-doc
   update is downstream of the operator-only owner/date placeholder (self-declared "not worker-determinable"), and the
   `aave_live.py` constructor-arg item is an explicit "decide" design call. Whole-doc RECLASSIFY bar not cleared.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **4**, matching. Re-affirms the round9 (2026-08-09) satellite-extraction verdict: the sole mechanical item
+  (`paper_target_registry` corpus-wide rename) is already correctly `➡️ EXTRACTED 2026-08-09 to
+  ao_satellite_ao_dispatch_batch15_2026_08_09.md`. The 3 survivors remain genuinely gated — the `TestingStage` codex
+  update is downstream of an explicit `[OPERATOR]` placeholder (owner + target date, "not worker-determinable" per its
+  own text, not invented here), and the `aave_live.py` constructor-arg item is an explicit "decide" design call. No new
+  bounded item found on independent re-read.

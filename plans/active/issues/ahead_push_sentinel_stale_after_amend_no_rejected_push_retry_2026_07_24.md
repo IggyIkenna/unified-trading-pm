@@ -136,3 +136,7 @@ behind — rather than a guessed one-line patch to the riskiest file in the code
   fleet's riskiest auto-push path is unchanged and genuinely undecided. Corroborated by the same-day
   `/ag-closeout-audit ao` batch12 run, which independently lists this doc under operator-gated (22), declined
   zero-extraction.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Sole open todo remains a real, undecided retry-vs-alert design call on "the single riskiest
+  automated code path in the system" (doc's own words, unchanged framing since filing) — checked against the full
+  round7-10 precedent set, none apply.

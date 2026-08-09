@@ -216,3 +216,8 @@ must not also destroy a working (or merely soon-to-expire) credential — the sc
   this one; a citation-based pre-filter isn't the same as content coverage. Doc stays `assigned_vm: NA` overall: the
   remaining `[INFRA] P3` "Ghost host rows" item is a genuine unresolved design call (the doc's own text explicitly asks
   the worker to "decide which" of prune-vs-tombstone) — no whole-doc RECLASSIFY, per-item extraction only.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **2**, matching. The `[INFRA] P2` "30-day treadmill" item is already correctly `➡️ EXTRACTED 2026-08-09 to
+  ao_satellite_ao_dispatch_batch16_2026_08_09.md` (verified live: exists, `status: active`,
+  `assigned_vm: planning`). The `[INFRA] P3` "Ghost host rows" item remains a genuine, explicit "decide which" design
+  fork (prune vs. tombstone) the doc's own text never resolves — no new bounded item found on independent re-read.

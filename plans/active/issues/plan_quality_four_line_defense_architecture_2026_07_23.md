@@ -376,3 +376,9 @@ existing codex SSOT names this 4-line architecture itself — once lines 2-4 are
     nothing further (already true today); option (b) would need the reference-paths ratchet regression fixed first
     (small, 3-count) before it could ship clean. Reporting this back per the operator's own stated precondition; not
     resolving the actual policy fork myself -- that remains the operator's call this round didn't make.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **2**, matching. Both remain explicit, repeatedly-re-measured repo-wide CI-policy calls the doc's own text
+  self-labels "not a bounded/deterministic todo per task_template.md's dispatch-scope-eligibility rule" (item 2's
+  acceptance test) and a genuine unresolved 3-option design fork with no tiebreaker (item 1, line-1-completeness vs.
+  proseWrap). No new evidence since the 2026-08-08 operator-Q&A investigation entry changes either disposition.

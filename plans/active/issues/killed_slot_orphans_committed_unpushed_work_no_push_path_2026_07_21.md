@@ -249,3 +249,9 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
   reversibility-qualified deletes, Option B retirement, DeepSeek/Slack credentials) — none apply; this is
   live-dispatch-critical-path git/state machinery, not a defaulted or credential-gated item. Corroborated same-day:
   `/ag-closeout-audit ao` batch12 independently lists this doc under operator-gated (22).
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Sole open item ([INFRA] P2, reclaim-and-push automation for a killed/idle slot's ahead/diverged
+  commits) remains a genuine architectural fork (AutoSpawn re-prioritization vs. a dedicated reaper) narrowed to the
+  diverged sub-case by the 2026-08-03/08-04 recurrence evidence, still judgment-gated by 2 cited prior data-loss
+  near-misses in the code's own comments. Checked against the full round7-10 precedent set — none apply
+  (live-dispatch-critical-path git/state machinery, not a defaulted or credential-gated item).

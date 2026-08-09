@@ -205,3 +205,8 @@ function.
   `ao_open_issues_consolidated_close_out_2026_07_17.md`'s Phase-LAST `[BACKEND] P0` todo (operator-sequenced),
   consistent with `/ag-closeout-audit ao` batch12's same-day "Covered by an existing active plan (2) — not orphaned"
   verdict for this doc.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Explicit, dated operator ruling 2026-07-16 (Option B, re-home the recovery-audit-signoff producer,
+  deliberately sequenced LAST after AO dispatch-correctness work) remains current and un-retired — confirmed distinct
+  from the unrelated same-label "Option B" semver-reconciler retirement (round11 already ruled this out). Sole todo
+  remains fully claimed by `ao_open_issues_consolidated_close_out_2026_07_17.md`'s Phase-LAST todo. Not re-litigated.

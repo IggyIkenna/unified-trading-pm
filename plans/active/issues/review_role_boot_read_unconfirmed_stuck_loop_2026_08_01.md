@@ -241,7 +241,6 @@ pending retag and the ordering risk against `boot_composer`. **C** — keep NA w
   `6166269` (landed 19:35Z that day), not a regression of it — no P0 needed. Regression test shipped:
   `agent-orchestrator/tests/test_role_file_worker_md_read_sync.py` (`agent-orchestrator@5353b6b`, full
   `quality-gates.sh` green). `unified-trading-pm@6f7ed49c2` carries the `review.md` fix + this Progress Log entry.
-
 - **2026-08-09 (slot 24, review craft, `ao_satellite_ao_dispatch_batch9_finalize_2026_08_08.md` todo 3)**: reconciled
   the verified evidence back into this doc's own checkboxes — flipped `[DOCS] P1` and `[BACKEND] P2` to `[x]`.
   Independently re-verified both cited commits before flipping (not just re-reading the prior session's self-report):
@@ -255,3 +254,9 @@ pending retag and the ordering risk against `boot_composer`. **C** — keep NA w
   `check_archive_candidates.sh --only`'s immediate-archival demand while combining the flip with the `git mv` in one
   commit is separately banned. The field is dropped in the immediately-following archival commit (batch9-finalize todo
   4).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: MOOT, superseded before this marker landed — both
+  checkboxes were flipped `[x]` by `ao_satellite_ao_dispatch_batch9_finalize_2026_08_08.md` todo 3 (see the entry
+  directly above, same day this audit ran) via a real independent re-verification, not a bare pointer. `grep -cE
+  '^[[:space:]]*[-*] \[ \]'` = **0** as of this read. This doc is pending archival via that same finalize plan's todo
+  4 — not archived here (outside this sweep's scope), just noting real remaining work is genuinely zero.

@@ -521,3 +521,10 @@ plan + verifying the `done_sha`, never from the row's status alone.
   not a silent blindspot.** No bulk-mutation performed (per the todo's own instruction); this is a report-only finding,
   no code shipped, no backlog rows touched.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA-STALE, valid — `grep -cE
+  '^[[:space:]]*[-*] \[ \]'` = **2**, both citation-pointers already correctly marked `➡️ EXTRACTED 2026-08-09 to
+  ao_satellite_ao_dispatch_batch12_2026_08_09.md` (todos 6 and 7) — real remaining work on this doc is zero. Note: the
+  round7 (2026-08-08) marker's claim to have flipped `assigned_vm: NA → planning` never actually landed in this doc's
+  own frontmatter (still `NA` as of this read) — but this is now moot, since both real items are already covered
+  elsewhere; re-flipping would be a pointless duplicate dispatch against work with nothing left to do. Not re-flipping.

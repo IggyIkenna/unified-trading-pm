@@ -506,3 +506,12 @@ bans. Fleet VMs (setup-token env files) are unaffected.
   dispatch hook + plan todos per repo surface" left to build; worth a second look on a future pass to confirm whether
   this is still a genuine open design call or has become bounded implementation work. Left untouched this pass — 3 prior
   audits (07-30, 08-01, 08-06) all classified it the same way and I have no new evidence to override that.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **2**, matching. The `[CREDS] P0` SM-secret-write item is fully staged with exact operator-run commands (2026-08-08
+  ruling: "Operator will run it") — an agent-side secret write, permission-blocked by design. Took a fresh second look
+  at the `[DESIGN] P0` dirty-worktree-resolution item per the 2026-08-07 marker's own flagged uncertainty: grepped
+  codex for whether the 4-step policy (QG→quickmerge / fix→re-QG / escalate / operator-sanctioned hard-reset) has since
+  been built elsewhere — found only the adjacent-but-distinct fresh-spawn dirty-state resolution
+  (`resolve_dirty_state`, FM2/FM3/FM8, already covered/cited in this same doc) and no implementation of the "committed-
+  able but unverified WIP" chain this item specifically describes. Still genuinely open, unbuilt design work — 4th
+  consecutive audit pass reaching the same conclusion, now with an actual second look performed, not just deferred.

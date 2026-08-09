@@ -123,3 +123,9 @@ mechanical fix, which is why this is filed rather than patched.
 - **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA, valid — re-confirms the same-day operator-ruling entry
   directly above (RECLASSIFY already explicitly considered and declined this session). No new facts change that
   call.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **2**, matching. The 2026-08-09 operator ruling entry explicitly considered `assigned_vm: NA → planning`
+  (dispatch-scope-eligibility bar) and declined it for a stated, still-current reason: the `[UI]` item is sequenced
+  after the `[REVIEW]` investigation and would become concurrently dispatchable the moment this doc goes AO-live, and
+  the investigation can still terminate in a genuine semantics call the investigation alone can't resolve. Explicit
+  dated operator consideration-and-decline, not re-litigated.

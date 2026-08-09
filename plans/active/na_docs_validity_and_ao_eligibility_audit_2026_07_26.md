@@ -752,3 +752,10 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   self-service, D16, S5.1, escalation-N, reversibility-qualified deletes, Option B retirement, DeepSeek/Slack
   credentials) touches any of the 13 open items. Remaining 11 items unchanged, genuine per-tranche
   audit/consolidation/line-cap-gated work.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -c '^- \[ \]'` = **13**, matching.
+  This is the explicit, dated, case-specific operator-chosen LOCAL/human-track origin plan for the very skill this run
+  executes under (operator asked directly 2026-07-26, chose LOCAL "since this is real per-doc judgment work") — per the
+  round7-10 precedent chain already established on this exact doc (round9/round11 markers above), a later general
+  default ("plan-destination defaults to AO-dispatched") does not override an earlier specific, dated ruling. Not
+  re-litigated; no new precedent from the accumulated set (IAM self-service, D16, S5.1, escalation-N, reversibility-
+  qualified deletes, Option B retirement, DeepSeek/Slack credentials) touches any of the 13 open items.

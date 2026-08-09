@@ -302,3 +302,11 @@ restarting the service and from shipping the fix (routes via BACKEND worker + qu
   overall: the readiness-probe `[BACKEND] P2` todo still embeds the never-autonomous `autonomous-recovery-matrix.md`
   edit.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **2**, matching. The `[BACKEND] P2` readiness-probe item embeds an edit to
+  `/codex/04-architecture/autonomous-recovery-matrix.md` (the kill-switch/self-heal matrix SSOT), never autonomous per
+  this doc's own established precedent. The `[BACKEND] P3` item lists multiple live alternatives ("raise
+  pool_size/max_overflow" — explicitly superseded per occurrence #6/#7 evidence — "and/or lower pool_timeout... and/or
+  Consider batching/serialising...") with no stated preference among the surviving options; per this same sweep's own
+  established "Consider" = judgment-call-not-mandate reading (applied consistently to sibling docs in this tranche),
+  this stays a genuine design fork, not a bounded mandate. No new bounded item found.

@@ -175,3 +175,7 @@ confirmed, recurrence-prone, and points at a real one-shot-lifecycle exit-signal
   against the round7-10 precedent set — none apply (this is a live-fleet-observation condition, not a
   credential/plan-destination/delete-safety question). Not found in any batch1-15 citation list, but the item's own
   gating condition (unobserved-so-far) means there is nothing bounded to extract yet.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Sole open item ([REVIEW] P3) remains explicitly observation-gated ("act only if this scenario is
+  ever observed live") — no bounded fix is writable for a not-yet-observed failure shape. Not found in any batch1-17
+  citation list; the gating condition itself (unobserved-so-far) means there is nothing extractable yet.

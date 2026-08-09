@@ -197,3 +197,7 @@ them"), but the instruction is not being followed in practice, at least in this 
   Shipped `unified-trading-pm@a20e52125`.
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
+  **1**, matching. Sole open item ("Consider a soft turn-count circuit breaker") uses the same "Consider" hedge phrasing
+  this sweep treats as a judgment call, not a mandate, elsewhere in this tranche — no committed threshold or mechanism,
+  a genuine design fork. Items 1-2 already correctly executed + closed via `ao_satellite_ao_dispatch_batch7_2026_08_06.md`.
