@@ -13,7 +13,7 @@ summary: >-
   quant-math methodology design call and stays `assigned_vm: NA` on the source doc). Conflict-checked against
   `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` (the plan that discovered and filed the source issue, 0
   open todos remaining, no overlapping claim).
-status: active
+status: complete # (was: active) 2026-08-09 -- sole todo done, archived alongside its finalize plan
 nature: process
 asset_group: [defi]
 stage: [strategy]
@@ -62,6 +62,9 @@ drift_direction: advance-code
 ---
 
 # DeFi satellite AO batch 12 — 2026-08-09
+
+> **✅ ARCHIVED 2026-08-09 — sole todo done.** RAW-consumption verdict recorded; source doc's second todo retagged
+> P2→P1; reconciled + archived by `defi_satellite_ao_dispatch_batch12_2026_08_09_finalize.md`.
 
 Single-item extraction from a targeted end-to-end read of
 `issues/onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md` during the round-9 RECLASSIFY +
