@@ -1970,7 +1970,7 @@ def _write_firestore_ci_watcher(
     now_iso: str,
     project_id: str,
 ) -> None:
-    try:
+    try:  # noqa: fallback-import — Firestore is an optional extra, only needed for the best-effort ledger write
         from google.api_core.exceptions import GoogleAPICallError  # noqa: imports-inside-functions
         from google.cloud import (  # noqa: TID251, RUF100, I001  # noqa: imports-inside-functions  # noqa: cloud-sdk-direct
             firestore,
