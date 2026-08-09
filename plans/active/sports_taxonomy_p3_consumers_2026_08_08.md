@@ -97,9 +97,14 @@ spelling variant survives, which is the entire point of the panel". It does not.
       accepted-exception entries carry a new `exception_reason` field (via `_ACCEPTED_EXCEPTION_REASONS`), both still
       counted out of `non_canonical_count` only. Existing unit tests updated to assert presence + `exception_reason`
       instead of absence; full quality-gates.sh green (5265 passed).
-- [ ] [TEST] P0. **Regression test from the real failure**: a coverage payload containing an accepted-exception venue, a
-      blank venue and a non-canonical value must produce a value list containing ALL THREE. A test asserting only
-      `non_canonical_count == 0` would have passed against the broken behaviour — which is why it shipped.
+- [x] ✅ [TEST] P0. **Regression test from the real failure**: a coverage payload containing an accepted-exception
+      venue, a blank venue and a non-canonical value must produce a value list containing ALL THREE. A test asserting
+      only `non_canonical_count == 0` would have passed against the broken behaviour — which is why it shipped. —
+      deployment-api@625ca75: added `TestPanelMaskingRegressionFromRealFailure` — a single payload with an
+      accepted-exception bookmaker, a blank venue and a synthetic genuine-drift venue, asserting all three survive in
+      the value list with correct `is_canonical`/`exception_reason` badging; also asserts `non_canonical_count` alone
+      (2, excluding the bookmaker) would not have distinguished the fixed behaviour from a masked one. Full
+      quality-gates.sh green (5266 passed).
 - [x] ✅ [REVIEW] P1. **Re-check the sibling asset_groups for the same masking.** The same drop-before-enumerate applies
       to cefi/defi/tradfi/prediction exception sets. Report per-AG how many values the panel currently hides; file
       `- [ ]` follow-ups per AG where it is material, rather than fixing them silently here. — Reviewed
