@@ -134,12 +134,13 @@ findings 3 and 4 have concrete bounded next steps, tracked as todos below.
       loses the "legitimate calendar absence" framing — accepted, matches the precedent already set for the other 3
       asset groups on 2026-06-22). Not option B (threading real `league_id` down both call sites) — more invasive,
       deferred. (repo: `market-data-processing-service`)
-- [ ] [DATA] P2. **Implement the ruled option A above** in `live_workers_chain.py::_write_or_record_empty_timeframe` and
-      `live_workers_streaming.py::_record_streaming_empty_timeframe` — route the `SOURCE_RETURNED_ZERO`-fallback case to
-      `record_failed_for_shard` instead of `record_empty`, matching the CEFI/DEFI/TRADFI reference implementation
-      (2026-06-22 operator decision). Done-when: a SPORTS honest-absence candle timeframe produces a real manifest row
-      (not a `WARNING` + zero rows), proven on one re-run day. UNBLOCKED — ruling above resolved the A-vs-B gate. (repo:
-      `market-data-processing-service`)
+- [x] ✅ [DATA] P2. **Implement the ruled option A above** in `live_workers_chain.py::_write_or_record_empty_timeframe`
+      and `live_workers_streaming.py::_record_streaming_empty_timeframe` — route the `SOURCE_RETURNED_ZERO`-fallback
+      case to `record_failed_for_shard` instead of `record_empty`, matching the CEFI/DEFI/TRADFI reference
+      implementation (2026-06-22 operator decision). Done-when: a SPORTS honest-absence candle timeframe produces a real
+      manifest row (not a `WARNING` + zero rows), proven on one re-run day. UNBLOCKED — ruling above resolved the A-vs-B
+      gate. (repo: `market-data-processing-service`) — **DONE 2026-08-09 (slot-29)**:
+      `market-data-processing-service@9c23178`. See Progress Log below for the re-run-day proof.
 - [x] ✅ [DIAG] P1. **Settle finding 4's `_collect_future_result` lead for the deterministic `~50/N "Unknown error"`
       crash.** **RESOLVED 2026-08-06 (slot-4, batch9 findings-3+4 pass) — `_collect_future_result` lead DISCONFIRMED,
       findings 3+4 = same root cause as finding 1.** Grepped the failing VM's `run.log` (`134301`, date `2025-12-18`)
@@ -480,3 +481,42 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   `[SCRIPT] P3` relaunch-and-confirm todo is explicitly sequenced after its own `[DATA] P2` fix, which is itself already
   claimed by an active `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo. Re-check once batch9 lands."). Flipping
   or re-extracting here would duplicate live AO dispatch. No flip.
+
+- **2026-08-09 (slot-29, data_engineering — `sports_satellite_ao_dispatch_batch9-007`): SHIPPED — ruled option A
+  implemented.** `market-data-processing-service@9c23178`. Both call sites now branch on the
+  `classify_sports_empty_reason` result rather than assuming category:
+  `live_workers_chain.py:: _write_or_record_empty_timeframe` (previously hardcoded
+  `EmptyConfirmedReason.SOURCE_RETURNED_ZERO` unconditionally for every asset_group, never actually calling
+  `classify_sports_empty_reason`) now gates on `category.value.upper() == "SPORTS"` and, within that branch, calls
+  `classify_sports_empty_reason(league_id="", ...)` — when it resolves `SOURCE_RETURNED_ZERO` (always, today, since
+  `league_id` is unresolvable at this layer), routes to
+  `record_failed_for_shard(error=RecordFailedReason.NO_RAW_TICK_DATA_FOR_SHARD)` instead of `record_empty_for_shard`;
+  any other typed calendar reason still routes to `record_empty_for_shard` (future-proofs a later caller that threads
+  real `league_id` context down). `live_workers_streaming.py::_record_streaming_empty_timeframe` already called
+  `classify_sports_empty_reason` — added the same reason-based branch inside its existing `category == SPORTS` arm (it
+  previously always called `record_empty_for_shard` for SPORTS regardless of the resolved reason). Non-SPORTS
+  asset_groups are unaffected in both files.
+
+  **Re-run-day proof (done-when's explicit ask), against the real SPORTS `-test-` bucket
+  (`market-data-tick-sports-test-central-element-323112`, `MDPS_OUTPUT_BUCKET_SPORTS`-style test isolation via
+  `resolve_bucket_name(..., deployment_env="test")`), synthetic clearly-non-prod instrument/date
+  (`FOOTBALL:TESTVENUE:h2h:sports_batch9_007_verify:2099/2100:*`, `date=2099-01-01` — cannot collide with real captured
+  data), run under `scripts/dev/run-bounded-analysis.sh --mem-cap 2G` per the memory-bounding guardrail:**
+  - OLD-behaviour repro (`record_empty_for_shard(reason=SOURCE_RETURNED_ZERO)`, the exact call this doc's finding 2
+    describes): raised inside `ManifestWriter.record_empty` with the EXACT `WARNING` text this doc quotes
+    (`record_empty(reason=SOURCE_RETURNED_ZERO) requires FetchEvidence...`), caught by shard-level-failure-isolation,
+    **zero manifest rows written** — confirmed via a filtered
+    `read_availability_index(..., filters=[("date","==", "2099-01-01")])` read (single-walk-safe, columns-projected)
+    returning an empty frame for that instrument_id.
+  - NEW (fixed) behaviour (`record_failed_for_shard(error=NO_RAW_TICK_DATA_FOR_SHARD)`): no warning, **one real
+    `attempted_failed` manifest row landed** in the live GCS-backed availability index (confirmed: "ManifestWriter:
+    updated availability index (906 total entries, 1 new)"; the filtered read-back shows
+    `capture_status=attempted_failed, error_reason=NO_RAW_TICK_DATA_FOR_SHARD` for the synthetic instrument/date).
+
+  This directly proves the done-when: a SPORTS honest-absence candle timeframe now produces a real manifest row instead
+  of a WARNING log with zero rows written. 2 new unit tests (`TestWriteOrRecordEmptyTimeframeSportsRoutesFailed`) + 1
+  updated test (`test_empty_tf_candles_sports_records_failed`, renamed from `..._records_empty`) + 1 updated test
+  (`TestRunAdapterAndWriteHonestAbsenceIsNotFailure`, now mocks both verbs) assert the routing directly at the mock
+  boundary — `tests/unit/test_live_workers_coverage2.py`. Full `quality-gates.sh` green on the shipped SHA
+  (sentinel-verified). Finding 5's separate `[CODE] P2` fix+grep todo remains open (untouched by this pass) —
+  `_build_candle_output_path`'s asset-group venue-correction gate is a different bug in a different function.

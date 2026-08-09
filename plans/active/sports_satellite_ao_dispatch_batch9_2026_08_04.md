@@ -180,14 +180,20 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`. Done when: both dates' authoritative status is
       recorded in the doc with the ManifestWriter query evidence cited, the resolved-vs-still-attempted_failed date list
       in the doc is corrected to be internally consistent, and the todo itself is checked off as settled.
-- [ ] [DATA] P2. Implement the ruled option A (2026-08-02 operator ruling) in
+- [x] ✅ [DATA] P2. Implement the ruled option A (2026-08-02 operator ruling, cited in
+      `/plans/active/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`) in
       `live_workers_chain.py::_write_or_record_empty_timeframe` and
       `live_workers_streaming.py::_record_streaming_empty_timeframe`: route the `SOURCE_RETURNED_ZERO`-fallback case
       from `classify_sports_empty_reason` to `record_failed_for_shard` instead of `record_empty`, matching the existing
       CEFI/DEFI/TRADFI reference implementation (`batch_workers.py::_handle_empty_tick_data`, 2026-06-22 operator
       decision). Source: `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`. Done when: a SPORTS
       honest-absence candle timeframe produces a real manifest row (not a WARNING log with zero rows written), proven on
-      one re-run day in `market-data-processing-service`.
+      one re-run day in `market-data-processing-service`. — **DONE 2026-08-09 (slot-29)**:
+      `market-data-processing-service@9c23178`. Both call sites now branch on the `classify_sports_empty_reason` result
+      — `SOURCE_RETURNED_ZERO` routes to `record_failed_for_shard` (`NO_RAW_TICK_DATA_FOR_SHARD`), any other typed
+      calendar reason still routes to `record_empty_for_shard`. 2 new + 2 updated unit tests assert the routing directly
+      (`tests/unit/test_live_workers_coverage2.py`); full `quality-gates.sh` green on the shipped SHA. See Progress Log
+      in the source issue doc for the re-run-day proof.
 - [x] ✅ [DIAG] P1. Investigate the MDPS SPORTS `~50/N "Unknown error"` crash (findings 3+4 of
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md`, combined into one sequential pass per
       the skill's same-source-doc rule) in `market-data-processing-service`: (1) grep the failing VM's `run.log` (e.g.
