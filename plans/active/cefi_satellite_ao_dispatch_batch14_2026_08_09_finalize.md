@@ -56,11 +56,14 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile `issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`'s checkbox pointer**
-      (line 163 as of drafting) with the shipping commit + verification evidence once batch14's Aster adapter todo
-      lands. **Verify the cited commit is reachable on `origin/live-defi-rollout` before citing it.** **Done when**: the
-      pointer is replaced with a verified commit + evidence, and the source doc's remaining-open count (3, all
-      human-gated) is explicitly re-stated.
+- [x] ✅ [REVIEW] P1. **Reconcile `issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`'s checkbox
+      pointer** (line 163 as of drafting) with the shipping commit + verification evidence once batch14's Aster adapter
+      todo lands. **Verify the cited commit is reachable on `origin/live-defi-rollout` before citing it.** **Done
+      when**: the pointer is replaced with a verified commit + evidence, and the source doc's remaining-open count (3,
+      all human-gated) is explicitly re-stated. — unified-trading-pm@(this commit): verified
+      `execution-service@05b425e6` reachable on `origin/live-defi-rollout` (`git merge-base --is-ancestor` confirmed),
+      replaced the line-163 pointer with the verified commit + shipped-scope evidence, flipped it to `[x]`, and
+      re-stated the doc's remaining-open count (3, all human/operator-gated) inline + in its Progress Log.
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch14_2026_08_09.md`** via the standard 6-step ritual: add the
       archive banner → confirm no new durable contract needs codex-alignment → grep the corpus for every referrer of
       `cefi_satellite_ao_dispatch_batch14_2026_08_09` and repoint each to the archived path → clear `locked_by` (already
@@ -77,3 +80,8 @@ context_scope:
 
 - **2026-08-09** — drafted alongside batch14; `status: active` from the start, machine-held by `gate_on_depends: true`
   until batch14's todo is done.
+- **2026-08-09 (slot-4, review)**: todo 1 done — batch14's Aster adapter todo confirmed landed
+  (`execution-service@05b425e6`, verified reachable on `origin/live-defi-rollout`), source issue doc's line-163 pointer
+  reconciled with the verified commit + shipped-scope evidence, remaining-open count (3, all human/operator-gated)
+  re-stated inline + in that doc's own Progress Log. Todo 2 (archival) still open, `sequential: true` so it proceeds
+  next.
