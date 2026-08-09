@@ -10,7 +10,7 @@ summary: >-
   item from the same source doc (repointing 6 refs in `monitoring_control_plane_master_2026_06_10.md`) carries
   `parent_epic: observability_master` instead and is extracted separately into
   `ci_satellite_ao_dispatch_batch10_2026_08_09.md`, per the batch7/batch8 parent_epic-grouping precedent.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -20,7 +20,7 @@ tags: [ci, ao-dispatch, close-out, batch-9, satellite-docs, plan-hygiene, dangli
 related:
   [
     /plans/active/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
-    /plans/active/ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
     /plans/active/ci_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     /plans/epics/infrastructure_master.md,
@@ -60,6 +60,15 @@ source: >-
 ---
 
 # CI satellite AO batch 9 (infrastructure_master group)
+
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** Both todos done + their source-doc checkboxes reconciled by
+> `ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md`'s own sole todo (`unified-trading-pm@63b1044ea`). Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "archive immediately" HARD RULE (and the
+> `ci_satellite_ao_dispatch_batch7_finalize_2026_08_09.md` precedent for this exact batch-N/finalize shape), this doc
+> and its now-done finalize companion archive together in this same follow-up commit — separate from the checkbox-flip
+> commit per that same codex doc's "never combine the flip with the git mv" rule (see
+> `issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md` for the same-day rule
+> interaction this tripped). Successor: none.
 
 > **Why this is a separate doc from batch 10.** Both batches come out of the same 2026-08-09 round-9 pass over
 > `issues/plan_reconciler_ci_late_findings_2026_08_06.md`. This doc's two items both cite a source doc whose own
@@ -143,3 +152,9 @@ Todos 1 and 2 touch disjoint files (`qg_host_adaptive_resource_governor_2026_07_
   deployment-service commit) — located the actual shipping commit by content match (`a52672b6d`, "repoint 4 stale issue
   refs in qg_host_adaptive_resource_governor") and corrected the citation above. Both source-doc checkboxes in
   `issues/plan_reconciler_ci_late_findings_2026_08_06.md` now carry the verified SHAs.
+- **2026-08-09 (archival)** — Flip commit (`unified-trading-pm@63b1044ea`) shipped separately from this archival move
+  per the codex "never combine" rule. Archiving this doc + its finalize companion together now, in this follow-up
+  commit: `status` → `complete`, `related:` repointed at the finalize doc's new archive path, referrers fixed
+  corpus-wide (`ci_satellite_ao_dispatch_batch10_2026_08_09.md`, `issues/plan_reconciler_ci_late_findings_2026_08_06.md`
+  `related:` entries). No codex-alignment change needed — both todos were pure reference/index-hygiene fixes already
+  covered by `/codex/11-project-management/cross-reference-path-convention.md`.

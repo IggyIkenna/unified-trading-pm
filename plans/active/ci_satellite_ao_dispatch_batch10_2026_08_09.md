@@ -19,7 +19,7 @@ related:
   [
     /plans/active/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
     /plans/active/ci_satellite_ao_dispatch_batch10_finalize_2026_08_09.md,
-    /plans/active/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/monitoring_control_plane_master_2026_06_10.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
   ]

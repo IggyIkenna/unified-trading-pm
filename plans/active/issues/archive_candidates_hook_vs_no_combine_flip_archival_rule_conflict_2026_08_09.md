@@ -20,7 +20,7 @@ tags: [plan-hygiene, archival, pre-commit, ssot-conflict, check_archive_candidat
 related:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/active/ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
     /agents/RULES.md,
   ]
 created: 2026-08-09

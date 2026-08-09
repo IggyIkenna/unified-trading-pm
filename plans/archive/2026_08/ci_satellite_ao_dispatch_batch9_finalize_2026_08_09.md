@@ -7,7 +7,7 @@ summary: >-
   (`issues/plan_reconciler_ci_late_findings_2026_08_06.md`) — that doc retains 2 genuinely-open, deliberately
   non-extracted items (an archived-doc cosmetic typo and an editorial judgment call), so it stays `status: open` after
   this batch lands.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [ci, ao-dispatch, close-out, batch-9, satellite-docs, archival]
 related:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
   ]
 created: "2026-08-09"
@@ -34,7 +34,6 @@ supersedes:
 superseded_by:
 depends_on: [ci_satellite_ao_dispatch_batch9_2026_08_09]
 gate_on_depends: true
-archive_exempt: true
 source: >-
   Authored alongside `ci_satellite_ao_dispatch_batch9_2026_08_09.md` per `plans/active/task_template.md` §4's
   finalize-plan-coverage rule. Authored `status: active` (not `draft`) per the established no-double-gate finding:
@@ -45,7 +44,7 @@ sequential: true
 drift_direction: none
 context_scope:
   [
-    /plans/active/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
     /plans/active/task_template.md,
   ]
@@ -53,8 +52,16 @@ context_scope:
 
 # CI satellite AO batch 9 — finalize
 
-> **🔒 GATED, not draft.** `depends_on: [ci_satellite_ao_dispatch_batch9_2026_08_09]` + `gate_on_depends: true` holds
-> the todo below until batch 9's 2 todos are both `done`.
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** Sole todo done (`unified-trading-pm@63b1044ea`); archived alongside its
+> now-done base plan, `ci_satellite_ao_dispatch_batch9_2026_08_09.md`, in this same follow-up commit — per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "archive immediately" HARD RULE and the
+> `ci_satellite_ao_dispatch_batch7_finalize_2026_08_09.md` precedent for this exact shape. The checkbox-flip commit
+> shipped separately from this git-mv archival commit per that same codex doc's "never combine" rule (see
+> `issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`) — the `archive_exempt: true`
+> bridge used for the flip commit is removed here as moot now that the doc is leaving `plans/active/`. Successor: none.
+
+> **🔒 GATED, not draft (historical).** `depends_on: [ci_satellite_ao_dispatch_batch9_2026_08_09]` +
+> `gate_on_depends: true` held the todo below until batch 9's 2 todos were both `done`.
 
 ## Todos
 
@@ -95,3 +102,10 @@ context_scope:
   `issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md`. This exemption covers only
   THIS commit; the very next commit performs the actual 6-step archival ritual (git mv + banner + status + referrer-fix)
   and removes this key (moot once the doc leaves `plans/active/`).
+- **2026-08-09 (archival)** — This follow-up commit performs the actual 6-step ritual: archive banner added, `status` →
+  `complete`, `archive_exempt` key removed (moot), `related:` repointed at the base plan's new archive path, corpus-wide
+  referrers fixed (`ci_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`'s `related:` entry and this session's own
+  new issue doc's `related:` entry). No deferred item was silently dropped — this plan's only todo was a clean
+  reconciliation with no residue. No codex-alignment change needed (pure reference-hygiene, already covered by
+  `/codex/11-project-management/cross-reference-path-convention.md`). Archived together with
+  `ci_satellite_ao_dispatch_batch9_2026_08_09.md` in this same commit.
