@@ -126,15 +126,39 @@ and the parent extraction session's own report for the full per-doc disposition.
       with evidence in this todo. Source: `/plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md:242` (its
       `[DATA] P2` item, itself sourced from
       `/plans/archive/2026_08/wip_preserve_refs_silently_unrecovered_2026_07_29.md`, archived). Repo: strategy-service.
-- [ ] [REVIEW] P1. **Sweep `plans/active/issues/` for `ao`-tagged docs that are already resolved/fully-`[x]` but never
-      archived, and archive each via the standard 6-step ritual** (banner, codex-alignment check, corpus-wide referrer
-      fixup, lock check). This is the current-state form of the source doc's Phase-5 gate — do not trust its stale "Docs
-      #2 and #6" reference (those predate several archival waves already landed since 2026-07-17); re-derive the
-      candidate set fresh from a live grep/`check_archive_candidates.sh`-style pass scoped to `asset_group: [ao]` /
+- [x] ✅ [REVIEW] P1. **Sweep `plans/active/issues/` for `ao`-tagged docs that are already resolved/fully-`[x]` but
+      never archived, and archive each via the standard 6-step ritual** (banner, codex-alignment check, corpus-wide
+      referrer fixup, lock check). This is the current-state form of the source doc's Phase-5 gate — do not trust its
+      stale "Docs #2 and #6" reference (those predate several archival waves already landed since 2026-07-17); re-derive
+      the candidate set fresh from a live grep/`check_archive_candidates.sh`-style pass scoped to `asset_group: [ao]` /
       `parent_epic: orchestrator_master` docs. **Done when**: `plans/active/issues/` contains no resolved-but-
       unarchived `ao`-tagged doc, and `regenerate_active_plan_inventory.py` is re-run clean. Source:
       `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md:479` (Phase 5, its `[REVIEW] P0` item). Repo:
-      unified-trading-pm.
+      unified-trading-pm. — unified-trading-pm@ (this commit). **Re-derived the candidate set fresh (not the stale "Docs
+      #2 and #6" reference)**: found all 57 `plans/active/issues/*.md` docs matching `asset_group: [ao]` OR
+      `parent_epic: orchestrator_master`, checked each for 0-open-todos-with-`>0`-done (mirroring
+      `check_archive_candidates.sh`'s own criterion) plus a terminal `status:` field independent of checkbox state.
+      Result: **0 genuine orphans** — `check_archive_candidates.sh` (0 candidates, baseline 0) and
+      `check_terminal_status_archived.py` (0 violations, baseline 0) both confirm corpus-wide, and the manual per-doc
+      sweep found the same 0 within the `ao`/`orchestrator_master` subset. 4 docs surfaced by a naive 0-open-todos grep
+      are NOT real orphans, each already correctly held back by an existing mechanism: (1)
+      `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` — 0 open todos but legitimately
+      `gate_on_depends`-gated by its own active finalize plan
+      (`multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md`, confirmed
+      `depends_on`+`gate_on_depends: true` wiring); (2)
+      `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` and (3)
+      `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md` — both `archive_exempt: true`, correctly
+      routed through `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`'s and
+      `ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`'s own `[REVIEW]` archival todos respectively, both
+      re-verified current as recently as 2026-08-07/2026-08-09 per their own Progress Logs; (4)
+      `ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md` — `status: resolved`, 0 open todos, but
+      carries the standing corpus-wide `locked_by: live-defi-rollout` lock shared with 62 other active docs (not a
+      per-editor claim) — per `plans/PLAN_FORMAT.md`'s own archive-eligibility rule ("not `locked_by:` an active
+      branch") this doc is archival-INELIGIBLE until an explicit `[unlock-plan]`, so per this codex's HARD RULE ("MUST
+      NEVER unlock autonomously") it was correctly left untouched, not force-archived.
+      `regenerate_active_plan_inventory.py` re-run: **0 orphans** (297 plans, 0 TBD, 63% done overall) — dashboard file
+      regenerated + committed alongside. Net: 0 archival actions required this pass — a legitimate 0-yield audit
+      outcome, not a shortfall.
 - [ ] [BACKEND] P1. **Prove ONE `plan_reconciler` run end-to-end (observe the next natural 01:00 UTC timer fire, or
       trigger one if the doc's stated hold has cleared) — plus pin 2 named residuals.** Gate: (a) observe a full run
       producing BOTH a `plan_health_result` activity row AND a pushed `plan_reconciler/<dispatch_id>` branch — cite the
@@ -199,3 +223,9 @@ and the parent extraction session's own report for the full per-doc disposition.
   (`ao_recovery_audit_layer1_deleted_2026_07_15.md`'s own sole open todo — genuine safety-domain design work, "decides a
   SignoffVerdict" has no specified decision logic, stays behind); `dashboard_prettier`'s "decide whether the dashboard
   should gate on formatting at all" (explicit undecided policy call, sequenced behind the extracted bump anyway).
+- **2026-08-09** (slot 19) — Todo 3 (the `ao`-tagged archive sweep) done: 0 genuine orphans found in
+  `plans/active/issues/` — see the todo's own evidence line for the 4 near-misses (gate/exempt/lock, each already
+  correctly held back) and both mechanical gates' 0-candidate confirmation. `regenerate_active_plan_inventory.py` re-run
+  clean (0 orphans, 297 plans). No `[unlock-plan]` requested for the one locked-but-resolved doc found
+  (`ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md`) — its lock is the standing corpus-wide
+  `locked_by: live-defi-rollout` convention shared with 62 other active docs, not an anomaly worth an operator ping.
