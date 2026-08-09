@@ -6,7 +6,7 @@ title:
 created: 2026-08-09
 author: slot-15
 assigned_vm: planning
-status: open
+status: resolved
 tags: [ci-cd, promotion-blocked, dangling-reference, code-conflict, agent-orchestrator, cross-repo, workflow-parity]
 source:
   [
@@ -33,14 +33,18 @@ related:
   ]
 parent_epic: infrastructure_master
 resolved_by:
+  "unified-trading-pm@3bf7e3c97 (last todo, the main-workflow-stub-migration root fix, agent-orchestrator@2e43e4f8 PR
+  #820) -- all 3 todos done, unlocked"
 locked_by:
 locked_since:
 execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true # flip-only bridge; dropped in the immediately-following archival commit
 ---
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED** (status: resolved, 0 open todos, unlocked). Archived by infra (slot-19) after
+> shipping the sole remaining todo (main<->LDR workflow-stub migration, `agent-orchestrator@2e43e4f8`, PR #820).
 
 # agent-orchestrator: main <-> live-defi-rollout workflow-file drift, caught by the new parity check
 
