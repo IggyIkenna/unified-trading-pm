@@ -405,3 +405,6 @@ that doesn't block or affect anything here; pick it up whenever, no urgency.
   correction names is owned end-to-end by `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`'s "The panel"
   section, not by this doc. No new open work here, no reclassification.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA-STALE, valid — reconfirmed `sports_satellite_ao_dispatch_batch10_2026_08_06.md`
+  is still `status: active` / `assigned_vm: planning` with its todo 3 (`LC_TARBALL_FRESHNESS=enforce` proposal, line
+  ~98) still open — genuinely in-flight, not stalled. No change.
