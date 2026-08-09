@@ -155,12 +155,41 @@ drift_direction: advance-code
       `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (Phase-0 item 10). Done when: `COVERAGE_EXCLUSIONS`
       carries a TradFi entry with a valid `evidence_uri` + re-runnable `evidence_probe`; the ~241k cells report
       `EXPECTED_UPSTREAM_OUT_OF_BOUNDS` instead of a plain gap.
-- [ ] [INFRA] P0. Rebuild the IS daily-definition producer for TradFi/sports/prediction, mirroring the already-shipped
-      and prod-verified cefi + defi producers (24/53 venues verified) — the tradfi child plan confirms
+- [x] ✅ [INFRA] P0. Rebuild the IS daily-definition producer for TradFi/sports/prediction, mirroring the
+      already-shipped and prod-verified cefi + defi producers (24/53 venues verified) — the tradfi child plan confirms
       tradfi/sports/prediction currently have NO prod daily producer at all. Repo: instruments-service. Source:
       `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (Phase-0 item 12). Done when: TradFi/sports/prediction
       each have a verified prod daily producer, confirmed via a dated venue-count run log matching the cefi/defi
-      evidence bar.
+      evidence bar. — instruments-service@cad1d322. **Finding that changed the fix**: sports and prediction ALREADY had
+      live, prod-verified daily producers (contradicting this todo's stated premise, stale from 2026-06-26) —
+      `uts-prod-instruments-service-prediction-t1-recon` (scheduler `0 20 * * *` UTC) succeeded 5/5 consecutive days
+      2026-08-05→09 (latest: KALSHI 11,689 + POLYMARKET 1,594 instruments);
+      `uts-prod-instruments-service-sports-fixtures` (4 daily schedules + a `*/5` cron, same
+      `--operation=instruments --mode=batch --asset-group=SPORTS --run-tag=t1-recon` CLI as cefi/defi/tradfi) succeeded
+      on its 2026-08-09 06:00 UTC run, 594 fixtures + rosters across 20+ leagues. **Only TradFi was genuinely broken**:
+      `uts-prod-instruments-service-tradfi-t1-recon` (scheduler `10 0 * * *` UTC) crashed with exit 1 on
+      `UndeclaredTradfiVenueError('FRED')` on every run for at least 5 consecutive days (2026-08-05→09, confirmed via
+      `gcloud run jobs executions list` + full log pulls) — FRED (Federal Reserve Economic Data, a static macro/rates
+      series with no exchange trading calendar, same nature as FX) was never declared in the tradfi calendar SSOT
+      (`instruments_service/reference_data/adapters/tradfi/databento/sessions.py` `_EXCHANGE_HOURS`/`_XCAL_MAPPING`), so
+      the fail-closed guard added 2026-06-25 (G1.e) raised instead of resolving. Fixed by declaring FRED as a 24/7 venue
+      alongside FX (renamed `_FX_VENUES_24_7`→`_STATIC_24_7_VENUES`; also fixed `_get_session_metadata`'s 24/7 branch,
+      which hardcoded `holiday_calendar="FX"` regardless of actual venue — would have mislabeled FRED session metadata).
+      3 new regression tests pin the fix; full `quality-gates.sh` green (186s). **Live-verified, not just unit-tested**:
+      manually rebuilt the instruments-service image from this commit
+      (`gcloud builds triggers run instruments-service-build --branch=live-defi-rollout`, build `00f77c23` SUCCESS — no
+      LDR-specific Cloud Build trigger exists for this repo, so the router's automatic `qg-passed` dispatch does not
+      reach it; documented as a follow-up below), then manually executed the live TradFi job against the fresh image
+      (`gcloud run jobs execute uts-prod-instruments-service-tradfi-t1-recon --wait`, execution
+      `uts-prod-instruments-service-tradfi-t1-recon-kfkzj`, 2026-08-09 08:09-08:13 UTC) — **completed successfully
+      (exit 0)**, no crash: NASDAQ (635), NYSE (633), CBOE (126), KRX (5) fetched; CBOE/KRX/NASDAQ/NYSE correctly
+      pre-stamped as non-trading-day `empty_confirmed` (weekend/holiday logic exercising the fixed calendar path); FX
+      and FRED both resolve `is_non_trading_day()`→False (24/7, no raise) as designed. **Not fixed here (pre-existing,
+      confirmed present in BOTH the old crashing run and the new successful run — unrelated to this fix, filed as
+      follow-ups below)**: (a) FX/FRED instrument records fail schema validation post-fetch
+      (`SHARD FAILED … all     N instruments failed validation`, reason `timezone required for TradFi`) — these venues
+      fetch successfully but write 0 captured rows; (b) one CME COMBO symbol (`UD:1N: 12 2518307`) carries a malformed
+      embedded `:` and hits `ADAPTER_ERROR` in `build_instrument_id`.
 - [ ] [CODE] P1. Build the granularity-aware catalogue producer for prediction (per-cqg grain) and sports (per-league
       vs. per-fixture grain), mirroring the already-shipped shape-aware producer for cefi/tradfi/defi
       (`instruments-service@6ea46565`). Repo: instruments-service. Source:
@@ -279,6 +308,26 @@ drift_direction: advance-code
       when: per-asset_group `--dry-run` sizing checks land in the expected ballpark; `--apply-write` runs on VM(s) per
       the vm-launcher-runbook (SPOT); post-run verification shows `expected_unattempted` counts in range with captured
       rows preserved and the consolidator green.
+- [ ] [CODE] P2. Fix TradFi FX/FRED instrument-write schema validation failure — both venues fetch successfully from
+      their sources but 100% of their instrument records are rejected at write time with
+      `SCHEMA_VALIDATION_FAILED …     reason=timezone required for TradFi`, so
+      `uts-prod-instruments-service-tradfi-t1-recon` writes 0 captured rows for FX/FRED every run despite the job itself
+      completing (exit 0). Found 2026-08-09 while live-verifying item 6's fix (`instruments-service@cad1d322`) —
+      confirmed pre-existing (present identically in the last crashing run, execution
+      `uts-prod-instruments-service-tradfi-t1-recon-wdskr`, and the first post-fix successful run, execution
+      `uts-prod-instruments-service-tradfi-t1-recon-kfkzj`), so unrelated to and not caused by that fix. Repo:
+      instruments-service. Done when: FX and FRED instrument records pass validation and write captured rows (either the
+      validator's timezone requirement is relaxed for these 24/7 non-exchange venues, mirroring their
+      `_STATIC_24_7_VENUES` calendar treatment, or the adapters are fixed to stamp a timezone) — verified via a fresh
+      dated run log showing FX/FRED captured counts > 0.
+- [ ] [CODE] P3. Fix the CME COMBO malformed-symbol `ADAPTER_ERROR` in `build_instrument_id` — symbol
+      `UD:1N: 12 2518307` (instrument_type=COMBO) carries an embedded `:`, the canonical id's own VENUE:TYPE:SYMBOL
+      delimiter, so id construction fails with a classified `ADAPTER_ERROR (permanent)`. Found 2026-08-09 alongside the
+      FX/FRED finding above (same live-verification pass), confirmed pre-existing in both the crashing and post-fix
+      successful TradFi t1-recon runs. Repo: instruments-service. Done when: the CME adapter resolves this symbol
+      against the catalogue/wire-map before calling `build_instrument_id`, or routes it through the UAC quarantine model
+      (`unified_api_contracts.canonical.quarantine`) instead of raising — verified via a fresh run log showing no
+      `ADAPTER_ERROR` for this symbol.
 
 ## Codex SSOTs
 

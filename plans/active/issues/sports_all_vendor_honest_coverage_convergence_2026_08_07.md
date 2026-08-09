@@ -905,34 +905,16 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   **Per precedent, NOT probing again until well past tonight's UTC midnight** (~00:00Z) — plan to test-relaunch around
   01:00-01:30Z. INJURIES (next AF-campaign item, same singleton lock/API key) also blocked until then — no point
   launching either.
-- **22:25Z — smallchunk8 died silently (5th occurrence), chunk 26 again (3rd time, same date=2020-10-09 as smallchunk2)
-  — genuine bug, ~15-16min silent gap matches signature exactly.** Relaunched as `smallchunk9` (CHUNK_SIZE=5 explicit).
-  Full detail: `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`@`9a8cd66da1`. FIXTURE_LINEUPS still
-  paused (AF quota), not due for a check until ~01:00Z+.
-- **23:02Z-00:38Z (4 routine ticks, all healthy, compacted 2026-08-09).** smallchunk9 climbed cleanly chunk 7→18/451,
-  zero OOMs until entering chunk 18 at 00:38Z (7 `CHUNK_FAILED`, expected). FIXTURE_LINEUPS correctly left paused
-  pre-midnight per the quota-reset plan, no probes attempted.
-- **01:05Z — ✅ AF DAILY QUOTA RESET CONFIRMED.** Probed via `af-backfill-20260809-020527`
-  (`RESUME_ENTITY=FIXTURE_LINEUPS`). Launcher's own pre-flight check showed `remaining_daily_quota=149210` (was 0
-  yesterday); `run.log` confirmed zero `'reached the request limit'` errors, genuine `Fetched N lineup rows` across many
-  real fixtures, `VM_PROGRESS` advancing. Left running. Matches the Aug-6/7 precedent's UTC-midnight-reset pattern
-  almost exactly (~1h05m past midnight this time vs ~1h45m then). INJURIES (62,709 needed) queued next behind the
-  singleton lock once FIXTURE_LINEUPS completes or shows a genuine slowdown. smallchunk9 still healthy, chunk 18,
-  unaffected throughout.
-- **01:41Z** — new FIXTURE_LINEUPS baseline post-resume: needed=**48,566** (0 quota errors, genuine fetches).
-  smallchunk9 chunk 18, 26 `CHUNK_FAILED` (in-range), fresh. Both healthy.
-- **02:10Z** — census flat at 48,566 (0 net change) despite `run.log` showing genuine fresh fetches seconds before the
-  census ran. Root-caused: the census reads the **consolidated** manifest (single-walk discipline), refreshed
-  periodically by a separate consolidator job, not live per-VM shards — a flat reading with fresh run.log activity is
-  expected lag, NOT a stall; only flag if it stays flat across 2+ consecutive ticks. smallchunk9 cleared chunk 18→ now
-  chunk 22/451, still 26 total `CHUNK_FAILED` (zero new). Both healthy, no action.
-- **02:56Z-05:11Z (compacted further).** Push-integrity issue recovered (verify `ahead=0/behind=0` independently, don't
-  trust `safe-doc-push.sh` alone). smallchunk9 climbed chunk 25→26 cleanly through the death chunk (29→51
-  `CHUNK_FAILED`, in-range), heartbeat blob confirmed alive throughout even when run.log text briefly lagged (standing
-  diagnostic: trust heartbeat blob over run.log staleness). FIXTURE_LINEUPS's ~2h15m flat census traced to the
-  consolidator (real merges ~11-15min due to lock contention; found an unresolved `shards_listed=12`→`downloaded=7` gap,
-  data itself confirmed safe) — self-resolved at 05:11Z (48,566→48,432 net).
-- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **22:25Z-05:11Z (2026-08-09, further compacted).** smallchunk8 died silently (5th occurrence, chunk 26 3rd time,
+  ~15-16min gap) → relaunched `smallchunk9`, climbed cleanly chunk 7→26/451 across the night (zero OOMs until chunk 18,
+  then in-range `CHUNK_FAILED` cycling through 18 and 26, heartbeat blob confirmed alive throughout even when run.log
+  text briefly lagged — established diagnostic: trust heartbeat blob over run.log staleness). **AF daily quota RESET
+  CONFIRMED at 01:05Z** (probe via `af-backfill-20260809-020527`, `remaining_daily_quota=149210` was 0 the day before,
+  matches the Aug-6/7 UTC-midnight-reset precedent) — FIXTURE_LINEUPS resumed, baseline 48,566. A ~2h15m flat census
+  reading was traced to consolidator lock-contention lag (real merges ~11-15min, found an unresolved
+  `shards_listed=12`→`downloaded=7` gap, data itself confirmed safe) and self-resolved at 05:11Z (→48,432). Also:
+  recovered a push-integrity issue this stretch — always verify `ahead=0/behind=0` independently, never trust
+  `safe-doc-push.sh`'s own message alone. context-scout 2026-08-09: refreshed context_scope (5 entries).
 - **05:39Z — `smallchunk9` was silently replaced by an AUTOMATED relaunch; cause of the original's death is
   UNKNOWN/unrecoverable, and both forensic logs were destroyed by the reuse.** Found via
   `gcloud compute operations list`: the original instance was deleted at `05:26:17Z` (within the 05:11Z→05:39Z
@@ -967,3 +949,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **07:54Z — smallchunk10 launch confirmed genuine** (retried once the unrelated concurrent session's dirty
   `deployment-service` file resolved on its own) — chunk 1/451, correct 5-day chunking, skip-fasting cleanly, real boot
   banner. FIXTURE_LINEUPS needed **43,518 → 41,381** (-2,137, fast real progress), heartbeat live. Both healthy.
+- **08:24Z** — smallchunk10 chunk 7/451, zero OOMs, heartbeat live. FIXTURE_LINEUPS needed **41,381 → 39,749** (-1,632).
+  Both healthy, no action. Did another compaction pass (969→951 lines) — this doc keeps needing one ~every 2h; if that
+  cadence continues, worth spinning a continuation doc next time rather than compacting again.

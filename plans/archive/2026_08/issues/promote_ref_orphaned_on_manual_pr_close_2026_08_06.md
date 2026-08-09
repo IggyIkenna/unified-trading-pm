@@ -138,3 +138,15 @@ manual step for anyone who closes a promote PR outside the fleet bot.
   was inaccurate. `promote_ref_orphaned_on_manual_pr_close-001`'s own stricter user-set bar (confirm `dbaa7b463` lands
   on `main` before `/done`) is still open and is being tracked live in that task's own session, not here — see the
   currently-open LDR→main promote PR for unified-trading-pm for progress.
+- **CLOSED, cicd-worker slot 30, 2026-08-09T08:2xZ**: `dbaa7b463`'s main-landing bar (the correction above's remaining
+  open item) is now satisfied. PR chain #2656→#2665 (11 promote PRs) each failed CI on the plan-hygiene
+  `check_todo_regression` ratchet check (documented in
+  `plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`); **PR #2666**
+  (head `f0496015365b`, opened 2026-08-09T08:16:02Z) is the first in the chain to pass `QG slice (checks)`, then passed
+  `quality-gates-v2` and merged at 2026-08-09T08:20:08Z (merge commit `8fe9c2b5156ffd16571191e6f6fb0d764032491a`).
+  Re-verified with the SAME command the correction entry used to catch the earlier false-positive:
+  `git fetch origin main --quiet && git merge-base --is-ancestor dbaa7b463 origin/main` → exit 0 (ON MAIN). Task
+  `promote_ref_orphaned_on_manual_pr_close-001`'s own stricter bar is now fully closed —
+  `unified-trading-pm@dbaa7b463 + @6ec2599f6 + @34eca6c42`. No `/done`-lifecycle tool is reachable from this dev
+  checkout session (no AO dispatch JWT; searched local `.claude/skills` and `commands/` dirs, no match) — this Progress
+  Log entry is the durable closing record per the commit-push-flip rule.

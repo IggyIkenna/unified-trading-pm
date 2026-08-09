@@ -158,11 +158,11 @@ own Tick history.
       heavy-phase token vs sitting in lighter setup/lint phases. New todo added below to determine whether
       total-instance count (not just heavy-phase count) also needs a cap, since even light-phase QG steps compound with
       the ~20+ concurrent Claude CLI sessions already driving the CPU/memory picture documented above.
-- [ ] [DOCS] P3. Correct the ~00:22Z progress-log entry below (12-slot simultaneous burst) — review (msg 4361) showed
+- [x] ✅ [DOCS] P3. Correct the ~00:22Z progress-log entry below (12-slot simultaneous burst) — review (msg 4361) showed
       it's a batch-processing artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick,
       NOT a tmux-server-level event as originally hypothesized; only the review-role entry in that burst was a real loss
       (the other 4 were already-finished scheduled jobs, `archived_lifecycle_complete:true`). Superseded-note only, keep
-      the original entry for history — do not delete it.
+      the original entry for history — do not delete it. — unified-trading-pm (this doc) + Progress Log entry below.
 - [ ] [BACKEND] P1. **Operator-confirmed active incident (msg 4377)** — determine whether
       `quality-gates-base/qg-host-governor.sh`'s ≤2 heavy-phase cap needs to be extended to gate total
       `quality-gates.sh` script instances (not just pytest/basedpyright), given 12-19 concurrent instances were observed
@@ -181,6 +181,13 @@ own Tick history.
 
 ## Progress log
 
+- 2026-08-09 (infra, slot 11, unified-trading-pm): Todo 6 (DOCS P3) — added a SUPERSEDED-NOTE directly under the ~00:22Z
+  progress-log entry (the "12-slot simultaneous burst") correcting its "plausibly a genuine tmux-server-level event"
+  hypothesis: per review's msg 4361 finding (already documented in the ~00:35Z entry below), the burst is a
+  batch-processing artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick, and only the
+  review-role entry in that burst was a real loss (the other 4 were already-finished scheduled jobs,
+  `archived_lifecycle_complete:true`). Original entry text kept verbatim for history, per the todo's own instruction —
+  only appended a note, nothing deleted.
 - 2026-08-09 ~05:25Z (main agt-22de53, relaying review msg 4403 from agt-f56131): Significant update — crash rate is
   DECOUPLED from raw host contention. Load has eased ~75% since the 03:14Z peak (14-19 vs 63-65) yet the ~5-8min kill
   cadence is completely unchanged (16 deaths in the ~2h16m window since the 03:07Z checkpoint, still 0
@@ -268,6 +275,12 @@ own Tick history.
   has-session-miss the debounce fix targets — plausibly a genuine tmux-server-level event (not a per-session liveness
   false-positive), which the fix may not address. Leaving todo 3 to review's fresh-window judgment rather than
   pre-empting it, but wanted this specific data point on record before it ages out of the activity log.
+
+  > **SUPERSEDED-NOTE (2026-08-09, per the ~00:35Z entry below and todo 6)**: the "genuine tmux-server-level event"
+  > hypothesis above was WRONG. Review (msg 4361) determined the 12-slot simultaneous burst is a batch-processing
+  > artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick, not a tmux-server-level
+  > event. Only the review-role entry in that burst was a real loss — the other 4 were already-finished scheduled jobs
+  > (`archived_lifecycle_complete:true`). Kept for history, not deleted — see the corrected finding below.
 
 - 2026-08-08 ~23:45Z (main agt-22de53): Review (msg 4359) found `agent-orchestrator@e32d962` shipped+`slot_done` at
   23:32Z but not live (`server_started:23:15:31Z` predates the commit) — corroborated by review's own slot-1 session
