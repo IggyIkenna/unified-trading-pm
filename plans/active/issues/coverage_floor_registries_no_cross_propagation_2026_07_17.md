@@ -314,7 +314,13 @@ which value is measured-reality is needed per venue, not a mechanical merge.
 
 - [ ] [DATA] P3. Investigate why read_availability_index(bucket, columns=[...]) returned an empty DataFrame on
       2026-07-27 (flagged 'worth its own follow-up, not chased here').
+- [ ] [DATA] P3. Re-verify HYPERLIQUID manifest coverage for 2023-04-15..2023-12-31 once the backfill VM's
+      `DEPLOYMENT_COMPLETED exit_code=0` lands (added 2026-08-09 by plan_reconciler — this item was flagged in prose
+      only; the 2026-08-06 archive-candidate audit note below correctly caught it, but it was never actually converted
+      to a tracked checkbox per the HARD RULE).
 
 > **2026-08-06 archive-candidate audit**: Hyperliquid todo's own text flags 'worth its own follow-up, not chased here to
-> stay in scope' (read_availability_index empty-DF) and a second prose-only 'Follow-up: re-verify manifest coverage for
-> 2023-04-15..2023-12-31 once DEPLOYMENT_COMPLETED exit_code=0 lands' — neither became a `- [ ]` todo.
+> stay in scope' (read_availability_index empty-DF, tracked above) and a second prose-only 'Follow-up: re-verify
+> manifest coverage for 2023-04-15..2023-12-31 once DEPLOYMENT_COMPLETED exit_code=0 lands' — **UPDATE 2026-08-09
+> (plan_reconciler)**: both are now tracked `- [ ]` todos above; this note's original "neither became a todo" claim is
+> stale as of this correction.
