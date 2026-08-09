@@ -89,8 +89,8 @@ Requires the strict strategy-service QG + the manifest-allocation-guard tests + 
 is a multi-file live-trading-system integration — done as a focused build, not rushed; the shipped paper/ensemble engine
 is the validated foundation + a runnable paper path TODAY.
 
-- [x] ✅ [STRATEGY] P1. Fold the funding-reversion + ensemble into strategy-service v2 `carry_and_yield` + allocator with a
-      complete-data DATA*SOURCE config mode (reads dumped GCS canonical data). **Repo: strategy-service.** (perm
+- [x] ✅ [STRATEGY] P1. Fold the funding-reversion + ensemble into strategy-service v2 `carry_and_yield` + allocator
+      with a complete-data DATA*SOURCE config mode (reads dumped GCS canonical data). **Repo: strategy-service.** (perm
       granted) — **DONE (na-eligibility-audit 2026-08-07) — both halves shipped, closing the stale open checkbox.**
       Config piece: `strategy-service@c412f6af` (2026-06-19): typed
       `StrategyServiceConfig.data_source: Literal['live','gcs_complete']` + `gcs_complete_data_path` (the complete-data
@@ -333,15 +333,15 @@ vm_zombie_watchdog ruff cleanup. No DEFERRED-without-successor; no broken state.
 
 ## Progress Log
 
-- **na-eligibility-audit 2026-08-07**: KEEP-NA, stale items — closed the "Fold the funding-reversion + ensemble..."
-  todo (line ~92): its own text already recorded the config half DONE (`strategy-service@c412f6af`) and the ENGINE+UAC
+- **na-eligibility-audit 2026-08-07**: KEEP-NA, stale items — closed the "Fold the funding-reversion + ensemble..." todo
+  (line ~92): its own text already recorded the config half DONE (`strategy-service@c412f6af`) and the ENGINE+UAC
   archetype half is independently DONE per the very next todo's 2026-07-31 verified-ancestor evidence
   (`unified-api-contracts@487b9a9` + `strategy-service@6b285fad`) — no sub-piece remained open, just an unflipped
   checkbox. Doc stays KEEP-NA overall: the 5 remaining open NICE-TO-HAVE items (rank-allocator increment, UI wizard
   surfacing, daily-recurrence scheduler, ruff cleanup, asset-class filter) are bounded engineering follow-ups with no
-  stated operator gate — flagged as a lower-confidence RECLASSIFY signal in this session's report rather than reclassified
-  here (the prior 2026-08-02 pass's "design judgment" framing looks looser than a close read supports, but this batch's
-  own rubric requires reporting, not unilaterally flipping `assigned_vm`).
+  stated operator gate — flagged as a lower-confidence RECLASSIFY signal in this session's report rather than
+  reclassified here (the prior 2026-08-02 pass's "design judgment" framing looks looser than a close read supports, but
+  this batch's own rubric requires reporting, not unilaterally flipping `assigned_vm`).
 - **na-eligibility-audit 2026-08-02** (re-confirms 2026-07-30; re-read after intervening edits, verdict unchanged):
   KEEP-NA, valid — remaining todos are strategy/UI design judgment (rank-allocator increment, archetype surfacing,
   asset-class filter). NOTE the `[HISTORICAL] P3` todo is self-labelled 'SUPERSEDED — DONE above' (UAC@487b9a9 +
@@ -350,3 +350,4 @@ vm_zombie_watchdog ruff cleanup. No DEFERRED-without-successor; no broken state.
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — fixed a duplicate `carry_and_yield/` entry
   (with/without trailing slash counted as 2 slots) and added the UAC `architecture_v2/enums.py` source path (the
   `CARRY_FUNDING_DISPERSION` archetype definition).
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

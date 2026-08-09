@@ -97,27 +97,29 @@ just picking a winner by filename.
 
 - **na-eligibility-audit 2026-08-08 (Phase 2/3, sub-agent conflict-check + apply)**: **RECLASSIFY, applied.**
   Re-verified the whole-doc bar: all 3 open todos are bounded, worker-determinable — todo 1 (idempotency guard at
-  finalize-plan creation time, keyed on the `depends_on` relationship per `_gated_slugs()`, not filename shape) and
-  todo 2 (a corpus-wide duplicate-gate detector modeled on the sweep's existing checkers, reported the same way the
-  orphan count already is) are both scoped code changes with a stated done-when; todo 3 (sweep once with todo 2's
-  detector, de-race any hits using the exact port-then-supersede procedure this doc's own 2026-08-06 entry already
-  documents) is a mechanical application of an already-proven procedure, not a fresh judgment call — reports zero as a
-  valid, checkable outcome. Confirmed live (direct code read, `scripts/quality_gates/check_finalize_plan_coverage.py`)
-  that no duplicate-gate detector exists yet (`_gated_slugs()` returns a `set[str]`, dedupes by construction, cannot
-  surface a duplicate) and `scripts/plan-hygiene/` has no `check_na_duplicate_staleness.py`-adjacent script covering
-  this — todo 2 is genuinely unbuilt, not a stale checkbox. Ran the shared conflict-check protocol
+  finalize-plan creation time, keyed on the `depends_on` relationship per `_gated_slugs()`, not filename shape) and todo
+  2 (a corpus-wide duplicate-gate detector modeled on the sweep's existing checkers, reported the same way the orphan
+  count already is) are both scoped code changes with a stated done-when; todo 3 (sweep once with todo 2's detector,
+  de-race any hits using the exact port-then-supersede procedure this doc's own 2026-08-06 entry already documents) is a
+  mechanical application of an already-proven procedure, not a fresh judgment call — reports zero as a valid, checkable
+  outcome. Confirmed live (direct code read, `scripts/quality_gates/check_finalize_plan_coverage.py`) that no
+  duplicate-gate detector exists yet (`_gated_slugs()` returns a `set[str]`, dedupes by construction, cannot surface a
+  duplicate) and `scripts/plan-hygiene/` has no `check_na_duplicate_staleness.py`-adjacent script covering this — todo 2
+  is genuinely unbuilt, not a stale checkbox. Ran the shared conflict-check protocol
   (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3): grepped every `status: active`,
   `assigned_vm: planning` doc under `parent_epic: orchestrator_master` (and corpus-wide) for
   `idempotent finalize`/`duplicate finalize`/`_gated_slugs`/`duplicate-gate detector` — the only substantive hits are
   this doc's own already-resolved sibling incidents (`infra_capture_and_devops_leftovers_finalize_2026_07_25.md`'s
   2026-07-25 ad hoc supersede of a DIFFERENT duplicate-finalize pair, and
-  `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md`, the SURVIVOR of the very race this
-  doc documents) — neither tracks building the general-purpose idempotency guard or detector this doc's 3 todos ask
-  for. Verdict: clear. Applied: `assigned_vm: NA` -> `planning`, `execution_scope: local-only` ->
-  `orchestrator-agent`, added `sequential: true` (todo 3 depends on todo 2's detector existing — a real intra-doc
-  dependency chain now that this doc is live-dispatchable). `assigned_role: infra` was already correct (matches all 3
-  todos' `[INFRA]` tag) — no change needed. **No separate finalize-plan twin authored**:
-  `check_finalize_plan_coverage.py::_find_violations` scans `plans/active/*.md` only (non-recursive), never
-  `plans/active/issues/*.md` (confirmed by direct code read) — this doc, `doc_type: issue` in `plans/active/issues/`,
-  is structurally outside that gate's scanned population, same as ~110 other live `assigned_vm: planning` issue docs
-  in this corpus with no finalize-plan companion. Archival will be handled directly once all 3 todos clear.
+  `live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md`, the SURVIVOR of the very race this doc
+  documents) — neither tracks building the general-purpose idempotency guard or detector this doc's 3 todos ask for.
+  Verdict: clear. Applied: `assigned_vm: NA` -> `planning`, `execution_scope: local-only` -> `orchestrator-agent`, added
+  `sequential: true` (todo 3 depends on todo 2's detector existing — a real intra-doc dependency chain now that this doc
+  is live-dispatchable). `assigned_role: infra` was already correct (matches all 3 todos' `[INFRA]` tag) — no change
+  needed. **No separate finalize-plan twin authored**: `check_finalize_plan_coverage.py::_find_violations` scans
+  `plans/active/*.md` only (non-recursive), never `plans/active/issues/*.md` (confirmed by direct code read) — this doc,
+  `doc_type: issue` in `plans/active/issues/`, is structurally outside that gate's scanned population, same as ~110
+  other live `assigned_vm: planning` issue docs in this corpus with no finalize-plan companion. Archival will be handled
+  directly once all 3 todos clear.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

@@ -97,10 +97,10 @@ todos of its own**. The plans that actually work these docs' open items:
   also archived. Superseded by
   [ao_satellite_ao_dispatch_batch2_2026_07_30](/plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md),
   [batch3_2026_07_31](/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md),
-  [batch4_2026_08_01](/plans/active/ao_satellite_ao_dispatch_batch4_2026_08_01.md), and
-  [batch5_2026_08_03](/plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md) (`status: draft`, awaiting operator
-  approval) — each with its own gated `_finalize` pair — as the tranche's iterative-drain audit cycle continued per the
-  skill's own methodology.
+  [batch4_2026_08_01](/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md) (now archived, complete),
+  and [batch5_2026_08_03](/plans/active/ao_satellite_ao_dispatch_batch5_2026_08_03.md) (`status: draft`, awaiting
+  operator approval) — each with its own gated `_finalize` pair — as the tranche's iterative-drain audit cycle continued
+  per the skill's own methodology.
 - [ao_open_issues_consolidated_close_out_2026_07_17](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)
   — an earlier AO-scope tracker (8 open todos as of 2026-08-04) that is **not** in the Sources lists below but does
   cover some of them (its Recovery-audit Layer-1 producer todo owns
@@ -126,8 +126,8 @@ todos of its own**. The plans that actually work these docs' open items:
 [issues/ao_backlog_done_row_disappearance_2026_07_25.md](/plans/archive/issues/ao_backlog_done_row_disappearance_2026_07_25.md)
 (backlog `state.db` rows silently vanishing — RESOLVED 2026-07-28,
 `agent-orchestrator@b926a9262c4ef592f1bfe644b0c0e03cac3335ef`) ·
-[issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md](/plans/active/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md)
-(`PlanRegenLoop.prune_stale` wiped the entire live backlog on a transient zero-scan tick) ·
+[issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md](/plans/archive/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md)
+(`PlanRegenLoop.prune_stale` wiped the entire live backlog on a transient zero-scan tick — now archived, resolved) ·
 [issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md](/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md)
 (same backlog task dispatched to two slots simultaneously) ·
 [issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md](/plans/archive/issues/orchestrator_ready_p1_task_undispatched_no_matching_worker_autospawn_gap_2026_07_25.md)
@@ -173,7 +173,11 @@ reaper-false-done, clean-exit-signal, auto-park-enforcement).
 [issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md](/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md)
 (shared UTL clone repeatedly reset to origin, destroying local commits) ·
 [issues/orphan_rootm_branch_unmerged_work_2026_06_05.md](/plans/archive/issues/orphan_rootm_branch_unmerged_work_2026_06_05.md)
-(orphaned unmerged work on dead root-VM agent-slot branches).
+(orphaned unmerged work on dead root-VM agent-slot branches) ·
+[issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md](/plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md)
+(retagged `[ao]` 2026-08-09 from a `[cross-cutting]` mistag — WorkerLivenessWatchdog resume-kick loop stuck at
+`phase=pre_boot`, never escalating to a clean kill+respawn; 1 of its 3 open items already claimed by
+`ao_satellite_ao_dispatch_batch5_2026_08_03.md`, 2 remain `[OPERATOR]`-gated).
 
 **Close-out criterion**: each git-safety race fixed (killed-slot orphan recovery, idle-slot inherit, double-reset guard,
 context-wedge auto-recovery, autostash foreign-WIP protection, sentinel/reporter staleness fixes, shared-clone reset
@@ -229,7 +233,10 @@ route-collision + backlog-relations-view, are DEFERRED per operator instruction 
 [ao_open_issues_consolidated_close_out_2026_07_17.md](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)
 (9 open/32 done — added 2026-07-26, resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #25, option A/C
 combined: this doc was the single most-important covering plan actually tracking real AO-tranche work and had been
-missing from Sources entirely).
+missing from Sources entirely) ·
+[context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md](/plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
+(retagged `[ao]` 2026-08-09 from a `[ao, cross-cutting]` mistag — `context_scout`/`plan-brainstorm` skill-authoring
+plumbing, 1 of 11 items still open).
 
 **Close-out criterion**: all three docs' residual items closed or explicitly re-deferred with a named owner.
 
@@ -249,11 +256,11 @@ missing from Sources entirely).
 - [x] ✅ [BACKEND] P1. **Land FIRST (sequenced ahead of the hard-kill-escalation todo directly below — do not start that
       one until this todo is done; per the 2026-07-29 operator sequencing ruling above).** Make the liveness kick
       host-load-aware / require two-window confirmation, per
-      `/plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s own spec: before
-      firing `worker_kicked`, require the ping/pane to be stale across TWO consecutive verify windows (not one), OR
-      widen `verify_window_s` adaptively when host load average / swap pressure is high, OR gate the kick on a progress
-      marker (don't kick a pane whose progress advanced within the last N seconds even if the latest read is stale).
-      Done when: a regression test simulating pane-read latency > `verify_window_s` while progress markers keep
+      `/plans/archive/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s own spec:
+      before firing `worker_kicked`, require the ping/pane to be stale across TWO consecutive verify windows (not one),
+      OR widen `verify_window_s` adaptively when host load average / swap pressure is high, OR gate the kick on a
+      progress marker (don't kick a pane whose progress advanced within the last N seconds even if the latest read is
+      stale). Done when: a regression test simulating pane-read latency > `verify_window_s` while progress markers keep
       advancing produces ZERO `worker_kicked` events. Repo: agent-orchestrator. — agent-orchestrator@64b5310: added
       `_progress_marker_shields_kick` (new `kick_progress_grace_seconds` tuning knob, default 90s) to
       `WorkerLivenessKicker._tick_once` — a worker whose `last_ping` advanced within the grace window is never kicked

@@ -300,3 +300,5 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   matching. All 4 items are explicit `BLOCKED-OPERATOR-DECISION` A/B/C(/D) authority calls per the doc's own framing
   (items 1-3 unchanged; item 4, added today, is a genuine security-relevant content contradiction the docs-reconcile
   entry above already correctly declined to guess at). Textbook KEEP-NA, no re-derivation needed.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

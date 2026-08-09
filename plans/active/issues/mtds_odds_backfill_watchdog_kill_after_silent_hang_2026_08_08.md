@@ -1,25 +1,25 @@
 ---
 doc_type: issue
 title:
-  "MTDS sports-odds backfill VMs die repeatedly (4x so far) — total silence for ~16-24 min then correctly killed by the
+  "MTDS sports-odds backfill VMs die repeatedly (5x so far) — total silence for ~16-24 min then correctly killed by the
   vm-zombie-watchdog, root cause of the silence itself unconfirmed"
 summary: >-
-  FOUR consecutive `mtds-backfill-odds-*` VMs (`smallchunk2`, `smallchunk3`, `smallchunk4`, `smallchunk5`) died mid-run
-  with the identical signature: `run.log` and the heartbeat blob both go completely silent (no new lines, no heartbeat
-  refresh) for ~18-24 minutes, then `gcloud compute operations list` shows a `delete` operation. Neither death has a
-  terminal `exit_code=` line, a `Traceback`, a `CHUNK_FAILED`, or any other error marker in the persisted `run.log` —
-  just an ordinary mid-work log line (a `RESOURCE_SAMPLE` with unremarkable RSS, ~15-25% of the OOM-observed peak)
-  followed by silence. Confirmed via `deployment-service/scripts/vm/vm_zombie_watchdog.py`
+  FIVE consecutive `mtds-backfill-odds-*` VMs (`smallchunk2`, `smallchunk3`, `smallchunk4`, `smallchunk5`,
+  `smallchunk8`) died mid-run with the identical signature: `run.log` and the heartbeat blob both go completely silent
+  (no new lines, no heartbeat refresh) for ~16-24 minutes, then `gcloud compute operations list` shows a `delete`
+  operation. Neither death has a terminal `exit_code=` line, a `Traceback`, a `CHUNK_FAILED`, or any other error marker
+  in the persisted `run.log` — just an ordinary mid-work log line (a `RESOURCE_SAMPLE` with unremarkable RSS, ~15-25% of
+  the OOM-observed peak) followed by silence. Confirmed via `deployment-service/scripts/vm/vm_zombie_watchdog.py`
   (`gs://deployment-scripts-{project}/vm-heartbeat/{vm}.txt`) that the heartbeat blob itself also stopped updating in
   the same window — this is NOT a false-positive watchdog read of a still-alive VM (the codebase's documented 2026-07-18
   precedent for API-Football VMs), it looks like the watchdog correctly caught a genuine hang and killed it as designed.
   What's still unconfirmed: WHY the underlying Python process (or its wrapping `mtds_chunk_loop.sh`) stops emitting ANY
-  output — no OOM kernel message, no Python exception, nothing — for that specific ~16-21-minute window. All four
-  occurrences happened during REAL-FETCH-heavy work (not skip-fast dates): `smallchunk2` and `smallchunk5` both died
-  mid-chunk-26 (2020-10-09+, genuinely new territory each time); `smallchunk3` and `smallchunk4` both died mid-chunk-18
-  (the known 2020-08-30→2020-09-03 season-opener week). No data loss in any case — the manifest's per-VM shard writes
-  are durable regardless of which VM instance wrote them, and a relaunch with `RESUME_FORCE=false` correctly skip-fasts
-  through already-captured ground.
+  output — no OOM kernel message, no Python exception, nothing — for that specific ~16-21-minute window. Death chunks
+  are now 18, 18, 26, 26, 26 — **chunk 26 / date≈2020-10-09 has now recurred a THIRD time** (`smallchunk8` died at
+  exactly `date=2020-10-09`, same as `smallchunk2`'s "2020-10-09+"), re-strengthening a per-chunk-content correlation
+  that had been downgraded after `smallchunk5` cleared chunk 26 cleanly once — worth a closer look if a 4th chunk-26
+  death occurs. No data loss in any case — the manifest's per-VM shard writes are durable regardless of which VM
+  instance wrote them, and a relaunch with `RESUME_FORCE=false` correctly skip-fasts through already-captured ground.
 status: open
 nature: issue
 asset_group: [sports]
@@ -57,14 +57,15 @@ context_scope:
   ]
 ---
 
-## Timeline (four occurrences now)
+## Timeline (five occurrences now)
 
-| VM                                        | Last real log line                                                      | Heartbeat blob last update                                               | Delete op timestamp       | Silent gap |
-| ----------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------- | ---------- |
-| `mtds-backfill-odds-smallchunk2-20260807` | `2026-08-08T00:36:42Z` (mid-chunk-26, EPL, RSS=16.3GiB)                 | not separately checked this occurrence                                   | `00:55:20Z` / `00:56:15Z` | ~19 min    |
-| `mtds-backfill-odds-smallchunk3-20260808` | `2026-08-08T05:05:17Z` (mid-chunk-18, SCOTTISH_PREMIERSHIP, RSS=8.6GiB) | `05:06:23Z` (confirmed via `gcloud storage ls -L` on the heartbeat blob) | `05:26:25Z`               | ~20-21 min |
-| `mtds-backfill-odds-smallchunk4-20260808` | `2026-08-08T08:11:46Z` (mid-chunk-18, AUSTRIAN_BUNDESLIGA, RSS=24.4GiB) | `08:11:31Z` (confirmed via `gcloud storage ls -L`)                       | `08:27:34Z`               | ~16 min    |
-| `mtds-backfill-odds-smallchunk5-20260808` | `2026-08-08T13:11:01Z` (mid-chunk-26, LA_LIGA, RSS=13.5GiB)             | not separately checked this occurrence                                   | `13:28:05Z`               | ~17 min    |
+| VM                                        | Last real log line                                                             | Heartbeat blob last update                                               | Delete op timestamp       | Silent gap |
+| ----------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------- | ---------- |
+| `mtds-backfill-odds-smallchunk2-20260807` | `2026-08-08T00:36:42Z` (mid-chunk-26, EPL, RSS=16.3GiB)                        | not separately checked this occurrence                                   | `00:55:20Z` / `00:56:15Z` | ~19 min    |
+| `mtds-backfill-odds-smallchunk3-20260808` | `2026-08-08T05:05:17Z` (mid-chunk-18, SCOTTISH_PREMIERSHIP, RSS=8.6GiB)        | `05:06:23Z` (confirmed via `gcloud storage ls -L` on the heartbeat blob) | `05:26:25Z`               | ~20-21 min |
+| `mtds-backfill-odds-smallchunk4-20260808` | `2026-08-08T08:11:46Z` (mid-chunk-18, AUSTRIAN_BUNDESLIGA, RSS=24.4GiB)        | `08:11:31Z` (confirmed via `gcloud storage ls -L`)                       | `08:27:34Z`               | ~16 min    |
+| `mtds-backfill-odds-smallchunk5-20260808` | `2026-08-08T13:11:01Z` (mid-chunk-26, LA_LIGA, RSS=13.5GiB)                    | not separately checked this occurrence                                   | `13:28:05Z`               | ~17 min    |
+| `mtds-backfill-odds-smallchunk8`          | `2026-08-08T21:12:37Z` (mid-chunk-26, LA_LIGA, `date=2020-10-09`, RSS=19.9GiB) | `21:13:15Z` (confirmed via `gcloud storage ls -L`)                       | `21:28:57Z`               | ~15-16 min |
 
 **New pattern confirmation from occurrence 4**: this one died at **chunk 26**, not chunk 18 — the second time chunk 26
 specifically has been the death site (smallchunk2 also died there), further weakening any "chunk 18 is special" framing.
@@ -139,9 +140,10 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
       VM's `run.log`/heartbeat go quiet, SSH in immediately
       (`gcloud compute ssh ... --command="py-spy dump --pid <pid>"` or `strace -p <pid>`) instead of waiting for the
       watchdog to kill it, to capture the actual hang state.
-- [ ] [SCRIPT] P3. Audit whether `market_tick_data_service`'s `odds_api` HTTP client calls have explicit connect/read
-      timeouts — a hung socket with no timeout is the single most likely mechanism for "total silence, no exception, no
-      OOM."
+- **[SCRIPT] P3. Extracted to `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 (2026-08-09,
+  satellite-batch-extraction pass) — audit whether `market_tick_data_service`'s `odds_api` HTTP client calls have
+  explicit connect/read timeouts, and add them if missing. Tracked there (`assigned_vm: planning`), not duplicated here;
+  that batch's finalize sibling reconciles this checkbox once it lands.**
 - [x] ✅ [SCRIPT] P1. **Third occurrence confirmed 2026-08-08T08:27Z (`smallchunk4`)** — pattern is now real, not
       coincidence (consistent ~16-21 min silent gap across 3 independent VMs/leagues/RSS values). Per this todo's own
       original gate, this crosses into needing a real decision rather than another quiet relaunch: relaunched once more
@@ -232,3 +234,63 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   `smallchunk5`/`smallchunk6`'s `LAUNCH_PARAMS.json` and relaunching as `mtds-backfill-odds-smallchunk8` with it
   explicit. Noted here since it could otherwise be mistaken for a worsening of the hang pattern by a future reader
   diffing chunk-progress speed.
+
+- **2026-08-08T22:25Z (autonomous session) — FIFTH occurrence, `smallchunk8`.** Had been clean through chunk 24 with
+  zero new OOMs (last confirmed-healthy check 20:52Z). Found gone entirely at this tick's check (`instances describe` →
+  not found). Diagnosed via `run.log` + heartbeat blob (not assumed from the delete op alone, per rule 4a): last real
+  log line `21:12:37Z` (mid-chunk-26, LA_LIGA, `date=2020-10-09`, RSS=19.9GiB), heartbeat blob last updated `21:13:15Z`,
+  delete op `21:28:57Z` — **~15-16 min silent gap**, matching the signature exactly (no `CHUNK_FAILED`, no error, no
+  restart — genuinely different from the OOM-retry pattern documented above). Verified NOT a delete-op-timestamp
+  misread: cross-checked both `run.log`'s own last timestamp and the separately-updated heartbeat blob, both agree.
+  **Notable**: died at chunk 26, `date=2020-10-09` — the THIRD time chunk 26 specifically (and the second time this
+  exact date) has been the death site, re-strengthening the per-chunk-content hypothesis that was downgraded after
+  `smallchunk5` cleared chunk 26 cleanly once. Relaunched immediately as `mtds-backfill-odds-smallchunk9` with
+  `CHUNK_SIZE=5` explicit (learned from the smallchunk7 misconfiguration — never trust the launcher default). Still no
+  working SSH access this session to catch a live hang — todo 1's blocker unchanged.
+
+- **satellite-batch-extraction 2026-08-09 (sports tranche)**: extracted todo 2 (`[SCRIPT] P3`, `odds_api` HTTP client
+  connect/read-timeout audit+fix) into `/plans/active/sports_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1
+  (`assigned_vm: planning`) — this is exactly the split the 2026-08-08 `na-eligibility-audit` entry above flagged as a
+  good standalone RECLASSIFY candidate but declined to split out unilaterally in that pass. Todo 1 (catch a live hang
+  before the silent window elapses) and todo 4 (`PREFIX_IDLE_THRESHOLDS` tuning, explicitly gated on this audit's
+  finding) remain open here, untouched — doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **2026-08-09T05:39Z — discovered an AUTOMATED relaunch mechanism, and a naming-convention gotcha that destroys
+  forensic evidence.** `smallchunk9` (which had been cleanly alive through a long chunk-26 OOM-retry stretch, 51
+  `CHUNK_FAILED`, heartbeat confirmed live at 05:11Z) was gone by the next check. `gcloud compute operations list`
+  showed: deleted `05:26:17Z` (within the monitoring gap), then a NEW same-named instance created `05:32:25Z` by
+  **`unified-trading-sa@central-element-323112.iam.gserviceaccount.com`** — a different principal than the
+  `1060025368044-compute@...` account used for every manual action and (per the earlier-established pattern) the
+  zombie-watchdog's own kills. This confirms a genuine, previously-unobserved **automated SPOT-preemption relaunch**
+  (`RelaunchPreemptedVm`, per the launcher's header comment) operates on this campaign — future occurrences may
+  self-heal without manual intervention. **Cannot determine cause of death this time**: `smallchunk8`/`smallchunk9`'s
+  no-timestamp-suffix naming convention means `run.log`/`WATCHDOG_TRACE.log` live at name-keyed GCS paths — the new
+  instance's startup completely overwrote the old one's history, destroying the evidence needed to distinguish this from
+  a genuine silent hang vs an ordinary SPOT preemption. **Not counted as a confirmed 6th occurrence** — genuinely
+  inconclusive, unlike 1-5 which all had clean heartbeat-blob death evidence. **Recommendation for future relaunches in
+  this campaign**: reintroduce a timestamp suffix (matching the original `smallchunk2-20260807` convention) so
+  same-named auto-relaunches don't erase the evidence trail — this directly affects todo 1's feasibility (catching a
+  live hang is moot if the evidence gets overwritten before anyone reads it).
+
+- **2026-08-09T07:15Z — a GENUINELY NEW failure mode, distinct from both the silent-hang pattern above AND the OOM-retry
+  pattern: `run.log`'s own GCS-tee upload can silently stall while every other liveness signal stays live.** The
+  (auto-relaunched) `smallchunk9` from the entry above had its `run.log` GCS object frozen at `2026-08-09T05:59:53Z`
+  (confirmed via direct `gcloud storage ls -L` object metadata, not just eyeballing content) — yet its
+  **`WATCHDOG_TRACE.log`** (a separate GCS object, `mode=size` iterations tracking the LOCAL on-VM file's byte count)
+  showed continuous growth up to `07:15:16Z`, essentially live, ~76 minutes AFTER `run.log` stopped updating. This means
+  the underlying VM process was very likely still running (something kept writing to the local log file the watchdog
+  measures) — but the **upload path** that streams that local file to the `run.log` GCS object
+  (`vm-exec-with-gcs-tee.sh`, per the file's own name) had broken specifically. The heartbeat blob (a third, even
+  simpler mechanism) also stayed live throughout. **This is a blind spot in every diagnostic this doc has established so
+  far**: "trust the heartbeat blob over run.log text staleness" (established after occurrence-adjacent false alarms)
+  assumed run.log lag was always cosmetic/short — but here NONE of the 3 remote signals (run.log content, heartbeat
+  blob, watchdog trace) could distinguish "genuinely still making chunk progress, just blind to me" from "stuck in a
+  loop that keeps writing local bytes without real progress" — chunk 1 already had 9 `CHUNK_FAILED` (unusually high for
+  a chunk that isn't 18/26) before the run.log freeze, adding to the uncertainty. Without SSH access (todo 1's standing
+  blocker), there was no way to resolve this remotely. **Decision: killed the VM rather than continue trusting an
+  unverifiable signal** — same billing-waste-avoidance reasoning as the FIXTURE_LINEUPS quota-exhaustion kill.
+  Relaunched as `mtds-backfill-odds-smallchunk10-20260809` (timestamp-suffixed, preserving forensic history this time).
+  **New open question for whoever investigates todo 1 next**: is the `run.log` GCS-tee upload mechanism itself prone to
+  silently dying independent of the main backfill process? If so, `run.log` freshness alone is an insufficient health
+  signal — the watchdog's own trace log (or a similar local-size-based check) may need to become part of the standard
+  diagnostic, not just heartbeat blob + run.log content.

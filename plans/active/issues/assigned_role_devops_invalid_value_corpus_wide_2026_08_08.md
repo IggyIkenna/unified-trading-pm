@@ -80,12 +80,12 @@ separate times during future reclassification passes.
 
 ## Todos
 
-- [ ] [DOC] P3. **Retag all 10 docs' `assigned_role: devops` to the correct real role** — read each doc's actual subject
-      matter and pick the best fit (likely `cicd` for most, `infra` for host/VM-adjacent ones — mirror the judgment the
-      2 already-fixed docs used, don't default all 10 to the same value without reading each). Validate against the live
-      `agents/*.md` registry, never hand-type a near-miss. **Done when**:
-      `grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md` returns zero results. Repo:
-      unified-trading-pm.
+- **[DOC] P3. EXTRACTED 2026-08-09 — see `ci_satellite_ao_dispatch_batch8_2026_08_09.md` todo 1.** ~~Retag all 10 docs'
+  `assigned_role: devops` to the correct real role~~ — read each doc's actual subject matter and pick the best fit
+  (likely `cicd` for most, `infra` for host/VM-adjacent ones — mirror the judgment the 2 already-fixed docs used, don't
+  default all 10 to the same value without reading each). Validate against the live `agents/*.md` registry, never
+  hand-type a near-miss. **Done when**: `grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md`
+  returns zero results. Repo: unified-trading-pm.
 
 ## Codex SSOTs
 
@@ -93,5 +93,15 @@ separate times during future reclassification passes.
 
 ## Progress Log
 
+- **2026-08-09 (satellite-batch extraction)**: This doc's sole todo extracted verbatim into
+  `ci_satellite_ao_dispatch_batch8_2026_08_09.md` todo 1 (checkbox above replaced with a citation pointer, per the
+  `ci`-tranche satellite-batch-extraction pattern — this item's own `parent_epic` differs from the sibling
+  `infrastructure_master`-group items pulled into batch 7, so it got its own batch per the parent_epic-grouping rule).
 - 2026-08-08: Filed following the pre-compact ritual's Step 1 audit (chat-only finding from 2 sub-agent reports,
   converted to a tracked todo per the workspace's HARD RULE that every deferral must be a `- [ ]`, not prose).
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:3a10c7ffb2d96eae]:
+  KEEP-NA, valid — 0 open `- [ ]` todos (sole item already extracted + cited to
+  `ci_satellite_ao_dispatch_batch8_2026_08_09.md` todo 1, per today's `ag_closeout_audit_ci_parked_2026_08_09.md` Phase
+  0-1 delta: "archivable_after_planned_work"). Not archive-eligible yet — batch8 todo 1 hasn't executed. Nothing further
+  for this run to fix.

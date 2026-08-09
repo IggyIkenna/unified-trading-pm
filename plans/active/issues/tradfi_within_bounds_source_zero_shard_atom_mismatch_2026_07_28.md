@@ -371,3 +371,10 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   `status: active`, `assigned_vm: planning`); correctly not flipped independently. Todo 3 stays conditionally-scoped
   ("if it is found to cause its own denominator/accounting issues" -- trigger condition not yet evaluated); todo 4 stays
   DEPENDENCY_BLOCKED, sequenced after todo 1's `--apply` landing. Nothing to reclassify.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:fed44256db6685c6]:
+  **KEEP-NA-STALE-DUPLICATED, confirmed -- confirmed unchanged.** Phase-0 flagged this doc as "changed since the 08-08
+  marker" (git-date fallback), but `git diff <08-08-marker-sha>..HEAD` shows the ONLY intervening change is the
+  context-scout line directly above -- zero todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh
+  full re-read; see `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying
+  false-positive class this run found and filed.

@@ -119,3 +119,9 @@ defect (phantom-venue emission) without touching a registry other code may depen
   `instruments-service@2b2e9f124` (QG-green, `test_defi_v2_pre_launch_alias_key_not_duplicated` added). Remaining work
   is genuinely open (not this session's to do): the `[OPERATOR]`-gated historical row purge, and the `[DESIGN]` question
   on `PROTOCOL_LAUNCH_DATES`'s alias-key pattern — status stays `open`, not `resolved`, until both clear.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- Root-cause + code fix already shipped
+  (instruments-service@2b2e9f124). 2 remaining open items both explicitly gated: an `[OPERATOR]` human-executed
+  manifest-row purge (46,300 rows, delete-safety hard-stop) and a `[DESIGN]` judgment call on alias dict-keys.
+  Corroborated by sibling doc `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md`. Doc stays
+  `assigned_vm: NA`.

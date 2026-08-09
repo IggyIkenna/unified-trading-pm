@@ -39,6 +39,10 @@ non-goal: it never diagnoses or restarts anything), so there is nothing for an o
 
 ## 1. Run the check
 
+Run from the tab root (the directory that has `agent-orchestrator/` as a sibling of `unified-trading-pm/`, e.g.
+`.tabs/<N>/`) — from inside any single repo checkout, including `unified-trading-pm`, the relative path below fails with
+a plain `No such file or directory` (not an SSM/IAM error) since `agent-orchestrator` isn't nested under it.
+
 ```bash
 bash agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh [substring-filter]
 ```

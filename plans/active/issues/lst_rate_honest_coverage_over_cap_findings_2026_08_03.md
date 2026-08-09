@@ -187,3 +187,14 @@ for the compact pointer back to this doc.
   P2→P3 and decoupled (pure SOFT-cap hygiene now). Updated `defi_satellite_ao_dispatch_batch10_2026_08_06.md` todo #160
   to reflect Todo 2 is done and only the (optional, decoupled) extraction remains. Doc stays `assigned_vm: NA` — Todo 1
   still open, not yet archival-eligible.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- Spillover issue doc from a na-eligibility-audit
+  finding about `lst_rate_honest_coverage_2026_07_21.md` being over its plan-hygiene line cap. Todos 2-3 are DONE (VM
+  relaunch ruled+shipped 2026-08-06/07; 3 stale-checkbox closes applied 2026-08-08). Sole remaining item (Todo 1,
+  extract a chronological VM-monitoring-history block into a companion doc) is now pure SOFT-cap/500L hygiene with its
+  own explicit redirect citation: a line-cap split is /plan-reconcile Phase 5's remit, not something to force through
+  here. Independently verified `defi_satellite_ao_dispatch_batch10_2026_08_06.md`'s cited coverage is DONE for
+  Todo1+Todo2 bundled but explicitly disclaims the Todo-1 extraction specifically -- the doc's original
+  KEEP_NA_STALE_DUPLICATE basis is itself now superseded by the /plan-reconcile Phase 5 redirect, not a live
+  duplicate-dispatch claim. Doc stays `assigned_vm: NA`.

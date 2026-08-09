@@ -126,9 +126,9 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
       `features-service@c092df50`, verified green — see Progress Log entries below), so this todo is partially
       addressed, but "other repos" beyond `features-service` is broader than one confirmed repo — staying open, not
       closing.
-- [ ] 3. [SCRIPT] P2. **DEFAULT-RULED 2026-08-06, option (a): minimum cooldown since the last dispatch for the same repo
-      with an unchanged target-branch HEAD.** `[SCRIPT]` tag (was `[OPERATOR]`) — same ruling applies to the identical
-      gap in `_continued2`/`_continued3` sibling docs, not re-decided separately there. The `features-service`
+- [x] ✅ 3. [SCRIPT] P2. **DEFAULT-RULED 2026-08-06, option (a): minimum cooldown since the last dispatch for the same
+      repo with an unchanged target-branch HEAD.** `[SCRIPT]` tag (was `[OPERATOR]`) — same ruling applies to the
+      identical gap in `_continued2`/`_continued3` sibling docs, not re-decided separately there. The `features-service`
       `wall_type=main_ci_red` escalation has now fired **9 times today** (agents
       `agt-4e5bc3`/`agt-637862`/`agt-a7a7b6`/`agt-3bc731`/`agt-0dbb62`/this session, plus 3 more implied by the
       numbering) for the literal same underlying state — LDR fix shipped, waiting on a runner slot, nothing new to do —
@@ -140,7 +140,14 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
       escalation's re-fire on either (a) a minimum cooldown since the last `main_ci_red` dispatch for the same repo with
       an unchanged LDR HEAD, or (b) suppressing re-dispatch entirely while `ldr-to-main-promote-fleet`'s own GATE BLOCK
       reason is unchanged from the prior escalation's — operator decision, not something a one-shot wall-clearing
-      session should self-implement.
+      session should self-implement. — **DONE 2026-08-08, agent-orchestrator@a351d0d** (via
+      `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 6): option (a) implemented in
+      `CIReconcileLoop._dispatch_failures` — a disk-persisted `RedispatchState` keyed by `repo:wall_type` →
+      `(head_sha, dispatched_at)`, gated by `should_suppress_redispatch()`, suppresses a redispatch ONLY when the
+      target-branch HEAD is unchanged since the last dispatch AND still inside the cooldown window; a HEAD change (a
+      genuinely new failure) always dispatches immediately. Persisted (unlike the pre-existing `_last_dispatch`
+      in-process cooldown), so an orchestrator restart no longer re-arms the "9 dispatches for the identical unchanged
+      state" pattern this todo documents. 11 new regression tests, `quality-gates.sh` green (2810 passed).
 
 ## Progress Log
 
@@ -956,3 +963,10 @@ assertion — only the wall-clock deadline the same passing tests are held to. V
 fix landed/archived since); todos 2-3 remain genuinely open (design-scope + operator-ruled-but-unimplemented cooldown
 guard). Doc near the 1000L hard cap (952L) — keeping this entry minimal; next touch should consider splitting per the
 doc's own note.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:8991b050d116400a]: KEEP-NA,
+valid — the sole open item (todo 2, whether other repos beyond features-service warrant the same `PYTEST_TIMEOUT` raise)
+remains an open-ended "consider whether" judgment call, unchanged since the 2026-08-04 verdict. Doc at 972L, still under
+the 1000L hard cap. No `assigned_vm` change.

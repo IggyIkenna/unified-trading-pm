@@ -78,6 +78,13 @@ def _scan_file(
         return broken
 
     for lineno, raw_line in enumerate(lines, start=1):
+        # Cheap substring pre-filter: neither _PATTERNS entry can match a line that
+        # doesn't contain "scripts/" (case-insensitive, matching _PATTERNS[0]'s
+        # re.IGNORECASE) — skip the regex work entirely for the ~98% of lines that
+        # can't possibly match, measured via profile_qg_resources.py to be the hot
+        # path (79k .search()/.finditer() calls on files with almost no matches).
+        if "scripts/" not in raw_line.lower():
+            continue
         if _SKIP_LINE_RE.search(raw_line):
             continue
         for pat in _PATTERNS:

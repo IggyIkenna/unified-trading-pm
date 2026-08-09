@@ -231,19 +231,20 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
   exact target lines already identified," i.e. a candidate for RECLASSIFY on a future pass. Not flipping `assigned_vm`
   myself (needs the standing corpus conflict-check).
 
-- **na-eligibility-audit 2026-08-08 (Phase 2/3, sub-agent conflict-check + apply)**: **RECLASSIFY, applied.** Re-verified
-  the whole-doc bar independently: the sole remaining open item is now a fully bounded code fix with exact target lines
-  already identified (per the 2026-08-07 root-cause section above) — no design/judgment call left undecided, clears
-  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility". Ran the shared
-  conflict-check protocol (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3): grepped
-  every `status: active`, `assigned_vm: planning` doc under `parent_epic: orchestrator_master` (and corpus-wide) for
+- **na-eligibility-audit 2026-08-08 (Phase 2/3, sub-agent conflict-check + apply)**: **RECLASSIFY, applied.**
+  Re-verified the whole-doc bar independently: the sole remaining open item is now a fully bounded code fix with exact
+  target lines already identified (per the 2026-08-07 root-cause section above) — no design/judgment call left
+  undecided, clears `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope
+  eligibility". Ran the shared conflict-check protocol
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3): grepped every `status: active`,
+  `assigned_vm: planning` doc under `parent_epic: orchestrator_master` (and corpus-wide) for
   `dirty_consecutive_ticks`/`_read_repo_dirty_ticks`/`slot-git-status-report.sh` — zero overlap found.
   `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s own combined todo (now archived, `unified-trading-pm@594aea342`)
   explicitly excluded this exact scope ("a code change only if the verdict is (i) or (ii)... NOT a schema/field
   addition"), so no live claim on this ground anywhere else in the corpus. Verdict: clear. Applied: `assigned_vm: NA` ->
-  `planning`, `execution_scope: local-only` -> `orchestrator-agent`, added `assigned_role: backend_engineer` (matches the
-  sole remaining todo's `[BACKEND]` tag; the field was previously absent). **No separate finalize-plan twin authored**:
-  `scripts/quality_gates/check_finalize_plan_coverage.py::_find_violations` scans `plans/active/*.md` only
+  `planning`, `execution_scope: local-only` -> `orchestrator-agent`, added `assigned_role: backend_engineer` (matches
+  the sole remaining todo's `[BACKEND]` tag; the field was previously absent). **No separate finalize-plan twin
+  authored**: `scripts/quality_gates/check_finalize_plan_coverage.py::_find_violations` scans `plans/active/*.md` only
   (non-recursive `Path.glob("*.md")`), never `plans/active/issues/*.md` — confirmed by direct code read, and confirmed
   live by the ~110 other `assigned_vm: planning` issue docs already sitting in `plans/active/issues/` with no companion
   finalize-plan file anywhere in the corpus. This doc (`doc_type: issue`, lives in `plans/active/issues/`) is
@@ -251,3 +252,4 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
   carve-out in spirit — archival will be handled directly (by whichever worker closes the sole remaining todo, or a
   future `/na-eligibility-audit`/`/archive-candidates-audit` pass) once it reaches zero open todos, same as every other
   `assigned_vm: planning` issue doc in this corpus.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

@@ -197,11 +197,12 @@ Two genuinely different directions, not mutually exclusive with the naming recon
       7+ month backfill window, not this ~3-week verification window). Safe-idempotent case for the operator's
       consideration: SPOT, idempotent re-fetch (`MANIFEST_PER_VM_SHARDS=true` + last-writer-wins consolidation — same
       pattern as the 3 Pyth VMs that already ran cleanly to `exit_code=0` this same week), and the code fix + operator
-      ruling this verifies (`instruments-service@dec90cc0`, `market-tick-data-service@cd017a1c`, direction 1 "extend")
-      are already both landed. Once launched + confirmed `EXIT_STATUS=0`, re-dispatch `[DATA] P2` to run its same
-      bounded manifest read. Repo: deployment-service (VM launch only, no code change). Source: split off after 3
-      consecutive re-verify dispatches hit the identical unmet-precondition dead-end
-      (`defi_satellite_ao_dispatch_batch3-015`, 2026-08-04).
+      ruling this verifies (recorded in this same doc's `[OPERATOR] P2 → RESOLVED 2026-08-03` todo above:
+      `defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md`) — `instruments-service@dec90cc0`,
+      `market-tick-data-service@cd017a1c`, direction 1 "extend" — are already both landed. Once launched + confirmed
+      `EXIT_STATUS=0`, re-dispatch `[DATA] P2` to run its same bounded manifest read. Repo: deployment-service (VM
+      launch only, no code change). Source: split off after 3 consecutive re-verify dispatches hit the identical
+      unmet-precondition dead-end (`defi_satellite_ao_dispatch_batch3-015`, 2026-08-04).
 - [x] ✅ [DATA] P1 (DO FIRST — direction-INDEPENDENT, ongoing data loss) → instruments-service@dec90cc0 (2026-08-03,
       slot-8). Rebased my local commit onto slot-6's `a325da86` (which cleared repo-blocker `RB-48c5820b` — the
       unrelated STEP 5.106 gate failure this fix was blocked behind), re-ran `quality-gates.sh` clean, verified
@@ -233,16 +234,17 @@ Two genuinely different directions, not mutually exclusive with the naming recon
       5/5 most recent runs `completed success` (2026-08-07T20:19Z..23:02Z), so the 2026-08-06 01:35Z CI-red note below
       is stale/self-resolved and no longer blocking promotion. The remaining action is a mechanical ops-check, not an
       operator judgment call — reclassified below.
-- [ ] [SCRIPT] P2. **Confirm the live IS Cloud Run revision actually serves `instruments-service@main` HEAD** (i.e. the
-      deployed image includes the `6fbaae90`/content-equivalent PYTH_PRICE_FEEDS fix, not a stale pre-fix image) — a
-      mechanical ops-check, not a redeploy-authorization judgment call (the code question above is closed). Read the
-      active Cloud Run revision's deployed image digest/commit label
-      (`gcloud run services describe     instruments-service --region <region> --format=...` or the equivalent per
-      `/codex/05-infrastructure/deployment-observability.md`) and compare against `origin/main` HEAD; if stale, confirm
-      whether the daily `instruments-service-daily-trigger` Workflow already picked up a newer revision on its own
-      (Cloud Run auto-deploy vs manual-trigger-only) before concluding a redeploy is still needed. **Done when**: a
-      dated Progress Log entry states the live revision's commit/digest and whether it matches main HEAD, with the
-      `gcloud`/`gh` command output cited as evidence.
+- **[SCRIPT] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Confirm the live IS Cloud
+  Run revision actually serves `instruments-service@main` HEAD (i.e. the deployed image includes the
+  `6fbaae90`/content-equivalent PYTH_PRICE_FEEDS fix, not a stale pre-fix image) — a mechanical ops-check, not a
+  redeploy-authorization judgment call (the code question above is closed). Read the active Cloud Run revision's
+  deployed image digest/commit label
+  (`gcloud run services describe     instruments-service --region <region> --format=...` or the equivalent per
+  `/codex/05-infrastructure/deployment-observability.md`) and compare against `origin/main` HEAD; if stale, confirm
+  whether the daily `instruments-service-daily-trigger` Workflow already picked up a newer revision on its own (Cloud
+  Run auto-deploy vs manual-trigger-only) before concluding a redeploy is still needed. **Done when**: a dated Progress
+  Log entry states the live revision's commit/digest and whether it matches main HEAD, with the `gcloud`/`gh` command
+  output cited as evidence.
 
 ## Progress Log
 
@@ -442,3 +444,7 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   can't be split from the naming-reconciliation item. `defi_satellite_ao_dispatch_batch10_2026_08_06.md`'s own
   pre-2026-08-08 "cite-only" bucket already characterizes the naming half as "deliberately deferred as risky design
   work," consistent with this verdict. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- Sole open checkbox is genuine design/judgment
+  work (reconcile 3 coexisting oracle_prices/PYTH naming conventions) -- an earlier in-session attempt at this exact
+  reconciliation produced a false "77 gap days" result via a last-writer-wins merge shadowing real data. Multiple
+  standing audits (2026-08-04/07/08) independently reached KEEP-NA. Doc stays `assigned_vm: NA`.

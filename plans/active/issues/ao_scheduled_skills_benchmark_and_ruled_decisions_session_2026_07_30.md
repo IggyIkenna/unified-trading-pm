@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [ao-scheduled-skills, benchmark, operator-decisions, session-checkpoint, pre-compact]
 related:
   [
-    /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /plans/active/issues/aws_codebuild_terraform_import_pending_2026_07_22.md,
@@ -48,7 +48,7 @@ context_scope:
     /cursor-configs/skills/plan-reconcile/SKILL.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /agents/na_eligibility_auditor.md,
-    /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
   ]
 ---

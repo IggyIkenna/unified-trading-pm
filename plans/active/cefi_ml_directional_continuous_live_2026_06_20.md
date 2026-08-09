@@ -177,16 +177,10 @@ context_scope:
   >   a new todo below (a narrow, window-scoped honest-coverage check — NOT contingent on the unrelated full 2019-2026
   >   chronological backfill finishing).
 
-- [ ] [DATA] P1. **Blocking prerequisite for the grid-run schedule todo above**: run a **window-scoped** honest-coverage
-      measurement (`instruments-service/scripts/measure_honest_coverage.py --asset-group cefi`, or a targeted
-      `/data-pipeline-check-mtds` day-sample across 2024-2026) restricted to **OKX-SPOT/-SWAP/-FUTURES,
-      BINANCE-SPOT/-FUTURES, BYBIT** over **2024-01-01→present** specifically — this is deliberately narrower and faster
-      than the stalled full-history 2019-2026 chronological backfill in
-      `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` (that gate should NOT be a prerequisite for this one;
-      they are different questions). **Done when**: a coverage % for exactly this venue set + window is cited in this
-      plan's Progress Log, with `attempted_failed`/`expected_unattempted` breakdown. If the % is materially below
-      complete, file the specific gap (which venue/data_type/date ranges) as its own blocking issue before the grid run
-      todo above is marked schedulable.
+- **[DATA] P1. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 10 for AO
+  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Blocking prerequisite for the
+  grid-run schedule todo above: window-scoped honest-coverage measurement for OKX/BINANCE/BYBIT over
+  2024-01-01→present.)
 
 ## Model-improvement backlog (deferred — not blocking the live loop)
 
@@ -267,10 +261,15 @@ This plan's own "Model-improvement backlog" section remains the owner until a su
   stays pending, permanent hard-stop until operator says otherwise." Doc status re-confirmed accurate as-is (the
   "Reviewed 2026-07-28" note above already states this is a PERMANENT hard-stop, not retagged/unlocked) — no change
   needed.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — doc carries `locked_by:
-  live-defi-rollout` (conflict: not touched for a flip regardless of content). Both open todos were freshly
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — doc carries
+  `locked_by: live-defi-rollout` (conflict: not touched for a flip regardless of content). Both open todos were freshly
   re-investigated by TODAY's own na-corpus-digest-closeout entries above (items 26 and 32) and both remain genuinely
   gated: the backtest-fidelity grid run stays NOT schedulable (window-scoped coverage unconfirmed, a new bounded
   `[DATA] P1` prerequisite todo was filed for that check itself but the grid-run gate above it stays judgment-adjacent
-  pending that check's result), and live-capital wallet keys/kill-switch arming is a reaffirmed PERMANENT
-  human-only hard-stop. No cheat-sheet precedent from today applies (not a delete, not IAM, not a script-flag gap).
+  pending that check's result), and live-capital wallet keys/kill-switch arming is a reaffirmed PERMANENT human-only
+  hard-stop. No cheat-sheet precedent from today applies (not a delete, not IAM, not a script-flag gap).
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — locked (live-defi-rollout); permanent
+  human-only hard-stop (wallet/kill-switch for real capital, reaffirmed 2026-08-08) + operator-scheduled backtest grid +
+  deferred research.

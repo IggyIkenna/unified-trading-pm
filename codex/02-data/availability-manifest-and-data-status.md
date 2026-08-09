@@ -21,7 +21,11 @@ related:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-04-13
-authoritative_for: [availability manifest schema + capture_status 4-state ledger, prediction canonical_question_group shard atom and taxonomy]
+authoritative_for:
+  [
+    availability manifest schema + capture_status 4-state ledger,
+    prediction canonical_question_group shard atom and taxonomy,
+  ]
 referenced_by:
   [
     /codex/02-data/bar-boundary-candle-edge-convention.md,
@@ -125,6 +129,18 @@ exists** in that bucket. Each row represents one shard — a unit of data writte
 > > manifest-column canonicalization applied at the writer seam must be applied through the identical shared function at
 > > every OTHER place that materializes a row for the same shard atom (seeders, backfills, rebuild scripts) — a second
 > > hand-rolled implementation of "canonical" WILL drift from the first.**
+> >
+> > **Sibling trap — hand-rolled KEY COMPOSITION drifts the same way (found 2026-08-09,
+> > `cefi_chain_drop_v2_dedup_stop_on_surprise_198k_lossy_groups_2026_08_08.md`, archived `plans/archive/2026_08/`):**
+> > the same pattern applies to the dedup/shard-atom key's COLUMN SET, not just column-VALUE canonicalization. Found
+> > twice in one investigation: a CeFi manifest dedup migration script's own `PIN_ATOM` key had drifted from
+> > `manifest_consolidator.consolidate()`'s production dedup key (missing `timeframe`+`service_name`, collapsing
+> > legitimate per-candle-timeframe rows into false "duplicate" groups — 115k+ false positives corpus-wide); a second,
+> > independently hand-rolled DuckDB SQL key in a sibling one-off analysis script then drifted the SAME way, separately,
+> > from the first script's already-fixed key (another 58,682 false positives). **Any one-off/analysis/migration script
+> > computing a dedup or shard-atom key should import/dynamically-load and reuse the canonical key function, never
+> > hand-roll its own equality/concat chain** — a plain re-implementation of "the key" has no mechanism to notice when
+> > the canonical definition gains a column.
 >
 > Every downstream consumer — the data-status coverage summary + drilldown, strategy/features pre-flight — **READS**
 > `capture_status` and the honest denominator

@@ -34,8 +34,15 @@ convention as na_corpus_baseline.yaml / repo_docs_ssot_baseline.yaml:
     case, reported as its own louder finding per the issue's ask.
 
 A DECLARED exclusion (a live marker that DOES open its own line — the deliberate,
-correctly-authored hold) never counts against either axis; it is the parser working
-exactly as intended.
+correctly-authored hold) never counts against max_accidental_exclusions; it is the
+parser working exactly as intended. It STILL counts toward max_zero_dispatchable_docs
+if it's the doc's only open todo — that axis is declared/accidental-blind by design
+(disk_open>0 and backlog_open==0, full stop; see `_summarize`): a doc with a single
+genuinely-blocked todo really does have zero dispatchable work right now, regardless
+of whether the block is correctly classified. Confirmed 2026-08-09
+(/plans/archive/issues/ao_dispatch_visibility_gate_regression_sports_blocked_upstream_marker_2026_08_08.md
+todo 3): fixing an accidental->declared misclassification does not by itself lower
+max_zero_dispatchable_docs.
 
 Usage: check_ao_dispatch_visibility_gate.py [--workspace-root DIR] [--vm-id ID]
                                              [--json] [--update-baseline] [--quiet]
@@ -110,6 +117,19 @@ def _run_report(workspace_root: Path, vm_id: str) -> list[dict[str, object]] | N
         )
         return None
     result: list[dict[str, object]] = json.loads(proc.stdout)
+    # Fail LOUDLY on a sibling checkout predating the `ineffective` field rather than
+    # defaulting it to zero: a silent zero would report "no ineffective declarations"
+    # for a corpus nobody actually measured, which is the same silent-false-negative
+    # class this whole gate exists to eliminate. No compat shim — say what's wrong.
+    for entry in result:
+        if "ineffective" not in entry:
+            print(
+                "check_ao_dispatch_visibility_gate: the sibling agent-orchestrator checkout predates the\n"
+                "  `ineffective` finding (added 2026-08-09, server/dispatch_visibility_report.py). Pull it —\n"
+                "  refusing to report a measurement this checkout cannot make.",
+                file=sys.stderr,
+            )
+            return None
     return result
 
 
@@ -117,6 +137,7 @@ def _summarize(reports: list[dict[str, object]]) -> dict[str, int]:
     accidental = 0
     declared = 0
     zero_dispatchable = 0
+    ineffective = 0
     for r in reports:
         excluded = r["excluded"]
         assert isinstance(excluded, list)
@@ -127,11 +148,15 @@ def _summarize(reports: list[dict[str, object]]) -> dict[str, int]:
                 declared += 1
             else:
                 accidental += 1
+        ineffective_list = r["ineffective"]
+        assert isinstance(ineffective_list, list)
+        ineffective += len(ineffective_list)
     return {
         "docs": len(reports),
         "accidental_exclusions": accidental,
         "declared_exclusions": declared,
         "zero_dispatchable_docs": zero_dispatchable,
+        "ineffective_declarations": ineffective,
     }
 
 
@@ -169,6 +194,7 @@ def main(argv: list[str] | None = None) -> int:
     baseline = _load_baseline()
     max_accidental = baseline.get("max_accidental_exclusions")
     max_zero = baseline.get("max_zero_dispatchable_docs")
+    max_ineffective = baseline.get("max_ineffective_declarations")
 
     if args.update_baseline:
         warnings = []
@@ -176,16 +202,22 @@ def main(argv: list[str] | None = None) -> int:
             warnings.append(f"max_accidental_exclusions RAISED {max_accidental} -> {summary['accidental_exclusions']}")
         if isinstance(max_zero, int) and summary["zero_dispatchable_docs"] > max_zero:
             warnings.append(f"max_zero_dispatchable_docs RAISED {max_zero} -> {summary['zero_dispatchable_docs']}")
+        if isinstance(max_ineffective, int) and summary["ineffective_declarations"] > max_ineffective:
+            warnings.append(
+                f"max_ineffective_declarations RAISED {max_ineffective} -> {summary['ineffective_declarations']}"
+            )
         BASELINE.write_text(
             _BASELINE_HEADER
             + f"max_accidental_exclusions: {summary['accidental_exclusions']}\n"
             + f"max_zero_dispatchable_docs: {summary['zero_dispatchable_docs']}\n"
+            + f"max_ineffective_declarations: {summary['ineffective_declarations']}\n"
             + f'last_updated: "{datetime.now(UTC).date().isoformat()}"\n'
         )
         print(
             "ao_dispatch_visibility_baseline.yaml regenerated: "
             f"max_accidental_exclusions={summary['accidental_exclusions']} "
-            f"max_zero_dispatchable_docs={summary['zero_dispatchable_docs']}"
+            f"max_zero_dispatchable_docs={summary['zero_dispatchable_docs']} "
+            f"max_ineffective_declarations={summary['ineffective_declarations']}"
         )
         for w in warnings:
             print(f"WARNING: {w} -- verify this is a reviewed, justified raise, not silenced", file=sys.stderr)
@@ -198,6 +230,12 @@ def main(argv: list[str] | None = None) -> int:
         )
     if isinstance(max_zero, int) and summary["zero_dispatchable_docs"] > max_zero:
         problems.append(f"zero-dispatchable docs grew: {summary['zero_dispatchable_docs']} > baseline {max_zero}")
+    if isinstance(max_ineffective, int) and summary["ineffective_declarations"] > max_ineffective:
+        problems.append(
+            f"ineffective declarations grew: {summary['ineffective_declarations']} > baseline {max_ineffective} "
+            "(a todo declares BLOCKED-<TOKEN> in a token the dispatcher does not know, so it DISPATCHES "
+            "while reading as held)"
+        )
 
     if problems:
         print("check_ao_dispatch_visibility_gate: FAILED", file=sys.stderr)
@@ -217,7 +255,8 @@ def main(argv: list[str] | None = None) -> int:
         print(
             f"check_ao_dispatch_visibility_gate: {summary['docs']} AO-dispatched docs, "
             f"{summary['accidental_exclusions']} accidental exclusions (baseline {max_accidental}), "
-            f"{summary['zero_dispatchable_docs']} zero-dispatchable docs (baseline {max_zero})"
+            f"{summary['zero_dispatchable_docs']} zero-dispatchable docs (baseline {max_zero}), "
+            f"{summary['ineffective_declarations']} ineffective declarations (baseline {max_ineffective})"
         )
     return 0
 

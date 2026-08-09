@@ -133,14 +133,16 @@ context_scope:
 > everything still unchecked in Phases 1b/1c/2/5 as of 2026-07-25 — read the source doc for full context (per-venue
 > live-listing counts, probed Yahoo/Databento limits) before touching any of these.
 
-- [ ] [SCRIPT] P0. **Propagation ops (B1/B3/B4) — run the IS→catalogue→enumerator→MTDS wave chain to completion** for
-      the new Binance tradfi-perp cash-twin equities (IS instruments backfill → `build_instrument_catalogue` rollup →
-      `enumerate_expected_universe.py` v2 tradfi → MTDS wave). Repos: deployment-service, instruments-service. **Done
-      when**: the catalogue shows the new MVP tickers; the manifest shows them `expected_unattempted`; a sample equity
-      captures non-NaN OHLCV. Source: Phase 1b.
-- [ ] [DATA] P2. **BLOCKED-DATA — source a Korea-equity vendor** for HYUNDAI/SAMSUNG/SK-Hynix cash-twin coverage (no
-      US-listed twin on Databento DBEQ.BASIC; neither current vendor covers KRX). Repo: instruments-service (vendor ask
-      → operator). Source: Phase 1b.
+- **[SCRIPT] P0. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 for AO
+  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Propagation ops B1/B3/B4 —
+  IS→catalogue→enumerator→MTDS wave chain for the new Binance tradfi-perp cash-twin equities. Source: Phase 1b.)
+- [x] ✅ [DATA] P2. ~~**BLOCKED-DATA — source a Korea-equity vendor** for HYUNDAI/SAMSUNG/SK-Hynix cash-twin coverage
+      (no US-listed twin on Databento DBEQ.BASIC; neither current vendor covers KRX). Repo: instruments-service (vendor
+      ask → operator). Source: Phase 1b.~~ **CLOSED — na-eligibility-audit 2026-08-09.** Embedded mirror of the
+      identical item closed 2026-08-08 citing a 2026-08-07 operator ruling documented in
+      `/plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` (line 662): "daily from yahoo finance
+      is enough" — `unified-api-contracts@844c5ee6b` + `instruments-service@1ba5da4b`. This embedded copy was never
+      flipped to match; fixed now.
 - [ ] [SCRIPT] P1. **Capture Binance/OKX/Bybit `indexPrice`/`markPrice`/`fundingRate`** for the equity-perps as a
       first-class data_type (rides the existing premiumIndex/funding endpoints). Repo: market-tick-data-service. Source:
       Phase 1b.
@@ -155,9 +157,10 @@ context_scope:
       (`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`, 2026-08-08 Progress Log entry). Open work is now
       the IBKR adapter BUILD itself (that doc's Phase 1e P0 todo, `[BACKEND]`, not embedded in this Track 0's 11-todo
       list — out of this track's Phase 1/1b/1c/2/5 scope).
-- [ ] [UAC] P0. **Map the index perps** (`SPXUSDT`/`NAS100`/`SPYUSDT`/`XAUUSDT`) to the CME index-future + Databento
-      index canonical, carrying the scale/multiplier (Binance SPX-perp is a SCALED micro unit — sizing MUST use the
-      multiplier for the ES hedge ratio). Repo: unified-api-contracts. Source: Phase 1c.
+- **[UAC] P0. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 2 for AO dispatch
+  (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Map the index perps
+  SPXUSDT/NAS100/SPYUSDT/XAUUSDT to CME index-future + Databento index canonical, carrying scale/multiplier. Source:
+  Phase 1c.)
 - [ ] [DESIGN] P1. **strategy-service — design the INDEX-perp cash-and-carry archetype** (short Binance SPX/NAS perp +
       long CME ES/NQ real hedge, scale-adjusted) — the FIRST fully-executable equity-perp basis archetype (deep real
       hedge, both legs already in universe+data, CME Globex ~23h/day). Repo: strategy-service. Source: Phase 1c.
@@ -165,14 +168,15 @@ context_scope:
       of scope until now — the un-filter + type-stamping code landed 2026-07-18, this is the actual backfill). Verify
       manifest `capture_status` for an EQUITY_PERP-tagged shard. Repos: instruments-service, deployment-service. Source:
       Phase 2.
-- [ ] [SCRIPT] P1. **Backfill the 3 KRX stocks via guardrailed Yahoo** (1d since 2019-01-01 + 1h 730d + 15m 89d
-      (range=60d) + 1m 28d-chunked). Repos: deployment-service, market-tick-data-service. Source: Phase 5.
-- [ ] [UAC] P1. **Measure the exact Databento L-floor boundary per level** (L0/L1/L2/L3) live + update
-      `LEVEL_MAX_LOOKBACK_DAYS`/`earliest_allowed_start`/`assert_lookback_allowed` to the measured values. Repo:
-      unified-api-contracts. Source: Phase 5.
-- [ ] [REFACTOR] P2. **Deprecate + remove all Barchart code** (its only role, the VIX cash-index preload, was already
-      replaced by VX-futures-via-databento) — delete the adapter/client/source-entries, no shim. Repos:
-      unified-api-contracts, market-tick-data-service, unified-trading-pm. Source: Phase 5.
+- **[SCRIPT] P1. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 3 for AO
+  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Backfill the 3 KRX stocks via
+  guardrailed Yahoo. Source: Phase 5.)
+- **[UAC] P1. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 4 for AO dispatch
+  (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Measure the exact Databento L-floor
+  boundary per level live + update the 3 named constants/functions. Source: Phase 5.)
+- **[REFACTOR] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 5 for AO
+  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Deprecate + remove all Barchart
+  code, no shim. Source: Phase 5.)
 
 **Close-out criterion**: all 11 todos above closed or explicitly re-deferred by the operator; the source doc's own
 Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
@@ -232,8 +236,9 @@ Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
       Completion Program + REVERSE the 50.79% acceptance.** Basis (all operator-stated): the archival's premise is a
       verified-false ~350x code-bug, now fixed + measured live; the "accept 50.79%" was inferred, not actually given.
       Coverage % is the climbing metric. The operator can reverse this ruling; surfaced in the session report.
-- **Close-out criterion**: operator ruling recorded (done, above); coverage re-measured post-resume-backfill (tracked in
-  the forked child plan).
+- **Close-out criterion**: operator ruling recorded (done, above — source:
+  `plans/archive/2026_07/cefi_completion_program_2026_07_15.md`, the archived "honest-done, 50.79% accepted" doc this
+  ruling reverses); coverage re-measured post-resume-backfill (tracked in the forked child plan).
 
 ### Checkpoint cadence
 
@@ -630,12 +635,17 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
   operator-gated (Korea-equity vendor ask, 2 strategy-desk design calls), 3 dependency-blocked (Track 1 cutover + 2
   Track 2 post-backfill gates in sibling fleet docs).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-checked against today's 9
-  cheat-sheet rulings; none convert this hub's mixed content into a bounded whole (Track 0's Korea-equity vendor ask
-  was independently resolved 2026-08-07 in the sibling `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
-  doc — see that doc's own fix in this same sweep — but this doc's DART/hedge-venue design item was already resolved
-  today in-doc, and Track 0 still carries genuine `[SCRIPT]`/`[UAC]`/`[DESIGN]` build items alongside real operator-
-  and dependency-gated ones). Whole-doc flip stays blocked per the HARD RULE (mixed judgment + bounded items). Track
-  0's remaining bounded items (B1/B3/B4 propagation ops, index-perp UAC mapping, KRX Yahoo backfill, Databento
-  L-floor measurement, Barchart removal) are candidates for a future satellite-batch extraction (mirroring the
-  established `cefi_satellite_ao_dispatch_batchN` pattern) — not executed in this pass, out of this sweep's
-  whole-doc-flip mechanism.
+  cheat-sheet rulings; none convert this hub's mixed content into a bounded whole (Track 0's Korea-equity vendor ask was
+  independently resolved 2026-08-07 in the sibling `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` doc —
+  see that doc's own fix in this same sweep — but this doc's DART/hedge-venue design item was already resolved today
+  in-doc, and Track 0 still carries genuine `[SCRIPT]`/`[UAC]`/`[DESIGN]` build items alongside real operator- and
+  dependency-gated ones). Whole-doc flip stays blocked per the HARD RULE (mixed judgment + bounded items). Track 0's
+  remaining bounded items (B1/B3/B4 propagation ops, index-perp UAC mapping, KRX Yahoo backfill, Databento L-floor
+  measurement, Barchart removal) are candidates for a future satellite-batch extraction (mirroring the established
+  `cefi_satellite_ao_dispatch_batchN` pattern) — not executed in this pass, out of this sweep's whole-doc-flip
+  mechanism.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, stale-items — closed the Korea-equity-vendor
+  mirror item (line 139 area; source doc cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md already closed the
+  identical item 2026-08-08 citing a 2026-08-07 operator ruling). Remaining items: Track 1 correctly follows-the-fleet
+  per a 2026-08-02 operator ruling (not independently reclassify-able), 2 dependency-blocked backfill-verification
+  gates, rest genuine coordination/judgment work.

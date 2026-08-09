@@ -58,11 +58,19 @@ jobs:
     outputs:
       stuck: ${{ steps.scan.outputs.stuck }}
       report: ${{ steps.scan.outputs.report }}
+      recovered: ${{ steps.recovery.outputs.recovered }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
+      - name: Restore promote-fleet-startup-failure alert state cache
+        uses: actions/cache@v5
+        with:
+          path: .promote-fleet-startup-failure-alert-state.json
+          key: promote-fleet-startup-failure-alert-state-${{ github.run_id }}
+          restore-keys: |
+            promote-fleet-startup-failure-alert-state-
       - name: Scan promote-fleet workflows for a startup_failure streak or a zombie-queued run
         id: scan
         env:
@@ -84,6 +92,13 @@ jobs:
             echo "__EOR__"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Compute recovery transition (state-diffed)
+        id: recovery
+        run: |
+          python3 scripts/cicd/alert_recovery.py \
+            --state-file .promote-fleet-startup-failure-alert-state.json \
+            --current "${{ steps.scan.outputs.stuck }}" >> "$GITHUB_OUTPUT"
+
   notify:
     needs: check
     if: needs.check.outputs.stuck == 'true'
@@ -99,4 +114,26 @@ jobs:
       # a cooldown.
       dedup_key: promote-fleet-startup-failure
       cooldown_min: 60
+    secrets: inherit
+
+  # ── RESOLVED bookend (2026-08-08) ──────────────────────────────────────────────────────
+  # Previously no all-clear path — an operator seeing the CRITICAL page had no way to tell,
+  # short of manually checking, whether the startup_failure streak / zombie-queued run had
+  # since cleared. State-diffed via the shared alert_recovery.py helper.
+  notify-recovered:
+    name: Slack — promote-fleet-startup-failure RESOLVED
+    needs: check
+    if: needs.check.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":ballot_box_with_check: *promote-fleet-startup-failure-monitor: RESOLVED* — no more startup_failure streak or
+        zombie-queued run (prior tick paged CRITICAL)"
+      severity: INFO
+      conclusion: success
+      recovery: true
+      workflow_name: promote-fleet-startup-failure-monitor
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: promote-fleet-startup-failure-resolved
+      cooldown_min: 30
     secrets: inherit

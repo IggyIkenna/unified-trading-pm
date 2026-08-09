@@ -74,7 +74,7 @@ related:
     /plans/archive/tradfi_massive_dual_source_2026_05_28.md,
     /plans/archive/2026_08/tradfi_multisource_backfill_2026_06_22.md,
     /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
-    /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
@@ -233,6 +233,8 @@ strike glued as `C7960`. Target for this exact row: `CME:OPTION:SP500-USD@LIN-<e
 surface — Phase A1 (writer) → B (migrate `prod/catalog.parquet`) → C (widget renders canonical) fix it end to end.
 
 ## MVP universe (operator-defined 2026-07-18 — the Phase-D readiness target)
+
+> **🟡 2026-08-09 scope:** `/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`.
 
 - **S&P index futures** (ES) + **S&P index options**.
 - **Delta-one single-stock equities** (S&P/NASDAQ single names — already canonical on filenames; verify the id columns).
@@ -643,7 +645,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **❌ [SCRIPT] P1.** OBSOLETE. Build the S3 flat-files bulk-backfill ingester — Massive removed as a tradfi source
     - **❌ [SCRIPT] P1.** OBSOLETE (no-longer-massive-relevant). Fix `backfill_tradfi_source_column.py` walk prefix
     - +4 more (P2) — see file for the rest
-  - [`plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`](/plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md)
+  - [`plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`](/plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md)
     - **[DESIGN] P2.** Decide whether real aggregated `ohlcv_15m`/`ohlcv_24h` TradFi bars are wanted (not just alert
       silence)
     - **[VERIFY] P3.** Trace the orchestrator/sentinel classification layer for `attempted_failed` vs `empty_confirmed`
@@ -996,3 +998,8 @@ operator activation.
   index) — a folding/archival judgment call, never autonomous. `depends_on` 3 still-active children
   (`tradfi_manifest_content_recovery_completion_2026_07_24`, `tradfi_backfill_throughput_followups_2026_07_24`,
   `tradfi_phase_d_terminal_gate_2026_07_24`) gates archival per PLAN_FORMAT.md regardless. `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:4adac7a23a03a549]: **KEEP-NA,
+  valid -- 0 native open todos confirmed; today's new MVP-of-MVP banner verified an accurate, correctly-scoped redirect
+  (narrows near-term dispatch only, doesn't rewrite this doc). FLAGGED not corrected (over-cap doc, append-only budget):
+  the "Aggregated source docs" digest entry for `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` says "0 open
+  todos" but that doc actually carries 3 -- see it directly. `assigned_vm` unchanged.

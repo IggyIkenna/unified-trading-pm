@@ -251,3 +251,8 @@ explicitly declined to rule on D1-D4 ("weren't in scope of this governance pass"
 `[OPERATOR]` todo. All 3 open items chained behind the single unruled D1-D4 gate. No `assigned_vm` change.
 
 - **context-scout 2026-08-07**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:c69e2d2b0eb20eda]: KEEP-NA,
+valid — re-verified all 3 open items unchanged since the 2026-08-07 marker (only context-scout touches since). D1-D4
+operator-rulings table still unruled, blocks the other 2 mechanically. No `assigned_vm` change.

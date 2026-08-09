@@ -28,7 +28,7 @@ related:
   ]
 created: 2026-08-08
 author: round5-cross-cutting-audit
-last_updated: 2026-08-08
+last_updated: 2026-08-09
 parent_epic: mtds_mdps_master
 assigned_vm: NA
 execution_scope: local-only
@@ -113,7 +113,12 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
       `build_catalogue_dataframe` (or an equivalent pre-write filter step) excluding `venue=ICE`,
       `venue=CBOE AND instrument_type IN (OPTION, SPOT_PAIR)`, and the 2 VIX-cash `INDEX` ids from every future rebuild
       — this is the fix that makes it safe to re-enable both schedulers without re-baking the just-purged pollution.
-      Repo: instruments-service.
+      Repo: instruments-service. **CITATION (na-eligibility-audit 2026-08-09, tradfi tranche, dispatch agt-3df41f):**
+      this exact filter is already tracked verbatim in
+      `/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` (`status: active`,
+      `assigned_vm: planning`, still open there too) — cross-referenced from
+      `instruments_completion_tracker_2026_07_06.md` line ~474-478 ("EXTRACTED 2026-08-09 -> ...batch2..."). Track the
+      fix THERE, not here, to avoid a double-dispatch; this checkbox stays open as a pointer, not independent scope.
 - [ ] [INFRA] P2. **Once the filter above ships + is verified (dry-run a manual regen, confirm the 4 legs stay
       excluded), re-enable both schedulers** (`gcloud scheduler jobs resume`). Do not re-enable before the filter lands.
 - [ ] [DIAG] P2. **Determine WHEN the daily job actually got re-enabled** (was it ever truly paused via the Scheduler
@@ -137,3 +142,15 @@ precedent). The purge was executed WITHOUT the resume step for this reason — s
   completed successfully (see `instruments_completion_tracker_2026_07_06.md`'s todo for full evidence). This doc tracks
   the residual root-cause fix (build-time filter) + re-enable path, kept separate from the purge todo itself since it's
   a distinct, cross-cutting infra-correctness finding.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:5dc4d63f3807f9b1]:
+  **KEEP-NA-STALE (already-duplicated), first audit -- 1 citation added.** All 4 open items read end-to-end via a
+  dedicated sub-agent hunter; count reconciled (4/4). Item 1 (the build-time exclusion filter) turned out to duplicate
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md` verbatim (3-way convergence: that plan, this doc, and
+  `instruments_completion_tracker_2026_07_06.md`'s own "EXTRACTED 2026-08-09" note all describe the identical fix) --
+  citation added so nobody double-dispatches it. Items 2-3 (scheduler resume; 90-day audit-log diagnosis) are genuine
+  DEPENDENCY_BLOCKED/GENUINE_WORK, not duplicated anywhere in the corpus -- item 3 in particular is a clean, unblocked,
+  bounded diagnostic (MISCLASSIFIED_LIKELY_AO_ELIGIBLE, flagged for a future pass's conflict-check, not promoted this
+  run since item 1's citation fix was this pass's priority). Item 4 ("consider whether scheduler state should be
+  asserted...") stays a genuine open design/scoping question, not yet a committed bounded task. Doc stays NA --
+  whole-doc RECLASSIFY does not apply (items 2-4 remain open scope).

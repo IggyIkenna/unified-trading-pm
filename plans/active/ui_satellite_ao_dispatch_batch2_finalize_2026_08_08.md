@@ -128,3 +128,4 @@ source: >-
 - **2026-08-08** — Drafted alongside `ui_satellite_ao_dispatch_batch2_2026_08_08.md` by `ag_closeout_auditor` (dispatch
   agt-a0f1b7, `/ag-closeout-audit ui`, Autonomous mode). Ships `active` per the no-double-gate rule; genuinely cannot
   dispatch early due to `gate_on_depends: true`.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

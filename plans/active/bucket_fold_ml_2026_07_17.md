@@ -246,19 +246,27 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       `_deserialize_model(self, model_bytes, blob_name, expected_sha256: str | None)` raising
       `ValueError("Model integrity check failed: …")` on digest mismatch — i.e. the allowlist AND the optional sha256
       gate the todo asked for are both present in the shipped code.
-- [ ] [CODE] P2. **Ship deployment-api ml-store display cutover** (4 files: `commentary/pipeline_uat.py`,
+- [x] ✅ [CODE] P2. **Ship deployment-api ml-store display cutover** (4 files: `commentary/pipeline_uat.py`,
       `deployment_api_config.py`, `routes/services.py`, `services/data_status_drilldown/_core.py`) — implemented +
       QG-verified 2026-07-17 (display-only: data-status drilldown + config-buckets scope to ml-store prefixes;
       pipeline_uat dead f-string repointed). Currently UNCOMMITTED in the deployment-api tree — BLOCKED by foreign
       uncommitted `terraform.tfvars` (features-service-sports docker repin) in the deployment-service DEP (quickmerge
       dep-cleanliness gate; not mine to commit). Ship once that foreign WIP clears. Non-runtime-critical (the
       availability-index readers already discriminate ml via the `service_name==ml-service` filter, so no conflation
-      without this).
-- [ ] [DATA] P3. **PM `cloud-providers.yaml` mirror re-sync** — add the `ml-store` key to the non-authoritative PM
+      without this). **DONE (staleness-recheck 2026-08-09)** — `deployment-api@ff1c691` (2026-07-19) shipped exactly
+      these 4 files (`git show --stat` confirms `commentary/pipeline_uat.py`, `deployment_api_config.py`,
+      `routes/services.py`, `services/data_status_drilldown/_core.py`, all carrying `ml-store` content today);
+      `git merge-base --is-ancestor ff1c691 origin/live-defi-rollout` = true. The foreign `terraform.tfvars` blocker
+      cleared and this landed the same day; the checkbox was simply never flipped.
+- [x] ✅ [DATA] P3. **PM `cloud-providers.yaml` mirror re-sync** — add the `ml-store` key to the non-authoritative PM
       mirror (deferred 2026-07-17: PM quickmerge STAGE 1.5 dependency-alignment gate fails on an UNRELATED fleet drift —
       `ibkr-gateway-infra` pins `cryptography>=46,<47` vs canonical `>=47,<50`, which blocks ALL PM config quickmerges).
       The mirror is non-runtime (deployment-service authoring + UAC packaged are the read copies, both shipped). Re-sync
       when the ibkr drift clears, or bundle into the closeout copy-reconcile. FLEET FINDING flagged to operator.
+      **DONE (staleness-recheck 2026-08-09)** — `unified-trading-pm@5f04b0702a` ("fold PM cloud-providers.yaml mirrors
+      (Folds A/B/C/D/E) — add features/ml-store/portfolio-state folded keys...", 2026-07-19) already added the
+      `ml-store` key to `configs/cloud-providers.yaml`; confirmed live at HEAD (both GCP + AWS rows present, lines
+      64-70/231-232) and `git merge-base --is-ancestor 5f04b0702a origin/live-defi-rollout` = true.
 - [ ] [CODE] P3. **Alias sunset** — after the reader-fallback window closes and the 5 legacy kinds are grep-clean of any
       resolver caller, hard-remove the `_KIND_ALIASES` entries + retired yaml keys ("no double SSOT"); `terraform plan`
       stays green. (Deferred to the closeout plan if the window is still open when the other folds land.) ALSO drop the

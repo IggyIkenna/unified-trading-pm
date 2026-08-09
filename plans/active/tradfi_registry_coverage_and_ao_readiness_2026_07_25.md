@@ -41,7 +41,7 @@ related:
     /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md,
-    /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md,
     /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
   ]
@@ -163,28 +163,30 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       correct the stale closeout digest below — the ICE/KRX/FX source-mislabeling root-cause was fully fixed 2026-07-26
       (`unified-trading-library@f237b75a`, with regression tests + green `quality-gates.sh`), and the remaining
       billing-guard question was explicitly closed by a 2026-07-28 operator ruling (downgraded P0→P3: "leave
-      deprioritized/blocked, do not re-ask").** NEW 2026-07-24 — two live defects found by the raw-tick reconciliation's
-      3rd run: (1) ICE/KRX/FX (all Yahoo-exclusive per SSOT) captured under `source=databento` since ~2026-07-18 (real
-      values, wrong provenance stamp — **root-caused + fixed 2026-07-26**: `derive_pipeline_mode_for_row`'s
-      explicit-source branch trusted a caller-supplied `--source` unconditionally instead of re-validating
-      venue/data_type capability, so a shared run-level `--source databento` (legitimate for CME/CBOE in the same VM
-      run) fabricated a `batch_databento` stamp for the Yahoo-only ICE/KRX/FX `ohlcv_24h` cells; the fix now
-      re-validates via `is_source_capable_for_venue(...)` before trusting an explicit source, closing the write path for
-      all current + future callers, not just this occurrence); (2) FX `SPOT_PAIR` manifest `instrument_id` is 0%
-      well-formed across its entire 2020-2026 captured history (the GCS object + content are fine — this is a pure
-      manifest-copy defect; the write path for NEW captures was already fixed as of `market-tick-data-service@020b703e`,
-      2026-07-25). Positive counter-finding same run: captured-row id-form canonicality measured ~99.3% corpus-wide (up
-      from the 07-21 report's 30.8%), independently corroborated by a 99.95%-clean reconstructed-path check — strong
-      evidence the Phase-B migration in `tradfi_manifest_content_recovery_completion_2026_07_24.md` has substantially
-      landed (**that plan's Surface-B manifest-migration todo is now confirmed `[x]` "RE-VERIFIED LIVE 2026-07-25"** —
-      verified live 2026-07-25 during this fork; the evidence-reconciliation action is done). **Resolved, not a stale
-      pointer**: this bullet was reformatted 2026-07-25 into a non-checkbox digest pointer (finding H) on the premise
-      that "this doc's own 'Suggested next steps' are explicitly marked not executed/undecided, so no bounded action is
-      stated yet" — that premise no longer holds. Root-cause is fixed and regression-tested at the code level, and the
-      one open question (an actual Databento billing-guard gap) was explicitly operator-closed 2026-07-28, not left
-      pending. The only genuinely remaining work is the historical-row backfill — a bounded, non-operator-gated
-      execution step, now tracked as its own todo below, not a fresh investigation. Full evidence + Progress Log (incl.
-      the `_quarantine/` register going stale — 146K→400K+ objects in 3-4 days, register still says "deleted"):
+      deprioritized/blocked, do not re-ask" — verbatim ruling recorded in
+      `/plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`'s Todos section).** NEW
+      2026-07-24 — two live defects found by the raw-tick reconciliation's 3rd run: (1) ICE/KRX/FX (all Yahoo-exclusive
+      per SSOT) captured under `source=databento` since ~2026-07-18 (real values, wrong provenance stamp —
+      **root-caused + fixed 2026-07-26**: `derive_pipeline_mode_for_row`'s explicit-source branch trusted a
+      caller-supplied `--source` unconditionally instead of re-validating venue/data_type capability, so a shared
+      run-level `--source databento` (legitimate for CME/CBOE in the same VM run) fabricated a `batch_databento` stamp
+      for the Yahoo-only ICE/KRX/FX `ohlcv_24h` cells; the fix now re-validates via `is_source_capable_for_venue(...)`
+      before trusting an explicit source, closing the write path for all current + future callers, not just this
+      occurrence); (2) FX `SPOT_PAIR` manifest `instrument_id` is 0% well-formed across its entire 2020-2026 captured
+      history (the GCS object + content are fine — this is a pure manifest-copy defect; the write path for NEW captures
+      was already fixed as of `market-tick-data-service@020b703e`, 2026-07-25). Positive counter-finding same run:
+      captured-row id-form canonicality measured ~99.3% corpus-wide (up from the 07-21 report's 30.8%), independently
+      corroborated by a 99.95%-clean reconstructed-path check — strong evidence the Phase-B migration in
+      `tradfi_manifest_content_recovery_completion_2026_07_24.md` has substantially landed (**that plan's Surface-B
+      manifest-migration todo is now confirmed `[x]` "RE-VERIFIED LIVE 2026-07-25"** — verified live 2026-07-25 during
+      this fork; the evidence-reconciliation action is done). **Resolved, not a stale pointer**: this bullet was
+      reformatted 2026-07-25 into a non-checkbox digest pointer (finding H) on the premise that "this doc's own
+      'Suggested next steps' are explicitly marked not executed/undecided, so no bounded action is stated yet" — that
+      premise no longer holds. Root-cause is fixed and regression-tested at the code level, and the one open question
+      (an actual Databento billing-guard gap) was explicitly operator-closed 2026-07-28, not left pending. The only
+      genuinely remaining work is the historical-row backfill — a bounded, non-operator-gated execution step, now
+      tracked as its own todo below, not a fresh investigation. Full evidence + Progress Log (incl. the `_quarantine/`
+      register going stale — 146K→400K+ objects in 3-4 days, register still says "deleted"):
       `/plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`. (repos:
       market-tick-data-service, unified-api-contracts, unified-trading-pm)
 - [ ] [DATA] P2. **NEW 2026-07-29 — execute the two historical backfills the now-fixed write paths left behind**: (1)
@@ -253,19 +255,19 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       non-zero count). (repo: instruments-service)
 
       **ATTEMPTED 2026-07-30 — NOT completed, aborted for shared-host safety.** Ran the exact command live
-                                                                  (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
-                                                                  scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, `instruments-service`). The
-                                                                  manifest load (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `market-data-tick-tradfi-prd`
-                                                                  `_index` + its outstanding `_index/per_vm/` shards — tradfi has an extensive VM-launch history) drove the process
-                                                                  to ~13GB RSS with growing swap (5.9Gi to 9.3Gi on a 15Gi-total shared host, other sessions concurrently active)
-                                                                  and zero log progress past "Loading manifest" for 6+ minutes — flat progress reads as a stall, not
-                                                                  slow-but-working, per the async-wait-discipline SSOT. Killed it (`kill -9`) before risking an OOM crash or
-                                                                  thrashing badly enough to hurt other concurrent work on the shared host, rather than waiting indefinitely. This is
-                                                                  the same heavy-compute-on-shared-host class the infra codex gates to a dedicated VM — tradfi's corpus size makes
-                                                                  this a genuinely heavier operation than the ruling's "the dry-run is runnable now" framing assumed. Cross-filed in
-                                                                  `data_completion_tradfi_2026_07_15.md`'s `⑫ FOLLOW` todo. **Recommended next step**: re-run on a dedicated VM (or
-                                                                  scope down via `--start-date`/`--end-date`/`--venues` to shrink the per-VM-shard merge) rather than the shared
-                                                                  host. No `--apply` was ever reached; nothing was mutated.
+                                                                      (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
+                                                                      scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, `instruments-service`). The
+                                                                      manifest load (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `market-data-tick-tradfi-prd`
+                                                                      `_index` + its outstanding `_index/per_vm/` shards — tradfi has an extensive VM-launch history) drove the process
+                                                                      to ~13GB RSS with growing swap (5.9Gi to 9.3Gi on a 15Gi-total shared host, other sessions concurrently active)
+                                                                      and zero log progress past "Loading manifest" for 6+ minutes — flat progress reads as a stall, not
+                                                                      slow-but-working, per the async-wait-discipline SSOT. Killed it (`kill -9`) before risking an OOM crash or
+                                                                      thrashing badly enough to hurt other concurrent work on the shared host, rather than waiting indefinitely. This is
+                                                                      the same heavy-compute-on-shared-host class the infra codex gates to a dedicated VM — tradfi's corpus size makes
+                                                                      this a genuinely heavier operation than the ruling's "the dry-run is runnable now" framing assumed. Cross-filed in
+                                                                      `data_completion_tradfi_2026_07_15.md`'s `⑫ FOLLOW` todo. **Recommended next step**: re-run on a dedicated VM (or
+                                                                      scope down via `--start-date`/`--end-date`/`--venues` to shrink the per-VM-shard merge) rather than the shared
+                                                                      host. No `--apply` was ever reached; nothing was mutated.
 
 - [ ] [BACKEND] P2. **NEW 2026-07-25 (plan-reconcile) — track the KRX name-column "STILL OPEN" work as a real todo, not
       just prose behind a checked box.** The KRX name-column code (4/4 read surfaces) shipped 2026-07-20 —

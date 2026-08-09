@@ -47,6 +47,14 @@ assigned_role: infra
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/scripts/vm/launch-cefi-forward-poll.sh,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py,
+    /plans/active/issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md,
+  ]
 ---
 
 # cefi-fwd-20260808-110409 deleted within 10-13 min — 0 data written
@@ -323,3 +331,83 @@ before launch.
 - **VM-4 progress update (slot-17, ~2026-08-09, ~94h elapsed)**: 07-11 COMPLETE (BIN=584, BYB=508, OKX=361, KRA=249,
   BITGET=506, BITFINEX=58). 07-12 OPENED (BIN=584, BYB=327, BITGET=506, BITFINEX=58; OKX/KRA=0). ~36 days done of 62
   (~58%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~98h elapsed)**: 07-12 COMPLETE (BIN=584, BYB=508, OKX=361, KRA=249,
+  BITGET=506, BITFINEX=58). 07-13 OPENED (BIN=225, BITGET=128, BITFINEX=58; BYB/OKX/KRA=0). ~37 days done of 62 (~60%).
+  ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~102h elapsed)**: 07-13 COMPLETE (BIN=584, BYB=510, OKX=361, KRA=249,
+  BITGET=510, BITFINEX=58). 07-14 OPENED (BIN=248, BYB=2, BITGET=156, BITFINEX=58; OKX/KRA=0). ~38 days done of 62
+  (~61%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~106h elapsed)**: 07-14 COMPLETE (BIN=584, BYB=512, OKX=364, KRA=249,
+  BITGET=510, BITFINEX=58). 07-15 OPENED (BIN=137, BITGET=128, BITFINEX=58; BYB/OKX/KRA=0). ~39 days done of 62 (~63%).
+  ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~110h elapsed)**: 07-15 COMPLETE (BIN=584, BYB=515, OKX=364, KRA=249,
+  BITGET=510, BITFINEX=58). 07-16 OPENED (BIN=248, BITGET=150, BITFINEX=58; BYB/OKX/KRA=0). ~40 days done of 62 (~65%).
+  ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~114h elapsed)**: 07-16 COMPLETE (BIN=587, BYB=520, OKX=364, KRA=249,
+  BITGET=510, BITFINEX=58). 07-17 OPENED (BIN=376, BITGET=276, BITFINEX=58; BYB/OKX/KRA=0). ~41 days done of 62 (~66%).
+  ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~118h elapsed)**: 07-17 COMPLETE (BIN=589, BYB=522, OKX=368, KRA=249,
+  BITGET=510, BITFINEX=58). 07-18 OPENED (BIN=120, BITGET=94, BITFINEX=58; BYB/OKX/KRA=0). ~42 days done of 62 (~68%).
+  ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~120h elapsed)**: 07-18 COMPLETE (BIN=589, BYB=522, OKX=368, KRA=249,
+  BITGET=510, BITFINEX=58). 07-19 OPENED (BIN=589, BYB=422, BITGET=510, BITFINEX=58; OKX/KRA=0). ~43 days done of 62
+  (~69%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~122h elapsed)**: 07-19 COMPLETE (BIN=589, BYB=522, OKX=368, KRA=249,
+  BITGET=510, BITFINEX=58). 07-20 OPENED (BIN=3; BYB/OKX/KRA/BITGET/BITFINEX=0). ~44 days done of 62 (~71%). ETA
+  ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~125h elapsed)**: 07-20 COMPLETE (BIN=589, BYB=524, OKX=368, KRA=249,
+  BITGET=511, BITFINEX=58). 07-21 OPENED (BIN=78; BYB/OKX/KRA/BITGET/BITFINEX=0). ~45 days done of 62 (~73%). ETA
+  ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~128h elapsed)**: 07-21 COMPLETE (BIN=589, BYB=523, OKX=367, KRA=249,
+  BITGET=511, BITFINEX=58). 07-22 OPENED (BIN=376, BYB=114, BITGET=275, BITFINEX=60; OKX/KRA=0). ~46 days done of 62
+  (~74%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~131h elapsed)**: 07-22 COMPLETE (BIN=592, BYB=523, OKX=367, KRA=249,
+  BITGET=511, BITFINEX=60). 07-23 OPENED (BIN=504, BYB=231, BITGET=402, BITFINEX=60; OKX/KRA=0). ~47 days done of 62
+  (~76%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~134h elapsed)**: 07-23 COMPLETE (BIN=593, BYB=524, OKX=367, KRA=233,
+  BITGET=511, BITFINEX=60). 07-24 OPENED (BIN=427, BYB=155, BITGET=382, BITFINEX=60; OKX/KRA=0). ~48 days done of 62
+  (~77%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~137h elapsed)**: 07-24 COMPLETE (BIN=593, BYB=524, OKX=367, KRA=233,
+  BITGET=511, BITFINEX=60). 07-25 OPENED (BIN=247, BYB=68, BITGET=222, BITFINEX=60; OKX/KRA=0). ~49 days done of 62
+  (~79%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~140h elapsed)**: 07-25 COMPLETE (BIN=592, BYB=524, OKX=367, KRA=233,
+  BITGET=511, BITFINEX=60). 07-26 OPENED (BIN=248, BYB=59, BITGET=154, BITFINEX=60; OKX/KRA=0). ~50 days done of 62
+  (~81%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~143h elapsed)**: 07-26 COMPLETE (BIN=592, BYB=523, OKX=367, KRA=233,
+  BITGET=511, BITFINEX=60). 07-27 OPENED (BIN=592, BYB=422, BITGET=511, BITFINEX=60; OKX/KRA=0). ~51 days done of 62
+  (~82%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~146h elapsed)**: 07-27 COMPLETE (BIN=592, BYB=524, OKX=368, KRA=233,
+  BITGET=511, BITFINEX=60). 07-28 OPENED (BIN=480, BYB=164, BITGET=384, BITFINEX=60; OKX/KRA=0). ~52 days done of 62
+  (~84%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~149h elapsed)**: 07-28 COMPLETE (BIN=592, BYB=528, OKX=368, KRA=233,
+  BITGET=511, BITFINEX=60). 07-29 OPENED (BIN=370, BYB=69, BITGET=265, BITFINEX=60; OKX/KRA=0). ~53 days done of 62
+  (~85%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~152h elapsed)**: 07-29 COMPLETE (BIN=592, BYB=528, OKX=368, KRA=233,
+  BITGET=511, BITFINEX=60). 07-30 OPENED (BIN=285, BYB=68, BITGET=255, BITFINEX=60; OKX/KRA=0). ~54 days done of 62
+  (~87%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~155h elapsed)**: 07-30 COMPLETE (BIN=592, BYB=530, OKX=370, KRA=233,
+  BITGET=511, BITFINEX=60). 07-31 OPENED (BIN=122, BITGET=109, BITFINEX=60; BYB/OKX/KRA=0). ~55 days done of 62 (~89%).
+  ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~158h elapsed)**: 07-31 COMPLETE (BIN=592, BYB=531, OKX=370, KRA=233,
+  BITGET=511, BITFINEX=60). 08-01 OPENED (BIN=395, BYB=159, BITGET=361, BITFINEX=60; OKX/KRA=0). ~56 days done of 62
+  (~90%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~161h elapsed)**: 08-01 COMPLETE (BIN=592, BYB=531, OKX=370, KRA=233,
+  BITGET=511, BITFINEX=60). 08-02 OPENED (BIN=248, BYB=46, BITGET=137, BITFINEX=60; OKX/KRA=0). ~57 days done of 62
+  (~92%). ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~164h elapsed)**: 08-02 COMPLETE (BIN=592, BYB=531, OKX=370, KRA=233,
+  BITGET=511, BITFINEX=60). 08-03 OPENED (BIN=120, BITGET=73, BITFINEX=60; BYB/OKX/KRA=0). ~58 days done of 62 (~94%).
+  ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~167h elapsed)**: 08-03 COMPLETE (BIN=592, BYB=531, OKX=370, KRA=233,
+  BITGET=514, BITFINEX=60). 08-04 OPENED (BIN=120, BITGET=22, BITFINEX=60; BYB/OKX/KRA=0). ~59 days done of 62 (~95%).
+  ETA ~2026-08-12T05:00Z unchanged.
+- **VM-4 progress update (slot-17, ~2026-08-09, ~170h elapsed)**: 08-04 COMPLETE (BIN=592, BYB=531, OKX=370, KRA=233,
+  BITGET=514, BITFINEX=60). 08-05 OPENED (BIN=457, BYB=158, BITGET=382, BITFINEX=60; OKX/KRA=0) — **FINAL DAY of window
+  (06-05→08-05)**. ~61 days done of 62 (~98%). VM expected to TERMINATE after 08-05 completes.
+- **VM-4 COMPLETE + probe PASSED (slot-17, ~2026-08-09, ~173h elapsed)**: 08-05 COMPLETE (BIN=592, BYB=531, OKX=370,
+  KRA=234, BITGET=514, BITFINEX=60). VM TERMINATED (instance deleted). Full probe
+  `probe_cefi_perp_funding_raw_coverage.py --start 2026-06-05 --end 2026-08-05` exit 0 — 62-day window now has data for
+  5 CARRY_BASIS_PERP venues across most days. **Notable: 06-19 and 06-20 show all-zeros for 5 venues (DERIBIT=21 only) —
+  likely legitimate Tardis data gaps (exchange outage or no recording); corpus recompute will honest-skip them. 06-18 is
+  partial (OKX=0, KRA=0).** GCS probe gate MET — proceeding to corpus recompute + `funding_window()` verification to
+  flip contamination plan -011.
+- **context-scout 2026-08-09**: populated context_scope (5 entries).

@@ -68,27 +68,27 @@ registry gap (S1-c) by registering it. **(B):** finish `launch-mdps-features-liv
 repoint S1-a's self-heal to `launch-features-vm.sh`. **(C):** do only the `mdps-sports-` registry gap now, defer the
 launcher deletions. Other: free-text.
 
-> **NOT genuinely `[OPERATOR]`-gated (round5-cefi-question-resolution 2026-08-08).** Applying `plans/active/task_template.md`
-> finding U's explicit positive test: `[OPERATOR]` is for (i) a business/spend/value judgment with no data-derivable
-> answer, (ii) a credential/access-only gate, or (iii) a whole-bucket destroy / failed reversibility check. This is
-> none of those — S1-a/S1-b are launchers ALREADY confirmed non-functional (`ModuleNotFoundError` on every invocation,
-> not merely deprecated-but-working), so deleting them + repointing the self-heal binding to the already-working
+> **NOT genuinely `[OPERATOR]`-gated (round5-cefi-question-resolution 2026-08-08).** Applying
+> `plans/active/task_template.md` finding U's explicit positive test: `[OPERATOR]` is for (i) a business/spend/value
+> judgment with no data-derivable answer, (ii) a credential/access-only gate, or (iii) a whole-bucket destroy / failed
+> reversibility check. This is none of those — S1-a/S1-b are launchers ALREADY confirmed non-functional
+> (`ModuleNotFoundError` on every invocation, not merely deprecated-but-working), so deleting them + repointing the
+> self-heal binding to the already-working
 > `launch-features-vm.sh --feature-family cross_instrument --asset-group PREDICTION` STRICTLY REDUCES blast radius (a
 > broken launcher can't succeed today regardless; repointing to a working one only helps). S1-c is a pure registry-gap
 > fix (add missing rows), zero deletion involved. This doc's own stated "Recommended (A)" is the correct, low-risk
 > engineering default — ordinary dead-code cleanup + registry hygiene, not a product/strategic call. S3-b (sports dual
-> entrypoint) is DIFFERENT and correctly stays a real design adjudication — do NOT silently delete, it backs live
-> sports backfills. Reclassifying todos 1-3 as ordinary AO-dispatchable `[SCRIPT]` work per option A; the actual
-> multi-file deletion + registry edit was not executed in this pass (documentation-question audit, not an
-> implementation dispatch).
+> entrypoint) is DIFFERENT and correctly stays a real design adjudication — do NOT silently delete, it backs live sports
+> backfills. Reclassifying todos 1-3 as ordinary AO-dispatchable `[SCRIPT]` work per option A; the actual multi-file
+> deletion + registry edit was not executed in this pass (documentation-question audit, not an implementation dispatch).
 
 ## Todos
 
-- [ ] 1. [SCRIPT] P2. S1-a — `launch-prediction-features-vm.sh` BROKEN (packages removed
-      `features-cross-instrument-service`, import-verify ModuleNotFounds under `set -e`; no SPOT; 50GB disk escaping the
-      disk QG; no live-collision guard; `launcher_registry.py:154` binds `prediction-features-` self-heal to it).
-      Superseded by `launch-features-vm.sh --feature-family cross_instrument --asset-group PREDICTION`. DELETE + repoint
-      registry (pending operator A/B/C).
+- **1. [SCRIPT] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch12_2026_08_09.md` todo 1 for AO
+  dispatch (parent_epic: infrastructure_master). See that doc for the live checkbox + evidence.** (S1-a —
+  `launch-prediction-features-vm.sh` BROKEN, superseded by
+  `launch-features-vm.sh --feature-family cross_instrument --asset-group PREDICTION`; DELETE + repoint registry — no
+  longer operator-gated per the round5-cefi-question-resolution annotation above.)
 - [ ] 2. [SCRIPT] P2. S1-b — `launch-mdps-features-live.sh` non-runnable (no dispatcher branch;
       `VM_SERVICE=market_data_processing_service+features_service` → ModuleNotFoundError; plan archived) but registered
       in `vm_prefix_registry.py:841-851` (5 rows). DELETE launcher + 5 rows OR finish the dispatcher branch (pending
@@ -162,9 +162,14 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
   pass — this was a documentation-question audit, not an implementation dispatch. The sibling doc
   `plans/active/issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md` (2 more
   launchers with the same defect class) follows the same reasoning once picked up.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid - per the HARD RULE, `assigned_vm`
-  flips WHOLE-DOC only, and todo 8 (S3-b, sports dual entrypoint) remains an explicit, un-superseded design
-  adjudication ("Do NOT silently delete... operator/design adjudication") — one genuine judgment call among the 4
-  open items blocks the whole-doc flip even though todos 1-3 are now correctly declassified/bounded (per the same-day
-  round5 pass above). Doc stays NA in full; todos 1-3 are ready for dispatch the moment todo 8 is resolved or split
-  out, but that split is not performed here since it changes doc structure beyond a citation/marker touch.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid - per the HARD RULE, `assigned_vm` flips
+  WHOLE-DOC only, and todo 8 (S3-b, sports dual entrypoint) remains an explicit, un-superseded design adjudication ("Do
+  NOT silently delete... operator/design adjudication") — one genuine judgment call among the 4 open items blocks the
+  whole-doc flip even though todos 1-3 are now correctly declassified/bounded (per the same-day round5 pass above). Doc
+  stays NA in full; todos 1-3 are ready for dispatch the moment todo 8 is resolved or split out, but that split is not
+  performed here since it changes doc structure beyond a citation/marker touch.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms round7 (2026-08-08)
+  whole-doc-only-flip ruling: todo 8 (sports dual-entrypoint) remains an un-superseded design adjudication that traps
+  otherwise-bounded todos 1-3.

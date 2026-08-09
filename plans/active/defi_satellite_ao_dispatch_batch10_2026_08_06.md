@@ -138,8 +138,8 @@ same day) before being drafted here.
 - [x] ✅ [CODE] P2. **Thread the real HTTP status through the direct `async_post_to_subgraph` callers**
       (`dex_swaps_handler.py`, `liquidations_handler.py` — re-verify current file state at pickup), establishing the
       widen-return-signature pattern other subgraph-HTTP helpers can reuse. Repo: market-tick-data-service. Source:
-      `issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md` (item 4). Done when: both callers return the
-      real HTTP status, existing tests pass, and `quality-gates.sh --no-fix` is green. —
+      `/plans/archive/2026_08/issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md` (item 4). Done when:
+      both callers return the real HTTP status, existing tests pass, and `quality-gates.sh --no-fix` is green. —
       market-tick-data-service@17aed396 · QG green (233s) · async_post_to_subgraph returns tuple[dict, int]; dex_swaps +
       liquidations callers thread http_status through all return paths; tests assert status propagation.
 - [x] ✅ [CODE] P1. **Ship the operator-approved BLAZESTAKE known-outage exemption** in `dependency_checker.py`'s
@@ -169,9 +169,10 @@ same day) before being drafted here.
       VM-monitoring-history extraction itself remains a real but now-decoupled, non-blocking SOFT-cap (500L) hygiene
       item — tracked as that same issue doc's Todo 1 (downgraded P2→P3, `assigned_vm: NA`, not re-drafted here).
 - [x] ✅ [INFRA] P1. **Relaunch the stalled `mtds-dex-swaps-backfill-3` VM** with `--start 2025-12-15 --end 2026-07-21`
-      (no `--force`) — per the 2026-08-06 operator ruling this is now AO-dispatchable, no longer gated on the OOM
-      root-cause investigation. **Safe-idempotent justification: standard backfill relaunch, SPOT, skip-if-captured, no
-      GCS delete.** Repo: market-tick-data-service. Source:
+      (no `--force`) — per the 2026-08-06 operator ruling recorded in
+      `/plans/active/issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (Todo3) this is now
+      AO-dispatchable, no longer gated on the OOM root-cause investigation. **Safe-idempotent justification: standard
+      backfill relaunch, SPOT, skip-if-captured, no GCS delete.** Repo: market-tick-data-service. Source:
       `issues/lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (Todo3). Done when: the VM is health-verified
       RUNNING at T+10min and progress (throughput/coverage) is logged in the source doc's Progress Log. Evidence: VM
       RUNNING 2026-08-07T15:42Z (SPOT, SHARD_INDEX=6, asia-northeast1-c); 95,236 swap rows written in first shard

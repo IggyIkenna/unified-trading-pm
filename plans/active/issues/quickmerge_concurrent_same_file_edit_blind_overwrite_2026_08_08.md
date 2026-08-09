@@ -123,3 +123,5 @@ read, regardless of whether the specific lines textually conflict.
 
 - 2026-08-08: Issue filed per direct instruction from main, relayed to data_engineering worker slot-7 during
   `sports_taxonomy_p1_capture_and_contracts-019` boot. No investigation performed yet — todo above is unstarted.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).

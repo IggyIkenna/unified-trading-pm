@@ -34,8 +34,8 @@ related:
     /plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md,
     /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
-    /plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
-    /plans/active/issues/production_readiness_checklist_file_missing_2026_07_24.md,
+    /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/archive/2026_07/issues/production_readiness_checklist_file_missing_2026_07_24.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -213,9 +213,10 @@ both still awaiting operator approval to flip to `active`. Neither has been acti
 
 - [x] ✅ [DOCS] P2. Flip `infra_satellite_ao_dispatch_batch3_2026_07_30.md`'s `assigned_vm: NA` → `planning` (finding 7)
       — **CLOSED 2026-08-06 (na-eligibility-audit)**: now in place — live `assigned_vm: planning` with the 2026-08-02
-      correction comment (operator ruling, finding 7), verified in batch3 frontmatter. OPERATOR CONFIRMATION NEEDED
-      first (this changes live dispatch state). Done when: the field is flipped and the remaining `[BACKEND] P3` todo
-      appears in the live AO backlog (verify via `/check-agent-orchestrator` or equivalent).
+      correction comment (operator ruling, finding 7 — see
+      `/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_30.md`), verified in batch3 frontmatter. OPERATOR
+      CONFIRMATION NEEDED first (this changes live dispatch state). Done when: the field is flipped and the remaining
+      `[BACKEND] P3` todo appears in the live AO backlog (verify via `/check-agent-orchestrator` or equivalent).
 - [x] ✅ [DOCS] P3. Drop the redundant `meta` co-tag from
       `issues/git_health_not_clean_since_pinned_constant_2026_07_27.md` **CLOSED 2026-08-06 (na-eligibility-audit)**:
       resolved by the broader 2026-08-02 operator-ruled retag — live `asset_group: [ao, meta]` with the multi-value kept

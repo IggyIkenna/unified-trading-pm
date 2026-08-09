@@ -117,3 +117,13 @@ alerting mechanism actively instrumenting a live, hours-old incident carries rea
 — the same "too hot to batch while live" posture this tranche applies to comparable same-day continuation docs (e.g.
 `pytest_timeout_60s_flaky_under_contention_continued2/3`, parked live-incident in batch6 D6-16/D6-17). Checked today's 9
 precedents; none apply. Revisit once todo 2's "LDR quiet" precondition is confirmed. No `assigned_vm` change.
+
+## Progress Log
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:5bafab3bb0900fde]: KEEP-NA,
+valid — confirms the 2026-08-08 round7 verdict. Todo 1 (dedup-key fix) stays too-hot-to-touch while live; todo 2
+explicitly gates on "LDR goes quiet," unconfirmed. Independently re-confirmed by today's
+`ag_closeout_audit_ci_parked_2026_08_09.md` ("too_large_or_risky / live-incident... re-confirmed unchanged a day
+later"). No `assigned_vm` change.

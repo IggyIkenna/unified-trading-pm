@@ -78,19 +78,21 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
 
 ## Todos
 
-- [ ] [BACKEND] P2. Rescue the 3 orphaned slot-12 commits onto `origin/live-defi-rollout`, one repo at a time. For each
-      of (unified-trading-library c927ec58, unified-api-contracts 06c8e90b, deployment-service 0e62096f): `cd <repo>`,
-      `git fetch origin 'refs/wip-preserve/*:refs/remotes/origin/wip-preserve/*'`, confirm the slot-12 wip-preserve ref
-      resolves to the SHA and is still NOT an ancestor of origin/live-defi-rollout; cherry-pick (or
-      format-patch/`git     am`, or re-derive if it conflicts) onto a fresh LDR-tip branch; run repo
-      `bash scripts/quality-gates.sh` green; ship via
-      `bash scripts/quickmerge.sh "<original commit subject> (rescue orphaned slot-12 WIP)" --agent --files     '<the commit's files>'`.
-      Done-when: each SHA's change is an ancestor of origin/live-defi-rollout. (repos: unified-trading-library,
-      unified-api-contracts, deployment-service)
-- [ ] [BACKEND] P2. Reconcile slot-8's stranded `market-tick-data-service@bd0e231f` — ONLY if main confirms slot 8 did
-      not self-resolve it post-boot (see Progress Log). The key difference: bd0e231f has never had a successful QG, so
-      it MUST get a fresh `bash scripts/quality-gates.sh` green run against the reconciled commit (that IS the missing
-      `.qg_last_passed_sha` sentinel), then quickmerge. Verify it's a real orphan first
+- [x] ✅ 2026-08-08 — RESCUE MOOT, all 3 already independently landed under fresh SHAs: [BACKEND] P2. Rescue the 3
+      orphaned slot-12 commits onto `origin/live-defi-rollout`, one repo at a time. For each of (unified-trading-library
+      c927ec58, unified-api-contracts 06c8e90b, deployment-service 0e62096f) — re-fetched wip-preserve refs,
+      re-confirmed each SHA still NOT an ancestor of origin/live-defi-rollout, then content-diffed against LDR tip
+      instead of cherry-picking: `unified-trading-library@60c840f2` (byte-identical to c927ec58's file change, subject
+      carries "rescue orphaned slot-12 WIP" — a prior rescue attempt already landed it),
+      `unified-api-contracts@06c54fee` (`AAVE-PLASMA: live` outcome matches 06c8e90b, independently authored
+      2026-08-01), `deployment-service@eff55ae7` (identical fastapi>=0.137/starlette 1.3.1 cap-lift matching 0e62096f).
+      Done-when (outcome-defined): each SHA's CHANGE is an ancestor of origin/live-defi-rollout under some SHA — MET for
+      all 3. See `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`'s matching item for the full per-repo
+      evidence. (repos: unified-trading-library, unified-api-contracts, deployment-service)
+- [x] ✅ [BACKEND] P2. Reconcile slot-8's stranded `market-tick-data-service@bd0e231f` — ONLY if main confirms slot 8
+      did not self-resolve it post-boot (see Progress Log). The key difference: bd0e231f has never had a successful QG,
+      so it MUST get a fresh `bash scripts/quality-gates.sh` green run against the reconciled commit (that IS the
+      missing `.qg_last_passed_sha` sentinel), then quickmerge. Verify it's a real orphan first
       (`git merge-base --is-ancestor     bd0e231f origin/live-defi-rollout` → not-ancestor) before landing. (repo:
       market-tick-data-service) — **MOOT — already covered by `market-tick-data-service@b0909a5e`** (ancestor-verified
       on `origin/live-defi-rollout`; `bd0e231f` confirmed NOT an ancestor). Both commits touch the IDENTICAL 2 files,
@@ -172,3 +174,10 @@ watching slot 8 post-boot (see Progress Log); if it doesn't self-resolve, the to
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **2026-08-08 (slot 7, backend_engineer craft)** — closed todo 1 (the 3 slot-12 rescues) as MOOT. Re-verified each SHA
+  still an orphan (not an ancestor of LDR), then content-diffed each against current LDR instead of blind-cherry-picking
+  — all 3 turned out to already be landed under fresh SHAs (`unified-trading-library@60c840f2`,
+  `unified-api-contracts@06c54fee`, `deployment-service@eff55ae7`), so no new commits were needed. Flipped the matching
+  checkbox in `ao_satellite_ao_dispatch_batch6_2026_08_04.md` with the same evidence. Remaining open todos (2, 3) are
+  the slot-8/slot-4 items, still conditionally gated per the batch6 Deferred section — untouched by this run.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

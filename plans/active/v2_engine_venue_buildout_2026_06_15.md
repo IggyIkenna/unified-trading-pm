@@ -686,11 +686,12 @@ blocked-model-variant MM engines + 2 sta...
   already-live-capturing venues first or wait for all 9. No todo/status changed — the doc's existing "no backfill
   authorised" framing already correctly reflects this; this entry documents WHY with evidence instead of leaving it a
   bare unresolved question.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
-  per the doc's own 2026-07-13 tally, the 13 fully-unblocked Tier-1 items were already split into 5
-  `assigned_vm: planning` child plans that day; every remaining open item here is blocked on Tardis credentials,
-  "no backfill authorised" (operator constraint), or an unbuilt ML model-variant (genuine ML-training judgment
-  call) -- no cheat-sheet precedent applies.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged): per
+  the doc's own 2026-07-13 tally, the 13 fully-unblocked Tier-1 items were already split into 5 `assigned_vm: planning`
+  child plans that day; every remaining open item here is blocked on Tardis credentials, "no backfill authorised"
+  (operator constraint), or an unbuilt ML model-variant (genuine ML-training judgment call) -- no cheat-sheet precedent
+  applies.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
 
 ## Follow-ups discovered during Phase D / template wave (2026-06-15)
 

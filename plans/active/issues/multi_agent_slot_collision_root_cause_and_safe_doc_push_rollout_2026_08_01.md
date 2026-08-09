@@ -159,47 +159,47 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
       — fixed. Repo: unified-trading-pm.
 
       **Root cause, refined during reproduction**: the fix sketch's own hypothesis (mid-flight `git diff --cached
-                      --name-status -M` re-detection right before `git restore --staged .`) turned out to be insufficient on its own —
-                      empirically, when the CONCURRENT commit forcing reconciliation also touches the rename source's CONTENT (the
-                      realistic collision shape, not just an unrelated file elsewhere), `git`'s own autostash pop can no longer
-                      cleanly re-apply the staged rename as one `R100` unit: it comes back as a staged ADD of the destination plus an
-                      **UNSTAGED** delete of the source, which a `git diff --cached -M` re-detection step (staged-state only) cannot
-                      see at all. Confirmed by reproduction in a sandboxed origin+2-clone setup (bare repo, clone A stages the rename
-                      while behind, clone B lands a concurrent edit to the SAME source file, forcing clone A's merge-pull into the
-                      rebase+autostash fallback) — the unpatched script reliably produced `git ls-tree -r HEAD` showing the doc at
-                      BOTH paths, reproducing the doc's own observed symptom exactly.
+                                      --name-status -M` re-detection right before `git restore --staged .`) turned out to be insufficient on its own —
+                                      empirically, when the CONCURRENT commit forcing reconciliation also touches the rename source's CONTENT (the
+                                      realistic collision shape, not just an unrelated file elsewhere), `git`'s own autostash pop can no longer
+                                      cleanly re-apply the staged rename as one `R100` unit: it comes back as a staged ADD of the destination plus an
+                                      **UNSTAGED** delete of the source, which a `git diff --cached -M` re-detection step (staged-state only) cannot
+                                      see at all. Confirmed by reproduction in a sandboxed origin+2-clone setup (bare repo, clone A stages the rename
+                                      while behind, clone B lands a concurrent edit to the SAME source file, forcing clone A's merge-pull into the
+                                      rebase+autostash fallback) — the unpatched script reliably produced `git ls-tree -r HEAD` showing the doc at
+                                      BOTH paths, reproducing the doc's own observed symptom exactly.
 
-                      **Fix actually shipped** (more robust than the sketch): capture the rename mapping (`git diff --cached
-                      --name-status -M`, filtered to renames whose destination is one of the caller's named `--files`) **ONCE, at
-                      script start**, before any fetch/pull/rebase touches the tree — the only point the staged rename is guaranteed
-                      unambiguous. A new `reassert_renames()` then unconditionally re-stages (`git add -- <source>`) the deletion of
-                      every captured source path that is still missing from disk, right before every commit attempt — regardless of
-                      whether the index shows it as a clean rename, an unstaged delete, or nothing at all, since the source's absence
-                      from disk (not its index shape) is the one thing that survives every reconcile step. Also relaxed the pre-flight
-                      `[[ ! -e "$f" ]]` existence check to accept a named path that is tracked (index OR `HEAD:<path>`) but absent from
-                      disk, so a caller can optionally name BOTH rename halves explicitly.
+                                      **Fix actually shipped** (more robust than the sketch): capture the rename mapping (`git diff --cached
+                                      --name-status -M`, filtered to renames whose destination is one of the caller's named `--files`) **ONCE, at
+                                      script start**, before any fetch/pull/rebase touches the tree — the only point the staged rename is guaranteed
+                                      unambiguous. A new `reassert_renames()` then unconditionally re-stages (`git add -- <source>`) the deletion of
+                                      every captured source path that is still missing from disk, right before every commit attempt — regardless of
+                                      whether the index shows it as a clean rename, an unstaged delete, or nothing at all, since the source's absence
+                                      from disk (not its index shape) is the one thing that survives every reconcile step. Also relaxed the pre-flight
+                                      `[[ ! -e "$f" ]]` existence check to accept a named path that is tracked (index OR `HEAD:<path>`) but absent from
+                                      disk, so a caller can optionally name BOTH rename halves explicitly.
 
-                      **Verification** (done-when: an archival `git mv` + a forced retry yields `git ls-tree -r HEAD` showing the doc
-                      at exactly ONE path) — 6 sandboxed scenarios, all against a fresh bare-repo + clone setup, none reusing state
-                      across runs:
-                      1. Original bug reproduction (unpatched script) — confirmed corruption (doc at both paths).
-                      2. Same scenario, patched script — `git ls-tree -r HEAD` shows exactly ONE path (`X_renamed.md`), and `git show
-                         HEAD` displays it as a clean `rename from`/`rename to` diff.
-                      3. No-collision rename (plain fast-forward, `autostash_rebase_reconcile` never invoked) — still correct (the
-                         once-at-start capture + unconditional reassert covers this path too, not just the reconcile-triggered one).
-                      4. Plain non-rename edit — regression check, unaffected (`KNOWN_RENAME_SOURCES` empty, no spurious reassert
-                         output).
-                      5. Caller explicitly names BOTH rename halves (exercises the relaxed existence check) — single final path,
-                         correct.
-                      6. Foreign staged content mid-run (a concurrent process's own `git add`) combined with a rename — foreign path
-                         correctly isolated (left untracked, not committed) AND the rename still lands at a single path; separately,
-                         a post-commit push-race retry (commit already made, rebase replays the already-correct commit onto a moved
-                         origin tip) confirmed no corruption there either (as expected — `git restore --staged .` only resets the
-                         index, never an already-baked commit's tree).
+                                      **Verification** (done-when: an archival `git mv` + a forced retry yields `git ls-tree -r HEAD` showing the doc
+                                      at exactly ONE path) — 6 sandboxed scenarios, all against a fresh bare-repo + clone setup, none reusing state
+                                      across runs:
+                                      1. Original bug reproduction (unpatched script) — confirmed corruption (doc at both paths).
+                                      2. Same scenario, patched script — `git ls-tree -r HEAD` shows exactly ONE path (`X_renamed.md`), and `git show
+                                         HEAD` displays it as a clean `rename from`/`rename to` diff.
+                                      3. No-collision rename (plain fast-forward, `autostash_rebase_reconcile` never invoked) — still correct (the
+                                         once-at-start capture + unconditional reassert covers this path too, not just the reconcile-triggered one).
+                                      4. Plain non-rename edit — regression check, unaffected (`KNOWN_RENAME_SOURCES` empty, no spurious reassert
+                                         output).
+                                      5. Caller explicitly names BOTH rename halves (exercises the relaxed existence check) — single final path,
+                                         correct.
+                                      6. Foreign staged content mid-run (a concurrent process's own `git add`) combined with a rename — foreign path
+                                         correctly isolated (left untracked, not committed) AND the rename still lands at a single path; separately,
+                                         a post-commit push-race retry (commit already made, rebase replays the already-correct commit onto a moved
+                                         origin tip) confirmed no corruption there either (as expected — `git restore --staged .` only resets the
+                                         index, never an already-baked commit's tree).
 
-                      `bash -n` + `shellcheck -S error` clean. Shipped via the repo's own `quality-gates.sh` → `quickmerge --agent`
-                      flow (this is a `scripts/dev/*.sh` CODE change, not a docs-only edit — the `safe-doc-push.sh` fast path itself
-                      does not apply to shipping safe-doc-push.sh's own source).
+                                      `bash -n` + `shellcheck -S error` clean. Shipped via the repo's own `quality-gates.sh` → `quickmerge --agent`
+                                      flow (this is a `scripts/dev/*.sh` CODE change, not a docs-only edit — the `safe-doc-push.sh` fast path itself
+                                      does not apply to shipping safe-doc-push.sh's own source).
 
 - [x] ✅ [SCRIPT] P1. **DONE 2026-08-08 (slot-14, infra craft)** — `unified-trading-pm@f75e752d8`. **UNBLOCKED
       2026-08-08 (operator ruling, ao round-5 apply item 15, via
@@ -221,12 +221,30 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
       falsely heartbeat. All 19 tests in the script's full bats suite green (no regressions). `bash -n` +
       `shellcheck -S error` clean; `quality-gates.sh` full run (sentinel disabled) green. Prerequisite for fix 2
       (`-003`).
-- [ ] [SCRIPT] P2. **UNBLOCKED 2026-08-08 (same ruling as fix 1 above) — WARN, never refuse.** Implement candidate fix 2
-      (session-start collision warning), once fix 1 lands: add a liveness-aware check (reuse the FM8 discriminator
-      pattern already used elsewhere for dead-vs-live slot claims) that prints a loud warning when a new interactive
-      Claude Code session starts in a slot whose `.agent-claim` is live-claimed by a different, still-alive process —
-      never a hard refusal (an operator may deliberately want two sessions for a review pass). No operator ruling
-      blocker remains; ready for dispatch.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-08 (slot-21, infra craft)** — `unified-trading-pm@<sha, see commit>`. **UNBLOCKED
+      2026-08-08 (same ruling as fix 1 above) — WARN, never refuse.** Implemented candidate fix 2 (session-start
+      collision warning). New Claude Code `SessionStart` hook, `cursor-configs/hooks/session-start-collision-check.sh`,
+      wired into `cursor-configs/settings.json`'s `hooks.SessionStart` (the canonical settings symlinked into every
+      slot's `.claude/settings.json`). Fires on every session start/resume/clear/compact/fork; reads the SessionStart
+      JSON payload's `cwd` from stdin, derives the `.tabs/<N>` slot dir, and checks TWO independent liveness signals —
+      never a hard refusal (SessionStart is a non-blocking hook event regardless of exit code, confirmed against the
+      official hook contract; this script always exits 0): 1. `.agent-claim`'s `tmux_session` field, confirmed alive via
+      the SAME exact-match `tmux has-session -t "="` check fix 1's `refresh_agent_claim_heartbeat()` and the FM8
+      maker-liveness classifier (`agent-orchestrator/server/worktree_clean_check/_liveness.py`) both use (prevents
+      `orch-slot-1` from prefix-matching `orch-slot-10`) — skipped when the hook can't self-identify its own tmux
+      session (no `$TMUX`). 2. A live `/proc/<pid>/cwd` scan for any OTHER `claude`-matching process rooted under the
+      slot dir (the FM8 "addendum" signal, `_default_proc_cwd_live`) — catches the exact shape of the original incident
+      (bare `claude` processes with no `.agent-claim` registered at all), excluding this hook's own ancestor-PID chain.
+      A warning surfaces via `hookSpecificOutput.additionalContext` (same JSON convention as the existing
+      `UserPromptSubmit` context-threshold-nudge.sh hook), naming the live occupant + the concrete collision risks
+      (index-lock contention, lost edits, wrong commit attribution) and suggesting an unclaimed slot — never blocking.
+      **Verified live** (6 manual scenarios, real tmux sessions + a real backgrounded process, no mocking): (1) current
+      slot with no claim/no foreign process → silent; (2) cwd outside any `.tabs/<N>` → silent; (3) claim naming a DEAD
+      tmux session → silent; (4) claim naming a REAL LIVE tmux session (`orch-slot-12`) → warning fires, names
+      operator/role/tmux_session; (5) exact-match guard — claim names `orch-slot-1`, only `orch-slot-12/16/17` exist
+      (prefix, not exact) → silent, confirming no false-positive prefix collision; (6) a real backgrounded process
+      renamed to `claude` (`exec -a claude sleep 30`) with cwd inside a fake slot dir, no claim file at all → warning
+      fires via the process-scan signal alone. `bash -n` + `shellcheck -S error` clean.
 - [ ] [DOCS] P2. Fold this incident + the commit-attribution gap into `/codex/05-infrastructure/per-tab-worktrees.md`'s
       "Troubleshooting" section and CLAUDE.md's "Multi-agent safety" block — currently neither documents "two operators
       sharing one slot" as a distinct failure mode from "two AO slots colliding on a file."
@@ -310,3 +328,15 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   `bash -n`/`shellcheck -S error` clean; `quality-gates.sh` full run (sentinel disabled, so tests genuinely re-ran
   against this exact tree, not a cached fast-path) green. 2 todos remain open (`-003` session-start collision warning,
   now unblocked by this landing; `-004` DOCS fold-in) — doc stays `status: open`.
+
+- **2026-08-08 (slot-21, infra craft)**: Shipped candidate fix 2 (session-start collision warning, flipped above) —
+  `unified-trading-pm@<sha, see commit>`. New `SessionStart` Claude Code hook
+  (`cursor-configs/hooks/session-start-collision-check.sh`, wired into `cursor-configs/settings.json`) checks two FM8
+  discriminator signals (live `.agent-claim.tmux_session` via exact-match `has-session`; a `/proc/<pid>/cwd` scan for
+  another `claude`-matching process under the slot) and surfaces a non-blocking warning via
+  `hookSpecificOutput.additionalContext` when a live occupant is detected — never refuses, per the WARN-only ruling.
+  Verified live against 6 manual scenarios (real tmux sessions + a real renamed background process, no mocking): silent
+  on no-collision / outside-a-slot / dead-claim / prefix-non-match cases, warns correctly on a genuinely live claim and
+  on a claim-less foreign process. `bash -n`/`shellcheck -S error` clean. Only `-004` (DOCS fold-in) remains open — doc
+  stays `status: open`.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

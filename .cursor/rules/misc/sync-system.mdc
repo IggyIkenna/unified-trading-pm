@@ -10,9 +10,9 @@ tags:
 # Sync System
 RULE: Docs, cursor rules, and configs must stay aligned. Use sync-mapping-registry.yaml and sync-rules-and-docs.py to detect drift.
 WHY: Drift causes inconsistent patterns, rule amnesia, and conflicting guidance.
-CODEX: /codex/10-audit/sync-mapping-registry.yaml (live). NOTE (2026-07-30): `sync-rules-and-docs.py` / `auto-sync-fixes.py` do
-not exist in any current repo (`unified-trading-codex`, their original home, is archived) — the registry YAML survives
-but its enforcement script does not. Do not run the DO line below until a successor script exists or is confirmed
-truly gone.
-DO: Run `python unified-trading-codex/scripts/sync-rules-and-docs.py`; use auto-sync-fixes.py for simple fixes; run pre-commit sync validation
+CODEX: /codex/10-audit/sync-mapping-registry.yaml (live). NOTE (2026-08-09, re-confirmed 2026-07-30): `sync-rules-and-docs.py` /
+`auto-sync-fixes.py` have no successor anywhere in the current workspace (`unified-trading-codex`, their original home,
+is archived and absent from every checkout) — the registry YAML survives but its enforcement script is CONFIRMED gone,
+not just unconfirmed. The DO line below is dead; there is no script to run.
+DO: No automated enforcement exists — reconcile drift manually against /codex/10-audit/sync-mapping-registry.yaml until a successor script is built; run pre-commit sync validation if/when one exists
 NEVER: Ignore sync drift; bypass sync-check workflow; manually duplicate patterns across sources

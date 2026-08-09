@@ -38,6 +38,19 @@ with --baseline-write ONLY after confirming the flagged violation is pre-existin
 drift, not a new authority bypass.
 
 Exit codes: 0 = at/below baseline; 1 = regression; 2 = arg/IO error.
+
+``--only <paths>`` (2026-08-09, precommit migration — root-caused after this ratchet regressed
+5x in one day, 58->76, entirely via the docs(plans) fast path / safe-doc-push.sh, which runs
+run_hygiene_sweep.sh --precommit and NEVER invoked this script at all): the corpus-wide/baselined
+mode above is precommit-unsafe for the same reason check_terminal_status_archived.py's is — a
+huge pre-existing backlog (58+) would false-block every commit if run as a blocking gate. But an
+unsourced 'operator ruling' citation in a file YOU are actively staging is unconditionally wrong
+regardless of the rest of the corpus's backlog (same reasoning check_terminal_status_archived.py
+--only already established) — no baseline needed for a single-file check. Wired into
+run_hygiene_sweep.sh's STAGED_PLANS precommit block so the fast doc-commit path — the one that
+was actually producing this drift all day, invisible to every code-commit-only quickmerge run
+until hours later — now catches a NEW unsourced citation at commit time instead of letting it
+land and surface as a corpus-wide QG failure someone has to firefight after the fact.
 """
 
 from __future__ import annotations
@@ -53,6 +66,10 @@ from typing import cast
 import yaml
 
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "plan_operator_ruling_evidence_baseline.yaml"
+
+# unified-trading-pm repo root — baseline paths are stored relative to this so the file is
+# byte-identical no matter which slot/host regenerates it.
+_PM_ROOT = Path(__file__).resolve().parents[2]
 
 _FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?\n)---\s*\n", re.DOTALL)
 _CHECKED_RE = re.compile(r"^\s*-\s*\[[xX]\]\s")
@@ -203,7 +220,14 @@ def _write_baseline(baseline_path: Path, violations: list[RulingViolation]) -> N
         "source": "plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md",
         "baseline_violations": [
             {
-                "path": str(v.citation.path),
+                # Repo-root-relative, NOT absolute (2026-08-09). Storing resolved absolute paths
+                # made this file specific to whichever clone last regenerated it -- a run from a
+                # different slot/host rewrote all N entries, so a real ratchet-DOWN was
+                # indistinguishable from path churn in review. That is precisely the noise that
+                # invites the "just re-baseline it" reflex which took this ratchet 58 -> 76.
+                # See plans/active/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md.
+                # Only `unsourced_ruling_baseline` is ever read back; this list is a human record.
+                "path": str(v.citation.path.resolve().relative_to(_PM_ROOT)),
                 "line": v.citation.line_no,
                 "phrase": v.citation.phrase,
                 "context": v.citation.context[:80],
@@ -212,6 +236,41 @@ def _write_baseline(baseline_path: Path, violations: list[RulingViolation]) -> N
         ],
     }
     baseline_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
+
+
+def _violations_for_file(p: Path) -> list[RulingViolation]:
+    """Shared by the corpus-wide glob and the --only path so the two modes can never
+    silently diverge on what counts as a violation."""
+    try:
+        text = p.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return []
+    out: list[RulingViolation] = []
+    for citation in _iter_frontmatter_ruling_citations(text, p):
+        out.append(RulingViolation(citation=citation))
+    for citation in _iter_todo_ruling_citations(text, p):
+        out.append(RulingViolation(citation=citation))
+    return out
+
+
+def _run_only(paths: list[str], quiet: bool) -> int:
+    """Precommit-scoped mode: check exactly the given staged files, no baseline/ratchet.
+    An unsourced 'operator ruling' citation in a file you're actively staging is
+    unconditionally wrong regardless of the rest of the corpus's pre-existing backlog."""
+    violations: list[RulingViolation] = []
+    for raw in paths:
+        p = Path(raw)
+        if not p.is_absolute():
+            p = Path.cwd() / p
+        violations.extend(_violations_for_file(p))
+
+    if not quiet:
+        for v in violations:
+            print(f"  {v}")
+
+    n = len(violations)
+    print(f"{'✅' if n == 0 else '❌'} check_plan_operator_ruling_evidence (--only): {n} violation(s) in staged files")
+    return 0 if n == 0 else 1
 
 
 def _parse_args() -> argparse.Namespace:
@@ -228,10 +287,26 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--baseline-path", type=Path, default=DEFAULT_BASELINE_PATH)
     parser.add_argument("--baseline-write", action="store_true")
+    parser.add_argument(
+        "--only",
+        nargs="*",
+        default=None,
+        help=(
+            "Blast-radius-safe precommit mode (RULE-11, mirrors check_finalize_plan_coverage.py): still "
+            "scans the whole corpus, but only reports/fails on violations among these specific paths — a "
+            "pre-existing violation in an unrelated plan never blocks an unrelated commit. No baseline "
+            "comparison in this mode; any violation among --only paths fails immediately."
+        ),
+    )
     return parser.parse_args()
 
 
 def main() -> int:
+    quiet = "--quiet" in sys.argv
+    if "--only" in sys.argv:
+        idx = sys.argv.index("--only")
+        return _run_only(sys.argv[idx + 1 :], quiet)
+
     ns = _parse_args()
     workspace_root: Path = cast(Path, ns.workspace_root).resolve()
     baseline_path: Path = cast(Path, ns.baseline_path)
@@ -249,14 +324,7 @@ def main() -> int:
 
     all_violations: list[RulingViolation] = []
     for p in plan_files:
-        try:
-            text = p.read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
-            continue
-        for citation in _iter_frontmatter_ruling_citations(text, p):
-            all_violations.append(RulingViolation(citation=citation))
-        for citation in _iter_todo_ruling_citations(text, p):
-            all_violations.append(RulingViolation(citation=citation))
+        all_violations.extend(_violations_for_file(p))
 
     # De-dupe by (path, line_no) — a single block can generate at most one violation.
     seen: set[tuple[Path, int]] = set()
@@ -269,6 +337,26 @@ def main() -> int:
         deduped.append(v)
     violations = deduped
 
+    only = cast("list[str] | None", ns.only)
+    if only is not None:
+        # Precommit scoping: the author who writes an unsourced ruling citation is the one who
+        # should fix it. Before this existed, these gates ran ONLY inside the full
+        # quality-gates.sh, so `safe-doc-push` (prek-only, the sanctioned pure-doc fast path)
+        # let an unsourced citation land freely and the red surfaced later for whichever OTHER
+        # agent next ran quickmerge — measured 2026-08-08/09, baseline 58 -> 76 in a day with
+        # the cost landing on bystanders. Same blast-radius-safe shape as
+        # check_finalize_plan_coverage.py: full corpus scan, narrowed reporting, no ratchet math.
+        only_resolved = {Path(o).resolve() for o in only}
+        violations = [v for v in violations if v.citation.path.resolve() in only_resolved]
+        if not violations:
+            print("✅ plan-operator-ruling-evidence (--only): clean.")
+            return 0
+        print("❌ Unsourced 'operator ruling' citation(s) in staged plan(s) — cite the doc that records the ruling")
+        print("   (/plans/…, /codex/…, or a .md filename) within 300 chars of the ruling phrase:")
+        for v in violations:
+            print(f"  - {v.citation.path}:{v.citation.line_no}: {v.citation.context[:120]}")
+        return 1
+
     print(
         f"Scanned {len(plan_files)} plan(s) — "
         f"{len(violations)} checked todo(s)/resolved_by: value(s) citing 'operator ruling' "
@@ -277,8 +365,21 @@ def main() -> int:
     )
 
     if baseline_write:
+        # A RAISE must be loud. This ratchet went 58 -> 76 in a single day through silent
+        # --baseline-write calls, absorbing 18 real violations; nothing printed, so nothing was
+        # defended in a commit message and the debt became invisible. Mirrors the warning
+        # check_ao_dispatch_visibility_gate.py already emits on its own axes.
+        # SSOT: plans/active/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md
+        previous = _load_baseline(baseline_path)
         _write_baseline(baseline_path, violations)
         print(f"✅ Wrote baseline ({len(violations)}) to {baseline_path}")
+        if len(violations) > previous:
+            print(
+                f"WARNING: unsourced_ruling_baseline RAISED {previous} -> {len(violations)} -- a shrinking ratchet\n"
+                "  must only go DOWN. Verify this is a reviewed, justified raise and say why in the commit message;\n"
+                "  the correct default is to fix or file the new violations instead.",
+                file=sys.stderr,
+            )
         return 0
 
     baseline = _load_baseline(baseline_path)

@@ -346,28 +346,11 @@ context_scope:
       `prediction_phase_ab_residuals_2026_07_24.md`'s gated regen" — so the actual cqg-bundle-grain seed run this
       checkbox asks for is still not executed; not flipping here, the AO-dispatchable seed-run work now lives (or should
       be tracked) in `prediction_phase_ab_residuals_2026_07_24.md` (active).
-- [ ] [DATA] P2. **G1.run-full-history — extend the bounded-window seed to the FULL 2018→today per-instrument universe
-      (~190M rows fleet-wide)** once the index-size/reader-perf impact is operator-reviewed (the bounded window keeps
-      the LIVE denominator honest now; full history is the complete drilldown denominator). Provenance: 2026-06-19 audit
-      — bounded window shipped, full history sized but not materialised. **operator ruling 2026-08-08 (NA-corpus blocker
-      digest round 5, id=53)**: approved — yes, extend to full history. Scoped as a concrete `[DATA]`/`[SCRIPT]`
-      implementation (NOT executed this session — real, sizeable infra build, deliberately left for its own dedicated
-      VM-launch pass per this workspace's "heavy I/O never runs unattended in a doc-editing session" discipline): (1)
-      re-run the existing `enumerate_expected_universe.py` v2 per-AG (same tool the bounded seed already used,
-      `--apply-write`, `MANIFEST_PER_VM_SHARDS=true`) with `EXPECTED_UNIVERSE_START_DATE` widened from the current ~120d
-      bounded window to `2018-01-01`, across all 5 AGs (cefi/defi/tradfi/sports/prediction); (2) per-VM shard output →
-      consolidator-merge, same pattern as G1.run-bounded (watch for the idle-bucket consolidator trap — cefi/tradfi
-      needed a manual `consolidate(force=True)` last time, per
-      `consolidator_idle_bucket_incremental_trap_2026_06_19.md`); (3) size the actual per-AG row counts BEFORE a
-      fleet-wide `--apply-write` (a `--dry-run` first per AG, since the ~190M estimate is from 2026-06-19 and the live
-      universe has grown since) to confirm the index-size/reader-perf impact the operator was asked to review is still
-      in the expected ballpark, not a surprise multiple; (4) launch on a VM per the vm-launcher-runbook (this is exactly
-      the "heavy I/O, full-corpus-scale write" class that never runs on a local/interactive session) — likely one VM per
-      AG or a small sharded fleet, SPOT per the backfill-VM default; (5) verify post-run: `expected_unattempted` row
-      counts per AG land in the expected range, captured rows preserved (no regression), consolidator green. **Not gated
-      on anything further** — approval is unconditional; this todo's remaining scope is purely the execution pass
-      (sizing + VM launch + verify), which is intentionally NOT done in this same session per the operator's own
-      instruction to scope-not-execute.
+- **[DATA] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.**
+      G1.run-full-history — extend the bounded-window seed to the full 2018→today per-instrument universe (~190M
+      rows fleet-wide), per the operator's unconditional 2026-08-08 approval (NA-corpus blocker digest round 5,
+      id=53). See the batch doc for the full scoped todo (dry-run-first sizing check, VM launch per
+      vm-launcher-runbook, post-run verify); do not duplicate-dispatch from here.
 - [x] ✅ [INFRA] P1. (**APPLIED 2026-06-11, autonomous run** — `tofu apply` vs `terraform/state/prod`: **16 added / 0
       changed / 0 destroyed**; all 5 `lifecycle-catalogue-regen-<ag>` Cloud Run jobs + 5 ENABLED 01:00-UTC schedulers
       verified via `gcloud run jobs list`/`scheduler jobs list`; cefi smoke execution triggered + watched. THREE
@@ -444,8 +427,7 @@ that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
 - **context-scout 2026-08-01**: populated/refreshed context_scope (3 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- dropped the sibling defi audit-log link, added
   the 3 real source-code targets this log's shipped commits actually touch (catalogue builder, enumerator, v9 migrator).
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- self-described
-  historical/audit record; every open todo is gated (G1.run on the IS backfill + UAC accuracy + v9;
-  G1.run-prediction on another plan's loader wiring; G1.run-full-history explicitly deferred pending the
-  operator's already-approved-but-not-yet-executed dedicated VM-launch pass) -- consistent with 2026-08-02/08-06
-  verdicts.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- self-described historical/audit
+  record; every open todo is gated (G1.run on the IS backfill + UAC accuracy + v9; G1.run-prediction on another plan's
+  loader wiring; G1.run-full-history explicitly deferred pending the operator's already-approved-but-not-yet-executed
+  dedicated VM-launch pass) -- consistent with 2026-08-02/08-06 verdicts.

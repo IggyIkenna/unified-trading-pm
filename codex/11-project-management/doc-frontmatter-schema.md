@@ -136,7 +136,14 @@ Notes:
   optional: most of the ~550-doc corpus predates the field and is backfilled incrementally, not all at once, so a
   present-but-empty convention would just be noise on every doc `/context-scout` hasn't reached yet. Target 2-6 entries
   — this is a curated pointer list for cutting a fresh worker's cold-start context burn, not an exhaustive index; see
-  `cursor-configs/skills/context-scout/SKILL.md` for the population procedure.
+  `cursor-configs/skills/context-scout/SKILL.md` for the population procedure. **Consumption side (shipped
+  2026-08-08)**: `agents/RULES.md` § "0. STEP 0" now instructs every worker to read a dispatched task's `plan_ref`
+  `context_scope` entries before starting any todo (a no-op fallback when absent) — fleet-wide, not pilot-scoped,
+  because the instruction degrades safely on the ~66% of the corpus still `NEVER_SCOUTED`/`STALE` (measured via
+  `scripts/plan-hygiene/generate_context_scope_inventory.py`, re-run periodically). Corpus coverage crossing "majority
+  `UP_TO_DATE`" is a precondition for any FURTHER enforcement (e.g. a QG-style dispatch gate) — not yet met as of the
+  2026-08-08 measurement; see `/plans/archive/2026_08/issues/context_scope_consumption_enforcement_2026_07_30.md` for
+  the design rationale + freshness-measurement history.
 - **`author`** (issue, **ELECTIVE**, added 2026-08-04): the author of the issue doc. Mandated by worker.md §4.5
   (FINDINGS CLOSURE, HARD RULE 2026-06-10) which requires issue-doc frontmatter to carry
   `title`/`created`/`author`/`source[]`. Elective, not required: only 6 of 444 existing issue docs carry `author` today

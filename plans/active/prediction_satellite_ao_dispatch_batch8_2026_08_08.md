@@ -53,6 +53,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.08
 assigned_role: data_engineering
+effort: high
 sequential: false
 drift_direction: advance-code
 locked_by:

@@ -66,12 +66,13 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P0. **Dedicated zombie sweep** — beyond the original audit, specifically hunt for: (a) Cloud Run job
-      EXECUTIONS stuck in a non-terminal state far longer than the job's peers (truly stuck, not the already-found
-      OOM-crash-loops which DO recover), (b) duplicate/orphaned VMs doing redundant work on the same target (the
-      `uts-prod-alerting-paging` dual-consumer pattern from earlier today is the template for this class of bug), (c)
-      any GCE VM with a heartbeat that stopped climbing days ago but the instance is still billably RUNNING. Report only
-      genuinely-zombie findings, not restatement of the original audit.
+- [x] [SCRIPT] P0. ✅ **Dedicated zombie sweep — DONE 2026-08-07.** Bullets (b)/(c) found nothing new beyond what was
+      already tracked (no second dual-consumer pattern; every long-running VM's heartbeat was current within 1-2 min;
+      the fleet's own `vm-zombie-watchdog` independently confirms 0 zombies). Bullet (a) uncovered a much bigger
+      standalone finding instead: ~38 Cloud Scheduler jobs (asia-northeast1 + europe-west1) firing daily/hourly at Cloud
+      Run Job targets that no longer exist — some for 500+ consecutive failed executions (~1.4 years). Triaged +
+      bulk-paused separately (see the "Zombie scheduler triage" work below +
+      `/plans/active/issues/     asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md`).
 - [x] [SCRIPT] P0. ✅ **STALE DUPLICATE — already done, closing 2026-08-07 (na-eligibility-audit).** Alert-coverage
       cross-reference — for every finding below (excluding the DeFi consolidator), check `#data-pipeline-alerts` and
       `#uts-live-alerts` for a matching alert; cross-check against the DP-* registry; produce a finding→alert-fired
@@ -115,10 +116,53 @@ drift_direction: advance-code
       `gcloud run jobs describe client-reporting-batch --region=asia-northeast1     --format="value(...resources.limits.memory)"`
       returning `2Gi` (2026-08-08). Fix-agent details (source-of-truth IaC change, sizing rationale, execution
       verification) pending its own report; this checkbox reflects the confirmed live GCP state, not just a claim.
-- [ ] [SCRIPT] P1. **Fix `uts-prod-data-status-rollup-svc` OOM at its ceiling** — 32Gi/8vCPU maxed, `maxScale=1`. No
-      more headroom to add on this axis — investigate whether the rollup can be sharded/batched instead of raising the
-      ceiling further, or if a genuine resource bump + `maxScale` increase is the right fix. Verify MTDS/
-      instruments-service rollup timeouts stop recurring post-fix.
+- [ ] [SCRIPT] P1. **Fix `uts-prod-data-status-rollup-svc` OOM at its ceiling — round 3 fix shipped to LDR
+      2026-08-09T07:43Z, live verification IN PROGRESS.** Status as of 2026-08-09T07:43Z: - **Rounds 1-2 recap**:
+      per-service isolation (`4c0e039`) + per-category subprocess sharding (`_SERIAL_DISPATCH_ISOLATED`) fixed the
+      ORIGINAL in-process RSS ratchet, and the `daemon=True→False` hotfix (`e2b9a55`) fixed the sharding fix's own
+      regression (0/14 succeeding). Both reached `main`, deployed on revision
+      `uts-prod-data-status-rollup-svc-00360-hkf` (created `2026-08-09T03:43:35Z`, confirmed 100% traffic). - **Round 3
+      finding: the OOM PERSISTED on that revision — measured 10/10 cron cycles over 6h (04:09→07:09Z), every single
+      one**. Pulled the full Cloud Logging history for revision `00360-hkf`: an IDENTICAL pattern on every cycle —
+      `instruments-service` (first in `_DEFAULT_SERVICES`) times out at exactly 420s
+      (`manifest rollup failed for service=instruments-service: timed out after 420s`), then ~100-110s later the WHOLE
+      CONTAINER OOMs ("Memory limit of 32768 MiB exceeded") while the loop is working through the next service. - **Root
+      cause (genuinely new, not the daemon bug)**: `_run_service_isolated`'s 420s timeout-kill path
+      (`process.terminate()`/`process.kill()`, unchanged since before per-category sharding existed) only signals the
+      per-service child's own PID. But under `_SERIAL_DISPATCH_ISOLATED`, that child has itself spawned a per-category
+      GRANDCHILD via `bounded_subprocess.run_bounded` (its own independent 24Gi rlimit, 200s timeout enforced by the
+      now-about-to-die parent). A service's ~5 categories at up to 200s each (up to 1000s) routinely exceed the
+      service's 420s outer ceiling — confirmed the ROUTINE case for instruments-service, not rare — so the timeout-kill
+      fires mid-category. Killing only the parent PID leaves the grandchild ORPHANED: nothing ever signals it, it keeps
+      running and consuming memory (up to its own 24Gi) for the rest of the sweep, while the loop moves on to the next
+      service's fresh compute — the orphan's leftover memory plus the next service's compute pushes the container over
+      32Gi. Confirmed daemon=True's auto-cleanup-on-parent-exit does NOT apply here (that mechanism is an `atexit` hook
+      that only fires on normal Python interpreter shutdown, never on an externally-delivered SIGTERM/SIGKILL, which is
+      exactly how the timeout path kills the child). - **Fix**: `deployment-api` (commit
+      `6ac1c43ff66cbeff4903c6559cbbac70fb1299ec`, landed on LDR 2026-08-09T07:43Z) — the per-service child now calls
+      `os.setpgrp()` as its first statement (becomes its own process-group leader before it can spawn anything), and
+      `_run_service_isolated`'s timeout path now kills the WHOLE process group via `os.killpg()` instead of a single
+      PID, so any grandchild dies atomically with its parent. Applied the same hardening to
+      `bounded_subprocess.run_bounded` itself (defense-in-depth for the shared reusable utility, since it's the exact
+      primitive being nested one level down). 4 files changed (worker + bounded_subprocess + both test files,
+      updated/added regression tests incl. `test_terminates_and_reports_timeout_when_still_alive` now asserting
+      `os.killpg(pid, SIGTERM)`/`SIGKILL` instead of the old single-PID `terminate()`/`kill()`, plus new
+      `test_becomes_process_group_leader_first`/`test_becomes_process_group_leader_before_running_fn` coverage). QG
+      green (5252 passed). Shipped via normal `quickmerge.sh --agent --files` (no carve-out needed this round). -
+      **`--hotfix-to-main` explicitly NOT used**: checked `scripts/quickmerge.sh --help` first — it requires operator
+      env `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` and is explicitly documented "agents cannot self-authorize this path";
+      letting the normal fleet LDR→main promotion (`*/15`) carry it is correct here. - **Correction to the operator's
+      own verification ask**: `log_event("SERVICE_PROCESSED"/"SERVICE_FAILED")` writes ONLY to the GCS `GcsEventSink`
+      (`unified_trading_library.events_interface.log_event` — when a writer is configured it calls
+      `_writer.write_event()` and returns, no console/logger call at all); it NEVER reaches stdout/Cloud Logging, so
+      those event names can't be grepped from Cloud Logging even on a clean success. Ground-truth verification instead
+      reads (a) Cloud Logging for the ABSENCE of "Memory limit" ERROR entries on the new revision (the actual OOM
+      signal), and (b) the GCS rollup blobs' own `updateTime`
+      (`gs://central-element-323112-data-status-rollups/{service}/full.json.gz`) for instruments-service/MTDS
+      specifically, per this workspace's own "check target artifacts, not activity" rule. - **In-flight**: a background
+      verification pipeline (`verify_rollup_fix.sh`) is watching for LDR→main promotion → Cloud Build deploy → new Cloud
+      Run revision → ≥2 full 20-min rollup cron cycles → the Cloud Logging/GCS checks above, then will report a
+      definitive verified-or-not verdict in this same session. This checkbox stays open until that lands with evidence.
 - [x] [SCRIPT] P1. ✅ **Killed the hung idle `mtds-dex-swaps-backfill-2` VM.** Re-confirmed before deleting: no
       `PROGRESS.json` at its GCS log path (404), `run.log` tail (15:15-15:20Z) showed only RESOURCE_SAMPLE/
       PIPELINE_HEARTBEAT lines at ~0-1.4% CPU, no processing activity since the `process_final=True` shard-complete line
@@ -126,10 +170,22 @@ drift_direction: advance-code
       `gcloud compute instances delete mtds-dex-swaps-backfill-2     --zone=asia-northeast1-c` (2026-08-07T15:2xZ) —
       justification: confirmed-finished worker VM, non-preemptible on-demand billing with zero further useful work
       possible, not a data-delete (no GCS/manifest content touched).
-- [ ] [SCRIPT] P1. **Fix or decommission `vm-serial-capture-prd`** — dead 19 days (`ContainerMissing`, image deleted),
-      Cloud Scheduler still firing 4x/day into the void. Determine whether serial-capture is still needed; if yes,
-      rebuild+republish the image and verify a real execution succeeds; if no, pause/delete the scheduler + job rather
-      than leaving it firing forever.
+- [x] [SCRIPT] P1. ✅ **Fixed `vm-serial-capture-prd`** — still a genuinely needed function (no successor found; it's
+      the periodic GCE serial-console capture for `LONG_LIVED_LIVE`/`SCHEDULED_RECURRING` VMs, distinct from the
+      already-working `vm-log-archival-prd` cron — live in `cloud_run_job_registry.py`'s `_SINGLETON_JOBS`, UTL helper
+      `vm_serial_rolling_uri` actively tested; unlike `market-data-query-service` this one has NO co-location/successor
+      migration). Root cause: `deployment-service/terraform/gcp/vm_serial_capture_scheduler.tf`'s `image:` field pointed
+      at Artifact Registry repo `unified-trading-library/deployment-service:latest` — that repo has **zero**
+      `deployment-service` images (confirmed via `gcloud artifacts docker images list`), a copy-paste bug (confusing the
+      source-repo name for an AR docker-repo path). The correct, actively-published repo is `unified-trading-system`
+      (confirmed via the working sibling `vm-log-archival-prd`, which uses that path). Fixed the `image:` line +
+      documented the gotcha inline; `ENV=prod tofu.sh apply -target=google_cloud_run_v2_job.vm_serial_capture` applied
+      the 1-line diff (plan showed exactly 0 add/1 change/0 destroy). **Verified live**: `gcloud run jobs describe`
+      shows `Ready: True` (ContainerMissing cleared); manually triggered execution `vm-serial-capture-prd-mjghx`
+      **succeeded** — 5 VMs captured, 0 errors, exit(0), real objects written to
+      `gs://deployment-scripts-central-element-323112/log-archive/serial-rolling/20260807/...`. Shipped
+      `deployment-service@a1936e72` via quickmerge (QG green: `ALL QUALITY GATES PASSED`, sentinel
+      `22f35fa32c7bbcd45429482a1818af53900ad5cb` == HEAD at push).
 - [x] [SCRIPT] P1. **Fix the 3 dead `europe-west1` jobs** (`tardis-data-loader`, `check-missing-cloud-storage`,
       `gen-inst-defs`) — 100% failure for 50 days on a stale `gcr.io/...` path orphaned by the AR migration. ✅ All 3
       verdicted OBSOLETE (superseded, not fixed) — zero references to any of the 3 job/image/pubsub-trigger names in any
@@ -155,17 +211,53 @@ drift_direction: advance-code
       `Image '...' not found` on all 5 most-recent executions per job (2026-08-03 through 2026-08-07);
       `gcloud scheduler jobs list --location=europe-west1 --project=central-element-323112` showed all 3 `state: PAUSED`
       post-fix. (repo: unified-trading-pm, no code repo — infra-only)
-- [ ] [SCRIPT] P1. **Fix `live-event-log-compactor` daily OOM** — 4Gi limit, OOM every scheduled 02:00 UTC run for 7
-      straight days despite an already-generous limit; data growth is outpacing capacity. Investigate whether this is
-      unbounded growth (a leak / missing retention/compaction elsewhere) before just raising the limit again — raising
-      the ceiling on a growth trend just delays the next OOM.
-- [ ] [SCRIPT] P2. **Reduce `mtds-backfill-odds-401-retry` memory footprint** — OOM every 7-9 min but self-recovers and
-      keeps progressing; wasteful, not broken. The sibling `mtds-backfill-odds-smallchunk-20260807` run (smaller chunks,
-      far fewer OOMs) is a working precedent — apply the same chunk-size mitigation here.
-- [ ] [SCRIPT] P2. **Fix the `dp-alerting-subscriber` GCS 429 retry storm** on `write_config_snapshot`'s
+- [x] ✅ [SCRIPT] P1. **Fix `live-event-log-compactor` daily OOM** — DONE (multi-slot effort 2026-08-07/08, re-verified
+      live 2026-08-09). Root cause was two compounding bugs, not simple undersizing: (1) warm GCS objects are NDJSON
+      (multiple `CanonicalPersistEnvelope` per file) but the compactor parsed each file as a single JSON document —
+      every envelope failed validation, so cold compaction had silently written ZERO cefi cold data since inception,
+      masking the shard's true memory requirement; (2) once NDJSON parsing was fixed, `(cefi, book_snapshot_5)` proved
+      to be genuinely large (~204GiB/day) — real organic growth, not a leak. Fix: NDJSON per-line parsing
+      (deployment-service@d5f850f1), schema-drift + column-order handling (@5281cb0a0, @d304c0ba), per-file batching to
+      cut Arrow overhead (@e57441c0), memory raised in verified steps 512Mi(implicit default; never actually
+      4Gi)→4Gi→16Gi + CPU 2→4 (@5e23a7b0, @454cccd9c), task timeout extended 3600s→28800s(8h) to match real compaction
+      time (@6edec6b9, @e584b559, @4648b5ea), plus a COMPACTION_DATE backfill mechanism (@9e1ab495) — this already gives
+      per-date chunking (one execution per day, not the whole log at once) on top of the per-file streaming write path.
+      Backfill: all 7 missed dates (2026-08-01→2026-08-07) × 4 cefi data_types backfilled — 28 cold parquet objects
+      confirmed via `gcloud storage ls gs://central-element-323112-events/live-events/cold/cefi/**`. Live verification:
+      the next scheduled 02:00 UTC run (`live-event-log-compactor-9z2tv`, 2026-08-08T02:00:04Z) completed successfully
+      in 2h49m35s with zero OOM — first clean scheduled run after the 7-day OOM streak (2026-08-01 through 2026-08-07,
+      all `The configured memory limit was reached`). Full incident:
+      `/plans/archive/issues/cefi_live_event_cold_compactor_oom_and_legacy_path_check_2026_08_07.md` (status: resolved).
+      (repo: deployment-service)
+- [x] [SCRIPT] P2. **Reduce `mtds-backfill-odds-401-retry` memory footprint** ✅ — root cause: `CHUNK_SIZE` (days per
+      subprocess-per-league in `mtds_chunk_loop.sh`) defaulted to 250 in
+      `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh`, vs. `CHUNK_SIZE=5` on the working
+      `mtds-backfill-odds-smallchunk-20260807` sibling (`LAUNCH_PARAMS.json` diff confirmed — both share the same
+      launcher). A wide chunk lets one subprocess accumulate many real-fetch days' worth of RSS before it exits (the
+      root cause already diagnosed in `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`); live re-check same day:
+      401-retry hit 15 `OOM_KILLED` in ~80min vs. the smallchunk sibling's 2 over the same window. Fix: launcher default
+      changed 250→5 (deployment-service@22f35fa32c7bbcd45429482a1818af53900ad5cb, QG green — `IGNORE_TIMEOUT=true`,
+      sanctioned host-contention override, all substantive gates incl. 3151 tests + 71.76% coverage passed; shipped via
+      quickmerge, landed on `live-defi-rollout`). This is a mitigation, not the confirmed root-cause fix — the
+      underlying native-memory leak investigation stays open in that issue doc. Live-VM check:
+      `mtds-backfill-odds-401-retry` itself is no longer running — it was SPOT-preempted (`compute.instances.preempted`,
+      2026-08-07T16:55Z) and auto-deleted per its own `--instance-termination-action=DELETE`, not OOM-killed into
+      oblivion; no hot-apply path exists (`VM_CHUNK_DAYS` is baked into the boot-time-generated `mtds_chunk_loop.sh`,
+      not re-read from metadata), so no live intervention was needed or attempted. A separate
+      `mtds-backfill-odds-     smallchunk9` VM (started 2026-08-08) is already continuing the backfill with the
+      small-chunk approach.
+- [x] [SCRIPT] P2. **Fix the `dp-alerting-subscriber` GCS 429 retry storm** ✅ on `write_config_snapshot`'s
       `routing_rules.yaml` writes (479 occurrences in one day, separate from the already-fixed `mirror_live` bug) —
-      likely needs a write-coalescing/backoff fix rather than raw retry, since the write frequency itself looks like the
-      problem (an object-mutation rate limit implies redundant writes of the same content).
+      confirmed root cause: `router.route_event()` calls `_persist_config_snapshot()` on every routed event, but
+      `AlertingSystemConfig.routing_rules` is process-lifetime-static (byte-for-byte render of the UAC
+      `LIVE_ALERT_RULES` SSOT), so every write re-uploaded byte-identical content to the same blob. Fix: in-memory
+      SHA-256 content-hash cache keyed by snapshot `name` in `AlertStorageStore.write_config_snapshot` — skips the GCS
+      upload when unchanged since the last successful write, still writes immediately on genuine change (preserves audit
+      intent). 5 regression tests added. Evidence: `alerting-service@066a1bcad8e6c17edcdc4bbefc2cc872fcb1408a`, QG green
+      (`ALL QUALITY GATES PASSED`, sentinel `58824f38b0dd41a6421812cb8d28424f1e6f1f8b`), landed on LDR
+      (`live-defi-rollout`) via quickmerge 2026-08-09. LDR→main fleet promotion was stalled at the time (see
+      `plans/active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md` Progress Log
+      2026-08-07 recurrence entry) — deploy propagation to Cloud Run not verified as part of this todo.
 - [x] [SCRIPT] P3. **Fix the AWS cost-snapshot IAM failure** ✅ — root cause: OIDC identity drift, not a permissions
       bug. AWS IAM role `gcp-cloudrun-athena-cost-reader` (trust policy `Federated: accounts.google.com`, condition
       `accounts.google.com:sub == 104881302737822972808`) was provisioned 2026-07-14 trusting
@@ -280,3 +372,38 @@ drift_direction: advance-code
   than its siblings — not promoted to RECLASSIFY this run since the doc's other 6 items don't clear the bar and a
   whole-doc flip would dispatch those too, but worth a second look if it's still open next pass. Doc stays NA as a
   whole; still genuinely live `/autonomous` work, not defaulted/unassessed.
+- **2026-08-09**: Confirmed the "tracked elsewhere" `mdps-backfill-cefi-20260807-130321` action (todo above, line ~225)
+  was actually executed, not just referenced. Independently re-verified the old VM is genuinely gone (404 on
+  `gcloud compute instances describe`, only `insert`+`compute.instances.preempted` ops, no successor — matches this
+  todo's own finding) and relaunched it (`mdps-backfill-cefi-20260808-095136`, SPOT e2-standard-8, launched
+  2026-08-08T08:56:57Z, confirmed STARTED + still RUNNING, actively progressing, no preemption op). While verifying,
+  found concurrent slot-16/slot-7/slot-26 work had already landed on the SAME VM + the same underlying bug: `--force`
+  was silently dropped in MDPS's per-date subprocess spawner (root-caused + fixed,
+  `market-data-processing-service@e9f9819`; writeup `issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md`)
+  — this pre-fix VM will not itself fix the BYBIT bundles even at completion; a per-day-scoped relaunch is already
+  queued in `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md` for once it reaches terminal state. No
+  duplicate relaunch performed. Full detail: `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` todo 3 (already flipped
+  `[x]`) and the Track-7 issue doc's "2026-08-08 84-cell audit" section.
+- **na-eligibility-audit 2026-08-09 (ui tranche, dispatch agt-eee16e)**: KEEP-NA, valid — re-confirmed; only 1 open item
+  remains (`uts-prod-data-status-rollup-svc` OOM), down from 7 at the 2026-08-08 marker as the other 6 closed out since.
+  Content shift worth flagging: this item has moved from open-ended investigate-then-decide judgment (its 2026-08-08
+  framing) to a bounded, deterministic verify-then-flip — the fix (`deployment-api@e2b9a55`) is already shipped to LDR,
+  and the only remaining step is (a) wait for the external ~hourly LDR→main promotion to land it, (b) check Cloud
+  Logging for `SERVICE_PROCESSED` events on MTDS/instruments-service, (c) flip the checkbox with that evidence. That
+  shape would normally clear the RECLASSIFY bar, but this doc is under continuous active hands-on iteration right now
+  (Progress Log entries at 2026-08-09T01:52Z and T01:58Z, within the hour of this audit) — reclassifying mid-flight
+  risks a duplicate/competing dispatch racing whichever session is already driving it live. Tagging
+  MISCLASSIFIED_LIKELY_AO_ELIGIBLE rather than promoting to a clean RECLASSIFY this pass; re-assess next run against the
+  primary RECLASSIFY bar if this item is still open and the doc has gone quiet (no Progress Log edit in the interim).
+- **2026-08-09T07:43Z (round 3)**: the daemon=False hotfix (`e2b9a55`) deployed live 2026-08-09T03:43Z but the OOM
+  PERSISTED — measured 10/10 cron cycles over the following 6h, every single one, via the full Cloud Logging history for
+  revision `uts-prod-data-status-rollup-svc-00360-hkf`. Root-caused to a genuinely different bug: the per-service
+  timeout-kill path (`_run_service_isolated`, unchanged since before per-category sharding existed) only signals the
+  per-service child's own PID, orphaning the per-category grandchild it spawns under `_SERIAL_DISPATCH_ISOLATED` when
+  the (routine, not rare) 420s outer timeout fires mid-category — the orphan keeps consuming memory, uncapped by
+  anything tracking it, until the container tips over 32Gi. Fixed via process-group isolation
+  (`os.setpgrp()`/`os.killpg()`) in `deployment-api@6ac1c43ff66cbeff4903c6559cbbac70fb1299ec`, applied to both the
+  concrete caller (`data_status_rollup_worker.py`) and the shared `bounded_subprocess.run_bounded` utility. QG green,
+  shipped via normal quickmerge (no carve-out), landed on LDR. Live verification pipeline armed and in progress
+  (LDR→main promotion → Cloud Build → new revision → ≥2 rollup cron cycles → Cloud Logging/GCS blob-freshness checks);
+  will update this entry with a definitive verdict once it completes.

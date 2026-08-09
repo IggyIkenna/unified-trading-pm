@@ -19,7 +19,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [infra, disk-space, shared-host, fleet-wide, blocking]
-related: []
+related: [/plans/active/infra_satellite_ao_dispatch_batch10_2026_08_09.md]
 created: 2026-07-26
 author: unknown
 priority: P1
@@ -84,7 +84,7 @@ specific to any one task.
 - [x] ✅ [INFRA] P1. **MOOT as of 2026-07-27** — downgraded from `[OPERATOR]`; the recursive-delete this todo escalated
       was never executed by any agent (correctly BLOCKED by `block_destructive_commands.py`, no §3a-style reversibility
       carve-out applies to a local-filesystem guardrail) — resolution was by passage of time (operator/another agent
-      cleanup), not an operator ruling this session needs to keep gated. Verified fresh from this same shared host
+      cleanup), not an operator decision this session needs to keep gated. Verified fresh from this same shared host
       (confirmed via `.tabs/1`/`.tabs/2` slot dirs present under `unified-trading-system-repos/`, i.e. this session runs
       on the exact host the finding describes): none of the 3 named directories exist anymore (`ls` on all 3 absolute
       paths → "No such file or directory") and `df -h` now reports `145G total, 87G used, 59G avail, 60% use` (vs the
@@ -124,16 +124,26 @@ already (2026-06-28), which is why `setup-tab-worktrees.sh` carries a slot cap a
 but not clear this: `block_destructive_commands.py` correctly refuses recursive `rm` regardless of reversibility, so
 this needs automation rather than an agent noticing.
 
-- [ ] [INFRA] P2. **Find what writes `manifest-consolidate-*` scratch to the orchestrator VM and stop it, or give it a
-      reaper.** Either something runs the consolidator on the VM (find and fix) or a VM-side helper legitimately spills
-      there and needs a TTL sweep. Done-when: no new `manifest-consolidate-*` dir appears over a 7-day window, OR a
-      reaper deletes any such dir older than 48h with zero holding process. Evidence: 175G across 3 dirs, 2026-08-08.
-      (repo: identify the writer first)
-- [ ] [INFRA] P3. **Add a free-space alert for the orchestrator VM root.** Both the 2026-06-28 wedge and this 175G find
-      were caught by a human looking, not a monitor. Suggest paging under 60G free. Done-when: the alert exists and has
-      fired once in test. (repo: agent-orchestrator)
+- [ ] [INFRA] P2. **EXTRACTED 2026-08-09 → `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 2.** Find what
+      writes `manifest-consolidate-*` scratch to the orchestrator VM and stop it, or give it a reaper. Full scope now
+      lives in that batch doc — tracked there going forward, not duplicated here; this checkbox flips once the batch's
+      finalize plan reconciles it.
+- [ ] [INFRA] P3. **EXTRACTED 2026-08-09 → `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todo 3.** Add a
+      free-space alert for the orchestrator VM root. Full scope now lives in that batch doc — tracked there going
+      forward, not duplicated here; this checkbox flips once the batch's finalize plan reconciles it.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:ebde55209df8df2e]: KEEP-NA-STALE (already-duplicated) —
+  2 of 4 items. Todos 3-4 are already correctly self-annotated as EXTRACTED into
+  `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todos 2-3 (status: active, confirmed). Todos 1-2 remain genuinely
+  open-ended investigative items, gated by `block_destructive_commands.py`'s autonomous-cleanup block.
+- **satellite-batch-extraction 2026-08-09 (infra tranche)**: extracted both `[INFRA]` todos from the "Orphaned
+  manifest-consolidator scratch" section into `infra_satellite_ao_dispatch_batch10_2026_08_09.md` todos 2-3
+  (`status: active`, conflict-checked against the full active corpus, zero competing claims found), per the 2026-08-08
+  `na-eligibility-audit` pass's own "strong RECLASSIFY candidates" flag. Left the 2 older `[DATA] P2` open-ended
+  investigation items untouched — both remain genuinely open-ended ("propose an action") and gated by
+  `block_destructive_commands.py`'s autonomous-cleanup block. Doc stays `assigned_vm: NA` (2 open items remain).
 
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid. Re-read end-to-end;
   `grep -cE '^- \[ \]'` = 4, matching (2 open-ended `[DATA] P2` investigation items unchanged since 2026-08-02/03, plus

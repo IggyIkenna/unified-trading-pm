@@ -63,6 +63,10 @@ import yaml
 
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "plan_commit_sha_evidence_baseline.yaml"
 
+# unified-trading-pm repo root — baseline paths are stored relative to this so the file is
+# byte-identical no matter which slot/host regenerates it.
+_PM_ROOT = Path(__file__).resolve().parents[2]
+
 _FRONTMATTER_RE = re.compile(r"\A---\s*\n(.*?\n)---\s*\n", re.DOTALL)
 _CHECKED_RE = re.compile(r"^\s*-\s*\[[xX]\]\s")
 _UNCHECKED_OR_CHECKED_RE = re.compile(r"^\s*-\s*\[[ xX]\]\s")
@@ -299,7 +303,15 @@ def _write_baseline(baseline_path: Path, violations: list[ShaViolation]) -> None
         "rule": "plan-commit-sha-evidence (ratchet)",
         "source": "plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md",
         "baseline_citations": [
-            {"path": str(v.citation.path), "line": v.citation.line_no, "cited": f"{v.citation.repo}@{v.citation.sha}"}
+            # Repo-root-relative, NOT absolute — see the same change in
+            # check_plan_operator_ruling_evidence.py: absolute paths made the file specific to
+            # whichever clone last regenerated it, so a real ratchet-DOWN was indistinguishable
+            # from path churn in review. Only the count is ever read back.
+            {
+                "path": str(v.citation.path.resolve().relative_to(_PM_ROOT)),
+                "line": v.citation.line_no,
+                "cited": f"{v.citation.repo}@{v.citation.sha}",
+            }
             for v in violations
         ],
     }
@@ -317,6 +329,17 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--baseline-path", type=Path, default=DEFAULT_BASELINE_PATH)
     parser.add_argument("--baseline-write", action="store_true")
+    parser.add_argument(
+        "--only",
+        nargs="*",
+        default=None,
+        help=(
+            "Blast-radius-safe precommit mode (RULE-11, mirrors check_finalize_plan_coverage.py): still "
+            "scans the whole corpus, but only reports/fails on violations among these specific paths — a "
+            "pre-existing violation in an unrelated plan never blocks an unrelated commit. No baseline "
+            "comparison in this mode; any violation among --only paths fails immediately."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -372,6 +395,20 @@ def main() -> int:
         if not sha_cache[key]:
             violations.append(ShaViolation(citation=c))
 
+    only = cast("list[str] | None", ns.only)
+    if only is not None:
+        # See check_plan_operator_ruling_evidence.py's --only comment: precommit scoping so a
+        # fabricated/unresolvable SHA fails for its author, not for the next agent to ship.
+        only_resolved = {Path(o).resolve() for o in only}
+        violations = [v for v in violations if v.citation.path.resolve() in only_resolved]
+        if not violations:
+            print("✅ plan-commit-sha-evidence (--only): clean.")
+            return 0
+        print("❌ Unresolvable <repo>@<sha> citation(s) in staged plan(s):")
+        for v in violations:
+            print(f"  - {v.citation.path}:{v.citation.line_no}: {v.citation.repo}@{v.citation.sha}")
+        return 1
+
     checked = sum(1 for c in citations if c.repo in repos)
     print(
         f"Scanned {len(plan_files)} plan(s), {len(citations)} `<repo>@<sha>` citation(s) found, "
@@ -379,8 +416,19 @@ def main() -> int:
     )
 
     if baseline_write:
+        # A RAISE must be loud — this gate's own docstring records its baseline climbing
+        # 2 -> 4 -> 6 -> 8 over two days, "what a ratchet is explicitly never supposed to do",
+        # and nothing printed at the time. Same warning as the sibling ruling-evidence gate.
+        previous = _load_baseline(baseline_path)
         _write_baseline(baseline_path, violations)
         print(f"✅ Wrote baseline ({len(violations)}) to {baseline_path}")
+        if len(violations) > previous:
+            print(
+                f"WARNING: fabricated_sha_citation_baseline RAISED {previous} -> {len(violations)} -- a shrinking\n"
+                "  ratchet must only go DOWN. Verify this is a reviewed, justified raise and say why in the commit\n"
+                "  message; the correct default is to fix or file the new violations instead.",
+                file=sys.stderr,
+            )
         return 0
 
     baseline = _load_baseline(baseline_path)

@@ -198,3 +198,17 @@ in the deployment-ui panel; the sentinel fan-out is verified to emit honest 0% r
   (see checkbox above), not reclassified — batch6 remains the correct owner. The `[VERIFY][UI] P0` item (line 113)
   remains genuinely `[BLOCKED-PLAYWRIGHT]` (env-gated, no UI-capable dev-server slot) — stays open. Doc stays NA
   (`locked_by: live-defi-rollout` unaffected — this is a content edit, not archival).
+
+- **na-eligibility-audit staleness re-check 2026-08-09 (prediction tranche)**: **ARCHIVE CANDIDATE — 0 open todos.**
+  Both prior gaps closed same-day (2026-08-07): the `[VERIFY][UI] P0` item (line 113) was independently flipped `[x]`
+  DONE the same day ("the 'no UI-capable slot' premise was wrong; this interactive session IS one" — 5/5 playwright
+  tests passing, `tests/smoke/prediction_v9_breakdown.spec.ts`), and the Phase-5 backfill item above was also closed
+  `[x]` that day. Live-verified via `grep -c '^- \[ \]'` on the current file: **0 open checkboxes** (11/11 done). Not
+  archived by this pass — `locked_by: live-defi-rollout` (`locked_since: 2026-06-20`) blocks archival per CLAUDE.md's
+  plan-completion-and-archival-discipline HARD RULE (`[unlock-plan]` requires an explicit operator ask, never
+  autonomous). Flagging for the next operator-present session to unlock + archive.
+- **na-eligibility-audit 2026-08-09 (prediction tranche)**: ARCHIVE CANDIDATE, re-confirmed — 0 open todos (11/11 done),
+  unchanged since this morning's staleness re-check. `locked_by: live-defi-rollout` (`locked_since: 2026-06-20`) still
+  blocks autonomous archival — `[unlock-plan]` requires an explicit operator ask, not taken autonomously by this
+  scheduled dispatch. Flagging again in this run's final report for operator action. Doc stays NA (blocked-archival, not
+  a reclassify).

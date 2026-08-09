@@ -118,12 +118,15 @@ Missing: market-tick-data-service-perp
 
 ## Todos
 
-- [ ] [DIAG] P2. Check whether `market-data-tick-defi-prd-central-element-323112`'s manifest consolidator staleness is
-      already a known/tracked incident (grep `#data-pipeline-alerts` history / run `/data-pipeline-alerts-reconcile` /
-      check `manifest-consolidator-ssot.md`'s own status). If novel, escalate per that codex doc's remediation path (fix
-      the Cloud Run Job + Scheduler for this bucket — do NOT blindly set `MANIFEST_ALLOW_STALE_FALLBACK=true`, which the
-      error message itself flags as an OOM risk on a large bucket). Repo: deployment-service (or wherever the
-      consolidator infra lives).
+- [x] ✅ [DIAG] P2. **DONE (na-eligibility-audit 2026-08-09) — already tracked.** Checked whether
+      `market-data-tick-defi-prd-central-element-323112`'s manifest consolidator staleness is a known/tracked incident:
+      YES — `issues/defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md` confirms the same bucket's
+      consolidator cron (`uts-prod-manifest-consolidator-market-data-defi-cron`) was deliberately PAUSED
+      2026-08-06T20:16:52Z by an in-flight canonical-migration rebuild VM
+      (`canonical-migration-defi-rebuild-20260806-223130`), independently corroborated via live Cloud Audit Logs by
+      `plans/archive/issues/dp_consolidator_scheduler_paused_defi_recurrence_2026_08_07.md` (resolved, archived
+      2026-08-07). The "escalate as novel" branch does not apply. The underlying outage itself remains open, tracked in
+      that sibling doc — not resolved here, only the "is this tracked" question is answered.
 - [ ] [DIAG] P2. Determine the real scope of the HYPERLIQUID `perp_funding` gap around 2026-04-20 — a bounded manifest
       query (not a fresh whole-corpus walk) for `(cefi, perp_funding, HYPERLIQUID)` across April-May 2026 to establish
       whether this is a single-day hole or a wider window, and whether it's the same root cause as the already-tracked
@@ -140,3 +143,19 @@ Missing: market-tick-data-service-perp
   backfill run. Two real script bugs found + fixed (`features-service@00b399d7a`); the actual compute then blocked on
   the two upstream dependency gaps documented above. Did not chase either gap further this session (out of scope for the
   backfill-script task — each is its own real investigation). No data written; no GCS/manifest mutation made.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
+- **2026-08-09 (cross_cutting_satellite_ao_dispatch_batch5_2026_08_09 Phase A)**: hit the SAME
+  `ManifestConsolidatorStaleError` class on a DIFFERENT bucket — `features-defi-test-central-element-323112`
+  (consolidated blob age ~289k-290k s, well past the 3600s threshold, while per-VM shards existed), not the
+  `market-data-tick-defi-prd` bucket this doc originally tracked. Confirms the consolidator-staleness class is not a
+  one-off on a single bucket. Used `MANIFEST_ALLOW_STALE_FALLBACK=true` to proceed — judged safe here (unlike Todo 1's
+  caution for the PROD raw-tick bucket) because `features-defi-test-*` is a small, lightly-used `-test-` bucket (38-40
+  total manifest entries observed, not "large"), and the recovery merge completed in seconds with no memory pressure.
+  Did not investigate WHY the `features-defi-test-*` consolidator schedule is behind — plausible it simply isn't
+  scheduled as often as prod tiers for a low-traffic test bucket, but not confirmed. Not chasing further here (out of
+  scope for the Phase-A task) — leaving Todo 1 as-is since it's scoped to the prod bucket; a separate investigation
+  would be needed to say whether the `-test-` tier's consolidator schedule needs its own fix.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA, stale item closed. Todo 1 answered YES by sibling doc
+  `defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md` (read in full) — closed by citation. Todos 2-3 remain
+  genuine open work (todo 2 unevidenced anywhere in the corpus; todo 3 explicitly gated on 1+2, and the underlying
+  consolidator outage is still genuinely unresolved). Doc stays `assigned_vm: NA`.

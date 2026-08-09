@@ -139,3 +139,8 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
   underlying gap (a dispatched-but-not-yet-`done` task isn't excluded from being handed to a second free slot). Relevant
   to todo 2's `skip-current-task` gap discussion: the fix there should also cover "already dispatched to another live
   slot," not just "repeat-skipped," since this case never skipped once before duplicating.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- Live-incident doc: task wedged 4 different slots
+  via the fleet-wide TmuxPruner crash-loop, durably parked. 4 open todos -- todo 1's named prerequisite
+  (`review_slot1_tmuxpruner...`'s root-cause todo) is now done, unblocking investigation; todo 3 is an explicit
+  `[OPERATOR]` unpark decision with no ruling yet; todo 4 depends on todo 3. Doc stays `assigned_vm: NA`.

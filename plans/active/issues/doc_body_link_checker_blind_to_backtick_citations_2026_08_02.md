@@ -105,19 +105,26 @@ corpus actually uses was never brought into the checker's purview.
       positives — genuinely sizeable, exactly as flagged, not a same-day extension. Left unchecked as an implementation
       task (still real, bounded follow-up work, not a design question) — see the codex-scoped item below for the
       recommended first landing.
-- [ ] [SCRIPT] P2. **Recommended first cut, evidence-backed**: only match backtick-paths that begin with `codex/` or
-      `/codex/` (the retrieval-layer-critical subset this skill's own charter cares about most), leaving plans-corpus
-      and other backtick citations for a later pass (the P1 item above, once its placeholder-exclusion logic exists).
-      **Measured 2026-08-08 (round5 ao investigation)**: only 2,254 codex/-prefixed backtick citations exist
-      corpus-wide, of which just **14 are unresolved** — several of those are themselves angle-bracket/ellipsis
-      placeholders (e.g. `codex/09-strategy/architecture-v2/archetypes/<archetype>.md`, `/codex/<NN-section>/<doc>.md`,
+- [x] [SCRIPT] P2. ✅ **Implemented** — only match backtick-paths that begin with `codex/` or `/codex/` (the
+      retrieval-layer-critical subset this skill's own charter cares about most), leaving plans-corpus and other
+      backtick citations for a later pass (the P1 item above, once its placeholder-exclusion logic exists). **Measured
+      2026-08-08 (round5 ao investigation)**: only 2,254 codex/-prefixed backtick citations exist corpus-wide, of which
+      just **14 are unresolved** — several of those are themselves angle-bracket/ellipsis placeholders (e.g.
+      `codex/09-strategy/architecture-v2/archetypes/<archetype>.md`, `/codex/<NN-section>/<doc>.md`,
       `codex/.../block-list.md`), so the real broken-citation count needing a genuine fix (not just a baseline entry) is
       likely closer to 6-8. This confirms the doc's own framing — "smaller, faster to land" — with real numbers: a
       same-day-sized change, not an open scope question. Reuse `_resolve()` unchanged; seed
       `doc_body_link_baseline.yaml` via `--update-baseline` immediately after landing (do not ship zero-tolerance day
-      one, matching how the original markdown-link checker itself was seeded 2026-07-23). Not implemented in this pass
-      (a shared-QG-infra code change needs its own `quality-gates.sh`-green ship + regression test, out of scope for an
-      investigation-only pass) — but the scope decision itself is no longer an open judgment call.
+      one, matching how the original markdown-link checker itself was seeded 2026-07-23). **Shipped 2026-08-08**:
+      `_BACKTICK_CODEX_RE` added to `check_doc_body_links.py` (`` `(/?codex/[^`\s*]+\.(?:md|mdc))` `` — the `*`
+      exclusion is a real fix found during implementation, not anticipated by the investigation: a wildcard-glob
+      illustration `` `codex/**.md` `` in `cross-reference-path-convention.md` matched the naive pattern and crashed
+      `_resolve()`'s archive-fallback `glob()` on a bare `**` segment; excluding `*` from the path charclass avoids it
+      without touching `_resolve()`). Live corpus scan post-landing found 16 unresolved (close to the 14 measured, two
+      more docs landed since the investigation) — baseline seeded via `--update-baseline` (28 total `known_broken`
+      entries, +17 net new vs. the pre-existing 11 markdown-link entries) per this item's own instruction; the
+      individual unresolved citations are unfixed debt now tracked in the baseline, not silently swept. 7 new unit tests
+      added covering resolve/broken/non-codex-scope/fence-exclusion/glob-safety.
 - [ ] [DOCS] P3. Regardless of which script fix is chosen: once shipped, re-run `/docs-reconcile`'s Phase 0/1 against
       the newly-widened checker to catch whatever real breakage the wider scan surfaces.
 
@@ -146,13 +153,27 @@ corpus actually uses was never brought into the checker's purview.
   "genuine P1-vs-P2 scope/risk fork" that kept this KEEP-NA is now resolved — the 2026-08-08 round5 ao investigation
   measured the P2 (narrow, `codex/`-prefix-only) option live (2,254 candidates, 14 unresolved, several of those
   themselves placeholders) and explicitly closed the scope question ("no longer an open scope question... a
-  same-day-sized change"). The remaining 2 open items (`[SCRIPT] P2` implement + seed the baseline; `[DOCS] P3`
-  re-run `/docs-reconcile` after) are both bounded implementation/verification work with a concrete plan already
-  written out in-doc, no remaining judgment call. Conflict-check clear: grepped `plans/active/*.md` for
+  same-day-sized change"). The remaining 2 open items (`[SCRIPT] P2` implement + seed the baseline; `[DOCS] P3` re-run
+  `/docs-reconcile` after) are both bounded implementation/verification work with a concrete plan already written out
+  in-doc, no remaining judgment call. Conflict-check clear: grepped `plans/active/*.md` for
   "backtick"/`codex/.*backtick`/this doc's own filename — the only hits are unrelated docs listing this issue in a
   "referenced, discoverability" digest (`ag_closeout_audit_rollout_2026_07_25.md`,
   `ao_satellite_ao_dispatch_batch3_2026_07_31.md`, `cross_cutting_consolidated_closeout_2026_07_25.md`,
-  `infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`, `tradfi_phase_d_terminal_gate_2026_07_24.md`), none
-  claim the implementation itself. `execution_scope: local-only → orchestrator-agent`, `assigned_role: infra`
-  (unchanged, already correct). Companion gated finalize:
+  `infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`, `tradfi_phase_d_terminal_gate_2026_07_24.md`), none claim
+  the implementation itself. `execution_scope: local-only → orchestrator-agent`, `assigned_role: infra` (unchanged,
+  already correct). Companion gated finalize:
   `doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md`.
+- **2026-08-08 (slot-28, infra worker)**: P2 shipped. Added `_BACKTICK_CODEX_RE` to
+  `scripts/quality_gates/check_doc_body_links.py` and wired it into `_extract_links()`, reusing `_is_checkable()`/
+  `_resolve()` unchanged. Found + fixed one real bug surfaced by the widened scope during implementation (not
+  anticipated by the investigation): a wildcard-glob illustration `` `codex/**.md` `` in
+  `/codex/11-project-management/cross-reference-path-convention.md` matched the naive backtick pattern and crashed
+  `_resolve()`'s archive-fallback `Path.glob("**/<name>")` call on a bare `**` path segment — fixed by excluding `*`
+  from the backtick path charclass (a real citation never contains one). Added 7 unit tests in
+  `test_check_doc_body_links.py` (resolve / broken / non-codex-scope-excluded / fence-excluded / leading-slash /
+  glob-safety). Seeded `doc_body_link_baseline.yaml` via `--update-baseline` immediately after landing (28
+  `known_broken` entries total, +17 net new from the widened backtick scan) — matches this item's own instruction to
+  absorb pre-existing debt rather than ship zero-tolerance day one. `[DOCS] P3` (re-run `/docs-reconcile` against the
+  widened checker) is left open — different `[TAG]`/craft, out of this task's scope.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.

@@ -36,7 +36,13 @@ drift_direction: none
 depends_on: []
 locked_by:
 resolved_by:
-context_scope: []
+context_scope:
+  [
+    /plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md,
+    /plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md,
+    /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # Operator action items — 2026-08-08 session
@@ -157,3 +163,4 @@ pull any specific checkout's full table back up if you want it before deciding.
 
 - 2026-08-08: Filed as the consolidated wrap-up of the full 80-item Q&A + 6-agent apply + 7-tranche RECLASSIFY session,
   per the operator's explicit request for one document to work through.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

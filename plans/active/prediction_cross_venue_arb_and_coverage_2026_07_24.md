@@ -699,22 +699,22 @@ live `status=open` is unauth-OK so live wasn't broken by it — the `/historical
       `timestamp+method+path` (PSS/SHA256, DIGEST_LENGTH salt), headers `KALSHI-ACCESS-KEY/-SIGNATURE/-TIMESTAMP`.
       Replace the bogus `Authorization: Bearer` in `_get_headers` (make it method/path-aware). Repo: instruments-service
       (+ mirror in MTDS `kalshi_adapter.py` for historical trade fetch).
-- [ ] [SCRIPT] P1. e2e-testing/instruments-service — **series-scoped historical backfill — DEEP CORPUS DONE;
-      recent-window LAUNCHED; the 2025-10→2026-04 mid-gap is the precise residual (2026-06-23)**: (1) **DEEP CORPUS
-      LANDED + VERIFIED** — the Jon-Becker free 36 GiB Parquet seed (mtds@74a2dd7 converter + deployment@2e37dcd VM)
-      wrote **1,553,117 canonical `venue=KALSHI` trades parquets** to
-      `market-data-tick-pred-prd/raw_tick_data/by_date/…/pipeline_mode=batch_kalshi/…` covering **2021-06-30 →
-      ~2025-09** (probed: batch_kalshi present 2025-06/2025-09; sample-inspected a 2021-07-01 parquet → 7 real trades,
-      full canonical schema
-      trade_id/count/yes_price/no_price/taker_side/created_time/ticker/canonical_question_group/available_at). (2)
-      **RECENT-WINDOW LAUNCHED** — Kalshi trades backfill VM `mtds-prediction-kalshi-20260623-180254` (RUNNING, fresh
-      tarball @7c849d7 with the `/markets/trades` endpoint fix mtds@aed9fb2; 2026-06-20→06-22) covers the API-reachable
-      recent ~60d. (3) **RESIDUAL (precise)**: the **2025-10 → 2026-04** mid-gap (no batch_kalshi, no live_kalshi — live
-      only started 2026-06-23) needs the series-scoped `/historical/*` enumeration (enumerate `/series` ~11k →
-      per-series markets → per-market `/historical/trades` RSA-PSS-signed; the IS cutoff-aware routing IS@8b118d9 +
-      RSA-PSS auth already ship) — a multi-hour 11k-series API grind (the IS series enumerator + e2e driver are the
-      remaining build). Repo: e2e-testing (driver) + instruments-service (enumerator). Provenance: autonomous
-      catalogue/backfill session 2026-06-23.
+- **[SCRIPT] P1. EXTRACTED 2026-08-09 → `prediction_satellite_ao_dispatch_batch9_2026_08_09.md`.** e2e-testing/
+  instruments-service — series-scoped historical backfill — DEEP CORPUS DONE; recent-window LAUNCHED; the
+  2025-10→2026-04 mid-gap is the precise residual (2026-06-23)**: (1) **DEEP CORPUS LANDED + VERIFIED** — the Jon-Becker
+  free 36 GiB Parquet seed (mtds@74a2dd7 converter + deployment@2e37dcd VM) wrote **1,553,117 canonical `venue=KALSHI`
+  trades parquets** to `market-data-tick-pred-prd/raw_tick_data/by_date/…/pipeline_mode=batch_kalshi/…` covering
+  **2021-06-30 → ~2025-09** (probed: batch_kalshi present 2025-06/2025-09; sample-inspected a 2021-07-01 parquet → 7
+  real trades, full canonical schema
+  trade_id/count/yes_price/no_price/taker_side/created_time/ticker/canonical_question_group/available_at). (2)
+  **RECENT-WINDOW LAUNCHED** — Kalshi trades backfill VM `mtds-prediction-kalshi-20260623-180254` (RUNNING, fresh
+  tarball @7c849d7 with the `/markets/trades` endpoint fix mtds@aed9fb2; 2026-06-20→06-22) covers the API-reachable
+  recent ~60d. (3) **RESIDUAL (precise)**: the **2025-10 → 2026-04** mid-gap (no batch_kalshi, no live_kalshi — live
+  only started 2026-06-23) needs the series-scoped `/historical/*` enumeration (enumerate `/series` ~11k → per-series
+  markets → per-market `/historical/trades` RSA-PSS-signed; the IS cutoff-aware routing IS@8b118d9 + RSA-PSS auth
+  already ship) — a multi-hour 11k-series API grind (the IS series enumerator + e2e driver are the remaining build).
+  Repo: e2e-testing (driver) + instruments-service (enumerator). Provenance: autonomous catalogue/backfill session
+  2026-06-23.
 
 ### 2026-06-21 23:50 — Polymarket v9 re-walk COMPLETE + book_snapshot naming diagnosed
 
@@ -760,8 +760,9 @@ live `status=open` is unauth-OK so live wasn't broken by it — the `/historical
       path = day/pipeline_mode/asset_group/venue/instrument_type/data_type), so existing trade/book parquets do not
       move. — tarball@21:08Z + 2 VMs relaunched + T+9min verified. Provenance: operator partition-completeness Q
       2026-06-23.
-- [~] [SCRIPT] P1. **cqg partition-completeness — BATCH re-classification re-walk** — **script bug FIXED (mtds@24db3f16,
-  ✅); `--apply` operational run REMAINS (now safe, non-corrupting).** Shipped the venue-aware classifier routing:
+- **[SCRIPT] P1. EXTRACTED 2026-08-09 → `prediction_satellite_ao_dispatch_batch9_2026_08_09.md`.** cqg
+  partition-completeness — BATCH re-classification re-walk — script bug FIXED (mtds@24db3f16, ✅); `--apply` operational
+  run REMAINS (now safe, non-corrupting).** Shipped the venue-aware classifier routing:
   `compute_object_atom(..., venue)` routes KALSHI tickers via `classify_kalshi_to_canonical_group(ticker=cid)` (one
   object = one ticker = one constant group), POLYMARKET via the tuple path; 2 regression tests
   (`KXCPI→CPI_PRINT_PER_MONTH`, `KXMLBGAME→SPORTS_MLB_MATCH`, NOT OTHER); 51/51 rebuild tests + mtds QG green.
@@ -1000,8 +1001,13 @@ themselves required manual VM backfill triggers.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-verified live (2 open items, down
   from the 6-9 range prior rounds tracked; most items closed/extracted since). Remaining: the `[OPS] P2`
   tarball-overwrite-race item is a genuine open-ended infra design question (two named options, no directive) matching
-  this doc's own long-standing precedent for this exact item; the `[SCRIPT] P1` series-scoped historical Kalshi
-  backfill residual (the 2025-10→2026-04 mid-gap) is a substantial but genuinely bounded build (IS series enumerator +
-  e2e driver, both prerequisites already shipped) and on its own would be a reasonable RECLASSIFY candidate, but
+  this doc's own long-standing precedent for this exact item; the `[SCRIPT] P1` series-scoped historical Kalshi backfill
+  residual (the 2025-10→2026-04 mid-gap) is a substantial but genuinely bounded build (IS series enumerator + e2e
+  driver, both prerequisites already shipped) and on its own would be a reasonable RECLASSIFY candidate, but
   `assigned_vm` flips whole-doc and the tarball item is a real judgment call, so the doc stays together. Doc stays
   `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-09 (prediction tranche)**: KEEP-NA, valid — 2 open, re-verified (lines 172/380, matches
+  Phase 0). Line 172 (tarball race) is `infra`/`ci` scope. Line 380 (fixture-pairing residual) has an open provenance
+  question per today's Finding 5 (does `instruments-service@62a8b1d8` cover 3a/3b, not just 3c). **Doc now 1009L, over
+  the 1000L hard cap** (was 999 on 08-08) — SCOPED-mode append only; remediation is batch8's active, not-yet-executed
+  todo. Doc stays NA.

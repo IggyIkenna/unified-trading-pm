@@ -313,6 +313,23 @@ pane-scan + the watchdog; this self-report only covers the still-actionable tool
 The progress response may include `messages: [...]` — these are from the operator or main agent. Read them and act
 accordingly.
 
+**ACK a one-shot instruction the moment you've confirmed it's already fulfilled/stale (HARD RULE, codified 2026-08-09,
+`ao_direct_instruction_stale_redelivery_after_blocked_resolution_2026_08_08.md`).** A free-text "Direct instruction from
+main" message (sent via `POST /api/slots/<N>/message`, not a task-scoped blocked-answer) has no self-closing condition —
+without an ack it keeps redelivering to every future fresh session on this slot for up to 30 redeliveries (a confirmed
+live incident hit 4+ independent sessions re-verifying the SAME already-fixed issue in one day, 15 campaigns fleet-wide
+unanswered at once). `/boot`, `/heartbeat`, and `/progress` responses each carry `message_ids: [...]` — positionally
+aligned with `messages` (same order/length) — the id you need. The moment you determine a message's ask is already done
+(by someone else, or moot), close it in the SAME turn before continuing:
+
+```bash
+curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/messages/<message_id>/ack -H 'Content-Type: application/json'
+```
+
+Idempotent — acking an already-closed or unknown id is a harmless no-op (`{"acked": false}`), never an error. Do NOT ack
+a message whose ask you actually still need to DO (only ack once the work is genuinely done or confirmed moot) — acking
+is "this is closed", not "I've seen it".
+
 ### 4) BLOCKED — if you hit ambiguity you can't resolve
 
 ```bash

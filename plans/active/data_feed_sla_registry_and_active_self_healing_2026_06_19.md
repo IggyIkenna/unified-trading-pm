@@ -138,7 +138,7 @@ ladder, the 4-state honest-absence manifest).
 Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636` via carve-out #3 — `qg-common.sh` +
 `base-service.sh` + `base-library.sh`). Residual proper-fix follow-ups:
 
-- [ ] [SCRIPT] P0. **Bump msgpack `>=1.2.1` fleet-wide + lock-regen**, then drop its `--ignore-vuln GHSA-6v7p-g79w-8964`
+- [x] ✅ [SCRIPT] P0. **Bump msgpack `>=1.2.1` fleet-wide + lock-regen**, then drop its `--ignore-vuln GHSA-6v7p-g79w-8964`
       from `base-service.sh` + `base-library.sh`. **18/20 SHIPPED + 3 were already 1.2.1 = 21/23 at 1.2.1.** Shipped:
       instruments@`9cd6540`, mdps@`f6f3554`, mtds@`0a1b389`, ml@`fc46485`, sit@`3b98675`, trading-agent@`f0d0a39`,
       uta@`9fa5a12`, UTL@`01f9b7b2`, PM@`467e86348`(PR#440), deployment-api@`ebe7cd0`, e2e-testing@`bd1f8af`,
@@ -157,7 +157,12 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
       installed/working on this host); foreign + out of feed-SLA scope. Owner fixes the dashboard, then bump + ship.
       **The `--ignore-vuln GHSA-6v7p-g79w-8964` MUST STAY until those 2 land** — removing it now would red the 2
       unbumped repos. Genuine-impossibility-in-scope per autonomous rule 1 (can't ship past a foreign/version-machinery
-      red gate without a workspace-broad version op or editing foreign UI infra).
+      red gate without a workspace-broad version op or editing foreign UI infra). **DONE (staleness-recheck
+      2026-08-09)** — both blockers cleared: live-verified `alerting-service/uv.lock` and `agent-orchestrator/uv.lock`
+      both now pin `msgpack==1.2.1`; `unified-trading-pm/scripts/quality-gates-base/qg-common.sh`'s
+      `QG_PIP_AUDIT_COMMON_IGNORES` is confirmed EMPTY (resolved 2026-07-30 per its own inline changelog, well before
+      this recheck) — the GHSA-6v7p-g79w-8964 mention there is historical commentary only, not an active ignore. All
+      23/23 repos at msgpack>=1.2.1, ignore fully dropped.
 - [x] ✅ [SCRIPT] P3. **Re-export `ACCOUNT_STATE_FRESHNESS` via the UAC facade** — UAC@`6b91f1f`: added to
       `internal/reference/__init__.py` + `internal/__init__.py` (import + `__all__`);
       `from unified_api_contracts.internal     import ACCOUNT_STATE_FRESHNESS` now works. (Unblocked once the

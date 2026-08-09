@@ -48,6 +48,13 @@ source: >-
   to file this doc via slot 11 was itself lost to a busy-slot dispatch race, then filed this doc directly.
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/state_store/activity.py,
+    agent-orchestrator/server/routes/slots_ops.py,
+    agent-orchestrator/server/models/worker_api.py,
+    /plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md,
+  ]
 ---
 
 # AO direct-instruction dispatch redelivers a stale message after its underlying blocked-question/escalation resolves
@@ -141,22 +148,44 @@ stale-redelivery problem this doc is primarily about.
       of `server/state_store/activity.py` (`enqueue_message`/`take_pending_messages`) + a live, read-only query against
       `data/state/state.db` (15 distinct unanswered "Direct instruction from main" campaigns, 18 rows, 12 slots,
       `redelivery_count` up to 17/30).
-- [ ] [INFRA] P2. Implement the fix: add an explicit close/ack primitive for `slot_messages` so a one-shot instruction
-      can terminate the moment ANY recipient session confirms it's fulfilled/stale, instead of waiting out up to 30
-      redeliveries across up to 30 future sessions. Recommended shape (mirrors the `agent_messages`/`/reply` pattern
-      that already solves this exact problem for the main/review/chat channel):
-      `POST /api/slots/{slot_id}/messages/{message_id}/ack` stamps `answered_at` immediately; update
-      `unified-trading-pm/agents/worker.md` + `review.md` so a session that reads a "Direct instruction from main"
-      message and determines the ask is already done (by someone else, or moot) calls this before continuing, closing
-      the loop the same turn rather than leaving it to expire. Bonus: accept an optional `supersedes_message_id` on
-      `POST /api/slots/{slot_id}/message` so a correction (e.g. id 5883 correcting garbled id 5882 — both still live
-      today) auto-acks the message it replaces. Cheaper interim mitigation if the new endpoint is non-trivial: let
-      `SendMessageRequest` carry a `max_redeliveries` override (e.g. 2-3) for one-shot sends, distinct from the 30
-      default that's correctly tuned for recurring notices (git-health, etc.) — bounds the blast radius without a new
-      endpoint. Done-when: a session that acks a one-shot instruction (or hits the lowered cap) stops seeing it
-      redelivered to the NEXT fresh session on that slot, verified live against a real send, not just a unit test —
-      specifically confirm the acked message does NOT reappear in that slot's subsequent `/progress`/`/heartbeat` poll
-      responses (end-to-end delivery-path verification, not just that `answered_at` got set in the DB row).
+- [x] [INFRA] P2. **DONE 2026-08-09 (slot-25, infra craft)** — `agent-orchestrator@af129dd`. Implemented the recommended
+      shape: `POST /api/slots/{slot_id}/messages/{message_id}/ack` (new `ss.ack_message`,
+      `server/state_store/     activity.py`) stamps `answered_at` immediately, idempotent, no-op-not-error on an
+      unknown/cross-slot id. `BootResponse`/`HeartbeatResponse`/`ProgressResponse` gain `message_ids: list[int]` —
+      positionally aligned with the existing `messages: list[str]` (a NEW parallel field, not a breaking type change on
+      `messages` itself, since many live worker sessions across the fleet already parse it as a bare string list and
+      this table's rows are handed to a fresh session on every respawn, so a breaking change couldn't roll out
+      atomically). `GET     /api/slots/{id}/messages`'s `IncomingMessage` also gains `id`. Bonus shipped too:
+      `SendMessageRequest.     supersedes_message_id` auto-acks the row it replaces via
+      `enqueue_message(..., supersedes_message_id=...)`. Updated `unified-trading-pm/agents/worker.md` (new "ACK a
+      one-shot instruction..." HARD RULE section) and `review.md` (cross-reference for per-task worker-loop dispatches)
+      so a session that confirms an ask is already fulfilled/moot calls the ack endpoint before continuing. Did NOT also
+      ship the "cheaper interim mitigation" (`max_redeliveries` override) — the recommended primary fix was not
+      non-trivial, so the fallback wasn't needed; skipped to avoid unrequested scope. **Verification**:
+      `bash scripts/quality-gates.sh` full green (2864 passed, 2 skipped, 0 lint/type errors) on the exact committed
+      SHA; two new test files (`tests/test_slot_message_ack.py` — DB-level mechanism proof via the same
+      `session_scope`/SQLAlchemy code path production uses, including the core scenario
+      `test_acked_message_never_reaches_a_fresh_session` mirroring the sibling file's
+      `test_message_survives_a_worker_respawn` but with an ack in between — proves the acked row is terminal
+      (`answered_at` set) BEFORE the respawn, so `take_pending_messages`' `answered_at IS NULL` filter excludes it for
+      every future session, not just the one that acked it; `tests/test_slot_message_ack_route.py` — route-level,
+      patches `session_scope`/`ss` per this repo's established convention (`test_slot_message_live.py`), incl. an
+      auth-dependency-wiring test). **Live-HTTP verification gap, disclosed rather than overclaimed**: the done-when
+      above asks for confirmation against the actually-DEPLOYED orchestrator's `/progress`/`/heartbeat` responses — the
+      live `localhost:8765` server every fleet slot (including this one) talks to runs from a separately-deployed
+      checkout, not this slot's worktree, so my new endpoint doesn't exist there until the normal LDR→main promote +
+      redeploy happens; triggering that redeploy specifically to self-test one small feature is a
+      fleet-wide-blast-radius action out of scope for a single P2 todo, so I did NOT do it. New follow-up todo below
+      covers the live-HTTP leg once the normal deploy cycle has picked this up.
+- [ ] [INFRA] P3. Once `agent-orchestrator@af129dd` (the `slot_messages` ack primitive above) has reached the LIVE
+      deployed orchestrator via the normal promote/redeploy cycle (verify via `GET /api/slots/<test-slot>/messages` or
+      similar — a 404/422 on `POST /api/slots/<slot>/messages/<id>/ack` means it hasn't landed yet), do the live-HTTP
+      round-trip the original todo's done-when asked for: send a real message via `POST /api/slots/<N>/message`, confirm
+      it appears in a `message_ids`-carrying `/heartbeat` or `/progress` response, `POST .../ack` it, then confirm a
+      SUBSEQUENT fresh-session delivery (a real respawn, or a read-only query against `data/state/state.db` confirming
+      `answered_at` is set + would be excluded by `take_pending_messages`' filter) does not redeliver it. Repo:
+      agent-orchestrator (verification only, no code change expected unless something doesn't match the unit tests'
+      proof).
 - [ ] [INFRA] P3. Separately check whether `POST /api/slots/{id}/message` direct instructions are reliably durable
       against a slot that's mid-task when the message arrives (this doc's own first filing attempt was lost this way) —
       confirm whether the message is genuinely dropped in that case, or whether it should have queued and simply hasn't
@@ -238,3 +267,13 @@ stale-redelivery problem this doc is primarily about.
   delivery/ack generally, not tied to one escalation id's text — any direct instruction whose underlying doc-write
   already landed is a candidate for stale redelivery on the next boot. Not implementing Todo 2 myself (out of this
   session's assigned scope this turn); noting as reinforcing evidence for whoever picks it up next.
+- **2026-08-09 (slot-25, infra craft)**: Implemented Todo 2 — see the todo's own DONE entry above for full detail.
+  Summary: `POST /api/slots/{slot_id}/messages/{message_id}/ack` (`agent-orchestrator@af129dd`, shipped via quickmerge,
+  `quality-gates.sh` full green) closes a `slot_messages` row immediately; `message_ids` added to
+  `Boot`/`Heartbeat`/`ProgressResponse` (parallel to `messages`, not a breaking type change); `supersedes_message_id`
+  bonus shipped; `worker.md`/`review.md` updated with the ack-on-confirmed-stale rule. Proved the core mechanism with a
+  dedicated unit test mirroring the sibling `test_slot_message_session_delivery.py`'s own respawn-redelivery proof, but
+  with an ack in between showing the acked row never reaches the fresh session. Did not redeploy the live orchestrator
+  to chase full live-HTTP verification (out of scope / unjustified blast radius for a single small feature) — added a
+  new P3 follow-up todo to close that leg once the normal promote/redeploy cycle picks this commit up.
+- **context-scout 2026-08-09**: populated context_scope (4 entries).

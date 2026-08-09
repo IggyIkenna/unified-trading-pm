@@ -166,18 +166,19 @@ exposed to this class before the veto shipped.
 ## Recommended decision
 
 - [x] ✅ [OPERATOR] P2. **RESOLVED 2026-08-08 — no trigger needed, already picked up by the routine build cadence.**
-      Once `deployment-service`/`unified-trading-library` land on `live-defi-rollout` and promote to `main`, confirm
-      (or trigger) a fresh `deployment-api` build+deploy so the live `uts-prod-dp-exit-code-monitor` Cloud Run job
-      actually picks up the fix (same deploy-lag gap `cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md`
+      Once `deployment-service`/`unified-trading-library` land on `live-defi-rollout` and promote to `main`, confirm (or
+      trigger) a fresh `deployment-api` build+deploy so the live `uts-prod-dp-exit-code-monitor` Cloud Run job actually
+      picks up the fix (same deploy-lag gap `cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md`
       flagged for the prior preemption fix). Done when
       `gcloud artifacts docker images list asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/deployment-api --include-tags --sort-by=~UPDATE_TIME --limit=1`
       shows an `UPDATE_TIME` after this fix's merge commit. **Live-checked 2026-08-08**: fix commit
       `deployment-service@5bd0017b` landed `2026-08-06T10:53:59+01:00`; the `deployment-api` image has since been
-      rebuilt repeatedly (5 builds on 2026-08-08 alone), latest `sha256:fc6deaf8` tagged `latest`, `UPDATE_TIME
-      2026-08-08T07:23:26` — well after the fix commit. `gcloud run jobs describe uts-prod-dp-exit-code-monitor`
-      confirms the job references `deployment-api:latest`, and Cloud Run Jobs pull the tag fresh per execution, so the
-      live monitor already runs the fixed code. This was never actually an operator-only action — `deployment-api`
-      rebuilds on a routine, frequent cadence (multiple builds/day observed) independent of any manual trigger.
+      rebuilt repeatedly (5 builds on 2026-08-08 alone), latest `sha256:fc6deaf8` tagged `latest`,
+      `UPDATE_TIME     2026-08-08T07:23:26` — well after the fix commit.
+      `gcloud run jobs describe uts-prod-dp-exit-code-monitor` confirms the job references `deployment-api:latest`, and
+      Cloud Run Jobs pull the tag fresh per execution, so the live monitor already runs the fixed code. This was never
+      actually an operator-only action — `deployment-api` rebuilds on a routine, frequent cadence (multiple builds/day
+      observed) independent of any manual trigger.
 - [ ] [SCRIPT] P2. Fix the `launch-cefi-forward-poll.sh` singleton-lock TOCTOU race — CONFIRMED RECURRING, not a
       one-off: it fired on BOTH the original launch (`-064507`/`-064513`/`-064526`, insert timestamps 13s apart) AND its
       own relaunch 12 minutes later (`-065757` then `-065837`, only 46s apart) in the same incident window. Bound the
@@ -225,15 +226,20 @@ exposed to this class before the veto shipped.
 - **round5-cefi-question-resolution 2026-08-08**: line-168 `[OPERATOR]` deploy-confirmation item flipped `[x]` —
   live-checked `gcloud artifacts docker images list` shows `deployment-api` rebuilt `2026-08-08T07:23:26` (well after
   this doc's `2026-08-06T10:53:59+01:00` fix commit), and `gcloud run jobs describe uts-prod-dp-exit-code-monitor`
-  confirms it runs `deployment-api:latest`. This was never a genuine operator-only decision — `deployment-api`
-  rebuilds on a routine multi-times-daily cadence independent of manual triggering.
+  confirms it runs `deployment-api:latest`. This was never a genuine operator-only decision — `deployment-api` rebuilds
+  on a routine multi-times-daily cadence independent of manual triggering.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — never re-litigated (established
   ruling). The remaining line-181 `[SCRIPT]` P2 TOCTOU-race item is still ALREADY claimed by
-  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 2 (confirmed re-checked in that batch's own text, "unclaimed
-  by any other" caveat notwithstanding — this doc IS the claim it's checking against); reclassifying here would
-  create a duplicate-dispatch surface. Independently re-confirmed by
-  `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s "Deferred — operator-gated" section (drafted/activated the
-  same day, a separate `/ag-closeout-audit` run), which lists this exact doc and reaches the identical conclusion
-  ("item 2 is already covered by an active in-flight batch9 todo"). Line-187 `[SCRIPT]` P3 item remains explicitly
-  time-gated/opportunistic, not blocking. Doc stays NA; the 2026-08-07 conflict citation and this run's independent
-  reaffirmation both hold.
+  `cefi_satellite_ao_dispatch_batch9_2026_08_07.md` todo 2 (confirmed re-checked in that batch's own text, "unclaimed by
+  any other" caveat notwithstanding — this doc IS the claim it's checking against); reclassifying here would create a
+  duplicate-dispatch surface. Independently re-confirmed by `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`'s
+  "Deferred — operator-gated" section (drafted/activated the same day, a separate `/ag-closeout-audit` run), which lists
+  this exact doc and reaches the identical conclusion ("item 2 is already covered by an active in-flight batch9 todo").
+  Line-187 `[SCRIPT]` P3 item remains explicitly time-gated/opportunistic, not blocking. Doc stays NA; the 2026-08-07
+  conflict citation and this run's independent reaffirmation both hold.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — root-cause fix (is_spot veto) shipped
+  and live-confirmed. TOCTOU singleton-lock item (line 182) is correctly cited as claimed by
+  cefi_satellite_ao_dispatch_batch9_2026_08_07.md todo 2 — verified that todo is still `- [ ]` open as of this run (fix
+  not yet shipped), so this doc's checkbox correctly stays open per its own 'flip both together' instruction. Not yet
+  ready to close.

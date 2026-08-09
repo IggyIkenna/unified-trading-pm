@@ -126,16 +126,12 @@ evidence-backed, zero-risk housekeeping action, not new work.
       6 open items stay local/NA, see this run's Workflow journal for why). Repo: agent-orchestrator (read-only). —
       unified-trading-pm@4f5a1e6ba
 
-- [ ] [DOC] P3. **Document the accepted BLOCKED‑marker `/done`-disposition convention in `task_template.md`.** Add a
-      section (alongside the existing CANCELLED/SUPERSEDED and DEFERRED‑BY‑DESIGN conventions — confirmed via grep
-      neither currently exists as a documented convention in that file) describing the `BLOCKED‑ON:<ref>` marker
-      `_ADDED_BLOCKED_LINE_RE` (`agent-orchestrator/server/verify.py`) recognizes for `/done`-time evidence-only closure
-      — distinct from the pre-existing `BLOCKED‑<TOKEN>` ingestion-gate marker family (e.g. `BLOCKED‑CREDENTIALS`)
-      already documented at `task_template.md:176`; do not conflate the two. **Done when**: `task_template.md` names and
-      documents the `BLOCKED‑ON:<ref>` convention distinctly from the ingestion-gate family; the source doc's `[DOC] P3`
-      checkbox flips `[x]` citing the commit. Source:
-      `/plans/active/issues/ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (its sole
-      remaining item). Repo: unified-trading-pm.
+- [x] ✅ [DOC] P3. **Document the accepted BLOCKED‑marker `/done`-disposition convention in `task_template.md`.** Added
+      a "`/done`-time disposition markers" bullet (right after the pre-existing `BLOCKED-<TOKEN>` ingestion-gate bullet)
+      documenting all three server-recognized closures — CANCELLED/SUPERSEDED, DEFERRED-BY-DESIGN, and
+      `BLOCKED-ON:<ref>` — with the `BLOCKED-ON:<ref>` entry explicitly distinguished from the `BLOCKED-<TOKEN>`
+      ingestion-gate family (the ingestion-gate family keeps a todo OUT of the backlog; the disposition markers are how
+      a DISPATCHED todo closes at `/done` without a false `[x]` flip). — unified-trading-pm@79565c404
 
 - [x] ✅ [BACKEND] P3. **CLOSED 2026-08-08 — already shipped, found during this review's re-verification.** The source
       doc (`external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`) is now `status: resolved` +
@@ -161,15 +157,19 @@ evidence-backed, zero-risk housekeeping action, not new work.
       `/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (its sole
       remaining item — GATED-prefix cleared 2026-08-03, see that doc's own inline note). Repo: agent-orchestrator.
 
-- [ ] [BACKEND] P3. **On re-dispatch, clear/invalidate the prior owner's slot-side `current_task`** (and log a warning
-      naming both slot ids + the task) so `/api/state` never shows one task `working` in two slots — makes the double-
-      dispatch condition observable instead of something main has to catch by pane inspection. **See this plan's
+- [x] ✅ [BACKEND] P3. **On re-dispatch, clear/invalidate the prior owner's slot-side `current_task`** (and log a
+      warning naming both slot ids + the task) so `/api/state` never shows one task `working` in two slots — makes the
+      double- dispatch condition observable instead of something main has to catch by pane inspection. **See this plan's
       file-adjacency rule #1 before starting.** **Done when**: a regression test proves a re-dispatched task's prior
       slot no longer reports it as `current_task`, and the loud log line fires; full `agent-orchestrator`
       `quality-gates.sh` green. Source:
       `/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` (its 2nd `[BACKEND] P3`
       item ONLY — the 3rd item, `/done` idempotency, stays conflict-gated against 3 other open docs sharing the same
-      mechanism, see Deferred). Repo: agent-orchestrator.
+      mechanism, see Deferred). Repo: agent-orchestrator. — **agent-orchestrator@82578c3** (`assign_task_to_slot` in
+      `server/state_store/slots.py` now clears a DIFFERENT slot's stale `current_task` before assigning the task to a
+      new slot, logging `orchestrator.state_store.logger.warning(...)` naming both slot ids + the task_id;
+      `tests/test_redispatch_clears_stale_owner.py` covers the collision case, the no-prior-owner no-op, and the
+      same-slot-reclaims-itself no-op; full `quality-gates.sh` 2799 passed, 2 skipped).
 
 - [x] ✅ [DOCS] P2. **Mirror the shipped liveness-by-progress check into the review-role wedge/escalation heuristic,
       then record operator sign-off.** `agents/review.md` step 3d still classifies a long-dirty worktree as dead/stale
@@ -234,17 +234,22 @@ evidence-backed, zero-risk housekeeping action, not new work.
       `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item — its 2nd item is
       an explicit operator/design-owner decision, stays open/NA). Repo: unified-trading-pm.
 
-- [ ] [BACKEND] P2. **Rescue the 3 orphaned slot-12 commits onto `origin/live-defi-rollout`, one repo at a time** — for
-      each of (`unified-trading-library c927ec58`, `unified-api-contracts 06c8e90b`, `deployment-service 0e62096f`):
-      `git fetch origin 'refs/wip-preserve/*:refs/remotes/origin/wip-preserve/*'`, confirm the slot-12 wip-preserve ref
-      still resolves to the SHA and is NOT an ancestor of `origin/live-defi-rollout`; cherry-pick (or format-patch/
-      `git am`, or re-derive if it conflicts) onto a fresh LDR-tip branch; run repo `bash scripts/quality-gates.sh`
-      green; ship via
-      `bash scripts/quickmerge.sh "<original subject> (rescue orphaned slot-12 WIP)" --agent --files     '<files>'`.
-      Zero data-loss risk (all wip-preserve-safety-netted); each commit independently re-verified as a real orphan (not
-      ancestor of LDR) by 2 independent checkers before this run. **Done when**: all 3 commits (or their re-derived
-      equivalents) are ancestors of `origin/live-defi-rollout`, each with a fresh green QG run. Source:
-      `/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md` (its 1st item only — items 2/3 are
+- [x] ✅ [BACKEND] P2. **Rescue the 3 orphaned slot-12 commits onto `origin/live-defi-rollout`, one repo at a time —
+      MOOT, all 3 already independently landed under fresh SHAs before this run.** For each of
+      (`unified-trading-library c927ec58`, `unified-api-contracts 06c8e90b`, `deployment-service 0e62096f`): fetched
+      `refs/wip-preserve/*`, re-confirmed each SHA still NOT an ancestor of `origin/live-defi-rollout` (orphan status
+      held), then content-diffed each against current LDR tip instead of blind-cherry-picking: -
+      `unified-trading-library c927ec58` (point_in_time.py docstring `lst_staking_yields`→`lst_yields`) — byte-identical
+      file-change already on LDR as `unified-trading-library@60c840f2` ("... (rescue orphaned slot-12 WIP)" +
+      `Quickmerge:       agent` trailer — a prior rescue attempt landed this exact patch under a fresh SHA). -
+      `unified-api-contracts 06c8e90b` (AAVE-PLASMA phase pipeline→live) — same outcome (`"AAVE-PLASMA": "live"` in
+      `defi_venues.py`) already on LDR as `unified-api-contracts@06c54fee` ("feat(defi): flip AAVE-PLASMA venue phase
+      pipeline to live", dated 2026-08-01, independently authored). - `deployment-service 0e62096f` (fastapi/starlette
+      cap-lift) — identical `pyproject.toml`/`uv.lock` state (fastapi>=0.137, starlette 1.3.1) already on LDR as
+      `deployment-service@eff55ae7` ("chore(deps): lift fastapi/starlette caps to fastapi>=0.137/starlette>=1.3.1", same
+      commit subject). **Done when** (outcome-defined, per the source issue doc's own reasoning) — all 3 commits'
+      CONTENT is an ancestor of `origin/live-defi-rollout` under some SHA: MET for all 3, no rescue action needed.
+      Source: `/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md` (its 1st item only — items 2/3 are
       conditionally gated on a main-agent confirmation this run could not re-verify, see Deferred). Repo:
       unified-trading-library, unified-api-contracts, deployment-service.
 

@@ -245,3 +245,5 @@ not lost if the bound expires unanswered.
   window) to inject `now=datetime(2026,7,20,UTC)`. Added 3 new tests: old-outside-window no-page, cefi/liquidations
   exact-scenario (44k old + 26 fresh = no page), recent-within-window still-pages. QG green (952 lines < 960 cap).
   Shipped: `deployment-service@96271280`.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate -- the shipped fix
+  landed in `meta_watchers.py`, already covered.

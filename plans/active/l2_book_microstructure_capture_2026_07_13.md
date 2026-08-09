@@ -229,28 +229,32 @@ context_scope:
       passed** (captured_depth=20 for every venue; sample: BINANCE-FUTURES imbalance=0.55/queue_position bid=7.012
       ask=2.083, DERIBIT bid=2510.0 ask=146280.0, etc. — full per-venue output in the session transcript). Exit 0.
       `quality-gates.sh` green (147s, sentinel-verified at the shipped SHA).
-- [ ] [SCRIPT] P2. **BLOCKED-DATA-CORRECTNESS** — Do NOT flip `MarketMakingQueueMicrostructureEngine`'s registration
-      here — that stays in the parent plan's Phase E1, gated on this data landing AND a passing `GroupBRunner` backtest
-      (which needs historical deeper-book replay, still no backfill authorised). This todo is DONE when the feed is
-      honestly live for the capable venues, not when the engine registers. **BLOCKED-DATA-CORRECTNESS (2026-07-14,
-      slot-11):** verified the done-condition before flipping — it is NOT true. Manifest check found `depth_of_book_10`
-      has 0 rows ever captured, AND — much bigger — the entire CeFi live WS tick-capture pipeline (every `live_*`
-      pipeline_mode, every data_type, every venue) has produced no manifest rows since 2026-06-29 (15 days stale); no
-      running compute instance in the project looks like a persistent live-WS process. Filed
-      [`issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`](issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md)
-      (P1, NOTIFY-OPERATOR class per the data-pipeline-correctness HARD RULE) — did NOT attempt to relaunch anything
-      myself (needs operator context on the correct deployment target + whether this is an intentional pause).
-      **Checkbox NOT flipped** pending that finding's resolution; the engine-registration guard itself is trivially
-      satisfied (not touched), but that's not what this todo's done-condition actually gates on. **RE-VERIFIED STILL
-      DORMANT (2026-07-16, slot-7):** re-dispatched 2 days after the issue doc's "intentional pause" resolution
-      (`BLK-55d45a68`) — checked whether the pause had lifted before assuming it still applied. Bounded
-      `read_availability_index` query over `2026-06-30..2026-07-16` on the CeFi tick bucket: 502,153 rows, **0** with a
-      `live_*` pipeline_mode (all `batch_tardis`/`batch_aster`/`batch_hyperliquid`/`batch_extended`/`batch_deribit`).
-      Bounded GCS prefix check on `day=2026-07-15` and `day=2026-07-16`: no `pipeline_mode=live_*` directory either day.
-      `gcloud compute instances list` (project-wide): the identified relaunch target (`mtds-live-cefi-consolidated*`,
-      per the issue doc's "Relaunch targets identified") has never been launched, in any state. Nothing has changed
-      since 2026-07-14 — the intentional pause is still in effect, done-condition still false. **Checkbox NOT flipped**
-      (still correct). No infra touched (read-only check).
+- **[SCRIPT] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 2 for AO
+  dispatch (parent_epic: strategy_master). See that doc for the live checkbox + evidence.** (Wire `depth_of_book_10`
+  into the CeFi live event-log capture dispatcher — the source doc's own round5-cefi-question-resolution 2026-08-08
+  entry below re-scoped this from an operator question to a bounded wiring gap.) Historical investigation trail retained
+  below for context (do not re-derive): **BLOCKED-DATA-CORRECTNESS (historical)** — Do NOT flip
+  `MarketMakingQueueMicrostructureEngine`'s registration here — that stays in the parent plan's Phase E1, gated on this
+  data landing AND a passing `GroupBRunner` backtest (which needs historical deeper-book replay, still no backfill
+  authorised). This todo is DONE when the feed is honestly live for the capable venues, not when the engine registers.
+  **BLOCKED-DATA-CORRECTNESS (2026-07-14, slot-11):** verified the done-condition before flipping — it is NOT true.
+  Manifest check found `depth_of_book_10` has 0 rows ever captured, AND — much bigger — the entire CeFi live WS
+  tick-capture pipeline (every `live_*` pipeline_mode, every data_type, every venue) has produced no manifest rows since
+  2026-06-29 (15 days stale); no running compute instance in the project looks like a persistent live-WS process. Filed
+  [`issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`](issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md)
+  (P1, NOTIFY-OPERATOR class per the data-pipeline-correctness HARD RULE) — did NOT attempt to relaunch anything myself
+  (needs operator context on the correct deployment target + whether this is an intentional pause). **Checkbox NOT
+  flipped** pending that finding's resolution; the engine-registration guard itself is trivially satisfied (not
+  touched), but that's not what this todo's done-condition actually gates on. **RE-VERIFIED STILL DORMANT (2026-07-16,
+  slot-7):** re-dispatched 2 days after the issue doc's "intentional pause" resolution (`BLK-55d45a68`) — checked
+  whether the pause had lifted before assuming it still applied. Bounded `read_availability_index` query over
+  `2026-06-30..2026-07-16` on the CeFi tick bucket: 502,153 rows, **0** with a `live_*` pipeline_mode (all
+  `batch_tardis`/`batch_aster`/`batch_hyperliquid`/`batch_extended`/`batch_deribit`). Bounded GCS prefix check on
+  `day=2026-07-15` and `day=2026-07-16`: no `pipeline_mode=live_*` directory either day. `gcloud compute instances list`
+  (project-wide): the identified relaunch target (`mtds-live-cefi-consolidated*`, per the issue doc's "Relaunch targets
+  identified") has never been launched, in any state. Nothing has changed since 2026-07-14 — the intentional pause is
+  still in effect, done-condition still false. **Checkbox NOT flipped** (still correct). No infra touched (read-only
+  check).
 
       **RESOLVED — premise now stale (round5-cefi-question-resolution 2026-08-08).** The "is the pipeline dormant,
       should it be relaunched" question no longer needs an operator answer: it already WAS relaunched, on
@@ -460,17 +464,20 @@ Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit
   depth_of_book_10 manifest check before todo 7 is re-evaluated, not a full re-litigation.
 - **round5-cefi-question-resolution 2026-08-08**: did exactly the narrow check the 08-07 caveat flagged —
   `gcloud storage ls "gs://central-element-323112-events/live-events/warm/cefi/"` lists 4 data_types
-  (book_snapshot_5/derivative_ticker/liquidations/trades), no `depth_of_book_10`. Todo 7 stays unflipped but the
-  "is the pipeline dormant, should it relaunch" operator-question framing is now retired — the pipeline IS alive
-  (since 2026-07-31); the remaining gap is a bounded technical one (wire `depth_of_book_10` into the new event-log
-  live-capture dispatcher). See the todo's own annotation above.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid overall — todo 7 is now bounded per
-  the round5 finding directly above (a scoped wiring gap, not an operator question), but todo 5 remains explicitly
+  (book_snapshot_5/derivative_ticker/liquidations/trades), no `depth_of_book_10`. Todo 7 stays unflipped but the "is the
+  pipeline dormant, should it relaunch" operator-question framing is now retired — the pipeline IS alive (since
+  2026-07-31); the remaining gap is a bounded technical one (wire `depth_of_book_10` into the new event-log live-capture
+  dispatcher). See the todo's own annotation above.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid overall — todo 7 is now bounded per the
+  round5 finding directly above (a scoped wiring gap, not an operator question), but todo 5 remains explicitly
   `BLOCKED-OPERATOR-DECISION` (Option A/MDPS-column-extension authorization gated on todo 7's backtest work actually
-  being picked up — an explicit dated ruling, not re-litigated per this sweep's own rules). Whole-doc flip stays
-  blocked per the HARD RULE. Cross-checked against `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (today's
-  independent full-corpus audit, authored before this same-day round5 update landed) — its "todo 7 similarly
-  judgment-gated" characterization is now stale; todo 7's re-scoped bounded framing supersedes it.
-  **Recommendation for the next `/ag-closeout-audit` cefi batch (batch11)**: extract todo 7 alone (wire
-  `depth_of_book_10` into the live event-log capture dispatcher) into a satellite AO-dispatch item — not executed in
-  this pass, same reasoning as the other extraction recommendations in this sweep.
+  being picked up — an explicit dated ruling, not re-litigated per this sweep's own rules). Whole-doc flip stays blocked
+  per the HARD RULE. Cross-checked against `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (today's independent
+  full-corpus audit, authored before this same-day round5 update landed) — its "todo 7 similarly judgment-gated"
+  characterization is now stale; todo 7's re-scoped bounded framing supersedes it. **Recommendation for the next
+  `/ag-closeout-audit` cefi batch (batch11)**: extract todo 7 alone (wire `depth_of_book_10` into the live event-log
+  capture dispatcher) into a satellite AO-dispatch item — not executed in this pass, same reasoning as the other
+  extraction recommendations in this sweep.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — sole item gated by dated operator
+  ruling BLK-e5571ccf (2026-07-14, issues/l2_book_microstructure_features_extractor_snapshot_path_retired_2026_07_14.md,
+  status: resolved); step 1 of 3 now has a live AO-dispatch path (batch13 todo 2) but steps 2-3 remain un-authorized.

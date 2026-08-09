@@ -132,3 +132,5 @@ EXEMPT reasons accordingly.
   outranks an automated audit verdict. **A future `/na-eligibility-audit` pass must NOT flip this back to NA on the
   strength of the older marker**; if it disagrees, it needs a fresh operator ruling, not a re-application of the
   superseded one.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

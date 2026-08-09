@@ -138,3 +138,4 @@ partition walk anywhere (single-walk discipline):
   `gcloud storage ls`/manifest spot-check per asset_group to confirm whether `pipeline_mode=` has already landed as a
   side effect of other writer work — that check is prose-only, not a tracked todo, so it stays invisible to backlog
   regen; worth converting to a real todo on a future pass.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

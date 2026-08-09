@@ -308,24 +308,43 @@ before).
       `git worktree list` confirms only the pre-existing session's own worktrees remain); both primary checkouts
       confirmed `git status --porcelain` clean afterward. This is real, reproducible verification of the fix's
       correctness on real data — not a live GH-Actions run, but not theory either.
-- [ ] [DEVOPS] P1. **Live end-to-end verification (BLOCKED, external)**: confirm a NEW tag actually mints on `main` via
-      a real `push:[main]`-triggered GH Actions run. Blocked because the LDR→main fleet promoter
-      (`ldr-to-main-promote-fleet.yml`, the ONLY path code reaches `main` under the `ldr_main` promotion model) has 0
-      self-hosted `glue` runners registered — reconfirmed repeatedly 13:34–13:45 UTC
-      (`gh api repos/IggyIkenna/unified-trading-pm/actions/runners` → `{"total_count": 0, "runners": []}`, HTTP 200, not
-      an auth artifact), with a run of consecutive `cancelled` promote-fleet conclusions from 12:23–13:45 UTC (6
-      cancelled runs across `schedule` + `workflow_dispatch` events) and the newest dispatch (`31184137209`, 13:45:05
-      UTC) still `status=pending` with no runner picking it up. This is a live recurrence of the ALREADY-TRACKED
-      `/plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md` (Progress Log entry added there the same
-      session) — NOT investigated or fixed here, out of scope for this task (requires VM/SSM-level runner-pool
-      intervention owned by that doc). All 21 repos' fixes are correctly landed on LDR (verified SHAs above,
-      `git merge-base --is-ancestor` confirmed post-push for each) and will promote to `main` automatically — no further
-      action needed from this task — the instant the runner pool recovers.
-- [ ] [DEVOPS] P1. Once promoted, re-run `python3 scripts/cicd/reconcile_release_tags.py --dry-run` and confirm the
-      stall count drops from 13 (baseline re-measured 2026-08-07 13:45 UTC, still 13 — expected, nothing has reached
-      `main` yet; unblocked purely by the runner-pool recovery above, not by anything left to do in this task).
-- [ ] [DEVOPS] P2. Ship the fix to `market-tick-data-service` once its unrelated pre-existing test failure is fixed
-      (tracked in the docs cited above — this todo is just the reminder to circle back, not a duplicate of that fix).
+- [x] ✅ [DEVOPS] P1. **Live end-to-end verification — CONFIRMED 2026-08-09 (stale-recheck sweep), real tag minted.**
+      The runner-pool stall this todo was blocked on has since cleared (tracked separately in
+      `fleet_promoter_glue_runner_stall_2026_08_06.md`). `batch-live-reconciliation-service` (one of the two repos this
+      doc's own "Verification" section replayed the fix logic against) went from `v0.49.0` (stale 41 days, the exact
+      baseline cited in this doc's `## Root cause`) to **`v0.49.1`**, minted at commit `738ac176` dated
+      `2026-08-08T09:48:12Z` — a genuine `push:[main]`-triggered patch bump, post-fix.
+      `python3     scripts/cicd/reconcile_release_tags.py --dry-run` now lists it under the healthy tag-derived set, not
+      stalled. The fix mints real tags in production, not just in the isolated-worktree logic replay.
+- [x] ✅ [DEVOPS] P1. **Re-ran 2026-08-09: stall count dropped 13 → 7, not to 0 — real, partial, measured progress.**
+      `python3 scripts/cicd/reconcile_release_tags.py --dry-run`: 15 repos now tag-derived/healthy (up from the original
+      13-repo-stalled baseline), **7 STILL STALLED**: `e2e-testing`, `fund-administration-service`, `greeks-service`,
+      `ibkr-gateway-infra`, `system-integration-tests`, `trading-agent-service`, `unified-trading-api`. Spot-checked
+      `unified-trading-api`'s and `fund-administration-service`'s recent `semver-agent.yml` run history — both show
+      `conclusion=success` runs as recently as 2026-08-08 (post-fix, not stuck/erroring), so the residual 7-repo stall
+      is NOT the same "zero-jobs parse failure" bug this doc fixed — it reads as either "no `SOURCE_DIR`-touching commit
+      since baseline" (a legitimately-empty bump, correct behavior) or a separate cause not yet root-caused. **Not
+      investigated further here** (out of this stale-recheck's scope) — flagging as a genuinely NEW residual finding,
+      not closing the todo on an overclaim. This todo's own literal ask ("confirm the stall count drops from 13") is
+      satisfied — it did drop, to 7 — even though the fleet is not fully clear.
+- [x] ✅ [DEVOPS] P2. **MOOT — market-tick-data-service already inherits the fix automatically, no shipping needed.**
+      `market-tick-data-service/.github/workflows/semver-agent.yml` is now a thin `workflow_call` caller stub pointing
+      at the central `unified-trading-ci/.github/workflows/semver-agent.yml` reusable workflow (shipped separately by
+      `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 5, unrelated to this doc but landed after
+      it) — the same central file this doc's own Follow-up regression #2 fixed. MTDS's `semver-agent.yml` runs are green
+      (`conclusion=success` x5 most recent, 2026-08-08T22:33–2026-08-09T00:06Z) and it already shows up in the
+      `reconcile_release_tags.py` healthy/tag-derived list (`market-tick-data-service:v0.112.2`), unstalled — the
+      unrelated pre-existing test failure this todo was gating on no longer blocks anything, since no per-repo ship of
+      THIS fix is needed anymore.
+- [ ] [DEVOPS] P2. **NEW 2026-08-09 (stale-recheck sweep) — root-cause the residual 7-repo stall.** `e2e-testing`,
+      `fund-administration-service`, `greeks-service`, `ibkr-gateway-infra`, `system-integration-tests`,
+      `trading-agent-service`, `unified-trading-api` are still `STALL`ed per `reconcile_release_tags.py --dry-run` even
+      though all 7 got this doc's patch-fallback fix shipped (see the `## Shipped` checklist) and their
+      `semver-agent.yml` runs are completing green post-fix (spot-checked 2 of 7). Determine whether this is legitimate
+      (no `SOURCE_DIR`-touching commit landed on `main` since each repo's baseline tag, so `BUMP=""` is the CORRECT
+      outcome) or a genuine gap the patch-fallback logic still misses for these specific repos. Done when: each of the 7
+      is classified either "correctly quiet" (with the commit range checked) or a new root cause is identified and
+      fixed.
 
 ## Follow-up regression #2 (2026-08-08): unified-trading-ci reusable-workflow migration silently reintroduced the char-cap bug
 
@@ -402,21 +421,15 @@ conservative here since it can't verify reversibility from command text alone).
 - [x] ✅ [DEVOPS] P1. Central file confirmed fixed and live:
       `gh api repos/IggyIkenna/unified-trading-ci/actions/workflows --jq '.workflows[]|select(.path|test("semver"))|.name'`
       → `"Semver Agent"` (was the raw path before this fix).
-- [ ] [DEVOPS] P1. Caller-repo re-registration still pending as of this writing: `instruments-service` and
-      `unified-trading-api` (the 2 caller repos checked) both STILL show the raw path, not `"Semver Agent"` — expected
-      per the task's own prediction ("reusable-workflow callers re-resolve on next evaluation... you may need to trigger
-      a fresh event"). Checked for a safe forced-trigger: the caller stub's own `on:` block is `push: branches: [main]`
-      ONLY (no `workflow_dispatch`), and per the shared-workflow starvation rule
-      (`ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md`) this task must NOT
-      `gh workflow run ldr-to-main-promote-fleet.yml` to force one. Checked for a naturally-pending promote that would
-      trigger soon regardless: `gh pr list --search "chore(promote)"` returned empty for both repos — no promote
-      currently queued. This will self-resolve on either repo's next natural `push:[main]` (any future LDR→main promote
-      cycle); no forcing mechanism exists that doesn't violate a HARD RULE. Re-check opportunistically (next session
-      touching either repo, or the next `/ci-reconcile` sweep) — do not spin up a dedicated wait/poll loop for this
-      alone.
-- [ ] [DEVOPS] P2. Once at least one caller repo naturally promotes, re-run the same
-      `gh api .../workflows --jq '...name'` check on it (and ideally 2-3 more, spot-checked) to close out this doc's
-      live-verification bar, matching the standard this doc already held itself to for Follow-up regression #1.
+- [x] ✅ [DEVOPS] P1. **RESOLVED — self-resolved exactly as predicted, confirmed 2026-08-09 (stale-recheck sweep).**
+      Both caller repos now resolve correctly:
+      `gh api repos/IggyIkenna/instruments-service/actions/workflows --jq     '...name'` → `"Semver Agent"`; same for
+      `unified-trading-api`. Neither shows the raw file path anymore. Resolved naturally via each repo's own subsequent
+      `push:[main]` promote cycle, no forced trigger needed — exactly the self-resolution path this todo predicted.
+- [x] ✅ [DEVOPS] P2. **DONE 2026-08-09 (stale-recheck sweep) — 3 callers spot-checked, all green.**
+      `instruments-service` and `unified-trading-api` both resolve `"Semver Agent"` (see above); additionally checked
+      `market-tick-data-service` (also `"Semver Agent"`, 5 recent green runs) as a third spot-check. This closes out the
+      doc's live-verification bar for Follow-up regression #2, matching the standard already held for regression #1.
 
 ## Codex SSOTs
 
@@ -498,3 +511,26 @@ resolves the raw file path, not `"Semver Agent"` — caller re-registration stil
 `gh pr list --search "chore(promote)"` shows zero queued promote PRs for either. All 5 open items remain genuinely
 externally-blocked (fleet promoter / natural `push:[main]` triggers / the unrelated MTDS test fix), none closeable with
 today's evidence.
+
+## Progress Log
+
+- **stale-recheck 2026-08-09** (KEEP-NA staleness re-audit, `ci` tranche): all 5 externally-blocked items from the
+  2026-08-08 marker have now cleared with fresh live evidence — `reconcile_release_tags.py --dry-run` shows the stall
+  count dropped 13 → 7 (not to 0); `batch-live-reconciliation-service` minted a real post-fix patch tag (`v0.49.1`,
+  2026-08-08T09:48:12Z); `instruments-service`/`unified-trading-api`/`market-tick-data-service` all now resolve
+  `"Semver Agent"` via `gh api .../actions/workflows` (was the raw path); MTDS turns out to need no separate ship — it
+  already runs the fixed logic via the central `unified-trading-ci` reusable workflow. Flipped 5 checkboxes to `[x]`
+  with citations. Opened one NEW tracked todo for a genuinely new finding (the residual 7-repo stall, not the same bug —
+  root cause not yet determined) rather than leaving it as prose. This doc is NOT an archive candidate — 1 open todo
+  remains.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:4f41d1675dd06a2d]: KEEP-NA,
+valid — 1 open item, newly added today by an earlier stale-recheck session (root-cause the residual 7-repo semver
+stall). Tagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE`: the classification half (check each of 7 repos' commit ranges, label
+correctly-quiet vs. genuine gap) is bounded/worker-determinable, but the "if a genuine gap is found and fixed" branch is
+open-ended (this doc's own history shows 2 prior "follow-up regression" cascades of real diagnostic
+
+- fleet-wide-fix scope from this same investigation area) — not confident enough to RECLASSIFY the whole doc on one
+  read; flag for next round once the classification-only sub-scope could be split out. No `assigned_vm` change.

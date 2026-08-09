@@ -285,6 +285,8 @@ mirroring the batch1-7 finalize pattern.
   no new claim; (c) `tradfi_consolidated_closeout_2026_07_18.md` unchanged since this batch's drafting. `locked_by`
   unset. Dispatching.
 
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+
 ## Codex SSOTs
 
 `/codex/02-data/availability-manifest-and-data-status.md`,

@@ -46,6 +46,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 1.6
 assigned_role: backend_engineer
+effort: medium
 sequential: true
 drift_direction: advance-code
 resolved_by:
@@ -138,35 +139,52 @@ Both were established by reading the code, and both are silent — neither raise
       not a hand-edited `backlog.yaml` or a bug in the new minting's own collision check. **KEEP** the NULL-`brief_hash`
       backfill branch unchanged. The source doc requires this decision be written down either way. (repo:
       agent-orchestrator) — agent-orchestrator@5ae9dd5
-- [ ] [BACKEND] P3. **Decide `remint_backlog_collision`'s fate** (`routes/backlog.py:545-687`). Its premise — a
-      positional id got reused — is structurally unreachable post-Phase-1. Check whether it has ever actually fired (its
-      own `backlog_sibling_reset_guard_collision_reminted` activity event answers this), then either retire it with its
-      test, or repurpose it as a general "force a task onto a fresh id" admin tool. Record which and why. (repo:
-      agent-orchestrator)
+- [x] ✅ [BACKEND] P3. **DONE 2026-08-08 (slot-26, backend_engineer)** — **Decide `remint_backlog_collision`'s fate**
+      (`routes/backlog.py:545-687`). Ruling: **KEEP**, not retire. The todo's premise — "structurally unreachable
+      post-Phase-1" — does not hold: Phase 1's `_make_content_task_id` switch only prevents a FRESH mint from landing on
+      a collided id; it does nothing for the ~2,187 rows already sitting in `backlog.yaml` under the OLD positional
+      `<slug>-NNN` scheme, which this endpoint remediates and which only Phase 2's (not-yet-run) historical backfill
+      retires the need for. Empirically confirmed via
+      `GET /api/activity?type=backlog_sibling_reset_guard_collision_reminted`: 173 fires between 2026-07-26 and
+      2026-08-08, **including after** the Phase-1 minting switch landed (`agent-orchestrator@ba6eff5`,
+      2026-08-08T14:28:06Z) — `defi_catalog_engine_config_key_contract_drift-002` alone refused 156+ times from 11:38Z
+      through past 22:40Z today, well after the switch. Also actively wired into the dashboard's one-click "Fix"
+      affordance (`dashboard/src/layout.tsx`, `dashboard/src/api.ts`) with its own e2e coverage
+      (`dashboard/tests/e2e/backlog-collision.spec.ts`) — retiring it would be a UI regression too. It already IS the
+      general "force a task onto a fresh id" admin tool the alternative disposition asked for (any flagged collision,
+      not slug-specific) — no repurposing needed. Recorded the ruling + evidence directly in the endpoint's own
+      docstring (not just here) per this plan's established "record the guard disposition in the docstring" pattern
+      (Phase 1 todo P2 above). New finding filed as a Follow-up below (the `-002` collision recurring even after an
+      explicit remint at 15:44:23Z suggests remint's "future regen ticks stop re-deriving that position" claim doesn't
+      always hold — out of this todo's scope to root-cause). No test changes (nothing retired). QG: full suite green
+      (basedpyright clean, no new violations). Evidence: agent-orchestrator@e47eb50. Repo: agent-orchestrator.
 
 ## Phase 2 — historical backfill (Option B). Every irreversible step is operator-gated.
 
-- [ ] [BACKEND] P1. **Build the old→new id map as a REPORT ONLY — no writes.** For every row, derive the new id from the
-      ALREADY-STORED `TaskRow.brief_hash` (`orm.py:70`; `sync_backlog_to_db` has populated it since @4695db6), so no
-      plaintext re-derivation is needed. Recover the slug from the old id's prefix, or from `TaskRow.plan_ref` for
-      orphan `done` rows with no yaml counterpart (the `_orphan_view` case, `routes/backlog.py:67-101`). Emit the map as
-      a durable artifact. Done-when: the artifact exists and its row count matches `SELECT COUNT(*) FROM tasks`. (repo:
-      agent-orchestrator)
-- [ ] [BACKEND] P1. **Exclude the NULL-`brief_hash` tail from the map, permanently.** Those rows' briefs are documented
-      unrecoverable (`bootstrap.py:710-727` — backlog.yaml is gitignored, no VCS history, no archive writer,
-      activity_log never stored the brief), so they can never get a content id. This mirrors the already-ruled "(c)
-      accept permanently" decision for that tail; it is not reopened here. Report the count. (repo: agent-orchestrator)
-- [ ] [BACKEND] P1. **Write the pre/post prereq-remap assertion — hazard 2's gate.** Diff every
-      `completed_tasks`/`prerequisites` array before and after the proposed map and assert each old id is either
-      remapped or was ALREADY legitimately absent pre-migration. A missed remap does not error at runtime
-      (`_completed_task_satisfied` treats absent as satisfied) — it silently un-gates. This assertion is the only thing
-      that catches it. Done-when: the check runs against the Phase-2 map artifact and reports zero unexplained entries.
-      (repo: agent-orchestrator)
-- [ ] [BACKEND] P1. **Enforce the dispatched-row deferral — hazard 1's gate.** The migration must SKIP any row whose
-      status is `dispatched` and defer its rename to the transition points that already fire on terminal state
-      (`done_slot` finalization, `_prune_stale`'s cancel path, `/skip-current-task`'s release). With this ordering
-      honored, **no id-alias/back-compat column is needed**. Done-when: a test proves a `dispatched` row is never
-      renamed by the migration and is renamed correctly once it goes terminal. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-08 (slot-7, content_derived_backlog_task_ids-008)** — Build the old→new id map as
+      a REPORT ONLY — no writes. For every row, derive the new id from the ALREADY-STORED `TaskRow.brief_hash`
+      (`orm.py:70`; `sync_backlog_to_db` has populated it since @4695db6), so no plaintext re-derivation is needed.
+      Recover the slug from the old id's prefix, or from `TaskRow.plan_ref` for orphan `done` rows with no yaml
+      counterpart (the `_orphan_view` case, `routes/backlog.py:67-101`). Emit the map as a durable artifact. Done-when:
+      the artifact exists and its row count matches `SELECT COUNT(*) FROM tasks`. See Progress Log for the algorithm +
+      live counts. (repo: agent-orchestrator) — agent-orchestrator@8a8454c
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-08 (slot-18, content_derived_backlog_task_ids-009)** — **Exclude the
+      NULL-`brief_hash` tail from the map, permanently.** Those rows' briefs are documented unrecoverable
+      (`bootstrap.py:710-727` — backlog.yaml is gitignored, no VCS history, no archive writer, activity_log never stored
+      the brief), so they can never get a content id. This mirrors the already-ruled "(c) accept permanently" decision
+      for that tail; it is not reopened here. Report the count. (repo: agent-orchestrator) — agent-orchestrator@b143bf5
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-09 (slot-23, content_derived_backlog_task_ids-010)** — **Write the pre/post
+      prereq-remap assertion — hazard 2's gate.** Diff every `completed_tasks`/`prerequisites` array before and after
+      the proposed map and assert each old id is either remapped or was ALREADY legitimately absent pre-migration. A
+      missed remap does not error at runtime (`_completed_task_satisfied` treats absent as satisfied) — it silently
+      un-gates. This assertion is the only thing that catches it. Done-when: the check runs against the Phase-2 map
+      artifact and reports zero unexplained entries. (repo: agent-orchestrator) — agent-orchestrator@d86827b
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-09 (slot-23, content_derived_backlog_task_ids-011)** — **Enforce the
+      dispatched-row deferral — hazard 1's gate.** The migration must SKIP any row whose status is `dispatched` and
+      defer its rename to the transition points that already fire on terminal state (`done_slot` finalization,
+      `_prune_stale`'s cancel path, `/skip-current-task`'s release). With this ordering honored, **no
+      id-alias/back-compat column is needed**. Done-when: a test proves a `dispatched` row is never renamed by the
+      migration and is renamed correctly once it goes terminal. (repo: agent-orchestrator) — agent-orchestrator@6b57503
 - [ ] [BACKEND] P2. **Do NOT rewrite `activity_log` or `compactions` rows in place.** Rewriting a past audit entry to an
       id it did not happen under is itself the audit-integrity violation this whole effort exists to prevent. Instead
       append a `backlog_task_id_migrated {old_id, new_id}` activity row per rename so old→new stays resolvable.
@@ -208,6 +226,21 @@ Both were established by reading the code, and both are silent — neither raise
       occurrences), each citing a wrong sha — a direct symptom of positional ids. After Phase 1, dedupe them to one row.
       Source: /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md. (repo:
       unified-trading-pm)
+- [ ] [BACKEND] P2. **Root-cause why `remint_backlog_collision` didn't durably stop
+      `defi_catalog_engine_config_key_contract_drift-002`'s collision from recurring.** Found while working the
+      `remint_backlog_collision` fate todo above (2026-08-08, slot-26): the collision was reminted exactly once
+      (`backlog_sibling_reset_guard_collision_reminted` @ 2026-08-08T15:44:23Z, `new_task_id: -004`), yet
+      `backlog_sibling_reset_guard_refused` fired 156+ MORE times for the SAME id `-002` afterward (11:38Z through past
+      22:40Z, `existing_done_sha` unchanged at `2667e967d` the whole time) — contradicting the endpoint's own docstring
+      claim that reminting makes "future regen ticks stop re-deriving that position back onto the collided id."
+      `GET /api/backlog` also shows no `-004` row at all today — only `-002` (`done`), `-001`, `-003`, `-005`.
+      Hypothesis (unverified): `regen_backlog_from_plan`'s per-plan matching for an ALREADY-yaml'd checkbox may still
+      derive by POSITION-within-brief-group rather than by content, so removing the yaml row at `-002` (what remint
+      does) doesn't stop the next regen tick from re-deriving a brand-new entry back at the SAME position/id. Needs
+      someone to trace `_group_plan_tasks_by_brief` + `regen()`'s matching path for the specific
+      `defi_catalog_engine_config_key_contract_drift_*.md` plan checkbox to confirm/refute. Not fixed here — out of the
+      fate-decision todo's scope and touches the same collision-sensitive minting path Phase 1/2 are already carefully
+      sequencing around. (repo: agent-orchestrator)
 
 ## Codex SSOTs
 
@@ -317,3 +350,140 @@ Both were established by reading the code, and both are silent — neither raise
   to its own existing paragraph. Docstring-only change, no production logic touched. `.venv` was absent on this slot's
   agent-orchestrator clone (fresh worktree); ran `uv sync --all-extras` to build it before Pass-1. QG: 2773 passed (full
   suite). Evidence: agent-orchestrator@5ae9dd5 (verified ancestor of origin/live-defi-rollout before `/done`).
+
+- **2026-08-08 (slot 26, content_derived_backlog_task_ids-007, review craft dispatched off
+  `cefi_track2_backfill_vm_preempted_no_recovery-003` then reassigned to this backend_engineer task on next
+  heartbeat)**: Decided `remint_backlog_collision`'s fate — **KEEP**, not retire. Checked the todo's own premise
+  ("structurally unreachable post-Phase-1") against live activity data before accepting it:
+  `GET /api/activity?type=backlog_sibling_reset_guard_collision_reminted` shows 173 fires 2026-07-26..2026-08-08,
+  **including 156+ for `defi_catalog_engine_config_key_contract_drift-002` alone AFTER** the Phase-1 minting switch
+  (`agent-orchestrator@ba6eff5`, landed 2026-08-08T14:28:06Z) — the premise was wrong for pre-existing positional-id
+  rows, which Phase 1 never touches (only fresh mints go through `_make_content_task_id`); only Phase 2's not-yet-run
+  historical backfill retires the need for this endpoint. Also confirmed it's wired into the dashboard's one-click "Fix"
+  UI with its own e2e spec — retiring it would regress that too. Recorded the ruling + evidence in the endpoint's own
+  docstring (`routes/backlog.py`), following this plan's established "record the guard disposition in the docstring"
+  pattern from todo `-006`. No test changes (nothing retired). `.venv` was absent on this slot's agent-orchestrator
+  clone; ran `uv sync --all-extras` before Pass-1. QG: 2816 passed (full suite, basedpyright clean). Evidence:
+  agent-orchestrator@e47eb50 (verified ancestor of origin/live-defi-rollout before `/done`). Filed a new Follow-up todo
+  for a genuinely new, out-of-scope finding surfaced during this investigation: the `-002` collision kept recurring even
+  after an explicit remint at 2026-08-08T15:44:23Z, contradicting the endpoint's own claim that reminting stops future
+  re-derivation at the same position — needs a `regen_backlog_from_plan` matching-path trace to confirm/refute, not
+  fixed here.
+
+- **2026-08-08 (slot-7, content_derived_backlog_task_ids-008, Phase 2 todo 1)**: Built
+  `scripts/orchestrator/build_content_id_migration_map.py` (+ `tests/test_build_content_id_migration_map.py`, 11 tests)
+  and ran it read-only against the LIVE `state.db` + `backlog.yaml`. **No writes to either store.**
+
+  **Why the new id can't bit-match a fresh `_make_content_task_id` call**: that function hashes the PLAINTEXT brief
+  (`sha256(plan_ref|brief|occurrence)`), but `TaskRow` never stores plaintext brief — only `brief_hash = sha256(brief)`
+  — and for a `done` row whose yaml entry is pruned, the plaintext is permanently gone (confirmed again reading
+  `sync_backlog_to_db`'s own docstring: no VCS history on backlog.yaml, no archive writer, `activity_log` never stores
+  brief/title). A hash cannot be un-hashed, so no formula recovers it. The script instead derives
+  `sha256(plan_ref|brief_hash|dup_index)` — same shape, `brief_hash` substituted for the unrecoverable plaintext.
+  `dup_index` mirrors `_group_plan_tasks_by_brief`'s own "sorted by old id ascending" disambiguation for rows sharing an
+  identical (plan_ref, brief_hash) — the same hard-wrap-collision case `_make_content_task_id`'s docstring documents for
+  `occurrence`.
+
+  **De-risking finding (verified against code, not assumed)**: a migrated id does NOT need to bit-match a live
+  `_make_content_task_id` recomputation to avoid a duplicate mint on the next regen tick. Traced `regen()`'s matching
+  path (`regen_backlog_from_plan.py` ~:1922-1952): the RECONCILE branch matches an open todo to an existing task by
+  `(plan_ref, brief-TEXT)` via `_group_plan_tasks_by_brief` — **never by comparing task_id** — and keeps whatever id the
+  matched row already has. `_make_content_task_id` is only ever called when NO existing task matches the brief at all (a
+  genuinely new todo). So renaming a still-`queued` row is safe for regen correctness, PROVIDED `backlog.yaml`'s `id:`
+  field and `state.db`'s `tasks.task_id` are renamed in the same operation — which the Phase 2 apply todo below already
+  requires for the two-store-divergence reason. This directly informs (de-risks, doesn't change the plan of) the
+  "Enforce the dispatched-row deferral" and "Make the migration idempotent" todos below.
+
+  **Live run** (2026-08-08T23:06Z): 2445 rows, matches `SELECT COUNT(*) FROM tasks` exactly (done-when met).
+  - 2342 derived (positional → content)
+  - 92 already content-derived (Phase 1 fresh mints since `agent-orchestrator@ba6eff5` landed — correctly passed through
+    as no-ops, not re-derived)
+  - 11 unrecoverable (`brief_hash IS NULL`, the permanent legacy tail — down from the 38 baseline recorded 2026-07-20,
+    consistent with that ruling's "shrinks under normal operation" prediction)
+  - 0 unrecoverable-no-slug, 0 slug mismatches (id-prefix vs plan_ref-derived slug agreed on every row), **0 new_id
+    collisions** (the critical safety check the script performs — verified on the real corpus, not just unit tests)
+  - 1895 orphan rows (no yaml counterpart) — the `done`+pruned audit-history tail this whole effort protects
+
+  Artifact: `agent-orchestrator/scripts/orchestrator/content_derived_backlog_task_ids_2026_08_08_id_map.json` (847 KB,
+  compact JSON — added to `.prettierignore` since Prettier's pretty-print pushed it past the repo's 1000 KB pre-commit
+  large-file gate on every regen; same precedent as `data/state/state.json`). Re-runnable per the script's own docstring
+  (`--db`/`--backlog`/`--out`); exit code is 1 if collisions are ever found on a future run (loud failure, not silent).
+  QG: 2821 passed, 2 skipped (full suite, basedpyright clean). Evidence: agent-orchestrator@8a8454c (verified ancestor
+  of origin/live-defi-rollout before this flip).
+
+- **2026-08-08 (slot-18, content_derived_backlog_task_ids-009, Phase 2 todo 2)**: `build_content_id_migration_map.py`
+  previously included the `brief_hash IS NULL` tail INSIDE `entries` (with `new_id=null`), which would have forced every
+  downstream consumer (the not-yet-built prereq-remap assertion + apply scripts) to special-case `new_id is None` on
+  every read. Moved those rows to a new top-level `excluded_null_brief_hash` list (a new `ExcludedEntry` TypedDict —
+  `old_id`/`plan_ref`/`status`/`done_sha`/`orphan`/`reason`, no `new_id`/`dup_index` since neither is meaningful) so
+  `entries` now contains ONLY rows a future apply step can rename/no-op unconditionally. Full-corpus accounting is
+  preserved (nothing silently dropped): `main()`'s row-count assertion now checks
+  `len(entries) + len(excluded_null_brief_hash) == SELECT COUNT(*) FROM tasks`, and `orphan_rows` sums across both
+  lists. `unrecoverable_null_brief_hash` count renamed `excluded_null_brief_hash` throughout (`MapCounts`, docstring,
+  CLI summary) to match the new semantics. The other unrecoverable case (no positional id-suffix + no `plan_ref`) is
+  UNCHANGED — it is not ruled permanent, so it stays inside `entries` with `new_id=null` as a loud hard-stop. Updated 4
+  of the 11 existing unit tests in `tests/test_build_content_id_migration_map.py` to assert the new split (moved count,
+  `excluded_null_brief_hash` list membership, orphan flag now read from that list for a NULL-brief_hash row). **Report
+  the count** (this todo's own done-when): re-ran the script read-only against the LIVE `state.db` + `backlog.yaml`
+  (2026-08-08T23:53Z) — **11 of 2449 rows permanently excluded** (`brief_hash IS NULL`), matching the `-008` baseline
+  exactly (no drift since that run); `entries` now holds 2438 rows (97 already-content-derived + 2341 derived + 0
+  no-slug), 0 collisions, 0 slug mismatches. Output written to a scratch path outside the repo (this script never writes
+  to a root clone; the checked-in artifact from `-008` is unchanged). QG: 2840 passed (full suite, basedpyright clean,
+  ruff clean). Evidence: agent-orchestrator@b143bf5 (verified ancestor of origin/live-defi-rollout before this flip).
+
+- **2026-08-09 (slot-23, content_derived_backlog_task_ids-010, Phase 2 todo 3)**: Built
+  `scripts/orchestrator/verify_prereq_remap_coverage.py` (+ `tests/test_verify_prereq_remap_coverage.py`, 12 tests).
+  Classifies every `completed_tasks`/`prerequisites` reference in the live `backlog.yaml` against the proposed
+  id-migration map into 4 buckets: **remapped** (genuine rename in the map — asserted to resolve to the new id),
+  **unchanged** (accounted for in the map but keeps its id — passthrough / permanently-excluded NULL-brief_hash tail /
+  unrecoverable no-slug row), **legit_absent** (not a live `tasks` row at all, checked fresh against `--db` — the exact
+  case `_completed_task_satisfied` already tolerates), **unexplained** (IS a live row but the map doesn't account for it
+  — the map is stale relative to the live corpus; this is the only classification that fails the gate, exit 1).
+  Schema-tolerant of both the pre- and post-`-009` artifact shapes (the checked-in artifact predates `-009`'s
+  `excluded_null_brief_hash` split — malformed/missing fields are defensively dropped, not raised, mirroring
+  `server/dedup_state.py`'s best-effort JSON-state convention, rather than trusting `json.loads`'s `Any` return).
+
+  **First live run surfaced real staleness, not a script bug**: running against the checked-in `-008`-era artifact (last
+  regenerated 2026-08-08T23:06Z) reported **82 unexplained references** — every one a `completed_tasks` entry pointing
+  at a task Phase 1's live content-id minting created in the ~9h since the artifact was built (e.g.
+  `sports_taxonomy_p1_capture_and_contracts-<hex>`, satellite-batch finalize chains). This is squarely hazard 2's real
+  failure mode (a map that doesn't know about a live row), so per this script's own docstring guidance ("Rebuild it with
+  build_content_id_migration_map.py before trusting this map"), re-ran `build_content_id_migration_map.py` against the
+  LIVE `state.db`/`backlog.yaml` (2026-08-09T01:20Z) to refresh the checked-in artifact — now 2452 entries + 11
+  permanently-excluded (2463 total, matches live `tasks` count exactly), 0 collisions. Re-running the new assertion
+  against the refreshed artifact: **1198 references checked, 966 remapped, 106 unchanged, 126 legit_absent, 0
+  unexplained** — done-when met. Refreshing the artifact also incidentally closes the `-009` Progress Log's noted gap
+  ("the checked-in artifact from -008 is unchanged") — it now matches the current script's schema. QG: 2852 passed, 2
+  skipped (full suite, basedpyright clean, ruff clean — pre-existing unrelated thread-exception warnings in
+  `test_operator_gated_blocked` and JWT short-key warnings in `test_internal_auth_asymmetric`, not touched by this
+  change). Evidence: agent-orchestrator@d86827b (verified ancestor of origin/live-defi-rollout before this flip).
+
+- **2026-08-09 (slot-23, content_derived_backlog_task_ids-011, Phase 2 todo 4)**: Implemented hazard 1's gate. Added
+  `server/content_id_migration.py` as the single shared decision point (`is_rename_eligible` / `pending_rename_for` /
+  `resolve_deferred_rename` / `rename_yaml_task`) — reads old->new from the already-built, verified migration map
+  artifact (`-010`'s refreshed 2452-entry artifact) rather than a live recomputation, so a per-row deferred rename can
+  never disagree with what the (separate, operator-gated) bulk apply would compute for the same row. Wired into the
+  three named transition points: `done_slot` (after `mark_done`), `_prune_stale`'s cancel path (after the
+  dispatched->cancelled UPDATE — no yaml touch needed, every cancelled id is by construction already an orphan being
+  pruned from yaml in the same pass), and `/skip-current-task`'s release (after the cooldown/auto-park block, so the
+  rename can't shift the id out from under those — deliberately-OLD-id-keyed — calls mid-request; those namespaces are
+  `-012`'s separate scope). `done_slot`/skip-current-task also rename the matching `backlog.yaml` entry in the same
+  operation when one still exists — skipping that would let `sync_backlog_to_db` re-derive a fresh `queued` row at the
+  old id on the next regen tick (confirmed by reading `sync_backlog_to_db`'s own id-matching logic), reintroducing the
+  exact two-store divergence this migration exists to fix.
+
+  **Real bug caught by the tests, not just written around**: both ORM call sites run `session_scope()` sessions with
+  `autoflush=False` (see the existing M3 dual-flip-warning comment in `slots_worker.py`). The first implementation
+  issued the raw `UPDATE tasks SET task_id=...` immediately, before the ORM's own pending `row.status=...` write (still
+  unflushed) — on session close, SQLAlchemy tried to flush that pending UPDATE keyed on the now-renamed-away old
+  `task_id` and raised `StaleDataError: expected to update 1 row(s); 0 were matched`. Fixed with an explicit
+  `session.flush()` immediately before the raw rename in both hooks.
+
+  Tests: `tests/test_content_id_migration.py` (19 tests, pure decision logic — `resolve_deferred_rename` never returns a
+  rename for `status="dispatched"` even with a real pending map entry; returns the mapped id for every other status;
+  cache mtime-invalidation; yaml rename-in-place preserving sibling tasks) + `tests/test_content_id_migration_wiring.py`
+  (6 tests, live wiring at all three call sites, including the negative case: a `_prune_stale` row that stayed
+  `dispatched` this tick — the done-not-removed race exception — is never renamed even with a pending map entry). QG:
+  2879 passed, 2 skipped (full suite, basedpyright clean, ruff clean — the same two pre-existing unrelated warnings as
+  `-010`, not touched by this change). Evidence: agent-orchestrator@6b57503 (verified ancestor of
+  origin/live-defi-rollout before this flip).

@@ -30,8 +30,8 @@ depends_on: []
 > todo 2 (`base-service.sh` PID-collision race, `unified-trading-pm@68309de03`, verified live + regression-tested this
 > session), todo 3 (VM oversubscription, root-caused structural + governor confirmed enforced, closed 2026-07-29). The
 > standing "Recommended decision #2" prevention question (periodic automated `/tmp` cleanup policy) is NOT dropped — it
-> is tracked as a real todo in `/plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md` (`[OPS] P3`,
-> fleet-wide cleanup-cron audit). 0 open todos here.
+> is tracked as a real todo in `/plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md`
+> (`[OPS] P3`, fleet-wide cleanup-cron audit). 0 open todos here.
 
 ## What I found
 

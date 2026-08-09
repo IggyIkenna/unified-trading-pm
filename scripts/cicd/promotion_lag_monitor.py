@@ -72,6 +72,11 @@ OWNER = "IggyIkenna"
 # them past the provenance baseline. Naming the block in the alert is what prevents that repeat.
 _PROVENANCE_MARKER = "<!-- promote:provenance-blocked -->"
 
+# The fleet-shared SIT commit-status context `ldr_to_main_fleet_promote.sh` posts on an
+# `ldr_main` repo's promote-PR head sha (`scripts/repo-management/pin_branch_protection_rulesets.py`
+# `SIT_FLEET_CONTEXT` is the ruleset-side twin of this constant — keep both in sync).
+_SIT_FLEET_CONTEXT = "sit-gate/fleet-green"
+
 # Cap on per-file last-touch lookups in _content_delta_age. The oldest last-touch over a
 # 25-file sample is a sound floor for "how long has the delta been waiting" — and the age
 # only has to beat a 60m threshold, not be exact. Bounded so a huge delta cannot fan out
@@ -487,32 +492,137 @@ def _commit_window_age(
     return len(relevant), age, omsg
 
 
-def _provenance_blocked(repo: str) -> bool:
+def _open_promote_pr(repo: str) -> dict[str, object] | None:
+    """The OPEN `chore(promote)`-titled PR to `main` for this repo, or None if none exists.
+
+    Shared lookup for `_provenance_blocked` and `_promote_pr_cause` — one PR-list fetch serves
+    both cause checks for the same lagging LDR→main pair instead of two independent calls.
+    """
+    prs = _gh_json(f"repos/{OWNER}/{repo}/pulls?state=open&base=main&per_page=20")
+    if not isinstance(prs, list):
+        return None
+    for pr in prs:
+        if isinstance(pr, dict) and str(cast("dict[str, object]", pr).get("title") or "").startswith("chore(promote)"):
+            return cast("dict[str, object]", pr)
+    return None
+
+
+def _provenance_blocked(repo: str, pr: dict[str, object] | None = None) -> bool:
     """True when this repo has an OPEN promote PR the fleet bot refused to arm on provenance.
 
     Cheap + only called for a pair that is ALREADY going to page, so a healthy fleet pays nothing.
     Fail-CLOSED to False: if the lookup fails we report the ordinary lag line rather than claim a
-    block that may not exist.
+    block that may not exist. `pr` lets the caller pass an already-fetched `_open_promote_pr`
+    result (avoids a second identical PR-list fetch); omitted/None fetches it here (back-compat
+    with the pre-refactor single-arg call).
     """
-    prs = _gh_json(f"repos/{OWNER}/{repo}/pulls?state=open&base=main&per_page=20")
-    if not isinstance(prs, list):
+    p = pr if pr is not None else _open_promote_pr(repo)
+    if p is None:
         return False
-    for pr in prs:
-        if not isinstance(pr, dict):
-            continue
-        p = cast("dict[str, object]", pr)
-        if not str(p.get("title") or "").startswith("chore(promote)"):
-            continue
-        num = p.get("number")
-        if not isinstance(num, int):
-            continue
-        comments = _gh_json(f"repos/{OWNER}/{repo}/issues/{num}/comments?per_page=30")
-        if not isinstance(comments, list):
-            continue
-        for c in comments:
-            if isinstance(c, dict) and _PROVENANCE_MARKER in str(cast("dict[str, object]", c).get("body") or ""):
-                return True
+    num = p.get("number")
+    if not isinstance(num, int):
+        return False
+    comments = _gh_json(f"repos/{OWNER}/{repo}/issues/{num}/comments?per_page=30")
+    if not isinstance(comments, list):
+        return False
+    for c in comments:
+        if isinstance(c, dict) and _PROVENANCE_MARKER in str(cast("dict[str, object]", c).get("body") or ""):
+            return True
     return False
+
+
+def _sit_fleet_status(repo: str, sha: str) -> str | None:
+    """The `sit-gate/fleet-green` commit-status `state` on `sha` ("pending"/"success"/"failure"/
+    "error"), or None if the status was never posted (non-`ldr_main` repo, or not reached yet) or
+    the lookup failed."""
+    d = _gh_json(f"repos/{OWNER}/{repo}/commits/{sha}/status")
+    if not isinstance(d, dict):
+        return None
+    statuses = cast("list[object]", cast("dict[str, object]", d).get("statuses") or [])
+    for s in statuses:
+        if isinstance(s, dict) and cast("dict[str, object]", s).get("context") == _SIT_FLEET_CONTEXT:
+            state = cast("dict[str, object]", s).get("state")
+            return state if isinstance(state, str) else None
+    return None
+
+
+def _promote_pr_cause(repo: str, pr: dict[str, object] | None) -> tuple[str, int | None]:
+    """Classify WHY an LDR→main pair is lagging, given the (possibly None) open promote PR.
+
+    Returns (cause, pr_number). cause is one of "no_promote_pr", "blocked_conflicting",
+    "sit_gated_inflight", "unknown" — the four causes `silent_failures_surfacing_as_generic_
+    promotion_lag_2026_07_17.md` P2 names (the provenance block is a FIFTH, checked separately by
+    the caller via `_provenance_blocked` — a deliberate bot refusal is never "unknown", so it takes
+    priority and this function is not even called for it). Restricted to LDR→main by the caller —
+    the only direction with a promote-PR mechanism at all (mirrors `_provenance_blocked`'s scope).
+    """
+    if pr is None:
+        return "no_promote_pr", None
+    num = pr.get("number")
+    pr_num = num if isinstance(num, int) else None
+    mergeable_state = str(pr.get("mergeable_state") or "")
+    if mergeable_state in ("dirty", "blocked"):
+        return "blocked_conflicting", pr_num
+    head = cast("dict[str, object]", pr.get("head") or {})
+    sha = head.get("sha")
+    if isinstance(sha, str) and sha and _sit_fleet_status(repo, sha) == "pending":
+        return "sit_gated_inflight", pr_num
+    return "unknown", pr_num
+
+
+def _ldr_main_finding(repo: str, label: str, n: int, age: float, omsg: str) -> tuple[str, bool, str | None]:
+    """Build the LDR→main finding line + its (blocked, cause) classification.
+
+    Isolated from `main()`'s loop to keep the loop's cyclomatic complexity under the ruff cap — a
+    provenance/SIT-gated/no-PR/blocked-conflicting/unknown 5-way dispatch reads better as one
+    function than folded into the per-direction loop. Returns (finding_line, provenance_blocked,
+    cause) — `cause` is None when provenance-blocked (a deliberate bot refusal, not one of the P2
+    causes) and otherwise one of `_promote_pr_cause`'s four values.
+    """
+    age_m = int(age // 60)
+    pr = _open_promote_pr(repo)
+    # A provenance-blocked forward pair is NOT a wedged pipeline — the bot deliberately refused to
+    # arm it and the remedy is specific. Say so, so nobody "unblocks" it by hand-arming auto-merge
+    # (which promotes the bypassed code AND launders it past the baseline — 2026-07-16).
+    if _provenance_blocked(repo, pr):
+        return (
+            f"{repo} {label}: ⛔ BLOCKED by the provenance gate — non-quickmerge CODE on LDR "
+            f"({n} change(s), oldest {age_m}m). NOT a stuck pipeline. If the bypass is the "
+            f"LDR tip: `quickmerge --agent --files` it. If it is MID-HISTORY (a later commit landed on "
+            f"top): `scripts/cicd/reprovenance_bypass.sh <sha> --push` (re-ship/revert canNOT clear a "
+            f"mid-history bypass — the sha stays in-range). Do NOT hand-arm auto-merge.",
+            True,
+            None,
+        )
+    # P2 (silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md line 165): name a cause
+    # per line instead of implying "just slow". A line that cannot name a cause says so explicitly
+    # ("cause unknown"), never silently falls back to the old generic wording.
+    cause, pr_num = _promote_pr_cause(repo, pr)
+    if cause == "sit_gated_inflight":
+        line = (
+            f"{repo} {label}: 🕒 SIT-gated in-flight — promote PR #{pr_num} awaiting "
+            f"`sit-gate/fleet-green` ({n} change(s), oldest {age_m}m). Full SIT round-trip "
+            f"is ~156m; no action needed unless this exceeds that."
+        )
+    elif cause == "no_promote_pr":
+        line = (
+            f"{repo} {label}: ❓ no promote PR open — a promote has not been dispatched yet "
+            f"({n} change(s), oldest {age_m}m). Check `ldr-to-main-promote-fleet.yml`'s "
+            f"latest tick for this repo."
+        )
+    elif cause == "blocked_conflicting":
+        line = (
+            f"{repo} {label}: 🚧 promote PR #{pr_num} BLOCKED/CONFLICTING "
+            f"({n} change(s), oldest {age_m}m). Resolve the merge conflict or failing "
+            f"required check on the PR."
+        )
+    else:
+        line = (
+            f"{repo} {label}: cause unknown — {n} commit(s), oldest {age_m}m old — "
+            f'"{omsg[:60]}" (promote PR #{pr_num} state matched none of the known causes; '
+            f"investigate directly)"
+        )
+    return line, False, cause
 
 
 def _write_firestore_promotion_lag(
@@ -788,27 +898,24 @@ def main() -> int:
                 repo_lags[repo][label] = {"lag": False, "unmeasured": True}
             elif isinstance(res, tuple):
                 n, age, omsg = res
-                # A provenance-blocked forward pair is NOT a wedged pipeline — the bot deliberately
-                # refused to arm it and the remedy is specific. Say so, so nobody "unblocks" it by
-                # hand-arming auto-merge (which promotes the bypassed code AND launders it past the
-                # baseline — 2026-07-16). Only checked on LDR→main, the direction the gate guards.
-                blocked = label == "LDR→main" and _provenance_blocked(repo)
-                if blocked:
-                    findings.append(
-                        f"{repo} {label}: ⛔ BLOCKED by the provenance gate — non-quickmerge CODE on LDR "
-                        f"({n} change(s), oldest {int(age // 60)}m). NOT a stuck pipeline. If the bypass is the "
-                        f"LDR tip: `quickmerge --agent --files` it. If it is MID-HISTORY (a later commit landed on "
-                        f"top): `scripts/cicd/reprovenance_bypass.sh <sha> --push` (re-ship/revert canNOT clear a "
-                        f"mid-history bypass — the sha stays in-range). Do NOT hand-arm auto-merge."
-                    )
+                # LDR→main is the only direction with a promote-PR mechanism, so it's the only one
+                # that can name a cause (provenance-blocked / SIT-gated-in-flight / no-promote-PR /
+                # blocked-conflicting / unknown — see `_ldr_main_finding`). The other 3 directions
+                # (staging squash-merge, both backmerges) are automation-driven with no PR to
+                # inspect, so they keep the plain "N commit(s), oldest Xm old" line.
+                if label == "LDR→main":
+                    line, blocked, cause = _ldr_main_finding(repo, label, n, age, omsg)
                 else:
-                    findings.append(f'{repo} {label}: {n} commit(s), oldest {int(age // 60)}m old — "{omsg[:60]}"')
+                    line = f'{repo} {label}: {n} commit(s), oldest {int(age // 60)}m old — "{omsg[:60]}"'
+                    blocked, cause = False, None
+                findings.append(line)
                 repo_lags[repo][label] = {
                     "n_commits": n,
                     "age_s": age,
                     "oldest_msg": omsg,
                     "lag": True,
                     "provenance_blocked": blocked,
+                    "cause": cause,
                 }
             else:
                 repo_lags[repo][label] = {"lag": False}

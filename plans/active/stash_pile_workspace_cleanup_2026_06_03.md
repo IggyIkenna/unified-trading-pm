@@ -32,6 +32,7 @@ source:
     "git stash list across all repos on the planning host (59 stashes / 16 repos, 2026-06-03)",
   ]
 assigned_role: infra
+effort: medium
 drift_direction: advance-code
 context_scope:
   [
@@ -123,17 +124,17 @@ commit date), file count, `.py` count, and a class:
       override. Base ref resolves per-repo: `origin/main` for agent-orchestrator, `origin/live-defi-rollout` otherwise.
       — owner: planning-host — unified-trading-pm@e4ef61532 (scripts/dev/audit-stash-pile.sh, implements dry-run
       default + --apply/--repo/--base + classification taxonomy)
-- [x] ✅ [INFRA] P3. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — DONE via the
-      cross-referenced doc.** `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own copy of this exact item is
-      `[x]` DONE 2026-08-04 at `unified-trading-pm@1fa747856`: ran the classifier dry-run against the host's shared
-      stash pile (76 stashes), hand-verified the 1 `redundant` call as a true positive plus 5 additional
-      `genuine-WIP` boundary-case spot-checks (broadened beyond the done-when's "≥3" since the redundant class itself
-      only had 1 member to verify), verdict "classifier trustworthy: YES." Independently re-verified this pass:
-      `git merge-base --is-ancestor 1fa747856 origin/live-defi-rollout` confirms ancestor. Original text preserved
-      below for record. Was: Smoke-test: run `--dry-run --repo unified-trading-pm` on this host; eyeball the
-      31-stash classification; hand-verify 2-3 "redundant" calls actually have no net diff vs LDR before trusting the
-      auto-drop class. — owner: planning-host **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra tranche,
-      dispatch agt-30721a)**: this + the Phase 2 sweep-this-host item below are already extracted (verbatim scope) as
+- [x] ✅ [INFRA] P3. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — DONE via the cross-referenced
+      doc.** `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own copy of this exact item is `[x]` DONE 2026-08-04
+      at `unified-trading-pm@1fa747856`: ran the classifier dry-run against the host's shared stash pile (76 stashes),
+      hand-verified the 1 `redundant` call as a true positive plus 5 additional `genuine-WIP` boundary-case spot-checks
+      (broadened beyond the done-when's "≥3" since the redundant class itself only had 1 member to verify), verdict
+      "classifier trustworthy: YES." Independently re-verified this pass:
+      `git merge-base --is-ancestor 1fa747856 origin/live-defi-rollout` confirms ancestor. Original text preserved below
+      for record. Was: Smoke-test: run `--dry-run --repo unified-trading-pm` on this host; eyeball the 31-stash
+      classification; hand-verify 2-3 "redundant" calls actually have no net diff vs LDR before trusting the auto-drop
+      class. — owner: planning-host **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra tranche, dispatch
+      agt-30721a)**: this + the Phase 2 sweep-this-host item below are already extracted (verbatim scope) as
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Measure fleet-wide..." todo (Done when: a written
       classification report with ≥3 hand-verified `redundant` calls + an explicit classifier-trustworthy verdict,
       Source: this doc). Not checked off here — the extracting doc's todo is not yet done; tracked there going forward.
@@ -208,36 +209,40 @@ surface — do not auto-drop — genuine WIP.
 
 ### Phase 5 — prevent regrowth (codify)
 
-- [x] ✅ [INFRA] P3. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — DONE via the
-      cross-referenced doc.** `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own copy of this exact item is
-      `[x]` DONE 2026-07-30 at `unified-trading-pm@59756e802`: folded a WARNING-only `--max-stash-age`-style signal
-      into `scripts/dev/slot-git-status-report.sh` via a new `scripts/dev/stash-pile-detect.sh` detector
-      (count>15/oldest>14d thresholds, measured off a real cross-slot distribution; never touches stash content;
-      validated against a real 45-entry pile, a clean repo, a never-stashed repo, and a synthetic age-only trigger).
-      Documented in `/codex/05-infrastructure/per-tab-worktrees.md` § "Stash-pile regrowth signal." Independently
-      re-verified this pass: `git merge-base --is-ancestor 59756e802 origin/live-defi-rollout` confirms ancestor.
-      Original text preserved below for record. Was: **NICE-TO-HAVE.** The pile regrew 0→31 in PM in 2 days, so the
-      autostash/foreign-park churn is structural. Investigate folding a `--max-stash-age` warning into
-      `slot-git-status-report.sh` (or a weekly cron) so a host pings its inbox when `refs/stash` exceeds N or a stash
-      ages past M days, instead of relying on manual sweeps. Capture decision in
-      `/codex/05-infrastructure/per-tab-worktrees.md`. — owner: planning-host **CROSS-REFERENCED 2026-07-30
-      (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: already extracted (verbatim scope) as
-      `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Add a stash-pile regrowth signal..." todo (Source: this
-      doc). Not checked off here — the extracting doc's todo is not yet done; tracked there going forward.
+- [x] ✅ [INFRA] P3. **CLOSED 2026-08-08 (na-eligibility-audit, round7 RECLASSIFY sweep) — DONE via the cross-referenced
+      doc.** `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own copy of this exact item is `[x]` DONE 2026-07-30
+      at `unified-trading-pm@59756e802`: folded a WARNING-only `--max-stash-age`-style signal into
+      `scripts/dev/slot-git-status-report.sh` via a new `scripts/dev/stash-pile-detect.sh` detector (count>15/oldest>14d
+      thresholds, measured off a real cross-slot distribution; never touches stash content; validated against a real
+      45-entry pile, a clean repo, a never-stashed repo, and a synthetic age-only trigger). Documented in
+      `/codex/05-infrastructure/per-tab-worktrees.md` § "Stash-pile regrowth signal." Independently re-verified this
+      pass: `git merge-base --is-ancestor 59756e802 origin/live-defi-rollout` confirms ancestor. Original text preserved
+      below for record. Was: **NICE-TO-HAVE.** The pile regrew 0→31 in PM in 2 days, so the autostash/foreign-park churn
+      is structural. Investigate folding a `--max-stash-age` warning into `slot-git-status-report.sh` (or a weekly cron)
+      so a host pings its inbox when `refs/stash` exceeds N or a stash ages past M days, instead of relying on manual
+      sweeps. Capture decision in `/codex/05-infrastructure/per-tab-worktrees.md`. — owner: planning-host
+      **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: already extracted
+      (verbatim scope) as `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Add a stash-pile regrowth signal..."
+      todo (Source: this doc). Not checked off here — the extracting doc's todo is not yet done; tracked there going
+      forward.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:99ca86720460311c]: KEEP-NA, valid — unchanged since
+  2026-08-08. 5 open items remain: Phase 2 `--apply` sweep (still not a clean RECLASSIFY without an explicit
+  reversibility precedent for local stash refs); 2 laptop sweeps (not workable from this environment); Phase 4
+  owner-review + archive-purge (both downstream-gated on Phase 2).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, stale items — closed 2 of 7 open todos with
-  hard evidence, both cross-referenced duplicates already DONE in `infra_satellite_ao_dispatch_batch1_2026_07_26.md`
-  but never reflected back here: the Phase-1 smoke-test (`unified-trading-pm@1fa747856`, 2026-08-04) and the Phase-5
+  hard evidence, both cross-referenced duplicates already DONE in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` but
+  never reflected back here: the Phase-1 smoke-test (`unified-trading-pm@1fa747856`, 2026-08-04) and the Phase-5
   regrowth-signal build (`unified-trading-pm@59756e802`, 2026-07-30), both ancestor-verified this pass. Left the
-  remaining 5 open: the Phase-2 `--apply` sweep (line ~136) — now that the smoke-test's own verdict is
-  "classifier trustworthy: YES," this is closer to bounded, but it is still a fleet-wide auto-drop (even if scoped
-  to the 3 provably-safe classes) on a SHARED multi-slot host, a real-risk local-git-mutation class this sweep is not
-  treating as a clean RECLASSIFY without an explicit reversibility precedent covering local stash refs (the cheat
-  sheet's item 6 precedent is GCS-object-specific); the 2 laptop-sweep todos (Ikenna/Harsh) are literal
-  personal-machine-only tasks, not workable from this environment; Phase 4's owner-review and Phase 5's archive-purge
-  are both downstream-gated on Phase 2's output. `assigned_vm: NA` correct.
+  remaining 5 open: the Phase-2 `--apply` sweep (line ~136) — now that the smoke-test's own verdict is "classifier
+  trustworthy: YES," this is closer to bounded, but it is still a fleet-wide auto-drop (even if scoped to the 3
+  provably-safe classes) on a SHARED multi-slot host, a real-risk local-git-mutation class this sweep is not treating as
+  a clean RECLASSIFY without an explicit reversibility precedent covering local stash refs (the cheat sheet's item 6
+  precedent is GCS-object-specific); the 2 laptop-sweep todos (Ikenna/Harsh) are literal personal-machine-only tasks,
+  not workable from this environment; Phase 4's owner-review and Phase 5's archive-purge are both downstream-gated on
+  Phase 2's output. `assigned_vm: NA` correct.
 - **infra-tranche NA-question resolution 2026-08-08**: executed the standing ruling from
   `/plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md` § 4 (option B, ratified 2026-07-28 but
   never applied — "out of this file's assigned scope to execute" at the time). Voided the 10 `vm-*` Phase-3 rows
@@ -277,3 +282,4 @@ purge here.
   is a re-scoping judgment call tracked as a BLOCKED-OPERATOR-DECISION in
   `/plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md`, and Phase 4's owner-review + purge is
   downstream-gated on that unresolved re-targeting.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

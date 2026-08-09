@@ -40,12 +40,13 @@ related:
     /codex/02-data/honest-coverage-model.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/05-infrastructure/deployment-observability.md,
+    /plans/audit/results/data_pipeline_reconciliation_cefi_2026_08_09.md,
     /plans/audit/results/data_pipeline_reconciliation_cefi_2026_08_08.md,
     /plans/audit/results/data_pipeline_reconciliation_cefi_2026_08_07.md,
   ]
 created: "2026-08-08"
 author: cefi_reconciliation_auditor (scheduled role, slot 3, dispatch agt-9dc091)
-priority: P2
+priority: P1
 parent_epic: infrastructure_master
 source:
   "Discovered read-only during the scheduled cefi_reconciliation_auditor daily spot-check (2026-08-08) while
@@ -174,15 +175,51 @@ data landing under an unexpected path.
 - [ ] [DIAG] P2. Run `launch-measure-honest-coverage-vm.sh --oom-monitor --force` (or equivalent) for a fresh
       right-sizing verification; identify which asset_group's read is now the RSS peak and whether it matches organic
       growth or looks like a leak. Repo: instruments-service / deployment-service.
-- [ ] [OPERATOR] P2. Decide immediate unblock: re-launch now with `--machine-type e2-highmem-4` to get 08-06/08-07 (or
-      at least a fresh) `coverage.json` written while the diagnostic above runs, given the rollup is already ~50h stale
-      for all 5 asset groups. Repo: deployment-service.
+- [ ] [OPERATOR] P1. **Escalated 2026-08-09 (was P2) — now 4 consecutive missed cycles (08-06/07/08/09), ~86h stale, 0
+      remediation attempts recorded.** Decide immediate unblock: re-launch now with `--machine-type e2-highmem-4` to get
+      a fresh `coverage.json` written while the diagnostic above runs, given the rollup is now stale for all 5 asset
+      groups across 4 consecutive daily cycles with an unchanging (not self-healing) OOM signature. Repo:
+      deployment-service.
 - [ ] [INFRA] P3. Harden `honest-coverage-daily-launcher` to not report success until it confirms the VM reached a real
       terminal state (output object exists, or VM exit code / OOM marker checked) — the current "VM launched ⇒ Container
       called exit(0)" pattern is structurally blind to this exact failure mode. Repo: deployment-service.
 - [ ] [INFRA] P3. Fix the VM's own metadata `TASK=features-backfill` self-label (should be honest-coverage-specific) —
       cosmetic, but misleads future log-grep-by-TASK debugging. Repo: deployment-service (launcher script / whatever
       shared VM-metadata helper sets `TASK=`).
+
+## 2026-08-09 update — 3rd consecutive IDENTICAL OOM, rollup now 4 cycles / ~86h+ stale, no remediation applied yet
+
+Re-checked read-only during today's scheduled `cefi_reconciliation_auditor` run (dispatch agt-91ada6, slot 4). Nothing
+in this update changes the root-cause analysis below; it confirms the condition is still live and adds one analytically
+useful data point.
+
+- **Bucket still stuck at `2026-08-05/`** — `gsutil ls gs://central-element-323112-honest-coverage/` shows no
+  `2026-08-06/`, `2026-08-07/`, or `2026-08-08/` dir. At this audit (2026-08-09T~02:15Z) the rollup is **~86h stale**
+  (was ~50h when filed 08-08).
+- **`honest-coverage-daily-launcher` fired again today and again reported blind success**: execution
+  `honest-coverage-daily-launcher-54j5c`, `2026-08-09T00:30:07Z → 00:30:55Z`, `Completed / True`, "Execution completed
+  successfully in 48.52s" — same fire-and-forget pattern, unchanged.
+- **The VM it launched (`measure-honest-coverage-20260809-003041`) OOM-killed again**, confirmed via serial console:
+  `Out of memory: Killed process 4857 (python) total-vm:22012596kB, anon-rss:15396828kB, ...` at 00:35:41Z (VM created
+  00:30:41Z, python process killed ~5 min after launch — same shape as 08-06/08-07).
+- **New signal: anon-rss is now FLAT across all 3 measured days, not still climbing** — 08-06: 15,352,788kB; 08-07:
+  15,411,360kB; 08-09: 15,396,828kB (today's cycle; no VM ran for 08-08 per the launcher's own once-daily schedule, so
+  this is the 3rd measured occurrence, not the 4th). All three sit within **~59,000kB (~0.06GB) of each other** — this
+  is evidence AGAINST the "organic manifest growth" hypothesis (which would show a continuing upward trend) and favours
+  either a deterministic ceiling (one AG's read has stopped growing, e.g. its backfill/capture completed) or a leak that
+  maxes out at a size independent of day-to-day data volume. Still **not established** which — the `--oom-monitor`
+  diagnostic run (todo 1 below) remains the right next step to pin down which AG's read is the peak.
+- **No remediation has been applied**: machine type is still `e2-standard-4` (inferred from the OOM ceiling itself —
+  `e2-highmem-4`'s 32GiB would not OOM at ~15.4GB; not independently confirmed via an `instances.insert` audit-log read
+  this run). Todo 2 (`[OPERATOR]` — decide immediate unblock) is still unresolved 1 day later.
+- **Not re-fixed inline this run either** — same reasoning as 08-08: this is a cross-asset-group (`--asset-group all`)
+  job outside cefi-only scope, and the remediation choice (bump vs. diagnose-first) is an explicit operator decision
+  already correctly gated, not a mechanical fix this role should apply unilaterally.
+
+**Escalation note**: this is now a 4-cycle-and-counting miss (08-06/07/08/09) on a rollup that feeds all 5 asset groups'
+honest-coverage numbers, with zero remediation attempts recorded since the 08-08 diagnosis. Flagging for operator
+visibility per CLAUDE.md's "big finding" (cross-cutting data-correctness) criterion — carried forward via this issue
+doc + today's `data_pipeline_reconciliation_cefi_2026_08_09.md` report rather than a new duplicate doc.
 
 ## Codex SSOTs referenced
 
@@ -197,3 +234,7 @@ data landing under an unexpected path.
   `[OPERATOR]`-tagged (decide immediate machine-type bump vs. wait for the diagnostic, no ruling on record), alone
   keeping the whole doc NA; todo 3 is self-described in-doc as needing an owner decision on the detection mechanism
   before implementation.
+- **cefi_reconciliation_auditor 2026-08-09 (dispatch agt-91ada6, slot 4)**: re-confirmed condition still live, 3rd
+  identical OOM (see update above). No status change — still `open`, still NA-appropriate (same `[OPERATOR]`-gated todo
+  2 blocking), still no fix applied. Escalating visibility given now 4 missed cycles, not 2.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

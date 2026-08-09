@@ -225,3 +225,9 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
 - **na-eligibility-audit 2026-08-07** (tranche=defi): KEEP-NA valid — both remaining open items remain genuine design
   forks (ManifestWriter safety-check branch choice; per-slot RSS ceiling explicitly out of scope), not
   bounded/deterministic.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 2 open checkboxes remain (down from 3 --
+  sibling-scripts item closed 2026-08-02 via batch7 extraction). Both remaining items are explicit undecided design
+  forks in their own text (a loud-warning-vs-refuse-construction choice; an out-of-scope-flagged RSS-ceiling pattern).
+  Doc stays `assigned_vm: NA`.

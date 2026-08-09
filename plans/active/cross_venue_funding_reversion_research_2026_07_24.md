@@ -520,3 +520,4 @@ overlays), `_multivenue_capital.py` (capital/leverage/treasury), `_paper_trade.p
   is strategy/ML research judgment (GBM squeeze models, archetype-shelving decisions, structure-5 candidacy,
   prime-broker research, productionisation calls gated on research conclusions) — one item (the day-mean→per-settlement
   funding switch) is explicitly blocked-by a separate issue doc, tagged DEPENDENCY_BLOCKED; the rest are GENUINE_WORK.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

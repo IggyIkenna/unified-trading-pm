@@ -694,3 +694,8 @@ mitigation ladder (bigger machine → smaller chunks) is exhausted; only the cod
       **Done when**: the upload call's failure mode is identified (e.g. a swallowed exception, a once-per-VM-lifetime
       guard misfiring, a stale path) and fixed, with a regression check that `PROGRESS.json` keeps advancing across ≥20
       consecutive chunks on a fresh run. Repo: deployment-service.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — item 1 is an ongoing native-memory
+  OOM root-cause investigation (session-reuse fix shipped as an efficiency win, does not confirm root cause); item 2
+  flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE (bounded monitoring-bug fix) but not enough alone to flip the doc.

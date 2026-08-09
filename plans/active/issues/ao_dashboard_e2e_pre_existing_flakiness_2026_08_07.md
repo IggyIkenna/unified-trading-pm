@@ -228,3 +228,42 @@ shipped independently or these findings would still be sitting entirely undocume
   applies. Also reverted an incidental `parked.e2e.yaml` re-serialization-only diff (68 lines, same content reordered)
   observed during a full-config repro run — pre-existing `bootstrap.initialise()` YAML-normalize-on-load behavior,
   unrelated to this todo, not touched.
+- **ao_satellite_ao_dispatch_batch8-003 2026-08-08 (backend_engineer craft)**: Root-caused + fixed todo 3
+  (`backlog-collision.spec.ts`'s intermittent "click Fix" failure). **Not an async-completion race** in the
+  remint→confirm sequence as hypothesized — static review of `onFixCollision`/`refresh()` (dashboard/src/App.tsx),
+  `remint_backlog_collision` (server/routes/backlog.py), and `unresolvedBacklogCollisions`'s dedup-by-latest-activity-id
+  logic (dashboard/src/layout.tsx) found no structural race: the remint POST is fully awaited and its DB write commits
+  synchronously before the follow-up GET, and the dedup logic deterministically resolves ordering. The actual blocker
+  was TWO local-slot-only port-mismatch bugs that made this spec un-reproducible from ANY `.tabs/N` slot checkout (every
+  worker's/session's prior local-repro attempt on this spec — including this one, for over an hour before finding this —
+  silently failed for infra reasons unrelated to the app code; neither bug manifests in CI, which runs un-tabbed at
+  `SLOT_OFFSET=0`):
+  1. `run-e2e-backend-collision.sh` pointed `ORCHESTRATOR_BACKENDS` at the checked-in, hardcoded-port
+     `fixtures/backends.e2e.collision.json` (`"url": "http://localhost:8792"`), but `playwright.config.ts` offsets every
+     port by `10 * slot_number` for `.tabs/N` checkouts — so on any non-zero slot the dashboard's own Login screen
+     resolved to the WRONG backend port and every request failed with "Failed to fetch" (confirmed via the Playwright
+     error-context page snapshot), which is exactly the `getByText(/Slots:/)` `beforeEach` login timeout todo 2's
+     Progress Log above attributed to "host CPU contention" for `worker-chat.spec.ts` — plausibly the SAME bug class
+     there too (`backends.e2e.chat.json` has the identical static-port pattern), flagged for whoever picks up todo 5.
+     Fixed by mirroring `run-e2e-backend-tier.sh`'s already-established pattern (the newest of the 6 runners,
+     2026-08-08): generate the backends file at runtime into `TMP_DIR` with the actual slot-offset-aware `${E2E_PORT}`,
+     instead of shipping a static fixture. Deleted the now-unused `fixtures/backends.e2e.collision.json`.
+  2. Separately, `backlog-collision.spec.ts`'s own follow-up out-of-band verification fetch
+     (`COLLISION_BACKEND_URL = http://localhost:${process.env.E2E_COLLISION_BACKEND_PORT ?? "8792"}`) reads
+     `process.env` in the Playwright test-runner process — but `playwright.config.ts` only passed the computed,
+     slot-offset-aware `E2E_COLLISION_BACKEND_PORT` into the SPAWNED backend subprocess's `env:`, never into its own
+     process's `process.env`, so the spec's direct fetch silently fell through to the un-offset "8792" default and
+     failed with `TypeError: Failed to fetch` (this ONE was reproducible even after fix 1, since it needed its own
+     diagnosis). Fixed by setting `process.env.E2E_COLLISION_BACKEND_PORT = COLLISION_BACKEND_PORT` in the config's main
+     process, which Playwright's worker processes inherit. **Verification**: once both fixes landed, a fully isolated
+     single-webServer-pair repro (bypassing the other 5 unrelated pairs, since `worker-chat`'s todo 2 already
+     established those add noise — see the `webServer` array residual finding, todo 5) passed **5/5 runs cleanly, both
+     tests, zero flakes** (~20s/run). Full `agent-orchestrator` `quality-gates.sh` green. Evidence:
+     `agent-orchestrator@<sha, see commit>`, independently verified ancestor of `origin/live-defi-rollout`. Scope:
+     `dashboard/tests/e2e/run-e2e-backend-collision.sh`, `dashboard/tests/e2e/fixtures/backends.e2e.collision.json`
+     (deleted), `dashboard/playwright.config.ts` — no product (non-test) source touched, matching this batch's
+     file-disjointness rule (todo 3 = collision-only files). Also reverted an incidental `parked.e2e.yaml`
+     re-serialization-only diff observed during a full-config repro run, same pre-existing `bootstrap.initialise()`
+     normalize-on-load behavior noted in todo 2's entry above — not touched.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

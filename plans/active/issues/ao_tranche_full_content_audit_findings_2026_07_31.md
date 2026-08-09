@@ -158,12 +158,20 @@ tracker's Phase sections and flipping them `[x]` with a `DONE via ao_fleet_obser
       chose opportunistic folding precisely to avoid a 23-file bulk edit under concurrent-slot contention. **Done
       when**: §2's list is exhausted, at which point this doc's remaining §3/§4 items decide its archival. Until then
       this todo is expected to sit open for a long time — that is the intended shape, not staleness.
-- [ ] [SCRIPT] P2. **§3 — read both duplicate docs in full, decide the survivor, merge/supersede the other.** Source:
-      this doc §3. **Gate**: one doc `status: resolved` + `superseded_by:` pointing at the survivor, or both kept with
-      an explicit reason why they're not actually duplicates.
-- [ ] [SCRIPT] P3. **§4 — flip `ao_fleet_observability_kpis`'s 6 MOVED items `[x]` in the tracker + correct the "14"
-      count to "8".** Source: this doc §4. **Gate**: the tracker's MOVED-item counts are internally consistent with its
-      own child-plan status table.
+- [x] [SCRIPT] P2. **§3 — DONE 2026-08-08.** Survivor: `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`
+      (`status: resolved`, real fix `agent-orchestrator@e761cb1`). Added the missing
+      `superseded_by:     [ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26]` to the duplicate's frontmatter
+      (it already had `status: resolved` + `resolved_by:` prose but no machine-readable pointer), and folded its two
+      extra root-cause candidates into the survivor's body for the historical record. Both docs already archived — no
+      move needed. Source: this doc §3. — unified-trading-pm (this commit)
+- [x] [SCRIPT] P3. **§4 — DONE 2026-08-08, but not as originally scoped.** Live-checked all 3 named children
+      (`ao_scheduled_agent_hygiene` ×3, `ao_fleet_infra_hardening` ×5-across-4-blocks, `ao_fleet_observability_kpis` ×6)
+      — every one of the 14 MOVED-item checkboxes was **already** `- [x]` with a `DONE via <child>` pointer (verified by
+      direct read, not just grep); the stale part was only the summary sentence claiming they "stay open because their
+      child plan is still active" when the status table two paragraphs up already shows all 3 archived. So the original
+      todo's "correct the 14 to 8" premise was itself stale (only `ao_fleet_observability_kpis` had been assumed
+      unfixed) — corrected the sentence to state all 29 MOVED items in the tracker are closed, none open. Source: this
+      doc §4. — unified-trading-pm (this commit)
 
 ## Progress Log
 

@@ -31,7 +31,7 @@ _check_small_marker_append() {
     [ "$deleted" = "0" ] || return 1
     [ "$added" -le 10 ] 2>/dev/null || return 1
     pre_commit_lines=$(( lines - added ))
-    [ "$pre_commit_lines" -gt "$PLAN_HARD_CAP" ] || return 1
+    [ "$pre_commit_lines" -ge "$PLAN_HARD_CAP" ] || return 1
     added_chk="$(git -C "$repo" diff --cached -- "$fpath" 2>/dev/null \
         | grep -cE '^\+\s*-\s*\[.\]' || true)"
     added_chk="${added_chk:-0}"
@@ -89,6 +89,25 @@ _write_plan() {
 
     # Pure append: 2 lines, no checkboxes
     printf '\n- **na-eligibility-audit 2026-08-07**: KEEP-NA valid.\n' >> "$plan"
+    git -C "$repo" add "$plan"
+    lines="$(wc -l < "$plan")"
+
+    run _check_small_marker_append "$repo" "$plan" "$lines"
+    [ "$status" -eq 0 ]
+}
+
+@test "carve-out fires for a marker append on a plan sitting at EXACTLY the hard cap (boundary bug regression)" {
+    # Regression for the PRE_COMMIT_LINES -gt vs -ge boundary bug (2026-08-09): a file
+    # compliant at exactly 1000L making its first 1-line marker append crossed to 1001L,
+    # PRE_COMMIT_LINES computed back to 1000 (not -gt 1000), so the carve-out never fired
+    # and the file was permanently unverdictable on any future marker touch.
+    repo="$(_make_pm_repo)"
+    plan="$repo/plans/active/at_cap.md"
+    _write_plan 1000 "$plan"
+    git -C "$repo" add "$plan"
+    git -C "$repo" commit -q -m "base"
+
+    printf '\n- **na-eligibility-audit 2026-08-09**: KEEP-NA valid.\n' >> "$plan"
     git -C "$repo" add "$plan"
     lines="$(wc -l < "$plan")"
 

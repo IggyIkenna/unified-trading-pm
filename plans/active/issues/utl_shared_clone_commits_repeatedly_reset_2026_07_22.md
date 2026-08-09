@@ -240,3 +240,4 @@ single canonical clone per repo and behaves incorrectly under multi-clone (workt
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

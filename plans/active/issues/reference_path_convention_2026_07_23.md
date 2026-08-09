@@ -241,21 +241,22 @@ convention's scope).
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. The blocking
-  P2 REVIEW policy call ("does archival mean physical-move or stay-in-place-with-banner") — the one item every
-  prior MIXED_NO_CLEAN_FLIP verdict cited as the reason the whole doc had to stay NA — was resolved TODAY
-  (round5 ao investigation): an existing codex SSOT (`plan-completion-and-archival-discipline.md`'s 6-step ritual,
-  dated the SAME day this issue was filed) already answers it unambiguously — physical move is the documented
-  convention, no fresh ruling needed. That item is now `[x]`. Of the 4 remaining open items, all are bounded
-  mechanical/investigative cleanup with a stated "Done when" (109 format violations; 1,286 existence violations,
-  explicitly flagged in-doc as "a candidate for a Workflow fan-out"; the sports_satellite_batch2 body-prose
-  reference fix; the 2026-08-03 baseline-drift re-measurement) — no remaining judgment call. **Noted, not a
-  blocker**: the sports_satellite_batch2 item's own "Done when" requires splitting
-  `sports_satellite_ao_dispatch_batch2_2026_07_24.md` under 1000L first — per
-  `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own "why NOT drafted" list (item 10), that SPLIT is claimed
-  by sports batches 3/5, not this reference-path fix itself; a worker picking this item up should check whether the
-  split has landed before attempting it, not treat it as immediately actionable. Conflict-check on the other 3
-  items clear: `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own "why NOT drafted" §9 explicitly declined to
-  claim the format/existence-violation backlogs, deferring back to this doc by name. `execution_scope: local-only →
-  orchestrator-agent`, `assigned_role: infra` (added, matches content). Companion gated finalize:
-  `reference_path_convention_2026_07_23_finalize_2026_08_08.md`.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: RECLASSIFY → `assigned_vm: planning`. The blocking P2
+  REVIEW policy call ("does archival mean physical-move or stay-in-place-with-banner") — the one item every prior
+  MIXED_NO_CLEAN_FLIP verdict cited as the reason the whole doc had to stay NA — was resolved TODAY (round5 ao
+  investigation): an existing codex SSOT (`plan-completion-and-archival-discipline.md`'s 6-step ritual, dated the SAME
+  day this issue was filed) already answers it unambiguously — physical move is the documented convention, no fresh
+  ruling needed. That item is now `[x]`. Of the 4 remaining open items, all are bounded mechanical/investigative cleanup
+  with a stated "Done when" (109 format violations; 1,286 existence violations, explicitly flagged in-doc as "a
+  candidate for a Workflow fan-out"; the sports_satellite_batch2 body-prose reference fix; the 2026-08-03 baseline-drift
+  re-measurement) — no remaining judgment call. **Noted, not a blocker**: the sports_satellite_batch2 item's own "Done
+  when" requires splitting `sports_satellite_ao_dispatch_batch2_2026_07_24.md` under 1000L first — per
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own "why NOT drafted" list (item 10), that SPLIT is claimed by
+  sports batches 3/5, not this reference-path fix itself; a worker picking this item up should check whether the split
+  has landed before attempting it, not treat it as immediately actionable. Conflict-check on the other 3 items clear:
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own "why NOT drafted" §9 explicitly declined to claim the
+  format/existence-violation backlogs, deferring back to this doc by name.
+  `execution_scope: local-only → orchestrator-agent`, `assigned_role: infra` (added, matches content). Companion gated
+  finalize: `reference_path_convention_2026_07_23_finalize_2026_08_08.md`.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

@@ -276,3 +276,8 @@ is a human decision wearing a todo's clothes" dispatch-scope bar. It also touche
   per this doc's own "Why NA" framing, unchanged by the writer fix landing go-forward-only). Held at doc-level KEEP-NA
   per the same precedent the 2026-08-06 audit already established for this exact doc (item-4 case) rather than split for
   one small item. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- Writer fix + verification + cross-parser audit
+  (todos 1-4) all shipped `mtds@2f7d7840` (2026-08-07). 2 open checkboxes remain: a P3 dead-code deletion and a P3
+  `[HUMAN]` historical-backfill decision. Matches the 2026-08-07 audit's own classification (dead-code item tagged
+  MISCLASSIFIED_LIKELY_AO_ELIGIBLE at lower confidence, held at doc-level per precedent). Doc stays `assigned_vm: NA`.

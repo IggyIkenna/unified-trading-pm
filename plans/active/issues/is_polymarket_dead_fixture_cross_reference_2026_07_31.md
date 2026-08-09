@@ -153,3 +153,12 @@ Not adjudicated here:
   worker-determinable fact. Third consecutive audit pass (07-31, 08-04, 08-07) reaching the same verdict. Doc stays NA.
 - **Operator ruling 2026-08-07 (interactive session, via consolidated NA-blocker-digest audit)**: RULED — delete (option
   A). See Todos section above for the full ruling + rationale.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-09 (prediction tranche)**: KEEP-NA — re-verified, 1 open. The 2026-08-07 operator
+  ruling (DELETE, option A) makes this bounded/worker-determinable in isolation, but NOT independently reclassified:
+  today's sibling `/ag-closeout-audit prediction` run (dispatch agt-465129) already extracted this exact deletion into
+  `prediction_satellite_ao_dispatch_batch10_2026_08_09.md` todo 3 (`status: draft`, verbatim source citation to this
+  doc's own todo), with `batch10_finalize` gated to reconcile this doc's checkbox once executed. Independently
+  reclassifying this doc now would create a duplicate AO-dispatch surface for the identical deletion the moment batch10
+  activates — cleared via the shared conflict-check's 4th surface (a `status: draft` sibling batch citing this doc's
+  path). Doc stays NA pending batch10's operator-approved dispatch + execution.

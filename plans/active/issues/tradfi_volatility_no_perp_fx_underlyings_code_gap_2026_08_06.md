@@ -147,8 +147,15 @@ is fixed. Unblocks the benchmark to report 0 throughput (honest absence), but do
   staying NA until that already-filed conflict resolves (reclassify/dedupe/re-affirm), rather than re-filing a duplicate
   conflict record here.
 - **context-scout 2026-08-07**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-08** (tradfi tranche, dispatch agt-29c933): **KEEP-NA, confirmed -- re-verified,
   unchanged.** 2 open todos re-read end-to-end; count reconciled (2/2). Independently re-checked the 08-07 marker's
   conflict citation: `governance_sweep_deferred_followups_2026_08_06.md`'s item 5/6 (naming this exact doc) and its
   target `[DIAG] P2` todo are both still present and still open. Per the never-re-litigate-a-cited-conflict rule,
   preserved KEEP-NA rather than re-deriving. Todo 2 remains sequenced behind todo 1. Nothing to reclassify.
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:24f6096f8fd0df18]: **KEEP-NA,
+  confirmed -- confirmed unchanged.** Phase-0 flagged this doc as "changed since the 08-08 marker" (git-date fallback),
+  but `git diff <08-08-marker-sha>..HEAD` shows the ONLY intervening change is the context-scout line above -- zero
+  todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh full re-read; see
+  `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying false-positive class
+  this run found and filed.

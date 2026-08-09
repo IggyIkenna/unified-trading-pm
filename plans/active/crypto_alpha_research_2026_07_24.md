@@ -178,10 +178,9 @@ UI in `unified-trading-system-ui/app/paper-trading/`.
       (zero queue priority still fills); a candle that only TOUCHES (`low==limit`) = a 25% queue share; never reaches →
       no fill. Always AT the limit, never better. Validated vs real Binance UNI 1m: $59k order → 53% filled / 47% missed
       (vs flat-1/3's fantasy 100%). Repo: e2e-testing (engine).
-- [ ] [CODE] P2.5. **Taker = VWAP-walk the live depth** — the IOC/taker path currently fills the whole order at
-      first-1m-open + flat slip; replace with a volume-weighted walk THROUGH the order book (the dashboard already pulls
-      live depth at $250k/$1M) so the taker fill price is the realistic average price through the book. Repo:
-      e2e-testing.
+- **[CODE] P2.5. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 1 for AO
+  dispatch (parent_epic: strategy_master). See that doc for the live checkbox + evidence.** (Taker = VWAP-walk the live
+  depth, replacing the flat-slip fill-sim in `_ledgers.py`. Repo: e2e-testing.)
 - [x] ✅ [CODE] PB.6. **Missed-remainder policy — DROP wins (backtest-decided, NOT requote)** — PB.7 verdict: dropping
       the unfilled remainder (single-shot, no requote) is the risk-adjusted winner for cs (Sharpe 0.24 vs 0.22, maxDD
       −$1.06M vs −$1.79M ≈ halved, 5.3 vs 4.0 bps), because under-filling the largest rebalances acts as a free
@@ -611,3 +610,6 @@ Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, S
   cheat-sheet rulings; none apply to a corpus of alpha-research strategy-desk judgment calls (execution-config sweeps,
   leg re-specs, allocator design, universe construction, all `[RESEARCH]`/`[STRATEGY]`). This is the archetypal
   trading-judgment content the NA classification exists for — reaffirms the 2026-07-30 verdict, no change.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — reaffirms 2026-08-08 round7 verdict;
+  16/22 open items map onto the doc's own operator-gated §C register (PERMANENT hard-stop, 2026-07-28), remaining 6 are
+  RESEARCH refinements. 3 lower-confidence MISCLASSIFIED_LIKELY_AO_ELIGIBLE items noted, not enough to flip the doc.

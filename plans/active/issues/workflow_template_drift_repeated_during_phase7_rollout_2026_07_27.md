@@ -171,3 +171,10 @@ items. Item 1 is an open-ended design question ("consider whether... could roll 
 mechanism. Item 2 is a standing conditional runbook, not a pending action — confirmed still being actively exercised
 live (a 2026-08-06 tradfi-tranche auditor hit the same drift gate, followed this doc's own step-3 diagnostic, and
 correctly used the docs-only carve-out rather than fixing code). No `assigned_vm` change.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:699f5e63a376d900]: KEEP-NA,
+valid — confirms the 2026-08-07 verdict, unchanged. Item 1 remains an open-ended design question with no decided
+mechanism; item 2 remains a standing conditional runbook (last actually exercised 2026-08-06 by a tradfi-tranche
+auditor, per its own documented usage). No `assigned_vm` change.

@@ -24,7 +24,10 @@ last_updated: 2026-08-06
 parent_epic: orchestrator_master
 priority: P3
 assigned_vm: NA
-resolved_by: "AO issue-doc sweep 2026-08-06 — resolved via ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md's fix (agent-orchestrator@e761cb1), confirmed duplicate."
+resolved_by:
+  "AO issue-doc sweep 2026-08-06 — resolved via ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md's fix
+  (agent-orchestrator@e761cb1), confirmed duplicate."
+superseded_by: [ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26]
 locked_by:
 source:
   [
@@ -83,8 +86,8 @@ first:
 
 - [x] [INFRA] P3. **CLOSED 2026-08-06 — resolved via the duplicate doc's fix.**
       `/plans/archive/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md` shipped
-      `agent-orchestrator@e761cb1` (seed_e2e_state.py `current_task` fix); live-verified 2/2 passing across 3 consecutive
-      Playwright runs of `backlog-detail.spec.ts`. Original text follows. **Duplicate — tracked under
+      `agent-orchestrator@e761cb1` (seed_e2e_state.py `current_task` fix); live-verified 2/2 passing across 3
+      consecutive Playwright runs of `backlog-detail.spec.ts`. Original text follows. **Duplicate — tracked under
       `/plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`** (same two
       `backlog-detail.spec.ts` test failures, same symptom, filed 4 days earlier with a more complete root-cause
       hypothesis — a background reconciler resetting a mock-mode-seeded `dispatched` row). **Citation corrected
@@ -127,3 +130,8 @@ first:
 - **na-eligibility-audit 2026-08-06**: KEEP-NA-STALE — Sole open todo duplicates
   ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md (itself NA/local-only per 2026-07-31 operator
   directive). Prior 2026-08-04 marker unchanged.
+- **ao_satellite_ao_dispatch_batch5 2026-08-08** (§3 formal-closure): added the missing
+  `superseded_by: [ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26]` frontmatter field (status was already
+  `resolved`, already archived). This doc's two extra root-cause candidates (`bootstrap.initialise()`
+  seed-timestamp-ordering; possibly-inverted frontend sort comparator) were folded into the survivor doc's body in this
+  same commit — see that doc's matching Progress Log entry.

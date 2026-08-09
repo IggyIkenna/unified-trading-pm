@@ -124,3 +124,30 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
 - **slot-26 data_engineering 2026-08-08**: Root-caused + fixed while checking terminal state of
   `mdps-backfill-cefi-20260807-130321` for `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` todo 3. Filed as a
   separate doc since the defect is cross-cutting (any multi-day `--force` MDPS backfill), not Track-7-specific.
+- **data_engineering (slot 11) 2026-08-08T22:14Z**: Checked terminal-state gate for todo 2 (P2 relaunch). VM
+  `mdps-backfill-cefi-20260808-095136` (`asia-northeast1-c`) is still `RUNNING` — confirmed via
+  `gcloud compute instances describe` (status=RUNNING) +
+  `gs://deployment-scripts-central-element-323112/vm-logs/mdps-backfill-cefi-20260808-095136/run.log` showing active
+  POLARS aggregation output at `2026-08-08T22:12:28Z` (~2 min before this check — not stalled, genuinely progressing, no
+  zombie-watchdog intervention needed per STEP 0.55). Todo 2 remains gated: not actionable until this VM reaches a
+  terminal state (completed or preempted), which per this doc's own estimate (~12 min/day, ~950 remaining days) is far
+  more likely to be a SPOT preemption than natural completion, on an unpredictable timeline. Not busy-waiting on this in
+  a live session — releasing the task back to the queue rather than holding a session open for an indeterminate
+  (possibly month-scale) external condition; a future dispatch cycle should re-check terminal state the same way.
+- **data_engineering (slot 15) 2026-08-08T22:26Z**: Re-checked terminal-state gate for todo 2. VM
+  `mdps-backfill-cefi-20260808-095136` is still `RUNNING` (`gcloud compute instances describe` status=RUNNING) — run.log
+  shows active POLARS aggregation at `2026-08-08T22:26:32Z` (this check's own timestamp), now on `Date: 2023-08-09` (up
+  from `2023-07-14` at the prior check ~12 min earlier — consistent with the doc's ~12 min/day rate, so genuinely
+  progressing, not stalled). Still ~880 days from `2026-01-01`. Todo 2 remains gated, same as the prior check —
+  releasing back to the queue rather than busy-waiting on an external condition with a month-scale timeline.
+- **cicd/data_engineering (slot 24) 2026-08-08T22:40Z**: Re-checked terminal-state gate for todo 2, same result — VM
+  `mdps-backfill-cefi-20260808-095136` still `RUNNING` (`gcloud compute instances describe` status=RUNNING), run.log
+  progressing (`Date: 2023-08-11` at `2026-08-08T22:39:40Z`, up from `2023-08-09` at the prior check — consistent rate,
+  not stalled). Todo 2 remains gated. While checking, found a SEPARATE, unrelated live data-correctness bug in this same
+  run.log: DERIBIT `options_chain` candle derivation raises `SchemaContractNotFoundError` for the `15s` tier
+  (`instrument_type='OPTION' data_type='options_chain_15s'`), causing that date's per-date subprocess to exit `rc=1`
+  (masked at the top level by shard-level isolation). Filed separately as
+  `/plans/archive/issues/mdps_cefi_deribit_options_chain_15s_missing_schema_contract_2026_08_08.md` (P1, UAC
+  CONTRACT_REGISTRY gap, resolved + archived 2026-08-09) since it's cross-cutting and unrelated to the
+  `--force`-forwarding fix this doc tracks. Releasing todo 2 back to the queue per the same precedent — not busy-waiting
+  on a month-scale external condition.

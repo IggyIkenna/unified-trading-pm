@@ -435,40 +435,40 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       a transient clean working-tree read (corrected below) — actually shipped `market-tick-data-service@4e5d8b475`,
       verified via `git show origin/live-defi-rollout:market_tick_data_service/market_interface/__init__.py` (0 refs)
       and `git cat-file -e` on the deleted file (confirmed absent), not `git status` on a shared clone.
-- [ ] [SERVICE] P2. **RULED 2026-08-08 (operator): consolidate onto `HeliusSolanaAdapter`, delete
-      `native_staking_handler.py`'s hand-rolled implementation.** market-tick-data-service. **2026-08-07 note
-      (unchanged)**: the `BLOCKED-CREDENTIALS` framing in § 2.2 is STALE — `helius-api-key` was approved + provisioned
-      2026-05-15 (confirmed live in `/codex/05-infrastructure/credentials-matrix.md`); not credential-blocked.
-      **2026-08-08 scoping (NOT a clean 1:1 swap — read both implementations before touching either)**:
-      `HeliusSolanaAdapter` (`onchain/helius_solana.py`) today only implements `get_inflation_rate()` /
-      `get_epoch_info()` / `get_token_balances()` / `get_native_balance()` / `get_enhanced_transactions()`, with a real
-      retry+backoff contract (3 attempts, exponential backoff, honours `Retry-After` on 429, `classify_venue_error`
-      integration) and requires a Helius key (no fallback to another RPC provider). `native_staking_handler.py`
-      additionally needs, and the adapter does NOT yet provide: (1) a `getVoteAccounts` call (`_fetch_vote_accounts`,
-      per-validator breakdown, top-200 by stake) — must be ADDED to `HeliusSolanaAdapter` as a new public method before
-      the handler can consolidate; (2) a 3-tier RPC-URL fallback (Helius → Alchemy → public
-      `api.mainnet-beta.solana.com`, `_get_solana_rpc_url`) — the adapter is Helius-only, so the handler's graceful
-      degrade to free public RPC when no Helius key is configured has no equivalent in the adapter today and must be
-      preserved (either inside the adapter or as a thin wrapper the handler keeps); (3) the deterministic historical
-      inflation-SCHEDULE fallback (`_schedule_rate`, on-chain taper constants) for epochs before the current one — this
-      is NOT a Helius RPC call at all and stays in `native_staking_handler.py` regardless of the consolidation; (4) the
-      Jito MEV-rewards fetch (`_fetch_jito_mev_apy`) — a completely separate public Kobe API, also unrelated to Helius
-      and stays as-is. **Consolidation scope**: (a) add `get_vote_accounts()` to `HeliusSolanaAdapter` mirroring
-      `_fetch_vote_accounts`'s shape/limit; (b) either extend the adapter with the Helius→Alchemy→public fallback tier,
-      or have `NativeStakingHandler` construct `HeliusSolanaAdapter` only when a Helius key is present and keep its own
-      lightweight fallback path when absent (avoids over-generalizing the adapter for a fallback need this is currently
-      its only caller for); (c) swap `NativeStakingHandler._collect_staking_rows`'s raw
-      `_rpc_call`/`_fetch_live_rates`/`_fetch_vote_accounts` for
-      `HeliusSolanaAdapter.get_inflation_rate()`/`get_epoch_info()`/`get_vote_accounts()` calls, keeping the schedule-
-      rate + Jito MEV logic unchanged; (d) delete the now-dead hand-rolled RPC plumbing
-      (`_rpc_call`/`_helius_rpc_attempt`-equivalent/`_fetch_vote_accounts`/`_fetch_live_rates`'s raw-HTTP body,
-      `_get_helius_api_key`/`_get_solana_rpc_url`) from `native_staking_handler.py`, keeping only the
-      epoch/schedule/Jito-MEV/row-building logic that has no adapter equivalent. Unit tests: assert the adapter's real
-      retry/backoff contract now covers the staking-rate live path (previously untested — the handler's own `_rpc_call`
-      had zero retry logic), and that the fallback tier + schedule-rate + Jito MEV behavior are unchanged (regression,
-      not new behavior). Repo: market-tick-data-service. Done-when: `native_staking_handler.py` imports
-      `HeliusSolanaAdapter` for its live RPC path with no duplicate hand-rolled JSON-RPC POST/retry code remaining, and
-      the existing staking-rate unit tests (mocked) still pass green.
+- **[SERVICE] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** RULED 2026-08-08
+  (operator): consolidate onto `HeliusSolanaAdapter`, delete `native_staking_handler.py`'s hand-rolled implementation.**
+  market-tick-data-service. **2026-08-07 note (unchanged)**: the `BLOCKED-CREDENTIALS` framing in § 2.2 is STALE —
+  `helius-api-key` was approved + provisioned 2026-05-15 (confirmed live in
+  `/codex/05-infrastructure/credentials-matrix.md`); not credential-blocked. **2026-08-08 scoping (NOT a clean 1:1 swap
+  — read both implementations before touching either)**: `HeliusSolanaAdapter` (`onchain/helius_solana.py`) today only
+  implements `get_inflation_rate()` / `get_epoch_info()` / `get_token_balances()` / `get_native_balance()` /
+  `get_enhanced_transactions()`, with a real retry+backoff contract (3 attempts, exponential backoff, honours
+  `Retry-After` on 429, `classify_venue_error` integration) and requires a Helius key (no fallback to another RPC
+  provider). `native_staking_handler.py` additionally needs, and the adapter does NOT yet provide: (1) a
+  `getVoteAccounts` call (`_fetch_vote_accounts`, per-validator breakdown, top-200 by stake) — must be ADDED to
+  `HeliusSolanaAdapter` as a new public method before the handler can consolidate; (2) a 3-tier RPC-URL fallback (Helius
+  → Alchemy → public `api.mainnet-beta.solana.com`, `_get_solana_rpc_url`) — the adapter is Helius-only, so the
+  handler's graceful degrade to free public RPC when no Helius key is configured has no equivalent in the adapter today
+  and must be preserved (either inside the adapter or as a thin wrapper the handler keeps); (3) the deterministic
+  historical inflation-SCHEDULE fallback (`_schedule_rate`, on-chain taper constants) for epochs before the current one
+  — this is NOT a Helius RPC call at all and stays in `native_staking_handler.py` regardless of the consolidation; (4)
+  the Jito MEV-rewards fetch (`_fetch_jito_mev_apy`) — a completely separate public Kobe API, also unrelated to Helius
+  and stays as-is. **Consolidation scope**: (a) add `get_vote_accounts()` to `HeliusSolanaAdapter` mirroring
+  `_fetch_vote_accounts`'s shape/limit; (b) either extend the adapter with the Helius→Alchemy→public fallback tier, or
+  have `NativeStakingHandler` construct `HeliusSolanaAdapter` only when a Helius key is present and keep its own
+  lightweight fallback path when absent (avoids over-generalizing the adapter for a fallback need this is currently its
+  only caller for); (c) swap `NativeStakingHandler._collect_staking_rows`'s raw
+  `_rpc_call`/`_fetch_live_rates`/`_fetch_vote_accounts` for
+  `HeliusSolanaAdapter.get_inflation_rate()`/`get_epoch_info()`/`get_vote_accounts()` calls, keeping the schedule-
+  rate + Jito MEV logic unchanged; (d) delete the now-dead hand-rolled RPC plumbing
+  (`_rpc_call`/`_helius_rpc_attempt`-equivalent/`_fetch_vote_accounts`/`_fetch_live_rates`'s raw-HTTP body,
+  `_get_helius_api_key`/`_get_solana_rpc_url`) from `native_staking_handler.py`, keeping only the
+  epoch/schedule/Jito-MEV/row-building logic that has no adapter equivalent. Unit tests: assert the adapter's real
+  retry/backoff contract now covers the staking-rate live path (previously untested — the handler's own `_rpc_call` had
+  zero retry logic), and that the fallback tier + schedule-rate + Jito MEV behavior are unchanged (regression, not new
+  behavior). Repo: market-tick-data-service. Done-when: `native_staking_handler.py` imports `HeliusSolanaAdapter` for
+  its live RPC path with no duplicate hand-rolled JSON-RPC POST/retry code remaining, and the existing staking-rate unit
+  tests (mocked) still pass green.
 - [x] [SERVICE] P3. market-tick-data-service: land the corrected `onchain/__init__.py` docstring quoted in § 2.2 once
       the shared checkout is clean. — DONE 2026-07-30 (defi_satellite_ao_dispatch_batch1 finalize reconciliation), see
       defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 12 for full evidence (market-tick-data-service@0cd76b93).
@@ -572,7 +572,12 @@ files.
   say "leave this checkbox open until that plan's todo N lands," with the REAL execution already `assigned_vm: planning`
   in `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md`; flipping this doc's own `assigned_vm`
   would risk a worker picking these up as fresh, redundant work. Item 4 (Helius/native_staking_handler consolidation)
-  gained a full operator ruling + detailed scoping TODAY (2026-08-08) and is now genuinely bounded — a strong
-  RECLASSIFY candidate on its own, flagged for a future round or a dedicated extraction. Item 2 (governance-params-poller
+  gained a full operator ruling + detailed scoping TODAY (2026-08-08) and is now genuinely bounded — a strong RECLASSIFY
+  candidate on its own, flagged for a future round or a dedicated extraction. Item 2 (governance-params-poller
   cross-repo re-verify, the OPERATOR-NOTIFY big finding) remains unruled and cross-repo. Net: whole-doc flip is not
   clean this round. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 579-line audit doc, 6 prior na-eligibility-audit
+  rounds all landed KEEP-NA valid, re-confirmed today. 2 open checkboxes: a deliberate citation-tracker held open until
+  `defi_jupiter_venue_registration_and_live_connector_wireup_2026_08_07.md` todo 6 lands (verified active/planning, real
+  citation), plus one other gated item. Doc stays `assigned_vm: NA`.

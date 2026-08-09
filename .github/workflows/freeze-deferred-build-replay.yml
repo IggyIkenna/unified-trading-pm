@@ -45,12 +45,22 @@ jobs:
       replayed_count: ${{ steps.drain.outputs.replayed_count }}
       stale: ${{ steps.stale.outputs.stale }}
       stale_detail: ${{ steps.stale.outputs.stale_detail }}
+      recovered: ${{ steps.recovery.outputs.recovered }}
     steps:
-      - name: Checkout PM (freeze calendar)
+      - name: Checkout PM (freeze calendar + alert-recovery helper)
         uses: actions/checkout@v5
         with:
           sparse-checkout: |
             plans/ops/change-freeze-calendar.csv
+            scripts/cicd/alert_recovery.py
+
+      - name: Restore freeze-deferred-stale alert state cache
+        uses: actions/cache@v5
+        with:
+          path: .freeze-deferred-stale-alert-state.json
+          key: freeze-deferred-stale-alert-state-${{ github.run_id }}
+          restore-keys: |
+            freeze-deferred-stale-alert-state-
 
       - name: Am I in a PROD_DEPLOY freeze window now? (non-failing — SSOT logic mirrors change-freeze-check.yml)
         id: freeze
@@ -199,6 +209,14 @@ jobs:
             echo "stale=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Compute recovery transition (state-diffed)
+        id: recovery
+        if: always()
+        run: |
+          python3 scripts/cicd/alert_recovery.py \
+            --state-file .freeze-deferred-stale-alert-state.json \
+            --current "${{ steps.stale.outputs.stale }}" >> "$GITHUB_OUTPUT"
+
   # The ONLY actionable alert on this path (2026-07-20). change-freeze-check.yml deliberately no
   # longer pages on a routine block — a short, self-resolving window is not news. A deferral that
   # has NOT drained after 6h is: either the freeze calendar is wedged, the drain is failing, or the
@@ -220,6 +238,28 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       dedup_key: "stale-freeze-deferral"
       cooldown_min: 720
+    secrets: inherit
+
+  # ── RESOLVED bookend (2026-08-08) ──────────────────────────────────────────────────────
+  # notify-stale-deferral above never announced when a stuck deferral finally drained — an
+  # operator watching #ci-failures had no way to tell "still stuck" from "silently forgotten
+  # about". State-diffed via the shared alert_recovery.py helper.
+  notify-stale-deferral-resolved:
+    name: Slack — STALE freeze deferral RESOLVED
+    needs: [replay]
+    if: always() && needs.replay.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":ballot_box_with_check: *STALE FREEZE DEFERRAL RESOLVED* — the previously-stuck deferred prod build has drained
+        (prior tick paged CRITICAL)"
+      severity: "INFO"
+      conclusion: "success"
+      recovery: true
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "stale-freeze-deferral-resolved"
+      cooldown_min: 30
     secrets: inherit
 
   notify:

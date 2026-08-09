@@ -156,12 +156,18 @@ FOUR TIMES in one session, currently-live hazard regardless of whether it explai
       dangling blob via `git fsck --unreachable`, but only an EARLIER, incomplete version of the lost file) suggests
       blobs DO often survive but are not straightforward to locate or guaranteed to be the final version — establish
       whether this is reliably recoverable or just got lucky once.
-- [ ] [INFRA] P1. **Reproduce deliberately and minimally** — two throwaway clones of the same repo sharing nothing but
-      intent to collide: clone A makes an uncommitted edit to file X and holds it dirty; clone B (simulating a
+- [x] ✅ [INFRA] P1. **Reproduce deliberately and minimally** — two throwaway clones of the same repo sharing nothing
+      but intent to collide: clone A makes an uncommitted edit to file X and holds it dirty; clone B (simulating a
       concurrent quickmerge.sh) runs `git pull --rebase --autostash` against a remote with new commits that do NOT touch
       X. Confirm whether file X's content in clone A survives. If it does NOT reproduce in a clean 2-clone setup, the
       trigger requires something specific to this workspace's shared-checkout model (e.g. genuinely being the SAME
-      `.git` directory two processes operate on concurrently, not just "the same remote") — narrow accordingly.
+      `.git` directory two processes operate on concurrently, not just "the same remote") — narrow accordingly. **DONE
+      2026-08-08 (`ao_satellite_ao_dispatch_batch8-004`)** — separate `.git` directories do NOT reproduce it (edit
+      survives cleanly; a pure-concurrent-pull variant instead hits `fatal: Cannot rebase onto multiple branches` before
+      ever reaching autostash). Narrowed + reproduced the real mechanism within the SAME `.git` directory
+      (stash-interleaving: two processes' `git stash push` calls interleave, and the wrong process's `git stash pop`
+      pops the OTHER process's top-of-stack entry, leaving the victim's own stash unpopped and its file reverted to
+      HEAD). Full verdict recorded in the Progress Log entry below.
 - [ ] [INFRA] P0 (pending the above). **If confirmed as a genuine cross-process working-tree race on the SAME `.git`
       directory**: this is a structural hazard in the "share one clone per slot across multiple concurrent Claude Code
       sessions" model CLAUDE.md's Multi-agent safety section already documents as an accepted operating mode ("Two
@@ -271,3 +277,5 @@ understanding the root cause to be valuable.
   answered (recoverability: reliable via stash if not dropped/gc'd; final-version recovery confirmed in controlled
   setting; partial-version risk noted for multi-edit scenarios). Full todo 1 closure still requires a live reproduction
   opportunity per the original constraint.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.

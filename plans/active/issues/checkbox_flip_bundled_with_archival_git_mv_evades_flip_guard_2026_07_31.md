@@ -160,3 +160,4 @@ repeated per-incident coaching.
 - **na-eligibility-audit 2026-08-07 (cross-cutting tranche)**: KEEP-NA, valid — reaffirmed, unchanged. Sole open todo
   still requires an operator/plan-owner decision among the 3 named options (A/B/C) before an implementation step is
   determinable; no new information since 2026-08-06.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

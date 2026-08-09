@@ -352,3 +352,5 @@ already performed successfully in 2026-07-06/07-12 for the original non-covered-
 > confirms the shipped fix is NOT holding in production, that the deployed Cloud Run image predates the fix, and
 > explicitly calls for re-triage (rebuild+redeploy+re-verify) — none of which is a tracked open todo. The 2026-08-05
 > Progress Log restates 'file a new [INFRA]/[CODE] todo'.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

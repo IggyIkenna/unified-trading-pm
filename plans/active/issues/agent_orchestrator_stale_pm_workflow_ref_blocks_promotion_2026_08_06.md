@@ -169,3 +169,4 @@ notify-slack.yml work; both pre-date it and were only surfaced by the audit.
   2026-08-07 per the entries above); the sole remaining open todo (todo 4, rollout-process gap) is explicitly an
   operator/rollout-process-owner decision ("whether to build this now or accept the recurring cost") — not a
   worker-determinable outcome as currently scoped.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

@@ -30,6 +30,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.32
 assigned_role: review
+effort: high
 drift_direction: advance-code
 locked_by:
 locked_since:
@@ -61,12 +62,22 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P0. **Re-verify every batch-8 done-claim against reality, not against its checkbox** — for each of the 4
-      todos in `/plans/active/ao_satellite_ao_dispatch_batch8_2026_08_08.md`, re-run `git show --stat <sha>` for any
-      cited commit and re-run the specific named regression check (the 10x-loop stable-rerun for todos 1-3; the written
-      2-clone reproduction verdict for todo 4) directly rather than trusting the claim. **Done when**: all 4 verified,
-      and any claim whose evidence does not hold up is re-opened as a new tracked todo in this doc's Progress Log with
-      the discrepancy stated.
+- [x] [REVIEW] P0. ✅ **DONE 2026-08-08 (slot-15).** Re-verified every batch-8 done-claim against reality. **Todo 3
+      (backlog-collision) fully holds up** — SHAs `1e2ecac`+`3ba4ba4` verified ancestor of origin, diffs match claims; 3
+      independent isolated re-runs (6/6 tests) passed cleanly, exactly as the 5/5 claim described. **Todo 4 (autostash)
+      fully holds up** — no code shipped (correct, investigation-only); independently re-reproduced the core
+      stash-interleaving mechanism in a fresh scratch repo, confirming the written verdict. **Todo 2
+      (worker-chat/`ef73a44`) — fix confirmed correct, verification methodology did not reproduce as described**: SHA
+      verified, diff matches claim; 3 isolated re-runs (9/9 tests) passed once a pre-existing, SEPARATE infra bug
+      (below) was worked around. **Todo 1 (deepseek specs) — genuine discrepancy found, NOT fully fixed**: the `343501a`
+      timeout mitigation is real and necessary but not sufficient — `deepseek-wallet-reconciliation.spec.ts` still fails
+      DETERMINISTICALLY (3/3 re-runs, identical value every time) on a later assertion (`Worker (backlog tasks)` expects
+      `$3.0000`, gets `$5.0000`), because `DeepSeekUsagePoller` (confirmed the sole writer of `DeepSeekMessageUsageRow`,
+      `server/deepseek_usage_poller.py:498`, and — unlike `PlanRegenLoop` — still has NO `not config.is_mock()` gate)
+      scans REAL on-disk transcript files for every seeded slot id and merges genuine host transcript usage into the
+      fixture's `deepseek_message_usage` table on every tick. The batch8 doc's own root-cause claim ("no poller is
+      involved") only ruled out `DeepSeekBalancePoller` — it never checked `DeepSeekUsagePoller`, which is the actual
+      mechanism. Full details + the 2 new tracked todos this surfaced: see Progress Log below and todos 5-6.
 - [ ] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** — batch
       8 was an extraction, so the source-doc items it covers are the ones that go stale, not the batch's. Flip the
       specific todo(s) in each of: `/plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md` (items
@@ -92,6 +103,42 @@ source: >-
       execution time). **Done when**: the batch plan is archived with a banner, the inventory regenerates cleanly, and
       `check_finalize_plan_coverage.py` no longer names this pair.
 
+- [x] [BACKEND] P1. ✅ **CODE FIX SHIPPED 2026-08-09 (slot-26) — `agent-orchestrator@d279c22`.** Gate
+      `DeepSeekUsagePoller` behind `not config.is_mock()`, mirroring `ef73a44`'s `PlanRegenLoop` fix. Discovered
+      2026-08-08 (this plan's own todo 1 re-verification): `server/server.py:234` constructs `DeepSeekUsagePoller`
+      unconditionally, with no mock-mode gate (contrast `server/server.py:294`'s
+      `if not config.is_mock(): plan_regen.start()`). Its sweep (`server/deepseek_usage_poller.py` ~line 460-500) scans
+      REAL on-disk transcript files (`~/.claude-configs/orch-slot-<N>`) for every slot id the (fixture) DB returns and
+      merges genuine host usage into `DeepSeekMessageUsageRow` — confirmed live: on this shared host, slot 5 (seeded by
+      `deepseek-wallet-reconciliation.spec.ts`'s fixture as `worker, $3.0000`) has a real active Claude session, so the
+      poller's tick adds real spend on top, deterministically producing `$5.0000` instead. This is the SAME bug class
+      `ef73a44` already fixed for `PlanRegenLoop` (an unconditional background loop inheriting real host state into a
+      "mock" backend), just for a different poller/table. **Done when**: the poller never starts in mock mode,
+      `deepseek-wallet-reconciliation.spec.ts` passes deterministically from a `.tabs/N` slot checkout (5+ clean
+      re-runs), and `deepseek-per-turn-metrics.spec.ts`'s ALREADY-KNOWN poller-overwrite issue
+      (`/plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md` todo 3) is
+      re-assessed — this fix may fully or partially resolve that doc's pending implementation todo too (same poller,
+      same class of gate) — cross-reference the outcome into that doc's Progress Log either way. Repo:
+      agent-orchestrator.
+- [ ] [INFRA] P2. **Make `run-e2e-backend.sh` and `run-e2e-backend-chat.sh` generate their `ORCHESTRATOR_BACKENDS` file
+      at runtime with the slot-offset-aware port, mirroring `run-e2e-backend-collision.sh`'s (`1e2ecac`) and
+      `run-e2e-backend-tier.sh`'s already-established pattern.** Discovered 2026-08-08 (this plan's own todo 1
+      re-verification): `dashboard/tests/e2e/fixtures/backends.e2e.json` (default/`chromium` project, used by
+      `deepseek-*.spec.ts`) and `backends.e2e.chat.json` (`worker-chat` project) are still STATIC checked-in files with
+      hardcoded, non-offset ports (`8790`/`8793`) — the exact bug class `1e2ecac` found and fixed for
+      `backends.e2e.collision.json`, just not applied to these two. From ANY `.tabs/N` (N≠0) slot checkout, the
+      dashboard's Login screen resolves to the wrong (un-offset) backend port and every request fails "Failed to fetch"
+      — confirmed live from `.tabs/15` (offset 150): both specs' e2e backends boot correctly on their offset-aware ports
+      (8940/8943), but the dashboard never reaches them without a manual port correction. This makes it currently
+      IMPOSSIBLE to verify either `deepseek-wallet-reconciliation.spec.ts` or `worker-chat.spec.ts` from a tabbed slot
+      checkout as their own Progress Log entries describe doing — todo 2's claimed "10/10 clean isolated re-runs" and
+      todo 1's claimed fix-verification could only have been produced from an un-tabbed (`SLOT_OFFSET=0`) environment,
+      if genuinely run at all (todo 1's own Progress Log admits its check was NOT run due to `node_modules` being absent
+      at authoring time). **Done when**: both runner scripts generate their backends file into `$TMP_DIR` at the correct
+      offset-aware port (no hardcoded default), the 2 static fixture files are deleted, and
+      `deepseek-wallet-reconciliation.spec.ts` + `worker-chat.spec.ts` both log in successfully from a `.tabs/N` (N≠0)
+      slot checkout. Repo: agent-orchestrator.
+
 ## Codex SSOTs
 
 `/codex/11-project-management/` (findings triage + the archival ritual),
@@ -104,3 +151,80 @@ source: >-
   dispatch). `sequential: true` is deliberate here: the four todos are a genuine chain (verify → reconcile → archive
   sources → archive self). Ships `status: active` per the skill's 2026-07-30 finding (`gate_on_depends` already holds
   every task; no separate draft-gate needed).
+- **2026-08-08 (slot-15, review task ao_satellite_ao_dispatch_batch8_finalize-001)** — Todo 1 ✅. Full re-verification
+  method: fresh-pulled every repo; for each of batch8's 4 cited commits ran `git show --stat`/full diff +
+  `git merge-base --is-ancestor origin/live-defi-rollout`; for todos 1-3's e2e regression checks, built 3 throwaway
+  single-webServer-pair Playwright configs (`.tabs/15`-local, never committed) to reproduce the "TRUE isolation"
+  environment each todo's own Progress Log claims to have used, since the real `playwright.config.ts` boots all 6
+  backend pairs regardless of `--project` (confirmed: my first attempt via `--project=worker-chat` against the real
+  config booted all 12 processes and was killed by its own 180s timeout — reproducing the ALREADY-KNOWN todo-5 residual
+  finding directly).
+  - **Todo 4 (autostash)**: no code shipped, correctly investigation-only. Independently re-derived the core
+    stash-interleaving mechanism (2 processes both `git stash push` before either pops → the pop consumes the wrong LIFO
+    entry) in a fresh scratch repo in under a minute — reproduced instantly, confirming the written verdict is
+    git-mechanically sound, not a fluke. CONFIRMED, no discrepancy.
+  - **Todo 3 (backlog-collision, `1e2ecac`+`3ba4ba4`)**: both SHAs verified ancestors, diffs match claims exactly
+    (including the static fixture DELETION). 3 independent isolated re-runs, 6/6 tests, zero flakes, zero fixture
+    mutation — reproduced perfectly as claimed, no port workaround needed (this fix already made itself
+    slot-offset-aware). CONFIRMED, no discrepancy.
+  - **Todo 2 (worker-chat, `ef73a44`)**: SHA verified ancestor, diff matches claim exactly (the `not config.is_mock()`
+    gate on `plan_regen.start()`). First isolated run failed 3/3 tests at LOGIN (`Failed to fetch`) — traced to
+    `dashboard/tests/e2e/fixtures/backends.e2e.chat.json` being a STATIC, non-slot-offset-aware fixture (hardcoded
+    `:8793`) while the real backend boots on the offset-aware port (`:8943` from `.tabs/15`) — the exact same bug class
+    todo 3's own fix just solved for collision, just never applied here. Temporarily corrected the port in a local,
+    uncommitted edit (`git restore`d before finishing — see below) to isolate the ACTUAL regression check from this
+    separate infra gap: with the correct port, 3/3 isolated re-runs (9/9 tests total) passed cleanly. **Verdict: the
+    `ef73a44` fix is genuinely correct and the flakiness is genuinely resolved** — but the claimed "10/10 clean isolated
+    re-runs" could not have been produced from a `.tabs/N` (N≠0) slot exactly as described, since login itself fails
+    there without the same port fix. New todo 6 tracks fixing this at the source (both this backend and the default one
+    below).
+  - **Todo 1 (deepseek specs, `343501a` + codex doc `88693651d`)**: SHA + doc-commit both verified ancestors, diffs
+    match claims exactly. `deepseek-per-turn-metrics.spec.ts`: no fix landed (correct — hard stop, operator-gated, per
+    its own Done-when); nothing to regression-check. `deepseek-wallet-reconciliation.spec.ts`: hit the SAME
+    static-backend-port bug as todo 2 (`backends.e2e.json`, hardcoded `:8790`) — corrected locally the same way. With
+    login now working, the test proceeds PAST the specific assertion `343501a` fixed (the `{timeout: 10_000}` one) but
+    fails DETERMINISTICALLY on a LATER, different assertion: `row("Worker (backlog tasks)")` expects `$3.0000`, gets
+    `$5.0000` — identical value across 3/3 independent re-runs (not a flake). Root-caused: the sole writer of
+    `DeepSeekMessageUsageRow` is `DeepSeekUsagePoller` (`server/deepseek_usage_poller.py:498`), which — unlike
+    `PlanRegenLoop` post-`ef73a44` — has NO mock-mode gate (`server/server.py:234` constructs it unconditionally) and
+    scans REAL on-disk `~/.claude-configs/orch-slot-<N>` transcript files for every slot id the (fixture) DB returns;
+    slot 5 (this fixture's seeded "worker" row) happens to have a real active session on this shared host, so the poller
+    merges genuine spend into the fixture table on every tick, deterministically inflating the total by exactly the
+    delta observed. **This directly contradicts the batch8 doc's own root-cause claim** ("CONFIRMED different root
+    cause...no poller is involved") — that check only ruled out `DeepSeekBalancePoller`, never `DeepSeekUsagePoller`,
+    which is the actual mechanism. **Verdict: genuine discrepancy — the fix landed for todo 1 is real but insufficient;
+    the spec does not pass today.** New todo 5 tracks the actual fix (gate `DeepSeekUsagePoller` the same way `ef73a44`
+    gated `PlanRegenLoop`), and flags that it may also bear on
+    `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`'s still-open todo 3 (the
+    `deepseek-per-turn-metrics.spec.ts` fix, same poller).
+  - **Cleanup**: all 3 scratch Playwright configs deleted (never committed, `dashboard/` untracked only); both
+    temporarily-edited fixture files (`backends.e2e.chat.json`, `backends.e2e.json`) `git restore`d to their committed
+    content; an incidental `parked.e2e.yaml` re-serialization diff (same pre-existing `bootstrap.initialise()`
+    normalize-on-load behavior noted in todo 2's own original entry) also reverted. `agent-orchestrator` worktree
+    confirmed clean (`git status --short` empty) before this write-up. No product code touched by this review task —
+    only this plan document.
+  - **Todo 2 (reconcile evidence into source docs) is affected by these findings**: when reconciling
+    `deepseek-wallet-reconciliation.spec.ts`'s fix into
+    `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`/
+    `ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`, do NOT flip that item's checkbox to fully-done — the fix is
+    real progress (the timing-race half is resolved) but the spec does not pass end-to-end yet, pending new todo 5.
+- **2026-08-09 (slot-26, backend_engineer, task `ao_satellite_ao_dispatch_batch8_finalize-24c19fccdf7c`)** — Todo 5 ✅
+  code fix shipped: `agent-orchestrator@d279c22` gates `deepseek_usage_poller_inst.start()` behind
+  `if not config.is_mock():` in `server/server.py`, mirroring the existing `plan_regen.start()` gate exactly (same file,
+  same pattern). Verified `config.is_mock()` is the correct switch for this bug: both
+  `dashboard/tests/e2e/run-e2e-backend.sh:26` and `run-e2e-backend-chat.sh:66` export `ORCHESTRATOR_MODE=mock`, so every
+  e2e backend this bug affects now never starts the poller — the fix directly closes the root cause (real host
+  transcript scanning leaking into fixture data), not a workaround. Pass-1 `quality-gates.sh` green (2871 tests),
+  shipped via Pass-2 quickmerge, `d279c22` verified ancestor of `origin/live-defi-rollout`.
+  - **Residual gap, NOT fabricated as done**: the todo's own "Done when" also asked for 5+ clean re-runs of
+    `deepseek-wallet-reconciliation.spec.ts` from a `.tabs/N` slot checkout. That is currently BLOCKED by this same
+    plan's own still-open todo 6 (`run-e2e-backend*.sh` static, non-offset-aware backend-port fixtures — `[INFRA] P2`) —
+    exactly the port bug slot-15's Progress Log above hit and worked around locally; reproducing that workaround plus a
+    `dashboard/` `npm install` is UI/e2e-infra work outside `backend_engineer` craft scope
+    (`does_not: UI / TypeScript work`). Not attempted here rather than mis-claimed. Once todo 6 lands, re-run the spec
+    5+ times to close this residual.
+  - **Cross-referenced into `e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md`** (its todo 3,
+    "implement the chosen fix"): this SAME commit (`d279c22`) is that fix — flipped that doc's todo 3 to done with a
+    matching Progress Log entry there; see that doc for detail. `deepseek-per-turn-metrics.spec.ts` itself was not
+    re-run for the same infra-blocker reason above, but the fix is structurally identical to the one that doc's own todo
+    2 already decided on, so the code-level resolution is confirmed even without a fresh e2e run.

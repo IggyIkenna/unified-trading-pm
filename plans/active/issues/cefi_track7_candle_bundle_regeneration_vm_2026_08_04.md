@@ -45,6 +45,7 @@ context_scope:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
     deployment-service/scripts/vm/launch-mdps-backfill-vm.sh,
+    /plans/active/issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md,
   ]
 ---
 
@@ -148,6 +149,18 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
   (`mdps-backfill-cefi-20260808-095136`) — left running (not stale) per the VM-delete guardrail, flagged for operator.
   Filed `issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md` (cross-cutting finding) + added a
   per-day-scoped relaunch todo above. See "2026-08-08 84-cell audit" section for full detail.
+- **2026-08-09 (independent corroboration + ETA correction)**: Re-verified `mdps-backfill-cefi-20260807-130321` is
+  genuinely gone (404 on `gcloud compute instances describe`; only `insert`+`compute.instances.preempted` ops, no
+  successor) and independently confirmed `mdps-backfill-cefi-20260808-095136` is the correct, already-launched successor
+  — no duplicate relaunch performed. Sampled 2 of the 6 BYBIT target days already reached by this VM (2023-06-01,
+  2023-08-02): both bundles unchanged bit-for-bit from the pre-fix state (`Update time` still `2026-08-03T01:59:07Z`,
+  still 1 symbol each), confirming this pre-fix VM will not fix BYBIT even at completion, as already noted above. **ETA
+  correction**: the "~8 months of continuous uptime" estimate above appears to be an arithmetic slip. Measured rate over
+  a longer, more recent window (2023-06-01 start 08-08T08:59:28Z → 2023-08-26 start 08-09T01:22:53Z = 86 days / 16.38h ≈
+  5.25 days/hour): remaining ~860 days ÷ 5.25/h ≈ 164h ≈ **~7 days**, not 8 months — full natural completion (if it
+  survives that long without a further preemption) is a week-scale wait, not a multi-month one. Doesn't change the
+  recommended action (per-day-scoped relaunch already queued below for once it terminates), just corrects the timeline
+  other agents/the operator should expect.
 
 ## Follow-ups
 
@@ -184,7 +197,14 @@ shared VM. A dedicated f1-micro or e2-small SPOT instance is sufficient.
       root-cause fix (`market-data-processing-service@e9f9819`, see
       `issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md`) is now live, so a fresh VM launch will
       correctly force-reprocess. **Done when**: 84-cell audit (6 days × 2 venues × 7 timeframes) shows BYBIT bundles
-      carry both BTC+ETH `instrument_id`s and DERIBIT bundles are present for all 6 days (both underlyings).
+      carry both BTC+ETH `instrument_id`s and DERIBIT bundles are present for all 6 days (both underlyings). **RISK FLAG
+      (2026-08-09, unconfirmed)**: a static code-reading pass found a SEPARATE possible root cause for the original
+      1-symbol "race winner" defect — BTC and ETH raw files may be written via independent concurrent
+      `ThreadPoolExecutor` tasks that each straight-overwrite the SAME shared `ticks.parquet` (no merge-on-write step
+      found in `candle_write_mixin.py`/`canonical_writer.py`), which would recur regardless of `--force` correctness.
+      Not yet live-confirmed (no post-fix relaunch has completed yet). When THIS todo's own audit runs, explicitly check
+      for this failure mode before declaring done — see
+      `issues/mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md`.
 
 ## 2026-08-08 84-cell audit (6 BYBIT + 6 DERIBIT days, pre-relaunch baseline)
 
@@ -233,3 +253,9 @@ relaunch todo added above for once it reaches a terminal state.
 > BYBIT target days. Of the 1 target day it did reach (2023-06-01), the bundle was NOT actually fixed due to the
 > --force-drop bug above. Root cause fixed (market-data-processing-service@e9f9819); next relaunch (todo above) will use
 > corrected per-day scoping once the currently-running mdps-backfill-cefi-20260808-095136 terminates.
+
+## Progress Log (continued)
+
+- **context-scout 2026-08-09**: refreshed context_scope (6 entries) -- added the cross-cutting
+  `mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md` issue (the root-cause fix that explains why 2 prior
+  relaunches never fixed the BYBIT cells, per the 2026-08-08 slot-26 finding above).

@@ -41,6 +41,14 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md,
+    /plans/active/ui_satellite_ao_dispatch_batch2_2026_08_08.md,
+    /plans/active/artifact_pipeline_observability_2026_07_17.md,
+    /plans/active/issues/ag_closeout_audit_ui_parked_2026_08_07.md,
+  ]
 ---
 
 # ag-closeout-audit ui parked findings — 2026-08-08
@@ -192,3 +200,4 @@ only, no action needed until the infra-tranche migration progresses further.
   `artifact_pipeline_observability_2026_07_17.md`'s prose-only "still open" vulnerability-scan sentence into a real
   `- [ ]` checkbox (see that doc's own marker) so it's no longer at risk of being missed a 5th time. Findings 1/3/4/5
   are process notes / already correctly deferred / no new information — no further action needed from this skill.
+- **context-scout 2026-08-09**: populated context_scope (5 entries).

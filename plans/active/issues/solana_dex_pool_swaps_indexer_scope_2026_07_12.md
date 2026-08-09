@@ -36,6 +36,7 @@ last_updated: 2026-07-12
 locked_by:
 context_scope:
   [
+    /plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md,
     /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/archive/issues/solana_defi_fake_history_snapshot_2026_06_17.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
@@ -153,3 +154,8 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
   implementation plan `solana_dex_pool_swaps_indexer_2026_08_08.md` was authored, `assigned_vm: planning`, gated
   finalize companion included). This scoping doc's own work is done; the real dispatchable build lives in that new plan
   pair, not here. Not archived this pass. Nothing to reclassify.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA-STALE (already-duplicated) — the doc's 1 open checkbox
+  ([DOCS] P3, archive-once-complete) is the exact same closing action already tracked, verbatim, as todo 2 of the active
+  `solana_dex_pool_swaps_indexer_2026_08_08_finalize.md` (gated on the implementation plan, currently 2/5 todos done).
+  Flipping `assigned_vm` here would dispatch a duplicate of that finalize todo. Doc stays `assigned_vm: NA`.

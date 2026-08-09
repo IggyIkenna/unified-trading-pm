@@ -27,6 +27,13 @@ resolved_by:
 locked_by:
 source: [direct instruction from main agent, BLK-dc3f8317 + BLK-af6cef6a]
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/routes/slots_worker.py,
+    agent-orchestrator/server/tmux_pruner.py,
+    agent-orchestrator/server/worker_liveness/_respawn.py,
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+  ]
 ---
 
 # one_shot_complete session-ownership desync — idle-reap during async-wait
@@ -112,3 +119,7 @@ is an ancestor of `origin/live-defi-rollout`) is a stronger correctness signal t
   "idle-reap"/"ScheduleWakeup"/"session-ownership desync" -- zero hits outside this doc.
   `execution_scope: local-only -> orchestrator-agent`. Companion gated finalize:
   `one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md`.
+
+## Progress Log (context-scout)
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

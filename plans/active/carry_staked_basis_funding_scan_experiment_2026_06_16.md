@@ -777,3 +777,4 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
 - **context-scout 2026-08-01**: populated/refreshed context_scope (6 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (6 entries), unchanged — already carries the
   staked_basis_funding_scan.py harness source path and all entries still resolve.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

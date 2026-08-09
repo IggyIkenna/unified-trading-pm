@@ -172,8 +172,9 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
 
 ## Phase 3 — live CLOB depth (shared with the prediction-perps plan's Phase 3)
 
-- [ ] [SCRIPT] P2. Live BBO+depth recording for these equity perps (for basis-arb slippage calibration) — reuse the CeFi
-      live-ws book connectors. Repo: market-tick-data-service.
+- **[SCRIPT] P2. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 6 for AO
+  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Live BBO+depth recording for
+  these equity perps, reusing the CeFi live-ws book connectors. Repo: market-tick-data-service.)
 
 ## Phase 4 — arb wiring
 
@@ -252,6 +253,33 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       Repos: unified-api-contracts + market-tick-data-service + unified-trading-pm (CLAUDE.md).
 
 ## Progress Log
+
+### 2026-08-09 — Propagation ops (B1/B3/B4) verified DONE on live prod state (`cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1)
+
+Dispatched via AO batch11. Re-verified the chain against LIVE production GCS state rather than launching a fresh
+backfill/rollup/enumerator run, since the 2026-06-24 session already launched `instr-backfill-tradfi-20260623`
+(exit_code=0) and armed the nightly schedulers (`lifecycle-catalogue-regen-tradfi` 01:00 UTC,
+`expected-universe-v2-tradfi` 01:30 UTC, `instrument-catalogue-regen`) — ~6 weeks of nightly runs since then should have
+already propagated the full universe.
+
+- **Catalogue has the new MVP tickers** — downloaded
+  `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (919,493 rows). 103 distinct
+  EQUITY/ETF `base_asset`s tagged `mvp=True`, including every sampled 2026-06-24-batch addition
+  (HOOD/PLTR/COIN/MSTR/ARM/ASML/RIVN/SMCI/UBER/DELL/GME/CRWD/SONY/NOK/BABA/TSM/NVO) and all 16 sampled ETF additions
+  (EWT/EWY/ROBO/SLX/URNM/UVXY/GLD/IAU/SLV/PPLT/PALL/CPER/USO/UNG/IBIT/ETHA) — all `mvp=True`, correct venue
+  (NASDAQ/NYSE).
+- **Manifest shows them `expected_unattempted`** — downloaded
+  `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (7,022,190 rows). Every
+  one of the 17 sampled tickers above shows a real `expected_unattempted` population (1,000-3,000 rows each) alongside
+  `captured`/`empty_confirmed` rows — the enumerator has seeded them at the NASDAQ/NYSE:EQUITY grain as designed.
+- **A sample equity capture shows non-NaN OHLCV** — downloaded
+  `gs://market-data-tick-tradfi-prd-central-element-323112/processed_candles/by_date/day=2026-07-20/pipeline_mode=batch_databento/timeframe=15m/data_type=ohlcv_15m/instrument_type=EQUITY/venue=NASDAQ/NASDAQ:EQUITY:HOOD-USD.parquet`
+  — 49 rows, 0 NaNs across `open/high/low/close/volume`, realistic price range ($98.63-$102.56).
+- **Parity check**: the same `capture_status` distribution shape (dominated by `empty_confirmed`+`expected_unattempted`
+  for low-frequency data_types like `ohlcv_24h`) holds for long-established tickers (AAPL, NVDA) as for the new
+  additions (MSTR) — the new tickers are behaving identically to pre-existing ones, not showing a distinct gap.
+
+Checkbox flipped above; `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1 flipped in the same commit.
 
 ### 2026-07-18 — Binance equity-perp universe WIDENED to ALL live TRADIFI_PERPETUAL listings (operator directive)
 
@@ -560,6 +588,10 @@ dropped. The CME-b tradfi close-out is the linchpin that unlocks the DBEQ 3-data
 - **na-eligibility-audit 2026-08-07** (tranche=cefi, autonomous): KEEP-NA, valid — 22 open items are dominated by
   open-ended strategy-archetype/hedge-venue/universe-construction [DESIGN]/[RESEARCH] calls, not bounded deterministic
   work.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — 15 open items, majority genuine
+  strategy-design/research work or explicitly flagged as needing their own scoped build plan before AO dispatch. 7 items
+  flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE as future-extraction candidates (mirrors this doc's own 2026-08-09 extraction
+  pattern for 4 other items), not enough to flip the whole doc.
 
 ## Temporary states + their canonical follow-up plans
 
@@ -619,28 +651,32 @@ realized +26–40% ann during spikes, 0 most ticks; SPX ~5.5%).
       stay non-MVP. The catalogue `_add_mvp_column` calls `is_mvp("tradfi",…)` per row → on next
       `build_instrument_catalogue` regen the new tickers tag `mvp=True`. unified- api-contracts@219e4b17. (98 mvp_scope
       tests + 173 ticker/g9 tests green.)
-- [ ] [SCRIPT] P0. **Propagation ops (B1/B3/B4) — run on real infra to completion.** The code (above) is the enabler;
+- [x] ✅ [SCRIPT] P0. **Propagation ops (B1/B3/B4) — run on real infra to completion.** The code (above) is the enabler;
       the chain is wired: (1) IS instruments backfill (`launch-instruments-backfill-vm.sh --asset-group TRADFI`) writes
       per-day InstrumentRecords for the new equities (databento/massive now fetch them) → (2)
       `build_instrument_     catalogue` rolls up + tags `mvp=True` → (3) `enumerate_expected_universe.py` v2 tradfi
       enumerator reads the catalogue, seeds the new equities as `expected_unattempted` at venue=NASDAQ/NYSE grain → (4)
       MTDS wave-launcher reads the manifest `expected_unattempted` gaps + captures. **Run + verify**: catalogue has new
       MVP tickers; manifest shows them `expected_unattempted`; a sample equity captures non-NaN OHLCV. Repo:
-      deployment-service (launchers) + instruments-service (catalogue/enumerator CLIs). **IN PROGRESS** (this session) —
-      see Progress Log.
-- [x] ✅ [DATA] P2. ~~**BLOCKED-DATA** — HYUNDAI / SAMSUNG / SK Hynix (3 Binance tradfi-perps with NO US-listed twin, KRX
-      primary): source a Korea-equity reference + tick vendor so the cash-equity twin exists for basis (databento
+      deployment-service (launchers) + instruments-service (catalogue/enumerator CLIs). **DONE — verified live
+      2026-08-09** (`cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1). The live nightly schedulers
+      (`lifecycle-catalogue-regen-tradfi`, `expected-universe-v2-tradfi`, `instrument-catalogue-regen`) armed 2026-06-24
+      have run to completion in the ~6 weeks since — no fresh backfill/rollup/enumerator run was needed; verification
+      read prod state directly. See Progress Log for the full evidence.
+- [x] ✅ [DATA] P2. ~~**BLOCKED-DATA** — HYUNDAI / SAMSUNG / SK Hynix (3 Binance tradfi-perps with NO US-listed twin,
+      KRX primary): source a Korea-equity reference + tick vendor so the cash-equity twin exists for basis (databento
       DBEQ.BASIC is US-only). Until sourced these perps have a dispersion-only (cross-crypto-venue) leg, no cash hedge.
       Repo: instruments-service (vendor ask → operator). **DEFERRED** — needs an operator credential/vendor decision
-      (Korea equities).~~ **CLOSED — na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep), stale item.** This
-      doc's own Progress Log already records the resolution: **RULED 2026-08-07 (operator, interactive session)**: no
-      dedicated Korea-equity tick vendor — "daily from yahoo finance is enough." Accept reduced fidelity for these 3
-      basis-arb cash-twin legs specifically — use the already-live KRX-venue Yahoo daily OHLCV coverage
+      (Korea equities).~~ **CLOSED — na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep), stale item.** This doc's
+      own Progress Log already records the resolution: **RULED 2026-08-07 (operator, interactive session — source:
+      `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log, 2026-08-07 entry)**: no dedicated
+      Korea-equity tick vendor — "daily from yahoo finance is enough." Accept reduced fidelity for these 3 basis-arb
+      cash-twin legs specifically — use the already-live KRX-venue Yahoo daily OHLCV coverage
       (`unified-api-contracts@844c5ee6b` + `instruments-service@1ba5da4b`, Phase 5) as the cash UNDERLYING reference at
       daily (not tick) resolution. This checkbox was simply never flipped when that ruling landed. The "Deferred work —
       migrated to" section's note below (pre-dating the 2026-08-07 ruling) is correspondingly superseded — the
-      basis-execution cash-twin need it describes as "still open" is now closed at daily resolution, not still needing
-      a fresh operator ask.
+      basis-execution cash-twin need it describes as "still open" is now closed at daily resolution, not still needing a
+      fresh operator ask.
 - [ ] [SCRIPT] P1. market-tick-data-service — capture Binance/OKX/Bybit `indexPrice` + `markPrice` + `fundingRate` for
       the equity-perps as a first-class data_type (the venue's DISCLOSED mark — needed for basis = mark−index and for
       OFF-HOURS synthetic-mark detection where the cash tape is closed). These ride the existing CeFi
@@ -792,9 +828,9 @@ funding.
       adapter — is resolved; what remains is the build itself). Genuinely multi-day, cross-repo build (new
       execution-service adapter + `ibkr-gateway-infra` wiring); not a single-worker bounded-outcome task, so
       `assigned_vm` stays `NA` pending its own scoped build plan rather than blind AO dispatch on this umbrella doc.
-- [ ] [RESEARCH] P1. Check OKX/Bybit (+ Hyperliquid) for a WTI/Brent OIL perp — CL is in −20% backwardation so an
-      oil-perp + long-CL-future hedge would be NET >20% (the single best pair if a perp exists). If found, add it. Repo:
-      instruments-service.
+- **[RESEARCH] P1. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 7 for AO
+  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Check OKX/Bybit/Hyperliquid for
+  a WTI/Brent oil perp; add if found. Repo: instruments-service.)
 - [ ] [DESIGN] P1. strategy-service — single-stock basis archetype on the 12 net-profitable names: short Binance
       stock-perp (collect funding) + long IBKR cash stock; low-turnover (held; the winners had 0–2 sign-flips/90); entry
       restricted to US hours (UAC venue_session_hours), hold through off-hours. Edge = NET basis, sized continuously by
@@ -817,13 +853,13 @@ strictly biggest; the set CHURNS over quarters. The 12 added in 0fe9067e are a s
       (universe) + strategy-service (ranking). **APPROVED (operator, 2026-08-08)**: "Approve, build it" — retagged
       `[DESIGN]`→`[BACKEND]`. Genuinely multi-repo build (UAC universe schema + strategy-service ranking logic); not a
       single-worker bounded-outcome task, so `assigned_vm` stays `NA` pending its own scoped build plan.
-- [ ] [SCRIPT] P1. e2e-testing — re-run the NET-basis backtest with DIVIDENDS priced into the long cash-stock leg
-      (holding the stock EARNS dividends → ADDS to net; current +5–24% is a FLOOR). Use a dividend-yield source per
-      name. Repo: e2e-testing.
-- [ ] [RESEARCH] P1. instruments-service — KEEP crude/gold/natgas/SPX/NDX commodity+index perps in the universe despite
-      net≤0 NOW (carry FLIPS with the futures curve — crude already −20% backwardated). Check how far back Binance's
-      perp history goes per symbol → confirm whether the backtest window spans a contango↔backwardation regime change
-      (if history is short, the "net-negative" verdict is regime-conditional, not permanent). Repo: instruments-service.
+- **[SCRIPT] P1. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 8 for AO
+  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Re-run the NET-basis backtest
+  with dividends priced into the long cash-stock leg, all 12 net-profitable pairs. Repo: e2e-testing.)
+- **[RESEARCH] P1. EXTRACTED 2026-08-09 — moved to `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 9 for AO
+  dispatch (parent_epic: cefi_master). See that doc for the live checkbox + evidence.** (Check Binance perp
+  listing/history length per NET-negative/-slim symbol against known regime shifts, to determine whether the
+  net-negative verdict is regime-conditional. Repo: instruments-service.)
 - [ ] [DESIGN] P2. strategy-service — note: XAU (gold) perp is the deepest non-crypto leg ($327M) → if gold carry flips
       to backwardation (or for non-basis gold strategies), it's the most size-able crypto-venue commodity. Repo:
       strategy-service.

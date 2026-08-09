@@ -22,8 +22,9 @@ summary: >-
   fallout, explicitly flagged as a followup in the revert plan's own Progress Log ("glue-pool-starvation-monitor.yml ...
   NOT touched ... flagged here for whoever next touches this plan to consider retiring for the same reason") but not yet
   acted on before this incident materialized.
-status: open # both immediate items resolved + verified live below; 1 non-blocking P3 audit todo remains
+status: open
 nature: issue
+archive_exempt: true
 asset_group: [ci, cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm]
@@ -155,13 +156,17 @@ every healthy tick forever) — that is a real, if modest, additional job
 
 ## Still open
 
-- [ ] [INFRA] P3. Audit which of this repo's standing CI monitors implement a real state-diffed recovery/all-clear post
-      (confirmed present: `branch-health.yml`'s lag-monitor, `overnight-dead-man-switch.yml`; confirmed absent:
+- [x] ✅ [INFRA] P3. Audit which of this repo's standing CI monitors implement a real state-diffed recovery/all-clear
+      post (confirmed present: `branch-health.yml`'s lag-monitor, `overnight-dead-man-switch.yml`; confirmed absent:
       `glue-pool-starvation-monitor.yml`, `glue-runner-health-monitor.yml` — both now schedule-disabled so the gap is
       dormant, not urgent) vs. ones that only ever post CRITICAL/WARNING and never confirm resolution. For any LIVE
       (schedule-active) monitor found missing it, add the `branch-health.yml`-pattern recovery job (cached prior-state
       diff + `recovery: true` + a short `cooldown_min`) — this is the gap the operator flagged directly: "if this got
-      fixed and I didn't see a Slack alert that it got fixed, that would be a problem."
+      fixed and I didn't see a Slack alert that it got fixed, that would be a problem." **DONE 2026-08-09,
+      `unified-trading-pm` (this commit)** — full enumeration + fixes in the Progress Log below. Note: this todo's own
+      premise about `overnight-dead-man-switch.yml` was STALE — re-verified live, it has NO dedup_key/cooldown and NO
+      resolved job at all (a one-shot nightly liveness check, not a re-nagging standing-condition monitor); it is
+      correctly excluded from this fix (see Progress Log for why) but was wrongly cited as "confirmed present."
 
 ## Progress Log
 
@@ -178,3 +183,89 @@ every healthy tick forever) — that is a real, if modest, additional job
   `assigned_vm: planning`, drafted by `/ag-closeout-audit ci` the same day). Not reclassifying `assigned_vm` here —
   batch6 is still draft pending operator activation; flipping this doc too would risk a duplicate dispatch once batch6
   activates.
+
+- **2026-08-09 (slot 7, `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 4)**: Full audit + fix.
+  `unified-trading-pm@c717af0fd`.
+
+  **Citation corrected 2026-08-09 (`ci_satellite_ao_dispatch_batch6_finalize` todo 1)**: `c717af0fd` does not resolve to
+  a commit in this repo (a pre-rebase SHA — confirmed via `git cat-file -e`). The real work is
+  `unified-trading-pm@4bd8a11d0b` ("feat(cicd): add state-diffed recovery/all-clear bookend to 6 CI monitors"), verified
+  ancestor of `origin/live-defi-rollout` — the same correction batch6's own plan already made for its todo 4.
+
+  **Method**: enumerated every `.github/workflows/*.yml` with a `schedule:` trigger (27 files), read each one in full,
+  and classified by whether it is a genuine STANDING-CONDITION monitor (uses `dedup_key` + `cooldown_min` to re-nag
+  while a bad state persists — the exact shape that leaves an operator wondering "is this still broken?") vs. a per-run
+  pass/fail report (no dedup/cooldown; a fresh success is silently suppressed by `notify-slack.yml`'s routine-green
+  filter, a fresh failure just posts again next run — no persisting-alert illusion to correct).
+
+  **Correction to this doc's own premise**: `overnight-dead-man-switch.yml` was cited above as "confirmed present" for
+  the recovery pattern. Re-read in full: its `notify` job has no `dedup_key`/`cooldown_min` at all and there is no
+  sibling resolved/recovery job anywhere in the file — it is a one-shot nightly liveness check (03:00 UTC), not a
+  re-nagging standing-condition monitor, so the "recovery bookend" concept doesn't apply to it the way it does to
+  `branch-health.yml`'s lag-monitor. Correctly excluded from the fix below, but the earlier "confirmed present"
+  characterization was wrong.
+
+  **CONFIRMED PRESENT** (genuine dedup'd standing-condition alert + a real resolved/recovery job, verified by reading
+  the file — not just grepping for the word "recovery"): `branch-health.yml` (`lag-notify-resolved`; note its sibling
+  `ar-lag-notify` job in the SAME file has NO resolved counterpart — a smaller gap, flagged below, not fixed here since
+  AR-dep-publish-lag is a WARNING-only advisory, not the operator's stated pain point),
+  `cloud-build-failure-watcher.yml` (`notify-recovery`), `reconcile-release-tags.yml` (`stall-notify-resolved`),
+  `sit-debounce-trigger.yml` (`stale-notify-resolved`), `stale-build-watcher.yml` (`notify-recovery`), `ci-health.yml`
+  and `ldr-ci-monitor.yml` (both compute recovery TRANSITIONS inside their backing Python script —
+  `ci_failure_watcher.py`'s `detect_resolved_prs()`/`kind: "recovered"` and `ldr_ci_monitor.py`'s RED→GREEN transition
+  detector — verified by reading the scripts, not just the YAML).
+
+  **CONFIRMED ABSENT + LIVE (schedule-active) — FIXED this commit** (6 monitors: a real dedup'd standing-condition alert
+  with no all-clear path):
+  1. `fix-approval-timeout.yml` (`dedup_key: fix-approval-timeout:outstanding`, cooldown 120m)
+  2. `ldr-docs-gate.yml` (`dedup_key: ldr-docs-gate-red`, cooldown 60m)
+  3. `freeze-deferred-build-replay.yml`'s `notify-stale-deferral` (`dedup_key: stale-freeze-deferral`, cooldown 720m)
+  4. `promote-fleet-startup-failure-monitor.yml` (`dedup_key: promote-fleet-startup-failure`, cooldown 60m)
+  5. `ruleset-drift-alert.yml` (`dedup_key: ruleset-drift-detected`, cooldown 120m)
+  6. `sit-gate-stuck-detector.yml` (`dedup_key: sit-gate-stuck-<max_streak>`, cooldown 60m)
+
+  **Fix mechanism**: rather than re-derive the prev-tick-vs-this-tick diff per workflow (as
+  `cloud-build-failure-watcher.yml`/`stale-build-watcher.yml` each do inline in bash), added ONE shared, unit-tested
+  helper `scripts/cicd/alert_recovery.py` (`compute_recovery()` — a transition-only recovery: prior tick alerted AND
+  this tick doesn't; `read_prev_alert()`/`write_state()` — a missing/corrupt state file reads as "no prior alert", never
+  a false recovery) + `scripts/cicd/test_alert_recovery.py` (10 tests: the 4-case transition table, missing/
+  corrupt-file handling, state round-trip, and 3 CLI-level tests). Every one of the 6 workflows now: restores a
+  per-workflow `actions/cache` state file (mirrors `branch-health.yml`'s `.lag-state.json` pattern — no new GCP auth
+  needed for the 4 files that had none), calls the shared CLI to compute+persist `recovered`, and gates a new
+  `notify-*-resolved` job (severity INFO, `conclusion: success`, `recovery: true`, its own distinct `dedup_key` + short
+  `cooldown_min` so the resolved bookend never shares a cooldown with the alert itself) on `recovered=='true'`.
+
+  **Not fixed (documented, not silently dropped)** — monitors that alert on a bad state but are NOT this todo's
+  dedup'd-standing-condition shape, so adding a resolved bookend would need a bigger redesign (adding dedup/cooldown
+  first) rather than just the recovery bookend this todo scoped:
+  - `ldr-to-main-promote-fleet.yml` (`notify` conflict alert, `notify-arm-failed`) and `ldr-to-main-promote.yml`
+    (`notify-arm-failed`) — neither has a `dedup_key` at all, so each re-posts every tick the condition persists
+    (spammy) rather than dedup'd-silent-until-fixed; the harm shape here is "too noisy," not "silently resolved," so
+    it's a different fix (add dedup, not add recovery) — flag for a future todo, not addressed here.
+  - `branch-health.yml`'s `ar-lag-notify` (AR-dep-publish-lag) — has `dedup_key`/`cooldown_min` but no resolved sibling;
+    smaller/lower-severity gap (WARNING advisory, not an operator-named pain point) than the 6 fixed above.
+  - Per-run pass/fail reporters with no dedup/cooldown (`cassette-drift-check.yml`,
+    `removed-symbols-workspace- sweep.yml`, `build-smoke-all-repos.yml`, `cold-storage-cleanup.yml`,
+    `readiness-verifier.yml`, `secret-health-check.yml`, `digest-drift-sweep.yml`, `ci-status-consolidator.yml`,
+    `version-coherence-check.yml`, `workspace-quickmerge-validation.yml`, `supersede-stale-dep-update-prs.yml`) — a
+    fresh green run is already silent (suppressed by the carrier's routine-green filter) and a fresh red run posts again
+    on its own merits; there is no re-nagging illusion of being unwatched to correct.
+  - `glue-pool-starvation-monitor.yml` / `glue-runner-health-monitor.yml` — confirmed still schedule-disabled (verified
+    live in both files' `on:` blocks), so out of scope per this todo's own text.
+
+  **Verification**: `scripts/cicd/test_alert_recovery.py` green (10/10) standalone; full `quality-gates.sh` run cited
+  below.
+
+- **cicd escalation agt-558c62 2026-08-09**: all items resolved (0 open todos), genuinely archival-eligible, but
+  `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` (1007L, already over the 1000L hard line-cap) cites
+  this doc via a markdown-syntax link — archiving would hit the exact deadlock documented in
+  `/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` (a same-line link-repoint
+  edit in an over-cap file has no `check_line_caps.sh` carve-out). Set `archive_exempt: true`, kept `status: open`
+  (terminal status without physical archival would itself fail `check_terminal_status_archived`). Un-set once the
+  deadlock doc's operator decision lands and the archival can complete.
+
+- **na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:3e317fe1078c4dd1]:
+  KEEP-NA, valid — confirmed independently: 0 open `- [ ]` todos, `archive_exempt: true` with the line-cap-deadlock
+  reason still current (the referring doc's `check_line_caps.sh` deadlock is unresolved). Not archive-eligible until
+  that deadlock doc's operator decision lands, per the doc's own prior entry.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

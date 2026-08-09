@@ -29,6 +29,7 @@ non-silent default; forcing an explicit tier onto genuinely role-generic work is
 busywork) — the goal is that the silent-default population does not grow unattended.
 
 Usage: check_effort_signal_ratchet.py [--quiet] [--update-baseline]
+  check_effort_signal_ratchet.py --only <path> [<path> ...]
   --update-baseline   regenerate effort_signal_baseline.yaml from the CURRENT corpus
                        state. Run this ONLY after actually reviewing the new plans this
                        run flagged (declare effort:/thinking_tier: on the ones that need
@@ -36,11 +37,27 @@ Usage: check_effort_signal_ratchet.py [--quiet] [--update-baseline]
                        plans. A genuine raise still writes (with a loud warning), so a
                        real spike stays visible in the commit history.
 Exit 0 = current count <= baseline. Exit 1 = grew beyond baseline.
+
+``--only <paths>`` (2026-08-09, precommit migration): checks ONLY the given staged files,
+no baseline math — same shape as check_terminal_status_archived.py --only. This ratchet
+previously had NO precommit-time presence (only the full corpus-wide baseline mode), so a
+docs(plans) commit authoring a new living plan with assigned_role but no effort/
+thinking_tier had zero enforcement at commit time — root-caused after the baseline grew
+217->228 in under a day via commits that never ran this check. --only flags what the commit
+INTRODUCES: a staged plan that is a silent-default now but was ALREADY one at HEAD is
+pre-existing debt and is skipped (corrected 2026-08-09 — the original "unconditionally
+flagged regardless of pre-existing population" reading contradicted this module's own
+never-on-pre-existing-debt / not-busywork contract above, and blocked an 18-doc
+citation-sourcing commit on 18 gaps it neither created nor could correctly decide). A brand-new
+plan, or an edit that STRIPS an existing effort signal, still flags — that is the growth this
+ratchet exists to stop. Declaring effort/thinking_tier explicitly, or accepting the role
+default deliberately, remains the author's call.
 """
 
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -88,22 +105,79 @@ def _frontmatter(text: str) -> dict[str, str]:
     return out
 
 
+def _is_silent_default_text(name: str, text: str) -> bool:
+    """Content-level predicate, so the same rule can be applied to a working-tree file AND to
+    a `git show HEAD:<path>` blob without a second implementation."""
+    if name in _EXCLUDE_NAMES or name.startswith("_") or name.endswith(".HANDOVER.md"):
+        return False
+    fm = _frontmatter(text)
+    if fm.get("doc_type") != "plan":
+        return False
+    if fm.get("status") not in _LIVING_STATUSES:
+        return False
+    if not fm.get("assigned_role"):
+        return False
+    return not (fm.get("effort") or fm.get("thinking_tier"))
+
+
+def _is_silent_default(fp: Path) -> bool:
+    """True iff this plan is a living (draft/active) plan that declares assigned_role but
+    neither effort: nor thinking_tier:. Shared by the corpus-wide scan and --only so the
+    two modes can never silently diverge on what counts as a violation."""
+    return _is_silent_default_text(fp.name, fp.read_text(encoding="utf-8", errors="replace"))
+
+
+def _was_silent_default_at_head(fp: Path) -> bool:
+    """True iff this plan was ALREADY a silent-default in the committed (HEAD) version.
+
+    A file absent from HEAD (brand-new plan) returns False — a new plan authored without an
+    effort signal IS the growth this ratchet exists to stop, so it must still be flagged.
+    """
+    proc = subprocess.run(
+        ["git", "-C", str(PM), "show", f"HEAD:{fp.resolve().relative_to(PM)}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode != 0:
+        return False
+    return _is_silent_default_text(fp.name, proc.stdout)
+
+
 def _silent_default_plans() -> list[str]:
-    flagged = []
-    for fp in sorted(ACTIVE_DIR.glob("*.md")):
-        if fp.name in _EXCLUDE_NAMES or fp.name.startswith("_") or fp.name.endswith(".HANDOVER.md"):
+    return [fp.name for fp in sorted(ACTIVE_DIR.glob("*.md")) if _is_silent_default(fp)]
+
+
+def _run_only(paths: list[str], quiet: bool) -> int:
+    """Precommit-scoped mode: check exactly the given staged files, no baseline math.
+
+    Flags only what THIS COMMIT INTRODUCES — a plan that was already a silent-default at HEAD is
+    pre-existing debt and is skipped (2026-08-09). Without that, editing one prose line of any
+    legacy plan demanded an `effort:` declaration for a plan you may not own, which contradicts
+    this module's own contract twice over: "hard-fails ... never on pre-existing debt", and "the
+    goal is not 'every plan must declare effort/thinking_tier' ... forcing an explicit tier onto
+    genuinely role-generic work is busywork". Measured: an 18-doc citation-sourcing commit was
+    blocked on 18 pre-existing gaps it did not create and could not correctly decide. The growth
+    signal the ratchet actually wants — a NEW plan, or an edit that REMOVES an existing effort
+    signal — is still caught, because a file absent from HEAD (or clean at HEAD) still flags.
+    """
+    flagged: list[str] = []
+    for raw in paths:
+        p = Path(raw)
+        if not p.is_absolute():
+            p = Path.cwd() / p
+        if not p.is_file():
             continue
-        fm = _frontmatter(fp.read_text(encoding="utf-8", errors="replace"))
-        if fm.get("doc_type") != "plan":
-            continue
-        if fm.get("status") not in _LIVING_STATUSES:
-            continue
-        if not fm.get("assigned_role"):
-            continue
-        if fm.get("effort") or fm.get("thinking_tier"):
-            continue
-        flagged.append(fp.name)
-    return flagged
+        if _is_silent_default(p) and not _was_silent_default_at_head(p):
+            flagged.append(str(p))
+
+    if not quiet:
+        for name in flagged:
+            print(f"  SILENT-DEFAULT-EFFORT  {name}")
+
+    n = len(flagged)
+    print(f"{'✅' if n == 0 else '❌'} check_effort_signal_ratchet (--only): {n} violation(s) in staged files")
+    return 0 if n == 0 else 1
 
 
 def _load_baseline() -> dict[str, object]:
@@ -116,6 +190,10 @@ def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     update_baseline = "--update-baseline" in args
     quiet = "--quiet" in args
+
+    if "--only" in args:
+        idx = args.index("--only")
+        return _run_only(args[idx + 1 :], quiet)
 
     flagged = _silent_default_plans()
     count = len(flagged)

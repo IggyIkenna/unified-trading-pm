@@ -103,6 +103,7 @@ context_scope:
 - **context-scout 2026-08-07**: refreshed context_scope (4 entries, unchanged) — `*_finalize` gate doc, genuinely
   code-free (all 3 todos are checkbox-reconciliation/re-triage/archival, no code target); the gating parent batch, the
   umbrella closeout, the audit methodology, and the archival-ritual codex doc remain the correct minimal set.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
 
 ## Codex SSOTs
 

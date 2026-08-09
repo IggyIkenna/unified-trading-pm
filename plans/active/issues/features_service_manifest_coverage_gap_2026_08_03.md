@@ -306,3 +306,5 @@ not something an AO worker should guess at.
      `correct_calendar_time_features_phantom_manifest_rows_2026_08_05.py --dry-run` fell back to the seed (consolidated
      blob 3056s old) and re-read the 2 phantoms, while the same check against the consolidated index shows 0. The
      corrections landed only in the consolidated index, not the per-VM shard the fallback reads.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

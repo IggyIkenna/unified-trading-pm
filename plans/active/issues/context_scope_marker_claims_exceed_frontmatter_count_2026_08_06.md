@@ -67,6 +67,7 @@ context_scope:
   [
     /cursor-configs/skills/context-scout/SKILL.md,
     /scripts/plan-hygiene/generate_context_scope_inventory.py,
+    scripts/plan-hygiene/generate_context_scope_marker_sweep.py,
     /plans/active/data_completion_defi_2026_07_15.md,
     scripts/plan-hygiene/check_line_caps.sh,
   ]
@@ -346,3 +347,9 @@ harness task #4 → ✅ CLOSE the `BLK-bea57103` and the new BLK bookends.
   `data_completion_to_100_all_ag_2026_06_21.md` ALREADY restored (only `migrate_defi_full_v9_canonical.py` remains
   genuinely missing) — apparently a concurrent, unrelated edit in this shared working tree; that doc is outside this
   batch's scope so left untouched, noted here only.
+- **context-scout 2026-08-09**: re-scouted (flagged COUNT_MISMATCH by Phase 0, a known regex false-positive per
+  `context_scope_count_mismatch_regex_false_positive_comma_extended_claim_2026_08_08.md` — this doc's own subject matter
+  is that bug class, not an instance of it). Live-checked: `context_scope` still accurate for this doc's substance;
+  added `scripts/plan-hygiene/generate_context_scope_marker_sweep.py` (the standing corpus-sweep tool this issue's todo
+  2 shipped, previously missing from the list) — refreshed context_scope (5 entries). This fresh marker is now the
+  latest, which self-heals the false positive for future Phase 0 runs.

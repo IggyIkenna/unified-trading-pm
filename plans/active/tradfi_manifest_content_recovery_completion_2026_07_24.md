@@ -901,3 +901,4 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
 `tradfi_consolidated_closeout_2026_07_18.md`.
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

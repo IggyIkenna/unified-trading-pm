@@ -284,3 +284,10 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
   2026-08-06: go-ahead to run --apply" text vs. `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`'s
   still-operator-gated framing of the identical residual-91-CBOE+312-DBEQ item) — a worker picking up that todo needs
   this pointer before running `--apply`.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:07b1aaeea1fc99f4]: **KEEP-NA,
+  valid -- confirmed unchanged.** Phase-0 flagged this doc as "changed since the 08-08 marker" (git-date fallback), but
+  `git diff <08-08-marker-sha>..HEAD` shows the ONLY intervening change is the context-scout line directly above (a
+  context_scope refresh) -- zero todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh full
+  re-read; see `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying
+  false-positive class this run found and filed.

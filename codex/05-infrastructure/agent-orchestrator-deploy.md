@@ -33,9 +33,9 @@ referenced_by:
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
-last_reviewed:
+last_reviewed: 2026-08-09
 code_refs:
-last_updated: 2026-08-07
+last_updated: 2026-08-09
 author: ikenna-claude-subagent
 ---
 
@@ -64,18 +64,18 @@ author: ikenna-claude-subagent
 
 ## Central API VM (EC2 — `13.113.200.22`)
 
-| Resource       | Value                                                                                                                                                                                                                                                                                                |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Instance       | `i-0c9b283b31d6b5ca7` — `m8i.2xlarge` (8 vCPU / 32 GB Intel Granite Rapids)                                                                                                                                                                                                                          |
-| Region / AZ    | `ap-northeast-1` / `ap-northeast-1c`                                                                                                                                                                                                                                                                 |
-| Elastic IP     | `13.113.200.22` (allocation `eipalloc-07b7bfe509d63c477`)                                                                                                                                                                                                                                            |
-| OS             | Ubuntu 24.04 LTS, kernel 6.17                                                                                                                                                                                                                                                                        |
-| Service        | systemd unit `orchestrator.service`, runs as user `ubuntu`                                                                                                                                                                                                                                           |
-| Listen         | `127.0.0.1:8765` behind nginx (`api.agent-orchestrator.odum-research.com` :443 with Let's Encrypt)                                                                                                                                                                                                   |
-| Workspace root | `/home/ubuntu/unified-trading-system-repos/`                                                                                                                                                                                                                                                         |
-| Slot worktrees | `.tabs/1..17/` (code-only ~3.7 GB each)                                                                                                                                                                                                                                                              |
-| Root EBS       | `vol-0b4f0237fa0f5cd0f` — `gp3`, 700 GB / 16000 IOPS / 1000 MB/s provisioned (live-confirmed 2026-08-07 via `describe-volumes`; grown from the 300→500GB progression documented in Disk hygiene below)                                                                                               |
-| Cost           | ~$1/hr on-demand — **AWS credits do NOT reliably cover this** (re-confirmed 2026-08-03, live `aws ce get-cost-and-usage`: July 2026 real out-of-pocket cost $1,020, August 1-4 real cost $268 with only $0.01 credited — treat spend as real, not moot). Stop the instance when idle to halt compute |
+| Resource       | Value                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Instance       | `i-0c9b283b31d6b5ca7` — `m8i.2xlarge` (8 vCPU / 32 GB Intel Granite Rapids). Live-confirmed `running` 2026-08-09 (`aws ec2 describe-instances --instance-ids i-0c9b283b31d6b5ca7`). **Distinct box from the dedicated CI-runner VM** (`i-042a6332509482556`, § "CI-runner fleet" below) — the two happen to share an instance type today, but are separate hosts; do not conflate them. |
+| Region / AZ    | `ap-northeast-1` / `ap-northeast-1c`                                                                                                                                                                                                                                                                                                                                                    |
+| Elastic IP     | `13.113.200.22` (allocation `eipalloc-07b7bfe509d63c477`)                                                                                                                                                                                                                                                                                                                               |
+| OS             | Ubuntu 24.04 LTS, kernel 6.17                                                                                                                                                                                                                                                                                                                                                           |
+| Service        | systemd unit `orchestrator.service`, runs as user `ubuntu`                                                                                                                                                                                                                                                                                                                              |
+| Listen         | `127.0.0.1:8765` behind nginx (`api.agent-orchestrator.odum-research.com` :443 with Let's Encrypt)                                                                                                                                                                                                                                                                                      |
+| Workspace root | `/home/ubuntu/unified-trading-system-repos/`                                                                                                                                                                                                                                                                                                                                            |
+| Slot worktrees | `.tabs/1..17/` (code-only ~3.7 GB each)                                                                                                                                                                                                                                                                                                                                                 |
+| Root EBS       | `vol-0b4f0237fa0f5cd0f` — `gp3`, 700 GB / 16000 IOPS / 1000 MB/s provisioned (live-confirmed 2026-08-07 via `describe-volumes`; grown from the 300→500GB progression documented in Disk hygiene below)                                                                                                                                                                                  |
+| Cost           | ~$1/hr on-demand — **AWS credits do NOT reliably cover this** (re-confirmed 2026-08-03, live `aws ce get-cost-and-usage`: July 2026 real out-of-pocket cost $1,020, August 1-4 real cost $268 with only $0.01 credited — treat spend as real, not moot). Stop the instance when idle to halt compute                                                                                    |
 
 ### SSH access
 
@@ -138,17 +138,26 @@ Full root-cause + fix audit: `plans/archive/issues/orchestrator_spawn_tmux_silen
 This box previously ran BOTH the orchestrator role AND ~25 repos' worth of self-hosted GitHub Actions runner pools
 (`github-glue-runner*` systemd units) colocated on the same VM — the confirmed root cause of the fleet-wide CI capacity
 crisis (`/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`: load average 25-65 on
-this box's 16 vCPUs). All 25 pools have now been migrated to a dedicated VM (`i-042a6332509482556`,
-`ci-escalation-runner-vm-1`, `c8i.4xlarge`, ap-northeast-1) — confirmed zero `github-glue-runner*` units remain active
-on this box (`/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`). **Naming gotcha**:
+this box's 16 vCPUs). All 25 pools have now been migrated to a dedicated VM, `i-042a6332509482556`
+(`ci-escalation-runner-vm-1`, ap-northeast-1) — confirmed zero `github-glue-runner*` units remain active on this
+(planning) box (`/plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`). **Naming gotcha**:
 "escalation" in this box's NAME is unrelated to the agent-orchestrator's own `/api/escalations/active` (stuck-PR worker
 assignment, surfaced in deployment-ui's Repos-CI board via
 `deployment-api/deployment_api/routes/_repo_ci_escalations.py`) — the name is a holdover from this box's origin as an
 emergency overflow VM during the capacity crisis; its actual, current, sole job is hosting the fleet's self-hosted GHA
-workflow runners, nothing escalation-specific. **This box's instance type changed 2026-08-07** — downsized from
-`m8i.4xlarge` to `m8i.2xlarge` (8 vCPU / 32 GB) per that same plan's todo 8, after 24h of live usage data confirmed
-CPU/RAM headroom post-migration; operator-confirmed before execution. Do not describe this box as still hosting the
-runner fleet, and do not assume it is still `m8i.4xlarge`.
+workflow runners, nothing escalation-specific. **This box's instance type changed 2026-08-08** — downsized from
+`c8i.4xlarge` (16 vCPU / 32 GB) to `m8i.2xlarge` (8 vCPU / 32 GB) per
+`/plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` Part 8 todo (a cross-family
+change, not just a size step down — RAM was deliberately kept at 32 GB per that audit's own Part 5 finding that halving
+RAM would be actively dangerous, so a `c8i.2xlarge`, at only 16 GB, was rejected in favor of `m8i.2xlarge`), after ~21h
+of post-fix live load data (14,819 samples, `load_avg_1m` max 7.84 against the target's own 8 vCPUs, zero OOM-kills)
+confirmed the downsize was safe; operator-confirmed before execution. Live-confirmed 2026-08-09 (this update):
+`aws ec2 describe-instances --instance-ids i-042a6332509482556` → `m8i.2xlarge`, `running`, private IP `172.31.3.59`, AZ
+`ap-northeast-1c`. Its root volume, `vol-03880fe9bf1ea805b`, is live-confirmed at **12,000 IOPS / 312 MB/s**
+(`aws ec2 describe-volumes --volume-ids vol-03880fe9bf1ea805b`) — matching that instance size's own EBS baseline, up
+from the pre-downsize interim bump of 6,000 IOPS / 500 MB/s. Do not describe this box as still hosting runners on the
+planning VM, and do not assume it is still `c8i.4xlarge` or on the interim 6,000/500 volume spec. Full runbook for a
+from-scratch relaunch of this box specifically: `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`.
 
 ### Disk hygiene
 

@@ -30,8 +30,8 @@ source: >-
   Review-craft session, dispatched on unrelated work, independently noticed the pattern while investigating slot 1's own
   boot history and reported it to main via chat (msg 4310, 2026-08-08T16:36:22Z) rather than filing directly —
   doc-authoring/backlog is outside review's scope per its own role definition.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -76,24 +76,208 @@ own Tick history.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Read `TmuxPruner`'s kill logic (and whatever emits `tmux_session_lost`) in the agent-orchestrator
+- [x] ✅ [BACKEND] P1. Read `TmuxPruner`'s kill logic (and whatever emits `tmux_session_lost`) in the agent-orchestrator
       server source and determine why it is concluding slot 1's tmux session is lost roughly every 5-10 minutes when the
       session is, in the large majority of cases, not exiting voluntarily (no preceding `context_recycle_requested`).
       Check specifically whether this is a liveness-probe timing/false-positive issue (e.g. a heartbeat threshold too
       tight for review-craft's actual work cadence) versus a genuine external kill (resource pressure, OOM, a supervisor
-      restart). Repo: agent-orchestrator.
-- [ ] [BACKEND] P2. If the root cause is a false-positive liveness probe: fix the threshold/detection logic. If it is a
-      genuine resource-pressure kill: correlate against host memory/CPU metrics for the same window and file/link to the
-      appropriate host-capacity issue if one already exists (check
+      restart). Repo: agent-orchestrator. — agent-orchestrator@e32d962 + Progress Log entry below.
+- [x] ✅ [BACKEND] P2. If the root cause is a false-positive liveness probe: fix the threshold/detection logic. If it is
+      a genuine resource-pressure kill: correlate against host memory/CPU metrics for the same window and file/link to
+      the appropriate host-capacity issue if one already exists (check
       `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` first for a possible match
-      before filing new). Repo: agent-orchestrator.
-- [ ] [REVIEW] P3. Once a fix lands, independently re-verify via `GET /api/activity?slot=1` (or whichever slot is
-      currently the review role) over a fresh 2h+ window that `tmux_session_lost` without a preceding
-      `context_recycle_requested` has dropped to near-zero. Repo: unified-trading-pm (verification + checkbox flip
-      only).
+      before filing new). Repo: agent-orchestrator. — agent-orchestrator@e32d962 + Progress Log entry below.
+- [ ] [REVIEW] P3. **DO NOT close yet** — `e32d962` fixed a different code path (see todo 5 below); re-verify only once
+      todo 5 also lands. Then independently re-verify via `GET /api/activity?slot=1` (or whichever slot is currently the
+      review role) over a fresh 2h+ window that `tmux_session_lost` without a preceding `context_recycle_requested` has
+      dropped to near-zero. Repo: unified-trading-pm (verification + checkbox flip only).
+- [x] ✅ [BACKEND] P1. **Second, distinct root cause found (review, msg 4361, code-confirmed from live source, not
+      guessed)**: `check_spawn_heartbeat_timeouts()` (`server/worker_liveness/_auth_failover.py:54`) gates a
+      slot-bearing agent's liveness on `SlotRow.last_ping >= SlotRow.last_spawned_at` (line 96); past
+      `SPAWN_HEARTBEAT_TIMEOUT_SECONDS` it only spares the slot if `pane_state=="working"` (line 122). But review's
+      documented loop (`review.md` STEP 2) calls only `/api/agents/{id}/poll`, which writes `AgentRow.last_ping`
+      (`server/routes/agents.py:784` → `state_store/agents.py:751`) — **never** `SlotRow.last_ping`. So a review
+      session's `SlotRow.last_ping` freezes near spawn time and never advances; once `spawn_retry_count` hits cap=2,
+      `spawn_retry_cap_reached` fires (a `_DEATH_SIGNAL_EVENT_TYPES` member, `worktree_clean_check/_liveness.py:70`) and
+      the session is killed — repeatedly, for its entire life, not a one-time boot issue. `pane_state=="idle"`
+      (legitimate "waiting quietly, nothing queued" between review ticks) is NOT exempted the way `"working"` is.
+      Confirmed live: 5x `tmux_session_lost` since 23:44:42Z spanning BOTH the 23:45:40Z and 00:17:46Z `e32d962`-load
+      restarts with unchanged cadence — the debounce fix does not touch this path. Pick ONE (review left scoping to the
+      implementer, has not tested a fix): (a) have review's (and other slot-bearing agent-surface roles' — same
+      `_AGENT_KIND_BY_PROMPT_TEMPLATE` set) loop also call a slot-level heartbeat endpoint once per tick so
+      `SlotRow.last_ping` advances; (b) make `check_spawn_heartbeat_timeouts` consult `AgentRow.last_ping` too for those
+      roles; (c) exempt `pane_state=="idle"` the same way `"working"` already is. Repo: agent-orchestrator. —
+      agent-orchestrator@dd01255 (option (b), code-only fix, covers every chat-loop role uniformly regardless of pane
+      state) + Progress Log entry below.
+- [ ] [BACKEND] P1. **Both prior fixes (`e32d962` debounce + `dd01255` heartbeat-exempt) confirmed live but the crash
+      rate is UNCHANGED (msg 4372)** — review traced `GET /api/activity?slot=1` across a fresh 87min window
+      (01:08-02:35Z, well after both fixes' restart) and found ~100% of review-role sessions still died via
+      `tmux_session_lost` with zero `context_recycle_requested` precursors, survival 47s-14m12s, no improving trend.
+      Most recent death (agt-2f893e) went STRAIGHT to `tmux_session_lost` with no preceding
+      `spawn_heartbeat_timeout_pane_working`/`spawn_retry_cap_reached` at all — meaning `dd01255`'s own gated code path
+      wasn't even implicated; the kill came from TmuxPruner's has-session debounce (`e32d962`'s target), which only
+      absorbs ONE miss 0.25s apart. Corroborates the host-memory-pressure hypothesis already cross-linked to
+      `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`: `orchestrator.service` cgroup at 19-23G/26G
+      mem + 9.1G/16G swap (peak 13.6G), system-wide swap 9.3Gi in use at time of report. Plausible the shared tmux
+      server itself stalls >0.25s under this load, defeating the debounce regardless of which slot-liveness logic gates
+      on it — a 3rd logic-only patch is unlikely to help without host memory relief first. Repo: agent-orchestrator +
+      cross-reference the host-memory doc for the actual remediation (memory bump / reduce concurrent slot count /
+      investigate the swap source). **CPU-contention angle added (msg 4373, agt-9a70a7)**: load average 36/44/46 on an
+      8-core box (nproc=8), `vmstat` runnable-queue depth 20/38/32 with %idle collapsing to 1% in 2 of 3 samples,
+      context-switches/s spiking 48k-55k, 27 concurrent `claude` CLI processes host-wide — additive to, not a
+      replacement for, the memory/swap hypothesis (manual `tmux has-session` calls returned <0.01s when checked, so it's
+      plausibly scheduling-delay-under-contention on the orchestrator/tmux-client fork, not tmux itself being slow).
+      Whoever picks this up: pull load-average/runnable-queue history (not just mem/swap) for the recorded death
+      timestamps too. **Trend update (msg 4376, agt-45d610, 03:07Z): still worsening** — load avg now 65.56/62.12/55.86
+      (up from 55/53/49 at 02:57Z, up from 36/44/46 at ~02:48Z — CPU %us+%sy 92-99% in 2 of 3 samples), 49 concurrent
+      `claude` CLI processes, memory comparatively flat (~19.5/27.9GB cgroup). **New hypothesis worth investigating**: a
+      possible self-reinforcing feedback loop — AutoSpawn's ~60s respawn design (meant to minimize downtime) may itself
+      ADD CPU load at exactly the moment contention is already high, i.e. crash rate and contention could be mutually
+      reinforcing rather than purely one-directional (contention→crashes). If confirmed, a respawn-rate backoff/throttle
+      during a detected contention event could help more than waiting for organic host relief alone — flagged as a
+      hypothesis for backend/operator judgment, not asserted as proven causation. **KEY UPDATE (msg 4403, agt-f56131,
+      05:23Z): crash rate DECOUPLED from raw contention level.** Host load has eased ~75% since the 03:14Z peak (load
+      avg now 14.29/13.30/18.86 vs 63-65; QG processes 5 vs 12-19; claude CLI processes 37 vs 49; swap 12Gi vs 14Gi) —
+      but the kill CADENCE is completely unchanged: still 16x `tmux_session_lost`/0x `context_recycle_requested` in the
+      ~2h16m window since the 03:07Z checkpoint, landing every ~5-8min regardless (04:39/04:47/04:55/05:03/
+      05:08/05:15Z). This argues against "wait for host relief" being sufficient on its own, and toward either (a) a
+      much lower actual trigger threshold than assumed (today's 2x-core oversubscription is apparently already enough,
+      vs the peak's 7-8x), or (b) the standing feedback-loop hypothesis above (AutoSpawn's own respawn churn sustaining
+      an independent load floor). No dmesg/journalctl access from any review sandbox session (confirmed
+      permission-denied, consistently across sessions) to independently verify current kernel OOM-killer activity.
+      **OPERATOR-CONFIRMED ESCALATION (msg 4377, 03:14Z)**: this is now a severe, ACTIVE, human-confirmed incident, not
+      just review-role-scoped. Operator independently reported (and main independently re-confirmed at 03:15Z): 12-19
+      concurrent `quality-gates.sh` processes, load avg 63.28/60.29/57.11, only 893Mi genuinely free RAM (`free -h`'s
+      "available" 15Gi is reclaimable buff/cache, not true headroom), swap 14Gi/47Gi used. Genuine kernel OOM-killer
+      activity confirmed — the operator's own bare `sleep 60` was killed before completing, meaning the reaper is not
+      QG-specific, it's fleet-wide. Operator's own quickmerge ship is blocked (QG self-aborts via its own
+      `qg-host-governor.sh` RAM watchdog near completion, after passing every substantive gate). **Nuance**:
+      `qg-host-governor.sh`'s documented ≤2 cap (`max(2, floor(physical_cores/4))`) gates only the HEAVY phase
+      (pytest/basedpyright) via flock tokens, not total `quality-gates.sh` script instances — so 12+ running processes
+      is not automatically proof the governor itself is broken; unverified whether that many are concurrently holding a
+      heavy-phase token vs sitting in lighter setup/lint phases. New todo added below to determine whether
+      total-instance count (not just heavy-phase count) also needs a cap, since even light-phase QG steps compound with
+      the ~20+ concurrent Claude CLI sessions already driving the CPU/memory picture documented above.
+- [ ] [DOCS] P3. Correct the ~00:22Z progress-log entry below (12-slot simultaneous burst) — review (msg 4361) showed
+      it's a batch-processing artifact of `check_spawn_heartbeat_timeouts()` scanning all slots in one pass per tick,
+      NOT a tmux-server-level event as originally hypothesized; only the review-role entry in that burst was a real loss
+      (the other 4 were already-finished scheduled jobs, `archived_lifecycle_complete:true`). Superseded-note only, keep
+      the original entry for history — do not delete it.
+- [ ] [BACKEND] P1. **Operator-confirmed active incident (msg 4377)** — determine whether
+      `quality-gates-base/qg-host-governor.sh`'s ≤2 heavy-phase cap needs to be extended to gate total
+      `quality-gates.sh` script instances (not just pytest/basedpyright), given 12-19 concurrent instances were observed
+      with only 893Mi genuine free RAM and confirmed fleet-wide kernel OOM-killer activity (a bare `sleep 60` was
+      reaped). First step: check whether those 12+ processes are actually holding heavy-phase governor tokens (governor
+      working as designed, cap is just too permissive) or running ungated in lighter phases (governor scope gap). Repo:
+      unified-trading-pm (`scripts/quality-gates-base/qg-host-governor.sh`). Cross-reference the standing
+      CPU-contention/respawn-loop hypothesis above — likely the SAME underlying host-capacity crisis, not a separate
+      one.
+- [x] ✅ [OPERATOR] P1. `agent-orchestrator@e32d962` (the TmuxPruner debounce fix) was committed but not loaded — the
+      live uvicorn process (PID 885271) started at 23:15:22Z, ~11min BEFORE the 23:26:25Z commit. Main could not restart
+      it (sandbox permission boundary: `sudo`/non-interactive `systemctl restart` both blocked). RESOLVED —
+      `GET /api/state` now reports `server_started:2026-08-08T23:45:40Z` (after the commit); `git log` in the
+      orchestrator checkout still confirms HEAD=e32d962. Someone/something with the right privilege restarted it. Todo 3
+      (REVIEW re-verify) can now proceed.
 
 ## Progress log
 
+- 2026-08-09 ~05:25Z (main agt-22de53, relaying review msg 4403 from agt-f56131): Significant update — crash rate is
+  DECOUPLED from raw host contention. Load has eased ~75% since the 03:14Z peak (14-19 vs 63-65) yet the ~5-8min kill
+  cadence is completely unchanged (16 deaths in the ~2h16m window since the 03:07Z checkpoint, still 0
+  `context_recycle_requested` precursors). Weakens "wait for host relief" as a sufficient fix on its own; points toward
+  either a lower actual trigger threshold than assumed, or the standing feedback-loop hypothesis (AutoSpawn respawn
+  churn sustaining its own load floor). Doc updated with full numbers in the BACKEND todo. No action beyond logging —
+  genuinely useful data for whoever picks up the todo, not something main can resolve directly.
+- 2026-08-09 ~03:16Z (main agt-22de53, relaying operator msg 4377): Severe active incident, human-confirmed and
+  independently re-verified by main. 12 concurrent `quality-gates.sh` processes, load avg 63.28/60.29/57.11, 893Mi
+  genuine free RAM, swap 14Gi/47Gi used, confirmed kernel OOM-killer reaping arbitrary processes (operator's own
+  `sleep 60` killed). This is the same host-capacity crisis the standing BACKEND todo has been tracking via review's 4
+  consecutive samples, now with the operator's own blocked task as direct evidence (QG self-aborting via its own RAM
+  watchdog after passing every substantive gate). Added a new [BACKEND] P1 todo on whether `qg-host-governor.sh`'s
+  heavy-phase-only cap needs to extend to total script-instance count. Replied to operator: confirmed severity, flagged
+  the heavy-phase-vs-total-instance nuance (don't over-claim the governor is broken without checking held-token state
+  first), suggested retrying the QG sentinel once load visibly drops rather than repeatedly mid-spike.
+- 2026-08-09 ~03:10Z (main agt-22de53, relaying review msg 4376 from agt-45d610, the FOURTH review-role session in this
+  window — predecessor agt-494734 died 03:02:28Z, only 2.5min before this session's own boot): trend still worsening
+  (load avg 65.56/62.12/55.86, CPU %us+%sy 92-99%, 49 concurrent CLI processes) — added to the standing BACKEND todo
+  along with a new hypothesis worth investigating: AutoSpawn's fast respawn design may itself be ADDING CPU load at
+  exactly the moment contention is already high, i.e. a possible crash-rate/contention feedback loop, not purely
+  one-directional. Not asserted as proven — flagged for whoever picks up the todo. No doc-status change.
+- 2026-08-09 ~02:57Z (main agt-22de53, relaying review msg 4375 from agt-494734, the THIRD review-role session on slot 1
+  in ~15min — predecessors agt-39fb1c and agt-9a70a7 both died zero-precursor `tmux_session_lost`): CPU contention trend
+  is WORSENING, not stable — load average 55.23/53.25/49.41 (up from 36/44/46 in msg 4373), runnable-queue depth 39-53
+  (5-6x nproc=8), 48 concurrent `claude` CLI processes (up from 27). Memory looks less acute this sample (cgroup
+  ~18.7GiB/26GiB, system swap 8.4Gi used/39Gi free) — CPU/process-count is now the more acute and clearly-trending
+  signal. No new mechanism, same standing conclusion (host-level relief needed, not a 3rd logic patch). No doc-status
+  change.
+- 2026-08-09 ~02:48Z (main agt-22de53, relaying review msg 4373 from agt-9a70a7, freshly booted on slot 1): Further
+  corroboration + a new CPU-contention data point added to the open BACKEND todo (host load average 36-46 on an 8-core
+  box, runnable-queue depth, context-switch spikes, 27 concurrent CLI processes) — additive to the memory/swap
+  hypothesis, not a replacement. Own predecessor sessions on slot 1 died 2x since the current post-fix restart (14m12s
+  and 9m39s survival), both zero-precursor `tmux_session_lost`. No doc-status change (still open, still tracking
+  host-resource-pressure as primary hypothesis).
+- 2026-08-09 ~02:40Z (main agt-22de53, relaying review msg 4372 from agt-2f893e's successor session): Todo 3 re-verify
+  NOT resolved. Independently confirmed the ancestry claim: `dd01255` is a git-ancestor of the current root checkout
+  HEAD (`6b57503`), and the running process (`systemctl status`, active since matches the restart window) postdates both
+  fixes' commit times — so this is not another committed-but-not-loaded gap like the `e32d962` incident. Despite both
+  fixes being genuinely live, the crash rate is unchanged (~100% unexplained kills across a fresh 87min window). Added a
+  new [BACKEND] P1 todo capturing the host-memory-pressure pivot per review's recommendation — keeping todo 3 open, NOT
+  marking it resolved, since a 3rd liveness-logic patch is unlikely to help without host memory relief first.
+
+- 2026-08-09 (backend, slot 26, agent-orchestrator@dd01255): Fixed the second, distinct root cause (the "second,
+  distinct root cause found" BACKEND P1 todo, review msg 4361) — picked option (b) from the 3 choices the todo left
+  open: `check_spawn_heartbeat_timeouts()` (`server/worker_liveness/_auth_failover.py`) now also consults the bound
+  `AgentRow.last_ping` (via `state_store.find_active_agent_for_session`, matched on `slot.tmux_session`) as a second
+  evidence source before treating a slot as spawn-timed-out — same bar as the existing `SlotRow.last_ping` check (the
+  agent's ping must postdate the spawn). Chose (b) over (a) (editing review.md/main.md/the typed-one-off prompt
+  templates to add a slot-heartbeat call to every tick — more surface area, prompt-doc-enforced not code-enforced) and
+  over (c) (exempting `pane_state=="idle"` alone — narrower, only covers the idle-pane symptom and not e.g. a case where
+  the pane capture itself is transiently unavailable while the agent is demonstrably still polling). (b) is a single
+  code-only change in the one function that owns this verdict, applies uniformly to review/main/any future chat-loop
+  role without touching their prompt docs, and is fully unit-testable. Added
+  `test_chat_loop_agent_last_ping_spares_slot_with_frozen_slot_ping` (proves a live AgentRow's fresh last_ping spares
+  the slot even with `SlotRow.last_ping` frozen at spawn and `has_session` mocked False) and
+  `test_stale_chat_loop_agent_last_ping_does_not_spare_slot` (proves an AgentRow ping that predates the spawn does NOT
+  spare it — only a post-spawn ping counts, same bar as the SlotRow check) to `tests/test_spawn_heartbeat_liveness.py`.
+  Full local `quality-gates.sh` green (2859 passed, ruff/basedpyright clean). Todo 3 (REVIEW re-verify) can now proceed
+  against BOTH root causes (the debounce fix, todo 1/2, and this one) — still left for review craft per its own scope.
+- 2026-08-09 ~01:04Z (main agt-22de53, relaying review msg 4365 from agt-252692, a fresh slot-1 session): Live, ongoing
+  confirmation of todo 5 — `spawn_heartbeat_timeout_pane_working` firing repeatedly against THIS session
+  (`00:58:59Z`/`00:59:41Z`/`01:01:04Z`/`01:02:13Z`, `elapsed_s` climbing 192→234→317→386s), `pane_state:working` each
+  time (so still spared), confirming `SlotRow.last_ping` stays frozen despite the session's own `/api/agents/{id}/poll`
+  calls, exactly as diagnosed. Reporter explicitly considered and correctly declined a self-mitigation
+  (`/api/slots/1/heartbeat`) since that endpoint can dispatch a real backlog task to an idle review slot — unsafe,
+  review must never pull backlog work. No new action from main; recording only, per the reporter's own request in case
+  their session dies before they can log it themselves.
+- 2026-08-09 ~00:35Z (main agt-22de53, relaying review msg 4361 from a fresh slot-1 session): Second, distinct
+  root-cause hypothesis, code-confirmed (not guessed) from live agent-orchestrator source — see new todo 5 above for the
+  full chain (`check_spawn_heartbeat_timeouts` gates on `SlotRow.last_ping`, which review's poll-only loop never
+  advances; `pane_state=="idle"` isn't exempted like `"working"` is). This ALSO self-corrected my own ~00:22Z entry
+  below: the "12-slot simultaneous burst" is a batch-processing artifact of that same function scanning all slots in one
+  pass per tick, not a tmux-server-level event — see new todo 6. Confirmed via review's own slot-1 history: 5x
+  `tmux_session_lost` since 23:44:42Z spanning both post-`e32d962` restarts with unchanged cadence, i.e. the debounce
+  fix (todo 1/2, already shipped) addressed a different code path and does not resolve this. Reopened todo 3 (re-verify)
+  explicitly — it must wait for todo 5, not just the already-shipped debounce fix. No action taken beyond documenting;
+  review flagged this as read-only code+data analysis, scoping the actual fix is left to whoever picks up todo 5.
+- 2026-08-09 ~00:22Z (main agt-22de53): Data point for the open REVIEW re-verify todo (todo 3) — a routine stall sweep
+  found `GET /api/activity` reporting 12x `tmux_session_lost` (slots 1,4,5,11,12,13 + 6 unattributed) all at the EXACT
+  same timestamp (`00:21:27.90x`Z, sub-millisecond apart), i.e. a simultaneous fleet-wide burst, at `00:21:27Z` — 4min
+  AFTER the orchestrator restart at `00:17:31Z` that loaded `e32d962`. AutoSpawn already recovering normally (slot 4/8
+  `autospawn_succeeded` + `slot_boot` within seconds, no `spawn_retry_cap_reached`/`slot_resume_exhausted`). Flagging
+  because a simultaneous multi-slot burst at one instant is a DIFFERENT signature than the single-session
+  has-session-miss the debounce fix targets — plausibly a genuine tmux-server-level event (not a per-session liveness
+  false-positive), which the fix may not address. Leaving todo 3 to review's fresh-window judgment rather than
+  pre-empting it, but wanted this specific data point on record before it ages out of the activity log.
+
+- 2026-08-08 ~23:45Z (main agt-22de53): Review (msg 4359) found `agent-orchestrator@e32d962` shipped+`slot_done` at
+  23:32Z but not live (`server_started:23:15:31Z` predates the commit) — corroborated by review's own slot-1 session
+  hitting `tmux_session_lost` at 23:35:07Z (3min post-shipped) while genuinely alive, plus a fleet-wide kill burst
+  23:25-23:35Z (slots 1-12). Verified independently: `systemctl status orchestrator` confirmed PID 885271 since
+  23:15:22Z; `git log` in the orchestrator checkout confirmed HEAD=e32d962, clean. Attempted the restart myself — both
+  `sudo systemctl restart orchestrator` and the sudoless form both blocked by this session's sandbox
+  (`no new privileges`/`Interactive authentication required`), not a policy decision main is choosing not to act on.
+  Added an `[OPERATOR]` todo above requesting the restart directly. Replied to review confirming the diagnosis and
+  explaining why main couldn't self-serve it.
 - 2026-08-08 (main agt-22de53): Filed from a review-craft chat report (msg 4310) that review declined to file itself
   (doc-authoring is outside review's scope). Not independently re-verified against `/api/activity` by main before filing
   — relaying the reporter's evidence as given, since it was already a direct, timestamped `/api/activity` query result,
@@ -186,3 +370,105 @@ own Tick history.
   evidence, not a kernel-level OOM confirmation — todo 2's host-memory-exhaustion correlation check (against
   `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`) is the natural next step for whoever has host
   access. Acked back to review; not independently re-verified by main beyond the slot-16 activity-log cross-check.
+
+- 2026-08-08 ~21:32Z (main agt-22de53): Strengthened server-restart correlation evidence — a CLEAN 3/3 confirmation,
+  upgrading the ~20:22Z entry's "possible correlation" from a partial (3-of-many) sample to a complete cluster. A 4th
+  brief AO connection-refused blip was observed ~21:29-21:30Z (uvicorn restart, ~9s downtime). All 3 slots that booted
+  in the immediately-following ~65s window (18 @21:27:02Z, 19 @21:27:31Z, 20 @21:27:05Z) — no other slots booted in that
+  window — went completely silent afterward and were escalated via `reassign kill_worker:true` at 4:00-4:47min
+  post-boot, zero exceptions, zero survivors. Same signature as the ~20:22Z cluster (`slot_boot`->`task_dispatched`, no
+  `forced_compact` ever fires, no `slot_progress`, nothing). This is now the SECOND independent full-cluster observation
+  (100% failure rate both times) tying a boot-during/immediately-after-restart window to this silent-death variant —
+  meaningfully stronger than a coincidence hypothesis. Whoever picks up todo 1 should specifically correlate `slot_boot`
+  timestamps against AO server restart/redeploy timestamps (visible in systemd/journalctl for the uvicorn unit) as a
+  primary lead, not just a background note.
+- 2026-08-08 ~22:42Z (main agt-22de53, relaying review msg 4353 from a fresh review session agt-896798): Severe
+  escalation of the original finding, sustained not resolved. Since the 16:45Z checkpoint (Tick 132, ~6h ago): 28x
+  `tmux_session_lost` vs only 2x `context_recycle_requested` for slot 1 — the same ~93% unexplained-kill ratio,
+  sustained far longer than the original 22-in-2h sample. New and more severe: 16+ distinct review-role
+  `agent_registered` events in that same window, and **NONE completed a full tick cycle** —
+  `review-agent-checkpoint.md`'s last entry is still Tick 132. That is 100% infant mortality for review continuity since
+  16:45Z, not merely elevated churn — 3 review agents died in the last 30 min alone before this report's author. Review
+  separately flagged (correctly, outside its own scope to act on) that todo 1 was `assigned_vm: NA` /
+  `execution_scope: local-only`, meaning it was NEVER in the AO auto-dispatch pool despite being a bounded,
+  determinable-outcome investigation (read TmuxPruner/keeper source, diagnose liveness-probe-false-positive vs
+  genuine-kill) — likely why it sat untouched 6h. Main confirmed this diagnosis is correct (checked a comparable
+  AO-dispatched issue doc's frontmatter convention: `assigned_vm: planning` pairs with
+  `execution_scope: orchestrator-agent`, not `local-only`) and flipped this doc's frontmatter accordingly so a worker
+  can now be auto-dispatched to todo 1. Given the severity (100% review-role continuity failure, sustained 6h, a real
+  ongoing fleet-availability cost) this crossed the bar for a direct main-agent fix rather than just relaying — not a
+  new-plan-creation decision (which defaults to human per the ASK-BEFORE-CREATING HARD RULE), just correcting an
+  existing bounded, already-P1, already-approved investigation todo's dispatch eligibility.
+- 2026-08-08 (backend, slot 2, agent-orchestrator@e32d962): Dispatched todo 2 (only todo in the AO-dispatch pool at
+  pickup time — todo 1 sat `queued`/`target_slot: 3`/`affinity: high` unclaimed). Todo 2's own text branches on todo 1's
+  root-cause finding, so did todo 1's investigation first as a prerequisite; flipping both here since both are now
+  genuinely done (no `sequential: true`/`depends_on` linked them, which is why the dispatcher offered todo 2 before todo
+  1 — worth noting for future conditional-todo authoring, but out of scope to fix here). **Root cause (todo 1)**:
+  `tmux_session_lost` is emitted ONLY by `TmuxPruner.prune_once()` (`server/tmux_pruner.py`), gated purely on a single
+  `tmux has-session` subprocess call returning nonzero — it does NOT consult `worker_alive`/heartbeat cadence at all
+  (that field lives in `routes/state.py`/`stale_dispatch.py`, never read by TmuxPruner). Review's own
+  `worker_alive`-heartbeat-cadence-mismatch hypothesis (msg 4345, ~19:49Z entry above) does not match this code path — a
+  plausible-sounding but incorrect theory, worth flagging so it isn't re-chased. The actual first-party evidence in that
+  SAME entry (a review session flagged killed while continuously alive, single agent registration, no respawn,
+  `tmux_alive` true throughout) is direct proof of a transient `has-session` false-negative — a single miss on the
+  shared tmux server (dozens of slots' spawn/capture-pane/ send-keys/has-session calls all racing one tmux server
+  process) does not mean the session is actually gone. **Fix (todo 2, false-positive branch)**:
+  `TmuxPruner._confirm_session_dead()` now requires a second `has-session` miss (0.25s later) before a slot/agent is
+  declared dead, for both the slot and agent death paths in `prune_once()`. A genuinely dead session stays dead on the
+  recheck (unaffected); a transient blip self-heals. Added `test_transient_has_session_miss_does_not_kill_live_slot`
+  (proves the debounce absorbs one miss) and `test_sustained_has_session_miss_still_kills_slot` (proves a real death is
+  still caught) to `tests/test_tmux_pruner_agent_reap.py`. Full local QG green (2823 passed). **Resource-pressure branch
+  (todo 2)**: separately, review's worker-side evidence (sports_taxonomy/defi_venue heavy I/O tasks dying via
+  `tmux_session_lost` clustered around memory-intensive research sub-agent spawns) is a DIFFERENT population from the
+  review-role false positives above — consistent with genuine host memory pressure, not a liveness-probe bug. That
+  population is already tracked (matches the "simultaneous tmux-session loss on slots 1/5/10" signature) in
+  `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` (open, P1) — no new issue doc
+  filed, per todo 2's own instruction to check that doc first. The server-restart-correlated silent-death variant
+  (~20:22Z/~21:32Z entries above, no `forced_compact` ever fires) is a THIRD distinct mechanism this fix does NOT
+  address — it's a boot-time registration race with a uvicorn restart, not a `has_session()` false-negative on an
+  established session. Left for a follow-up if it recurs; flagging here so todo 3's re-verification isn't surprised if
+  that specific variant's rate doesn't drop. Todo 3 (independent re-verification via `/api/activity?slot=1` over a fresh
+  2h+ window) is `[REVIEW]`-scoped — left unchecked for review craft to pick up now that a fix has actually landed.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).
+- 2026-08-09 ~05:24Z (review agt-f56131, relayed by main agt-22de53 msg 4403): Fresh decoupling data point against the
+  host-resource-pressure hypothesis. Since Tick 134 checkpoint (~03:07Z) through ~05:23Z (~2h16m window): still 16x
+  `tmux_session_lost` / 0x `context_recycle_requested` for slot 1 — 100% unexplained-kill rate, unimproved. Host
+  contention has eased substantially since the operator's 03:16Z peak report: load avg now 14.29/13.30/18.86 (was
+  63-65), `quality-gates.sh` processes now 5 (was 12-19), `claude` CLI processes 37 (was 49), swap 12Gi/47Gi used (was
+  14Gi) — roughly a 75% drop from peak. But the kill CADENCE is unchanged: still landing every ~5-8min
+  (04:39/04:47/04:55/05:03/05:08/05:15Z), same as during the peak-load window. This argues against "just wait for host
+  relief" being sufficient on its own, and toward either (a) the actual trigger threshold being lower than assumed —
+  today's still-elevated-but-much-lower load (~2x core oversubscription vs peak's 7-8x) is apparently already enough, or
+  (b) the standing feedback-loop hypothesis (msg 4376, cited in an earlier entry above) where AutoSpawn's own respawn
+  churn sustains a load floor independent of the wider host's swings. Reporting session had no dmesg/journalctl access
+  (confirmed permission-denied) so could not independently check current kernel OOM-killer activity. Not asserting a new
+  root cause — flagging the load/cadence decoupling as a fresh data point for whoever picks up the open `[BACKEND] P1`
+  todos.
+- 2026-08-09 ~05:39Z (review agt-457acf, relayed by main agt-22de53 msg 4407): STRONGER decoupling signal — host is now
+  fully back to baseline, not just eased. Fresh session booted ~1min after the last kill (05:35:07Z). Load avg
+  7.42/9.25/12.97 on nproc=8 — the 1-min figure is essentially AT capacity, no CPU oversubscription at all (vs
+  14.29/13.30/18.86 at 05:24Z, vs 63-65 at the 03:14Z peak). `quality-gates.sh` processes 3 (was 5, was 12-19 at peak),
+  `claude` CLI processes 36 (was 37), mem 9.4Gi/30Gi used with 21Gi available (genuinely healthy), swap 11Gi/47Gi (was
+  12-14Gi). Slot-1 kill cadence over the trailing ~30min (all zero-precursor `tmux_session_lost`, via
+  `/api/activity?slot=1`): 05:08:27, 05:15:49 (+7m22s), 05:25:19 (+9m30s), 05:35:07 (+9m48s) — spacing maybe very
+  slightly widening (7-10min vs the earlier 5-8min) but still firing at essentially-baseline host load. This further
+  weakens the pure host-contention hypothesis: the host is no longer oversubscribed on CPU AT ALL, yet the kill cadence
+  continues largely unabated. Strengthens the standing feedback-loop hypothesis (msg 4376) relative to "wait for host
+  relief" as the fix.
+- 2026-08-09 ~07:54Z (main agt-22de53): New mechanism candidate, found via direct `journalctl -u orchestrator` access
+  (main has this; review sessions have confirmed they don't). A burst of 30x
+  `sqlite3.OperationalError: database is locked` fired across `WorkerLivenessWatchdog`, `PlanReconcilerLivenessCanary`,
+  `RepoHealthWatcher`, and the auto-snapshot tick, all within a ~2min window (07:51:36-07:53:37Z), plus one
+  `SQLite backup to S3 failed ... database or disk is full` at 07:52:51Z. Orchestrator process itself did NOT restart
+  (same PID, uptime unaffected) — this is live lock contention on `data/state/state.db`, not a crash. `/tmp` (tmpfs) was
+  at 89% used / 980M avail at check time — plausible source of the transient "disk is full" (the S3 backup likely stages
+  a copy there); root disk itself is healthy (72%, 193G avail). Burst had already subsided by the time this was found
+  (no recurrence in the trailing 5min). Correlates with this same tick's `/api/state` sweep showing MANY slots
+  (2/3/12/13/15/18/21/23/24, not just the usual slot 1/26/27) simultaneously stale by 1.6-2.2h — plausibly
+  WorkerLivenessWatchdog/heartbeat writes silently failing under this same lock contention rather than genuine per-slot
+  staleness. Not claiming this IS the crash-loop root cause (the burst is minutes-scale, the kill cadence is a sustained
+  hours-scale pattern), but it's a concrete, measurable shared-resource-contention mechanism worth checking against
+  slot-1's specific kill timestamps if this recurs — unlike raw CPU load (already shown decoupled above), SQLite
+  write-lock stalls could plausibly cause a liveness probe to time out and misreport a session as dead even while the
+  underlying tmux session is fine.

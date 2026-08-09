@@ -404,28 +404,29 @@ a migration gap). Probe basis: `gcloud storage` bucket sweep + `market-data-tick
       filed immediately below); the other 8 stay deprioritized scaffolds unless the operator says otherwise. Coverage
       matrix table above updated to match.
 
-- [ ] [DATA] P2. **Wire a real source for `liquidation_events` (MVP scope, 2026-08-08 operator ruling)** — distinct from
-      the already-migrated `liquidations` data_type (which carries protocol-level liquidation EVENT SUMMARIES from the
-      dedicated `liquidations-central` bucket); `liquidation_events` is the currently-unproduced per-event scaffold (no
-      GCS data at all today, handler-if-any produces nothing). Determine the real on-chain source (Aave/Compound/Morpho
-      liquidation-call event logs via existing RPC/subgraph access already used elsewhere in this asset_group — check
-      `_dex_factory_registry.py`/`solana_defi_handler.py`-style precedent before assuming a new credential is needed)
-      and wire a collector that writes real rows, following the same
-      `record_captured`/`record_zero_rows`/`record_failed` honest-absence contract every other DeFi handler uses. Repo:
-      market-tick-data-service. parent_epic: defi_master. Done-when: a real `liquidation_events` manifest row lands for
-      at least one live venue/day.
-- [ ] [DATA] P2. **Wire a real source for `token_transfers` (MVP scope, 2026-08-08 operator ruling)** — currently a
-      no-data scaffold. Determine the real source (EVM `Transfer` event logs via existing Alchemy/RPC access, or a
-      subgraph if one of the already-registered `SUBGRAPH_IDS` protocols exposes transfer history) and wire a collector
-      writing real rows via the standard `record_captured`/honest-absence contract. Repo: market-tick-data-service.
-      parent_epic: defi_master. Done-when: a real `token_transfers` manifest row lands for at least one live venue/day.
-- [ ] [DATA] P2. **Wire a real source for `governance_events` (MVP scope, 2026-08-08 operator ruling)** — currently a
-      no-data scaffold. Determine the real source (on-chain governance-contract event logs — proposal
-      created/voted/executed — for the DeFi protocols this asset_group already tracks governance for, e.g. via the
-      existing `_defi_chain_data`/`SOLANA_RPC_TEMPLATES`-style RPC registry, or a governance subgraph) and wire a
-      collector writing real rows via the standard `record_captured`/honest-absence contract. Repo:
-      market-tick-data-service. parent_epic: defi_master. Done-when: a real `governance_events` manifest row lands for
-      at least one live venue/day.
+- **[DATA] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Wire a real source for
+  `liquidation_events` (MVP scope, 2026-08-08 operator ruling) — distinct from the already-migrated `liquidations`
+  data_type (which carries protocol-level liquidation EVENT SUMMARIES from the dedicated `liquidations-central` bucket);
+  `liquidation_events` is the currently-unproduced per-event scaffold (no GCS data at all today, handler-if-any produces
+  nothing). Determine the real on-chain source (Aave/Compound/Morpho liquidation-call event logs via existing
+  RPC/subgraph access already used elsewhere in this asset_group — check
+  `_dex_factory_registry.py`/`solana_defi_handler.py`-style precedent before assuming a new credential is needed) and
+  wire a collector that writes real rows, following the same `record_captured`/`record_zero_rows`/`record_failed`
+  honest-absence contract every other DeFi handler uses. Repo: market-tick-data-service. parent_epic: defi_master.
+  Done-when: a real `liquidation_events` manifest row lands for at least one live venue/day.
+- **[DATA] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Wire a real source for
+  `token_transfers` (MVP scope, 2026-08-08 operator ruling) — currently a no-data scaffold. Determine the real source
+  (EVM `Transfer` event logs via existing Alchemy/RPC access, or a subgraph if one of the already-registered
+  `SUBGRAPH_IDS` protocols exposes transfer history) and wire a collector writing real rows via the standard
+  `record_captured`/honest-absence contract. Repo: market-tick-data-service. parent_epic: defi_master. Done-when: a real
+  `token_transfers` manifest row lands for at least one live venue/day.
+- **[DATA] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Wire a real source for
+  `governance_events` (MVP scope, 2026-08-08 operator ruling) — currently a no-data scaffold. Determine the real source
+  (on-chain governance-contract event logs — proposal created/voted/executed — for the DeFi protocols this asset_group
+  already tracks governance for, e.g. via the existing `_defi_chain_data`/`SOLANA_RPC_TEMPLATES`-style RPC registry, or
+  a governance subgraph) and wire a collector writing real rows via the standard `record_captured`/honest-absence
+  contract. Repo: market-tick-data-service. parent_epic: defi_master. Done-when: a real `governance_events` manifest row
+  lands for at least one live venue/day.
 
 ### 🗑️ DeFi ORPHAN-COVERAGE DRILLDOWN — GCS data NOT covered by the migrator + delete-after plan (slot-2, 2026-06-08)
 
@@ -855,5 +856,10 @@ speed-note (both deferred optimisations, non-blocking).
   (instruments-store v9 WRITE) is an operational apply gate, not worker-determinable. Because `assigned_vm` flips
   whole-doc, the destructive-delete-gated items block a clean flip. Flagging for a future round: the 3 "wire a real
   source" todos + the aggregator-routes spec are strong RECLASSIFY candidates if forked into their own child plan
-  (mirroring this same doc's own gas-fees/liquidations-spec precedent) — not done this round (scope: classification,
-  not authoring a new fork). Doc stays `assigned_vm: NA`.
+  (mirroring this same doc's own gas-fees/liquidations-spec precedent) — not done this round (scope: classification, not
+  authoring a new fork). Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 862-line migration audit-log hub, 14 open items
+  (grep-confirmed). Whole-doc RECLASSIFY blocked by 3 genuine gates named in the doc's own 2026-08-08 round7 entry: GATE
+  C (instruments-store-defi `_index` v9 write, currently 0% v9, an operational apply-gate), Era-B legacy retirement
+  (gated on cefi+tradfi G4 apply complete), and the delete-after-migration bucket purges (explicit operator-sign-off
+  owner: vm-defi). Doc stays `assigned_vm: NA`.

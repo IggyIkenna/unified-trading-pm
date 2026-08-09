@@ -142,32 +142,33 @@ BLAZESTAKE still blocking — Option A still needed).
       scheduling/trigger/cron-registration issue rather than a code-level capture bug. Read-only diagnosis is
       AO-dispatchable (a checkable root-cause question, not an operator judgment call); any actual fix (e.g.
       re-registering a stalled cron/Workflow trigger) may still need an `[OPERATOR]` follow-up once the cause is known.
-- [ ] [SCRIPT] P3. **RULED 2026-08-08 (operator), option (c): reclassify the 1,404 BLAZESTAKE retirement markers OUT of
-      `attempted_failed` entirely** — the previously-open options (a)/(b) are superseded by this ruling. Disposition
-      evidence: slot-6 escalation agt-d87c1c, 2026-08-06. **Scoping read of `attempted_failed_staleness.py` (2026-08-08,
-      before filing this todo)**: that module is a pure staleness-LABELING helper
-      (`stale_days_since`/`stale_backlog_annotation`) — it computes a display annotation ("STATIC BACKLOG — no new
-      activity in Nd") for an alert body; it does **NOT** mutate `capture_status` and does **NOT** gate/suppress paging
-      cadence (its own docstring says so explicitly). Its threshold (`STATIC_BACKLOG_STALE_DAYS_THRESHOLD = 1`) is a
-      1-day label cutoff, not the "~14-day trailing window" this doc's earlier 2026-08-08 context note speculated might
-      self-resolve the backlog — no code in this module supports that self-resolve assumption; the 1404 rows stay
-      `attempted_failed` in the manifest indefinitely (and keep tripping DP-FETCH-009's abs-threshold count) until
-      something actually rewrites their `capture_status`. **The real fix is a manifest-mutation script**, not a
-      config/threshold change: write a targeted reclassification script (same shape as the already-shipped
-      `relabel_retire_blazestake_venue_2026_08_06.py`, which flipped these exact rows `captured`→`attempted_failed` with
-      reason `superseded_by_content_verified_canonical_solblaze_solana_relabel_2026_08_06`) that finds every
-      `(defi, lst_rates, BLAZESTAKE)` row with `capture_status=attempted_failed` AND an `error_reason` starting
-      `superseded_by_` (currently 1,404 rows, live-reverify the count at execution time — do NOT assume it's still
-      exactly 1,404), and rewrites each to `capture_status=empty_confirmed` via the standard manifest recorder's
-      honest-absence path (mirrors how a retired/superseded venue is otherwise represented — `empty_confirmed` is the
-      manifest's designated state for "genuinely will never produce data", distinct from `attempted_failed` = "we tried
-      and it errored"; matches the sibling doc's own Option B framing). Verify: (1) a bounded pushdown read
-      (`pyarrow.fs.GcsFileSystem` + `dataset.scanner(columns=..., filter=...)`, NOT a full `to_table()` — the 2.6GB defi
-      `_index` OOMs on a full read, per this doc's own verification-traps note) confirms 0 remaining `attempted_failed`
-      rows for `(BLAZESTAKE, lst_rates)` with a `superseded_by_*` reason after the script runs; (2) DP-FETCH-009's
-      `(defi, lst_rates)` `attempted_failed` count drops by the reclassified row count. Repo: deployment-service (or
-      wherever the manifest-mutation script family for this consolidator lives — mirror the existing
-      `relabel_retire_blazestake_venue_2026_08_06.py`'s repo). parent_epic: infrastructure_master.
+- **[SCRIPT] P3. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** RULED 2026-08-08
+  (operator), option (c): reclassify the 1,404 BLAZESTAKE retirement markers OUT of `attempted_failed` entirely** — the
+  previously-open options (a)/(b) are superseded by this ruling. Disposition evidence: slot-6 escalation agt-d87c1c,
+  2026-08-06. **Scoping read of `attempted_failed_staleness.py` (2026-08-08, before filing this todo)**: that module is
+  a pure staleness-LABELING helper (`stale_days_since`/`stale_backlog_annotation`) — it computes a display annotation
+  ("STATIC BACKLOG — no new activity in Nd") for an alert body; it does **NOT** mutate `capture_status` and does **NOT**
+  gate/suppress paging cadence (its own docstring says so explicitly). Its threshold
+  (`STATIC_BACKLOG_STALE_DAYS_THRESHOLD = 1`) is a 1-day label cutoff, not the "~14-day trailing window" this doc's
+  earlier 2026-08-08 context note speculated might self-resolve the backlog — no code in this module supports that
+  self-resolve assumption; the 1404 rows stay `attempted_failed` in the manifest indefinitely (and keep tripping
+  DP-FETCH-009's abs-threshold count) until something actually rewrites their `capture_status`. **The real fix is a
+  manifest-mutation script**, not a config/threshold change: write a targeted reclassification script (same shape as the
+  already-shipped `relabel_retire_blazestake_venue_2026_08_06.py`, which flipped these exact rows
+  `captured`→`attempted_failed` with reason
+  `superseded_by_content_verified_canonical_solblaze_solana_relabel_2026_08_06`) that finds every
+  `(defi, lst_rates, BLAZESTAKE)` row with `capture_status=attempted_failed` AND an `error_reason` starting
+  `superseded_by_` (currently 1,404 rows, live-reverify the count at execution time — do NOT assume it's still exactly
+  1,404), and rewrites each to `capture_status=empty_confirmed` via the standard manifest recorder's honest-absence path
+  (mirrors how a retired/superseded venue is otherwise represented — `empty_confirmed` is the manifest's designated
+  state for "genuinely will never produce data", distinct from `attempted_failed` = "we tried and it errored"; matches
+  the sibling doc's own Option B framing). Verify: (1) a bounded pushdown read (`pyarrow.fs.GcsFileSystem` +
+  `dataset.scanner(columns=..., filter=...)`, NOT a full `to_table()` — the 2.6GB defi `_index` OOMs on a full read, per
+  this doc's own verification-traps note) confirms 0 remaining `attempted_failed` rows for `(BLAZESTAKE, lst_rates)`
+  with a `superseded_by_*` reason after the script runs; (2) DP-FETCH-009's `(defi, lst_rates)` `attempted_failed` count
+  drops by the reclassified row count. Repo: deployment-service (or wherever the manifest-mutation script family for
+  this consolidator lives — mirror the existing `relabel_retire_blazestake_venue_2026_08_06.py`'s repo). parent_epic:
+  infrastructure_master.
 
 ## Progress Log
 
@@ -261,3 +262,8 @@ BLAZESTAKE still blocking — Option A still needed).
   filed today) is not mentioned in either batch and would itself be a clean RECLASSIFY candidate, but the whole-doc-flip
   constraint means it can't be split from item 3's conflict. Recommend: batch9/batch10 owners reconcile their stale park
   text against this doc's live self-resolution next round, then re-run this classification. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- Sole open checkbox (root-cause `lending_indices`
+  capture stoppage) reads AO-dispatchable on its own text, but this doc's own round7 (2026-08-08) entry ruled it
+  CONFLICT-DEFERRED -- held by the active `defi_satellite_ao_dispatch_batch9_2026_08_06.md`'s operator-ruling-pending
+  park. Not re-litigated. Doc stays `assigned_vm: NA`.

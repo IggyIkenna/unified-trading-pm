@@ -117,14 +117,15 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
 
 - [x] ✅ [OPERATOR] P1. Decide the mechanical-enforcement approach for the heavy-compute-on-shared-host HARD RULE (see 4
       options above) -- gates every fix below. (repo: unified-trading-pm, decision only) — **RULED 2026-08-06 (operator,
-      interactive)**: none of the 4 options as written. The approach taken is a **host-level per-process reaper** —
-      `resource-watchdog` — which achieves option 1's intent (the bound no longer depends on the calling agent
-      remembering to wrap a heavy leg) without requiring every skill to be rewritten, and is root-cause-agnostic the way
-      option 2 is: it kills the offending process regardless of whether the cause is one bad script or aggregate
-      oversubscription. Shipped by `/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md` (archived).
-      (Reconciled 2026-08-06: an independently-reached "combine 1+2+3" ruling from a concurrent session is superseded by
-      this one — the shipped reaper is already live evidence of what was actually chosen and built, not a still-open
-      combination of the original 3 options.)
+      interactive)** (recorded in `/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md`): none of the 4
+      options as written. The approach taken is a **host-level per-process reaper** — `resource-watchdog` — which
+      achieves option 1's intent (the bound no longer depends on the calling agent remembering to wrap a heavy leg)
+      without requiring every skill to be rewritten, and is root-cause-agnostic the way option 2 is: it kills the
+      offending process regardless of whether the cause is one bad script or aggregate oversubscription. Shipped by
+      `/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md` (archived). (Reconciled 2026-08-06: an
+      independently-reached "combine 1+2+3" ruling from a concurrent session is superseded by this one — the shipped
+      reaper is already live evidence of what was actually chosen and built, not a still-open combination of the
+      original 3 options.)
 - [x] ✅ [INFRA] P2. Once decided, implement the chosen enforcement mechanism — **DONE 2026-08-05**,
       `unified-trading-pm/scripts/infra/resource-watchdog/` (`resource-watchdog.sh` + systemd unit + `config.yaml` +
       logrotate/tmpfiles retention), first shipped `unified-trading-pm@d1ffdf6b3`. **Verified LIVE on the planning VM
@@ -139,7 +140,7 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
       documented, write it into codex" half of the 2026-08-06 ruling needed no action.
 - [x] [OPERATOR] P2. ✅ **STALE-CHECKBOX FIX (round5 ao investigation) — the linked doc's identical action is now done,
       catching this citing checkbox up to reality, not a new decision.** The action this todo pointed at —
-      `/plans/active/issues/watchdog_kill_events_deployment_gaps_2026_08_05.md`'s `[INFRA] P2` item (systemd
+      `/plans/archive/2026_08/watchdog_kill_events_deployment_gaps_2026_08_05.md`'s `[INFRA] P2` item (systemd
       `Environment=RW_DEPLOYMENT_API_URL=.../RW_VM_NAME=...` +
       `systemctl daemon-reload && systemctl restart     resource-watchdog`) — is confirmed `[x]` done there: "RULED
       2026-08-06 (operator): approved, AO-dispatchable to a session/worker with root on the planning VM... applied via
@@ -378,7 +379,7 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   entry -- still open.
 - **na-eligibility-audit 2026-08-07** (ao tranche, batch3of3): KEEP-NA, valid — re-verified all 3 open items: the
   `[OPERATOR] P2` kill-event dual-write gap is genuinely duplicate-tracked in
-  `/plans/active/issues/watchdog_kill_events_deployment_gaps_2026_08_05.md` (confirmed still `status: open`,
+  `/plans/archive/2026_08/watchdog_kill_events_deployment_gaps_2026_08_05.md` (confirmed still `status: open`,
   `assigned_vm: planning` — do the work there, not here); `[DIAG] P2` is explicitly non-gating best-effort; the fresh
   `[OPERATOR] P2` dmesg/root-access todo (added earlier this session) is still unresolved as its own text states. No
   reclassification.

@@ -794,3 +794,4 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   well within per-test budget, no timeout involved); unrelated to this doc's flake class. unified-trading-pm: latest 3
   runs all `conclusion=success` (`31247609729`/`31247453779`/`31247024661`, through 08:04Z) — both slices green. Zero
   pytest-timeout recurrence anywhere. Window NOT yet closed (day ~3 of ~14); skipping per prior-pass precedent.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

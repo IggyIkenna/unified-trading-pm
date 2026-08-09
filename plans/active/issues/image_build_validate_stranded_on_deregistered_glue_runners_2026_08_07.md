@@ -100,13 +100,25 @@ needed a brand new dispatch). Result: `validate / GCP Cloud Build — alerting-s
 
 ## Still open
 
-- [ ] [INFRA] P2. Fleet-wide sweep: are there OTHER reusable workflows that moved in the same 2026-08-06
+- [x] ✅ [INFRA] P2. Fleet-wide sweep: are there OTHER reusable workflows that moved in the same 2026-08-06
       `shared_ci_workflow_repo_extraction_2026_08_06.md` extraction and might have the same
-      still-self-hosted-but-now-stranded pattern? This issue only found `image-build-validate.yml` because it happened
-      to be directly on the alerting-service deploy-chain critical path — a deliberate sweep of every file that plan
-      moved (not just the one that happened to block this session) would catch any siblings before they're discovered
-      the same accidental way. `grep -rn 'runs-on:.*self-hosted' unified-trading-ci/.github/workflows/` as a starting
-      point (should be empty or intentional-only after this fix).
+      still-self-hosted-but-now-stranded pattern? — `unified-trading-pm@39e71f811` (citation corrected 2026-08-09,
+      `ci_satellite_ao_dispatch_batch6_finalize` todo 1 — the placeholder "this commit" resolved to the actual flip
+      commit, verified ancestor of `origin/live-defi-rollout`). **Finding: none found.** Swept all 5 extracted files
+      (`python-quality-gates-v2.yml`, `notify-slack.yml`, `image-build-validate.yml`,
+      `.github/actions/setup-python-tools/action.yml`, `.github/actions/setup-agent-tools/action.yml`) in
+      `unified-trading-ci`. `grep -rn 'runs-on:.*self-hosted' unified-trading-ci/.github/workflows/` → 0 hits (the only
+      prior hit, `image-build-validate.yml`, is already fixed — confirmed all 3 jobs `runs-on: ubuntu-latest`).
+      `notify-slack.yml` → `runs-on: ubuntu-latest`. The 2 composite actions have no `runs-on:` of their own (they run
+      in the calling job's runner) and no self-hosted/glue references at all. `python-quality-gates-v2.yml` is the one
+      file that still references self-hosted (`glue`) runners, but only via the parameterized
+      `self_hosted_runner_labels` input that **defaults to `ubuntu-latest`** — this is the deliberate, working canary
+      from `github_actions_operator_gated_followups_2026_07_17.md`'s quality-gates-v2 self-host decision, not the broken
+      hardcoded-no-fallback pattern `image-build-validate.yml` had. Its only current non-empty-value callers
+      (`strategy-service`, `execution-service`, `features-service`, `agent-orchestrator`, `e2e-testing`,
+      `market-tick-data-service`, `ml-service`) are private repos never touched by
+      `self_hosted_runner_public_repo_revert_2026_08_05.md` (that revert scoped to PUBLIC repos only) — their glue
+      registration is unaffected by this extraction, so this is not a stranding case.
 - [ ] [INFRA] P3. Add a standing check (or extend an existing rollout/extraction script) that flags "a reusable workflow
       file changed HOST REPO visibility (private→public) or its callers' runner registration changed" as a trigger to
       re-audit `runs-on:` choices — this is the second time in two days a repo-visibility/extraction change silently
@@ -160,3 +172,13 @@ needed a brand new dispatch). Result: `validate / GCP Cloud Build — alerting-s
   reclassifying this doc's `assigned_vm` — batch6 activation is the operator's call, and flipping here too risks a
   duplicate dispatch. Todo 2 (standing check for repo-visibility/runner-registration drift as a re-audit trigger) stays
   KEEP-NA, valid — a genuine design decision (what mechanism, where implemented), not extracted anywhere.
+
+- **2026-08-08**: ran the batch6-dispatched sweep (todo 1 above, `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo
+  5). Finding: none found — see the flipped checkbox above for the full grep evidence. No code fix needed in
+  `unified-trading-ci`; `python-quality-gates-v2.yml`'s remaining self-hosted reference is a safe, parameterized,
+  intentional canary, not a stranded hardcoded pattern.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (2 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:5dc1e65cce36b844]: KEEP-NA,
+valid — the sole open item (todo 2, standing-check design decision) remains a genuine, un-scoped design call. No
+`assigned_vm` change.

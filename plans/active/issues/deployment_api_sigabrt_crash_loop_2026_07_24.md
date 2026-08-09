@@ -975,3 +975,5 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   pre-fix 0.36-2.9 GiB band. Flipped `[REVIEW] P2`. SIGKILL rate dropped 23→3 across pre/post-fix windows (confounded,
   noted honestly). New finding: 2 of 3 post-fix SIGKILLs correlate with an UN-instrumented data-status dashboard burst
   instead — filed a `[BACKEND] P2` follow-up. No code shipped (one live read-only monitoring GET).
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

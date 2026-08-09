@@ -131,11 +131,10 @@ Two independent fix directions, either or both:
       active-account pointer) are still shared/reused rather than re-authenticated per slot — the goal is isolating the
       MUTABLE selection, not duplicating the credentials themselves. (repo: unified-trading-pm, touches per-slot
       bootstrap tooling)
-- [ ] [INFRA] P3. Document the hazard explicitly in `/codex/05-infrastructure/per-tab-worktrees.md` § "Multi-agent
-      safety" (or a new subsection) regardless of which code fix above lands first: `gcloud config set account` is a
-      HOST-WIDE mutation, not session-scoped — any worker that must switch identity should prefer a per-invocation
-      `--account=`/`CLOUDSDK_CORE_ACCOUNT` override over `gcloud config set account` where the tooling allows it, and
-      should be aware that OTHER slots may change the ambient identity at any time. (repo: unified-trading-pm)
+- **[DOC] P3. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.** Document the
+  `gcloud config set account` host-wide-mutation hazard in `/codex/05-infrastructure/per-tab-worktrees.md` §
+  "Multi-agent safety". See the batch doc for the full scoped todo; do not duplicate-dispatch from here. (repo:
+  unified-trading-pm)
 
 ## Progress Log
 
@@ -183,3 +182,5 @@ Two independent fix directions, either or both:
   against the SAME shared `~/.config/gcloud` mutable state. Per the conflict-check protocol's caution on
   closely-adjacent claims, staying `assigned_vm: NA` and flagging the overlap rather than guessing which doc should own
   the shared-gcloud-identity fix space.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (3 entries).

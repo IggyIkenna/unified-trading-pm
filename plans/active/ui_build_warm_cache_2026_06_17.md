@@ -3,7 +3,7 @@ doc_type: plan
 title: UI build warm-cache — keep the UI QG build cache warm so only changed code rebuilds
 summary:
   Keep the UI quality-gate build cache warm so incremental rebuilds only recompile changed code, not the full app.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -96,7 +96,7 @@ context_scope:
       correctly detects the already-warm cache and skips). `quality-gates.sh --no-fix` green (42s, 101 tests, coverage
       73.53%), shipped via `quickmerge.sh --agent`, landed `live-defi-rollout`. Both UI repos' `setup.sh` are now in
       sync with the template — todo fully closed.
-- [ ] [INFRA] P3. **Migrate to pnpm's global content-addressable store** for UI repos: hardlinked node_modules →
+- [x] ✅ [INFRA] P3. **Migrate to pnpm's global content-addressable store** for UI repos: hardlinked node_modules →
       identical inodes across ALL slot clones → OS page cache warm fleet-wide while deps are unchanged (npm copies
       per-clone: N× disk + N× cold reads). **Operator decision 2026-07-27
       (`june_2026_vintage_audit_findings_2026_07_27.md` §5#33): APPROVED — migrate.** No longer an evaluate-first
@@ -123,7 +123,18 @@ context_scope:
       todo narrows to: root-cause why pnpm's content-addressable store isn't hardlinking `node_modules` across slot
       clones. Stays `[UI]`+NA per the standing citation above, though the narrowed scope is a tooling/infra
       investigation touching no UI source — a future pass may find the `[UI]` gate no longer applies to what's left,
-      same reasoning this doc already applied to the setup.sh item.
+      same reasoning this doc already applied to the setup.sh item. **DONE 2026-08-09 (agent slot 24, via
+      `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 10, verified ancestor commits) — sub-part 3 root-caused +
+      fixed.** Not a pnpm config gap: the default store (`~/.local/share/pnpm/store`) sits on a DIFFERENT mount boundary
+      than `.tabs/` on this host — raw `ln` probes confirmed `.tabs/<N>` <-> `.tabs/<M>` hardlinks succeed while
+      anything outside `.tabs/` fails `EXDEV`, and `pnpm install`'s `auto` import method silently falls back to a full
+      copy on that failure with no warning. Fix: `setup.sh` now detects a `.tabs/<N>` ancestor and relocates pnpm's
+      `store-dir` to `<.tabs>/.pnpm-store` via `npm_config_store_dir`. Evidence: two independent installs sharing the
+      relocated store show the identical inode with `nlink=3` (was `nlink=1` + distinct inode per clone pre-fix),
+      confirmed via a real `bash scripts/setup.sh --force` end-to-end run, not just a raw `pnpm install`. Shipped:
+      `deployment-ui@33c6a02`, `unified-trading-system-ui@e70aeeb8`, `unified-trading-pm@e9e344a66`. Adjacent finding
+      (same mount-boundary failure applies to `UV_CACHE_DIR`) filed separately, out of this todo's repo/scope — see
+      `issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`.
 - [x] ✅ [SCRIPT] P3. base-ui.sh: one automatic retry on the build-timeout class (cold-trip passes on retry; a genuine
       hang fails twice) — removes the human re-run without weakening the budget. Repo: unified-trading-pm
       (`scripts/quality-gates-base/base-ui.sh`); exercise against a UI repo build before shipping. — **MIGRATED
@@ -173,3 +184,23 @@ citation-based role/gate blocker on the narrowed remaining scope is unaffected b
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — UI-gated tooling investigation, locked_by: live-defi-rollout
+
+- **2026-08-09 (`ci_satellite_ao_dispatch_batch6_finalize` todo 1, slot 31)**: sub-part 3 (the sole remaining open
+  checkbox) shipped via batch6 todo 10 — verified `deployment-ui@33c6a02`, `unified-trading-system-ui@e70aeeb8`, and
+  `unified-trading-pm@e9e344a66` are all ancestors of `origin/live-defi-rollout` before flipping. Zero open checkboxes
+  and no remaining open prose work — `status: active` → `complete` (`resolved` is not a valid `doc_type: plan` status
+  per the frontmatter schema; `complete` is the terminal value for plans). Not archived: `locked_by: live-defi-rollout`
+  is non-empty, which blocks archival without an explicit `[unlock-plan]` decision per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`; this reconciliation todo's scope is the
+  source-doc flip/resolve step only, not archival — left for a future archival-sweep pass to ask about unlocking.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5): SUPERSEDED BY LIVE EVENT — written
+against a since-changed state; correcting rather than leaving stale. At classification time this doc had 1 open item
+(pnpm hardlink-dedup investigation) and I verdicted KEEP-NA valid; `ci_satellite_ao_dispatch_batch6_finalize` todo 1
+(slot 31) shipped that item concurrently and flipped `status: active` → `complete` (0 open checkboxes, 0 open prose
+work) before this commit landed. Current state: KEEP-NA correct as a terminal classification (not ARCHIVE) only because
+`locked_by: live-defi-rollout` blocks archival without an explicit `[unlock-plan]` decision — not this run's to clear
+autonomously, per the doc's own 2026-08-09 note above. No `assigned_vm` change; no incremental-skip body-hash recorded
+since the doc changed again after this marker was drafted — next run should re-hash fresh.

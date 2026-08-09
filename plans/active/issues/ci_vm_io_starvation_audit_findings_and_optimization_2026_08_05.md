@@ -469,9 +469,10 @@ not cost**):
 set, the self-hosted VM is genuinely the cheaper option** — it is earning its keep, and its sizing is set by these 7
 repos alone.
 
-> ⚠️ **These numbers are PRE-cache-fix and heavily inflated by it.** MTDS ran 256 jobs at ~335s cache restore each —
-> ~1,430 of its 1,649 minutes. Across 1,253 jobs, roughly a third to two-thirds of the 5,875 min was `actions/cache`
-> doing nothing useful (Part 3a). **Do not size anything on this number — re-measure after 2026-08-06.**
+> ⚠️ **These numbers are PRE-cache-fix and were heavily inflated by it.** MTDS ran 256 jobs at ~335s cache restore each
+> — ~1,430 of its 1,649 minutes. Across 1,253 jobs, roughly a third to two-thirds of the 5,875 min was `actions/cache`
+> doing nothing useful (Part 3a). **Re-measured 2026-08-09: 3,972 min/24h (-32.4%) — see Progress Log.** Sizing
+> decisions below may now be revisited against the post-fix number.
 
 The 18 public repos' volume is **not yet measurable**: 16 of them have zero runners and cannot dispatch, so there is no
 traffic to count until the migration is finished. What is certain is that their cost is $0 at any volume.
@@ -520,10 +521,9 @@ traffic to count until the migration is finished. What is certain is that their 
       `skipped Cache uv package cache` on both slices with `Install dependencies` still 3–4s (local cache intact) and
       the post phase absent. Full analysis: Part 3a.
 
-- [ ] [INFRA] P0. **Re-measure fleet job-minutes 24 h after the cache fix.** Run
-      `bash scripts/cicd/measure-ci-job-minutes.sh` and record the delta against the 5,875 min/24h pre-fix baseline in
-      Part 6. Every sizing decision below is gated on this number — the pre-fix figure is inflated by the very step that
-      was just removed, so sizing on it would be sizing on a bug.
+- [x] ✅ [INFRA] P0. **Re-measure fleet job-minutes 24 h after the cache fix.** Re-measured 2026-08-09: **3,972
+      min/24h**, down from the 5,875 min/24h pre-fix baseline (**-1,903 min, -32.4%**). Full per-repo breakdown +
+      analysis in the Progress Log entry below.
 
 - [ ] [INFRA] P1. **Investigate CI run VOLUME on the two heaviest repos.** `agent-orchestrator` fires 97 runs / 361 jobs
       per day and `market-tick-data-service` 49 runs / 256 jobs. Together that is ~54% of all fleet job-minutes. Cutting
@@ -546,50 +546,51 @@ traffic to count until the migration is finished. What is certain is that their 
       recheck (mentioned in the original finding) also still needs doing.
 
       **operator ruling 2026-08-08**: will do it later — leave BOTH sub-parts blocked for now, do not execute either
-      autonomously. Preparing the exact ready-to-run steps below so both are a single click/paste next time the
-      operator is available; nothing below was applied this session.
+                                                                              autonomously. Preparing the exact ready-to-run steps below so both are a single click/paste next time the
+                                                                              operator is available; nothing below was applied this session.
 
-      **Sub-part (2) — the exact click-through (unchanged from above, restated for a fast pickup):**
-      `github.com/IggyIkenna/unified-trading-pm` → **Settings → Actions → General** → scroll to **"Fork pull request
-      workflows"** → select **"Require approval for all outside collaborators."** → Save. Verified live 2026-08-08
-      this is STILL the current exposure (re-checked `gh api repos/IggyIkenna/unified-trading-pm/actions/permissions`
-      → `{"enabled":true,"allowed_actions":"all","sha_pinning_required":false}` — `allowed_actions` unchanged from the
-      2026-08-06 finding, and the fork-PR-approval setting itself is still web-UI-only, no API surface found).
+                                                                              **Sub-part (2) — the exact click-through (unchanged from above, restated for a fast pickup):**
+                                                                              `github.com/IggyIkenna/unified-trading-pm` → **Settings → Actions → General** → scroll to **"Fork pull request
+                                                                              workflows"** → select **"Require approval for all outside collaborators."** → Save. Verified live 2026-08-08
+                                                                              this is STILL the current exposure (re-checked `gh api repos/IggyIkenna/unified-trading-pm/actions/permissions`
+                                                                              → `{"enabled":true,"allowed_actions":"all","sha_pinning_required":false}` — `allowed_actions` unchanged from the
+                                                                              2026-08-06 finding, and the fork-PR-approval setting itself is still web-UI-only, no API surface found).
 
-      **Sub-part (1) — the allow-list, now actually enumerated (2026-08-08) so the command below is ready-to-paste,
-      not a placeholder:** scanned every `uses:` line across `.github/workflows/*.yml` +
-      `scripts/workflow-templates/*.yml*` (the fleet template sources). Local composite-action refs (`./...`) need no
-      allow-list entry — only externally-hosted actions do. Full external set, 12 actions:
-      `actions/cache`, `actions/checkout`, `actions/create-github-app-token`, `actions/download-artifact`,
-      `actions/github-script`, `actions/setup-python`, `actions/upload-artifact`, `astral-sh/setup-uv`,
-      `aws-actions/configure-aws-credentials`, `google-github-actions/auth`, `google-github-actions/setup-gcloud`, plus
-      the org's own reusable-workflow refs `IggyIkenna/unified-trading-ci` and `IggyIkenna/unified-trading-pm` (PM
-      calling its own reusable `python-quality-gates-v2.yml`). Ready-to-run (NOT executed this session — operator
-      deferred both sub-parts):
+                                                                              **Sub-part (1) — the allow-list, now actually enumerated (2026-08-08) so the command below is ready-to-paste,
+                                                                              not a placeholder:** scanned every `uses:` line across `.github/workflows/*.yml` +
+                                                                              `scripts/workflow-templates/*.yml*` (the fleet template sources). Local composite-action refs (`./...`) need no
+                                                                              allow-list entry — only externally-hosted actions do. Full external set, 12 actions:
+                                                                              `actions/cache`, `actions/checkout`, `actions/create-github-app-token`, `actions/download-artifact`,
+                                                                              `actions/github-script`, `actions/setup-python`, `actions/upload-artifact`, `astral-sh/setup-uv`,
+                                                                              `aws-actions/configure-aws-credentials`, `google-github-actions/auth`, `google-github-actions/setup-gcloud`, plus
+                                                                              the org's own reusable-workflow refs `IggyIkenna/unified-trading-ci` and `IggyIkenna/unified-trading-pm` (PM
+                                                                              calling its own reusable `python-quality-gates-v2.yml`). Ready-to-run (NOT executed this session — operator
+                                                                              deferred both sub-parts):
 
-      ```bash
-      gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions \
-        -f allowed_actions=selected
+                                                                              ```bash
+                                                                              gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions \
+                                                                                -f allowed_actions=selected
 
-      gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions/selected-actions \
-        -f github_owned_allowed=true \
-        -f verified_allowed=true \
-        -f 'patterns_allowed[]=astral-sh/setup-uv@*' \
-        -f 'patterns_allowed[]=aws-actions/configure-aws-credentials@*' \
-        -f 'patterns_allowed[]=google-github-actions/auth@*' \
-        -f 'patterns_allowed[]=google-github-actions/setup-gcloud@*' \
-        -f 'patterns_allowed[]=IggyIkenna/unified-trading-ci@*' \
-        -f 'patterns_allowed[]=IggyIkenna/unified-trading-pm@*'
-      ```
+                                                                              gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions/selected-actions \
+                                                                                -f github_owned_allowed=true \
+                                                                                -f verified_allowed=true \
+                                                                                -f 'patterns_allowed[]=astral-sh/setup-uv@*' \
+                                                                                -f 'patterns_allowed[]=aws-actions/configure-aws-credentials@*' \
+                                                                                -f 'patterns_allowed[]=google-github-actions/auth@*' \
+                                                                                -f 'patterns_allowed[]=google-github-actions/setup-gcloud@*' \
+                                                                                -f 'patterns_allowed[]=IggyIkenna/unified-trading-ci@*' \
+                                                                                -f 'patterns_allowed[]=IggyIkenna/unified-trading-pm@*'
+                                                                              ```
 
-      `github_owned_allowed=true` covers every `actions/*` action (checkout/cache/setup-python/upload-download-artifact
-      /create-github-app-token/github-script — all GitHub-owned) without needing individual patterns;
-      `verified_actions=true` is intentionally NOT set (none of the 12 are in GitHub's "verified creator" program, so it
-      would add nothing) — the 6 explicit `patterns_allowed` entries above cover every remaining non-GitHub-owned action
-      actually in use. **Before running**: re-derive the `uses:` scan fresh (a workflow may have added a new action
-      since 2026-08-08) — `grep -rhoE "uses:\s*[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+" .github/workflows/*.yml
-      scripts/workflow-templates/*.yml* | sed 's/uses:\s*//' | sort -u` — and diff against the 12 above before
-      applying, so a newly-added action isn't silently locked out mid-CI-run.
+                                                                              `github_owned_allowed=true` covers every `actions/*` action (checkout/cache/setup-python/upload-download-artifact
+                                                                              /create-github-app-token/github-script — all GitHub-owned) without needing individual patterns;
+                                                                              `verified_actions=true` is intentionally NOT set (none of the 12 are in GitHub's "verified creator" program, so it
+                                                                              would add nothing) — the 6 explicit `patterns_allowed` entries above cover every remaining non-GitHub-owned action
+                                                                              actually in use. **Before running**: re-derive the `uses:` scan fresh (a workflow may have added a new action
+                                                                              since 2026-08-08) — `grep -rhoE "uses:\s*[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+" .github/workflows/*.yml
+                                                                              scripts/workflow-templates/*.yml* | sed 's/uses:\s*//' | sort -u` — and diff against the 12 above before
+                                                                              applying, so a newly-added action isn't silently locked out mid-CI-run.
+
 - [x] ✅ [INFRA] P0. **Fix the 6 failing plan-hygiene ratchets.** PM's LDR→main promotion is blocked and re-fails every
       ~15 min. Not I/O — the `checks` slice fails in 2m44s on content. Exact list in Finding 4. **DONE — closed
       2026-08-07 (na-eligibility-audit)**: fixed twice, once per recurrence — `unified-trading-pm@b30fb5267`
@@ -674,9 +675,14 @@ traffic to count until the migration is finished. What is certain is that their 
       `ubuntu-latest`)" — the state this todo asks for already holds; nothing actionable remains unless/until a future
       repo-visibility change (the conditional "if ever made private" clause, which is not this checkbox's scope).
 
-- [ ] [DOC] P2. **Update stale codex docs.** `central-vm-relaunch-glue-runner-reinstall.md` (full rewrite — runners no
-      longer on the planning VM); `self-hosted-runner-security-posture.md` (dedicated VM **and** the public-repo threat
-      model); `agent-orchestrator-deploy.md` (AO instance size once the downsize resolves).
+- [x] ✅ **[DOC] P2. DONE 2026-08-09 — `unified-trading-pm@c8f7776fb`** (shipped via
+      `ci_satellite_ao_dispatch_batch7_2026_08_09.md` todo 1, now archived at
+      `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch7_2026_08_09.md`). ~~Update stale codex docs.~~
+      `central-vm-relaunch-glue-runner-reinstall.md` (full rewrite — runners no longer on the planning VM, all facts
+      live-verified via AWS `describe-instances`/`describe-volumes`); `self-hosted-runner-security-posture.md`
+      (dedicated VM, current 7-repo self-hosted set, and the public-repo threat model incident marked RESOLVED);
+      `agent-orchestrator- deploy.md` (AO instance size + CI-VM downsize facts corrected — the doc's own text had the
+      wrong instance family and date).
 
 - [x] ✅ [OPERATOR] P3. **DONE 2026-08-07 — already executed before being re-asked.** `i-0c9b283b31d6b5ca7` downsized
       `m8i.4xlarge` → `m8i.2xlarge` (see `plans/archive/2026_08/ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`,
@@ -686,16 +692,16 @@ traffic to count until the migration is finished. What is certain is that their 
 
 ## Deferred work after 2026-08-06
 
-| Item                                              | State                  | Blocked on                                                       |
-| ------------------------------------------------- | ---------------------- | ---------------------------------------------------------------- |
-| Re-measure job-minutes post-cache-fix             | **Cannot be done yet** | ~24 h of elapsed traffic. Gates every sizing decision.           |
-| Re-baseline `qg_resource_baseline.json`           | **Not done**           | Nobody — real work, and the governor over-admits until it lands  |
-| Complete public-repo → `ubuntu-latest` migration  | **DONE 2026-08-07**    | —                                                                |
-| Harden/remove self-hosted runners on public repos | **DONE 2026-08-07**    | PM's own revert closed the last public-repo self-hosted exposure |
-| Downsize CI VM / planning VM                      | **Operator-owned**     | 24h tracking window open, target check 2026-08-08 11:00 UTC      |
-| Could any of the 7 private repos go public?       | **Operator-owned**     | Business call on repo contents; would zero their CI cost         |
-| Fix the 6 plan-hygiene ratchets                   | **Not done**           | Nobody — PM's LDR→main promotion stays blocked until fixed       |
-| Sibling-clone I/O (bare repos + worktree)         | **Not done**           | Low priority — 8–11s/job, dwarfed by what was just removed       |
+| Item                                              | State               | Blocked on                                                       |
+| ------------------------------------------------- | ------------------- | ---------------------------------------------------------------- |
+| Re-measure job-minutes post-cache-fix             | **DONE 2026-08-09** | — 3,972 min/24h, -32.4% vs baseline. See Progress Log.           |
+| Re-baseline `qg_resource_baseline.json`           | **Not done**        | Nobody — real work, and the governor over-admits until it lands  |
+| Complete public-repo → `ubuntu-latest` migration  | **DONE 2026-08-07** | —                                                                |
+| Harden/remove self-hosted runners on public repos | **DONE 2026-08-07** | PM's own revert closed the last public-repo self-hosted exposure |
+| Downsize CI VM / planning VM                      | **Operator-owned**  | 24h tracking window open, target check 2026-08-08 11:00 UTC      |
+| Could any of the 7 private repos go public?       | **Operator-owned**  | Business call on repo contents; would zero their CI cost         |
+| Fix the 6 plan-hygiene ratchets                   | **Not done**        | Nobody — PM's LDR→main promotion stays blocked until fixed       |
+| Sibling-clone I/O (bare repos + worktree)         | **Not done**        | Low priority — 8–11s/job, dwarfed by what was just removed       |
 
 **Recommended NEXT item: fix the 6 plan-hygiene ratchets.** It is the only P0 that is neither operator-gated nor waiting
 on elapsed time, and PM's promotion pipeline re-fails every ~15 min until it is done. The re-measure runs itself in the
@@ -705,6 +711,35 @@ background of that work.
 
 ## Progress Log
 
+- **2026-08-09 (post-cache-fix re-measure)**: Re-ran `bash scripts/cicd/measure-ci-job-minutes.sh`, window since
+  2026-08-08T03:27:34Z (>24h post the 2026-08-06 `actions/cache` gate-off, `unified-trading-pm@9b39f6a05`). Result:
+
+  | repo (all private)         | runs | jobs      | min/24h (2026-08-09) | min/24h (2026-08-06 baseline) |
+  | -------------------------- | ---- | --------- | -------------------- | ----------------------------- |
+  | `agent-orchestrator`       | 158  | 918       | **1,152**            | 1,519                         |
+  | `market-tick-data-service` | 182  | 834       | **958**              | 1,649                         |
+  | `strategy-service`         | 109  | 492       | **530**              | 301                           |
+  | `features-service`         | 65   | 311       | **455**              | 988                           |
+  | `ml-service`               | 51   | 247       | **268**              | 698                           |
+  | `execution-service`        | 85   | 378       | **412**              | 561                           |
+  | `e2e-testing`              | 41   | 188       | **197**              | 159                           |
+  | **total**                  |      | **3,368** | **3,972**            | **5,875**                     |
+
+  **Net: -1,903 min/24h, -32.4%** vs the 2026-08-05/06 pre-fix baseline (Part 6). Confirms the cache-fix hypothesis: the
+  two heaviest repos shrank the most in absolute terms (`market-tick-data-service` -691 min, `agent-orchestrator` -367
+  min) — consistent with MTDS's 256-job, ~335s-each cache-restore cost (Part 3a) being the dominant inflator.
+  `features-service` also dropped sharply (-533 min) despite run count rising, same mechanism. Fleet job COUNT actually
+  rose (1,253 → 3,368, +169%) in this window — this is real activity growth, not a measurement artifact (same script,
+  same methodology, both windows) — while total minutes fell 32%. Per-job cost fell from 4.69 min/job to 1.18 min/job
+  (**-75%**), which is the real signature of the cache-fix: the fleet did far more CI work in far less aggregate time.
+  **Sizing implication**: the self-hosted VM's true post-fix load is ~68% of what Part 6 sized against, even with job
+  volume nearly 3x higher — the downsize-VM deferred item (line 697) and the plan-hygiene-ratchet fix can now reference
+  this number instead of the stale one.
+
+- **2026-08-09 (satellite-batch extraction)**: Part 8's `[DOC] P2` "Update stale codex docs" item extracted verbatim
+  into `ci_satellite_ao_dispatch_batch7_2026_08_09.md` todo 1 (checkbox above replaced with a citation pointer, per the
+  `ci`-tranche satellite-batch-extraction pattern). Every other open item in this doc was re-assessed and left behind —
+  see batch 7's own Progress Log for the full per-item reasoning.
 - **2026-08-08 (interactive session)**: Also right-sized the AO/planning VM's EBS volume (`i-0c9b283b31d6b5ca7`,
   `agent-orchestrator-vm-1`, `vol-0b4f0237fa0f5cd0f`) while auditing AWS spend more broadly — this VM is out of this
   doc's own CI-VM scope but the same live-CloudWatch-data method applies, recorded here as the closest existing home.
@@ -799,17 +834,27 @@ all 15 open items end-to-end. Closed 2: "Fix the 6 failing plan-hygiene ratchets
 todo" (already true — `self_hosted_runner_public_repo_revert_2026_08_05.md` todo 19 confirms `ui-quality-gates-v2.yml`
 was already correctly `ubuntu-latest` through the revert). 13 remain genuinely open — operator-gated, judgment-call, or
 duplicate-tracked-elsewhere-so-not-closable-here (item 6, "Complete public-repo migration," and item 9, "Cut
-sibling-clone I/O," are cross-referenced in sibling NA docs, not done). No `assigned_vm` change.
-**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-derived the open-item count fresh
-and cross-checked `/ag-closeout-audit ci`'s own fresh same-day 42-agent sweep
+sibling-clone I/O," are cross-referenced in sibling NA docs, not done). No `assigned_vm` change. **na-eligibility-audit
+2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — re-derived the open-item count fresh and cross-checked
+`/ag-closeout-audit ci`'s own fresh same-day 42-agent sweep
 (`plans/active/issues/ag_closeout_audit_ci_parked_2026_08_08.md`), which independently classified this doc
-`orphaned_never_touched` and extracted exactly ONE item as AO-eligible — the time-gated job-minutes re-measurement —
-now claimed by `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 1 (dispatched, `status: active`); flipping this
-doc's own copy of that item would create a competing dispatch path, so it stays KEEP-NA-STALE (already-claimed) on
-citation. The remaining open items (investigate CI volume; the `[OPERATOR]`-tagged fork-PR-approval item, itself
-carrying a fresh 2026-08-08 operator ruling to defer both sub-parts; re-baseline `qg_resource_baseline.json`; stagger
-the promote-fleet fan-out; the fleet-wide concurrency cap, deferred by the same sweep as D6-22, a genuine judgment call
-per its own 2 prior na-eligibility-audit verdicts; cut sibling-clone I/O; reap the governor marker-file leak; decide
-`content-gate`'s runner; update 3 stale codex docs) were each checked against today's 9 operator-Q&A precedents — none
-apply. Deferring to the same-day sibling audit's judgment on AO-eligibility rather than re-litigating in a second pass
-the same day. No `assigned_vm` change.
+`orphaned_never_touched` and extracted exactly ONE item as AO-eligible — the time-gated job-minutes re-measurement — now
+claimed by `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 1 (dispatched, `status: active`); flipping this doc's
+own copy of that item would create a competing dispatch path, so it stays KEEP-NA-STALE (already-claimed) on citation.
+The remaining open items (investigate CI volume; the `[OPERATOR]`-tagged fork-PR-approval item, itself carrying a fresh
+2026-08-08 operator ruling to defer both sub-parts; re-baseline `qg_resource_baseline.json`; stagger the promote-fleet
+fan-out; the fleet-wide concurrency cap, deferred by the same sweep as D6-22, a genuine judgment call per its own 2
+prior na-eligibility-audit verdicts; cut sibling-clone I/O; reap the governor marker-file leak; decide `content-gate`'s
+runner; update 3 stale codex docs) were each checked against today's 9 operator-Q&A precedents — none apply. Deferring
+to the same-day sibling audit's judgment on AO-eligibility rather than re-litigating in a second pass the same day. No
+`assigned_vm` change.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:cf645e1fdcb52a01]: KEEP-NA,
+valid — 8 open items (Part 8), all re-verified against today's fresh full read by
+`ci_satellite_ao_dispatch_batch7_2026_08_09.md` todo 1 (the sole extractable item — the 3-codex-doc sync — is now DONE
+via that batch, `unified-trading-pm@c8f7776fb`; the other 7 were explicitly considered and rejected there: 2 touch the
+`qg_host_adaptive_resource_governor_2026_07_14.md` standing operator ruling, 1 has no stated done-when, 2 are
+already-deferred fleet-wide-promote judgment calls, 1 is a re-baseline with no forcing function, 1 is the
+operator-deferred fork-PR item). No `assigned_vm` change.

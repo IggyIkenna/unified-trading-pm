@@ -431,3 +431,4 @@ a systemd unit needs host root / SSM on the planning VM — genuinely operator-g
   shipped `is_crash_looping()` fix required); the 2 P3 items (VM-naming disambiguation, automated watchdog-script sync)
   are lower-confidence AO-eligible candidates — flagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` in this audit's report rather
   than reclassified here, given this doc's history of misdiagnosis from ambiguous instance naming.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

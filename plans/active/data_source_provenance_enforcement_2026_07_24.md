@@ -61,32 +61,25 @@ context_scope:
 
 ### From `data_source_provenance_all_asset_groups_2026_06_01.md` (archived 2026-07-13 -- Data-source provenance enforced across all asset groups (source column + SOURCE_PRIORITY))
 
-- [ ] [SCRIPT] P1. Write `backfill_defi_source_column.py` (copy tradfi template) — stamps the known historical source
-      **per data_type** (most defi → `onchain_subgraph`; `oracle_prices` → resolve pyth vs chainlink from the existing
-      `pipeline_mode`/path; `native_staking_rates` → solana_rpc vs helius_rpc). Idempotent. **(MIGRATED FROM:
-      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- **[SCRIPT] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** Write
+  `backfill_defi_source_column.py` (copy tradfi template) to stamp the known historical source per data_type. See the
+  batch doc for the full scoped todo; do not duplicate-dispatch from here.
 
 - [ ] [DATA] P1. Backfill the existing DeFi corpus — run now, parallel in-region VMs sharded by `day=` (see § Migration
       scope); fold into the defi canonicalisation migration (`defi_manifest_canonicalisation_2026_06_01.md`) if open,
       else run direct; manifest re-consolidation after. **(MIGRATED FROM:
       `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [MTDS] P1. Thread `source="tardis"` through every CeFi adapter write + extend
-      `record_empty_for_shard`/`record_failed_for_shard` to accept + forward `source`.
-      `market-data-processing-service/.../core/canonical_writer.py`. (No `SOURCE_PRIORITY` change needed yet — `tardis`
-      is already the declared source; expand the list only when the alternative actually lands.) **PARTIAL-VERIFIED
-      (slot-3 cefi run-readiness re-audit 2026-06-04):** the **captured** write-path already auto-derives + stamps
-      `source="tardis"` for cefi on BOTH surfaces — UAC `SOURCE_PRIORITY` registers `("cefi", <data_type>) → ["tardis"]`
-      (source_priority.py:152-160), the MTDS raw-tick writer derives via `get_primary_source` (mtds@4e5fa57f), and the
-      MDPS candle writer derives via `_resolve_primary_source_for_candle` (canonical_writer.py:1316-1319). REMAINING for
-      this item: confirm the `record_empty_for_shard` / `record_failed_for_shard` empty/failed paths likewise forward
-      `source` (the captured path is done), + the [TEST] below, + the [DATA] historical backfill (rides the cefi
-      C-source RIDER). Repo: market-data-processing-service. **(MIGRATED FROM:
-      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- **[MTDS] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`** (the narrow
+  remaining slice only — the captured write-path already ships `source="tardis"` for cefi; confirm
+  `record_empty_for_shard`/`record_failed_for_shard` likewise forward `source` in market-data-processing-service
+  `canonical_writer.py`). See the batch doc for the full scoped todo; do not duplicate-dispatch from here. The
+  historical-corpus backfill sub-item stays here (rides the cefi C-source RIDER, see below). Repo:
+  market-data-processing-service.
 
-- [ ] [TEST] P1. CeFi unit test: a cefi cell without `source=` raises; `source="tardis"` persists; a future
-      `["<alt>", "tardis"]` registry expansion resolves two sources by priority. **(MIGRATED FROM:
-      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- **[TEST] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** CeFi unit test:
+  blank `source=` raises; `source="tardis"` persists; a future multi-source registry expansion resolves by priority. See
+  the batch doc for the full scoped todo; do not duplicate-dispatch from here.
 
 - [ ] [DATA] P1. Backfill `source="tardis"` onto the existing cefi corpus — **fold into
       `cefi_manifest_canonicalisation_2026_06_01.md` C-source rider** (its single bundled walk owns the cefi `_index`;
@@ -136,11 +129,9 @@ context_scope:
       **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation
       ruling.)**
 
-- [ ] [TEST] P1. **`available_at` parity across sources (batch = live)**: rows from any source for a cell are
-      timestamped with the live-mode `available_at` of the `SOURCE_PRIORITY` top entry — NOT each vendor's slower
-      archive time. A 2-source fixture asserts identical `available_at` derivation per cell, so swapping/adding a source
-      never shifts the lookahead. (Covers the tradfi audit item (n) generalised to all asset groups.) **(MIGRATED FROM:
-      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- **[TEST] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** `available_at`
+  parity across sources (batch = live) — a 2-source fixture (tradfi) asserts identical `available_at` derivation per
+  cell. See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
 
 - [ ] [QG] P1. **(checker DONE, wiring REMAINING)** Checker generalised —
       `check_tradfi_source_explicit_at_record_captured.py` now flags only when a callsite's resolved
@@ -151,37 +142,13 @@ context_scope:
       promoted).** **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)**
 
-- [ ] [MTDS] P1. **A12a — wire the upstream instruments-service DeFi-catalog PREFLIGHT into the REMAINING DeFi collect
-      handlers** (shared gate landed 2026-06-04 slot-2: UAC `PreflightTrigger.DEFI_COLLECT_DAILY` +
-      `INSTRUMENTS_PREFLIGHT_REQUIREMENTS[(DEFI,"defi_market_data")]` → `instrument-catalog` within 24h, exported from
-      UAC top-level; MTDS `_defi_manifest.assert_defi_catalog_fresh()` wraps
-      `unified_trading_library.instruments_preflight.run_preflight` and routes honest absence — `record_failed` per
-      shard, never raises in a per-venue loop). **WIRED so far**: `dex_pools_handler` (arbitrage critical path) +
-      `lst_rates_handler` (carry critical path). **REMAINING** DeFi collect handlers in
-      `market-tick-data-service/market_tick_data_service/cli/handlers/` to call `assert_defi_catalog_fresh(...)` at
-      their `process()` chokepoint before the source fetch + record honest absence on a stale catalog:
-      `dex_swaps_handler`, `lending_indices_handler`, `perp_funding_handler`, `oracle_prices_handler`,
-      `liquidations_handler`, `liquidation_events_handler`, `staking_yields_handler`, `eigenlayer_rewards_handler`,
-      `vault_share_price_handler`, `gas_fee_handler`, `bridge_events_handler`, `governance_events_handler`,
-      `governance_proposals_handler`, `mev_events_handler`, `token_transfers_handler`, `position_data_handler`,
-      `aggregator_route_handler`, `flash_loan_events_handler`, `jupiter_quote_handler`, `phoenix_orderbook_handler`,
-      `orca_whirlpool_state_handler`, `raydium_classic_amm_handler`, `drift_v2_historical_handler`,
-      `solana_defi_handler`, `evm_defi_handler`. (Existing handler tests that call `process()` must patch
-      `assert_defi_catalog_fresh` → True, as done for dex_pools/lst_rates.) **Codex SSOT**: add a DeFi row to the
-      instruments-preflight-chain doc (`/codex/04-architecture/instruments-preflight-chain.md`). **(MIGRATED FROM:
-      `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)** **STALE
-      (na-eligibility-audit 2026-08-03) — PARTIAL, checkbox stays open**:
-      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s "A12a follow-through" todo
-      (`market-tick-data-service@f7d6f5fd`) wired 15 of the handlers listed here — `dex_swaps_handler`,
-      `oracle_prices_handler`, `staking_yields_handler`, `eigenlayer_rewards_handler`, `vault_share_price_handler`,
-      `gas_fee_handler`, `governance_events_handler`, `governance_proposals_handler`, `mev_events_handler`,
-      `position_data_handler`, `jupiter_quote_handler`, `phoenix_orderbook_handler`, `orca_whirlpool_state_handler`,
-      `raydium_classic_amm_handler`, `evm_defi_handler` — each now calls `assert_defi_catalog_fresh(...)` at its
-      `process()` chokepoint. `drift_v2_historical_handler` was confirmed removed/renamed (no file exists under that
-      name). `perp_funding_handler` was confirmed intentionally NOT wired (its only live venues are UAC-classified cefi,
-      never consult the DeFi catalog). **Still open** (not covered by that todo): `lending_indices_handler`,
-      `liquidations_handler`, `liquidation_events_handler`, `bridge_events_handler`, `token_transfers_handler`,
-      `aggregator_route_handler`, `flash_loan_events_handler`, `solana_defi_handler`.
+- **[MTDS] P1. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch3_2026_08_09.md`.** A12a — wire the
+  remaining 8 DeFi collect handlers (`lending_indices_handler`, `liquidations_handler`, `liquidation_events_handler`,
+  `bridge_events_handler`, `token_transfers_handler`, `aggregator_route_handler`, `flash_loan_events_handler`,
+  `solana_defi_handler`) — 15 of the original 23 already wired via
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (`market-tick-data-service@f7d6f5fd`);
+  `drift_v2_historical_handler` confirmed removed; `perp_funding_handler` confirmed intentionally not wired. See the
+  batch doc for the full scoped todo; do not duplicate-dispatch from here.
 
 - [ ] ❌ [DATA] P1. OBSOLETE/WONTFIX. ~~TradFi backfill UNBLOCKED (`MASSIVE_API_KEY` provided by operator 2026-06-01) —
       run the dual-source backfill per `tradfi_massive_dual_source_2026_05_28.md` Phase 5: stamp `source=databento` on
@@ -246,8 +213,9 @@ Scope exemptions (by design, not gaps): features-service / strategy / execution 
 - **context-scout 2026-08-03 (full re-scout pass)**: re-verified context_scope (6 entries, corrects the prior marker's
   stale count) -- unchanged; already covers the enforcement SSOT source + the preflight-chain codex doc the A12a todo
   needs.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-07-30 (unchanged):
-  P0 provenance enforcement whose `[DATA]` todos are prod corpus backfills explicitly folded into other plans'
-  single-walk windows (cross-plan sequencing is coordination judgment); genuinely AO-eligible slices exist
-  (`[SCRIPT]` backfill_defi_source_column, `[TEST]` unit tests, the A12a remaining-8-handler wiring) but
-  splitting them out of this coordination doc into a fresh batch is plan-authoring work this audit does not do.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-07-30 (unchanged): P0
+  provenance enforcement whose `[DATA]` todos are prod corpus backfills explicitly folded into other plans' single-walk
+  windows (cross-plan sequencing is coordination judgment); genuinely AO-eligible slices exist (`[SCRIPT]`
+  backfill_defi_source_column, `[TEST]` unit tests, the A12a remaining-8-handler wiring) but splitting them out of this
+  coordination doc into a fresh batch is plan-authoring work this audit does not do.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.

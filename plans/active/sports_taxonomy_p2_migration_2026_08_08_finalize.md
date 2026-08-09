@@ -31,6 +31,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.8
 estimate_calibrated_ai_days: 0.64
 assigned_role: data_engineering
+effort: high
 supersedes:
 superseded_by:
 resolved_by:

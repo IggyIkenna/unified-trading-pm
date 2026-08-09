@@ -99,6 +99,13 @@ depends_on: []
 locked_by:
 resolved_by:
 source: cicd-escalation-agt-62ba62
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    scripts/workflow-templates/rollout-workflow-templates.sh,
+    /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
+    /plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md,
+  ]
 ---
 
 # Fleet-wide `runs-on:` placeholder break — root-caused + template SSOT fixed
@@ -261,3 +268,4 @@ source: cicd-escalation-agt-62ba62
   **Recommendation for a future pass**: split the P2 "Investigate…" todo into its own properly-scoped issue doc (or
   resolve the judgment call interactively first, per the eligibility SSOT's own prescribed path) — once that's done,
   this doc's remaining open item (the P3 lint todo) would likely clear the bar on its own.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

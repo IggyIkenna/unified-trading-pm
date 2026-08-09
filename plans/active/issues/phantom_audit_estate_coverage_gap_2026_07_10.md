@@ -188,21 +188,20 @@ noted here only so the two aren't conflated.
   >    `prefix_tpls` machinery (`reconcile_phantom_manifest_rows_all.py:231-306`), unchanged. Aggregate every bucket's
   >    prefix-list into ONE combined in-memory work queue — `list[tuple[bucket_name, prefix]]` across all 47 buckets —
   >    instead of building 47 separate per-bucket prefix lists that each spawn their own listing pass.
-  > 3. **Expensive phase once, shared pool**: submit that ENTIRE combined queue to a SINGLE shared
-  >    `concurrent.futures` worker pool (the same `list_blobs()`-per-prefix pattern `_audit_generic`/`_audit_sports`
-  >    already use per-bucket today, at `reconcile_phantom_manifest_rows_all.py:517-524` — reuse the pattern, widen the
-  >    pool's input) — one shared client, one shared concurrency cap, one shared progress/log stream — rather than 47
-  >    sequential invocations each paying its own process-startup + client-init + logging overhead and running
-  >    back-to-back. This is the actual "batch/optimize" the operator asked for: same total GCS `list_blobs` call count
-  >    (unavoidable — 47 real buckets need real listings), but ONE orchestrated pass instead of 47 independent full
-  >    walks.
+  > 3. **Expensive phase once, shared pool**: submit that ENTIRE combined queue to a SINGLE shared `concurrent.futures`
+  >    worker pool (the same `list_blobs()`-per-prefix pattern `_audit_generic`/`_audit_sports` already use per-bucket
+  >    today, at `reconcile_phantom_manifest_rows_all.py:517-524` — reuse the pattern, widen the pool's input) — one
+  >    shared client, one shared concurrency cap, one shared progress/log stream — rather than 47 sequential invocations
+  >    each paying its own process-startup + client-init + logging overhead and running back-to-back. This is the actual
+  >    "batch/optimize" the operator asked for: same total GCS `list_blobs` call count (unavoidable — 47 real buckets
+  >    need real listings), but ONE orchestrated pass instead of 47 independent full walks.
   > 4. **Classify + emit phantoms in-memory, per bucket**, from the aggregated listing results (substring-match each
   >    captured row's key against its bucket's listing set, same logic as today, just fed from the shared pool's output
   >    keyed by bucket).
-  > 5. **Concurrency/QPS safety check** (per the doc's own "Suggested fix" note): the existing per-bucket concurrency cap
-  >    was tuned for 5 buckets' worth of prefixes; widening the SAME pool to ~47 buckets' combined prefix count needs a
-  >    fresh cap/backoff check against GCS QPS limits before shipping — measure real prefix-count totals across the full
-  >    matrix first (cheap, phase 2 above already computes this) rather than guessing a safe pool size.
+  > 5. **Concurrency/QPS safety check** (per the doc's own "Suggested fix" note): the existing per-bucket concurrency
+  >    cap was tuned for 5 buckets' worth of prefixes; widening the SAME pool to ~47 buckets' combined prefix count
+  >    needs a fresh cap/backoff check against GCS QPS limits before shipping — measure real prefix-count totals across
+  >    the full matrix first (cheap, phase 2 above already computes this) rather than guessing a safe pool size.
   > 6. **Orchestrator side**: `manifest_hygiene_daily.py`'s cron loop (`:384`, currently 5 sequential per-AG CLI
   >    invocations) changes to ONE invocation carrying the full bucket list (or an `--all-buckets` flag), preserving the
   >    weekly `--mode full` cadence (schedule-level single-walk-discipline unchanged — still once/week, just wider per
@@ -236,14 +235,19 @@ noted here only so the two aren't conflated.
   every bucket's candidate prefixes into ONE combined work queue, submit that queue to a SINGLE shared worker pool
   (instead of 47 separate per-bucket sequential passes), classify phantoms in-memory per bucket from the shared pool's
   output, and re-check the concurrency/QPS cap against the widened combined prefix count before shipping. Doc stays
-  `assigned_vm: NA` — this is real, non-trivial engineering (touches the audit script's core listing strategy + the
-  cron orchestrator), not a bounded single-worker AO-dispatch task as scoped.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — independently re-assessed rather
-  than deferring to the same-day verdict above. The 6-step batching plan is unusually well-specified (exact
-  file/function references, no open "how should this work" question), which is a genuine RECLASSIFY signal — but step
-  5's concurrency/QPS safety check ("measure real prefix-count totals... rather than guessing a safe pool size") still
-  asks the worker to PICK a safe concurrency cap/backoff strategy against GCS QPS limits from first principles, not
-  apply a stated formula — a residual judgment component. Combined with the multi-file, 2-repo scope (audit script's
-  core listing strategy + the cron orchestrator) touching a single-walk-discipline-sensitive path, this stays just shy
-  of whole-doc worker-determinable. No cheat-sheet ruling matches directly. Reaffirms the concurrent verdict on
-  independent grounds.
+  `assigned_vm: NA` — this is real, non-trivial engineering (touches the audit script's core listing strategy + the cron
+  orchestrator), not a bounded single-worker AO-dispatch task as scoped.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — independently re-assessed rather than
+  deferring to the same-day verdict above. The 6-step batching plan is unusually well-specified (exact file/function
+  references, no open "how should this work" question), which is a genuine RECLASSIFY signal — but step 5's
+  concurrency/QPS safety check ("measure real prefix-count totals... rather than guessing a safe pool size") still asks
+  the worker to PICK a safe concurrency cap/backoff strategy against GCS QPS limits from first principles, not apply a
+  stated formula — a residual judgment component. Combined with the multi-file, 2-repo scope (audit script's core
+  listing strategy + the cron orchestrator) touching a single-walk-discipline-sensitive path, this stays just shy of
+  whole-doc worker-determinable. No cheat-sheet ruling matches directly. Reaffirms the concurrent verdict on independent
+  grounds.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — sole open item is a well-specified
+  6-step batching plan (2026-08-08 operator ruling: widen to full ~47-bucket matrix, batch the walks) with one residual
+  judgment step (GCS QPS concurrency-cap selection) on a single-walk-discipline-sensitive path. 2 independent same-day
+  (2026-08-08) passes already scrutinized this exact tension and landed KEEP-NA; concurring.

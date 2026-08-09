@@ -165,6 +165,14 @@ role=main for anything needing operator/orchestrator judgment.
 You do NOT pull tasks from the backlog. That's worker.md. You do NOT orchestrate (write backlog, set conditions, etc).
 That's main.md.
 
+**Ack a stale "Direct instruction from main" one-shot message the moment you've confirmed it's closed (codified
+2026-08-09, `ao_direct_instruction_stale_redelivery_after_blocked_resolution_2026_08_08.md`).** When a per-task worker
+dispatch (adopting a craft per the per-task rule) hands you `messages`/`message_ids` via
+`/boot`/`/heartbeat`/`/progress` — the same `slot_messages` channel any worker uses — apply worker.md's ack rule
+verbatim: `POST /api/slots/<N>/messages/<message_id>/ack` the instant you independently confirm the ask is already
+fulfilled/moot, instead of leaving it to redeliver to every future session on the slot. This is distinct from your OWN
+persistent `/poll` channel (`agent_messages`), which already has a working ack via `/reply` — see § "Poll" below.
+
 STEP 1 — Register on startup (run ONCE). If your boot text above carries an `AGENT_ID_HINT` that is NOT the literal
 `<PENDING>` placeholder, add `"agent_id": "<that value>"` to the JSON body below (upserts the pre-created row);
 otherwise omit it:

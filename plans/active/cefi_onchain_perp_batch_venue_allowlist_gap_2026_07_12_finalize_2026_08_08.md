@@ -47,6 +47,7 @@ source: >-
   re-launch item; conflict-checked clean against currently-active AO plans. This finalize doc closes the
   finalize-plan-coverage gate the reclassification itself triggered.
 assigned_role: data_engineering
+effort: high
 drift_direction: none
 context_scope:
   [
@@ -68,9 +69,10 @@ context_scope:
       entitlement re-probe), and re-run `measure_honest_coverage.py` Layer-1 for LIGHTER-ZKSYNC to confirm
       `present_tuples` moves off 0 — re-verify the cited commit/manifest evidence actually exists (do not trust the
       source doc's own copy of the evidence line), flip the checkbox if not already `[x]`. Also fix the now-stale
-      `cefi_consolidated_closeout_2026_07_18.md` line-329 citation ("lighter Tardis entitlement (BLOCKED-CREDENTIALS,
-      scaffold correct)") to reflect the resolved entitlement + completed re-launch. **Done when**: the source doc's
-      `[VERIFY]` item is `[x]` with fresh manifest evidence, and the consolidated-closeout citation is updated.
+      `cefi_consolidated_closeout_2026_07_18.md` line-329 citation (the "lighter Tardis entitlement" parenthetical still
+      citing the old credentials-hold marker, scaffold correct) to reflect the resolved entitlement + completed
+      re-launch. **Done when**: the source doc's `[VERIFY]` item is `[x]` with fresh manifest evidence, and the
+      consolidated-closeout citation is updated.
 - [ ] [DOC] P2. **Archive.** Run the standard 6-step archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md` once todo 1 confirms it is fully closed — dated

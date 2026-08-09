@@ -183,3 +183,4 @@ than acted on:
   this same session ("RULED 2026-08-06 (operator), option A [WORKER REC]: narrow the existing exception", retagged
   `[OPERATOR] -> [SCRIPT]"; a leftover "BLOCKED-OPERATOR-DECISION" body string in the same checkbox is stale prose, not a live re-block). All 3 remaining open todos are now worker-determinable: implement the diff-shape carve-out in `check_line_caps.sh`+ update the codex SSOT + a regression test, land the already-drafted deferred annotation, and a bounded corpus-wide report of over-cap live plans. Conflict-check cleared (no overlapping claim in`parent_epic:
   plan_hygiene_master`).
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

@@ -193,3 +193,5 @@ pending retag and the ordering risk against `boot_composer`. **C** — keep NA w
   point at `boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md`'s composer-guard fix instead.
   Not independently verified against `/api/activity` by main this pass — relaying review's evidence as-is. Re-affirms
   the `[DOCS] P1` and `[BACKEND] P2` todos above are still live, not stale.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

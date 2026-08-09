@@ -33,6 +33,7 @@ estimate_class: research
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2.4
 assigned_role: infra
+effort: high
 drift_direction: advance-code
 sequential: true
 depends_on: []
@@ -480,3 +481,11 @@ the 2026-08-03 pass's own reasoning (`sequential: true` at the plan level + the 
 `assigned_vm: planning` flip-trigger, not a partial dispatch) — not re-litigating that citation; the `[REVIEW] P2`
 fleet-wide evidence-sufficiency item remains an explicit human/reviewer judgment call. No new RECLASSIFY or ARCHIVE
 signal.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:e82da2dcd15f1683]: KEEP-NA,
+valid — confirms the 2026-08-07 verdict, unchanged. The `[SCRIPT] P2` divergence-analysis tool item stays correctly NA
+under the plan-level `sequential: true` + whole-plan `assigned_vm: planning` flip-trigger (not a partial dispatch); the
+`[REVIEW] P2` fleet-wide evidence-sufficiency item remains an explicit human/reviewer judgment call. No `assigned_vm`
+change.

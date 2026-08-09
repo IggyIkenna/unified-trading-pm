@@ -58,11 +58,14 @@ code_refs:
 > **The pipeline is the MVP (operator decision Harsh + Ikenna, 2026-06-30).** A commit is green locally
 > (`quality-gates.sh`) and reaches `live-defi-rollout` (LDR) via `quickmerge`. SIT validates the LDR content. The
 > LDR→main fleet promoter merges **LDR→main directly** — there is NO staging hop. `staging` is KEPT but **DORMANT**
-> behind a reversible per-repo toggle. **The LDR→main promote gate set is exactly THREE things:** `sit-gate/fleet-green`
+> behind a reversible per-repo toggle. **The LDR→main promote gate set is exactly THREE things:**
 >
-> - `quality-gates-v2` (on the promote PR) + quickmerge-provenance. The former "complex pipeline" gates — **label-check,
->   the SIT cross-repo COMBINATION workspace-digest, the dep-order gate, version-out-of-source (D13)** — are RETIRED /
->   advisory-only and are NOT part of the contract.
+> - `sit-gate/fleet-green`
+> - `quality-gates-v2` (on the promote PR)
+> - quickmerge-provenance
+>
+> The former "complex pipeline" gates — **label-check, the SIT cross-repo COMBINATION workspace-digest, the dep-order
+> gate, version-out-of-source (D13)** — are RETIRED / advisory-only and are NOT part of the contract.
 >
 > **Historical record (refactor COMPLETE, archived 2026-07-31):
 > `/plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md`** — all 29 todos done; it superseded the WS-L
@@ -400,6 +403,17 @@ they diverged.
     **fail-safe** (a stale/missing marker widens the range → over-flags, never under-flags). **Do NOT "simplify" the
     range back to `main..LDR`.** (The pre-push hook range `origin/live-defi-rollout..HEAD` is already a since-base range
     and is unaffected.)
+  - **The marker must be a true ANCESTOR of LDR, not merely an existing object (HARD; bug found 2026-08-06, fixed
+    PM@7b5390649).** A security-driven git history rewrite can leave the stored marker SHA still fetchable from GitHub
+    (so a bare existence check passes) while it sits on the OLD, pre-rewrite history line — `git log <marker>..LDR` then
+    balloons to nearly the repo's entire history instead of a small since-last-promote delta, still technically
+    "over-flags, never under-flags" but at a scale (thousands of commits, largely predating the `Quickmerge:` trailer
+    convention itself) that is impractical to clear. `promote_provenance_range.py`'s `marker_usability()` composes an
+    object-existence check with `marker_is_ancestor()` (`git merge-base --is-ancestor <marker> <ldr_ref>`); a marker
+    that is reachable but NOT an ancestor is treated the same as an unreachable one and falls through to the safe
+    `origin/main..origin/live-defi-rollout` fallback range. Full incident + the fleet-wide scope audit confirming
+    exactly 3 repos were affected:
+    `/plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`.
 
 Every shippable unit goes through exactly two passes:
 

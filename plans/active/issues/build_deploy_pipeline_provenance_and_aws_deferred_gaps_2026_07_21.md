@@ -200,9 +200,15 @@ named-owner coordination. No `assigned_vm` change.
   version is dead right now and we have kept it dead deliberately." SHA-only tagging is intentional, not a defect; `#1`
   is not a bug. Closed `#1` todo `[x]`. Source: `artifact_pipeline_observability_2026_07_17.md` Progress Log 2026-07-24
   (flagged as owed follow-up to this doc) + `/plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md` todo 2.
-**na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — the sole remaining open item (`#3`,
-confirm whether the cicd-events ledger should carry `build_id`) checked against today's 9 operator-Q&A precedents; none
-apply — it is a low-confidence "confirm whether" judgment call, not an IAM gap, a carve/tiering/context_scope/
-escalation/deletion/Option-B/AWS question, or a script gap with an exact sibling precedent. The doc's standing
-"page-first, do NOT fix here" operator ruling (2026-07-21) still governs the file-ownership coordination posture. No
-`assigned_vm` change.
+  **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — the sole remaining open item (`#3`,
+  confirm whether the cicd-events ledger should carry `build_id`) checked against today's 9 operator-Q&A precedents;
+  none apply — it is a low-confidence "confirm whether" judgment call, not an IAM gap, a carve/tiering/context_scope/
+  escalation/deletion/Option-B/AWS question, or a script gap with an exact sibling precedent. The doc's standing
+  "page-first, do NOT fix here" operator ruling (2026-07-21) still governs the file-ownership coordination posture. No
+  `assigned_vm` change.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:c53f3136e574ad22]: KEEP-NA,
+valid — re-verified the sole open item (#3, cicd-events ledger `build_id`), still an explicit low-confidence judgment
+call. Independently re-confirmed by today's batch7 fresh full read ("0 extractable... explicit low-confidence judgment
+call"). No `assigned_vm` change.

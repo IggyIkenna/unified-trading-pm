@@ -490,3 +490,10 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
   terms ("sector-identity", "MICRO-AUD", "tradfi_roots.py", "Surface A-D") -- zero hits in all three. Recommend the next
   `/ag-closeout-audit` tradfi pass draft it explicitly, carrying both caveats above. Todo 1 and todo 3 unchanged
   (DEPENDENCY_BLOCKED / OPERATOR_QUESTION respectively, per the 2026-08-07 reasoning, not re-litigated).
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:1f8c06a57ecdce2f]: **KEEP-NA,
+  valid -- confirmed unchanged.** Phase-0 flagged this doc as "changed since the 08-08 marker" (git-date fallback), but
+  `git diff <08-08-marker-sha>..HEAD` shows the ONLY intervening change is the context-scout line directly above -- zero
+  todo/verdict content changed. Reaffirming the 08-08 verdict without a fresh full re-read; see
+  `na_eligibility_hash_blind_to_context_scout_progress_log_line_2026_08_09.md` for the underlying false-positive class
+  this run found and filed.

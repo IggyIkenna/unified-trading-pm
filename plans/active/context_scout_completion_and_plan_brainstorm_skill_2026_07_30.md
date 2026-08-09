@@ -13,7 +13,11 @@ summary: >-
   pre-authoring clarifying-questions gap the audits currently only catch post-hoc.
 status: active
 nature: process
-asset_group: [ao, cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-09 (/ag-closeout-audit ao) -- was [ao, cross-cutting]. Content is 100% agent-orchestrator
+  # context_scout/plan-brainstorm skill-authoring plumbing; zero data-pipeline/cross-AG span -- cross-cutting was a
+  # redundant mistag per the Orthogonality HARD CHECK (flagged but not yet fixed by the 2026-08-08 cross-cutting run,
+  # see plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md finding 2).
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]

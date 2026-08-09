@@ -116,6 +116,20 @@ if [ "$CI_MODE" = "--precommit" ]; then
     python3 "$SCRIPT_DIR/../quality_gates/check_finalize_plan_coverage.py" --workspace-root "$(dirname "$PM_DIR")" --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Finalize-plan coverage (staged plans)" \
       || { echo "  ❌ Finalize-plan coverage — a staged assigned_vm:planning plan has no gated finalize companion (task_template.md §4)"; PF=$(( PF + 1 )); }
+
+    # Evidence gates, --only-scoped (2026-08-09). These lived ONLY in the full quality-gates.sh,
+    # so the CLAUDE.md-sanctioned pure-doc fast path (safe-doc-push.sh -> prek only) could land an
+    # unsourced operator-ruling citation or an unresolvable <repo>@<sha> with nothing objecting.
+    # The debt then surfaced for whichever OTHER agent next ran quickmerge, which re-gates the whole
+    # tree — measured 2026-08-08/09: the ruling baseline went 58 -> 76 in a day, with the cost
+    # landing on bystanders and one baseline RAISE absorbing 18 real violations rather than fixing
+    # them. Author-pays, same blast-radius-safe --only shape as finalize-plan-coverage above.
+    python3 "$SCRIPT_DIR/../quality_gates/check_plan_operator_ruling_evidence.py" --workspace-root "$(dirname "$PM_DIR")" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Operator-ruling evidence (staged plans)" \
+      || { echo "  ❌ Operator-ruling evidence — a staged todo claims an 'operator ruling' with no traceable source doc"; PF=$(( PF + 1 )); }
+    python3 "$SCRIPT_DIR/../quality_gates/check_plan_commit_sha_evidence.py" --workspace-root "$(dirname "$PM_DIR")" --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Commit-SHA evidence (staged plans)" \
+      || { echo "  ❌ Commit-SHA evidence — a staged todo cites <repo>@<sha> that does not resolve to a real commit"; PF=$(( PF + 1 )); }
     # Terminal-status-archived, --only-scoped (2026-08-07): a staged doc that's
     # status:resolved/complete/etc with all todos done but still physically under
     # plans/active/[issues/] is unconditionally wrong regardless of the corpus-wide
@@ -126,6 +140,38 @@ if [ "$CI_MODE" = "--precommit" ]; then
     python3 "$SCRIPT_DIR/check_terminal_status_archived.py" --quiet --only "${STAGED_PLANS[@]}" \
       && echo "  ✅ Terminal-status-archived (staged plans)" \
       || { echo "  ❌ A staged plan/issue doc is terminal-status but not archived — git mv it to plans/archive/[issues/] (see plan-completion-and-archival-discipline.md)"; PF=$(( PF + 1 )); }
+    # Archive-candidates, --only-scoped (2026-08-09): same shape as operator-ruling-evidence above —
+    # this check previously had NO precommit-time presence at all (only --ci mode's --diff-base and
+    # the full corpus-wide baseline mode), so a docs(plans) commit flipping a doc's last open todo to
+    # done had zero enforcement at commit time. Root-caused after the corpus-wide count reached 9
+    # (baseline 0) entirely via commits that never ran this check — the LDR-red Tier-A synthetic
+    # re-scan (baseline mode, not diff-scoped) is what eventually caught it, hours later, attributed
+    # to whoever's unrelated commit happened to trigger the next full quality-gates.sh run. A staged
+    # doc that's now 0-open/some-done/unlocked/not-exempt is unconditionally wrong regardless of the
+    # corpus's pre-existing backlog — no baseline needed for a single-file check.
+    bash "$SCRIPT_DIR/check_archive_candidates.sh" --quiet --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Archive candidates (staged plans)" \
+      || { echo "  ❌ A staged plan/issue doc now has 0 open todos + some done, unlocked — archive it: flip status to a terminal value, add the archive banner, git mv to plans/archive/[issues/], fix corpus referrers (or set archive_exempt: true with a Progress Log reason if its 0-open-todos state is intentional/durable)"; PF=$(( PF + 1 )); }
+    # Reference-path convention, --only-scoped (2026-08-09): same shape as the checks above — this
+    # ratchet previously had NO precommit-time presence, only the full corpus-wide baseline mode, so
+    # a docs(plans) commit introducing a badly-formatted or dangling /plans/…/codex/… reference had
+    # zero enforcement at commit time. Root-caused after the existence-violation baseline grew 86->95
+    # in one evening via commits that never ran this check. A staged file whose own content has a
+    # bad-format or dangling reference is unconditionally wrong regardless of the rest of the
+    # corpus's pre-existing debt.
+    python3 "$SCRIPT_DIR/check_reference_paths.py" --quiet --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Reference-path convention (staged plans)" \
+      || { echo "  ❌ A staged file has a badly-formatted or dangling /plans/…/codex/… reference — fix it (see codex/11-project-management/cross-reference-path-convention.md)"; PF=$(( PF + 1 )); }
+    # Silent-default-effort, --only-scoped (2026-08-09): same shape as the checks above — this
+    # ratchet previously had NO precommit-time presence, only the full corpus-wide baseline mode, so
+    # a docs(plans) commit authoring a new living plan with assigned_role but no effort/
+    # thinking_tier had zero enforcement at commit time. Root-caused after the baseline grew
+    # 217->228 in under a day via commits that never ran this check. A newly-staged living plan with
+    # assigned_role and no effort/thinking_tier signal is unconditionally flagged regardless of the
+    # rest of the corpus's pre-existing population.
+    python3 "$SCRIPT_DIR/check_effort_signal_ratchet.py" --quiet --only "${STAGED_PLANS[@]}" \
+      && echo "  ✅ Silent-default-effort (staged plans)" \
+      || { echo "  ❌ A newly-staged living plan declares assigned_role but no effort:/thinking_tier: — declare it explicitly, or confirm the role's default effort is genuinely right for this plan's complexity"; PF=$(( PF + 1 )); }
   fi
   if [ "${#STAGED_RUNBOOKS[@]}" -gt 0 ]; then
     python3 "$SCRIPT_DIR/check_runbook_fields.py" --quiet "${STAGED_RUNBOOKS[@]}" && echo "  ✅ Runbook fields (staged runbooks)" || { echo "  ❌ Runbook governance fields (staged runbooks)"; PF=$(( PF + 1 )); }
@@ -140,6 +186,11 @@ if [ "$CI_MODE" = "--precommit" ]; then
     python3 "$SCRIPT_DIR/check_frontmatter_schema.py" --quiet "${STAGED_CODEX[@]}" && echo "  ✅ Frontmatter schema (staged codex)" || { echo "  ❌ Frontmatter schema — missing/empty required field (staged codex)"; PF=$(( PF + 1 )); }
     "$SCRIPT_DIR/check_conflict_markers.sh" --quiet "${STAGED_CODEX[@]}" && echo "  ✅ No conflict markers (staged codex)" || { echo "  ❌ Conflict marker(s) in staged codex — resolve before commit"; PF=$(( PF + 1 )); }
     "$SCRIPT_DIR/check_prettier_mangling.sh" --quiet "${STAGED_CODEX[@]}" && echo "  ✅ No prettier mangling (staged codex)" || { echo "  ❌ Prettier emphasis-mangling in staged codex — see plans/active/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md for the repair recipe"; PF=$(( PF + 1 )); }
+    # Reference-path convention (staged codex) — check_reference_paths.py scans codex/** as well as
+    # plans/**; same --only rationale as the plans-side call above.
+    python3 "$SCRIPT_DIR/check_reference_paths.py" --quiet --only "${STAGED_CODEX[@]}" \
+      && echo "  ✅ Reference-path convention (staged codex)" \
+      || { echo "  ❌ A staged codex doc has a badly-formatted or dangling /plans/…/codex/… reference — fix it (see codex/11-project-management/cross-reference-path-convention.md)"; PF=$(( PF + 1 )); }
   fi
   if [ "$PF" -gt 0 ]; then
     echo "❌ plan-hygiene pre-commit: $PF hard failure(s) in STAGED files — fix before commit (fixable frontmatter: python3 scripts/plan-hygiene/fix_frontmatter.py; todo format: bash scripts/plan-hygiene/fix_todo_format.sh)."

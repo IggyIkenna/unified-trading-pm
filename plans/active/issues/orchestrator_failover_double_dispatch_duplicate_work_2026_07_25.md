@@ -129,7 +129,10 @@ task is already in-flight on another live slot.
       test confirmed to FAIL pre-fix with the exact `"...requeued (pinned)"` warning. Full `quality-gates.sh` green.
 - [ ] [BACKEND] P3. On re-dispatch, clear/curl-invalidate the prior owner's slot-side `current_task` (and surface a loud
       log naming both slot ids + the task) so `/api/state` never shows one task `working` in two slots — makes the
-      condition observable instead of something main has to catch by pane inspection.
+      condition observable instead of something main has to catch by pane inspection. — **Shipped
+      agent-orchestrator@82578c3** (dispatched + executed via
+      `/plans/active/ao_satellite_ao_dispatch_batch6_2026_08_04.md`, full evidence there; checkbox flip pending this
+      batch's finalize plan reconciliation, per this doc's own todo-editing convention).
 - [ ] [BACKEND] P3. Make `/done` idempotent + owner-checked: a second `/done` on an already-terminal task by a non-owner
       slot should no-op with a warning (not double-flip the checkbox or re-run reconciliation). Confirm current behavior
       against incidents 1 & 2 (slot 8 /done as non-owner of record for sigabrt; slot 11 potentially /done batch2-001 as
@@ -309,3 +312,4 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
 
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

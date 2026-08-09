@@ -174,8 +174,17 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
       instrument) — this is a MERGE, not a blind move, because the split-brain means both sides can hold the same atom.
 - [ ] [DATA] P1. Re-partition LIGHTER-ZKSYNC `ohlcv_1m` under `batch_tardis` on days < 2026-04-17 → `batch_lighter_api`
       (20 sampled), same de-dup requirement. Leave `derivative_ticker` under `batch_tardis` ALONE — it is correct.
-- [ ] [DATA] P2. Quarantine PACIFICA-SOLANA (13 sampled, 265 census-wide): no valid lane, no catalogue rows, venue
-      culled. Register in the quarantine set so fail-hard can be enabled around it.
+- [x] ✅ [DATA] P2. Quarantine PACIFICA-SOLANA (13 sampled, 265 census-wide): no valid lane, no catalogue rows, venue
+      culled. Register in the quarantine set so fail-hard can be enabled around it. **CLOSED 2026-08-09
+      (stale-check-cefi, staleness re-audit)**: this is the same registration action tracked (and already closed) under
+      `cefi_4surface_migration_execution_log_2026_07_24.md`'s parallel "Register PACIFICA-SOLANA (265) in the fail-hard
+      quarantine set" todo — done via `unified-api-contracts@989e9d16` (2026-07-21). Live-verified today:
+      `unified_api_contracts/canonical/quarantine.py`'s `QUARANTINE_REGISTRY` carries exactly one entry,
+      `"PACIFICA-SOLANA"` (`instrument_stem="*"`, reason cites "265 objects... venue culled 2026-07-16" — same figure
+      and same venue this todo names), matching "no valid lane, no catalogue rows, venue culled... register in the
+      quarantine set" verbatim. This doc's own sibling closure items above already reached the same "the target
+      mechanism already exists" pattern (the writer-fix todo cites `unified-trading-library@a4779c8b`); this is the
+      remaining half.
 - [x] ✅ [DATA] P1. Find the WRITER that stamped `batch_tardis` on a non-Tardis venue and fix the derivation at source,
       before any re-partition — otherwise the next capture re-creates the mislabel. Start from the UTL
       `_VENUE_OVERRIDES` map that `PipelineMode` cites for ASTER / HYPERLIQUID / EXTENDED-STARKNET. **DONE
@@ -208,3 +217,13 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
   doc stays NA as a unit.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — the writer-fix item was already closed today by a concurrent
   session; 3 genuine-work items remain (prod GCS pipeline_mode re-partition/merges against a live split-brain).
+- **stale-check-cefi 2026-08-09** (staleness re-check on already-KEEP-NA-marked docs, operator-requested): the
+  PACIFICA-SOLANA quarantine-registration todo was stale — already done since `unified-api-contracts@989e9d16`
+  (2026-07-21), the same commit closes the parallel todo in `cefi_4surface_migration_execution_log_2026_07_24.md`.
+  Flipped with evidence. 2 genuine-work items remain (EXTENDED-STARKNET / LIGHTER-ZKSYNC prod GCS pipeline_mode
+  re-partition/merges against a live split-brain) — re-checked, no evidence either has landed since the 2026-08-07
+  marker; doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — 2 of 4 original closure actions now
+  done (PACIFICA-SOLANA quarantine closed today 2026-08-09; writer-fix closed 2026-08-07). 2 remain: both prod-GCS
+  split-brain MERGE operations, single-walk-discipline-sensitive.

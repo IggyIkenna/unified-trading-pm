@@ -937,6 +937,30 @@ process_repo() {
     echo "  deleted orphan promote ref refs/heads/$_STALE_HEAD"
   done
 
+  # ── Orphan-ref sweep: promote/$REPO/* refs with NO open PR, from ANY close path ──────────
+  # The superseded-ref cleanup above only catches refs whose PR `gh pr list --state open`
+  # still returns THIS tick — a ref whose PR was closed by any OTHER path (conflict_resolver
+  # closing a superseded PR manually, an operator, a stale-check close) is never swept and
+  # accumulates on the remote indefinitely (confirmed live 2026-08-06: execution-service PR
+  # #552 closed by conflict_resolver agt-7e7e2c, ref left orphaned until a manual delete —
+  # promote_ref_orphaned_on_manual_pr_close_2026_08_06.md). List every promote/$REPO/* ref
+  # directly (not PR-derived) and delete any that is neither the current frozen head nor
+  # backed by a currently-open PR. Best-effort: a listing/delete failure never blocks promotion.
+  ALL_PROMOTE_REFS=$(GH_TOKEN="$GH_PAT_FOR_ARM" gh api --paginate \
+    "repos/$OWNER/$REPO/git/matching-refs/heads/promote/$REPO/" \
+    --jq '.[].ref | sub("^refs/heads/"; "")' 2>/dev/null || echo "")
+  OPEN_PROMOTE_HEADS=$(gh pr list --repo "$OWNER/$REPO" --base main --state open \
+    --json headRefName \
+    --jq ".[] | select(.headRefName | startswith(\"promote/$REPO/\")) | .headRefName" \
+    2>/dev/null || echo "")
+  for _ORPHAN_HEAD in $ALL_PROMOTE_REFS; do
+    [ "$_ORPHAN_HEAD" = "$PROMOTE_HEAD" ] && continue
+    echo " $OPEN_PROMOTE_HEADS " | grep -q " $_ORPHAN_HEAD " && continue
+    GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X DELETE "repos/$OWNER/$REPO/git/refs/heads/$_ORPHAN_HEAD" 2>/dev/null \
+      && echo "  🧹 orphan-ref sweep: deleted refs/heads/$_ORPHAN_HEAD (no open PR, not current head)" \
+      || echo "  🧹 orphan-ref sweep: refs/heads/$_ORPHAN_HEAD already gone or delete failed (non-fatal)"
+  done
+
   # ── Open (or reuse) the LDR→main PR and enable v2-gated auto-merge ──────────
   BODY="WS-L Phase-0: LDR→main direct promotion for \`$REPO\` (promotion_model=ldr_main, immutable per-SHA ref \`$PROMOTE_HEAD\`). ci_status=${CI_STATUS}; Tier-A + content + SIT + combination gates passed; v2-gated auto-merge armed (delete-branch on merge). SSOT: cicd_consolidated_remaining_2026_06_24.md WS-L."
   # Create the PR with the PAT, NOT the App token (GH_TOKEN). A promote PR opened by the

@@ -479,6 +479,7 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   f3063b98). LC_TARBALL_FRESHNESS=warn set as safety precaution (no actual republish needed). Background 30-min
   heartbeat monitor armed (sends /progress every 5 min). Chunks 3-7 (2022..2026-04-09) not yet reached — this entry
   captures the start state; will update on completion.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
 
 ## Follow-ups
 

@@ -225,7 +225,7 @@ The resolver writes canonical for new paths; reader fallback is hive-key-agnosti
   home.
 - [`/plans/epics/sports_master.md`](//plans/epics/sports_master.md) — sports asset_group umbrella; cites this SSOT as
   the path-layout authority.
-- `/plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md` and
+- `/plans/archive/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md` and
   `/plans/archive/issues/reconciliation_skill_sports_raw_tick_ssot_wrong_bucket_2026_07_24.md` (resolved 2026-07-25) —
   both stem from the same underlying dual-bucket architecture this doc describes (`instruments-store-sports-*`'s
   `sports_reference/` reference tree vs `market-data-tick-sports-*`'s standard `raw_tick_data/` raw-tick tree): the

@@ -789,3 +789,4 @@ into the same fix — carried forward here so it isn't lost with the archive:
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 7 open items: 2 dependency-blocked, 2 lower-confidence
   AO-eligible candidates not yet promoted, 1 genuine work, 2 operator questions.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

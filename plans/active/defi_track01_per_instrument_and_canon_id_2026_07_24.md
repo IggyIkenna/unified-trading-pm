@@ -238,15 +238,15 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
   checkpoint recorded, so a future `defi-per-instrument` re-run (e.g. for a NEW year added to the corpus) doesn't pay
   this same growing-listing-to-OOM cost on already-done years — not fixed here (would need a code change + QG cycle, out
   of scope for a one-shot infra-relaunch escalation; tracked as a new todo below).
-- [ ] [DATA] P2. **NEW 2026-08-06 (DP-VM-003, slot-7 data_pipeline_failure escalation agt-ef3dd8).** Skip
-      `migrate_defi_batch_to_per_instrument.py`'s per-year `discover_bundled()` full listing for years that already have
-      a recorded `[[VM_PROGRESS]] last_completed_date=` monotonic checkpoint (or an equivalent already-migrated marker)
-      instead of re-walking the whole `raw_tick_data/by_date/day=*` tree for that year every single relaunch. Two
-      consecutive `canonical-migration-defi-per-instrument` VMs (`-165240`, `-175529`) OOM'd 2026-08-06 on this exact
-      waste — per-year listing time climbed 68s→123s→186s (2022→2024) then crossed the OOM threshold on 2025, even
-      though every year fast-skips `cells=0` (corpus already migrated). Without this fix, any future
-      `defi-per-instrument` re-run (new year added, or re-verifying scope) pays the same growing, eventually-fatal
-      listing cost. (repo: market-tick-data-service)
+- **[DATA] P2. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** NEW 2026-08-06 (DP-VM-003,
+  slot-7 data_pipeline_failure escalation agt-ef3dd8). Skip `migrate_defi_batch_to_per_instrument.py`'s per-year
+  `discover_bundled()` full listing for years that already have a recorded `[[VM_PROGRESS]] last_completed_date=`
+  monotonic checkpoint (or an equivalent already-migrated marker) instead of re-walking the whole
+  `raw_tick_data/by_date/day=*` tree for that year every single relaunch. Two consecutive
+  `canonical-migration-defi-per-instrument` VMs (`-165240`, `-175529`) OOM'd 2026-08-06 on this exact waste — per-year
+  listing time climbed 68s→123s→186s (2022→2024) then crossed the OOM threshold on 2025, even though every year
+  fast-skips `cells=0` (corpus already migrated). Without this fix, any future `defi-per-instrument` re-run (new year
+  added, or re-verifying scope) pays the same growing, eventually-fatal listing cost. (repo: market-tick-data-service)
 
 ### R5 — Full-corpus canon reconciliation (operator-caught 2026-07-19; R3-as-scoped is NOT the whole job) · P0
 
@@ -317,19 +317,20 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       the 32 addresses known at ONE 2026-07-20 snapshot; any new high-TVL pool pairing a major/non-major asset going
       forward silently drops again until someone notices and manually extends `DEFI_FORCE_INCLUDE_POOLS`. (repo:
       instruments-service, unified-api-contracts)
-- [~] [BACKEND] P0. **Catalogue-venue gap — ROOT CAUSE FIXED + SHIPPED (`unified-api-contracts@f7314dc2`, 9/9
-  acceptance: 7 new venues + cbETH/wBETH ACCEPT, COINBASE-SPOT/BINANCE-FUTURES stay CEFI; whole defi universe validates,
-  was 26 rejected). SOLANA-NATIVE kept (documented canonical spelling; validator now parses the TRAILING chain segment).
-  DEPLOY-GATED re-enum+re-rollup remains.** NOT deploy-lag/creds/silent-[] (deployed image HAS 89 venues + adapters DO
-  emit). The 26 new venues are REJECTED at UAC `validate_instrument_records` — **R2 wired them into the FETCH list
-  (`_DEFI_VENUES`) but NOT the VALIDATION allowlist (`instrument_validation.py::_DEFI_VENUE_PREFIXES` line 22)** →
-  "unknown venue 'RENZO-ETHEREUM'" → they never reach `by_date/`, EU-seeded as `expected_unattempted`. There's an
-  in-code comment about this EXACT bug recurring (VENUS/RADIANT 2026-07-12). Fix = +15 collision-free prefixes (unblocks
-  22/26) + chain-aware COINBASE/BINANCE disambiguation for cbETH/wBETH (3 more; must NOT misclassify
-  COINBASE-SPOT/BINANCE-FUTURES as defi) + IS `SOLANA-NATIVE-SOLANA` tag fix. **DEPLOY-GATED**: after ship → LDR→main →
-  IS-image rebuild → then `is-daily-enum-defi` re-enum + `lifecycle-catalogue-full-defi` re-rollup + verify (a later
-  tick). Original catalogue snapshotted `prod/_snapshots/catalog.pre-rollup.20260719T040600Z.parquet`. (repo:
-  unified-api-contracts, instruments-service)
+- **[BACKEND] P0. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`** (the remaining
+  deploy-check + re-enum/re-rollup sub-scope)**. Catalogue-venue gap — ROOT CAUSE FIXED + SHIPPED
+  (`unified-api-contracts@f7314dc2`, 9/9 acceptance: 7 new venues + cbETH/wBETH ACCEPT, COINBASE-SPOT/BINANCE-FUTURES
+  stay CEFI; whole defi universe validates, was 26 rejected). SOLANA-NATIVE kept (documented canonical spelling;
+  validator now parses the TRAILING chain segment). DEPLOY-GATED re-enum+re-rollup remains.** NOT
+  deploy-lag/creds/silent-[] (deployed image HAS 89 venues + adapters DO emit). The 26 new venues are REJECTED at UAC
+  `validate_instrument_records` — **R2 wired them into the FETCH list (`_DEFI_VENUES`) but NOT the VALIDATION allowlist
+  (`instrument_validation.py::_DEFI_VENUE_PREFIXES` line 22)** → "unknown venue 'RENZO-ETHEREUM'" → they never reach
+  `by_date/`, EU-seeded as `expected_unattempted`. There's an in-code comment about this EXACT bug recurring
+  (VENUS/RADIANT 2026-07-12). Fix = +15 collision-free prefixes (unblocks 22/26) + chain-aware COINBASE/BINANCE
+  disambiguation for cbETH/wBETH (3 more; must NOT misclassify COINBASE-SPOT/BINANCE-FUTURES as defi) + IS
+  `SOLANA-NATIVE-SOLANA` tag fix. **DEPLOY-GATED**: after ship → LDR→main → IS-image rebuild → then `is-daily-enum-defi`
+  re-enum + `lifecycle-catalogue-full-defi` re-rollup + verify (a later tick). Original catalogue snapshotted
+  `prod/_snapshots/catalog.pre-rollup.20260719T040600Z.parquet`. (repo: unified-api-contracts, instruments-service)
 
 ### R4 — Coverage against the IS denominator · P1 (gated on R1+R2+R3+R5) → then RESUME capture
 
@@ -455,12 +456,14 @@ instruments in one `instruments.parquet` with `available_from/to`).
       unified-api-contracts) **RATIFIED (operator, 2026-08-08)**: yes to both — `derivative_ticker` is the single
       canonical raw-funding home for all DeFi perps, and `lst`/`staking`/`yield_bearing` are ratified canonical
       `InstrumentType` grains. Filed the implementation as a new `[SCRIPT] P1` todo below.
-- [ ] [SCRIPT] P1. **Implement the derivative_ticker/InstrumentType ratification** (per the 2026-08-08 ruling above):
-      drop the Drift-only 24h/7d/30d window aggregates in favor of `derivative_ticker` as the sole raw-funding capture
-      path for all DeFi perps; confirm `lst`/`staking`/`yield_bearing` carry no remaining case-variant/alias drift
-      anywhere they're consumed (repos: market-tick-data-service, unified-api-contracts).
+- **[SCRIPT] P1. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Implement the
+  derivative_ticker/InstrumentType ratification (per the 2026-08-08 ruling above): drop the Drift-only 24h/7d/30d window
+  aggregates in favor of `derivative_ticker` as the sole raw-funding capture path for all DeFi perps; confirm
+  `lst`/`staking`/`yield_bearing` carry no remaining case-variant/alias drift anywhere they're consumed (repos:
+  market-tick-data-service, unified-api-contracts).
 - [x] ✅ [DECISION] P2. **Bare `SUSHISWAP`/`UNISWAP` version (199,397→206,107 rows, measured 2026-07-21) — decided +
-      infra shipped `instruments-service@3ffd1adf`.** Operator ruling applied (see § "Operator decisions applied
+      infra shipped `instruments-service@3ffd1adf`.** Operator ruling applied (recorded in this doc,
+      `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md` § "Operator decisions applied
       (2026-07-21..." above): derive per-pool from the deploying factory contract address, not "undecidable." Shipped: a
       static, cited factory-address→version map (Uniswap V2/V3/V4, SushiSwap V2/V3;
       `instruments_service/reference_data/adapters/defi/_dex_factory_registry.py`) wired into
@@ -490,18 +493,18 @@ instruments in one `instruments.parquet` with `available_from/to`).
       non-canonical bare `SUSHISWAP`/`UNISWAP` originals purged once the canonical twins are verified. This is the same
       avoid-two-sources-of-truth standard as the sibling SUSHISWAP-alias ruling in
       `defi_venue_lst_rates_residual_2026_07_24.md` — not a forward-only labeling fix.
-- [ ] [SCRIPT] P1. **Wire RPC `factory()` lookup for the 206,107 bare SUSHISWAP/UNISWAP rows, register the missing
-      Sushi-Arbitrum UAC venues, then migrate + purge the historical objects/manifest to canonical venue+chain naming**
-      (per the 2026-08-08 ruling above): (1) enumerate the unique `pool_address` set from the raw MTDS parquet for these
-      206,107 rows, (2) RPC `factory()` lookup per pool (needs an RPC provider — build the adapter scaffold now
-      regardless of provider-credential status per the External-Data-Always-Available rule), (3) resolve each pool to
-      its canonical venue via the already-shipped factory-address→version map (`_dex_factory_registry.py`), (4) register
-      `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` in UAC `ALL_DEFI_VENUES` (currently only bare `SUSHISWAP-ARBITRUM`
-      exists), (5) rewrite/migrate the historical GCS objects + manifest rows to the resolved canonical venue+chain
-      path, (6) purge the non-canonical originals once canonical twins are verified present — a fresh
-      `gcs_bucket_soft_delete_retention_seconds()` check qualifies this for agent-execution per
-      `gcs-and-manifest-delete-safety-protocol.md` §3a, same pattern as the sibling composite-venue-objects migration in
-      this epic. **No backfill needed** — rename/relabel of already-captured data.
+- **[SCRIPT] P1. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`.** Wire RPC `factory()`
+  lookup for the 206,107 bare SUSHISWAP/UNISWAP rows, register the missing Sushi-Arbitrum UAC venues, then migrate +
+  purge the historical objects/manifest to canonical venue+chain naming** (per the 2026-08-08 ruling above): (1)
+  enumerate the unique `pool_address` set from the raw MTDS parquet for these 206,107 rows, (2) RPC `factory()` lookup
+  per pool (needs an RPC provider — build the adapter scaffold now regardless of provider-credential status per the
+  External-Data-Always-Available rule), (3) resolve each pool to its canonical venue via the already-shipped
+  factory-address→version map (`_dex_factory_registry.py`), (4) register `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM`
+  in UAC `ALL_DEFI_VENUES` (currently only bare `SUSHISWAP-ARBITRUM` exists), (5) rewrite/migrate the historical GCS
+  objects + manifest rows to the resolved canonical venue+chain path, (6) purge the non-canonical originals once
+  canonical twins are verified present — a fresh `gcs_bucket_soft_delete_retention_seconds()` check qualifies this for
+  agent-execution per `gcs-and-manifest-delete-safety-protocol.md` §3a, same pattern as the sibling
+  composite-venue-objects migration in this epic. **No backfill needed** — rename/relabel of already-captured data.
 - [x] ✅ [DATA] P2. **RESOLVED 2026-07-24 (autonomous session, sub-agent investigation) — the "2,936 rows = cefi
       leakage" premise was WRONG for 99.998% of the population; genuine leakage is 4 rows, not 2,936, and needs a writer
       fix, not a manifest cleanup.** Fresh live count (24,209,852-row manifest): `HYPERLIQUID`=204,286, `KALSHI_PERP`=2,
@@ -550,120 +553,121 @@ instruments in one `instruments.parquet` with `available_from/to`).
       data_engineering)... Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing combo builders
       (cefi/deribit_combo_adapter.py, cefi/tardis/combos.py)... Evidence: instruments-service@9416be7d." Confirmed
       ancestor of `origin/live-defi-rollout`.
-- [ ] [BACKEND] P0. **NEW 2026-07-21 (operator ruling) — eliminate the address/UUID fallback in
-      `canonical_instrument_id` for POOL + LENDING; resolve token symbols for real, don't fall back.** Operator: "it
-      needs to be fully canonical no fallback and migrated." Does NOT touch the two-id model or the machine
-      `instrument_id` (`pool_address.lower()` stays — 2026-07-18 ruling unchanged, `engine/defi_catalog_reader` still
-      joins on it). Scope is narrower than it first looks: `DefiPoolIdentity.glued_pair_id`
-      (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py:333-361`) only falls back to
-      `pool_address.lower()` when `base_asset`/`quote_asset` arrive blank — the fallback is a SYMPTOM of upstream token
-      resolution never being attempted, not a structural need. Measured root cause (research this session): no adapter
-      does independent on-chain/registry symbol resolution — `orca.py`/`raydium.py::_build_pool_record` DROP the pool
-      when the DEX's own subgraph/REST response lacks a symbol; `raydium.py::_build_historical_pool_record` hardcodes
-      `"UNKNOWN"`; `balancer.py:222-231` defaults to the literal string `"UNKNOWN"`; Solana LENDING
-      (`lending_indices_handler.py:420-423`) falls back to DeFiLlama's own pool UUID when DeFiLlama's `symbol` field is
-      blank — measured **49.7% raw-address + 17.6% UUID** of 707,803 live LENDING rows are non-symbolic today. A real,
-      unused resolution path already exists: `unified_api_contracts.external.alchemy.schemas.AlchemyTokenMetadata` is
-      declared (`registry/endpoints.py:302`, `registry/venue_manifest/defi.py`) with **zero real callers**
-      workspace-wide. **Design (decided this session):** a new shared, cached resolver module —
-      `unified_trading_library` (both instruments-service and market-tick-data-service already depend on it; UAC stays
-      schema-only) — `unified_trading_library/defi/token_metadata_resolver.py`: EVM via a real
-      `alchemy_getTokenMetadata` call (MTDS `alchemy_base_client.py` gets the calling method; UTL wraps it with an
-      on-disk/GCS-backed cache since token metadata is immutable — same address never needs a second live call); Solana
-      via the static `solana-labs/token-list` JSON (mint→symbol; confirmed reachable, HTTP 200, unlike `token.jup.ag`
-      which is dead — verified this session) — refreshed periodically, not a live call per-row. **Todos**: (1) build +
-      unit-test the UTL resolver (both legs); (2) wire it into `balancer.py`/`orca.py`/`raydium.py` + the other POOL
-      adapters as the enrichment step BEFORE the drop/`"UNKNOWN"` branches; (3) wire it into
-      `lending_indices_handler.py`/`_solana_defi_fetch.py` replacing the `market_id`-as-symbol fallback; (4) re-run
-      `build_instrument_catalogue.py` so POOL `glued_pair_id` re-resolves; (5) re-derive existing address/UUID-fallback
-      `canonical_instrument_id` values for LIVE rows via a one-off backfill (pattern:
-      `scripts/backfill_defi_canonical_id_and_glued_prefix_2026_07_14.py`), idempotent, verify 0 address/UUID-shaped
-      `canonical_instrument_id` remain for a resolvable token; a token genuinely absent from BOTH Alchemy AND the Solana
-      list (e.g. a rugged/delisted token with no metadata anywhere) is the only acceptable residual — route those
-      through `needs_attribution`/`empty_confirmed`, never silently re-embed the address. (repos:
-      unified-trading-library, unified-api-contracts, market-tick-data-service, instruments-service) - **(2)/(4) — CODE
-      COMPLETE + TESTED + MEASURED 2026-07-21 (slot-4), SHIP BLOCKED on an external, now-tracked cross-repo issue (not a
-      partial-scope call — see below).** Wired `resolve_evm_token_symbol` / `resolve_solana_token_symbol` into
-      `balancer.py::_pool_to_record`, `orca.py::_build_pool_record`,
-      `raydium.py::_build_pool_record`/`_extract_token_symbol` as the enrichment step BEFORE their drop/`"UNKNOWN"`
-      branches: subgraph/REST symbol present → unchanged; blank → resolver called with the on-chain address the pool
-      already carries → real symbol on success; drop/`"UNKNOWN"` only when the resolver ALSO returns `None` (honest
-      residual). `raydium.py::_build_historical_pool_record` deliberately stays `"UNKNOWN"`/DELISTED (documented
-      in-code): its caller (`getProgramAccounts` with a zero-length `dataSlice`) never fetches mint addresses at all —
-      genuinely resolving it needs a NEW on-chain step (decode the base/quote mint from the Raydium AMM V4 752-byte
-      account layout) that cannot be verified against live data in this pass; this path also defaults
-      `include_historical=False` (opt-in only) — tracked as an explicit follow-up rather than shipping an unverified
-      byte-offset guess that could fabricate a WRONG symbol (worse than an honest placeholder). **Adjacent fix in the
-      same commit**: a live Balancer pool's subgraph `symbol` can itself be a malformed string carrying an embedded `:`
-      (UAC `build_instrument_id`'s own id delimiter — FAILS LOUD, same bug class as the CeFi/Bitfinex
-      colon-wire-notation case) — now treated like a blank symbol (resolve on-chain instead of trusting it verbatim),
-      with 2 new regression tests. 15 new/updated unit tests total across the 3 adapters (subgraph-has-symbol unchanged
-      / subgraph-blank-resolver-succeeds / subgraph-blank-resolver-also-fails, per adapter, plus the colon-guard pair).
-      **Measured live 2026-07-21** (real Alchemy + `solana-labs/token-list` calls, zero mocks,
-      `GCP_PROJECT_ID=central-element-323112`): **BALANCER-ETHEREUM** 2,323 pools sampled, 3 had a blank/malformed token
-      symbol before this fix (all → `"UNKNOWN"`), **1 now resolves to a real on-chain symbol** via live Alchemy (2
-      genuinely unresolvable — no Alchemy metadata for those specific wrapped-vault-share addresses, correctly left
-      honest); **ORCA-SOLANA** 502 pools kept before → **514 after (+12 previously-silently-DROPPED pools now named and
-      included)** via the Solana static token list; **RAYDIUM-SOLANA** (active REST sample) 994/994 — no blank symbols
-      in this particular top-994-by-liquidity live snapshot (resolver wired + unit-tested; no live opportunity to fire
-      in this sample). (4) scoped equivalent: `build_instrument_catalogue.py`'s `_defi_pool_dual_form` re-derives
-      `glued_pair_id`/`canonical_instrument_id` from PRIOR DAILY ENUM SNAPSHOTS (`by_date/.../instruments.parquet`), not
-      a live adapter call — a catalogue rebuild today would NOT yet reflect this fix (the daily enum cron hasn't run
-      since); the live-adapter measurement above is the real-world equivalent proof that the SAME code path the cron
-      calls now resolves real symbols. **Full quality-gates.sh is genuinely green for this diff** (proven via a
-      `git stash` baseline: the FULL suite shows the identical 4 pre-existing, unrelated failures with or without this
-      diff — 4,756 passed / 7 skipped baseline vs 4,765 passed / 8 skipped with the diff, delta = exactly the new tests,
-      nothing else moved). **NOT yet shipped**: `quickmerge --agent`'s sentinel fast-path requires a literal 100%-green
-      `quality-gates.sh` run, and instruments-service's tree currently fails 4 hard invariant tests
-      (`test_every_uac_adapter_key_resolves_to_a_class` et al.) because UAC `unified-api-contracts@6bdbc31d`
-      (`lst_rate_honest_coverage_2026_07_21.md` Phase 1) registered `AAVE-ETHEREUM: aave_oracle` ahead of
-      instruments-service's own `factory._ADAPTERS` entry — a live, plan-owned, already-in-flight track (that plan's own
-      Progress Log: the IS-side `aave_oracle.py` adapter is "BUILT-BUT-NOT-SHIPPED" in a DIFFERENT session's checkout,
-      not this slot's). Building it here would risk a duplicate/divergent implementation colliding with that in-flight
-      work, and the failing tests are DELIBERATE no-bypass ship gates (no `known_gaps`-style escape valve for 3 of the
-      4). Filed `issues/instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md` (full evidence +
-      stash-baseline proof + recommended decision). **Action**: re-attempt a `quickmerge --agent --files` ship of the 3
-      changed adapters + their 2 test files from instruments-service the moment that issue closes (the code is untouched
-      and ready; nothing further to do on it). **na-eligibility-audit 2026-08-03**: the cited issue is now
-      `status: resolved` (`instruments-service@fd0d12a9` shipped the `aave_oracle` adapter registration; "4760 passed, 0
-      failed (all 4 originally-red invariant tests now green)") — the ship-blocker for this sub-item is cleared. Not
-      confirming the actual quickmerge re-attempt happened (no evidence found elsewhere in the corpus that the 3-adapter
-      diff itself was subsequently shipped) — checkbox stays open; whoever picks this up next should just re-run the
-      quickmerge, not re-diagnose. (repo: instruments-service) - **(3) Solana LENDING
-      (`lending_indices_handler.py`/`_solana_defi_fetch.py`) — SHIPPED + MEASURED 2026-07-21 (slot-4).** Wired
-      `resolve_solana_token_symbol` into a new `_solana_defi_fetch.resolve_blank_solana_lending_symbols` (called from
-      `_collect_solana_lending`): DeFiLlama's `symbol` present → unchanged; blank → resolve the reserve's REAL on-chain
-      mint (a NEW `underlying_mint` column, extracted from DeFiLlama's own `underlyingTokens` field — verified live
-      2026-07-21, this is the actual on-chain mint, never the DeFiLlama pool UUID) via the shared UTL resolver; UUID
-      fallback (`market_id`) used ONLY when the resolver ALSO returns `None` (mint absent from the static Solana
-      token-list — genuinely unresolvable). **Critical adjacent finding**: the UAC `DEFI_SOLANA_LENDING_LENDING_INDICES`
-      SchemaContract's `symbol_column` was `"market_id"` (not `"symbol"`) — meaning `write_defi_rows` built the
-      canonical `instrument_id`/GCS leaf from the UUID for EVERY Solana-lending row regardless of what `symbol` carried,
-      so the handler-side fix alone would have been a no-op on the actual written object. Fixed the SchemaContract too
-      (`unified-api-contracts@4c049355`) — verified no other caller relies on the old default (both migration/fold
-      one-off scripts + `risk_params_handler.py` pass an explicit `symbol_column=`). market-tick-data-service@7ce100f9.
-      **Also fixed 3 pre-existing, unrelated MTDS quality-gates.sh regressions found blocking ALL quickmerges in this
-      repo** (root-caused + closed `issues/mtds_canonical_stem_leaf_qg_regression_blocks_quickmerge_2026_07_21.md` — see
-      that doc for the full writeup; 2 of the 3 converged independently with a concurrent agent's own fix,
-      `market-tick-data-service@08f15f26`). (repos: market-tick-data-service, unified-api-contracts) - **(5) Backfill
-      existing UUID-fallback LENDING rows — SHIPPED + RUN 2026-07-21 (slot-4).**
-      `scripts/one_offs/backfill_solana_lending_uuid_canonical_id_2026_07_21.py` (market-tick-data-service@7ce100f9):
-      reads the consolidated defi availability index (one bounded-chunked download — a single-shot download of this
-      ~1.86 GiB object reproducibly broke mid-transfer at the same ~1.33 GiB offset, 4/4 attempts; per-chunk ranged GETs
-      fixed it), finds captured Solana-lending manifest rows whose `instrument_id` (per-market grain key) is
-      UUID-shaped, resolves each distinct market's mint via ONE live DeFiLlama pool-list fetch + the shared resolver,
-      migrates each resolved market's object to its real-symbol leaf (idempotent — skips if already present), retires
-      (renames, never deletes) the old UUID leaf, and re-registers the (unchanged — machine grain key stays the market
-      UUID per the two-id model) shard via `DefiManifestRecorder`. **Measured (dry-run, then --apply after the dry-run
-      looked sane, per this todo's own authorization):** **103 total UUID-shaped Solana-lending manifest rows**
-      (KAMINO=44, SOLEND=59, MARGINFI=0 — all dated 2026-04-14, all pre-Gate-5 legacy captures under the BARE venue slug
-      `KAMINO`/`SOLEND`, not the post-split `KAMINO_LENDING`; both forms are now recognised). **39 distinct markets
-      RESOLVED** to a real on-chain token symbol; **64 RESIDUAL** (3 — pool no longer in DeFiLlama's live listing; 61 —
-      resolver could not resolve the mint against the static Solana token-list; a genuinely unresolvable/delisted-token
-      residual, the only acceptable kind, never silently re-embedded). **Apply**: 23 objects migrated (new
-      resolved-symbol leaf uploaded, old UUID leaf retired, manifest re-registered), 16 already-migrated (idempotent
-      skip — same symbol as an existing object from a different market on the same day), 0 errors, 0 missing sources.
-      (repo: market-tick-data-service)
+- **[BACKEND] P0. EXTRACTED 2026-08-09 → `defi_satellite_ao_dispatch_batch11_2026_08_09.md`** (the sole remaining
+  sub-scope — re-ship the already-coded+tested (2)/(4) diff; sub-items (1)/(3)/(5) below are already shipped)**. NEW
+  2026-07-21 (operator ruling, recorded in this doc,
+  `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md` § "Operator decisions applied (2026-07-21…") —
+  eliminate the address/UUID fallback in `canonical_instrument_id` for POOL + LENDING; resolve token symbols for real,
+  don't fall back.** Operator: "it needs to be fully canonical no fallback and migrated." Does NOT touch the two-id
+  model or the machine `instrument_id` (`pool_address.lower()` stays — 2026-07-18 ruling unchanged,
+  `engine/defi_catalog_reader` still joins on it). Scope is narrower than it first looks:
+  `DefiPoolIdentity.glued_pair_id`
+  (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py:333-361`) only falls back to
+  `pool_address.lower()` when `base_asset`/`quote_asset` arrive blank — the fallback is a SYMPTOM of upstream token
+  resolution never being attempted, not a structural need. Measured root cause (research this session): no adapter does
+  independent on-chain/registry symbol resolution — `orca.py`/`raydium.py::_build_pool_record` DROP the pool when the
+  DEX's own subgraph/REST response lacks a symbol; `raydium.py::_build_historical_pool_record` hardcodes `"UNKNOWN"`;
+  `balancer.py:222-231` defaults to the literal string `"UNKNOWN"`; Solana LENDING
+  (`lending_indices_handler.py:420-423`) falls back to DeFiLlama's own pool UUID when DeFiLlama's `symbol` field is
+  blank — measured **49.7% raw-address + 17.6% UUID** of 707,803 live LENDING rows are non-symbolic today. A real,
+  unused resolution path already exists: `unified_api_contracts.external.alchemy.schemas.AlchemyTokenMetadata` is
+  declared (`registry/endpoints.py:302`, `registry/venue_manifest/defi.py`) with **zero real callers** workspace-wide.
+  **Design (decided this session):** a new shared, cached resolver module — `unified_trading_library` (both
+  instruments-service and market-tick-data-service already depend on it; UAC stays schema-only) —
+  `unified_trading_library/defi/token_metadata_resolver.py`: EVM via a real `alchemy_getTokenMetadata` call (MTDS
+  `alchemy_base_client.py` gets the calling method; UTL wraps it with an on-disk/GCS-backed cache since token metadata
+  is immutable — same address never needs a second live call); Solana via the static `solana-labs/token-list` JSON
+  (mint→symbol; confirmed reachable, HTTP 200, unlike `token.jup.ag` which is dead — verified this session) — refreshed
+  periodically, not a live call per-row. **Todos**: (1) build + unit-test the UTL resolver (both legs); (2) wire it into
+  `balancer.py`/`orca.py`/`raydium.py` + the other POOL adapters as the enrichment step BEFORE the drop/`"UNKNOWN"`
+  branches; (3) wire it into `lending_indices_handler.py`/`_solana_defi_fetch.py` replacing the `market_id`-as-symbol
+  fallback; (4) re-run `build_instrument_catalogue.py` so POOL `glued_pair_id` re-resolves; (5) re-derive existing
+  address/UUID-fallback `canonical_instrument_id` values for LIVE rows via a one-off backfill (pattern:
+  `scripts/backfill_defi_canonical_id_and_glued_prefix_2026_07_14.py`), idempotent, verify 0 address/UUID-shaped
+  `canonical_instrument_id` remain for a resolvable token; a token genuinely absent from BOTH Alchemy AND the Solana
+  list (e.g. a rugged/delisted token with no metadata anywhere) is the only acceptable residual — route those through
+  `needs_attribution`/`empty_confirmed`, never silently re-embed the address. (repos: unified-trading-library,
+  unified-api-contracts, market-tick-data-service, instruments-service) - **(2)/(4) — CODE COMPLETE + TESTED + MEASURED
+  2026-07-21 (slot-4), SHIP BLOCKED on an external, now-tracked cross-repo issue (not a partial-scope call — see
+  below).** Wired `resolve_evm_token_symbol` / `resolve_solana_token_symbol` into `balancer.py::_pool_to_record`,
+  `orca.py::_build_pool_record`, `raydium.py::_build_pool_record`/`_extract_token_symbol` as the enrichment step BEFORE
+  their drop/`"UNKNOWN"` branches: subgraph/REST symbol present → unchanged; blank → resolver called with the on-chain
+  address the pool already carries → real symbol on success; drop/`"UNKNOWN"` only when the resolver ALSO returns `None`
+  (honest residual). `raydium.py::_build_historical_pool_record` deliberately stays `"UNKNOWN"`/DELISTED (documented
+  in-code): its caller (`getProgramAccounts` with a zero-length `dataSlice`) never fetches mint addresses at all —
+  genuinely resolving it needs a NEW on-chain step (decode the base/quote mint from the Raydium AMM V4 752-byte account
+  layout) that cannot be verified against live data in this pass; this path also defaults `include_historical=False`
+  (opt-in only) — tracked as an explicit follow-up rather than shipping an unverified byte-offset guess that could
+  fabricate a WRONG symbol (worse than an honest placeholder). **Adjacent fix in the same commit**: a live Balancer
+  pool's subgraph `symbol` can itself be a malformed string carrying an embedded `:` (UAC `build_instrument_id`'s own id
+  delimiter — FAILS LOUD, same bug class as the CeFi/Bitfinex colon-wire-notation case) — now treated like a blank
+  symbol (resolve on-chain instead of trusting it verbatim), with 2 new regression tests. 15 new/updated unit tests
+  total across the 3 adapters (subgraph-has-symbol unchanged / subgraph-blank-resolver-succeeds /
+  subgraph-blank-resolver-also-fails, per adapter, plus the colon-guard pair). **Measured live 2026-07-21** (real
+  Alchemy + `solana-labs/token-list` calls, zero mocks, `GCP_PROJECT_ID=central-element-323112`): **BALANCER-ETHEREUM**
+  2,323 pools sampled, 3 had a blank/malformed token symbol before this fix (all → `"UNKNOWN"`), **1 now resolves to a
+  real on-chain symbol** via live Alchemy (2 genuinely unresolvable — no Alchemy metadata for those specific
+  wrapped-vault-share addresses, correctly left honest); **ORCA-SOLANA** 502 pools kept before → **514 after (+12
+  previously-silently-DROPPED pools now named and included)** via the Solana static token list; **RAYDIUM-SOLANA**
+  (active REST sample) 994/994 — no blank symbols in this particular top-994-by-liquidity live snapshot (resolver
+  wired + unit-tested; no live opportunity to fire in this sample). (4) scoped equivalent:
+  `build_instrument_catalogue.py`'s `_defi_pool_dual_form` re-derives `glued_pair_id`/`canonical_instrument_id` from
+  PRIOR DAILY ENUM SNAPSHOTS (`by_date/.../instruments.parquet`), not a live adapter call — a catalogue rebuild today
+  would NOT yet reflect this fix (the daily enum cron hasn't run since); the live-adapter measurement above is the
+  real-world equivalent proof that the SAME code path the cron calls now resolves real symbols. **Full quality-gates.sh
+  is genuinely green for this diff** (proven via a `git stash` baseline: the FULL suite shows the identical 4
+  pre-existing, unrelated failures with or without this diff — 4,756 passed / 7 skipped baseline vs 4,765 passed / 8
+  skipped with the diff, delta = exactly the new tests, nothing else moved). **NOT yet shipped**: `quickmerge --agent`'s
+  sentinel fast-path requires a literal 100%-green `quality-gates.sh` run, and instruments-service's tree currently
+  fails 4 hard invariant tests (`test_every_uac_adapter_key_resolves_to_a_class` et al.) because UAC
+  `unified-api-contracts@6bdbc31d` (`lst_rate_honest_coverage_2026_07_21.md` Phase 1) registered
+  `AAVE-ETHEREUM: aave_oracle` ahead of instruments-service's own `factory._ADAPTERS` entry — a live, plan-owned,
+  already-in-flight track (that plan's own Progress Log: the IS-side `aave_oracle.py` adapter is "BUILT-BUT-NOT-SHIPPED"
+  in a DIFFERENT session's checkout, not this slot's). Building it here would risk a duplicate/divergent implementation
+  colliding with that in-flight work, and the failing tests are DELIBERATE no-bypass ship gates (no `known_gaps`-style
+  escape valve for 3 of the 4). Filed
+  `issues/instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md` (full evidence + stash-baseline
+  proof + recommended decision). **Action**: re-attempt a `quickmerge --agent --files` ship of the 3 changed adapters +
+  their 2 test files from instruments-service the moment that issue closes (the code is untouched and ready; nothing
+  further to do on it). **na-eligibility-audit 2026-08-03**: the cited issue is now `status: resolved`
+  (`instruments-service@fd0d12a9` shipped the `aave_oracle` adapter registration; "4760 passed, 0 failed (all 4
+  originally-red invariant tests now green)") — the ship-blocker for this sub-item is cleared. Not confirming the actual
+  quickmerge re-attempt happened (no evidence found elsewhere in the corpus that the 3-adapter diff itself was
+  subsequently shipped) — checkbox stays open; whoever picks this up next should just re-run the quickmerge, not
+  re-diagnose. (repo: instruments-service) - **(3) Solana LENDING (`lending_indices_handler.py`/`_solana_defi_fetch.py`)
+  — SHIPPED + MEASURED 2026-07-21 (slot-4).** Wired `resolve_solana_token_symbol` into a new
+  `_solana_defi_fetch.resolve_blank_solana_lending_symbols` (called from `_collect_solana_lending`): DeFiLlama's
+  `symbol` present → unchanged; blank → resolve the reserve's REAL on-chain mint (a NEW `underlying_mint` column,
+  extracted from DeFiLlama's own `underlyingTokens` field — verified live 2026-07-21, this is the actual on-chain mint,
+  never the DeFiLlama pool UUID) via the shared UTL resolver; UUID fallback (`market_id`) used ONLY when the resolver
+  ALSO returns `None` (mint absent from the static Solana token-list — genuinely unresolvable). **Critical adjacent
+  finding**: the UAC `DEFI_SOLANA_LENDING_LENDING_INDICES` SchemaContract's `symbol_column` was `"market_id"` (not
+  `"symbol"`) — meaning `write_defi_rows` built the canonical `instrument_id`/GCS leaf from the UUID for EVERY
+  Solana-lending row regardless of what `symbol` carried, so the handler-side fix alone would have been a no-op on the
+  actual written object. Fixed the SchemaContract too (`unified-api-contracts@4c049355`) — verified no other caller
+  relies on the old default (both migration/fold one-off scripts + `risk_params_handler.py` pass an explicit
+  `symbol_column=`). market-tick-data-service@7ce100f9. **Also fixed 3 pre-existing, unrelated MTDS quality-gates.sh
+  regressions found blocking ALL quickmerges in this repo** (root-caused + closed
+  `issues/mtds_canonical_stem_leaf_qg_regression_blocks_quickmerge_2026_07_21.md` — see that doc for the full writeup; 2
+  of the 3 converged independently with a concurrent agent's own fix, `market-tick-data-service@08f15f26`). (repos:
+  market-tick-data-service, unified-api-contracts) - **(5) Backfill existing UUID-fallback LENDING rows — SHIPPED + RUN
+  2026-07-21 (slot-4).** `scripts/one_offs/backfill_solana_lending_uuid_canonical_id_2026_07_21.py`
+  (market-tick-data-service@7ce100f9): reads the consolidated defi availability index (one bounded-chunked download — a
+  single-shot download of this ~1.86 GiB object reproducibly broke mid-transfer at the same ~1.33 GiB offset, 4/4
+  attempts; per-chunk ranged GETs fixed it), finds captured Solana-lending manifest rows whose `instrument_id`
+  (per-market grain key) is UUID-shaped, resolves each distinct market's mint via ONE live DeFiLlama pool-list fetch +
+  the shared resolver, migrates each resolved market's object to its real-symbol leaf (idempotent — skips if already
+  present), retires (renames, never deletes) the old UUID leaf, and re-registers the (unchanged — machine grain key
+  stays the market UUID per the two-id model) shard via `DefiManifestRecorder`. **Measured (dry-run, then --apply after
+  the dry-run looked sane, per this todo's own authorization):** **103 total UUID-shaped Solana-lending manifest rows**
+  (KAMINO=44, SOLEND=59, MARGINFI=0 — all dated 2026-04-14, all pre-Gate-5 legacy captures under the BARE venue slug
+  `KAMINO`/`SOLEND`, not the post-split `KAMINO_LENDING`; both forms are now recognised). **39 distinct markets
+  RESOLVED** to a real on-chain token symbol; **64 RESIDUAL** (3 — pool no longer in DeFiLlama's live listing; 61 —
+  resolver could not resolve the mint against the static Solana token-list; a genuinely unresolvable/delisted-token
+  residual, the only acceptable kind, never silently re-embedded). **Apply**: 23 objects migrated (new resolved-symbol
+  leaf uploaded, old UUID leaf retired, manifest re-registered), 16 already-migrated (idempotent skip — same symbol as
+  an existing object from a different market on the same day), 0 errors, 0 missing sources. (repo:
+  market-tick-data-service)
 
 ### Operator decisions applied (2026-07-21, /autonomous — decided per AUTONOMOUS_AGENT_RULES.md rule 2, documented not asked)
 
@@ -851,17 +855,17 @@ instruments in one `instruments.parquet` with `available_from/to`).
       market-tick-data-service)
 
       **RE-VERIFIED 2026-07-24 (this pass) — the `--apply` handoff is still NOT unblocked; NOT 0 glued ids.** The 9
-                                                                                                                                                                                                                                                                                                                                                          ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
-                                                                                                                                                                                                                                                                                                                                                          `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
-                                                                                                                                                                                                                                                                                                                                                          manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
-                                                                                                                                                                                                                                                                                                                                                          rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
-                                                                                                                                                                                                                                                                                                                                                          the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
-                                                                                                                                                                                                                                                                                                                                                          docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
-                                                                                                                                                                                                                                                                                                                                                          the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
-                                                                                                                                                                                                                                                                                                                                                          supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
-                                                                                                                                                                                                                                                                                                                                                          `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
-                                                                                                                                                                                                                                                                                                                                                          (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
-                                                                                                                                                                                                                                                                                                                                                          unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
+                                                                                                                                                                                                                                                                                                                                                                                                      ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
+                                                                                                                                                                                                                                                                                                                                                                                                      `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
+                                                                                                                                                                                                                                                                                                                                                                                                      manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
+                                                                                                                                                                                                                                                                                                                                                                                                      rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
+                                                                                                                                                                                                                                                                                                                                                                                                      the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
+                                                                                                                                                                                                                                                                                                                                                                                                      docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
+                                                                                                                                                                                                                                                                                                                                                                                                      the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
+                                                                                                                                                                                                                                                                                                                                                                                                      supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
+                                                                                                                                                                                                                                                                                                                                                                                                      `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
+                                                                                                                                                                                                                                                                                                                                                                                                      (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
+                                                                                                                                                                                                                                                                                                                                                                                                      unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
 
 - [x] ✅ [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
       `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — **VERIFIED
@@ -942,3 +946,8 @@ instruments in one `instruments.parquet` with `available_from/to`).
   new `[SCRIPT]`/`[SCRIPT] P1` implementation todos filed same-day — both genuinely bounded, but sit alongside R4
   (`gated on R1+R2+R3+R5`) and the residual canon walk (infra-state-gated) in the same doc, so a whole-doc flip is not
   clean. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-09** (tranche=defi): KEEP-NA valid -- 949-line doc carrying the R1-R8 per-instrument
+  writer re-architecture + Track 1 residual canon walk -- the gating id-migration work behind
+  `defi_consolidated_closeout_2026_07_18.md`'s and `defi_track5`'s own `depends_on`+`gate_on_depends` gates (personally
+  confirmed still open). Carries a live "In-flight refactor + capture halted" banner. 4 open checkboxes + 1 in-flight
+  `[~]` partial (R3 historical migration, not yet terminal). Doc stays `assigned_vm: NA`.

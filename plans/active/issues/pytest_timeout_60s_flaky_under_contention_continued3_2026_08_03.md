@@ -89,15 +89,20 @@ here.
       unchanged from the parent doc-chain; still open per `continued2`'s own last check — a brief runner-idle window was
       observed once but did not hold). Once landed AND sustained (not a momentary idle blip), re-test whether
       `main_ci_red`/`ldr_qg_failure` re-fires across this whole doc-chain stop recurring.
-- [ ] 2. [SCRIPT] P2. **RESOLVED 2026-08-06 — same ruling as the parent doc-chain's decision, do not duplicate here.**
-      `[SCRIPT]` tag (was `[OPERATOR]`) — option (a), minimum cooldown since last dispatch with unchanged HEAD. Same
-      operator-level gap flagged repeatedly across the whole doc-chain, now also observed for `instruments-service`: no
-      cooldown/state-transition dedup guard exists on the `main_ci_red`/`ldr_qg_failure` escalation trigger, so an
-      escalation can fire (and a worker be dispatched) for a state that self-resolved before the worker even started
-      investigating (this session's PR merged 2 seconds before its own escalating run began). Recommend gating re-fire
-      on either (a) a minimum cooldown since the last dispatch for the same repo with an unchanged target-branch HEAD,
-      or (b) checking PR merge/HEAD-advancement state at dispatch time, not just at escalation-creation time. Operator
-      decision, not something a one-shot wall-clearing session should self-implement.
+- [x] ✅ 2. [SCRIPT] P2. **RESOLVED 2026-08-06 — same ruling as the parent doc-chain's decision, do not duplicate
+      here.** `[SCRIPT]` tag (was `[OPERATOR]`) — option (a), minimum cooldown since last dispatch with unchanged HEAD.
+      Same operator-level gap flagged repeatedly across the whole doc-chain, now also observed for
+      `instruments-service`: no cooldown/state-transition dedup guard exists on the `main_ci_red`/`ldr_qg_failure`
+      escalation trigger, so an escalation can fire (and a worker be dispatched) for a state that self-resolved before
+      the worker even started investigating (this session's PR merged 2 seconds before its own escalating run began).
+      Recommend gating re-fire on either (a) a minimum cooldown since the last dispatch for the same repo with an
+      unchanged target-branch HEAD, or (b) checking PR merge/HEAD-advancement state at dispatch time, not just at
+      escalation-creation time. Operator decision, not something a one-shot wall-clearing session should self-implement.
+      — **DONE 2026-08-08, agent-orchestrator@a351d0d** (same fix as the parent doc's todo 3 — see
+      `pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md` todo 3 and
+      `ci_satellite_ao_dispatch_batch6_2026_08_08.md` todo 6; not re-implemented separately here). Note: option (b)'s
+      PR-merge/HEAD-advancement-at-dispatch-time refinement was not built — option (a) alone was operator-ruled; not a
+      gap left open by this fix.
 - [ ] 3. [INFRA] P3. Once `/plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md` Phases 2-3
       land and hold, re-check whether this entire doc-chain (4 docs now, 30+ occurrences across 8+ repos) self-resolves
       — if so, archive all four docs together rather than leaving them open indefinitely as "still waiting."
@@ -511,3 +516,21 @@ items; prior verdict stands (2026-08-04 audit: "all 3 open todos fail the worker
 still open per `continued2`'s own last check (a brief runner-idle window observed once, did not hold); todo 2 is the
 `[OPERATOR]`-tagged cooldown-guard item; todo 3 gated on todo 1. No RE-TRIAGE section, no prose-only work outside the 3
 checkboxes. No `assigned_vm` change.
+
+- **2026-08-09 ~02:20-03:15Z (slot 22, data_engineering, task
+  `defi_dex_pool_swaps_733_row_indexer_health_findings-c4893c5446f8`)**: another corroborating occurrence,
+  `market-tick-data-service` (no `PYRIGHT_TIMEOUT` override — consistent with the established "don't pre-emptively raise
+  it" practice above). A local `quality-gates.sh` run repeatedly died with no visible error until the log tail was
+  checked directly: `❌ Type check FAILED/timeout (exit=143)` — `[4/6] TYPE CHECK` hitting the bare 120s
+  `PYRIGHT_TIMEOUT` default under this session's measured heavy host contention (9+ concurrent `quality-gates.sh`
+  processes host-wide at points, `free -h` showing 5.7-8.4GiB swapped throughout, `qg-host-governor.sh --status`
+  reporting only 4 physical cores on this box). Worked around with a one-shot `PYRIGHT_TIMEOUT=600` env override for
+  this session's own runs only — did NOT add a permanent repo override, per this doc's established precedent that MTDS's
+  occurrence rate doesn't yet warrant one. No new todo — same root cause, same `[OPERATOR]`-gated capacity question
+  already tracked by todo 1.
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:39bc9a22662d6f04]: KEEP-NA,
+valid — both open items (track the ledger-coordination fork Phase 2-3; re-check the 4-doc chain once landed) remain
+gated on that external plan, consistent with the doc-chain family's established verdict. No `assigned_vm` change.

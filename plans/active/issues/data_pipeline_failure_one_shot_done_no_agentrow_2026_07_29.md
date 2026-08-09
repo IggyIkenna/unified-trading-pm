@@ -133,9 +133,16 @@ still in flight.
 
 ## Todos
 
-- [ ] [DATA] P2. Query the live `AgentRow` for `agent_id='agt-79063c'` (or the `escalation_dispatched` activity log
+- [x] ✅ [DATA] P2. Query the live `AgentRow` for `agent_id='agt-79063c'` (or the `escalation_dispatched` activity log
       entry with that `escalation_id`) to determine whether the registration ever happened, and if so what changed its
-      status before this worker's `/done` call.
+      status before this worker's `/done` call. **Done 2026-08-08** (data_engineering, slot 11) — ran the diagnostic for
+      all 5 named agent_ids directly against the live `agent-orchestrator/data/state/state.db`, read-only; see Progress
+      Log entry "data_engineering (slot 11) 2026-08-08T22:24Z — DIAGNOSTIC" for the full per-id table. Answer: none has
+      a current `AgentRow` (all predate the table's rolling retention window), all 5 registrations are confirmed
+      indirectly via `escalation_dispatched`/`plan_health_dispatched`, and all 5 were transitioned away via the SAME
+      event — `tmux_session_lost` (scope=agent, `archived_lifecycle_complete: true`) from `tmux_pruner.py`'s
+      dead-tmux-session sweep calling `archive_agent(exit_reason="reaped-stale")` — across 3 distinct proximate triggers
+      (slot-reuse collision ×2, context-saturation wedge-kill ×1, plain silent loss ×2).
 - [ ] [CODE] P2. Once root-caused: fix the gap (either the registration path for `data_pipeline_failure` dispatches, or
       widen/guard `_done_one_off`'s active-agent lookup), and add a regression test mirroring
       `test_direct_boot_lazy_agentrow_then_one_shot_complete_succeeds` but for the `escalation.py` dispatch path rather
@@ -297,3 +304,52 @@ still in flight.
   `assigned_vm: NA`, and still cite this doc's diagnostic ([DATA] P2) and gated code-fix ([CODE] P2) items by name. Only
   in scope this run because 3 more corroboration entries landed since the 08-07 marker — none change either todo's own
   content or the parked status. Not re-litigated.
+
+- **data_engineering (slot 11) 2026-08-08T22:24Z — DIAGNOSTIC (`ao_satellite_ao_dispatch_batch5` [DATA] P2 todo,
+  read-only, no code change)**: Ran the requested query directly against the LIVE orchestrator DB
+  (`agent-orchestrator/data/state/state.db`, opened `mode=ro` — NOT the empty, stale root-clone artifact at
+  `agent-orchestrator/state.db`, a 0-byte file unrelated to the running server) for all 5 named agent_ids.
+
+  **(a) AgentRow exists now?** No — `SELECT * FROM agents WHERE agent_id=...` returned zero rows for all 5. The `agents`
+  table itself appears to carry a rolling retention window independent of this bug (179 rows resident, oldest
+  `registered_at`=2026-08-01 12:00:42, vs. 589 lifetime `agent_registered` activity_log events since 2026-06-27) — did
+  not locate the exact prune code path via grep of `server/**/*.py`, so the retention MECHANISM is unconfirmed, but the
+  row-count/date pattern is consistent with routine pruning rather than anything specific to these 5. **All 5 predate
+  the current retention window**, so "ever existed" had to be answered from `activity_log` instead (unpruned back to
+  2026-06-27).
+
+  **(a, continued) Did an AgentRow ever exist?** Yes for all 5, confirmed indirectly — each has an
+  `escalation_dispatched` (`agt-79063c`/`agt-0cd704`/`agt-765e33`/`agt-8fa8d1`) or `plan_health_dispatched`
+  (`agt-8e95ca`) activity_log row, meaning `escalation.py`'s / plan_health's success-branch registration code path was
+  reached. Note a code-level gap this surfaced: `escalation.py`'s one-shot `register_agent()` call (line ~746) never
+  itself logs an `agent_registered` activity event — the ONLY `"agent_registered"` log site in the whole server is
+  `server/routes/agents.py:764`, the PERSISTENT-agent `/register` path, a structurally different code path. So "the
+  registration succeeded" is only ever inferable indirectly (via `escalation_dispatched`/ `plan_health_dispatched`),
+  never directly observable in `activity_log` for one-shot agents.
+
+  **(b) Current status/tmux_session**: N/A for all 5 (no row exists to report a status on).
+
+  **(c) The activity_log event that transitioned each away from active/stale, before its `/done` call**: **all 5** have
+  a `tmux_session_lost` event (scope=agent) with `archived_lifecycle_complete: true`, i.e. `tmux_pruner.py`'s
+  dead-tmux-session sweep called `archive_agent(agent_id, exit_reason="reaped-stale")` on each. Confirmed `health.py`'s
+  silence-based `agent_stale`/`agent_offline` dimmers explicitly SKIP `lifecycle in ("one_shot", "scheduled")` agents
+  (health.py:350-351, by design — "their terminal transition is the reaper's dead-tmux-session archival"), so
+  `tmux_session_lost` is the ONLY possible transition path for this agent class, confirmed live:
+
+  | agent_id     | slot             | `tmux_session_lost` ts (UTC) | proximate pattern in the surrounding activity window                                                                                                                                                                                                                                                                                                                                                            |
+  | ------------ | ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `agt-79063c` | 10               | 2026-07-29 21:00:21          | **Slot-reuse collision**: a `slot_compacted` at 20:52:46 was followed by 2 `worker_kicked` liveness pokes, then the SAME slot's `/done`+`slot_done_verified` fired for an unrelated Class-A task (`capability_wizard_gap_discovery-020`) at 21:00:01 — 20s before the agent's `tmux_session_lost`. The physical tmux pane was reused as a plain backlog worker before this escalation's own `/done` could land. |
+  | `agt-0cd704` | 9                | 2026-07-29 21:20:30          | Plain silent loss — 5× `worker_kicked` over ~10min, ending in `slot_dispatch_unacked`, then `tmux_session_lost` with no competing task completion visible in the window.                                                                                                                                                                                                                                        |
+  | `agt-765e33` | 4 (moved from 6) | 2026-07-29 22:19:59          | Plain silent loss — `slot_blocked`/`blocked_partial_answer` (mid a `/blocked` exchange) then `tmux_session_lost` ~1min later, no competing task.                                                                                                                                                                                                                                                                |
+  | `agt-8fa8d1` | 2                | 2026-07-31 16:00:51          | **Context-saturation wedge-kill**: `worker_kick_failed` → `slot_wedged_killed_for_resume` (a DIFFERENT task, `deployment_api_qg_size_gate_debt-007`) → `tmux_session_lost` + `context_saturated_session_lost_task_requeued`, all within the same second. A distinct 3rd mechanism from the other 4.                                                                                                             |
+  | `agt-8e95ca` | 2                | 2026-08-02 12:25:58          | **Slot-reuse collision** (same shape as `agt-79063c`): `/done`+`slot_done_verified` for an unrelated Class-A task (`tarball_stale_window_cefi_live_capture_correctness_risk-005`) fired at 12:25:54, 4s before this agent's `tmux_session_lost`, then a fresh `escalation_dispatched` right after.                                                                                                              |
+
+  **Net**: 3 distinct proximate mechanisms across 5 corroborations, all converging on the same terminal event
+  (`tmux_session_lost` → `archive_agent(exit_reason="reaped-stale")`), all of which is invisible to a one-shot worker's
+  own session (it has no DB access) and race-prone against that same worker's still-in-flight `/done` call. This is a
+  diagnostic only, per this todo's own scope — not attempting the [CODE] P2 fix (gated per this doc +
+  `ao_satellite_ao_dispatch_batch6_2026_08_04.md`'s Deferred section). Query commands + full raw output available on
+  request; not pasted here to keep this entry scannable. Source query tool: `sqlite3 "file:<path>?mode=ro"` against
+  `agent-orchestrator/data/state/state.db`, read-only throughout, no writes to live server state.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

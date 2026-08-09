@@ -137,9 +137,8 @@ run). #5 waits on #1 because both touch the lifecycle loops.
 #1's re-measure), the 07-12 degradation onset, the two `[REVIEW]` doc close-out/archival passes (they fire as each
 source doc's last todo lands), and the operator-sequenced Layer-1 producer rewire — **plus the 4 Phase-8 residuals
 inherited from the archived children** (2 calendar-time re-measurements + 2 operator-gated `.env.local` actions), for a
-genuine remainder of **9**. Separately, **14 `- [ ]` MOVED items stay open** because their child plan is still active
-(`ao_scheduled_agent_hygiene` ×3, `ao_fleet_infra_hardening` ×5, `ao_fleet_observability_kpis` ×6); the **15 MOVED items
-whose child is archived were flipped `- [x]` on 2026-07-20** with a per-item `DONE via <child>` pointer.
+genuine remainder of **9**. Separately, the 14 MOVED items once pending on those 3 children are now ALSO flipped `- [x]`
+with `DONE via <child>` pointers (all archived); **all 29 MOVED items here are closed** (fixed 2026-08-08).
 
 ## Satellite AO-dispatch layer (2026-07-26 → 2026-07-31) — this plan's related: never linked to it until now
 
@@ -480,7 +479,8 @@ NOT AO and are deliberately out of scope here.
 - [ ] [REVIEW] P0. **Archive each source doc as its items land** (5-step ritual each: migrate deferred → banner →
       codex-alignment → codex update if a contract changed → clear lock). Docs #2 and #6-frontmatter carry bogus fields
       (`last_updated: 2026-06-27` predating `created`; stray `locked_by: live-defi-rollout`) — repair at archival.
-      **Gate**: `plans/active/issues/` contains no resolved-but-unarchived AO doc; inventory regenerated.
+      **Gate**: `plans/active/issues/` contains no resolved-but-unarchived AO doc; inventory regenerated. **➡️ EXTRACTED
+      2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 3 — do NOT action here.**
 
 ### Phase 6 — operator-reported dispatch-policy gaps (2026-07-17, verified this session before writing)
 
@@ -825,7 +825,8 @@ NOT AO and are deliberately out of scope here.
       (/plan-reconcile ao): all 6 named plans are now confirmed archived** (`ao_fleet_infra_hardening` corrected above
       to ✅ ARCHIVED, 5/5, no residual; the other 5 were already shown archived in the split-out table above). The hold
       no longer blocks a retry — this P0 stays unflipped, the run itself still needs to happen. \_Source:
-      `ao_scheduled_agent_hygiene_2026_07_20.md` (archived), todo 4 (+ R1/R2 residuals carried in todo 5).*
+      `ao_scheduled_agent_hygiene_2026_07_20.md` (archived), todo 4 (+ R1/R2 residuals carried in todo 5).* **➡️
+      EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 4 — do NOT action here.**
 - [ ] [BACKEND] P0. **Role lifecycle-field reclassification — align the declared `lifecycle` on plan-worker roles with
       reality.** `backend_engineer` / `ui_developer` / `quant_dev` / `infra` are declared `lifecycle: one_shot`;
       reclassify to `persistent`, and resolve `data_engineering` (scheduled-vs-persistent). **NOT required for
@@ -836,7 +837,8 @@ NOT AO and are deliberately out of scope here.
       **Operator-owned timing** (2026-07-21): "after updating docs, fixing this, and everything discussed." **Gate**:
       each role's `lifecycle` matches its real dispatch pattern, or a recorded decision says why the declared value
       stays. _Source: `ao_worker_lifecycle_dispatch_context_2026_07_21.md` (archived 2026-07-23), its "Deferred
-      (tracked, not this plan's scope)" item — which had NO successor owner until this migration._
+      (tracked, not this plan's scope)" item — which had NO successor owner until this migration._ **➡️ EXTRACTED
+      2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 5 — do NOT action here.**
 - [x] ✅ [SCRIPT] P2. **Remove the dead `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` from the live planning-VM
       `.env.local`.** — DONE 2026-07-21 (operator authorized, superseding the A6 "fold into re-bootstrap" default — done
       in-window alongside the DB migration). Took the `sed -i` backup-first route (backups

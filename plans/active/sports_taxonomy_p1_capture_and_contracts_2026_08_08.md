@@ -46,6 +46,7 @@ estimate_class: design
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8
 assigned_role: data_engineering
+effort: high
 supersedes:
 superseded_by:
 resolved_by:
@@ -306,15 +307,16 @@ achieved by exclusion, not canonicalisation.**
       same fallback `lookup_contract` already performs during the fork's migration window) — built on the pre-existing
       `SPORTS_VENUE_TYPE_MAP`, so every venue self-classifies mechanically; no per-venue enumeration, which makes the
       19-vs-21 count discrepancy moot (the resolver covers the map, not a hand-picked subset — did not re-run a fresh
-      live-manifest count since the classification question itself no longer depends on the count; the archived issue
-      doc's own OPERATOR RULING banner already carries the 21-venue correction). **P1 CONTRACT only**, same additive
-      pattern as `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM`/`SPORTS_ODDS_DATA_TYPE_CANONICAL_FORM`: deliberately NOT wired
-      into `CONTRACT_REGISTRY`'s `("sports","exchange_odds"/"fixed_odds","trades")` keys, the MTDS writer that still
-      stamps the column, or any existing manifest row this phase — switching the writer/readers to call this instead of
-      the stamped column, and retiring `CONTRACT_REGISTRY`'s exchange_odds/fixed_odds entries + the
-      accepted-noncanonical set entries in `market_data_categories.py`, is the P2 `[REVIEW] P0` full-enumeration scope
-      referenced above. 8 new unit tests (`test_registry_completeness_p1.py::TestDeriveSportsOddsInstrumentType`) green.
-      Full `unified-api-contracts` `quality-gates.sh` green (405s).
+      live-manifest count since the classification question itself no longer depends on the count;
+      `/plans/archive/issues/sports_odds_venue_enumeration_undercount_predrain_2026_07_27.md`'s own OPERATOR RULING
+      banner already carries the 21-venue correction). **P1 CONTRACT only**, same additive pattern as
+      `SPORTS_IS_DATA_TYPE_LOWERCASE_FORM`/`SPORTS_ODDS_DATA_TYPE_CANONICAL_FORM`: deliberately NOT wired into
+      `CONTRACT_REGISTRY`'s `("sports","exchange_odds"/"fixed_odds","trades")` keys, the MTDS writer that still stamps
+      the column, or any existing manifest row this phase — switching the writer/readers to call this instead of the
+      stamped column, and retiring `CONTRACT_REGISTRY`'s exchange_odds/fixed_odds entries + the accepted-noncanonical
+      set entries in `market_data_categories.py`, is the P2 `[REVIEW] P0` full-enumeration scope referenced above. 8 new
+      unit tests (`test_registry_completeness_p1.py::TestDeriveSportsOddsInstrumentType`) green. Full
+      `unified-api-contracts` `quality-gates.sh` green (405s).
 - [x] ✅ [CODE] P1. **Delete `markets`, `outcomes` and `settlements`** from `DATA_TYPES_BY_ASSET_GROUP["sports"]` — 0
       rows ever written, pure phantom declarations. Record in codex that ML labels come from IS `fixtures_outcomes` /
       `matches` (post-lowercasing), so the real label lineage is documented rather than implied by a path that was never
@@ -422,23 +424,65 @@ achieved by exclusion, not canonicalisation.**
       key-minting function the next todo must read before changing). None of these are RAW MTDS capture vocabulary (this
       todo's scope, per the plan header's "contracts only" phase boundary) — they are MDPS-internal processed-output
       keys, correctly deferred.
-- [ ] [CODE] P1. **Decide and record the snapshot-vs-candle discriminator on the collapsed model.** `odds_snapshot`
+- [x] ✅ [CODE] P1. **Decide and record the snapshot-vs-candle discriminator on the collapsed model.** `odds_snapshot`
       (point-in-time LOCF) and `odds_movement` (OHLC bar) are different SHAPES at the same grain, so `timeframe` alone
       cannot distinguish them once the names are gone. **PRE-SPECIFIED**: follow the fleet convention already used for
       the cefi/tradfi candle family — the OHLC form is the candle (`odds` + `timeframe`), and the LOCF point-in-time
       form is a distinct processed key via `_RAW_TO_PROCESSED_PREFIX` (`odds_ohlcv_*` vs a snapshot prefix), NOT a new
       `data_type`. Confirm against `canonical_writer_shaping.mdps_data_type_key`'s real output before implementing, and
-      record the chosen keys in codex.
-- [ ] [CODE] P1. **Make MTDS's `_asset_group_for_venue` FAIL LOUD instead of defaulting to cefi.**
-      `market_tick_data_service/reader.py::_asset_group_for_venue` resolved any unrecognised venue to `"cefi"` SILENTLY.
-      When this chain's venue-axis split removed `ODDS_API`/`FOOTYSTATS` from the canonical venue axis, that default
-      began pointing every read of their **146,163 historical shards** (ODDS_API 123,650 + FOOTYSTATS 22,513) at the
-      **CEFI bucket** — a silent wrong answer, caught only because one unit test happened to assert the sports case.
-      Hot-fixed 2026-08-08 (`SPORTS_VENUES` consulted before the fallback + the fallback now WARN-logs), but the default
-      itself remains. Replace it with a typed raise, and sweep for other `.get(..., <default asset_group>)` lookups in
-      the same class of resolver across MTDS/MDPS/IS. Deferred from the hot-fix only to keep the blast radius off an
-      in-flight chain — a genuinely-unknown cefi venue currently relies on this default, so the raise needs its own
-      enumeration pass first.
+      record the chosen keys in codex. — **DONE 2026-08-08 (slot 12, data_engineering)**. Confirmed against the real
+      `mdps_data_type_key`/`_DATA_TYPE_TO_MDPS_PREFIX` + UAC `_RAW_TO_PROCESSED_PREFIX` implementations AND the actual
+      adapter code (`odds_movement_adapter.py`/`odds_snapshot_adapter.py`): `_RAW_TO_PROCESSED_PREFIX` is strictly
+      raw-MTDS-`data_type`-scoped (backs `MDPS_DERIVABLE_DATA_TYPES`/`PROCESSED_REQUIRES_RAW`'s honest-coverage
+      classification) — `odds_snapshot`/`odds_movement` are NOT raw data_types (confirmed: neither was ever a
+      raw-vocabulary entry), so a literal new prefix-table entry for them would misclassify them as raw sources and risk
+      colliding `odds_movement_{tf}` with the base `odds_ohlcv_{tf}` candle. **Ruling**: `odds_movement`'s adapter
+      already computes a genuine OHLC aggregation (first/max/min/last of `home_odds`) — this **is** the "OHLC form is
+      the candle" the pre-spec calls for, just realized as the sports-specific candle-of-`home_odds` rather than a
+      literal `odds`+`timeframe` merge; `odds_snapshot`'s LOCF (last-value, flat O=H=L=C) remains the distinct
+      point-in-time key. Both stay MDPS-internal `CandleAdapterRegistry` product keys — NOT new raw `data_type`s —
+      resolved via `mdps_data_type_key`'s existing deterministic fallback (`odds_movement_{tf}`/`odds_snapshot_{tf}`),
+      which was already correct; no functional key-minting change was needed. Shipped: (1) clarifying comments in both
+      prefix tables + the fallback branch marking the omission deliberate — market-data-processing-service@d3ac175,
+      unified-api-contracts@c4ed6094; (2) codex decision record + a fix to a stale schema description (the doc wrongly
+      described `odds_movement` as a `price_prev`/`price_curr`/`delta` shape; the real adapter output is OHLC columns) —
+      unified-trading-pm@\<pending\>, in `/codex/02-data/sports-data-types-catalog.md` § "Snapshot vs Candle
+      Discriminator (P1 decision, 2026-08-08)".
+- [x] ✅ [CODE] P1. **Make MTDS's `_asset_group_for_venue` FAIL LOUD instead of defaulting to cefi.** —
+      market-tick-data-service@55d8abc7. `market_tick_data_service/reader.py::_asset_group_for_venue` resolved any
+      unrecognised venue to `"cefi"` SILENTLY. When this chain's venue-axis split removed `ODDS_API`/`FOOTYSTATS` from
+      the canonical venue axis, that default began pointing every read of their **146,163 historical shards** (ODDS_API
+      123,650 + FOOTYSTATS 22,513) at the **CEFI bucket** — a silent wrong answer, caught only because one unit test
+      happened to assert the sports case. Hot-fixed 2026-08-08 (`SPORTS_VENUES` consulted before the fallback + the
+      fallback now WARN-logs), but the default itself remained. **Enumeration pass** (required before the raise, per
+      this todo's own text): resolving through UAC's `to_canonical_venue()` before the `VENUE_TO_ASSET_GROUP` lookup
+      surfaced a SECOND, previously-undetected instance of the same bug class — all 62 DeFi legacy bare-name venue
+      aliases (`ANKR`, `LIDO`, `UNISWAP_V2`, …) are NOT keys in `VENUE_TO_ASSET_GROUP` (only their canonical `-CHAIN`
+      forms are), so they were ALSO silently defaulting to cefi. Closed that gap, then replaced the remaining default
+      with a typed raise (`UnknownVenueAssetGroupError`, matching the existing `InvalidChainError`/
+      `InvalidCanonicalQuestionGroupError` fail-loud convention in `reader_errors.py`) — the "genuinely-unknown cefi
+      venue" carve-out this todo flagged turned out to be empty once the DeFi alias gap was closed, so nothing
+      legitimately depends on the silent default anymore. Updated the reader's existing test suite (2 tests asserting
+      the old silent-cefi behavior now assert the raise; 4 DeFi chain-axis tests' stale `VENUE_TO_ASSET_GROUP` mocks
+      removed in favor of the real registry; 2 no-blobs tests swapped their placeholder venue for a registered one; the
+      file-wide stale `"BINANCE"` bare-token fixture convention corrected to `"BINANCE-SPOT"`). `quality-gates.sh`
+      genuinely green (sentinel-verified on the shipped SHA): 10198 passed, 0 failed, 28 skipped. The broader "sweep for
+      other `.get(..., <default asset_group>)` lookups across MTDS/MDPS/IS" this todo also called for is tracked as its
+      own follow-up todo below (found ~15 more sites; fixing all of them was outside this todo's 1h estimate).
+- [ ] [CODE] P2. **Sweep the other `.get(venue, "cefi")`-style silent-default resolvers found across MTDS/IS during the
+      2026-08-08 `_asset_group_for_venue` enumeration pass** (same bug class as the fixed todo above — a wrong bucket is
+      a silent wrong answer). Concrete sites found (not exhaustive — re-grep `VENUE_TO_ASSET_GROUP.get(` before
+      starting): `market-tick-data-service/market_tick_data_service/engine/orchestrator/preflight.py:428`
+      (`cat = _orch.VENUE_TO_ASSET_GROUP.get(venue, "cefi")`),
+      `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py:195,375`
+      (`ag = _orch.VENUE_TO_ASSET_GROUP.get(venue_name, "cefi").lower()`, two call sites),
+      `instruments-service/instruments_service/engine/orchestrator/writers.py:286`
+      (`_cat = "defi" if manifest_chain else (VENUE_TO_ASSET_GROUP.get(venue_str, "cefi"))`). For each: determine via
+      the same enumeration approach (does any currently-live venue actually rely on the default, incl. DeFi legacy bare
+      aliases via `to_canonical_venue()`) whether it's safe to raise, then either raise or document why a default is
+      still correct there. NOT in scope: `instruments-service/.../process_write.py::_asset_group_for_venue` (a
+      deliberately different, already-reasoned resolver defaulting to `"sports"`, not `"cefi"` — see its own docstring).
+      **Done when**: each listed site is either converted to fail-loud or has a recorded reason it's a genuine default.
 - [x] ✅ [CODE] P1. **Update `venue_data_types.yaml` in the SAME change as the markets/outcomes/settlements deletion.**
       — unified-trading-pm@\<pending\>, market-tick-data-service@\<pending\>. Fixed via the `ldr_qg_failure` escalation
       (agt-fecbe9): UAC commit `1f5879fc` (2026-08-08) collapsed `odds_snapshot`/`odds_movement` out of
@@ -495,7 +539,7 @@ achieved by exclusion, not canonicalisation.**
       net coverage loss in the window", NOT "no weakening anywhere". Decide whether a semantic check is worth building
       (e.g. flag any commit where an `assert` line is replaced rather than added/removed) or record why counting is good
       enough. **Done when**: the decision is recorded, or the semantic check exists.
-- [ ] [DOCS] P2. **`codex/02-data/sports-data-types-catalog.md`'s "Venue Axis" section venue list does not match the
+- [ ] [DOCS] P2. **`/codex/02-data/sports-data-types-catalog.md`'s "Venue Axis" section venue list does not match the
       live `VENUES_BY_ASSET_GROUP["sports"]`** (found by `/docs-reconcile` 2026-08-08, direct-import verification
       against `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`). The doc claims "32
       canonical members" and names `BETFAIR_EX_AU`, `WILLIAM_HILL`, `BWIN`, `MYBOOKIEAG`, `LOWVIG`, `WYNNBET`, `FOXBET`,
@@ -531,14 +575,14 @@ achieved by exclusion, not canonicalisation.**
 Nothing below is uncommitted — every item is either a tracked `- [ ]` or is owned elsewhere. Kinds are separated because
 they need different responses.
 
-| item                                                                                                                 | kind                     | blocked on                                                                       |
-| -------------------------------------------------------------------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------- |
-| P2 migration (17 todos), P3 consumers (15), P4 backfill (9)                                                          | **Not done** — real work | P1 completing; P2 additionally on the API-Football campaign                      |
-| `markets`/`outcomes`/`settlements` YAML+UAC parity; collapse `odds_snapshot`/`odds_movement` onto `odds`+`timeframe` | **Not done**             | tracked as P0 todos in P1/P2                                                     |
-| MTDS `_asset_group_for_venue` fail-fast (default still `cefi`, now WARN-logged)                                      | **Not done**             | deliberately deferred off an in-flight chain; needs its own consumer enumeration |
-| Two WS-cassette xfails (`jupiter_solana_ws`, `aave_liquidations_ethereum_ws`)                                        | **Cannot be done yet**   | needs a real WS capture session; fabricating a cassette is explicitly banned     |
-| Sports live-trading activation                                                                                       | **Operator-owned**       | permanent hard-stop; now formally gated on this chain                            |
-| Other artifact tranches (123 open operator questions, Cross-cutting 37)                                              | **Operator-owned**       | only sports got the reconcile-then-plan treatment                                |
+| item                                                                                                                 | kind                                                     | blocked on                                                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P2 migration (17 todos), P3 consumers (15), P4 backfill (9)                                                          | **Not done** — real work                                 | P1 completing; P2 additionally on the API-Football campaign                                                                                                |
+| `markets`/`outcomes`/`settlements` YAML+UAC parity; collapse `odds_snapshot`/`odds_movement` onto `odds`+`timeframe` | **Not done**                                             | tracked as P0 todos in P1/P2                                                                                                                               |
+| MTDS `_asset_group_for_venue` fail-fast (default still `cefi`, now WARN-logged)                                      | **Done** (2026-08-08, market-tick-data-service@55d8abc7) | enumeration pass also found + fixed a 2nd silent-cefi-default class (DeFi legacy bare aliases); the broader MTDS/IS sweep is now its own P2 follow-up todo |
+| Two WS-cassette xfails (`jupiter_solana_ws`, `aave_liquidations_ethereum_ws`)                                        | **Cannot be done yet**                                   | needs a real WS capture session; fabricating a cassette is explicitly banned                                                                               |
+| Sports live-trading activation                                                                                       | **Operator-owned**                                       | permanent hard-stop; now formally gated on this chain                                                                                                      |
+| Other artifact tranches (123 open operator questions, Cross-cutting 37)                                              | **Operator-owned**                                       | only sports got the reconcile-then-plan treatment                                                                                                          |
 
 **Recommended NEXT: let P1 finish, then release P2.** P2 is the long pole (375k-shard re-stamp) and is double-gated;
 everything else is cheaper and can follow. Do NOT start P4's backfill early — backfilling pre-migration guarantees a

@@ -20,7 +20,11 @@ summary: >-
   unproductive for 1.5h+ and the watchdog is not self-healing it.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-09 (/ag-closeout-audit ao) -- was [cross-cutting]. Content is 100% WorkerLivenessWatchdog/
+  # AutoSpawn slot-wedge mechanics (agent-orchestrator repo, parent_epic: agent_operating_framework_master -- the ao
+  # tranche's own primary epic); flagged but not yet fixed by the 2026-08-08 cross-cutting run, see
+  # plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md finding 3.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [admin]
@@ -150,7 +154,8 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-04 (unchanged): todos 1/3 are
   [OPERATOR]-tagged kill+respawn/judgment actions main cannot self-serve; todo 2 touches live dispatch-critical watchdog
   machinery already under active sequenced modification elsewhere (batch5).
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-06 (unchanged):
-  the 2 remaining open todos are an `[OPERATOR]`-tagged live kill+respawn action (slot 3, 3rd recurrence) and a
-  `[BACKEND]` fix to live dispatch-critical-path watchdog machinery -- neither is a worker-determinable bounded
-  fix safely dispatchable through the same fleet it would be modifying.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-06 (unchanged): the
+  2 remaining open todos are an `[OPERATOR]`-tagged live kill+respawn action (slot 3, 3rd recurrence) and a `[BACKEND]`
+  fix to live dispatch-critical-path watchdog machinery -- neither is a worker-determinable bounded fix safely
+  dispatchable through the same fleet it would be modifying.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

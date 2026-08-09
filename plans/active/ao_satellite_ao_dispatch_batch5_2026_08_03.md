@@ -161,39 +161,47 @@ below rather than duplicated here.
       `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`. Repo: unified-trading-pm. —
       unified-trading-pm (this commit)
 
-- [ ] [DOCS] P3. **Close `ao_tranche_full_content_audit_findings_2026_07_31.md`'s §3 (duplicate-doc merge) and §4 (stale
-      MOVED-item bookkeeping) — the two eligible slices only; §1/§2 stay NA/operator-gated as the doc already has
-      them.** (a) Duplicate-doc formal closure: na-eligibility-audit already concluded (2026-07-31, re-affirmed
-      2026-08-02) that `backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md` is a duplicate of
-      `ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`. Flip the 07-30 doc's frontmatter to
-      `status: resolved` + `superseded_by: ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26`, fold its two
-      extra root-cause candidates (seed-timestamp-ordering in `bootstrap.initialise()`; a possibly-inverted frontend
-      sort comparator) into the 07-26 survivor's "What was found" section, then archive the 07-30 doc per the standard
-      ritual. (b) Tracker MOVED-item bookkeeping: in `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`
-      (land AFTER todo 2 above — same-file rule), re-verify every `➡️ MOVED 2026-07-20 to <child>` bullet tied to
-      `ao_scheduled_agent_hygiene_2026_07_20.md` / `ao_fleet_infra_hardening_2026_07_20.md` /
-      `ao_fleet_observability_kpis_2026_07_20.md` (all 3 children archived) is flipped `[x]` with a DONE citation, then
-      correct the stale MOVED-item count sentence and the `ao_fleet_infra_hardening_2026_07_20.md` status-table cell to
-      match the freshly re-counted true state. **Done when**: both duplicate docs have internally-consistent frontmatter
-      (07-30 `resolved`+`superseded_by`, archived); the tracker's MOVED-item summary + status-table cell reflect the
-      freshly-verified count with no stale figures; this doc's own §3/§4 todos flip `[x]` with commit-sha citations;
-      §1/§2 explicitly left open/NA in the same edit. Source:
+- [x] [DOCS] P3. ✅ **Close `ao_tranche_full_content_audit_findings_2026_07_31.md`'s §3 (duplicate-doc merge) and §4
+      (stale MOVED-item bookkeeping) — DONE 2026-08-08.** (a) Both duplicate docs were already `status: resolved` +
+      archived from an earlier sweep, but the 07-30 doc was missing the machine-readable `superseded_by:` pointer (had
+      only `resolved_by:` prose) — added `superseded_by: [ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26]`
+      and folded its two extra root-cause candidates into the 07-26 survivor's "Why it matters" section. No re-archival
+      needed (already there). (b) **Finding that changed scope**: live-checked every `➡️ MOVED 2026-07-20 to <child>`
+      bullet tied to all 3 named children in `ao_open_issues_consolidated_close_out_2026_07_17.md` — all 14 (not just
+      `ao_fleet_observability_kpis`'s 6) were **already** `- [x]` with `DONE via <child>` citations pre-existing from
+      earlier sessions; only the summary sentence was stale (claimed "stay open... still active" when the status table
+      already showed all 3 archived). Corrected that sentence (all 29 MOVED items now stated closed) — and had to trim
+      it to a net -1 line to clear `check_line_caps.sh`'s HARD gate, the doc having crept to exactly 1001L (now 1000L,
+      right at the soft-warn line, zero headroom for the next touch). `ao_fleet_infra_hardening`'s status-table cell was
+      already accurate, no separate fix needed. This doc's own §3/§4 todos flipped `[x]` with citations; §1/§2 stay
+      `[x]`-operator-ruled as before. Source:
       `/plans/active/issues/ao_tranche_full_content_audit_findings_2026_07_31.md` (§3+§4 only). Repo:
-      unified-trading-pm.
+      unified-trading-pm. — unified-trading-pm (this commit)
 
-- [ ] [DATA] P2. **Read-only diagnostic on the orchestrator VM's own `data/state/state.db` + `activity_log` (no external
-      credential needed — same host every dispatched worker already runs on).** For each of the 5 escalation/agent_ids
-      `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`'s Progress Log names (`agt-79063c`, `agt-0cd704`,
-      `agt-765e33`, `agt-8fa8d1`, `agt-8e95ca`), determine (a) whether an `AgentRow` with that `agent_id` exists now or
-      ever existed (cross-check `escalation_dispatched`/`plan_health_dispatch` `activity_log` rows for that id if the
-      `AgentRow` itself is gone/archived), (b) if found, its current `status`/`tmux_session`, and (c) if it existed then
-      transitioned away from active/stale before its worker's `/done` call, the `activity_log` event that did it. **Do
-      NOT attempt the code fix** (that doc's Todo 2) in this same todo — it is two-hypothesis-contingent on this
-      diagnostic's result, a separate gated follow-up. **Done when**: a new dated Progress Log entry on the source doc
-      records the table above for all 5 ids that are still within retention; a fully-attempted-but-inconclusive result
-      (e.g. all 5 rows already pruned) is an acceptable, explicitly-recorded outcome. Source:
+- [x] ✅ [DATA] P2. **Read-only diagnostic on the orchestrator VM's own `data/state/state.db` + `activity_log` (no
+      external credential needed — same host every dispatched worker already runs on).** For each of the 5
+      escalation/agent_ids `data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md`'s Progress Log names
+      (`agt-79063c`, `agt-0cd704`, `agt-765e33`, `agt-8fa8d1`, `agt-8e95ca`), determine (a) whether an `AgentRow` with
+      that `agent_id` exists now or ever existed (cross-check `escalation_dispatched`/`plan_health_dispatch`
+      `activity_log` rows for that id if the `AgentRow` itself is gone/archived), (b) if found, its current
+      `status`/`tmux_session`, and (c) if it existed then transitioned away from active/stale before its worker's
+      `/done` call, the `activity_log` event that did it. **Do NOT attempt the code fix** (that doc's Todo 2) in this
+      same todo — it is two-hypothesis-contingent on this diagnostic's result, a separate gated follow-up. **Done
+      2026-08-08** (data_engineering, slot 11) — queried the LIVE `agent-orchestrator/data/state/state.db` (`mode=ro`;
+      NOT the empty 0-byte root-clone artifact of the same basename) for all 5 ids. None has a current `AgentRow` (table
+      itself appears to carry a rolling retention window, unconfirmed mechanism, independent of this bug); all 5
+      registrations are confirmed indirectly via `escalation_dispatched`/`plan_health_dispatched` (one-shot registration
+      never logs its own `agent_registered` event — only the persistent-agent `/register` path does,
+      `server/routes/agents.py:764`); all 5 were archived via the SAME event, `tmux_session_lost`
+      (`archived_lifecycle_complete: true`, from `tmux_pruner.py`'s dead-tmux-session sweep calling
+      `archive_agent(exit_reason="reaped-stale")` — confirmed as the ONLY possible transition path since `health.py`
+      explicitly skips its silence-based stale dimmers for `lifecycle in (one_shot, scheduled)`), across 3 distinct
+      proximate triggers (slot-reuse collision ×2 — the same physical tmux pane completed an unrelated Class-A task
+      seconds before the reap; context-saturation wedge-kill ×1; plain silent session loss ×2). Full per-id table +
+      evidence in the source doc's new dated Progress Log entry. Source:
       `/plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md` (diagnostic half of its
-      remaining scope only). Repo: agent-orchestrator (read-only).
+      remaining scope only; its own [DATA] P2 todo flipped `[x]` in the same commit). Repo: agent-orchestrator
+      (read-only, no code changed). — unified-trading-pm (this commit)
 
 - [x] ✅ [BACKEND] P2. **CLOSED 2026-08-08 — verified via source-doc re-read, option (a) applies.** The source doc
       (`host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`) was independently resolved+archived
@@ -257,26 +265,23 @@ below rather than duplicated here.
       `/plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md` (its
       residual-risk finding). Repo: agent-orchestrator.
 
-- [ ] [BACKEND] P2. **Close the connection-release-proof gap on
+- [x] ✅ [BACKEND] P2. **Close the connection-release-proof gap on
       `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md`'s still-open "Determine root cause: connection
-      LEAK vs. concurrency-over-pool" todo** (the leak-vs-concurrency conclusion is already recorded via the doc's own
-      occurrence #6/#7 log and a 2026-07-30 na-eligibility-audit entry — only the formal proof + test remain): (1)
-      confirm every hot-path DB session usage — `server/routes/state.py::get_state` → `server/state_store/slots.py`,
-      `server/routes/agents.py::agent_poll`, `server/routes/git_health.py::post_slot_git_status`/`get_slot_git_status` —
-      routes through `session_scope()`/`read_only_session_scope()` (both already release via `finally: session.close()`,
-      `server/db.py:117-152`) rather than a raw session-factory call that could skip cleanup on an error branch; (2) add
-      a new pool-exhaustion-and-recovery test, mirroring the threading-harness style
-      `tests/test_db_read_only_session.py` already uses (and already cites this exact issue doc), that opens
-      `pool_size + max_overflow` concurrent sessions via `get_session_factory()` and holds them past `pool_timeout`,
-      asserts the next concurrent request raises the expected pool-exhaustion `TimeoutError`, then releases the held
-      sessions and asserts a fresh request succeeds promptly. **Done when**: `quality-gates.sh` green in
-      agent-orchestrator; the new test module (`tests/test_db_pool_exhaustion_recovery.py`) demonstrates both the
-      exhaustion and the recovery; each of the 4 named hot-path handlers is confirmed (recorded in the test module's
-      docstring or a code comment) to route through the release-safe helpers; the source doc's `[BACKEND] P2` todo flips
-      `[x]` citing the new test module + commit sha. Source:
-      `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` (`[BACKEND] P2` only — its
-      codex-governance-matrix item and its unscoped write-batching item are NOT in scope, see this run's Workflow
-      journal for why). Repo: agent-orchestrator.
+      LEAK vs. concurrency-over-pool" todo** — DONE 2026-08-08 (slot 31). `agent-orchestrator@54b86a9`
+      (`test(db): prove pool-exhaustion + release-safe recovery for pool exhaustion issue`): (1) confirmed by direct
+      source read — `server/routes/state.py::get_state` → `server/state_store/slots.py::list_slots`
+      (`read_only_session_scope`), `server/routes/agents.py::agent_poll` (`session_scope`),
+      `server/routes/git_health.py::post_slot_git_status`/`get_slot_git_status` (`session_scope`) — all 4 route through
+      `session_scope()`/`read_only_session_scope()`, which release via `finally: session.close()`
+      (`server/db.py:117-152`); no raw session-factory call skips cleanup. (2) Added
+      `tests/test_db_pool_exhaustion_recovery.py`, mirroring `tests/test_db_read_only_session.py`'s style: checks out
+      `pool_size + max_overflow` (5+10=15, SQLAlchemy `QueuePool` defaults — `make_engine` never overrides them)
+      connections via `get_read_only_session_factory()`, asserts the next checkout raises `sqlalchemy.exc.TimeoutError`,
+      releases the held sessions, and asserts a fresh session succeeds promptly (both exhaustion and recovery
+      demonstrated in one test). `quality-gates.sh` green (2779 passed, 2 skipped) on this exact SHA. Source
+      `[BACKEND] P2` todo flipped in
+      `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` citing the same test
+      module + SHA. Repo: agent-orchestrator.
 
 - [x] ✅ [SCRIPT] P3. **Close out the stale `[SCRIPT] P3]` todo on
       `plan_health_tests_leak_real_slack_alerts_2026_07_24.md` via VERIFICATION, not re-implementation.** — DONE

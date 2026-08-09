@@ -221,3 +221,4 @@ elsewhere — it stays captured here so nothing is lost. This plan itself remain
   work; item 2's "75 violations / 8 files" framing is now materially smaller than described
   (`scripts/quality-gates.sh`'s `FUNCTION_SIZE_EXTRA_EXCLUDES` is down to 10 entries per live check) — flagged for a
   future non-read-only pass to refresh the description, not acted on here (read-only classification scope).
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

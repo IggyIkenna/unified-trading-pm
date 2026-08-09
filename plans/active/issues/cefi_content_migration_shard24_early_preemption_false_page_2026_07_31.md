@@ -157,24 +157,23 @@ someone checks.
       Cloud Run jobs pick up `deployment-service@09a2374`. **Done when**:
       `gcloud artifacts docker images list asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/deployment-api --include-tags --sort-by=~UPDATE_TIME --limit=1`
       shows an `UPDATE_TIME` after `2026-07-31T08:06:31Z`. **Live-checked 2026-08-08**: the newest `deployment-api`
-      image (`sha256:fc6deaf8`, tag `latest`) shows `UPDATE_TIME 2026-08-08T07:23:26` — 7 days after the fix commit,
-      and `deployment-api` has rebuilt repeatedly since (5 builds visible on 2026-08-08 alone, confirming this is a
-      routine/frequent cadence, not something that needed a human-triggered one-off). `gcloud run jobs describe
-      uts-prod-dp-exit-code-monitor` confirms it references `deployment-api:latest`, and Cloud Run Jobs resolve the tag
-      fresh per execution. The original `[OPERATOR]` tag reflected "I couldn't find the redeploy command," not a
-      genuine business/judgment gate — the redeploy happens automatically via the standard build pipeline; no operator
-      action was ever structurally required here. (Test-pass confirmation half of the done-when not independently
-      re-run in this pass — the image-freshness half is sufficient to close the deploy-lag concern this todo exists to
-      track.)
+      image (`sha256:fc6deaf8`, tag `latest`) shows `UPDATE_TIME 2026-08-08T07:23:26` — 7 days after the fix commit, and
+      `deployment-api` has rebuilt repeatedly since (5 builds visible on 2026-08-08 alone, confirming this is a
+      routine/frequent cadence, not something that needed a human-triggered one-off).
+      `gcloud run jobs describe     uts-prod-dp-exit-code-monitor` confirms it references `deployment-api:latest`, and
+      Cloud Run Jobs resolve the tag fresh per execution. The original `[OPERATOR]` tag reflected "I couldn't find the
+      redeploy command," not a genuine business/judgment gate — the redeploy happens automatically via the standard
+      build pipeline; no operator action was ever structurally required here. (Test-pass confirmation half of the
+      done-when not independently re-run in this pass — the image-freshness half is sufficient to close the deploy-lag
+      concern this todo exists to track.)
 - [ ] [SCRIPT] P3. Once the above is confirmed deployed, relaunch shard 24
       (`launch-canonical-migration-vm.sh cefi-content-apply 2026-01-07 2026-01-15 full` — the exact checkpoint-resumed
-      window `-065001` was already using) for its 3rd attempt today. If the operator wants it relaunched sooner
-      (accepting the `RB-INFRA-RELAUNCH` budget as a deliberate exception, mirroring the 2026-07-31T06:30Z shard-17
-      precedent in `cefi_content_migration_shard17_default_bump_2026_07_31.md`), that is an operator call, not one this
-      escalation makes unilaterally. No `[OPERATOR]` gate needed for the relaunch action itself once the budget
-      genuinely resets (ordinary backfill relaunch, AO-dispatchable by default per
+      window `-065001` was already using) for its 3rd attempt today. No `[OPERATOR]` gate needed for the relaunch action
+      itself once the budget genuinely resets (ordinary backfill relaunch, AO-dispatchable by default per
       `/codex/05-infrastructure/vm-launcher-runbook.md`). Repo: deployment-service (launch) + market-tick-data-service
-      (verify).
+      (verify). **ALSO dispatched via `cefi_satellite_ao_dispatch_batch12_2026_08_09.md` todo 3 (2026-08-09) — this
+      checkbox stays open here until that todo actually lands; flip both together, do not duplicate-dispatch a second
+      relaunch if batch12's todo already completed it.**
 
 ## Progress Log
 
@@ -205,22 +204,27 @@ someone checks.
   unchanged.
 - **na-eligibility-audit 2026-08-07**: KEEP-NA, valid — 2 open items, 1 operator question and 1 dependency-blocked
   (test-pass confirmation half of item 1's done-when).
-- **round5-cefi-question-resolution 2026-08-08**: item 1 flipped `[x]` — live-checked, `deployment-api` has been
-  rebuilt repeatedly since (newest image `UPDATE_TIME 2026-08-08T07:23:26`, 7 days after the `08:06:31Z` fix commit),
-  and the live Cloud Run job resolves `:latest` fresh per execution. No manual redeploy trigger was ever structurally
-  required — the original `[OPERATOR]` tag reflected the filer's uncertainty about the redeploy command, not a
-  genuine business/judgment gate. Item 2 (relaunch shard 24 a 3rd time) is now unblocked in principle but out of this
-  pass's scope (a fresh relaunch decision/action, not a documentation question).
+- **round5-cefi-question-resolution 2026-08-08**: item 1 flipped `[x]` — live-checked, `deployment-api` has been rebuilt
+  repeatedly since (newest image `UPDATE_TIME 2026-08-08T07:23:26`, 7 days after the `08:06:31Z` fix commit), and the
+  live Cloud Run job resolves `:latest` fresh per execution. No manual redeploy trigger was ever structurally required —
+  the original `[OPERATOR]` tag reflected the filer's uncertainty about the redeploy command, not a genuine
+  business/judgment gate. Item 2 (relaunch shard 24 a 3rd time) is now unblocked in principle but out of this pass's
+  scope (a fresh relaunch decision/action, not a documentation question).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA — CONFLICT found, not flipped. Item 2's own
   text ("No `[OPERATOR]` gate needed for the relaunch action itself once the budget genuinely resets... ordinary
-  backfill relaunch, AO-dispatchable by default") plus the round5 entry directly above (item 1's redeploy gate
-  cleared) together look like a RECLASSIFY match on first read. But the mandatory sibling-batch conflict-check (§3b)
-  found `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (active, `assigned_vm: planning`, today's full-corpus cefi
+  backfill relaunch, AO-dispatchable by default") plus the round5 entry directly above (item 1's redeploy gate cleared)
+  together look like a RECLASSIFY match on first read. But the mandatory sibling-batch conflict-check (§3b) found
+  `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (active, `assigned_vm: planning`, today's full-corpus cefi
   re-audit) explicitly lists this exact doc under "Deferred — operator": "item 1 is `[OPERATOR]`-tagged by its own
   author (no safe deterministic rebuild command identified for a live UI-serving prod Cloud Run service)" — reasoning
   that predates or is otherwise inconsistent with this doc's own round5 resolution of item 1 above. Per the shared
   conflict-check protocol, a same-day sibling batch doc's live classification of this doc is a conflict signal, not
   something this sweep should unilaterally override by flipping `assigned_vm` — batch10's characterization needs
-  reconciling against this doc's own later Progress Log first (out of scope for this pass). Doc stays `assigned_vm:
-  NA`. Flagging for the next `/ag-closeout-audit cefi` or `/na-eligibility-audit` pass to reconcile once batch10's
-  own state is re-read.
+  reconciling against this doc's own later Progress Log first (out of scope for this pass). Doc stays `assigned_vm: NA`.
+  Flagging for the next `/ag-closeout-audit cefi` or `/na-eligibility-audit` pass to reconcile once batch10's own state
+  is re-read.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — sole remaining item ([SCRIPT] P3,
+  relaunch shard 24) explicitly self-documents as staying open until cefi_satellite_ao_dispatch_batch12_2026_08_09.md
+  todo 3 actually lands (verified still `- [ ]` open as of this run) — citation already correct, not yet ready to close.

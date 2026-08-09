@@ -404,3 +404,4 @@ that doesn't block or affect anything here; pick it up whenever, no urgency.
   `sports_satellite_ao_dispatch_batch10_2026_08_06.md` todo 3, `assigned_vm: planning`); the panel-badging fix the
   correction names is owned end-to-end by `/plans/active/sports_taxonomy_p3_consumers_2026_08_08.md`'s "The panel"
   section, not by this doc. No new open work here, no reclassification.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

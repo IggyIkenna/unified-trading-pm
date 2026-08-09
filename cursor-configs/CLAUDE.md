@@ -70,7 +70,9 @@ UAC-internal.
   `quality-gates.sh`-green tree (not just prek). **QG-sweep batching** — gate once over a batch → per-unit commits;
   committing own named files → `quality-gates.sh --no-fix` (no tree reformat); deliberate tree-wide reformat you own →
   ship mode; pure doc/plan-flip → `scripts/dev/safe-doc-push.sh` (runs prek; bare git races the shared index).
-  Shared-host ≤2 full QGs at once (`max(2, floor(cores/4))`); never bulk-kill another slot's `pytest`/QG.
+  Shared-host ≤2 full QGs at once, auto-enforced by `quality-gates.sh`'s own `qg-host-governor.sh`
+  (`max(2, floor(cores/4))`, queues rather than fails — just invoke normally); never bulk-kill another slot's
+  `pytest`/QG.
 - **Commit attribution = slot + host**: author NAME `ikennaigboaka [slot-<N>·<host>]`, email = operator's GitHub account
   (Ikenna `…@gmail.com`, Harsh `…@odum-research.com`); each slot clone has its own `.git/config` (set at clone time by
   `setup-tab-worktrees.sh`). Derivation SSOT `scripts/hooks/slot-identity-lib.sh` (slot-N from the PATH); audit/stamp a

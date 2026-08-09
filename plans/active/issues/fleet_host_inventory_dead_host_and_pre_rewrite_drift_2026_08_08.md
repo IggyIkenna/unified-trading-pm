@@ -39,6 +39,12 @@ source:
   "review (agent-orchestrator loop tick, msg 4113, ~2026-08-08T12:58:58Z); main independently corroborated slot 3 state
   via /api/state before filing"
 depends_on: []
+context_scope:
+  [
+    /plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+  ]
 ---
 
 # Fleet host inventory gaps — dead host + pre-rewrite repo drift
@@ -74,9 +80,23 @@ unique to lose), so the fix is a clean re-clone/reset of these 5 repos on this s
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide decommission vs. recovery for host ip-172-31-0-185 (11-14 days fully stale across all 3
-      slots, consistent with a terminated AWS instance). If recovering, verify slot 0's dirty/detached repos first for
-      any uncommitted work worth rescuing before touching them.
+- [x] ✅ [OPERATOR] P2. **CLOSED as a stale duplicate 2026-08-09 (`/ag-closeout-audit ao`)** — host ip-172-31-0-185 /
+      instance `i-0dd9812a96cdda5dc` was already independently AWS-verified TERMINATED 2026-08-03 (operator-approved
+      retirement via `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`), 3+ prior re-flags already resolved, no
+      snapshot/volume survives to attempt recovery. See
+      `/plans/archive/issues/fleet_git_health_ip_185_known_human_planning_vm_2026_08_03.md` (`status: resolved`, final
+      2026-08-05 Progress Log entry) for the full resolution trail. This finding (filed 2026-08-08, 5 days later)
+      re-discovered the identical stale-host signature without cross-referencing that resolution — no new decision
+      needed, decommission is already the executed outcome.
 - [ ] [DEVOPS] P2. Clean-reset the 5 drift-violating repos on ip-172-31-5-118 slot 0 (see table above) onto current
       post-history-rewrite `live-defi-rollout` — confirmed no committed work sits on the stale base, so this is a
       re-clone/reset, not a merge. Confirm drift-violation clears afterward (ahead=0/behind=0 or normal small drift).
+      Source: extracted into `/plans/active/ao_satellite_ao_dispatch_batch12_2026_08_09.md`.
+
+## Progress Log
+
+- **context-scout 2026-08-09**: populated context_scope (3 entries).
+- **2026-08-09 (`/ag-closeout-audit ao`, dispatch `agt-41d860`, slot 10)**: Finding 1 closed as a stale duplicate of an
+  already-resolved doc (see todo 1 above) — editorial dedup, not new work. Finding 2 (todo 2) is a clean, conflict-free
+  AO-dispatch candidate; extracted into `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo (pending operator approval
+  to flip that batch `draft` → `active`).

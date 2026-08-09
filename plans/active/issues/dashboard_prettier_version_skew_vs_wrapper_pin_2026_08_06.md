@@ -84,7 +84,8 @@ context_scope:
       repo-scoped to unified-trading-pm only... a bounded, no-longer-judgment-call follow-up"). No remaining judgment:
       todo 1 already empirically proved byte-identical output + zero idempotency drift on every dashboard file type, so
       this is a mechanical version bump. Done when: `agent-orchestrator/dashboard`'s `format`/`format:check` scripts
-      agree with `scripts/hooks/prettier-autostage.sh`'s 3.9.5 pin on the same file set. Repo: agent-orchestrator.
+      agree with `scripts/hooks/prettier-autostage.sh`'s 3.9.5 pin on the same file set. Repo: agent-orchestrator. **➡️
+      EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 6 — do NOT action here.**
 - [ ] [INFRA] P3. **Then decide whether the dashboard should gate on formatting at all.**
       `agent-orchestrator/scripts/quality-gates.sh` runs `tsc --noEmit` + `vitest` for the dashboard but never
       `format:check`, which is the only reason this skew has not failed anyone's gate. That is a gap or a deliberate
@@ -113,3 +114,4 @@ and the gate passed, so nothing was blocked.
   remaining "decide whether the dashboard should gate on formatting at all" item is still a genuine, undecided
   design/policy call ("a gap or a deliberate choice... currently neither documented nor obvious"), so the whole-doc bar
   for RECLASSIFY is not met.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.

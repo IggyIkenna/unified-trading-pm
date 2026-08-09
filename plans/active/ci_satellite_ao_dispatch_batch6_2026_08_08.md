@@ -54,6 +54,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 4.2
 estimate_calibrated_ai_days: 3.4
 assigned_role: cicd
+effort: high
 sequential: false
 drift_direction: advance-code
 context_scope:
@@ -114,13 +115,11 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
 
 ## Todos
 
-- [ ] 1. [INFRA] P0. **Re-measure fleet CI job-minutes 24h after the runner-checkout cache fix.** The 24h time-gate
-      (cache fix landed 2026-08-06) has elapsed as of this batch's authoring date. Run
-      `bash scripts/cicd/measure-ci-job-minutes.sh` and record the delta against the stated 5,875 min/24h baseline in
-      the source doc's own dated Progress Log entry (do not edit this plan's body). **Done when**: the delta is recorded
-      with real numbers (or `BLOCKED-CREDENTIALS` if the measurement source is unreachable — do not estimate). Source:
-      `issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` (Part 8 line 523) — never cited by any
-      covering doc.
+- [x] ✅ 1. [INFRA] P0. **Re-measure fleet CI job-minutes 24h after the runner-checkout cache fix.** Re-measured
+      2026-08-09: **3,972 min/24h**, down from the 5,875 min/24h baseline (**-1,903 min, -32.4%**). Full per-repo delta
+      recorded in the source doc's Progress Log entry (2026-08-09, "post-cache-fix re-measure"), same commit as this
+      checkbox flip. Source: `issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` (Part 8 line
+      523).
 
 - [x] ✅ 2. [BACKEND] P2. **Ship the stranded, already-diagnosed-good `features-service` `PYRIGHT_TIMEOUT` fix.** Rebase
       `origin/wip-preserve/slot-4-features-service-diverged-20260803T171854Z` onto current `origin/live-defi-rollout`
@@ -159,7 +158,7 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       confirmed in watchdog comment lines 309–321 (fixed 2026-08-05). Both recorded in source doc Progress Log
       2026-08-08.
 
-- [ ] 4. [INFRA] P3. **Audit which of this repo's standing, schedule-active CI monitors lack a state-diffed
+- [x] ✅ 4. [INFRA] P3. **Audit which of this repo's standing, schedule-active CI monitors lack a state-diffed
       recovery/all-clear post, and add the already-3×-precedented `branch-health.yml` recovery-job pattern (cached
       prior-state diff + `recovery: true` + a short `cooldown_min`) to any LIVE one found missing it.** Confirmed
       present: `branch-health.yml`'s lag-monitor, `overnight-dead-man-switch.yml`. Confirmed absent but currently
@@ -168,20 +167,38 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       every LIVE monitor found missing the pattern has it added, with a regression test proving the recovery/all-clear
       fires on a synthetic resolved-condition case and stays silent while the condition persists. Source:
       `issues/glue_pool_starvation_monitor_stale_jobs_after_runner_revert_2026_08_07.md` (`## Still open`, sole [INFRA]
-      P3 item) — never cited by any covering doc (created 2026-08-07, after every prior sweep).
+      P3 item) — never cited by any covering doc (created 2026-08-07, after every prior sweep). **DONE 2026-08-09,
+      unified-trading-pm@4bd8a11d0b** _(citation corrected 2026-08-09: `c717af0fd` resolved to no commit in this repo —
+      a pre-rebase SHA. The real work is `4bd8a11d0b` "feat(cicd): add state-diffed recovery/all-clear bookend to 6 CI
+      monitors", the commit immediately preceding this flip.)_ — enumerated all 27 schedule-active workflows; the source
+      doc's own "`overnight-dead-man-switch.yml` confirmed present" premise was STALE (re-verified: it has no
+      dedup_key/cooldown and no resolved job — a one-shot nightly liveness check, not a re-nagging standing-condition
+      monitor, correctly excluded from the fix). Found 6 LIVE standing-condition monitors genuinely missing the pattern
+      (`fix-approval-timeout.yml`, `ldr-docs-gate.yml`, `freeze-deferred-build-replay.yml`,
+      `promote-fleet-startup-failure-monitor.yml`, `ruleset-drift-alert.yml`, `sit-gate-stuck-detector.yml`) and added
+      the recovery bookend to each via a new shared, unit-tested `scripts/cicd/alert_recovery.py` (10 regression tests:
+      transition table + state round-trip + CLI) rather than re-deriving the diff per workflow. 2 smaller gaps found but
+      NOT fixed here (documented, not silently dropped) — `ldr-to-main-promote-fleet.yml`/ `ldr-to-main-promote.yml`'s
+      conflict/arm-failed alerts have no dedup_key at all (a "too spammy" defect, not a "silently resolved" one —
+      different fix), and `branch-health.yml`'s `ar-lag-notify` lacks a resolved sibling (lower-severity WARNING
+      advisory). Full enumeration + per-monitor classification in the source doc's Progress Log 2026-08-09 entry.
+      `quality-gates.sh` green (see commit).
 
-- [ ] 5. [INFRA] P2. **Fleet-wide sweep of `unified-trading-ci/.github/workflows/` for other reusable workflows carrying
-      the same still-self-hosted-but-now-stranded `runs-on:` pattern the 2026-08-06 `shared_ci_workflow_repo_extraction`
-      migration left behind, and fix any found.** Starting grep:
-      `grep -rn 'runs-on:.*self-hosted' unified-trading-ci/.github/workflows/`. Fix direction is the already-19×-applied
-      precedent: revert to `ubuntu-latest` for any reusable workflow whose runner registration no longer resolves
-      post-extraction. **Done when**: the sweep is complete, every genuine hit is fixed and verified via a real
-      triggered run, and the finding (fixed count, or "none found") is recorded in the source doc. Source:
-      `issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md` (`## Still open` item 1, [INFRA]
-      P2) — never cited by any covering doc (created 2026-08-07).
+- [x] ✅ 5. [INFRA] P2. **Fleet-wide sweep of `unified-trading-ci/.github/workflows/` for other reusable workflows
+      carrying the same still-self-hosted-but-now-stranded `runs-on:` pattern the 2026-08-06
+      `shared_ci_workflow_repo_extraction` migration left behind, and fix any found.** — unified-trading-pm (this
+      commit). **Finding: none found.** Swept all 5 extracted files;
+      `grep -rn 'runs-on:.*self-hosted'     unified-trading-ci/.github/workflows/` → 0 hits (`image-build-validate.yml`
+      already fixed to `ubuntu-latest` pre-existing this task; `notify-slack.yml` → `ubuntu-latest`; the 2 composite
+      actions have no `runs-on:`/no self-hosted refs). `python-quality-gates-v2.yml`'s remaining
+      `self_hosted_runner_labels` reference is a parameterized input defaulting `ubuntu-latest`, used only by private
+      repos whose glue registration was never touched by the public-repo-only revert — a deliberate working canary, not
+      the stranded hardcoded pattern. No code fix needed; finding recorded in the source doc. Full evidence:
+      `issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md` (`## Still open` item 1, now
+      flipped) + its Progress Log 2026-08-08 entry.
 
-- [ ] 6. [SCRIPT] P2. **Implement the operator-DEFAULT-RULED-2026-08-06 escalation-dispatch cooldown guard (option a): a
-      minimum cooldown since the last `main_ci_red`/`ldr_qg_failure` dispatch for the same repo with an unchanged
+- [x] ✅ 6. [SCRIPT] P2. **Implement the operator-DEFAULT-RULED-2026-08-06 escalation-dispatch cooldown guard (option
+      a): a minimum cooldown since the last `main_ci_red`/`ldr_qg_failure` dispatch for the same repo with an unchanged
       target-branch HEAD.** Locate the escalation-raising site (likely `agent-orchestrator/server/ci_reconcile.py`,
       confirm exact site first) and add a state-transition dedup guard consistent with
       `/codex/04-architecture/agent-orchestrator-alerting.md`'s "fire on change/RESOLVED, never every tick" principle —
@@ -193,38 +210,72 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       corrected from `[OPERATOR]`) — the one prior assessment of this doc (2026-08-03) called it "too hot to batch";
       re-verified this run: the doc's own 2026-08-06/08-07 na-eligibility-audit entries confirm todo 3 is a decided,
       bounded implementation task, not an open judgment call — it cooled from "operator needs to decide" to "operator
-      decided, needs building."
+      decided, needs building." — **agent-orchestrator@a351d0d**. Confirmed exact site:
+      `CIReconcileLoop._dispatch_failures` calls `escalate()` directly (bypassing `enqueue()`'s existing AF-1b
+      context-snapshot cooldown entirely), and its own `_last_dispatch` in-process cooldown is wall-clock-only and
+      resets on every restart — the documented root cause of the repeat-fire pattern. Added a disk-persisted
+      `RedispatchState` (`ci_reconcile_redispatch_cooldown.json`, mirrors the existing ETag-cache persistence pattern)
+      keyed by `repo:wall_type` → `(head_sha, dispatched_at)`, gated by a new pure `should_suppress_redispatch()`:
+      suppresses ONLY when the target-branch HEAD is unchanged since the last dispatch AND still inside the cooldown
+      window; a HEAD change always dispatches immediately regardless of cooldown. Wired via an injectable `head_sha_fn`
+      (same convention as the staleness/billing-wall gates) so existing tests are unaffected (default no-op when
+      `conclusion_fn` is test-injected). 11 new regression tests, incl. two end-to-end tests that construct a SECOND
+      `CIReconcileLoop` instance pointed at the same persisted state file (simulating an orchestrator restart, which
+      wipes `_last_dispatch`) — confirms the redispatch stays suppressed for an unchanged HEAD, and still fires for a
+      changed HEAD. `quality-gates.sh` green (2810 passed, 2 skipped, 185s).
 
-- [ ] 7. [SCRIPT] P2. **Make `promotion_lag_monitor.py`'s lag alert distinguish a cause per line** (SIT-gated-in-flight
-      / no promote PR / PR blocked-conflicting / cause-unknown) instead of implying generic slowness. **Done when**: a
-      synthetic case for each named cause fires the correctly-worded line, and a genuinely-unknown cause says so
-      explicitly rather than defaulting to a misleading "slow" message. Source:
+- [x] ✅ 7. [SCRIPT] P2. **Make `promotion_lag_monitor.py`'s lag alert distinguish a cause per line**
+      (SIT-gated-in-flight / no promote PR / PR blocked-conflicting / cause-unknown) instead of implying generic
+      slowness. **Done when**: a synthetic case for each named cause fires the correctly-worded line, and a
+      genuinely-unknown cause says so explicitly rather than defaulting to a misleading "slow" message. Source:
       `issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md` (P2, line 165) — the doc's other 3 open
       items (the `glue-runner-run.sh` `--selfcheck` redo, the `StartLimitBurst` unit hardening, the TS-only
       `detect_breaking_change.py` gap) remain correctly parked too-large-or-risky per batch1 D14/D15/D33 — unchanged,
-      not re-listed as new Deferred rows here.
+      not re-listed as new Deferred rows here. **unified-trading-pm@66ba7feda** — `_ldr_main_finding()` now names
+      provenance-blocked (pre-existing), SIT-gated-in-flight (`sit-gate/fleet-green` status pending),
+      no-promote-PR-open, and PR-BLOCKED/CONFLICTING (`mergeable_state` dirty/blocked); a match-less case says "cause
+      unknown" explicitly. 12 new regression tests (`test_promotion_lag_monitor_promote_pr_cause.py`) cover a synthetic
+      case per cause. `quality-gates.sh` green (1839 passed).
 
-- [ ] 8. [DEVOPS] P3. **Audit whether any repo extracted/created after 2026-08-05 has the same
+- [x] 8. ✅ [DEVOPS] P3. **Audit whether any repo extracted/created after 2026-08-05 has the same
       no-promotion-workflows-and-no-exemption gap** the `unified-trading-ci` divergence fix just closed. Re-run the
       `_main_direct_repos()`/manifest promotion-model check against the current repo list; for any newly-created repo
       missing both a promotion workflow and an explicit exemption, apply the same fix pattern
-      (`unified-trading-pm@a0561c4`/`@3d6e25e`) or file the gap. **Done when**: every repo created after 2026-08-05 is
+      (`unified-trading-ci@a0561c4`/`@3d6e25e`) or file the gap. **Done when**: every repo created after 2026-08-05 is
       accounted for (has promotion workflows, or a recorded exemption), recorded in the source doc. Source:
       `issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md` (todo, lines 113-115, [DEVOPS] P3) — never
-      cited by any covering doc (created 2026-08-07, postdates every active covering doc).
+      cited by any covering doc (created 2026-08-07, postdates every active covering doc). — **Done 2026-08-08**: live
+      `gh repo list IggyIkenna --limit 500 --json name,createdAt` (115 repos) shows exactly one repo created after
+      2026-08-05 — `unified-trading-ci` itself (2026-08-06) — already exempted via `promotion_model: "single_branch"`
+      and confirmed live in `promotion_lag_monitor._single_branch_repos()`. No other post-2026-08-05 repo exists, so no
+      further gap to close. Findings recorded in
+      `issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`'s todo + Progress Log.
 
-- [ ] 9. [DEVOPS] P3. **Fleet-propagate the SC2015 shellcheck fix (`22a45ea`, `notify-slack.yml`'s dedup-marker-write
-      `A && B || C` → `if`) from `unified-trading-ci`'s copy back into the fleet SSOT
-      `scripts/workflow-templates/notify-slack.yml`, then re-run `rollout-workflow-templates.sh` so all 26 consuming
-      repos pick it up.** Claims the `scripts/workflow-templates/` rollout mechanism this round — see § Same-file
-      contention; do not run this concurrently with any other template-rollout todo. Currently only grandfathered into
-      `workflow_template_drift_baseline.json` as a stopgap. **Done when**: the template carries the fix, the rollout has
-      run for all 26 consumers, `workflow_template_drift_baseline.json`'s grandfather entry for this specific drift is
-      removed (ratchet moves down, never up), and every touched repo's `quality-gates.sh` is green. Source:
-      `issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md` (todo, lines 116-125, [DEVOPS] P3) — never
-      cited by any covering doc.
+- [x] ✅ 9. [DEVOPS] P3. **Fleet-propagate the SC2015 shellcheck fix (`22a45ea`, `notify-slack.yml`'s dedup-marker-write
+      `A && B → if`) from `unified-trading-ci`'s copy back into the fleet SSOT
+      `scripts/workflow-templates/notify-slack.yml`.** Claims the `scripts/workflow-templates/` rollout mechanism this
+      round — see § Same-file contention; do not run this concurrently with any other template-rollout todo. **DONE
+      2026-08-08, but the "26 consumers" premise was STALE — corrected scope, see
+      `issues/notify_slack_yml_fleet_rollout_scope_contradiction_2026_08_08.md` for the full investigation.** Ported the
+      fix into the template + PM's own deployed copy (`unified-trading-pm@5d16f57f3`) and into `deployment-service`
+      (`deployment-service@00a23128`, its confirmed sole remaining legitimate local caller via
+      `cloud-run-traffic-drift-check.yml`). Did NOT blanket-roll to the other 24 manifest repos: 21 of them had their
+      local `notify-slack.yml` copies DELIBERATELY DELETED 2026-08-07 as genuinely dead
+      (`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todo 6, "22/23 repos" — their only callers
+      migrated to `unified-trading-ci`-hosted reusable workflows) and running the rollout would have silently
+      resurrected 20 of those as brand-new dead files (caught before push — reverted); `execution-service` and
+      `strategy-service` carry pre-existing zombie copies with zero current local callers each (left untouched, not part
+      of this todo's fix, flagged in the new issue doc as candidates for the same deletion todo 6 already applied
+      fleet-wide). `workflow_template_drift_baseline.json` ratcheted to 0 entries via
+      `detect_template_drift.py --workflows --baseline-write` (the notify-slack.yml/unified-trading-ci grandfather
+      genuinely resolved; the 25 `staging-lock-check.yml` entries were already moot — that template source was deleted
+      2026-08-08 per the same dedup plan's todo 11). `quality-gates.sh` green on `unified-trading-pm` and
+      `deployment-service`. Source: `issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md` (todo, lines
+      116-125, [DEVOPS] P3) — never cited by any covering doc; its "all 25 OTHER repos' local copies are still on the
+      un-fixed pattern" claim (2026-08-07) is the specific stale premise this todo inherited — see the new issue doc for
+      why.
 
-- [ ] 10. [SCRIPT] P3. **Root-cause why pnpm's content-addressable store isn't hardlinking `node_modules` across
+- [x] ✅ 10. [SCRIPT] P3. **Root-cause why pnpm's content-addressable store isn't hardlinking `node_modules` across
       per-slot worktree clones** (empirically confirmed non-hardlinked across 5 clones). Check pnpm version, `.npmrc`
       `node-linker` setting, and filesystem hardlink support across the slot clones; either fix the config gap or
       document the structural cause (e.g. cross-filesystem clones defeat hardlinking by design). **Playwright-gate
@@ -237,23 +288,66 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
       sub-part 3 only — sub-parts 1-2 of this item are already shipped) — parts of this item were repeatedly
       acknowledged-but-declined in batch1 D20/D28, batch4, and batch5 D5-7 as "role-mismatch"/"needs its own plan", but
       sub-part 3 specifically is a diagnostic task, not the pnpm-migration implementation those deferrals were about —
-      narrower and genuinely uncovered.
+      narrower and genuinely uncovered. — **ROOT-CAUSED + FIXED, agent slot 24, 2026-08-09**: not a pnpm config gap
+      (node-linker/`.npmrc`/version were all already correct on every clone) — the default store
+      (`~/.local/share/pnpm/store`) sits on a DIFFERENT mount boundary than `.tabs/` on this host. Verified via raw `ln`
+      probes: `.tabs/<N>` <-> `.tabs/<M>` hardlinks succeed (exit 0); anything outside `.tabs/` (pnpm's default store, a
+      sibling repo clone, `${WORKSPACE_ROOT}/.uv-cache`) fails `EXDEV` (Invalid cross-device link) even though
+      `stat -c %d` reports an identical device id for both sides — `pnpm install`'s `auto` import method silently falls
+      back to a full copy on that failure, no error/warning. **Fix (config gap, not structural)**: `setup.sh` now
+      detects a `.tabs/<N>` ancestor and relocates pnpm's `store-dir` to `<.tabs>/.pnpm-store` (inside the boundary
+      every slot can reach) via `npm_config_store_dir`. **Evidence**: before —
+      `is-fullwidth-code-point@5.1.0/package.json` showed `nlink=1` + a DISTINCT inode in each of 5 real slot clones
+      (`.tabs/2,4,6,7,8`) despite byte-identical (sha256-matched) content; a real `deployment-ui` install via the OLD
+      default store reproduced this fresh (`nlink=1`, new inode) even though the content already existed in store from
+      another install. After — two independent real installs sharing the relocated store (real `deployment-ui` clone + a
+      second independent install of the same lockfile) show the IDENTICAL inode with `nlink=3`, confirmed via
+      `bash scripts/setup.sh --force` end-to-end (not just a raw `pnpm install`). Shipped: `deployment-ui@33c6a02`,
+      `unified-trading-system-ui@e70aeeb8`, `unified-trading-pm@e9e344a66` (canonical `setup.sh` template + both repos'
+      copies). **Adjacent finding, filed separately** (outside this todo's repo/scope): the SAME mount-boundary failure
+      applies to `UV_CACHE_DIR` (`${WORKSPACE_ROOT}/.uv-cache` is also outside `.tabs/`), meaning
+      `host_root_disk_full_transient_2026_07_13.md` sub-item (b)'s 2026-08-08 DONE claim likely does not actually
+      restore `.venv` cross-slot dedup — see `issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`.
 
-- [ ] 11. [SCRIPT] P2. **Optimize `check_pm_script_path_refs.py`** — measured at 28% of a from-scratch
+- [x] ✅ 11. [SCRIPT] P2. **Optimize `check_pm_script_path_refs.py`** — measured at 28% of a from-scratch
       `quality-gates.sh` run via `profile_qg_resources.py`. Profile the hot path, apply the optimization (e.g. cache
       repeat file reads, narrow the file-walk scope, or parallelize independent checks — worker's judgment on
       mechanism), and re-measure. **Done when**: a repeatable before/after `profile_qg_resources.py` measurement shows a
       real wall-clock reduction with zero regression in what the checker catches (existing test suite for the checker
       stays green). Source: `quality_gates_quickmerge_timing_baseline_2026_07_31.md` (line ~351) — never cited by any
       covering doc; flagged as a RECLASSIFY-candidate by two prior na-eligibility-audit passes but never actually
-      dispatched.
+      dispatched. — `unified-trading-pm@ec01e4167`. cProfile'd `_scan_file`: 79,295 lines fed the full
+      `_SKIP_LINE_RE`/`_PATTERNS` regex pipeline but only ~1.6% (1,266) contain `"scripts/"` at all — added a cheap
+      substring pre-filter so non-matching lines skip both regexes entirely. Standalone cProfile: 0.333s → 0.087s (74%
+      less CPU work). `profile_qg_resources.py --repo unified-trading-pm --core 2` before/after full run: STEP 5.64
+      28.62s → 25.91s wall (the in-run coarse-phase number is confounded by concurrent sibling-slot host load on this
+      shared VM — the source doc's own noise caveat applies here too; the isolated cProfile delta is the attributable
+      win). Zero regression: manual before/after correctness check (clean PM tree passes; a synthetic broken-ref +
+      valid-ref fixture still correctly flags the broken one and resolves the valid one) — no dedicated unit test
+      pre-existed for this checker to regress.
 
-- [ ] 12. [VERIFY] P3. **Run the `--skip-tests`/`--skip-<X>` per-phase delta measurement** the source doc's own Deferred
-      table calls "now unblocked"/"ready to run" — a bounded benchmark using the existing timing methodology already
-      built in Phase 1 of that doc. **Done when**: the delta table is filled in and recorded in the source doc's
-      Progress Log with real numbers (or `BLOCKED-CREDENTIALS`/`BLOCKED-INFRA` if the measurement environment is
+- [x] ✅ 12. [VERIFY] P3. **Run the `--skip-tests`/`--skip-<X>` per-phase delta measurement** the source doc's own
+      Deferred table calls "now unblocked"/"ready to run" — a bounded benchmark using the existing timing methodology
+      already built in Phase 1 of that doc. **Done when**: the delta table is filled in and recorded in the source doc's
+      Progress Log with real numbers (or recorded as blocked on credentials/infra if the measurement environment is
       unavailable). Source: `quality_gates_quickmerge_timing_baseline_2026_07_31.md` (line ~364) — never cited by any
-      covering doc.
+      covering doc. **Done**: ran `--skip-tests` baseline + `--skip-typecheck`/`--skip-codex`/`--skip-version-alignment`
+      variants (4 timed `quality-gates.sh` runs), all `exit 0` after discarding one transient plan-discipline blip on
+      the first baseline attempt (re-ran clean with zero intervening edits — confirmed foreign-slot noise, not this
+      work). Recorded as "Results table 3" in the source doc, with an explicit noise caveat: host load average was 29-37
+      on an 8-core box throughout, so the ~135-167s band and the `--skip-codex` row coming out slower than baseline
+      reflect shared-host contention, not a clean per-phase signal — matches the doc's own prior finding that wall-clock
+      deltas on a busy host are unreliable vs. the existing single-core-pinned profiler. Source doc's Deferred-work
+      table + Progress Log updated accordingly; an idle-host re-run flagged as an optional new P3 follow-up, not
+      blocking. — `unified-trading-pm@7f41c4488`.
+
+> **Note (slot-3, 2026-08-09) — do not re-add the literal marker tokens to todos 1 and 12.** Both originally wrote the
+> blocked-status instruction as a backticked `BLOCKED-<TOKEN>` literal. That token keeps a todo OUT of the backlog
+> entirely wherever it appears in the block (`plans/active/task_template.md` § Non-dispatchable), so the parser read
+> both as live holds and AO never dispatched them — silently, including todo 1 at **P0**. Verified against the real
+> `regen_backlog_from_plan._is_non_dispatchable`: the original text returns `True` (dropped), the prose form returns
+> `False` (dispatches). Meaning is unchanged; only the literal token was removed. SSOT:
+> `/plans/archive/issues/ao_silently_non_dispatchable_todos_have_no_visibility_gate_2026_08_08.md`.
 
 ## Deferred
 
@@ -364,3 +458,25 @@ contention to the smallest fully-decided edit) rather than needing a fresh rulin
   (spot-checked the 3-way `scripts/workflow-templates/` contention, the glue-starvation-monitor targets, and the
   stranded-branch rebase — all still clean); (c) no `ci_consolidated_closeout` doc exists for this tranche to check
   against. `locked_by` unset. Dispatching.
+- **2026-08-08 (todo 7 shipped, slot 31)**: `unified-trading-pm@66ba7feda`. Added `_open_promote_pr()` /
+  `_sit_fleet_status()` / `_promote_pr_cause()` / `_ldr_main_finding()` to `scripts/cicd/promotion_lag_monitor.py` — the
+  LDR→main finding line now names one of 5 causes (provenance-blocked, pre-existing; SIT-gated-in-flight via the
+  `sit-gate/fleet-green` commit-status; no promote PR open; PR BLOCKED/CONFLICTING via `mergeable_state`; or an explicit
+  "cause unknown" when none match) instead of the old generic "N commit(s), oldest Xm old" line. The other 3 branch-pair
+  directions (no promote-PR mechanism) keep the generic line unchanged. Cause-dispatch isolated into
+  `_ldr_main_finding()` to stay under the ruff C901 complexity cap. 12 new tests in
+  `test_promotion_lag_monitor_promote_pr_cause.py` cover a synthetic case per cause plus the helper functions.
+  `quality-gates.sh` green (1839 passed, 17 skipped, 84s).
+- **2026-08-08 (todo 6 shipped, slot 2)**: `agent-orchestrator@a351d0d`. Implemented the operator-DEFAULT-RULED
+  2026-08-06 option (a) escalation-dispatch cooldown guard in `CIReconcileLoop._dispatch_failures`
+  (`server/ci_reconcile.py`) — confirmed the exact site (it calls `escalation.escalate()` directly, bypassing
+  `enqueue()`'s existing AF-1b context-snapshot cooldown, and its own `_last_dispatch` cooldown is in-process/wall-clock
+  only and resets on every restart). Added a disk-persisted `RedispatchState` keyed by `repo:wall_type` →
+  `(head_sha, dispatched_at)`, gated by a new pure `should_suppress_redispatch()`: suppresses a redispatch ONLY when the
+  target-branch HEAD is unchanged since the last dispatch AND still inside the cooldown window; a genuine new
+  HEAD/failure always dispatches immediately. 11 new regression tests (incl. two that construct a second
+  `CIReconcileLoop` instance against the same persisted state file to simulate a restart, proving the cooldown survives
+  it). `quality-gates.sh` green (2810 passed, 2 skipped, 185s). Also flipped the source doc's todo 3
+  (`issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md`) and the identical-gap todos in its
+  `_continued2`/`_continued3` siblings, all citing the same commit — this closes the one gap `/ag-closeout-audit ci`
+  extracted this round.

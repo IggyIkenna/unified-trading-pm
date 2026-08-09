@@ -53,7 +53,7 @@ scope: [engineer, admin]
 tags: [ci-cd, provenance, quickmerge, ldr-main, promotion, git-history-rewrite, cross-repo]
 related:
   [
-    /plans/active/issues/instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md,
+    /plans/archive/2026_08/issues/instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md,
     /plans/archive/issues/utl_ldr_main_blocked_34_foreign_quickmerge_bypasses_2026_07_21.md,
     /plans/archive/issues/provenance_gate_squash_perpetual_block_2026_06_17.md,
     /plans/archive/issues/provenance_gate_midhistory_bypass_deadlock_2026_07_17.md,
@@ -61,10 +61,11 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-08-06
-last_updated: "2026-08-07"
+last_updated: "2026-08-08"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
+archive_exempt: true
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.6
@@ -78,7 +79,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/issues/instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md,
+    /plans/archive/2026_08/issues/instruments_service_pr1084_provenance_blocked_fix_stuck_on_ldr_2026_08_06.md,
     /codex/08-workflows/ci-cd-flow.md,
     unified-trading-pm/scripts/cicd/promote_provenance_range.py,
     unified-trading-pm/scripts/cicd/check_strict_quickmerge.py,
@@ -87,6 +88,10 @@ context_scope:
 ---
 
 # LDR→main provenance-marker corrupted post-history-rewrite — 3 repos stuck since 2026-08-05
+
+> **Archival status (2026-08-08): all 3 todos done, but the archival move itself is BLOCKED** by a newly-discovered
+> tooling deadlock — see `/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`.
+> This doc stays `status: open` (not `resolved`) at its original path until that's cleared, per that doc's own todo #2.
 
 ## What was measured (live, 2026-08-06)
 
@@ -178,11 +183,41 @@ Two reasons, mirroring the UTL-34-bypass precedent
       #604, operator-authorized 7-commit sweep), `instruments-service` (PR #1098, operator-authorized 19-commit sweep) —
       all via diff-reviewed `reprovenance_bypass.sh` sweeps per repo (not admin-merge), each self-healing going forward
       (new marker = a valid post-rewrite SHA). See Progress Log for full per-repo evidence.
-- [ ] [DEVOPS] P2. Audit whether any OTHER repos have a `chore(promote)`-titled merge whose `mergedAt` predates
-      2026-08-05T11:24:53Z but were not part of the 5-repo history-rewrite set — confirm this is genuinely scoped to
-      exactly {instruments-service, unified-trading-library, market-data-processing-service} and not wider.
+- [x] [DEVOPS] P2. **DONE 2026-08-08** — Audit whether any OTHER repos have a `chore(promote)`-titled merge whose
+      `mergedAt` predates 2026-08-05T11:24:53Z but were not part of the 5-repo history-rewrite set — confirm this is
+      genuinely scoped to exactly {instruments-service, unified-trading-library, market-data-processing-service} and not
+      wider. **Confirmed genuinely scoped to exactly these 3, not wider.** See Progress Log for full method + evidence.
 
 ## Progress Log
+
+- **2026-08-08 (scope-audit, the remaining open todo)** — Confirmed the marker-corruption blast radius is genuinely
+  exactly {instruments-service, unified-trading-library, market-data-processing-service}, not wider. Method: (1)
+  Re-derived the canonical fleet repo list from `workspace-manifest.json`'s `topologicalOrder` (26 repos — the
+  authoritative list `promotion_lag_monitor.py` itself uses, not a hand-picked subset). (2) For every fleet repo,
+  `gh pr list --base main --state merged --limit 30` filtered to `title` prefix `chore(promote)`, sorted by `mergedAt`
+  descending, to find each repo's CURRENT marker-source PR. Result: **24/26 repos show their most recent
+  `chore(promote)` merge on 2026-08-08** — i.e. every repo that actually participates in the LDR→main promotion pipeline
+  has a self-healed, well-post-rewrite marker today; none is stuck. (3) The 2 exceptions are both structurally exempt
+  from the pipeline, not additional instances of the bug: `agent-orchestrator` (`promotion_model: ldr_terminal` per
+  manifest — `main` is a frozen historical ref no longer consumed by anything for this repo since the 2026-08-05
+  `agent_orchestrator_ldr_terminal_promotion_2026_08_05` change, so its Aug-05-predating marker is expected dormancy,
+  not breakage) and `unified-trading-ci` (`promotion_model: single_branch`, `integration_branch: main` — no LDR→main
+  promotion pipeline exists for this repo at all, hence zero `chore(promote)` PRs ever, per
+  `unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`). (4) Independently re-confirmed the 5-repo
+  history-rewrite set itself (only a REWRITTEN repo's ancestry can be broken by this bug — a stale marker on a
+  non-rewritten repo, e.g. alerting-service earlier in this doc, is a different condition entirely) two ways: the
+  `.stale-pre-history-rewrite-20260805T112618Z` sibling backup clones present in this slot
+  (`e2e-testing`/`execution-service`/`instruments-service`/`market-data-processing-service`/`unified-trading-library` —
+  exactly 5, matching this doc's own table), AND an independent cross-check from
+  `/plans/active/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md` (filed by a different review
+  pass on a different host, `ip-172-31-5-118` slot 0) which found the IDENTICAL 5 repos showing
+  `2026-08-05T11:12Z`-timestamped ahead/behind drift-violations from the same rewrite event, with no 6th repo appearing
+  in either independent source. Of those 5, this doc's own Progress Log already established 2 (execution- service,
+  e2e-testing) self-healed without intervention and 3 (instruments-service, unified-trading-library,
+  market-data-processing-service) needed the operator-authorized reprovenance sweeps, all now merged. **Conclusion**: no
+  repo outside the already-confirmed 3 ever had (or currently has) a broken marker from this bug — the scope is exactly
+  as originally diagnosed. This closes this doc's last open todo; per `check_finalize_plan_coverage.py`'s own exemption
+  (issue docs aren't globbed, and this doc is now at 0 open todos regardless), no finalize twin is needed.
 
 - **2026-08-07 (branch-health lag re-verification session)**: Re-verified all repos flagged by the morning
   `PROMOTION LAG > 60m` Slack alert via `promotion_lag_monitor.py` directly (not the alert text). Cross-checked the 2
@@ -211,7 +246,7 @@ Two reasons, mirroring the UTL-34-bypass precedent
   - Net: fleet lag dropped from 13 measured pairs (21 in the original alert, partly stale) to 3 — the 2
     provenance-blocked repos tracked here (now with fresher, smaller bypass lists) plus an unrelated
     `unified-trading-ci` promotion-infra gap (filed separately, see
-    `/plans/active/issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`).
+    `/plans/archive/2026_08/issues/unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`).
   - Also fixed, unrelated to this doc's own bug but found while re-verifying: `agent-orchestrator`
     (`promotion_model: ldr_terminal`) was a permanent false-positive in `promotion_lag_monitor.py` — the monitor never
     got a `ldr_terminal` exemption when that promotion model was introduced 2026-08-05. Added `_ldr_terminal_repos()`
@@ -396,17 +431,27 @@ Two reasons, mirroring the UTL-34-bypass precedent
   5-repo set) is a precisely-scoped, determinable fact-check (a checkable "is the blast radius exactly these 3, or
   wider" question, not an open-ended "what should X be"), correctly formatted `[DEVOPS] P2.` already. Conflict-check
   (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) run against (a) every
-  `status: active`/`assigned_vm: planning` plan in `parent_epic: infrastructure_master`, (b) sibling `ci`
-  batch/finalize docs (`ci_satellite_ao_dispatch_batch{1,4,5}*`), (c)
-  `ag_closeout_audit_cross_cutting_parked_2026_08_07.md` (independently found this doc's 2 open `[DEVOPS]` todos "real,
-  undispatched, worker-scoped-with-context work" and recommended only an `asset_group` retag — milestone-only, not a
-  conflicting duplicate claim) — zero prior claim on this exact audit found, CLEAR. Corrected `assigned_role: devops`
-  (not a valid `agents/*.md` `role:` value — `docspec.py`'s role-registry check would HARD-fail it) → `cicd` (matches
-  `agents/cicd.md`). Flipped `assigned_vm: NA` → `planning`, `execution_scope: local-only` → `orchestrator-agent`.
-  **Big finding, out of this doc's scope**: grepped the corpus and found 15 active docs total still carry the same
-  invalid `assigned_role: devops` value (this doc + the sibling
-  `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md` were 2 of them) — worth a dedicated
-  corpus-wide retag pass, not fixed here beyond this doc's own frontmatter. **No finalize twin authored** — verified
-  against `scripts/quality_gates/check_finalize_plan_coverage.py` directly: it globs only `plans/active/*.md` (not the
-  `issues/` subdirectory this doc lives in) AND separately exempts any plan with ≤1 open todo (this doc has exactly
-  1) — clears both the structural and content exemptions task_template.md §4 documents.
+  `status: active`/`assigned_vm: planning` plan in `parent_epic: infrastructure_master`, (b) sibling `ci` batch/finalize
+  docs (`ci_satellite_ao_dispatch_batch{1,4,5}*`), (c) `ag_closeout_audit_cross_cutting_parked_2026_08_07.md`
+  (independently found this doc's 2 open `[DEVOPS]` todos "real, undispatched, worker-scoped-with-context work" and
+  recommended only an `asset_group` retag — milestone-only, not a conflicting duplicate claim) — zero prior claim on
+  this exact audit found, CLEAR. Corrected `assigned_role: devops` (not a valid `agents/*.md` `role:` value —
+  `docspec.py`'s role-registry check would HARD-fail it) → `cicd` (matches `agents/cicd.md`). Flipped `assigned_vm: NA`
+  → `planning`, `execution_scope: local-only` → `orchestrator-agent`. **Big finding, out of this doc's scope**: grepped
+  the corpus and found 15 active docs total still carry the same invalid `assigned_role: devops` value (this doc + the
+  sibling `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md` were 2 of them) — worth a
+  dedicated corpus-wide retag pass, not fixed here beyond this doc's own frontmatter. **No finalize twin authored** —
+  verified against `scripts/quality_gates/check_finalize_plan_coverage.py` directly: it globs only `plans/active/*.md`
+  (not the `issues/` subdirectory this doc lives in) AND separately exempts any plan with ≤1 open todo (this doc has
+  exactly
+  1. — clears both the structural and content exemptions task_template.md §4 documents.
+- **cicd escalation agt-558c62 2026-08-09**: set `archive_exempt: true`. This doc's own banner (top of file, 2026-08-08)
+  already records that all 3 todos are done but the physical `git mv` archival is BLOCKED by a genuine tooling deadlock
+  (`/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` — a markdown-syntax
+  referrer in an over-1000L doc has no scoped carve-out in `check_line_caps.sh` for a same-line link-repoint edit,
+  confirmed live by the prior agent who attempted and reverted the archival). This is exactly the `archive_exempt`
+  carve-out's intended shape per `check_archive_candidates.sh`'s own header comment: a 0-open-todos state that is
+  intentional and durable (pending the operator decision tracked on the deadlock doc), not a forgotten completion.
+  Un-set this flag once the deadlock doc's `[OPERATOR]`/`[INFRA]` todos land and the deferred archival actually
+  completes.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).

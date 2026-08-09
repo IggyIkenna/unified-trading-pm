@@ -443,8 +443,9 @@ jobs:
           SAFE_KEY=""
           if [ -n "${INPUT_DEDUP_KEY:-}" ]; then
             SAFE_KEY="$(printf '%s' "$INPUT_DEDUP_KEY" | tr -c 'A-Za-z0-9._-' '_')"
-            printf '%s' "$ALERT_JSON" | gsutil cp - "gs://${CICD_EVENTS_BUCKET}/cicd/alerts/dedup/${SAFE_KEY}.json" \
-              && echo "Dedup marker written: dedup/${SAFE_KEY}.json" || true
+            if printf '%s' "$ALERT_JSON" | gsutil cp - "gs://${CICD_EVENTS_BUCKET}/cicd/alerts/dedup/${SAFE_KEY}.json"; then
+              echo "Dedup marker written: dedup/${SAFE_KEY}.json"
+            fi
           fi
           # History append — ONE OBJECT PER ALERT (root-cause fix, matching persist-event/action.yml's
           # events-ledger fix and deployment-api's _persist_alert() fix, 2026-07-21): the OLD path did

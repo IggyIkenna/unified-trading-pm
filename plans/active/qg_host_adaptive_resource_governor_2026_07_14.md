@@ -234,15 +234,15 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 ### Phase 1 — Interim quick-win: raise K on 61 GB hosts (operator-approved 2026-07-14)
 
 - [x] ✅ [INFRA] P0. **RESOLVED-BY-RULING — stale DEFERRED tag cleaned 2026-07-28 (stale-tag audit; this was never a
-      live `[OPERATOR]` gate, just an inline label describing an already-made decision).** Operator ruling 2026-07-14,
-      "raise K to 6 for now": the live load-repro is skipped; safety is instead established by analysis — 6×UTL
-      worst-case = 33 GB < the 43 GB (70 %) ceiling, and each worker's QG is already capped in a per-worker 10 GB
-      systemd scope (`tmux_spawn` §6.2) + 16 GB host swap, so the 05-29 single-pytest OOM is contained per-worker and
-      cannot recur at K=6. The Phase-6 soak (no swap regression / no false 80 % aborts) is the empirical confirmation in
-      lieu of the live repro. **STALE-CLOSED 2026-07-30 (na-eligibility-audit, infra tranche, dispatch agt-30721a)** —
-      this is a narrative artifact describing an already-made decision, not a live gate; the decision it describes
-      (raise K to 6) was already executed in the very next checkbox below
-      (`[x] Raised QG_HOST_CONCURRENCY from 1 to 6`).
+      live `[OPERATOR]` gate, just an inline label describing an already-made decision).** Operator ruling 2026-07-14
+      (documented inline in this plan, `qg_host_adaptive_resource_governor_2026_07_14.md`), "raise K to 6 for now": the
+      live load-repro is skipped; safety is instead established by analysis — 6×UTL worst-case = 33 GB < the 43 GB (70
+      %) ceiling, and each worker's QG is already capped in a per-worker 10 GB systemd scope (`tmux_spawn` §6.2) + 16 GB
+      host swap, so the 05-29 single-pytest OOM is contained per-worker and cannot recur at K=6. The Phase-6 soak (no
+      swap regression / no false 80 % aborts) is the empirical confirmation in lieu of the live repro. **STALE-CLOSED
+      2026-07-30 (na-eligibility-audit, infra tranche, dispatch agt-30721a)** — this is a narrative artifact describing
+      an already-made decision, not a live gate; the decision it describes (raise K to 6) was already executed in the
+      very next checkbox below (`[x] Raised QG_HOST_CONCURRENCY from 1 to 6`).
 - [x] [INFRA] P0. ✅ Raised `QG_HOST_CONCURRENCY` from 1 to **6** across all three layers — live tmux global env
       (`setenv -g`, new workers inherit as they cycle) + root `agent-orchestrator/.env.local` (survives restart) +
       `bootstrap_vm.sh` template (survives re-bootstrap). Evidence: AO@222369f (bootstrap) + `.env.local=6` +
@@ -365,6 +365,20 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       (`PYRIGHT_TIMEOUT=300`/`480`/`600` set per-invocation) with no shared fix or documented guidance. Raise the
       default (scaled by repo size / measured baseline, same spirit as the RAM/CPU admission work above) or at minimum
       document the override in `/codex/06-coding-standards/quality-gates.md` so slots stop rediscovering it
+      independently.
+- [ ] [INFRA] P3. NEW FINDING (2026-08-09, slot 22): corroborates the `PYRIGHT_TIMEOUT` finding above — hit the SAME
+      class of drift on market-tick-data-service's `MAX_DURATION` meta-gate (separate from `PYRIGHT_TIMEOUT`): with
+      `PYRIGHT_TIMEOUT=600` set (needed to avoid the exit=143 kill above), 2 consecutive runs measured 830s (0s governor
+      queue-wait) and 864s (24s queue-wait) work-time, both over the then-current 800s budget (itself only bumped
+      2026-08-06 from 600s). Bumped `MAX_DURATION` 800→1000 in market-tick-data-service/scripts/quality-gates.sh (same
+      ad-hoc per-repo pattern as the two prior bumps in that file's history comment) to unblock landing
+      `defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`'s P2 todo (shipped 2026-08-09,
+      `market-tick-data-service@5d633923`; source doc now archived at
+      `/plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`) — same
+      underlying tension as the `PYRIGHT_TIMEOUT` finding: raising one gate's timeout (needed to let TYPE CHECK finish
+      under contention instead of being killed) mechanically pushes total wall time into a SEPARATE completion-budget
+      gate. Whoever owns this plan: consider whether `MAX_DURATION` should scale with `PYRIGHT_TIMEOUT`/repo size the
+      same way the P3 finding above proposes, rather than each repo's `quality-gates.sh` accumulating manual bumps
       independently.
 - [ ] [INFRA] P2. NEW FINDING (2026-07-27, slot 5): pytest-xdist's SINGLE worker (`PYTEST_WORKERS` default is already 1,
       not a multi-worker coordination bug) can itself die under sustained severe host load, crashing the whole run with
@@ -758,3 +772,9 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (4 entries), unchanged.
 
 **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — LOCAL/operator-driven banner, human-tracked design questions
+
+**na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:1c5a6017d0616242]: KEEP-NA,
+valid — 10 open items now (was 9; today's new `[INFRA] P3` MAX_DURATION-drift finding, filed 2026-08-09 slot 22, is the
+same class as the other 9 — a real, well-specified engineering follow-on under the standing top-of-doc 2026-07-14
+"LOCAL/operator-driven, human-driven" ruling, not defaulted-and-never-assessed). No duplicate found in any active
+`assigned_vm: planning` sibling. No RECLASSIFY, no ARCHIVE.

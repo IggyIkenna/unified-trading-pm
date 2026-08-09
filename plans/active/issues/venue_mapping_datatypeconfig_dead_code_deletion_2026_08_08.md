@@ -39,6 +39,8 @@ context_scope:
   [
     unified-api-contracts/unified_api_contracts/registry/venue_mapping.py,
     unified-trading-library/tests/config_interface/unit/test_venue_config.py,
+    market-tick-data-service/market_tick_data_service/market_interface/models/venue_config.py,
+    /plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
   ]
 ---
 
@@ -92,3 +94,4 @@ zero-call-site premise still holds.
 - **2026-08-08 (finalize-plan REVIEW re-verification, slot 30)**: filed as the tracked follow-up to
   `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`'s `[SCRIPT]` todo, per that todo's own "do not do in this
   todo" deferral and the workspace HARD RULE that every follow-up is a tracked `- [ ]` todo, never prose.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

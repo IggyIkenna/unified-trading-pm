@@ -82,47 +82,15 @@ children.
 
 ## Phase 0 — cross-cutting foundations (block G2; build once, reused by every AG)
 
-- [ ] [INFRA] P0. **Observability wiring (§0.5) for every instruments/MTDS backfill VM + roll-up job** — register as a
-      classified `DeploymentTarget` (`classify_deployment_target` + `cloud_run_job_registry` / VM `lifecycle_class`),
-      `ServiceBootstrap` + `log_event` + 60s `PIPELINE_HEARTBEAT` + ≥1 progress/hr, error→`#data-pipeline-alerts`,
-      terminal `exit_code` + log-mtime persisted, **appears in `/deployments` BATCH tab with click-through to logs**.
-      DoD: a launched job is click-through-able in the cockpit; SSH not required. SSOT:
-      `/codex/05-infrastructure/deployment-observability.md`. **Reconciled 2026-07-28 — STILL OPEN (infra exists,
-      fleet-wide verification not evidenced).** Live-grepped `deployment-service`/`deployment-api`: the classification
-      infra IS built — `classify_deployment_target`, `cloud_run_job_registry.CLOUD_RUN_JOBS`, `VM_PREFIX_TO_BUCKET`,
-      `dp-exit-code-monitor`/`dp-heartbeat-watcher`, `/api/deployments/inventory` all exist and are referenced as live
-      evidence in cefi's own GATE G2 sign-off (`instruments_cefi_g1_g5_gate_execution_2026_07_24.md` line ~305: "Cockpit
-      click-through — classify_deployment_target + cloud_run_job_registry.CLOUD_RUN_JOBS
-      (lifecycle-catalogue-regen-cefi/manifest-consolidator-cefi/expected-universe-v2-cefi BATCH registered); alert
-      coverage complete"). But that is cefi-scoped evidence only; this item's own DoD is fleet-wide ("every
-      instruments/MTDS backfill VM + roll-up job"), and the cefi child plan's own 2026-06-25 audit explicitly flagged
-      "Phase-0 observability item = VERIFY the cefi launchers actually emit ServiceBootstrap/log_event/heartbeat/
-      persist-exit_code + click-through in the cockpit (not assumed)" as still open at that time — no later evidence in
-      the cefi/tradfi/defi child plans closes that verification gap, and none of the 3 remaining AGs (tradfi/sports/
-      prediction) have any cited observability-verification pass at all. Leaving `[ ]` open.
-- [ ] [SCRIPT] P0. **Layered coverage via the SSOT (Honest-Coverage v2 — two-layer, NOT a v1 single-layer script)** —
-      **[v2 ALIGN 2026-06-30, A12/A13/C12]** this MUST be the Honest-Coverage **v2** model per
-      `/codex/02-data/honest-coverage-model.md` (the SSOT, written `@unified-trading-pm@842ddb93e`), produced by
-      `instruments-service/scripts/measure_honest_coverage.py` emitting **`coverage.json` `schema_version == 2`** — do
-      NOT build a fresh single-layer day/depth script. v2 contract: **Layer-1 (instrument-denominator completeness)
-      GATES Layer-2 (download coverage)** — a Layer-2 % is trustworthy ONLY at Layer-1 == 100%
-      (`denominator_complete==True`); no flat "100% coverage" without the gate. The "day + depth" axes map to v2's
-      `by_day` (time view) + `by_venue_instrument_type[_data_type]` (shard/entity view);
-      `instrument_gates_download`/`denominator_complete`/ `layer1_completeness_pct` on each AG cell. Expected-universe
-      is materialised by the SINGLE producer `build_expected(asset_group)` (folded into
-      `honest_coverage_v2_instrument_denominator` Phase 1, blocked on registry-consolidation Ph 1-2). Surface BOTH
-      layers per-AG/per-venue in manifest → `/data-status` → deployment-API → deployment-UI. **No ad-hoc coverage
-      scripts** that diverge from the v2 SSOT. DoD: UI shows the two-layer v2 number (Layer-2 gated on Layer-1); a
-      synthetic gap drags the right layer down; output is `coverage.json` v2. **Reconciled 2026-07-28 — STILL OPEN
-      (SSOT + producer script shipped; UI/API surfacing NOT wired).** Live-verified: `LayeredCoverage` +
-      `compute_layered_coverage()` exist in `unified-api-contracts/.../canonical/crosscutting/_honest_coverage_logic.py`
-      (shipped `UAC@755c40515`, cited as GATE-G5 evidence in the cefi child plan);
-      `instruments-service/scripts/measure_honest_coverage.py` exists in-repo and its emitted payload confirms
-      `"schema_version": 2`. So the v2 SSOT + the measurement-script half of this item ARE shipped. But grepping
-      `deployment-api` + `deployment-ui` for
-      `layer1_completeness_pct`/`instrument_gates_download`/`denominator_complete` returns **zero hits** — the "Surface
-      BOTH layers per-AG/per-venue in manifest → /data-status → deployment-API → deployment-UI" half of the DoD is NOT
-      built, so the UI still cannot show the two-layer v2 number. Leaving `[ ]` open (partial).
+- **[INFRA] P0. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Observability
+  wiring (§0.5) for every instruments/MTDS backfill VM + roll-up job — cefi's pattern is shipped + prod-verified (cited
+  as GATE-G2 evidence); TradFi/sports/prediction have no observability-verification pass at all. See the batch doc for
+  the full scoped todo; do not duplicate-dispatch from here.
+- **[SCRIPT] P0. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Layered coverage
+  via the Honest-Coverage v2 SSOT — the SSOT + `measure_honest_coverage.py` producer are shipped
+  (`schema_version == 2`), but `layer1_completeness_pct`/`instrument_gates_download`/`denominator_complete` have zero
+  grep hits in deployment-api/deployment-ui — surfacing through the API + UI is still unbuilt. See the batch doc for the
+  full scoped todo; do not duplicate-dispatch from here.
 - [ ] [SCRIPT] P0. **Cumulative-drawdown health metric (§1.2)** — per venue, the cumulative-instruments-ever-seen
       series; any negative day-over-day delta = a hard defect (flag + block). Active-count drops must net to a typed
       reason (cefi/tradfi delisting; DeFi delisting OR `NOT_ENOUGH_TVL`). DoD: drawdown count per venue surfaced; target
@@ -158,31 +126,13 @@ children.
       canonical-form work, and a separate cefi finding (G1.3 follow-up) notes the guard "must treat split↔glued as
       equivalent" for on-chain-perp venues **until** it is aligned — i.e. describes a future state, not a live guard.
       Leaving `[ ]` open.
-- [ ] [SCRIPT] P0. **Verification discipline — captured↔expected KEY-OVERLAP, not raw count (§6.1/§6.3)** — the G5/
-      backfill success signal is `expected_unattempted` DROPS / the captured∩expected per-(instrument,day) overlap
-      CLIMBS, proven by grepping actual captured key-tuples against the expected set — NEVER `captured++` (captures can
-      land as net-new cells keyed differently than the EU seeds — the 2026-06-24 DeFi stall). "Done" = the **metric
-      moved in prod**, cross-checked vs the run.log terminal `exit_code` — never "job exited 0 / tests green" (the
-      exit-0-but-empty blind spot). DoD: an overlap-vs-expected check is the wired completion verdict, not VM-gone/pass.
-      **Reconciled 2026-07-28 — STILL OPEN, unbuilt as a formal wired check.** No script/gate implementing a
-      captured∩expected per-(instrument,day) key-overlap verdict was found. In practice, the cefi/tradfi child plans'
-      own gate sign-offs already lean on measured-artifact evidence in spirit (e.g. cefi G2's day-axis gap-count +
-      `empty_confirmed`-row-count citations, tradfi's `verify_instrument_manifest_coverage.py` re-runs) rather than
-      VM-exit-code-only claims, but that is ad-hoc per-gate discipline, not the KEY-OVERLAP mechanism this item
-      specifies. Leaving `[ ]` open.
-- [ ] [SCRIPT] P0. **Silent-cap source audit + FetchEvidence enforcement (§6.2/§6.5)** — for EVERY source, find + page
-      PAST the truncating cap (Graph `skip`≤5000 → timestamp-cursor [done mtds@08b45468]; top-N daily snapshot →
-      explicit instrument filter; REST page limit; vendor free-tier window). A cap that truncates the universe is a
-      G1/G2 capture-correctness defect; its missing rows are **never** recorded `NOT_ENOUGH_TVL`/`SOURCE_RETURNED_ZERO`
-      — the keystone `FetchEvidence`/`UnprovenHonestAbsenceError` gate enforced at every empty-write. DoD: per-source
-      cap audited + paged-past; keystone gate green fleet-wide. **Reconciled 2026-07-28 — STILL OPEN (keystone gate
-      shipped; per-source cap audit NOT exhaustive).** `FetchEvidence`/`UnprovenHonestAbsenceError` DO exist live in
-      `unified-api-contracts/.../canonical/crosscutting/honest_coverage.py` as the general honest-absence write-path
-      contract — the "keystone gate" half of the DoD is real infra, in production use. But "for EVERY source, find +
-      page PAST the truncating cap" is a full per-source audit that is NOT evidenced as done: the only cited instance is
-      the one already named in this item's own text (Graph `skip`≤5000 → timestamp-cursor, `mtds@08b45468`, shipped
-      2026-06-24) — no evidence of a systematic sweep across every source's REST page limit / top-N snapshot / free-tier
-      window. Leaving `[ ]` open.
+- **[SCRIPT] P0. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Verification
+  discipline — captured∩expected KEY-OVERLAP, not raw count (§6.1/§6.3). See the batch doc for the full scoped todo; do
+  not duplicate-dispatch from here.
+- **[SCRIPT] P0. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Silent-cap source
+  audit + `FetchEvidence` enforcement (§6.2/§6.5) — keystone gate is shipped and live; the full per-source
+  page/snapshot/window-cap sweep is not evidenced as exhaustive. See the batch doc for the full scoped todo; do not
+  duplicate-dispatch from here.
 - [ ] [SCRIPT] P0. **Depth-aware re-fetch trigger (§7.5) — NOT blanket `--force`, NOT just unexpected-missing** —
       re-fetch ONLY `{missing/EU, attempted_failed, captured-but-instrument_count < expected_depth}` (the
       shallow-capture a plain skip-if-exists misses); needs the §2.1 depth oracle for `expected_depth`; the §2.2
@@ -191,20 +141,10 @@ children.
       `expected_depth` across `instruments-service`, `market-tick-data-service`, or `unified-api-contracts` — this item
       is correctly blocked on the still-unbuilt §2.1 depth oracle (item 4 above) and the still-unbuilt §2.2 reconcile
       pass (item 5 above), matching its own stated dependency. Leaving `[ ]` open.
-- [ ] [DESIGN] P1. **Cost/entitlement-boundary reason class (§6.4)** — cells deliberately unfetched for cost (TradFi
-      beyond-free Databento window, ~241k clipped) are a typed `KNOWN_SOURCE_GAP`/cost-boundary EXPECTED state in the
-      §2.1 oracle — not `attempted_failed`, not silent absence — so coverage shows "available-but-intentionally-
-      unfetched". DoD: reason class exists + the denominator accounts for it. **Reconciled 2026-07-28 — STILL OPEN
-      (mechanism shipped; the named TradFi case not yet classified through it).** Live-verified UAC ships a
-      registry-derived, evidence-gated cost/upstream-boundary reason —
-      `EmptyConfirmedReason.EXPECTED_UPSTREAM_OUT_OF_BOUNDS`, sourced from
-      `canonical.coverage_exclusions.COVERAGE_EXCLUSIONS` (each entry requires a typed `ExclusionReason` +
-      `evidence_uri` + re-runnable `evidence_probe`, per an "Operator proposal 2026-07-17" — this is a materially
-      DIFFERENT, more rigorous mechanism than the `KNOWN_SOURCE_GAP` this item's own text names, and appears to be its
-      actual successor/implementation). However `COVERAGE_EXCLUSIONS: Final[...] = ()` is currently **empty** — no
-      cost-boundary interval (including the TradFi ~241k beyond-free-Databento-window case this item names) has actually
-      been registered, so "the denominator accounts for it" is not yet true for the concrete case. Leaving `[ ]` open
-      (mechanism exists, application pending).
+- **[DESIGN] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.**
+  Cost/entitlement-boundary reason class (§6.4) — the `COVERAGE_EXCLUSIONS` registry mechanism is shipped (empty today);
+  the named TradFi ~241k beyond-free-Databento-window case just needs registering. See the batch doc for the full scoped
+  todo; do not duplicate-dispatch from here.
 - [ ] [DATA] P0. **Canonical-form single-SoT GCS migration (IS + MTDS, every AG) — NO two sources of truth (operator
       2026-06-24).** Any GCS data in a non-canonical **schema** (`schema_version` < v9 / drifted fields), **path**
       (missing `pipeline_mode={mode}_{source}/`/`asset_group=` keys, legacy sibling trees, glued `PROTOCOL-CHAIN`), or
@@ -349,18 +289,9 @@ re-implemented here — this is reconciliation only, per this todo's own scope.
 
 ### From `proper_instrument_catalogue_lifecycle_rollup_2026_06_04` (archived)
 
-- [ ] [INFRA] P0. **Rebuild the IS daily definition producer** — resumed schedulers point at dead infra; recreate the
-      Cloud Run job / repoint `instruments-service-daily` Workflow at a CURRENT image + CLI
-      (`--operation instruments --mode batch --asset-group …`), per-VM shard env, post-2026-06-10 cloud-providers.yaml.
-      Until this lands the dailies only "succeed" at the scheduler layer. Repo: deployment-service +
-      instruments-service. assigned_vm: vm-cross-cutting. (MIGRATED FROM:
-      `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`.) **Reconciled 2026-07-28 — STILL OPEN (2 of 5 AGs
-      done).** The cefi child plan's Progress Log confirms: cefi's `uts-prod-instruments-service-cefi-t1-recon` producer
-      was de-hardcoded + verified (24 venues, day=2026-06-26), and defi's `uts-prod-instruments-service-t1-recon`→DEFI
-      producer was created + verified (53 venues, same day) — 2 of the 5 AGs have a genuinely working prod daily
-      producer. But the tradfi child plan's own Progress Log (Checkpoint 12:40 section) states plainly: "tradfi/sports/
-      prediction have NO prod daily producer" — 3 of 5 AGs remain uncovered, matching this item's own unchecked state.
-      Leaving `[ ]` open (partial: cefi+defi done, tradfi/sports/prediction not).
+- **[INFRA] P0. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** Rebuild the IS
+  daily definition producer — cefi+defi shipped + prod-verified (2 of 5 AGs); tradfi/sports/prediction have no prod
+  daily producer at all. See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
 - [x] [INFRA] P1. ✅ **Wire the lifecycle roll-up to trigger on every IS instruments update (per-AG).** TF authored
       (deployment@98bee4b, `lifecycle_catalogue_scheduler.tf`); REMAINING = `terraform apply` + T+10min per-AG execution
       verify. (MIGRATED FROM: `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`.) — deployment-service@c1d2e3e6
@@ -373,13 +304,10 @@ re-implemented here — this is reconciliation only, per this todo's own scope.
       supersedes the earlier "diagnose fast-fail" bullet.) — RESOLVED: root cause was full-history-walk timeout, not a
       grpc/pyarrow init bug; fixed by instruments-service@b0596d0c incremental engine (reachable on
       origin/live-defi-rollout).
-- [ ] [CODE] P1. **All asset groups adopt the proper catalogue.** cefi/tradfi/defi catalogues APPLIED 2026-06-05; G1
-      shape-aware enumerator DONE (is@6ea46565). REMAINING = granularity-aware producer for **prediction** (per-cqg
-      grain) + **sports** (per-league vs per-fixture), and per-AG `_enumerate_v2_*` verify emits `expected_unattempted`
-      against the real universe. Per-AG slices ride the sibling AG masters. (MIGRATED FROM: same.) **Reconciled
-      2026-07-28 — STILL OPEN, unbuilt.** No evidence in the cefi/tradfi/defi child plans or a live-code grep of a
-      granularity-aware catalogue producer for prediction (per-`canonical_question_group`) or sports (per-league vs
-      per-fixture) — this item's own "REMAINING" framing is still accurate. Leaving `[ ]` open.
+- **[CODE] P1. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md`.** All asset groups
+  adopt the proper catalogue — cefi/tradfi/defi shipped (is@6ea46565); the granularity-aware producer for prediction
+  (per-cqg) + sports (per-league vs per-fixture) is still unbuilt. See the batch doc for the full scoped todo; do not
+  duplicate-dispatch from here.
 
 ---
 
@@ -621,8 +549,7 @@ wrong).
   behind GATE 0 (NOT RECORDED SIGNED OFF); the set mixes unbuilt SCRIPT infra with genuine DESIGN-judgment items
   (expected-universe oracle venue-truth sourcing decision, canonical-form single-SoT whole-corpus migration sequencing)
   that aren't cleanly bounded-outcome — consistent with the prior two passes' verdict, doc stays NA as a mixed set.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
-  all open Phase-0 items sit behind GATE 0 (still NOT RECORDED SIGNED OFF); the set mixes unbuilt SCRIPT infra
-  with genuine DESIGN-judgment items (expected-universe oracle venue-truth sourcing decision) that aren't
-  cleanly bounded-outcome. No cheat-sheet precedent (IAM/reversible-delete/recurring-finding-job) applies to any
-  open item here.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged): all
+  open Phase-0 items sit behind GATE 0 (still NOT RECORDED SIGNED OFF); the set mixes unbuilt SCRIPT infra with genuine
+  DESIGN-judgment items (expected-universe oracle venue-truth sourcing decision) that aren't cleanly bounded-outcome. No
+  cheat-sheet precedent (IAM/reversible-delete/recurring-finding-job) applies to any open item here.

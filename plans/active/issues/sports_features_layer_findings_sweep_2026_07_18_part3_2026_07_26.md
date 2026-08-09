@@ -936,3 +936,4 @@ overwrite.
   there (re-read live). The `[PROCESS] P1`/§R codex-authoring todo and the `[CODE] P2`/batch6 todo that the 2026-08-03
   marker also tracked are both now `[x]` in this doc (shipped since) — not part of today's open count. No
   reclassification: this doc's remaining open work is a citation, not new dispatchable content.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).

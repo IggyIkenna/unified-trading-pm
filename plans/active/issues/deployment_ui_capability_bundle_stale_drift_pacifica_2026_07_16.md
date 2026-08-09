@@ -440,3 +440,5 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
   instead, per the task's own fallback: a worker picking up the reclassified todo should register the completed
   `unified-api-contracts` commit under BOTH this doc and whichever cross-cutting tracking surface exists, rather than
   this doc's tag being silently wrong in the meantime.
+
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

@@ -271,16 +271,12 @@ ledger.
       `[cross-cutting]` → `[ui]` — **flagged urgent for the 3rd consecutive day**: live unauthenticated-prod-endpoint
       exposure, all 4 fix-steps still open. Done when: retagged and the `ui` tranche's audit picks it up with priority
       commensurate with a live P1 security hole.
-- [ ] [SCRIPT] P3. `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership test
-      (`parent_epic in DATA_EPICS or basename in cited`) silently excludes never-cited docs with a non-data
-      `parent_epic` from the candidate pool entirely (Process finding 2 above) — consider widening the membership test
-      itself (not just relying on the `check_ag_closeout_linkage.py` cross-check every run) so this class doesn't need
-      manual rediscovery each time. Done when: the generator's membership test has a documented, tested fix, or a
-      recorded decision that the cross-check is sufficient going forward.
-- [ ] [DOC] P2. `cross_cutting_consolidated_closeout_2026_07_25.md` is now at 999/1000 lines (hard cap) after today's
-      "Known non-orphan dispositions" addition — 1 line of margin. Line-cap-split it (fork a Track/phase-named child,
-      `depends_on` back) before the next substantive edit, mirroring how the other 5 AGs' consolidated closeout docs
-      were split. Done when: doc is back under ~700L with a forked child covering the trimmed content.
+- **[SCRIPT] P3. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.**
+  `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership test silently excludes never-cited docs with a
+  non-data `parent_epic`. See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
+- **[DOC] P2. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.**
+  `cross_cutting_consolidated_closeout_2026_07_25.md` is at/near the 1000-line hard cap — line-cap-split it. See the
+  batch doc for the full scoped todo; do not duplicate-dispatch from here.
 - [ ] [OPERATOR] P2. `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` — rule on whether
       `/codex/04-architecture/live-strategy-config-hot-reload.md`'s documented safe-field allow-list/
       `UnsafeConfigChangeError` is the target to BUILD (strategy-service currently ships an unconditional-swap reloader
@@ -310,5 +306,14 @@ ledger.
   tracking the retag + the underlying fix separately).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- same-day filing, reaffirms the
   earlier na-eligibility-audit entry above (unchanged): 2 of 5 open items are cross-tranche retag handoffs
-  (owning-tranche's write, not this one's), 1 is an unruled `[OPERATOR]` design question that alone keeps the
-  whole doc NA, and the remaining 2 (script fix, line-cap split) don't clear the whole-doc bar on their own.
+  (owning-tranche's write, not this one's), 1 is an unruled `[OPERATOR]` design question that alone keeps the whole doc
+  NA, and the remaining 2 (script fix, line-cap split) don't clear the whole-doc bar on their own.
+- **`/ag-closeout-audit ao` 2026-08-09 (dispatch `agt-41d860`, slot 10)**: closed out the `ao ×3` slice of the todo-4
+  retag (findings 1-3 above). Finding 1 (`ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`) was already retagged
+  by an earlier same-day `/ag-closeout-audit ao` pass. Findings 2
+  (`context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`) and 3
+  (`plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md`) retagged to `[ao]` this
+  run, plus a one-line Sources mention added to each retagged doc's Track in `ao_consolidated_closeout_2026_07_25.md`
+  (Track 2 for slot2_wedged, Track 5 for context_scout) so `check_ag_closeout_linkage.py` clears both (21→19 orphans,
+  still ≤ baseline 49). `ci ×6`/`infrastructure ×3`/`meta ×1` remain for those tranches' own audits.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.

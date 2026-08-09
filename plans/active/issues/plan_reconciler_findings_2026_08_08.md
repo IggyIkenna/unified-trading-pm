@@ -181,35 +181,35 @@ The codex-alignment spot-check hunter checked the 12 highest-traffic codex docs 
 plans; 9 of 12 showed drift (codex-side stale in most cases). Per plan_reconciler's own rule, a codex/SSOT edit is only
 ever applied after an explicit operator ruling — filed here, not edited:
 
-- [ ] [OPERATOR] P2. `codex/05-infrastructure/vm-launcher-runbook.md:564` claims a preempted backfill VM is
+- [ ] [OPERATOR] P2. `/codex/05-infrastructure/vm-launcher-runbook.md:564` claims a preempted backfill VM is
       "auto-relaunched by `RelaunchPreemptedVm`" — but `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s
       Progress Log shows the cefi sharded-backfill launcher died 5× in 8 days with ZERO automatic relaunch each time
       (already escalated to the operator separately). Codex overstates a capability that doesn't exist for this
       launcher.
-- [ ] [OPERATOR] P3. `codex/06-coding-standards/quality-gates.md:3248` calls the RAM-pressure abort-monitor "(planned)"
+- [ ] [OPERATOR] P3. `/codex/06-coding-standards/quality-gates.md:3248` calls the RAM-pressure abort-monitor "(planned)"
       — it shipped 2026-07-27 (`761edd205`), 11+ days ago (`qg_host_adaptive_resource_governor_2026_07_14.md`).
-- [ ] [OPERATOR] P3. `codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md:95-99` documents
+- [ ] [OPERATOR] P3. `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md:95-99` documents
       exactly 3 conflict-check surfaces; a measured 4th real surface slips through (fix todo open since 2026-08-06 in
       `na_and_ag_closeout_audit_population_overlap_2026_07_31.md`).
-- [ ] [OPERATOR] P3. `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:159`'s Class-B table says
+- [ ] [OPERATOR] P3. `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:159`'s Class-B table says
       `plan_reconciler` (this very role) runs "daily 01:00 UTC, opus" — current reality is sharded-by-tranche,
       hourly-retry-until-capacity, sonnet (per `daily_trading_analyst_llm_job_design_2026_07_29.md`'s 07-28/29 rulings
       and this dispatch's own MODEL=claude-sonnet-5). Self-referential — worth fixing since it's the SSOT for how this
       role is supposed to be scheduled.
-- [ ] [OPERATOR] P3. `codex/12-agent-workflow/plan-completion-and-archival-discipline.md` self-declares
+- [ ] [OPERATOR] P3. `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` self-declares
       `authoritative_for` the archival ritual, but the real "never combine flip+`git mv`" rule lives only in
       `agents/RULES.md`; 10+ plans miscite the source.
-- [ ] [OPERATOR] P3. `codex/02-data/pipeline-mode-partition.md:252-254` still tags the M4 live read-path resolver
+- [ ] [OPERATOR] P3. `/codex/02-data/pipeline-mode-partition.md:252-254` still tags the M4 live read-path resolver
       `[GATED — rides M1-BREAKING]` though M1 landed and M4 itself was verified shipped 2026-07-12 — the adjacent M1 tag
       was fixed 2026-08-04 but M4's was missed in the same edit.
-- [ ] [OPERATOR] P3. `codex/02-data/honest-coverage-model.md` CK3 table shows cefi Layer-1 at a superseded 79.55% figure
-      (07-03, superseded 07-07 and again 07-12) — other asset_group rows got updated 2026-07-28, cefi's didn't.
-- [ ] [OPERATOR] P3. `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3/§3a — PLAN-side staleness, codex is
+- [ ] [OPERATOR] P3. `/codex/02-data/honest-coverage-model.md` CK3 table shows cefi Layer-1 at a superseded 79.55%
+      figure (07-03, superseded 07-07 and again 07-12) — other asset_group rows got updated 2026-07-28, cefi's didn't.
+- [ ] [OPERATOR] P3. `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3/§3a — PLAN-side staleness, codex is
       fine here: `bucket_estate_consolidation_closeout_2026_07_24.md` repeatedly quotes only half the delete rule and
       declares an `ml-models-store` delete "categorically human-only" without ever running the §3a
       fresh-retention-seconds check. No incorrect action has occurred (independently blocked by an unrelated IAM gap
       too) — flagging the plan's mischaracterization, not a codex fix.
-- [ ] [OPERATOR] P3. **Grace-protected this run, skip until it clears.** `codex/08-workflows/ci-cd-flow.md:882,887-892`
+- [ ] [OPERATOR] P3. **Grace-protected this run, skip until it clears.** `/codex/08-workflows/ci-cd-flow.md:882,887-892`
       describes semver PATCH bumps as commit-label-driven — structurally unreachable for weeks under squash-promote
       (every `main` commit is `chore(promote):`), just replaced with content-based detection
       (`semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md`, fix landed 2026-08-07 18:33-20:59Z, codex last
@@ -287,3 +287,7 @@ ever applied after an explicit operator ruling — filed here, not edited:
 
 None in the non-grace actionable set (333 active/issue docs + 28 epics) — every one was assigned to and read by at least
 one hunter this run. The 262 grace-protected docs were correctly excluded per the HARD LIMIT, not "not reached."
+
+## Progress Log
+
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).

@@ -22,7 +22,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-28"
+last_updated: "2026-08-09"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -101,17 +101,30 @@ context_scope:
       `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_13.md`. **Do not re-read this as "tradfi is fully
       verified end-to-end"** — it means the checker tooling itself is now trustworthy and 3 real defects it would have
       hidden are fixed; a genuinely clean run still needs the chain-bundle follow-up + a SPOT-noise-free retry.
-- [ ] [DATA] P0. **MVP backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single
-      Databento IP, throughput-fixed) and verify manifest-counted canonical rows for each MVP cell. **Still blocked** —
-      Phase D is not literally green per the note above; do not start this until the chain-bundle follow-up is resolved
-      or the operator explicitly accepts the current evidence as sufficient.
-- [ ] [DATA] P1. **Post-full-backfill reconciliation RUN checkpoint (both raw-tick and candles layers)** — after the MVP
-      backfill readiness gate above goes green, run `/data-pipeline-reconciliation --asset-group tradfi` against PROD as
-      this terminal gate's final verification step (added per
-      `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md` §11's checkpoint-cadence requirement — the
-      terminal gate currently ends at the MVP backfill readiness gate with no reconciliation run cited). Definition of
-      done: a dated reconciliation report path cited, covering both the raw-tick and candles layers, with any finding
-      either resolved or explicitly carried forward as a new tracked todo.
+- [ ] [DATA] P0. BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09, see
+      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md). **MVP backfill readiness gate** —
+      only after A–D green: run the tradfi MVP backfills (SPOT VMs, single Databento IP, throughput-fixed) and verify
+      manifest-counted canonical rows for each MVP cell. **Still blocked** — Phase D is not literally green per the note
+      above; do not start this until the chain-bundle follow-up is resolved or the operator explicitly accepts the
+      current evidence as sufficient. **FLAGGED, NOT CORRECTED (na-eligibility-audit 2026-08-09, tradfi tranche,
+      dispatch agt-3df41f):** both cited sub-blockers may now be stale for the specific cells this run's own MVP-of-MVP
+      narrowing (`/plans/active/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`) actually targets — (a)
+      the billing suspension was independently live-verified lifted for in-scope items the same day per that doc; (b)
+      `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4's exhaustive diff places ES/BTC/ETH in its clean
+      "Matches" bucket, not its 3 open-defect items (CBOE VIX + 15 micro-contract codes + 8 sector-identity codes only).
+      Not re-citing this pass -- confirming the EXACT narrowed-scope claim needs one more direct read before editing a
+      critical-path gate's blocking citation; recommend a follow-up pass (or the doc owner) verify and re-point if
+      confirmed.
+- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION (depends on the MVP backfill readiness gate above, itself blocked on
+      databento account billing-suspended 2026-08-09, see
+      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md). **Post-full-backfill
+      reconciliation RUN checkpoint (both raw-tick and candles layers)** — after the MVP backfill readiness gate above
+      goes green, run `/data-pipeline-reconciliation --asset-group tradfi` against PROD as this terminal gate's final
+      verification step (added per `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md` §11's
+      checkpoint-cadence requirement — the terminal gate currently ends at the MVP backfill readiness gate with no
+      reconciliation run cited). Definition of done: a dated reconciliation report path cited, covering both the
+      raw-tick and candles layers, with any finding either resolved or explicitly carried forward as a new tracked todo.
+      Inherits P0's same flagged-citation caveat above (not independently re-checked).
 
 ## Codex SSOTs (read before touching this workstream)
 
@@ -407,7 +420,11 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
   `genuine` proof stands (unaffected — pre-flight reads the manifest, not a live fetch). Tracked as a new confirmed
   instance in `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4.
 
-- `- [ ] [SCRIPT] P3. Add TestIsBundledChainShardCboeCorrection (3 tests, verified passing in isolation) to tests/unit/test_pipeline_e2e_check.py once mtds_deployment_env_race_survives_single_worker_2026_07_23.md is resolved.`
+- [ ] [SCRIPT] P3. Add TestIsBundledChainShardCboeCorrection (3 tests, verified passing in isolation) to
+      tests/unit/test_pipeline_e2e_check.py once mtds_deployment_env_race_survives_single_worker_2026_07_23.md is
+      resolved. **(na-eligibility-audit 2026-08-09: un-escaped from an inline-backtick-wrapped line -- was invisible to
+      checkbox tooling; content unchanged, `mtds_deployment_env_race_survives_single_worker_2026_07_23.md` confirmed
+      still `status: open`.)**
 - `~~- [ ] [SCRIPT] P3. Fix IS's FX force/skip status label~~` — **SUPERSEDED 2026-07-23**: rather than relabel the
   honest-absence status, built the actual missing adapter. `instruments-service` had zero reference-data adapter for FX
   (`NO_ADAPTER_YET`) even though MTDS already has a fully-working Yahoo-sourced FX tick/OHLCV path — a research agent
@@ -431,7 +448,10 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
   > scoping list (which emit the `instr-backfill-*-pipelinecheck-*` / `mtds-backfill-*-pipelinecheck-*` VM names this
   > note describes); the actual native-shutdown-script code fix shipped `deployment-service@db5d3c7` — the gap this note
   > flags is now closed at both the doc-scoping and launcher levels.
-- `- [ ] [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever running --apply — unchanged from the earlier entry; still awaiting operator review, not touched this continuation.`
+- [ ] [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever
+      running --apply — unchanged from the earlier entry; still awaiting operator review, not touched this continuation.
+      **(na-eligibility-audit 2026-08-09: un-escaped from an inline-backtick-wrapped line -- was invisible to checkbox
+      tooling; content unchanged.)**
 
 ### 2026-07-24 — session wrap-up (operator asked to stop after shipping local + pre-compact)
 
@@ -545,3 +565,14 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   still does not exist -- §4 frames it only as a "Recommendation," not yet scoped as its own buildable todo. Two
   independent same-day audits (this doc and the blocker doc itself) now converge on the identical conclusion. Gate
   correctly stays blocked, not prematurely. Nothing to reclassify.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:adb10cf9ee27521c]: **KEEP-NA,
+  stale items -- open-item count corrected 2 -> 4, 1 citation flagged (not corrected).** A dedicated sub-agent hunter
+  found 2 ADDITIONAL genuinely-open items (the CboeCorrection-test todo and the retire-phase-candidate-review todo, both
+  later in this doc) that were invisible to checkbox tooling because the entire line was wrapped in inline backticks --
+  un-escaped both (content unchanged, verified still-open via their own cited dependencies) so future counts are
+  accurate. Also flagged (not corrected, see the P0 item's own inline note above): the P0/P1 billing-suspension +
+  chain-bundle-sampler citations may be stale for the specific cells today's
+  `tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` narrows to, but confirming the exact narrowed-scope claim
+  needs a direct read before editing a critical-path gate's citation -- left for a follow-up pass. Doc stays NA (still a
+  genuine, multi-part gated mix).

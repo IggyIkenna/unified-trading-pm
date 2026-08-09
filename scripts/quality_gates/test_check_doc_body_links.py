@@ -169,3 +169,69 @@ def test_duplicate_broken_target_in_one_doc_reported_once(tmp_path: Path) -> Non
 
     broken = find_broken_links([doc], tmp_path)
     assert broken == {"plans/source.md": [(1, "missing.md")]}
+
+
+def test_backtick_codex_citation_resolves(tmp_path: Path) -> None:
+    (tmp_path / "codex" / "02-data").mkdir(parents=True)
+    (tmp_path / "codex" / "02-data" / "target.md").write_text("# Target\n", encoding="utf-8")
+    (tmp_path / "plans").mkdir(parents=True)
+    doc = tmp_path / "plans" / "source.md"
+    doc.write_text("SSOT: `codex/02-data/target.md`\n", encoding="utf-8")
+
+    broken = find_broken_links([doc], tmp_path)
+    assert broken == {}
+
+
+def test_backtick_leading_slash_codex_citation_resolves(tmp_path: Path) -> None:
+    (tmp_path / "codex" / "02-data").mkdir(parents=True)
+    (tmp_path / "codex" / "02-data" / "target.md").write_text("# Target\n", encoding="utf-8")
+    (tmp_path / "plans").mkdir(parents=True)
+    doc = tmp_path / "plans" / "source.md"
+    doc.write_text("SSOT: `/codex/02-data/target.md`\n", encoding="utf-8")
+
+    broken = find_broken_links([doc], tmp_path)
+    assert broken == {}
+
+
+def test_broken_backtick_codex_citation_is_flagged(tmp_path: Path) -> None:
+    (tmp_path / "plans").mkdir(parents=True)
+    doc = tmp_path / "plans" / "source.md"
+    doc.write_text("SSOT: `codex/02-data/does-not-exist.md`\n", encoding="utf-8")
+
+    broken = find_broken_links([doc], tmp_path)
+    assert broken == {"plans/source.md": [(1, "codex/02-data/does-not-exist.md")]}
+
+
+def test_backtick_non_codex_citation_is_never_checked(tmp_path: Path) -> None:
+    """Only `codex/`/`/codex/`-prefixed backtick citations are in scope for this first cut — other
+    backtick-cited trees (plans/, agents/, ...) are left for a later pass, per the issue doc."""
+    (tmp_path / "plans").mkdir(parents=True)
+    doc = tmp_path / "plans" / "source.md"
+    doc.write_text("Plan: `plans/active/does-not-exist.md`\n", encoding="utf-8")
+
+    broken = find_broken_links([doc], tmp_path)
+    assert broken == {}
+
+
+def test_backtick_codex_glob_pattern_example_is_never_checked(tmp_path: Path) -> None:
+    """A wildcard-glob illustration like `codex/**.md` in prose (not a real citation) must not be
+    extracted as a path — `_resolve()`'s archive-fallback glob() raises on a literal "**" segment
+    that isn't a whole path component."""
+    (tmp_path / "plans").mkdir(parents=True)
+    doc = tmp_path / "plans" / "source.md"
+    doc.write_text("Format: every codex-shaped ref in `plans/**.md` + `codex/**.md` must be ...\n", encoding="utf-8")
+
+    broken = find_broken_links([doc], tmp_path)
+    assert broken == {}
+
+
+def test_backtick_codex_citation_inside_fenced_code_block_is_ignored(tmp_path: Path) -> None:
+    (tmp_path / "plans").mkdir(parents=True)
+    doc = tmp_path / "plans" / "source.md"
+    doc.write_text(
+        "Example:\n```\nSSOT: `codex/02-data/does-not-exist.md`\n```\nReal text after.\n",
+        encoding="utf-8",
+    )
+
+    broken = find_broken_links([doc], tmp_path)
+    assert broken == {}
