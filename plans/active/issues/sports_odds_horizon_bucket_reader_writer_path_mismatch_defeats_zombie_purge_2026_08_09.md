@@ -196,16 +196,39 @@ This needs a human/cross-repo design call, not a mechanical fix — three shapes
       `test_read_bucketed_odds.py` cover: manifest-row-present → no legacy fallback even when a legacy shard still
       physically exists (the exact zombie scenario); manifest-row-absent → legacy fallback preserved; lookup exception →
       fails closed. Repo: features-service.
-- [ ] [DATA] P2. Once the reconciliation fix lands, re-run the read-only sweep
+- [x] ✅ [DATA] P2. Once the reconciliation fix lands, re-run the read-only sweep
       (`sweep_sports_odds_horizon_bucket_zombie_contamination_2026_07_27.py`) against BOTH path shapes (canonical +
       legacy) to get an accurate, current contamination count before re-attempting the purge — the sweep script itself
       only checks canonical today and would need the same dual-prefix probe `gcs_reader.py` already has. Repo:
-      market-tick-data-service.
-- [ ] [DATA] P2. **Re-attempt `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s zombie-tick purge todo** (parts a +
-      b: purge/re-derive the contaminated shards via `reprocess_sports_odds.py --force` using todo 2 above's updated
+      market-tick-data-service. **Shipped `market-tick-data-service@926f9b20`/`c2dda59a7`**: dual-prefix `list_blobs`
+      probe + `_path_shape` tagging, QG green. Re-run against production recovered the ORIGINAL 2026-07-27 sizing
+      exactly: 37 contaminated shards / 187 rows across 18 dates (2025-07-31 → 2025-11-13), **100% at the legacy path
+      shape** (0 at canonical) — direct confirmation of this issue's root-cause finding.
+- [x] ✅ [DATA] P2. **Re-attempt `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s zombie-tick purge todo** (parts
+      a + b: purge/re-derive the contaminated shards via `reprocess_sports_odds.py --force` using todo 2 above's updated
       dual-prefix contamination count, then re-run `verify_ml_readiness.py` and confirm the 17-date failure set
       clears/shrinks) now that the reader/writer mismatch this issue documents is fixed. Repo: market-data-processing-
-      service.
+      service. **Done**: ran `reprocess_sports_odds.py --force` per-day (single-day range, surgical — not the full
+      backfill range) against all 18 sweep-identified dates; manifest-verified all 18 now carry a coarse
+      `odds_horizon_bucket` row (`capture_status=captured`); spot-verified `read_bucketed_odds('2025-09-02')` now
+      returns 0 rows (was silently serving 3 zombie RUSSIA_PREMIER_LEAGUE rows before the fix). Re-ran
+      `verify_ml_readiness.py --start-date 2025-09-01 --end-date 2025-11-30`: **the 17-date failure set cleared to 0
+      FAILED** (88/91 dates passed, gate met: YES). 3 dates (2025-10-23, 2025-11-11, 2025-11-13 — all 3 among the 18
+      just-purged dates) report MISSING (no `odds_features` parquet at all, 404) rather than FAILED — this is NOT
+      "genuine honest-absence" as the plan's done-when anticipated; it's a distinct downstream gap (see new todo below),
+      tracked separately rather than silently folded into this checkbox's evidence.
+- [ ] [DATA] P2. **New finding (2026-08-09, slot 26)**: `odds_features` feature-export parquet is entirely missing for
+      the 3 dates above despite the underlying `odds_horizon_bucket` source now being correctly re-derived. Investigated
+      one date (`2025-10-23`) via
+      `python -m features_service.sports.cli.main --operation compute --mode     batch --asset-group SPORTS --date 2025-10-23 --tables odds_features --skip-fetch`:
+      it logged `env=dev` (unexpected — invoked with `DEPLOYMENT_ENV_SHORT=prd`/`CLOUD_PROVIDER=gcp`, needs confirming
+      which bucket/manifest this env label actually resolves to) and
+      `compute_pending_dates: manifest-aware prune skipped 1/1 already-fully-resolved dates ... nothing to do` — i.e.
+      this CLI's OWN manifest pre-flight thinks the date is already resolved and silently no-ops, even though the
+      physical `features.parquet` is missing (404). This is plausibly the SAME reader/writer/manifest-mismatch class
+      this whole issue is about, one layer downstream (odds_features' own pending-dates pruning vs. its physical output)
+      — not confirmed, needs its own investigation before a fix. Do NOT reflexively add `--force` without first
+      resolving the `env=dev` discrepancy (risk of writing to the wrong environment/bucket). Repo: features-service.
 - [ ] [REVIEW] P2. **Option C follow-up (non-blocking, operator ruling 2026-08-09 — same
       `sports_satellite_ao_dispatch_batch5_2026_07_26.md` Progress Log entry cited in todo 1 above)**: locate and
       re-engage whatever effort owns "the bucket-cutover lane" (referenced by name in `reprocess_sports_odds.py`'s
@@ -229,3 +252,13 @@ This needs a human/cross-repo design call, not a mechanical fix — three shapes
   bucket-cutover-lane cleanup) rather than leaving them as prose in "Recommended decision." The batch5 plan's
   zombie-tick checkbox itself stays unflipped — the reader/writer mismatch is fixed but the purge has not actually been
   re-run yet and `verify_ml_readiness.py` has not been re-verified.
+- **2026-08-09 (slot 26, data_engineering, continued — operator directive to proceed with the full purge)**: Shipped the
+  sweep dual-prefix fix (`market-tick-data-service@926f9b20`/`c2dda59a7`) and re-ran it against production — recovered
+  the exact original 2026-07-27 sizing (37 shards / 187 rows / 18 dates, 100% legacy path shape). Ran
+  `reprocess_sports_odds.py --force` per-day against all 18 dates (manifest-verified: all 18 now have a coarse
+  `captured` row); spot-verified the reader no longer serves the RUSSIA_PREMIER_LEAGUE zombie rows for 2025-09-02.
+  Re-ran `verify_ml_readiness.py` — **17-date failure set cleared to 0 FAILED**, gate met YES. Found + documented a new,
+  separate downstream gap (3 dates missing `odds_features` output entirely — todo above) rather than either silently
+  ignoring it or forcing an uninvestigated fix into a third script/manifest layer. Flipping
+  `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s zombie-tick checkbox now — its literal parts (a) purge and (b)
+  verify_ml_readiness scope are genuinely complete; the residual is tracked as its own todo, not glossed over.
