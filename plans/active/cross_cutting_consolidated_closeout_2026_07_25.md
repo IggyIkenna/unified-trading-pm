@@ -164,9 +164,12 @@ anywhere in this corpus; flag to the operator whether it needs its own per-AG pl
   full-2018-history seed extension, gated on an operator index-size review).
 - **G0** → `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` — narrow tracker fully green (9/9);
   broader Work-units list still open: M6 capability-driven startup gate, M7 autonomous-recovery replay triggers, T+1
-  batch/live reconciliation + live-TTL, M8 cadence column-wiring, 1 stale codex doc, UI reference-data regen (stale
-  token), a reverted `_merge_dataframes` dedup-key fix needing a real design. **2 CICD findings + 1 sports test item
-  misfiled here belong to `cicd_retire_staging_branch_2026_06_27.md`/sports — migrate, don't work in place.**
+  batch/live reconciliation + live-TTL, M8 cadence column-wiring, 1 stale codex doc, a reverted `_merge_dataframes`
+  dedup-key fix needing a real design, and the **"STANDARDISE per-AG manifest stamping" parent todo** (full closure
+  still unverified per the doc's own text). **Corrected 2026-08-09 (plan_reconciler agt-733350)**: UI reference-data
+  regen is `[x]` DONE (re-verified 2026-07-28, `grep -c hyperliquid_rest`=0 across all 4 named files) and the 2 CICD
+  findings + 1 sports test item are `[x]` CLOSED-AS-SUPERSEDED/REHOMED 2026-07-28 — both dropped from this list, no
+  migration needed.
 - **G1** → `is_catalogue_g1_root_audit_log_2026_07_24.md` (verbatim coordinator extract; 3 genuinely open: G1.run once
   the v9 migration below lands, G1.run-full-history + G1.run-prediction both operator-decision-gated) ← feeds from
   `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (its "Folded-in I-2" section: 7 open P0/P1 —
@@ -185,10 +188,9 @@ anywhere in this corpus; flag to the operator whether it needs its own per-AG pl
   `legacy_bucket_dual_write_decommission_2026_07_24.md` (prediction AG fully closed; cefi/defi/tradfi/sports all still
   open — per-AG mechanical steps once each L3 canon plan reaches green, a tarball-migration blocker, a legacy-scheduler
   migrate-vs-retire decision).
-- **G3.5** → `infra_ops_residual_migration_verification_2026_07_24.md` (9 open: a non-operator-gated full sweep, a
-  RESUME-runbook un-pause gated on tradfi fleet-drain, rollup Cloud Run image-lag fix, deployment-ui could-exist-vs-
-  capture surfacing, local-dev flakiness, `unique_instruments` precompute, an irreversible `schema_version` re-stamp
-  needing operator sign-off, 2 pointer-only items).
+- **G3.5** → `infra_ops_residual_migration_verification_2026_07_24.md` (**3 open as of 2026-08-09** — down from the
+  original 9, verified plan_reconciler agt-733350: 6 flipped `[x]` 2026-08-01→08-08 — a non-operator-gated full sweep,
+  the operator-deferred `schema_version` re-stamp, and a pointer-only item remain).
 
 **Close-out criterion**: the coordinator's own registry shows 0 orphans; G0/G1/G3.5's AO-eligible items above closed or
 explicitly re-deferred with a named successor; **G5's execution ownership resolved** (currently a gap — no doc in this
@@ -199,9 +201,10 @@ inside each AG's own consolidated closeout).
 
 **Sources**: `issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md` (prediction green; sports/
 tradfi/defi relabel work confirmed stale-as-already-done; **cefi NOT adjudicated** — CF-4 blank-source 54%, CF-5 189,665
-untyped reasons, Era-B 521,513 chain-rows, CF-1 string schema_version all still open; legacy-bucket delete ×4 AGs is
-human-hard-stop; tradfi 13,971-row v4 tail is fleet-drain-gated) +
-`issues/manifest_v6_batch3_residual_ orphaned_work_2026_07_21.md` (mostly closed; 2 items correctly
+untyped reasons, Era-B 521,513 chain-rows, CF-1 string schema_version all still open; **legacy-bucket delete ×3 AGs
+RESOLVED 2026-08-08** (operator, NA-corpus blocker digest round 5, id=57 — all 3 remaining buckets confirmed already
+gone, 404 on live probe, sole todo `[x]`; verified plan_reconciler agt-733350 2026-08-09); tradfi 13,971-row v4 tail is
+fleet-drain-gated) + `issues/manifest_v6_batch3_residual_ orphaned_work_2026_07_21.md` (mostly closed; 2 items correctly
 `depends_on`+`gate_on_depends`-gated on cefi's own v6 migration landing).
 
 **⚠️ Overlap flag**: both docs are downstream of cefi's own v6/G2 tracks and may already be substantially covered by
@@ -255,20 +258,24 @@ pending an operator ruling.
 TF/yaml removal, a real unresolved **32-item TF plan drift finding** — pre-existing IAM-member/ scheduler DESTROYs
 unrelated to the fold, blocking a clean `apply`, still unresolved and worth flagging to whoever owns Track 6's IAM
 work), `bucket_fold_features_2026_07_17.md` (**post-cutover redeploy+verify DONE 2026-07-26**,
-`unified-trading-pm@e3a1174aa` — was: "[IN FLIGHT 2026-07-25] … being run now"; the fold cutover itself is complete, 2
-lower-priority items remain: a P2 IAM+lifecycle join and a P3 alias sunset),
-`bucket_fold_execution_strategy_2026_07_17.md` (done 2026-07-18, byte-parity + adversarial-verify evidence),
-`bucket_fold_portfolio_state_2026_07_17.md` (done; open: an operator retention-window decision — live-trading snapshots
-may need longer than the default 60-day STANDARD-before-COLDLINE) → `bucket_estate_consolidation_closeout_2026_07_24.md`
-(**2 of the 3 in-flight items landed 2026-07-26**, `unified-trading-pm@a9b57d752` — the 11-alias `_KIND_ALIASES`
-hard-removal re-verified already-shipped and the cosmetic asset-group-parity drift cleaned up; the ml-legacy-bucket
-delete stays OPEN as a prod-bucket operator hard stop [re-verified safe, deliberately not executed]; recon-bucket E2E
-producer-chain stand-up stays explicitly descoped, cross-plan-deletion checkpoint stays tracking-only, 3 audit-issue
-docs need re-confirm).
+`unified-trading-pm@e3a1174aa` — was: "[IN FLIGHT 2026-07-25] … being run now"; the fold cutover itself is complete —
+**corrected 2026-08-09**: only 1 item remains (P3 alias sunset); IAM+lifecycle shipped `deployment-service@76a2459`
+2026-07-28, reaffirmed by 4 dated na-eligibility-audit passes through 2026-08-07),
+`bucket_fold_execution_strategy_2026_07_17.md` (fold cutover done 2026-07-18, byte-parity + adversarial-verify evidence
+— **but 3 residual todos remain open** (AWS leg+TF-drift assert, IAM+lifecycle join, P3 alias sunset), reaffirmed open
+by na-eligibility-audit 2026-08-07; not fully closed as this Track previously implied),
+`bucket_fold_portfolio_state_2026_07_17.md` (fold done; **the retention-window question is RESOLVED 2026-08-08**
+(operator, NA-corpus blocker digest round 5, id=45 — 60-day default confirmed fine, no exception needed); what remains
+is the mechanical IAM-join + lifecycle-policy execution, not an open decision) →
+`bucket_estate_consolidation_closeout_2026_07_24.md` (**corrected 2026-08-09**: only 2 items genuinely still open — the
+ml-legacy-bucket delete stays OPEN as a prod-bucket operator hard stop [re-verified safe, deliberately not executed],
+and recon-bucket E2E producer-chain stand-up stays explicitly descoped; the 11-alias `_KIND_ALIASES` hard-removal, the
+cross-plan-deletion checkpoint, AND the 3 audit-issue docs' re-confirm are all `[x]` DONE, dated 2026-07-31 with full
+evidence — the prior "checkpoint tracking-only / docs need re-confirm" framing was stale).
 
-**Close-out criterion**: the closeout doc's remaining todos all closed or re-deferred with a named owner (count
-deliberately not restated here — read the doc); the ml-fold's 32-item TF/IAM drift finding handed to Track 6; the
-portfolio-state retention question ruled by the operator.
+**Close-out criterion**: the closeout doc's remaining 2 todos (ml-legacy-bucket delete, recon-bucket E2E) closed or
+re-deferred with a named owner; the ml-fold's 32-item TF/IAM drift finding handed to Track 6; **the portfolio-state
+retention question is RULED** (2026-08-08, 60d confirmed) — only its mechanical IAM+lifecycle execution remains.
 
 ## Track 6 — Bucket IAM / credential-gated hygiene · P1 — **✅ both credential blockers cleared 2026-07-25**
 
@@ -284,13 +291,10 @@ otherwise; verified via an independent re-read) +
 [`issues/datapoint_validation_results_bucket_missing_2026_07_21.md`](/plans/archive/issues/datapoint_validation_results_bucket_missing_2026_07_21.md)
 (**DONE, archived 2026-07-26** — all 7 todos closed, `status: resolved`).
 
-**Close-out criterion (updated)**: `bucket_iam_write_protection_per_tier`'s Phase 1 SA design re-derived against the
-real `-test-`/`-prd-` naming, then P1.1-P1.3 terraform authored + applied;
-`datapoint_validation_results_bucket_missing`'s 3 residual items closed.
-
-**Close-out criterion**: operator runs the handed-off commands; Phase 1 terraform ships once bucket names are verified;
-the `DATA_WRITE` auditConfigs entry removed; `datapoint_validation_results_bucket_missing`'s 3 residual items closed
-independent of the credential gate.
+**Close-out criterion**: `bucket_iam_write_protection_per_tier`'s Phase 1 SA design re-derived against the real
+`-test-`/`-prd-` naming, then P1.1-P1.3 terraform authored + applied (operator runs the handed-off commands; the
+`DATA_WRITE` auditConfigs entry removed — already done); `datapoint_validation_results_bucket_missing`'s 3 residual
+items closed independent of the credential gate.
 
 ## Track 7 — Instruments-service / MTDS SSOT reconciliation + foundation overlap · P1
 
@@ -405,14 +409,16 @@ conflict clears; all other bounded residuals closed.
 ## Track 11 — Macro/econ coverage + perp funding semantics · P2
 
 **Sources**: `issues/macro_micro_econ_data_capture_audit_2026_06_05.md` (reference/audit doc, no live dispatch-ready
-todos of its own — 4 unanswered operator questions on altdata sourcing; execution lives externally in
-`data_ completion_to_100_all_ag_2026_06_21.md`) + `issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` (2/9
-done; open: exact discrete per-settlement funding model, historical cadence tracker, Aster funding backfill run, Aster
-pre-funding-genesis backfill [blocked on GAP4], Aster live book WS connector, margining reverify, and **GAP4** —
-reconcile `expected_start_dates.yaml`'s trades entry, which must precede the pre-genesis backfill).
+todos of its own — of the original 4 operator questions, 2 substantively answered, 2 narrowed to FRED-only/moot per the
+doc's own text; execution lives externally in `data_completion_to_100_all_ag_2026_06_21.md`) +
+`issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` (**corrected 2026-08-09 — 0 open / 20 done**, was stale
+"2/9 done": the exact discrete per-settlement funding model, historical cadence tracker, Aster funding backfill run,
+Aster live book WS connector, margining reverify, and GAP4 all shipped 2026-07-21→08-04, after this Track was authored;
+the Aster pre-funding-genesis backfill closed as N/A — GAP4's resolution eliminated that window).
 
-**Close-out criterion**: the 4 macro operator questions answered (execution tracked elsewhere, this stays a pointer);
-GAP4 lands first, then the perp-funding items ship in dependency order.
+**Close-out criterion — MET, pending archival review**: perp-funding doc fully shipped; the macro doc's 2 substantively
+answered + 2 narrowed-to-moot questions are the accepted final state (an implicit rather than explicit closure — flag if
+a stricter reading is wanted).
 
 ## Track 12 — Silent-wrong-answer class + distinct-values census · P0/P1
 
@@ -485,9 +491,9 @@ same-day; open: DeFi handlers have zero concurrency at any level, needs an `asyn
 per-site verification across ~12 DeFi handlers — not a mass edit, needs care) +
 `issues/manifest_index_read_oom_ canonical_cache_2026_06_24.md` (operationally mitigated; the durable fix — bound
 `_CANONICAL_CACHE` per bucket — is undone, touches the LIVE cefi/sports/tradfi manifest path, validate carefully) +
-`issues/manifest_reprocessing_ generic_utility_2026_07_07.md` (fully open, 4 todos — design → implement
-`select_shards_for_reprocess()` → wire as an IS CLI subcommand → optionally retire 13 near-identical one-off scripts;
-concrete design already specified) +
+[issues/manifest_reprocessing_generic_utility_2026_07_07.md](/plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md)
+(**RESOLVED + ARCHIVED 2026-07-30** — corrected 2026-08-09, was stale "fully open, 4 todos": all 4 done — design,
+`select_shards_for_reprocess()` implemented, wired as an IS CLI subcommand, 13 one-offs deliberately left in place) +
 [issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md](/plans/archive/issues/vm_exec_stall_watchdog_checkpoint_regex_mismatch_2026_08_03.md)
 (self-dispatched, `assigned_vm: planning` — `vm-exec-with-gcs-tee.sh`'s `STALL_PROGRESS_REGEX=checkpoint` self-kills any
 real backfill VM across all 20 launchers using that wrapper; regex fix identified, VM relaunch/verify in flight).
@@ -499,42 +505,26 @@ designed+implemented+wired.
 
 ## Track 15 — Test/CI hygiene + closed/retriage-only · P2/P3
 
-**Sources (hygiene — ✅ all 3 RESOLVED + ARCHIVED 2026-07-25, nothing left in flight)**: was "(hygiene, all [IN FLIGHT
-2026-07-25])"; verified 2026-07-26 that every one of the three has landed in `plans/archive/issues/` —
+**Sources (hygiene, ✅ all 3 resolved + archived 2026-07-25/26)**:
 [`local_storage_provider_shared_tempdir_test_state_leak_2026_07_20.md`](/plans/archive/issues/local_storage_provider_shared_tempdir_test_state_leak_2026_07_20.md)
-(bind to pytest `tmp_path`; archived `unified-trading-pm@e1580ac0a`) +
+·
 [`pytest_posixpath_str_drv_attributeerror_flake_2026_07_17.md`](/plans/archive/issues/pytest_posixpath_str_drv_attributeerror_flake_2026_07_17.md)
-(archived `unified-trading-pm@74df80162`) +
-[`instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`](/plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md)
-(archived `unified-trading-pm@e1580ac0a`).
+·
+[`instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`](/plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md).
 
-**Sources (closed or needs-retriage only, no active work)**:
+**Sources (closed or needs-retriage only)**:
 
 - [`cross_ag_never_seeded_backlog_scan_2026_07_06.md`](/plans/archive/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md)
-  — **DONE + ARCHIVED** (`unified-trading-pm@b5805e7aa`, all 7 markers closed). Was self-contradictory here, reading
-  both "(ARCHIVED)" and "a workflow is … archiving it now" in the same sentence; the archival is finished.
-- `issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` — **RESOLVED-IN-PLACE 2026-07-25**: all 4
-  originally-flagged files (book_microstructure_handler.py / perp_funding_handler.py / honest_coverage.py /
-  source_priority.py) confirmed non-regressions (baseline already regenerated by `unified-trading-pm@ba098a7cc`,
-  re-verified this pass) — `status: resolved`, all 4 todos closed, no code change needed. **ARCHIVED 2026-07-26 to
-  [`plans/archive/issues/`](/plans/archive/issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md) by
-  `unified-trading-pm@57ed9271c` — but WITHOUT the `[unlock-plan]` approval the doc's own `locked_by: live-defi-rollout`
-  is supposed to require, and the archived copy still carries that lock (ritual step 6 skipped).** This pass had
-  deliberately parked the archival for exactly that approval; a concurrent escalation-driven remediation archived it
-  anyway. Root cause filed as
-  [`issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md`](/plans/archive/issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md)
-  — the gate lives only in `quality-gates.sh`, which `docs(plans):` commits are explicitly routed away from.
-- `issues/empty_reprobe_ disagreement_2026_06_22.md` (stale — auto-filed over a month ago, `locked_by` looks like an
-  abandoned lock; likely much of its scope superseded by Track 12's audits; recommend a fresh re-probe or archive rather
-  than direct dispatch).
-- `issues/instruments_remaining_work_audit_2026_07_10.md` (a CeFi-consolidated-closeout-style discoverability index, now
-  15 days stale relative to 2026-07-25 — several docs it indexed have since split/archived; valuable as a structural
-  template for THIS doc, but needs a "historical snapshot" banner, not treated as current inventory).
+  — DONE + ARCHIVED, all 7 markers closed.
+- `issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` — RESOLVED-IN-PLACE +
+  [ARCHIVED](/plans/archive/issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md), all 4 flagged files
+  confirmed non-regressions. **Archived WITHOUT its required `[unlock-plan]` approval** (lock-skip incident; root cause
+  filed:
+  [locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md](/plans/archive/issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md)).
+- `issues/empty_reprobe_ disagreement_2026_06_22.md` — stale, abandoned-looking lock; recommend re-probe or archive.
+- `issues/instruments_remaining_work_audit_2026_07_10.md` — historical-snapshot banner ✅ already added.
 
-**Close-out criterion**: **the hygiene items are all closed ✅ (3 archived 2026-07-25)**;
-`mtds_uac_adapter_contract_baseline_regression` ✅ resolved + archived, with the un-cleared lock retro-fix tracked in
-the gate issue doc above; `empty_reprobe_disagreement` re-triaged or archived; `instruments_remaining_work_audit` gets a
-historical-snapshot banner.
+**Close-out criterion — MET** except `empty_reprobe_disagreement` (re-triage or archive).
 
 ## Track 16 — UAC/manifest/catalogue schema-wide audits · P1/P2
 
@@ -632,7 +622,7 @@ coverage-summary, flat `capture_status` matrix endpoint — all data-status/API 
 **Close-out criterion**: all 5 docs' open P1/P2 items ship; the v9-migration gate on `_tab_and_downloads_remediation`
 re-checked before dispatch (do not surface pre-migration data through the UI, per the data-pipeline-correctness rule).
 
-## Track 21 — Data-pipeline alert/monitoring bugs · P1
+## Track 21 — Data-pipeline alert/monitoring bugs · P1 — **near-complete, confirmed 2026-08-09 (plan_reconciler agt-733350)**
 
 **Sources**:
 [/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md](/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md)
@@ -644,8 +634,10 @@ re-checked before dispatch (do not surface pre-migration data through the UI, pe
 [issues/live_mode_event_sink_topic_missing_2026_06_21.md](/plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md)
 (fleet-wide latent bug: live-mode lifecycle event sink publishes to non-existent PubSub topics, MTDS/MDPS).
 
-**Close-out criterion**: all 4 alerting bugs fixed + verified live (the false-positive fix, the missing PubSub route,
-the cron launcher-SSOT reconcile, the missing `{service_name}-events` topic creation for live-mode launches).
+**Close-out criterion — 3/4 done, 4th resolved but unarchived**: the first 3 sources are archived (false-positive fix,
+PubSub route, cron launcher-SSOT reconcile all shipped); `live_mode_event_sink_topic_missing_2026_06_21.md` is
+`status: resolved`, all todos `[x]`, self-declared archive-eligible — but carries `locked_by: live-defi-rollout`, so per
+this workspace's HARD RULE it needs an operator `[unlock-plan]` before archival (not auto-archived here).
 
 ## Track 22 — Manifest-hygiene / phantom-capture monitor instances · P2
 
@@ -764,10 +756,9 @@ batch)
 
 ### Genuinely cross-cutting, operator-gated (NOT a mistag — tracked here pending an operator ruling, not a retag)
 
-- [`strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md`](/plans/active/issues/strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md)
-  — `drift_direction: needs-decision`: is `/codex/04-architecture/live-strategy-config-hot-reload.md`'s documented
-  safe-field allow-list/`UnsafeConfigChangeError` the target to BUILD, or is the doc wrong and the shipped
-  unconditional-swap behavior the accepted state? Unruled since 2026-07-31.
+_(empty as of 2026-08-09 — `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` was RULED 2026-08-06, option A;
+removed from this list, verified plan_reconciler agt-733350: its own `drift_direction` frontmatter and a stale same-day
+na-eligibility-audit line still need updating in that doc directly.)_
 
 ### Genuinely cross-cutting, real open work, currently uncovered (orphaned_never_touched)
 
