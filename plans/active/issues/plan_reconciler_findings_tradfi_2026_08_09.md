@@ -275,4 +275,35 @@ design.
 3. **T1's `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`/`batch8_2026_08_08.md`** — cited as context for the
    stale-dispatch-vehicle finding but not editable this run (~11.6h old).
 
-(populated if context runs low before full coverage)
+## Deferred work after 2026-08-09 (pre-compact checkpoint, context ~78%)
+
+| Item                                                              | State / why deferred                                                                           | Blocked on                                         |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| STEP 8 loop-and-wait (this dispatch's final step)                 | **Cannot be done yet** — not blocked on this session, waiting on a human-paced event           | Operator answer to BLK-dce00835 or BLK-345eb7ce    |
+| Redispatch the 81,454-row `--apply` (Follow-up todos #1)          | **Operator-owned / next-audit-owned** — not this role's job to draft AO-dispatch batches       | Next `/ag-closeout-audit tradfi` or satellite pass |
+| `ag_closeout_audit_rollout_2026_07_25.md` close+archive (todo #2) | **Operator-owned / next-tranche-owned** — genuinely multi-AG, outside single-tranche authority | `cross-cutting` tranche's next run                 |
+| `agents/plan_reconciler.md` 2 stale details (todo #3)             | **Operator-owned** — file is outside `plans/**`, this role cannot write it                     | A human or a differently-scoped agent              |
+| T2/T3 grace-blocked fixes (Grace-blocked section above)           | **Cannot be done yet** — 12h HARD LIMIT, docs were <12h old at run start                       | Elapsed time (grace clears ~2026-08-09 14:00 UTC)  |
+
+**Recommended next action** (for whoever resumes this dispatch, whether via the armed `ScheduleWakeup` or a fresh
+session): re-check `GET /api/slots/3/messages` for the 2 blocked-question answers first — if both are resolved, apply
+them, re-POST the result, and call `/done`; if neither has arrived, the correct move is simply to wait longer (this is a
+genuine external dependency, not a stall) — do not re-do STEP 1-7's work, it is already complete and pushed
+(`unified-trading-pm@0b90c6e6c` on review branch `plan_reconciler/agt-a3e83c`, PR
+[#2652](https://github.com/IggyIkenna/unified-trading-pm/pull/2652)).
+
+### Lessons carried forward (see also "Near-misses" above)
+
+- `git diff --stat A..B` (two-dot) is the wrong check for "will my PR look noisy" — GitHub's PR view uses
+  three-dot/merge-base semantics; check `A...B` instead before reflexively rebasing.
+- `git push --force`/`--force-with-lease` is unconditionally guardrail-blocked for this role, with no
+  own-branch-vs-shared-branch carve-out — don't attempt it even on a dispatch-exclusive review branch.
+- `git reset --hard` is also guardrail-blocked; `git checkout -B <branch> <sha>` is the sanctioned way to move a local
+  branch pointer back to a known-good (already-pushed) commit without it.
+- `fix_frontmatter.py`/`fix_todo_format.sh` have no real `--check`/dry-run flag — omitting file args runs them in full
+  APPLY mode over the WHOLE corpus. Always pass explicit file args.
+- A `git mv` + content-edit commit can silently land as a bare rename (0 diff) on a busy shared host — always verify at
+  HEAD (`git show HEAD:<path> | grep <the-thing>`) before trusting a "commit succeeded" message.
+- A whitespace-normalization fix scoped to a detected corrupted line-RANGE can miss a second corrupted region elsewhere
+  in the same doc — a corpus-wide `sed` pass (unscoped) is more reliable once you've confirmed the doc has no
+  legitimately-deep-nested content that 20+ leading spaces would false-positive on.
