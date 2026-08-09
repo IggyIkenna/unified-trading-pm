@@ -361,3 +361,8 @@ it's titled after never consults the manifest) is unchanged today.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries) — swapped in
   `sports_taxonomy_p3_consumers_2026_08_08.md` (the doc named verbatim as what resolves this issue) in place of the
   batch2 finalize companion.
+- **round-9 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — reconfirmed `sports_taxonomy_p3_consumers_2026_08_08.md`
+  is still `status: active` / `assigned_vm: planning` with its own open `[REVIEW] P1` todo
+  (`sports_dependency.py::_build_fixture_league_map_from_gcs` — enumerate callers, line ~169) citing this doc verbatim
+  — the implementing plan is genuinely in-flight, not stalled. No change: this doc's sole open todo stays
+  resolved-by-citation to that plan's finalize.
