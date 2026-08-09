@@ -146,10 +146,19 @@ if [ "${1:-}" = "--only" ]; then
 
     # Detector 1 (backtick-padding): compare against HEAD's own violations only -- this
     # detector isn't threshold-based, so it isn't subject to the rec. (A) gap below.
-    cur_backtick="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
-    head_backtick="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | sort -u)"
+    # LC_ALL=C pinned on every sort/comm below (2026-08-09,
+    # prosewrap_padding_precommit_gate_locale_false_positive_2026_08_09.md): under a
+    # non-C shell locale, UTF-8 content (em-dashes, curly quotes, checkmarks) piped
+    # through sort/comm can throw "Illegal byte sequence" (musl libc) and silently
+    # degrade into a truncated/empty comparison set, false-flagging byte-identical HEAD
+    # content as a NEW violation. C is also the only locale that guarantees byte-order
+    # (not collation-order) comparison, which is what a diff-by-set operation like
+    # comm(1) actually needs -- both sides must sort identically for comm to be correct,
+    # and only a fixed, content-agnostic collation guarantees that across environments.
+    cur_backtick="$(_detect_hits "$f" | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | LC_ALL=C sort -u)"
+    head_backtick="$(printf '%s' "$head_content" | _detect_hits | grep ':backtick-padding:' | sed -E 's/^[0-9]+://' | LC_ALL=C sort -u)"
     new_backtick=""
-    [ -n "$cur_backtick" ] && new_backtick="$(comm -23 <(printf '%s\n' "$cur_backtick") <(printf '%s\n' "$head_backtick") 2>/dev/null || true)"
+    [ -n "$cur_backtick" ] && new_backtick="$(LC_ALL=C comm -23 <(printf '%s\n' "$cur_backtick") <(printf '%s\n' "$head_backtick") 2>/dev/null || true)"
 
     # Detector 2 (over-indent): 2026-08-09 rec. (A),
     # prosewrap_padding_precommit_gate_blocks_already_affected_files_2026_08_09.md.
@@ -163,10 +172,10 @@ if [ "${1:-}" = "--only" ]; then
     # appear ANYWHERE in HEAD's content -- i.e. genuinely worker-authored, not prose that
     # already existed at HEAD (at any indent, flagged there or not) and merely got
     # reflowed past the threshold this pass.
-    cur_overindent="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://' | sort -u)"
-    head_all_content="$(printf '%s' "$head_content" | _all_content_previews | sort -u)"
+    cur_overindent="$(_detect_hits "$f" | grep ':over-indent(' | sed -E 's/^[0-9]+:over-indent\([0-9]+\)://' | LC_ALL=C sort -u)"
+    head_all_content="$(printf '%s' "$head_content" | _all_content_previews | LC_ALL=C sort -u)"
     new_overindent=""
-    [ -n "$cur_overindent" ] && new_overindent="$(comm -23 <(printf '%s\n' "$cur_overindent") <(printf '%s\n' "$head_all_content") 2>/dev/null || true)"
+    [ -n "$cur_overindent" ] && new_overindent="$(LC_ALL=C comm -23 <(printf '%s\n' "$cur_overindent") <(printf '%s\n' "$head_all_content") 2>/dev/null || true)"
 
     new_sigs="$(printf '%s\n%s\n' "$new_backtick" "$new_overindent" | grep -v '^$' || true)"
 
