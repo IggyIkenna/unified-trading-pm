@@ -1127,6 +1127,30 @@ distinguishes **two** classes of stuck promotion PR so it never hands a code-fix
 `scripts/cicd/promotion_lag_monitor.py` (`branch-health.yml`, `*/30`) pages time-based LDR↔main lag (oldest
 un-propagated commit > 60 min), the diff that matters under Path-B.
 
+**Shared recovery-bookend helper for GHA standing-condition monitors (`scripts/cicd/alert_recovery.py`, added
+2026-08-09).** A standing-condition PM workflow (paging via `notify-slack.yml`'s `dedup_key`+`cooldown_min`) needs a
+prev-tick-vs-this-tick diff to announce a RESOLVED bookend once the condition clears — rather than each workflow
+re-deriving that diff inline in bash, one tested CLI (`--state-file <path> --current true|false`, backed by an
+`actions/cache`-persisted JSON state file, mirrors `branch-health.yml`'s `.lag-state.json` pattern) computes
+`recovered = prev_alert and not current_alert` and prints it for `$GITHUB_OUTPUT`. Wired into 6 previously-silent
+standing-condition monitors: `fix-approval-timeout.yml`, `ldr-docs-gate.yml`, `freeze-deferred-build-replay.yml`,
+`promote-fleet-startup-failure-monitor.yml`, `ruleset-drift-alert.yml`, `sit-gate-stuck-detector.yml`. A missing/corrupt
+state file reads as "no prior alert" (never a false recovery post). Not every schedule-active monitor needs this — a
+one-shot liveness check (e.g. `overnight-dead-man-switch.yml`) isn't a re-nagging standing condition and is correctly
+excluded.
+
+**Escalation-dispatch redispatch cooldown (`agent-orchestrator/server/ci_reconcile.py`, operator-DEFAULT-RULED
+2026-08-06 option (a), shipped 2026-08-08).** `CIReconcileLoop._dispatch_failures` calls `escalation.escalate()`
+directly, bypassing `enqueue()`'s existing AF-1b context-snapshot cooldown — and once an escalation goes TERMINAL
+(unresolved cap-hit / abandoned), a restart wiped the in-process `_last_dispatch` cooldown and a still-red wall
+re-dispatched a brand-new escalation from scratch (the "9 dispatches in one day for the identical unchanged state"
+pattern). Fix: a disk-persisted `RedispatchState` (`ci_reconcile_redispatch_cooldown.json`) keyed by `repo:wall_type` →
+`(head_sha, dispatched_at)`, gated by the pure `should_suppress_redispatch()` — suppresses ONLY when the target-branch
+HEAD is unchanged since the last dispatch AND still inside the cooldown window; a genuinely new HEAD or a fresh failure
+always dispatches immediately regardless of cooldown. This is a distinct mechanism from the Slack-page-level dedup in
+`agent-orchestrator-alerting.md`'s "Repeat-page hardening" section — that one suppresses the NOTIFICATION for a repeat
+unresolved-page; this one suppresses the escalation DISPATCH itself.
+
 ### SIT-harness lint decoupling (sprawl consolidation 2026-06-27)
 
 The `sit-gate.yml` `harness-lint` job runs **in parallel with** the SIT work and NEVER gates promotion. On configuration

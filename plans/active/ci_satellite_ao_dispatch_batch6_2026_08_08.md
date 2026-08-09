@@ -45,7 +45,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-09"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -81,10 +81,17 @@ source: >-
 
 # CI satellite AO batch 6
 
-> **✅ STATUS: `active` — dispatched, ingested.** Operator-approved 2026-08-08 after a fresh conflict-check re-verified
-> Phase 3's original clearance still holds (no newer sibling batch, no new same-`parent_epic` claim, no `locked_by`).
-> Its finalize sibling was already `active` per the established no-double-gate rule. Drafted in autonomous/scheduled
-> mode; now live for AO dispatch.
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 12 todos shipped. Finalize plan
+> `/plans/active/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md` (source-doc reconciliation, the 29-item
+> Deferred re-check, and this archival) completed and archived alongside in the same commit set. Every D6-1 through
+> D6-29 Deferred item remains tracked in its own live source doc (none was uniquely resident in this plan), so archiving
+> it strands no open work — see the finalize plan's todo 2 for the full per-item re-verification. Successor: none
+> drafted here; 11 of the 29 Deferred items are cleared and ready for a future `ci`-tranche batch to extract.
+
+> **✅ STATUS (historical): `active` — dispatched, ingested.** Operator-approved 2026-08-08 after a fresh conflict-check
+> re-verified Phase 3's original clearance still holds (no newer sibling batch, no new same-`parent_epic` claim, no
+> `locked_by`). Its finalize sibling was already `active` per the established no-double-gate rule. Drafted in
+> autonomous/scheduled mode; now live for AO dispatch.
 
 > **Why this plan exists.** `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (42/43 done),
 > `ci_satellite_ao_dispatch_batch4_2026_07_31.md` (8/9 done), and `ci_satellite_ao_dispatch_batch5_2026_08_02.md` (5/6
@@ -480,3 +487,9 @@ contention to the smallest fully-decided edit) rather than needing a fresh rulin
   (`issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md`) and the identical-gap todos in its
   `_continued2`/`_continued3` siblings, all citing the same commit — this closes the one gap `/ag-closeout-audit ci`
   extracted this round.
+- **2026-08-09 (archived)** — All 12 todos done (last two reconciled by the finalize plan's todo 1). Archived via the
+  standard 6-step ritual alongside `ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md`: codex-alignment check added
+  the two new contracts todos 4 and 6 established (`scripts/cicd/alert_recovery.py`'s shared recovery-bookend helper and
+  `ci_reconcile.py`'s `should_suppress_redispatch()` cooldown guard) to `/codex/08-workflows/ci-cd-flow.md`'s "Central
+  CI watcher" section, since neither was previously documented anywhere in codex; every corpus referrer with a
+  leading-slash `/plans/active/...` path repointed to `/plans/archive/2026_08/...`; `locked_by` confirmed empty.

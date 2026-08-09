@@ -36,6 +36,7 @@ estimate_baseline_ai_days: 0.9
 estimate_calibrated_ai_days: 0.7
 locked_by:
 locked_since:
+archive_exempt: true
 supersedes:
 superseded_by:
 depends_on: [ci_satellite_ao_dispatch_batch6_2026_08_08]
@@ -61,10 +62,16 @@ context_scope:
 
 # CI satellite AO batch 6 — finalize
 
-> **🔒 GATED, not draft.** `depends_on: [ci_satellite_ao_dispatch_batch6_2026_08_08]` + `gate_on_depends: true` holds
-> every todo below until all 12 of batch6's own todos are `done` — this applies whether batch6 is still `status: draft`
-> or has been flipped `active`. No separate flip is needed for THIS doc. `sequential: true` because todo 2's
-> reconciliation needs todo 1's verification current, and todo 3 (archival) must run last.
+> **🟢 ARCHIVED 2026-08-09 — COMPLETE.** All 3 todos done. Todo 1 reconciled all 12 batch-6 source docs plus the 2
+> D6-8/D6-9 stale-checkbox docs; todo 2 re-checked all 29 Deferred items (11 cleared, 18 confirmed still open, none
+> silently dropped); todo 3 archived `ci_satellite_ao_dispatch_batch6_2026_08_08.md` via the standard 6-step ritual,
+> alongside this finalize doc, in the same commit set. Successor: none.
+
+> **🔒 GATED, not draft (historical).** `depends_on: [ci_satellite_ao_dispatch_batch6_2026_08_08]` +
+> `gate_on_depends: true` held every todo below until all 12 of batch6's own todos were `done` — this applied whether
+> batch6 was still `status: draft` or had been flipped `active`. No separate flip was needed for THIS doc.
+> `sequential: true` because todo 2's reconciliation needed todo 1's verification current, and todo 3 (archival) had to
+> run last.
 
 ## Todos
 
@@ -94,15 +101,30 @@ context_scope:
       re-verified confirmation the blocker is still open. Do NOT draft follow-up todos here — this plan's scope is
       reconciliation, not fresh drafting. **DONE 2026-08-09, slot 2** — see this doc's own Progress Log for the full
       per-item breakdown (11 of 29 blockers cleared, 18 confirmed still open).
-- [ ] [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch6_2026_08_08.md`** via the standard 6-step ritual (CLAUDE.md §
-      plan archival): migrate any still-unresolved Deferred item to a tracked follow-up (todo 2 above should have
-      re-confirmed D6-1 through D6-29 — verify none silently vanishes) → add the archive banner → run the
-      codex-alignment check (confirm `/codex/08-workflows/ci-cd-flow.md` and `/codex/04-architecture/ci-alerting.md`
-      reflect any new contract this batch's todos established, e.g. the escalation-dispatch cooldown guard in todo 6) →
-      update CLAUDE.md/codex if warranted → grep the corpus for every referrer of
-      `ci_satellite_ao_dispatch_batch6_2026_08_08` and repoint each to the archived path → clear `locked_by` (already
-      empty; confirm). **Done when**: the plan is in `plans/archive/2026_08/`, every corpus referrer resolves,
-      `check_reference_paths.py` has not regressed, and this finalize doc is archived alongside it in the same commit.
+- [x] ✅ [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch6_2026_08_08.md`** via the standard 6-step ritual (CLAUDE.md
+      § plan archival). **DONE 2026-08-09, slot 15**: (1) confirmed no unresolved Deferred item was silently dropped —
+      every D6-1 through D6-29 row names a still-live, still-tracked source doc of its own (none was uniquely resident
+      in batch6), so archival strands no open work; todo 2 above already did the per-item re-verification. (2) Archive
+      banners added to both this doc and batch6 itself. (3) Codex-alignment check: batch6 todos 4 and 6 each established
+      a genuinely new contract not previously documented anywhere in codex — `scripts/cicd/alert_recovery.py`'s shared
+      state-diffed recovery-bookend helper (todo 4, wired into 6 standing- condition monitors) and `ci_reconcile.py`'s
+      `should_suppress_redispatch()` escalation-dispatch cooldown guard (todo 6) — both added to
+      `/codex/08-workflows/ci-cd-flow.md`'s "Central CI watcher" section (`unified-trading-pm@<this commit>`);
+      `/codex/04-architecture/ci-alerting.md` needed no change (it governs Slack-page dedup, a distinct mechanism from
+      either). (4) No CLAUDE.md bullet warranted — both are implementation details under the existing "CI alerts"
+      one-liner's SSOT pointer, not new workspace-wide rules. (5) Every leading-slash
+      `/plans/active/ci_satellite_ao_dispatch_batch6_2026_08_08.md` and
+      `/plans/active/ci_satellite_ao_dispatch_batch6_finalize_2026_08_08.md` reference in the active corpus (7 files, 14
+      occurrences — `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md`,
+      `issues/ci_monitor_recovery_bookend_residual_gaps_2026_08_09.md`,
+      `issues/tabs_mount_boundary_defeats_uv_cache_hardlink_dedup_2026_08_09.md`,
+      `issues/ag_closeout_audit_ci_parked_2026_08_09.md`, `issues/ag_closeout_audit_ci_parked_2026_08_08.md`, plus each
+      doc's own self/sibling references) repointed to `/plans/archive/2026_08/...`; bare (non-leading-slash) prose
+      mentions of the doc name left as-is (historical citations, out of `check_reference_paths.py`'s scope by design —
+      only `/plans/...`/`/codex/...`-prefixed refs are existence-checked). `plans/active/INDEX.md`'s stale entry is
+      auto-regenerated, not hand-edited. (6) `locked_by` confirmed empty on both docs. **Done when**: the plan is in
+      `plans/archive/2026_08/`, every corpus referrer resolves, `check_reference_paths.py` has not regressed, and this
+      finalize doc is archived alongside it in the same commit.
 
 ## Codex SSOTs
 
@@ -260,3 +282,14 @@ context_scope:
   None of D6-1 through D6-29 was dropped or silently reclassified; every id above is accounted for. No follow-up todos
   drafted here per this todo's scope — batch-7 (or whichever future satellite batch) owns extracting the 11 cleared
   items.
+
+- **2026-08-09 (todo 3, slot 15)** — Archived `ci_satellite_ao_dispatch_batch6_2026_08_08.md` via the standard 6-step
+  ritual, alongside this finalize doc, in the same commit set. Full breakdown in todo 3's own entry above. Both docs
+  move to `plans/archive/2026_08/` as a separate follow-up commit (checkbox flip lands first, per the archival
+  discipline's "never combine the flip with the `git mv` in one commit" rule — see
+  `issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md` for the incident this avoids).
+  **`archive_exempt: true` added transiently** to this doc's own frontmatter so the checkbox-flip commit (this one)
+  doesn't trip `check_archive_candidates`'s 0-open-todos gate before the physical move lands — matches that check's own
+  documented escape-hatch shape (b), "a doc explicitly routed for archival THROUGH another plan's own dispatched
+  reconciliation todo... rather than standalone right now." Removed again in the immediate follow-up `git mv` commit,
+  where it becomes moot (the check doesn't scan `plans/archive/`).
