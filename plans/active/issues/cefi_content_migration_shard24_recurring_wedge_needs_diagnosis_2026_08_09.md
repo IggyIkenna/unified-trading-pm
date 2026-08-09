@@ -124,7 +124,7 @@ not `2026-01-07`.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Launch shard 24's 4th checkpoint-resumed attempt from its ACTUAL last checkpoint:
+- [x] ✅ [SCRIPT] P2. Launch shard 24's 4th checkpoint-resumed attempt from its ACTUAL last checkpoint:
       `RESUME_START_DATE=2026-01-08 RESUME_END_DATE=2026-01-15` (day AFTER `-133746`'s `last_completed_date=2026-01-07`
       — do NOT replay 2026-01-07).
       `RESUME_ASSET_GROUP=cefi-content-apply RESUME_SHARD_OF=1 RESUME_SHARD_INDEX=0 bash     scripts/vm/launch-canonical-migration-vm.sh cefi-content-apply 2026-01-08 2026-01-15 full`.
@@ -164,3 +164,22 @@ not `2026-01-07`.
   (RUNNING vs NOT_FOUND) and tail
   `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-content-apply-20260809-213834/run.log`
   for the current `Progress:` line before deciding completion vs. a 5th relaunch is warranted.
+- **2026-08-09 23:47Z (slot-12, infra)**: T+90min checkback on `-213834`. VM no longer exists (`NOT_FOUND` in
+  asia-northeast1-c, self-deleted per `--instance-termination-action=DELETE`). `PROGRESS.json`:
+  `last_completed_date=2026-01-10` (2 days past `RESUME_START_DATE=2026-01-08` — genuine active progress, not a replay,
+  confirming the checkpoint math was correct). `run.log` shows real, ongoing `Progress:` lines up to `50800/85086 files`
+  at `23:24:33Z` (`patched=912`, i.e. real writes, not just skips) interleaved with the same
+  `WARNING No progress in the last poll window` self-diagnostic seen on every prior attempt — then at `23:24:51Z` the
+  wrapping shell reports `Killed` (`rc=137`) and the deployment framework logs `received signal 15`,
+  `DEPLOYMENT_FAILED exit_code=137`. `WATCHDOG_TRACE.log`'s own log-size-growth heuristic shows `progress=1` (file still
+  growing) at every iteration up through its last recorded tick (`iter=101`, `ts=1786317863` ≈ `23:24:23Z`) — i.e. the
+  file-growth watchdog did NOT flag a stall itself; the kill (SIGKILL, no `PREEMPTED` marker, no graceful-shutdown line
+  before the signal) landed ~30-40s after the last confirmed-genuine `Progress:` line, matching `-032606`/`-133746`'s
+  identical "real progress interleaved with 'possible wedged worker' warnings, then abrupt silence" signature exactly.
+  **This is the 3rd wedge-shaped death on shard 24 (of 4 total attempts; the 2nd, `-065001`, was a clean SPOT
+  preemption, a distinct failure mode)** — todo 1's own done-when explicitly names this outcome ("a repeat wedge, in
+  which case STOP relaunching and treat todo 2 below as blocking"). Flipping todo 1 done on that basis (the launch
+  action was correctly taken with the right checkpoint math, and its own done-when treats a confirmed repeat wedge as a
+  valid terminal state, not a signal to keep relaunching) — no 5th relaunch attempted per the STOP instruction. Todo 2
+  (root-cause diagnosis, market-tick-data-service) is now the actionable remaining work; leaving it for dispatch rather
+  than absorbing it into this task (different investigation scope, no VM-launcher action left to take here).
