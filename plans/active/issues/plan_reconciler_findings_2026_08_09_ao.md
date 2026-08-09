@@ -177,8 +177,8 @@ depends_on: []
    independent genuine human locks, and since `locked_by:` is a HARD archival blocker no autonomous agent may clear,
    this could be silently blocking archival across a meaningful slice of the corpus. **Not fixed or cleared here** —
    `locked_by:` is an explicit-human-signal field this skill (and every agent) is required to treat as authoritative
-   regardless of how confident the evidence looks (SKILL.md § "STILL ASK/PARK"). Routed via `/blocked` + filed below for
-   an operator ruling on the correct remediation.
+   regardless of how confident the evidence looks (SKILL.md § "STILL ASK/PARK"). Routed via `/blocked`
+   (`BLK-a30d3bc0`) + filed below for an operator ruling on the correct remediation.
 2. **plan_reconciler's own review-PR output is piling up unmerged — 19 open PRs, oldest 7 days.** Independently measured
    twice this session (once directly by me, once by the topic hunter):
    `gh pr list --search "plan_reconciler" --state open --limit 50` returns 19 open PRs as of 2026-08-09, oldest
@@ -187,7 +187,7 @@ depends_on: []
    (`ao_scheduled_job_reserve_and_staggering_2026_08_04.md`) extensively tracking plan_reconciler's
    dispatch/sharding/timer reliability in detail. If the "PROVING PHASE" review-gate (`plan_reconciler.md` STEP 7) is
    still the intended steady state, the daily reconciliation work has had ZERO effect on the live corpus for a week —
-   findings pile up in unreviewed branches instead of landing. Routed via `/blocked` + filed below.
+   findings pile up in unreviewed branches instead of landing. Routed via `/blocked` (`BLK-a8e76fb3`) + filed below.
 
 ## Filed
 
@@ -245,7 +245,7 @@ item per SKILL.md's batching guidance rather than 14 separate asks:
   `ao_recovery_audit_layer1_deleted_2026_07_15.md` (both genuinely 1-open-but-unstarted, not "almost done" — flagged by
   the mechanical hunter as a literal-rubric-match nuance, not real near-complete candidates)
 
-Routed via `/blocked` as a single batched class question rather than 14 individual asks.
+Routed via `/blocked` (`BLK-26742a3d`) as a single batched class question rather than 14 individual asks.
 
 ## Refuted (dropped by verify)
 
@@ -268,8 +268,8 @@ Routed via `/blocked` as a single batched class question rather than 14 individu
   needing a CLAUDE.md/codex edit outside this skill's authority), 2 big cross-cutting findings, 1 stale 2-way todo
   framing, 1 embedded design-decision-in-a-dispatched-todo, 1 still-unverifiable hedge claim, 1 out-of-tranche referrer,
   4 grace-blocked referrers, 14 near-complete consolidation candidates (batched).
-- **Routed = parked check** (Phase 5.9(a)): 2 `/blocked` alerts posted (big findings 1+2, batched with the
-  near-complete-class question as a 3rd) = 3 questions asked this round; all 3 also filed durably above
+- **Routed = parked check** (Phase 5.9(a)): 3 `/blocked` alerts posted this round (`BLK-a30d3bc0` locked_by bogus-lock,
+  `BLK-a8e76fb3` PR pileup, `BLK-26742a3d` near-complete-docs class question); all 3 also filed durably above
   (`routed == parked`, both = 3).
 
 ## Plans not reached
