@@ -338,3 +338,51 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
   `engine/orchestrator/partitioned_writer.py`, `engine/orchestrator/_cluster_bookkeeping.py` (new),
   `market_interface/adapters/cefi/tardis_shared.py`, `market_interface/adapters/tradfi/tardis_cefi_shards.py`,
   `cefi_futures_chain_symbology.py` (new), + the 4 test files above.
+
+- **2026-08-09 (slot-15, data_engineering, item 4 — dispatched on this issue's own P2 todo)**: Investigated launching
+  the targeted OKX-SPOT + BYBIT `trades`/`book_snapshot_5` backfill (2024-01-01→present). **Blocked on the Tardis N=1
+  concurrent-VM cap — confirmed a real, active, legitimate occupant, not a stale/dead claim**:
+  - `gcloud compute instances describe cefi-queue-heavy-binancefutu-x17-20260809-083733` → `RUNNING`, created
+    2026-08-09T08:37:39Z (this session's launch, presumably the latest of the 8+ relaunches tracked in
+    `issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`).
+  - `PROGRESS.json`: `{"last_completed_date":"2020-05-25","monotonic":true,"updated":"2026-08-09T13:17:43Z"}` —
+    genuinely advancing (checkpoint mechanism confirmed real and working, addressing the earlier "no PROGRESS.json"
+    gap). `run.log` tail confirms live Tardis streaming writes for `date=2020-05-27` at check time, across multiple
+    venues including OKX-FUTURES.
+  - `LAUNCH_PARAMS.json` confirms this VM's scope is the FULL chronological walk — all 16 CeFi venues (including
+    OKX-SPOT and BYBIT), `heavy` group, no year/date restriction (natural per-venue genesis start).
+  - Day ~512/2769 (~18.5%) of the 2019-01-01→present span — consistent with (slightly ahead of) the 2026-08-09 item-3
+    cross-reference's 1.5-17% reading. At the previously-measured ~3 days/hr rate, reaching 2024-01-01 (day ~1827) is
+    still many days out — confirms item 3's "not reachable on the P0 gate's timeline" conclusion still holds for this
+    narrower 2-venue scope too, since both venues ride the SAME single combined VM.
+  - `tardis-concurrency-guard.sh` (read in full) REFUSES rather than queues a second Tardis VM — confirmed via source,
+    not by triggering a live refusal (no throwaway launch attempt). `FORCE=1` would bypass it but is explicitly
+    documented as accepting "the 403-storm + false-attempted_failed-row risk" (measured elsewhere in this same doc's
+    Progress Log: N=3 lease-on produced +37,212 false `attempted_failed` rows and coverage went BACKWARD) — not an
+    acceptable trade for a P2 todo against a CORRECTNESS-north-star craft rule.
+  - **Prepared and DRY_RUN-validated the exact ready-to-fire recipe** (from `deployment-service/`):
+    `VENUES="OKX-SPOT BYBIT" YEARS="2024 2025 2026" LAUNCH_GROUPS=heavy SINGLE_VM_QUEUE=1 TARDIS_CONCURRENCY_LEASE=1 TARDIS_MAX_CONCURRENT_DOWNLOADS=32 bash scripts/vm/launch-cefi-sharded-backfill.sh`
+    — confirmed via `DRY_RUN=1` (bypasses the cap check entirely, so safe to run regardless of current VM state) to
+    correctly bundle into ONE combined VM (`cefi-queue-heavy-okxspot-x2-*`, `e2-highmem-16`) spanning exactly
+    `start=2024-01-01 end=2026-08-08`, `data_types=trades;book_snapshot_5`, both venues. **Do NOT add a `START_DATE`
+    override for this multi-year launch** — found (by reading `launch_cefi_shard`, not by reproducing it live) that
+    `START_DATE` is validated per-shard against `^${year}-[0-9]{2}-[0-9]{2}$`, so a single global
+    `START_DATE=2024-01-01` would pass validation for `year=2024` but FAIL it for `year=2025`/`2026` and abort the whole
+    script under `set -e` partway through the queue-accumulation loop — a latent bug, not exercised here since the
+    un-overridden per-year default (`${year}-01-01`) already equals the target start for every year in this range,
+    making the override unnecessary. Not fixed (adjacent, not blocking, and a proper fix needs testing across both the
+    per-shard and `SINGLE_VM_QUEUE` code paths) — flagging here for a future P3 script-robustness todo rather than
+    silently absorbing it.
+  - **Decision: did NOT force (`FORCE=1`) or interrupt the running chronological VM.** Killing it would free the slot
+    immediately (and the checkpoint above means it's genuinely resumable, not a total-loss), but it is tracked by a
+    DIFFERENT plan (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`) whose own todos -004/-005 are durably
+    parked on this exact VM's measured self-termination (`cefi-track2-backfill-vm-terminated` prerequisite, applied by
+    main 2026-07-28 after an identical fork was raised via `/blocked` by slot-13 on 2026-07-28) — manually terminating
+    it would flip that condition on a truncated, non-representative run, exactly the misrepresentation the operator's
+    prior ruling on that same doc guarded against. This is a cross-plan-consequential, genuinely-either-way judgment
+    call (not a pure execution matter), so filing `/blocked` rather than deciding unilaterally, mirroring the
+    established precedent in this exact plan family. Recommendation: durably park this todo the same way (reuse the SAME
+    `cefi-track2-backfill-vm-terminated` prerequisite rather than mint a new one — it's the identical real-world
+    condition), so this todo and track2's own broader 6-venue supplement (todo 6 there) both become dispatchable the
+    moment a genuine slot-opening is confirmed. Todo checkbox left UNCHECKED (no coverage-% improvement is measurable
+    yet — flipping it now would misrepresent progress the same way the operator's park precedent exists to prevent).
