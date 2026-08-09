@@ -87,15 +87,40 @@ words: "this branch is churning faster than one CI worker can chase serially").
       `scripts/plan-hygiene/check_effort_signal_ratchet.py`). Done-when: same structural fix as the P2 todo below
       resolves this facet too (a grandfather/baseline mode for `--only`, or moving these two checks to periodic/batched
       sweep, would both fix it) — track under the same resolution, don't design a separate fix.
-- [ ] [BACKEND] P2. Consider one or more structural fixes so ratchet regressions don't outrace serial fixing on a
-      high-churn branch: (a) debounce/coalesce the CI re-trigger (e.g. the hourly `ldr-ci-monitor`) so a fix push
-      doesn't immediately race a fresh concurrent regression; (b) batch multiple ratchet-fix commits into a single CI
-      pass instead of one escalation-and-fix cycle per individual regression; (c) evaluate whether any of the four
-      ratchet checks that regressed here (codex-doc-freshness, effort-ratchet, archive-candidates,
-      dangling-reference-paths) should move from hard-fail to a periodic/batched sweep instead of per-commit
-      enforcement, given they're corpus-wide ambient-drift-prone rather than tied to the committing agent's own diff.
-      Repo: unified-trading-pm (`.github/workflows/`, `scripts/quality_gates/`).
-- [ ] [REVIEW] P3. Once a structural fix lands, verify by watching the next 2-3 `quality-gates-v2` runs on
+- [x] [BACKEND] P2. ✅ Consider one or more structural fixes so ratchet regressions don't outrace serial fixing on a
+      high-churn branch — `unified-trading-pm@<pending-sha>` (see Progress Log entry below for the exact commit and what
+      shipped: option (c)'s diff-scoping applied to `check_reference_paths.py`, mirroring the already-proven
+      `check_archive_candidates.sh --diff-base` pattern, plus a latent fail-unsafe bug fixed in that same pattern for
+      the periodic cron path). Follow-up P2/P3 todos below track the checks this dispatch did NOT convert.
+- [ ] [BACKEND] P2. Extend the SAME `--diff-base <ref>` pattern (proven twice now: `check_archive_candidates.sh`
+      2026-08-06, `check_reference_paths.py` 2026-08-09 above) to `check_effort_signal_ratchet.py` and
+      `check_na_corpus_ratchet.py` — both are structurally identical in shape (a corpus-wide scan producing a total
+      count compared against a static baseline), so the same "compare the violation/candidate SET at HEAD vs the set at
+      `<ref>`, fail only on what's new" refactor applies directly. Wire the result into `run_hygiene_sweep.sh`'s shared
+      `DIFF_BASE_REF` guard (already computed once, resolvability-checked) the same way the two existing diff-scoped
+      checks consume it — do not duplicate the `[ -n "$CI_MODE" ]`-only guard shape, that was the latent bug this
+      dispatch fixed. Repo: unified-trading-pm (`scripts/plan-hygiene/`).
+- [ ] [BACKEND] P3. `check_codex_doc_freshness.py` (`scripts/quality_gates/`, wired directly into `quality-gates.sh`'s
+      post-gates, not `run_hygiene_sweep.sh`) is fundamentally NOT diff-scopable the way the checks above are — its
+      violations are pure TIME decay (`last_reviewed` aging past a threshold), so a doc can flip stale↔fresh between two
+      CI runs with ZERO commits in between; diffing against any git ref cannot express "did today's wall-clock make this
+      worse". This is the strongest candidate for option (c)'s literal ask ("move to periodic/batched sweep instead of
+      per-commit enforcement") since gating an unrelated commit on ambient calendar drift is not a diff-scoping problem
+      to solve, it's a policy call about whether per-commit enforcement is the right shape at all — needs an
+      operator/main decision (weakening a currently-hard gate), not a unilateral backend change. File the decision as
+      its own `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above.
+- [ ] [BACKEND] P3. `check_todo_regression.sh` needs a DIFFERENT fix shape than the diff-base pattern above — it already
+      compares two snapshots (PR-head vs `origin/live-defi-rollout`), but the SECOND side is a live MOVING target
+      (re-fetched fresh every run), not a stable ref like `origin/main`, so it races on every CI run rather than being
+      fixable by pointing `--diff-base` at it. The correct fix compares each touched file's OWN todo count only against
+      ITS state at the merge-base of HEAD and `origin/live-defi-rollout` (the actual fork point), not the moving tip —
+      but computing a reliable merge-base needs more history than this job's shallow `fetch-depth: 2` checkout carries
+      (confirmed via inspection of `python-quality-gates-v2.yml`'s QG-slice job), so the fix also needs either a
+      deeper/targeted fetch (`git fetch --deepen=<N>` or a merge-base-aware shallow fetch) or a restructure to scope the
+      scan to only files this push's own diff touched (skip files nobody in this push edited entirely, regardless of
+      what origin's tip does). Scope this as its own investigation, not a copy-paste of the diff-base pattern above — it
+      doesn't fit that shape. Repo: unified-trading-pm (`scripts/plan-hygiene/`).
+- [ ] [REVIEW] P3. Once the structural fix above lands, verify by watching the next 2-3 `quality-gates-v2` runs on
       `live-defi-rollout` for whether ratchet regressions still chain the way they did here.
 
 ## Progress log
@@ -236,3 +261,42 @@ words: "this branch is churning faster than one CI worker can chase serially").
   race this doc already documents 6+ times over. No code/plan fix needed or applied; nothing to push. Confirms this
   escalation lineage's already-established finding rather than adding a new failure mode. `AUTHORING_SLOT=ci-reconcile`
   sentinel (not a numbered slot) — no slot-ping applicable per this role's skip-rule. Completing via `/done`.
+- 2026-08-09 (backend_engineer, slot 7, dispatched for the P2 structural-fix todo): shipped option (c) for one of the
+  four named checks. Root-caused the exact mechanism: `run_hygiene_sweep.sh --ci` (the plan-hygiene hard gate folded
+  into `quality-gates-v2`'s `checks` leg, `python-quality-gates-v2.yml` line ~843) runs most ratchet checks in
+  corpus-wide baseline mode — comparing the CURRENT live corpus count against a static YAML baseline, regardless of
+  whether the commit under test touched the offending doc — which is exactly why an unrelated concurrent commit landing
+  between a worker's fix-push and the next CI re-run fails that re-run on a check the worker never touched.
+  `check_archive_candidates.sh` already had a proven fix for this shape (`--diff-base <ref>`, operator ruling
+  2026-08-06): compare the violation SET at HEAD vs the violation SET at a stable ref (`origin/main`) via
+  `git ls-tree`/`git show` snapshot reads (no merge-base/history-depth needed, so the job's shallow `fetch-depth: 2`
+  checkout is not a problem), and fail only on violations NEW at HEAD. Extended the SAME pattern to
+  `check_reference_paths.py` ("dangling-reference-paths", explicitly named in option (c)) — added `--diff-base <ref>`
+  mode there, batched via `git ls-tree` + one `git cat-file --batch` call (an initial per-file `git show` implementation
+  measured 60s+ per run on this corpus; the batched version is ~4s). Verified locally: baseline mode unchanged (64/81
+  format, 79/86 existence, matches pre-change output exactly), `--diff-base origin/main` correctly finds 8 genuine NEW
+  violations vs `origin/main` (real drift from docs authored on LDR ahead of the last promotion), and an unresolvable
+  ref correctly fails hard (confirming the mode is fail-UNSAFE on a missing ref, same as archive-candidates' existing
+  mode — this is why the caller-side guard below exists). Also found + fixed a REAL latent bug in the existing
+  archive-candidates fix while implementing this: `run_hygiene_sweep.sh` gated `--diff-base origin/main` on bare
+  `[ -n "$CI_MODE" ]`, which ALSO fires for `cron_hygiene_sweep_entrypoint.sh`'s periodic sweep — that entrypoint does a
+  shallow single-branch clone with no `origin/main` fetch, so `origin/main` was never resolvable there, meaning the
+  periodic sweep's archive-candidates check was silently degrading to "every current candidate counts as new"
+  (fail-unsafe) instead of its intended baseline-tolerant behavior, since 2026-08-06 — never caught because the periodic
+  sweep already tolerates hard failures (exits 0 always, Slack-only). Fixed by hoisting a single `DIFF_BASE_REF` guard
+  (resolvability-checked via `git rev-parse --verify -q origin/main`) that both the archive-candidates AND
+  reference-paths invocations now share — `DIFF_BASE_REF` only gets set when `origin/main` is actually fetched (true in
+  the quality-gates-v2 CI-gate context, which explicitly fetches it before this step; false in the periodic-cron
+  context), so the periodic sweep now correctly falls back to full baseline mode instead of hard-failing on 100% of
+  corpus debt. Filed 3 follow-up todos above for the checks NOT converted this dispatch: extending the same pattern to
+  effort-ratchet/na-corpus (mechanical, same shape), moving codex-doc-freshness to periodic-only (a POLICY call, needs
+  operator/main sign-off since it weakens a hard gate — not something to unilaterally decide as backend_engineer craft),
+  and a differently-shaped fix for todo-regression-vs-origin (its second comparison side is a moving live ref, not a
+  stable one — the diff-base pattern doesn't directly apply). Files touched:
+  `scripts/plan-hygiene/check_reference_paths.py`, `scripts/plan-hygiene/run_hygiene_sweep.sh`. No CI workflow change
+  needed (the existing `origin/main` fetch step in `python-quality-gates-v2.yml`, added for archive-candidates, already
+  covers reference-paths too). Live-observed the exact race this doc documents while testing: a fresh
+  `check_todo_regression` run during this session failed on `prediction_satellite_ao_dispatch_batch9_2026_08_09.md`
+  (origin=3 current=2) from a concurrent agent's commit — not mine, not fixed this dispatch (tracked in the
+  todo-regression follow-up above), but direct live confirmation the systemic pattern is still active and this fix
+  targets a real, currently-firing failure mode.

@@ -213,6 +213,26 @@ HARD_FAIL=0
 SOFT_WARN=0
 RESULTS=()
 
+# ── Diff-scoped ratchet base (2026-08-09, plan_hygiene_ratchet_regressions_outpace_serial_
+# ci_fix_velocity_2026_08_09.md) ──
+# Corpus-wide ambient ratchet checks (archive-candidates, reference-paths) attribute ANY
+# concurrent agent's new violation — landing anywhere in the corpus between a worker's
+# fix-push and the next CI re-run — to whoever happens to be re-triggering. On a
+# high-churn branch this makes the checks un-convergeable serially (the issue doc above
+# measured 4+ consecutive distinct-check regressions chasing one CI wall). Diff-scoped
+# mode (`--diff-base <ref>`) fixes the shape: only a violation NEW at HEAD vs <ref> fails
+# the gate; pre-existing corpus debt at <ref> is tolerated exactly like baseline mode.
+# ONLY set DIFF_BASE_REF when the ref is actually resolvable locally — both checkers'
+# diff-base mode is fail-UNSAFE on an unresolvable ref (git ls-tree/show against a
+# missing ref returns nothing, so EVERY current violation reads as "new"), and
+# `cron_hygiene_sweep_entrypoint.sh`'s shallow single-branch clone never fetches
+# origin/main, so this guard is what keeps that periodic path on baseline mode instead of
+# silently hard-failing on the corpus's entire pre-existing debt.
+DIFF_BASE_REF=""
+if [ -n "$CI_MODE" ] && git -C "$PM_DIR" rev-parse --verify -q origin/main >/dev/null 2>&1; then
+  DIFF_BASE_REF="origin/main"
+fi
+
 run_check() {
   local label="$1"
   local kind="$2"   # hard | soft
@@ -268,7 +288,15 @@ run_check "depends_on DAG (cycles + self-deps)" hard python3 "$SCRIPT_DIR/check_
 # as the fallback-import/DTZ ratchets: hard-fails only on a NEW violation above the
 # pre-existing count, never on the corpus's existing debt. Supersedes check_codex_refs.sh's
 # narrower existence-only scope (kept below for its standalone fast path).
-run_check "Reference path convention (/plans, /codex — ratchet)" hard python3 "$SCRIPT_DIR/check_reference_paths.py" --quiet
+# In CI-gate mode with a resolvable diff base (DIFF_BASE_REF above), run diff-scoped
+# instead of baseline-scoped — closes the concurrent-commit race this check was one of the
+# confirmed repeat offenders for. Baseline mode remains the fallback (periodic cron sweep,
+# interactive/local runs) — no behavior change there.
+REFPATH_DIFF_ARGS=()
+if [ -n "$DIFF_BASE_REF" ]; then
+  REFPATH_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
+fi
+run_check "Reference path convention (/plans, /codex — ratchet)" hard python3 "$SCRIPT_DIR/check_reference_paths.py" "${REFPATH_DIFF_ARGS[@]}"
 # AG-closeout linkage (operator request 2026-07-25) — every single-asset-group plan/issue
 # doc must have a findable path (related: graph, either direction, or a body-text mention)
 # to its AG's consolidated closeout plan, so a finding can never silently become an
@@ -344,9 +372,17 @@ run_check "Priority vs. asset-group tier policy (candidate signal)" soft python3
 # candidate NEW since origin/main (i.e. introduced by this promote PR's diff) fails the gate;
 # pre-existing corpus debt at origin/main is tolerated. Operator ruling 2026-08-06 —
 # /plans/active/issues/archive_candidates_content_verification_backlog_2026_08_06.md.
+# Uses the same DIFF_BASE_REF guard as the reference-path check above (2026-08-09 fix) —
+# was previously gated on bare `[ -n "$CI_MODE" ]`, which also fires for
+# cron_hygiene_sweep_entrypoint.sh's periodic sweep. That entrypoint does a shallow
+# single-branch clone with no origin/main fetch, so --diff-base origin/main against an
+# unresolvable ref degraded to "every current candidate is new" (fail-unsafe, not the
+# intended baseline-tolerant behavior) — this was a live latent bug in the 2026-08-06 fix,
+# just never triggered because the periodic sweep already tolerates hard failures
+# (exit 0 always, Slack-only).
 ARCHIVE_DIFF_ARGS=()
-if [ -n "$CI_MODE" ]; then
-  ARCHIVE_DIFF_ARGS=(--diff-base origin/main)
+if [ -n "$DIFF_BASE_REF" ]; then
+  ARCHIVE_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
 fi
 run_check "Archive candidates (0 open todos, unlocked -> plans/archive/, ratchet)" hard "$SCRIPT_DIR/check_archive_candidates.sh" "${ARCHIVE_DIFF_ARGS[@]}"
 
