@@ -110,31 +110,64 @@ words: "this branch is churning faster than one CI worker can chase serially").
       checks consume it — do not duplicate the `[ -n "$CI_MODE" ]`-only guard shape, that was the latent bug this
       dispatch fixed. Repo: unified-trading-pm (`scripts/plan-hygiene/`). Shipped `unified-trading-pm@b12d43618` (+
       `@3fffb345b` for this doc's own updates), verified ancestor of `origin/live-defi-rollout`.
-- [ ] [BACKEND] P3. `check_codex_doc_freshness.py` (`scripts/quality_gates/`, wired directly into `quality-gates.sh`'s
-      post-gates, not `run_hygiene_sweep.sh`) is fundamentally NOT diff-scopable the way the checks above are — its
-      violations are pure TIME decay (`last_reviewed` aging past a threshold), so a doc can flip stale↔fresh between two
-      CI runs with ZERO commits in between; diffing against any git ref cannot express "did today's wall-clock make this
-      worse". This is the strongest candidate for option (c)'s literal ask ("move to periodic/batched sweep instead of
-      per-commit enforcement") since gating an unrelated commit on ambient calendar drift is not a diff-scoping problem
-      to solve, it's a policy call about whether per-commit enforcement is the right shape at all — needs an
-      operator/main decision (weakening a currently-hard gate), not a unilateral backend change. File the decision as
-      its own `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above.
+- [x] ✅ [BACKEND] P3. `check_codex_doc_freshness.py` (`scripts/quality_gates/`, wired directly into
+      `quality-gates.sh`'s post-gates, not `run_hygiene_sweep.sh`) is fundamentally NOT diff-scopable the way the checks
+      above are — its violations are pure TIME decay (`last_reviewed` aging past a threshold), so a doc can flip
+      stale↔fresh between two CI runs with ZERO commits in between; diffing against any git ref cannot express "did
+      today's wall-clock make this worse". This is the strongest candidate for option (c)'s literal ask ("move to
+      periodic/batched sweep instead of per-commit enforcement") since gating an unrelated commit on ambient calendar
+      drift is not a diff-scoping problem to solve, it's a policy call about whether per-commit enforcement is the right
+      shape at all — needs an operator/main decision (weakening a currently-hard gate), not a unilateral backend change.
+      File the decision as its own `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above.
 
       **PARTIALLY ADDRESSED 2026-08-09 (slot-28, backend_engineer, unified-trading-pm@8bc27fe8f) — via
-                          `codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md` (now archived), a sibling finding of the
-                          same symptom filed independently before this doc's todo was written.** The "diffing against any git ref cannot
-                          express wall-clock drift" claim above is correct for git-ref diff-scoping (`--diff-base <ref>`, the pattern the
-                          P2 todo above uses) but does NOT apply to the different mechanism actually shipped: the ratchet now diffs the
-                          current violating PATH SET against a persisted baseline SNAPSHOT (`codex_doc_freshness_baseline.yaml`'s
-                          `baseline_files:`, previously written but never consulted) — a stored point-in-time list, not a git ref — which
-                          DOES express "did wall-clock decay make THIS SPECIFIC doc newly-stale since the last snapshot", the exact
-                          question the claim above says can't be asked. This resolves the concrete symptom both docs independently
-                          reported (chaotic multi-session re-baselining on an unbisectable count, 25→26→27 same day) — a session hitting
-                          the gate now sees the exact NEW doc(s) named, not a vague delta, and a doc already known-stale at baseline time
-                          drifting further stale no longer counts as a fresh regression. It does NOT resolve the broader policy question
-                          this todo raises (should a genuinely brand-new stale doc, with zero commits touching it, still be allowed to
-                          block an unrelated PR at all, vs. moving to a periodic/batched sweep) — that residual call is still open and
-                          still needs the `[OPERATOR]`-tagged decision this todo asks for; do not treat this note as closing it.
+                              `codex_doc_freshness_regression_ambient_staleness_drift_2026_08_09.md` (now archived), a sibling finding of the
+                              same symptom filed independently before this doc's todo was written.** The "diffing against any git ref cannot
+                              express wall-clock drift" claim above is correct for git-ref diff-scoping (`--diff-base <ref>`, the pattern the
+                              P2 todo above uses) but does NOT apply to the different mechanism actually shipped: the ratchet now diffs the
+                              current violating PATH SET against a persisted baseline SNAPSHOT (`codex_doc_freshness_baseline.yaml`'s
+                              `baseline_files:`, previously written but never consulted) — a stored point-in-time list, not a git ref — which
+                              DOES express "did wall-clock decay make THIS SPECIFIC doc newly-stale since the last snapshot", the exact
+                              question the claim above says can't be asked. This resolves the concrete symptom both docs independently
+                              reported (chaotic multi-session re-baselining on an unbisectable count, 25→26→27 same day) — a session hitting
+                              the gate now sees the exact NEW doc(s) named, not a vague delta, and a doc already known-stale at baseline time
+                              drifting further stale no longer counts as a fresh regression. It does NOT resolve the broader policy question
+                              this todo raises (should a genuinely brand-new stale doc, with zero commits touching it, still be allowed to
+                              block an unrelated PR at all, vs. moving to a periodic/batched sweep) — that residual call is still open and
+                              still needs the `[OPERATOR]`-tagged decision this todo asks for; do not treat this note as closing it.
+
+          **DONE 2026-08-09 (backend_engineer, slot 4)** — per this todo's own instruction ("File the decision as its own
+          `[OPERATOR]`-tagged todo once picked up; don't fold it into the P2 above"), filed the residual policy decision as
+          the `[OPERATOR]` todo directly below. Confirmed via a fresh read of `check_codex_doc_freshness.py` that the
+          slot-28 partial fix is real and live (per-file baseline-snapshot diffing, not a git-ref diff) and that the check
+          is still wired as a hard, unconditional post-gate in `quality-gates.sh` (`CODEX_FRESHNESS_CHECKER`, line ~639,
+          runs on every `unified-trading-pm` commit regardless of whether that commit touches any codex path) — i.e. the
+          symptom fix landed but the underlying per-commit-enforcement policy is unchanged, exactly as the partial-addressed
+          note says. No code change needed for this todo itself (the todo's own text scopes it as "not a unilateral backend
+          change"); closing this checkbox on the OPERATOR todo being filed, not on the policy question being resolved.
+
+- [ ] [OPERATOR] P3. **Decide: should `check_codex_doc_freshness.py` keep hard-blocking every `unified-trading-pm`
+      commit via `quality-gates.sh`'s post-gates (current, unconditional — `CODEX_FRESHNESS_CHECKER` at line ~639 of
+      `scripts/quality-gates.sh`), or move to a periodic/batched sweep instead (e.g. folded into
+      `run_hygiene_sweep.sh`'s cron path, Slack-notify + exit-0-always, matching how the periodic path already treats
+      `archive-candidates`/`reference-paths` outside CI)?** The check's violations are pure wall-clock decay
+      (`last_reviewed` aging past the 90-day window) — a doc can go from fresh to stale between two CI runs with ZERO
+      commits touching it, so an unrelated commit can be blocked by a doc nobody in that commit's diff touched. The
+      per-file baseline-snapshot fix (`unified-trading-pm@8bc27fe8f`) already stopped the CHAOTIC re-baselining symptom
+      (a session hitting the gate now sees the exact new-stale doc, not a vague delta) — this is the separate,
+      still-open question of whether ambient calendar drift should gate commits AT ALL. - Option A (status quo): keep it
+      a hard per-commit gate. Pro: freshness debt can't silently accumulate past the ratchet without a
+      `--baseline-write` that visibly acknowledges the new debt. Con: still blocks commits on doc content the committer
+      never touched — the same "chasing a moving target" shape this whole issue doc documents across 8+ distinct ratchet
+      checks. - Option B (recommended): drop it from `quality-gates.sh`'s post-gates and move it to
+      `run_hygiene_sweep.sh`'s periodic/cron path (Slack-only, non-blocking). A stale codex doc is real debt worth
+      surfacing, but it isn't caused by — and shouldn't block — an unrelated commit; this matches the "batched sweep"
+      shape option (c) originally asked for. - Option C: keep it in `quality-gates.sh` but scope it to fire only when
+      the commit's OWN diff touches a cutover-critical codex path (skip entirely otherwise) — closer to the diff-base
+      checks in the P2 todo above, but weaker: it narrows who gets blocked without solving "the doc went stale with
+      nobody committing anything." Repo: unified-trading-pm (`scripts/quality_gates/check_codex_doc_freshness.py`,
+      `scripts/quality-gates.sh` `CODEX_FRESHNESS_CHECKER` block). Once decided, implement the outcome and update this
+      todo with the result.
 
 - [ ] [BACKEND] P3. `check_todo_regression.sh` needs a DIFFERENT fix shape than the diff-base pattern above — it already
       compares two snapshots (PR-head vs `origin/live-defi-rollout`), but the SECOND side is a live MOVING target
@@ -470,3 +503,13 @@ words: "this branch is churning faster than one CI worker can chase serially").
   na-corpus and prosewrap remain the live blockers on this wall as of this tick, same systemic pattern as every prior
   dispatch. Reinforcing the P3 backlog todos above (prosewrap needs the same diff-base conversion as the other 3;
   na-corpus's real fix is the stalled LDR→main promotion clearing, not a per-dispatch chase).
+- 2026-08-09 (backend_engineer, slot 4, dispatched for the `check_codex_doc_freshness.py` P3 todo): the todo's own text
+  scopes this as a policy call, not a unilateral backend change — its instruction is literally "file the decision as its
+  own `[OPERATOR]`-tagged todo once picked up." Verified the slot-28 partial fix (per-file baseline-snapshot diffing in
+  `check_codex_doc_freshness.py`) is real and still live by reading the current file directly, and confirmed the check
+  is still wired as an unconditional post-gate in `scripts/quality-gates.sh` (`CODEX_FRESHNESS_CHECKER`, ~line 639 —
+  runs on every commit to this repo, no diff-scoping to the commit's own changed paths). Filed the `[OPERATOR]` todo
+  above with 3 concrete options (keep hard-gate / move to periodic sweep [recommended] / scope-to-touched-paths) so
+  main/operator can make the actual call. No code change — the residual question this todo raises is explicitly a policy
+  decision, not something a backend_engineer craft should decide unilaterally. Flipping this P3 todo done on "OPERATOR
+  todo filed", not on "policy question resolved" — the new `[OPERATOR]` todo tracks the open decision going forward.
