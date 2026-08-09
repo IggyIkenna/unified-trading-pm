@@ -106,12 +106,13 @@ Progress Log) confirmed, with exact file:line citations:
 
 ## Todos
 
-- [ ] [BACKEND] P1. Add an `ltv_mode`-string → `(max_ltv, liquidation_threshold)` resolver in
-      `unified-api-contracts/unified_api_contracts/registry/defi_reserve_params.py` (or a new sibling helper in the same
-      module) that maps the exact tokens `catalog_carry.py` already writes (`"emode_eth"`, `"market_0945"`,
-      `"market_086"`) to real values via the existing `get_emode_params()`/`get_morpho_market_lltv()` functions — do not
-      re-derive the numbers, only add the string-to-lookup indirection. Repo: unified-api-contracts. Done-when: a new
-      unit test resolves all 3 tokens to the operator-ruled values (0.93/0.945/0.86) and `quality-gates.sh` is green.
+- [x] ✅ [BACKEND] P1. Add an `ltv_mode`-string → `(max_ltv, liquidation_threshold)` resolver in —
+      unified-api-contracts@547b1d1b `unified-api-contracts/unified_api_contracts/registry/defi_reserve_params.py` (or a
+      new sibling helper in the same module) that maps the exact tokens `catalog_carry.py` already writes
+      (`"emode_eth"`, `"market_0945"`, `"market_086"`) to real values via the existing
+      `get_emode_params()`/`get_morpho_market_lltv()` functions — do not re-derive the numbers, only add the
+      string-to-lookup indirection. Repo: unified-api-contracts. Done-when: a new unit test resolves all 3 tokens to the
+      operator-ruled values (0.93/0.945/0.86) and `quality-gates.sh` is green.
 - [ ] [BACKEND] P1. Wire the resolver from the prior todo into
       `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog_carry.py`'s
       `build_carry_recursive_borrow_lending_only()` (`:621-662`) and `build_carry_basis_perp_inv()` (`:670-719`):
@@ -173,6 +174,10 @@ Progress Log) confirmed, with exact file:line citations:
 
 ## Progress Log
 
+- **2026-08-09**: Todo 1 shipped — `resolve_ltv_mode()` added to `defi_reserve_params.py` resolving `emode_eth`/
+  `market_0945`/`market_086` tokens to `(max_ltv, liquidation_threshold)` via `get_emode_params()`/
+  `get_morpho_market_lltv()`; new unit tests assert 0.93/0.945/0.86; `quality-gates.sh` green.
+  unified-api-contracts@547b1d1b.
 - **2026-08-09**: plan authored following an exhaustive code-landscape research pass (findings recorded in
   `defi_catalog_engine_config_key_contract_drift_2026_07_23.md`'s Progress Log) that confirmed exact file/function
   targets for every todo above before this plan was written, per the operator's explicit request for a tracked
