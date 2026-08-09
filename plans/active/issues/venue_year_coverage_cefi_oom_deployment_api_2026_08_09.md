@@ -50,6 +50,8 @@ source: >-
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
+drift_direction: advance-code
+depends_on: []
 ---
 
 # `venue-year-coverage` cefi OOM (16GiB Cloud Run limit)

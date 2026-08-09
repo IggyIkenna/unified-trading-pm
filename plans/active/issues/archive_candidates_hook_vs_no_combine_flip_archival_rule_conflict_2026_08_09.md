@@ -33,6 +33,7 @@ source:
   2026-08-09)."
 locked_by:
 drift_direction: none
+depends_on: []
 ---
 
 # check_archive_candidates hook vs. never-combine-flip-and-mv SSOT — same-day conflict

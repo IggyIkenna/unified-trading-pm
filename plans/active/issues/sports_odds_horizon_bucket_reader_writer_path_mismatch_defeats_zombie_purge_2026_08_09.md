@@ -61,6 +61,7 @@ context_scope:
     market-data-processing-service/scripts/reprocess_sports_odds.py,
     features-service/features_service/sports/data/gcs_reader.py,
   ]
+depends_on: []
 ---
 
 # odds_horizon_bucket reader/writer path mismatch defeats the RUSSIA_PREMIER_LEAGUE zombie purge
