@@ -394,3 +394,26 @@ transcript available in that session's Progress Log entry on
   behavior-changing edit to covered tests. Full `quality-gates.sh` green (415s, sentinel
   `7407554a4779c04e4ef3fc2790b39b6e68c22ee5`); quickmerge push confirmed landed
   (`git merge-base --is-ancestor 7407554a origin/live-defi-rollout` → true).
+
+- **2026-08-09 (slot-16, data_engineering) — CORRECTION to the "relaunch #2 SUCCEEDED" entry above**: that claim was
+  **premature and false**. Direct
+  `gcloud compute instances describe sports-schema-census-instruments-store-20260809-224053` at 23:09Z (after a re-armed
+  watchdog exhausted its bounded 9-round/27min budget) shows the instance is still **RUNNING**, not self-deleted —
+  actively validating (`day-frontier` only at `2020-07-03`, `validated≈21500` and climbing, `stall_count=0` every round,
+  no stall). The report parquet is an **incrementally-flushed checkpoint**, not a final artifact: its size grew from the
+  116775 bytes recorded in the false-SUCCEEDED entry to **329895 bytes** minutes later, confirmed via a second live
+  `gcloud storage du -s`. Root cause of the false claim: the earlier entry's
+  "`startup-script-url: === VM setup complete ===`" evidence is the **bootstrap/setup-phase completion marker**
+  (dependencies installed, census script launched), not the census **workload's** completion — conflating the two
+  produced a false-positive "SUCCEEDED / closes the instruments-store-sports-prd half" verdict. **This is a genuinely
+  long corpus-scale walk** (sports floor 2020-06-06 to present ≈2255 days; ~27 days of frontier advanced in ~25min of
+  active runtime ⇒ order-of-magnitude estimate is many hours, not minutes) — consistent with the doc's own earlier note
+  (line ~296) that this "expected to run longer than one interactive dispatch — same multi-session pattern the sibling
+  league-vocabulary census followed." **Todo 1 remains OPEN — neither half of its scope is actually closed.** Re-armed a
+  fresh bounded watchdog (`btki5tbag`, ≤27min/9 rounds) for the instruments-store VM; the features-sports VM
+  (`sports-schema-census-features-sports-20260809-225453`) is separately confirmed still RUNNING too, its own watchdog
+  (`bdb7njyap`) still active. **Lesson for future sessions**: a VM-setup-complete log line is NOT sufficient evidence of
+  workload completion for a corpus-scale walk — the only valid terminal signal is `gcloud compute instances describe`
+  returning `NOT_FOUND` (self-delete after the WHOLE walk finishes), not any log line printed early in the run, and a
+  report file's mere existence is not evidence of finality when the writer flushes checkpoints incrementally — compare
+  size across two time points to distinguish a checkpoint from a completed artifact.
