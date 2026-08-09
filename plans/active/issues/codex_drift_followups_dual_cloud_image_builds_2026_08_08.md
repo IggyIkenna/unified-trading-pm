@@ -129,3 +129,4 @@ access from this worktree).
   `infra_satellite_ao_dispatch_batch9_2026_08_09.md` (status: draft, not yet active — falls short of the KEEP-NA-STALE
   bar, which requires an ACTIVE extracting doc). Finding 4 (AWS IAM identity scope for `ikenna-worker`) is a genuine
   `[OPERATOR]` decision, correctly not extracted. Recommend a forward-pointer citation once batch9 activates.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (1 entry), still accurate.

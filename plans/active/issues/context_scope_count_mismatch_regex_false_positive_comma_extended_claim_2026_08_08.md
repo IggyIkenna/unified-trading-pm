@@ -172,3 +172,4 @@ cross-repo / SSOT contradiction / kill-switch / batch≠live -- does not apply h
   `cross_cutting_consolidated_closeout_2026_07_25.md`'s own text has no overlap either. `doc_type: issue` --
   structurally exempt from the finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only globs
   `plans/active/*.md`, non-recursive), so no companion finalize plan authored.
+- **context-scout 2026-08-09**: re-scouted; context_scope unchanged (3 entries), still accurate.
