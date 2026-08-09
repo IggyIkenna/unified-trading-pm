@@ -22,7 +22,7 @@ summary: >-
   cross_repo_pm_file_touched_no_checkbox_flip` on this same checkbox despite the underlying disposition being identical
   (still gated, still correctly unflipped) to -002's accepted case. No plan-doc edit can fix case (2) — `brief` is
   captured at dispatch time, not re-read from the doc.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [meta]. Genuinely AO server code
@@ -55,6 +55,11 @@ context_scope:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-09** — all 3 todos done, both blind spots (case 1 false-positive, case 2 false-negative) closed:
+> `agent-orchestrator@3511af4` (content-overlap hardening), `agent-orchestrator@6ef5953` (leading-marker tolerance in
+> `_TODO_TAG_PRIORITY_RE`), `agent-orchestrator@0d449c6` (sha-vs-evidence guard). No corpus referrers cite this doc by
+> `/plans/...` path (2 informal prose mentions found, both historical Progress Log narrative, not path-dependent links).
 
 # AO `/done` M3 tag-correlation fallback: false-match + leading-marker blind spot
 
@@ -138,10 +143,16 @@ false-positive surface). Recommend, in order:
       operator/main manual DB patch); the underlying work (code shipped + checkbox flipped + doc archived) is
       independently verified via `git merge-base --is-ancestor` on both the code repo and the PM repo, so `/done`
       recovery is a bookkeeping-only gap, not a work-completeness gap. (repo: agent-orchestrator)
-- [ ] [INFRA] P2. Widen `_TODO_TAG_PRIORITY_RE` (or add a preprocessing strip) so a `brief`/plan line with a leading
-      `BLOCKED-<TOKEN>` (or similar) marker before `[TAG] P<n>.` still extracts tag+priority correctly. Add a regression
-      test using a brief like `"BLOCKED-FOO [DATA] P2. ..."` (an arbitrary marker-shaped token — the bug is about
-      position relative to `[TAG] P<n>.`, not the specific token's semantics). (repo: agent-orchestrator)
+- [x] ✅ [INFRA] P2. **DONE 2026-08-09 (slot-27) — `agent-orchestrator@6ef5953`.** Widened `_TODO_TAG_PRIORITY_RE` with
+      an optional non-capturing leading-marker group (`BLOCKED-[A-Z][A-Z0-9-]*|CANCELLED|DEFERRED-BY-DESIGN`,
+      intentionally not restricted to the currently-recognized `_BLOCKED_TOKEN_RE` vocabulary — the bug is about
+      position relative to `[TAG] P<n>.`, not the specific token) so a `brief`/plan line retagged with a leading marker
+      still extracts tag+priority correctly across all three call sites (`_marker_disposition_in_text`,
+      `_brief_is_checked_by_tag_in_text`, `_disposition_by_tag_position`). Added 4 regression tests: 2 direct
+      regex-level (leading-marker tolerance + no-marker case unaffected) and 2 end-to-end `/done` cases with a
+      leading-marker `brief` — one correlating against a checked line, one against a diff-less on-disk CANCELLED marker.
+      Full `quality-gates.sh` green (2933 passed, 2 skipped), verified on origin/live-defi-rollout. (repo:
+      agent-orchestrator)
 - [x] ✅ [INFRA] P2. **DONE 2026-08-02 (slot-6) — `agent-orchestrator@3511af4`.** Hardened both
       `_brief_is_checked_by_tag_in_text` and `_marker_disposition_in_text`: a `hits == 1` tag+priority correlation now
       also requires at least one shared length->=6 word between `brief`'s own text and the matched line's text (both
