@@ -842,3 +842,19 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
     (`31314100524`, 12:45Z) confirms `QG slice (checks): failure`, `QG slice (tests): success` — same known ratchet
     class, not pytest-timeout. Zero pytest-timeout recurrence anywhere. Window NOT yet closed (day ~4 of ~14, closes
     ~2026-08-20); releasing via skip-current-task per established precedent.
+- **slot-29 2026-08-09 ~12:55Z (seventeenth pass, same task)**: corroborates all prior passes, including slot-25's pass
+  ~4min earlier. Spot-checked 4 representative repos (unified-api-contracts, instruments-service, features-service,
+  unified-trading-pm) across all branches (not just `live-defi-rollout` — LDR-only filtering undercounts, since most
+  `quality-gates-v2` signal comes from `promote/*`/`main` runs) rather than a full 10-repo sweep, since slot-19/28/10/25
+  already covered all 10 within the preceding ~40min. unified-api-contracts + instruments-service each had ONE genuinely
+  new run since slot-25's pass (`31313062103`/`31313483567`, both `main`, both `conclusion=success`); features-service
+  unchanged; unified-trading-pm's newest run (`31314100524`, 12:45Z) is the SAME run slot-25 already job-level-verified
+  as `QG slice (checks): failure` / `QG slice (tests): success` (known ratchet class, not pytest-timeout) — not
+  re-verified here. Zero pytest-timeout recurrence anywhere. **Flagging for whoever next touches this doc's own dispatch
+  cadence**: this monitoring backlog task has now been dispatched 5 times in ~45min (slot-19 12:15Z, slot-28 12:38Z,
+  slot-10 12:45Z, slot-25 12:51Z, this pass 12:55Z) against a CI signal that only produces a handful of new runs per
+  repo per hour — most of each pass's "survey" re-observes run IDs the immediately-preceding pass already logged. Worth
+  a priority/cooldown tune (RULES.md § "Park a task" pattern, or a minimum-redispatch-interval knob) once someone has
+  bandwidth outside a monitoring pass itself — not fixed here (parking outright would silence the window's genuine
+  14-day watch obligation, not just throttle its redispatch rate; this pass's scope is observe-and-report only). Window
+  NOT yet closed (day ~4 of ~14, closes ~2026-08-20); releasing via skip-current-task per established precedent.
