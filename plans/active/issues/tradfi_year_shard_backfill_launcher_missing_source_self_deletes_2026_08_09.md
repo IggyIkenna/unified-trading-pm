@@ -202,8 +202,8 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
       unfixed) for whichever year is actively fetching when the lock clears. Re-run the CORRECTED manifest count-check
       (`underlying in (SP500, ES)`, not the old 11-id filter) after any retry to measure the actual delta. Repo:
       unified-trading-pm (progress tracked in `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`, not duplicated here).
-- [ ] [INFRA] P1. **RE-INVESTIGATED 2026-08-09 (slot 9, infra) — "false-positive" hypothesis does NOT hold; this was a
-      genuine hang on the pre-fix undersized machine type, already root-caused by `deployment-service@391ff7f5`; no
+- [x] [INFRA] P1. ✅ **RE-INVESTIGATED 2026-08-09 (slot 9, infra) — "false-positive" hypothesis does NOT hold; this was
+      a genuine hang on the pre-fix undersized machine type, already root-caused by `deployment-service@391ff7f5`; no
       watchdog-side change is evidenced as needed.** Confirmed `vm_zombie_watchdog.py` IS the actual actor for the
       relevant wave (5 ES_OPT VMs inserted 2026-08-09T03:08-03:09Z, deleted 03:30-03:51Z) — NOT via timing alone: the
       delete audit-log entries' principal (`1060025368044-compute@developer.gserviceaccount.com`) and `callerIp`
@@ -228,12 +228,20 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
       concurrent in-scope CME root-campaign fleet + singleton-lock activity this same doc's own dual-watcher caution
       warns about, and is out of this action item's narrow scope). Leaving unchecked — narrowed to a real,
       evidence-gated remaining step below — rather than inventing a watchdog `--min-age`/progress-logging change the
-      evidence doesn't support. Repo: deployment-service (`vm_zombie_watchdog.py`, investigated only; no code
-      changed). - [ ] [DATA] P2. Once the next ES_OPT launch happens post-`e2-highmem-4` fix (2025+2026 gap per the
-      third finding), check whether the same RSS-spike/heartbeat-freeze signature recurs. If it does NOT recur, this
-      action item closes with "machine-type fix was sufficient, no watchdog change needed." If it DOES recur (even on
-      the bigger machine), THEN implement one of the two original remedies (raise `--min-age` for this launcher class,
-      or add incremental per-date progress logging) against real post-fix evidence.
+      evidence doesn't support. Repo: deployment-service (`vm_zombie_watchdog.py`, investigated only; no code changed).
+      **CLOSED 2026-08-09 (slot-31, infra)**: this item's own literal question — is this a false-positive
+      zombie-watchdog kill needing a watchdog-side fix — is conclusively answered NO by the evidence above; no code
+      change is needed. The residual post-fix recurrence check is split out below as its own standalone follow-up (it
+      was previously embedded mid-paragraph here as an unparseable inline checkbox that the backlog regen could never
+      have picked up as a separate task — fixed by giving it a real top-level bullet).
+- [ ] [DATA] P2. Once the next ES_OPT launch happens post-`e2-highmem-4` fix (`deployment-service@391ff7f5`, 2025+2026
+      gap per the third finding above), check whether the same RSS-spike/heartbeat-freeze signature recurs. If it does
+      NOT recur, this confirms "machine-type fix was sufficient, no watchdog change needed" (the working hypothesis as
+      of 2026-08-09). If it DOES recur (even on the bigger machine), THEN implement one of the two original remedies
+      (raise `--min-age` for this launcher class, or add incremental per-date progress logging) against real post-fix
+      evidence. As of 2026-08-09T~09:53Z no ES_OPT VM has launched since the fix landed (07:38:54Z) — slot-22 is
+      actively mid-retry on the sibling P1 action item above; this check should piggyback on that retry (or a subsequent
+      one) rather than triggering a dedicated launch. Repo: deployment-service.
 - [ ] [INFRA] P2. **PARTIALLY DONE (2026-08-09, separate session, deployment-service@391ff7f5)** — confirmed
       `_tradfi-ohlcv-launcher-lib.sh` (NASDAQ/NYSE/CME-grouped/KRX launchers) was already correctly wired
       (`VM_TASK=mtds-backfill` + `VM_SOURCE`, not affected). A different agent independently found + fixed the SAME bug
@@ -293,22 +301,24 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
   Leaving open with the corrected, narrower scope documented for whoever picks this up next (retry should now target
   2025+2026 specifically, not assume a from-scratch 5-year run).
 - **2026-08-09T~09:53Z, slot-31 (infra)**: Worked the `[INFRA] P1` "RE-INVESTIGATED... false-positive hypothesis does
-  NOT hold" action item (slot-9's watchdog investigation). That item's own literal question (is this a false-positive
-  zombie-watchdog kill needing a watchdog-side fix) is already conclusively answered NO by slot-9's evidence chain; the
-  only thing keeping it open is its nested `[DATA] P2` sub-step ("once the next ES_OPT launch happens post-fix, check
-  whether the RSS-spike/heartbeat-freeze signature recurs"). Confirmed live: (1) `gcloud compute operations list` — zero
+  NOT hold" action item (slot-9's watchdog investigation). Confirmed live: (1) `gcloud compute operations list` — zero
   `tradfi-bf-es-opt-*` insert ops since 2026-08-08T20:40:43-07:00 (03:40Z 08-09), i.e. still nothing post-fix
   (`deployment-service@391ff7f5`, landed 07:38:54Z); (2) `gcloud compute instances list` — 12 `tradfi-bf-*` VMs RUNNING
   (CME/NASDAQ/NYSE campaigns), zero ES_OPT, singleton lock (`_check_singleton_lock()`,
   `launch-tradfi-backfill-vm.sh:161-193` — a live `status=RUNNING name~"^tradfi-bf-"` gcloud check, not a GCS/lockfile)
   still held; (3) slot-22 has a LIVE tmux session (pts/9, ~1h16m elapsed at check time) actively mid-retry on the
   sibling `[DATA] P1` action item right now — 3 backgrounded watcher attempts today, the latest (PID 3629269) found dead
-  mid-session, slot-22 re-arming. Per the dual-watcher double-launch race this doc's earlier entries already flag,
-  triggering a competing launch myself would collide with that in-flight work, so I did not. This `[INFRA] P1` item's
-  checkbox stays correctly unchecked — the `[DATA] P2` evidence it's gated on will land as a byproduct of slot-22's (or
-  a subsequent worker's) in-flight retry, not from a fresh duplicate launch. No code change shipped (none was evidenced
-  as needed, confirming slot-9's original conclusion still holds). Also confirmed the `wave_launcher.py` out-of-scope
-  cron issue (`tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`) is still open/unfixed at
-  the root (only reactively killed twice so far) — it is the recurring cause of the singleton lock staying held; whoever
-  next has bandwidth on that P1 should prioritize the actual fix (pause/fix the cron), not another reactive kill, since
-  it's what's blocking every downstream ES_OPT retry attempt.
+  mid-session, slot-22 re-arming. Per the dual-watcher double-launch race this doc's earlier entries already flag, did
+  NOT trigger a competing launch — would collide with that in-flight work. **Checked this item's box**: its own literal
+  question (is this a false-positive zombie-watchdog kill needing a watchdog-side fix) is conclusively answered NO by
+  slot-9's evidence chain, and no code change is evidenced as needed — that investigation is genuinely complete. The
+  residual post-fix recurrence check was previously embedded as an unparseable inline `- [ ] [DATA] P2.` mid-paragraph
+  (never its own top-level bullet, so backlog regen could never have dispatched it as a separate task) — split it out
+  into a real standalone `[DATA] P2` bullet below this item so it stays tracked and dispatchable once slot-22's (or a
+  subsequent) retry produces the post-fix evidence, instead of silently riding on this now-closed item's coattails. No
+  code shipped (none evidenced as needed, confirming slot-9's original conclusion). Also confirmed the
+  `wave_launcher.py` out-of-scope cron issue
+  (`tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`) is still open/unfixed at the root
+  (only reactively killed twice so far) — it is the recurring cause of the singleton lock staying held; whoever next has
+  bandwidth on that P1 should prioritize the actual fix (pause/fix the cron), not another reactive kill, since it's
+  what's blocking every downstream ES_OPT retry attempt.
