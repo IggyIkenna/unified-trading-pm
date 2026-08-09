@@ -316,20 +316,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                                                          disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                                                          future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                                                          bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                                                          prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                                                          2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                                                          hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                                                          threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                                                          loader, post-delete verification) and filed
-                                                          `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                                                          AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                                                          actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                                                          stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                                                          via that issue doc, not this line.
-                                                          verification actually complete.
+                                                                  disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                                                                  future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                                                                  bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                                                                  prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                                                                  2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                                                                  hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                                                                  threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                                                                  loader, post-delete verification) and filed
+                                                                  `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                                                                  AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                                                                  actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                                                                  stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                                                                  via that issue doc, not this line.
+                                                                  verification actually complete.
 
 - [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
@@ -465,15 +465,17 @@ drift_direction: advance-code
       from `non_error_venues` once monotonicity blocks them. 2 new regression test files (typed-reason +
       failure-routing, both blocked and control cases); `quality-gates.sh` green, sentinel matches
       `096bc5647a996576cb13b04c41dea578b3986f03` (QG's own `no_blank_empty_reason` check now passes cleanly).
-- [ ] [REVIEW] P2. Land the bar-edge fallback-to-open fix — the source doc's own text claims it was committed as
-      `instruments-service@20a92886`, but that SHA does NOT resolve to a real commit in any local clone (verified
+- [x] ✅ [REVIEW] P2. Land the bar-edge fallback-to-open fix — the source doc's own text claims it was committed as
+      instruments-service SHA `20a92886`, but that SHA does NOT resolve to a real commit in any local clone (verified
       2026-08-09) — treat the "already committed" claim as unverified, not fact: re-derive whether the fix (raise on
       unsupported timeframe instead of silently falling to the open edge, in `ccxt_adapter.py` and any sibling adapter)
       actually exists on `live-defi-rollout` today; if not, (re)implement it. Repo: instruments-service. Source:
       `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (bar-edge-fallback item). Done when: IS
       `quality-gates.sh` is confirmed green (or RB-d3bb9020's current status is re-verified); the fix is confirmed
       present with a REAL, resolvable commit SHA cited (or freshly implemented + committed); if still blocked, the
-      checkbox is left open with a freshly-dated status note (not silently re-committed).
+      checkbox is left open with a freshly-dated status note (not silently re-committed). **DONE 2026-08-09 (slot 8)** —
+      `20a92886` confirmed unresolvable; freshly implemented + committed + `quality-gates.sh` green, sentinel matches —
+      instruments-service@9b91297f.
 - [ ] [CODE] P3. Swap the hand-maintained MTDS `_instruments_metadata.py` venue-prefix-map mirror for a direct import of
       UAC's `VENUE_PREFIX_TO_PROTOCOL` (removing the duplicate mapping); also fix the stale comment in
       `unified-trading-system-ui/lib/types/defi.ts` naming the already-deleted `CANONICAL_VENUE_TO_ADAPTER`. Repo:
@@ -525,31 +527,31 @@ drift_direction: advance-code
       it as the live index" — is not directly achievable safely).
 
       Findings: (1) `rebuild_defi_manifest.py --apply` (mtds@3f5cc6e/cf63cf6, already shipped) UPSERTS by cell key
-          (date, venue, data_type, instrument_type, instrument_id, underlying) — a freshly canonical-spelled row lands as a
-          NEW key alongside the stale legacy-spelled row instead of removing it, so a plain re-run cannot achieve
-          "replace, not merge". (2) UTL's real wholesale-replace primitive is deliberately NOT used bucket-wide by
-          `rebuild_mtds_manifest.py` (uses an additive merge helper instead) because the DeFi tick bucket co-locates MDPS
-          candle rows under the same index — a bucket-wide replace would silently delete every candle-manifest row (see
-          `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`).
+                  (date, venue, data_type, instrument_type, instrument_id, underlying) — a freshly canonical-spelled row lands as a
+                  NEW key alongside the stale legacy-spelled row instead of removing it, so a plain re-run cannot achieve
+                  "replace, not merge". (2) UTL's real wholesale-replace primitive is deliberately NOT used bucket-wide by
+                  `rebuild_mtds_manifest.py` (uses an additive merge helper instead) because the DeFi tick bucket co-locates MDPS
+                  candle rows under the same index — a bucket-wide replace would silently delete every candle-manifest row (see
+                  `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md`).
 
-          Correct design mirrors the sports K1K2 casing-revert manifest-swap script's ADD+REMOVE CAS-protected pattern
-          (`scripts/sports/k1k2_casing_revert_2026_07_27/`), precisely scoped: ADD = fresh canonical rows from a
-          `rebuild_defi_manifest.py --dry-run --beta-manifest-out` projection (needs `--chunk-days` and
-          `--beta-manifest-out` made compatible — currently mutually exclusive — to avoid the OOM class already fixed for
-          the non-projection path, `mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md`); REMOVE =
-          ONLY the legacy-spelled/uppercase-itype/chain-polluted rows whose canonical replacement is confirmed present in
-          that same projection (never "every stale row" — mirrors the K1K2 script's report-scoped-REMOVE invariant, so a
-          captured cell is never orphaned).
+                  Correct design mirrors the sports K1K2 casing-revert manifest-swap script's ADD+REMOVE CAS-protected pattern
+                  (`scripts/sports/k1k2_casing_revert_2026_07_27/`), precisely scoped: ADD = fresh canonical rows from a
+                  `rebuild_defi_manifest.py --dry-run --beta-manifest-out` projection (needs `--chunk-days` and
+                  `--beta-manifest-out` made compatible — currently mutually exclusive — to avoid the OOM class already fixed for
+                  the non-projection path, `mtds_manifest_rebuild_scripts_unbounded_memory_no_chunking_2026_07_31.md`); REMOVE =
+                  ONLY the legacy-spelled/uppercase-itype/chain-polluted rows whose canonical replacement is confirmed present in
+                  that same projection (never "every stale row" — mirrors the K1K2 script's report-scoped-REMOVE invariant, so a
+                  captured cell is never orphaned).
 
-          Sub-steps: (a) make `--chunk-days` and `--beta-manifest-out` compatible; (b) build a new
-          `defi_manifest_venue_itype_canon_swap.py` (mirrors the K1K2 script skeleton) with a dry-run default, an
-          apply-prod-plus-confirm gate, and a mandatory pre-write snapshot; (c) run the chunked dry-run projection on a
-          dedicated VM (corpus-scale GCS walk, never the shared host) and diff it against live; (d) run the
-          pre-migration drain gate plus snapshot; (e) apply and post-verify (0 stale rows remaining, 0 captured-to-failed
-          mass flip). Repo: market-tick-data-service. Done when: the live defi index has 0 legacy-spelled/uppercase-itype/
-          chain-polluted rows AND 100% of their canonical twins present with matching row_count, verified via a fresh
-          post-apply GCS-sampled re-audit (mirrors the N6r 2026-06-18 post-apply verification already done for the
-          index-walk fix).
+                  Sub-steps: (a) make `--chunk-days` and `--beta-manifest-out` compatible; (b) build a new
+                  `defi_manifest_venue_itype_canon_swap.py` (mirrors the K1K2 script skeleton) with a dry-run default, an
+                  apply-prod-plus-confirm gate, and a mandatory pre-write snapshot; (c) run the chunked dry-run projection on a
+                  dedicated VM (corpus-scale GCS walk, never the shared host) and diff it against live; (d) run the
+                  pre-migration drain gate plus snapshot; (e) apply and post-verify (0 stale rows remaining, 0 captured-to-failed
+                  mass flip). Repo: market-tick-data-service. Done when: the live defi index has 0 legacy-spelled/uppercase-itype/
+                  chain-polluted rows AND 100% of their canonical twins present with matching row_count, verified via a fresh
+                  post-apply GCS-sampled re-audit (mirrors the N6r 2026-06-18 post-apply verification already done for the
+                  index-walk fix).
 
 ## Codex SSOTs
 
