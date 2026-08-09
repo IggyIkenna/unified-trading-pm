@@ -217,11 +217,19 @@ before launch.
       genuine Tardis data absences, NOT a processing order artifact). Also 06-18: OKX-SWAP=0 and KRAKEN=0 only (other 4
       venues have data) — Tardis gap for those two venues on that day. Pre-existing remnants on 06-25 (BYBIT/OKX/KRAKEN
       ~3 objects each) are NOT from this VM.
-- [ ] [CODE] P2. **Fix MTDS pre-flight code bug**: `venue_fetch.py:526-552` missing positive `if has_instruments:`
+- [x] ✅ [CODE] P2. **Fix MTDS pre-flight code bug**: `venue_fetch.py:526-552` missing positive `if has_instruments:`
       branch that populates `venue_instrument_ids` from IS data. When IS data IS available, `venue_instrument_ids` stays
       None → empty expected_atoms → false "fully covered" for any venue+date with EXPECTED_* atoms. Fix: fetch IS
       instrument IDs when `has_instruments=True` (or treat `_expected_atoms = {}` as "no filter" in
-      `_apply_preflight_skip_filter` to disable skip when no instrument filter is active).
+      `_apply_preflight_skip_filter` to disable skip when no instrument filter is active). —
+      market-tick-data-service@a31126b8. Added `_fetch_instrument_ids_from_is()` (preflight.py) + wired it through the
+      orchestrator facade; extracted the preflight instrument-resolution block into `_resolve_venue_instrument_ids()`
+      (venue_fetch.py) to stay under the function-size gate. Updated the 5 test fixtures mocking
+      `_check_instruments_available=True` to also mock the new collaborator (avoids live GCS calls in unit tests) and
+      fixed `test_preflight_lookup_skips_already_captured` (its coarse venue-level captured_index row no longer
+      satisfies genuine per-instrument atom coverage — that WAS this bug). Added a focused unit test
+      (`test_fetch_instrument_ids_from_is.py`). Full unit suite (8,256 tests) + quality-gates.sh green; landed +
+      ancestry-verified on live-defi-rollout.
 - [x] ✅ [INFRA] P1. **Harden the singleton-lock refusal against the confirmed agent-deletes-fresh-VM recurrence**
       (repo: deployment-service) — deployment-service@bc48b09b. Removed the raw, directly-executable
       `gcloud compute instances delete ... --quiet` line from the singleton-lock/collision refusal message in
