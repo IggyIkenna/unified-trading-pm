@@ -9,7 +9,7 @@ summary: >-
   for workers was deliberately NOT extended to review, and review's force path is idle-gated on top. Live 2026-08-09: a
   4.3h /api/activity window held ZERO context-lifecycle events for role=review — the same silence that preceded the
   main-agent incident, and with the same shape of cause (no fresh, self-owned measurement source).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -34,6 +34,9 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: backend_engineer
 drift_direction: fix-regression
 resolved_by:
+  "slot-20/slot-31, 2026-08-09 (all 3 todos closed: review's DB-vs-fresh-probe delta measured live, review extended into
+  `_read_pct`'s same-tick out-of-band ratchet @agent-orchestrator@c5be809, generic context_signal_stale
+  frozen-vs-growing detector shipped @agent-orchestrator@db0384e)"
 locked_by:
 locked_since:
 supersedes:
@@ -51,6 +54,12 @@ context_scope:
 ---
 
 # Review agents' context signal has no fresh, self-owned source
+
+> **🟢 RESOLVED 2026-08-09** — all three todos closed. Review's SlotRow-vs-fresh-probe staleness measured live (DB
+> frozen at 0%/`killed` for ~22h while a fresh `context_probe` read measured 17-19%, moving); review extended into
+> `_read_pct`'s same-tick out-of-band ratchet (`agent-orchestrator@c5be809`); a generic, fix-mechanism-independent
+> `context_signal_stale` detector shipped for every target (`agent-orchestrator@db0384e`), watching for a stored pct
+> that freezes while a fresh transcript read keeps growing. Full detail in the Progress Log below.
 
 ## The gap
 
@@ -86,9 +95,10 @@ That reasoning is now questionable for two measured reasons:
       as the worker path does. Done-when: a unit test proves a review target whose SlotRow is stale still reads the
       measured value, and `tests/test_context_lifecycle.py`'s idle-check ban still passes. — agent-orchestrator@c5be809
       (see Progress Log below).
-- [ ] [BACKEND] P2. Emit a `context_signal_stale` activity event when any target's stored pct has not moved for longer
-      than a configurable window while its transcript shows the session growing. Done-when: the event fires in a unit
-      test for a frozen-column target and is visible in `GET /api/activity`.
+- [x] ✅ [BACKEND] P2. Emit a `context_signal_stale` activity event when any target's stored pct has not moved for
+      longer than a configurable window while its transcript shows the session growing. Done-when: the event fires in a
+      unit test for a frozen-column target and is visible in `GET /api/activity`. — agent-orchestrator@db0384e (see
+      Progress Log below).
 
 ## Progress Log
 
@@ -148,4 +158,21 @@ That reasoning is now questionable for two measured reasons:
   `_measured_pct` mock for the two `_tick_target` tests that still need `_pane_has_child_processes` controllable) onto
   the review-path tests. Full `bash scripts/quality-gates.sh` green both before and after rebasing onto a same-day
   upstream `context_probe.py` commit (2974 passed, 2 skipped). Shipped via quickmerge — agent-orchestrator@c5be809,
+  verified ancestor of `origin/live-defi-rollout`.
+
+- **2026-08-09 (slot 20)** — Todo 3 shipped: a new `_tick_stale_signal_detector` in `server/context_lifecycle.py`, wired
+  into `_tick_target` alongside the existing saturation detector, fires a `context_signal_stale` activity event when a
+  target's STORED `context_used_pct` (the value `_read_pct` decided for a tick) has not changed at all for
+  `context_signal_stale_window_seconds` (new tuning knob, default 1800s, 0 disables) while a fresh,
+  independently-measured transcript read (`_measured_pct`) shows growth since the freeze began — compared across the
+  WINDOW (a baseline taken when the streak starts vs. a fresh read once the window elapses), not within one tick, to
+  avoid racing whatever `_read_pct` itself already measured that same tick. Deliberately a pure observer: it never
+  writes SlotRow/AgentRow itself, so it stays a second, independent watcher of the same failure shape even if todo 2's
+  out-of-band ratchet regresses or a future role/path isn't covered by it. Re-baselines (rather than firing) when the
+  window elapses with no growth evidence — the common, healthy case of a target genuinely idle at a stable pct — so it
+  doesn't busy-poll the transcript every tick forever, and resets cleanly whenever the stored figure actually moves (up
+  on progress, down on a real compaction). 6 new unit tests added (fires on frozen-pct-plus-growing-transcript, does not
+  fire before the window elapses, does not fire without growth evidence, resets on a stored-pct change, disabled at
+  window=0, plus the `ActivityRow`/`GET /api/activity`-visibility assertion the todo's done-when calls for). Full
+  `bash scripts/quality-gates.sh` green (2979 passed, 2 skipped). Shipped via quickmerge — agent-orchestrator@db0384e,
   verified ancestor of `origin/live-defi-rollout`.
