@@ -122,12 +122,17 @@ than acted on:
 
 ## Todos
 
-- [x] ✅ [SCRIPT] P2. **RULED 2026-08-06 (operator), option A [WORKER REC]: narrow the existing exception.** `[SCRIPT]`
+- [x] ✅ [SCRIPT] P2. **RULED 2026-08-02 (operator), option A [WORKER REC]: narrow the existing exception.** `[SCRIPT]`
       tag (was `[OPERATOR]`), AO-dispatchable — allow a commit whose diff to an over-cap plan is confined to appending a
       dated audit marker / `last_updated` bump (no checkbox lines touched, no net new content) through the line-cap
       gate. **BLOCKED-OPERATOR-DECISION** — rule on A/B/C/D above. A is a change to a hard quality gate's policy
       (`scripts/plan-hygiene/check_line_caps.sh` + its codex SSOT), which is not a worker-determinable outcome. Operator
-      ruled option A 2026-08-06. (repo: unified-trading-pm)
+      ruled option A 2026-08-02 (`/plans/archive/issues/plan_reconcile_parked_operator_decisions_2026_08_02.md`).
+      **CORRECTED 2026-08-09 (plan_reconciler agt-2d9a32)**: this and the following todo previously cited a 2026-08-06
+      ruling date and an unfilled `<sha>` evidence placeholder — both wrong. Verified via `git log` against
+      `scripts/plan-hygiene/check_line_caps.sh` (its own code comment at line 19 already cited the correct 2026-08-02
+      date) and this doc's own 2026-08-04 Progress Log entry below, which independently corroborates 2026-08-02. The
+      underlying work was genuinely done; only the citation was stale/incomplete. (repo: unified-trading-pm)
 - [x] ✅ [SCRIPT] P2. Once ruled: if A, implement the marker-only carve-out in `scripts/plan-hygiene/check_line_caps.sh`
       (diff-shape check: no checkbox lines touched), update
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "The line-cap does NOT block archival of
@@ -135,7 +140,8 @@ than acted on:
       split. Then, either way, land the deferred `/plans/active/lst_rate_honest_coverage_2026_07_21.md` Phase-3
       annotation citing `defi_satellite_ao_dispatch_batch8_2026_08_02.md`, plus that doc's 2026-08-02 KEEP-NA verdict
       marker (both drafted and reverted this run — full text in the Progress Log below). Implemented
-      `unified-trading-pm@<sha>` (2026-08-07). (repo: unified-trading-pm)
+      `unified-trading-pm@d4f7fab9d` (2026-08-02, verified reachable on `origin/live-defi-rollout` via
+      `git merge-base --is-ancestor` — corrected 2026-08-09, see prior todo). (repo: unified-trading-pm)
 - [ ] [SCRIPT] P3. Report how wide the class is: list every `plans/active/*.md` over 1000L with ≥1 open todo (the docs
       that are currently un-verdictable), so the fix's real blast radius is a measured number rather than this doc's
       single example. (repo: unified-trading-pm)
