@@ -134,18 +134,23 @@ per `task_template.md`'s dispatch-scope bar) rather than fixed by this session, 
 
 ## Todos
 
-- [ ] [BACKEND] P1. Narrow all 21 real `except Exception:` occurrences (table above, excludes the `audit_dead_code.py`
-      string-literal false positive) to the specific exception type(s) each surrounding try-block actually expects —
-      same approach as this doc's own drive-by fix to `scripts/finops/measure_agent_fleet_tokens.py` (already shipped).
-      Re-run `rg "except Exception:" --type py --glob "!tests/**" scripts/` after to confirm only the 1 known false
-      positive remains, then confirm `bash scripts/quality-gates.sh` passes the "No broad except Exception" check on a
-      pristine tree. Repo: unified-trading-pm.
+- [ ] [BACKEND] P3 (re-triaged 2026-08-09, was P1). Narrow the 21 real `except Exception:` occurrences (table above,
+      excludes the `audit_dead_code.py` string-literal false positive) to the specific exception type(s) each
+      surrounding try-block actually expects — same approach as this doc's own drive-by fix to
+      `scripts/finops/measure_agent_fleet_tokens.py` (already shipped). **Downgraded from P1 → P3**: the NEW FACET todo
+      below's resolution found all 13 of the non-false-positive files in this table were ALREADY covered by
+      `BE_EXCLUDE_GLOBS` in `scripts/quality-gates.sh` (mostly since 2026-06-01) — they do NOT currently fail the gate
+      (verified: the check's real `rg` invocation with `BE_EXCLUDE_GLOBS` applied returns 0 hits on the unchanged
+      corpus). This is genuine code-quality debt (a documented bypass is still a bypass), not an active gate-blocker —
+      re-run `rg "except Exception:" --type py --glob "!tests/**" scripts/` after any fix to confirm the count drops,
+      then remove the now-unneeded `BE_EXCLUDE_GLOBS` entry for that file (+ its `QUALITY_GATE_BYPASS_AUDIT.md` §2.9
+      entry, backfilled 2026-08-09) once genuinely narrowed. Repo: unified-trading-pm.
 - [ ] [BACKEND] P3. Optional: teach the `codex_rg "except Exception:"` check
       (`scripts/quality-gates-base/base-library.sh` ~line 1005) to skip matches inside string literals (e.g. a
       lightweight AST-based scan instead of a raw regex) so a generated-code template string (like
       `audit_dead_code.py`'s) can never trip it — only worth doing once the P1 above is clear, since right now the false
       positive is masked by 21 real hits anyway. Repo: unified-trading-pm (`scripts/quality-gates-base/`).
-- [ ] [BACKEND] P1. **NEW FACET, 2026-08-09 (slot 18): the check produced a FALSE-NEGATIVE green once, on a tree that
+- [x] ✅ [BACKEND] P1. **NEW FACET, 2026-08-09 (slot 18): the check produced a FALSE-NEGATIVE green once, on a tree that
       demonstrably still had all 21 violations.** A `bash scripts/quality-gates.sh` run on commit `204bb3c0bd89` (the
       exact SHA `.qg_last_passed_sha` recorded as fully green) printed `✅ No broad except Exception` and exited 0 — but
       `git show 204bb3c0bd89:<any of the 12 flagged files>` confirms every one of the 21 real occurrences was PRESENT in
@@ -161,7 +166,34 @@ per `task_template.md`'s dispatch-scope bar) rather than fixed by this session, 
       trust to actually catch a NEW broad except is worse than no gate — it gives false confidence). Whoever picks up
       the P1 fix-the-21 todo above should first try to reproduce this (rerun `quality-gates.sh` 2-3x on an unchanged
       tree, compare outputs) before assuming the check is reliable once the corpus is clean. Repo: unified-trading-pm
-      (`scripts/quality-gates-base/base-library.sh`).
+      (`scripts/quality-gates-base/base-library.sh`). **RESOLVED 2026-08-09 (this session) — root cause found, NOT a
+      check bug: `unified-trading-pm` sources `scripts/quality-gates-base/base-service.sh` (not `base-library.sh` — the
+      prior write-up cited the wrong file; `base-library.sh` is for library-tier repos and isn't loaded here at all).
+      `scripts/quality-gates.sh` defines a `BE_EXCLUDE_GLOBS` array (line ~222) that is spliced into the broad-except
+      `codex_rg` call as `--glob "!<pat>"` exclusions. As of commit `6ecd10de72` (2026-06-01, "fix(qg): full local QG
+      passes — extend BE_EXCLUDE_GLOBS") plus several earlier/later additions, **13 of the 14 files in this doc's
+      original inventory table were ALREADY in `BE_EXCLUDE_GLOBS`** (the 14th, `audit_dead_code.py`, was also already
+      excluded — it's the acknowledged string-literal false positive). Verified directly: running the check's actual
+      `rg` invocation WITH `BE_EXCLUDE_GLOBS` applied against the current tree (which still has 22 raw
+      `except Exception:` hits) returns **0 hits** — deterministically, not flaky. The prior investigation's methodology
+      compared a RAW `rg "except Exception:" scripts/` count against the gate's printed verdict without ever applying
+      the same exclude-globs the real invocation uses — an apples-to-oranges comparison that looked like non-determinism
+      but isn't. The genuine V=1 this doc opened with came from `scripts/finops/measure_agent_fleet_tokens.py`'s 2 NEW
+      (not-yet-excluded) occurrences added by the trigger commit — once that file's drive-by fix landed, V correctly
+      returned to 0 because the OTHER 21 were never really failing the check in the first place. The real defect
+      surfaced by this investigation is different: most of those 13 files' `BE_EXCLUDE_GLOBS` entries were added without
+      the `QUALITY_GATE_BYPASS_AUDIT.md §1.1` documentation this check's own inline comment requires
+      (`# Bypass: add --glob exclusions for files whitelisted in QUALITY_GATE_BYPASS_AUDIT.md §1.1`) — a governance gap,
+      not a gate-reliability gap. Fixed this session: (1) backfilled `QUALITY_GATE_BYPASS_AUDIT.md` §2.9 with per-file
+      rationale for the 10 genuinely-active-and-undocumented entries (`pin_branch_protection_rulesets.py`,
+      `generate_unified_spec.py`, `verify_env_tiered_buckets_provisioned.py`, `validate-import-deps.py`,
+      `check-integration-dep-coverage.py`, `migrate_sports_gcs_to_hive.py`, `qg_audit.py`,
+      `check_emission_policy_paired_callsites.py`, `reap_stale_blockers.py`, `generate_ui_reference_data.py`, plus the
+      `audit_dead_code.py` false-positive note); (2) discovered + removed 8 STALE `BE_EXCLUDE_GLOBS` entries whose files
+      no longer contain `except Exception:` at all (`smoke-test-dev.py`, `validate-buildspec.py`,
+      `validate-cloudbuild.py`, `validate-internal-editable.py`, `validate-manifest-dag.py`, `generate-cicd-diagram.py`,
+      `tier_c_promotion_gate.py`, `reconcile_release_tags.py`) — each verified via `rg -c "except Exception:" <file>`
+      == 0. Shipped: `unified-trading-pm@<see Progress Log below>`.
 
 ## Progress Log
 
@@ -185,3 +217,22 @@ per `task_template.md`'s dispatch-scope bar) rather than fixed by this session, 
   which already carried an equivalent independent fix) shipped clean via `quickmerge --agent`:
   `unified-trading-pm@b12d43618` + `@3fffb345b`, both verified `git merge-base --is-ancestor` of
   `origin/live-defi-rollout`.
+- **2026-08-09 (slot-15, backend_engineer) — root cause found, NEW FACET resolved**: Investigated the false-negative
+  facet fresh (the exact SHA `204bb3c0bd89` no longer resolves in this clone — rewritten/reflog-expired — so a
+  byte-for-byte re-run on that SHA wasn't possible; instead reproduced the underlying mechanism directly against the
+  current tree, which still carries the same 22 raw `except Exception:` hits). Found `unified-trading-pm` sources
+  `scripts/quality-gates-base/base-service.sh`, not `base-library.sh` (the prior write-ups cited the wrong file — PM is
+  a service-tier repo for QG purposes). `scripts/quality-gates.sh` defines `BE_EXCLUDE_GLOBS` and splices it into the
+  broad-except `codex_rg` call; as of mostly 2026-06-01 (`6ecd10de72`), 13 of this doc's 14-file inventory were ALREADY
+  excluded there. Confirmed deterministically: running the check's actual invocation (globs applied) against the
+  unchanged current tree returns 0 hits, every time — not flaky. **Verdict: not a check bug.** The genuine V=1 this doc
+  opened with came from `measure_agent_fleet_tokens.py`'s 2 new (not-yet-excluded) occurrences; once fixed, V correctly
+  returned to 0 because the other 21 were never really tripping the gate. The real gap: most of those `BE_EXCLUDE_GLOBS`
+  entries were added without the `QUALITY_GATE_BYPASS_AUDIT.md §1.1` documentation the check's own comment requires — a
+  governance/traceability gap, not a reliability one. Fixed + shipped `unified-trading-pm@e31246f4f` (verified
+  `git merge-base --is-ancestor` of `origin/live-defi-rollout`): backfilled `QUALITY_GATE_BYPASS_AUDIT.md` §2.9 with
+  per-file rationale for the 10 undocumented-but-active entries + the `audit_dead_code.py` false-positive note, and
+  removed 8 stale `BE_EXCLUDE_GLOBS` entries whose files no longer contain `except Exception:` at all. Re-ran full
+  `bash scripts/quality-gates.sh` on the shipped tree: exit 0, "No broad except Exception" ✅, sentinel written at that
+  exact SHA. Downgraded the "fix the 21" todo above P1→P3 since it's code-quality debt behind an (now-documented)
+  bypass, not an active gate-blocker.
