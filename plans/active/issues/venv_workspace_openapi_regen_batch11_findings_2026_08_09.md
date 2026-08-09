@@ -119,11 +119,11 @@ ship.
 
 ## Todos
 
-- [ ] 1. [SCRIPT] P1. Re-run `generate-unified-openapi.sh` against the now-fixed `.venv-workspace`, independently verify
-      the phantom-service-consolidation explanation for `config-registry.json`'s `total_repos` drop (cross-check
+- [x] ✅ 1. [SCRIPT] P1. Re-run `generate-unified-openapi.sh` against the now-fixed `.venv-workspace`, independently
+      verify the phantom-service-consolidation explanation for `config-registry.json`'s `total_repos` drop (cross-check
       `workspace-manifest.json` + any `strategy_repo_consolidation` plan/codex doc), and if confirmed, commit the
       regenerated outputs (`config-registry.json`, `unified-trading-system.openapi.json`, `ui-reference-data.json`,
-      `system-topology.json`) via quickmerge in `unified-api-contracts`. (repo: unified-api-contracts)
+      `system-topology.json`) via quickmerge in `unified-api-contracts`. — unified-api-contracts@7896deda
 - [ ] 2. [SCRIPT] P2. Either build a real drift/regression gate comparing fresh vs. committed `config-registry.json` /
       `unified-trading-system.openapi.json` extraction counts (formalizing the manual checkpoint used in this session),
       or correct `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`'s Residual 1 text (and any other
@@ -142,3 +142,21 @@ ship.
 - **2026-08-09** — Filed by the batch11 infra worker (slot-10) per the Findings Closure HARD RULE, after root-causing
   and shipping the `.venv-workspace` fix but hitting a genuine BLOCKED-EXTRACTION-REGRESSION on the extraction-count
   checkpoint plus 3 smaller unrelated findings surfaced along the way.
+- **2026-08-09** — Todo 1 closed (slot-10). Rebuilt `.venv-workspace` clean in this slot (23 editable installs OK, only
+  the non-Python `unified-trading-system-ui` repo skipped — expected). Independently confirmed the
+  phantom-service-consolidation explanation via two authoritative plan docs (not just the manifest):
+  `plans/archive/features_repo_consolidation_2026_05_08.plan.md` (`status: archived`) confirms all 8 `features-*` source
+  repos incl. `features-sports-service` were subtree-merged into `features-service`;
+  `plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md` (`status: complete`) confirms `ml-inference-service` was
+  merged into `ml-service`; both cross-checked against `workspace-manifest.json`'s `removedEntries`. Re-ran
+  `generate-unified-openapi.sh` end-to-end (script still fails at the known Finding-3 GCS 404 on the instrument-snapshot
+  step, but all 4 target outputs generate before that point). Fresh `config-registry.json`: `total_configs` 26→30 (up),
+  `configs_by_repo` actual count 16→14 — the exact same 7 phantom repos dropped
+  (`features-calendar/commodity/ cross-instrument/delta-one/multi-timeframe/sports-service`, `ml-inference-service`) and
+  the same 5 genuine new repos added (`fund-administration-service`, `greeks-service`, `instruments-service`,
+  `market-tick-data-service`, `unified-trading-library` config_interface/) as this doc's finding 1 originally reported —
+  NOT a regression. `unified-trading-system.openapi.json` also up (paths 473→628, schemas 105→353). Committed + shipped
+  via quickmerge: `unified-api-contracts@7896deda` (6 files: `config-registry.json`,
+  `unified-trading-system.openapi.{json,yaml}`, `ui-reference-data.json`, `system-topology.json`, `orphan-report.txt` —
+  the last two are same-generator-step companions of the named targets, included to avoid stale-companion drift). QG
+  green (301s, sentinel matched HEAD), verified `7896deda` is an ancestor of `origin/live-defi-rollout`.
