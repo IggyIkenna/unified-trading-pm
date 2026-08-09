@@ -91,7 +91,7 @@ entries:
     successor: read_availability_index_bare_defi_callers_2026_07_27
   - repo: deployment-api
     file: deployment_api/services/data_status_service.py
-    line: 483
+    line: 490
     function: _read_index_cached
     status: wrapper_alias_already_projected_internally
     successor: read_availability_index_bare_defi_callers_2026_07_27
