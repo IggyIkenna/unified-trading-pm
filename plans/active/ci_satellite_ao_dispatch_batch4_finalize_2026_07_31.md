@@ -104,16 +104,39 @@ context_scope:
   - No FALSE-CHECKED-checkbox traps found among the 9 docs beyond the ones already correctly handled by prior
     reconciliation passes (fleet_wide_qg doc's `archive_exempt`, github_actions_operator_gated_followups' partial-open
     status).
-- [ ] [REVIEW] P1. **Re-check the conflict-gated Deferred items (D4-1 through D4-4) for whether their blocker has
-      cleared.** D4-1 (quickmerge.sh branch-check broadening) — is `scripts/quickmerge.sh` free again (batch-4 todo 1
-      landed) AND has batch-4 todo 2's step-2 alias fix landed? If both, D4-1 is ready-for-batch-5 extraction — note it,
-      do NOT draft it here. D4-2/D4-3 (the test-impact design-scoping todo + BigQuery verification, both deferred
-      because `github_actions_operator_gated_followups_2026_07_17.md` was already claimed by todo 9's sweep) — is that
-      file free again (todo 9 landed)? If so, both are ready-for-batch-5, note and do not draft. D4-4
-      (`sit_validated_tree_treadmill`'s stuck-gate monitor) — confirm it is still exactly batch1's own still-open todo
-      and no new doc has claimed it since. **Done when**: each of D4-1 through D4-4 has either (a) a note that it is
-      ready for batch-5 extraction because its blocker cleared, or (b) a re-verified confirmation the blocker is still
-      open. Do NOT draft follow-up todos here — this plan's scope is reconciliation, not fresh drafting.
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-09 (slot 33, review→cicd craft).** Re-checked all 4 conflict-gated Deferred items;
+      no follow-up drafted here per scope.
+  - **D4-1 (quickmerge.sh branch-check broadening, step 3 of
+    `issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md`) — BOTH blockers cleared, ready for
+    batch-5 extraction.** Batch-4 todo 1 (`quickmerge.sh` dormancy gate + hook deletion) landed
+    `unified-trading-pm@b02ba28c7`, live-verified ancestor of `origin/live-defi-rollout` — `scripts/quickmerge.sh` is
+    free again. Batch-4 todo 2 step 2 (the `UnifiedCloudServicesConfig` alias-precedence fix, the step-3 precondition)
+    landed `unified-trading-library@dc1dc7df`, live-verified ancestor. Step 3 (broaden the branch check to recognise
+    `live-defi-rollout`/`staging`) remains the sole open item in its source doc — genuinely a design/judgment call on
+    the fleet-wide shipping gate, so still correctly `assigned_vm: NA` there; batch-5 (or later) should extract it as a
+    bounded AO todo now that both preconditions are met. Not drafted here per this todo's own scope limit.
+  - **D4-2 (test-impact design-scoping todo) and D4-3 (BigQuery `resource_samples` verification) — file freed AND both
+    underlying items already fully DONE, no extraction needed at all.**
+    `github_actions_operator_gated_followups_2026_07_17.md` was freed by batch-4 todo 9 landing (2026-08-09 billing
+    sweep, confirmed in that doc's own Progress Log). But independently of batch-4, a sibling plan
+    (`ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2) already picked up and shipped both: BigQuery
+    `resource_samples` utilization measured `avg_cpu_pct=50.6%` (within the 50-70% band, checkbox flipped ~line 685 of
+    the source doc); the test-impact design-scoping item was found MOOT — already `[x]` (extracted 2026-08-03, shipped
+    as `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`, no fresh design needed). Source doc's own
+    2026-08-09 Progress Log entry ("`ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2 ... both remaining items
+    closed") confirms this. So D4-2/D4-3 are superseded-by-completion, not merely unblocked — batch 5 already did the
+    work; nothing left to extract into a future batch.
+  - **D4-4 (`sit_validated_tree_treadmill`'s stuck-gate monitor) — no longer open; already shipped.** Re-verification
+    found batch1's own todo (`ci_satellite_ao_dispatch_batch1_2026_07_26.md`, the "SIT-BLOCKED for N consecutive
+    promoter ticks" item) is now `[x]` ✅ done — `scripts/cicd/sit_gate_stuck_detector.py` +
+    `.github/workflows/sit-gate-stuck-detector.yml` shipped `unified-trading-pm@409c35437`, live-verified ancestor of
+    `origin/live-defi-rollout`. Source doc
+    `plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` is `status: resolved`,
+    archived, zero open checkboxes, `locked_by` empty. D4-4 is fully resolved — not "still open", not a fresh item to
+    extract; batch4's original framing ("already claimed by batch1's still-open todo") is now stale since batch1's todo
+    has since landed.
+  - No new doc has claimed any of D4-1/D4-4's underlying work since batch4 was drafted; D4-2/D4-3 were claimed and
+    completed by batch5, as detailed above.
 - [ ] [REVIEW] P2. **Re-verify the operator-gated (D4-5 through D4-18), live-incident (D4-19), and needs-re-scoping
       (D4-20) Deferred items have not silently changed state.** In particular: has the operator ruled on D4-10 (the
       `pm_bats_tests` base-service.sh plan-destination question, escalated below)? Has
@@ -166,3 +189,10 @@ context_scope:
   `ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`'s own 2026-07-31 na-eligibility-audit note
   asked for. No FALSE-CHECKED-checkbox traps found beyond the ones already correctly flagged/handled elsewhere. Todos
   2-4 remain (D4-1..D4-20 re-checks + archival) — not in this todo's scope.
+- **2026-08-09 (slot 33, review→cicd craft)** — Completed todo 2 (D4-1 through D4-4 re-check). D4-1: both blockers
+  cleared (`unified-trading-pm@b02ba28c7`, `unified-trading-library@dc1dc7df`, both live-verified ancestors) — ready for
+  batch-5 extraction, noted only, not drafted. D4-2/D4-3: file freed by batch-4 todo 9, but both underlying items were
+  already independently shipped by sibling plan `ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2 (2026-08-09) —
+  superseded-by-completion, nothing to extract. D4-4: batch1's "still-open" todo has since landed
+  (`unified-trading-pm@409c35437`, live-verified ancestor; source doc archived + `status: resolved`, zero open) — fully
+  resolved, not open. Todos 3-4 (D4-5..D4-20 re-verify + archival) remain — not in this todo's scope.
