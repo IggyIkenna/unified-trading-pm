@@ -675,26 +675,28 @@ Did not flip todo #2's checkbox (backfill hasn't genuinely completed — 2025 is
 row yet — that's the next fresh session's job once a retry actually lands 2025/2026 progress. Full findings + Progress
 Log entry: `issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`.
 
-**Watcher armed this session (slot 22, ~09:12Z)**: slot 21's watcher was found dead at the ~09:12Z check (session ended,
-`run_in_background` doesn't survive session death — expected, not a bug). Armed a replacement via the proven setsid
-pattern: script `wait_and_launch_es_opt_slot22.sh` (in this session's scratchpad, NOT committed — same
-ad-hoc-per-session convention as every prior watcher in this saga), **PID `2086857`**, verified isolated
-(PGID=SID=PID=2086857), polling every 180s, launches ES_OPT the moment `tradfi-bf-*` hits 0, 180-min bound. Observed
-directly for ~15 min (2 bounded windows, 09:13-09:26Z): lock flat at 14 VMs (6 CME duplicated pairs + 5 NASDAQ-2023 + 3
-NYSE-2023, the out-of-scope wave `wave_launcher.py`'s 2nd recurrence had already launched before I killed it — tracked
-in the scope-violation doc), zero drain. `wave_launcher.py` itself showed 0 live processes at last check (a mid-window
-`ps` count of "4" looked like a transient artifact — fleet count didn't move, and a direct re-check moments later showed
-0; not investigated further, noted in case it recurs).
+**Watcher instability this session (slot 22, 09:12-09:39Z) — background/setsid watchers did NOT survive at all today,
+worse than this saga's earlier precedent.** Slot 21's watcher was dead at pickup (session end, expected). Armed TWO
+setsid replacements in a row (`wait_and_launch_es_opt_slot22.sh`, same recipe as every prior watcher here) — PID
+`2086857` died silently ~6 min in, PID `3004093` (re-armed 09:30:54Z) also died silently ~5-6 min in (confirmed dead by
+09:36Z). Both were verified isolated (PGID=SID=PID) at launch, so this isn't a process-group leak — some other factor in
+today's environment is killing them faster than the 1.5h+ survival seen earlier in this same saga. **Not chasing this
+further this session** (diminishing returns, per no-sawtooth polling discipline) — flagging for whoever next babysits
+this: bounded synchronous foreground polling (`timeout 480 bash -c 'while ...; sleep 60; done'`) may be more reliable
+than backgrounding today, same as the 2026-08-08T22:50Z entry above already found once before.
 
-- **NEXT ACTION (fresh session)**: check todo #2's checkbox first. If `[ ]`: (1) check `kill -0 2086857` — if alive,
-  it's still polling, just monitor (tail its log, `.../scratchpad/wait_and_launch_es_opt_slot22.log` — session-specific
-  path, may not exist in a different session's scratchpad; if the PID is dead and no `tradfi-bf-es-opt-*` VMs exist,
-  re-arm following the recipe above with a fresh scratchpad path). (2) If VMs named `tradfi-bf-es-opt-*` already exist
-  (watcher fired), monitor for completion, THEN re-run the **corrected** manifest query (`underlying in (SP500, ES)`,
-  NOT the old 11-id filter) and expect to see 2025/2026 move, not the other years. (3) Watch for `wave_launcher.py`
-  recurring again (2-3 occurrences observed so far, cadence unclear — not strictly hourly) — kill by exact PID if seen,
-  don't touch the cron installer itself (still unidentified after a quick crontab/systemd-timer check this session came
-  up empty — that's the scope-violation doc's own P1). (4) Once 2025 shows real coverage and 2026 is materially higher,
-  update the closeout plan's "S&P index options" row (currently reverted/unedited this session — file is at the
-  1000-line hard cap, needs a shrink pass before ANY edit can land, not just this one — flag to whoever owns that file's
-  size) and flip this todo.
+Total direct observation this session: ~27 min across 4 windows (09:13-09:39Z). Lock: flat at 14 VMs for ~25 min, then
+ONE VM completed naturally (14→13 at 09:36Z) — first sign of real drain observed this session, still far from 0.
+`wave_launcher.py`: 0 live processes at last check (a mid-window count of "4" looked transient, fleet didn't move; not
+investigated further).
+
+- **NEXT ACTION (fresh session)**: check todo #2's checkbox first. If `[ ]`: (1) check current lock
+  (`gcloud compute instances list --filter='name~"^tradfi-bf-"'`) and whether any `tradfi-bf-es-opt-*` VMs exist
+  (someone's watcher fired) — if so, monitor for completion, THEN re-run the **corrected** manifest query
+  (`underlying in (SP500, ES)`, NOT the old 11-id filter) and expect 2025/2026 to move, not the other years. (2) If not,
+  re-arm a watcher OR use bounded foreground polling (both legitimate — foreground may be more reliable today per this
+  session's findings). (3) Watch for `wave_launcher.py` recurring (2-3 occurrences so far, cadence unclear) — kill by
+  exact PID if seen, don't touch the cron installer itself (still unidentified — scope-violation doc's own P1). (4) Once
+  2025 shows real coverage and 2026 is materially higher, update the closeout plan's "S&P index options" row
+  (reverted/unedited this session — that file is at the 1000-line hard cap, needs its own shrink pass before ANY edit
+  can land there, not specific to this one) and flip this todo.
