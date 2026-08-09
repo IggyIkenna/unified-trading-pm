@@ -136,3 +136,29 @@ the VM-scale run:
   `_MLTrainingModeHandler` machinery since this driver is model-id-driven, not instrument/timeframe-driven. Full
   `bash scripts/quality-gates.sh` green (2188 passed, 4 skipped, 80.96% coverage). Todo 2 (the VM-scale run) is now
   unblocked by the `sequential: true` gate.
+- 2026-08-09 (slot-10): started todo 2. Refreshed ml-training code tarballs (`create-code-tarballs.sh --ml-training`;
+  confirmed `ml-service-code.manifest.json` pins `3232e17`, the commit carrying the driver). Launched 5 independent
+  dedicated VMs (n2-highmem-16, `asia-northeast1-c`, `uts-prd-sa`, `VM_SHUTDOWN_ON_COMPLETION=true`), one per model,
+  each running
+  `python -m ml_service.training --operation sports-ensemble-train --model-id <model_id> --start-date 2019-08-01 --end-date 2025-07-31`
+  (the CLI's `--start-date`/`--end-date` are argparse-required but unused by this operation — the runner derives its own
+  train/val/test season windows from each model's `SportsModelSpec`). No `--family`/ singleton-lock applies; the 5
+  models are independent so this runs as 5 parallel VMs rather than one long serial run (per the VM-launcher runbook's
+  parallelization-threshold rule). VM names (routed via the pre-registered `ml-` `VM_PREFIX_TO_BUCKET` prefix, no new
+  registry entry needed):
+  - `ml-train-sports-model-2a-20260809-191045` (model_2a)
+  - `ml-train-sports-model-2b-20260809-191058` (model_2b)
+  - `ml-train-sports-model-2c-20260809-191114` (model_2c)
+  - `ml-train-sports-model-2d-20260809-191127` (model_2d)
+  - `ml-train-sports-model-2e-20260809-191143` (model_2e)
+
+  Each VM self-deletes on completion (success or failure); logs persist at
+  `gs://deployment-scripts-central-element-323112/vm-logs/{VM_NAME}/run.log` regardless. Success is
+  `SportsEnsembleTrainingRunner(<model_id>) complete: train=N val=N test=N rows, K features, test_metrics={home:{rmse, mae,r2}, draw:{...}, away:{...}}`
+  in that log; honest-absence abort is `sports-ensemble-train for <model_id>: no data available, run aborted`. No
+  artifact-persistence/results-JSON path exists yet (out of scope per the driver's own docstring) — the run.log line is
+  the only record, so it's being captured here once each VM terminates. A background watchdog (`run_in_background`, 3min
+  poll, 5h cap) is tailing all 5 VMs to terminal state; if this session ends before it reports, the next worker on this
+  doc should re-check the 5 VM names above via `gcloud compute instances describe <name> --zone=asia-northeast1-c` (gone
+  = terminal) and pull `gs://deployment-scripts-central-element-323112/vm-logs/<name>/run.log` for the result line
+  before assuming the run needs re-launching.
