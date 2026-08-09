@@ -297,6 +297,33 @@ re-escalated to avoid alert fatigue on an already-well-tracked item):**
 still-open `asset_group: [ci, infrastructure]` retag question the `ci` tranche's own
 `ag_closeout_audit_ci_parked_2026_08_08.md` had already flagged pending, unrelated to the archival itself.
 
+## Addendum (2026-08-09, pre-compact checkpoint — 2 findings surfaced during the run but not yet filed above)
+
+1. **P3, pre-existing corpus debt, NOT caused by this run's edits** — a final scoped `check_reference_paths.py --only`
+   sweep across the (post-archival) infra tranche surfaced 9 dangling refs unrelated to anything this run touched:
+   `ag_closeout_audit_infra_parked_2026_08_08.md` (grace-protected, can't fix this run) still cites the old active path
+   for `infra_satellite_ao_dispatch_batch6_2026_08_02.md` (same class this run fixed elsewhere — routed as a filed todo
+   below rather than fixed, since editing a grace-window doc is out of bounds); and 2 already-archived docs
+   (`infra_satellite_ao_dispatch_batch2_2026_07_27.md` + its finalize twin,
+   `infra_satellite_ao_dispatch_batch5_2026_08_01.md`) reference other already-archived-before-this-session docs
+   (`candle_feature_canonical_path_divergence_2026_07_20.md`, `infra_satellite_ao_dispatch_batch3_2026_07_30.md`,
+   `infra_satellite_ao_dispatch_batch4_2026_07_31.md`) at stale paths. Pre-existing before this run started; not fixed
+   (out of this run's scope — only referrers to docs THIS run moved were in scope per the 6-step ritual). Filed below.
+2. **P1, grace-window, flagged but not asserted as a clear defect (TOPIC-C finding B1, never individually filed)** —
+   `infra_satellite_ao_dispatch_batch10_2026_08_09.md` ships `status: active` directly (self-justified: "manual
+   satellite-batch-extraction pass", different provenance than batch1/6/7/9, which all self-documented `status: draft`
+   - explicit operator-approval-required). Not acted on this run (grace-protected + the hunter itself flagged this as
+     needing re-confirmation, not a confirmed defect) — filed below for a future pass to re-check once out of the grace
+     window.
+
+- [ ] [DOCS] P3. Fix the pre-existing dangling refs to `infra_satellite_ao_dispatch_batch6_2026_08_02.md`'s old active
+      path in `ag_closeout_audit_infra_parked_2026_08_08.md` (once out of grace window) + the pre-existing stale refs in
+      `infra_satellite_ao_dispatch_batch2_2026_07_27.md`(+finalize)/`batch5_2026_08_01.md` to other already-archived
+      docs' old active paths (addendum item 1 above). (repo: unified-trading-pm)
+- [ ] [DOCS] P2. Re-check `infra_satellite_ao_dispatch_batch10_2026_08_09.md`'s `status: active`-direct provenance
+      (addendum item 2 above) once it clears the 12h grace window — confirm whether the draft-then-review convention was
+      correctly bypassed or should have been followed. (repo: unified-trading-pm)
+
 ## Archive candidates (operator review)
 
 1. **`infra_satellite_ao_dispatch_batch6_2026_08_02.md`** — archived (not just flagged): both todos `[x]` with hard
@@ -345,3 +372,69 @@ this run's scope, noted for a future pass: (a) the corpus-wide `populate_epic_bo
 to fully fix the epic hub's stale plan-count (touches 22 other epics, out of infra-tranche scope — filed inline on the
 epic hub itself, not as a separate todo); (b) `infrastructure_master.md:191`'s "sports rename Stage 1" gating premise,
 which EC-6 could not confirm/refute from infra-tranche docs alone (sports-domain content).
+
+## Deferred work after 2026-08-09 (pre-compact checkpoint)
+
+| Item                                                                                                                                                                 | State / why deferred                                                            | Blocked-on                                          |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------- |
+| BLK-e02c6622 (effort:max policy, P0)                                                                                                                                 | Cannot be done yet — awaiting operator ruling                                   | Operator-owned                                      |
+| BLK-f614bb24 (pm_scripts_typecheck_debt unlock, P2)                                                                                                                  | Cannot be done yet — awaiting operator ruling                                   | Operator-owned                                      |
+| BLK-58fadc62 (2 codex-SSOT gaps, P2)                                                                                                                                 | Cannot be done yet — awaiting operator ruling                                   | Operator-owned                                      |
+| STEP 8 loop-and-wait itself                                                                                                                                          | Not done — mid-loop, interrupted by this pre-compact checkpoint at ~83% context | Nobody — pick up: re-poll `/api/slots/12/messages`  |
+| ~10 durable todos in "Filed" above (CITE_RE, multi-counting, 2 tooling bugs, na_inventory stall, 3× codex staleness, AO-readiness violations, delete/VM-launch gaps) | Real work, not started — each is self-contained with file/line/recommendation   | Nobody — any future infra-tranche or dedicated pass |
+| 2 addendum items (pre-existing dangling refs, batch10 provenance)                                                                                                    | Real work, small — see Addendum section above                                   | Nobody (1 item also grace-window-gated)             |
+
+**Recommended next item**: none of the above is actionable by a future session ahead of the 3 blocked-questions —
+they're the highest-priority (P0/P2, already asked) and everything else is downstream or independent P2/P3 filed work.
+If resuming this exact run: re-poll `/api/slots/12/messages`, apply any answers per STEP 8, then re-schedule or
+complete. If starting fresh (this run's `/done` already fired, or the dispatch is considered closed): the filed todos
+are independently actionable in priority order (P0 → P1 → P2 → P3) by any future infra-tranche pass or a dedicated
+worker, no ordering dependency between them.
+
+## Lessons learned this run (worth not re-learning)
+
+1. **`git mv <src> <dst>` on a file with UNSTAGED edits silently moves the last-STAGED/committed content, not the
+   current on-disk content** — bit this run twice (had to redo the `client_reporting_api` archival commit and the
+   `batch6_finalize` archival commit after discovering the landed content was stale). Fix: always `git add <file>`
+   (stage current edits) BEFORE `git mv`, or make content edits and the `git mv` as fully separate steps with a
+   `git add` in between. Always verify with `git show HEAD:<path> | grep <the-thing-you-changed>` immediately after any
+   archival commit — a clean "rename" summary in the commit output does NOT guarantee the content is current (SKILL.md
+   Phase 5.9(c) already warns about this generally; this is the specific mechanical cause).
+2. **`check_effort_signal_ratchet.py`'s `_frontmatter()` parser is naive same-line regex** — a `key:\n  value # comment`
+   form (which prettier WILL produce if your inline comment is long enough to wrap) reads as an empty value. Keep
+   frontmatter comment additions short enough to stay on one line (~100 chars total), or verify with
+   `grep -n '^key:' file` after prettier runs, not before.
+3. **`check_plan_operator_ruling_evidence.py` requires a traceable source within its window (50 chars before / 300 chars
+   after) of EACH "operator ruling"-phrase occurrence independently** — quoting another doc's `resolved_by:` text
+   verbatim (which itself says "(operator ruling)") creates a SECOND occurrence that needs its OWN nearby citation, even
+   if the surrounding paragraph already cites the source doc once. Fix: repeat the citation path textually near each
+   occurrence, not just once per todo.
+4. **The real API route is `/api/plan-health/result` (hyphen) — `plan_reconciler.md`'s own STEP 7 example uses
+   `plan_health` (underscore) and 404s.** Filed as a todo; worth independently verifying every URL a role file gives you
+   against the actual route table before trusting the literal string, especially for a once-per-run call like this one
+   where a typo isn't caught by iteration.
+5. **`check_archive_candidates.sh --only` respects `archive_exempt: true`; `check_terminal_status_archived.py --only`
+   does not** (only respects `locked_by`) — when a flip-then-archive split needs an interim commit that satisfies BOTH
+   gates without prematurely archiving, `archive_exempt: true` alone isn't enough; keep `status` non-terminal too for
+   the interim commit (see the batch6/client_reporting_api commit sequences in this doc for the working pattern).
+6. **Host was extremely loaded all session** (load average 61-70 on an 8-core box — confirmed many other slots running
+   similar plan-hygiene/reconciliation work concurrently). A full corpus-wide `run_hygiene_sweep.sh --ci` took >5
+   minutes and had to be backgrounded; several individual `git commit` calls timed out at 30s under contention and
+   needed a retry with a longer timeout. Scoping mechanical checks to just the tranche/files-in-play via each script's
+   `--only` flag (where available) was consistently faster and more reliable than the whole-corpus mode under this load.
+7. **Raw hunter sub-agent transcripts were NOT promoted into the repo** (10 files, ~65KB total, in this session's
+   scratchpad) — their actionable substance was extracted into this findings doc's Contradictions/Doc-drift/Filed
+   sections; the raw transcripts themselves are working notes, consistent with `plan_reconciler.md`'s own design ("your
+   review branch already holds your checkpointed work + the run-findings doc" — the findings doc, not raw hunter output,
+   is the intended durable artifact for this role). They will be lost on scratchpad cleanup; nothing committed points at
+   them.
+
+## Progress Log
+
+- **2026-08-09, plan_reconciler agt-a398c9 (slot 12, infra tranche)**: STEPs 1-7 complete (see full run narrative
+  above). STEP 8 (loop-and-wait for BLK-e02c6622/BLK-f614bb24/BLK-58fadc62) was IN PROGRESS — one wait-loop tick
+  completed (no answers yet as of the first poll) — when session context hit ~83% and this pre-compact checkpoint ran.
+  All work durable: 19 commits on `plan_reconciler/agt-a398c9`, pushed, `ahead=0` confirmed against origin. Review PR:
+  https://github.com/IggyIkenna/unified-trading-pm/pull/2653. Whoever resumes (this session post-compact, or a fresh
+  dispatch) should re-poll `/api/slots/12/messages` and continue STEP 8 exactly as before — nothing about the run's
+  substance needs to be redone.
