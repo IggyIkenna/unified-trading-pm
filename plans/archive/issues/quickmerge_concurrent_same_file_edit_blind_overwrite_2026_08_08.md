@@ -130,18 +130,18 @@ read, regardless of whether the specific lines textually conflict.
       rebase-based conflict detection is not defective for any of the tested shapes.
 
       The live incident's actual mechanism was different from a rebase at all: `d52a11058`'s diff is provably built ON
-              TOP OF `c886da0f6`'s own output blob (`bf0d8513e` — the exact same hash appears as `c886da0f6`'s post-commit blob
-              AND as `d52a11058`'s pre-commit blob for this file), meaning no rebase/reconciliation ever ran for that push — it
-              was a plain, valid, sequential commit already built on the latest content. The data loss happened because
-              `d52a11058`'s author READ the file (necessarily fresh — its diff's "before" state is `c886da0f6`'s exact output)
-              and then REPLACED the already-present checkbox annotation + Progress Log entry with their own shorter one, instead
-              of appending alongside it. That is a content-discipline gap, not a git/quickmerge mechanism gap — from git's
-              perspective this was a perfectly valid, non-conflicting commit.
+                      TOP OF `c886da0f6`'s own output blob (`bf0d8513e` — the exact same hash appears as `c886da0f6`'s post-commit blob
+                      AND as `d52a11058`'s pre-commit blob for this file), meaning no rebase/reconciliation ever ran for that push — it
+                      was a plain, valid, sequential commit already built on the latest content. The data loss happened because
+                      `d52a11058`'s author READ the file (necessarily fresh — its diff's "before" state is `c886da0f6`'s exact output)
+                      and then REPLACED the already-present checkbox annotation + Progress Log entry with their own shorter one, instead
+                      of appending alongside it. That is a content-discipline gap, not a git/quickmerge mechanism gap — from git's
+                      perspective this was a perfectly valid, non-conflicting commit.
 
-              **Fix shipped**: `unified-trading-pm/agents/RULES.md` § 1 — new rule requiring APPEND, not replace, when a shared
-              plan/issue doc's checkbox/Progress-Log entry already carries content from another author/session. No
-              `quickmerge.sh` change made — its conflict detection is correct as-is; changing it would not have prevented this
-              incident's actual mechanism. (repo: unified-trading-pm)
+                      **Fix shipped**: `unified-trading-pm/agents/RULES.md` § 1 — new rule requiring APPEND, not replace, when a shared
+                      plan/issue doc's checkbox/Progress-Log entry already carries content from another author/session. No
+                      `quickmerge.sh` change made — its conflict detection is correct as-is; changing it would not have prevented this
+                      incident's actual mechanism. (repo: unified-trading-pm)
 
 ## Progress Log
 
