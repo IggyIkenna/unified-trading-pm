@@ -261,3 +261,49 @@ mid-hygiene-sweep); bundling a full-corpus regen into this tradfi-scoped PR woul
 against sibling PRs for zero tradfi-specific benefit. Discarded via `git checkout --` after confirming their content
 (same precedent as STEP 1's `master_to_live_defi` side-effect handling). A future whole-corpus `all` pass (or whichever
 tranche's PR lands last) is the natural place for that refresh to actually land.
+
+## Tooling note (chat-only discovery, recorded here so it isn't lost)
+
+- [ ] [DOC] P3. `agents/plan_reconciler.md`'s STEP 7 result-POST snippet cites `POST $SERVER_URL/api/plan_health/result`
+      (underscore) — the server actually serves this at `/api/plan-health/result` (hyphen, matching the
+      `/api/plan-health/dispatch` naming convention). Confirmed live: the underscore path returns `404 Not Found`; the
+      hyphenated path works (returned `200` for this run's own result POST, `agt-1a9b86`). Also confirms the doc's claim
+      that "the result POST is same-box localhost, which the server trusts on the loopback bind regardless of the
+      header" is inaccurate as observed — the live server returned `401 invalid or missing X-Orchestrator-Secret` until
+      the header was sent explicitly (this session's `ORCHESTRATOR_INTERNAL_SECRET` env var was in fact non-empty, so
+      omitting the header was the actual mistake, not a loopback-trust gap — but the doc's phrasing ("may be EMPTY...
+      that's fine") reads as if omitting the header entirely is safe, which this run's own 401 contradicts). Someone
+      with `agents/` edit authority (outside this skill's `plans/**`-only scope) should fix both lines in
+      `agents/plan_reconciler.md` §"STEP 7".
+- [ ] [DOC] P3. This run's boot heartbeat + a large number of subsequent turns (40+, spanning this run's full duration)
+      carried a recurring `Operator answered your BLOCKED question — check your messages now and resume` prompt that
+      never corresponded to real content on `GET /api/slots/6/messages`, the `/api/slots/6/progress` response, or
+      `GET /api/escalations/active` (verified empty every single time, including well after this run posted a genuine
+      blocked question, `BLK-dd01168b`). Most likely a stale artifact tied to the dead predecessor session that occupied
+      slot 6 before this dispatch booted (`worker_alive=false since ~14:58-14:59Z`, a "5-slot wedge cluster"), but the
+      notification firing on nearly every turn for the ENTIRE run's duration — rather than once, or clearing after the
+      first empty check — suggests the underlying delivery/dedup mechanism itself may have a bug worth a dedicated look,
+      separate from this one occurrence. Filed here since it's outside this run's `plans/**` remit to fix directly.
+
+## Session state at handoff (2026-08-09, context ~84%, pre-compact checkpoint)
+
+**Everything substantive is done, committed, and pushed**
+(`git rev-list --count origin/plan_reconciler/agt-1a9b86..HEAD` = 0, working tree clean). PR
+[#2631](https://github.com/IggyIkenna/unified-trading-pm/pull/2631) is open. The result was POSTed to
+`/api/plan-health/result` (200 OK). The only open item is STEP 8's wait-loop:
+
+| Item                                                 | State                                                                     | Blocked on                                                                    |
+| ---------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `BLK-dd01168b` (codex-edit ruling, see Doc-drift #2) | Operator-owned, unanswered after 40+ checks over this run's full duration | A human/main-agent reading the dashboard escalation queue — not work, waiting |
+
+**If this session resumes**: re-check `GET http://localhost:8765/api/slots/6/messages` once. If answered: apply the
+ruling to `codex/09-strategy/mvp-universe-per-asset-group.md` (remove the 2 stale tokens per option A, the recommended
+option), checkpoint-commit + push to `plan_reconciler/agt-1a9b86`, update this findings doc + the PR body, then
+`POST /api/slots/6/done {"task_id": "", "sha": "", "evidence": "", "one_shot_complete": true}` and stop. If a fresh
+session picks this up instead (this doc + the pushed branch/PR are the full handoff — nothing else is needed to resume):
+same procedure. If still unanswered indefinitely, per `agents/plan_reconciler.md`'s own design this is an acceptable
+terminal state ("even if the operator never answers... nothing is lost") — the finding is durably filed either way.
+
+**Lesson for continuation**: earlier in this run's STEP-8 loop, several cycles double-polled (checked messages
+immediately after `ScheduleWakeup` in the same turn, rather than actually yielding). Corrected mid-run — a resumed
+session should schedule-and-stop, not schedule-then-immediately-recheck.
