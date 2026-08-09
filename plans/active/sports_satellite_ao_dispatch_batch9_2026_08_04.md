@@ -141,13 +141,15 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       `/plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md` (todo + Progress Log, both docs
       cross-referenced). **Next worker**: verify the endpoint returns 200 (see that doc's probe recipe) before
       relaunching; do not relaunch blind.
-- [ ] [DIAG] P2. Re-measure the golden-window (2025-09-01..2025-11-30) ODDS+PREDICTIONS blank-reason `empty_confirmed`
-      residual (~3,062/3,078 cells as of the 2026-06-24 measurement, later ~3,255 combined) against the live manifest,
-      and file a scoped issue doc
+- [x] ✅ [DIAG] P2. Re-measure the golden-window (2025-09-01..2025-11-30) ODDS+PREDICTIONS blank-reason
+      `empty_confirmed` residual (~3,062/3,078 cells as of the 2026-06-24 measurement, later ~3,255 combined) against
+      the live manifest, and file a scoped issue doc
       (`plans/active/issues/sports_odds_predictions_golden_window_empty_confirmed_residual_<date>.md`) capturing the
       root cause + fix options — read-only/diagnosis only, no code or manifest change. Source:
       `data_completion_sports_2026_07_24.md`. Done when: the live-manifest re-measurement figures are recorded and a new
-      scoped issue doc exists describing the root-cause candidates and fix options for the residual.
+      scoped issue doc exists describing the root-cause candidates and fix options for the residual. — **DONE 2026-08-09
+      (slot-20): 0 blank-reason cells remain**, already resolved by prior shipped typing work. See
+      `plans/archive/issues/sports_odds_predictions_golden_window_empty_confirmed_residual_2026_08_09.md`.
 - [ ] [DATA] P2. Apply the already-tool-extended historical migration for prediction's two confirmed-historical-only
       legacy `instrument_availability` shapes (`canonical_question_group={G}/day={D}/venue={V}/...` +
       `market_lifecycle`'s `day={D}/group={G}/venue={V}/...`, ~13,282 objects per the 2026-08-03 dry-run;
@@ -975,3 +977,13 @@ latency before the error), confirming a sustained 15h+ outage, not a transient b
 prior kill) rather than let it keep burning GCE billing against a call that cannot succeed. Did not relaunch. Todo 2
 annotated in place with this citation and tagged `BLOCKED-UPSTREAM-OUTAGE`; stays unchecked — completion requires the
 vendor endpoint to recover first (verify via the convergence doc's probe recipe before any future relaunch).
+
+### 2026-08-09 — Todo 3 (golden-window ODDS+PREDICTIONS blank-reason `empty_confirmed` re-measurement) — RESOLVED, 0 residual (slot-20)
+
+Bounded, column-pruned + row-filtered live-manifest re-measurement (not a whole-corpus walk): **0 blank-reason cells
+remain** — all 11,334 in-window `empty_confirmed` cells (ODDS 3,663 / PREDICTIONS 7,671) now carry a typed reason.
+Already resolved by prior shipped typing scripts (2026-06-24..07-06 range), no new fix needed. Full measurement +
+root-cause citation in
+`plans/archive/issues/sports_odds_predictions_golden_window_empty_confirmed_residual_2026_08_09.md`. Flagged there (not
+actioned, out of scope): `data_completion_sports_2026_07_24.md`'s own duplicate P2 line for this residual should be
+struck by whoever next touches that plan.
