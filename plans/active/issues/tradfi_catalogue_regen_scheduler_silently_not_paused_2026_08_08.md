@@ -63,8 +63,9 @@ context_scope:
 
 While executing the operator-approved tradfi §8 4-leg catalogue retirement purge (2026-08-08), I checked live Cloud
 Scheduler state before running the purge, per the delete-safety protocol's "verify current state, never assume a prior
-claim" discipline. Two independent plan docs (`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s Progress Log,
-2026-06-25 entry) state:
+claim" discipline. One plan doc (`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s Progress Log, 2026-06-25
+entry — **corrected 2026-08-09, plan_reconciler agt-a3e83c**, was "two independent plan docs" but only this one is
+quoted/named below) states:
 
 > "Tradfi compute STOPPED ... paused **`lifecycle-catalogue-regen-tradfi-daily` (01:00)** +
 > **`instrument-catalogue- regen-nightly` (02:00)** at 01:38 UTC — protective, before the 02:00 fire would re-bake the

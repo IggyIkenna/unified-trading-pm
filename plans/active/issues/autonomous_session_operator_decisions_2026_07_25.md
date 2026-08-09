@@ -442,10 +442,12 @@ rather than buried in a 345-line residuals plan. C: Fold it instead into
 `/plans/active/prediction_live_clob_depth_capture_2026_07_24.md` (2 open), the other Phase-A3 split sibling. Other:
 operator can type a custom answer.
 
-**Status**: resolved — option A. The lock is mandatory (CLAUDE.md's own text is unambiguous); sharpened the
-mechanism-fix todo in `issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md` with the real
-commit-msg-vs-pre-commit staging nuance found while scoping it, and retro-cleaned the stale `locked_by:` on the
-already-independently-verified archived doc. `unified-trading-pm@2c61a8dc4`.
+**Status**: resolved — option A. **Corrected 2026-08-09 (plan_reconciler agt-a3e83c)**: this line previously repeated
+entry 11's resolution text verbatim (the `locked_by:`-gate mechanism fix), which does not answer this entry's own
+fold-target question. The fold itself was done correctly despite the log defect — verified live:
+`/plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md` is archived ("ARCHIVED 2026-07-26 —
+sole remaining open item folded into prediction_phase_ab_residuals_2026_07_24.md § A3"), and
+`prediction_phase_ab_residuals_2026_07_24.md` § A3 confirms the fold-in text is present, citing this entry.
 
 ---
 

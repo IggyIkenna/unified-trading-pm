@@ -315,7 +315,12 @@ which value is measured-reality is needed per venue, not a mechanical merge.
 
 - [ ] [DATA] P3. Investigate why read_availability_index(bucket, columns=[...]) returned an empty DataFrame on
       2026-07-27 (flagged 'worth its own follow-up, not chased here').
+- [ ] [DATA] P3. Re-verify manifest coverage for `2023-04-15..2023-12-31` (cefi-hyperliquid-2023-\*) once
+      `DEPLOYMENT_COMPLETED exit_code=0` lands (**added 2026-08-09, plan_reconciler agt-a3e83c** — genuinely untracked
+      prose per the audit note below, unlike the read_availability_index item directly above which already had a todo).
 
 > **2026-08-06 archive-candidate audit**: Hyperliquid todo's own text flags 'worth its own follow-up, not chased here to
-> stay in scope' (read_availability_index empty-DF) and a second prose-only 'Follow-up: re-verify manifest coverage for
-> 2023-04-15..2023-12-31 once DEPLOYMENT_COMPLETED exit_code=0 lands' — neither became a `- [ ]` todo.
+> stay in scope' (read_availability_index empty-DF) — now the P3 todo directly above (**corrected 2026-08-09,
+> plan_reconciler agt-a3e83c** — this note's "neither became a todo" claim was already false for this item in the very
+> commit that wrote it) — and a second prose-only 'Follow-up: re-verify manifest coverage for 2023-04-15.. 2023-12-31
+> once DEPLOYMENT_COMPLETED exit_code=0 lands', now also tracked as the P3 todo above.
