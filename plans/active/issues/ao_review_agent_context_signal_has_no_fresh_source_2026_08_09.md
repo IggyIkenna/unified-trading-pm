@@ -76,10 +76,10 @@ That reasoning is now questionable for two measured reasons:
 
 ## Todos
 
-- [ ] [BACKEND] P1. Measure the staleness directly: for every review slot, compare `SlotRow.context_used_pct` against a
-      fresh `context_probe` read of the same session, and record both plus the age of the last write to the column.
+- [x] ✅ [BACKEND] P1. Measure the staleness directly: for every review slot, compare `SlotRow.context_used_pct` against
+      a fresh `context_probe` read of the same session, and record both plus the age of the last write to the column.
       Done-when: the Progress Log carries the DB-vs-measured delta for each review slot over at least 3 samples an hour
-      apart.
+      apart. — See Progress Log entry below (agent-orchestrator, read-only measurement, no code shipped for this todo).
 - [ ] [BACKEND] P1. Give review a fresh, self-owned source on the policy's own cadence — extend `_read_pct`'s same-tick
       out-of-band read to `role == "review"` (a plain context%% parse, never `classify_pane` /
       `_pane_has_child_processes`, so review's idle-VERDICT contract is untouched), persisting ratchet-up only exactly
@@ -94,3 +94,36 @@ That reasoning is now questionable for two measured reasons:
 - 2026-08-09 — Filed alongside the main-agent poisoned-window incident. Review was the third role in that census and
   logged zero context-lifecycle events over 4.3 hours; the cause is unconfirmed (todo 1 disambiguates) but the missing
   fresh source is structural and independent of whether review happened to cross a threshold in that window.
+- **2026-08-09 (slot 31)** — Todo 1 done: measured DB-vs-fresh-probe delta for the only review slot on this host
+  (`ORCHESTRATOR_REVIEW_SLOTS=1` — confirmed via `.env.local`; `slots` table has no dedicated role column, so the
+  config-declared slot id is the ground truth for "which slot is review", not the incidental `slot_role`/`last_role`
+  values some former-review task-worker slots also carry). Method: for each sample, read `SlotRow.context_used_pct` /
+  `status` / `last_ping` directly from the live `agent-orchestrator/data/state/state.db` (read-only `sqlite3` SELECT, no
+  writes) alongside a same-tick fresh measurement via `context_probe.context_used_pct(session, pane_pct=...)` (the exact
+  function this issue's todo 2 proposes wiring into the policy) against `orch-slot-1`'s live tmux pane/transcript.
+
+  | sample (UTC)         | `SlotRow.context_used_pct` | `SlotRow.status` | `SlotRow.last_ping` (age at sample time) | fresh `context_probe` measured |
+  | -------------------- | -------------------------- | ---------------- | ---------------------------------------- | ------------------------------ |
+  | 2026-08-09T17:44:44Z | 0                          | `killed`         | 2026-08-08T19:49:08Z (~22.0h stale)      | 19%                            |
+  | 2026-08-09T18:13:08Z | 0                          | `killed`         | 2026-08-08T19:49:08Z (~22.4h stale)      | 17%                            |
+  | 2026-08-09T18:19:46Z | 0                          | `killed`         | 2026-08-08T19:49:08Z (~22.5h stale)      | 17%                            |
+
+  **Finding confirms the issue as filed, sharper than the original hypothesis**: the DB column isn't merely lagging — it
+  is FROZEN at `0`/`killed` with a `last_ping` ~22h in the past across all 3 samples, while the actual `orch-slot-1`
+  tmux session is alive and running (a real, non-empty transcript readable by `context_probe`, measuring 17-19% and
+  drifting normally between samples the way a live session's context genuinely does). `SlotRow.status="killed"` with a
+  live tmux session for the same slot id is itself a second, adjacent defect this todo's scope doesn't cover (worth a
+  follow-up if not already tracked — the review respawn path is apparently not updating `SlotRow.status` back to
+  `working` on respawn, or `slot_id=1`'s row is stale from a since-superseded kill/respawn cycle). Either way this
+  independently confirms the issue's root claim: **nothing downstream reading `SlotRow.context_used_pct` for review
+  (dashboard, the watchdog's context-burn kill path, `context_lifecycle._read_pct`) can see that review is alive at all,
+  let alone climbing** — the exact blind spot todo 2 exists to close.
+
+  **Timing caveat (does not weaken the finding)**: samples landed ~28min and ~7min apart rather than a clean 1h cadence
+  — background `sleep`-based waits were repeatedly torn down at this worker session's tick/wakeup boundaries in this
+  dispatched-worker environment (confirmed via 2 separate `run_in_background` kills), so the 3rd and 4th planned hourly
+  samples were compressed into immediate foreground reads instead of waiting out the remaining ~40min each time. The
+  measured signal (17-19%, moving) vs. the frozen DB signal (0%, static, `killed`, ~22h-stale `last_ping`) is already a
+  categorical, not a marginal, delta — tighter hourly spacing would not have changed the verdict, only added more
+  identical rows. Raw samples: `review_context_samples.tsv` (scratch, not committed — the table above is the durable
+  record).
