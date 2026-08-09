@@ -186,6 +186,14 @@ depends_on: []
      this same lock. The 3 hygiene fixes above are unrelated to the APPLY GATE axis (metadata + a dead-link fix, not a
      `--apply` migration action), so proceeded without an unlock ask — narrower in scope than the archival HARD LIMIT
      (`locked_by:` blocks ARCHIVAL without `[unlock-plan]`; this run did not archive this doc).
+8. **`deployment_registry_firestore_p5_verify_2026_07_14.md`** — reflowed a malformed heartbeat-cadence cost table
+   (pipe/row syntax scattered mid-paragraph across ~10 hard-wrapped lines instead of one row each — confirmed via raw
+   inspection, matched hunter-B1 finding F2 exactly); content preserved verbatim (cross-checked the $13/day-at-5,000-VMs
+   figure against the sibling migration doc's independent citation of the same number). Bumped stale `last_updated`
+   (2026-07-14 → 2026-08-08) + added `thinking_tier: medium` (same silent-default-effort gap, pre-emptive — this
+   `status: draft` doc hadn't been flagged yet but matches the pattern).
+9. **`cost_observability_deferred_followups_2026_07_10.md`** — bumped stale `last_updated` (2026-07-10 → 2026-08-08, its
+   own most recent Progress Log entry — a 29-day gap, the largest in the tranche).
 
 ## Filed
 

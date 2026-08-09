@@ -20,7 +20,7 @@ related:
   - /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md
   - /plans/archive/2026_07/deployment_registry_firestore_p4_dynamodb_2026_07_14.md
 created: "2026-07-14"
-last_updated: "2026-07-14"
+last_updated: "2026-08-08"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -29,6 +29,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 assigned_role: review
+thinking_tier: medium
 drift_direction: advance-code
 depends_on:
   - deployment_registry_firestore_p3_cutover_2026_07_14.md
@@ -85,14 +86,15 @@ datetimes; QG-green.
 ## Progress Log
 
 - **2026-08-08 (draft-flip conflict-check session)**: Operator authorized flipping AO plans from draft to active today
-  conditional on a real per-doc conflict-check; checked THIS doc's own `depends_on: [deployment_registry_firestore_p3_cutover_2026_07_14, deployment_registry_firestore_p4_dynamodb_2026_07_14]`
-  + `gate_on_depends: true` before touching anything. P4 is `complete (archived)`, but P3
-  (`deployment_registry_firestore_p3_cutover_2026_07_14.md`) is still `status: active` with its own 🔴 HALT banner in
-  force and 3 of 4 todos unchecked (drop-GCS-write, soak, snapshot-then-delete) — most recently re-confirmed still
-  blocked by the 2026-08-07 na-eligibility-audit pass and the 2026-07-30 soak measurement (GO/NO-GO criterion 1,
-  fleet-wide Firestore doc-count parity, not yet met — only 4/~19 running GCE instances were Firestore-represented at
-  soak time). `depends_on` requires BOTH P3 and P4 done; P3 is not, so this is a genuine unmet dependency-gate, not an
-  operator-approval-only draft. Correctly staying `assigned_vm: NA` / `status: draft`. **Not flipped.**
+  conditional on a real per-doc conflict-check; checked THIS doc's own
+  `depends_on: [deployment_registry_firestore_p3_cutover_2026_07_14, deployment_registry_firestore_p4_dynamodb_2026_07_14]`
+  - `gate_on_depends: true` before touching anything. P4 is `complete (archived)`, but P3
+    (`deployment_registry_firestore_p3_cutover_2026_07_14.md`) is still `status: active` with its own 🔴 HALT banner in
+    force and 3 of 4 todos unchecked (drop-GCS-write, soak, snapshot-then-delete) — most recently re-confirmed still
+    blocked by the 2026-08-07 na-eligibility-audit pass and the 2026-07-30 soak measurement (GO/NO-GO criterion 1,
+    fleet-wide Firestore doc-count parity, not yet met — only 4/~19 running GCE instances were Firestore-represented at
+    soak time). `depends_on` requires BOTH P3 and P4 done; P3 is not, so this is a genuine unmet dependency-gate, not an
+    operator-approval-only draft. Correctly staying `assigned_vm: NA` / `status: draft`. **Not flipped.**
 - **2026-07-14 (slot 5, Opus — local execution)** — Ran the two measurement todos early (they don't depend on the P3
   cutover — they validate the shipped P1/P4 backend). The codex/CLAUDE.md doc updates + master archival (todos 3-5) stay
   BLOCKED on P3 (the cutover) completing — documenting "the registry IS Firestore" would be false while prod is still
@@ -105,14 +107,17 @@ datetimes; QG-green.
   - **Heartbeat-cadence (todo 2).** Observed batched write cost ≈16ms/write (batches of 500); a registry heartbeat is
     ONE Firestore write per VM per interval. Firestore write pricing ≈
     $0.18/100k (no base cost). Cost = fleet ×
-    (3600/interval_sec) × 24 × $0.0000018/write/day: | scale | 60s cadence
-    | 300s cadence | |
-    ------------------------------------------------------------------------------------------------------------ |
-    ------------------------ | ----------------------- | | 100 VMs | ~$0.26/day (144k writes) | ~$0.05/day (29k writes)
-    | | 5,000 VMs | ~$13/day (7.2M writes) | ~$2.6/day (1.4M writes) | | Recommendation: keep the current ~60s heartbeat
-    at ≤100 VMs (negligible); at 1k+ VMs widen to 300s — the D.1 | | resource-sample forensics ride the run.log
-    (`utl@600fe4f4`), so slowing the registry write loses NO resource | | history. The reads are the cheaper side
-    (indexed query, one per inventory refresh, cached). |
+    (3600/interval_sec) × 24 × $0.0000018/write/day:
+
+    | scale     | 60s cadence              | 300s cadence            |
+    | --------- | ------------------------ | ----------------------- |
+    | 100 VMs   | ~$0.26/day (144k writes) | ~$0.05/day (29k writes) |
+    | 5,000 VMs | ~$13/day (7.2M writes)   | ~$2.6/day (1.4M writes) |
+
+    Recommendation: keep the current ~60s heartbeat at ≤100 VMs (negligible); at 1k+ VMs widen to 300s — the D.1
+    resource-sample forensics ride the run.log (`utl@600fe4f4`), so slowing the registry write loses NO resource
+    history. The reads are the cheaper side (indexed query, one per inventory refresh, cached).
+
   - **Blocked (todos 3-5)**: the codex `deployment-observability.md` rewrite, the CLAUDE.md one-liner, and the master
     archival all describe a COMPLETED cutover — they must wait for P3 (deploy + soak + GCS decommission). Doing them now
     would misstate prod as Firestore-backed when it is still GCS.
