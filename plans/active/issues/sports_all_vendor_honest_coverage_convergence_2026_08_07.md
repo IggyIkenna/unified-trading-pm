@@ -962,3 +962,20 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   multi-signal evidence unlike the smallchunk9 incident). Relaunched as `mtds-backfill-odds-smallchunk11-20260809`
   (timestamp-suffixed). FIXTURE_LINEUPS unaffected, healthy, far advanced. Full detail:
   `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`.
+- **14:27Z (slot 4, data_engineering, odds_api-doc dispatch) — `smallchunk11` (the 13:08Z relaunch) is ALSO dead, but
+  from a genuinely NEW failure mode: SETUP FAILURE, not OOM/silent-hang. Currently 0 odds_api backfill VMs running.**
+  `gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-odds-smallchunk11-20260809/` shows
+  `EXIT_STATUS=1`/`SETUP_EXIT_STATUS=1` at `14:15:5{0,2}Z`, no `run.log` ever created — the pipeline itself never
+  started. `vm-setup.log` (2497 bytes, complete) shows code deploy succeeded for all 4 repos
+  (uac`82505ed7`/utl`262a8531`/deployment-service`1e85ce3b`/mtds`15864866`) then fails within 1s at
+  `uv pip install --no-sources -e .../uac -e .../utl -e .../mtds` — `SETUP FAILED rc=1` with **no pip stderr captured**
+  despite the startup template piping everything through `tee`; could not determine whether pip genuinely fast-failed
+  (e.g. a lockfile/version conflict from the freshly-deployed tarball SHAs above) or the self-delete raced the tee
+  buffer flush. This is a DIFFERENT bug class from the watchdog/OOM pattern this doc has tracked all along — worth its
+  own follow-up if it recurs (the launcher's setup-failure path doesn't reliably preserve the actual error). Did not
+  relaunch myself (dispatched via the odds_api-scattered-gaps doc, whose own standing instruction there is "do not
+  launch a VM from this todo" — deferring to whoever continues this tracker). Full detail + the odds_api-doc side of
+  this entry: `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`. **Net: the campaign is
+  currently stalled at 0 running VMs** — next continuation of this doc should check for a live VM first and, if still 0,
+  do a fresh guard-respecting relaunch (`odds-api-concurrency-guard.sh` cap=1 permits it) and watch the first few
+  minutes closely to confirm setup actually completes this time before walking away.
