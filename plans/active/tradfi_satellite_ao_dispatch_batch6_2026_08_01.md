@@ -471,3 +471,53 @@ change in operating posture: not force-launching, continuing to verify-and-repor
   (`gcloud compute instances list --filter='name~"^tradfi-bf-"'`) and either re-arm a background watcher or run a
   bounded synchronous poll loop, whichever is available/preferred at that time. No lessons beyond what's already
   captured in this doc's condensed saga summary + the background-mechanism-unreliability findings above.
+
+### 2026-08-09T~02:36Z-03:16Z — slot 28, same session — LOCK CLEARED, ES_OPT LAUNCHED (with a real bug found+fixed en route)
+
+**Status: IN FLIGHT — todo #2 still `[ ]` but genuinely progressing now** (VMs actively backfilling, not just waiting).
+
+**The lock cleared for real at 02:36:11Z** (8-min poll loop caught `count=0`). Immediately re-verified + launched
+`bash deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` → 5 VMs (2022-2026), all
+confirmed RUNNING within seconds. **But the clear was NOT organic completion** — `gcloud compute operations list` showed
+the ~150-VM prior fleet was mass-`delete`d in a synchronized burst right before the clear. This is now explained: a
+separate operator-directed interactive session filed `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`
+the same day, narrowing immediate TradFi scope and explicitly killing the entire out-of-scope FX/commodity
+`tradfi-bf-cme-ohlcv-1m-g0{1,2,3}-*` fleet (167 VMs, massively duplicated per that doc's own finding) — **not a bug, not
+a billing kill-switch, a deliberate scoped kill**. ES_OPT is explicitly IN-SCOPE per that same ruling ("S&P 500 options
+— full 6.5-year history"), so this launch is correctly authorized. Also relevant:
+`issues/tradfi_databento_account_billing_suspended_2026_08_09.md` had gated this exact todo `BLOCKED-OPERATOR-DECISION`
+earlier the same day, then the scope-ruling doc recorded a live Databento API verification that lifted the gate for
+in-scope items — consistent with the todo's own text already carrying an "UNBLOCKED 2026-08-09" prefix by the time this
+session read it. **Minor staleness note**: the billing doc's own gate list still shows batch6 as gated (not yet
+retagged) — not fixed here, out of scope for this session, flagged for whoever next touches that doc.
+
+**Real bug found + fixed en route**: all 5 first-attempt ES_OPT VMs self-deleted within 2-4 minutes (0 data written).
+Root-caused via `gcloud logging read` + a dedicated sub-agent: `launch-tradfi-backfill-vm.sh` set
+`VM_TASK=cefi-backfill`, which matches **no dispatch branch at all** in `setup-data-pipeline-vm.sh` (stale copy-paste
+from a cefi launcher) — every VM fell through to the generic fallback, which never builds `--source`, so MTDS
+hard-failed instantly ("--source databento is REQUIRED") and the VM self-deleted via its own `VM_SHUTDOWN_ON_COMPLETION`
+convention. NOT an external killer, NOT related to the mass-delete above (different SA: `uts-prd-sa` self-delete, vs.
+the scope-kill's own actor). Fixed: `VM_TASK=mtds-backfill` + `VM_SOURCE=databento` (mirrors the identical fix already
+shipped in `launch-tradfi-forward-poll.sh`). Committed `deployment-service@6b1057cc`, QG running in background
+(`bx6e0j6l1`, pytest still in progress at last check — will ship via quickmerge once green). Filed
+`issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md` (pushed `PM@7759cd2f3`) — full
+evidence + 3 follow-up action items (verify-to-completion tracked there but not duplicated here; audit whether
+BTC/ETH/other callers hit the same bug; wire `VM_FORCE_WINDOW` into the `mtds-backfill` branch).
+
+**Re-launched with the fix** (03:08:39Z-03:09:52Z, all 5 VMs `tradfi-bf-es-opt-light-{2022..2026}-202608090308-52`):
+confirmed via serial console (`VM_TASK=mtds-backfill` in the actual boot log) + run.log
+(`Chunk 1/53: 2022-01-01 → 2022-01-07`, real venue processing, no `--source` error, RSS ~8.4GB / CPU 100% — genuine
+work) that all 5 are past the previous failure window and actively backfilling. 53 chunks/year × 5 years — this will
+take hours, not minutes.
+
+- **NEXT ACTION (fresh session)**: (1) Check todo #2 checkbox — if `[x]`, done. (2) If `[ ]`, check
+  `gcloud compute instances list --filter='name~"^tradfi-bf-es-opt-"'` — if VMs still RUNNING, they're mid-backfill,
+  just monitor (no action needed, they self-delete + the manifest-verify step still needs a worker to run it after). If
+  VMs are gone (all self-deleted, presumably on completion), proceed to phase 2: download a fresh manifest, run the
+  count query (venue=CME × ohlcv_1m × instrument_type=options_chain × the 11 canonical ES_OPT instrument_ids — see the
+  Phase 2 section far above in this doc's condensed saga summary for the exact query shape), update the MVP-cell table
+  in `tradfi_consolidated_closeout_2026_07_18.md`, flip this todo's checkbox, commit+push, `/done`. (3) Check whether
+  `deployment-service@6b1057cc` (the VM_TASK fix) has shipped via quickmerge yet
+  (`git log --oneline -5 -- scripts/vm/launch-tradfi-backfill-vm.sh` on `deployment-service`) — if not, QG may still be
+  running or need a retry; the issue doc's action items track this, not required for THIS todo's own completion since
+  the fix is already committed locally and the launch already ran successfully off it.
