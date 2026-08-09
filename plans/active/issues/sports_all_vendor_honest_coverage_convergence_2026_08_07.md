@@ -470,3 +470,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   FIXTURE_STATS confirmed still resolved at 116). At the observed rate (~3,275 shards/hr), full convergence to near-zero
   is roughly ~3-4h out, not yet at the "launch INJURIES next" trigger threshold — continuing to monitor rather than
   launching prematurely. Both VMs healthy, no intervention needed this tick.
+- **18:11Z — 7th silent-hang occurrence (smallchunk12, chunk 18), relaunched; FIXTURE_LINEUPS SPOT-preempted +
+  auto-recovered; census shows accelerating convergence.** `smallchunk12` died with clean 3-signal evidence (~19min
+  silent gap, standard watchdog account, RSS=15.9GiB — not OOM); relaunched as
+  `mtds-backfill-odds-smallchunk13-20260809`, confirmed genuinely booted (chunk 1/451, correct skip-fast). Full detail:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 7x). Separately, FIXTURE_LINEUPS's VM was
+  routinely SPOT-preempted (not the hang pattern) and auto-relaunched as `af-backfill-20260809-180612` within ~4 min,
+  confirmed resuming cleanly. Fresh census: FIXTURE_LINEUPS needed **11,257 → 8,332** (-2,925 in ~32min, rate
+  accelerated to ~5,484/hr vs ~3,275/hr last tick) — still not at the near-zero INJURIES-launch trigger, but closing in
+  (~1.5h out at this rate if it holds). Both fleets healthy, no further intervention needed this tick.
