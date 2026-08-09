@@ -109,7 +109,7 @@ feature_group's lookback validation, not scoped to `returns`/`statistical_anomal
 inline under a single P2 corpus-recompute todo; needs its own properly-scoped fix + regression test (one BITGET-sourced
 instrument with a `-`/`@`-suffixed raw manifest id, asserting lookback validation PASSES via the canonical CLI id).
 
-- [ ] [DATA] P1. Fix `DependencyChecker._count_candles_for_lookback`
+- [x] ✅ [DATA] P1. Fix `DependencyChecker._count_candles_for_lookback`
       (features-service/delta_one/app/core/dependency_checker.py) to translate between the CEFI canonical instrument_id
       form (`VENUE:TYPE:SYMBOL`, no separator/suffix — what the MVP-universe filter + feature-output filenames already
       use) and the availability-manifest's raw vendor instrument_id form (Tardis-sourced BITGET ids carry a
@@ -147,3 +147,13 @@ instrument with a `-`/`@`-suffixed raw manifest id, asserting lookback validatio
   that for future dispatch (incl. the still-`queued` sibling P2 item). Skipping this task with `reason_code: GATED` +
   `park_now: true` rather than attempting the re-run against unfixed code (would reproduce the exact failure the issue
   documents) or duplicating slot 14's in-flight P1 fix.
+- 2026-08-09 (slot-14): ✅ Shipped the P1 fix — features-service@d2e32548. Added
+  `features_service/delta_one/app/core/_instrument_symbol_normalization.py` (new small module, kept separate to stay
+  under `dependency_checker.py`'s 900-line file cap) with `normalize_instrument_symbol()` (strips vendor `-`/`@LIN`/
+  `@INV` decoration from the last `:`-delimited segment) and `normalized_symbol_lookup()` (venue-scoped scan over the
+  captured-index). `_count_candles_for_lookback` now tries: full-id key → bare-symbol key → normalized-symbol scan →
+  blank chain-bundle key. Added regression tests in `tests/delta_one/unit/test_lookback_validation.py`
+  (`TestCountCandlesNormalizedSymbolFallback`) reproducing the exact `BTC-USDT@LIN` vs `BTCUSDT` repro from this issue,
+  plus a venue-isolation negative test. `bash scripts/quality-gates.sh` green on the committed HEAD (sentinel matched);
+  shipped via `quickmerge --agent`, post-push ancestry verified (`d2e325485` is an ancestor of
+  `origin/live-defi-rollout`). The two P2 re-run todos are now unblocked.
