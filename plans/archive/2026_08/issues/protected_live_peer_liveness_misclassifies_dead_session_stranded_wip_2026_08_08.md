@@ -29,7 +29,7 @@ repos: [agent-orchestrator, market-tick-data-service]
 scope: [engineer, admin]
 tags: [agent-orchestrator, liveness, dirty-state, work-loss-risk, live-incident, wip-preserve]
 related:
-  - /plans/active/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md
+  - /plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md
   - /plans/archive/2026_08/issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md
 created: 2026-08-08
 author: agt-22de53 (main)

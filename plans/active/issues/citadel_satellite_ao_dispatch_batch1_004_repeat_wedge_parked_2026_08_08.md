@@ -22,7 +22,7 @@ repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, tmux, crash-loop, task-affinity, live-incident, spawn-overhead, park]
 related:
-  - /plans/active/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md
+  - /plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md
   - /plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md
 created: 2026-08-08
 author: agt-22de53 (main)

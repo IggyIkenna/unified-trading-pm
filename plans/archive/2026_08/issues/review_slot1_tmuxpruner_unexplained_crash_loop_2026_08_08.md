@@ -12,8 +12,7 @@ summary: >-
   hits for slot 1 on any of the 3, so this looks like a different mechanism, though a shared deeper root cause (e.g.
   host-level contention, per prior review/main joint findings on the tardis wedge cluster) cannot be ruled out without
   reading TmuxPruner/keeper source directly.
-status: open
-archive_exempt: true
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -36,13 +35,20 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: backend_engineer (slot 11, agent-orchestrator@5daa375, 2026-08-09)
 last_updated: 2026-08-09
 locked_since:
 context_scope: [agent-orchestrator/server/routes/slots_worker.py, agent-orchestrator/server/state_store/cooldown.py]
 ---
 
 # Slot 1 (review role) crash-looping via unexplained TmuxPruner kills
+
+> **🟢 ARCHIVED (2026-08-09).** All todos done, 0 open, unlocked. Root cause found + fixed
+> (`agent-orchestrator@c9dad3e`, `remain-on-exit` set-option was silently no-op'ing since introduction); the
+> live-orchestrator confirm + smoke-verify + capture-the-next-death follow-up (`agent-orchestrator@5daa375`) is also
+> complete — the capture is now durable (persisted into the `tmux_session_lost` activity event on every future genuine
+> death), so this doc's original diagnostic question no longer needs a human/agent to keep re-chasing it. Progress Log
+> carries full detail.
 
 ## What was found
 
@@ -305,6 +311,55 @@ own Tick history.
       Progress Log. Repo: agent-orchestrator.
 
 ## Progress log
+
+- 2026-08-09 ~21:30Z (backend_engineer, slot 11, agent-orchestrator@5daa375): Picked up the "Follow-up to the
+  remain-on-exit fix" BACKEND P1 todo — all 4 parts resolved, closing this doc's last open item.
+
+  **(1) Confirmed live orchestrator restarted since `c9dad3e`.** `GET /api/state` →
+  `server_started: 2026-08-09T20:30:36Z` (after the 20:21:42Z threshold). The version string's `g33d1ae5f2` suffix is
+  misleading (that hash predates `c9dad3e` and is only setuptools_scm's nearest-tag marker, not the deployed HEAD) —
+  verified the ACTUAL deployed code directly instead: on the orchestrator VM (confirmed via `/proc/self/cgroup` →
+  `system.slice/orchestrator.service`), the root clone's `git log -1` is exactly `c9dad3e`, and `grep` of the live
+  `server/tmux_spawn.py` shows `exact_pane_target()`/`is_session_genuinely_alive()` present. systemd's own
+  `ActiveEnterTimestamp` (2026-08-09 20:30:25Z) matches the running uvicorn PID's start time.
+
+  **(2) Smoke-verified `remain-on-exit on` is live on fresh spawns.** `tmux show-window-options -t "=orch-slot-N"` on 4
+  sessions spawned AFTER the 20:30 restart (slots 11, 1, 12, 23) all show `remain-on-exit on`; a session predating the
+  restart (slot-21, created 08:32Z) shows nothing (tmux default `off`) — confirms the fix applies to new spawns, not
+  retroactively (expected — it's a `set-option` at `_start_session` time).
+
+  **(3) Captured the next genuine slot-1 death — and it revealed the capture window is narrower than expected.** Set up
+  a 25-min-bounded background watcher polling `GET /api/activity?slot=1&type=tmux_session_lost` for the next event past
+  a baseline id, primed to immediately run `tmux display-message #{pane_dead_status}/#{pane_dead_signal}` the instant a
+  new event appeared. Slot-1 died again at 20:43:35Z (its post-restart session, created 20:31:47Z, so this WAS a
+  post-fix session). By the time the watcher polled (~12s later, poll interval 15s) and ran the capture, the session was
+  **already gone** (`tmux has-session` → "can't find session"), rc=0 with blank output from the capture call. This is
+  the actual finding: even with `remain-on-exit` correctly applying, an EXTERNAL poller (any human/agent racing after
+  the fact) loses the race — AutoSpawn's respawn cycle reuses the session name fast enough that a ~12s-lagged external
+  check already misses the preserved dead pane.
+
+  **(4) Root-fixed the capture window instead of re-attempting the race.** Rather than tighten external polling (still
+  fundamentally racy), moved the capture INSIDE `TmuxPruner.prune_once()` itself, at the exact instant
+  `_confirm_session_dead()` returns True — before `reap_dead_slot_worker_tree()` or any other post-confirm work that
+  could touch/respawn the session. Added `capture_pane_death_info()` (`server/tmux_spawn.py`) — best-effort
+  `tmux display-message #{pane_dead_status}\t#{pane_dead_signal}\t#{pane_dead_time}`, returns `None` if the pane is
+  already gone by capture time rather than raising. Wired into `TmuxPruner.prune_once()`'s dead-slots loop
+  (`server/tmux_pruner.py`) and persisted into the `tmux_session_lost` activity event's `details.pane_death_info` — so
+  the answer to this whole doc's original question ("what actually killed slot-1's sessions?") is now captured and
+  durably logged automatically on the NEXT genuine death, no race to win. This directly distinguishes "external kill" (a
+  real signal value) from "claude CLI exited non-crash-like" (`None`, no kernel correlation per the existing
+  `check-tmux-session-lost-kernel-correlation.sh` tool) — no longer blocked on tooling.
+
+  **Testing**: 3 new tests for `capture_pane_death_info` (`test_tmux_spawn_targets.py`) + 3 new tests for the
+  `TmuxPruner` wiring incl. an explicit ordering test (`test_tmux_pruner_pane_death_capture.py`, new file).
+  `quality-gates.sh`: 3001 passed, 2 skipped. Shipped via quickmerge, ancestry self-verified on origin.
+
+  **Session-continuity note**: this session died mid-task twice (once mid-QG, once mid-wait); both times the
+  orchestrator's dirty-state gate auto-preserved the WIP as a `chore(orphan-wip)` commit pushed to a
+  `wip-preserve/orchestrator-slot-11-*` branch, recovered cleanly via `git merge --ff-only` (parent-chain verified
+  before merging) each time, then squashed into the final clean commit before shipping. No work was lost.
+
+  **Archiving this doc now** — 0 open todos remain, unlocked. See archive banner above.
 
 - 2026-08-09 ~20:35Z (backend_engineer, slot 33, agent-orchestrator@c9dad3e): Picked up the "capture the ACTUAL
   signal/exit status" BACKEND P1 todo. Found the diagnostic mechanism the todo asked to use has itself been silently
