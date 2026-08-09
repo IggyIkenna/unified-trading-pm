@@ -161,9 +161,11 @@ not just fold it into a routine batch. The doc's `related:` also points at
 `/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md`, not one of the 6 cross-cutting covering docs
 and not independently verified here — flagged for the `ui` tranche auditor to check.
 
-### 5. `plans/active/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md` — real owner `ci`
+### 5. `plans/archive/2026_08/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md` — real owner `ci`
 
-**Doc state**: `status: open`, `asset_group: [cross-cutting]`, `priority: P2`. 1 open todo (P3).
+**Doc state (at time of this finding, 2026-08-07)**: `status: open`, `asset_group: [cross-cutting]`, `priority: P2`. 1
+open todo (P3). **Update 2026-08-09**: resolved + archived to the path above — `unified-trading-pm@dbaa7b463` shipped
+the sweep, both done-when halves live-verified. The asset_group retag todo below is now moot (see its own note).
 
 **Why not cross-cutting**: sole subject is the LDR→main "fleet bot" promote pipeline's ref-hygiene mechanics
 (`scripts/cicd/ldr_to_main_fleet_promote.sh`'s "Superseded ref cleanup" step failing to delete `promote/<repo>/*` refs
@@ -267,9 +269,10 @@ spot per this skill's SKILL.md).
       `[cross-cutting]` → `[ui]` (finding 4) — owning-tranche fix, leave to the `ui` tranche's own audit, **flagged
       urgent**: live unauthenticated-prod-endpoint exposure, all 4 fix-steps still open. Done when: the tag is corrected
       and the `ui` tranche's audit picks it up with priority commensurate with a live P1 security hole.
-- [ ] [DOCS] P3. Retag `plans/active/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`'s `asset_group`
-      `[cross-cutting]` → `[ci]` (finding 5) — owning-tranche fix, leave to the `ci` tranche's own audit. Done when: the
-      tag is corrected and the doc is folded into `ci`'s closeout membership.
+- [x] ✅ [DOCS] P3. MOOT 2026-08-09 — the target doc (`promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`) resolved
+      and archived to `plans/archive/2026_08/issues/` before the `ci` tranche picked up this retag; asset_group no
+      longer matters for an archived, resolved doc. No action taken (retagging a closed archive entry has no downstream
+      effect on closeout membership).
 - [ ] [DOCS] P3. Retag
       `plans/active/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`'s `asset_group`
       `[cross-cutting]` → `[ci]` (finding 6) — owning-tranche fix, leave to the `ci` tranche's own audit. Done when: the
@@ -303,7 +306,7 @@ spot per this skill's SKILL.md).
   by OTHER tranches (ci x5, ui x1, infrastructure x1), each explicitly scoped "owning-tranche fix, leave to X tranche's
   own audit, not this run" per the 2026-07-30 concurrent-sharded-worker rule. Cross-cutting cannot execute these retags
   itself by construction.
-- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged):
-  all 7 open todos are cross-tranche `asset_group` retag handoffs (ci x5, ui x1, infrastructure x1), each
-  explicitly "owning-tranche fix, leave to X tranche's own audit, not this run" -- cross-cutting cannot execute
-  these itself by construction.
+- **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- reaffirms 2026-08-07 (unchanged): all
+  7 open todos are cross-tranche `asset_group` retag handoffs (ci x5, ui x1, infrastructure x1), each explicitly
+  "owning-tranche fix, leave to X tranche's own audit, not this run" -- cross-cutting cannot execute these itself by
+  construction.
