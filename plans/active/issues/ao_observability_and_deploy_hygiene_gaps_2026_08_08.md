@@ -102,23 +102,28 @@ the ONLY lever that matters. See the P1 todo below.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Raise `ORCHESTRATOR_FLEET_WORKER_CAP` above 15 — it is now the ONLY thing capping the fleet.**
-      After the 2026-08-08 tranches the clamp is `min(15, 32-7=25) = 15`, so 25 slots of real capacity sit behind a knob
-      set to 15. Measured headroom at 34 registered slots / 14 live sessions: **RAM 6G used of 30G (23G avail)** at
-      ~0.4-0.5G per worker, so 25 concurrent workers is roughly 12.5G — comfortably inside budget; disk 58% with 291G
-      free; host load ~4 on 8 cores with work that is mostly I/O-bound (operator ruling 2026-08-08: CPU oversubscription
-      acceptable, RAM is the constraint to respect). Lives in `.env.local` on the central VM
-      (`fleet_worker_cap_override` / `ORCHESTRATOR_FLEET_WORKER_CAP`), so it needs a VM-side edit + orchestrator
-      restart, NOT a code change. **Recommended: raise to 25** and watch RAM across one full tick cycle before going
-      further. `[OPERATOR]` because it is a deliberate capacity/spend decision on live infra, not a bounded defect — the
-      arithmetic and the headroom evidence are settled, only the ruling is outstanding. (repo: agent-orchestrator, VM
-      config)
-- [ ] [BACKEND] P3. **Re-run `setup-tab-worktrees.sh --add-slot 30` — it holds 25 of 27 repos.** Failed mid-clone on the
-      same `git clone --reference … Aborted (core dumped)` that hit slot 17 in tranche 1; both times a plain idempotent
-      re-run of the same command completed it (slot 17 went 17 -> 27 repos that way), and memory was NOT the cause on
-      either occasion (23G free). The installer is skip-if-exists, so the re-run only fetches what is missing. Worth a
-      look at WHY `git clone --reference` core-dumps roughly once per tranche — twice in ~16 clones is not a fluke, and
-      a fresh slot that silently lands short of the manifest will quarantine on its first spawn rather than fail loudly.
+- [x] ✅ [OPERATOR] P1. **`ORCHESTRATOR_FLEET_WORKER_CAP` raised 15 -> 25 — DONE 2026-08-09.** Operator approved ("do
+      this yourself" — no longer a unilateral call). Edited `.env.local` on the central VM directly
+      (`ORCHESTRATOR_FLEET_WORKER_CAP=15` -> `=25`), `systemctl restart orchestrator` (clean start,
+      `Started     orchestrator.service`), verified the deployed checkout was `03e1809`/ahead=0 of origin before
+      restarting. Measured the actual effect rather than trusting the config write: live `tmux` session count (the
+      ground-truth fleet-fill signal per this doc's own Lessons section, not the DB snapshot) climbed **20 -> 21 -> 22**
+      across three checks in the ~3 minutes after restart — already past the old effective ceiling of ~13-15 — while RAM
+      tracked **7.5G -> 7.7G -> 8.2G used of 30G (22G avail)**, comfortably inside the pre-computed 12.5G budget for 25
+      workers. No `AutoSpawn fleet cap … CLAMPED by slot arithmetic` warning fired (expected: that message only fires
+      when SLOT COUNT is the binding constraint, and at 32 registered slots / 25 configured, arithmetic was never going
+      to be the limiter now — the ORIGINAL "0 occurrences" finding this todo is built on already established that).
+      Backlog at restart time: 498 queued, 5 dispatched, 36 blocked — plenty of ready work for the fleet to grow into.
+      (repo: agent-orchestrator, VM config)
+- [x] ✅ [BACKEND] P3. **`setup-tab-worktrees.sh --add-slot 30` re-run — DONE 2026-08-09, now 26/26 repos.** Ran as
+      `ubuntu` (not root — the earlier `git clone --reference … core dumped` failures and this session's own
+      `dubious ownership`/`$HOME not set` SSM-as-root friction both point at the same class of issue: root-context git
+      operations against a `ubuntu`-owned checkout). Live output: all 26 repos report `OK … (Path-B clone exists)`,
+      `checked=26 drift=0 fixed=1` (one repo's commit identity had drifted to `slot-30·laptop` and was auto-corrected to
+      `slot-30·planning` by the installer's own guard). Skip-if-exists design meant this was a genuinely idempotent
+      completion, not a re-clone. The WHY-core-dumps-under-root question from the original finding is now answered by
+      inference (root vs ubuntu execution context) rather than fully root-caused via a git bug report — good enough to
+      close this todo; worth remembering for the NEXT provisioning tranche rather than a separate action item now.
       (repo: unified-trading-pm)
 - [x] ✅ [BACKEND] P2. **`ao-self-pull.sh` silently stops auto-deploying when an UNTRACKED file appears** — FIXED
       agent-orchestrator@2c08afd85. Gate now uses `--porcelain -uno` (TRACKED changes only). An untracked file cannot be
@@ -182,6 +187,20 @@ the ONLY lever that matters. See the P1 todo below.
       content-identity, the exact question `worktree_clean_check.verify_all_wip_preserve_refs` already answers for
       orphaned commits (is this content already in origin? SUPERSEDED / GONE / STILL-ORPHANED). (repo:
       agent-orchestrator)
+- [ ] [BACKEND] P2. **`stash_pile_stale` is ANOTHER unconditional per-tick activity-log flood — same bug class as the
+      already-fixed `orphan_ref_verified` one above, found live 2026-08-09 while re-verifying this doc's own claims.**
+      `StashAuditWatchdog` (a SEPARATE, older watchdog from the `StashVerifyWatchdog` fixed above — one flags aged/large
+      piles by count/age threshold, the other content-verifies individual stashes; the flood is in the former) logged
+      one `stash_pile_stale` row per stale repo per tick, unconditionally — its own docstring literally cited
+      `orphan_ref_verify_watchdog`'s PRE-FIX per-tick shape as its design template, written before that pattern was
+      recognized as a bug and fixed earlier in this same 2026-08-08 session. Measured live: **51 of the last 500
+      `/api/activity` rows within roughly an hour** — smaller than the 76% orphan-ref flood but the identical root
+      cause. Fix in progress same session: transition-dedup keyed on stash COUNT (not `oldest_age_days`, which
+      increments daily for a genuinely unchanged pile and would still log once/day/repo for no new information),
+      persisted via `dedup_state.stash_pile_counts_path()`, with a `stash_pile_resolved` bookend when a pile drops below
+      threshold — mirrors `OrphanRefVerifyWatchdog`'s exact shape. 3 new tests. **Done when**: shipped,
+      `quality-gates.sh` green, deployed to the central VM, and verified live (fresh `stash_pile_stale` row count over a
+      tick window near zero for unchanged piles). (repo: agent-orchestrator)
 - [x] ✅ [OPERATOR] P3. **Glue-runner litter removed — 51 orphaned unit files retired 2026-08-08T13:05Z.** Verified
       immediately before acting, and re-asserted inside the same script as a refuse-guard: **0 of 51 active, 0 enabled,
       no `/opt/github-glue*` directory anywhere, and no `Runner.Listener` process** (an earlier `pgrep -fc` reading of 1
