@@ -134,15 +134,27 @@ are still live, unanswered operator decisions. Per the todos-not-prose HARD RULE
 (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 2), tracking them as real `- [ ]` items instead
 of leaving them as prose-only parking (exactly the "prose-only trap" gap 3 above names).
 
-- [ ] [OPERATOR] P2. Decide P2-B: `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` is 29/29 done but
-      `locked_by:     live-defi-rollout` — `[unlock-plan]` + archive it, or confirm the lock is still doing real work.
-      See "Parked — operator ruling required" § P2-B above.
-- [ ] [OPERATOR] P3. Decide P2-C: near-complete-plan fold policy (~36 active docs at ≤1 open todo) — authorize
-      fold-by-default for the stated sub-case, keep every fold operator-gated, or route the population to
-      `/na-eligibility-audit`/`/ag-closeout-audit`. See § P2-C above.
-- [ ] [OPERATOR] P3. Decide P2-D: stale `instruments-service-agentwork-sports-2026-07-13/` scratch clone (unregistered,
-      failing the shared `repo-docs-ssot` gate) — delete it, move it out of the workspace root, or fix its 6 docs in
-      place. See § P2-D above.
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-09 (stale-check re-verify) — resolved 2026-07-31, never flipped here.**
+      `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` was unlocked + archived the day after this doc parked the question
+      — `unified-trading-pm@39d663e92bbf75c37998bb1221dd501035df98a7` ("docs(plans): unlock + archive 7 fully-done
+      locked docs (operator [unlock-plan] ruling 2026-07-30)"), now at
+      `plans/archive/2026_07/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` with empty `locked_by:`. Matches option A
+      exactly. See "Parked — operator ruling required" § P2-B above.
+- [x] ✅ [OPERATOR] P3. **DONE 2026-08-09 (stale-check re-verify) — resolved 2026-08-02, never flipped here.** The
+      operator RULED "narrow fold-by-default" (option A) and it was executed:
+      `unified-trading-pm@0409fa053a5cd58373b92aa8c6fa1e86b66efb98` ("docs(plans): near-complete-fold sweep + remaining
+      meta retags (corpus-sweep items 4+6)") — commit message: "Narrow fold-by-default (RULED): found all
+      plans/active/*.md with exactly 1 open todo, folded the [REVIEW]/[DOC]-tagged remnant into its one obvious active
+      sibling where both conditions held, left the rest operator-gated." Cross-referenced in
+      `ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md` line 164 ("one-time near-complete-plan
+      fold sweep... CLOSED 2026-07-31"). See § P2-C above.
+- [x] ✅ [OPERATOR] P3. **DONE 2026-08-09 (stale-check re-verify) — resolved 2026-08-07, never flipped here.** Operator
+      ruling recorded directly in the dedicated tracking doc's own `resolved_by:` field —
+      `plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md`: "RESOLVED
+      2026-08-07 (operator ruling) — unrecovered loss, accepted, no further investigation. Both the source directory
+      and the stash-backup bundle are confirmed genuinely absent; the operator declined recovery." Shipped
+      `unified-trading-pm@ac6f77c3dd668825b4c9669d19a15ffe20736686`. Confirmed on disk: no
+      `*agentwork-sports-2026-07-13*` path exists anywhere under the workspace root today. See § P2-D above.
 
 ## Migrated deferral (this is real tracked work, not a decision)
 
@@ -266,6 +278,16 @@ are `*_finalize_*` companions whose authoring peer plausibly still has the epic 
 
 ## Progress Log
 
+- **stale-check re-verify 2026-08-09 (infra tranche, KEEP-NA staleness re-check)**: all 3 remaining `[OPERATOR]` todos
+  (P2-B, P2-C, P2-D) flipped `[x]` — every one of them was ALREADY resolved by an operator ruling + real commit within
+  days of this doc's own 2026-07-30 creation (P2-B unlocked+archived 2026-07-31, P2-C ruled+executed 2026-08-02, P2-D
+  ruled+accepted 2026-08-07), but none were ever cross-referenced back to close the todo here. Every subsequent
+  na-eligibility-audit pass (2026-07-30, 08-02, 08-03, 08-06, 08-07 — 5 consecutive KEEP-NA verdicts) re-verified these
+  as "still live, unanswered operator decisions" without checking whether the decisions had already landed elsewhere in
+  the corpus. All 3 evidence commits verified as real ancestors of `origin/live-defi-rollout`
+  (`git merge-base --is-ancestor`). This doc now has 0 open todos (the migrated-deferral `[OPS] P3` item was already
+  `[x]` before this pass) — **ARCHIVE candidate**, flagging for the next archival sweep rather than performing the full
+  6-step ritual in this pass (not this session's mandate).
 - **na-eligibility-audit 2026-08-07 (infra tranche)**: KEEP-NA, valid — unchanged since 2026-08-06. Re-read end-to-end;
   `grep -cE '^- \[ \]'` = 3, matching (the 2 `[OPERATOR]` parked-decision todos re-added 2026-08-07 as real tracked
   items plus the `[OPS] P3` migrated-deferral todo, which is now `[x]` done per its own table). P2-B/P2-C are authority
