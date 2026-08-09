@@ -405,3 +405,18 @@ spelling variant survives, which is the entire point of the panel". It does not.
   blast-radius, so the corrected-population check this todo's evidence mentions is that already-closed finding, not new
   work. `market-data-processing-service`'s `SportsArbitrageAdapter` is UNTOUCHED and still the only live producer —
   nothing downstream reads the new module yet, so this is additive/inert until Session 2's live-wiring todo lands.
+
+- **2026-08-09 (slot 15)** — Dispatched the ML section's "Move the sports feature loader off its PATH-PREFIX read of
+  bucketed odds" todo a SECOND time (slot-22 already found + skipped this exact premature dispatch above). Re-verified
+  live rather than trusting the prior note: `/plans/active/sports_taxonomy_p2_migration_2026_08_08.md`'s "Consumer
+  enumeration" todo (P0, gates every re-stamp todo in that plan including the `odds_horizon_bucket` one) is still
+  unchecked, and the `odds_horizon_bucket` re-stamp todo itself is still unchecked — nothing has changed since slot-22's
+  check. Since this is now the SECOND confirmed premature dispatch of the identical todo (real fleet-cooldown churn, not
+  a one-off), durably parked it via `POST /api/slots/15/skip-current-task {reason_code: "GATED", park_now: true}`
+  instead of relying on the N-skip auto-park threshold — the documented worker-usable "external gate" path
+  (`server/auto_park.py`). This creates prerequisite condition `auto_unpark__sports_taxonomy_p3_consumers-13983a72aba5`
+  (currently `false`), which blocks this task from redispatching to any slot until explicitly cleared. Whoever lands
+  P2's `odds_horizon_bucket` re-stamp (+ the physical write-side move off `data_type=odds_horizon_bucket`) MUST also run
+  `POST /api/prerequisites/auto_unpark__sports_taxonomy_p3_consumers-13983a72aba5 {"value": true}` afterward, or this P3
+  todo will sit invisibly parked forever — the unpark step has no automatic trigger (`auto_park.py`'s own docstring: the
+  reconciler only reacts once the condition is cleared by "an operator or another automated system").
