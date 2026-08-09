@@ -9,6 +9,7 @@ public-API/schema-surface removals/incompatible-changes as breaking.
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 import sys
 from pathlib import Path
 
@@ -24,6 +25,7 @@ _spec.loader.exec_module(_mod)
 extract_surface = _mod.extract_surface
 diff_surfaces = _mod.diff_surfaces
 registry_value_changes = _mod.registry_value_changes
+source_touched = _mod._source_touched
 
 
 BASE = '''
@@ -489,6 +491,65 @@ def test_non_allowlisted_constant_value_change_is_not_tracked():
     new_surf = extract_surface(new, "m")
     assert not diff_surfaces(old_surf, new_surf)
     assert registry_value_changes(old_surf, new_surf) == []
+
+
+# ── source_touched: the squash-promote patch-fallback signal ────────────────────────
+# Regression coverage for semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09
+# (the live incident: unified-trading-library@609299ad squashed into e94be221 -- BASELINE..HEAD
+# was a single `chore(promote): LDR -> main` commit, so semver-agent's message-based feat:/fix:
+# scan matched nothing, and old_export_count==new_export_count so the AST differ's own
+# net-new-export fallback didn't fire either -- BUMP="" silently skipped a real internal fix).
+# `_source_touched` is the content-based signal semver-agent.yml's patch-level fallback now
+# keys off of instead: any non-metadata file changed in the range -> patch, closing the gap
+# without needing the squash commit's subject to carry a conventional-commit prefix.
+
+
+def _init_git_repo(repo_dir: Path) -> None:
+    subprocess.run(["git", "init", "-q"], cwd=repo_dir, check=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo_dir, check=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=repo_dir, check=True)
+
+
+def _git_commit(repo_dir: Path, message: str) -> str:
+    subprocess.run(["git", "add", "-A"], cwd=repo_dir, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", message], cwd=repo_dir, check=True)
+    return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_dir, text=True).strip()
+
+
+def test_source_touched_true_on_squash_only_commit_range_with_real_source_change(tmp_path, monkeypatch):
+    """The live-incident shape: BASELINE..HEAD is a single squash-promote commit whose
+    SUBJECT carries no feat:/fix: prefix, but its content touches real package source --
+    source_touched must be True so the patch-level fallback fires instead of silently
+    skipping the release."""
+    _init_git_repo(tmp_path)
+    pkg = tmp_path / "pkg"
+    pkg.mkdir()
+    (pkg / "mod.py").write_text("def f():\n    return 1\n")
+    baseline = _git_commit(tmp_path, "chore: baseline")
+
+    (pkg / "mod.py").write_text("def f():\n    return 2  # retry-path fix\n")
+    head = _git_commit(tmp_path, "chore(promote): LDR → main (Option-B direct)")
+
+    monkeypatch.chdir(tmp_path)
+    assert source_touched(baseline, head) is True
+
+
+def test_source_touched_false_on_squash_commit_touching_only_metadata_noise(tmp_path, monkeypatch):
+    """A squash commit whose ONLY changes are CI/docs/lockfile noise (the
+    `_NON_FUNCTIONAL_PATH_RE` denylist) must stay source_touched=False -- matching the
+    documented `chore:/docs: -> no bump` rule; the patch-fallback must not fire on pure
+    metadata churn even when it is the sole commit in a squash-promote range."""
+    _init_git_repo(tmp_path)
+    (tmp_path / "README.md").write_text("v1\n")
+    (tmp_path / "uv.lock").write_text("# lock v1\n")
+    baseline = _git_commit(tmp_path, "chore: baseline")
+
+    (tmp_path / "README.md").write_text("v2\n")
+    (tmp_path / "uv.lock").write_text("# lock v2\n")
+    head = _git_commit(tmp_path, "chore(promote): LDR → main (Option-B direct)")
+
+    monkeypatch.chdir(tmp_path)
+    assert source_touched(baseline, head) is False
 
 
 if __name__ == "__main__":

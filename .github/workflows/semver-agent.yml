@@ -368,6 +368,23 @@ jobs:
             fi
           fi
 
+          # Patch-level fallback for squash-promote commits (mirrors
+          # unified-trading-ci/.github/workflows/semver-agent.yml's fix for
+          # semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09 — a
+          # squash-only BASELINE..HEAD range carries no feat:/fix: subject and, when the
+          # change adds no NEW public export, the AST differ's own fallback above doesn't
+          # fire either, so BUMP stays unset and a real internal fix silently never
+          # releases). $SURFACE already carries detect_breaking_change.py's repo-wide
+          # source_touched field (denylist-based: true for any changed file that isn't
+          # pure CI/docs/lockfile noise) — reuse it instead of re-deriving a second,
+          # narrower notion of "did anything change."
+          if [ -z "$BUMP" ]; then
+            if echo "$SURFACE" | python3 -c "import json,sys; sys.exit(0 if json.load(sys.stdin).get('source_touched') else 1)" 2>/dev/null; then
+              BUMP="patch"
+              echo "No feat:/fix:/breaking commit labels visible (squash-promote) and no net-new export, but a non-metadata file changed since baseline (source_touched=true) → defaulting to PATCH (internal change)."
+            fi
+          fi
+
           if [ -z "$BUMP" ]; then
             echo "No feat:/fix:/breaking commits or API changes found. Skipping version bump."
             echo "skip=true" >> "$GITHUB_OUTPUT"
