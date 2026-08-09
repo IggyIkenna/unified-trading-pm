@@ -134,11 +134,33 @@ spelling variant survives, which is the entire point of the panel". It does not.
       multi-venue key (leg list / venue set), replacing the single-venue stamp that cannot be correct for a cross-venue
       construct. Preserve the existing 13 days (2026-07-25 → 08-06) rather than discarding — it is the only
       arb-frequency history and the arb-decay analysis needs a series.
+  - **Partial progress (2026-08-09)** — the new home's DETECTION + PERSISTENCE primitives are built, tested, and
+    shipped; the live wiring (todo below) and the history migration + old-adapter deletion (todo below) remain. Checkbox
+    stays open — "relocate + preserve history" is one unit and neither half of the remaining work is done.
+- [ ] [CODE] P0. **Wire the new detector into a live/batch producer** reading real `odds`/`trades` snapshots (the same
+      per-bookmaker tick data `market-data-processing-service`'s `SportsArbitrageAdapter` reads today) and calling
+      `features_service.sports.arb.detect_sports_arbitrage_opportunity` + `write_arb_opportunities` per fixture/interval
+      — mirroring `features_service.cross_instrument.app.cross_venue_arb_runner`'s tick-loop shape. Without this the new
+      module is a second "reference-only" library with no real caller (the same dead-code pattern found in
+      `unified_api_contracts.canonical.domain.sports.arbitrage.ArbitrageOpportunity`, see below).
+- [ ] [CODE] P1. **Migrate the historical 13 days (2026-07-25 → 08-06) by reprocessing the underlying raw odds/trades
+      ticks** through the new detector (the old MDPS candle output only ever kept the aggregated `arb_margin`, never
+      which bookmaker contributed each leg — so a leg-level series must be RECOMPUTED from the raw ticks, not migrated
+      from the old rows). Once the live producer above exists and the history is backfilled, delete
+      `market-data-processing-service/market_data_processing_service/app/adapters/sports/arbitrage_adapter.py`
+      (`SportsArbitrageAdapter`) and its ~23 test references (`test_sports_adapters.py`, `test_schema_robustness.py`,
+      `test_adapter_registry_coverage.py`).
 - [ ] [CODE] P1. **Make the relocated series consume the CORRECTED operator-group guard** shipped in
       `unified-api-contracts@e080ef74` (re-keyed VENUE_OPERATOR_GROUPS, case-insensitive `.upper()` normalisation) +
       `unified-api-contracts@b9a0be80` (OPERATOR_GROUP_VENUES hierarchy — BETFAIR_EX_UK/EU/SB_UK → BETFAIR). Any arb
       whose legs are all one operator must never enter the series. If the historical 13 days contain such rows,
       recompute or flag them — do not carry a known-wrong population forward as a baseline.
+  - **Done (2026-08-09) for the new detector** — `features_service/sports/arb/detector.py`'s
+    `detect_sports_arbitrage_opportunity` calls `arb_legs_are_independent` and returns `None` (excludes) when legs
+    collapse to one operator group; covered by
+    `tests/sports/unit/arb/test_detector.py::test_same_operator_group_legs_never_enter_the_series`. Checkbox stays open
+    — "the relocated series" isn't live yet (depends on the live-wiring todo above), and the historical-13-day
+    population hasn't been checked/recomputed against this guard yet.
 - [x] ✅ [REVIEW] P1. **Recompute the arb-decay/alpha-gate baseline on the corrected population** if the bugfix plan's
       blast-radius count comes back non-zero (that plan files this as a follow-up; this todo is its landing site).
       Operator ratified the decay spec as-written on 2026-08-08 — per-leg decay against a shared t=0, gate on p25, edge
@@ -353,3 +375,20 @@ spelling variant survives, which is the entire point of the panel". It does not.
   the todo. Recommend whoever picks up P2's `odds_horizon_bucket` re-stamp todo apply this loader migration as part of
   that same change (per the todo's own instruction), or the operator add `depends_on`/`gate_on_depends` wiring from this
   specific P3 todo onto P2's re-stamp todo to stop repeat premature dispatch.
+
+- **2026-08-09 (slot 16) — Arbitrage relocation, Session 1 of 2 (detection + persistence primitives)**. Shipped
+  `features-service@5f10127d` (quickmerge, QG green): new `features_service/sports/arb/detector.py`
+  (`detect_sports_arbitrage_opportunity` — real multi-venue leg-list key, honest `None` on <2 books / no-arb / same-
+  operator-group legs via UAC `arb_legs_are_independent`) and `features_service/sports/arb/store.py`
+  (`write_arb_opportunities` — append-only, tick-timestamped
+  `sports_arb/by_date/day=.../tick=.../opportunities.parquet`, honest-absence on empty list, mirrors
+  `cross_venue_arb_runner.write_arb_store`), plus `tests/sports/unit/arb/test_detector.py` and `test_store.py`. This
+  directly answers slot-15's note above (dispatch the first todo with the operator-group guard applied AS PART of
+  building it) — the new detector's guard covers the new series from day one. Adopted 2-session scoping (this plan's arb
+  todo is one unit spanning relocate+preserve- history — checkbox intentionally stays open): **Session 1 (done, this
+  entry)** = detection+persistence only, no MDPS deletion, no historical migration. **Session 2** = the two new todos
+  above (live producer wiring, P0; historical 13-day reprocessing from raw ticks + old-adapter deletion, P1). No Session
+  3 needed — slot-17's entry above already closed the arb-decay/alpha-gate recompute todo at a measured zero
+  blast-radius, so the corrected-population check this todo's evidence mentions is that already-closed finding, not new
+  work. `market-data-processing-service`'s `SportsArbitrageAdapter` is UNTOUCHED and still the only live producer —
+  nothing downstream reads the new module yet, so this is additive/inert until Session 2's live-wiring todo lands.
