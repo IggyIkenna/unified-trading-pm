@@ -220,22 +220,26 @@ IMPORT_INSIDE_EXCLUDE_GLOBS=(
     "!**/plans/**"
 )
 BE_EXCLUDE_GLOBS=(
-    "**/smoke-test-dev.py"
-    "**/validate-buildspec.py"
-    "**/validate-cloudbuild.py"
-    "**/validate-internal-editable.py"
-    "**/validate-manifest-dag.py"
-    "**/check-integration-dep-coverage.py"
-    "**/generate_ui_reference_data.py"
-    "**/generate_unified_spec.py"
-    "**/migrate_sports_gcs_to_hive.py"
-    "**/validate-import-deps.py"
-    "**/audit_dead_code.py"
-    "**/reap_stale_blockers.py"
-    "**/verify_env_tiered_buckets_provisioned.py"
-    "**/pin_branch_protection_rulesets.py"
-    "**/check_emission_policy_paired_callsites.py"
-    "**/qg_audit.py"
+    # smoke-test-dev.py, validate-buildspec.py, validate-cloudbuild.py,
+    # validate-internal-editable.py, validate-manifest-dag.py removed 2026-08-09:
+    # none of these files contain `except Exception:` any more (fixed upstream at
+    # some point after their exclude entry was added; verified via
+    # `rg -c "except Exception:" <file>` == 0 for all five) — stale bypass entries
+    # that were silently masking the check's ability to catch a NEW broad-except
+    # reintroduced in any of these files. Removed as part of
+    # pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md's false-negative
+    # investigation (root cause: undocumented/stale bypass-glob entries, not a check bug).
+    "**/check-integration-dep-coverage.py"  # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
+    "**/generate_ui_reference_data.py"      # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
+    "**/generate_unified_spec.py"           # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
+    "**/migrate_sports_gcs_to_hive.py"      # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
+    "**/validate-import-deps.py"            # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
+    "**/audit_dead_code.py"                 # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9 (false positive — string literal)
+    "**/reap_stale_blockers.py"             # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
+    "**/verify_env_tiered_buckets_provisioned.py"  # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
+    "**/pin_branch_protection_rulesets.py"  # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
+    "**/check_emission_policy_paired_callsites.py"  # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
+    "**/qg_audit.py"                        # documented QUALITY_GATE_BYPASS_AUDIT.md §2.9
 )
 DEEP_IMPORT_EXCLUDE_GLOBS=(
     "!**/check_data_completeness.py"
@@ -262,16 +266,16 @@ PYRIGHT_EXCLUDE_GLOBS=("!**/generate-cicd-diagram.py")
 EMPTY_STR_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py" "!**/invalidate-ci-status.py")
 EMPTY_DICT_LIST_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py" "!**/invalidate-ci-status.py")
 IMPORT_INSIDE_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py")
-BE_EXCLUDE_GLOBS+=("**/generate-cicd-diagram.py")
-# tier_c_promotion_gate.py: except Exception is a Firestore-unavailable fallback guard —
-# documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-11)
-BE_EXCLUDE_GLOBS+=("**/tier_c_promotion_gate.py")
+# generate-cicd-diagram.py, tier_c_promotion_gate.py, reconcile_release_tags.py: their
+# BE_EXCLUDE_GLOBS entries removed 2026-08-09 — none of the three currently contains
+# `except Exception:` (already fixed upstream; verified via `rg -c` == 0 for all three).
+# Stale bypass entries silently masked the check's ability to catch a reintroduced
+# broad-except in any of them. See pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md.
 # promotion_lag_monitor.py + ci_failure_watcher.py: except Exception guards Firestore
 # best-effort writes so SDK/credential absence never blocks the monitors —
 # documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-11)
 BE_EXCLUDE_GLOBS+=("**/promotion_lag_monitor.py")
 BE_EXCLUDE_GLOBS+=("**/ci_failure_watcher.py")
-BE_EXCLUDE_GLOBS+=("**/reconcile_release_tags.py")
 # cron_liveness_watchdog.py: except Exception in gh_json() (network/subprocess errors)
 # and _parse_ts() (malformed timestamp) — best-effort fallback, never blocks the alert.
 # Documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-27)
