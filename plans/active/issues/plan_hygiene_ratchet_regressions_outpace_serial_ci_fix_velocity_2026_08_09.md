@@ -164,3 +164,27 @@ words: "this branch is churning faster than one CI worker can chase serially").
   fixed and verified, 3 remain (codex-doc-freshness already fixed upstream per the doc header,
   `dangling-reference-paths` currently green per a live local check, so effectively `assigned_vm:NA corpus size` is the
   one live blocker as of this tick).
+- 2026-08-09 (cicd agt-558c62, slot 11, 4th dispatch of this same escalation lineage): `ldr-ci-monitor` re-fired this
+  same escalation id against the same run (`31295043187`, `HEAD=ee34b044d` — no new commits landed since slot 23's
+  dispatch). Re-verified via `gh run view --log-failed`: the ONLY hard `❌ FAIL` line in the sweep is still
+  `assigned_vm:NA corpus size (docs + open todos, ratchet)` — no 6th distinct check, same single known blocker slot 23
+  already documented. Investigated whether this specific overage (baseline 365 docs / 1093 todos, slot-30 measured
+  367/1097 — only +2 docs/+4 todos) might be small enough for a bounded one-shot fix, unlike the 33-doc effort-ratchet
+  batch slot 23 tackled. A first-pass scan for `assigned_vm:NA` + `status: active|open` docs with 0 open `- [ ]` items
+  turned up ~20 candidates, including several `archive_exempt: true` standing-reference hubs, a template file
+  (`task_template.md`, 0 checkboxes by design, not real NA content), coordination-hub docs with child plans still open,
+  and a recurring **`ag_closeout_audit_<tranche>_parked_<date>.md` pileup** — 20 dated tracker docs spanning 2026-07-31
+  through 2026-08-09 across 6 tranches, several tranches (`cross_cutting`, `infra`) carrying 5-6 same-shaped docs on
+  different dates with no evidence the older ones were archived/superseded when a newer one was authored. That pileup is
+  a plausible concrete contributor to the corpus's slow creep and is worth flagging to whoever runs the next
+  `/ag-closeout-audit`/`/na-eligibility-audit` pass, but confirming which of the ~20 candidates are genuinely
+  archive-eligible vs. correctly-standing (the exact KEEP-NA/ARCHIVE-EXEMPT/RECLASSIFY judgment call those skills exist
+  for) is real per-doc audit work, not a spot-fix — this first pass alone surfaced 3 different reasons a 0-open-todos
+  doc can still be correctly NA, confirming slot 23/slot 30's "audit-scale, not one-shot" conclusion rather than
+  overturning it. Did not attempt a partial fix or `--update-baseline` (would be the banned "hand-raise to silence a
+  growth signal" per the baseline file's own header). No push this dispatch — nothing to ship without doing the real
+  audit. `AUTHORING_SLOT=ldr-ci-monitor` sentinel, so no slot-ping applicable. Completing via `/done`; the live blocker
+  remains exactly `assigned_vm:NA corpus size`, unchanged from slot 23's tick — recommend the next
+  `/na-eligibility-audit` or `/ag-closeout-audit` run include the parked-doc-pileup lead above, and/or the P2
+  structural-fix todo (move this check to periodic/batched rather than per-commit hard-fail) get prioritized so this
+  escalation lineage stops re-dispatching identical outcomes.
