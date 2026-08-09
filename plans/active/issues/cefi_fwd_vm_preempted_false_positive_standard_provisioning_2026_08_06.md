@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [cefi, vm, preemption, false-positive, monitoring, data-pipeline, dp-vm-008, alerting]
 related:
   [
-    /plans/active/issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md,
+    /plans/archive/2026_08/issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md,
     /plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
@@ -55,7 +55,7 @@ context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
-    /plans/active/issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md,
+    /plans/archive/2026_08/issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md,
     deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
     deployment-service/deployment_service/data_pipeline_monitors/_compute_ops.py,
     deployment-service/scripts/vm/launch-cefi-forward-poll.sh,

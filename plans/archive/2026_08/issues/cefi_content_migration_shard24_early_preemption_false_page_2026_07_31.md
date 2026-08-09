@@ -22,7 +22,7 @@ summary: >-
   `RB-INFRA-RELAUNCH` budget for this vm-prefix is now 2/2 for today (2026-07-31): `-032606` (a genuine wedge/freeze,
   froze at 68,200/155,419=43.9% after `last_completed_date=2026-01-06` checkpoint, deleted 06:32Z) + `-065001` (this
   preemption) — per the runbook's flat bound, did NOT relaunch a 3rd time.
-status: open
+status: archived
 nature: issue
 asset_group: [cefi, meta]
 stage: [data, meta]
@@ -55,7 +55,6 @@ drift_direction: none
 depends_on: []
 resolved_by:
 locked_by:
-archive_exempt: true
 context_scope:
   [
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
