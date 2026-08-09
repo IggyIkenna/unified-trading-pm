@@ -379,7 +379,15 @@ run_check "Create-only archival guard (archive/active duplicate pairs)" hard pyt
 # shrinking-ratchet shape as the three checks above (na_corpus_baseline.yaml): hard-fails only when
 # the CURRENT count exceeds the baseline on either axis. SSOT:
 # codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 4.
-run_check "assigned_vm:NA corpus size (docs + open todos, ratchet)" hard python3 "$SCRIPT_DIR/check_na_corpus_ratchet.py" --quiet
+# Uses the same DIFF_BASE_REF guard as the reference-path/archive-candidates checks above
+# (2026-08-09, plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md) —
+# diff-scoped in CI-gate mode with a resolvable base, baseline+buffer mode otherwise (periodic
+# cron sweep, interactive/local runs unchanged).
+NACORPUS_DIFF_ARGS=()
+if [ -n "$DIFF_BASE_REF" ]; then
+  NACORPUS_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
+fi
+run_check "assigned_vm:NA corpus size (docs + open todos, ratchet)" hard python3 "$SCRIPT_DIR/check_na_corpus_ratchet.py" "${NACORPUS_DIFF_ARGS[@]}"
 # Line caps (plans 500 soft/1000 hard; epics 2000 hard flat, NO umbrella-exemption escape hatch —
 # operator ruling 2026-07-24) — flipped from advisory to a real hard gate 2026-07-24 via the SAME
 # shrinking-ratchet shape as the reference-path check above (line_caps_baseline.yaml): hard-fails
@@ -395,7 +403,14 @@ run_check "Estimate sanity (±20% drift)"     soft "$SCRIPT_DIR/check_estimate_s
 # with nobody having deliberately chosen that for THIS plan. Same shrinking-ratchet
 # shape as the hard ratchets above (effort_signal_baseline.yaml): hard-fails only when
 # the CURRENT count exceeds the baseline, never on the pre-existing 211-plan debt.
-run_check "Silent-default-effort plans (ratchet)" hard python3 "$SCRIPT_DIR/check_effort_signal_ratchet.py" --quiet
+# Uses the same DIFF_BASE_REF guard as the checks above (2026-08-09,
+# plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md) — diff-scoped
+# in CI-gate mode with a resolvable base, baseline mode otherwise.
+EFFORT_DIFF_ARGS=()
+if [ -n "$DIFF_BASE_REF" ]; then
+  EFFORT_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
+fi
+run_check "Silent-default-effort plans (ratchet)" hard python3 "$SCRIPT_DIR/check_effort_signal_ratchet.py" "${EFFORT_DIFF_ARGS[@]}"
 run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_in_active.sh"
 run_check "Codex path refs resolve (legacy, subset of the ratchet check above)" soft "$SCRIPT_DIR/check_codex_refs.sh"
 run_check "Parent-epic alignment (keyword)"  soft python3 "$SCRIPT_DIR/check_parent_epic_alignment.py"
