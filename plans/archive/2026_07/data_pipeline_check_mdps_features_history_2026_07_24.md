@@ -1639,3 +1639,37 @@ violate the plans-run-to-actual-completion HARD RULE. Todo 14 itself, however, i
 **Disposition**: todo 14 DONE — its own scope (ship-verify, flip, codex audit) is fully closed. The PLAN remains ACTIVE
 (genuinely open work: 11b/11c, the gated features-numbers todo, 10-followup-a, 14-followup) — no rule-9 whole-plan
 closing report follows from this todo, and the plan should NOT be archived.
+
+### 2026-07-31 (slot-8, data_engineering) — todo 14-followup DONE: inverse-phantom content_check shipped to both drivers
+
+Dispatched to `data_pipeline_check_mdps_features-058` (todo 14-followup). Added the shared `check_inverse_phantom()`
+primitive to `unified_trading_library.pipeline_e2e_check.shard_verify` (bar: every sampled cell across the caller's
+`value_columns` NaN, not merely most — a row with even one real value is never flagged) plus
+`ShardCheckResult.content_check`/`content_check_nan_ratio` + a report "Content" column, all shipped in
+`unified-trading-library@8b894105`. Wired into both drivers: MDPS's `_check_content_for_inverse_phantom`
+(`market-data-processing-service@12a3f6b`) consults the SAME `mdps_ohlc_is_nullable` UAC oracle the write seam itself
+uses (via `_type_token_from_canonical_id` for the instrument_type) before flagging, so a legitimate nullable-OHLC
+honest-absence window (`trades`/`derivative_ticker`/etc) is never mislabeled; features-service's twin
+(`features-service@6afdb414`) has no equivalent per-type oracle, so it checks every non-identity numeric column against
+the same strict 100%-NaN bar.
+
+**Deliberately scoped informational-only in both drivers** — the verdict is threaded into the report/reason string but
+never flips a leg's `passed`/`failed` status. Rationale: this smoke-check is relied on by other slots/CI as a
+currently-green signal, and there is no adversarial test coverage yet proving the nullable-detection heuristic never
+false-positives on real prod-shaped data (a false positive here would silently fail a legitimate leg). Promoting either
+to authoritative once validated against real data is natural, tracked follow-up — not claimed done here.
+
+While QG-verifying the MDPS driver via a real `--dry-enumerate` smoke run (`quality-gates.sh` § "PIPELINE-E2E-CHECK
+DRIVER SMOKE"), surfaced a genuine, PRE-EXISTING, unrelated break (confirmed via diff against the parent commit before
+my change touched this file): `_candle_data_types_for_market_ag` still unpacks `mdps_mvp_universe()`'s return as a
+2-tuple, but the function was extended to a 3-tuple `(venue, instrument_type, data_type)` in
+`unified-api-contracts@724b6633` (see `/plans/archive/2026_08/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`, whose
+own caller-update sweep only covered UAC-internal callers, not this cross-repo consumer) — every enumeration call raises
+`ValueError: too many values to unpack`. `quality-gates.sh`'s own exit code is 0 (this smoke step is non-blocking), so
+it did not block shipping, but it is a real correctness gap. Per findings triage (not small/clear enough to fix inline —
+needs redesigning the function's data_type derivation, not a 1-line unpack fix) filed as a new todo on the existing,
+still-open issue doc rather than a fresh one (same root cause, already active, `assigned_vm: planning`) — did NOT fix it
+here, out of this todo's scope.
+
+Repos shipped: `unified-trading-library@8b894105`, `market-data-processing-service@12a3f6b`,
+`features-service@6afdb414`.

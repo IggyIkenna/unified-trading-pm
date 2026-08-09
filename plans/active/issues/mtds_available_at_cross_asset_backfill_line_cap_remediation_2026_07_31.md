@@ -13,7 +13,7 @@ summary: >-
   issue's own finding, prediction's todos all read `[x]` except the still-open apply/resume pair (gated on the same
   pause/apply/resume protocol as tradfi); tradfi is likewise all done except apply/resume — so most of the plan's
   historical Progress Log entries document already-CLOSED lanes and are archival candidates, not live work.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi, prediction]
 stage: [data]
@@ -33,7 +33,7 @@ parent_epic: manifest_master
 assigned_vm: planning
 locked_by:
 priority: P3
-resolved_by:
+resolved_by: plan_reconciler-agt-d7a9f2-2026-08-09
 source: >-
   Deferred from plans/active/issues/dp_consolidator_scheduler_paused_tradfi_recurrence_2026_07_31.md's "Recommended
   decision" § follow-up 2 (2026-07-31) per the archival-ritual requirement that a DEFERRED prose item be migrated into a
@@ -41,7 +41,7 @@ source: >-
 execution_scope: orchestrator-agent
 drift_direction: correct-docs
 depends_on: []
-last_updated: 2026-07-31
+last_updated: 2026-08-09
 context_scope:
   [
     /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
@@ -53,6 +53,10 @@ context_scope:
 ---
 
 # mtds_available_at_cross_asset_backfill_2026_07_13.md line-cap remediation
+
+> **✅ RESOLVED 2026-08-09 (plan_reconciler, dispatch agt-d7a9f2).** Both todos done: the split (todo 1) landed
+> 2026-08-01; todo 2 (cross-plan `depends_on`+`gate_on_depends` sequencing) closed RESOLVED-BY-EVENTS — its target plan
+> is archived `status: complete` with no remaining apply/resume work to sequence. Archived per the 6-step ritual.
 
 ## What I found
 
@@ -112,13 +116,18 @@ running against it) — check the plan's own status before starting.
       from the trimmed plan), leaving the still-open apply+resume todos (and any other still-open lane) in the active
       plan, landing it back under the 1000-line hard cap. Verify no todo is currently `locked_by`/mid-dispatch before
       splitting. (repo: unified-trading-pm) — ✅ 2026-08-01 (slot-11, cicd): see Progress Log for full evidence.
-- [ ] [PLAN] P2. While splitting (todo above), add explicit per-todo sequencing between each asset group's "Apply
-      `rebuild_{prediction,tradfi}_manifest.py`" and "Resume the {prediction,tradfi} consolidator cron" todos via the
-      **cross-plan `depends_on` + `gate_on_depends: true` split** (see 2026-07-31 Progress Log entry below — the
-      `prereqs.completed_tasks`-on-a-single-todo mechanism this todo originally suggested is NOT a valid authoring
-      mechanism; do not attempt it) so the resume todo cannot dispatch before its apply sibling is done. Verify by
-      confirming `mtds_available_at_cross_asset_backfill-006`-equivalent (post-split) does not appear
-      `queued`/dispatchable while its apply counterpart is open. (repo: unified-trading-pm)
+- [x] [PLAN] P2. **RESOLVED-BY-EVENTS 2026-08-09 (plan_reconciler), not executed.** ~~While splitting (todo above), add
+      explicit per-todo sequencing between each asset group's "Apply `rebuild_{prediction,tradfi}_manifest.py`" and
+      "Resume the {prediction,tradfi} consolidator cron" todos via the cross-plan `depends_on` + `gate_on_depends: true`
+      split~~ — the target plan (`mtds_available_at_cross_asset_backfill_2026_07_13.md`) no longer exists in
+      `plans/active/`: verified it archived to
+      `/plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md` with `status: complete` (16/17
+      checkboxes done; the sole remaining open item is an unrelated orchestrator `orphan_reap` follow-up, not an
+      apply/resume todo). Every apply/resume/go-no-go todo this restructure was meant to sequence-guard completed
+      without the guard ever being built — the race this todo hedged against never materialized. Building the
+      depends_on/gate_on_depends split now would restructure a plan that no longer has any open apply/resume work to
+      sequence. **This todo carried `assigned_vm: planning` (live AO-dispatchable) — flagging closed here specifically
+      to stop a future dispatch from being wasted discovering the target is gone.** (repo: unified-trading-pm)
 
 ## Progress Log
 

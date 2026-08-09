@@ -292,7 +292,18 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
       path string on its own). Also fixed an unrelated pre-existing QG red hit while shipping
       (instruments-service@90f667ec): stale `expected_universe` golden missing 6 SOLEND-SOLANA/VENUS-BSC/VENUS-ETHEREUM
       oracle_prices tuples from an earlier lending-adapter addition — regenerated via the documented recipe, set-diff
-      verified additive-only. Provenance: this audit § 3b.
+      verified additive-only. Provenance: this audit § 3b. **CORRECTION (plan_reconciler, 2026-08-09):** item 3's own
+      claim that "the generic `_write_venue` path CEFI/DEFI/TRADFI share still emits the flat `day=/venue=` shape today"
+      was itself wrong — confirmed via `backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md`'s deeper
+      re-verification (todo 1) AND independently re-checked here against live code:
+      `instruments-service/instruments_service/engine/orchestrator/writers.py:324-360`'s `_write_venue` (the generic
+      fallback used for every venue not routed to sports/prediction) calls `_instrument_availability_sink_for(...)`
+      directly — full-hive prefix, not flat — with a docstring citing "the full-hive prefix (operator R2, 2026-07-21)";
+      `git show 108f5120` confirms this commit (2026-07-22, 8 days BEFORE this item's 2026-08-08 correction) already
+      rewired `_write_venue` for every venue, not just sports/prediction. The `9c2cddf1` correction this item shipped
+      was itself based on a stale premise; the finalize doc's `a36d3cf1`/`37d48151` correction (SUPERSEDED-BY-EVENTS
+      note pointing at `108f5120`) is the one that actually landed accurate comments. No further action needed here —
+      flagging only so a future reader of this item in isolation isn't misled by its own superseded claim.
 - [x] ✅ 4. [SCRIPT] P2. **[already covered by
       `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch2_2026_07_27.md`, see that doc for execution]** —
       citation added 2026-07-30 (`/na-eligibility-audit` tranche=cefi). unified-trading-pm: add a Phase-0 `-test-`
