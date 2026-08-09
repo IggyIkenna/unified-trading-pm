@@ -141,3 +141,26 @@ words: "this branch is churning faster than one CI worker can chase serially").
   literal string `"checks failed"` (168 bytes), not which check(s) failed; identifying the actual failing check requires
   either `gh run view --log-failed` (verbose, slow) or reading the job's raw log for the checker script's own output.
   `dbaa7b463` still not on `origin/main` as of this tick; continuing to wait rather than intervene.
+- 2026-08-09 (cicd agt-558c62, slot 23, 3rd dispatch of this same escalation lineage — after slot 3 and slot 14 both
+  declined to keep chasing): triaged the ORIGINAL 2 regressions this escalation's context named (`effort-signal-ratchet`
+  217->248, `archive-candidates` 0->1) as genuine, fixable, in-scope defects, not just ambient churn — reviewed each
+  flagged doc individually (not a blind baseline bump): archived a fully-resolved TradFi issue doc + its now-obsolete
+  line-cap-relief companion pair (3-file `git mv`, corpus referrers repointed), and added explicit `effort:` frontmatter
+  to 79 recently-authored satellite AO-dispatch plans (mirroring each doc's own `assigned_role`'s already-deterministic
+  role-registry thinking-tier — not a guess). Hit 2 real stash-pop content conflicts along the way (a concurrent
+  context-scout sweep's Progress Log entry vs. mine on the same 2 docs) — resolved both as additive unions, not
+  force-overwrites. Took roughly a dozen fetch/rebase/restage cycles (this branch's commit velocity is high enough that
+  even single-file pulls landed mid-hook) before a commit finally survived long enough to push:
+  **`unified-trading-pm@0e87ab46e`, verified ancestor-of-origin.** Re-ran both original checks locally post-push — still
+  ✅ green (`effort-signal-ratchet`: 169 ≤ baseline 217; `archive-candidates`: 0 ≤ baseline 0) — confirming the fix
+  itself is durable, not reverted. Dispatched a fresh `quality-gates-v2` run (31295043187) to confirm end-to-end: it
+  failed again, but on the ALREADY-DOCUMENTED 5th distinct check from this doc (`assigned_vm:NA corpus size`), not on
+  either of my 2 targets or a 6th new one — the systemic pattern held exactly as predicted, and my fix is not the cause.
+  Per this doc's own established "hand off, don't keep chasing" precedent (already ruled twice on this same escalation
+  lineage), declining a further fix-and-retrigger cycle for the NA-corpus regression — same reasoning as the slot-30
+  entry above (audit-scale remedy, not a one-shot CI-wall fix). `AUTHORING_SLOT` for this escalation is the
+  `ldr-ci-monitor` sentinel (not a numbered slot), so no slot-to-slot ping is applicable per this role's own skip-rule;
+  recording the outcome here instead. Completing this dispatch via `/done` — 2 of 5 documented regressions now durably
+  fixed and verified, 3 remain (codex-doc-freshness already fixed upstream per the doc header,
+  `dangling-reference-paths` currently green per a live local check, so effectively `assigned_vm:NA corpus size` is the
+  one live blocker as of this tick).
