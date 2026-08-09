@@ -17,10 +17,9 @@ related:
     /plans/epics/infrastructure_master.md,
     /plans/active/monitoring_control_plane_master_2026_06_10.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md,
-    /plans/active/issues/ag_closeout_audit_ci_parked_2026_08_06.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_08/mtds_retry_safe_default_audit_2026_07_14.md,
   ]
@@ -31,6 +30,8 @@ execution_scope: local-only
 priority: P0
 source: agt-a304c9
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Late-arriving hunter findings — CI tranche reconciliation 2026-08-06
@@ -96,3 +97,14 @@ failure (75 orphans vs 69 baseline).
       under serial execution. Fix: update title/summary to reflect actual known state.
 - [ ] [DOC] P3. **`cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md`** (GRACE) — archive
       candidate: all 5 todos `- [x]`, unlocked. Archive after grace expires.
+
+## Progress Log
+
+- **2026-08-09, slot-22 (backend_engineer)**: found this doc's own `related:` list failing QG's `check_reference_paths`
+  (3 dangling entries) while shipping an unrelated task. `ag_closeout_audit_ci_parked_2026_08_06.md` never existed in
+  git history (checked `git log --all --diff-filter=A`) — the corpus only ever had `_2026_08_07`/`_08`/`_09`
+  daily-rotating snapshots, so removed that entry outright. The other two
+  (`ci_satellite_ao_dispatch_batch1_2026_07_26.md`
+  - its `_finalize` sibling) simply moved to `plans/archive/2026_08/` since this doc was filed — repointed both to their
+    archive path. All three are pure path/reference fixes, no content judgment involved — the findings/todos above are
+    untouched.
