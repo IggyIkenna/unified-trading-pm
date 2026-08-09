@@ -1,0 +1,182 @@
+---
+doc_type: plan
+title: Wire RecursiveLoopOrchestrator — LTV/depth params + real translation layer for Family 1/2 carry archetypes
+summary: >-
+  CARRY_RECURSIVE_BORROW_LENDING_ONLY and CARRY_BASIS_PERP_INV are fully catalogued but permanently stubbed —
+  CarryRecursiveStakedEngine.on_tick() returns [] whenever staking_yield_enabled=false, which both archetypes' catalog
+  rows always set. RecursiveLoopOrchestrator (execution-service, 711 lines, unit-tested) and PerpHedgeSizer
+  (execution-service) are both fully built but have ZERO production callers anywhere in the workspace — confirmed via
+  exhaustive grep. Operator ruled 2026-08-09 on the 3 trading-parameter numbers this build needs (LTV-per-lending-mode,
+  recursion-depth policy, perp-hedge rebalance formula) — see
+  defi_catalog_engine_config_key_contract_drift_2026_07_23.md's RULED todo. This plan wires those numbers into the
+  catalog builder and builds the real translation layer so both archetypes produce live AtomicInstruction output and
+  RecursiveLoopOrchestrator gets its first real caller.
+status: active
+nature: process
+asset_group: [defi]
+stage: [strategy]
+repos: [strategy-service, execution-service, unified-api-contracts]
+scope: [engineer]
+tags: [defi, carry, recursive-loop, perp-hedge, ltv, translation-layer, leveraged, money-path]
+related:
+  [
+    /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
+  ]
+created: "2026-08-09"
+last_updated: "2026-08-09"
+parent_epic: strategy_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: brand-new
+estimate_baseline_ai_days: 4
+estimate_calibrated_ai_days: 4
+assigned_role: backend_engineer
+effort: high
+drift_direction: advance-code
+depends_on: []
+sequential: true
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+resolved_by:
+source: >-
+  Operator ruling 2026-08-09 on defi_catalog_engine_config_key_contract_drift_2026_07_23.md's DRAFT PROPOSAL, followed
+  by an exhaustive code-landscape research pass confirming exact file/function targets before this plan was authored —
+  the operator explicitly asked for a tracked agent-orchestrator plan given the cross-repo, leveraged-money-path scope.
+context_scope:
+  [
+    /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py,
+    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog_carry.py,
+    strategy-service/tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2/recursive_loop_orchestrator.py,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_config.py,
+    unified-api-contracts/unified_api_contracts/registry/defi_reserve_params.py,
+    execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py,
+    execution-service/execution_service/defi_execution/helpers/perp_hedge_sizer.py,
+    execution-service/execution_service/algo_library/leveraged_leg_controller.py,
+    unified-trading-library/unified_trading_library/risk/net_delta.py,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
+  ]
+---
+
+# Wire RecursiveLoopOrchestrator — LTV/depth params + real translation layer
+
+## Background
+
+`CARRY_RECURSIVE_BORROW_LENDING_ONLY` (Family 1) and `CARRY_BASIS_PERP_INV` (Family 2) are both fully catalogued
+(`catalog_carry.py:621-719`) and route to `CarryRecursiveStakedEngine` (`factory.py:71-72`), but that engine's
+`on_tick()` (`recursive_staked.py:194-200`) unconditionally returns `[]` whenever `staking_yield_enabled=false` — which
+both archetypes' catalog rows set (`catalog_carry.py:654,708`). This is why the test suite carries both archetypes in
+`_ALLOWED_EMPTY_ARCHETYPES` (`test_all_catalogued_archetypes_construct_and_fire.py:104-112`) as a documented, deliberate
+exemption, not a bug.
+
+A 2026-08-09 code-landscape research pass (cited in `defi_catalog_engine_config_key_contract_drift_2026_07_23.md`'s
+Progress Log) confirmed, with exact file:line citations:
+
+- **`RecursiveLoopOrchestrator`**
+  (`execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py`, 711 lines,
+  `open()`/`unwind()`) and **`PerpHedgeSizer`**
+  (`execution-service/execution_service/defi_execution/helpers/perp_hedge_sizer.py`) are both fully implemented and
+  unit-tested but have **zero production callers anywhere in the workspace** (exhaustive grep, test files excluded).
+- The **LTV-per-lending-mode table** the operator ruled on exists as real values in UAC
+  (`unified_api_contracts/registry/defi_reserve_params.py` — Aave e-mode 0.93, Morpho `market_0945`=0.945,
+  `market_086`=0.86, all matching the codex doc), but the catalog builder only ever writes an `ltv_mode` STRING param
+  (`catalog_carry.py:653,707`) that **nothing reads back** — confirmed via grep, exactly 2 hits (the writes themselves).
+- **`recursion_depth_max=5`** is correctly set for both archetypes (`archetype_config.py:271,299`) but has **zero
+  production readers** — only schema/validation unit tests reference it.
+- A **working example already exists in the same engine file** for the currently-live `CARRY_RECURSIVE_STAKED`
+  archetype: `_build_loop_legs()` (`recursive_staked.py:382-447`) and `_build_instruction()` (`:350-380`) build a real
+  `list[AtomicLeg]` → `AtomicInstruction` per loop iteration. This is the target shape Family 1/2's real `on_tick()`
+  implementation needs to reproduce.
+
+## Codex SSOTs
+
+- `/codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md` — Family 1 spec: LTV table,
+  per-chain recursion-depth figures (operator ruled: NOT adopted, keep shipped 5), execution semantics (STAKE → TRANSFER
+  → LEND → BORROW per-loop bundle), LegController integration notes.
+- `/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md` — Family 2 spec: perp-hedge rebalance formula
+  (`perp_short_size = max(0, E_actual - target_net_delta)`, 5%-of-`E_actual` rebalance trigger), `PerpHedgeSizer`
+  docstring's "designed for 5-min poll cycle" framing.
+
+## Todos
+
+- [ ] [BACKEND] P1. Add an `ltv_mode`-string → `(max_ltv, liquidation_threshold)` resolver in
+      `unified-api-contracts/unified_api_contracts/registry/defi_reserve_params.py` (or a new sibling helper in the same
+      module) that maps the exact tokens `catalog_carry.py` already writes (`"emode_eth"`, `"market_0945"`,
+      `"market_086"`) to real values via the existing `get_emode_params()`/`get_morpho_market_lltv()` functions — do not
+      re-derive the numbers, only add the string-to-lookup indirection. Repo: unified-api-contracts. Done-when: a new
+      unit test resolves all 3 tokens to the operator-ruled values (0.93/0.945/0.86) and `quality-gates.sh` is green.
+- [ ] [BACKEND] P1. Wire the resolver from the prior todo into
+      `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog_carry.py`'s
+      `build_carry_recursive_borrow_lending_only()` (`:621-662`) and `build_carry_basis_perp_inv()` (`:670-719`):
+      replace the currently-unread `"ltv_mode": mode` catalog param with a real resolved
+      `"ltv_per_loop": liquidation_threshold - config.safety_buffer_ltv` value (read `safety_buffer_ltv` from
+      `get_archetype_config(archetype)` in `unified_api_contracts.internal.architecture_v2.archetype_config` — already
+      `0.05` for both archetypes, do not hardcode). Repo: strategy-service. Done-when: a new/updated catalog-builder
+      unit test asserts each of the 7 cataloged cells carries the correct numeric `ltv_per_loop` (0.93-0.05=0.88 for the
+      Aave e-mode cell, etc.), and `quality-gates.sh` is green.
+- [ ] [BACKEND] P1. Wire `ArchetypeConfig.recursion_depth_max` (already `5` for both archetypes,
+      `archetype_config.py:271,299`) into the same two catalog builders as an `"n_loops"` param, read via
+      `get_archetype_config(archetype).recursion_depth_max` — do not hardcode `5` in the catalog file. Repo:
+      strategy-service. Done-when: a catalog-builder unit test asserts `n_loops=5` on every cataloged cell for both
+      archetypes, and `quality-gates.sh` is green.
+- [ ] [BACKEND] P1. Implement Family-1 (`CARRY_RECURSIVE_BORROW_LENDING_ONLY`) real `on_tick()` leg construction in
+      `strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/recursive_staked.py`: add a new code path
+      (do not touch the shared `staking_yield_enabled=true` branch used by the live `CARRY_RECURSIVE_STAKED` archetype)
+      that, for this archetype specifically, builds a `list[AtomicLeg]` per loop iteration following the codex doc's
+      STAKE → TRANSFER → LEND → BORROW bundle, mirroring `_build_loop_legs()`/`_build_instruction()`'s existing pattern
+      (`:350-447`) but driven by the new `ltv_per_loop`/`n_loops` params from the prior 2 todos instead of the
+      staking-yield math. This replaces the unconditional `return []` (`:194-200`) for this archetype only —
+      `CARRY_BASIS_PERP_INV` still returns `[]` until the next todo lands (same file, sequential). Repo:
+      strategy-service. Done-when: a new unit test drives `on_tick()` for `CARRY_RECURSIVE_BORROW_LENDING_ONLY` with
+      real catalog params and asserts a non-empty, correctly-shaped `AtomicInstruction` (leg count = `n_loops` ×
+      legs-per-loop, correct `action`/`instrument`/`size_units` progression), and `quality-gates.sh` is green.
+- [ ] [BACKEND] P1. Implement Family-2 (`CARRY_BASIS_PERP_INV`) real `on_tick()` leg construction in the same file: the
+      same lending-loop legs as the prior todo, plus a perp-hedge leg using `PerpLegConfig`
+      (`unified_api_contracts.internal.architecture_v2.recursive_loop_orchestrator.PerpLegConfig`) sized via
+      `unified_trading_library.risk.net_delta.residual_hedge_size()` (operator-ruled formula, already shipped — do not
+      re-derive). Repo: strategy-service. Done-when: a new unit test drives `on_tick()` for `CARRY_BASIS_PERP_INV` and
+      asserts a non-empty `AtomicInstruction` including the correctly-sized hedge leg, and `quality-gates.sh` is green.
+- [ ] [BACKEND] P1. Build the `RecursiveLoopRequest` construction + `RecursiveLoopOrchestrator.open()`/`.unwind()` call
+      site in execution-service — candidate home:
+      `execution-service/execution_service/algo_library/leveraged_leg_controller.py` (or a new sibling module if that
+      file's existing responsibility doesn't fit) — that receives the `AtomicInstruction` produced by the prior 2 todos
+      (routed via `execution-service/execution_service/v2/atomic_instruction_router.py:35`), reconstructs a
+      `RecursiveLoopRequest` from its legs/params, and invokes `RecursiveLoopOrchestrator.open()` on entry / `.unwind()`
+      on exit. This is `RecursiveLoopOrchestrator`'s first real production caller. Repo: execution-service. Done-when: a
+      new integration-style unit test feeds a real `AtomicInstruction` (as produced by the prior 2 todos' new tests)
+      through this call site and asserts `RecursiveLoopOrchestrator.open()` is invoked with a correctly-populated
+      `RecursiveLoopRequest`, and `quality-gates.sh` is green.
+- [ ] [BACKEND] P2. Audit execution-service for an existing periodic-poller/scheduler mechanism suitable for
+      `PerpHedgeSizer.compute_rebalance()`/`.compute_margin_topup()` (its own docstring states "designed for 5-min poll
+      cycle", `perp_hedge_sizer.py:60-63`) — grep for existing Cloud Scheduler-triggered or in-process poll loops in
+      `execution-service/execution_service/defi_execution/` and `algo_library/`. If a suitable poller exists, wire
+      `PerpHedgeSizer` into it as a new call site for Family-2 open positions. If none exists, state that finding
+      explicitly in this todo's evidence and stop — do NOT freehand-design new scheduler infrastructure as part of this
+      bounded todo; file a follow-up `[DESIGN]` todo on this plan's finalize companion instead. Repo: execution-service.
+      Done-when: either (a) `PerpHedgeSizer` has a real, tested, live-reachable caller, with a new unit test proving it
+      fires on a poll tick, or (b) the audit's finding (no suitable poller exists) is recorded verbatim with the exact
+      grep evidence, and a follow-up todo is filed.
+- [ ] [BACKEND] P2. Remove the two `_ALLOWED_EMPTY_ARCHETYPES` entries for `CARRY_RECURSIVE_BORROW_LENDING_ONLY`
+      (`:104-108`) and `CARRY_BASIS_PERP_INV` (`:109-112`) in
+      `strategy-service/tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py` now that
+      both produce real non-empty `on_tick()` output — this test's own `"on_tick returned [] -- engine no-op'd"` failure
+      path (`:423-425`) should now correctly exercise both archetypes for real instead of silently exempting them. Repo:
+      strategy-service. Done-when: the full `test_all_catalogued_archetypes_construct_and_fire.py` suite passes green
+      with both entries removed, and `quality-gates.sh` is green across strategy-service.
+
+## Progress Log
+
+- **2026-08-09**: plan authored following an exhaustive code-landscape research pass (findings recorded in
+  `defi_catalog_engine_config_key_contract_drift_2026_07_23.md`'s Progress Log) that confirmed exact file/function
+  targets for every todo above before this plan was written, per the operator's explicit request for a tracked
+  agent-orchestrator plan given the cross-repo, leveraged-money-path scope. `sequential: true` — nearly every todo
+  touches one of 3 shared files (`defi_reserve_params.py` → `catalog_carry.py` → `recursive_staked.py` →
+  execution-service leg-controller → the test file), and each step's correctness genuinely depends on the prior step
+  landing first.
