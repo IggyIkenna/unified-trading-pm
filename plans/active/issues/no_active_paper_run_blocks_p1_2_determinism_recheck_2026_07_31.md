@@ -226,3 +226,4 @@ run already covers them under different instrument routing), not a mechanical da
   the `[DECISION]` item and filed the new bounded `[DIAG]` item — superseded, not a live conflict. Estimate re-tiered
   `research`→`infra` (a completeness measurement + a conditionally-launched, self-terminating VM). Companion finalize
   plan: `/plans/active/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31_finalize_2026_08_08.md`.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
