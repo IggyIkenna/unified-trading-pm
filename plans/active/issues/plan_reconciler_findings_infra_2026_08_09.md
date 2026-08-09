@@ -71,7 +71,32 @@ _(pending Phase 4/5 — filled in as STEP 4 confirms candidates)_
 
 ## Contradictions
 
-_(pending)_
+1. **P0 — CLAUDE.md's "every `assigned_vm: planning` plan defaults to `effort: max`" is CONTRADICTED by the actual AO
+   effort-resolution code for `assigned_role`-tagged plans.** VERIFIED this run (not inferred): a plan with
+   `assigned_vm: planning` + `assigned_role` set but no explicit `effort:`/`thinking_tier:` does NOT get
+   todo-count-derived `xhigh`/`max` (that path — `agent-orchestrator/server/model_tier.py` `LARGE_PLAN_TODO_THRESHOLD` —
+   only fires "for a plan declaring no tier at all", per its own comment) — it routes through `RoleSpec.effort`
+   (`agent-orchestrator/server/role_registry.py:76-83`: `max` only if `thinking=="max"`, `high` only if
+   `thinking=="high"`, else `None`) which then falls through to `model_tier.py:34` `_DEFAULT_EFFORT = "medium"`. Checked
+   the 3 roles actually in use across this tranche's flagged docs — `agents/infra.md:thinking: medium`,
+   `agents/backend_engineer.md:thinking: medium` (both → silently **medium**, not max),
+   `agents/review.md:thinking: high` (→ **high**, not max either). Scoped check
+   (`check_effort_signal_ratchet.py --only`) found **23 infra-tranche docs** hitting this gap (17
+   `assigned_vm: planning` — the operationally-affected ones — + 6 `assigned_vm: NA`, unaffected since NA plans aren't
+   AO-dispatched): `codex_vs_repo_docs_ssot_audit_2026_06_01(+_finalize)`,
+   `defi_compute_gcp_migration_2026_08_08(+_finalize)`,
+   `doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08`, all 5
+   `infra_satellite_ao_dispatch_batch{1,6,7,9,10}` docs (+ their `_finalize_` companions),
+   `na_docs_validity_and_ao_eligibility_audit_2026_07_26`,
+   `quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08`,
+   `reference_path_convention_2026_07_23_finalize_2026_08_08`. This is corpus-wide (the whole-corpus hygiene sweep
+   failed the SAME ratchet — I only itemized my tranche's share), and `review`/`backend_engineer` are cross-cutting
+   roles used well beyond infra, so the same gap almost certainly extends to every other tranche's `assigned_role` plans
+   too. **NOT auto-fixed**: which side is right (CLAUDE.md's stated policy, or the role files' current `thinking:`
+   values) is a policy call, not a provable fact — routed to STEP 6 (blocked-question + filed) rather than guessed.
+   unified-trading-pm (verified via `agent-orchestrator/server/model_tier.py`,
+   `agent-orchestrator/server/role_registry.py`, `unified-trading-pm/agents/{infra,review,backend_engineer}.md` — all
+   read this run).
 
 ## Doc-drift
 
