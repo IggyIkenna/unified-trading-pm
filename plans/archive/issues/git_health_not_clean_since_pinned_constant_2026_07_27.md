@@ -11,7 +11,7 @@ summary: >-
   (`unified-trading-pm/agents/review.md` § 3d), which relies on `not_clean_since` age to distinguish a stuck/orphaned
   worktree from normal interactive editing — as observed, EVERY dirty repo reads as ~9h+ stale regardless of when it
   actually went dirty.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ao, meta] # corrected 2026-08-02 (/ag-closeout-audit cross-cutting, operator-ruled) -- `infrastructure` -> `ao`; the
@@ -47,9 +47,13 @@ source: >-
   makes it useless for one-shot "did this go dirty just now vs hours ago" checks on actively-touched repos, and the fix
   may be exposing a separate per-observation "last dirty transition" alongside the confirmed-clean-gated
   `not_clean_since`, rather than a bug fix to the existing field.
-resolved_by:
+resolved_by: >-
+  All 3 [BACKEND] P3 todos closed. (i)/(ii) REFUTED 2026-08-07 (see Progress Log). (iii) CONFIRMED + fixed: server-side
+  agent-orchestrator@5d6752b (2026-08-08) + reporter-side companion unified-trading-pm@d094b9b8e7 (2026-08-09) —
+  slot-git-status-report.sh now forwards each repo's own dirty_consecutive_ticks, which the server's
+  _propagate_not_clean_since confirm-gate keys on instead of the host-wide aggregate.
+last_updated: "2026-08-09"
 locked_by:
-archive_exempt: true
 context_scope:
   [
     agent-orchestrator/server/routes/git_health.py,
@@ -136,7 +140,7 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
       locally: built a synthetic FF-cron result file with a per-repo `repo_dirty_ticks` map, confirmed `classify_repo` +
       the payload builder correctly produce `2` for a repo present in the map, `0` for a repo absent from the map, and
       `0` when the result file itself is missing entirely — matching `_read_repo_dirty_ticks`'s own fallback semantics.
-      `bash -n` + `shellcheck` clean (only pre-existing unrelated SC2015 infos). unified-trading-pm@07dbb2cb9b.
+      `bash -n` + `shellcheck` clean (only pre-existing unrelated SC2015 infos). unified-trading-pm@d094b9b8e7.
 
 ## Progress Log
 
@@ -271,8 +275,14 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
   `slot-cron-ff-pull.sh`'s `_read_repo_dirty_ticks` on the same `FF_RESULT_FILE` + `repo_key` convention), which the
   already-shipped server-side `RepoStatus.dirty_consecutive_ticks` / `_propagate_not_clean_since` code consumes in
   preference to the host-wide aggregate. Verified locally against a synthetic FF-cron result file (present-in-map → 2,
-  absent-from-map → 0, missing-result-file → 0). All todos now closed, doc unlocked — unified-trading-pm@07dbb2cb9b.
-  Flip committed with `archive_exempt: true` per `check_archive_candidates.sh`'s sanctioned flip-then-mv bridge
+  absent-from-map → 0, missing-result-file → 0). All todos now closed, doc unlocked — unified-trading-pm@d094b9b8e7
+  (rebased from the originally-committed 07dbb2cb9b during a `git pull --rebase --autostash` reconciliation; SHA
+  corrected here after verifying the rebased commit against origin). Flip committed with `archive_exempt: true` per
+  `check_archive_candidates.sh`'s sanctioned flip-then-mv bridge
   (`check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md`) — a plain edit at this still-active
   path, per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "never combine the checkbox flip
-  with the `git mv` in one commit" rule. Archival move follows immediately as the next commit.
+  with the `git mv` in one commit" rule (unified-trading-pm@7df15ef488). Archived in this immediately-following commit:
+  `status: resolved`, `resolved_by` filled in, `archive_exempt: true` dropped (moot outside `plans/active/`), moved to
+  `plans/archive/issues/`. Checked all 8 corpus-wide referrers (5 active plans + 3 archived docs) — every hit is a
+  bare-slug/prose mention (no `](/plans/...)` markdown links to fix) and none cites a specific fact/number needing codex
+  migration, so ritual step 5 is a no-op here.
