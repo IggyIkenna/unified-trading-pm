@@ -131,10 +131,11 @@ Two independent fix directions, either or both:
       active-account pointer) are still shared/reused rather than re-authenticated per slot — the goal is isolating the
       MUTABLE selection, not duplicating the credentials themselves. (repo: unified-trading-pm, touches per-slot
       bootstrap tooling)
-- **[DOC] P3. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.** Document the
-  `gcloud config set account` host-wide-mutation hazard in `/codex/05-infrastructure/per-tab-worktrees.md` §
-  "Multi-agent safety". See the batch doc for the full scoped todo; do not duplicate-dispatch from here. (repo:
-  unified-trading-pm)
+- **[DOC] P3. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`. ✅ DONE 2026-08-09 —
+  unified-trading-pm@de70cd5aa.** Documented the `gcloud config set account` host-wide-mutation hazard as item 5 in
+  `/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT cover", stating the hazard, the
+  2026-08-04 incident, and the per-invocation `--account=`/`CLOUDSDK_CORE_ACCOUNT` override recommendation. See the
+  batch doc for full evidence. (repo: unified-trading-pm)
 
 ## Progress Log
 

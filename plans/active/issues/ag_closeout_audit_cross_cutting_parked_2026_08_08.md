@@ -271,12 +271,13 @@ ledger.
       `[cross-cutting]` → `[ui]` — **flagged urgent for the 3rd consecutive day**: live unauthenticated-prod-endpoint
       exposure, all 4 fix-steps still open. Done when: retagged and the `ui` tranche's audit picks it up with priority
       commensurate with a live P1 security hole.
-- **[SCRIPT] P3. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.**
-  `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership test silently excludes never-cited docs with a
-  non-data `parent_epic`. See the batch doc for the full scoped todo; do not duplicate-dispatch from here.
-- **[DOC] P2. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.**
-  `cross_cutting_consolidated_closeout_2026_07_25.md` is at/near the 1000-line hard cap — line-cap-split it. See the
-  batch doc for the full scoped todo; do not duplicate-dispatch from here.
+- **[SCRIPT] P3. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`. ✅ DONE 2026-08-09
+  — unified-trading-pm@3829eea18.** `generate_ag_closeout_audit_candidates.py`'s cross-cutting membership test widened
+  to plain `"cross-cutting" in asset_group` (dropping the `parent_epic in DATA_EPICS` gate), no longer silently excludes
+  never-cited docs with a non-data `parent_epic`. See the batch doc for full evidence.
+- **[DOC] P2. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`. ✅ DONE 2026-08-09 —
+  unified-trading-pm@28d6b07a4.** `cross_cutting_consolidated_closeout_2026_07_25.md` line-cap-split, trimmed 1007→716
+  lines. See the batch doc for full evidence.
 - [x] ✅ [DOCS] P2. `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` — **RULED 2026-08-06 (operator), option
       A**: the documented safe-field allow-list/`UnsafeConfigChangeError` IS the target to build. Target doc's own todo
       is now `[CODE] P2` ("RULED 2026-08-06 (operator), option A: implement the documented guard") — no longer an open
