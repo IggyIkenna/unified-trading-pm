@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [data-pipeline, self-healing, actuators, monitoring, plan-split, residual]
 related:
   [
-    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24.md,
     /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
@@ -46,7 +46,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/archive/2026_07/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/05-infrastructure/data-pipeline-alerts.registry.yaml,
@@ -58,7 +58,7 @@ context_scope:
 # Data-Pipeline Self-Healing Completion — Residual Actuator Wiring
 
 > **Forked 2026-07-24** from
-> [`data_pipeline_hardening_self_monitoring_2026_06_22.md`](/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
+> [`data_pipeline_hardening_self_monitoring_2026_06_22.md`](/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md)
 > as 1 of a 4-way split (+ 1 excise) approved by the operator via the plan line-cap remediation triage
 > (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 9). The detect→auto_recover→file_issue→page loop
 > is LIVE end-to-end (see the parent plan's "Progress Log — LOOP LIVE END-TO-END (VERIFIED, 2026-06-23)"); this plan
@@ -171,30 +171,30 @@ context_scope:
       (`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` todo 5, deployment-service@f2d094e).
 
       **⚠️ CORRECTED 2026-07-26 (`/ag-closeout-audit cross-cutting`) — the "already applied" claim below was MEASURABLY
-                                                                                                                                                                                          FALSE; the OOM fix was NOT live at that point.** Measured, not inferred: (1) `gcloud run jobs describe uts-prod-dp-daily-digest`
-                                                                                                                                                                                          and `… uts-prod-dp-reprobe-empty` (region `asia-northeast1`, project `central-element-323112`) BOTH returned
-                                                                                                                                                                                          `cpu=2;memory=4Gi`; (2) the tracked `.tf` still read `memory = "4Gi" / cpu = "2"` at :91-92, :148-149, :267-268.
-                                                                                                                                                                                          So the 4 dp-audit jobs remained OOM-killable at 4Gi exactly as originally diagnosed — the digest/hygiene/reprobe
-                                                                                                                                                                                          monitoring was silently losing runs on tradfi/cefi. (was: "**Both changes ALREADY APPLIED to live prod state**
-                                                                                                                                                                                          (`tofu apply` targeted, `0 add/4 change/0 destroy`, plan clean) + written to the deployment-service working tree —
-                                                                                                                                                                                          **commit BLOCKED**: this clone has active foreign WIP (`cloud_run_job_registry.py`, `escalation.py`, untracked
-                                                                                                                                                                                          `scripts/recovery/relaunch_*.py` with import-pattern QG violations) + a dirty UAC dep (`honest_coverage.py`) → no
-                                                                                                                                                                                          clean QG-green / quickmerge boundary for a sibling agent's tree." Whether the apply never persisted or a later
-                                                                                                                                                                                          blanket apply reverted it was not established.) **The image-default HALF of this todo DID land** —
-                                                                                                                                                                                          `local.dp_audit_image_resolved` at :57 resolves `var.dp_audit_image` to `…/e2e-audit:latest`, so the IMAGE GAP is
-                                                                                                                                                                                          genuinely closed.
+                                                                                                                                                                                              FALSE; the OOM fix was NOT live at that point.** Measured, not inferred: (1) `gcloud run jobs describe uts-prod-dp-daily-digest`
+                                                                                                                                                                                              and `… uts-prod-dp-reprobe-empty` (region `asia-northeast1`, project `central-element-323112`) BOTH returned
+                                                                                                                                                                                              `cpu=2;memory=4Gi`; (2) the tracked `.tf` still read `memory = "4Gi" / cpu = "2"` at :91-92, :148-149, :267-268.
+                                                                                                                                                                                              So the 4 dp-audit jobs remained OOM-killable at 4Gi exactly as originally diagnosed — the digest/hygiene/reprobe
+                                                                                                                                                                                              monitoring was silently losing runs on tradfi/cefi. (was: "**Both changes ALREADY APPLIED to live prod state**
+                                                                                                                                                                                              (`tofu apply` targeted, `0 add/4 change/0 destroy`, plan clean) + written to the deployment-service working tree —
+                                                                                                                                                                                              **commit BLOCKED**: this clone has active foreign WIP (`cloud_run_job_registry.py`, `escalation.py`, untracked
+                                                                                                                                                                                              `scripts/recovery/relaunch_*.py` with import-pattern QG violations) + a dirty UAC dep (`honest_coverage.py`) → no
+                                                                                                                                                                                              clean QG-green / quickmerge boundary for a sibling agent's tree." Whether the apply never persisted or a later
+                                                                                                                                                                                              blanket apply reverted it was not established.) **The image-default HALF of this todo DID land** —
+                                                                                                                                                                                              `local.dp_audit_image_resolved` at :57 resolves `var.dp_audit_image` to `…/e2e-audit:latest`, so the IMAGE GAP is
+                                                                                                                                                                                              genuinely closed.
 
-                                                                                                                                                                                  **✅ MEMORY/CPU BUMP NOW SHIPPED 2026-07-26.** Re-measured before touching anything: ALL 4 jobs were live
-                                                                                                                                                                                          OOM-killing on their most recent execution ("The configured memory limit was reached", confirmed via
-                                                                                                                                                                                          `gcloud run jobs executions describe` on `uts-prod-dp-daily-digest`, `-dp-manifest-hygiene-changed`,
-                                                                                                                                                                                          `-dp-manifest-hygiene-full`, and `-dp-reprobe-empty` — the last one OOM-killed on 5 consecutive daily runs
-                                                                                                                                                                                          2026-07-22..07-26). Bumped all 4 job modules in the `.tf` to `cpu="4"`/`memory="16Gi"`
-                                                                                                                                                                                          (`dp_daily_digest_job`, `dp_manifest_hygiene_changed_job`, `dp_manifest_hygiene_full_job`,
-                                                                                                                                                                                          `dp_reprobe_empty_job`). `ENV=prod ./tofu.sh plan -target=...` (all 4 modules) showed exactly
-                                                                                                                                                                                          `0 to add, 4 to change, 0 to destroy` — additive in-place resource-limit change only, no
-                                                                                                                                                                                          `[OPERATOR]` gate required per this todo's own scoping. Applied via `ENV=prod ./tofu.sh apply` (targeted).
-                                                                                                                                                                                          Post-apply `gcloud run jobs describe` confirms all 4: `cpu=4;memory=16Gi`. `.tf` committed +
-                                                                                                                                                                                          quickmerged — deployment-service@f2d094e, `quality-gates.sh` green (sentinel-verified). — deployment-service
+                                                                                                                                                                                      **✅ MEMORY/CPU BUMP NOW SHIPPED 2026-07-26.** Re-measured before touching anything: ALL 4 jobs were live
+                                                                                                                                                                                              OOM-killing on their most recent execution ("The configured memory limit was reached", confirmed via
+                                                                                                                                                                                              `gcloud run jobs executions describe` on `uts-prod-dp-daily-digest`, `-dp-manifest-hygiene-changed`,
+                                                                                                                                                                                              `-dp-manifest-hygiene-full`, and `-dp-reprobe-empty` — the last one OOM-killed on 5 consecutive daily runs
+                                                                                                                                                                                              2026-07-22..07-26). Bumped all 4 job modules in the `.tf` to `cpu="4"`/`memory="16Gi"`
+                                                                                                                                                                                              (`dp_daily_digest_job`, `dp_manifest_hygiene_changed_job`, `dp_manifest_hygiene_full_job`,
+                                                                                                                                                                                              `dp_reprobe_empty_job`). `ENV=prod ./tofu.sh plan -target=...` (all 4 modules) showed exactly
+                                                                                                                                                                                              `0 to add, 4 to change, 0 to destroy` — additive in-place resource-limit change only, no
+                                                                                                                                                                                              `[OPERATOR]` gate required per this todo's own scoping. Applied via `ENV=prod ./tofu.sh apply` (targeted).
+                                                                                                                                                                                              Post-apply `gcloud run jobs describe` confirms all 4: `cpu=4;memory=16Gi`. `.tf` committed +
+                                                                                                                                                                                              quickmerged — deployment-service@f2d094e, `quality-gates.sh` green (sentinel-verified). — deployment-service
 
 - [x] ✅ [PERF] P2. **DeFi/observability: `data_pipeline_daily_digest.py` + `_dp_common.read_manifest_index` memory
       antipattern** — the digest reads the full index (`columns=None`) then count-EXPANDS into per-row Python lists

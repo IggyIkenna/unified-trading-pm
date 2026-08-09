@@ -23,7 +23,7 @@ authoritative_for: [How a planning-VM worker relaunches a failed/stalled/OOM'd d
 referenced_by:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
   ]
 ---
 

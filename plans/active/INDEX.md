@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 322 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 320 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -1005,7 +1005,7 @@ by hand._
   does NOT satisfy its done_definition — today the only action is a conversational ping. This plan gives review two
   narrow,…
 
-### ci (16)
+### ci (14)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -1014,13 +1014,6 @@ by hand._
 - [`ci_pipeline_speed_and_cost_redesign_2026_08_05`](./ci_pipeline_speed_and_cost_redesign_2026_08_05.md) — Operator
   target: LDR→main should take 3-5 minutes regardless of repo when little has changed, cross-repo workflow triggering
   should fire only when genuinely needed, and fleet CI cost (AWS self-hosted + GitHub Actions billing) should track…
-- [`ci_satellite_ao_dispatch_batch10_2026_08_09`](./ci_satellite_ao_dispatch_batch10_2026_08_09.md) — Sibling of
-  `ci_satellite_ao_dispatch_batch9_2026_08_09.md` — same round-9 combined RECLASSIFY + satellite-extraction pass over
-  `issues/plan_reconciler_ci_late_findings_2026_08_06.md`, split into a separate batch doc because its one…
-- [`ci_satellite_ao_dispatch_batch10_finalize_2026_08_09`](./ci_satellite_ao_dispatch_batch10_finalize_2026_08_09.md) —
-  Gated closeout for `ci_satellite_ao_dispatch_batch10_2026_08_09.md` — machine-held via `depends_on` +
-  `gate_on_depends: true` until that plan's one todo is done. Reconciles the source doc's one checkbox. Does NOT archive
-  the source doc…
 - [`ci_satellite_ao_dispatch_batch11_2026_08_09`](./ci_satellite_ao_dispatch_batch11_2026_08_09.md) — Round-11 combined
   RECLASSIFY + satellite-extraction sweep, `ci` tranche. Extracts Residual 1 (the CI-runner-blocked full
   `generate-unified-openapi.sh` regen) out of `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md` into

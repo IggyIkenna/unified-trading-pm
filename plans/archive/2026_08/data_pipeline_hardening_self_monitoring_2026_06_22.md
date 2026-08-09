@@ -4,7 +4,7 @@ title: Data-Pipeline Hardening + Self-Monitoring (anti silent-misclassification)
 summary:
   Harden all data-pipeline adapters against silent misclassification with FetchEvidence gates, per-adapter guards, daily
   summaries, and self-monitoring alerts across all 5 asset groups.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -47,7 +47,6 @@ depends_on:
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
-archive_exempt: true # TEMPORARY one-commit M3-flip-verification bridge, dropped in the immediately-following archival commit (see Progress Log + /plans/active/issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md)
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,
@@ -87,6 +86,12 @@ context_scope:
 > everything else moved is `[x]`-shipped or pure completed-run narrative (0 open todos in the moved content).
 
 # Data-Pipeline Hardening + Self-Monitoring
+
+> **ARCHIVED (2026-08-09) — complete.** Every todo shipped (all `[x]` with cited evidence). The sole remaining open
+> item, "9 live data VMs frozen 5.5–32h", resolved 2026-08-09 (slot-24): the originally-named VMs are conclusively gone,
+> CeFi live capture is confirmed recovered via the consolidated launcher, and TradFi live capture's separate,
+> currently-live outage was forked to its own P0 issue —
+> `/plans/active/issues/tradfi_live_cme_capture_stopped_2026_08_09.md`. Record-only from here.
 
 > **Operator intent (2026-06-22)**: "I can't babysit thousands of data types. Stop running VMs for hours only to realise
 > they're slow / rate-limited / not writing to the right place / marking everything `empty_confirmed` when the data

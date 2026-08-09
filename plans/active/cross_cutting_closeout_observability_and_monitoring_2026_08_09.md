@@ -52,7 +52,7 @@ related:
     /plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
     /plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
-    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
     /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
     /plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md,
@@ -139,7 +139,7 @@ re-fetch-on-stale self-healing).
 ## Track 19 — Data-pipeline hardening/self-monitoring family · P0/P1
 
 **Sources**:
-[data_pipeline_hardening_self_monitoring_2026_06_22.md](/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
+[data_pipeline_hardening_self_monitoring_2026_06_22.md](/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md)
 (the canonical anti-silent-misclassification hardening doc, explicitly "across all 5 asset groups" — an otherwise-
 shipped detect→auto_recover→file_issue→page loop) + its 3 residual forks (all 2026-07-24):
 [data_pipeline_ag_residual_backfill_decisions_2026_07_24.md](/plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md)

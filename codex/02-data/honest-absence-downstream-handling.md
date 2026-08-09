@@ -493,7 +493,7 @@ opt-in refinement.
 **Event family.** `DP_EMPTY_REPROBE_DISAGREEMENT` is a WARN-tier `DP_*` event routed to `#data-pipeline-alerts`
 (registry class `DP-FETCH-006`). Full alert taxonomy + routing:
 [`/codex/05-infrastructure/data-pipeline-alerts.md`](/codex/05-infrastructure/data-pipeline-alerts.md). Plan SSOT:
-[`data_pipeline_hardening_self_monitoring_2026_06_22.md`](/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
+[`data_pipeline_hardening_self_monitoring_2026_06_22.md`](/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md)
 Phase 1 (keystone) + Phase 5 (escalation hop).
 
 ---
