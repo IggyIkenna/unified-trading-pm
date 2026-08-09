@@ -63,6 +63,15 @@
 # debt covered by the full-sweep ratchet, not this commit's problem, matching the shape of
 # check_effort_signal_ratchet.py's --only mode.
 set -uo pipefail
+# Force byte-wise (locale-independent) collation for every sort/comm call below. Under a
+# UTF-8-aware locale, sort/comm invoke strcoll() on multibyte content; a locale/glibc
+# combination that trips on that content fails with "sort: string comparison failed:
+# Illegal byte sequence" and — because the callers below don't check sort's exit code —
+# the failure is silent, degrading into a truncated/empty comparison set that false-flags
+# byte-identical HEAD content as a NEW violation. LC_ALL=C makes sort/comm compare raw
+# bytes, which is also strictly correct here since these comparisons only need exact-match
+# set membership, never locale-aware ordering.
+export LC_ALL=C
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PM_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 BASELINE_PATH="$SCRIPT_DIR/prosewrap_padding_baseline.yaml"
