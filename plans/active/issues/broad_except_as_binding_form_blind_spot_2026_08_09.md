@@ -16,6 +16,7 @@ summary: >-
   (ci_failure_watcher.py, same Firestore best-effort-write pattern as the literal-colon sibling in
   promotion_lag_monitor.py); the other 76 are out of scope for this session and filed here.
 status: open
+archive_exempt: true
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -141,9 +142,17 @@ Two independent tracks:
       5.94's fallback-import-shim detector; these are best-effort multi-version UAC/UIC registry extractions by design,
       not dependency-hiding shims). Both STEP 5.5 and STEP 5.94 ratchets confirmed back at baseline (51 and 17
       respectively); `bash scripts/quality-gates.sh` green.
-- [ ] [BACKEND] P3. Narrow the remaining ~50 `except Exception as X:` occurrences across the other 29 files (full
+- [x] ✅ [BACKEND] P3. Narrow the remaining ~50 `except Exception as X:` occurrences across the other 29 files (full
       inventory: `rg -n "except Exception as" --type py --glob "!tests/**" scripts/`), same per-file review discipline
-      as `pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md`'s P3 todo. Repo: unified-trading-pm.
+      as `pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md`'s P3 todo. Repo: unified-trading-pm. —
+      unified-trading-pm@9c8ca82963 (narrowed all 51 remaining `except Exception as X:`/bare `except Exception:` sites
+      across 31 files to specific exception types or a `# noqa: broad-except` catch-all + reason; both
+      `broad_except_baseline.yaml` and `no_fallback_imports_baseline.yaml` ratcheted down for unified-trading-pm (51→0,
+      17→16)). Re-verified live post-shipment: `check_broad_except.py --scope unified-trading-pm` reports
+      `0 (== baseline)`, `check_no_fallback_imports.py --scope unified-trading-pm` reports `16 (== baseline)` — the two
+      remaining raw `rg` hits outside these are both false positives the AST-based checker correctly ignores (string
+      literals in `audit_dead_code.py` and `_capability_gaps.py`'s subprocess-probe template, not real `except` nodes in
+      this file's own AST) and `test_impact_selector.py` is exempt via the checker's `test_` filename convention.
 
 ## Progress Log
 
@@ -151,6 +160,10 @@ Two independent tracks:
   `ci_failure_watcher.py` that was invisible to the gate's literal-colon regex; corpus sweep found 77 more. Fixed the
   one found in-file; the rest tracked here per findings-triage (outside my primary task's scope, genuinely new per-file
   review work).
+- **2026-08-09 (slot-8, backend_engineer)**: Todo 3 closed — narrowed all remaining `except Exception as X:`/bare
+  `except Exception:` sites across the other 29 files (31 files touched total incl. 2 already-clean files with only
+  minor adjacent fixes). All 3 todos now done, no lock — archiving immediately per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 - **2026-08-09 (slot-33, backend_engineer)**: Todo 1 verified already shipped by a prior slot (code present on
   `live-defi-rollout` at boot, fresh-pulled this session) — `check_broad_except.py` (unified-trading-pm@18c3e65ff) + the
   STEP 5.5 wiring commit (unified-trading-pm@abe617a1b) together deliver the AST-based widen + shrinking-ratchet
