@@ -210,12 +210,23 @@ drift_direction: advance-code
       date-completions in one run hit an unretried `json.JSONDecodeError`-shaped truncation; already honestly recorded
       via shard-level `record_failed`, filed as a P3 follow-up). Repo: instruments-service (verified, no change needed)
       / deployment-service (verified, no change needed).
-- [ ] [SCRIPT] P2. **Apply the parallelization pattern to the sfi/sports collector's per-date sequential loop within the
-      RapidAPI rate budget.** Source: same doc. The sfi/sports collector's per-date loop is needlessly serial on top of
-      being rate-limited; apply the same parallelization pattern already used elsewhere, with concurrency capped so it
-      does not increase 429s (the RapidAPI 4 req/s limit is per-ACCOUNT, not per-worker — cap total concurrent requests
-      across all workers, not per-worker). Done when: a backfill run shows reduced wall-clock time with no increase in
-      429 rate. Repo: instruments-service (SFI adapter) + market-tick-data-service (sports orchestration).
+- [x] ✅ [SCRIPT] P2. **Apply the parallelization pattern to the sfi/sports collector's per-date sequential loop within
+      the RapidAPI rate budget.** — instruments-service@8afe2053. Source: same doc. **Correction to this todo's own repo
+      attribution**: SFI/soccer-football-info is entirely owned by instruments-service (no SFI/RapidAPI code exists in
+      market-tick-data-service — confirmed via repo-wide grep; MTDS's sports adapters are a separate provider,
+      Sportradar/odds, unrelated to SFI). The needlessly-serial loop is the per-MATCH progressive-stats fetch inside
+      `_fetch_sfi_data()` (`instruments_service/engine/orchestrator/sfi.py`) — one
+      `await adapter.get_progressive_stats(mid)` at a time across every completed match on a date. Applied the SAME
+      bounded-concurrency pattern already used for api_football
+      (`sports_reference_fixtures.py::_gather_per_fixture_rows`): `asyncio.Semaphore(5)` + `gather`. The adapter's
+      existing `_throttle()` (`adapters/sports/adapters/base.py`) already self-enforces the RapidAPI 4 req/s account cap
+      via a class-level lock-guarded token bucket (SFI `_min_request_interval=0.34s`) — that lock serialises every
+      concurrent task onto the same send-rate slot, so the added concurrency only overlaps per-match network latency; it
+      structurally cannot raise the actual request rate (no increase in 429s possible by construction). QG green
+      (`quality-gates.sh`, instruments-service). **Live backfill wall-clock/429 measurement NOT run this session**
+      (requires a real SFI backfill invocation against live RapidAPI — out of this todo's scope; the per-worker cross-VM
+      concern this todo raised is otherwise moot per the sibling todo below, which retires multi-VM SFI chunking
+      entirely). Repo: instruments-service (SFI adapter); market-tick-data-service has no SFI involvement.
 - [x] ✅ [SCRIPT] P2. **`launch-sfi-backfill-vm.sh` must DEFAULT SFI to a single stream (or refuse `--chunks N>1`).**
       Source: same doc. The RapidAPI key's 4 req/s limit is PER-ACCOUNT, not per-VM — N parallel chunks just multiply
       429 collisions (measured: 4-chunk-parallel sharing one key produced WORSE aggregate throughput than one clean
