@@ -5,7 +5,7 @@ summary: >-
   Gated closeout for `autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until its sole todo (root-cause the AutoSpawn refill SLA gap) is done. Reconciles the
   investigation's evidence quality before archiving.
-status: active
+status: complete
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -32,7 +32,6 @@ estimate_calibrated_ai_days: 0.16
 assigned_role: infra
 effort: medium
 drift_direction: advance-code
-archive_exempt: true # flip-only commit bridge (plan-completion-and-archival-discipline.md) — dropped in the immediately following git-mv archival commit
 locked_by:
 locked_since:
 context_scope:
@@ -54,8 +53,14 @@ source: >-
 
 # AutoSpawn refill SLA gap — finalize
 
-> **Machine-gated on `autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08.md`** (`depends_on` +
-> `gate_on_depends: true`) — the dispatcher will not queue any todo below until the parent doc's sole todo is `done`.
+> **🟢 ARCHIVED (2026-08-09).** Both todos done: the root-cause fix independently re-verified, and
+> `autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08.md` archived to `/plans/archive/2026_08/issues/` per the
+> 6-step ritual (the two remaining prose caveats were migrated to a tracked follow-up:
+> `/plans/active/issues/autospawn_refill_sla_data_points_1_2_and_live_recheck_followup_2026_08_09.md`). This finalize
+> doc itself moves alongside it in this immediately-following commit (per the never-combine-checkbox-flip-with-git-mv
+> rule) to `/plans/archive/2026_08/autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08_finalize_2026_08_08.md`. No
+> new durable contract — codex-alignment check: nothing to update, the fix already lives in code
+> (`agent-orchestrator@dfef970`).
 
 ## Todos
 
