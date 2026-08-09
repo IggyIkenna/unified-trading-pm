@@ -417,6 +417,20 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       already-open escalation, not deferred as its own new ticket. There was never an open ticket-system record waiting
       on the ledger fix; the prior "needs operator API access to close it" framing was itself the error, not a genuine
       gap.
+- [ ] [INFRA] P3. NEW FINDING (2026-08-09, relayed via a review-agent resource-contention investigation): the
+      HEAVY-PHASE `K` governor's own core count is inflated on a hyperthreaded host — `_qg_governor_default_k()`
+      (`scripts/quality-gates-base/qg-host-governor.sh:81-89`) computes `cores` via
+      `lscpu -p=core 2>/dev/null | grep -vc '^#'`, which counts one line per LOGICAL cpu (`lscpu -p=core` emits a row
+      per hyperthread sibling, with the physical core id repeating) — no dedup. On a HT host this returns the logical
+      CPU count (e.g. 16) instead of the true physical core count (e.g. 8), so `K = cores/4` (floored, min 2) comes out
+      up to 2x too permissive there. **Correction to the relayed finding**: the report named `_qg_physical_cores()` as
+      the buggy function, but that function (same file, line 185-196, "Physical core count (not logical/HT)") already
+      dedupes correctly via `sort -u` — verified by direct read, it is NOT the source of the bug. `_qg_physical_cores()`
+      was added later (additively, per its own header comment) for the newer TOTAL-INSTANCE cap
+      (`_qg_total_default_cap`, line 106-111) and is unaffected. The two functions independently re-implement the same
+      "count physical cores" logic with diverging correctness — likely fix: have `_qg_governor_default_k()` call
+      `_qg_physical_cores()` instead of its own inline `lscpu` invocation (DRY + inherits the existing dedup). Not fixed
+      here — flagging only, per the reporting agent's own request.
 
 ## Progress Log
 
