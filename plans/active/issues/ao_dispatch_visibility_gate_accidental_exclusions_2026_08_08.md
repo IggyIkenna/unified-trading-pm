@@ -75,7 +75,7 @@ the classify-and-file step that issue's own "Done when" calls for instead).
 - `plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md` (disk_open=1)
 - `plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md` (disk_open=3)
 - `plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md` (disk_open=1)
-- `plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` (disk_open=1)
+- `plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md` (disk_open=1)
 - `plans/active/issues/ao_done_gate_tag_correlation_false_match_on_leading_marker_2026_08_02.md` (disk_open=1)
 - `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` (disk_open=1)
 - `plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md` (disk_open=1)
@@ -307,7 +307,7 @@ human already made the call and the fleet still never executes it.
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
       no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P2. **Triage accidental exclusion in
-      `plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`.** Its checkbox reads
+      `plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`.** Its checkbox reads
       (truncated): "[DOCS] P2. **RULED 2026-08-06 (operator), option A [WORKER REC]: one scoped retag pass between
       scheduled auditor" — the marker trips `_is_non_dispatchable`
       (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not open its own line, so
