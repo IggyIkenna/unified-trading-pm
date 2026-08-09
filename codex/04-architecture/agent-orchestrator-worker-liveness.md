@@ -771,3 +771,48 @@ not the corpus/model-level estimate. The residual risk is a target with no self-
 on a smaller-than-average window; none exists in the fleet today (main and every worker/review slot carries a
 self-report). A future per-model-only registry key should stay that way unless a NEW target class appears with no
 self-report of its own.
+
+---
+
+## main/review stay COOPERATIVE-first — the idle gate is intended, not a defect (operator ruling 2026-08-10)
+
+**The ruling.** main and review keep the cooperative-first compaction path with its idle-verified forced fallback. The
+worker-style UNCONDITIONAL force (`context_worker_force_compact_pct`, no idle check, operator ruling 2026-08-05) is
+**not** extended to them. This reaffirms the 2026-08-05 rationale — *"never compact mid-work — a single pane-snapshot
+'looks idle' is untrustworthy on a days-long loop"* — against live measurement.
+
+**What the idle gate actually costs.** The forced fallback needs `classify_pane == "idle"` on
+`_FORCE_IDLE_OBSERVATIONS` (3) consecutive keeper ticks, plus an empty input box, plus ≤1 child process under the pane
+shell. The keeper ticks every `main_agent_interval_seconds` (**60s**), so the requirement is **~3 minutes of continuous
+quiet** — not hours. A recurring misreading is to treat the ≥6h instrumentation OBSERVATION WINDOW as an idle
+expectancy; it is not.
+
+**The measurement that decided it** (read-only `GET /api/activity?limit=4000`, 3.7h window 2026-08-09
+19:50Z→23:30Z, live fleet, taken after the idle-gate instrumentation landed):
+
+| path                        | events                                                                   | effectiveness             |
+| --------------------------- | ------------------------------------------------------------------------ | ------------------------- |
+| COOPERATIVE (main + review) | main: guidance 1 → compaction 1, idle gate blocked 1 · review: 16 compactions, 0 forces | **17/17 = 100%**          |
+| FORCED (workers)            | `forced_precompact` 68 · `forced_compact` 65 · `forced_compact_ineffective` 51 | **14/65 = 22%**           |
+
+The cooperative nudge lands before the force is needed: main and review are not starved of the 3-minute idle window,
+they mostly never reach the fallback at all. Extending the unconditional force to them would move the two roles that
+compact reliably onto the path that currently fails ~78% of the time
+(`/plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md`; its decisive
+"verify by EFFECT, not submission" fix was still unlanded when this was measured, so 22% is a pre-fix baseline, not a
+regression).
+
+**Consequences for future work — read before "fixing" the idle gate:**
+
+- The gate refusing to open is **not** by itself a bug report. Judge the path by whether the target actually compacts
+  (`context_compact_observed`), never by whether the force fired.
+- A silent main/review — zero context-lifecycle events — is still a real alarm, because that is exactly what the
+  2026-08-09 poisoned-window incident looked like. The silent-disarm detector, not the force, is the control for it.
+- If the forced path's effectiveness is ever fixed to approach the cooperative path's, this ruling may be revisited —
+  with a fresh measurement, not from first principles.
+
+### Anti-pattern (adds to the list above)
+
+- **Do NOT extend the worker unconditional force-compact to main/review** without a new operator ruling backed by a
+  fresh measurement. Machine guard: `tests/test_context_lifecycle.py` asserts main/review route through the
+  idle-gated `_maybe_force_compact`, so a change that bypasses it fails the suite rather than shipping silently.

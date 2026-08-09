@@ -107,7 +107,15 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
       `tests/test_context_lifecycle.py`, full QG green.
 - [ ] [BACKEND] P1. Measure for >=6h with the instrumentation live: how many ticks had main/review deadline-past, how
       many times the gate OPENED, and the dominant blocking signal. Record the counts in this doc's Progress Log.
-      Done-when: the Progress Log carries open-vs-blocked counts for both roles.
+      Done-when: the Progress Log carries open-vs-blocked counts for both roles. **RETARGETED 2026-08-10**: the ruling
+      it was meant to inform is already made on a 3.7h sample (see the [OPERATOR] todo below), so this is no longer a
+      gate on that decision — it now serves as the CONFIRMING run over a full window. Report it as confirmation that
+      the cooperative path keeps working, not as new input to a pending ruling.
+- [ ] [BACKEND] P2. Machine-guard the ruling so it cannot be silently reversed: add a test asserting main and review
+      route through the idle-gated `_maybe_force_compact` and never the worker unconditional-force path (the mirror of
+      `_forbid_idle_checks`, which already guards the worker side). A doc-only ruling is not a gate — a future agent
+      "fixing" the gate would otherwise ship the reversal green. Done-when: the test fails if a main/review target
+      reaches `_force_compact_now` without the idle verdict.
 - [x] ✅ [BACKEND] P1. Make main's terminal wedge-recovery reachable when no force ever fired.
       `_rearm_if_force_ineffective` returns early on `state.forced_at is None`, so the kill + `claude_session_id`
       clear + keeper respawn path cannot arm for a main that the idle gate never let through. Add a saturation-based
@@ -139,11 +147,15 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
       permanently spent for the rest of the episode); 3 new tests in `tests/test_context_lifecycle.py` (rearm fires past
       the window, does not rearm before it elapses, does not rearm once a force has fired); full QG green (2989 passed,
       basedpyright clean).
-- [ ] [OPERATOR] P1. Ruling, with todo 2's measured evidence in hand: extend the worker-style unconditional force to
-      main/review, or keep them idle-gated. This reverses the stated 2026-08-05 rationale ("never compact mid-work" for
-      days-long loop agents), so it is deliberately not a worker's call. Done-when: the ruling is recorded in
-      `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` or the worker-liveness SSOT and this doc's todo set
-      is updated to match.
+- [x] ✅ [OPERATOR] P1. Ruling, with measured evidence in hand: **KEEP main/review idle-gated and cooperative-first.**
+      The worker-style unconditional force is NOT extended to them. Operator ruling 2026-08-10, on a 3.7h live
+      measurement: the cooperative path was 17/17 = 100% effective (main guidance 1 -> compaction 1, idle gate blocked
+      only once; review 16 compactions, zero forces) while the forced path was 14/65 = 22% effective
+      (`forced_compact_ineffective` 51). Extending the force would move the two roles that compact reliably onto the
+      path that currently fails ~78% of the time. The 2026-08-05 rationale survives contact with the data. Recorded in
+      `/codex/04-architecture/agent-orchestrator-worker-liveness.md` section "main/review stay COOPERATIVE-first — the
+      idle gate is intended, not a defect (operator ruling 2026-08-10)", including the correction that the idle
+      requirement is ~3 MINUTES (3 x 60s keeper ticks), not the >=6h instrumentation observation window.
 
 ## Progress Log
 
@@ -184,3 +196,12 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
   since main has no `CompactionRow` history. Session resumed mid-task after a prior death; WIP was intact on re-boot, so
   no rework needed. Todos 2 and 5 remain open (2 needs the >=6h measurement window from the 2026-08-09 slot-15 note
   above; 5 is the explicit operator ruling gate).
+
+- 2026-08-10 — **[OPERATOR] RULING: keep main/review cooperative-first; the idle gate is INTENDED.** Decided on a 3.7h
+  live `/api/activity` measurement rather than first principles: cooperative 17/17 = 100% effective vs forced 14/65 =
+  22%. Also corrected a misreading this doc invited — the idle requirement is ~3 minutes (3 x 60s keeper ticks), NOT
+  the >=6h instrumentation observation window; the two were being conflated. Ruling recorded in
+  `/codex/04-architecture/agent-orchestrator-worker-liveness.md` with an anti-pattern entry, so a future agent reading
+  "the gate never opens" does not treat it as a defect and ship the reversal. Note the doc TITLE still says
+  "unreachable", which the ruling supersedes: the gate is rarely reached because the cooperative nudge lands first, and
+  that is working as designed. Remaining work is the confirming measurement + the machine guard.
