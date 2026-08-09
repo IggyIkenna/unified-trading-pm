@@ -979,3 +979,12 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   currently stalled at 0 running VMs** — next continuation of this doc should check for a live VM first and, if still 0,
   do a fresh guard-respecting relaunch (`odds-api-concurrency-guard.sh` cap=1 permits it) and watch the first few
   minutes closely to confirm setup actually completes this time before walking away.
+- **15:13Z-15:22Z (slot 20) — picked up this doc's own recommended next continuation: 0 VMs still running after 46min,
+  relaunched `mtds-backfill-odds-smallchunk12-20260809`, and likely root-caused `smallchunk11`'s setup failure.** The
+  launch's `lc_verify_tarball_freshness` check caught the `market-tick-data-service` tarball STALE (pinned sha
+  `1a704b0f0892` vs repo HEAD `85872cab756e`) and auto-republished it before creating the VM — `smallchunk11` almost
+  certainly deployed against that stale/mismatched tarball, consistent with its near-instant
+  `uv pip install -e .../mtds` failure with no captured stderr. Watched the new VM through setup (polled 30s×6):
+  `run.log` appeared clean at T+~4min, real pipeline bootstrap + `SKIP date=2020-06-06: all 1 venues fresh` (correct
+  skip-fast resume, no data loss). No setup failure this pass. Full detail:
+  `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`.
