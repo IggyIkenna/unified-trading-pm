@@ -194,12 +194,20 @@ context_scope:
       `index_commodity_perp_hedge_link.py` "found/not-found, cite the evidence" convention), added a dated
       cross-venue-verification comment next to the CL/BZ entries in `cefi_instrument_universe.py`, and added
       `tests/unit/test_oil_perp_venue_coverage.py` (13 tests). `quality-gates.sh` green (381s).
-- [ ] [DATA] P1. **Re-run e2e-testing's NET-basis backtest with dividend yield priced into the long cash-stock leg** for
-      each of the 12 net-profitable single-stock pairs (holding the stock earns dividends, adding to NET; the current
-      +5-24% figures are a floor without it) — identify and use an already-available dividend-yield data source (check
-      Databento DBEQ.BASIC corporate-actions coverage first). Repo: e2e-testing. Source:
+- [x] ✅ [DATA] P1. **Re-run e2e-testing's NET-basis backtest with dividend yield priced into the long cash-stock leg**
+      for each of the 12 net-profitable single-stock pairs (holding the stock earns dividends, adding to NET; the
+      current +5-24% figures are a floor without it) — identify and use an already-available dividend-yield data source
+      (check Databento DBEQ.BASIC corporate-actions coverage first). Repo: e2e-testing. Source:
       `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` line 820. **Done when**: an updated NET-basis table
-      including dividend yield is produced for all 12 pairs and posted to that doc's Progress Log.
+      including dividend yield is produced for all 12 pairs and posted to that doc's Progress Log. — **DONE 2026-08-09**
+      — `e2e-testing@12d1f3c`. Confirmed Databento DBEQ.BASIC has no dividends/corporate-actions schema (zero "dividend"
+      hits across every Databento adapter in market-tick-data-service + instruments-service); used yfinance instead
+      (mirrors the existing pattern already in market-tick-data-service/features-service/e2e-testing's own
+      `backfill_vix_yahoo.py`). Extended `e2e-testing/scripts/cefi/net_basis_scan.py` with a TTM-dividend-yield fetcher
+      (computed directly from raw dividend history ÷ last close — NOT yfinance's buggy `info["dividendYield"]` field)
+      and a dividend-adjusted re-run holding the original 06-20 Gross%/Borrow% backtest fixed. All 12 pairs remain
+      TRADEABLE with dividends priced in (NET +0.00 to +0.82pp vs. the 06-20 floor). Full table + evidence:
+      `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log, 2026-08-09 entry (same commit).
 - [ ] [DATA] P1. **For each commodity/index perp currently NET-negative or NET-slim** (XAU/XAG/COPPER/SPX/SPY/NDX),
       check how far back its Binance listing/trade history goes, and cross-reference that window against the known
       contango/backwardation regime shifts already documented in that doc's NET-basis backtest (e.g. CL's -20%
@@ -290,3 +298,15 @@ context_scope:
   itself. New module `oil_perp_venue_coverage.py` (mirrors this batch's todo 2 `index_commodity_perp_hedge_link.py`
   found/not-found-with-evidence convention) + a dated comment in `cefi_instrument_universe.py` next to the CL/BZ
   entries + `tests/unit/test_oil_perp_venue_coverage.py` (13 tests). `quality-gates.sh` green (381s).
+- **2026-08-09** — todo 6 (NET-basis backtest re-run with dividend yield) DISPATCHED + DONE: `e2e-testing@12d1f3c`.
+  Confirmed Databento DBEQ.BASIC has no dividends/corporate-actions schema (grepped every Databento adapter in
+  market-tick-data-service + instruments-service for "dividend" — zero hits); used yfinance instead, mirroring the
+  established pattern (market-tick-data-service's `yahoo_finance_adapter.py`, features-service's
+  `yfinance_earnings_adapter.py`, e2e-testing's own `backfill_vix_yahoo.py`) rather than the heavier Polygon
+  corporate-actions adapter. Extended `net_basis_scan.py` with a TTM-dividend-yield fetcher computed directly from raw
+  dividend history ÷ last close (NOT yfinance's `info["dividendYield"]` field, which has a documented stale/pre-split
+  bug — confirmed live: it reads 0.45% for NVDA vs. the correct 0.125%) and a dividend-adjusted re-run holding the
+  original 06-20 backtest's Gross%/Borrow% columns fixed so the comparison isolates exactly the dividend variable
+  (funding-rate drift is a separate, already-tracked concern — the doc's own DYNAMIC-universe-ranking follow-up).
+  Result: all 12 pairs remain TRADEABLE, NET +0.00 to +0.82pp vs. the 06-20 floor. Full table + evidence:
+  `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log, 2026-08-09 entry (same commit).

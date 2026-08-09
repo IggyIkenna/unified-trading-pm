@@ -254,6 +254,48 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
 
 ## Progress Log
 
+### 2026-08-09 — NET-basis backtest re-run with dividend yield priced in (`cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 6)
+
+Dispatched via AO batch11. **Databento DBEQ.BASIC has no dividends/corporate-actions schema** (confirmed by grepping
+every Databento adapter in market-tick-data-service and instruments-service for "dividend" — zero hits; matches the
+codex `tradfi-databento-sourcing-ssot.md` gap and the 2026-05-23 instruments-service ledger audit's own note that a
+dividend calendar would need an external source). Used **yfinance** instead, mirroring the already-established pattern
+elsewhere in this workspace (market-tick-data-service's `yahoo_finance_adapter.py`, features-service's
+`yfinance_earnings_adapter.py`, e2e-testing's own `scripts/common/backfill_vix_yahoo.py`) rather than the heavier
+Polygon corporate-actions adapter (features-service, requires a separate `polygon-api-key` secret + cross-repo import).
+
+Implementation: `e2e-testing/scripts/cefi/net_basis_scan.py` extended with `fetch_ttm_dividend_yield_pct()`
+(trailing-12mo dividend sum ÷ last close, computed directly from yfinance's raw `Ticker.dividends` history — NOT the
+`info["dividendYield"]` field, which has a documented stale/pre-split bug: it read 0.45% for NVDA vs. the
+raw-history-derived 0.125%), `dividend_adjusted_net_basis()`, and a `run_dividend_adjusted_backtest()` driver. Live-run
+2026-08-09, holding the original 2026-06-20 backtest's Gross%/Borrow% columns fixed (same 11mo Databento-roll +
+Binance-funding window) so the comparison isolates exactly the one variable this todo asks to add — dividend yield —
+rather than conflating it with funding-rate drift (funding is highly time-varying; a supplementary live-Binance-funding
+sanity check the same day showed funding has compressed materially fleet-wide since 06-20, several pairs now
+NET-negative on today's live rates — that's a SEPARATE, already-tracked concern, the doc's own DYNAMIC-universe-ranking
+follow-up a few lines below, not folded into this dividend-only delta):
+
+| Pair  | Gross% | Borrow% | Div yield% (TTM) | Hedge cost% | NET% (w/ div) | Δ vs 06-20 NET% |
+| ----- | ------ | ------- | ---------------- | ----------- | ------------- | --------------- |
+| NVDA  | +22.1% | +0.50%  | +0.125%          | +0.375%     | +21.73%       | +0.13pp         |
+| MSFT  | +15.7% | +0.30%  | +0.712%          | -0.412%     | +16.11%       | +0.71pp         |
+| CRCL  | +23.8% | +2.50%  | +0.000%          | +2.500%     | +21.30%       | +0.00pp         |
+| INTC  | +18.2% | +0.50%  | +0.000%          | +0.500%     | +17.70%       | +0.00pp         |
+| GOOGL | +18.0% | +0.30%  | +0.240%          | +0.060%     | +17.94%       | +0.24pp         |
+| AMD   | +24.4% | +0.50%  | +0.000%          | +0.500%     | +23.90%       | +0.00pp         |
+| TSLA  | +9.4%  | +0.50%  | +0.000%          | +0.500%     | +8.90%        | +0.00pp         |
+| AMZN  | +5.7%  | +0.30%  | +0.000%          | +0.300%     | +5.40%        | +0.00pp         |
+| META  | +11.7% | +0.30%  | +0.355%          | -0.055%     | +11.75%       | +0.35pp         |
+| HOOD  | +9.1%  | +2.00%  | +0.000%          | +2.000%     | +7.10%        | +0.00pp         |
+| AAPL  | +6.8%  | +0.30%  | +0.335%          | -0.035%     | +6.84%        | +0.34pp         |
+| BABA  | +6.2%  | +1.00%  | +0.818%          | +0.182%     | +6.02%        | +0.82pp         |
+
+**Result**: dividends confirm the operator's framing — the 06-20 figures WERE a floor, every pair's NET is flat-to-up
+(+0.00 to +0.82pp) with dividends priced in, no pair flips verdict (all 12 remain TRADEABLE). Biggest beneficiaries are
+the higher-yielding names (BABA +0.82pp, MSFT +0.71pp); 6 of the 12 (CRCL/INTC/AMD/TSLA/AMZN/HOOD) pay no dividend today
+so are unchanged. Evidence: `e2e-testing@12d1f3c` (this commit), script output reproduced above, run via
+`python3 scripts/cefi/net_basis_scan.py` (credential-free, public Yahoo endpoints only).
+
 ### 2026-08-09 — Propagation ops (B1/B3/B4) verified DONE on live prod state (`cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1)
 
 Dispatched via AO batch11. Re-verified the chain against LIVE production GCS state rather than launching a fresh
