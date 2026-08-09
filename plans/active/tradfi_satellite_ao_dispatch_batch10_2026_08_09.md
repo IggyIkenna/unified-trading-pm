@@ -113,20 +113,25 @@ other operator/design-gated content untouched. Yield is deliberately thin; repor
       floor-granularity fix. Repos: market-tick-data-service, instruments-service. Source:
       `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (the "NEW (2026-08-09) — before launching
       anything: check the manifest..." todo).
-- [ ] [DIAG] P2. **Determine WHEN `lifecycle-catalogue-regen-tradfi-daily` actually got re-enabled** (was it ever truly
-      paused via the Cloud Scheduler API on 2026-06-25 as two plan docs claimed, or did that session pause it manually
-      out-of-band via a mechanism that didn't persist — e.g. a `gcloud` command that failed silently, or a subsequent
-      Terraform apply/redeploy that reset it to its Terraform-declared default state). Run
-      `gcloud logging read 'resource.type="cloud_scheduler_job" resource.labels.job_id="lifecycle-catalogue-regen-tradfi-daily"' --project=central-element-323112 --freshness=90d`
-      (Cloud Audit Logs retention permitting) to pull the actual pause/resume history. This is read-only (no delete, no
-      `--apply`, no VM launch) — a bounded, worker-determinable diagnostic. **Done when**: the doc's own DIAG todo
-      (`issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` todo 4) is answered with cited log
-      evidence — either "the pause never took" (script/API-call bug) or "something later silently re-enabled it" (a
-      deploy-time reset gap) — and that doc's checkbox is flipped `[x]` citing the finding. Repo: unified-trading-pm
-      (finding write-up) + whichever repo the root cause points to (fix itself is NOT in scope for this todo — diagnosis
-      only). Source: `issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` (todo 4, DIAG P2),
-      flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE by that doc's own 2026-08-09 na-eligibility-audit entry but not promoted
-      that run.
+- [x] ✅ [DIAG] P2. **ANSWERED — unified-trading-pm (this commit).** "Something later silently re-enabled it" —
+      confirmed, and NOT a Terraform/deploy-time reset. The `resource.type="cloud_scheduler_job"` execution log this
+      todo named only carries fire records, not admin state-changes; the real pause/resume history lives in Cloud Audit
+      Logs' Admin Activity stream (`logName=...cloudaudit.googleapis.com%2Factivity`,
+      `protoPayload.serviceName="cloudscheduler.googleapis.com"`). Full history pulled: the 2026-06-25 pause DID
+      genuinely take effect via the real API (`PauseJob`, `ikenna@odum-research.com`) — ruling out "the pause never
+      took." It stayed paused 2 days, then was explicitly `ResumeJob`'d at 2026-06-27T19:46:44Z authenticated as
+      `unified-trading-sa`; the audit log's `callerSuppliedUserAgent` identifies the actor precisely:
+      `agent-name/claude_code command/gcloud.scheduler.jobs.resume` — a Claude Code agent session ran a raw
+      `gcloud     scheduler jobs resume` directly against this job (paired with a resume of
+      `uts-prod-manifest-consolidator-instruments-tradfi-cron` 1.8s earlier — a targeted tradfi-jobs sweep, not a
+      blanket all-schedulers resume). No commit in the surrounding 30-min window across 5 checked repos pins down the
+      exact task; `lifecycle_catalogue_scheduler.tf`'s `google_cloud_scheduler_job` resource declares no
+      `paused`/`state` attribute, ruling out a Terraform-apply reset mechanically. Full evidence + root-cause
+      classification + the practical implication for todo 3 (use `scheduler_maintenance.py`'s
+      `resume_after_maintenance`, not a raw `gcloud` resume) written up in
+      `issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` todo 4, flipped `[x]` there citing
+      this evidence. Repo: unified-trading-pm (finding write-up + diagnosis only, per this todo's own scope — no fix
+      applied).
 
 ## Not extracted this batch — items that stay behind
 
@@ -158,3 +163,12 @@ other operator/design-gated content untouched. Yield is deliberately thin; repor
   (venue-level discovery floor, not data-type-aware) found while verifying full-history scope. Full per-cell
   disposition + evidence in the todo itself. Todo 2 (DIAG P2, scheduler-history) is untouched — out of this session's
   scope, belongs to whichever worker picks it up next.
+- 2026-08-09 (data_engineering worker, slot 18): todo 2 done. Pulled Cloud Audit Logs Admin Activity history for
+  `lifecycle-catalogue-regen-tradfi-daily` (the plan's named execution-log filter only carries fire records, not admin
+  state-changes — had to widen to the Admin Activity log stream). Answer: the 2026-06-25 pause genuinely took effect; it
+  was explicitly resumed 2 days later by a Claude Code agent session running a raw `gcloud scheduler jobs resume` (not a
+  Terraform/deploy-time reset — confirmed via both the audit log's `callerSuppliedUserAgent` and the Terraform resource
+  declaring no `paused` attribute). Full evidence in the source issue doc's todo 4, flipped there citing this finding.
+  Both plan todos now done — plan reads 0 open todos; deferring archival decision to this plan's finalize twin
+  (`tradfi_satellite_ao_dispatch_batch10_2026_08_09_finalize.md`, per its own gated reconciliation scope) rather than
+  archiving directly from this todo, since a finalize twin already exists for this batch.
