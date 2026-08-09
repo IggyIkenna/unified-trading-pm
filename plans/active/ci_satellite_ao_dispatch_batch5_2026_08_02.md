@@ -184,8 +184,8 @@ Same-priority todos in one plan run **concurrently**, so they must touch disjoin
      2-week clock to 2026-08-17), and a historical backtest executed. **Skip sub-item 2 entirely when this todo is
      worked** — record a one-line pointer to the rollout plan instead of scoping a design that already shipped code; do
      not re-scope or re-design.
-  - **Done when**: sub-item 1's utilization number is recorded in the source doc (measurement window, or
-    `BLOCKED-CREDENTIALS` if unreachable), and sub-item 2 is recorded as a pointer to
+  - **Done when**: sub-item 1's utilization number is recorded in the source doc (measurement window, or a note that the
+    BigQuery source is credentials-unreachable), and sub-item 2 is recorded as a pointer to
     `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md` rather than a fresh design.
   - Source: `github_actions_operator_gated_followups_2026_07_17.md` (`[VERIFY] P2` + `[REVIEW] P2`). Batch4 **D4-2** /
     **D4-3**, both recorded there as "held for a cleaner batch-5 extraction".

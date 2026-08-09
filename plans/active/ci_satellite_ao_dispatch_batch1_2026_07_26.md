@@ -593,9 +593,9 @@ concurrent workers do not collide on this file.
       absorbed the load (slice `MemoryCurrent` < 8G, orchestrator load unaffected). Honour the doc's own measurement
       traps: skipped jobs are not billed, a throttled API call silently counts as 0, `/timing.billable.total_ms`
       UNDER-reports (`billable: {}` with no `UBUNTU` key is the real zero) — so COUNT JOBS, never ms. If the billing
-      token is unavailable, record `BLOCKED-CREDENTIALS` rather than estimating. **Done when**: a dated per-workflow
-      billed-job-count table is recorded in the source doc, or the credential block is recorded. **Explicitly NOT the
-      two-week Phase-5 re-pull** (still calendar-gated, `## Deferred` D29). Source:
+      token is unavailable, record that the measurement is credentials-blocked rather than estimating. **Done when**: a
+      dated per-workflow billed-job-count table is recorded in the source doc, or the credential block is recorded.
+      **Explicitly NOT the two-week Phase-5 re-pull** (still calendar-gated, `## Deferred` D29). Source:
       `github_actions_operator_gated_followups_2026_07_17.md` ([VERIFY] P0, `measure-billed-notify-cost.sh`).
 - [x] ✅ [VERIFY] P2. DONE 2026-07-26 (slot 6) — **CONFIRMED FIRING.**
       `gh run list -R IggyIkenna/unified-trading-pm     --workflow=ldr-docs-gate.yml --limit 20` shows 20 consecutive

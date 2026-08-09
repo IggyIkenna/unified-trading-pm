@@ -144,11 +144,23 @@ context_scope:
       ohlcv_24h shards despite real underlying data; (2) an orphaned, non-canonical `KRX:EQUITY:{code}.KS-USD` duplicate
       shard-atom (~8261 rows, 0 real captures) alongside the canonical `KRX:EQUITY:{code}-USD` form. Full evidence: see
       the issue doc's Progress Log.
-- [ ] [UAC] P1. **Measure the exact Databento lookback-floor boundary per level** (L0/L1/L2/L3) live and update
+- [x] ✅ [UAC] P1. **Measure the exact Databento lookback-floor boundary per level** (L0/L1/L2/L3) live and update
       `LEVEL_MAX_LOOKBACK_DAYS`/`earliest_allowed_start`/`assert_lookback_allowed` in unified-api-contracts to the
       measured values. Repo: unified-api-contracts. Source: `cefi_consolidated_closeout_2026_07_18.md` Track 0 (line
       170, cites source Phase 5). **Done when**: each level's floor is measured and the 3 named constants/functions
-      match the measured values, `quality-gates.sh` green.
+      match the measured values, `quality-gates.sh` green. — **DONE 2026-08-09** — unified-api-contracts@92a418e5.
+      Binary-searched `metadata.get_cost` live on GLBX.MDP3/ES.c.0 (a cost-estimate endpoint — no data fetched, no
+      billing risk) to find the exact free/metered transition per level: **L1 (trades) 367d free / 368d metered** (was
+      conservative 365d), **L2 (mbp-10) 33d free / 34d metered** (was conservative 30d), **L3 (mbo) 33d free / 34d
+      metered** (was conservative 30d) — L1's boundary cross-checked identical on DBEQ.BASIC/AAPL, confirming the
+      boundary is level-scoped not dataset-scoped. **L0 has no rolling metered boundary at all**: probed 5850d-5908d
+      back, every point $0.0000, then 5909d+ raises a hard 422 `data_start_before_available_start` (GLBX.MDP3's own
+      archive starts 2010-06-06) — never a metered charge; `_FULL_HISTORY_DAYS` updated from the arbitrary `16*365`
+      approximation to the measured 5908d (exact distance from 2026-08-09 to GLBX.MDP3's inception, the oldest of the 3
+      subscribed datasets, so it's the widest value safe for all three). `LEVEL_MAX_LOOKBACK_DAYS` + module/inline
+      docstrings updated to the measured values; test boundary assertions
+      (`tests/unit/test_databento_subscription_allowlist.py`) updated to match (366d/31d no longer raise — they're now
+      within the true free window). `quality-gates.sh` green (336s, 0 basedpyright errors, tests pass).
 - [ ] [REFACTOR] P2. **Deprecate and remove all Barchart code** (superseded by VX-futures-via-Databento for the VIX
       preload; CLAUDE.md: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"): delete the adapter/client/source-registry
       entries in unified-api-contracts and market-tick-data-service, no shim. **Conflict-checked 2026-08-09**: grepped
@@ -241,3 +253,17 @@ context_scope:
   label — its `row_count` field is separately bugged). 2 adjacent manifest-integrity defects found + filed as follow-up
   todos. Full evidence + the follow-up todos:
   `/plans/active/issues/krx_batch11_todo3_intraday_conflicts_with_2026_07_12_ruling_2026_08_09.md`.
+- **2026-08-09** — todo 4 (measure exact Databento lookback-floor boundary per level) DISPATCHED + DONE:
+  `unified-api-contracts@92a418e5`. Live-measured via `metadata.get_cost` binary search (cost estimate endpoint, no data
+  fetched, no billing risk) on GLBX.MDP3/ES.c.0: L1 (trades) exact boundary 367d free / 368d metered (prior constant
+  365d was a safe-but-loose approximation), L2 (mbp-10) and L3 (mbo) both exact boundary 33d free / 34d metered (prior
+  constant 30d). L1 boundary cross-checked identical on DBEQ.BASIC/AAPL — confirms the boundary is level-scoped, not
+  per-dataset, so the existing single `LEVEL_MAX_LOOKBACK_DAYS` dict design is correct. L0 turned out to have NO rolling
+  metered boundary at all — probed 5850d-5908d back on GLBX.MDP3, every point $0.0000, then 5909d+ hits a hard 422
+  `data_start_before_available_start` (GLBX.MDP3's real archive starts 2010-06-06), never a metered charge; updated
+  `_FULL_HISTORY_DAYS` from the arbitrary `16*365=5840` to the measured 5908d (exact distance from 2026-08-09 to
+  GLBX.MDP3's inception — the oldest of the 3 subscribed datasets, so the widest value that stays safe for all three;
+  XCBF.PITCH starts 2018-11-04, DBEQ.BASIC equities 2023-04-15, both cross-checked live). Updated
+  `LEVEL_MAX_LOOKBACK_DAYS` + all docstrings/inline comments in `databento_subscription_allowlist.py` to the measured
+  values; updated `tests/unit/test_databento_subscription_allowlist.py`'s boundary-raise assertions (366d/31d no longer
+  raise — they're within the true measured free window now). `quality-gates.sh` green (336s).

@@ -3247,9 +3247,9 @@ swaps and every run slows. Adding parallelism makes the aggregate worse.
 > (budget 43→21 GB, cpu_slots 6→3) with zero intervention. Validated by a 93-min live soak (42 runs, cpu-capped at 3,
 > **0 OOM**, all ghost reservations reaped within grace). Learning: on small hosts (≤ 32 GB) the non-QG baseline
 > (orchestrator + fleet workers) is a large fraction of RAM, so a post-admission RSS ramp can dip `MemAvailable` low
-> without OOM — the (planned) runtime abort-monitor matters most there. Introspect: `bash qg-host-governor.sh --status`
-> (mode, budget / reserved / cpu_slots / live reservations) and `--probe` (capacity). SSOT:
-> `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`.
+> without OOM — the runtime abort-monitor (shipped 2026-07-27, `761edd205`) matters most there. Introspect:
+> `bash qg-host-governor.sh --status` (mode, budget / reserved / cpu_slots / live reservations) and `--probe`
+> (capacity). SSOT: `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`.
 
 > **🟢 2026-08-03 — the GHA self-hosted glue-runner topology is now covered too.** The banner above only shared the
 > ledger correctly across interactive dev-VM SLOTS; on the GHA self-hosted glue-runner host (the SAME central/planning

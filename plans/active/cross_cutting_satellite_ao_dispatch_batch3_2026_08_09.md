@@ -65,13 +65,16 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Write `backfill_defi_source_column.py` (copy the existing TradFi template script) to stamp the known
-      historical `source` per `data_type`: most DeFi data_types → `onchain_subgraph`; `oracle_prices` → resolve `pyth`
-      vs. `chainlink` from the existing `pipeline_mode`/path; `native_staking_rates` → `solana_rpc` vs. `helius_rpc`.
-      Idempotent (safe re-run, no duplicate writes). Repo: market-tick-data-service (or wherever the cited TradFi
-      template script lives). Source: `data_source_provenance_enforcement_2026_07_24.md` (backfill-script item). Done
-      when: the script exists, implements the 3 stated per-`data_type` mapping rules, and is verified idempotent on a
-      re-run.
+- [x] ✅ [SCRIPT] P1. Write `backfill_defi_source_column.py` (copy the existing TradFi template script) to stamp the
+      known historical `source` per `data_type`: most DeFi data_types → `onchain_subgraph`; `oracle_prices` → resolve
+      `pyth`/`chainlink`/`aave` from the existing `pipeline_mode`; `native_staking_rates` → `solana_rpc` vs.
+      `helius_rpc`. Idempotent (safe re-run, no duplicate writes) — derives generically via `source_string_for()` off
+      `pipeline_mode` rather than a hardcoded `data_type` table, so it also correctly covers `lst_rates`
+      (`onchain_subgraph`/`defillama`), a byproduct not named in the source todo. Verified idempotent via unit test
+      (`test_backfill_defi_source_column.py`, apply-twice proof). Repo: market-tick-data-service@63776a43. Source:
+      `data_source_provenance_enforcement_2026_07_24.md` (backfill-script item). Shipped 2026-08-09 (slot-5) — checkbox
+      was not flipped at ship time; flipped here (slot-24) after confirming the commit already satisfies every stated
+      done-when criterion, no re-implementation needed.
 - [ ] [MTDS] P1. Confirm `record_empty_for_shard`/`record_failed_for_shard` in market-data-processing-service's
       `canonical_writer.py` forward a `source` parameter the same way the already-shipped captured-write-path does —
       thread it through if either function currently drops it. Repo: market-data-processing-service. Source:
@@ -157,3 +160,9 @@ drift_direction: advance-code
   2026-07-24 source doc this item was extracted from even existed — the source doc's "pause-crons" item text was already
   describing stale state when written. No code change required; verified live against both the terraform source (git
   log) and actual GCP state (`gcloud scheduler jobs list` + a fresh `tofu init` + `tofu state list`).
+- **2026-08-09 (data_engineering worker, slot 24)**: Dispatched the `backfill_defi_source_column.py` todo; found
+  `market-tick-data-service@63776a43` (slot-5, same day, ~18 min earlier) had already shipped the script + its unit
+  test, satisfying every stated done-when criterion, but the plan checkbox was never flipped — a missed Half-2
+  (commit-push-flip). Verified the shipped implementation against the todo's 3 stated mapping rules + idempotency
+  requirement (all met, plus a `lst_rates` byproduct from the generic `pipeline_mode`-derived approach) and flipped the
+  checkbox; no re-implementation needed.

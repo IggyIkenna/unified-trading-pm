@@ -461,17 +461,21 @@ count re-stales on the next bump. See Modes § "Calibration" |
 **Operator ruling required (Q&A in interactive mode; park + alert ONLY if nobody is reachable — see Modes § ASK >
 PARK):** SSOT-ownership disputes; two ACTIVE docs giving opposing directives; epic vs plan disagreeing about scope or
 sequencing; conflicting numbers **that no source of truth can settle** (if one side is checkable, it is NOT a ruling —
-go check it); neither side has hard evidence; **ANY resolution that edits a codex SSOT doc** (plans→codex updates are in
-scope for this skill but NEVER autonomous — the operator rectifies BEFORE any agent touches an SSOT);
-**near-complete-plan consolidation** (which sibling/epic the remnant folds into); **archiving a `locked_by:` plan**
-(even fully-done); splitting a plan over its line-cap (a normal plan >1000, or an epic >2000); anything touching a
-`locked_by:` plan, kill-switch, funds isolation, or the May-23 critical path. Interactive format — batched questions
-ordered P0→P1 hitting the chat box directly; recurring classes get ONE class-level question with per-item exceptions;
-every question carries: the two quotes + locations, why they conflict, which doc looks authoritative and why, and
-options A/B/C with the recommendation marked (never open-ended — SUB_AGENT_MANDATORY_RULES escalation format). In
-autonomous/AO mode the same structured questions are raised as **AO operator alerts/escalations** (orchestrator
-dashboard escalation with the options block) so the operator can rule asynchronously; the worker proceeds with
-everything else and applies the ruled items on the next pass.
+go check it); neither side has hard evidence; **ANY resolution that edits a codex SSOT doc, EXCEPT the narrow MECHANICAL
+codex-staleness carve-out** (operator ruling 2026-08-09, mirrors `agents/plan_reconciler.md` STEP 5.f2): auto-apply ONLY
+when the codex text is factually stale per HARD evidence (same bar as a todo flip), the fix is a single unambiguous
+substitution with no judgment call between multiple plausible values, it doesn't touch a HARD-STOP governance area
+(delete-safety rules, human-only hard-stops, version-graduation rules), and you don't run a NEW measurement to produce
+the corrected value (cite only existing evidence). Everything else stays operator-gated — the operator rectifies BEFORE
+any agent touches an SSOT; **near-complete-plan consolidation** (which sibling/epic the remnant folds into); **archiving
+a `locked_by:` plan** (even fully-done); splitting a plan over its line-cap (a normal plan >1000, or an epic >2000);
+anything touching a `locked_by:` plan, kill-switch, funds isolation, or the May-23 critical path. Interactive format —
+batched questions ordered P0→P1 hitting the chat box directly; recurring classes get ONE class-level question with
+per-item exceptions; every question carries: the two quotes + locations, why they conflict, which doc looks
+authoritative and why, and options A/B/C with the recommendation marked (never open-ended — SUB_AGENT_MANDATORY_RULES
+escalation format). In autonomous/AO mode the same structured questions are raised as **AO operator alerts/escalations**
+(orchestrator dashboard escalation with the options block) so the operator can rule asynchronously; the worker proceeds
+with everything else and applies the ruled items on the next pass.
 
 ## Phase 5 — apply + commit
 

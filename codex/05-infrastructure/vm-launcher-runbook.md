@@ -592,7 +592,11 @@ design: the backfill's own range already covers the recent days the T+1 would fi
 preempting the multi-day backfill would mean it never finishes).
 
 **Preemption + the cap**: a preempted backfill VM is auto-relaunched by `RelaunchPreemptedVm` **through this guard**, so
-a relaunch can never breach the cap — see `spot-vms-for-backfill.md` § "Re-runs cleanly requires a relauncher".
+a relaunch can never breach the cap — see `spot-vms-for-backfill.md` § "Re-runs cleanly requires a relauncher". **Not
+universal**: the cefi sharded backfill launcher specifically has NO working auto-relaunch — measured 5 preemptions
+across 8 days, 0 automatic relaunches each time, requiring manual `[INFRA]` relaunch every time (corrected 2026-08-09
+per `plans/active/issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`). Verify `RelaunchPreemptedVm`
+actually covers a given launcher before citing this section as proof it self-heals.
 
 **At most 1 Tardis-consuming VM runs at a time, across BOTH clouds (one shared key). The lease does NOT lift the cap —
 it AMPLIFIES the failure** (its fail-open path releases every waiting VM to fetch unlocked simultaneously). **This

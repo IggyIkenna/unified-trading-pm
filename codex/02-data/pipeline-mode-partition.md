@@ -250,8 +250,9 @@ Precedence is a CONSUMER config, not one global order: a **live-mode consumer** 
 **batch-mode consumer** (backtest / T+1 reconciliation) reads `batch > replay > live`. `replay` is ALWAYS the middle
 (gap-fill) tier. The data-status surface is mode-AGNOSTIC (M5 union: ≥1 mode `captured` ⇒ cell `captured`; M4 only picks
 the representative row — shipped `deployment-api@4dd2575`/`@46e3d57`). The live read-path resolver
-`select_for_mode(consumer_mode, available_modes)` lives in **batch-live-reconciliation-service** **[GATED — rides the
-`M1-BREAKING` tranche]**.
+`select_for_mode(consumer_mode, available_modes)` lives in **batch-live-reconciliation-service** — **[LANDED]**, not
+gated (corrected 2026-08-09: M1-BREAKING shipped 2026-06-30 and M4 itself was independently verified shipped 2026-07-12;
+the stale `[GATED — rides M1-BREAKING]` tag outlived both).
 
 ### M6 — capability-driven startup gate (the `[batch-cutoff → now]` tail)
 

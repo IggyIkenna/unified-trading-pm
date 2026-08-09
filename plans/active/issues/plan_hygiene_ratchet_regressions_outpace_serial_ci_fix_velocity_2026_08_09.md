@@ -225,3 +225,14 @@ words: "this branch is churning faster than one CI worker can chase serially").
   structural-fix todo (debounce/batch/move-to-periodic for the corpus-wide, ambient-drift-prone ratchet checks
   specifically) is the only remedy that actually converges — the serial chase-and-fix model has now failed to converge
   8/8 times at current fleet commit velocity.
+- 2026-08-09 (cicd agt-bd7b20, slot 2, `main_ci_red` escalation on `unified-trading-pm`, `PR_NUMBER=0`): dispatched to
+  fix `quality-gates-v2` RED on `main`. Diagnosed the failing run (`31303279068`, PR #2666, head `8fe9c2b5`) —
+  `QG slice (checks)` hard-failed on exactly `Todo regression vs origin` (same check family this doc already tracks),
+  the only ❌ in the sweep. Before touching anything, checked current state: `origin/main` tip had already moved to
+  `98bd7d002` (PR #2667, the next `ldr-to-main-promote` cycle) — combined status `success`, `quality-gates-v2` check-run
+  `success`, no open promote PRs, `origin/main` confirmed an ancestor of `origin/live-defi-rollout`. The wall
+  self-resolved via the automated promotion pipeline (classification (A), PROMOTION STUCK→cleared) before this dispatch
+  reached it — a fresh promote cycle simply carried a later, unaffected snapshot past the transient snapshot-vs-origin
+  race this doc already documents 6+ times over. No code/plan fix needed or applied; nothing to push. Confirms this
+  escalation lineage's already-established finding rather than adding a new failure mode. `AUTHORING_SLOT=ci-reconcile`
+  sentinel (not a numbered slot) — no slot-ping applicable per this role's skip-rule. Completing via `/done`.
