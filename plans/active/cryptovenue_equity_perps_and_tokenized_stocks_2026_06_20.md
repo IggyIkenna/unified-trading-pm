@@ -296,6 +296,61 @@ the higher-yielding names (BABA +0.82pp, MSFT +0.71pp); 6 of the 12 (CRCL/INTC/A
 so are unchanged. Evidence: `e2e-testing@12d1f3c` (this commit), script output reproduced above, run via
 `python3 scripts/cefi/net_basis_scan.py` (credential-free, public Yahoo endpoints only).
 
+### 2026-08-09 — Todo 9 (Binance listing/history-length vs regime-window cross-reference) DISPATCHED + DONE (`cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 9)
+
+Live-queried Binance USDT-margined futures `fapi/v1/exchangeInfo` (`onboardDate`) +
+`fapi/v1/klines?interval=1d&startTime=0` (first real daily candle) for every symbol in the requested set
+(XAU/XAG/COPPER/SPX/SPY/NDX), then cross-referenced each listing date/history-length against this doc's own NET-basis
+backtest regime window (~11-12mo, 2025-07-01→2026-06-30, Databento GLBX front-next roll-carry table above). **No
+universe add/remove decision made** — per this todo's explicit scope.
+
+| Symbol | Binance perp | Listed (UTC) | History as of 2026-08-09 | Overlap w/ 2025-07-01→2026-06-30 window | Coverage % |
+| ------ | ------------ | ------------ | ------------------------ | --------------------------------------- | ---------- |
+| XAU    | XAUUSDT      | 2025-12-11   | 241d (~7.9mo)            | 201d                                    | 55%        |
+| XAG    | XAGUSDT      | 2026-01-07   | 214d (~7.0mo)            | 174d                                    | 48%        |
+| COPPER | COPPERUSDT   | 2026-03-06   | 156d (~5.1mo)            | 116d                                    | 32%        |
+| SPX    | SPXUSDT      | 2024-12-10   | 607d (~20.0mo)           | 364d (full window)                      | 100%\*     |
+| SPY    | SPYUSDT      | 2026-04-06   | 125d (~4.1mo)            | 85d                                     | 23%        |
+| NDX    | _(none)_     | N/A          | N/A                      | N/A                                     | N/A\*\*    |
+
+\*SPX coverage is a false positive — see caveat below. \*\*NDX never had a real Binance perp or a NET-basis row in this
+doc's own table (only XAU/XAG/COPPER/SPX/SPY were ever measured — line ~772-780 above); it was only ever an aspirational
+mapping target in the "Map the index perps" todo, not a measured verdict.
+
+**Is the SLIM/NEGATIVE verdict regime-conditional or permanent?**
+
+- **XAU/XAG/COPPER (SLIM/NEGATIVE; GC/SI/HG contango over the observed window)**: each perp's trading history covers
+  only 32-55% of the 11-12mo regime window the futures-side contango reading spans, starting 4-8 months after the window
+  opened — we have zero Binance funding data from the pre-listing portion of the window, so we cannot say the contango
+  regime (and hence the NET reading) held there too. CL's own -20% backwardation reading in the SAME table, SAME window,
+  is this doc's own proof that a commodity future can sit in a materially different regime than gold/silver/copper's
+  contango — a partial-window contango reading is not proof of permanence. **Verdict: regime-conditional, not proven
+  permanent.**
+- **SPY (NEGATIVE; ES contango)**: shortest real history (125d/23% coverage) — SPYUSDT didn't exist for the first ~9
+  months of the window. The -9.8% NET reading rests on barely 4 months of live funding data. **Verdict:
+  regime-conditional, weakly supported** (smallest sample of the set).
+- **SPX (NEGATIVE; ES contango; nominal 100% coverage)**: the long history is a false signal — Binance's `SPXUSDT` is
+  confirmed live (`underlyingType=COIN`, `underlyingSubType=['Meme']`, matching batch11 todo 2's independent finding) to
+  be the **SPX6900 meme coin, not an S&P-500-linked instrument**. Its 20-month history is irrelevant to the S&P-500
+  carry regime — the doc's original "SPX" NET-basis row compares a meme-coin's funding rate against an S&P-500 future's
+  carry, a mismatched pair, not a regime read on the real index. Not a new finding (todo 2 already flagged the symbol
+  mismatch) — restated here because it directly undermines this row's own "100% coverage" cell: full history of the
+  WRONG instrument doesn't resolve the regime question, because no genuine SPX perp exists on Binance. **Verdict: not
+  assessable as a regime question — the underlying data doesn't measure what the table implies.**
+- **NDX**: no Binance perp exists (independently re-confirmed via a full-symbol-list grep of `exchangeInfo` for
+  NAS100/NDX — zero matches) and no NET-basis row for it was ever produced. Nothing to cross-reference.
+
+**Bottom line**: of the 4 symbols with both a real Binance perp AND a real NET-basis verdict (XAU/XAG/COPPER/SPY), every
+one has <60% overlap with the observed regime window and none has traded through a regime shift the way CL demonstrably
+has — their SLIM/NEGATIVE calls should be read as "negative under the one contango regime observed so far," not as
+structurally permanent. SPX's case is a category mismatch, not a regime question. NDX was never measured. No
+universe/backtest change made by this todo.
+
+Evidence: Binance `fapi/v1/exchangeInfo` `onboardDate` + `fapi/v1/klines?interval=1d&startTime=0` first-candle open time
+(live-queried 2026-08-09) for XAUUSDT/XAGUSDT/COPPERUSDT/SPYUSDT/SPXUSDT; full `exchangeInfo` symbol-list grep for
+NAS100/NDX confirms none exists. Checkbox flipped in `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 9 in the
+same commit.
+
 ### 2026-08-09 — Propagation ops (B1/B3/B4) verified DONE on live prod state (`cefi_satellite_ao_dispatch_batch11_2026_08_09.md` todo 1)
 
 Dispatched via AO batch11. Re-verified the chain against LIVE production GCS state rather than launching a fresh

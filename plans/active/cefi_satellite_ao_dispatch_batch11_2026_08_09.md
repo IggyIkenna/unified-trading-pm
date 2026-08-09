@@ -208,14 +208,23 @@ context_scope:
       and a dividend-adjusted re-run holding the original 06-20 Gross%/Borrow% backtest fixed. All 12 pairs remain
       TRADEABLE with dividends priced in (NET +0.00 to +0.82pp vs. the 06-20 floor). Full table + evidence:
       `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log, 2026-08-09 entry (same commit).
-- [ ] [DATA] P1. **For each commodity/index perp currently NET-negative or NET-slim** (XAU/XAG/COPPER/SPX/SPY/NDX),
+- [x] ✅ [DATA] P1. **For each commodity/index perp currently NET-negative or NET-slim** (XAU/XAG/COPPER/SPX/SPY/NDX),
       check how far back its Binance listing/trade history goes, and cross-reference that window against the known
       contango/backwardation regime shifts already documented in that doc's NET-basis backtest (e.g. CL's -20%
       backwardation) to determine whether each perp's short history means the net-negative verdict is regime-conditional
       rather than permanent. Repo: instruments-service (read-only research). Source:
       `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` line 823. **Done when**: a per-symbol table of
       (listing date, history length, regime-window coverage) is produced and posted to that doc's Progress Log — no
-      universe add/remove decision is made by this todo.
+      universe add/remove decision is made by this todo. — **DONE 2026-08-09** — live-queried Binance
+      `fapi/v1/exchangeInfo`+`klines` for XAU/XAG/COPPER/SPX/SPY/NDX. **XAU/XAG/COPPER/SPY are real perps but each has
+      only 23-55% overlap** with the doc's ~11-12mo NET-basis regime window (all listed partway through it) — their
+      SLIM/NEGATIVE verdicts are regime-conditional, not proven permanent (CL's own -20% backwardation in the same table
+      proves commodity regimes DO flip). **SPX's 100% window coverage is a false signal**: Binance `SPXUSDT` is the
+      SPX6900 meme coin (`underlyingType=COIN`/`Meme`, confirms batch11 todo 2's finding), not an S&P-500 instrument —
+      its long history doesn't bear on the real index's regime at all. **NDX has no Binance perp** (confirmed via a full
+      `exchangeInfo` grep) and never had a NET-basis row in the source doc. No universe/backtest change made. Full
+      per-symbol table + evidence: `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log,
+      2026-08-09 entry.
 - [ ] [DATA] P1. **Run a window-scoped honest-coverage measurement**
       (`instruments-service/scripts/measure_honest_coverage.py     --asset-group cefi`, or a targeted
       `/data-pipeline-check-mtds` day-sample) restricted to OKX-SPOT/-SWAP/-FUTURES, BINANCE-SPOT/-FUTURES, BYBIT over
@@ -309,4 +318,16 @@ context_scope:
   original 06-20 backtest's Gross%/Borrow% columns fixed so the comparison isolates exactly the dividend variable
   (funding-rate drift is a separate, already-tracked concern — the doc's own DYNAMIC-universe-ranking follow-up).
   Result: all 12 pairs remain TRADEABLE, NET +0.00 to +0.82pp vs. the 06-20 floor. Full table + evidence:
+  `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log, 2026-08-09 entry (same commit).
+- **2026-08-09** — todo 9 (Binance listing/history-length vs regime-window cross-reference) DISPATCHED + DONE: read-only
+  research, no code shipped. Live-queried Binance `fapi/v1/exchangeInfo` (`onboardDate`) +
+  `fapi/v1/klines?interval=1d&startTime=0` (first real daily candle) for XAU/XAG/COPPER/SPX/SPY/NDX, cross-referenced
+  against the source doc's own ~11-12mo NET-basis regime window (2025-07-01→2026-06-30). **XAU/XAG/COPPER/SPY** are real
+  perps with only 23-55% overlap with that window (each listed partway through it) — their SLIM/NEGATIVE verdicts are
+  regime-conditional, not proven permanent (the same table's CL -20% backwardation reading is this doc's own proof that
+  commodity regimes flip). **SPX**'s nominal 100% coverage is a false signal: Binance `SPXUSDT` is confirmed live to be
+  the SPX6900 meme coin (`underlyingType=COIN`/`Meme`), not an S&P-500 instrument — matches batch11 todo 2's independent
+  finding, restated here because it undermines this todo's own coverage metric for that row. **NDX** has no Binance perp
+  at all (confirmed via a full `exchangeInfo` symbol-list grep) and never had a NET-basis row in the source doc to begin
+  with. No universe/backtest change made, per this todo's explicit scope. Full per-symbol table + evidence:
   `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` Progress Log, 2026-08-09 entry (same commit).
