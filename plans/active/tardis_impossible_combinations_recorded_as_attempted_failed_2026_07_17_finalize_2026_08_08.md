@@ -60,12 +60,23 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify the vendor-catalog request gate (P0) landed.** Confirm a real commit (repo@sha) wires the
-      per-venue Tardis catalog cache (`GET /v1/exchanges/<venue>`, refreshed daily) into the shard-enumeration/
+- [x] ✅ [REVIEW] P1. **Re-verify the vendor-catalog request gate (P0) landed.** Confirm a real commit (repo@sha) wires
+      the per-venue Tardis catalog cache (`GET /v1/exchanges/<venue>`, refreshed daily) into the shard-enumeration/
       request-generation path so a (symbol, data_type, date) combination failing the 3-condition gate (symbol in catalog
       AND data_type in symbol.dataTypes AND availableSince<=date<=availableTo) is never requested and never recorded as
       any capture_status. Repo: market-tick-data-service. **Done when**: the source doc's `[CODE] P0` checkbox is `[x]`
-      with a verified repo@sha citation.
+      with a verified repo@sha citation. — **RE-VERIFIED 2026-08-09 (slot-24)**: source doc's `[CODE] P0` checkbox is
+      `[x]`, citing `market-tick-data-service@8e406dbb` + `@07cafbbb` + follow-up `@ca5be7d8` — all 3 confirmed live
+      ancestors of `origin/live-defi-rollout` (`git merge-base --is-ancestor`). Read the shipped
+      `tardis_vendor_catalog.py`: implements the 3-condition gate exactly as specced (symbol-in-catalog AND
+      data_type-in-`dataTypes` AND `availableSince<=date<=availableTo`, sourced from `datasets.symbols[]` per the
+      `ca5be7d8` fix). Confirmed WIRED (not just defined): `tardis_batch_download._build_per_symbol_tasks` calls
+      `is_allowed_by_vendor_catalog` before building each `PerSymbolTask` — a gated-out pair never becomes a task (never
+      requested) and is recorded via `emit_gate_manifest` -> `record_empty(reason=EXPECTED_INSTRUMENT_NOT_LISTED)`, i.e.
+      `capture_status=empty_confirmed` (honest absence), never `attempted_failed` — matches the issue's intent
+      (denominator-safe, non-retryable), not a literal zero-record (the plan's "never recorded as any capture_status"
+      phrasing is a loose paraphrase of "never recorded as attempted_failed"). Test coverage confirmed:
+      `tests/unit/test_tardis_vendor_catalog.py` + `tests/unit/test_tardis_batch_download_vendor_catalog_gate.py`.
 - [ ] [REVIEW] P1. **Re-verify the `--apply` purge (P1) ran.** Confirm the sizing script
       (`reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py`) was re-run fresh (counts drift per its own note)
       immediately before `--apply`, the reversibility check (`softDeletePolicy.retentionDurationSeconds` ≥604800s) was
@@ -85,3 +96,10 @@ context_scope:
 ## Progress Log
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **2026-08-09 (slot-24, task
+  `tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize-05ddc8158136`)**: flipped todo 1
+  (`[REVIEW]` P0 vendor-catalog gate re-verify) — independently confirmed
+  `market-tick-data-service@8e406dbb`/`@07cafbbb`/`@ca5be7d8` are live on `origin/live-defi-rollout`, read the shipped
+  `tardis_vendor_catalog.py` gate + its wiring into `tardis_batch_download._build_per_symbol_tasks`, and confirmed test
+  coverage exists for both. See checkbox note for full evidence. Todos 2-3 remain (sequential — not yet dispatched to
+  this slot).
