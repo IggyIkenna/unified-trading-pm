@@ -1,14 +1,14 @@
 ---
 doc_type: issue
-title: Review agents' context signal has no fresh source — they never heartbeat and are excluded from the out-of-band sample
+title:
+  Review agents' context signal has no fresh source — they never heartbeat and are excluded from the out-of-band sample
 summary: >-
-  A review agent's context_used_pct comes from its SlotRow, but review agents never post to
-  /api/slots/<N>/heartbeat at all (worker_liveness says so explicitly), so the column only advances via the
-  separately-scheduled, spinner-gated pane sample in WorkerLivenessKicker. The 2026-08-08 out-of-band same-tick pane
-  read that fixed exactly this latency class for workers was deliberately NOT extended to review, and review's force
-  path is idle-gated on top. Live 2026-08-09: a 4.3h /api/activity window held ZERO context-lifecycle events for
-  role=review — the same silence that preceded the main-agent incident, and with the same shape of cause (no fresh,
-  self-owned measurement source).
+  A review agent's context_used_pct comes from its SlotRow, but review agents never post to /api/slots/<N>/heartbeat at
+  all (worker_liveness says so explicitly), so the column only advances via the separately-scheduled, spinner-gated pane
+  sample in WorkerLivenessKicker. The 2026-08-08 out-of-band same-tick pane read that fixed exactly this latency class
+  for workers was deliberately NOT extended to review, and review's force path is idle-gated on top. Live 2026-08-09: a
+  4.3h /api/activity window held ZERO context-lifecycle events for role=review — the same silence that preceded the
+  main-agent incident, and with the same shape of cause (no fresh, self-owned measurement source).
 status: open
 nature: issue
 asset_group: [ao]
@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [agent-orchestrator, context, compaction, review-agent, worker-lifecycle]
 related:
   [
-    /plans/active/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
+    /plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
     /plans/active/issues/ao_main_review_force_compact_idle_gate_unreachable_2026_08_09.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]
@@ -46,7 +46,7 @@ context_scope:
   [
     agent-orchestrator/server/context_lifecycle.py,
     agent-orchestrator/server/worker_liveness/__init__.py,
-    /plans/active/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
+    /plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
   ]
 ---
 
@@ -54,34 +54,34 @@ context_scope:
 
 ## The gap
 
-`context_lifecycle._read_pct` treats review as slot-bound and reads `SlotRow.context_used_pct` straight from the DB.
-For a task worker that value is genuinely self-reported (every `/progress`, `/done`, `/heartbeat` posts it). For a
-review agent it is not: `server/worker_liveness/__init__.py` states in its own comment that a slot-bound review agent
-*"never posts to `/api/slots/<N>/heartbeat` at all"*. So review's column can only ever advance through
-`WorkerLivenessKicker`'s separately-scheduled, spinner-gated pane sample.
+`context_lifecycle._read_pct` treats review as slot-bound and reads `SlotRow.context_used_pct` straight from the DB. For
+a task worker that value is genuinely self-reported (every `/progress`, `/done`, `/heartbeat` posts it). For a review
+agent it is not: `server/worker_liveness/__init__.py` states in its own comment that a slot-bound review agent _"never
+posts to `/api/slots/<N>/heartbeat` at all"_. So review's column can only ever advance through `WorkerLivenessKicker`'s
+separately-scheduled, spinner-gated pane sample.
 
-The 2026-08-08 fix (`ao_worker_context_force_compact_blind_to_tool_heavy_stretches`) added a same-tick, out-of-band
-pane read inside `_read_pct` precisely because depending on another subsystem's cadence let a session climb
-un-compacted. That fix was scoped to workers on purpose — `_read_pct`'s docstring says *"Review is deliberately NOT
-extended here — its force path stays idle-gated and already has no lower-latency need for this; keeping the blast
-radius to exactly the diagnosed gap."*
+The 2026-08-08 fix (`ao_worker_context_force_compact_blind_to_tool_heavy_stretches`) added a same-tick, out-of-band pane
+read inside `_read_pct` precisely because depending on another subsystem's cadence let a session climb un-compacted.
+That fix was scoped to workers on purpose — `_read_pct`'s docstring says _"Review is deliberately NOT extended here —
+its force path stays idle-gated and already has no lower-latency need for this; keeping the blast radius to exactly the
+diagnosed gap."_
 
 That reasoning is now questionable for two measured reasons:
 
-1. The main-agent incident (2026-08-09) showed exactly what happens to a role whose only context signal is a
-   second-hand one — 4.3 hours of silence and a run to the model's hard limit.
+1. The main-agent incident (2026-08-09) showed exactly what happens to a role whose only context signal is a second-hand
+   one — 4.3 hours of silence and a run to the model's hard limit.
 2. In the same 4.3h census, `role=review` logged **zero** context-lifecycle events, versus 132 for workers. As with
    main, that silence is currently AMBIGUOUS — it may mean review never crossed 60%, or that its signal never moved.
    Nothing distinguishes those today, which is itself the defect.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Measure the staleness directly: for every review slot, compare `SlotRow.context_used_pct` against
-      a fresh `context_probe` read of the same session, and record both plus the age of the last write to the column.
-      Done-when: the Progress Log carries the DB-vs-measured delta for each review slot over at least 3 samples an
-      hour apart.
-- [ ] [BACKEND] P1. Give review a fresh, self-owned source on the policy's own cadence — extend `_read_pct`'s
-      same-tick out-of-band read to `role == "review"` (a plain context%% parse, never `classify_pane` /
+- [ ] [BACKEND] P1. Measure the staleness directly: for every review slot, compare `SlotRow.context_used_pct` against a
+      fresh `context_probe` read of the same session, and record both plus the age of the last write to the column.
+      Done-when: the Progress Log carries the DB-vs-measured delta for each review slot over at least 3 samples an hour
+      apart.
+- [ ] [BACKEND] P1. Give review a fresh, self-owned source on the policy's own cadence — extend `_read_pct`'s same-tick
+      out-of-band read to `role == "review"` (a plain context%% parse, never `classify_pane` /
       `_pane_has_child_processes`, so review's idle-VERDICT contract is untouched), persisting ratchet-up only exactly
       as the worker path does. Done-when: a unit test proves a review target whose SlotRow is stale still reads the
       measured value, and `tests/test_context_lifecycle.py`'s idle-check ban still passes.

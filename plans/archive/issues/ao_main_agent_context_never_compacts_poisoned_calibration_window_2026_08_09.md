@@ -10,7 +10,7 @@ summary: >-
   with calibrated_window=2,614,639 against a ~937K reality, so main's real 99% measured 26% and no threshold fired. It
   hit main and spared the fleet because workers keep a self-reported SlotRow floor and main, having no SlotRow, had only
   the poisoned probe. Code fix shipped; live validation and the codex update remain.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -35,7 +35,7 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 assigned_role: backend_engineer
 drift_direction: fix-regression
-resolved_by:
+resolved_by: unified-trading-pm (slot 4, this session) — see Progress Log; all 4 todos closed across slots 4/18/19/22
 locked_by:
 locked_since:
 supersedes:
@@ -146,9 +146,14 @@ post-fix reports 68%. Tests: `tests/test_context_probe.py::test_the_measured_poi
       already correctly overridden by each target's own self-report floor (`_main_pct` for main, `SlotRow` for workers).
       No registry/model change made. Full detail in `/codex/04-architecture/agent-orchestrator-worker-liveness.md` §
       "Context-window learning is per-model; per-session divergence is expected and already floored".
-- [ ] [DOCS] P1. Post-phase codex audit: fold the calibration-source contract (only CLI-rendered percentages may
+- [x] ✅ [DOCS] P1. Post-phase codex audit: fold the calibration-source contract (only CLI-rendered percentages may
       calibrate) and main's AgentRow floor into `/codex/04-architecture/agent-orchestrator-worker-liveness.md`.
-      Done-when: the SSOT states both rules and cites this incident.
+      Done-when: the SSOT states both rules and cites this incident. — **DONE 2026-08-09 (slot 4, backend_engineer)**:
+      added § "Calibration-source contract + main's AgentRow floor" stating both rules (calibration-source contract —
+      only `_CONTEXT_USED_RE`/`_AUTO_COMPACT_RE` may feed `context_probe.observe()`'s `pane_pct=`, never the
+      `_TOKEN_USAGE_RE` heuristic; main's `_main_pct()` floors the measured probe on its own
+      `AgentRow.context_used_pct`, mirroring the worker `SlotRow` floor), citing this incident by name —
+      `unified-trading-pm@<sha>`.
 
 ## Progress Log
 
@@ -189,6 +194,19 @@ post-fix reports 68%. Tests: `tests/test_context_probe.py::test_the_measured_poi
     poisoned entry from the root-cause section above really was purged out-of-band and nothing has recalibrated it since
     (the code fix now blocks a bad recalibration at write time regardless). **Conclusion: no other poisoned
     `calibrated_window` entry exists in the live registry.** Every entry is within the plausibility bound.
+
+- **2026-08-09 (slot 4, backend_engineer)** — Closed the "post-phase codex audit" todo, the last remaining item on this
+  issue. Added a new § "Calibration-source contract + main's AgentRow floor" to
+  `/codex/04-architecture/agent-orchestrator-worker-liveness.md` (before the existing "Context-window learning is
+  per-model" section from the slot-19 entry below, which already assumed this fix but never stated the two rules
+  themselves). The new section states: (1) the calibration-source contract — only `_CONTEXT_USED_RE`/`_AUTO_COMPACT_RE`
+  CLI-rendered percentages may feed `context_probe.observe()`'s `pane_pct=` via `derive_calibration_pct`, never the
+  `_TOKEN_USAGE_RE` token-heuristic branch of `derive_context_used_pct` (which remains a valid reading, never a
+  calibration source), plus the `_calibration_is_plausible` 1.5x defense-in-depth bound as a second layer; (2) main's
+  AgentRow floor — `_main_pct()` takes `max(measured probe, AgentRow.context_used_pct)`, mirroring the worker
+  `SlotRow.context_used_pct` floor (`_read_pct`) that is why workers kept firing correctly throughout the incident while
+  main did not. Both rules cite this incident by name. All 4 todos on this issue are now closed; all fixes were already
+  shipped/verified/documented by prior sessions (slots 18/19/22) — this todo was purely the codex-SSOT write-up.
 
 - **2026-08-09 (slot 19, backend_engineer)** — Closed the "per-account/per-session window" todo. This slot also resolves
   directly onto the orchestrator VM (root `agent-orchestrator` clone, HEAD `a272e95`). Read

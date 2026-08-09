@@ -22,7 +22,7 @@ referenced_by:
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
-last_reviewed: 2026-07-30
+last_reviewed: 2026-08-09
 code_refs:
   [
     agent-orchestrator/server/worker_liveness_watchdog.py,
@@ -679,6 +679,45 @@ Flow:
   #agent-orchestrator-alerts with an `/accounts` deep-link (sibling of `notify_all_accounts_unusable`).
 
 SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md` § "Operator follow-up (2026-06-22)".
+
+---
+
+## Calibration-source contract + main's AgentRow floor (2026-08-09, `ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09`)
+
+**The incident.** `orch-agent-main` sat at 99% context for 4.3 hours with zero `context_lifecycle` events for
+`role=main` (132 fired for workers in the same window) because `context_probe.observe()` latched a poisoned
+`calibrated_window=2,614,639` for `claude-sonnet-5` against a ~937K true window (2.8x) — monotonic, top-precedence,
+never re-validated, so the one bad write was permanent and fleet-wide. It hit only main because workers have a
+`SlotRow.context_used_pct` self-report floor and main did not.
+
+**Rule 1 — calibration-source contract: only CLI-rendered percentages may calibrate.**
+`worker_liveness._derive_context_used_pct(pane_text)` has three branches: (1) `_CONTEXT_USED_RE` ("N% context used"),
+(2) `_AUTO_COMPACT_RE` ("N% until auto-compact", inverted), (3) `_TOKEN_USAGE_RE` ("↑ N.Nk tokens") divided by a
+hardcoded `_DEFAULT_CONTEXT_WINDOW_K` guess. Branches 1-2 are the CLI's OWN rendered figure — authoritative. Branch 3 is
+a heuristic that assumes the window it is trying to measure. Feeding `context_probe.observe(..., pane_pct=...)` a
+branch-3 value was the root cause: `2,614,639 × 0.26 = 679,806`, a `pane_pct=26` recorded when the session actually held
+~679,806 tokens. **Fix**: `derive_calibration_pct(pane_text)` is split out of `derive_context_used_pct()` and returns
+ONLY branches 1-2 (`None` on branch-3-only text). Every call site that feeds `context_probe.observe()`'s `pane_pct=`
+MUST use `derive_calibration_pct`, never `derive_context_used_pct` — the latter remains a valid READING (e.g. for
+display / non-calibrating comparisons) but is never a calibration source.
+
+**Defense-in-depth**: `context_probe._calibration_is_plausible()` additionally rejects any calibration exceeding
+`_MAX_CALIBRATION_OVERSHOOT` (1.5x) of `max(model_tier prior, observed watermark)` — this bound exists specifically
+because `calibrated_window` is monotonic and never re-validated, so a single future caller getting the source wrong must
+still be caught at the write site, not rely on every caller forever being correct.
+
+**Rule 2 — main's measured context probe is floored by its own `AgentRow.context_used_pct` self-report, mirroring the
+worker ratchet.** Workers already computed `max(SlotRow.context_used_pct, probe)` (`_read_pct`) — their self-reported DB
+value kept the truth even while the registry was poisoned, so worker forced-compacts kept firing at 60% throughout the
+incident. Main has no `SlotRow`; before the fix it consulted the measured probe ALONE. `context_lifecycle._main_pct()`
+now takes `max(measured probe, AgentRow.context_used_pct)` — main's `AgentRow.context_used_pct` is the CLI's own figure,
+reported by main every tick, independent of the learned-window registry. Taking the max means a future learned-window
+error can only ever fire the compaction policy EARLY, never blind it — the same guarantee the worker path already had.
+
+Both fixes are defense-in-depth on top of each other, not alternatives: rule 1 stops a bad write at the source; the
+`_calibration_is_plausible` bound catches a bad write that slips past rule 1 anyway; rule 2 means even a fully poisoned
+registry can no longer blind main specifically, because main's own self-report is an independent floor. Tests:
+`tests/test_context_probe.py::test_the_measured_poisoning_case_is_rejected` and siblings.
 
 ---
 
