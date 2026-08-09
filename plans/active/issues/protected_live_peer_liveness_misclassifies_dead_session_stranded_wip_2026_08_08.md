@@ -101,9 +101,20 @@ context_scope: [agent-orchestrator/server/dirty_state.py, agent-orchestrator/ser
       — if one exists, the ping is proven stale and the function returns `False` regardless of the raw window check.
       Added 4 regression tests (one per death-event type + one predates-ping negative case) to
       `tests/test_dirty_state_resolution.py`. Full `quality-gates.sh` green (2827 passed).
-- [ ] [BACKEND] P2. Add a reconciliation path for orphaned dirty state in a repo the CURRENT fresh session on that slot
-      isn't using — either surface it in the blocked/review queue for a worker to explicitly inherit, or extend the idle
-      path to detect+flag (not silently ignore) pre-existing dirty state in sibling repos on the same slot.
+- [x] ✅ [BACKEND] P2. Add a reconciliation path for orphaned dirty state in a repo the CURRENT fresh session on that
+      slot isn't using — either surface it in the blocked/review queue for a worker to explicitly inherit, or extend the
+      idle path to detect+flag (not silently ignore) pre-existing dirty state in sibling repos on the same slot. —
+      agent-orchestrator@9a5506f. Added `WorkerLivenessWatchdog._flag_orphaned_sibling_dirty_repos` (runs every tick
+      alongside `_sweep_dirty_slots`): scoped to slots WITH a live tmux session (exactly the slots `_sweep_dirty_slots`
+      skips outright), it walks `check_slot_clean` and flags a dirty repo as orphaned iff none of its dirty files were
+      touched within `RECENT_DIRTY_MTIME_SECONDS` (the same mtime-recency signal `_liveness.py` already trusts to mean
+      "actively being edited right now"). Strictly read-only — logs `orphaned_sibling_dirty_repo_detected` /
+      `orphaned_sibling_dirty_repo_resolved` (state-transition dedup via a new `_orphaned_sibling_dirty_flagged`
+      tracker, mirroring the existing `_burn_flagged` pattern — fires once per episode, not once per tick) so a
+      human/review worker can explicitly triage + inherit it, matching the todo's "detect+flag, not silently ignore"
+      option. 4 new tests in `tests/test_watchdog_dirty_sweep.py` (flags a stale sibling-dirty repo under a live
+      session, resolves once cleaned, skips a recently-edited repo, no-ops when no live session owns the slot). Full
+      `quality-gates.sh` green (2827 backend + 262 dashboard tests).
 - [ ] [REVIEW] P2. Verify the 2 backup branches (`wip-preserve/orchestrator-slot-12-89f525f7`,
       `wip-preserve/orchestrator-slot-12-89f525f7-uncommitted`) contain the expected content, then route a worker to
       cherry-pick/rebase the taxonomy + stalled-head-detection work onto current `live-defi-rollout` (it is 6+ commits
@@ -122,3 +133,5 @@ context_scope: [agent-orchestrator/server/dirty_state.py, agent-orchestrator/ser
   `execution_scope: orchestrator-agent` directly (not `NA`) — the [BACKEND] todos are bounded/determinable (read a
   specific file, fix a specific classification gap), matching AO-eligibility criteria, and severity (active work-loss
   risk on a liveness-protection mechanism) justifies immediate dispatch over an ask-first NA default.
+- 2026-08-09 (slot 19, backend_engineer): Landed todo 2 — agent-orchestrator@9a5506f. See the checkbox above for the
+  full implementation summary.
