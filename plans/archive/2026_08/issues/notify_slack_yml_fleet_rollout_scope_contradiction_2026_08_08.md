@@ -12,7 +12,7 @@ summary: >-
   Running the literal rollout instruction today would have resurrected 20 dead workflow-call files fleet-wide as a
   silent regression of yesterday's cleanup. Caught before any push; reverted; the actual bugfix was scoped down to the 2
   genuine remaining consumers (unified-trading-pm, deployment-service) instead.
-status: open
+status: resolved
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -42,7 +42,7 @@ supersedes:
 superseded_by:
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: execution-service@9fbe2a42, strategy-service@92841614 (dead notify-slack.yml copies deleted, sole todo)
 source: >-
   Discovered while executing ci_satellite_ao_dispatch_batch6_2026_08_08.md todo 9 (fleet-propagate the SC2015 shellcheck
   fix to notify-slack.yml).

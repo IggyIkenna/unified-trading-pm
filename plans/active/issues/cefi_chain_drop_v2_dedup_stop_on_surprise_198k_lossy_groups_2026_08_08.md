@@ -25,7 +25,7 @@ scope: [engineer]
 tags: [cefi, manifest, duplicate, dedup, chain-drop, data-correctness, stop-on-surprise, big-finding]
 related:
   [
-    /plans/active/issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md,
+    /plans/archive/2026_08/issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md,
     /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]

@@ -858,6 +858,25 @@ a no-op"). Fix predates even the triage plan's creation — no code change neede
 against the full schema for real numbers, decide `--keep-chain` vs. repair vs. clean apply, then proceed to 2b (LATE
 renames) via direct Bash, then 2c, then 9.
 
+**cicd escalation agt-558c62 2026-08-09**: this doc's own checkbox-tracked "Deferred / handoff" list above (all `[x]`)
+was 0-open-todos-flagged by `check_archive_candidates.sh`'s ratchet as an archive candidate, but the "Deferred work
+after 2026-07-24 ~13:35Z" table two sections up its own row 9 ("Final 4-surface done-state re-proof + plan archival")
+still reads "Cannot be done yet" — a genuine checkbox-vs-prose gap, not a stale table. Live-verified this is not
+duplicate/orphaned tracking: `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` already carries the
+LIVE open todo for exactly this remaining work
+(`- [ ] [DATA] P2. Once the 2 blockers above resolve ..., re-run verify_cefi_canonical_4surface_2026_07_20.py for a clean PASS, then archive this doc + parent`).
+Adding an explicit todo here too so this doc's own checkbox state stops falsely reading as fully closed — archiving THIS
+doc (25+ corpus referrers, several near/at the 1000L line-cap, real risk of the exact broken-link/line-cap deadlock
+documented in `issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`) is out of scope for a
+one-shot CI-gate fix and belongs to whichever session closes out the sibling doc's own open todo above.
+
+- [ ] [DATA] P2. Final 4-surface done-state re-proof (Surface A/B/C/D all PASS on both probe instruments) + this doc's
+      own archival, once `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`'s open todo lands
+      (KRAKEN-SPOT LATE renames [2b] → MID window + colon_wire loop-until-dry [2c] → Surface-C v2 manifest apply [3] →
+      re-proof [9]). Tracked live on that sibling doc — do not duplicate-drive from here, just gate this doc's own
+      archival on it per that doc's own stated plan ("re-run verify_cefi_canonical_4surface_2026_07_20.py for a clean
+      PASS, then archive this doc + parent").
+
 ## Step 8 verdict (`/pre-compact` run interactively — operator present, called the stop; this closes out the `/autonomous` window)
 
 **Safe to compact/stop: YES.** All 3 repos (`unified-trading-pm`, `market-tick-data-service`, `instruments-service`)

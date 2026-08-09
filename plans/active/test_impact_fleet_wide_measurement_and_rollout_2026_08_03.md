@@ -33,6 +33,7 @@ estimate_class: research
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2.4
 assigned_role: infra
+effort: high
 drift_direction: advance-code
 sequential: true
 depends_on: []

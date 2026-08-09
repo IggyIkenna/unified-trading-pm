@@ -197,7 +197,7 @@ version.
     (`reason: "todo_blocked_pending_other_owner"`) without a false `[x]` flip — it does NOT remove the todo from the
     backlog the way `BLOCKED-<TOKEN>` does; whoever resolves the blocking work still needs to come back and either flip
     it for real or re-tag it. Source:
-    `/plans/active/issues/ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md`.
+    `/plans/archive/2026_07/issues/ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md`.
 - **No bare cross-doc section shorthand** _(2026-07-23, adversarial-review finding D:
   `sports_consolidated_closeout_2026_07_19.md` had todos citing `§A2`/`§T`/`§W`-style labels that only resolved against
   a DIFFERENT document's internal sections — meaningless to an agent dispatched just that one todo)._ A `§X` reference

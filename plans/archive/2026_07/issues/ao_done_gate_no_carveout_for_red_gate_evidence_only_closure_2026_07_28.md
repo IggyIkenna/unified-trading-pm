@@ -16,7 +16,7 @@ summary: >-
   confirmed live via two rejected calls (`reason: "cross_repo_pm_file_touched_no_checkbox_flip"` then `reason:
   "cross_repo_pm_log_clean"` on the same task, `data_completion_cefi-011`) even on a fully clean tree with
   already-pushed evidence commits.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -42,7 +42,7 @@ assigned_role: backend_engineer
 sequential: true # all 4 todos change the same file (server/verify.py) — same-file overlap, must serialise
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: agent-orchestrator@3839380 (all 4 todos [x], see Progress Log)
 locked_by:
 context_scope:
   [

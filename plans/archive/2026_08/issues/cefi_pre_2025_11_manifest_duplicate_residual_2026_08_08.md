@@ -8,7 +8,7 @@ summary: >-
   B=FAIL C=FAIL D=PASS]. Both failures are duplicate manifest rows on 2025-06-15 — a date BEFORE the `cefi-late-renames`
   migration's 2025-11-01 scope start, meaning this is a distinct, older population the current safe-residual work never
   touched, not a regression from anything done this session.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -28,7 +28,10 @@ priority: P2
 source: >-
   Discovered running the final 4-surface re-proof for cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md's
   resume sequence, slot 18, 2026-08-08.
-resolved_by:
+resolved_by: >-
+  instruments-service@e7d070c3 (scoped pre-2025-11-01 dedup apply, POST-APPLY GATE GREEN). Own scope fully closed; the
+  corpus-wide verify-PASS remainder is a separate, already-tracked population — see
+  /plans/active/issues/cefi_chain_drop_v2_dedup_stop_on_surprise_198k_lossy_groups_2026_08_08.md.
 locked_by:
 assigned_vm: planning
 assigned_role: data_engineering
