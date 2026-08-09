@@ -316,20 +316,20 @@ drift_direction: advance-code
       lacking a verified canonical twin.
 
       **STATUS 2026-08-09 (slot-16): the ACTUAL DELETE has NOT run — checked here only because this item's own
-                                                  disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
-                                                  future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
-                                                  bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
-                                                  prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
-                                                  2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
-                                                  hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
-                                                  threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
-                                                  loader, post-delete verification) and filed
-                                                  `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
-                                                  AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
-                                                  actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
-                                                  stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
-                                                  via that issue doc, not this line.
-                                                  verification actually complete.
+                                                      disposition is settled and its remaining execution work is EXTRACTED to a tracked issue doc (never mark a
+                                                      future task's own checkbox `[x]` off this entry).** The fresh re-confirm this item calls for surfaced a
+                                                      bigger gap than a spot-check: the referenced candidate list's cefi-freshness was never verified, the only
+                                                      prior audit tool proves twin EXISTENCE only (not crc32c content-equivalence, delete-safety protocol §1 Part
+                                                      2), and `launch-canonical-migration-vm.sh` has no generic dispatch for a new script category (2351-line
+                                                      hardcoded per-category bash). Shipped `instruments-service@3698dc819` (hardened `cleanup_legacy_twins.py`:
+                                                      threaded workers=32, `gcs_conditional_delete` race-safe, fresh §3a soft-delete retention gate, dual-schema
+                                                      loader, post-delete verification) and filed
+                                                      `/plans/active/issues/cefi_legacy_dup_delete_tooling_gap_2026_08_09.md` with the exact remaining
+                                                      AO-dispatchable todos (confirm/regenerate the candidate list, add a VM-launcher category, run + verify the
+                                                      actual delete). Operator confirmed (BLK-b3f5a97d, answer A) this tooling+issue-doc handoff is the right
+                                                      stopping point for this session — actual delete execution deferred to a dedicated VM-launch session tracked
+                                                      via that issue doc, not this line.
+                                                      verification actually complete.
 
 - [x] ✅ [BACKEND] P2. P2b-2 — wire the models data-status coverage consumer: extend the already-shipped
       `scope=mvp|could_exist|all` pattern (`deployment-api@3390c98`) to ml-service model output, reading the
@@ -419,13 +419,34 @@ drift_direction: advance-code
       file already uses ("this GCS-free test file stays GCS-free"). Full `quality-gates.sh` green (121s, sentinel
       `.qg_last_passed_sha=22a5f197ddf6f006de14cd2c7be81da0e7e1ecaa`); post-push ancestry independently verified on
       `origin/live-defi-rollout`.
-- [ ] [SCRIPT] P1. Widen the systemic unregistered-handler audit to the adapter-factory layer: diff every DeFi
+- [x] ✅ [SCRIPT] P1. Widen the systemic unregistered-handler audit to the adapter-factory layer: diff every DeFi
       protocol/adapter handler class registered in `factory.py` against `cli/main.py` + `deployment-service/scripts/vm/`
       invocation sites, classify each as built-but-unwired vs. genuinely-not-built (mirroring the already-fixed
       Deribit/Renzo precedent), and register+test-fix the built-but-unwired ones. Repo: instruments-service. Source:
       `instruments_completion_tracker_2026_07_06.md` (Stage-6 systemic-handler-audit item). Done when: every DeFi
       protocol/adapter in `factory.py` is checked against its dispatcher/invocation sites; built-but-unwired handlers
-      get register+test fixes; genuinely-not-built ones are filed as new issue docs (not built here).
+      get register+test fixes; genuinely-not-built ones are filed as new issue docs (not built here). —
+      market-tick-data-service@f21ae1eb (the real factory registry is `market_interface/factory.py` in
+      market-tick-data-service, not instruments-service — this todo's own `Repo:` label was stale/wrong, corrected
+      here). Diffed all 28 classes exported from `adapters/defi/__init__.py` against `VENUE_REGISTRY`'s 26 pre-existing
+      DeFi entries: exactly one was exported but never imported into `factory.py` at all — `CoinbaseCbEthAdapter`
+      (`lst_coinbase_adapter.py`, a fully-built 3-tier fallback adapter — Coinbase Advanced Trade API → AAVE Oracle →
+      DefiLlama — 26 passing unit tests, never registered). Registered it under `"coinbase_cbeth"` (bare `"coinbase"` is
+      already the CEFI spot `CoinbaseAdapter`'s key) + 2 new regression tests (`test_defi_coinbase_cbeth`,
+      `test_registry_has_coinbase_cbeth`) pinning the fix, mirroring the Deribit precedent's registration-test pattern.
+      **Finding that widened the audit further**: confirming this fix surfaced 6 sibling LST adapter classes
+      (Renzo/Puffer/RocketPool/Solblaze/Lido/EtherFi) that ARE already registered in `VENUE_REGISTRY` (since the
+      original 2026-06 DeFi adapter fan-out) but are never actually invoked anywhere in the codebase outside their own
+      test files — real LST-rate capture runs entirely through a separate, simpler on-chain-ABI mechanism
+      (`lst_rates_handler.py::_collect_evm_lst_rows` + `_EVM_LST_ABI_METADATA`) that doesn't call `get_adapter()` at
+      all. This doesn't fit the built-but-unwired/genuinely-not-built binary (they ARE wired and callable, just never
+      called by anything) — filed as a new issue doc rather than unilaterally deleting or further wiring what may be
+      intentionally-redundant fallback infrastructure:
+      `/plans/active/issues/defi_lst_adapter_factory_family_unused_by_production_path_2026_08_09.md` (assigned_vm: NA,
+      an operator design call — keep-and-wire vs delete-as-dead-code). Full local `market-tick-data-service` test suite
+      green except 2 confirmed pre-existing unrelated failures (reproduced identically on a clean stash of this diff:
+      `test_bucket_resolution_uses_category_tradfi`, `TestKalshiMarket::test_market_validates_against_ac_schema`); full
+      `quality-gates.sh` green, sentinel matches `f21ae1eb2fc5456bf9ca48bb7da214ecd66d2148`.
 - [ ] [CODE] P1. CF-5 — make instruments-service writers (non-sports asset_groups) emit typed `EmptyConfirmedReason`
       enum values at every empty-write call site, and route genuine fetch-failures to `attempted_failed` rather than
       `empty_confirmed` (the CF-11 swallow-sweep target). Repo: instruments-service. Source:
@@ -542,3 +563,10 @@ drift_direction: advance-code
   (today), 0 missing calendar days 2020-01-01..present, 0 `attempted_failed` for either venue. The original 2026-06-18
   backfill completed; the daily `cefi-fwd-daily-cron` VM kept it current since. No live/zombie VM found. See the item
   body for the full evidence. Checkbox flipped; no instruments-service commit, plan-flip only (verification-only item).
+- **2026-08-09 (adapter-factory unregistered-handler audit, slot 30)**: shipped `market-tick-data-service@f21ae1eb`
+  (registered `CoinbaseCbEthAdapter` in `factory.py`'s `VENUE_REGISTRY` + 2 regression tests). The todo's own `Repo:`
+  label (instruments-service) was stale — the real adapter-factory registry lives in market-tick-data-service; corrected
+  in the item body. Filed `/plans/active/issues/defi_lst_adapter_factory_family_unused_by_production_path_2026_08_09.md`
+  for the broader finding this fix surfaced (6 sibling LST adapters registered-but-never-invoked — an operator design
+  call, not a mechanical fix). Full `quality-gates.sh` green, ancestry-verified on `origin/live-defi-rollout`. Checkbox
+  flipped.
