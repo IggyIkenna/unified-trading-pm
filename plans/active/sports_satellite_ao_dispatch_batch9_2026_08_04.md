@@ -233,7 +233,10 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       shared-root-cause check result is recorded, the code fix lands, and a from-scratch
       `pipeline_e2e_check.py --asset-group SPORTS --data-types odds_horizon_bucket` force run against day=2026-04-14
       produces 0 `[partition_mismatch]` rejects for the SPORT888/BETONLINEAG/CORAL (`US_CATANZARO_1929-MODENA`) and
-      UNIBET (`SOUTHAMPTON-BLACKBURN`) cells.
+      UNIBET (`SOUTHAMPTON-BLACKBURN`) cells. **2026-08-09 (slot-2): grep+code-fix legs DONE
+      (`market-data-processing-service@551ca82`, unit-tested); e2e leg BLOCKED — see
+      [`mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md`](/plans/active/issues/mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md) +
+      the source doc's Progress Log for the full run evidence. Checkbox stays unflipped pending that fix.**
 - [ ] [DATA] P3. Root-cause the 216 residual poll-key-duplicate canonical sports MDT odds objects (1,266 duplicate-key
       groups where both home AND away team-id legs vary simultaneously, left untouched by the
       single-team-resolution-split rule shipped in `scripts/dedup_odds_api_poll_key_duplicates_2026_07_26.py`) and

@@ -375,11 +375,15 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
       truthy. Done-when: a from-scratch `pipeline_e2e_check.py --asset-group SPORTS --data-types odds_horizon_bucket`
       force run against day=2026-04-14 produces 0 `[partition_mismatch]` rejects for the SPORT888/BETONLINEAG/CORAL
       (`US_CATANZARO_1929-MODENA`) and UNIBET (`SOUTHAMPTON-BLACKBURN`) cells (this finding's repro instruments). (repo:
-      `market-data-processing-service`)
-- [ ] [DIAG] P3. Grep a findings-3/4 VM's `run.log` (e.g. `130846`/`134301`) for `[partition_mismatch]` to check whether
-      any of those 50-52 "Unknown error" instruments share this same venue-mismatch root cause, before assuming findings
-      3/4 and finding 5 are fully independent. Done-when: either a shared root cause is confirmed (fold the findings) or
-      the grep comes back empty (confirmed independent). (repo: `market-data-processing-service`)
+      `market-data-processing-service`) — **Code shipped 2026-08-09 (slot-2), e2e leg BLOCKED**: see Progress Log below.
+- [x] ✅ [DIAG] P3. Grep a findings-3/4 VM's `run.log` (e.g. `130846`/`134301`) for `[partition_mismatch]` to check
+      whether any of those 50-52 "Unknown error" instruments share this same venue-mismatch root cause, before assuming
+      findings 3/4 and finding 5 are fully independent. Done-when: either a shared root cause is confirmed (fold the
+      findings) or the grep comes back empty (confirmed independent). (repo: `market-data-processing-service`) — **DONE
+      2026-08-09 (slot-2)**: confirmed independent — grepped both implicated VM run.logs
+      (`mdps-backfill-sports-pcskip-20260801-130846-2bf067`,
+      `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067`, 175,912 / 184,214 lines respectively) for
+      `partition_mismatch` — 0 hits in both.
 
 ## Progress Log
 
@@ -520,3 +524,28 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   boundary — `tests/unit/test_live_workers_coverage2.py`. Full `quality-gates.sh` green on the shipped SHA
   (sentinel-verified). Finding 5's separate `[CODE] P2` fix+grep todo remains open (untouched by this pass) —
   `_build_candle_output_path`'s asset-group venue-correction gate is a different bug in a different function.
+
+- **2026-08-09 (slot-2, data_engineering — `sports_satellite_ao_dispatch_batch9-009`): Finding 5's CODE fix SHIPPED, e2e
+  verification leg BLOCKED on a newly-discovered tooling gap.** `market-data-processing-service@551ca82`: gated the
+  `input_venue.upper()` shortcut on `category != MarketAssetGroup.SPORTS` exactly as this todo specified. Added
+  regression test `test_sports_ignores_sport_token_input_venue_uses_bookmaker`
+  (`tests/unit/test_orchestration_workers.py`) reproducing this finding's exact repro instrument
+  (`FOOTBALL:SPORT888:MATCH_ODDS:SERIE_B:2026-27:US_CATANZARO_1929-MODENA::AWAY` with truthy sport-token
+  `input_venue="FOOTBALL"`) — asserts the output path now carries `venue=SPORT888/`, not `venue=FOOTBALL/`. Full
+  `quality-gates.sh` green, shipped via quickmerge (sentinel-verified on origin). The sibling `[DIAG] P3` grep-check
+  todo above is also DONE (flipped) — confirmed independent of findings 3/4.
+
+  **The todo's own done-when's e2e leg could NOT be completed this pass**: ran
+  `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket` (force+skip) twice
+  (first attempt blocked on an unrelated dirty-uv.lock tarball-staleness abort, resolved via a dirty-deps carve-out
+  commit `market-data-processing-service@bc19bac`). The retry's launched VM
+  (`mdps-backfill-sports-pipelinecheck-20260809-214758-d0c755`) exited 0 but processed ZERO candles — a
+  `SPORTS staleness guard: refusing derived output` false-trip, root-caused to `check_sports_raw_source_captured`
+  reading the instruments-store manifest bucket from the ambient `DEPLOYMENT_ENV=staging` (the launcher's
+  `--env staging` export) instead of the explicit prod tier the raw-tick read already uses — this fires BEFORE any
+  candle-write code (including this finding's fix) ever runs, for ANY SPORTS `pipeline_e2e_check.py` invocation, not
+  just this one. Filed as its own issue with root-cause + a fix-option A/B recommendation + a follow-up re-verify todo:
+  [`mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md`](/plans/active/issues/mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md).
+  Left this todo's checkbox UNCHECKED (its done-when is not yet met) rather than premature-flip it — the unit test above
+  proves the fix is correct at the function level, but the plan's stricter real-VM e2e proof is genuinely outstanding,
+  blocked on the linked issue's fix landing first.
