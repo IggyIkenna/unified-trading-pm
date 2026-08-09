@@ -11,7 +11,7 @@ summary: >-
   remainder work at `assigned_vm: NA` (the codex-freshness P0-A decision + dead-doctrine-ref judgment calls in the
   first; the cron-install operator-gated sub-item in the second) — so this plan's main job is to flip accurately and
   confirm neither is prematurely archived, then run the standard ritual on the batch pair itself.
-status: active
+status: complete # 2026-08-09 agt-a398c9 — all 3 todos done, batch6 archived
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -40,7 +40,6 @@ sequential: true
 drift_direction: advance-code
 depends_on: [infra_satellite_ao_dispatch_batch6_2026_08_02]
 gate_on_depends: true
-archive_exempt: true # THIS COMMIT ONLY — flip precedes archival per the flip/mv split HARD RULE, see next commit
 locked_by:
 locked_since:
 context_scope:
