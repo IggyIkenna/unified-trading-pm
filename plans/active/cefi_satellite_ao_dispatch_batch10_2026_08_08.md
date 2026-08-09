@@ -125,7 +125,7 @@ context_scope:
       `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` (Finding 8/10). **Done when**: each sampled
       pair is classified subset-confirmed (recommend a safe merge path, but do not execute it) or
       genuinely-distinct-content (recommend permanent leave-as-is), with results appended to the issue doc's Findings —
-      or the sample proves inconclusive and is escalated as `BLOCKED-OPERATOR-DECISION` with the evidence attached.
+      or the sample proves inconclusive and is escalated to the operator for a decision, with the evidence attached.
 - [x] ✅ [DATA] P2. **Check the terminal state of VM `mdps-backfill-cefi-20260807-130321` and re-run the per-cell
       symbol-count bundle audit** against the 84 targeted (6 BYBIT + 6 DERIBIT day) cells named in
       `issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md`. If the VM was preempted again, relaunch (SPOT

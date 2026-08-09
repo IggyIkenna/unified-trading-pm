@@ -104,14 +104,17 @@ remaining 34 accidental exclusions are real backlog debt (see Investigation find
 - [x] ✅ [DEVOPS] P1. Investigate whether the 26→34 jump is (a) real drift needing individual doc fixes or (b) a
       parser/marker-vocabulary regression still spreading. — unified-trading-pm (docs-only). **Verdict: case (a),
       confirmed stable, gate already GREEN** — see "Investigation findings" above.
-- [ ] [DOCS] P2. Fix the 3 cefi-tranche accidental exclusions:
+- [x] ✅ [DOCS] P2. Fix the 3 cefi-tranche accidental exclusions:
       `cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12_finalize_2026_08_08.md`,
       `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`, `cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize.md`.
       Per todo: either rewrite to avoid quoting a live-hold-marker token verbatim outside its own declared position (the
       false-positive shape — see "Investigation findings" above for the exact marker vocabulary this refers to;
       deliberately not respelled here, to avoid re-tripping this same gate on this very todo), or move a genuinely-live
       marker to open the checkbox line. Re-run `check_ao_dispatch_visibility_gate.py --json` after each doc to confirm
-      it drops off the flagged list. Repo: unified-trading-pm.
+      it drops off the flagged list. Repo: unified-trading-pm. **Done**: all 3 docs rewrote their quoted/mid-sentence
+      marker references (none were genuinely-live blocks) to avoid the literal `BLOCKED-CREDENTIALS` /
+      `BLOCKED-OPERATOR-DECISION` token outside a declared position; re-ran `dispatch_visibility_report` — all 3 dropped
+      off the flagged list, `check_ao_dispatch_visibility_gate.py` confirms `accidental_exclusions` 34→30, gate exit 0.
 - [ ] [DOCS] P2. Fix the 4 ci-tranche accidental exclusions: `ci_satellite_ao_dispatch_batch1_2026_07_26.md`,
       `ci_satellite_ao_dispatch_batch4_2026_07_31.md`, `ci_satellite_ao_dispatch_batch5_2026_08_02.md` (1 each),
       `ci_satellite_ao_dispatch_batch6_2026_08_08.md` (2). Same remedy as above. Repo: unified-trading-pm.

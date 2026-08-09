@@ -83,13 +83,12 @@ context_scope:
 - [ ] [REVIEW] P1. **Re-check the 32 non-batchable Deferred items from batch10 for cleared gates before batch11's
       Phase-1 re-triage** (per the skill's iterative-drain methodology — check the prior batch's Deferred section first,
       before spinning fresh Phase-1 agents). In particular: (a) has the operator ruled on
-      `issues/deribit_combo_perpetual_partition_move_2026_07_21.md`'s separate future review (the one
-      BLOCKED-OPERATOR-DECISION item)? (b) has `issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md`'s
-      conflicting active claim shipped or gone stale? (c) has
-      `issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s ON_DEMAND VM reached a terminal state? For
-      each item where the gate has cleared, record it explicitly as a "batch11 candidate," do NOT draft a todo here.
-      **Done when**: all 32 Deferred items have a dated re-check note (cleared → batch11 candidate, or still-blocked →
-      unchanged) in this finalize doc's Progress Log.
+      `issues/deribit_combo_perpetual_partition_move_2026_07_21.md`'s separate future review (the one item flagged for
+      an operator decision)? (b) has `issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md`'s conflicting
+      active claim shipped or gone stale? (c) has `issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s
+      ON_DEMAND VM reached a terminal state? For each item where the gate has cleared, record it explicitly as a
+      "batch11 candidate," do NOT draft a todo here. **Done when**: all 32 Deferred items have a dated re-check note
+      (cleared → batch11 candidate, or still-blocked → unchanged) in this finalize doc's Progress Log.
 - [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch10_2026_08_08.md`** via the standard 6-step ritual: confirm
       the Deferred/Archivable/Cross-tranche/Orthogonality-fixes sections (informational, never batch todos) need no
       separate migration → add the archive banner → run the codex-alignment check (batch10 creates no new durable
