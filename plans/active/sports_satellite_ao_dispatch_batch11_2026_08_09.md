@@ -124,7 +124,7 @@ outcome) or **stays behind** (judgment call, operator-gated, dependency-blocked,
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Audit whether `market-tick-data-service`'s `odds_api` HTTP client calls
+- [x] ✅ [SCRIPT] P2. **Audit whether `market-tick-data-service`'s `odds_api` HTTP client calls
       (`market_interface/adapters/sports/odds_api_adapter.py` and any sibling live connector,
       `live/connectors/odds_api_ws.py`) declare explicit connect/read timeouts on every outbound request** — a hung
       socket with no timeout is the leading hypothesis for the 5 consecutive silent VM hangs (~16-21 min each, no
@@ -176,3 +176,21 @@ outcome) or **stays behind** (judgment call, operator-gated, dependency-blocked,
   chain. One live GCS reversibility check (`sports_odds_stale_fixture_reinjection_2026_07_14.md`'s zombie-shard purge)
   was attempted but could not be executed this pass (stale/non-interactive `gcloud` auth on this host) — left open in
   its source doc, not extracted, consistent with every prior audit pass on that item.
+- **2026-08-09 (todo 1 — odds_api HTTP timeout audit, slot-18)**: NEGATIVE-RESULT AUDIT — every real outbound `odds_api`
+  HTTP call site already declares an explicit timeout; no code changes needed. Evidence:
+  `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:56-65`
+  (`_make_session()`) sets `kwargs.setdefault("timeout", BACKFILL_HTTP_TIMEOUT)` (line 63) on every freshly-constructed
+  `aiohttp.ClientSession` (line 64), where `BACKFILL_HTTP_TIMEOUT` (`market_tick_data_service/_http_timeouts.py:11`) =
+  `aiohttp.ClientTimeout(sock_connect=15, sock_read=60, total=120)`. All 5 real outbound calls in this adapter —
+  `fetch_sports` (:278), `get_markets` (:348), `get_prices` (:390), `_discover_fixtures` (:603), and the historical
+  fetch in `_run_league_fetch_loop` (:859) — obtain their session either directly via a fresh `_make_session()` call or
+  via the shared session `_fetch_all_leagues` opens at :557 (itself a fresh `_make_session()` construction, so it picks
+  up the same session-level default) — no call path bypasses the default. Sibling live connector
+  `market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py:309` (`_fetch_sport_odds`) passes an
+  explicit per-request `timeout=aiohttp.ClientTimeout(total=30)` on its one outbound call, independent of the session
+  default set (or not) in `_ensure_session()` (:258-262). Also checked `base_sports_adapter.py` and
+  `fixture_id_resolver.py` (both files this adapter imports) for any additional HTTP call sites — neither makes outbound
+  HTTP calls. Conclusion: the 5 silent VM hangs documented in
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` are NOT explained by a missing-timeout call site in
+  this adapter/connector pair — that doc's separate `PREFIX_IDLE_THRESHOLDS`/watchdog-window todo (explicitly deferred,
+  untouched here) remains the next avenue if the hang recurs. No repo touched; nothing to ship via quickmerge.
