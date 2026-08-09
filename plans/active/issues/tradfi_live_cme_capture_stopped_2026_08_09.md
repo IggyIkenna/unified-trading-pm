@@ -120,8 +120,32 @@ Relaunch the tradfi live producer and verify it sticks (infra craft, AO-eligible
       CME-market-hours-gated (unlike CeFi's 24/7 crypto venues the parent finding mirrors) and cannot be met before
       Globex opens — re-check after 22:00 UTC to confirm `captured` rows start flowing; the launch itself is healthy and
       correctly wired. (repo: deployment-service)
-- [ ] [INFRA] P1. Diagnose why the previous tradfi live VM stopped/was never relaunched after 2026-08-04 (preemption
-      without recovery vs. a crash vs. a manual stop) — check `/vm-preemption-billing-waste-audit`'s registry for a
-      matching preempted-without-resume entry for any `mtds-live-tradfi-*` instance name; if the watchdog/relaunch path
-      has a gap for this VM class specifically, file the systemic fix as its own todo in the parent hardening plan
-      rather than just relaunching once more. (repo: deployment-service, unified-trading-pm)
+- [x] ✅ [INFRA] P1. **Diagnosed (slot-5, 2026-08-09).** Root cause is NOT preemption — it's an unrecovered MANUAL
+      DELETE, over a month before capture actually went stale. `gcloud logging read` against `central-element-323112`
+      (Admin Activity, `protoPayload.resourceName:"mtds-live-tradfi"`, 60d freshness) shows the last real live producer,
+      `mtds-live-tradfi-cme-trades-20260623-095619`, was `v1.compute.instances.delete`'d by
+      `harshkantariya@odum-research.com` at **2026-06-30T06:53:16Z** — a deliberate authenticated API call, not a
+      `compute.instances.preempted` systemevent (confirmed zero preemption/guestTerminate events for any
+      `mtds-live-tradfi-*` name in `gcloud compute operations list` across the full 07-26→08-09 retention window, vs.
+      real preemption hits for unrelated `tradfi-bf-*` batch VMs in that same window — the mechanism IS visible when it
+      actually fires). No relaunch followed. The 24-row / `written_at=2026-08-04T08:51:36Z` figure in this doc's "What I
+      found" is therefore NOT this VM's own last write (it was already gone 5 weeks earlier) — it is some OTHER process
+      (backfill/reconciliation) writing to the same `pipeline_mode~live` shard-atom; worth a separate, smaller finding
+      but not blocking this diagnosis. **Systemic gap confirmed**: `deployment_service/vm_prefix_registry.py` registers
+      `mtds-live-tradfi-cme-trades-` as `LifecycleClass.LONG_LIVED_LIVE` (supposed to run 24/7, relaunch on exit), but
+      every existing watcher (`exit_code_fleet_monitor.py::sweep()`, `heartbeat_stall_watcher.py::sweep()`) only
+      evaluates VMs that ARE currently running/listed — neither has a check for "a registered `LONG_LIVED_LIVE` prefix
+      has ZERO live instances at all." A VM that's simply gone (deleted, not preempted, not crashed-while-still-running)
+      is structurally invisible to the fleet monitor. Filed the fix as todo below (parent hardening plan
+      `data_pipeline_hardening_self_monitoring_2026_06_22.md` is ARCHIVED, so per CLAUDE.md findings-triage this stays
+      in the still-open issue doc that surfaced it rather than reopening an archived plan). (repo: deployment-service,
+      unified-trading-pm)
+- [ ] [INFRA] P1. Add a "missing `LONG_LIVED_LIVE` producer" check to `deployment-service`'s fleet monitor sweep: for
+      every `vm_prefix_registry` entry with `lifecycle_class=LONG_LIVED_LIVE` that is NOT itself
+      `# non-relaunchable`/paper-only, verify at least one matching instance is RUNNING in the target cloud/project;
+      zero matches for longer than a reasonable grace window (long enough to cover a deliberate short maintenance
+      restart) is a CRITICAL finding routed through the existing actionable-alert path
+      (`/codex/04-architecture/agent-orchestrator-alerting.md`), not just a silent gap. Cite this issue doc
+      (`/plans/active/issues/tradfi_live_cme_capture_stopped_2026_08_09.md`) as the motivating incident — a producer can
+      be gone for 5+ weeks with zero page because nothing ever checks for absence, only for an unhealthy presence.
+      (repo: deployment-service)
