@@ -24,7 +24,7 @@ related:
   [
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch7_2026_08_09.md,
     /plans/active/ci_satellite_ao_dispatch_batch8_finalize_2026_08_09.md,
-    /plans/active/issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md,
+    /plans/archive/2026_08/issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
   ]
 created: "2026-08-09"
@@ -42,7 +42,7 @@ sequential: false
 drift_direction: none
 context_scope:
   [
-    /plans/active/issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md,
+    /plans/archive/2026_08/issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md,
     agents/infra.md,
     agents/cicd.md,
     scripts/docs/docspec.py,
@@ -77,7 +77,7 @@ source: >-
       and pick the best fit (mirror the judgment already used on the 2 docs fixed before the source issue was even
       filed: `infra` for host/VM-adjacent content, `cicd` for CI/CD-pipeline content) — never default every match to the
       same value. **Re-derive the live population fresh**
-      (`grep -l '^assigned_role: devops$' plans/active/*.md     plans/active/issues/*.md`) rather than trusting a static
+      (`grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md`) rather than trusting a static
       count — the corpus changes daily and already grew from 10 named docs at the source issue's filing time
       (2026-08-08) to 12 confirmed live as of this batch's own authoring (2026-08-09):
       `agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`,

@@ -17,7 +17,7 @@ tags: [ci, ao-dispatch, close-out, batch-8, satellite-docs, archival]
 related:
   [
     /plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md,
-    /plans/active/issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md,
+    /plans/archive/2026_08/issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"
@@ -45,7 +45,7 @@ drift_direction: none
 context_scope:
   [
     /plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md,
-    /plans/active/issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md,
+    /plans/archive/2026_08/issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md,
     /plans/active/task_template.md,
   ]
 ---
@@ -58,7 +58,10 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile batch-8 todo 1's source doc.** Batch-8 todo 1 ends with `Source:` naming
+- [x] ✅ [REVIEW] P1. **DONE (slot 11, 2026-08-09) — source doc
+      `assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md` flipped `[x]` citing
+      `unified-trading-pm@987cb57342` (ancestry-verified), `status: resolved`. Original ask below.** **Reconcile batch-8
+      todo 1's source doc.** Batch-8 todo 1 ends with `Source:` naming
       `issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md`. Flip that doc's `[DOC] P3` checkbox to
       `[x]` citing the batch-8 commit that shipped it — **verify the cited commit exists and is an ancestor of
       `origin/live-defi-rollout` before citing it** (`git merge-base --is-ancestor`). This is that source doc's ONLY
@@ -66,14 +69,16 @@ context_scope:
       edit). **Done when**: the checkbox is flipped with verified evidence and the doc's `status` reflects zero open
       work.
 - [ ] [DOC] P1. **Archive `ci_satellite_ao_dispatch_batch8_2026_08_09.md`** via the standard 6-step ritual (CLAUDE.md §
-      plan archival) — and since todo 1 above should leave
-      `issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md` with zero open work too, archive that doc
-      alongside it (per `task_template.md` §4's "(4) for a batch-style extraction plan, also check each SOURCE doc"
-      rule) → add the archive banner(s) → grep the corpus for every referrer of
-      `ci_satellite_ao_dispatch_batch8_2026_08_09` AND `assigned_role_devops_invalid_value_corpus_wide_2026_08_08` and
-      repoint each to its archived path → clear `locked_by` (already empty; confirm). **Done when**: both docs are in
-      `plans/archive/2026_08/`, every corpus referrer resolves, `check_reference_paths.py` has not regressed, and this
-      finalize doc is archived alongside them in the same commit.
+      plan archival). **`issues/assigned_role_devops_invalid_value_corpus_wide_2026_08_08.md` is ALREADY archived**
+      (done as part of todo 1 above, 2026-08-09 — the `check_archive_candidates`/`check_terminal_status_archived`
+      pre-commit gates hard-blocked landing todo 1's flip while that doc sat `status: resolved` + 0 open todos in
+      `plans/active/`, so its archival + corpus referrer repoint had to happen in the SAME commit as the flip; see that
+      doc's own archive banner + this plan's Progress Log) — do NOT redo it, just verify it's already at
+      `plans/archive/2026_08/issues/`. This todo now only needs: archive `ci_satellite_ao_dispatch_batch8_2026_08_09.md`
+      itself → add its archive banner → grep the corpus for every remaining referrer of
+      `ci_satellite_ao_dispatch_batch8_2026_08_09` and repoint each to its archived path → clear `locked_by` (already
+      empty; confirm). **Done when**: the batch8 doc is in `plans/archive/2026_08/`, every corpus referrer resolves,
+      `check_reference_paths.py` has not regressed, and this finalize doc is archived alongside it in the same commit.
 
 ## Codex SSOTs
 
@@ -86,3 +91,12 @@ context_scope:
 - **2026-08-09** — Drafted alongside `ci_satellite_ao_dispatch_batch8_2026_08_09.md`. Authored `status: active` per the
   established no-double-gate precedent; batch 8 itself is also authored `status: active` per this task's explicit
   dispatch instructions.
+- **2026-08-09 (review craft, slot 11)** — Todo 1 done. Verified `unified-trading-pm@987cb57342` (batch-8 todo 1's retag
+  commit) is an ancestor of `origin/live-defi-rollout` before citing it; re-ran the source doc's own done-when grep
+  myself (zero results, confirmed). Flipped the source doc's todo `[x]` with the verified citation and set its
+  `status: resolved`. **Correction to this entry**: `status: resolved` + 0 open todos made the source doc a hard
+  `check_archive_candidates`/`check_terminal_status_archived` pre-commit failure while sitting in `plans/active/` —
+  could not land the todo-1 commit at all without either archiving it or `archive_exempt: true`. Archived it properly in
+  the SAME commit (banner, `resolved_by` filled, referrers repointed) rather than exempting, since the work was already
+  in hand. Todo 2's text updated to reflect this — it now only archives the batch8 doc + this finalize plan itself. Todo
+  2 remains next, gated `sequential: true`, a separate dispatch.

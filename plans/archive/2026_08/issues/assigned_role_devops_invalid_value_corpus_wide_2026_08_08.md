@@ -9,7 +9,7 @@ summary: >-
   agents corrected their own doc in-place (one to `infra`, one to `cicd`, picked per that doc's actual subject matter)
   and flagged that the same invalid value likely exists elsewhere, without doing a corpus-wide sweep (out of scope for
   their dispatch). A precise grep (`grep -l '^assigned_role: devops$'`) confirms 10 more docs still carry it.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci, cross-cutting]
 stage: [meta]
@@ -36,11 +36,17 @@ estimate_class: refactor
 drift_direction: none
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: backend_engineer/review (slot 11, unified-trading-pm@987cb57342, 2026-08-09)
 context_scope: [agents/infra.md, agents/cicd.md, scripts/docs/docspec.py]
 ---
 
 # `assigned_role: devops` is not a valid role — 10 docs still carry it
+
+> **🟢 ARCHIVED (2026-08-09).** Sole todo done + verified: `unified-trading-pm@987cb57342` retagged all 15 (grown from
+> 10 at filing) live docs off the invalid `devops` value;
+> `grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md` returns zero results, confirmed.
+> Extracted-batch source doc — see `/plans/active/ci_satellite_ao_dispatch_batch8_2026_08_09.md` todo 1 for the shipping
+> work itself (not yet archived as of this doc's own archival — a separate, gated finalize-plan todo).
 
 ## What was found
 
@@ -80,12 +86,15 @@ separate times during future reclassification passes.
 
 ## Todos
 
-- **[DOC] P3. EXTRACTED 2026-08-09 — see `ci_satellite_ao_dispatch_batch8_2026_08_09.md` todo 1.** ~~Retag all 10 docs'
-  `assigned_role: devops` to the correct real role~~ — read each doc's actual subject matter and pick the best fit
-  (likely `cicd` for most, `infra` for host/VM-adjacent ones — mirror the judgment the 2 already-fixed docs used, don't
-  default all 10 to the same value without reading each). Validate against the live `agents/*.md` registry, never
-  hand-type a near-miss. **Done when**: `grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md`
-  returns zero results. Repo: unified-trading-pm.
+- [x] ✅ **[DOC] P3. DONE 2026-08-09 — see `ci_satellite_ao_dispatch_batch8_2026_08_09.md` todo 1.** Shipped:
+      `unified-trading-pm@987cb57342` (ancestry-verified `origin/live-defi-rollout`) —
+      `grep -l     '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md` returns zero results. ~~Retag
+      all 10 docs' `assigned_role: devops` to the correct real role~~ — read each doc's actual subject matter and pick
+      the best fit (likely `cicd` for most, `infra` for host/VM-adjacent ones — mirror the judgment the 2 already-fixed
+      docs used, don't default all 10 to the same value without reading each). Validate against the live `agents/*.md`
+      registry, never hand-type a near-miss. **Done when**:
+      `grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md` returns zero results. Repo:
+      unified-trading-pm.
 
 ## Codex SSOTs
 
@@ -93,6 +102,12 @@ separate times during future reclassification passes.
 
 ## Progress Log
 
+- **2026-08-09 (review craft, slot 11, ci_satellite_ao_dispatch_batch8_finalize todo 1)**: Batch-8 todo 1 (the extracted
+  retag work) shipped at `unified-trading-pm@987cb57342` — ancestry-verified an ancestor of `origin/live-defi-rollout`
+  before citing it. Re-ran the done-when grep myself:
+  `grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md` returns zero results, confirmed. This
+  was this doc's ONLY todo — flipped it `[x]` with the verified commit citation and set `status: resolved` (zero open
+  work). Archival is the finalize plan's next (sequential) todo.
 - **2026-08-09 (satellite-batch extraction)**: This doc's sole todo extracted verbatim into
   `ci_satellite_ao_dispatch_batch8_2026_08_09.md` todo 1 (checkbox above replaced with a citation pointer, per the
   `ci`-tranche satellite-batch-extraction pattern — this item's own `parent_epic` differs from the sibling
