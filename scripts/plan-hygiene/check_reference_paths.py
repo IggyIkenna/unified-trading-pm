@@ -30,9 +30,20 @@ semantics, not doc hygiene.
 
 Usage:
   python3 scripts/plan-hygiene/check_reference_paths.py [--quiet] [--update-baseline]
+  python3 scripts/plan-hygiene/check_reference_paths.py --only <path> [<path> ...]
 Exit 0 if both counts are <= their baseline. NEVER hand-raise a baseline entry — if a
 count needs to go up, something regressed; fix it instead. Ratchet DOWN as the
 pre-existing debt gets cleaned up: fix real violations, then re-run --update-baseline.
+
+``--only <paths>`` (2026-08-09, precommit migration): checks ONLY the given staged files
+for format/existence violations IN THEIR OWN content, no baseline math — same shape as
+check_terminal_status_archived.py/check_plan_operator_ruling_evidence.py --only. This
+ratchet previously had NO precommit-time presence (only the full corpus-wide baseline
+mode), so a docs(plans) commit introducing a bad-format or dangling reference had zero
+enforcement at commit time — root-caused after the existence-violation baseline grew
+86->95 in one evening via commits that never ran this check. A staged file whose OWN
+content has a badly-formatted or dangling /plans/.../codex/... reference is
+unconditionally wrong regardless of the rest of the corpus's pre-existing debt.
 """
 
 from __future__ import annotations
@@ -125,32 +136,79 @@ def extract_related_text(text: str) -> str:
     return rel_match.group(1) if rel_match else ""
 
 
+def _scan_file(p: Path, relpath: str) -> tuple[list[str], list[str]]:
+    """Format + existence violations for one file's own content. Shared by the
+    corpus-wide scan and --only so the two modes can never silently diverge on what
+    counts as a violation."""
+    fmt: list[str] = []
+    exist: list[str] = []
+    text = p.read_text(encoding="utf-8")
+
+    for m in BARE_CODEX_RE.finditer(text):
+        fmt.append(f"{relpath}: bare/relative codex ref '{m.group(0)}' — should be /codex/...")
+
+    related_text = extract_related_text(text)
+    for m in BARE_MD_RE.finditer(related_text):
+        preceding = related_text[: m.start()]
+        if not preceding.endswith("/"):
+            fmt.append(f"{relpath}: related: entry '{m.group(1)}' has no path — should be /plans/... or /codex/...")
+
+    for m in GOOD_REF_RE.finditer(text):
+        ref = m.group(0)
+        if not (PM_DIR / ref.lstrip("/")).is_file():
+            exist.append(f"{relpath}: '{ref}' does not resolve to a real file")
+
+    return fmt, exist
+
+
+def _run_only(paths: list[str], quiet: bool) -> int:
+    """Precommit-scoped mode: check exactly the given files, no baseline math. A
+    format/existence violation in a file you're actively staging is unconditionally
+    wrong regardless of the rest of the corpus's pre-existing backlog."""
+    format_violations: list[str] = []
+    existence_violations: list[str] = []
+    for raw in paths:
+        p = Path(raw)
+        if not p.is_absolute():
+            p = Path.cwd() / p
+        if not p.is_file():
+            continue
+        try:
+            relpath = p.relative_to(PM_DIR).as_posix()
+        except ValueError:
+            relpath = raw
+        fmt, exist = _scan_file(p, relpath)
+        format_violations.extend(fmt)
+        existence_violations.extend(exist)
+
+    if not quiet:
+        for v in format_violations:
+            print(f"  FORMAT    {v}")
+        for v in existence_violations:
+            print(f"  DANGLING  {v}")
+
+    n = len(format_violations) + len(existence_violations)
+    print(f"{'✅' if n == 0 else '❌'} check_reference_paths (--only): {n} violation(s) in staged files")
+    return 0 if n == 0 else 1
+
+
 def main() -> int:
     quiet = "--quiet" in sys.argv
     update = "--update-baseline" in sys.argv
+
+    if "--only" in sys.argv:
+        idx = sys.argv.index("--only")
+        return _run_only(sys.argv[idx + 1 :], quiet)
+
     format_violations: list[str] = []
     existence_violations: list[str] = []
     files = target_files()
 
     for p in files:
         relpath = p.relative_to(PM_DIR).as_posix()
-        text = p.read_text(encoding="utf-8")
-
-        for m in BARE_CODEX_RE.finditer(text):
-            format_violations.append(f"{relpath}: bare/relative codex ref '{m.group(0)}' — should be /codex/...")
-
-        related_text = extract_related_text(text)
-        for m in BARE_MD_RE.finditer(related_text):
-            preceding = related_text[: m.start()]
-            if not preceding.endswith("/"):
-                format_violations.append(
-                    f"{relpath}: related: entry '{m.group(1)}' has no path — should be /plans/... or /codex/..."
-                )
-
-        for m in GOOD_REF_RE.finditer(text):
-            ref = m.group(0)
-            if not (PM_DIR / ref.lstrip("/")).is_file():
-                existence_violations.append(f"{relpath}: '{ref}' does not resolve to a real file")
+        fmt, exist = _scan_file(p, relpath)
+        format_violations.extend(fmt)
+        existence_violations.extend(exist)
 
     baseline = load_baseline()
 

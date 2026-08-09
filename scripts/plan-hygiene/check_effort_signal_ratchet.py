@@ -29,6 +29,7 @@ non-silent default; forcing an explicit tier onto genuinely role-generic work is
 busywork) — the goal is that the silent-default population does not grow unattended.
 
 Usage: check_effort_signal_ratchet.py [--quiet] [--update-baseline]
+  check_effort_signal_ratchet.py --only <path> [<path> ...]
   --update-baseline   regenerate effort_signal_baseline.yaml from the CURRENT corpus
                        state. Run this ONLY after actually reviewing the new plans this
                        run flagged (declare effort:/thinking_tier: on the ones that need
@@ -36,6 +37,17 @@ Usage: check_effort_signal_ratchet.py [--quiet] [--update-baseline]
                        plans. A genuine raise still writes (with a loud warning), so a
                        real spike stays visible in the commit history.
 Exit 0 = current count <= baseline. Exit 1 = grew beyond baseline.
+
+``--only <paths>`` (2026-08-09, precommit migration): checks ONLY the given staged files,
+no baseline math — same shape as check_terminal_status_archived.py --only. This ratchet
+previously had NO precommit-time presence (only the full corpus-wide baseline mode), so a
+docs(plans) commit authoring a new living plan with assigned_role but no effort/
+thinking_tier had zero enforcement at commit time — root-caused after the baseline grew
+217->228 in under a day via commits that never ran this check. A newly-staged living plan
+with assigned_role and no effort/thinking_tier signal is unconditionally flagged
+regardless of the rest of the corpus's pre-existing population (declaring effort/
+thinking_tier explicitly, or accepting the role default deliberately, is still the
+author's call — --only just makes sure someone actually makes it, same as full mode).
 """
 
 from __future__ import annotations
@@ -88,22 +100,45 @@ def _frontmatter(text: str) -> dict[str, str]:
     return out
 
 
+def _is_silent_default(fp: Path) -> bool:
+    """True iff this plan is a living (draft/active) plan that declares assigned_role but
+    neither effort: nor thinking_tier:. Shared by the corpus-wide scan and --only so the
+    two modes can never silently diverge on what counts as a violation."""
+    if fp.name in _EXCLUDE_NAMES or fp.name.startswith("_") or fp.name.endswith(".HANDOVER.md"):
+        return False
+    fm = _frontmatter(fp.read_text(encoding="utf-8", errors="replace"))
+    if fm.get("doc_type") != "plan":
+        return False
+    if fm.get("status") not in _LIVING_STATUSES:
+        return False
+    if not fm.get("assigned_role"):
+        return False
+    return not (fm.get("effort") or fm.get("thinking_tier"))
+
+
 def _silent_default_plans() -> list[str]:
-    flagged = []
-    for fp in sorted(ACTIVE_DIR.glob("*.md")):
-        if fp.name in _EXCLUDE_NAMES or fp.name.startswith("_") or fp.name.endswith(".HANDOVER.md"):
+    return [fp.name for fp in sorted(ACTIVE_DIR.glob("*.md")) if _is_silent_default(fp)]
+
+
+def _run_only(paths: list[str], quiet: bool) -> int:
+    """Precommit-scoped mode: check exactly the given staged files, no baseline math."""
+    flagged: list[str] = []
+    for raw in paths:
+        p = Path(raw)
+        if not p.is_absolute():
+            p = Path.cwd() / p
+        if not p.is_file():
             continue
-        fm = _frontmatter(fp.read_text(encoding="utf-8", errors="replace"))
-        if fm.get("doc_type") != "plan":
-            continue
-        if fm.get("status") not in _LIVING_STATUSES:
-            continue
-        if not fm.get("assigned_role"):
-            continue
-        if fm.get("effort") or fm.get("thinking_tier"):
-            continue
-        flagged.append(fp.name)
-    return flagged
+        if _is_silent_default(p):
+            flagged.append(str(p))
+
+    if not quiet:
+        for name in flagged:
+            print(f"  SILENT-DEFAULT-EFFORT  {name}")
+
+    n = len(flagged)
+    print(f"{'✅' if n == 0 else '❌'} check_effort_signal_ratchet (--only): {n} violation(s) in staged files")
+    return 0 if n == 0 else 1
 
 
 def _load_baseline() -> dict[str, object]:
@@ -116,6 +151,10 @@ def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     update_baseline = "--update-baseline" in args
     quiet = "--quiet" in args
+
+    if "--only" in args:
+        idx = args.index("--only")
+        return _run_only(args[idx + 1 :], quiet)
 
     flagged = _silent_default_plans()
     count = len(flagged)
