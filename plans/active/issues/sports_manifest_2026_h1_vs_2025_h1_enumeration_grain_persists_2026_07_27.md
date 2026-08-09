@@ -490,11 +490,11 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
   present-set grain). Root-caused to a structural livelock in the sports v2 generator (several deterministic
   empty_confirmed branches never check `present_set` before yielding, so they regenerate identically every run and
   consume the entire `max_writes_per_run` cap before any new candidate is ever reached) — filed as its own issue with
-  full evidence + 3 candidate fix directions, left for operator triage:
-  `/plans/active/issues/sports_expected_universe_v2_halt_safety_livelock_no_present_set_gate_2026_08_09.md`. Chunk 3's
-  own done-when (EXIT_STATUS=0) is **not reachable** under the current code without one of that issue's fixes — did not
-  flip chunk 3's todo below; converting it to a blocked state instead (see banner). Did not touch chunks 4-7 pending the
-  operator's fix-direction decision.
+  full evidence + 3 candidate fix directions, left for operator triage (archived once resolved, see below):
+  `/plans/archive/2026_08/issues/sports_expected_universe_v2_halt_safety_livelock_no_present_set_gate_2026_08_09.md`.
+  Chunk 3's own done-when (EXIT_STATUS=0) is **not reachable** under the current code without one of that issue's fixes
+  — did not flip chunk 3's todo below; converting it to a blocked state instead (see banner). Did not touch chunks 4-7
+  pending the operator's fix-direction decision.
 - **infra worker (slot 33) 2026-08-09 (continued, post BLK-30815e45 answer)**: operator picked fix (B). Implemented at
   the write/count boundary rather than the generator (a generator-level gate broke the pre-existing
   `test_oscillation_guard_drops_season_gate_empty_over_captured_atom` regression test — that test proves the recurring
@@ -509,8 +509,9 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
 ## Follow-ups
 
 > **✅ RESOLVED 2026-08-09 (slot 33)**: operator picked fix (B) on `BLK-30815e45` — gate the write/count boundary on
-> `present_set` (see `sports_expected_universe_v2_halt_safety_livelock_no_present_set_gate_2026_08_09.md`, shipped
-> instruments-service@0d66cb926e0b). Chunk 3 re-run converged in ONE attempt (`EXIT_STATUS=0`, 17.6s, 144,586
+> `present_set` (see
+> `/plans/archive/2026_08/issues/sports_expected_universe_v2_halt_safety_livelock_no_present_set_gate_2026_08_09.md`,
+> shipped instruments-service@0d66cb926e0b). Chunk 3 re-run converged in ONE attempt (`EXIT_STATUS=0`, 17.6s, 144,586
 > genuinely-new rows — present-set correctly excluded the ~11.8M rows accumulated from the pre-fix duplicate-writing
 > attempts). Chunks 4-7 should now converge normally too — no longer blocked.
 

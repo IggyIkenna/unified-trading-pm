@@ -23,7 +23,7 @@ summary: >-
   leading segment of that backlog, never advancing past it — a structural livelock, not a slow-converging retry. This
   likely explains why chunk 2 (2021) needed 15+ retries across multiple sessions in the parent issue doc without ever
   being confirmed at EXIT_STATUS=0 in its own Progress Log (unlike chunk 1, a small window that converged in one shot).
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -44,7 +44,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 sequential: false
 locked_by:
-resolved_by:
+resolved_by: "instruments-service@0d66cb926e0b (slot 33, infra, 2026-08-09) — operator picked fix (B) on BLK-30815e45"
 source: >-
   Discovered while working sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists-7791d5492a8b's chunk 3/7
   follow-up todo (launch + verify chunk 3 of job (2)'s historical expected_unattempted backfill).
@@ -122,7 +122,8 @@ file for the same shape; that is explicitly out of this issue's scope (see Recom
 Three independent fix directions, left for operator/main triage rather than picked here (this is an architectural
 judgment call, not a bounded mechanical fix):
 
-- [ ] [OPERATOR] P1. Decide the fix direction for the halt-safety livelock:
+- [x] ✅ [OPERATOR] P1. Decide the fix direction for the halt-safety livelock — **RESOLVED 2026-08-09, operator answer
+      on `BLK-30815e45`: fix (B)**.
   - **(A) Raise `--max-writes-per-run` for a one-shot full-chunk run** on the affected large chunks (2021, 2022, and any
     future chunk with an oversized deterministic backlog) — cheapest code-wise (no logic change) but needs a real
     estimate of the deterministic backlog size first (unknown — could be many millions for sports' ~1,600+ league
@@ -141,9 +142,12 @@ judgment call, not a bounded mechanical fix):
     (no compute savings, only GCS-write/manifest-bloat savings) — halt-safety would still trip against a
     `total_candidates` count that doesn't reflect genuine new work unless the counter is also moved to only count
     NET-NEW rows. (repo: instruments-service, deployment-service for (A)'s launcher-side default if raised)
-- [ ] [DATA] P2. Once the operator picks a direction, re-attempt chunk 3/7 (2022) using it, then chunks 4-7 (which may
-      hit the same wall depending on catalogue size for 2023-2026). (repo: instruments-service or deployment-service
-      depending on direction picked)
+- [x] ✅ [DATA] P2. Once the operator picks a direction, re-attempt chunk 3/7 (2022) using it, then chunks 4-7 (which
+      may hit the same wall depending on catalogue size for 2023-2026). (repo: instruments-service or deployment-service
+      depending on direction picked) — fix shipped instruments-service@0d66cb926e0b (write/count-boundary dedup, not a
+      generator-level gate — see Progress Log). Chunk 3 re-run converged in ONE attempt (`EXIT_STATUS=0`, 17.6s, 144,586
+      genuinely-new rows). Chunks 4-7 not yet attempted by this session — left for the parent issue doc's own follow-up
+      todos, no longer blocked.
 - [ ] [DATA] P3. Re-verify chunk 2 (2021)'s actual convergence state — the parent issue doc's Progress Log never
       confirms an `EXIT_STATUS=0` for chunk 2, only partial-attempt row counts; given this finding, chunk 2 may ALSO be
       livelocked and its accumulated per-VM shards may be mostly duplicate content, not genuine progress. A direct
@@ -160,3 +164,16 @@ judgment call, not a bounded mechanical fix):
   fallback to bare `python3` lacking `deployment_service` — blocked every stale-tarball auto-republish with
   `ModuleNotFoundError`) — that fix IS real forward progress and is verified live on `origin/live-defi-rollout`; it just
   wasn't sufficient on its own to make chunk 3 converge, since this separate livelock bug was masked behind it.
+- **infra worker (slot 33) 2026-08-09 (resolved)**: operator answered `BLK-30815e45` with fix (B). Implementing (B) at
+  the GENERATOR level broke a pre-existing regression test
+  (`test_oscillation_guard_drops_season_gate_empty_over_captured_atom`) that proves the recurring daily cron + the
+  oscillation guard (a SEPARATE `captured_set`-keyed mechanism) both rely on the deterministic branches re-yielding
+  every run regardless of `present_set` — so the fix was relocated to the write/count boundary instead:
+  `_stream_write_v2_absent_rows` now accepts `present_set`/`present_cols` and skips an already-recorded candidate before
+  it counts toward `max_writes_per_run` or gets written, leaving the generator's oscillation-guard-compatible semantics
+  completely untouched. Shipped + verified on origin: instruments-service@0d66cb926e0b (234/234 pre-existing tests pass
+  unmodified + 2 new regression tests; full `quality-gates.sh` green). Re-ran chunk 3/7 of the parent campaign:
+  converged in ONE attempt (`EXIT_STATUS=0`, 17.6s, 144,586 genuinely-new rows — a present-set of 11.79M correctly
+  excluded the ~11M duplicate rows accumulated from the pre-fix attempts). Flipped chunk 3's todo in the parent issue
+  doc. Did not re-verify chunk 2 (2021)'s convergence state (the P3 follow-up below) or attempt chunks 4-7 — left for
+  the parent issue doc's own follow-ups, no longer blocked by this issue.
