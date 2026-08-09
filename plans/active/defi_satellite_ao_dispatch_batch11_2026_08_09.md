@@ -141,7 +141,8 @@ item here.
       `defi_track01_per_instrument_and_canon_id_2026_07_24.md` (DP-VM-003 follow-up todo, R3 section). Done when: a
       relaunch of `canonical-migration-defi-per-instrument` against already-migrated years no longer pays the growing
       full-year listing cost (verified via the run's own per-year timing log), `quality-gates.sh` green.
-- [ ] [SCRIPT] P1. **Implement the derivative_ticker/InstrumentType ratification** (per the 2026-08-08 operator ruling:
+- [x] ✅ [SCRIPT] P1. **Implement the derivative_ticker/InstrumentType ratification** (per the 2026-08-08 operator
+      ruling recorded in `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md` Track 1 line 456-458:
       `derivative_ticker` is the single canonical raw-funding home for all DeFi perps, and
       `lst`/`staking`/`yield_bearing` are ratified canonical `InstrumentType` grains) — drop the Drift-only 24h/7d/30d
       window aggregates in favor of `derivative_ticker` as the sole raw-funding capture path for all DeFi perps; confirm
@@ -149,7 +150,38 @@ item here.
       market-tick-data-service, unified-api-contracts. Source: `defi_track01_per_instrument_and_canon_id_2026_07_24.md`,
       Track 1 ("Implement the derivative_ticker/InstrumentType ratification" todo). Done when: the Drift-only window
       aggregates are removed, `derivative_ticker` is the sole raw-funding path for every DeFi perp venue, and a fresh
-      grep/manifest check confirms zero remaining case/alias drift on the 3 ratified grains.
+      grep/manifest check confirms zero remaining case/alias drift on the 3 ratified grains. **Already resolved
+      historically across two prior sessions; verified live 2026-08-09, no new code needed.** (1) Drift-only
+      `funding_rate_24h/7d/30d` aggregates: `market-tick-data-service@5f659c12` (2026-07-15) already replaced them with
+      `funding_rate`+`annualized_rate`; DRIFT-SOLANA was then removed from the platform entirely (2026-07-16 operator
+      ruling, SSOT `/codex/04-architecture/solana-defi-coverage.md`) — fresh grep confirms zero
+      `funding_rate_24h/7d/30d` hits and zero `drift_adapter`/`DRIFT-SOLANA` refs anywhere in MTDS/instruments-service
+      (only a denylist entry in `instruments-service/scripts/build_instrument_catalogue.py:1290-1291` guarding against
+      phantom re-entry, which is correct-by-design, not a gap). (2) `derivative_ticker` as sole raw-funding path for
+      DeFi perps: **there are currently zero live `asset_group="defi"` perp venues at all** — GMX-ARBITRUM/GMX-AVALANCHE
+      removed 2026-07-25, DRIFT/PACIFICA-SOLANA removed 2026-07-16, and
+      HYPERLIQUID/ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC were reclassified from `defi`→`cefi`
+      (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:467-473`, "On-chain CLOBs
+      (reclassified from DEFI"); live-verified every remaining perp_funding/derivative_ticker handler in
+      `market-tick-data-service/market_tick_data_service/cli/handlers/` (`perp_funding_handler.py`,
+      `_perp_funding_hyperliquid.py`, `onchain_perp_batch_handler.py`, `_perp_funding_kalshi_polymarket.py`) writes with
+      explicit `asset_group="cefi"` — none writes `asset_group="defi"` — so the "sole raw-funding path for all DeFi
+      perps" condition holds vacuously (empty venue set, not a violation). (3) `lst`/`staking`/`yield_bearing`
+      case/alias drift: the manifest-side check was already run live 2026-07-24 (sibling todo above, same source plan)
+      against a fresh 24,123,783-row read of the prod availability index — unanimous single-casing (lowercase) with 0
+      exceptions for all 11 `instrument_type` values including these 3. Fresh 2026-08-09 grep sweep across
+      market-tick-data-service/unified-api-contracts/features-service/deployment-api/unified-trading-library for
+      case-variant literals found no genuine drift: the `InstrumentType` enum's UPPERCASE members
+      (`LST`/`STAKING`/`YIELD_BEARING`, `unified-api-contracts/unified_api_contracts/_instrument_enums.py:59-63`) are
+      the consistent code-level SSOT; the manifest-write layer's lowercase `"lst"`/`"staking"`/`"yield_bearing"`
+      literals (e.g. `_lst_rates_write.py`, `lst_rates_handler.py`, `eigenlayer_rewards_handler.py`,
+      `vault_share_price_handler.py`) are a deliberate, separate persisted-partition-value convention (matches the
+      unanimous-lowercase manifest reality); the `INSTRUMENT_TYPE_TO_FOLDER`/`BLOB_PATH_INSTRUMENT_TYPE` dicts in
+      `deployment-api/deployment_api/utils/path_combinatorics.py` and
+      `features-service/features_service/delta_one/app/core/data_loader.py` map both `"LST"` and `"YIELD_BEARING"` enum
+      keys to the shared `"lst"` GCS folder (an intentional many-to-one physical-folder choice, keyed consistently by
+      the canonical uppercase enum, not a stray alias). No genuine mismatch (a query filtering one case while data is
+      stored in the other) found. No code shipped — verifying the premise, not writing a migration.
 - [ ] [SCRIPT] P1. **Wire RPC `factory()` lookup for the 206,107 bare SUSHISWAP/UNISWAP rows** (per the 2026-08-08
       operator ruling, option (b)) — build the adapter scaffold now regardless of provider-credential status per the
       External-Data-Always-Available rule: (1) enumerate the unique `pool_address` set from the raw MTDS parquet for
@@ -279,6 +311,18 @@ item here.
 
 ## Progress Log
 
+- 2026-08-09 (slot 2, data_engineering worker): Todo 6 (derivative_ticker/InstrumentType ratification) closed on live
+  re-verification, not new execution. Drift-only funding window aggregates were already removed
+  (`market-tick-data-service@5f659c12`, 2026-07-15) and the whole DRIFT-SOLANA vertical was removed platform-wide the
+  next day (2026-07-16 operator ruling) — fresh grep confirms zero `funding_rate_24h/7d/30d` or `drift_adapter` hits.
+  `derivative_ticker` as the sole DeFi-perp raw-funding path holds vacuously: zero venues remain in `asset_group="defi"`
+  with any perp capability today (GMX/DRIFT/PACIFICA removed; HYPERLIQUID/ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC
+  reclassified `defi`→`cefi`) — live-verified every current perp_funding/derivative_ticker handler writes explicit
+  `asset_group="cefi"`. `lst`/`staking`/`yield_bearing` case/alias drift: the manifest-side unanimous-casing check
+  already ran live 2026-07-24 (0 exceptions across 24.1M rows, same source plan); a fresh 2026-08-09 code-level grep
+  sweep across MTDS/UAC/features-service/deployment-api/UTL found the UPPERCASE `InstrumentType` enum members are the
+  consistent code SSOT and the lowercase manifest-write literals + folder-mapping dicts are a deliberate, consistent
+  convention — no genuine case-mismatch bug found. No code shipped; full evidence in the flipped checkbox above.
 - 2026-08-09 (targeted satellite-batch extraction, RECLASSIFY-sweep follow-up): drafted alongside its finalize twin. 12
   conflict-clear todos extracted from 6 of the 14 defi source docs this run read end-to-end; the other 8 yielded zero
   extractable items (see "Not extracted" above). Conflict-check run against `batch9`/`batch10` (both active) +
