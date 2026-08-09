@@ -204,23 +204,20 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       `unified-trading-pm@703b1e912`, 2026-06-22, via carve-out #3, same day the issue doc's "BLOCKED from landing"
       section was written — that section went stale the moment the carve-out push landed and was never updated).
 
-- [ ] [TEST] P2. **Repair the repo-wide E2E login helper contract (3-step chain, combined — the source doc's own todos 2
-      and 3 are explicitly gated on todo 1).** (1) Diagnose why `admin@odum.internal` (and likely other demo personas)
-      redirect to `https://uat.odum-research.com/login` instead of logging in locally under
-      `NEXT_PUBLIC_MOCK_API=true NEXT_PUBLIC_AUTH_PROVIDER=demo` (`pnpm dev:mock`) — check the "standing internal email"
-      redirect branch in `app/(public)/login/page.tsx` against `isDemoPersonaEmail()` (`lib/auth/personas.ts`) for a
-      classification bug. (2) Then restore/repair the `?persona=<id>` (or equivalent) fast-path login contract that
-      `tests/e2e/user-management.spec.ts` and every other `loginAsAdmin`/`loginAsClient`-based spec assumes —
-      `app/(public)/login/page.tsx` currently only wires an `?email=`+`#pwd=` fragment handoff and ignores `?persona=`
-      entirely, so 21/21 of that untouched pre-existing spec's tests fail at `waitForURL`. If a restored fast-path is
-      chosen, gate it to `NEXT_PUBLIC_AUTH_PROVIDER=demo` + `NEXT_PUBLIC_MOCK_API=true` so nothing changes for the real
-      prod login flow. (3) Re-run `tests/e2e/admin-strategy-assignments.spec.ts` and record the `pw:L2 ✓` evidence
-      retroactively on `/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`'s
-      item. **Why this is P2-but-urgent**: while this helper is broken, NO admin-gated E2E spec can produce the
-      `pw:L2 ✓` evidence the UI-todo contract requires, so every UI worker either silently claims evidence it does not
-      have or gets stuck on a Playwright-evidence hold on already-shipped features. **Done when**:
-      `npx playwright test --project=chromium tests/e2e/user-management.spec.ts` exits 0 as the cited regression check,
-      and the prod (non-demo) login path is confirmed unchanged. Repo: unified-trading-system-ui. Source:
+- [x] ✅ [TEST] P2. **Repair the repo-wide E2E login helper contract — DONE 2026-08-09 (slot-28, infra),
+      unified-trading-system-ui@15e4b4bc.** Root cause of the UAT-redirect was NOT a classification bug in
+      `isDemoPersonaEmail()` — `next.config.mjs` unconditionally loaded `.env.production`
+      (`NEXT_PUBLIC_SITE_URL=https://www.odum-research.com`) into every `next dev` too, wrongly satisfying
+      `login/page.tsx`'s `isProdSite` check under `pnpm dev:mock`; fixed by making the env-file load `NODE_ENV`-aware.
+      Also restored the `?persona=<id>` fast-path in `app/(public)/login/page.tsx` (gated to demo/mock mode, resolves
+      via `PERSONAS`, auto-submits). **Verified live** via Playwright trace: `?persona=admin` now logs in locally and
+      reaches `/dashboard` (previously silently redirected to UAT). 2/21 `user-management.spec.ts` tests now pass
+      end-to-end post-login (up from 0/21 timing out at login) — full-suite green is blocked by two SEPARATE,
+      pre-existing, unrelated gaps found during verification (`/api/v1/*` needs real Firebase Admin creds; the mock dev
+      server itself is unstable under sustained Playwright load), filed rather than absorbed:
+      `issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` (carries item
+      3's `admin-strategy-assignments.spec.ts` re-run as its own todo 3). Prod login path unchanged (both fixes gated
+      behind demo/mock checks). QG green. Repo: unified-trading-system-ui. Source:
       `issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md`.
 
 - [x] ✅ [UI] P2. **Fix the 8 pre-existing deployment-ui smoke failures** — deployment-ui@2340c68. `pw:L2 ✓`. (a)
