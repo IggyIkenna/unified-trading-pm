@@ -161,12 +161,13 @@ All three are real design/priority calls, not something determinable from code o
       exact per-venue mechanism (client-scoped OKX sub-keys vs. multi-wallet Hyperliquid) before estimating — this is a
       genuine build task once scoped, not a config change. Repo: execution-service.
 - [x] ✅ [BACKEND] P2. **Build the Aster execution adapter** — extracted 2026-08-09 to
-      `cefi_satellite_ao_dispatch_batch14_2026_08_09.md` todo 1 for AO dispatch (parent_epic: execution_master); shipped
-      2026-08-09 — `execution-service@05b425e6` ("feat(execution): add Aster CCXT execution adapter"), verified
-      reachable on `origin/live-defi-rollout`. New `aster_ccxt.py` (477 lines) mirrors `upbit_ccxt.py`'s CCXT-wrapper
-      shape (perpetual-only per UAC `ASTER -> {"PERPETUAL"}`, apiKey/secret credentials, Binance-futures symbol
-      convention); `"aster"` wired into `factory.py`'s CCXT dispatch + Venue mapping; `aster-api-key`/`aster-secret-key`
-      wired into `live_execution_handler.py`'s credential loader via new `service_config.py` fields; 44 unit tests added
+      `cefi_satellite_ao_dispatch_batch14_2026_08_09.md` todo 1 for AO dispatch (parent_epic: execution_master), now
+      archived at `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch14_2026_08_09.md`; shipped 2026-08-09 —
+      `execution-service@05b425e6` ("feat(execution): add Aster CCXT execution adapter"), verified reachable on
+      `origin/live-defi-rollout`. New `aster_ccxt.py` (477 lines) mirrors `upbit_ccxt.py`'s CCXT-wrapper shape
+      (perpetual-only per UAC `ASTER -> {"PERPETUAL"}`, apiKey/secret credentials, Binance-futures symbol convention);
+      `"aster"` wired into `factory.py`'s CCXT dispatch + Venue mapping; `aster-api-key`/`aster-secret-key` wired into
+      `live_execution_handler.py`'s credential loader via new `service_config.py` fields; 44 unit tests added
       (`test_aster_ccxt.py`); `quality-gates.sh` green (sentinel=05b425e6c313cb87d606893e544ab6c0fb9ff587). **Remaining
       open count in this doc: 3, all human/operator-gated** — the `[HUMAN] P1` Bybit key-creation todo (operator's own
       exchange login), the `[BACKEND] P2` OKX/Hyperliquid scope-separation todo (operator-approved to build but still

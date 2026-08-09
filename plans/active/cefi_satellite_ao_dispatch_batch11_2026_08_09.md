@@ -38,7 +38,7 @@ related:
     /plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md,
     /plans/active/cefi_satellite_ao_dispatch_batch12_2026_08_09.md,
     /plans/active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch14_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch14_2026_08_09.md,
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
