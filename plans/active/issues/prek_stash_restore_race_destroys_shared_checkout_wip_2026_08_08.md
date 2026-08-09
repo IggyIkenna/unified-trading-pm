@@ -108,9 +108,12 @@ standard "check `git status`, check `git stash list`" recovery ritual actively c
       `scripts/quality-gates-base/tests/test-quickmerge-commit-lock.sh` extracting the real `_prek_race_snapshot`/
       `_prek_race_check` functions — one asserts detection on a synthesized silent-revert, one asserts no false positive
       on an untouched unstaged file (both pass; full 6/6 suite green). Full `quality-gates.sh` Pass-1 green.
-- [ ] [DOCS] P2. **Add the scratchpad-backup rule to the multi-agent safety SSOT** — "back up uncommitted WIP to the
-      scratchpad BEFORE running any git-touching command in a shared checkout, and verify the backup before trusting
-      it." That is what saved the work here, and it is not currently written down anywhere.
+- [x] [DOCS] P2. ✅ **Add the scratchpad-backup rule to the multi-agent safety SSOT** — `unified-trading-pm@<SHA>`.
+      Added a new "Scratchpad-backup before git-touching commands on a shared checkout" section to
+      `/codex/05-infrastructure/per-tab-worktrees.md` (states the rule, explains why the prek stash/restore race defeats
+      the normal `git status`/`git stash list` recovery check, notes the shipped flock + checksum fixes are
+      defense-in-depth not a full supersede, gives the backup-and-verify recipe) plus a matching Anti-patterns bullet
+      and a `related:` frontmatter link back to this issue doc.
 
 ## Codex SSOTs
 
@@ -163,3 +166,7 @@ standard "check `git status`, check `git stash list`" recovery ritual actively c
   `safe-doc-push.sh`/`quickmerge.sh` invoke it). Script kept as `Lifecycle: permanent` — worth a follow-up run against
   the now-shipped todo-2 flock fix (`unified-trading-pm@d38f16f66`, landed concurrently by slot-22 above) to confirm it
   actually closes the interleaving window, and again once todo 3's checksum-verify lands.
+- **2026-08-09 (slot 5, backend_engineer)**: Todo 4 (last remaining) done — scratchpad-backup rule added to
+  `/codex/05-infrastructure/per-tab-worktrees.md` (new section + Anti-patterns bullet + `related:` link back to this
+  doc), checkbox flipped above. All 4 todos are now complete and this doc carries no `locked_by` — eligible for archival
+  per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.

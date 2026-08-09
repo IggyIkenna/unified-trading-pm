@@ -14,7 +14,12 @@ stage: [meta]
 repos: [agent-orchestrator, alerting-service, unified-trading-pm]
 scope: [engineer]
 tags: [infrastructure, quickmerge, scripts, orchestrator, reconciliation, self-healing]
-related: [plans/active/worktree_ldr_unification_2026_06_08.md, plans/archive/per_agent_worktrees_2026_05_10.md]
+related:
+  [
+    plans/active/worktree_ldr_unification_2026_06_08.md,
+    plans/archive/per_agent_worktrees_2026_05_10.md,
+    /plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md,
+  ]
 created: 2026-05-10
 authoritative_for: [per-slot reference-clone worktree model]
 referenced_by:
@@ -27,9 +32,9 @@ referenced_by:
     /codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
   ]
 owner: workspace-platform
-last_reviewed: 2026-07-27
+last_reviewed: 2026-08-09
 code_refs:
-last_updated: 2026-07-09
+last_updated: 2026-08-09
 related_codex: [/codex/05-infrastructure/plan-aware-merge-resolution.md, ../../cursor-configs/CLAUDE.md]
 ---
 
@@ -1048,6 +1053,35 @@ to the real binary unchanged.
 Full incident history (two recurrences + root cause + rollout verification):
 `plans/archive/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md`.
 
+## Scratchpad-backup before git-touching commands on a shared checkout (codified 2026-08-09)
+
+**Rule**: back up uncommitted WIP to the session scratchpad **before** running any git-touching command (a prek/
+pre-commit run, `safe-doc-push.sh`, `quickmerge.sh`, even a plain `git add`) on a file you're actively editing in a
+shared checkout — and **verify the backup's content**, not just that the file exists, before trusting it.
+
+**Why this is not redundant with "check `git status`/`git stash list`".** Every prek run stashes unstaged changes to its
+own patch cache (`~/.cache/prek/patches/<ts>-<pid>.patch`) at hook-batch start and restores them after. On a shared
+checkout, two concurrent prek runs interleave: if a SECOND session edits the same file while the FIRST session's hooks
+are still running, the first session's restore reinstates its OWN stale snapshot over the second session's
+already-landed newer edit — with **no error, no conflict marker, and no stash entry** (prek's patch cache is not a real
+`git stash`, so `git stash list` stays empty; `git status` reports the file clean). The standard shared-checkout
+recovery ritual ("check `git status`, check `git stash list`") actively confirms the WRONG conclusion here — the file
+reads as untouched even though it just lost content. Full mechanism + a deterministic repro:
+`/plans/active/issues/prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md` (three silent reverts of the
+same file in one interactive session, recovered only because a scratchpad copy existed).
+
+**This is defense-in-depth, not superseded by the shipped fixes.** The same issue doc shipped a per-checkout flock
+serializing prek's critical section (`unified-trading-pm@d38f16f66`) and a post-commit checksum check that hard-stops on
+a detected silent revert (`unified-trading-pm@f8a307bad`) — both close the race for the two scripts that route through
+them (`safe-doc-push.sh`, `quickmerge.sh`). Neither covers every git-touching path (a hand-run `prek` / `git commit`, or
+a future script that doesn't call through the locked commit helper), so keep backing up before git-touching commands
+regardless of whether those fixes are in place.
+
+**Recipe**: copy the file(s) you're actively editing to your session scratchpad (or any path outside the shared
+checkout) before the git-touching command runs; afterward, diff the checkout copy against the backup (or re-open and
+read it) to confirm your actual content survived — a clean `git status` is not proof, it is exactly the failure
+signature described above.
+
 ## Dashboard e2e ports are slot-namespaced (fixed 2026-08-07)
 
 Same failure CLASS as the pkill guard above, different surface:
@@ -1116,6 +1150,9 @@ auth-fail boot prompts inline the same ff-only-when-behind + divergence-STOP blo
 - **Don't** force-push `live-defi-rollout` / `main`. On a push-reject, rebase onto LDR keeping the merged combination.
 - **Don't** pre-build venvs across all slots on `--init`. Eager build = hundreds of GB duplication per fleet; on-demand
   keeps it ~3-4 GB code-only.
+- **Don't** trust a clean `git status` / empty `git stash list` as proof nothing was lost on a shared checkout — the
+  prek stash/restore race (§ "Scratchpad-backup before git-touching commands") reverts a concurrent session's edit with
+  neither signal tripped. Back up actively-edited files to the scratchpad before git-touching commands.
 
 ## Composes with
 
