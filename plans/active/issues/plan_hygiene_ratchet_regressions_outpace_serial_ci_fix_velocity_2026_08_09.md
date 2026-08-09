@@ -20,6 +20,7 @@ scope: [engineer, admin]
 tags: [ci, quality-gates-v2, ratchet, plan-hygiene, concurrency, live-incident]
 related:
   - /plans/archive/issues/quality_gates_v2_concurrency_and_bookkeeping_job_cost_2026_08_02.md
+  - /plans/active/issues/semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md
 created: 2026-08-09
 author: agt-22de53 (main), relaying a finding from agt-558c62 (slot 3)
 parent_epic: infrastructure_master
@@ -380,3 +381,28 @@ words: "this branch is churning faster than one CI worker can chase serially").
   `git show`, all 21 violations present) — a new, more serious P1 finding logged in that doc rather than here (same
   subject as its existing todo, not a new doc). This P2 todo itself is now fully done and shipped regardless — my own
   code adds/removes zero broad-except occurrences.
+- **2026-08-09 (infra worker, slot 18, dispatched for
+  `semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md` todo 2)**: independently hit this SAME
+  promote-stall while trying to manually re-trigger `unified-trading-library`'s Semver Agent run — found `origin/main`
+  568 commits behind `origin/live-defi-rollout` on `unified-trading-pm` itself, blocked on open promote PR #2704 (head
+  `promote/unified-trading-pm/026a84d6f685`, opened 2026-08-09T16:45:59Z): `QG slice (checks)` hard-FAILED (16:50:04Z)
+  with 5 `❌`s — `No prettier proseWrap continuation-padding (ratchet)` and
+  `Create-only archival guard (archive/active duplicate pairs)` are 2 NEW distinct checks not yet logged in this doc's
+  history (on top of the already-tracked `Reference path convention`/`assigned_vm:NA corpus size`/ `Archive candidates`)
+  — now 8 distinct ratchet checks observed regressing under concurrent commit load on this lineage. `QG slice (tests)`
+  has been `in_progress` on the SAME run since 16:47:07Z (90+ min as of this check, no step progress past "Run quality
+  gates (leg tests)") — looks like the genuine hung-job class RULES.md §4b / CLAUDE.md's "v2-never-reported deadlock"
+  describes, not just a ratchet race. **New downstream consequence not previously documented here**:
+  `unified-trading-ci`'s reusable `semver-agent.yml` fetches `scripts/cicd/detect_breaking_change.py` LIVE from
+  `unified-trading-pm`'s default branch (`main`) via unauthenticated `gh api .../contents/...` (no `--diff-base`/ref
+  pin) for every NON-PM repo's classifier run — so the `source_touched` squash-promote patch-fallback fix
+  (`semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` + its 2026-08-09 refinement, confirmed present on
+  `unified-trading-pm@30ed07eff` / LDR) is fleet-wide INERT for every repo on the `ldr_main` model until THIS
+  promote-stall clears — confirmed live: a fresh `Semver Agent` run on `unified-trading-library`'s `main` HEAD
+  (`e94be221`, run `31325951737`, 18:07:42Z) still printed the pre-fix
+  `"No feat:/fix:/breaking commits or API changes found. Skipping version bump."` with no `source_touched` key in its
+  JSON verdict — i.e. this isn't just a PM-corpus-hygiene problem anymore, it's silently blocking every fleet repo's
+  internal-bugfix releases too. Per this doc's own established precedent (9th dispatch into the same lineage), NOT
+  attempting a fix-and-retrigger cycle myself — continuing to wait for a future green promote cycle. Cross-referencing
+  from `semver_agent_squash_promote_loses_commit_type_never_bumps_2026_08_09.md` todo 2, which is blocked on this exact
+  condition.

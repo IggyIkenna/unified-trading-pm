@@ -38,6 +38,7 @@ related:
     /plans/active/issues/venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md,
   ]
 created: "2026-08-09"
 author: infra-worker-slot9
@@ -189,3 +190,30 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   - `..._false_on_squash_commit_touching_only_metadata_noise`, a synthetic squash-only commit range against a real temp
     git repo). Shipped `unified-trading-pm@30ed07eff` (fix + tests, QG green, verified ancestor of origin). Todo 2 (P1,
     re-trigger `unified-trading-library`'s release) is a separate, not-yet-worked todo — left open.
+- **2026-08-09 (infra worker, slot 18, todo 2)**: `Semver Agent` has NO `workflow_dispatch` trigger
+  (`gh workflow run "Semver Agent" --repo IggyIkenna/unified-trading-library` →
+  `422: Workflow does not have 'workflow_dispatch' trigger`) — its caller stub is `on: push: branches: [main]` only, so
+  "manually trigger" isn't literally available; the only lever is a fresh push to `main`. But re-triggering right now
+  would just reproduce the same skip: root-caused why. `unified-trading-ci`'s reusable `semver-agent.yml` (the ACTUAL
+  logic every non-PM caller runs) resolves its differ script via
+  `gh api repos/IggyIkenna/unified-trading-pm/contents/scripts/cicd/detect_breaking_change.py` with **no `ref=` param**
+  — i.e. it always fetches `unified-trading-pm`'s DEFAULT branch (`main`), never `live-defi-rollout`. Fetched that file
+  live just now: **`source_touched` is NOT present in `unified-trading-pm`'s `main`-branch copy** — todo 1's fix
+  (`unified-trading-pm@30ed07eff`) landed on LDR but has NOT promoted to `main` (`origin/main..origin/live-defi-rollout`
+  = 568 commits, as of this check). Confirmed the live consequence directly: the latest real `Semver Agent` run on
+  `unified-trading-library`'s `main` HEAD (`e94be221`, run `31325951737`, 2026-08-09T18:07:42Z — AFTER todo 1's fix
+  shipped) still printed `"No feat:/fix:/breaking commits or API changes found. Skipping version bump."` with no
+  `source_touched` key in its JSON verdict, i.e. still running the pre-fix classifier. Root cause of the stall:
+  `unified-trading-pm`'s own `chore(promote): LDR → main` PR is stuck (PR #2704, open since 16:45:59Z) — hard-failing
+  `QG slice (checks)` on `unified-trading-pm`'s own plan-hygiene ratchet corpus (5 `❌`s: prettier proseWrap,
+  reference-path convention, create-only archival guard, NA-corpus size, archive-candidates) plus a `QG slice (tests)`
+  job stuck `in_progress` 90+ min with no step progress — this is the SAME already-tracked, extensively-chased (9
+  dispatches, still unresolved) systemic race documented in
+  `plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md` (logged this todo's downstream
+  consequence there too, cross-linked). Per that doc's own established "hand off, don't chase serially" precedent (a
+  corpus-scale plan-hygiene fix, not a one-shot), **not** attempting to fix PM's promote pipeline myself. This todo
+  genuinely cannot complete (`done_definition`: a release minted) until PM's `main` catches up with the differ fix —
+  waiting for a future green promote cycle rather than busy-polling. Leaving todo 2 open/unchecked; will re-attempt once
+  `unified-trading-pm@30ed07eff` (or a later commit carrying `source_touched`) is confirmed an ancestor of
+  `origin/main`, then either a trivial push to `unified-trading-library`'s `main` (if one lands naturally from other
+  work) or waiting for the next real one will re-classify `609299ad` correctly.
