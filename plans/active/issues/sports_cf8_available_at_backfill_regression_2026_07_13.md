@@ -412,15 +412,27 @@ consolidation).
                       docstring), (2) get it reviewed given the 2 prior regressions in this area, (3) run it inside a coordinated
                       maintenance window with pre-snapshots, matching the 2026-07-14 attempt's own safe rollback pattern.
 
-- [ ] [INFRA] P1. **Implement + ship the per-service_name-scoped write-group fix, now design-confirmed but unbuilt**
-      (see the 2026-08-07 note directly above). Concretely: (1) rewrite
+- [ ] [INFRA] P1. **STALE-CHECK CORRECTION 2026-08-09 — sub-item (1) below is factually WRONG, already done; only
+      sub-item (3) remains.** This todo's own framing ("now design-confirmed but unbuilt") contradicts this SAME doc's
+      own 2026-07-14 Progress Log: `market-tick-data-service@af627b5b` ("fix(sports): per-original-service_name write
+      grouping for CF-8 captured-row targeted backfill") already implemented exactly this — verified live 2026-08-09,
+      `af627b5b` is an ancestor of `origin/live-defi-rollout`, and the current
+      `scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py` on that branch contains
+      `_group_target_rows_by_service_name()`, wired into `main()`'s write loop, with a synthetic unit test
+      (`tests/unit/scripts/test_sports_captured_available_at_targeted_backfill.py`). The script's own docstring already
+      says "**Fix applied (2026-07-14, this touch)**" for this exact grouping. The `na-eligibility-audit 2026-08-07`
+      entry below already flagged this as a likely duplicate ("worth re-verifying before rebuilding") — this pass
+      confirms it. **Implement + ship the per-service_name-scoped write-group fix, now design-confirmed but unbuilt**
+      (see the 2026-08-07 note directly above). Concretely: ~~(1) rewrite
       `sports_captured_available_at_targeted_backfill_2026_07_14.py` to group target rows by their OWN original
       `service_name` and write each group through a `ManifestWriter` constructed with THAT service_name, instead of the
-      fixed per-surface value that caused the 2026-07-14 rollback; (2) get it reviewed — this area has 2 prior
+      fixed per-surface value that caused the 2026-07-14 rollback~~ — **ALREADY DONE, 2026-07-14,
+      `market-tick-data-service@af627b5b`, see correction above**; (2) get it reviewed — this area has 2 prior
       regressions, do not skip review; (3) execute inside the coordinated maintenance window authorized by
       `sports_consolidated_closeout_2026_07_19.md`'s Track H todo, with pre-snapshots and the same safe-rollback pattern
       as the 2026-07-14 attempt. Does not scale-test past the ~286K/~652K remaining rows until the rewritten script is
-      reviewed. (repo: market-tick-data-service)
+      reviewed. **What genuinely remains: only sub-item (3), the operator-coordinated maintenance-window execution —
+      the same gate the sibling `[DATA] P1` todo above already tracks.** (repo: market-tick-data-service)
 
 - [x] ✅ [INFRA] P2. Verify whether the row_count-preferring multi-source dedup tie-break (`manifest_consolidator.py`'s
       `CASE WHEN capture_status = 'captured' AND captured_distinct_sources > 1 THEN COALESCE(TRY_CAST(row_count AS BIGINT), 0) ELSE NULL END DESC`)
