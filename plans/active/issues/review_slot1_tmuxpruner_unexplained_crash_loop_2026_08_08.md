@@ -221,19 +221,22 @@ own Tick history.
       `GET /api/state` now reports `server_started:2026-08-08T23:45:40Z` (after the commit); `git log` in the
       orchestrator checkout still confirms HEAD=e32d962. Someone/something with the right privilege restarted it. Todo 3
       (REVIEW re-verify) can now proceed.
-- [ ] [BACKEND] P2. **`journalctl -k` is readable from a worker sandbox (confirmed 2026-08-09, slot 33) — leverage it to
-      keep narrowing the still-unidentified root cause.** `dmesg` itself stays blocked (`Operation not permitted`), but
-      `journalctl -k --since <ts> --until <ts>` succeeds from an ordinary worker session (no `sudo`, no special grant
-      observed). 4 independent `orch-slot-1` `tmux_session_lost` timestamps checked this way all showed ZERO kernel-log
-      entries in their windows, further supporting "genuine death, kernel not involved" over "OOM/cgroup/ hardware kill"
-      — but 4 samples is not exhaustive. Whoever picks this up: (a) re-verify the access is durable (not a one-off
-      sandbox quirk — check from a couple of different slots/sessions), (b) if durable, wire a standing correlation
-      check (kernel-log window around each fresh `tmux_session_lost` for `orch-slot-1`) into whatever tooling/runbook
-      the ongoing investigation already uses, rather than each session re-deriving the `journalctl -k` command from
-      scratch, (c) also try `journalctl -k` (not just `-u orchestrator`) around a death for signal-related lines
-      (`SIGKILL`, `SIGTERM`, cgroup `oom-kill`, `Out of memory`) using a wider grep, since this session only eyeballed a
-      tail rather than pattern-matching. Repo: unified-trading-pm (this doc) or agent-orchestrator (if a durable check
-      gets code-ified).
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-09 (slot 13, backend_engineer craft) — access re-verified durable, wider signal
+      grep run, standing correlation check code-ified.** All 3 of the todo's own sub-asks completed: (a) re-verified
+      `journalctl -k` from a second, independent slot (13, distinct from the originating slot 33) — durable, no `sudo`,
+      `dmesg` still blocked as before; (b) wired a standing, reusable correlation check —
+      `agent-orchestrator/scripts/orchestrator/check-tmux-kill-kernel-correlation.sh` — instead of leaving the command
+      to be re-derived ad hoc each session; (c) ran the wider signal-pattern grep
+      (`SIGKILL|SIGTERM|oom-kill|oom_kill|Out of memory|invoked oom-killer|Killed process|cgroup.*kill`, not just an
+      eyeballed tail) across 15 fresh `orch-slot-1` `tmux_session_lost` timestamps (18:14:46Z–19:37:52Z window) —
+      **zero kernel-log entries in any of the 15 windows** (up from the prior 4-sample check), zero signal-pattern
+      matches. Cross-checked the journal itself is genuinely populated (not silently empty/broken) — a real
+      `systemd-journald: Under memory pressure, flushing caches.` entry exists elsewhere in the same boot
+      (12:13:30Z), just not near any of the 15 checked death windows. This further corroborates "genuine death,
+      kernel not directly involved" over an OOM/cgroup/hardware kernel-level kill — still does not by itself explain
+      what DID cause the process exit (see the script's own caveat + the live-PID-capture method from
+      `agent-orchestrator@5a163e7`'s Progress Log entry for that separate question). Repo:
+      agent-orchestrator@3a8f9f6 (script) + this doc (checkbox flip + Progress Log entry below).
 - [x] ✅ [BACKEND] P1. **All 3 known fixes confirmed live with ZERO combined effect on kill cadence (review re-verify,
       2026-08-09 ~19:16Z, see Progress Log below) — the 3 tested mechanisms (transient has-session miss, frozen
       `SlotRow.last_ping`, undebounced `reap_orphan_agents`) are each individually patched but collectively explain none
@@ -277,6 +280,31 @@ own Tick history.
       systemd-config fix is found).
 
 ## Progress log
+
+- 2026-08-09 ~19:45Z (backend, slot 13, agent-orchestrator@3a8f9f6): Picked up the `journalctl -k` durability/code-ify
+  BACKEND P2 todo. Re-verified `journalctl -k --since <ts> --until <ts>` access from this slot (13) — durable across a
+  second, independent slot beyond the originating slot 33, still no `sudo`/special grant needed; `dmesg` itself
+  confirmed still blocked (`Operation not permitted`), unrelated to `journalctl -k`'s own access.
+
+  **Shipped**: `agent-orchestrator/scripts/orchestrator/check-tmux-kill-kernel-correlation.sh` — a standing, reusable
+  correlation check (no SSM/AWS creds needed, unlike this directory's other `check-*` scripts, since a worker sandbox
+  runs ON the same host as the orchestrator server itself, confirmed via matching hostname `ip-172-31-5-118` +
+  `orchestrator.service` `systemctl status`). Pulls recent `tmux_session_lost` events for a given slot from the local
+  `/api/activity` endpoint, then greps `journalctl -k` over a window around each death for a wide kernel-level
+  signal/OOM pattern set (`SIGKILL|SIGTERM|oom-kill|oom_kill|Out of memory|invoked oom-killer|Killed process|cgroup.*kill`)
+  instead of the prior session's tail-eyeballing. shellcheck clean, `quality-gates.sh --no-fix` green.
+
+  **Ran it**: 15 fresh `orch-slot-1` `tmux_session_lost` timestamps spanning 18:14:46Z–19:37:52Z (a fresh window, past
+  every fix landed so far in this doc) — **zero kernel-log entries in any of the 15 windows**, zero signal-pattern
+  matches (up from the prior session's 4-sample check). Confirmed the journal itself is genuinely populated for this
+  boot (not silently empty) — spot-checked a real `systemd-journald: Under memory pressure, flushing caches.` entry
+  at 12:13:30Z elsewhere in the same boot (`--list-boots` shows boot 0 started 08:31:15Z, still current) — it's just
+  absent specifically near these 15 death windows. This is a larger, wider-pattern sample corroborating, not
+  contradicting, the prior finding: still no evidence of a kernel-level (OOM/cgroup/hardware) kill for these deaths.
+  Per the script's own caveat (and per the standing open P1 todo below), this does NOT by itself explain the actual
+  exit mechanism — it only continues to rule OUT the kernel-level branch. Flipped the todo; the still-open P1 todo
+  below (repeat live-PID-capture across multiple deaths / cross-reference SQLite lock bursts / check the debounce
+  window itself) remains the live thread for whoever continues the root-cause hunt.
 
 - 2026-08-09 ~09:16Z (backend, slot 23, agent-orchestrator@5a163e7): Picked up the standing "both prior fixes confirmed
   live but crash rate UNCHANGED" BACKEND P1 todo. Found + fixed the actual FIRST detector, then used a live empirical
