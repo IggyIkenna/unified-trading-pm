@@ -29,7 +29,7 @@ priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.08
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 locked_by:

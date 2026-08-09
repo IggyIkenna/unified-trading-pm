@@ -69,7 +69,7 @@ source: >-
 
 ## Todos
 
-- [ ] 1. [DOC] P3. **Retag every doc still carrying the invalid `assigned_role: devops` frontmatter value** to the
+- [x] 1. ✅ [DOC] P3. **Retag every doc still carrying the invalid `assigned_role: devops` frontmatter value** to the
       correct real role from the live `agents/*.md` registry (`backend_engineer`, `cefi_mtds_smoke_tester`,
       `cefi_reconciliation_auditor`, `cicd`, `data_engineering`, `docs_reconciler`, `infra`, `main`, `monitor`,
       `plan_health`, `quant_dev`, `review`, `ui_developer`, `worker`, plus the audit-role names — re-derive the live
@@ -107,3 +107,20 @@ source: >-
 - **2026-08-09** — Drafted alongside sibling batch 7, splitting this one `agent_operating_framework_master`-epic item
   out per the parent_epic-grouping rule. Full 15-doc disposition ledger (which docs contributed zero and why) is
   recorded once, in batch 7's own Progress Log — not duplicated here.
+- **2026-08-09** — Todo 1 done (slot 13). Re-derived the live population fresh
+  (`grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md`) — 15 docs live at execution time (2
+  from the plan's own 12-doc list already resolved by other work:
+  `fleet_host_inventory_dead_host_and_pre_rewrite_drift_ 2026_08_08.md`,
+  `unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`; 5 new:
+  `safe_doc_push_prek_patch_ not_restored_on_retry_success_2026_08_09.md`,
+  `tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md`,
+  `quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md`,
+  `todo_cancelled_disposition_format_breaks_todo_ regression_check_2026_08_09.md`,
+  `unified_trading_ci_lint_red_shellcheck_findings_2026_08_09.md`). Read each doc's subject matter and retagged: `infra`
+  (host/VM-adjacent) for `build_deploy_pipeline_provenance_and_aws_deferred_gaps_ 2026_07_21.md` (AWS tarball
+  launcher/bucket) and `orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` (shared orchestrator-VM gcloud
+  credential poisoning); `cicd` (CI/CD-pipeline content) for the remaining 13 (GH Actions workflows,
+  promote/SIT/quickmerge/ci_status pipeline mechanics — `todo_cancelled_disposition_format_...md` matches cicd.md's own
+  `plan_health` wall-type todo-regression handling).
+  `grep -l '^assigned_role: devops$' plans/active/*.md plans/active/issues/*.md` now returns zero results — done-when
+  met. Evidence: `unified-trading-pm@<sha, see commit below>`.

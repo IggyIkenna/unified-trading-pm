@@ -44,7 +44,7 @@ priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.3
-assigned_role: devops
+assigned_role: cicd
 drift_direction: none
 depends_on: []
 resolved_by:

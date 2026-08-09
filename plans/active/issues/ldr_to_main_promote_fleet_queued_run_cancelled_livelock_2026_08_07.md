@@ -49,7 +49,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 source: "ci-reconcile sweep, 2026-08-07, waiting on semver-agent fix live verification"

@@ -51,7 +51,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.1
-assigned_role: devops
+assigned_role: cicd
 resolved_by: "unified-trading-pm (this issue doc's own commit — see Fix applied)"
 locked_by:
 locked_since:

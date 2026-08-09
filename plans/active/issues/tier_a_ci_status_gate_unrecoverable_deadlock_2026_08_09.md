@@ -44,7 +44,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 source: "cicd escalation agt-086274, 2026-08-09, wall_type=main_ci_red, escalation BLK-96d38ee3"

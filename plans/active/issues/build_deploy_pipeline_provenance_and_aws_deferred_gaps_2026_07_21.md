@@ -40,7 +40,7 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-assigned_role: devops
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 source:

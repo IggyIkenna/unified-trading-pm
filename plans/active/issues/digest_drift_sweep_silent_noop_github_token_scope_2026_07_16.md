@@ -65,7 +65,7 @@ source:
   done anything
 assigned_vm: NA
 execution_scope: local-only
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 last_updated: 2026-07-16
 locked_by:

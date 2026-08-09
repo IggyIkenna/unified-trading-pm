@@ -33,7 +33,7 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.2
-assigned_role: devops
+assigned_role: cicd
 drift_direction: none
 depends_on: []
 resolved_by:
@@ -144,8 +144,8 @@ documented as the correct mechanism in `task_template.md` and still not exempted
   on the cross-file correlation logic, not a mechanical one-liner).
 - **na-eligibility-audit 2026-08-09 (round9)**: satellite-extraction, not whole-doc RECLASSIFY — first audit pass on
   this doc (never previously touched by na-eligibility-audit). Of the 3 open items, 2 are extracted to
-  `ao_satellite_ao_dispatch_batch15_2026_08_09.md`: the format-contradiction fix (both resolution options are
-  described in the doc's own text as small, with a concrete done-when) and the mechanical corpus grep (explicitly
-  "not urgent; a hygiene sweep item," zero judgment). The 3rd item (Finding-J archival-extraction trigger) stays
-  KEEP-NA, valid — this doc's own text self-flags it as needing "design judgment on the cross-file correlation logic,
-  not a mechanical one-liner." Whole-doc RECLASSIFY bar not cleared.
+  `ao_satellite_ao_dispatch_batch15_2026_08_09.md`: the format-contradiction fix (both resolution options are described
+  in the doc's own text as small, with a concrete done-when) and the mechanical corpus grep (explicitly "not urgent; a
+  hygiene sweep item," zero judgment). The 3rd item (Finding-J archival-extraction trigger) stays KEEP-NA, valid — this
+  doc's own text self-flags it as needing "design judgment on the cross-file correlation logic, not a mechanical
+  one-liner." Whole-doc RECLASSIFY bar not cleared.

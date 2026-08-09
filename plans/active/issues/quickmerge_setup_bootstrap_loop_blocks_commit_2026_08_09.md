@@ -26,7 +26,7 @@ assigned_vm: NA
 execution_scope: local-only
 priority: P1
 estimate_class: infra
-assigned_role: devops
+assigned_role: cicd
 drift_direction: unknown
 depends_on: []
 ---
