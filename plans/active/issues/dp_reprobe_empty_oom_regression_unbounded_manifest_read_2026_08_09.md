@@ -156,20 +156,28 @@ Mechanical, bounded fix — mirror the already-proven `daily_digest.py` pattern:
       both by this rejection and by every other job in the codebase topping out there.** The CODE P2 structural fix
       below is no longer a hedge against "if 32Gi isn't enough" — that condition is now live and confirmed; escalated
       its priority to P1 accordingly. Repo: deployment-service.
-- [ ] [CODE] P1 _(escalated from P2 2026-08-09 — the memory-ceiling path is now confirmed exhausted, not hypothetical;
-      see the INFRA P1 entry above)_. **NEW, filed 2026-08-09 (slot 15) — the only remaining fix: read via
-      row-group/column pushdown instead of downloading the full blob.** The root cause underneath both this doc and
-      `daily_digest.py`'s original fix is the same: `_dp_common.read_manifest_index()` downloads the ENTIRE compressed
-      parquet blob into memory (`client.download_bytes(...)`) before doing a column-restricted decode — the column
-      restriction only bounds the DECODE step, not the download/buffer-retention step, so as the underlying manifest
-      grows without bound, every caller's memory floor grows with it regardless of how few columns each caller actually
-      needs. A genuinely durable fix would read via row-group/column pushdown directly against GCS (DuckDB's
-      `read_parquet` over an `httpfs`/GCS URL, or a range-read of only the needed row-groups) instead of materializing
-      the full compressed file — the same DuckDB-over-pandas precedent already used elsewhere per
-      `/codex/05-infrastructure/manifest-consolidator-ssot.md`. DP-FETCH-006's self-healing reclassify is NOT running to
-      completion on `defi` (and likely `tradfi`/`sports`/`prediction`, not yet reached in any run) until this lands —
-      the 32Gi/8vCPU ceiling bump is not a viable stopgap (see evidence above: it bought ~0 extra runway). Repo:
-      e2e-testing.
+- [x] ✅ [CODE] P1 _(escalated from P2 2026-08-09 — the memory-ceiling path is now confirmed exhausted, not
+      hypothetical; see the INFRA P1 entry above)_. **DONE (code) 2026-08-09 (slot 15) — row-group/column pushdown
+      shipped + measured; LIVE re-trigger in flight, see Progress Log for the Cloud Build ID to check on resume.** The
+      root cause underneath both this doc and `daily_digest.py`'s original fix is the same:
+      `_dp_common.read_manifest_index()` downloads the ENTIRE compressed parquet blob into memory before doing a
+      column-restricted decode — the column restriction only bounds the DECODE step, not the download/buffer-retention
+      step, so as the underlying manifest grows without bound, every caller's memory floor grows with it regardless of
+      how few columns each caller actually needs. Fixed: `read_manifest_index()` now decodes via DuckDB from a local
+      temp file (not `pd.read_parquet` over an in-memory buffer), plus a NEW optional `row_filter` hook that pushes a
+      caller-built SQL WHERE-clause into the query BEFORE materialising to pandas. `reprobe_new_empty_confirmed.py`
+      wires its own capture_status+reason predicate through it. **Measured on the REAL 81.6M-row defi index** (not a
+      synthetic fixture): the OLD column-restricted-only approach still OOM'd even bounded at 8-10GB (tested via
+      `run-bounded-analysis.sh`, well below the live 32Gi ceiling); the NEW row-filtered approach completed in 1.3s at
+      **0.56GB peak RSS**, returning exactly the 3,897 `SOURCE_RETURNED_ZERO` rows out of 81.6M (measured via a direct
+      DuckDB aggregate query — `empty_confirmed` alone is 44.68M rows, so column/capture_status filtering alone was
+      never going to be enough; the reason-code filter is what actually collapses the result). 74 unit tests green (2
+      new, 1 updated), full `quality-gates.sh` green (68s), shipped `e2e-testing@64d369a` (Pass-1 sentinel verified ==
+      Pass-2 HEAD, ancestor-of-origin confirmed). Also discovered a SEPARATE, unrelated bug while measuring the real
+      manifest — `available_at` (the column reprobe's date filter resolves first) is blank for every empty_confirmed
+      row, so `_select_new_empties()` would silently select zero candidates for defi even with the OOM fixed — filed as
+      its own issue, `/plans/active/issues/reprobe_date_column_resolution_prefers_blank_available_at_2026_08_09.md` (NOT
+      fixed here — separate root cause, separate scope). Repo: e2e-testing.
 - [ ] [INFRA] P3. Check whether `uts-prod-dp-manifest-hygiene-changed` and `uts-prod-dp-manifest-hygiene-full` have the
       same unrestricted-columns gap in their own manifest-read call sites — not checked this session. Repo: e2e-testing.
 
@@ -266,3 +274,53 @@ Mechanical, bounded fix — mirror the already-proven `daily_digest.py` pattern:
      hedge against is now confirmed live, not hypothetical, and there is no further mechanical lever (ceiling bump) left
      to pull. DP-FETCH-006 self-healing remains broken on `defi` (and un-reached AGs `tradfi`/`sports`/`prediction`)
      until the CODE P1 lands.
+
+- **2026-08-09T~20:00Z-20:40Z (slot 15, data_engineering, task
+  `dp_reprobe_empty_oom_regression_unbounded_manifest_read-8043a20bb807`): shipped the CODE P1 structural fix, measured
+  on the real 81.6M-row defi manifest, live re-trigger in flight.**
+  1. **Row-count reality check first** (per this doc's own "verify locally before implementing" discipline): downloaded
+     the real `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` directly —
+     **81,624,266 rows**, 41 columns, 664 row groups (2.98GB compressed on disk, matches the ~2.79GiB figure already
+     cited). `capture_status` breakdown: `empty_confirmed` 44,682,545 (the LARGEST bucket, 55%) / `captured` 30,749,665
+     / `expected_unattempted` 4,834,560 / `attempted_failed` 1,357,496 — confirms capture_status alone was never going
+     to shrink the read enough. `error_reason` breakdown WITHIN empty_confirmed: `EXPECTED_INSTRUMENT_NOT_LISTED`
+     16.85M, `EXPECTED_REFERENCE_ONLY_NO_CAPTURE_PATH` 11.42M, `EXPECTED_PRE_GENESIS_CHAIN` 9.83M,
+     `EXPECTED_NOT_ENOUGH_TVL` 4.43M, `EXPECTED_INSTRUMENT_DELISTED` 2.12M, ... **`SOURCE_RETURNED_ZERO` (the ONLY
+     reason reprobe actually cares about) is just 3,897 rows** — the predicate that actually matters shrinks 81.6M to
+     ~0.005%.
+  2. **Measured 3 candidate fixes on the real file, each bounded via `run-bounded-analysis.sh` (never run unbounded on
+     this shared 30GiB host)**: (a) plain column-restricted `pd.read_parquet` (today's shipped state) — exceeded an 8GB
+     cap; (b) DuckDB `.df()` with the SAME column restriction, no row filter — ALSO exceeded 8-10GB (confirms column
+     projection alone, regardless of decode engine, cannot bound a materialise of tens of millions of rows — the per-row
+     overhead dominates, not the decode mechanism); (c) DuckDB with the row_filter predicate
+     (`capture_status='empty_confirmed' AND upper(error_reason)='SOURCE_RETURNED_ZERO'`) pushed into the SQL query
+     BEFORE `.df()` — **0.56GB peak RSS, 1.3s, 3,897 rows returned** — confirms row-level pushdown (not just column
+     projection) is the actual fix.
+  3. **Implemented**: `_dp_common.read_manifest_index()` now (i) writes the downloaded bytes to a local temp file
+     (`tempfile.TemporaryDirectory`) instead of decoding from an in-memory `io.BytesIO` buffer, (ii) decodes via DuckDB
+     (`SET memory_limit='8GB'`, mirrors `manifest_consolidator.py`'s own default) instead of `pd.read_parquet`, (iii)
+     accepts a new optional `row_filter: Callable[[list[str]], str | None]` parameter, called with the AG's ACTUAL
+     present column names, that lets a caller push a SQL WHERE-clause into the query. `digest`/`hygiene` callers are
+     unaffected (`row_filter` defaults to `None` — same full read as before, now with a `memory_limit` safety net that
+     converts a future OOM into a catchable exception instead of a silent SIGKILL). `reprobe_new_empty_confirmed.py`
+     adds `_manifest_row_filter()` (resolves the present reason column, mirrors `_select_new_empties()`'s own dynamic
+     column-name resolution) and wires it into its `read_manifest_index()` call. Deliberately did NOT also push the date
+     filter into SQL — see the separately-filed
+     `reprobe_date_column_resolution_prefers_blank_available_at_2026_08_09.md` for why (a real, separate latent bug
+     found during this same measurement).
+  4. **Tests**: added `test_read_manifest_index_row_filter_narrows_before_materialising` +
+     `test_read_manifest_index_row_filter_none_reads_everything` (the row_filter mechanism itself, at the `_dp_common`
+     level); updated `test_reprobe_requests_column_restricted_read`'s spy to accept + assert the `row_filter` kwarg.
+     74/74 unit tests green (was 44 collected up to the first failure before the spy fix — full file collects and passes
+     74 after). Full `quality-gates.sh` green (68s), sentinel matches shipped HEAD.
+  5. **Shipped**: `e2e-testing@64d369a` — Pass-1 QG sentinel verified == Pass-2 HEAD; `git merge-base --is-ancestor`
+     confirmed on `origin/live-defi-rollout`.
+  6. **Live re-verification**: `uts-prod-dp-reprobe-empty` runs a prebuilt `e2e-audit:latest` image (Cloud Run, not
+     live-source) — rebuilt via
+     `gcloud builds submit --config=cloudbuild-e2e-audit.yaml --project=central-element-323112`, build
+     `c37724c7-032c-418f-b77e-cd8f9c495bac` → **SUCCESS**. Manually re-triggered
+     `gcloud run jobs execute uts-prod-dp-reprobe-empty --region=asia-northeast1 --wait` with the new image — result
+     pending at time of this entry; see the immediately-following entry (or check
+     `gcloud run jobs executions list --job=uts-prod-dp-reprobe-empty --region=asia-northeast1 --limit=1` on resume if
+     this session ended before it completed) for the terminal verdict against the todo's own done-when (all 5 AGs
+     complete without "configured memory limit was reached").
