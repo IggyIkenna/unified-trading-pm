@@ -129,14 +129,19 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
 > `git stash list`, then drop only entries the fresh audit clears. Re-measure the counts at that time — do not reuse the
 > numbers below.
 
-- [ ] [OPERATOR] P2. **Re-audit all five checkouts before dropping anything** (supersedes the "review is done" premise
-      of the two P3s below; see the banner above). Cover `.tabs/1`, `.tabs/2`, `.tabs/3`, `.tabs/4` **and the root
-      `unified-trading-pm` clone** — the root was never in scope and held 44 stashes on 2026-08-06. For each entry
-      establish whether its content is (a) already on `origin/live-defi-rollout` (safe to drop — verify with
-      `git stash show -p stash@{N}` against the branch, not by date alone), (b) genuinely abandoned WIP, or (c) live
-      work a concurrent session's autostash swept away. Raised to P2 from the P3s' level because the pile is now known
-      to have contained recoverable work. **Done when**: a fresh per-checkout `git stash list` is recorded with a
-      per-entry verdict, and the two todos below are rewritten against those verdicts with re-measured counts.
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-08 (ao round-5 apply session, item 21) — see that dated entry below for the full
+      per-checkout breakdown + re-measured counts (188 total across `.tabs/1-4` + root) + exact drop instructions.**
+      Re-audit all five checkouts before dropping anything (supersedes the "review is done" premise of the two P3s
+      below; see the banner above). Cover `.tabs/1`, `.tabs/2`, `.tabs/3`, `.tabs/4` **and the root `unified-trading-pm`
+      clone** — the root was never in scope and held 44 stashes on 2026-08-06. For each entry establish whether its
+      content is (a) already on `origin/live-defi-rollout` (safe to drop — verify with `git stash show -p stash@{N}`
+      against the branch, not by date alone), (b) genuinely abandoned WIP, or (c) live work a concurrent session's
+      autostash swept away. Raised to P2 from the P3s' level because the pile is now known to have contained recoverable
+      work. **Done when**: a fresh per-checkout `git stash list` is recorded with a per-entry verdict, and the two todos
+      below are rewritten against those verdicts with re-measured counts. Note: the actual mechanical `git stash drop`
+      still has NOT been executed as of this write-up — live-checked `.tabs/1`'s own stash count is 102 (grown further
+      since the 2026-08-08 audit's 96, from ongoing shared-checkout autostash accumulation), not 0 — the two
+      `[OPERATOR] P3` todos below (superseded in text but not in checkbox) remain the open action.
 - [ ] [OPERATOR] P3. **[BLOCKED on the re-audit above — do not run as written]** Run the mechanical stash drop in
       `.tabs/4/unified-trading-pm` (the `[DATA] P2` audit above already did the actual judgment-call review — this is
       pure mechanics, not a decision): `for i in $(seq 1 25); do     git stash drop stash@{0}; done` (or
