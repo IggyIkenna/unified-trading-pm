@@ -163,18 +163,17 @@ human already made the call and the fleet still never executes it.
       delta measurement). Same moot cause as the sibling finding above (same target doc, now archived with every todo —
       including this one — checked `[x] ✅`). Verified via the same `dispatch_visibility_report --json` run: zero hits
       for this doc. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. **Triage accidental exclusion in
-      `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`.** Its checkbox reads (truncated):
-      "[SCRIPT] P1. **Cross-cutting data-completion prep residuals — `data_completion_to_100_all_ag_2026_06_21.md` Step"
-      — the marker trips `_is_non_dispatchable` (`agent-orchestrator/server/regen_backlog_from_plan.py`) but does not
-      open its own line, so `check_ao_dispatch_visibility_gate.py` classifies it accidental (declared: false). If it is
-      genuinely still blocked, move the non-dispatchable marker (a live BLOCKED‑token, or a permanent-deferral tag) to
-      the start of its own line (the checkbox line, right after its `[TAG] P<n>.` prefix, or a dedicated continuation
-      line) so it reads as a declared hold. If it is already resolved (several of these carry a dated
-      `RULED`/`DESIGN DECIDED` note — read the full todo before acting), rewrite the trigger phrase so the marker no
-      longer appears anywhere in the block. Verify:
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-20, infra).** Triage accidental exclusion in
+      `plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`. Moot, not accidental: the whole target
+      plan is gone from `plans/active/` — it was archived (all 22 todos done) to
+      `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` via
+      `unified-trading-pm@4f0666d0c` ("archive cross_cutting_satellite_ao_dispatch_batch1 (all 22 todos done)"). The
+      flagged todo's own trigger phrase had already been paraphrased earlier the same day by
+      `unified-trading-pm@8cbfaeea9` ("fix 2 cross_cutting-tranche ao-dispatch-visibility accidental exclusions"), then
+      the doc was completed and archived outright — no open todo remains anywhere for the gate to misclassify. Verified:
       `cd agent-orchestrator && .venv/bin/python3 -m server.dispatch_visibility_report --pm-path ../unified-trading-pm --json`
-      no longer lists this doc's todo with `"declared": false`. (repo: unified-trading-pm)
+      no longer lists `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` at all (only the sibling
+      `..._finalize.md` doc appears, `excluded: []`). (repo: unified-trading-pm)
 - [x] ✅ [SCRIPT] P2. **DONE 2026-08-09 (slot-24, infra).** Triage accidental exclusion in
       `plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md`. Already fixed by another session, not hand-fixed
       here: the flagged todo's trigger phrase (`...batch5_2026_07_27.md`'s earlier BLOCKED-OPERATOR-DECISION
