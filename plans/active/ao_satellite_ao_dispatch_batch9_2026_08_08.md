@@ -9,7 +9,7 @@ summary: >-
   scratch"). Of 48 items re-checked, exactly ONE surfaced genuinely new, not-yet-extracted AO-eligible work:
   `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01.md`'s 2 remaining items, whose 2nd stated conflict
   (sequencing behind `boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md`'s composer-guard
-  fix) cleared today when that fix's code landed live (`agent-orchestrator@6166269`/`@41da3e578`, verified via
+  fix) cleared today when that fix's code landed live (`agent-orchestrator@6166269`/`@0a8ed16`, verified via
   batch6-finalize todo 1's own re-run evidence) even though the source doc's own checkboxes are still stale-unflipped (a
   separate, already-tracked reconciliation gap, not this batch's job). Every other cleared/resolved item found by the
   re-check was either already self-dispatched (`assigned_vm: planning` directly, no batch wrapper needed), fully
