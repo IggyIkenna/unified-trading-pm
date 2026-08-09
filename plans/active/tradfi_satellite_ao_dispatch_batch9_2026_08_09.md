@@ -99,6 +99,19 @@ is deliberately thin; reported honestly rather than padded.
       the manifest for CBOE VX-futures via the new aggregator (not a passthrough), `quality-gates.sh` green, and
       `vix_features`'s required-input is genuinely fed.
 
+      **BLOCKED 2026-08-09 (slot-28, backend_engineer) — dispatched, found genuine POLICY CONFLICT, not an
+          implementation gap.** The aggregation mechanism itself already ships + is proven live for CME/NASDAQ/NYSE
+          (`mdps-backfill-tradfi-20260803-104812`: 99,711 candles, 788 captured rows) — this todo's own "genuinely new
+          build" framing is stale. The real blocker: CBOE VX-futures raw `ohlcv_1m`/`ohlcv_1s` is captured ONLY at
+          `instrument_type=futures_chain` grain (confirmed live on GCS, 2,942 captured rows), which
+          `market-data-processing-service@68f95f6`'s `_INSTRUMENT_TYPES_EXCLUDED_FROM_COARSE_TIMEFRAMES` (shipped
+          2026-08-06, one day before this todo's ruling) deliberately excludes from `ohlcv_15m`/`ohlcv_24h` — justified at
+          the time as "no downstream consumer expects combo-grain 15m/24h candles," a premise this todo's own 2026-08-07
+          ruling now contradicts for CBOE/VIX specifically. Filed
+          `issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md` with 2 candidate fix paths +
+          an `[OPERATOR]` decision todo rather than unilaterally reopen the CME-combo crash that exclusion was built to
+          close. This todo stays `- [ ]` pending that decision.
+
 ## Not extracted this batch — items that stay behind
 
 - `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s "Launch the ES_OPT backfill" + "Wire the ES_OPT post-launch
@@ -122,3 +135,10 @@ is deliberately thin; reported honestly rather than padded.
   `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`/`..._batch7_2026_08_06.md`'s own drafting — both of which still
   list these items as "Deferred — operator-gated" in their own text (stale as of that ruling). Conflict-check run
   against batch6/7/8 (all active) — zero collisions on the 2 extracted items.
+- 2026-08-09 (slot-28, backend_engineer): dispatched todo 2 (CBOE VX-futures aggregator). Found the aggregation
+  mechanism already ships/works (proven live for CME/NASDAQ/NYSE); the real blocker is a policy conflict between
+  `market-data-processing-service@68f95f6`'s 2026-08-06 `futures_chain`-exclusion default-ruling and this todo's own
+  2026-08-07 ruling — CBOE VX raw data is captured exclusively at the excluded `futures_chain` grain. Filed
+  `issues/mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md` (2 candidate fixes + `[OPERATOR]`
+  decision todo) rather than absorb an unplanned architecture-judgment call. Todo 2 left `- [ ]`, annotated in place
+  with the finding. No code shipped this session (nothing was safe to ship without the decision).
