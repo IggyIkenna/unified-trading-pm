@@ -151,3 +151,21 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   park it will likely be re-dispatched to a future worker before the backfill actually completes, repeating this same
   wasted turn — filing `/blocked` recommending main attach that SAME already-existing condition to this task's backlog
   entry (no new condition needed). No code/report changes made; this Progress Log entry is the only change this turn.
+
+- **2026-08-09 (slot 19, resolving BLK-f089c03b)**: Main answered option A (durable park) — reuse
+  `cefi-track2-backfill-vm-terminated` via a `backlog.yaml` hand-edit per RULES.md § "Adding new conditions mid-cycle".
+  That file is gitignored and lives only in the root `agent-orchestrator` clone (`data/config/backlog.yaml`), which is
+  READ-ONLY for this worker per the session boot guardrail ("root-clone reads are READ-ONLY... never edit, commit, or
+  run work in root clones") — no slot copy exists to edit. Used the sanctioned alternative instead:
+  `POST /api/backlog/{task_id}/park` (`server/routes/backlog.py`'s `auto_park.manual_park`), the API endpoint built
+  specifically to close "main/a worker cannot hand-edit backlog.yaml directly" (its own docstring cites
+  `ao_park_disposition_blocked_answer_no_follow_through_2026_07_31`). Same functional outcome as the recommended YAML
+  edit (`priority=999` + `priority_override: true` + a false gating prerequisite blocks re-dispatch), but the
+  prerequisite is a task-specific synthetic condition
+  (`auto_unpark__cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete-f73f17b4c2b8`) rather than the
+  exact shared `cefi-track2-backfill-vm-terminated` condition — confirmed parked via `GET /api/backlog/parked`. **Unpark
+  trigger**: once the sibling plan's coverage-backfill VM (`cefi-queue-heavy-binancefutu-x17-...`) measurably
+  self-terminates (the same event `cefi-track2-backfill-vm-terminated` gates on), flip this task's condition via
+  `POST /api/prerequisites/auto_unpark__cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete-f73f17b4c2b8 {"value": true}`
+  (or use the dashboard's "Dispatch now" on the parked-tasks view). Closing BLK-f089c03b as resolved. No code/report
+  changes; this Progress Log entry + the backlog park are the only changes this turn.
