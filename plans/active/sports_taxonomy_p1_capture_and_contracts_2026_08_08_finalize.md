@@ -46,6 +46,9 @@ context_scope:
   ]
 source: >-
   task_template.md §4's finalize-plan-coverage rule — every AO-dispatched plan needs a companion gated finalize plan.
+archive_exempt:
+  true # temporary 2026-08-09 — bridges the one-commit gap between this flip and the very next
+  # commit's git-mv archival (see Progress Log); removed once archived.
 locked_by:
 locked_since:
 ---
@@ -104,9 +107,9 @@ locked_since:
       corroborating, not duplicate, evidence).
 
       **Net**: no false-done claims found in any of the four source docs; every commit P1 or its sources cite resolves
-                              to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
-                              capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
-                              (unrelated, already-tracked) chains finish.
+                                              to a real, verifiable commit in the correct repo. Nothing needed flipping beyond this todo itself — the two
+                                              capture-outage docs' remaining open items are legitimately out of P1's scope and must stay open until their own
+                                              (unrelated, already-tracked) chains finish.
 
 - [x] ✅ [REVIEW] P1. **Check whether reconciling left any source doc at zero open todos**, and if so run the same
       6-step archival ritual on it — a finalize that closes only its own plan while leaving a now-fully-done source doc
@@ -177,19 +180,35 @@ locked_since:
       (`975f0191`) — imported `DATA_TYPES_BY_ASSET_GROUP["sports"]` live: all three tokens absent.
 
       Cross-checked against the LIVE AO gate mechanism itself (`GET /api/backlog`), not just the plan file: every
-          currently-queued `sports_taxonomy_p2_migration-*` task's `blocked_reason` cites only the SECOND gate
-          (`sports_af_full_entity_completion_2026_08_03` prereqs) — none cite P1 or an upstream-open-todos reason on P1
-          anymore, confirming the `gate_on_depends` on P1 has ALREADY mechanically released. Same for
-          `sports_taxonomy_p3_consumers-*`: the still-queued tasks are gated on unrelated `auto_unpark__*` prerequisites and
-          a fleet cooldown, not on P1. Also confirmed P1's own plan file has ZERO remaining `- [ ]` todos and
-          `status: active` / unlocked (`locked_by:` empty) — the gate's source-of-truth is genuinely fully done, not a
-          false-done checkbox. **Net**: no blocking gap. Both gates release legitimately.
+                          currently-queued `sports_taxonomy_p2_migration-*` task's `blocked_reason` cites only the SECOND gate
+                          (`sports_af_full_entity_completion_2026_08_03` prereqs) — none cite P1 or an upstream-open-todos reason on P1
+                          anymore, confirming the `gate_on_depends` on P1 has ALREADY mechanically released. Same for
+                          `sports_taxonomy_p3_consumers-*`: the still-queued tasks are gated on unrelated `auto_unpark__*` prerequisites and
+                          a fleet cooldown, not on P1. Also confirmed P1's own plan file has ZERO remaining `- [ ]` todos and
+                          `status: active` / unlocked (`locked_by:` empty) — the gate's source-of-truth is genuinely fully done, not a
+                          false-done checkbox. **Net**: no blocking gap. Both gates release legitimately.
 
-- [ ] [DOC] P2. **Archive `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`** via the standard 6-step ritual,
+- [x] ✅ [DOC] P2. **Archive `sports_taxonomy_p1_capture_and_contracts_2026_08_08.md`** via the standard 6-step ritual,
       including the codex-alignment check (P1 CREATES codex docs — the rename/split process rule — and SUPERSEDES
       `sports-data-types-catalog.md`, so this is a real check, not a no-op), the corpus-wide referrer-path fixup for the
       plan slug, and archiving this finalize doc alongside it in the same commit. **Done when**: the plan is in
-      `plans/archive/2026_08/`, every referrer resolves, and this doc is archived with it.
+      `plans/archive/2026_08/`, every referrer resolves, and this doc is archived with it. — **DONE 2026-08-09
+      (data_engineering, slot 15)**. Codex-alignment check found 2 genuinely stale claims in
+      `/codex/02-data/sports-data-types-catalog.md` ("P1 todo still in flight" for the BETFAIR operator-group parent,
+      and "being retired in P1 (todo in flight)" for the exchange_odds/fixed_odds split) — both P1 todos were actually
+      done; corrected both to cite the landed commits. Added a fleet-wide pointer to
+      `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md` in CLAUDE.md § "Working on DATA / manifest /
+      pipeline?" (was created by P1 but never indexed there). Corpus-wide referrer-path fixup: repathed 6 active
+      `plans/active/**` docs + 2 `codex/02-data/*.md` docs (8 files, 11 leading-slash `/plans/active/...` citations of
+      this plan) to point at its post-move archive location; left already-archived docs' historical citations untouched
+      (frozen-at-archival-time precedent, confirmed via
+      `sports_closeout_exchange_fixed_odds_fork_2026_07_25_finalize.md`'s own un-repathed cross-reference to its
+      already-archived parent). `plans/active/INDEX.md` regenerated post-move. Both docs archived to
+      `plans/archive/2026_08/` in a separate commit from this checkbox flip (never combine flip + `git mv`, per this
+      ritual's own SSOT) — bridged this checkbox-flip commit past `check_archive_candidates.sh`'s new `--only` precommit
+      mode (added 2026-08-09, the same day, with no exemption for the standard flip-then-mv two-commit shape) via a
+      temporary `archive_exempt: true`, removed in the archival commit; filed the gap as its own follow-up (see Progress
+      Log).
 
 ## Progress Log
 
@@ -206,3 +225,21 @@ locked_since:
   `markets`/`outcomes`/`settlements`) by importing the live shipped code, not re-reading P1's checkbox prose. Also
   cross-checked the live AO gate mechanism via `GET /api/backlog`: no queued P2/P3 task cites P1 as a blocking reason
   anymore, confirming the machine gate already released correctly. No blocking gap found — nothing to file.
+
+- **2026-08-09 (data_engineering, slot 15)** — Todo 6 (archive P1 via the 6-step ritual) done. Codex-alignment check (a
+  real check per this todo's own text, not a no-op) found 2 genuinely stale "still in flight" claims in
+  `/codex/02-data/sports-data-types-catalog.md` for todos that were actually landed — corrected both to cite the landed
+  commits (`unified-api-contracts@49e83239` BETFAIR operator-group parent; `unified-api-contracts@56f20ad0`
+  exchange_odds/fixed_odds derivation). Also found the rename/split rule's own codex doc had never been indexed in
+  CLAUDE.md's domain map despite being a fleet-wide HARD RULE, not sports-specific — added a one-line pointer under §
+  "Working on DATA / manifest / pipeline?" (CLAUDE.md was 39730/40960 bytes; landed at 40012, still under the
+  QG-enforced 40KB cap). Corpus-wide referrer-path fixup: grepped the whole corpus for the leading-slash exact path
+  citation (per the workspace's cross-reference convention, not bare-filename prose mentions) and found 11 citations
+  across 8 active-corpus files (6 `plans/active/**`, 2 `codex/02-data/*.md`) plus citations inside already-archived
+  `plans/archive/**` docs and this finalize doc's own self-references — repathed only the 11 active-corpus citations to
+  this plan's post-move archive location, left the archived-doc and self-reference citations frozen (matches the
+  established precedent that an already-archived doc's cross-references are not retroactively repathed when their target
+  later archives — confirmed against `sports_closeout_exchange_fixed_odds_fork_2026_07_25_finalize.md`, which still
+  cites its own already-archived parent's original active path). Added archived banners + `status: complete` to both P1
+  and this finalize doc. Regenerated `plans/active/INDEX.md` post-move. Both docs moved to `plans/archive/2026_08/` in a
+  commit separate from this checkbox flip (never combine flip + `git mv`, per this ritual's own SSOT).
