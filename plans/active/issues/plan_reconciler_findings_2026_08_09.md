@@ -197,7 +197,29 @@ depends_on: []
 
 ## Filed
 
-(populated as verified)
+Every genuinely-undecidable item below was BOTH alerted (`POST /blocked`, fires a dashboard escalation) AND filed here
+durably, per STEP 6's two-channel routing rule. `routed_to_operator` = 4, `parked_in_issue_doc` (this section) = 4 —
+balanced (Phase 5.9(a) ledger check).
+
+1. **`BLK-63280f61`** — 2 codex SSOT staleness fixes need operator approval before applying (codex edits are never
+   autonomous): `/codex/05-infrastructure/deployment-observability.md` P0 ("defaults to Firestore on GCP" with no HALT
+   caveat) + `/codex/03-deployment/data-status-ui-surface.md` P1 (stale `HonestCoverageCard` description). See
+   `## Doc-drift` items 2-3 for full evidence. Recommended: A (apply both as proposed).
+2. **`BLK-160d8cee`** — `plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` is fully
+   done (3/3 todos `[x]`, hard evidence) but stuck behind `status: open` + an impossible `locked_since` (predates its
+   own `created` by ~2 months) — 4th consecutive flag across audit runs with zero action. Asked for `[unlock-plan]`
+   authorization to fix metadata + run the 6-step archival ritual. Recommended: A (unlock, I'll archive it this pass).
+3. **`BLK-97110aee`** — possible DeFi Phase-E gate-sequencing contradiction in
+   `data_status_tab_and_downloads_remediation_2026_06_16.md` (a shipped path-fix pre-dating its own stated TIER-2 gate
+   clearing by ~3 weeks) — a data-pipeline-correctness question outside ui-shard domain expertise to resolve solo;
+   plausible innocent explanation exists (writer-cutover vs. backfill-apply) but not my call. Recommended: C (route to
+   the defi tranche's own reconciliation).
+4. **Codex `/codex/11-project-management/issue-doc-lifecycle.md` vs recurring `ag_closeout_audit_*_parked_*.md` docs —
+   NOT sent as a live blocked-question** (genuinely ambiguous whether this is even a gap — see `## Doc-drift` item 4 —
+   and confirmed cross-tranche, wider than one shard's dispatch can resolve or usefully force a same-day ruling on).
+   Filed here for a future `all`-scope `/plan-reconcile` run or a skill-maintainer pass to pick up: either codex needs
+   an explicit "recurring dated audit-trail record" exception, or these docs (2 in the ui tranche: `_2026_08_07.md`,
+   `_2026_08_08.md`; confirmed ≥1 sibling in `defi`) are a genuine, silently-accumulating archival-discipline gap.
 
 ## Archive candidates (operator review)
 
