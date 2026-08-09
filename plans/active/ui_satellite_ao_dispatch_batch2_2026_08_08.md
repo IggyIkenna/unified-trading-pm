@@ -222,3 +222,4 @@ for why Deferred item 1 was NOT drafted) · `/codex/11-project-management/ao-dis
   incidental hits as at drafting time, no new claim; (c) `ui_consolidated_closeout_2026_07_30.md` unchanged since this
   batch's drafting. `locked_by` unset. Batch 1 (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`) approved in the same
   pass — confirmed disjoint target files, no collision. Dispatching.
+- **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
