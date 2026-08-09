@@ -261,3 +261,64 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   `plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md`, which independently verified
   0 objects have actually moved and the 9,733-object count is unchanged) — dispatch for this exact work already exists
   live. Flipping this doc too would create a duplicate AO task for identical work. No flip, no extraction.
+
+- **2026-08-09 (slot-6, data_engineering, `sports_closeout_track_x_hygiene-006`)**: ran the actual migration dry-run
+  census against `instruments-store-sports-prd-central-element-323112` and found the live bucket state is substantially
+  different from the 9,733/172 baseline this issue documented:
+  - **Fixed 2 real bugs** in the migration script (`market-tick-data-service@ae797274`,
+    `scripts/sports/league_id_relocation/migrate_instruments_store_sports_league_vocabulary_2026_08_04.py`): (1) the
+    dry-run's canonical-mapping printer unpacked its `Counter` tuple wrong (summed the canonical-league string instead
+    of the object count), crashing before the JSON report wrote; (2) resolution only sampled the FIRST
+    `(day, pipeline_mode)` occurrence of each league value before quarantining, undercounting real contamination when
+    that one sample lacked a sibling `entity=fixtures` object even though other days had one — now retries up to 8
+    samples.
+  - **Scope correction**: the bucket's `league=` partition carries **1,603 distinct values total**, of which **1,131 are
+    numeric IDs** (~40K objects) from `pipeline_mode=batch_instruments_service` — a completely different, unrelated
+    keying scheme (not api-football data at all; every documented contamination example — `ENGLAND_PREMIER_LEAGUE`,
+    `LA_LIGA_2`, `UNKNOWN` — is non-numeric). Excluded these from migration scope entirely (script now treats them as
+    out-of-scope, not quarantine).
+  - **Of the 472 remaining non-numeric values**: only **3 resolve to a genuinely different canonical form** —
+    `SEGUNDA_DIVISION→LA_LIGA_2`, `BRAZIL_SERIE_A→BRASILEIRAO`, `ENGLAND_PREMIER_LEAGUE→EPL` — accounting for **13,911
+    objects** across 4,497 `(day, pipeline_mode)` units spanning 2020-06-06 through 2026-08-07. 19 values are already
+    canonical (no-op). **450 values (~1.45M objects) remain genuinely QUARANTINED** — could not resolve via the
+    cross-entity `af_league_id` lookup even with the 8-sample retry, almost entirely because they are legitimate
+    smaller/regional leagues with no UAC registry entry, not further country-prefixed contamination of the documented
+    kind. This matches the original todo's own "Done when" wording, which explicitly excludes the quarantine population
+    from the done-condition.
+  - **Validated the copy+verify mechanism** against the TEST bucket (5 sample units, 9/9 writes PASS, SHA-256 readback
+    byte-identical) before running the real migration.
+  - **New, separate finding**: while resolving `entity=fixtures` objects for cross-entity lookup, hit a schema-mismatch
+    (not missing-column) error on 54 distinct league values — one instance directly verified
+    (`day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures/league=BOLIVIA_PRIMERA_DIVISION/fixtures.parquet`)
+    genuinely contains `InstrumentRecord`-shaped instrument-catalog content, not sports fixture data. Filed separately
+    as `/plans/active/issues/sports_fixtures_object_wrong_schema_instrument_catalog_contamination_2026_08_09.md`
+    (already root-caused same-day by slot-15 as the known 2026-07-16 burst-write incident, structurally fixed — see that
+    doc). The 54 affected league values (from the full dry-run's quarantine log,
+    `grep -B1 "No match for FieldRef.Name(af_league_id)"`): ARGC, ARGENTINA_LIGA_PROFESIONAL_ARGENTINA,
+    ARGENTINA_PRIMERA, ARGENTINA_PRIMERA_B_METROPOLITANA, ARGENTINA_PRIMERA_NACIONAL, ARGENTINA_RESERVE_LEAGUE,
+    AUSTRIAN_CUP, AUSTRIA_REGIONALLIGA_OST, BOLIVIA_PRIMERA, BOLIVIA_PRIMERA_DIVISION, BRASILEIRAO_SERIE_B,
+    BRAZIL_BRASILEIRO_U20_A, BULGARIA_SECOND_LEAGUE, BULGARIA_THIRD_LEAGUE_SOUTHEAST, CHILE_PRIMERA_B,
+    CHILE_PRIMERA_DIVISION, CHINA_LEAGUE_TWO, CURACAO_SEKSHON_PAGA, CYPRUS_1_DIVISION, CYPRUS_SECOND_DIVISION,
+    CZECH_REPUBLIC_4_LIGA_DIVIZIE_D, DOMINICAN_REPUBLIC_LIGA_MAYOR, ECUADOR_COPA_ECUADOR, EL_SALVADOR_PRIMERA_DIVISION,
+    ENGLAND_CHAMPIONSHIP, ENGLAND_LEAGUE_ONE, ENGLAND_LEAGUE_TWO, ENGLAND_NATIONAL_LEAGUE,
+    ENGLAND_NATIONAL_LEAGUE_NORTH, ENGLAND_NATIONAL_LEAGUE_SOUTH, ENGLAND_NON_LEAGUE_PREMIER_ISTHMIAN,
+    ENGLAND_NON_LEAGUE_PREMIER_SOUTHERN_CENTRAL, ENGLAND_NON_LEAGUE_PREMIER_SOUTHERN_SOUTH,
+    ENGLAND_PROFESSIONAL_DEVELOPMENT_LEAGUE, ENGLAND_U18_PREMIER_LEAGUE_NORTH, ENGLAND_U18_PREMIER_LEAGUE_SOUTH,
+    GEORGIA_EROVNULI_LIGA_2, GERMANY_OBERLIGA_BAYERN_NORD, GERMANY_OBERLIGA_BAYERN_SUD, GERMANY_OBERLIGA_BREMEN,
+    GERMANY_OBERLIGA_HAMBURG, GERMANY_REGIONALLIGA_BAYERN, GERMANY_REGIONALLIGA_NORDOST, INDIA_I_LEAGUE,
+    INDIA_I_LEAGUE_2ND_DIVISION, IRAN_PERSIAN_GULF_PRO_LEAGUE, IRAQ_IRAQI_LEAGUE, IT2, ITALY_SERIE_B,
+    KAZAKHSTAN_PREMIER_LEAGUE, KENYA_FKF_PREMIER_LEAGUE, LIBERIA_FIRST_DIVISION, LIBERIA_LFA_FIRST_DIVISION,
+    PALESTINE_WEST_BANK_PREMIER_LEAGUE, PANAMA_LIGA_PANAMENA_DE_FUTBOL, PERU_PRIMERA, PERU_PRIMERA_DIVISION, POLISH_CUP,
+    PORTUGAL_LIGA_REVELACAO_U23, SC1, SCOTLAND_CHAMPIONSHIP, SCOTLAND_LEAGUE_ONE, SLOVAKIA_SUPER_LIGA, SLOVENIA_1_SNL,
+    SVENSKA_CUPEN, SWEDEN_SUPERETTAN, TANZANIA_LIGI_KUU, TANZANIA_LIGI_KUU_BARA, UKRAINE_PREMIER_LEAGUE,
+    UKRAINE_U19_LEAGUE, URUGUAY_SEGUNDA, USA_US_OPEN_CUP, WALES_WELSH_CUP, WORLD_AFC_CHAMPIONS_LEAGUE_ELITE,
+    WORLD_CONMEBOL_LIBERTADORES, WORLD_CONMEBOL_NATIONS_LEAGUE_WOMEN, WORLD_CONMEBOL_SUDAMERICANA, WORLD_CUP,
+    WORLD_FRIENDLIES_WOMEN, WORLD_OFC_PRO_LEAGUE, WORLD_UEFA_CHAMPIONS_LEAGUE,
+    WORLD_WORLD_CUP_WOMEN_QUALIFICATION_CONCACAF, WORLD_WORLD_CUP_WOMEN_QUALIFICATION_EUROPE. This corrects the earlier
+    "see the sibling issue's 2026-08-09 Progress Log" citation in
+    `/plans/active/issues/sports_fixtures_object_wrong_schema_instrument_catalog_contamination_2026_08_09.md`, which
+    slot-15 correctly flagged as not actually present here when it root-caused that issue — this entry is that missing
+    list.
+  - Running the scoped, verified `--apply-prod` migration (13,911 objects / 4,497 units) now; will update this doc +
+    flip the plan checkbox once complete and a fresh census confirms 0 objects remain for the 3 target mappings
+    (quarantine population excluded per the todo's own done-when wording).
