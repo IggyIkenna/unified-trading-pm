@@ -601,3 +601,28 @@ re-arming, don't trust the committed default.
 - **NEXT ACTION (fresh session)**: same as every prior checkpoint — check todo #2's checkbox first; if `[ ]`, check
   `kill -0 2092980` for liveness (may be dead, that's expected/normal per this saga's findings); if dead, re-arm per the
   recipe above with your OWN current task id.
+
+### 2026-08-09T~06:08Z-07:59Z — slot 22, same session — root cause found+fixed elsewhere, out-of-scope fleet fully
+
+drained, in-scope CME converging
+
+**Status: IN FLIGHT, genuinely converging now.** The 18-VM peak (6:08Z checkpoint) traced to `wave_launcher.py`, an
+hourly `--force` cron on `planning` ignoring the scope ruling — root-caused + the runaway process killed by another
+session (`issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`, not this session's work,
+cross-linked here for continuity). Confirmed no re-growth since. Fleet drain observed directly: 18 → 9 → 8 → **7** (all
+in-scope CME ES/ETH/MBT/MET; the entire out-of-scope NASDAQ/NYSE wave self-completed and drained to 0 on its own — no
+kill needed). Remaining 7 are a mix of ~4.8h-old originals + ~1.9h-old cron-duplicated siblings (same symbol+year
+running twice, wasteful but not this task's concern to fix).
+
+**Watcher lineage this session**: PID 2092980 (05:54Z, died ~5min) → PID 2908332 (06:18Z, survived **1.5+ hours**,
+noticeably better than every earlier attempt this session, died sometime before 07:58Z) → PID **1059819** (07:58:39Z,
+current, verified isolated). `run_in_background` watchdogs continue to die almost immediately (~1min, confirmed twice) —
+not worth re-arming those; relying on the setsid watcher + periodic direct `gcloud` checks instead. **Lesson reinforced
+this cycle**: a ~1h40m real-time gap occurred between two consecutive tool calls in this session with no indication at
+the time — always run `date -u` fresh before reasoning about elapsed time or watcher-death likelihood, per this doc's
+existing lesson #7.
+
+- **NEXT ACTION (fresh session)**: check todo #2 checkbox first. If `[ ]`: check `kill -0 1059819`; if dead, re-arm
+  (recipe near the top of this saga, remember the CURRENT task id, not a stale one). Direct check:
+  `gcloud compute instances list --filter='name~"^tradfi-bf-"'` — trend is DOWN, likely to clear soon if it keeps going,
+  but don't assume the exact rate holds.
