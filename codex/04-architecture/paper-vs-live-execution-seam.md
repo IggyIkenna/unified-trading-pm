@@ -34,7 +34,7 @@ referenced_by:
     /codex/14-customer-journeys/dart/mode-toggle.md,
   ]
 owner:
-last_reviewed: 2026-05-10
+last_reviewed: 2026-08-09
 code_refs:
 overview:
   Pins the principle that batch / paper / live differ ONLY at the execution layer — strategy / risk / P&L / position /
