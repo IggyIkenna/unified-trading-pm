@@ -21,7 +21,7 @@ related:
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-09"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -60,10 +60,19 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Verify the rename-corruption fix against a real archival + forced-retry simulation.** Confirm the
-      parent doc's own done-when: an archival `git mv` + a forced retry (simulate a concurrent push between commit and
-      push) yields a commit whose `git ls-tree -r HEAD` shows the doc at exactly ONE path, not both. **Done when**:
-      independently re-run, not just the shipping worker's own claim trusted. Repo: unified-trading-pm.
+- [x] ✅ [REVIEW] P2. **DONE 2026-08-09 (slot-4, review craft)** — independently re-verified (not the shipping worker's
+      claim trusted): built a fresh sandboxed bare-repo + 2-clone rig, replayed the exact collision shape (clone A
+      stages an archival `git mv doc.md archive/doc.md`; clone B concurrently commits+pushes a CONTENT edit to the
+      rename source `doc.md`, forcing clone A's `safe-doc-push.sh` into the
+      `merge-pull can't fast-forward ->     rebase+autostash` path). Against the CURRENT (patched, `f76a03a99`) script:
+      `reassert_renames()` fired ("re-staging deletion of rename source"), and the resulting commit's
+      `git ls-tree -r HEAD` showed the doc at exactly ONE path (`archive/doc.md`), correctly rename-detected
+      (`git show -M HEAD` prints a clean `rename from`/`rename to`), content correctly carrying BOTH the rename and
+      clone B's concurrent edit. **Negative control**: re-ran the identical scenario from a fresh rig against the
+      PRE-FIX script (`f76a03a99~1`) — it reproduced the doc's own reported symptom exactly, `git ls-tree -r HEAD`
+      showing the doc at BOTH paths (`doc.md` and `archive/doc.md`, same blob). Confirms the fix's done-when criterion
+      holds and that the corruption is real absent the fix. Verification-only (sandboxed, no repo code changed). Repo:
+      unified-trading-pm.
 - [ ] [REVIEW] P2. **Confirm the live `.agent-claim` heartbeat + session-start collision warning actually reduce
       collision frequency, not just that the code shipped.** Watch for at least one real multi-session collision after
       deploy and confirm the warning fired (WARN, not refuse, per the operator's 2026-08-08 ruling). **Done when**: a
@@ -89,3 +98,9 @@ source: >-
 - **2026-08-08**: Drafted alongside the parent doc's `na-eligibility-audit round7 RECLASSIFY` flip from
   `assigned_vm: NA` to `planning`. `status: active` immediately (not `draft`) — machine-held from actually dispatching
   via `depends_on` + `gate_on_depends: true` until the parent doc's 4 remaining todos are done.
+- **2026-08-09 (slot-4, review craft)**: Flipped the rename-corruption verification todo (above) — independently
+  reproduced the exact forced-retry collision shape in a fresh sandboxed bare-repo + 2-clone rig (not reused state, not
+  the shipping worker's own claim trusted). Patched script (`f76a03a99`): single final path, clean rename detected,
+  content correctly merged. Pre-fix script (`f76a03a99~1`), same scenario replayed from scratch as a negative control:
+  doc landed at both paths, reproducing the original symptom exactly. 2 todos remain open (`.agent-claim`/session-start
+  collision-frequency confirmation; the 6-step archival) — doc stays `status: active`.
