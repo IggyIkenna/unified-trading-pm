@@ -253,16 +253,28 @@ context_scope:
       qualifier (`_Z`/`!`/`_MD1`) into the canonical id, map to the base product root, extend `EXCHANGE_CODE_TO_NAME`.
       Non-MVP, no rush, no longer operator-gated. **Done when**: all 269,520 ICE-qualifier rows + the 1,063-row
       quarantine bucket canonicalize, 0 remaining.
-- [ ] [DATA] P2. **NEW 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — purge these rows, do not keep
-      them live.** `tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 1 re-asked this exact question on
-      2026-08-07 without realizing the classifier fix above had already shipped 2026-07-28 (that item was stale —
-      corrected there too). The operator's actual 2026-08-07 answer adds new scope beyond the shipped fix: since ICE is
-      non-MVP and this data will not be used, **delete the (now-canonicalized) 269,520 ICE-qualifier rows + the original
-      1,063-row quarantine bucket from both the catalogue and the live manifest**, rather than leave them sitting as
-      valid-but-unused entries. Needs its own scoped delete pass (identify via the same
-      `_ICE_UNDERSCORE_BODY_RE`/`_ICE_QUALIFIER_SUFFIX_RE`-matched population, delete-safety-cite per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` since this is a manifest/catalogue delete, not yet
-      scoped into a plan).
+- [x] ✅ [DATA] P2. **NEW 2026-08-07 (operator, via consolidated NA-blocker-digest audit) — purge these rows, do not
+      keep them live. SHIPPED 2026-08-09 — instruments-service@4b54bc99.**
+      `tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 1 re-asked this exact question on 2026-08-07
+      without realizing the classifier fix above had already shipped 2026-07-28 (that item was stale — corrected there
+      too). The operator's actual 2026-08-07 answer adds new scope beyond the shipped fix: since ICE is non-MVP and this
+      data will not be used, delete the (now-canonicalized) 269,520 ICE-qualifier rows + the original 1,063-row
+      quarantine bucket from both the catalogue and the by-day corpus feeding it, rather than leave them sitting as
+      valid-but-unused entries. `instruments-service/scripts/purge_tradfi_ice_qualifier_rows_2026_08_09.py`
+      (delete-safety-cited `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a inline — object/prefix delete
+      via `gcs_conditional_delete`/`gcs_conditional_put` qualifies for agent-autonomous execution once a fresh same-run
+      `gcs_bucket_soft_delete_retention_seconds` check clears 604800s; no `[OPERATOR]` tag needed). **Live-state
+      finding: the population was already purged** — a prior ad-hoc, uncommitted run had already applied the delete
+      (backup snapshot `prod/backups/catalog.parquet.pre_tradfi_ice_purge_20260808-001425.bak.parquet` dated
+      2026-08-08T00:14:25Z existed before this script was ever written). **Fresh live re-verification this session (both
+      dry-run AND `--apply`, both surfaces, genuinely re-run, not just cited from the script's own docstring)**:
+      catalogue 919,493 total rows / 0 ICE-qualifier matches (0 writes); by-day corpus 2,656 real day partitions / 4
+      residual `venue=ICE` directories, all a different, unrelated ICE product (`ICE:INDEX:DXY-USD`, never part of this
+      population) / 0 qualifier matches (0 writes); `--apply` run also confirmed the live fresh retention check passes
+      (`instruments-store-tradfi-prd-central-element-323112` = 604800s). This 0/0 result on both surfaces, both modes,
+      is the completion evidence — the shipped tool also formalizes the already-applied purge as reviewed code and gives
+      the fleet a genuine re-drift detector (re-run either mode any time to prove 0 residual, or purge for real if ICE
+      FUTURE/OPTION capture ever resumes).
 - [x] ✅ [DATA] P0. **Enumeration-driven migration (SINGLE SOURCE OF TRUTH — operator, 2026-07-18) — CASING sub-scope
       CLOSED 2026-07-25 to the literal-100% directive bar; semantic-mislabel-relabel + null/blank sub-scopes remain
       separately open, see the new P1 todo just below.** The migration MUST be driven by the FULL distinct set of
