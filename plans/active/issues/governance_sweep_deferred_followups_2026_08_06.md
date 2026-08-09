@@ -101,9 +101,10 @@ context_scope:
       (`cefi_content_migration_shard24...` above), and **8 already correctly resolved, no action needed**
       (`defi_consolidated_closeout_2026_07_18.md`, `l2_book_microstructure_capture_2026_07_13.md`,
       `issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`,
-      `issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md`,
-      `issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` — grep false-positive, matches were
-      inside a fenced quote block, not live checkboxes; `issues/post_cutover_silent_assumption_sweep_2026_07_23.md`,
+      `/plans/archive/2026_08/issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md` (resolved, archived
+      2026-08-09), `issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` — grep false-positive,
+      matches were inside a fenced quote block, not live checkboxes;
+      `issues/post_cutover_silent_assumption_sweep_2026_07_23.md`,
       `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`,
       `issues/strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`). Evidence: `unified-trading-pm@09cdfaad65`.
 - [x] [OPERATOR] P2. **6 RECLASSIFY candidates from the 2026-08-06 na-eligibility-audit reclassification pass hit a
@@ -150,17 +151,17 @@ context_scope:
       conflict cited.
 
       **round5-cross-cutting-audit 2026-08-08: all 6 subparts now confirmed resolved, no operator ruling needed.**
-                          (1) already closed above (2026-08-07). (2) `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` already
-                          self-corrects the stale PR#1084 citation (current PR is #1093). (3)
-                          `defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`'s own 2026-08-08 Progress Log ran the live
-                          re-check, confirmed the stall IS real, removed the BLOCKED-OPERATOR-DECISION park. (4)
-                          `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (committed 2026-08-08) confirms the split is now moot.
-                          (5) `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s own audit entries already identify this
-                          as the same live conflict. (6) `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` Progress Log
-                          already cross-validates via an independent convergent audit run. All 6 close as stale-checkbox/duplicate
-                          corrections against the docs they collide with.
+                                      (1) already closed above (2026-08-07). (2) `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` already
+                                      self-corrects the stale PR#1084 citation (current PR is #1093). (3)
+                                      `defi_onchain_dep_check_blazestake_lstrates_stalls_2026_08_06.md`'s own 2026-08-08 Progress Log ran the live
+                                      re-check, confirmed the stall IS real, removed the BLOCKED-OPERATOR-DECISION park. (4)
+                                      `lst_rate_honest_coverage_over_cap_findings_2026_08_03.md` (committed 2026-08-08) confirms the split is now moot.
+                                      (5) `tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md`'s own audit entries already identify this
+                                      as the same live conflict. (6) `okx_futures_instid_marker_convention_mismatch_2026_07_30.md` Progress Log
+                                      already cross-validates via an independent convergent audit run. All 6 close as stale-checkbox/duplicate
+                                      corrections against the docs they collide with.
 
-                  **CLOSED 2026-08-08 (na-eligibility-audit round7)**: the round5-cross-cutting-audit entry immediately above already found all 6 subparts resolved as stale-checkbox/duplicate corrections against the docs they collide with -- flipping this checkbox to match (no new investigation performed, citing that entry's own evidence).
+                              **CLOSED 2026-08-08 (na-eligibility-audit round7)**: the round5-cross-cutting-audit entry immediately above already found all 6 subparts resolved as stale-checkbox/duplicate corrections against the docs they collide with -- flipping this checkbox to match (no new investigation performed, citing that entry's own evidence).
 
 - [x] ✅ [OPERATOR] P2. **aws_codebuild_terraform_import_pending_2026_07_22.md's D1-D4 rows still need your own read** —
       this sweep ruled the provider-pin sub-question (v5-align, recommended) but explicitly did not fabricate answers to
@@ -177,9 +178,10 @@ context_scope:
 - [x] ✅ [OPERATOR] P2. **daily_trading_analyst_llm_job_design_2026_07_29.md needs the actual escalation-N number** —
       how many days a finding may recur unremediated before its severity escalates, and the initial severity assignment.
       A genuine business-risk-tolerance parameter, not something this sweep should invent. Suggested starting point if
-      useful: N=3 days. **RESOLVED 2026-08-08 (operator ruling, cross-cutting round 5, id=48/id=59)**: escalation-N = 3
-      days, initial `assigned_vm` default for freshly auto-filed finding issue docs = `planning`. Recorded in the source
-      doc's own §5 todo 6 (now `[x]`). (repo: unified-trading-pm)
+      useful: N=3 days. **RESOLVED 2026-08-08 (operator ruling, cross-cutting round 5, id=48/id=59, recorded in
+      `daily_trading_analyst_llm_job_design_2026_07_29.md`)**: escalation-N = 3 days, initial `assigned_vm` default for
+      freshly auto-filed finding issue docs = `planning`. Recorded in that doc's own §5 todo 6 (now `[x]`). (repo:
+      unified-trading-pm)
 - [ ] [OPERATOR] P3. **sports_predictions_live_mode_activation_readiness_2026_07_21.md's final live-trading go-ahead is
       deliberately still open** — real-money live trading, reserved for your own explicit sign-off per the workspace's
       live-trading-activation HARD RULE, not defaulted by this sweep regardless of how many adjacent items got resolved.

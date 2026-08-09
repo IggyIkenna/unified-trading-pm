@@ -122,21 +122,23 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       or silently ignores it). **Done when**: the investigation's finding is recorded with evidence (a real
       request/response trace, or documented API-spec confirmation), and the icon's label/tooltip matches reality.
       Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:231` (todo 17b). Repo: agent-orchestrator.
-- [ ] [OPERATOR] [BACKEND] P3. **Extend `agent-orchestrator/scripts/orchestrator/backfill_task_usage.py` to cover
-      one-off completions lost during a prior deploy window, then run it.** Operator already ruled "run the backfill"
-      (2026-08-08, ao round-5 apply session, item 3). The live script's `backfill()` is keyed purely off
-      `SlotHistoryRow`, so one-off tasks (`AgentRow`-only, `task_id=f"one-off:{agent_id}"`) have zero candidates today —
-      add a second candidate source selecting `AgentRow` rows in the affected window (`registered_at` between the
-      `de73f93` and `acd6d70` deploy timestamps) lacking a `TaskUsageRow`, deriving `assigned_at`/`completed_at` from
-      `AgentRow` state (mirroring the one-off capture logic `deepseek_usage.build_task_usage_snapshot` already uses),
-      merged into the same `_match_usage`/`record_task_usage(backfilled=True)` path. Tagged `[OPERATOR]`-adjacent since
-      the `--apply` step mutates live production rows directly via SSM — same provenance as
-      `deepseek_flash_ab_routing_test_2026_08_05.md` todo 16's `repair_unpriced_deepseek_spend.py --apply` run. **Done
-      when**: the extension ships with a regression test (a one-off candidate with no `SlotHistoryRow` gets matched and
-      backfilled), a live dry-run report is reviewed, `--apply` runs via SSM against the live orchestrator VM, and the
-      affected window's one-off `TaskUsageRow` count is verified non-zero (or genuinely unmatched due to transcript
-      rotation — report either way). Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:447` (todo 25).
-      Repo: agent-orchestrator.
+- [ ] [BACKEND] P3. **Retagged 2026-08-09 (was `[OPERATOR] [BACKEND]`) — the source todo this was extracted from
+      (`deepseek_flash_ab_routing_test_2026_08_05.md:447` todo 25) already dropped `[OPERATOR]` in favor of plain
+      `[BACKEND]`; this copy's tag was stale, not the underlying work, which remains open (see below).** Extend
+      `agent-orchestrator/scripts/orchestrator/backfill_task_usage.py` to cover one-off completions lost during a prior
+      deploy window, then run it. Operator already ruled "run the backfill" (2026-08-08, ao round-5 apply session, item
+      3). The live script's `backfill()` is keyed purely off `SlotHistoryRow`, so one-off tasks (`AgentRow`-only,
+      `task_id=f"one-off:{agent_id}"`) have zero candidates today — add a second candidate source selecting `AgentRow`
+      rows in the affected window (`registered_at` between the `de73f93` and `acd6d70` deploy timestamps) lacking a
+      `TaskUsageRow`, deriving `assigned_at`/`completed_at` from `AgentRow` state (mirroring the one-off capture logic
+      `deepseek_usage.build_task_usage_snapshot` already uses), merged into the same
+      `_match_usage`/`record_task_usage(backfilled=True)` path. Tagged `[OPERATOR]`-adjacent since the `--apply` step
+      mutates live production rows directly via SSM — same provenance as `deepseek_flash_ab_routing_test_2026_08_05.md`
+      todo 16's `repair_unpriced_deepseek_spend.py --apply` run. **Done when**: the extension ships with a regression
+      test (a one-off candidate with no `SlotHistoryRow` gets matched and backfilled), a live dry-run report is
+      reviewed, `--apply` runs via SSM against the live orchestrator VM, and the affected window's one-off
+      `TaskUsageRow` count is verified non-zero (or genuinely unmatched due to transcript rotation — report either way).
+      Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:447` (todo 25). Repo: agent-orchestrator.
 - [ ] [BACKEND] P3. **Bound the 12 `UNAUDITABLE` (`brief_hash IS NULL`) rows in the AO backlog `state.db`.** Re-run
       `audit_false_done.py`, re-measure the current count (it has moved since `agent-orchestrator@aaa2db8` shipped), and
       confirm every remaining unhashed row's `status` is `done` (bounds the exposure — a row that is NOT `done` and
@@ -280,3 +282,7 @@ for drill-down if ever needed — not restated here per this doc's own line-cap 
   report (including the 29 declined-zero-extraction orphans and the 2 archivable_after_planned_work docs) lives in this
   doc's own `## Deferred` section above, per the parked-findings HARD RULE (Phase 3 ran this cycle, so the batch's
   Deferred section is the durable home, not a separate parked-findings issue doc).
+- **stale-`[OPERATOR]`-flip sweep 2026-08-09**: todo about `backfill_task_usage.py` carried a stale `[OPERATOR]` tag —
+  the source todo it was extracted from already retagged to plain `[BACKEND]` (the decision was made 2026-08-08, only
+  the tag copy here lagged). Retagged to match; checkbox left open since the extension + live `--apply` run itself is
+  still real, un-started work, not just a stale tag.

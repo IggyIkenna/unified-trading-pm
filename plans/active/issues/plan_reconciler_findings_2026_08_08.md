@@ -206,9 +206,12 @@ ever applied after an explicit operator ruling — filed here, not edited:
       launcher.
 - [ ] [OPERATOR] P3. `/codex/06-coding-standards/quality-gates.md:3248` calls the RAM-pressure abort-monitor "(planned)"
       — it shipped 2026-07-27 (`761edd205`), 11+ days ago (`qg_host_adaptive_resource_governor_2026_07_14.md`).
-- [ ] [OPERATOR] P3. `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md:95-99` documents
-      exactly 3 conflict-check surfaces; a measured 4th real surface slips through (fix todo open since 2026-08-06 in
-      `na_and_ag_closeout_audit_population_overlap_2026_07_31.md`).
+- [x] ✅ [DOCS] P3. `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md:95-99` documented
+      exactly 3 conflict-check surfaces; a measured 4th real surface slipped through. **Fixed**:
+      unified-trading-pm@c2083029dc ("docs(codex): add 4th conflict-check surface for draft satellite batches") — the
+      codex doc's § 3 now lists surface (d): `status: draft` satellite batches from either skill's prior run. The
+      originating todo (`na_and_ag_closeout_audit_population_overlap_2026_07_31.md:141`) still tracks the SKILL.md
+      cross-reference half of the same fix separately — not duplicated here.
 - [ ] [OPERATOR] P3. `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:159`'s Class-B table says
       `plan_reconciler` (this very role) runs "daily 01:00 UTC, opus" — current reality is sharded-by-tranche,
       hourly-retry-until-capacity, sonnet (per `daily_trading_analyst_llm_job_design_2026_07_29.md`'s 07-28/29 rulings
@@ -309,3 +312,6 @@ one hunter this run. The 262 grace-protected docs were correctly excluded per th
 ## Progress Log
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
+- **stale-`[OPERATOR]`-flip sweep 2026-08-09**: the 4th-conflict-check-surface codex-drift finding was stale — the codex
+  fix already landed (`unified-trading-pm@c2083029dc`, verified via `git log` against the target file). Flipped `[x]`,
+  retagged `[OPERATOR]` → `[DOCS]`.

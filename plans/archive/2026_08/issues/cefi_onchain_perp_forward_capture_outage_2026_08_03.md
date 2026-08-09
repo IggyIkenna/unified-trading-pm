@@ -13,7 +13,7 @@ summary: >-
   Remediation VMs for ASTER/LIGHTER-ZKSYNC/EXTENDED-STARKNET launched this session (on-demand, after 3/3 SPOT attempts
   were preempted within ~90s — a fleet-wide SPOT capacity crunch at the time, not specific to this launch); see Progress
   Log for outcome.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -160,14 +160,16 @@ finding, just not caught by any existing gate because no gate watches this speci
       can fire for ANY venue (not just ASTER). Verified: `classify_venue_error("aster", "UpstreamTimestampBiasError")`
       now returns non-None across all four onchain-perp venues; new tests added (`TestInternalErrorFallback`); full
       `quality-gates.sh` green.
-- [ ] [DATA][OPERATOR] P1. Investigate `cefi-hyperliquid-2024-20260727-071055` and
-      `cefi-hyperliquid-2025-20260727-071055` — **Preliminary investigation done 2026-08-04 (slot 6): BOTH VMs confirmed
-      ALIVE and productively working (NOT hung/zombied).** VM 2024: backfilling 2024 HYPERLIQUID data, currently at
-      2024-10-29, ~47% CPU, 3.2GB RSS, 161K+ manifest entries written, heartbeat active. VM 2025: backfilling 2025 data,
-      currently at 2025-09-13, ~61% CPU, 15.2GB RSS, heartbeat active. Both writing to per-VM manifest shards. SSH
-      confirmed MTDS processes running with correct parameters. Run.logs show steady symbol-by-symbol capture. These are
-      legitimate long-running multi-year S3 backfills — do NOT delete. Operator should confirm and close this todo.
-      **Repo: deployment-service.**
+- [x] ✅ [DATA] P1. Investigate `cefi-hyperliquid-2024-20260727-071055` and `cefi-hyperliquid-2025-20260727-071055` —
+      **Preliminary investigation done 2026-08-04 (slot 6): BOTH VMs confirmed ALIVE and productively working (NOT
+      hung/zombied).** VM 2024: backfilling 2024 HYPERLIQUID data, currently at 2024-10-29, ~47% CPU, 3.2GB RSS, 161K+
+      manifest entries written, heartbeat active. VM 2025: backfilling 2025 data, currently at 2025-09-13, ~61% CPU,
+      15.2GB RSS, heartbeat active. Both writing to per-VM manifest shards. SSH confirmed MTDS processes running with
+      correct parameters. Run.logs show steady symbol-by-symbol capture. These are legitimate long-running multi-year S3
+      backfills — do NOT delete. **Re-verified 2026-08-09**: `aws ec2     describe-instances` for both instance names
+      returns zero results across us-east-1/us-east-2/us-west-1/us-west-2 — consistent with both multi-year backfills
+      having completed and self-terminated in the 5 days since the 08-04 check (no zombie/orphaned VM left running).
+      Closing — nothing left for the operator to rubber-stamp. **Repo: deployment-service.**
 - [x] ✅ [DATA] P2. HYPERLIQUID 2026-07-28→today gap confirmed and backfill launched. Manifest analysis (slot 6,
       2026-08-04): consolidated manifest (`mtds-live-cefi-consolidated-20260802-142543.parquet`) shows good capture
       2026-08-02→04 (171 deriv_ticker + 61-79 trades/day via cron VM `cefi-onchain-fwd-daily-cron-20260803-230641`).
@@ -210,3 +212,8 @@ finding, just not caught by any existing gate because no gate watches this speci
   2024/2025 HL VMs confirmed ALIVE and making legitimate progress (multi-year S3 backfills, NOT hung) — detailed
   findings inline in todo 3.
 - **context-scout 2026-08-05**: re-scouted; context_scope re-verified (7 entries), unchanged.
+- **stale-`[OPERATOR]`-flip sweep 2026-08-09**: re-verified the HYPERLIQUID VM investigation todo — live
+  `aws ec2 describe-instances` lookup for both VM names returns zero results in every US region checked, consistent with
+  both multi-year backfills having completed and self-terminated since the 08-04 alive-confirmation. Flipped `[x]`,
+  retagged `[DATA][OPERATOR]` → `[DATA]`. Note: all todos in this doc are now done — archival-eligible, but not archived
+  here (5 other corpus docs reference this doc's path; a full referrer sweep is out of scope for this pass).

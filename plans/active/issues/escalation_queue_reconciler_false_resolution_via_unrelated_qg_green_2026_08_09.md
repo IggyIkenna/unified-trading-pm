@@ -109,8 +109,14 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
 - [ ] [OPERATOR] P1. Confirm DP-VM-003 (stalled backfill VM) has been manually relaunched/investigated — it was
       auto-closed without any worker ever looking at it. If already handled through some other channel, note that here
       and close this todo; if not, this needs a real dispatch.
-- [ ] [OPERATOR] P1. Confirm DP-FETCH-009 (CRITICAL 1% cefi `book_snapshot_5` cell-loss gap) has been manually
-      investigated — same auto-close-with-zero-worker issue as DP-VM-003.
+- [x] ✅ [VERIFY] P1. Confirm DP-FETCH-009 (CRITICAL 1% cefi `book_snapshot_5` cell-loss gap) has been manually
+      investigated — **it has, extensively**:
+      `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` carries a 25+-dispatch escalation
+      history (confirmed via `na-eligibility-audit 2026-08-09`'s own full re-read) with 5 shipped fixes (3 root-cause
+      schema-contract fixes — MTDS `339ca767`/`6bf568ee`, UAC `8db188fe`/`1c4d8864` — plus 2 alerting-layer fixes —
+      deployment-service `a564cca` materiality downgrade, `9102eb9b` dedup-gap fix). This doc's framing ("nobody has
+      actually looked at either") is stale for DP-FETCH-009 specifically; DP-VM-003 above is untouched by this
+      re-verification and remains open.
 - [ ] [BACKEND] P2. Once the BLK-2a812311 quickmerge fix lands, spot-check a sample of the historical
       `data_pipeline_failure`/`provenance_blocked`/`sit_failure`/`plan_health` rows auto-closed via this bug (beyond
       DP-VM-003/DP-FETCH-009) for any other still-live, still-unaddressed problems masquerading as resolved. Scope this
@@ -128,3 +134,7 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
   finding exactly (down to the docstring/implementation mismatch). This doc covers the operator-notification and
   live-follow-up scope that the code fix alone does not: historical blast radius, and DP-VM-003/DP-FETCH-009 needing
   real (not silently-marked) resolution.
+- **stale-`[OPERATOR]`-flip sweep 2026-08-09**: DP-FETCH-009's "confirm investigated" todo was stale — re-verified
+  against `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`'s own Progress Log: 25+
+  dispatches, 5 shipped fixes across 3 repos. Flipped `[x]`, retagged `[OPERATOR]` → `[VERIFY]`. DP-VM-003 (separate
+  todo above) was not re-verified this pass and stays open.

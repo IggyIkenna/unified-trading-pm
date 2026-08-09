@@ -14,7 +14,7 @@ tags: [derivative_ticker, perp-funding, backfill, cron, data-correctness, tardis
 related:
   [
     /plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
-    /plans/active/issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md,
+    /plans/archive/2026_08/issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md,
   ]
 created: 2026-08-04
 author: unknown

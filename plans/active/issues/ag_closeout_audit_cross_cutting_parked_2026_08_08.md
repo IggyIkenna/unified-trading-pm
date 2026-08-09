@@ -277,11 +277,11 @@ ledger.
 - **[DOC] P2. EXTRACTED 2026-08-09 -> `cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md`.**
   `cross_cutting_consolidated_closeout_2026_07_25.md` is at/near the 1000-line hard cap — line-cap-split it. See the
   batch doc for the full scoped todo; do not duplicate-dispatch from here.
-- [ ] [OPERATOR] P2. `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` — rule on whether
-      `/codex/04-architecture/live-strategy-config-hot-reload.md`'s documented safe-field allow-list/
-      `UnsafeConfigChangeError` is the target to BUILD (strategy-service currently ships an unconditional-swap reloader
-      with none of that safety machinery), or the doc is wrong and should be corrected to match shipped behavior.
-      Unruled since 2026-07-31 (day 8).
+- [x] ✅ [DOCS] P2. `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` — **RULED 2026-08-06 (operator), option
+      A**: the documented safe-field allow-list/`UnsafeConfigChangeError` IS the target to build. Target doc's own todo
+      is now `[CODE] P2` ("RULED 2026-08-06 (operator), option A: implement the documented guard") — no longer an open
+      decision, tag corrected there from `[OPERATOR]` already; the actual implementation work continues to be tracked
+      there, not here. Re-verified 2026-08-09: `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md:97` confirms.
 
 ## Codex SSOTs
 
@@ -317,3 +317,7 @@ ledger.
   (Track 2 for slot2_wedged, Track 5 for context_scout) so `check_ag_closeout_linkage.py` clears both (21→19 orphans,
   still ≤ baseline 49). `ci ×6`/`infrastructure ×3`/`meta ×1` remain for those tranches' own audits.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **stale-`[OPERATOR]`-flip sweep 2026-08-09**: the `strategy_config_hot_reload_doc_vs_shipped_2026_07_31.md` design
+  question flagged "unruled since 2026-07-31" was actually ruled 2026-08-06 (option A) — re-verified against the target
+  doc's own todo, now `[CODE] P2`, tag already corrected there. Flipped `[x]` and retagged `[DOCS]` here; no further
+  action needed on this doc's side, implementation tracked at the target.

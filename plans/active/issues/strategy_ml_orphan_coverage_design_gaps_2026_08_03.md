@@ -148,20 +148,31 @@ just (c).
 
 ## Open work
 
-- [ ] 1. [OPERATOR] P2. Decide the fate of `strategy_orders`/`strategy_positions`/`strategy_pnl`: wire up a real
-      caller + deployment config (in which case also fix the PATH_REGISTRY divergence found above, mirroring todo 3b's
-      `ml_predictions`/`strategy_instructions` fixes) OR delete the dead code
-      (`CloudStrategyStorage.store_positions`/`store_pnl`, `store_orders_batch`, `OrderBatchStorage`) as tech debt.
-      Repo: strategy-service. Only once resolved does an orphan sweep for this family become meaningful to build.
-- [ ] 2. [OPERATOR] P2. Decide whether `backtest_results` should get a manifest-WRITE design (new
-      `data_type=backtest_results` keyed by `(strategy_id, run_id)`) or is intentionally out of the
-      availability-manifest's scope. Repo: strategy-service.
-- [ ] 3. [OPERATOR] P2. Decide whether `ml_models`/`ml_model_metadata`/`ml_training_artifacts` should get a
-      manifest-WRITE design (keyed by `model_id`) or are intentionally exempt. Repo: ml-service.
+- [x] ✅ 1. [DOCS] P2. Decide the fate of `strategy_orders`/`strategy_positions`/`strategy_pnl`. **RULED 2026-08-05
+      (operator, BLK-75060009): wire up.** The orphan-sweep-tooling half of this decision already shipped (todo 4 below,
+      strategy-service@4733a7e7). The real-caller wiring + PATH_REGISTRY divergence fix implied by "wire up" is NOT yet
+      built — tracked as new todo 5 below so it isn't lost now that the decision itself is closed. Repo:
+      strategy-service.
+- [x] ✅ 2. [DOCS] P2. Decide whether `backtest_results` should get a manifest-WRITE design. **RULED 2026-08-05
+      (operator, BLK-75060009): ephemeral, no sweep** — intentionally out of the availability-manifest's scope, no
+      further work needed. Repo: strategy-service.
+- [x] ✅ 3. [DOCS] P2. Decide whether `ml_models`/`ml_model_metadata`/`ml_training_artifacts` should get a
+      manifest-WRITE design. **RULED 2026-08-05 (operator, BLK-75060009): ephemeral, no sweep** — intentionally exempt,
+      no further work needed. Repo: ml-service.
 - [x] ✅ 4. [SCRIPT] P3. Once any of todos 1-3 resolves toward "wire it up", build the corresponding orphan-sweep
       extension — strategy-service@4733a7e7 (extend `strategy_orphan_sweep.py` for orders/positions/pnl and/or
       backtest_results; `ml_orphan_sweep.py` for models/metadata/training_artifacts) mirroring the A-E taxonomy pattern.
       Repo: strategy-service, ml-service.
+- [ ] 5. [BACKEND] P2. **New 2026-08-09, split out of todo 1's now-resolved decision.** Wire up a real caller for
+      `strategy_orders`/`strategy_positions`/`strategy_pnl`: add explicit `PROTOCOL_DATA_SINK_BUCKET_STRATEGY_ORDERS`
+      -class deployment config (currently defaults to `LocalDataSink()` — no `PROTOCOL_DATA_SINK_BACKEND`/bucket env var
+      set in `deployment-service/terraform/services/strategy-service/gcp/main.tf:197-224`), and fix the PATH_REGISTRY
+      divergence (`PATH_REGISTRY["strategy_orders"].path_template` declares
+      `strategy_orders/by_date/day={date}/strategy_id={strategy_id}/` but the real writer call resolves to bucket-root
+      `day={date}/strategy_id={strategy_id}/{uuid}.parquet` with no prefix — same class as todo 3b's
+      `ml_predictions`/`strategy_instructions` fixes). **Done when**: a real caller writes through
+      `get_data_sink(routing_key="strategy_orders")` to the documented `PATH_REGISTRY` path, deployment config sets an
+      explicit GCS backend, and `bash scripts/quality-gates.sh` is green. Repo: strategy-service, deployment-service.
 
 ## Progress Log
 
@@ -177,3 +188,8 @@ just (c).
   run gap (c) cites as prior evidence) and the orphan-detection codex SSOT, and swapped the ml-service writer in for the
   sweep-tool script since this doc's decision is about the 3 write-site gaps, not the future sweep extension.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **stale-`[OPERATOR]`-flip sweep 2026-08-09**: todos 1-3 carried stale `[OPERATOR]` tags — all 3 were already ruled
+  2026-08-05 (BLK-75060009, cited inline in the 2026-08-05 entry above). Flipped all 3 `[x]`, retagged `[DOCS]`. Todo
+  1's "wire up" ruling implies real, un-started implementation work (a live caller + PATH_REGISTRY fix) beyond the
+  orphan-sweep-tool extension todo 4 already shipped — split that out as new todo 5 (`[BACKEND] P2`) rather than let it
+  go untracked. Todos 2/3 needed no follow-up (both ruled "ephemeral, no sweep").

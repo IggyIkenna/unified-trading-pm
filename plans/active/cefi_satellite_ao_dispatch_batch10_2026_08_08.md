@@ -202,8 +202,10 @@ context_scope:
   upgrade, or alternatively an operator judgment call accepting reduced scope; neither is worker-bounded.
 - **`issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md`** — the shipped fix's residual todo
   is an operator sign-off/verification step, not further code work.
-- **`issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md`** — remaining item explicitly reads "Operator should
-  confirm and close this todo" — no further worker-determinable investigation remains.
+- **`issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md`** — **RESOLVED + ARCHIVED 2026-08-09**: re-verified
+  the HYPERLIQUID VMs are no longer running (live `aws ec2 describe-instances` returns zero results, consistent with
+  both multi-year backfills having completed since the 08-04 confirmation); closed and moved to
+  `/plans/archive/2026_08/issues/cefi_onchain_perp_forward_capture_outage_2026_08_03.md`.
 - **`issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`** — near-fully [x] (946 lines, ~50 todos almost all done); the
   residual prose item is operator-judgment-gated, not a fresh worker task.
 - **`issues/fail_hard_canonical_enforcement_design_2026_07_20.md`** — `[DESIGN] P1` item is an undecided
