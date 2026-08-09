@@ -126,14 +126,42 @@ _qg_total_dir() { echo "${QG_TOTAL_GOVERNOR_DIR:-$(_qg_shared_root)/.benchmarks/
 # stops one repo from monopolising the flat cap; the flat cap stops the WHOLE host from
 # oversubscribing even if every repo's own sub-cap would individually allow it.
 _qg_repo_name() {
-    # PROJECT_ROOT (set by qg-common.sh, sourced before this file in every base-*.sh)
-    # is the actual repo root. REPO_ROOT is this codebase's own, confusingly-named
-    # convention for ONE LEVEL ABOVE that — the .tabs/<slot> workspace directory — so
-    # preferring it here buckets every repo in a slot under the slot NUMBER (e.g. "2"),
-    # not the repo name, defeating the whole point of the per-repo sub-cap below (caught
-    # live 2026-08-09 via a 286s starvation on a bucket named "2" instead of
-    # "unified-trading-pm"). PROJECT_ROOT must win.
-    local root="${PROJECT_ROOT:-${REPO_ROOT:-}}"
+    # SLOT-AGNOSTIC BY DESIGN (2026-08-09, second incident same day — see
+    # plans/active/issues/qg_governor_repo_bucketing_falls_back_to_slot_number_2026_08_09.md).
+    # The first fix here only reordered PRECEDENCE (`PROJECT_ROOT:-REPO_ROOT` instead of
+    # the reverse) — it still depended on PROJECT_ROOT being POPULATED by the time this
+    # function runs, and a bare `bash scripts/quality-gates.sh --no-fix` invocation
+    # reproduced the identical slot-number bucketing the SAME day with PROJECT_ROOT
+    # apparently still empty at this call site (exact sourcing-order gap not fully
+    # traced — see the issue doc's Root Cause section). Querying git directly sidesteps
+    # the entire "which caller-populated env var, set in what order" class of bug — no
+    # env var needs to be populated at all, so this is immune to call-time ordering:
+    #   1. `git remote get-url origin`, basename minus the `.git` suffix — the repo's
+    #      actual GitHub identity. Correct from the main per-slot clone AND from a
+    #      nested worktree (.claude/worktrees/<branch>/) of the SAME repo, since a git
+    #      worktree shares its parent repo's remotes — `git rev-parse --show-toplevel`
+    #      would instead return the worktree's OWN directory (e.g. a branch/session hash),
+    #      wrongly treating it as a different "repo" than its own main clone (verified
+    #      live against a real worktree checkout while fixing this).
+    #   2. `git rev-parse --show-toplevel`, basename — falls back here only if there is no
+    #      `origin` remote (rare/test fixtures); still immune to slot number and worktree
+    #      nesting since it reads the actual working-tree root, not a caller-supplied path.
+    #   3. PROJECT_ROOT / REPO_ROOT / pwd, basename — final fallback only if git itself is
+    #      unavailable or this isn't a git working tree at all (matches this file's
+    #      existing graceful-degradation posture — a governor failure must never block
+    #      the run it's meant to be scheduling).
+    local url root
+    url="$(git remote get-url origin 2>/dev/null)"
+    if [[ -n "$url" ]]; then
+        basename "$url" .git
+        return 0
+    fi
+    root="$(git rev-parse --show-toplevel 2>/dev/null)"
+    if [[ -n "$root" ]]; then
+        basename "$root"
+        return 0
+    fi
+    root="${PROJECT_ROOT:-${REPO_ROOT:-}}"
     [[ -n "$root" ]] && basename "$root" || echo "unknown"
 }
 _qg_repo_instance_default_cap() {

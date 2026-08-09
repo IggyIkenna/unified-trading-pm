@@ -42,7 +42,11 @@ export QG_TOTAL_GOVERNOR_DIR="$TMP/total-gate"
     export QG_FORCE_CORES=2
     # shellcheck source=/dev/null
     source "$GOV"
-    eq "default cap floored at 4 (cores=2)" 4 "$(_qg_total_k)"
+    # Floor raised 4 -> 6 (operator ruling 2026-08-09, see _qg_total_default_cap's own
+    # comment in qg-host-governor.sh) — this assertion was left stale by that change;
+    # fixed in passing while touching this test file for the repo-bucketing regression
+    # (qg_governor_repo_bucketing_falls_back_to_slot_number_2026_08_09.md), unrelated bug.
+    eq "default cap floored at 6 (cores=2)" 6 "$(_qg_total_k)"
 )
 (
     export QG_TOTAL_INSTANCE_CAP=3 QG_FORCE_CORES=8
