@@ -9,7 +9,7 @@ summary: >-
   exactly what fails (a foreign autostash sweep unstages the named paths), so the false-success path triggers precisely
   when the tool is most needed. An agent trusting the exit code would flip a plan checkbox for work that is not in git —
   the false-progress class CLAUDE.md calls its #1 problem, inside the tool built to prevent it.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -44,6 +44,10 @@ depends_on: []
 context_scope:
   [unified-trading-pm/scripts/dev/safe-doc-push.sh, /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md]
 ---
+
+> **🗄️ ARCHIVED 2026-08-09** — all 4 todos are `[x]`, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately.
 
 # safe-doc-push.sh reports success having committed nothing
 
@@ -103,9 +107,10 @@ failure mode `/codex/12-agent-workflow/commit-push-flip-rule.md` exists to preve
       stage" in the log line — the current wording ("nothing staged for the named files") reads as the benign case when
       it is actually a hard failure. Done-when: the two produce distinct messages and distinct exit codes. —
       unified-trading-pm@2c2348c0a
-- [ ] [SCRIPT] P2. Add a documented escape hatch for a checkout under sustained foreign write, since retrying in place
-      cannot converge: land from a separate clone (what unblocked this incident) or fail loudly with that instruction.
-      Done-when: the script prints the recovery path after N failed attempts instead of looping.
+- [x] ✅ [SCRIPT] P2. Add a documented escape hatch for a checkout under sustained foreign write, since retrying in
+      place cannot converge: land from a separate clone (what unblocked this incident) or fail loudly with that
+      instruction. Done-when: the script prints the recovery path after N failed attempts instead of looping. —
+      unified-trading-pm@8cc92bc45
 
 ## Progress Log
 
@@ -156,3 +161,26 @@ failure mode `/codex/12-agent-workflow/commit-push-flip-rule.md` exists to preve
   `git merge-base --is-ancestor 2c2348c0a origin/live-defi-rollout` and `git branch -r --contains HEAD` both confirm the
   commit is genuinely on `live-defi-rollout`. unified-trading-pm@2c2348c0a (code), unified-trading-pm@8a9046388
   (checkbox flip + this correction).
+- 2026-08-09 (slot 23) — Todo 4 (final) shipped: added a `lock_contention_count` counter (`LOCK_CONTENTION_MAX=3`) fed
+  by both index.lock retry sites (`git add` and `git commit` under `locked_git_commit`) — once 3 CONSECUTIVE index.lock
+  failures accumulate, the script stops looping immediately (well before `MAX_ATTEMPTS=6`) and prints
+  `print_lock_contention_escape_hatch`: a documented recovery — clone fresh via
+  `git clone --reference "$(pwd)" ... /tmp/safe-doc-push-$$`, re-apply the edit there, re-run `safe-doc-push.sh` from
+  the fresh clone (the exact move that unblocked this incident's original 2026-08-09 session) — and exits a distinct
+  code, 8, separate from the pre-existing generic "exhausted retries" exit 5. New regression suite
+  `tests/test_safe_doc_push_lock_contention_escape_hatch.bats` (3 tests): a persistent index.lock (held for the whole
+  run) confirms the loop stops after exactly 3 attempts (not 6) and the output carries the escape-hatch text + exit 8; a
+  momentary index.lock that clears deterministically on the first retry backoff (via a fake `sleep` that removes the
+  lock file as its side effect, avoiding any real-wall-clock race) confirms the escape hatch is NOT tripped and the run
+  still succeeds; a third test asserts exit 8 is distinct from exit 5. Full existing suite
+  (`test_safe_doc_push_could_not_stage_vs_nothing_to_stage.bats`, `test_safe_doc_push_failure_classification.bats`,
+  `test_safe_doc_push_self_verifying_success.bats`, `test_safe_doc_push_untracked_file_never_false_success.bats`) still
+  green — 17/17 passing (bats-core available at `/tmp/bats-core-verify/bin/bats` in this environment). Shipped via the
+  mandatory Pass-1 `quality-gates.sh --no-fix` (exited 0; same pre-existing fleet-wide
+  VERSION_SPLIT/VESTIGIAL_SCALAR_DRIFT/base-image-digest-drift warn-only findings as prior entries, unrelated to this
+  change) → Pass-2 `quickmerge --agent --files` flow for code (not `safe-doc-push.sh` itself, per `RULES.md` § "Git
+  discipline" — this todo hardens that script, it doesn't ship through it). `git merge-base --is-ancestor` confirmed the
+  commit landed on `origin/live-defi-rollout` after quickmerge's rebase-retry rewrote the sha. All 4 todos in this issue
+  doc are now done; the issue doc is unlocked and eligible for archival per the plan-completion-and-archival-discipline
+  SSOT (not done in this same commit — see the never-combine-flip-with-archival rule in `RULES.md` § 2).
+  unified-trading-pm@8cc92bc45.
