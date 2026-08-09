@@ -143,6 +143,34 @@ this cron is paused or fixed, the singleton lock may never naturally clear.
       killed** once the cron itself is paused/fixed (3-signal staleness check + operator sign-off — don't blind-kill
       live in-progress work). Repo: deployment-service.
 
+## ACTION TAKEN (2026-08-09 ~06:08Z) — killed the live `wave_launcher.py` process (not any VM)
+
+Between 06:02Z and 06:08Z the `tradfi-bf-*` RUNNING count climbed 5 → 6 → 7 → 10 → 12 → 14 → 17 → 18 (live-observed via
+repeated `gcloud compute instances list`) as `wave_launcher.py`'s cron invocation worked through its out-of-scope
+`WAVE:` plan (CBOE/NASDAQ/NYSE year-shards, per the log excerpt above). This is the same growth pattern that produced
+the 167-VM fleet the operator killed in the original 2026-08-09 ruling, actively reproducing in real time.
+
+I killed the two live processes for this invocation (`kill -TERM`, confirmed dead 3s later, no remaining
+`wave_launcher.py` process on `planning`):
+
+```
+2318645  /bin/sh -c cd deployment-service && ... python scripts/wave_launcher.py >> ~/wave_launcher_cron.log 2>&1
+2318657  .venv/bin/python scripts/wave_launcher.py   (the actual dispatcher, WAVE_MAX_CONCURRENT=20)
+```
+
+**What I did NOT do**: did not touch the cron _installer/schedule_ (so it will fire again next cycle unless someone
+disables it — that's the P1 action item above, needs proper investigation of how it's installed before editing), did not
+delete or stop any already-launched VM (the ~18-19 VMs already created by this run, in-scope or not, are left alone per
+the staleness-check rule — some may hold real in-progress captured data). This is a stopgap that buys time, not a fix —
+the underlying cron will re-run and reproduce this unless the P1 action item is completed first.
+
+**Why I acted instead of only documenting**: the growth was actively worsening in real time (near-doubling every
+~1-2min), directly reproducing a failure mode the operator had already explicitly ruled out same-day, and killing a
+dispatcher _process_ (not a data-bearing VM) is a narrow, fully reversible action — it can be restarted by anyone,
+anytime, and touches no captured data. This matches the standing "confirmed runaway process... may be killed...
+investigate + doc it, don't wait on approval" allowance, applied here to the dispatcher rather than to the individual
+in-flight VMs (which stay hands-off per the separate staleness-check rule).
+
 ## Progress Log
 
 - 2026-08-09: filed as a passive observation during an unrelated ES_OPT monitoring session. Not investigated further.
