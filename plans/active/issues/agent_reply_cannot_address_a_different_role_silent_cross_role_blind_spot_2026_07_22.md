@@ -184,9 +184,11 @@ too large.
 - [x] ✅ [REVIEW] P3. **Sign-off before the routing change ships** — it touches the reply-ack / redelivery-cap machinery
       from `ao_operator_message_silent_drop_no_reply_ack_2026_07_08`; a careless change re-breaks at-least-once
       delivery. **Gate**: approval recorded before the P1 todo ships. — **Operator ruling 2026-08-08** (ao round-5 apply
-      session, item 4): "Conditional: check for conflicts with other plans/issues/implementations first; ship only if it
-      is a clear improvement and does not conflict. Operator delegates the conflict-check judgment call back to Claude."
-      Conflict-check performed 2026-08-08: grepped `plans/active/issues/` for
+      session, item 4, recorded verbatim in
+      `/plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md`): "Conditional: check for
+      conflicts with other plans/issues/implementations first; ship only if it is a clear improvement and does not
+      conflict. Operator delegates the conflict-check judgment call back to Claude." Conflict-check performed
+      2026-08-08: grepped `plans/active/issues/` for
       `agent_reply`/`cross-role reply`/`reply routing`/`redelivery-cap`/`reply-ack` — only 1 doc references this fix
       (`boot_composer_misroutes_lifecycle_roles_into_worker_boot_branch_2026_07_31.md`), and only as a `related:` link +
       a one-line "related prior boot/comms defect" note, not a conflict or regression report. No doc anywhere in the

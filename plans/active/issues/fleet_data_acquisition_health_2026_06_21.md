@@ -190,11 +190,12 @@ primary; mirrors the pre-existing `aster`-in-`derivative_ticker` registration). 
 > book_snapshot_5) are actually receiving non-empty ticks today; let that observation (not either doc's prose) settle
 > which pairs are genuinely dead. Other: operator can type a custom answer.
 
-- [x] [CODE] P2. **RESOLVED 2026-07-13 — operator ruling verbatim: "OPERATOR RULING 2026-07-13 (resolving the finding-77
-      escalation, option A): remove ONLY the (HYPERLIQUID, liquidations) SOURCE_PRIORITY registration — the one pair
-      with no real feed. The other three pairs (ASTER book_snapshot_5, ASTER liquidations, HYPERLIQUID book_snapshot_5)
-      STAY — they are real feeds per uac@3652f99f."** Matches escalation option A (`[WORKER REC]`) exactly — the
-      narrowest of the three offered options. Shipped: removed `hyperliquid` from `("cefi", "liquidations")` in
+- [x] [CODE] P2. **RESOLVED 2026-07-13 — operator ruling verbatim (recorded here in
+      `fleet_data_acquisition_health_2026_06_21.md`): "OPERATOR RULING 2026-07-13 (resolving the finding-77 escalation,
+      option A): remove ONLY the (HYPERLIQUID, liquidations) SOURCE_PRIORITY registration — the one pair with no real
+      feed. The other three pairs (ASTER book_snapshot_5, ASTER liquidations, HYPERLIQUID book_snapshot_5) STAY — they
+      are real feeds per uac@3652f99f."** Matches escalation option A (`[WORKER REC]`) exactly — the narrowest of the
+      three offered options. Shipped: removed `hyperliquid` from `("cefi", "liquidations")` in
       `_source_priority_data.py` ONLY; the other three pairs (`("cefi",     "book_snapshot")` keeps
       `aster`+`hyperliquid`, `("cefi", "liquidations")` keeps `aster`) are untouched, plus a code comment on the
       remaining aster/HL entries recording this ruling. Verified no `VENUE_DATA_TYPE_CAPABILITIES` entry claims HL

@@ -105,27 +105,27 @@ and the catalogue has **no `margin_type` field**. Deribit inverse is the only co
 - [x] ✅ [MTDS] P2. **UAC selector contract shipped — `unified-api-contracts@cae957ab`.** Investigated first (premise
       was stale): (1) the "scaffolded comment hook" in `mvp_scope.py` no longer exists — grepped all 4 `_mvp_scope_*.py`
       submodules, zero `margin`/`liquidity` hits; (2) the deterministic default this todo described (BINANCE-DELIVERY
-      via base-membership) is GONE — a LATER operator ruling (v10, 2026-06-27, decision #3, `_mvp_scope_rules.py:452`)
-      removed BINANCE-DELIVERY from the cefi MVP venues entirely (COIN-M delivery ruled not MVP), so that specific
-      ambiguity no longer exists. BUT the underlying problem is still real for OTHER venues: `_infer_margin_type`
-      (instruments-service `tardis/parsing.py`) confirms BYBIT (bare canonical venue) and OKX-SWAP both expose linear
-      AND inverse legs of the same base under one canonical venue key, and both venues are still declared in the cefi
-      MVP `venues` frozenset (`_mvp_scope_rules.py:403,414-415`) — since `is_in_mvp_capture_universe` has zero
-      margin_type-awareness, BOTH legs currently pass the MVP gate unfiltered (not wrong, just not the "pick the more
-      liquid one" behavior this rule specifies). Found the established precedent for exactly this shape of problem:
-      `liquid_representative.py` already ships `execution_spot_representative`/`feature_perp_representative` — PURE
-      functions taking caller-supplied volume observations (aggregated by the caller from data we already capture, e.g.
-      MDPS candle volume — NOT a live external API call, contra this todo's original "requires live Tardis API calls per
-      contract" framing). Added `margin_type_representative(venue, base, margin_volumes) -> MarginType` +
-      `MarginVolumeObservation` dataclass to the SAME module, mirroring the pattern exactly (sums volume per
-      margin_type, LINEAR wins ties + no-data per the operator's documented "default linear" rule); exported from
-      `unified_api_contracts/__init__.py` top-level facade. 15 new unit tests in `test_liquid_representative.py` (basic
-      selection, volume-sum-per-type, QUANTO-ignored, filtering, purity/determinism) — mirror the existing test classes'
-      structure. QG green (571s). **Follow-up (NOT this todo — a genuinely separate consumer-wiring task, not done here
-      to avoid guessing at untested MTDS capture-flow integration details):** wire `margin_type_representative` into
-      MTDS's `cefi_catalog_reader.py` capture-universe derivation for BYBIT/OKX-SWAP/KRAKEN-FUTURES so only the winning
-      margin type is actually captured (today both are captured, unfiltered — safe but not cost-minimal) — see the new
-      todo below.
+      via base-membership) is GONE — a LATER operator ruling (v10, 2026-06-27, decision #3, `_mvp_scope_rules.py:452`,
+      recorded here in `cefi_universe_capture_rule_2026_06_23.md`) removed BINANCE-DELIVERY from the cefi MVP venues
+      entirely (COIN-M delivery ruled not MVP), so that specific ambiguity no longer exists. BUT the underlying problem
+      is still real for OTHER venues: `_infer_margin_type` (instruments-service `tardis/parsing.py`) confirms BYBIT
+      (bare canonical venue) and OKX-SWAP both expose linear AND inverse legs of the same base under one canonical venue
+      key, and both venues are still declared in the cefi MVP `venues` frozenset (`_mvp_scope_rules.py:403,414-415`) —
+      since `is_in_mvp_capture_universe` has zero margin_type-awareness, BOTH legs currently pass the MVP gate
+      unfiltered (not wrong, just not the "pick the more liquid one" behavior this rule specifies). Found the
+      established precedent for exactly this shape of problem: `liquid_representative.py` already ships
+      `execution_spot_representative`/`feature_perp_representative` — PURE functions taking caller-supplied volume
+      observations (aggregated by the caller from data we already capture, e.g. MDPS candle volume — NOT a live external
+      API call, contra this todo's original "requires live Tardis API calls per contract" framing). Added
+      `margin_type_representative(venue, base, margin_volumes) -> MarginType` + `MarginVolumeObservation` dataclass to
+      the SAME module, mirroring the pattern exactly (sums volume per margin_type, LINEAR wins ties + no-data per the
+      operator's documented "default linear" rule); exported from `unified_api_contracts/__init__.py` top-level facade.
+      15 new unit tests in `test_liquid_representative.py` (basic selection, volume-sum-per-type, QUANTO-ignored,
+      filtering, purity/determinism) — mirror the existing test classes' structure. QG green (571s). **Follow-up (NOT
+      this todo — a genuinely separate consumer-wiring task, not done here to avoid guessing at untested MTDS
+      capture-flow integration details):** wire `margin_type_representative` into MTDS's `cefi_catalog_reader.py`
+      capture-universe derivation for BYBIT/OKX-SWAP/KRAKEN-FUTURES so only the winning margin type is actually captured
+      (today both are captured, unfiltered — safe but not cost-minimal) — see the new todo below.
 - [x] ✅ [MTDS] P3. **Wire `margin_type_representative` (unified-api-contracts, shipped `cae957ab`) into MTDS's capture
       layer** — market-tick-data-service@d9ce3b3d | Investigated first (BLK-4cb04e0d, 2026-07-31): a real
       `MarginVolumeObservation` source needs new manifest-query infra (no service↔service dep to MDPS is allowed, and

@@ -307,24 +307,26 @@ Two secondary findings:
       every `fetch_trades` branch already returned `[]`. Deleted `_download_trades_from_tardis` + inlined an honest
       `return []` (no behavior change — the Tardis-window trades source was never implemented; real HL trades come from
       S3 from 2025-05-25). +tests updated.
-- [x] [DECISION] P1. ✅ **RESOLVED (operator 2026-07-18): PACIFICA STAYS DECOMMISSIONED; LIGHTER kept MVP.** The
-      07-18-vs-07-16 conflict is resolved in favor of the 2026-07-16 decommission — operator: "decommission pacifica for
-      now". PACIFICA remains fully removed (no MVP, no scaffold; the 07-18 keep-MVP answer is retracted), locked by
+- [x] [DECISION] P1. ✅ **RESOLVED (operator 2026-07-18), recorded here in
+      `non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`: PACIFICA STAYS DECOMMISSIONED; LIGHTER kept MVP.**
+      The 07-18-vs-07-16 conflict is resolved in favor of the 2026-07-16 decommission — operator: "decommission pacifica
+      for now". PACIFICA remains fully removed (no MVP, no scaffold; the 07-18 keep-MVP answer is retracted), locked by
       `DECOMMISSIONED_VENUE_BASES` + the stays-removed test @a7ff8417. LIGHTER-ZKSYNC keeps MVP (live_capable honestly
       False, batch scaffold real). Original flag retained below.
 - [x] [DECISION-history] P1. ~~PARTIALLY DECIDED + SSOT CONTRADICTION FLAGGED (2026-07-18).~~ Operator answered "keep
       MVP + BLOCKED-CREDENTIALS scaffold" for PACIFICA-SOLANA + LIGHTER-ZKSYNC. Applied for **LIGHTER-ZKSYNC** (it
       exists): `live_capable` flipped honestly to False (batch scaffold preserved) — `unified-api-contracts@a7ff8417`.
       **BUT PACIFICA-SOLANA is a hard conflict — NOT actioned.** A non-Tardis fix-investigation (2026-07-18) found
-      PACIFICA was **decommissioned entirely on 2026-07-16** (operator ruling: all Solana perp DEXes dropped except
-      Jupiter) — it is locked in `venue_adapter_keys.DECOMMISSIONED_VENUE_BASES`, purged from `data_type_capability.py`,
-      and guarded by a test. The 2026-07-18 "keep PACIFICA MVP" answer therefore **CONTRADICTS the 2026-07-16
-      decommission**; resurrecting PACIFICA autonomously would undo a completed, locked decommission. **RESOLVED
-      2026-07-18** (stale "OPERATOR MUST RESOLVE" framing cleaned up 2026-07-28 — the conflict this entry raised was
-      answered the same day it was filed; see the `[DECISION]` todo directly above: operator ruled in favor of the
-      2026-07-16 decommission, "decommission pacifica for now"). PACIFICA stays fully removed (a
-      `PACIFICA-stays-removed` lock test was added @a7ff8417). The remaining PACIFICA FIX/VERIFY todos below are N/A per
-      that resolution (see each todo's own note); the LIGHTER/EXTENDED ones are unblocked.
+      PACIFICA was **decommissioned entirely on 2026-07-16** (operator ruling, recorded here in
+      `non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`: all Solana perp DEXes dropped except Jupiter) — it
+      is locked in `venue_adapter_keys.DECOMMISSIONED_VENUE_BASES`, purged from `data_type_capability.py`, and guarded
+      by a test. The 2026-07-18 "keep PACIFICA MVP" answer therefore **CONTRADICTS the 2026-07-16 decommission**;
+      resurrecting PACIFICA autonomously would undo a completed, locked decommission. **RESOLVED 2026-07-18** (stale
+      "OPERATOR MUST RESOLVE" framing cleaned up 2026-07-28 — the conflict this entry raised was answered the same day
+      it was filed; see the `[DECISION]` todo directly above: operator ruled in favor of the 2026-07-16 decommission,
+      "decommission pacifica for now"). PACIFICA stays fully removed (a `PACIFICA-stays-removed` lock test was added
+      @a7ff8417). The remaining PACIFICA FIX/VERIFY todos below are N/A per that resolution (see each todo's own note);
+      the LIGHTER/EXTENDED ones are unblocked.
 - [x] [FIX] P2. ✅ **N/A — PACIFICA decommissioned 2026-07-18 (venue fully removed; no pipeline to turn on).** ~~resolve
       the `derivative_ticker`/standalone-`perp_funding` duplicate-source risk~~ (`_umi_pacifica.py:227-276` and
       `_perp_funding_pacifica_lighter.py:125-175` both hit the same `/funding_rate/history` endpoint under two different
@@ -550,7 +552,7 @@ Two secondary findings:
   `defi/perp_funding` rows + relax RULE 11), same source-doc citation — not stale, genuinely still in-flight there.
   Checked all 3 open items against every accumulated round11 precedent (IAM self-service, D16 all-repos, S5.1 tiering,
   plan-destination-defaults-AO-dispatched, escalation-N=3-days, reversibility-qualified deletes, Option B retired, GSM
-  secret + 5 Slack webhooks now existing) — none apply: the 2 duplicate items are already dispatched elsewhere
-  (flipping here would open a second dispatch path), and the HYPERLIQUID k-prefix item is still a genuine
-  coin-case-convention design call, untouched by any round11 precedent. No satellite-extraction candidate found. Doc
-  stays `assigned_vm: NA` (KEEP-NA valid, round11).
+  secret + 5 Slack webhooks now existing) — none apply: the 2 duplicate items are already dispatched elsewhere (flipping
+  here would open a second dispatch path), and the HYPERLIQUID k-prefix item is still a genuine coin-case-convention
+  design call, untouched by any round11 precedent. No satellite-extraction candidate found. Doc stays `assigned_vm: NA`
+  (KEEP-NA valid, round11).

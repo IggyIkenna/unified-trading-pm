@@ -375,21 +375,21 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       (repo: agent-orchestrator)
 
       **RE-CHECKED 2026-08-09 (slot 11, data_engineering) — INCONCLUSIVE, still NOT closed.** Queried the live
-              SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
-              2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
-              below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
-              pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
-              rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
-              survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
-              both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
-              original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
-              per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
-              08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
-              also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
-              week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
-              rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
-              above for a causal read. New follow-up filed directly below given the climbing raw rate.
-              (repo: agent-orchestrator)
+                  SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
+                  2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
+                  below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
+                  pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
+                  rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
+                  survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
+                  both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
+                  original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
+                  per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
+                  08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
+                  also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
+                  week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
+                  rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
+                  above for a causal read. New follow-up filed directly below given the climbing raw rate.
+                  (repo: agent-orchestrator)
 
 - [x] ✅ [DATA] P2. **Bump the observability-enabler todo above (session-teardown instrumentation, was P3) given the
       08-09 re-check's climbing reaped-stale rate** — without it, the "regression vs. new mechanism vs. volume artifact"
@@ -444,10 +444,10 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       `tuning.watchdog_scheduled_heartbeat_timeout` (3600s) for scheduled/one_shot workers, resolved via the SAME
       `find_active_agent_for_session` lifecycle lookup `health.py` already uses for its 25-min stale-flip exemption, so
       the two stay in lockstep. A frozen pane past the bar is still reaped and tmux_pruner's `has_session` sweep still
-      catches dead sessions — neither carve-out removes a safety net. Operator ruling 2026-08-08 ("scheduled tasks
-      should be raised to 60 mins, and add an `_is_actively_thinking` guard"; VM-waiters may wait as long as they are
-      looping). Evidence: `quality-gates.sh` green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262
-      vitest. (repo: agent-orchestrator)
+      catches dead sessions — neither carve-out removes a safety net. Operator ruling 2026-08-08, recorded here in
+      `ao_scheduled_job_reserve_and_staggering_2026_08_04.md` ("scheduled tasks should be raised to 60 mins, and add an
+      `_is_actively_thinking` guard"; VM-waiters may wait as long as they are looping). Evidence: `quality-gates.sh`
+      green — 2677 python (13 new), basedpyright 0/0, `tsc --noEmit` clean, 262 vitest. (repo: agent-orchestrator)
 - [x] ✅ [CODE][OPERATOR] P1. **Planning-worker capacity 8 → 12 without touching either reserve; fleet-cap off-by-one
       fixed; slot guard made capacity-derived.** Three linked changes, all live on the central VM 2026-08-08. (a)
       **Off-by-one** (agent-orchestrator@665e5d0c9): `_apply_fleet_cap` clamped to `len(non_review_slots) - reserve`,
@@ -471,9 +471,9 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       free). Orchestrator restarted → `seed_worker_slots_from_tabs: registered 19 worker slot(s)`. **Verified live**:
       `AutoSpawn fleet cap: configured=15 CLAMPED to 12 by slot arithmetic (configured_slots=19 - reserve=7 [ci=3 +     scheduled=4])`.
       Reserves shift automatically with the fleet (they are the highest-numbered N slots): CI/data- pipeline now 18-20,
-      scheduled now 14-17, backlog pool 2-13. Disk 54% / 318G free after. Operator ruling 2026-08-08. Evidence:
-      `quality-gates.sh` green — 2684 python (2 new), basedpyright 0/0, tsc clean, 262 vitest. (repo:
-      agent-orchestrator, unified-trading-pm)
+      scheduled now 14-17, backlog pool 2-13. Disk 54% / 318G free after. Operator ruling 2026-08-08, recorded here in
+      `ao_scheduled_job_reserve_and_staggering_2026_08_04.md`. Evidence: `quality-gates.sh` green — 2684 python (2 new),
+      basedpyright 0/0, tsc clean, 262 vitest. (repo: agent-orchestrator, unified-trading-pm)
 - [x] ✅ [CODE] P1. **All 8 timer installers converted to `systemd --user` — the re-install below is the LAST one that
       needs sudo** — agent-orchestrator@c3a85c3b4. Root cause of this todo being `[OPERATOR]` at all was WHERE the
       installers wrote (`/etc/systemd/system`, `/usr/local/bin`), never what they did: the dispatch scripts only
