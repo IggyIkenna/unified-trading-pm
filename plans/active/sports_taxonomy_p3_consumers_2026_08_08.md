@@ -87,11 +87,16 @@ spelling variant survives, which is the entire point of the panel". It does not.
 
 ### The panel
 
-- [ ] [CODE] P0. **Make the panel BADGE excepted values instead of dropping them.** Every raw distinct value from the
+- [x] ✅ [CODE] P0. **Make the panel BADGE excepted values instead of dropping them.** Every raw distinct value from the
       rollup must appear, each carrying `is_canonical` plus a new `exception_reason` (or equivalent) when it is an
       accepted exception — so a reader sees "known and accepted" rather than "not present". `non_canonical_count` may
       keep excluding accepted exceptions (that is its job as a drift headline), but the VALUE LIST must not. Blank
-      sentinels must render as an explicit `<blank>` row, not vanish — a 2,490-shard blank venue is a finding.
+      sentinels must render as an explicit `<blank>` row, not vanish — a 2,490-shard blank venue is a finding. —
+      deployment-api@1b8d20b06334daeb6e3d8ad776e4f68707068f2e: `enumerate_distinct_values()` no longer drops blank
+      sentinels or accepted-exception values before enumeration; blanks collapse into one `<blank>` row per axis and
+      accepted-exception entries carry a new `exception_reason` field (via `_ACCEPTED_EXCEPTION_REASONS`), both still
+      counted out of `non_canonical_count` only. Existing unit tests updated to assert presence + `exception_reason`
+      instead of absence; full quality-gates.sh green (5265 passed).
 - [ ] [TEST] P0. **Regression test from the real failure**: a coverage payload containing an accepted-exception venue, a
       blank venue and a non-canonical value must produce a value list containing ALL THREE. A test asserting only
       `non_canonical_count == 0` would have passed against the broken behaviour — which is why it shipped.
