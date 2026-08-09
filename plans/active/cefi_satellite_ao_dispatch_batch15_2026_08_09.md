@@ -91,21 +91,22 @@ context_scope:
       **Done when**: `launch-ml-training-vm.sh` invokes a real, importable module (confirmed via
       `python -c "import <module>"` against the actual `ml-service` package, not just a launcher-script edit), no
       `ModuleNotFoundError` on a live/test invocation, and `quality-gates.sh` is green on both touched repos.
-- [ ] [SCRIPT] P2. **Fix `launch-prediction-pipeline-vm.sh`'s dead pre-consolidation feature-service import paths.**
-      Determine whether `launch-features-vm.sh --feature-family cross_instrument|delta_one --asset-group PREDICTION`
-      (the consolidated launcher, already the correct target for the sibling S1-a defect per the
-      round5-cefi-question-resolution declassification) covers this launcher's own 3-step
-      MDPS→cross_instrument→delta_one chunked sequencing; if yes, fold this launcher into the same keep/delete decision
-      already applied to S1-a (delete + repoint any registry/self-heal binding) — this is ordinary dead-code cleanup per
-      the same declassification, not a fresh operator question; if no (the chunking has no consolidated equivalent), fix
-      the embedded
-      `python3 -c "from features_cross_instrument_service.cli.main import main; ...; from features_delta_one_service.cli.main import main; ..."`
-      import-verify step in place to use `features_service.cross_instrument` / `features_service.delta_one` (the real
-      post-consolidation subpackage paths). Repo: deployment-service. Source:
+- [x] ✅ [SCRIPT] P2. **Fix `launch-prediction-pipeline-vm.sh`'s dead pre-consolidation feature-service import paths.**
+      — deployment-service@03b10e46. Determined `launch-features-vm.sh` does NOT cover this launcher's 3-step
+      MDPS→cross_instrument→delta_one chunked sequencing (it runs one feature-family at a time with a single date range,
+      no MDPS candle-derivation step, and no per-stage differential date windowing) — took the "no" branch: fixed in
+      place rather than folding into S1-a's delete decision. Repointed all 4 pre-consolidation references to the real
+      post-consolidation `features-service` package: the packaged `REPOS` array + `uv pip install` loop
+      (`features-cross-instrument-service`/`features-delta-one-service` → `features-service`), the embedded
+      import-verify step (`features_cross_instrument_service.cli.main`/`features_delta_one_service.cli.main` →
+      `features_service.cross_instrument.cli.main`/`features_service.delta_one.cli.main`), and the STAGE 2/3 runtime CLI
+      invocations (the nonexistent `features-cross-instrument`/`features-delta-one` binaries — not registered as
+      `project.scripts` in the consolidated package — → the unified
+      `features-service --feature-family     {cross_instrument,delta_one}` dispatcher; delta_one's `--feature-group` is
+      required so added `ALL` to match `launch-features-vm.sh`'s own default). Verified both import paths resolve via
+      `uv run python -c` against the real `features-service` package (not just read the source), `--dry-run` assembles
+      cleanly end-to-end, and `quality-gates.sh` is green. Repo: deployment-service. Source:
       `issues/ml_training_and_prediction_pipeline_launchers_stale_post_consolidation_2026_08_04.md` todo 2 (verbatim).
-      **Done when**: `launch-prediction-pipeline-vm.sh` either no longer exists (folded into `launch-features-vm.sh`,
-      with every referrer/registry entry repointed) or its embedded import-verify step succeeds against a real
-      `python -c` check of the actual `features-service` package, and `quality-gates.sh` is green.
 
 ## Codex SSOTs
 
