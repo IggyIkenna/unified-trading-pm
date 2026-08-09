@@ -139,6 +139,23 @@ Any codex/plan line framing KRX, ICE, or FX as Databento, operator-blocked, or r
 STALE — the data is freely available via Yahoo and the adapters exist. (This was an explicit operator correction; do not
 re-introduce the "ICE → Databento" or "KRX blocked" framing.)
 
+### CBOE is DUAL-SOURCED — Databento VX-futures AND Yahoo Treasury INDEX, data-type-scoped (fixed 2026-08-09)
+
+Unlike the venues above, **CBOE is not exclusively Databento.** `CBOE:INDEX:US3M/US5Y/US10Y/US30Y-USD` (the Treasury
+yield-curve `ohlcv_24h` payload) is Yahoo-routed, same as KRX/ICE/FX — only CBOE's `ohlcv_1s`/`ohlcv_1m` VX-futures
+payload (§ above, `XCBF.PITCH`) is Databento. Until `market-tick-data-service@af2c53ce`,
+`tick_data_handler.py::_resolve_source()`'s `--source databento REQUIRED` gate was VENUE-scoped only and missing CBOE
+from the Yahoo-routed exemption FX/KRX/ICE/FRED already had — every CBOE `ohlcv_24h` payload silently wrote a
+blank-instrument `empty_confirmed` placeholder since the launcher's creation (2026-07-21), with ZERO real coverage ever
+captured. The fix is **data-type-scoped** (only the `ohlcv_24h` INDEX payload is exempted), so it does not
+blanket-exempt CBOE's VX-futures `ohlcv_1s`/`ohlcv_1m` traffic, which still correctly requires `--source databento`.
+
+**Known follow-on limitation**: `is_venue_available()` (the discovery-floor check) is venue-level, not venue+data_type —
+CBOE's registered floor is the Databento VX-futures genesis (2020-06-01, table below), so CBOE `ohlcv_24h` dates before
+that are honest-absence-skipped even though the real Yahoo Treasury series has genuine history back to 2000-01-03 (4 of
+5 tenors) / 2018-08-13 (US2Y). Tracked separately:
+`/plans/active/issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md`.
+
 ### Per-venue genesis / discovery-start floors — never backfill below them (expected-absent)
 
 The authoritative per-venue lower bound is UAC `get_instrument_discovery_start(venue)` (=`get_venue_start_date` unless

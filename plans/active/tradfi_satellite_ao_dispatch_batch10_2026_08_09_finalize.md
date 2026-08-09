@@ -2,9 +2,9 @@
 doc_type: plan
 title: TradFi satellite AO batch 10 — finalize (reconcile 2 source docs + archive)
 summary: >-
-  Gated closeout for tradfi_satellite_ao_dispatch_batch10_2026_08_09.md — machine-held via depends_on +
-  gate_on_depends: true until both of that plan's todos are done. Reconciles the 2 source docs (flip/cite the item
-  each batch10 todo closed), then archives batch10 via the standard 6-step ritual.
+  Gated closeout for tradfi_satellite_ao_dispatch_batch10_2026_08_09.md — machine-held via depends_on + gate_on_depends:
+  true until both of that plan's todos are done. Reconciles the 2 source docs (flip/cite the item each batch10 todo
+  closed), then archives batch10 via the standard 6-step ritual.
 status: active
 nature: process
 asset_group: [tradfi]
@@ -54,11 +54,12 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Source-doc reconciliation**: confirm both source docs show their corresponding item closed —
-      `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s FRED/CBOE/KRW/DXY backfill-verify todo, and
-      `issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md`'s DIAG (todo 4) — either flipped
-      `[x]` with the batch10 commit citation, or annotated with a pointer to it. Repo: unified-trading-pm. Done when:
-      both source docs' items are closed-by-citation with no orphaned "still looks open" gap.
+- [x] ✅ [REVIEW] P1. **Source-doc reconciliation** — unified-trading-pm (this commit). Both source docs verified
+      closed-by-citation: `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md`'s FRED/CBOE/KRW/DXY
+      backfill-verify todo stays `[ ]` by design with an explicit "EXTRACTED → batch10 todo 1 ... Track completion
+      there, not here" pointer (batch10 todo 1 is `[x]` ✅);
+      `issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md`'s DIAG (todo 4) is flipped `[x]` ✅
+      citing batch10 todo 2 directly. No orphaned "still looks open" gap found. Repo: unified-trading-pm.
 - [ ] [DOC] P1. **Archive `tradfi_satellite_ao_dispatch_batch10_2026_08_09.md`** via the standard 6-step ritual (per
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): confirm todo 1's reconciliation is
       recorded, add the archived-banner cross-reference, run the post-phase codex audit, confirm no new CLAUDE.md
@@ -70,4 +71,4 @@ drift_direction: advance-code
 
 - 2026-08-09 (round-9 combined RECLASSIFY + satellite-extraction sweep, tradfi tranche): drafted alongside batch10,
   `status: active`, gated via `depends_on` + `gate_on_depends: true`. No work started — waiting on batch10's dispatch
-  + completion.
+  - completion.
