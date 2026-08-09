@@ -549,3 +549,20 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   Left this todo's checkbox UNCHECKED (its done-when is not yet met) rather than premature-flip it — the unit test above
   proves the fix is correct at the function level, but the plan's stricter real-VM e2e proof is genuinely outstanding,
   blocked on the linked issue's fix landing first.
+
+- 2026-08-09 (slot-31, data_engineering,
+  `mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check-6de668ad5496`): the staleness-guard blocker above
+  is now fixed (`market-data-processing-service@d653a42`) — re-ran the exact prescribed verification
+  (`pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket`, force+skip, VM
+  `mdps-backfill-sports-pipelinecheck-20260809-222203-d0c755`). Staleness guard confirmed fixed (0 hits), but this
+  todo's own done-when (0 `[partition_mismatch]` rejects) is STILL not met: 78 reject events at write@15m/write@1h.
+  `551ca82` genuinely fixed the specific SPORT888/BETONLINEAG/CORAL/UNIBET rows this finding originally cited (none
+  reappear), but exposed a deeper, still-unfixed root cause one level down — `_process_chain_timeframe` combines ALL
+  bookmakers for a match into one DataFrame, and `_build_candle_output_path`'s row-0 fallback derives one venue for that
+  whole multi-bookmaker batch, so a DIFFERENT subset of rows (6 new wrong-venue pairs: DRAFTKINGS/BETSSON,
+  CASUMO/BETSSON, MATCHBOOK/BETONLINEAG, PINNACLE/MATCHBOOK, BETONLINEAG/PINNACLE, VIRGINBET/CASUMO) on the SAME two
+  matches now reject instead. Filed as its own issue with root-cause + fix-option recommendation + a follow-up re-verify
+  todo (which supersedes this todo's own re-verify step):
+  [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/active/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md).
+  Left this todo's checkbox UNCHECKED — its done-when is still not met, and won't be until the linked issue's deeper fix
+  lands.

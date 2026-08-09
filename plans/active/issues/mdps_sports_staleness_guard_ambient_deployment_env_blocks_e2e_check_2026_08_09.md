@@ -14,6 +14,7 @@ summary: >-
   source tier the raw-tick read already uses — resolving an empty staging-tier manifest and false-tripping the "SPORTS
   staleness guard: refusing derived output" error for a date/asset_group that genuinely HAS captured prod data.
 status: open
+archive_exempt: true
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -132,19 +133,22 @@ this touches shared dependency-checker code used by every SPORTS derived-candle 
       (VM `mdps-backfill-sports-pipelinecheck-20260809-221454-d0c755`) — zero occurrences of "SPORTS staleness
       guard"/"refusing derived output" in the run.log (previously the FIRST thing logged), and processing proceeded to
       14 real `POLARS AGGREGATED` candle computations. Done-when met.
-- [ ] [DATA] P2. Once the above lands, re-run the exact verification
+- [x] ✅ [DATA] P2. Once the above lands, re-run the exact verification
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md` Finding 5's `[CODE] P2` todo was
       dispatched for (`pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket`,
       force+skip legs) and confirm 0 `[partition_mismatch]` rejects for the SPORT888/BETONLINEAG/CORAL
       (`US_CATANZARO_1929-MODENA`) and UNIBET (`SOUTHAMPTON-BLACKBURN`) cells — then flip that todo's checkbox with this
-      run's evidence. (repo: market-data-processing-service) **Heads-up for the worker who picks this up**: the todo-1
-      verification run above (force leg only) already got PAST the staleness guard and hit `[partition_mismatch]`
-      rejects — but BROADLY across the shard (dozens of venue/instrument_type combos in the
-      `SERIE_B:US_CATANZARO_1929-MODENA` and `CHAMPIONSHIP:PORTSMOUTH-IPSWICH` / `SOUTHAMPTON-BLACKBURN` matches alone),
-      not narrowly scoped to the 2 example cells this todo names. The `market-data-processing-service@551ca82`
-      venue-derivation fix this todo is meant to confirm does NOT appear to have resolved partition_mismatch broadly as
-      of this run — expect this todo's done-when to currently FAIL; investigate `551ca82`'s actual coverage before
-      re-running rather than assuming a clean pass.
+      run's evidence. (repo: market-data-processing-service) — Re-ran (VM
+      `mdps-backfill-sports-pipelinecheck-20260809-222203-d0c755`, force+skip — the same run slot-29's heads-up above
+      flags). Staleness guard: 0 hits (CONFIRMED FIXED). `[partition_mismatch]`: NOT 0 (78 reject events) — the ORIGINAL
+      cited repro cells (SPORT888/BETONLINEAG/CORAL/UNIBET) no longer reject, but a deeper, distinct root cause (one
+      venue derived from row 0 of a genuinely multi-bookmaker combined write) causes a DIFFERENT set of rows on the same
+      two matches to reject instead — confirms slot-29's heads-up: `551ca82` does NOT resolve partition_mismatch
+      broadly. Finding 5's checkbox in the sibling doc is correctly left UNCHECKED (its own done-when still unmet) —
+      filed the new root cause + fix recommendation as
+      [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/active/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md),
+      whose own `[DATA] P2` todo supersedes the re-verify step this todo describes. This todo's OWN job — run the
+      verification and act on the result — is complete.
 
 ## Progress Log
 
@@ -163,3 +167,12 @@ this touches shared dependency-checker code used by every SPORTS derived-candle 
   candle-aggregation cells computed. Run then failed on the pre-existing, already-tracked `[partition_mismatch]` issue
   (todo 2 below) — added a heads-up note there since the broken-out failures span far more cells than the 2 the todo
   names, so its done-when will likely need re-scoping or `551ca82` needs a follow-up fix first.
+
+- 2026-08-09 (slot-31, data_engineering,
+  `mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check-6de668ad5496`): both todos now done. Todo 1's fix
+  landed independently while this task was in flight — `market-data-processing-service@d653a42` (slot-29) hardcoded
+  `deployment_env="prod"`, simpler than my own in-progress env-var-override draft, which I discarded in favor of the
+  already-landed fix (confirmed via `git pull --rebase --autostash` surfacing the conflict). Todo 2: ran the prescribed
+  verification (confirming slot-29's heads-up above) — staleness guard confirmed fixed, but surfaced a DISTINCT, deeper
+  partition_mismatch root cause (filed as `mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`). Both
+  this doc's todos are complete and it carries no lock — eligible for archival.
