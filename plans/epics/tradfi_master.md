@@ -178,17 +178,24 @@ Covers:
   `unified_api_contracts/canonical/crosscutting/_source_priority_data.py` `("tradfi","trades"|"tbbo"|"ohlcv_1s")`).
   **Massive (= Polygon.io) was REMOVED as a TradFi source 2026-07-19** (operator ruling: Databento is the batch
   source-of-truth, Yahoo covers daily `ohlcv_24h` for treasuries/KRW) and the Massive estate was **PURGED 2026-07-21**
-  (1,701,422 objects → 0, accepted permanent loss). The historical `pipeline_mode=batch_massive/` objects retain
-  `possible_manifest`/`PipelineMode.BATCH_MASSIVE` recognition only until the separate gated GCS purge. The
-  `tradfi_massive_dual_source` child plan is `status: superseded` — dual-source Massive is no longer a live goal.
-  Barchart is **RETIRED as a general OHLCV tick source** — ~~it now survives ONLY as the VIX-15m cash-index layering
-  (Barchart preload 2020-01-02→2025-11-12 + Yahoo rolling 60d + honest gap), which Databento does not serve.~~
-  **[2026-07-14 correction, verify-rerun-2 finding 217] stale** (was the text struck through above — contradicted this
-  same epic's own § "Anti-patterns" `[2026-07-12 correction]`, which this Scope section was never updated to match).
-  Operator decision 2026-06-23 DELETED the VIX cash index entirely (`instruments-service@814b14a`, 1,621 GCS objects
-  removed) — there is no more Barchart-vs-Yahoo VIX-15m layering rule to enforce; VIX exposure is **VX-futures-only via
-  Databento `XCBF.PITCH`** (matches CLAUDE.md: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). Barchart has **zero
-  remaining sanctioned use** in TradFi sourcing. SSOT:
+  (1,701,422 objects → 0, accepted permanent loss). **[Corrected 2026-08-09 — self-contradiction removed]** this
+  sentence previously claimed `pipeline_mode=batch_massive/` objects "retain recognition only until the separate gated
+  GCS purge," implying the purge was still pending — that clause was written in the SAME commit as the "PURGED
+  2026-07-21" sentence above and contradicted it; the purge is in fact the gated GCS purge referenced, it EXECUTED
+  (RUN_TS=20260720-193849), and a live bounded prefix-scoped check 2026-08-09 confirms 0 `batch_massive` objects remain
+  (see `plans/active/issues/plan_reconciler_findings_2026_08_08.md` Progress Log). `batch_massive`
+  `PipelineMode`/`possible_manifest` READ recognition is now safe to drop from code (tracked separately, not yet done as
+  of this edit) — matching `/codex/02-data/canonical-cutover-register.md`
+  §4/`/codex/02-data/reconciliation-finding-taxonomy.md` AE-4 (CLOSED). The `tradfi_massive_dual_source` child plan is
+  `status: superseded` — dual-source Massive is no longer a live goal. Barchart is **RETIRED as a general OHLCV tick
+  source** — ~~it now survives ONLY as the VIX-15m cash-index layering (Barchart preload 2020-01-02→2025-11-12 + Yahoo
+  rolling 60d + honest gap), which Databento does not serve.~~ **[2026-07-14 correction, verify-rerun-2 finding 217]
+  stale** (was the text struck through above — contradicted this same epic's own § "Anti-patterns"
+  `[2026-07-12 correction]`, which this Scope section was never updated to match). Operator decision 2026-06-23 DELETED
+  the VIX cash index entirely (`instruments-service@814b14a`, 1,621 GCS objects removed) — there is no more
+  Barchart-vs-Yahoo VIX-15m layering rule to enforce; VIX exposure is **VX-futures-only via Databento `XCBF.PITCH`**
+  (matches CLAUDE.md: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). Barchart has **zero remaining sanctioned use**
+  in TradFi sourcing. SSOT:
   [`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md) — **NOTE**: as
   of 2026-07-14 that codex doc's own §"VIX — futures vs the cash index" (lines 271-275) still describes the retired
   Barchart+Yahoo VIX-15m cash-index layering as current; it was not updated for the 2026-06-23 deletion and is flagged

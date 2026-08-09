@@ -144,18 +144,10 @@ the operator, not resolved by this run.
 
 ### Big findings — data-pipeline-correctness-adjacent, routed to operator via `/blocked`
 
-- [ ] [OPERATOR] P1. **Has the TradFi Massive estate (~1.7M GCS objects) actually been purged, or not?**
-      `plans/epics/tradfi_master.md:181-183` contradicts itself in two adjacent sentences: "the Massive estate was
-      PURGED 2026-07-21 (1,701,422 objects → 0, accepted permanent loss)" vs. the very next sentence, "historical
-      `pipeline_mode=batch_massive/` objects retain recognition only until the **separate gated** GCS purge" (implying
-      NOT yet done). Corroborated as NOT-yet-done by
-      `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md:121-124,145-146` (purge is a future
-      `[GATE]` step needing "operator go", explicitly a prod-data hard-stop) and
-      `plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md:195-196` ("unchanged from batch1-6... stays
-      deferred as one unit"). The epic's own object count (1,701,422) also matches neither of
-      `tradfi_canonical_path_migration_design_2026_07_19.md`'s own tables (1,469,325 / 1,696,166). This is a real
-      prod-bucket-delete question — I did not attempt to resolve it by picking a side from prose (per delete-safety HARD
-      RULE, a live GCS state check is warranted, not a doc-reconciliation guess).
+- [x] ✅ [OPERATOR] P1. **Has the TradFi Massive estate (~1.7M GCS objects) actually been purged, or not?** **RESOLVED
+      2026-08-09 (interactive session, sub-agent dispatch) — YES, purged, and it stays purged.** See "Massive-purge
+      reconciliation, 2026-08-09" in the Progress Log below for the full evidence chain (doc archaeology + a live
+      bounded prefix-scoped GCS check).
 - [ ] [OPERATOR] P1. **Is DeFi `collect-dex-pools`/`collect-dex-swaps` live capture currently STOPPED or RUNNING?**
       `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md:68,195,338` (last touched 2026-08-06) says
       ALL DeFi capture is STOPPED, with `collect-dex-pools` gated-paused behind Track-8 and its own "RESUME the stopped
@@ -332,4 +324,61 @@ one hunter this run. The 262 grace-protected docs were correctly excluded per th
   `/codex/08-workflows/ci-cd-flow.md` directly (Compute row + commit-prefix result table in the "Version Bump Flow"
   section) to describe the actual content-based mechanism per
   `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md` instead of the stale pure-commit-label framing.
-  Flipped this todo done, retagged `[OPERATOR]` → `[DOC]`.
+- **Massive-purge reconciliation, 2026-08-09 (sub-agent dispatch, answering the P1 `[OPERATOR]` question above)**:
+  **VERDICT — the Massive estate IS purged, and stays purged as of today.** Resolved without an ad-hoc bucket walk, per
+  the single-walk-discipline instruction, using two layers of evidence:
+  1. **Doc archaeology.** The doc-side "contradiction" was never a genuine open question — it was one epic sentence
+     (`tradfi_master.md:181-182`, both halves written in the SAME commit `1dd1a22fd97`, 2026-07-21) that hedged on
+     whether recognition should be dropped, sitting next to **nine independent, cross-dated, mutually-corroborating
+     records** of the same executed purge: the archived issue doc
+     (`plans/archive/issues/massive_purge_blocked_databento_l1_entitlement_2026_07_20.md`) with full VM-fanout terminal
+     evidence (RUN_TS=20260720-193849, 1,701,414 PURGED + 8 QUARANTINE stragglers deleted directly = 1,701,422, 0
+     `PURGE_REFUSED_GATED`, 0 ORPHAN, a Phase-2 per-day before/after table showing massive→0 with databento counts
+     UNCHANGED); the manifest surgical CAS drop (`manifest-consolidator-ssot.md:603`, 686,005 `batch_massive` rows
+     removed 2026-07-20, 5,209,585→4,519,965); and independent CLOSED/COMPLETED/RETIRED confirmations dated 07-21
+     through 07-25 in `canonical-cutover-register.md` (§4, "COMPLETED 2026-07-21"),
+     `gcs-and-manifest-delete-safety-protocol.md` (hard-stop #3, "EXECUTED 2026-07-20/21 ... not because this specific
+     purge is still pending — it is not"), `reconciliation-finding-taxonomy.md` (AE-4, "CLOSED 2026-07-20/21"),
+     `four-surface-reconciliation-procedure.md` (§6, "COMPLETED 2026-07-20"), `non-canonical-path-inventory.md` (row 10,
+     "RETIRED — the Massive purge EXECUTED"), `tradfi-databento-sourcing-ssot.md`, and two independently-dated active
+     plans (`tradfi_manifest_content_recovery_completion_2026_07_24.md:350` "batch_massive=ZERO (already purged
+     2026-07-21)"; `tradfi_backfill_throughput_followups_2026_07_24.md:195`). All nine cite the identical non-round
+     figure (1,701,422) — not a number that would independently coincide across nine documents by accident.
+  2. **Live, bounded, prefix-scoped verification (not a bucket walk)** — reused the ORIGINAL campaign's own 6 Phase-2
+     verification days from the archived issue doc, plus 2 recent dates well after the purge to rule out resurrection,
+     against the real bucket (`gs://market-data-tick-tradfi-prd-central-element-323112`):
+     `gcloud storage ls ".../day=<D>/pipeline_mode=batch_massive/**"` for
+     `D ∈ {2020-06-15, 2021-06-15, 2022-06-15, 2023-05-23, 2024-06-17, 2025-04-08, 2026-07-25, 2026-08-05}` → **0
+     objects on every single day**, including the two recent dates. A sanity check on the same days against
+     `pipeline_mode=batch_databento` returned 1,350/1,387 objects respectively, confirming the bucket/prefix pattern
+     itself is correct (not a false-empty from a wrong prefix). A cheap delimiter-listing of the bucket root found two
+     `_migration_backup*/` prefixes; spot-checked — these hold manifest/index snapshot parquet only (~118MB), not raw
+     tick data, and are unrelated to the Massive estate. This is the sanctioned §5 route-1 pattern from
+     `/codex/02-data/four-surface-reconciliation-procedure.md` (prefix-scoped listing per known date, not a corpus walk)
+     — no whole-bucket or whole-corpus listing was performed.
+  - **Which docs were wrong — flagged, and one fixed:**
+    - **`plans/epics/tradfi_master.md:181-183` — FIXED this session** (purely mechanical, hard-evidence-backed): removed
+      the self-contradicting "retain recognition only until the separate gated GCS purge" clause and replaced it with
+      the corrected state (purge executed, live-reverified 2026-08-09, citing this entry).
+    - **`plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md` — FLAGGED, NOT fixed.** This doc
+      predates the purge (created 2026-07-19; purge ran 2026-07-20/21) and its "Sequencing"/"Hard-stops" sections still
+      frame BOTH step 5 (general canonical `--apply` migration) and step 6 (Massive purge) as future `[GATE]`
+      operator-go items. Beyond the Massive question this doc's own scope was asked about, there is strong independent
+      evidence the ENTIRE migration it describes — not just the Massive purge — has ALSO since executed:
+      `canonical-cutover-register.md:258-259` states "UPDATED 2026-07-27 — migration COMPLETE, not
+      operator-gated/pending ... run `20260720-120911` (mtds-code@5581dcf9), 20/20 SPOT shards reporting ORPHAN=0 over
+      2,649,469 objects," catalogue SHIPPED+APPLIED LIVE 2026-07-25, chain-bundle content gate CLOSED 2026-07-27. The
+      doc's own `## Todos` section already carries zero open items (its one todo is `[x]` done). This looks like a doc
+      whose core content is fully stale/executed and may be an archive candidate — **not resolved here**, since
+      confirming that requires auditing the doc's OTHER still-open surfaces (manifest resurrection cleanup, casing
+      normalization residuals, quarantine disposition) that are outside this todo's scope, and archival needs the full
+      6-step ritual + its `locked_by: live-defi-rollout` clearance. Recommend a dedicated closeout pass on this doc.
+    - **`plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md:195-196` — FLAGGED, NOT fixed.** Its "stays
+      deferred as one unit, unchanged from batch1-6" framing is a downstream inheritance of the design doc's stale
+      gating above — once that doc's status is corrected, this batch's "Deferred" list entry needs updating too (it may
+      no longer be deferred work at all). Left as-is pending the design-doc closeout above; batch8 (or whichever picks
+      this up next) should re-check against the corrected design doc, not this framing.
+  - **Confidence**: high on the narrow question asked (has the Massive estate been purged — yes, confirmed live
+    2026-08-09, not just by trusting doc prose). Lower/flagged on the broader "is the whole migration done" question the
+    investigation surfaced as a side-finding — that one is evidenced but not independently live-verified this session,
+    so it is flagged rather than asserted as fact. Flipped this todo done, retagged `[OPERATOR]` → `[DOC]`.
