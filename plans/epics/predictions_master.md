@@ -40,8 +40,6 @@ related_plans:
   - ../active/prediction_phase_c_data_status_ui_2026_07_24.md
   - ../active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md
   - ../active/prediction_phase_e_football_arb_live_2026_07_24.md
-  - ../active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md
-  - ../active/prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md
   - ../active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md
   - ../active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md
   - ../active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md
@@ -52,7 +50,7 @@ related_plans:
   - ../active/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
   - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
   - ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md
-last_updated: 2026-07-12
+last_updated: 2026-08-10
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -913,8 +911,9 @@ features predict.
 
 ## Assigned active plans
 
-_19 active plans declare `parent_epic: predictions_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_17 active plans declare `parent_epic: predictions_master` in their frontmatter (batch10 + batch10_finalize archived
+complete 2026-08-10). Workers pick up in priority order (P0 first). Auto-populated by
+`scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -976,15 +975,6 @@ arb detection + honest-coverage correctness
 
 **status**: active · **estimate**: 8 cal AI-days (class: brand-new) **title**: Prediction (Kalshi/Polymarket) live +
 batch CLOB depth & trades capture infrastructure
-
-### [`prediction_satellite_ao_dispatch_batch10_2026_08_09`](../active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra)
-
-### [`prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize`](../active/prediction_satellite_ao_dispatch_batch10_2026_08_09_finalize.md)
-
-**status**: active · **estimate**: 0.48 cal AI-days (class: infra) **title**: Prediction satellite AO batch 10 —
-finalize (reconcile 4 source docs + archive)
 
 ### [`prediction_satellite_ao_dispatch_batch8_2026_08_08`](../active/prediction_satellite_ao_dispatch_batch8_2026_08_08.md)
 
