@@ -88,9 +88,11 @@ source: >-
       of the 4 in-scope checkboxes (9/10/11/13) carries real, non-placeholder evidence citing batch18 todo 1's numbers
       (not a bare `[x]`) — re-read the source doc directly, no further action needed. No separate commit required for
       this todo since the reconciliation already landed.
-- [ ] [REVIEW] P1. **Archive `deepseek_flash_ab_routing_test_2026_08_05.md` ONLY if it is genuinely at zero open todos**
-      (check todos 2/4/12a/17b/25's status in `ao_satellite_ao_dispatch_batch12_2026_08_09.md`'s own finalize first — if
-      any are still open there, this doc stays `status: active`, not archived).
+- [x] ✅ [REVIEW] P1. **Archive `deepseek_flash_ab_routing_test_2026_08_05.md` ONLY if it is genuinely at zero open
+      todos** — NOT archived: source doc has 5 open todos (2/4/12a/17b/25), all extracted to
+      `ao_satellite_ao_dispatch_batch12_2026_08_09.md`. 4 of 5 are done there (todos 1-4: `[x]`), but batch12 todo 5 (←
+      source todo 25, `backfill_task_usage.py` one-off extension) is still `- [ ]` — genuinely unfinished. Doc stays
+      `status: active` until batch12 (+finalize) closes it out. — unified-trading-pm@d93d01ea27
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch18_2026_08_10.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`, then re-run the active-plan inventory
@@ -117,3 +119,11 @@ source: >-
   for every worker" section reserving that flip for this finalize plan. Verified all 4 in-scope checkboxes carry real
   evidence (not bare `[x]`s) before flipping this todo against the existing commit — no new commit needed for the
   reconciliation itself.
+- **2026-08-10 (slot 25) — todo 3: archival check complete, NOT archiving**: independently verified the source doc
+  (`deepseek_flash_ab_routing_test_2026_08_05.md`) has 5 open checkboxes (2/4/12a/17b/25), all extracted to
+  `ao_satellite_ao_dispatch_batch12_2026_08_09.md`. Cross-referenced batch12's own todo list directly (not inferred):
+  todos 1-4 are `[x]` done with real evidence, but todo 5 (← source todo 25, the `backfill_task_usage.py` one-off
+  extension) is still `- [ ]` — genuinely unfinished real work, not just an un-flipped checkbox. Batch12's finalize plan
+  (`ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md`) is also still entirely `- [ ]` (machine-gated on batch12
+  completing). Source doc stays `status: active` — do NOT archive until batch12 closes out its last todo and its
+  finalize reconciles evidence back. This finalize plan's todo 4 (archive batch18 itself) is still pending.
