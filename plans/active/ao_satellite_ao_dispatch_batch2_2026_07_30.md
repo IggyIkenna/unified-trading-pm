@@ -31,7 +31,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-07-30"
+last_updated: "2026-08-10"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -46,6 +46,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
+archive_exempt: true
 source: >-
   /ag-closeout-audit ao skill run 2026-07-30 (autonomous, scheduled dispatch agt-b4e164) — Phase 0 re-derived the
   tranche's 42 current members via scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py --tranche ao, confirmed
@@ -117,34 +118,34 @@ other orphaned candidate considered and why it was NOT drafted.
       agent-orchestrator.
 
       **Verification (not a re-implementation)**: on picking this up, read `server/verify.py` directly before writing
-                                                                          any code and found all 3 sub-items already present on current HEAD:
-                                                                          - Sub-items (1) + (2) (the `BLOCKED-ON` disposition + the Mode-1/Mode-2 marker-fallback for an aged-out log
-                                                                          window): already shipped by a different worker (slot-7, per the source doc's own Progress Log) at
-                                                                          `agent-orchestrator@22a14b1` (`_diff_blocks_checkbox`, `_ADDED_BLOCKED_LINE_RE`,
-                                                                          `reason="todo_blocked_pending_other_owner"`) and `agent-orchestrator@e1b30f5` (`_marker_disposition_in_text`,
-                                                                          `_mode1_fallback_disposition`/`_mode2_no_recent_commit_disposition`) — both confirmed ancestors of my current
-                                                                          HEAD via `git merge-base --is-ancestor`.
-                                                                          - Sub-item (3) (self-archival rename-blindness): traced `_same_commit_added_path_matching_basename` +
-                                                                          `_flips_at_path_or_rename`/`_cancels_at_path_or_rename`/`_defers_at_path_or_rename` — already wired into BOTH
-                                                                          `_mode1_disposition` AND `_mode2_disposition` — to an EARLIER, separate commit,
-                                                                          `agent-orchestrator@587c8db` (2026-07-28T20:30:49+01:00, `fix(ao): M3 plan-flip check follows an archival
-                                                                          git-mv bundled with the checkbox flip`), also confirmed an ancestor of HEAD. This means the 2 real-world
-                                                                          recurrences the source doc's todo 4 cites (2026-07-29, slots 12 and 2) hit an already-shipped-but-likely
-                                                                          not-yet-deployed-to-the-live-orchestrator-process version of the fix, not a genuine code gap — the codebase
-                                                                          itself was already correct by the time those recurrences were reported.
-                                                                          - Regression tests for all 3 sub-items already exist and PASS on HEAD — ran them directly rather than trusting
-                                                                          the claim: full `tests/test_done_gate_plan_flip_hard_reject.py` (29/29 passed), specifically confirming
-                                                                          `test_done_accepts_when_commit_blocks_todo_pending_other_owner` +
-                                                                          `test_done_accepts_cross_repo_when_pm_commit_blocks_todo_pending_other_owner` (sub-item 1),
-                                                                          `test_done_accepts_cross_repo_when_todo_blocked_outside_the_log_window` +
-                                                                          `test_done_accepts_cross_repo_when_todo_deferred_outside_the_log_window` +
-                                                                          `test_done_accepts_cross_repo_when_todo_cancelled_outside_the_log_window` +
-                                                                          `test_done_rejects_cross_repo_when_marker_disposition_is_ambiguous` (sub-item 2), and
-                                                                          `test_done_accepts_cross_repo_when_checkbox_flip_bundled_with_archival_git_mv` +
-                                                                          `test_done_accepts_single_repo_when_checkbox_flip_bundled_with_archival_git_mv` (sub-item 3, both PASSED).
-                                                                          - No code changes shipped (there was nothing to change) — per this plan's "don't edit the source issue doc's
-                                                                          checkboxes" rule, `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md`'s own todo 4 is
-                                                                          left untouched here; the paired finalize plan reconciles this evidence back into it.
+                                                                              any code and found all 3 sub-items already present on current HEAD:
+                                                                              - Sub-items (1) + (2) (the `BLOCKED-ON` disposition + the Mode-1/Mode-2 marker-fallback for an aged-out log
+                                                                              window): already shipped by a different worker (slot-7, per the source doc's own Progress Log) at
+                                                                              `agent-orchestrator@22a14b1` (`_diff_blocks_checkbox`, `_ADDED_BLOCKED_LINE_RE`,
+                                                                              `reason="todo_blocked_pending_other_owner"`) and `agent-orchestrator@e1b30f5` (`_marker_disposition_in_text`,
+                                                                              `_mode1_fallback_disposition`/`_mode2_no_recent_commit_disposition`) — both confirmed ancestors of my current
+                                                                              HEAD via `git merge-base --is-ancestor`.
+                                                                              - Sub-item (3) (self-archival rename-blindness): traced `_same_commit_added_path_matching_basename` +
+                                                                              `_flips_at_path_or_rename`/`_cancels_at_path_or_rename`/`_defers_at_path_or_rename` — already wired into BOTH
+                                                                              `_mode1_disposition` AND `_mode2_disposition` — to an EARLIER, separate commit,
+                                                                              `agent-orchestrator@587c8db` (2026-07-28T20:30:49+01:00, `fix(ao): M3 plan-flip check follows an archival
+                                                                              git-mv bundled with the checkbox flip`), also confirmed an ancestor of HEAD. This means the 2 real-world
+                                                                              recurrences the source doc's todo 4 cites (2026-07-29, slots 12 and 2) hit an already-shipped-but-likely
+                                                                              not-yet-deployed-to-the-live-orchestrator-process version of the fix, not a genuine code gap — the codebase
+                                                                              itself was already correct by the time those recurrences were reported.
+                                                                              - Regression tests for all 3 sub-items already exist and PASS on HEAD — ran them directly rather than trusting
+                                                                              the claim: full `tests/test_done_gate_plan_flip_hard_reject.py` (29/29 passed), specifically confirming
+                                                                              `test_done_accepts_when_commit_blocks_todo_pending_other_owner` +
+                                                                              `test_done_accepts_cross_repo_when_pm_commit_blocks_todo_pending_other_owner` (sub-item 1),
+                                                                              `test_done_accepts_cross_repo_when_todo_blocked_outside_the_log_window` +
+                                                                              `test_done_accepts_cross_repo_when_todo_deferred_outside_the_log_window` +
+                                                                              `test_done_accepts_cross_repo_when_todo_cancelled_outside_the_log_window` +
+                                                                              `test_done_rejects_cross_repo_when_marker_disposition_is_ambiguous` (sub-item 2), and
+                                                                              `test_done_accepts_cross_repo_when_checkbox_flip_bundled_with_archival_git_mv` +
+                                                                              `test_done_accepts_single_repo_when_checkbox_flip_bundled_with_archival_git_mv` (sub-item 3, both PASSED).
+                                                                              - No code changes shipped (there was nothing to change) — per this plan's "don't edit the source issue doc's
+                                                                              checkboxes" rule, `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md`'s own todo 4 is
+                                                                              left untouched here; the paired finalize plan reconciles this evidence back into it.
 
 - [x] [WORKER] P1. ✅ **MOOT — already fully resolved before this batch was drafted; re-verified 2026-07-30, no action
       needed.** The source doc (`branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`) was already
@@ -196,7 +197,7 @@ other orphaned candidate considered and why it was NOT drafted.
       for this exact bug class) yet task `-006` was dispatched while its direct predecessor `-001` was still `queued`.
       Source: `/plans/archive/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`. Repo:
       agent-orchestrator.
-- [ ] [SCRIPT] P3. **Read-only: verify whether `na-eligibility-auditor.timer`'s most recent scheduled fire(s) since
+- [x] ✅ [SCRIPT] P3. **Read-only: verify whether `na-eligibility-auditor.timer`'s most recent scheduled fire(s) since
       2026-07-28 reached `agent_kind=na_eligibility_auditor` lifecycle-complete.** Use the read-only SSM path
       (`/check-agent-orchestrator` or `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh`) against the
       `agents` table. The 2026-07-28 07:00 UTC fire is already known to have hit `Active: failed` on a curl TIMEOUT past
@@ -206,17 +207,25 @@ other orphaned candidate considered and why it was NOT drafted.
       points (see this plan's Deferred section). **Done when**: the source doc records the fire-completion verdict with
       evidence (dispatch id, timestamps, terminal state). Source:
       `/plans/archive/issues/na_eligibility_auditor_timer_not_yet_installed_2026_07_27.md` (its SCRIPT P3 item only —
-      NOT its P2 timeout-retune item). Repo: agent-orchestrator (read-only). **➡️ EXTRACTED 2026-08-09 to
-      `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 1 — do NOT action here.**
-- [x] [INFRA] P3. ✅ **MOOT — verified resolved 2026-08-06, no action needed (na-eligibility-audit round9, 2026-08-09).**
-      Re-mint the stale `~/.orch_token` on host `ip-172-31-5-118`. Source doc
-      (`git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`) itself already closed this exact item as
-      MOOT on 2026-08-06: the loopback-preference fix (batch1 todo 3, shipped 2026-07-26) removed this host's
-      public-URL-token dependency entirely, measured live from `hk` at the time —
-      `/api/fleet/git-health` host `ip-172-31-5-118` showed 17 slots, `reporter_stale` **0**. No re-mint was or is
-      needed for this host. This copy of the todo went stale when the source doc resolved it via a different fix
-      (loopback, not re-mint) rather than the credential op this copy describes — closing on the source doc's own
-      evidence rather than leaving a stopgap open against a host that no longer needs it. Source:
+      NOT its P2 timeout-retune item). Repo: agent-orchestrator (read-only). **✅ DONE 2026-08-10 — YES, later fires
+      complete end-to-end.** The 2026-07-28 07:00 UTC `TimeoutStartSec=2450` curl-TIMEOUT failure is superseded:
+      `TimeoutStartSec` was raised 2450→21600s on 2026-08-04 (`ao_scheduled_job_reserve_and_staggering_2026_08_04.md`,
+      `agent-orchestrator@17939c3`), and live `agents`-table rows confirm 10 `agent_kind=na_eligibility_auditor` reached
+      `exit_reason=lifecycle-complete` across 3 fires (2026-08-08 02:33-03:02 UTC: `agt-e640f6`/`agt-763d00`; 2026-08-09
+      02:10-03:26 UTC: `agt-913589`/`agt-aedcde`/`agt-eee16e`; 2026-08-09 05:17-08:31 UTC:
+      `agt-f74e23`/`agt-3df41f`/`agt-b831d5`, vs 2 siblings `reaped-stale`). Most recent fire (2026-08-10 ~01:47 UTC)
+      still in-progress (4 active, 4 `reaped-stale`) — `reaped-stale` is a separately-tracked failure mode, not this
+      todo's scope. Timeout value left untouched. Re-verified 2026-08-10 (slot 24, review): `agent-orchestrator@17939c3`
+      present; live `state.db` shows lifecycle-complete rows incl. `agt-b831d5` + fresh `agt-ffd0db`/`agt-a70469`.
+- [x] [INFRA] P3. ✅ **MOOT — verified resolved 2026-08-06, no action needed (na-eligibility-audit round9,
+      2026-08-09).** Re-mint the stale `~/.orch_token` on host `ip-172-31-5-118`. Source doc
+      (`git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`) itself already closed this exact item as MOOT
+      on 2026-08-06: the loopback-preference fix (batch1 todo 3, shipped 2026-07-26) removed this host's
+      public-URL-token dependency entirely, measured live from `hk` at the time — `/api/fleet/git-health` host
+      `ip-172-31-5-118` showed 17 slots, `reporter_stale` **0**. No re-mint was or is needed for this host. This copy of
+      the todo went stale when the source doc resolved it via a different fix (loopback, not re-mint) rather than the
+      credential op this copy describes — closing on the source doc's own evidence rather than leaving a stopgap open
+      against a host that no longer needs it. Source:
       `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` (its own MOOT-verified
       entry, 2026-08-06). Repo: agent-orchestrator.
 - [x] [DEVOPS] P1. ✅ **DONE 2026-07-30 — already resolved, don't dispatch.** The `.env.local`-based literal
@@ -244,17 +253,25 @@ other orphaned candidate considered and why it was NOT drafted.
       doc describes unconditional pinning, and both cite the sequential gate + the shipping sha — CONFIRMED. Source:
       `/plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md` (its sole remaining DOCS P1 item — the BACKEND
       P1 live-VM verification half is already done, dated 2026-07-29). Repo: unified-trading-pm (codex).
-- [ ] [DATA] P2. **Check + recover-or-dispose `strategy-service`'s stranded wip-preserve ref.** Check whether
+- [x] ✅ [DATA] P2. **Check + recover-or-dispose `strategy-service`'s stranded wip-preserve ref.** Check whether
       `refs/wip-preserve/cascade-strategy-service-a77eb6d170ca` (2026-07-28, a `staging-lock-check.yml`
       self-hosted-runner-migration commit) was independently superseded by a later rollout in strategy-service; if so,
       the ref is safely superseded and can be deleted (cite the superseding SHA). If not, recover it the same way this
       doc's sibling task recovered `unified-trading-library`'s equivalent ref (fetch the preserved ref,
       cherry-pick/fast-forward it onto current `origin/live-defi-rollout`, ship via quickmerge). **Done when**: the
       ref's disposition (superseded-and-deleted, or recovered-and-shipped) is recorded with evidence in the source doc.
-      **➡️ EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 2 — do NOT action here.**
-      Source: `/plans/archive/2026_08/wip_preserve_refs_silently_unrecovered_2026_07_29.md` (its `[DATA] P2` item only —
-      its two `[SCRIPT] P3` items, a fleet-wide sweep design and a "consider" post-push verification, are held in this
-      plan's Deferred section). Repo: strategy-service.
+      **✅ DONE 2026-08-10 — SUPERSEDED, ref deleted, no recovery needed.** Fetched the ref's commit (`a77eb6d170ca`,
+      "fix(ci): sync staging-lock-check.yml from template (self-hosted runner migration)", touches only
+      `.github/workflows/staging-lock-check.yml` `runs-on` on both jobs); its diff is **byte-identical** to
+      `strategy-service@400d3773` (2026-07-28, ~2h later), confirmed an ancestor of `origin/live-defi-rollout` — the
+      self-hosted intent is preserved end-to-end (the file has since been refactored into a thin caller of
+      `unified-trading-ci`'s reusable `staging-lock-check.yml@main`). The ref was never pushed to GitHub
+      (`git ls-remote origin 'refs/wip-preserve/*'` returns empty) — it existed only as a stale local
+      `refs/remotes/origin/wip-preserve/...` tracking ref, deleted via `git update-ref -d` (commit object untouched). No
+      code change needed. Re-verified 2026-08-10 (slot 24, review): ls-remote still empty; `a77eb6d1` vs `400d3773` file
+      content byte-identical. Source: `/plans/archive/2026_08/wip_preserve_refs_silently_unrecovered_2026_07_29.md` (its
+      `[DATA] P2` item only — its two `[SCRIPT] P3` items, a fleet-wide sweep design and a "consider" post-push
+      verification, are held in this plan's Deferred section). Repo: strategy-service.
 
 ## Deferred — orphaned but not currently dispatch-eligible (design/judgment fork, no evidence-based tiebreaker)
 
@@ -381,16 +398,16 @@ never-cited set). This is the same scope boundary the 2026-07-26 and 2026-07-30 
   actual source doc (`dispatch_sequential_gate_fix_2026_07_24.md`, archived same day); this batch2 copy of the citation
   had simply gone stale. Re-verified both codex docs live and flipped the checkbox. 3 items remain open (na- timer
   verification, orch_token re-mint, wip-preserve ref) — none in this session's scope.
-- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA-STALE, citation-closed — the `orch_token` re-mint item was
-  found already resolved on the SOURCE doc (`git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`,
-  2026-08-06 MOOT verdict) by a different fix (loopback preference) than the one this copy describes (re-mint);
-  flipped `[x]` with the source doc's own evidence cited, not a new dispatch. The na-timer verification and
-  wip-preserve-ref items were already `EXTRACTED 2026-08-09` to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` by a
-  concurrent same-day pass — 0 items remain un-actioned on this doc. Whole-doc RECLASSIFY not applicable (this doc is
-  itself a dispatch-coordination artifact, not a source doc).
+- **na-eligibility-audit 2026-08-09 (round9)**: KEEP-NA-STALE, citation-closed — the `orch_token` re-mint item was found
+  already resolved on the SOURCE doc (`git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`, 2026-08-06 MOOT
+  verdict) by a different fix (loopback preference) than the one this copy describes (re-mint); flipped `[x]` with the
+  source doc's own evidence cited, not a new dispatch. The na-timer verification and wip-preserve-ref items were already
+  `EXTRACTED 2026-08-09` to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` by a concurrent same-day pass — 0 items
+  remain un-actioned on this doc. Whole-doc RECLASSIFY not applicable (this doc is itself a dispatch-coordination
+  artifact, not a source doc).
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA, valid — `grep -cE '^[[:space:]]*[-*] \[ \]'` =
   **2**, matching. Both visible open lines are citation-pointers already correctly marked
   `➡️ EXTRACTED 2026-08-09 to ao_satellite_ao_dispatch_batch10_2026_08_09.md` (verified live: that extraction target
-  exists) — per round9's own "0 items remain un-actioned on this doc" verdict, real remaining work here is zero. This
-  is itself a dispatch-coordination satellite artifact (not a source doc), so whole-doc RECLASSIFY doesn't apply; stays
+  exists) — per round9's own "0 items remain un-actioned on this doc" verdict, real remaining work here is zero. This is
+  itself a dispatch-coordination satellite artifact (not a source doc), so whole-doc RECLASSIFY doesn't apply; stays
   `assigned_vm: NA` per the tranche's own 100%-consistent established convention (batch1/3/4 all NA too).

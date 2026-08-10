@@ -62,7 +62,7 @@ related:
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_progress_log_history_2026_08_03.md,
   ]
 created: 2026-07-17
-last_updated: 2026-08-06 # AO issue-doc re-verification sweep (7 archived, 1 new todo, 1 partial). File now 980/1000 lines — near the hard cap again, next touch should split Progress Log history to the archive doc per the 08-03 precedent
+last_updated: 2026-08-10 # batch10 source-checkbox evidence reconciliation (3 flips). File near hard cap — next touch should split Progress Log history to the archive doc per the 08-03 precedent
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -476,12 +476,20 @@ NOT AO and are deliberately out of scope here.
       commits), apply/route what remains, then flip the tracker `resolved` + archive. Its own X5 lesson applies: every
       edit lands committed+pushed in the same session. Source: doc #10. **Gate**: each tier marked landed/routed/dropped
       with evidence; doc archived.
-- [ ] [REVIEW] P0. **Archive each source doc as its items land** (6-step ritual each: migrate deferred → banner →
+- [x] ✅ [REVIEW] P0. **Archive each source doc as its items land** (6-step ritual each: migrate deferred → banner →
       codex-alignment → codex update if a contract changed → update every referrer's path corpus-wide → clear lock).
       Docs #2 and #6-frontmatter carry bogus fields (`last_updated: 2026-06-27` predating `created`; stray
       `locked_by: live-defi-rollout`) — repair at archival. **Gate**: `plans/active/issues/` contains no
-      resolved-but-unarchived AO doc; inventory regenerated. **➡️ EXTRACTED 2026-08-09 to
-      `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 3 — do NOT action here.**
+      resolved-but-unarchived AO doc; inventory regenerated. **✅ DONE 2026-08-10 — 0 archival actions required.**
+      Re-derived the candidate set fresh (not the stale "Docs #2 and #6" reference): all 57 `plans/active/issues/*.md`
+      docs matching `asset_group: [ao]` OR `parent_epic: orchestrator_master`, checked for 0-open-todos-with-`>0`-done +
+      a terminal `status:` field. Result: **0 genuine orphans** — `check_archive_candidates.sh` (0 candidates,
+      baseline 0) + `check_terminal_status_archived.py` (0 violations, baseline 0) both clean; the 4 near-miss docs are
+      each correctly held back (gate_on_depends finalize, `archive_exempt: true`, or the standing corpus-wide
+      `locked_by: live-defi-rollout`). `regenerate_active_plan_inventory.py` re-run clean (0 orphans, 297 plans). NOTE
+      (2026-08-10, slot 24 re-verify): the corpus-wide gates have since drifted — `check_archive_candidates.sh` now
+      flags 2 candidates and the inventory reports 3 orphans, both from new 2026-08-10 work; tracked as todo 5 in
+      `/plans/active/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`.
 
 ### Phase 6 — operator-reported dispatch-policy gaps (2026-07-17, verified this session before writing)
 
@@ -805,7 +813,7 @@ NOT AO and are deliberately out of scope here.
       **Measured 2026-08-08 ~08:21 UTC**: `dispatched`-status task count = 6; slots with `current_task` set = 6; exact
       1:1 mapping, zero orphans in either direction. 7 `stale_dispatch_reclaimed` events since 2026-07-26 (fix active
       and triggering). **VERDICT: PASS — invariant holds.**
-- [ ] [BACKEND] P0. **Prove ONE plan_reconciler run end-to-end (the reconciler's real gate) — plus pin two named
+- [x] ✅ [BACKEND] P0. **Prove ONE plan_reconciler run end-to-end (the reconciler's real gate) — plus pin two named
       residuals from the root-cause fix.** Two runs have died so far (07-20 `agt-751738` at 07:33:30, same
       `tmux_session_lost`/`archived_lifecycle_complete` signature as the historical 07-15/17/18 deaths) — root-caused to
       an UNGUARDED `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` reaping a live-working reconciler whose
@@ -826,10 +834,20 @@ NOT AO and are deliberately out of scope here.
       (/plan-reconcile ao): all 6 named plans are now confirmed archived** (`ao_fleet_infra_hardening` corrected above
       to ✅ ARCHIVED, 5/5, no residual; the other 5 were already shown archived in the split-out table above). The hold
       no longer blocks a retry — this P0 stays unflipped, the run itself still needs to happen. \_Source:
-      `ao_scheduled_agent_hygiene_2026_07_20.md` (archived), todo 4 (+ R1/R2 residuals carried in todo 5).* **➡️
-      EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 4 — do NOT action here.**
-- [ ] [BACKEND] P0. **Role lifecycle-field reclassification — align the declared `lifecycle` on plan-worker roles with
-      reality.** `backend_engineer` / `ui_developer` / `quant_dev` / `infra` are declared `lifecycle: one_shot`;
+      `ao_scheduled_agent_hygiene_2026_07_20.md` (archived), todo 4 (+ R1/R2 residuals carried in todo 5).* **✅ DONE
+      2026-08-10 — (a)(b)(c) all recorded with evidence.** (a) A full run completed end-to-end, standing behavior since
+      2026-08-06: cited `dispatch_id=agt-a398c9` — `plan_health_dispatch_initiated` row `396415` @ 2026-08-09 03:02:46
+      UTC → `plan_health_result` @ 04:43:25 UTC (contradictions=5, doc_drift=5, fixes_applied=12, filed=4,
+      commit_sha=40ad77233, pr_url=https://github.com/IggyIkenna/unified-trading-pm/pull/2653) → branch
+      `plan_reconciler/agt-a398c9` on origin; 20 completed reconcile runs since 2026-08-06 each with a pushed branch.
+      (b) R1 pinned: `WorkerLivenessWatchdog._reclaim_exited_slot()` (`worker_liveness_watchdog.py:1311-1359`), gated on
+      `has_session()==False` → `reset_slot_worker_state(...,"idle")`; the OLD `_reclaim_idle_lingering_sessions` path is
+      structurally incapable of touching a live typed agent. (c) R2 confirmed live: `orch-slot-19`'s reconciler sat
+      3134s heartbeat-silent yet stayed `working`, protected by the terminal-lifecycle
+      `watchdog_scheduled_heartbeat_timeout`=3600s (`config.py:499`) vs the persistent 900s (`config.py:489`). Residual
+      filed separately: `/plans/active/issues/plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md`.
+- [x] ✅ [BACKEND] P0. **Role lifecycle-field reclassification — align the declared `lifecycle` on plan-worker roles
+      with reality.** `backend_engineer` / `ui_developer` / `quant_dev` / `infra` are declared `lifecycle: one_shot`;
       reclassify to `persistent`, and resolve `data_engineering` (scheduled-vs-persistent). **NOT required for
       correctness** — the shipped fix rekeyed reaping on DISPATCH CONTEXT (a bound `one_shot` `AgentRow`), so nothing
       reads `role.lifecycle` to decide reaping any more; this is a declared-vs-actual **documentation-integrity** item.
@@ -838,8 +856,17 @@ NOT AO and are deliberately out of scope here.
       **Operator-owned timing** (2026-07-21): "after updating docs, fixing this, and everything discussed." **Gate**:
       each role's `lifecycle` matches its real dispatch pattern, or a recorded decision says why the declared value
       stays. _Source: `ao_worker_lifecycle_dispatch_context_2026_07_21.md` (archived 2026-07-23), its "Deferred
-      (tracked, not this plan's scope)" item — which had NO successor owner until this migration._ **➡️ EXTRACTED
-      2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 5 — do NOT action here.**
+      (tracked, not this plan's scope)" item — which had NO successor owner until this migration._ **✅ DONE 2026-08-10
+      — all 5 role files reclassified.** `agents/{backend_engineer,ui_developer,quant_dev,infra,data_engineering}.md`
+      now all declare `lifecycle: persistent` (they drain the backlog via the /boot→work→/done loop, not event-spawned
+      one-offs); `data_engineering` resolved to `persistent` per the 2026-08-06 `task_role_group` ruling. Updated the
+      agent-orchestrator tests/comments that hardcoded the old values (`test_role_registry.py` `_EXPECTED`,
+      `test_reap_orphan_agents.py`, `test_task_usage_windows.py` docstrings, `tests/fixtures/agents/*.md` mirrors,
+      `state_store/{agents,slots}.py` comments) + the 2 codex SSOTs (`agent-orchestrator-worker-liveness.md`,
+      `agent-orchestrator-single-vm-architecture.md`). No dispatch/reap behavior changed (reaping keys on dispatch
+      context, never this field). Commits: `agent-orchestrator@c72daaa` (state_store + tests) + `@4421129` (test
+      fixtures), `unified-trading-pm@14f1dcd` (role files). Re-verified 2026-08-10 (slot 24, review): all 5 role files
+      declare `lifecycle: persistent`.
 - [x] ✅ [SCRIPT] P2. **Remove the dead `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` from the live planning-VM
       `.env.local`.** — DONE 2026-07-21 (operator authorized, superseding the A6 "fold into re-bootstrap" default — done
       in-window alongside the DB migration). Took the `sed -i` backup-first route (backups
