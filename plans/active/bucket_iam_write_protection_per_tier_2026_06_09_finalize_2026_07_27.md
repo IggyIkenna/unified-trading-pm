@@ -83,3 +83,10 @@ context_scope:
   6-step archival ritual. This todo's own checkbox stays unflipped until that ritual actually runs (leaving it `[ ]` is
   deliberate — "reconcile + archive if closed" is one done_definition, and the archive half is genuinely blocked on a
   human-only gate, not skipped work).
+- **slot-15 2026-08-10 (re-verification pass)**: re-checked `BLK-df57c9fc` via `GET /api/state` — still
+  `answered_at: null`, no operator decision yet. Independently re-confirmed the source doc
+  (`bucket_iam_write_protection_per_tier_2026_06_09.md`) is still 100% `[x]` and still carries
+  `locked_by: live-defi-rollout` — nothing has changed since slot-33's pass. Not re-filing a duplicate blocked-question
+  (one is already open and paged). No new action available until the operator answers `BLK-df57c9fc`; releasing via
+  `/skip-current-task` with `reason_code: GATED` so the fleet cooldown arms instead of the task re-dispatching to the
+  next slot's heartbeat.
