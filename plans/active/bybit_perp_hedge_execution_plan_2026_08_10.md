@@ -180,3 +180,13 @@ context_scope:
   exists. Decision: wrap the existing adapter rather than build a native connector from scratch (P3 secondary venue —
   reuse tested code; the adapter IS the seam if CCXT ever needs replacing). Filed as the gated follow-up required by
   `recursive_loop_orchestrator_wiring_finalize_2026_08_09.md` todo 15.
+
+- **2026-08-10 (slot 13, backend_engineer)**: Todo 3 shipped — Bybit credential hot-reloader + wiring module at
+  `execution_service/defi_execution/wiring/bybit_wiring.py` (execution-service@03c69a3767). Credential resolution
+  follows the production reader `LiveExecutionHandler._load_bybit_trade_credentials` (trade-scope pair
+  `bybit_trade_api_key_secret_name`/`bybit_trade_api_secret_secret_name` preferred, unscoped `bybit_api_*` fallback) —
+  the plan's `bybit-api-credentials` single-blob name is stale (endpoint-registry note only; no such registry entry in
+  `DATA_SOURCE_TO_SECRET`, `ccxt` → `None`). `ApiKeyReloader` cannot serve Bybit (UAC maps BYBIT → `tardis` →
+  `tardis-api-key`, the market-data key), so `config_reloaders.py` gets a dedicated `_BybitKeyReloader` polling the
+  config secret names directly, pushing rotations into `BybitPerpHedgeConnector.update_credentials()` (new method +
+  stale-adapter cleanup) only when the pair changes. QG green (193s full gate); wiring tests 17/17 pass.
