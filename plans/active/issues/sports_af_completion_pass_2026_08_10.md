@@ -69,33 +69,36 @@ depends_on: []
     the singleton lock. Will monitor for completion via run.log → exit_code.
   - **Session compacted 2026-08-10 ~11:00Z** — VM still mid-flight. Deferred work table below.
 
-## Deferred work after 2026-08-10 ~11:00Z
+    - **2026-08-10 (slot 15, data_engineering, post-compact resume ~12:00Z)** — Resumed, VM still RUNNING:
+      - Progress: `last_completed_date=2021-11-26` via SSH (GCS tee shows `2021-11-24`, normal lag). Pace ~10 dates/min,
+        ~3 more hours to complete the full 2020-06-06 to 2026-08-10 range.
+      - Confirmed all-entity invocation: omitting `--entity` from the launcher defaults to "all entities" mode (line
+        308: `ENTITY_DESC="all entities"`). Strategy: a single all-entity VM will close the 5 remaining entities
+        (STANDINGS/TEAMS/FIXTURE_STATS/FIXTURE_LINEUPS/PLAYER_STATS) in one pass rather than 5 sequential launches.
+      - **VM `af-backfill-20260810-103218` still RUNNING at this session's compaction.**
 
-| Item                                                       | State / why deferred                                               | Blocked on                                                                                           |
-| ---------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| **INJURIES backfill** (`af-backfill-20260810-103218`)      | RUNNING, chunk ~5-6/26, `last_completed_date=2021-05-13`, ETA 1-2h | VM completion (real infra)                                                                           |
-| **STANDINGS backfill** (271 needed)                        | Queued — singleton lock held by INJURIES VM                        | INJURIES VM exit_code                                                                                |
-| **TEAMS backfill** (96 needed)                             | Queued                                                             | INJURIES VM exit_code                                                                                |
-| **FIXTURE_STATS backfill** (136 needed)                    | Queued                                                             | INJURIES VM exit_code                                                                                |
-| **FIXTURE_LINEUPS backfill** (136 needed)                  | Queued                                                             | INJURIES VM exit_code                                                                                |
-| **PLAYER_STATS backfill** (3 needed)                       | Queued (may be done already — 3 is daily-drift)                    | INJURIES VM exit_code                                                                                |
-| **Re-census to confirm ~0**                                | Gated on all backfills converging                                  | All entity backfills complete                                                                        |
-| **Unpark `sports_af_full_entity_completion-9798da269f23`** | Gated on re-census ~0                                              | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |
+## Deferred work after 2026-08-10 ~12:00Z
+
+| Item                                                                                                                | State / why deferred                                     | Blocked on                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, `last_completed_date=2021-12-10` (GCS), ~3h ETA | VM completion (real infra)                                                                           |
+| **All-entity backfill** (STANDINGS 271 + TEAMS 96 + FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642) | Queued — singleton lock held by INJURIES VM              | INJURIES VM exit_code                                                                                |
+| **Re-census to confirm ~0**                                                                                         | Gated on all backfills converging                        | All entity backfills complete                                                                        |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`**                                                          | Gated on re-census ~0                                    | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |
 
 **Recommended NEXT item**: Check `af-backfill-20260810-103218` status:
 
 ```bash
 gcloud compute instances list --filter='name=af-backfill-20260810-103218' --format='table(name,status)'
 # If TERMINATED: check exit_code:
-gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260810-103218/run.log | grep 'exit_code='
-# If exit_code=0: cd deployment-service && bash scripts/vm/launch-api-football-backfill-vm.sh --entity STANDINGS 2020-06-06 2026-08-10
-#   Repeat for TEAMS, FIXTURE_STATS, FIXTURE_LINEUPS — or launch one all-entity VM (no --entity) to close all at once
-# If RUNNING: monitor until completion
+gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260810-103218/run.log | grep 'exit_code=' | tail -1
+# If exit_code=0: launch ALL-ENTITY VM (no --entity) to close remaining 5 entities in one pass:
+cd deployment-service && bash scripts/vm/launch-api-football-backfill-vm.sh --on-demand 2020-06-06 2026-08-10
+# If RUNNING: monitor until completion, then launch all-entity VM
 ```
 
-**Launch cadence tip from campaign history**: entities move in lockstep — TEAMS and STANDINGS resolve together even when
-only `--entity TEAMS` is passed; FIXTURE_STATS and FIXTURE_LINEUPS also move together. A single `af-backfill-*` VM
-WITHOUT `--entity` may close all 6 entities in one pass, more efficient than 6 sequential entity-scoped launches. The
-campaign doc (`/plans/active/issues/sports_af_full_entity_completion_2026_08_03.md`) confirms this pattern repeatedly.
-Also: always use `--on-demand` to avoid `asia-northeast1-c` SPOT preemption — the first launch
-(`af-backfill-20260810-102659`, SPOT) vanished before writing a `run.log`.
+**Strategy for follow-up**: a single all-entity VM (no `--entity` flag) is now preferred over sequential entity-scoped
+launches. Campaign history shows entities resolve in lockstep and the chunk-loop architecture handles all entities
+efficiently in one pass. Validated from launcher source (line 308: `ENTITY_DESC="all entities"` when `$ENTITY` is
+empty). Always use `--on-demand` — `asia-northeast1-c` SPOT preemption killed the first launch
+(`af-backfill-20260810-102659`) before it could write `run.log`.
