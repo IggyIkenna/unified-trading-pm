@@ -110,7 +110,7 @@ each source doc's own Progress Log (not just trusting the classifier's one-line 
       near-identical blocked-nudge. **Done when**: the task is unparked, dispatches, and completes cleanly (or, if it
       re-triggers the same block, that itself is evidence for a fresh finding — report either outcome). Repo:
       agent-orchestrator (live API action, no code change).
-- [ ] [BACKEND] P1. **TmuxPruner-wedge workload-characteristic cross-check.** Source:
+- [x] ✅ [BACKEND] P1. **TmuxPruner-wedge workload-characteristic cross-check.** Source:
       `/plans/active/issues/citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` todo 1. Now that
       the fleet-wide TmuxPruner/keeper root cause is identified and fixed (`agent-orchestrator@e32d962`, TmuxPruner
       has-session debounce — see the archived `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md`), check
@@ -119,7 +119,15 @@ each source doc's own Progress Log (not just trusting the classifier's one-line 
       size — that makes them disproportionately likely to trigger it vs. other tasks. **Done when**: a concrete
       comparison is written into the source doc citing the actual measured characteristics of both tasks (not just "no
       obvious pattern found" without having checked all four dimensions). Repo: agent-orchestrator (investigation +
-      doc-writeup only, read-only).
+      doc-writeup only, read-only). — **DONE 2026-08-10 (slot 10, backend_engineer craft, doc-writeup only — no code
+      shipped).** Comparison written into the source doc todo 1 (flipped `[x]` there too). All four dimensions measured
+      and checked — prompt size (briefs 111 / ~110 chars, both short; boot prompt dominated by constant CLAUDE.md),
+      tool-call pattern (wedge fired `forced_precompact` 42s–2min post-`slot_boot`, before any pattern existed; keeper
+      pane `context%%` trigger, not task tools), repo state (wedge pre-work, hit `[REVIEW]` tasks identically), worktree
+      size (involved repos mid-range 0.9–1.8G; slot-constant, so can't discriminate). Both wedged in the SAME 2026-08-08
+      17:27–18:31Z fleet-wide crash-storm (in-window: 34 forced_compact, 23 tmux_session_lost, ≥8 distinct tasks hit
+      incl. non-`[DATA]`); solana-002 ran clean post-storm (market-tick-data-service@3619f9e2). **Verdict: no shared
+      workload characteristic — temporal + dispatch-mechanics artifact, not task workload.**
 
 ## Codex SSOTs (read before starting)
 

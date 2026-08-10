@@ -81,10 +81,48 @@ that the failure mode on this task isn't limited to the exact `forced_compact`->
 
 ## Todos
 
-- [ ] [BACKEND] P1. Once `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` todo 1 identifies the fleet-wide
-      TmuxPruner/keeper kill root cause, check specifically whether `citadel_satellite_ao_dispatch_batch1-004` (and
-      `solana_dex_pool_swaps_indexer-002`) share a workload characteristic (prompt size, tool-call pattern, repo state,
-      worktree size) that makes them disproportionately likely to trigger it vs. other tasks. Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P1. Once `review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md` todo 1 identifies the
+      fleet-wide TmuxPruner/keeper kill root cause, check specifically whether
+      `citadel_satellite_ao_dispatch_batch1-004` (and `solana_dex_pool_swaps_indexer-002`) share a workload
+      characteristic (prompt size, tool-call pattern, repo state, worktree size) that makes them disproportionately
+      likely to trigger it vs. other tasks. Repo: agent-orchestrator. — **DONE 2026-08-10 (slot 10,
+      `ao_satellite_ao_dispatch_batch19` todo 2, backend_engineer craft): NO shared workload characteristic — the
+      repeat-wedge was a temporal + dispatch-mechanics artifact of the fleet-wide crash-storm, not a task-workload
+      property. Full 4-dimension comparison (all four CHECKED with concrete measured data):** - **Prompt size — NOT a
+      differentiator.** `citadel_satellite_ao_dispatch_batch1-004` brief = **111 chars** (live `GET /api/backlog` query,
+      2026-08-10); `solana_dex_pool_swaps_indexer-002` brief was the same ~110-char plan-todo text (`[DATA] P1`, row now
+      zeroed post-`done`). Both short, average `[DATA]` tasks. The boot prompt is dominated by the constant auto-loaded
+      CLAUDE.md (~40 KB cap, identical for every task) + role files; the task-specific delta is ~110 chars. -
+      **Tool-call pattern — NOT a differentiator.** Wedge fired at `forced_precompact` **42s–2 min after `slot_boot`**
+      (slot 26: boot 17:46:06Z → forced_precompact 17:46:48Z; slot 11: boot 17:28:44Z → forced_precompact 17:30:44Z,
+      2026-08-08) — before any task-specific tool-call pattern was reachable. The trigger is the keeper's pane
+      `context%%` read (`context_lifecycle._read_pct`/`_tick_worker`, agent-orchestrator), independent of the task's
+      tool calls. The identical early-boot wedge hit OTHER tool-call profiles in the same window — e.g. REVIEW/doc-role
+      tasks `defi_expected_unattempted_backlog_1m_2026_07_03_finalize-002` and
+      `ao_false_done_backlog_rows_and_unresolved_plan_refs-007` (slots 26). - **Repo state — NOT a differentiator.** The
+      wedge hit at boot, before any repo work; the same slots later completed other tasks on the same repos. Both tasks
+      are `[DATA]`, but `[REVIEW]` tasks wedged identically in the same window. - **Worktree size — NOT a
+      differentiator.** solana-002 touches market-tick-data-service (measured 1.6G); citadel-004 touches
+      features-service (1.8G) + deployment-service (932M) — mid-range of the fleet (execution-service 1.3G,
+      strategy-service 594M, unified-trading-pm 915M). Decisively, worktree size is SLOT-CONSTANT (every slot clone
+      holds every repo; the task only selects which to work), and the wedge was slot-level — slot 11 and slot 26 each
+      wedged THREE DIFFERENT tasks in the same window — so it cannot discriminate between tasks. - **Actual mechanism
+      (positive finding).** Both tasks wedged in the SAME 65-min window (2026-08-08 17:27–18:31Z) = the fleet-wide
+      crash-storm peak (root-caused + fixed in the archived `review_slot1_tmuxpruner…` doc: remain-on-exit no-op +
+      liveness false-positives + host contention; `agent-orchestrator@e32d962`/`c9dad3e`/`5a163e7`/`dd01255`).
+      Fleet-wide in that window (live `GET /api/activity`): **34 forced_compact, 34 forced_precompact, 23
+      tmux_session_lost, 32 worker_kicked, 12 forced_compact_ineffective** — wedge-signature events hitting **≥8
+      distinct tasks** (solana-002, citadel-004, sports_taxonomy_p1_capture_and_contracts-019/-020,
+      defi_compute_gcp_migration-008, defi_expected_unattempted…-finalize-002, ao_false_done_backlog_rows…-007,
+      blocked_questions_ux_redesign…-001, cefi_chain_drop…-313de9df1f98, ao_satellite_ao_dispatch_batch7-003,
+      defi_venue_lst_rates_residual-001). The two named tasks were merely tier-1/prio-20-50 queued tasks re-dispatched
+      during the storm; each re-dispatch handed them to the next free slot, which wedged the same way — `park` was the
+      only lever that stopped the churn (dispatch-mechanics artifact, not a workload signature). **Direct confirmation
+      they are not inherently wedge-prone**: solana-002 ran CLEAN boot→work→done on slot 33 right after the storm
+      (market-tick-data-service@3619f9e2, 24 tests); a COMPLETED task in the same window (defi_compute_gcp_migration-008
+      on slot 11) hit forced_precompact→forced_compact and still succeeded; citadel-004's underlying P2.11.16 work was
+      being executed on 2026-08-10 (slot 30). **Verdict**: no shared workload characteristic across any of the four
+      dimensions — the wedge tracked host/time, not task.
 - [ ] [OPERATOR] P2. **CHECKED 2026-08-09 (operator, interactive session) — LEAN UNPARK, best odds of the 3 sibling
       parked tasks, not a guarantee.** `agent-orchestrator@dd01255` (cited by one prior sub-agent pass) does NOT apply
       here — it fixes chat-loop-role (review/main) liveness, not standard worker dispatch. The relevant fix is
@@ -104,6 +142,17 @@ that the failure mode on this task isn't limited to the exact `forced_compact`->
       only).
 
 ## Progress log
+
+- **2026-08-10 (slot 10, `ao_satellite_ao_dispatch_batch19` todo 2, backend_engineer craft — investigation + doc-writeup
+  only, no code shipped)**: Executed todo 1 (the workload-characteristic cross-check), now unblocked by the TmuxPruner
+  root-cause closure. Measured all four dimensions against live orchestrator state + plan/docs: brief sizes (111 chars
+  citadel-004 vs ~110 chars solana-002, via `GET /api/backlog`), worktree sizes of the involved repos (MTDS 1.6G,
+  features 1.8G, deployment 932M — mid-range of the fleet), and the full `GET /api/activity` event streams for slots
+  11/9/33/7/26/23/3/15 in the 2026-08-08 17:00-19:00Z window. Conclusion: **NO shared task-workload characteristic** —
+  both tasks wedged during the SAME fleet-wide crash-storm window (2026-08-08 17:27-18:31Z), and the identical signature
+  hit ≥8 distinct tasks including non-`[DATA]` REVIEW/doc tasks. The "repeat-wedge" appearance is a dispatch-mechanics
+  artifact (the tier-1/prio-20-50 tasks kept being re-picked by the next free slot during the storm; `park` stopped the
+  churn), corroborated by solana-002 running clean post-storm. Full comparison appended to todo 1 above.
 
 - 2026-08-08 ~18:32Z (main agt-22de53): Filed after the 4th consecutive slot pickup without completion (slot 15),
   following the standing mitigation rule set by the solana precedent ("any task that wedges a SAME task id on a 3rd
