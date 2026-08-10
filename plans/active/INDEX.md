@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 316 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 318 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -651,7 +651,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (66)
+### cross-cutting (68)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -827,6 +827,12 @@ by hand._
 - [`june_2026_vintage_audit_findings_2026_07_27`](./june_2026_vintage_audit_findings_2026_07_27.md) — Durable capture of
   the 2026-07-27 /plan-vintage-audit run over all 81 June-2026-created plans/issues (12-group Workflow classification).
   2 cross-plan false-citation bugs, 11 archivable-now docs, 15 migrate-to-July-plan-then-archive docs,…
+- [`kaiko_provider_removal_2026_08_10`](./kaiko_provider_removal_2026_08_10.md) — On 2026-08-09 a session scaffolded a
+  NEW Kaiko on-chain-analytics adapter in market-tick-data-service (`adapters/onchain/kaiko.py` + test +
+  `PLANNED_VENUES` entry + a UAC `SourceCapability`) and filed…
+- [`kaiko_provider_removal_2026_08_10_finalize`](./kaiko_provider_removal_2026_08_10_finalize.md) — Gated companion to
+  `kaiko_provider_removal_2026_08_10.md`, per `task_template.md`'s finalize-plan-coverage rule. Held by `depends_on` +
+  `gate_on_depends: true` until the removal lands. Verifies the removal is genuinely complete across all…
 - [`legacy_bucket_dual_write_decommission_2026_07_24`](./legacy_bucket_dual_write_decommission_2026_07_24.md) —
   Extracted 2026-07-24 from data_completion_to_100_all_ag_2026_06_21.md (M-1) per the plan line-cap remediation
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, bucket-(d) split, operator-approved). This is the

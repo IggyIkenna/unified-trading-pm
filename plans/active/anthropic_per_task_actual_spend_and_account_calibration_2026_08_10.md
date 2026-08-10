@@ -179,40 +179,11 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       The denominator MUST include all consumption on that account in the window (AO + laptop), else AO tasks absorb the
       whole subscription and are overstated. **Done when**: per-task costs for one window sum to that window's
       subscription cost within rounding, and a test proves the sum invariant holds when list rates change.
-- [ ] [OPERATOR] P0. **Dedicate ONE max20 account to agent-orchestrator exclusively — never log the laptop into it — so
-      its meter delta is 100% AO by construction.** Operator constraint 2026-08-10: an AO VM worker has no access to
-      `~/.claude` on the laptop, so it can NEVER compute a denominator that includes laptop consumption at runtime.
-      Reserving one account removes the entire contamination class permanently: calibration becomes exact and
-      repeatable, the multiplier is measured on AO's OWN workload (which is what it will price), and no laptop-to-VM
-      data channel is needed. `sub-d-odum1default` is the natural candidate — it has no local account env file and AO
-      used it heavily (216 tasks, 08-07 to 08-10). Operator action, not a code change: it needs a human to commit to
-      never using that account interactively. **Done when**: the reserved account is named here, recorded in the
-      accounts registry comment, and one full weekly window has elapsed with the login sampler showing zero laptop
-      sessions on it.
-- [ ] [BACKEND] P1. **Given the VM cannot see laptop usage, apply cost via a multiplier MEASURED on an AO-exclusive
-      window rather than a runtime denominator that needs both halves.** This supersedes the pure
-      proportional-allocation form for the AO runtime path: allocation still holds as the definition, but the VM
-      evaluates it using a stored multiplier derived from a window where AO owned the account outright (todo 11), so it
-      needs no laptop input. Keep the sum-invariant as a periodic CHECK (recompute allocation offline where both halves
-      are known) rather than a runtime requirement. **Done when**: the runtime path prices a task with no laptop data
-      available, and an offline check confirms the per-task costs sum to the window's subscription cost within rounding.
-- [ ] [OPERATOR] P2. **If no account can be reserved, ship a laptop-to-VM usage export instead — the laptop is the only
-      place its own consumption exists.** Fallback for todo 11: extend the laptop sampler to write per-window token
-      totals (per model, requestId-deduped) to a VM-readable location, and state plainly that the figure is stale
-      whenever the laptop is off. Strictly worse than reservation because it introduces a channel that fails silently.
-      **Done when**: either todo 11 is adopted and this is CANCELLED, or the export runs and the VM reads a non-stale
-      total.
 - [ ] [BACKEND] P2. **Ship per-task cost RANKING before the absolute-dollar question is settled, since the multiplier
       cancels out of any comparison.** Ordering tasks by cost needs only list value; the multiplier affects the absolute
       label alone. This unblocks the operator's original ask (a usable per-task cost breakdown) without waiting on
       calibration convergence. **Done when**: the dashboard ranks tasks by cost with the basis labelled, and the
       absolute figure is either shown from todo 9's allocation or clearly marked provisional.
-- [ ] [DATA] P1. **Test whether the quota meter weights cache reads like other tokens, by measuring a second window with
-      a very different cache-read share.** The 190x multiplier's transferability depends entirely on this: if the meter
-      tracks list value, a single constant is safe across workloads; if it discounts cache reads (as the extreme ratio
-      hints — 99% of the measured window's tokens were cache reads), then the multiplier is a property of workload shape
-      and must be measured per workload class. Compare measured multipliers across the two windows. **Done when**: both
-      windows' cache-read shares and multipliers are recorded here with an explicit stable/varies verdict.
 - [ ] [DATA] P2. **Do NOT assign the Pro account a multiplier by extrapolating from the published band — measure it or
       leave it labelled unmeasured.** The tempting shortcut (`Pro = Max / 2`, i.e. ~100x) rests on the published Pro
       3-6x vs Max20 6-10x ratio, and that source has already been shown wrong by ~20x for Max, so the ratio carries no
@@ -528,27 +499,6 @@ multiplier carry its valuation date and rate set.
 `seven_day_opus` / `seven_day_sonnet` per-model sub-meters, the `limits[]` array with model-scoped buckets
 (`kind: weekly_scoped`, `scope.model.display_name: "Fable"`), and the whole `extra_usage` block. Those per-model
 sub-meters are exactly the quota-weight signal todo 7 was written to go hunting for.
-
-### 2026-08-10 — AO account rotation timeline, and the cache-accounting verification
-
-**AO burns accounts to exhaustion then rotates**, rather than spreading load — measured from `task_usage` + `agents`:
-`sub-e` 08-06 00:18 -> 08-08 (49 tasks, exhausted), `sub-f` 08-06 22:53 -> 08-09 23:44 (166, exhausted), `sub-c` 08-07
-19:27 -> 08-09 18:46 (274, exhausted), `sub-d` 08-07 19:35 -> 08-10 09:14 (216, exhausted), `sub-b` 08-09 19:14 -> live
-(172, 63%), `sub-a` pro 08-06 -> 08-10 (128, exhausted). DeepSeek volume spikes on 08-10 exactly as the Anthropic pool
-empties. The `agents` table attributes further back than `task_usage` does (sub-d from 08-02, sub-b and sub-c from
-08-04) and is the usable attribution source for the pre-08-06 window where `task_usage.account_id` is null.
-
-**Cache accounting verified correct** (operator challenge): the flat `cache_creation_input_tokens` equals the
-`cache_creation` 5m+1h breakdown EXACTLY over the controlled window (11,711,885 = 747,496 + 10,964,389, zero per-turn
-mismatches), the four token classes are disjoint so summing cannot double count, and no server-tool calls were billed
-(`web_search=0`, `web_fetch=0`). The gross figure therefore already incorporates cache pricing at published rates (read
-0.1x, write 1.25x/2.0x) — it does NOT assume an uncached workload.
-
-**Open question the multiplier's transferability rests on**: we know what Anthropic CHARGES for cache, but not what its
-quota METER counts. If the meter weights cache reads like any other token, 7% of weekly bought 1.28B tokens
-(~18.3B/week); if it largely ignores them, 7% bought ~14.1M non-cache tokens (~201M/week). One observation cannot
-separate these, and they imply very different multipliers for differently-shaped work. Testable with a second window at
-a very different cache-read share — tracked below.
 
 ### 2026-08-10 — CONTROLLED MEASUREMENT: ~190x on a clean laptop-only window (best datapoint to date)
 

@@ -461,8 +461,8 @@ EXECUTION?"_ conditional bullet. On 2026-08-09 a session scaffolded a brand-new 
 market-tick-data-service (`adapters/onchain/kaiko.py` + test + a `PLANNED_VENUES` entry + a UAC `SourceCapability`) and
 filed a credential ask for `kaiko-api-key` — entirely in good faith, because writing an MTDS _analytics_ adapter is not
 "working on DeFi execution", so the conditional bullet did not obviously bind it. The operator ruled the ban is
-workspace-wide, the scaffold was removed under `/plans/archive/2026_08/kaiko_provider_removal_2026_08_10.md`, and the
-rule was promoted into CLAUDE.md's **always-on** section so no subsystem can read itself out of scope again.
+workspace-wide, the scaffold was removed under `/plans/active/kaiko_provider_removal_2026_08_10.md`, and the rule was
+promoted into CLAUDE.md's **always-on** section so no subsystem can read itself out of scope again.
 
 **The generalisable lesson**: a ban that applies to every subsystem must not live under a conditional
 `§ When your task touches X` heading — the conditional index is explicitly "open this only when your task touches that

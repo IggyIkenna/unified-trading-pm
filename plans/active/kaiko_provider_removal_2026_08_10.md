@@ -13,7 +13,7 @@ summary: >-
   stale, and the scaffold is deleted per the no-shims rule rather than left parked. This plan removes every live
   reference (7 files, ~70 occurrences) in one change per the entity-rename/split consumer-migration rule, and closes the
   Kaiko half of the credential ask while preserving the Glassnode half, which is unaffected.
-status: complete
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -23,7 +23,7 @@ tags: [kaiko, removed-provider, adapter-removal, credential-ask, no-shims, opera
 related:
   [
     /plans/active/issues/glassnode_kaiko_credential_ask_2026_08_09.md,
-    /plans/archive/2026_08/kaiko_provider_removal_2026_08_10_finalize.md,
+    /plans/active/kaiko_provider_removal_2026_08_10_finalize.md,
     /codex/02-data/external-data-always-available-rule.md,
     /codex/04-architecture/defi-execution-overview.md,
   ]
@@ -59,15 +59,6 @@ source: >-
 ---
 
 # Remove the Kaiko provider scaffold fleet-wide
-
-> **🟢 ARCHIVED 2026-08-10.** All 4 todos done and verified on origin: the UAC `SourceCapability` + `KAIKO_BASE_URL`
-> removal (`unified-api-contracts@c48238266b`, QG ALL PASSED 655s), the MTDS adapter/test/ `PLANNED_VENUES` deletion
-> (`market-tick-data-service@da86db197e`, QG ALL PASSED 1177s), the `_RETRY_SAFE_DEFAULT_BASELINE` 3→2 ratchet and the
-> CLAUDE.md ban relocation (`unified-trading-pm@026ed5ab52`). The durable rule this plan established — **the
-> removed-vendor ban is FLEET-WIDE, not DeFi-execution-only** — lives in
-> `/codex/04-architecture/defi-execution-overview.md` § "Removed vendors" and in `cursor-configs/CLAUDE.md`'s always-on
-> coding-standards section, NOT here; this plan is provenance only. Verification is recorded in
-> [[kaiko_provider_removal_2026_08_10_finalize]].
 
 ## The ambiguity that caused this, and why it is worth fixing at the source
 

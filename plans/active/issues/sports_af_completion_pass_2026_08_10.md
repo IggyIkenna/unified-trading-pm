@@ -177,26 +177,25 @@ depends_on: []
         - **Rightsizing note**: VM now running ~5.5h on `e2-standard-8` (on-demand). Flag carries forward.
         - **No code shipped** — pure monitoring. Session compacting again; VM near completion.
 
-      - **2026-08-10 (slot 28, data_engineering, ~15:39Z–15:45Z)** — INJURIES VM completed + all-entity VM launched:
-        - **INJURIES VM `af-backfill-20260810-103218`**: STOPPING at 15:39Z, `exit_code=0` (success). Completed full
-          range 2020-06-06→2026-08-10 — all 334 INJURIES objects backfilled.
-        - Singleton lock cleared (no other `af-backfill-*`/`af-audit-*` VMs).
-        - **Launched all-entity VM `af-backfill-20260810-154220`** (on-demand, `e2-standard-8`, `asia-northeast1-c`):
-          `--on-demand 2020-06-06 2026-08-10` with no `--entity` flag → all-entity mode (STANDINGS 271 + TEAMS 96 +
-          FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642). Confirmed RUNNING at 15:44Z. run.log not yet
-          written (VM booting).
-        - **No code shipped** — pure operations. All-entity VM left running.
+## Deferred work after 2026-08-10 ~15:42Z
 
-## Deferred work after 2026-08-10 ~15:45Z
+| Item                                                                                                                | State / why deferred                                     | Blocked on                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, `2026-07-12` (~99%), ~29 days left, ETA ~15:50Z | VM completion (real infra)                                                                           |
+| **All-entity backfill** (STANDINGS 271 + TEAMS 96 + FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642) | Queued — singleton lock held by INJURIES VM              | INJURIES VM exit_code=0                                                                              |
+| **Re-census to confirm ~0**                                                                                         | Gated on all backfills converging                        | All entity backfills complete                                                                        |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`**                                                          | Gated on re-census ~0                                    | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |
+| **VM rightsizing check** (`af-backfill-20260810-103218`)                                                            | VM running ~5.5h on `e2-standard-8`                      | After VM terminates (or now if CPU/mem telemetry accessible)                                         |
 
-| Item                                                                     | State / why deferred                     | Blocked on                       |
-| ------------------------------------------------------------------------ | ---------------------------------------- | -------------------------------- |
-| **All-entity backfill** (`af-backfill-20260810-154220`)                  | RUNNING, `e2-standard-8`, booting        | VM completion (real infra)       |
-| **Re-census to confirm ~0**                                              | Gated on all backfills converging        | All-entity VM exit_code=0        |
-| **Unpark `sports_af_full_entity_completion-9798da269f23`**               | Gated on re-census ~0                    | Re-census confirms ~0 needed     |
-| **VM rightsizing check** (`af-backfill-20260810-103218` — completed)     | VM ~5.5h `e2-standard-8` on-demand       | GCP monitoring data (historical) |
-| **VM rightsizing check** (`af-backfill-20260810-154220` — just launched) | Just launched, `e2-standard-8` on-demand | After VM >30min or terminates    |
+**Recommended NEXT item**: Check `af-backfill-20260810-103218` — by now it should be TERMINATED or very close:
 
-**Recommended NEXT item**: Monitor `af-backfill-20260810-154220` for first `[[VM_PROGRESS]]` markers → estimate ETA. The
-all-entity mode processes ALL 5 remaining entities per date — same 2257-day range, more API calls per date than the
-INJURIES single-entity pass, so expect a longer wall-clock time.
+```bash
+gcloud compute instances list --filter='name=af-backfill-20260810-103218' --format='table(name,status)'
+gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260810-103218/run.log | grep 'exit_code=' | tail -1
+# If exit_code=0: launch ALL-ENTITY VM (no --entity):
+cd deployment-service && bash scripts/vm/launch-api-football-backfill-vm.sh --on-demand 2020-06-06 2026-08-10
+# If exit_code!=0: diagnose from run.log tail
+```
+
+**Strategy**: single all-entity VM (no `--entity` flag) preferred. Always `--on-demand` — SPOT preemption killed the
+first launch (`af-backfill-20260810-102659`).

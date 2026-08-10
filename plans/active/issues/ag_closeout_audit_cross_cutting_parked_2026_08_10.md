@@ -191,12 +191,12 @@ source: >-
       Both remaining action items above are now `ao` tranche's > to carry, not cross-cutting's.
 - [x] ✅ [OPERATOR] P3. **SPLIT 2026-08-10 (operator ruling).** The **Kaiko** half is CLOSED — Kaiko is a removed
       provider workspace-wide, not just in DeFi execution; do NOT provision `kaiko-api-key`. The scaffolded adapter is
-      being deleted under `/plans/archive/2026_08/kaiko_provider_removal_2026_08_10.md`. The **Glassnode** half remains
-      genuinely open and is carried to `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`. Original
-      text preserved for record. Was: **Provision `glassnode-api-key` + `kaiko-api-key` GSM secrets, or decline**
-      (finding 4, `glassnode_kaiko_credential_ask_2026_08_09.md`). > **Round 2 note**: independently reconfirmed
-      accurate — genuinely cross-cutting (external-data-vendor > credential ask, per CLAUDE.md's "external data is
-      always available" rule), still open, still not AO-eligible. > Correctly stays a cross-cutting action item.
+      being deleted under `/plans/active/kaiko_provider_removal_2026_08_10.md`. The **Glassnode** half remains genuinely
+      open and is carried to `/plans/active/issues/operator_action_items_consolidated_2026_08_08.md`. Original text
+      preserved for record. Was: **Provision `glassnode-api-key` + `kaiko-api-key` GSM secrets, or decline** (finding 4,
+      `glassnode_kaiko_credential_ask_2026_08_09.md`). > **Round 2 note**: independently reconfirmed accurate —
+      genuinely cross-cutting (external-data-vendor > credential ask, per CLAUDE.md's "external data is always
+      available" rule), still open, still not AO-eligible. > Correctly stays a cross-cutting action item.
 - [x] ✅ [OPERATOR] P2. **CLOSED 2026-08-10 — NOT orphaned; real coverage exists.** This doc's own Round-2 note already
       corrected the verdict: `/plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` (`status: active`,
       `assigned_vm: planning`) cites the source issue doc by path and keeps its own matching `[INFRA] P1` open checkbox
