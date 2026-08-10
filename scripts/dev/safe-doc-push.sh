@@ -148,8 +148,21 @@ if [[ ${#FILES[@]} -eq 0 ]]; then
   exit 2
 fi
 
-if [[ ! -d .git ]]; then
-  echo "Refusing: run from a repo root (no .git here: $(pwd))." >&2
+# NOTE (2026-08-10): `.git` is a DIRECTORY in a normal clone but a FILE in a linked
+# worktree (`gitdir: ...`), so the original `[[ ! -d .git ]]` refused to run anywhere
+# inside a worktree. That silently broke the isolated-worktree mode added the same day
+# -- the parent set the worktree up correctly, re-exec'd this script inside it, and the
+# child exited 2 ("not a repo root"), so EVERY invocation failed. Caught by the
+# concurrency harness (scripts/dev/test-safe-doc-push-concurrency.sh), which runs its
+# workers from a worktree and saw 6/6 rc=2 before this fix. Ask git what the root is
+# instead of pattern-matching the filesystem, and require that we are AT that root.
+_sdp_toplevel="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [[ -z "$_sdp_toplevel" ]]; then
+  echo "Refusing: not inside a git working tree ($(pwd))." >&2
+  exit 2
+fi
+if [[ "$(pwd -P)" != "$(cd "$_sdp_toplevel" && pwd -P)" ]]; then
+  echo "Refusing: run from the repo root ($_sdp_toplevel), not $(pwd)." >&2
   exit 2
 fi
 
