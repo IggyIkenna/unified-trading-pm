@@ -290,6 +290,30 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
 
 ## Progress Log
 
+- 2026-08-10 (slot 30, citadel_satellite_ao_dispatch_batch1-004, P2.11.16 "BTC trend feature corpus recompute"): **in
+  flight — backfill VM running, NOT yet done.** Verified the P2.11.16 recompute is genuinely needed: `returns`
+  feature_group is ABSENT from `gs://features-cefi-prd-central-element-323112/delta_one/by_date/` for all paper-window
+  dates (2026-04-22, 2026-05-01..03), and the existing `volatility_realized` parquet (866 cols) does NOT contain
+  `btc_realized_vol` either — so both target columns are missing. Confirmed the fix chain from
+  `delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md` is LIVE and working: bounded local preflight
+  (`--preflight-only`, canonical `BITGET-FUTURES:PERPETUAL:BTCUSDT`, 2026-05-03, returns) →
+  **`Lookback validation passed: 1/1 instruments OK`** (id-form normalization + venue-collapse bypass confirmed).
+  Launched the backfill via
+  `launch-features-vm.sh --feature-family delta_one --asset-group CEFI --start-date 2026-04-22 --end-date 2026-05-03 --launch-mode full --env prod`
+  with `FEATURE_GROUP=returns`:
+  - Attempt 1 (`features-delta-one-cefi-20260810-140712`): booted (heartbeat "running" 14:09Z) but GONE ~14:14Z with
+    ZERO progress (no run.log, no parquet written) — SPOT preemption on the heavily-contended host (822 VMs running); no
+    `LAUNCH_PARAMS.json` was captured so no exact auto-relaunch; deleted-no-op.
+  - Attempt 2 (`features-delta-one-cefi-20260810-141704`): first create failed `asia-northeast1-c` STOCKOUT
+    (`e2-standard-8` resource_availability); retried 15s later → **CREATED + RUNNING** (SPOT, e2-standard-8,
+    asia-northeast1-c). Watcher armed for terminal state (run.log marker / TERMINATED). **NEXT STEP for whoever
+    resumes**: wait for terminal state, then (a) verify run.log `rc=0`, (b) manifest-row check that the delta_one
+    feature corpus carries non-null `btc_trailing_return_{1m,3m,6m,12m}` + `btc_realized_vol` for the paper window
+    (`_index/availability_index.parquet` under features-cefi, or a parquet-schema probe), (c) flip this todo `[x]` with
+    the VM name + manifest evidence, per the plan's done-when. Note: the launcher's printed post-backfill manifest
+    rebuild snippet uses `prefix='sports_features/by_date'` (sports template) — the cefi delta_one verify must use the
+    actual `delta_one/by_date` prefix / availability_index read, not copy that string.
+
 - 2026-08-09 (slot 9, citadel_satellite_ao_dispatch_batch1-006, "features-service: recompute the corpus for the intraday
   BTC mean-reversion cs-ML feature"): **item remains OPEN — blocked, not done.** Attempted the `returns` +
   `statistical_anomaly` backfill for cefi/BTC over the existing paper-trading window (`day=2026-04-22`,
