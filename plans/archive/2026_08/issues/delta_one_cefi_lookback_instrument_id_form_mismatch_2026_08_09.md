@@ -6,7 +6,7 @@ title:
 created: 2026-08-09
 author: slot-9
 assigned_vm: planning
-status: open
+status: resolved
 tags: [data-correctness, features-service, delta_one, cefi, instrument-id, manifest]
 source:
   [
@@ -25,7 +25,9 @@ repos: [features-service]
 scope: [engineer, admin]
 related: [cefi_consolidated_closeout_2026_07_18]
 parent_epic: cefi_master
-resolved_by: null
+resolved_by: >-
+  delta_one_cefi_lookback_instrument_id_form_mismatch-b430ed191acd (slot 20, data_engineering, 2026-08-10) — operational
+  re-run executed (returns + volatility_realized for cefi/BTC paper window); see Progress Log
 execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
@@ -34,6 +36,12 @@ sequential: true
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). All 3 todos complete: the P1
+> DependencyChecker id-form fix (features-service@d2e32548) + venue-volume reference-date (1cd9f819) + preflight-only
+> fix (0c70a43f) + venue-collapse bypass (2ea0c8cb); the first P2 re-run (returns + statistical_anomaly, slot-7); and
+> this doc's sibling P2.11.16 re-run (returns + volatility_realized, slot-20). Archived by task
+> `delta_one_cefi_lookback_instrument_id_form_mismatch-b430ed191acd`.
 
 ## What I found
 
@@ -135,9 +143,18 @@ instrument with a `-`/`@`-suffixed raw manifest id, asserting lookback validatio
       data-sparsity issue, not the id-form mismatch bug — the fix chain (DependencyChecker id-form translation +
       venue-volume reference_date + venue-collapse bypass + preflight-only fix) works correctly. Manifest: 165→175
       entries (returns) + 185 entries (statistical_anomaly, incl. record_failed rows).
-- [ ] [DATA] P2. Same re-run for the sibling P2.11.16 todo ("BTC trend feature corpus recompute" —
+- [x] ✅ [DATA] P2. Same re-run for the sibling P2.11.16 todo ("BTC trend feature corpus recompute" —
       `btc_trailing_return_{1,3,6,12}m` + `btc_realized_vol`, `returns` + `volatility_realized` groups) once the
-      dependency-checker fix lands. Repo: features-service.
+      dependency-checker fix lands. Repo: features-service. — EXECUTED 2026-08-10, slot-20 (details in Progress Log).
+      Ran `--feature-group returns` + `--feature-group volatility_realized` for cefi/BTC
+      (`BITGET-FUTURES:PERPETUAL:BTCUSDT`) over the paper window with the fix chain live; both preflights passed
+      (lookback 1/1 OK). **returns**: `btc_trailing_return_{1m,3m,6m,12m}` + `btc_realized_vol` present + non-null for
+      2026-05-01/02/03 (05-03: 5760/5760 @15s, 1440/1440 @1m, 24/24 @1h; 05-01 ~95% @15s warmup) — manifest
+      `capture_status=captured`. **volatility_realized**: computed 05-01/02/03 (872 cols, manifest captured). 2026-04-22
+      emission-suppressed (honest data-sparsity: 229 candles < 12m's 252-bar lookback). 24h output timeframe not
+      writable for this venue (~37-39 daily candles exist); honest-absence guard refused empty stamps — columns carried
+      at sub-24h timeframes. Operational re-run only; fix chain d2e32548/1cd9f819/0c70a43f/2ea0c8cb verified ancestors
+      of HEAD.
 
 ## Progress Log
 
@@ -218,3 +235,20 @@ instrument with a `-`/`@`-suffixed raw manifest id, asserting lookback validatio
   features-service codebase. 2026-04-22 failure is a data-sparsity issue, not the id-form mismatch — the fix chain works
   correctly. Manifest updated: 165 entries total, 10 new (returns) + 33 new (statistical_anomaly incl. record_failed
   rows).
+- 2026-08-10 (slot-20, task `delta_one_cefi_lookback_instrument_id_form_mismatch-b430ed191acd`): Executed the sibling
+  P2.11.16 re-run (this todo). Verified all 4 prerequisite fix SHAs are ancestors of HEAD (d2e32548, 1cd9f819, 0c70a43f,
+  2ea0c8cb). Ran the delta_one compute for `returns` + `volatility_realized` (CEFI/BTC,
+  `--instruments BITGET-FUTURES:PERPETUAL:BTCUSDT`, memory-bounded on host via run-bounded-analysis.sh) over the paper
+  window (04-22..05-03); both `--preflight-only` checks passed (lookback 1/1 OK — id-form normalization + venue-collapse
+  bypass + preflight-only fix all working). **returns**: `btc_trailing_return_{1m,3m,6m,12m}` + `btc_realized_vol`
+  present + non-null for 2026-05-01/02/03 across 15s/1m/5m/15m/1h (4h except 12m which needs 252 4h-bars) — e.g. 05-03:
+  5760/5760 @15s, 1440/1440 @1m, 288/288 @5m, 24/24 @1h; 05-01 slightly lower @15s (warmup). Availability-index rows
+  `capture_status=captured` for both groups on all 3 dates. 2026-04-22 remains emission-suppressed: only 229 candles,
+  12m's 252-bar lookback cannot fill → honest data-sparsity, identical to slot-7's finding (no silent placeholder; no
+  manifest row). **volatility_realized**: computed for 05-01/02/03 (872 cols, `feature_group_version=1` layout, atr_14
+  ~100% non-null) — new versioned output alongside the legacy 05-03 15s per-instrument parquet. **24h output
+  timeframe**: not writable for this venue — the 24h cluster only pre-loads ~37-39 daily candles (floor is 100; 12m
+  needs 252); the honest-absence guard correctly refused the empty stamp (no `record_empty` without FetchEvidence), and
+  the group fell back to remaining timeframes (shard isolation). Columns therefore carried at sub-24h timeframes.
+  Availability index updated by the writer (returns: 184 total, +32; volatility_realized: 202 total, +10 — reported by
+  ManifestWriter). No code change shipped — this was the operational recompute; the fix chain is already on origin.

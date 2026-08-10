@@ -21,7 +21,7 @@ tags: [cefi, features-service, backfill, vm-preemption, spot, operator-decision,
 related:
   [
     /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
-    /plans/active/issues/delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md,
+    /plans/archive/2026_08/issues/delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
@@ -40,7 +40,7 @@ resolved_by:
 context_scope:
   [
     /plans/active/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
-    /plans/active/issues/delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md,
+    /plans/archive/2026_08/issues/delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     deployment-service/scripts/vm/launch-features-vm.sh,

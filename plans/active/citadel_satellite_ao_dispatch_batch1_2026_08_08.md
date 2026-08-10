@@ -351,7 +351,7 @@ items stayed bundled in rather than being split into their own AO-dispatchable s
   (`BITGET-FUTURES:PERPETUAL:BTCUSDT`) — neither form lets `DependencyChecker`'s lookback pre-flight AND the
   MVP-universe filter both pass, so the backfill cannot start. Confirmed real candle data exists (both GCS and manifest)
   for the target window, ruling out an honest-absence explanation. Filed
-  `/plans/active/issues/delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md`
+  `/plans/archive/2026_08/issues/delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md`
   (unified-trading-pm@62dff90443) with a P1 fix todo (translate canonical↔raw instrument-id forms in
   `DependencyChecker._count_candles_for_lookback`) and P2 re-run todos for this item + its sibling P2.11.16. Escalated
   via `/blocked`; main confirmed (option A): leave this todo open pending the P1 fix landing as its own properly-scoped
