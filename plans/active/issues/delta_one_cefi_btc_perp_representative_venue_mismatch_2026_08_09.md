@@ -35,6 +35,7 @@ depends_on: []
 sequential: false
 locked_by:
 locked_since:
+archive_exempt: true
 ---
 
 ## What I found
@@ -146,18 +147,18 @@ preserves the existing BITGET-based corpus without a cross-group recompute (rule
 case that wouldn't generalize (rules out (c)). Scope as its own change with regression tests, filed as its own todo
 below — NOT bundled into either P2 corpus-recompute todo in the parent issue.
 
-- [ ] [DATA] P2. Make an explicit `--instruments` override bypass `_collapse_to_perp_representative` in
-      `features_service/delta_one/universe/mvp_universe_filter.py`'s `filter_instruments_for_family` — thread a
-      caller-explicit flag (mirroring how `BatchHandler._resolve_instrument_list`,
-      `features_service/delta_one/cli/handlers/batch_handler.py:476`, already distinguishes `instruments is None`
-      auto-discovery from an explicit caller-provided list via its `record_out_of_scope_instruments` gate) from
-      `_resolve_instrument_list` through `_process_one_group` (`batch_handler.py:733`'s
-      `filter_instruments_for_family(...)` call site) into `filter_instruments_for_family`, and skip the
-      `_collapse_to_perp_representative` call (mvp_universe_filter.py:182) when set. Add regression tests in
-      `tests/delta_one/unit/test_mvp_universe_filter.py`: (1) full-universe auto-discovery (no explicit override) still
-      collapses to one representative venue per base — unchanged behavior; (2) an explicit `--instruments` override
-      bypasses the collapse entirely and the named instrument(s) survive the filter regardless of trailing-volume
-      ranking. Repo: features-service. Unblocks both P2 re-run todos in
+- [x] ✅ [DATA] P2. Make an explicit `--instruments` override bypass `_collapse_to_perp_representative` in —
+      features-service@2ea0c8cb `features_service/delta_one/universe/mvp_universe_filter.py`'s
+      `filter_instruments_for_family` — thread a caller-explicit flag (mirroring how
+      `BatchHandler._resolve_instrument_list`, `features_service/delta_one/cli/handlers/batch_handler.py:476`, already
+      distinguishes `instruments is None` auto-discovery from an explicit caller-provided list via its
+      `record_out_of_scope_instruments` gate) from `_resolve_instrument_list` through `_process_one_group`
+      (`batch_handler.py:733`'s `filter_instruments_for_family(...)` call site) into `filter_instruments_for_family`,
+      and skip the `_collapse_to_perp_representative` call (mvp_universe_filter.py:182) when set. Add regression tests
+      in `tests/delta_one/unit/test_mvp_universe_filter.py`: (1) full-universe auto-discovery (no explicit override)
+      still collapses to one representative venue per base — unchanged behavior; (2) an explicit `--instruments`
+      override bypasses the collapse entirely and the named instrument(s) survive the filter regardless of
+      trailing-volume ranking. Repo: features-service. Unblocks both P2 re-run todos in
       `delta_one_cefi_lookback_instrument_id_form_mismatch_2026_08_09.md`.
 
 ## Progress Log
@@ -204,3 +205,18 @@ below — NOT bundled into either P2 corpus-recompute todo in the parent issue.
   `GATED`-reason_code skip on this session's own dispatched instance below.
   `delta_one_cefi_lookback_instrument_id_form_mismatch-53a0d8ce974a` (this session's actual dispatched task) stays
   blocked on this new todo landing — skipping it with `reason_code: GATED` rather than holding the slot idle.
+- 2026-08-10 (slot-17, task `delta_one_cefi_btc_perp_representative_venue_mismatch-d8b052488b6e`): Implemented the P2
+  fix todo per the operator ruling. Added `explicit_instrument_override: bool = False` to
+  `filter_instruments_for_family` (`mvp_universe_filter.py`) — when True, the perp-representative collapse
+  (`_collapse_to_perp_representative`) is skipped entirely; the base-asset/type gate in `_apply_cefi_filter` still
+  applies unchanged. Computed the flag in `BatchHandler._execute_batch` as `instruments is not None` (mirroring
+  `_resolve_instrument_list`'s own `record_out_of_scope_instruments` gate) and threaded it through `_process_groups` →
+  `_process_one_group` → the `filter_instruments_for_family` call site. Added 4 regression tests in
+  `tests/delta_one/unit/test_mvp_universe_filter.py` (`TestExplicitInstrumentOverrideBypassesCollapse`): (1)
+  full-universe auto-discovery (no override) still collapses unchanged, (2) an explicit override survives even when it
+  names the non-representative (lower-volume) venue, (3) multiple explicitly-named venues for the same base all survive,
+  (4) the override only skips the collapse — the base-asset/type gate still excludes out-of-universe instruments.
+  Updated the unrelated `fake_process_groups` mock signature in `tests/delta_one/unit/test_persistence_event_details.py`
+  to accept the new positional param. Full `quality-gates.sh` green (both pre-commit and post-commit Pass-1 runs,
+  sentinel matched committed HEAD). Shipped: features-service@2ea0c8cb, verified as ancestor of
+  `origin/live-defi-rollout`.
