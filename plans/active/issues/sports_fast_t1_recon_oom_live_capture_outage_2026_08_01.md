@@ -369,7 +369,7 @@ data-pipeline-correctness-hard-rule).
       content-verify `_is_preflight_source_evidence` (preflight.py:383 + :849, squash-merge-safe content-diff); (2) the
       done-when data state EXISTS — every date 08-07..08-10 has ONLY foreign-source ODDS_API rows (385/day, all
       `odds_horizon_bucket`, `source=mdps_odds_horizon_bucket`); (3) no false skip + real writes — 7-day scan: 0
-      `SKIP     date`, 0 `Pre-flight:`, 0 `still fetching`, 0 `skipping data_types`, 0 OOM; 08-09 `--league` dispatches
+      `SKIP date`, 0 `Pre-flight:`, 0 `still fetching`, 0 `skipping data_types`, 0 OOM; 08-09 `--league` dispatches
       processed (15,766 rows / 14,562 records, ~2.1MB); GCS has real objects under `day=2026-08-08`+`day=2026-08-09`.
       The foreign-source evidence no longer false-skips capture. (repo: market-tick-data-service, deployment-service)
 
@@ -511,13 +511,13 @@ data-pipeline-correctness-hard-rule).
               walk): per-day shard coverage for venue=bookmaker/pipeline_mode=batch_odds_api/source=odds_api is **NOT full** on
               any of the 5 gap days —
 
-                                                                      | date | shards | captured | empty_confirmed | attempted_failed | reachable_coverage |
-                                                                      |---|---|---|---|---|---|
-                                                                      | 2026-07-27 | 867 | 107 | 674 | 86 | 55.4% |
-                                                                      | 2026-07-28 | 823 | 34 | 763 | 26 | 56.7% |
-                                                                      | 2026-07-30 | 892 | 38 | 742 | 112 | 25.3% |
-                                                                      | 2026-07-31 | 901 | 108 | 628 | 165 | 39.6% |
-                                                                      | 2026-08-02 | 2224 | 589 | 553 | 1082 | 35.2% |
+                                                                              | date | shards | captured | empty_confirmed | attempted_failed | reachable_coverage |
+                                                                              |---|---|---|---|---|---|
+                                                                              | 2026-07-27 | 867 | 107 | 674 | 86 | 55.4% |
+                                                                              | 2026-07-28 | 823 | 34 | 763 | 26 | 56.7% |
+                                                                              | 2026-07-30 | 892 | 38 | 742 | 112 | 25.3% |
+                                                                              | 2026-07-31 | 901 | 108 | 628 | 165 | 39.6% |
+                                                                              | 2026-08-02 | 2224 | 589 | 553 | 1082 | 35.2% |
 
               (07-30's `captured` row-count independently matches the backfill VM's own run.log line, 1960 total records for
               that date — confirms the manifest read is fresh and correct, not stale.) `attempted_failed` is a real,

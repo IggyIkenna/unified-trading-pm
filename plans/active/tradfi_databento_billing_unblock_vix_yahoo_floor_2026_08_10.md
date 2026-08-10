@@ -135,8 +135,8 @@ discipline for whoever executes these:
 
 - [ ] [DOCS] P1. **Un-gate `data_completion_tradfi_2026_07_15.md`'s 2 billing-blocked todos.** Grep-check:
       `grep -c "UNGATED 2026-08-10" <file>` — skip if ≥1. Find the 2 todos matching
-      `BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09` (search `grep -n` for that string —
-      there are exactly 2 occurrences). For EACH: prefix the todo with
+      `(databento account billing-suspended 2026-08-09` (search `grep -n` for that string — there are exactly 2
+      occurrences). For EACH: prefix the todo with
       `**UNGATED 2026-08-10** — the billing-suspension gate is resolved (live-reverified that day, 3 real Databento calls across all 3 core datasets, see tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md).`
       For the first todo (the `build_instrument_catalogue.py` scheduler wiring one), note it is STILL gated on the
       second todo (the IS reference-capture restore) actually running, not just being dispatchable. For the second todo
@@ -145,18 +145,18 @@ discipline for whoever executes these:
 
 - [ ] [DOCS] P1. **Un-gate `tradfi_phase_d_terminal_gate_2026_07_24.md`'s 2 billing-blocked todos, PRESERVE the separate
       Phase-D-completeness caveat.** Grep-check: `grep -c "BILLING GATE LIFTED 2026-08-10" <file>` — skip if ≥1. The 2
-      todos matching `BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09` need the billing
-      citation replaced with `**BILLING GATE LIFTED 2026-08-10**` + the same evidence line as above. **Do NOT clear the
-      todo's OTHER, separate blocker**: `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (`status: open`) has a
-      confirmed, still-open CBOE VIX canonical-name (`VIX`→`VX`/`VX.FUT`) translation bug making the checker/sampler
-      tooling misreport CBOE VIX specifically — the P0 "MVP backfill readiness gate" todo stays blocked on "Phase D is
-      not literally green" until that's resolved or the operator accepts current evidence as sufficient; only the
-      billing citation is being lifted here, not the whole gate. Repo: unified-trading-pm.
+      todos matching `(databento account billing-suspended 2026-08-09` need the billing citation replaced with
+      `**BILLING GATE LIFTED 2026-08-10**` + the same evidence line as above. **Do NOT clear the todo's OTHER, separate
+      blocker**: `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (`status: open`) has a confirmed, still-open
+      CBOE VIX canonical-name (`VIX`→`VX`/`VX.FUT`) translation bug making the checker/sampler tooling misreport CBOE
+      VIX specifically — the P0 "MVP backfill readiness gate" todo stays blocked on "Phase D is not literally green"
+      until that's resolved or the operator accepts current evidence as sufficient; only the billing citation is being
+      lifted here, not the whole gate. Repo: unified-trading-pm.
 
 - [ ] [DOCS] P2. **Add a Databento-access-confirmed note to `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`'s
       re-feed-chain todo.** Grep-check: `grep -c "DATABENTO ACCESS CONFIRMED LIVE 2026-08-10" <file>` — skip if ≥1. Find
       the `[DATA] P0` todo starting "**NEW 2026-07-29 — run the tradfi Databento `by_date` re-feed chain to
-      completion..."`(this todo was never itself tagged`BLOCKED-OPERATOR-DECISION`, but the billing suspension made it practically undispatchable — a fetch would have failed). Insert a sentence after its bold lead-in: "**DATABENTO ACCESS CONFIRMED LIVE 2026-08-10** — the account-wide billing suspension is resolved (live-reverified that day, real `GLBX.MDP3`/`XCBF.PITCH`
+      completion..."`(this todo was never itself billing-block-tagged, but the billing suspension made it practically undispatchable — a fetch would have failed). Insert a sentence after its bold lead-in: "**DATABENTO ACCESS CONFIRMED LIVE 2026-08-10** — the account-wide billing suspension is resolved (live-reverified that day, real `GLBX.MDP3`/`XCBF.PITCH`
       pulls both succeeded); this todo is the exact re-feed work that gate would have blocked in practice — now
       genuinely runnable." Repo: unified-trading-pm.
 
