@@ -15,7 +15,7 @@ tags: [strategy, carry, basis, staking, yield, funding, defi]
 related:
   [
     /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
-    /codex/09-strategy/architecture-v2/families/market-making.md,
+    market-making.md,
     ../archetypes/carry-basis-perp.md,
     ../archetypes/yield-rotation-lending.md,
   ]
@@ -170,84 +170,6 @@ Each archetype has distinct position structure — see individual archetype docs
   the ceiling loss.
 - **Kill switches**: LST depeg > threshold, health factor breach, funding reversal, rapid APY change indicating
   disruption
-
-## Latency Requirements
-
-**Category: `Low`** — sub-second inter-leg execution gap, live mode only (batch mode has no latency requirements; it
-replays historical data at compute speed). Baseline: the archived
-[`/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md`](/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md)
-table — SUPERSEDED as a doc, but its **Delta-One Basis** row (Tick-to-Signal <5 s / Signal-to-Order <2 s / Order-to-Fill
-<30 s / Total E2E <37 s, Category **Medium**) is the operative baseline and is **corrected, not confirmed**, here. The
-archived doc classified basis as Medium because the decision cycle (rate monitor → signal → decide) tolerates seconds —
-funding rates and basis spreads are slow-moving signals that don't flip sub-second. But the 2026-08-10 operator ruling
-corrects this: for a multi-leg carry position, the **inter-leg execution gap** (the time between the lead-leg fill and
-the lag hedge-leg fill) must be ms-realm, regardless of how slow the decision cycle is. The decision is slow; the
-execution of the paired legs, once the decision to enter (or exit) is made, is not.
-
-| Segment                              | Budget                                                        | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Tick-to-Signal                       | < 5 s                                                         | Rate/yield monitor → funding-rate / APY / basis-spread tick → feature → signal. Rates are slow-moving (funding updates per 1h/4h/8h; APYs shift gradually; basis spreads widen/narrow over minutes-to-hours). The decision cycle tolerates seconds; this is the one segment the archived doc's Medium categorization was correct about.                                                                                                                                                                                                                                  |
-| Signal-to-Order (lead leg)           | < 2 s                                                         | StrategyInstruction → routing → venue adapter → lead-leg order submitted (spot buy, LST mint, collateral deposit). Seconds are acceptable because the basis spread hasn't moved materially in this window; the lead leg is just acquiring the position, not capturing the spread yet.                                                                                                                                                                                                                                                                                    |
-| Order-to-Fill (lead leg)             | Venue-dep. (CeFi: <50 ms; DeFi: block-time-bound)             | CeFi spot venues: 20–50 ms order submission + matching (archived venue-baselines table: Binance 20–50 ms, Coinbase, Deribit 15–40 ms). DeFi staking legs: Ethereum L1 ~12 s block time, Arbitrum ~250 ms, Solana ~400 ms — block time, not network latency, dominates. The staking-leg fill is NOT the gap constraint (see below).                                                                                                                                                                                                                                       |
-| **Inter-leg execution gap**          | **ms-realm** (< 500 ms operating target; < 100 ms achievable) | **The binding constraint — this is why the category is `Low`.** Lead-leg fill confirmed → hedge-leg order submitted → hedge-leg fill. For single-venue netted basis (Binance spot + Binance perp): achievable <100 ms. For cross-venue basis (Coinbase spot → Deribit perp): the budget allows cross-venue order routing within ms timing. For staked-basis: the staking-leg fill confirmation is DeFi-block-time-bound, but the hedge-leg submits to a CeFi perp venue — the gap from hedge-submit to hedge-fill IS ms-realm regardless of how long the stake leg took. |
-| Order-to-Fill (hedge leg)            | Venue-dep. (CeFi perp: 20–50 ms)                              | CeFi perp/futures matching engine: Binance 20–50 ms, Deribit 15–40 ms, Hyperliquid 20–60 ms, Bybit 25–70 ms (archived venue-baselines table). The hedge leg lands on the same or a nearby venue; matching-engine latency is the floor.                                                                                                                                                                                                                                                                                                                                   |
-| **Total E2E (decision + execution)** | **< 40 s** (CeFi basis); **block-time + <5 s** (DeFi staked)  | Sum of all segments. This number is NOT what drives the deployment profile — the inter-leg gap does. A 40 s total E2E with a <100 ms inter-leg gap is a Low-latency strategy because the spread-capture happens inside that gap; the slow decision cycle is just when you start the clock.                                                                                                                                                                                                                                                                               |
-
-`Inter-leg execution gap (lead fill → hedge fill)` in the UI dashboard is the monitor for the binding constraint;
-`Total E2E` is informative but not the number that gates the deployment profile.
-
-**Deployment implication:** `Low` ⇒ the `co_located_vm` deployment profile per the `/configs/runtime-topology.yaml`
-`deployment_profiles` category mapping, referencing
-[`/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`](/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md)
-§ 6. The current `topology_requirements` rows for `CARRY_BASIS_PERP` and `CARRY_STAKED_BASIS` (execution `isolated`,
-strategy `shared OK`, co-location `no`, min SLA `standard`) are a **discrepancy** the paired deployment-profile
-derivation todo resolves
-([`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md`](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md)
-todo 8): `Low` latency requires execution + strategy co-located on the same VM at min SLA `premium`, matching the
-`MARKET_MAKING_CONTINUOUS` row. The basis/staking-basis archetypes join market-making and arbitrage-structural as
-`co_located_vm` families.
-
-### Decision latency vs. inter-leg execution gap
-
-The archived doc's Medium category for Delta-One Basis was correct about the decision cycle (seconds are fine for
-rate/yield monitoring) but missed the multi-leg execution constraint (seconds are NOT fine for the gap between legs).
-The 2026-08-10 operator ruling is explicit: "we are executing two legs of a trade... how are we ensuring the lag leg
-followed by the lead leg is ms timing." For this family, the binding latency constraint is the **inter-leg execution
-gap**, not the decision latency:
-
-- **Basis perp** (`CARRY_BASIS_PERP`): long spot → short perp. The spot fill is the lead leg; the perp-hedge short is
-  the lag leg. If the perp order lands seconds after the spot fill, the funding rate or basis spread can move, and the
-  entry spread measured pre-trade is no longer the spread captured. The gap must be ms-realm: spot fills, perp order
-  submits immediately, perp fills at the same (or near-same) basis. Single-venue netted (Binance spot + Binance perp,
-  same account): the hedge can be a single order on the same matching engine — gap <100 ms achievable without
-  cross-venue routing.
-- **Basis perp inverse** (`CARRY_BASIS_PERP_INV`): short spot → long perp. Same structure inverted; same gap constraint.
-- **Basis dated** (`CARRY_BASIS_DATED`): long spot → short dated future. CME Globex / Deribit dated futures support
-  sub-100ms order submission; the gap is enforceable on TradFi venues with co-location. The futures-spot basis at entry
-  is the alpha; a lagged hedge captures a different basis.
-- **Basis dated inverse** (`CARRY_BASIS_DATED_INV`): short spot → long dated future. Same gap constraint.
-- **Staked basis perp** (`CARRY_STAKED_BASIS`): stake ETH/SOL → LST received → pledge LST as collateral on perp venue →
-  short perp. The staking leg (L1 smart-contract interaction) is DeFi-block-time-bound and is NOT the gap constraint —
-  the gap is between perp-collateral-pledge confirmation and perp-short order fill, both on the same CeFi venue, and
-  must be ms-realm. Live instances (JitoSOL×Drift, mSOL×Drift, stETH×Deribit, stETH×Bybit UTA) all hedge on CeFi perp
-  venues where ms timing is achievable.
-- **Staked basis dated** (`CARRY_STAKED_BASIS_DATED`): same as staked-basis-perp but the hedge is a dated future; the
-  gap is still CeFi-venue-bound at ms timing.
-- **Recursive staked basis** (`CARRY_RECURSIVE_STAKED`): the initial stake leg is DeFi-block-time-bound; each recursive
-  borrow+stake iteration adds another block-time window. The gap constraint applies at the perp-hedge step after the
-  loop completes — same ms-realm requirement as non-recursive staked basis.
-- **Recursive borrow lending only** (`CARRY_RECURSIVE_BORROW_LENDING_ONLY`): cross-venue lend+borrow with no staking
-  leg. The borrow leg is the hedge; the lend leg is the lead. Same inter-leg gap constraint — the APY spread can move
-  against the position if the borrow lags the lend.
-
-### Single-sided sub-families (yield rotation, simple staking)
-
-The two single-sided archetypes in this family — `YIELD_ROTATION_LENDING` and `YIELD_STAKING_SIMPLE` — have no paired
-legs, so the inter-leg gap concept does not apply. These inherit the **Medium** category from the archived doc's closest
-analogs (Funding Rate Harvest / Yield Optimization rows) per the audit plan's
-[rubric table](/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md). Decision latency alone
-governs; the P3 population todo for `vol-trading.md` / `event-driven.md` / `portfolio.md` will apply the same derivation
-pattern and state the reasoning explicitly in each doc.
 
 ## UI dashboard (shared)
 

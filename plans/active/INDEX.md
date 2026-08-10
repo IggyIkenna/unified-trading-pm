@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 318 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 319 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -885,7 +885,7 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (46)
+### ao (47)
 
 - [`anthropic_per_task_actual_spend_and_account_calibration_2026_08_10`](./anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md)
   — The task-usage dashboard's $ column is blank for 1,993 of 2,622 completed task_usage rows (100% of Anthropic rows)
@@ -1029,6 +1029,10 @@ by hand._
   Register DeepSeek V4 Pro as a second, first-class model provider in agent-orchestrator's account pool, and add a
   routing layer so AutoSpawn decides per-task whether a fresh spawn uses DeepSeek or a Claude Max account — a real
   policy…
+- [`e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10`](./e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md)
+  — Gated closeout for issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md — machine-held via depends_on +
+  gate_on_depends: true until its sole remaining item (re-run `admin-strategy-assignments.spec.ts`, record `pw:L2 ✓`
+  evidence or…
 - [`ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10`](./ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md)
   — Gated closeout for issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md — machine-held via depends_on +
   gate_on_depends: true until its 3 audit todos (glue-runner governor-ledger participation, host-undersizing verdict,…
