@@ -297,3 +297,15 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   hours with zero forward progress possible from this todo's own scope — the blocking condition (PM `main` catching up
   past `30ed07eff`) is entirely owned by the plan-hygiene ratchet fix, not by re-polling here; further re-checks of THIS
   todo add no new information unless the promote PR's hard-failure class changes.
+- **2026-08-10 (infra worker, slot 11, todo 2 re-check)**: Re-verified from scratch once more —
+  `git merge-base --is-ancestor 30ed07eff origin/main` on `unified-trading-pm` still returns NO
+  (`origin/main..origin/live-defi-rollout` now 1063 commits, up from slot 4's 968). `unified-trading-library`'s
+  `origin/main` tag is still `v0.77.0` (`git describe --tags origin/main` = `v0.77.0-2-gf2544c6a`) with
+  `git tag --contains 609299adf4bf49d5b027fd21289d6abd60a8bcfa` still empty. The auto-drain promote PR has rolled to a
+  new attempt, #2709 (opened 2026-08-10T04:46:28Z, superseding slot 4's #2707) — its
+  `QG slice (checks)`/`QG slice (tests)` jobs were still `pending` at check time (too fresh to have a verdict yet),
+  `content sentinel` passed. `Semver Agent`'s caller stub on `unified-trading-library` still has no `workflow_dispatch`
+  trigger (confirmed via a live dispatch attempt — same 422). Same blocker, same root cause
+  (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent (hand off, don't
+  chase serially — that doc's own scope, not this INFRA todo's). No alternate lever available. Leaving todo 2
+  open/unchecked; skipping with `reason_code: GATED` again.
