@@ -318,7 +318,7 @@ Writable set (32 docs, outside 12h grace):
 - plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
 - plans/active/github_actions_operator_gated_followups_2026_07_17.md
 - plans/active/issues/archive_candidates_hook_vs_no_combine_flip_archival_rule_conflict_2026_08_09.md
-- plans/active/issues/aws_codebuild_terraform_import_pending_2026_07_22.md
+- plans/archive/2026_08/issues/aws_codebuild_terraform_import_pending_2026_07_22.md
 - plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md
 - plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md
 - plans/active/issues/credential_ask_orphan_checker_ping_format_stale_2026_07_27.md
