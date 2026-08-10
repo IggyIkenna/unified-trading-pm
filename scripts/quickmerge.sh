@@ -2485,6 +2485,18 @@ _qm_push_attempt=0
 _qm_push_ok=0
 while [ "$_qm_push_attempt" -lt "$_QM_PUSH_RETRIES" ]; do
   _qm_push_attempt=$((_qm_push_attempt + 1))
+  # Heal evidence citations that a rebase invalidated -- INSIDE the loop, because the
+  # push-retry path below rebases again and re-orphans whatever the previous pass fixed.
+  # Same reconciler safe-doc-push uses; no-ops (one grep) when the staged files cite nothing.
+  if [ -n "$FILES_ARG" ] && [ -f "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" ]; then
+    # shellcheck source=/dev/null
+    source "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/reconcile-sha-citations.sh" 2>/dev/null || true
+    if declare -F reconcile_sha_citations >/dev/null 2>&1; then
+      # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
+      RSC_CALLER_REPO="${QM_CALLER_REPO:-$(git rev-parse --show-toplevel 2>/dev/null)}" \
+        reconcile_sha_citations "$BRANCH" $FILES_ARG || true
+    fi
+  fi
   _qm_push_err=$(git push -u origin "$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
   echo "[$REPO_NAME] ⚠️  push rejected (attempt $_qm_push_attempt/$_QM_PUSH_RETRIES) — rebasing onto the new remote tip and retrying (no QG re-run needed, content unchanged)..." >&2
   if ! git pull --rebase --autostash origin "$BRANCH" --quiet 2>/dev/null; then
@@ -2519,6 +2531,12 @@ if ! git merge-base --is-ancestor "$_QM_PUSHED_SHA" "origin/$BRANCH" 2>/dev/null
   exit 1
 fi
 echo "[$REPO_NAME] ✅ post-push ancestry verified — ${_QM_PUSHED_SHA:0:9} is an ancestor of origin/$BRANCH"
+# The SHA to put in the plan checkbox. Stated explicitly because the SHA a worker sees at
+# `git commit` time is NOT the one that lands: every push here rebases first, which rewrites
+# it. Citing the pre-rebase SHA is the single most common source of a FALSE
+# check_plan_commit_sha_evidence.py failure on work that was genuinely done -- and it is
+# silent on the authoring machine, where the orphaned object still resolves.
+echo "[$REPO_NAME] 📌 CITE THIS in the plan checkbox: ${REPO_NAME}@${_QM_PUSHED_SHA:0:10}"
 push_gov_release_push
 
 # Extract issue references from commit message for PR body
