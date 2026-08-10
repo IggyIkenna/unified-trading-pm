@@ -101,11 +101,16 @@ might come in handy."
       dispatch actually happens today (`colocated_engine.py`, `client_worker.py`, `live_execution_handler.py` — the
       parity-gap doc found NONE of these currently reference `V2EngineOrchestrator`/`on_tick`/`AtomicInstruction`;
       confirm this is still accurate and identify the EXACT point each one needs a new call/branch added).
-- [ ] [DATA] P1. **Determine why the 2026-07-30 routing seam (`publish_atomic_instruction` /
+- [x] ✅ [DATA] P1. **Determine why the 2026-07-30 routing seam (`publish_atomic_instruction` /
       `route_atomic_instructions`) was built but never wired in** — check git blame/commit history and any plan doc from
       that date for the ORIGINAL intent (was wiring it into live dispatch explicitly deferred/out-of-scope at the time,
       or was it an oversight?). This context matters for how the execution plan should sequence the work (finishing an
-      intentionally-deferred task vs. fixing a dropped one).
+      intentionally-deferred task vs. fixing a dropped one). **VERDICT: built as an intentionally-scoped round-trip
+      proof; the live-dispatch wiring was explicitly gated out at the time but NEVER re-tracked as a follow-up `- [ ]`
+      todo — so it is a "finish an intentionally-deferred task" that silently became a dropped follow-up.** The seam was
+      the RULED (2026-07-28) EventTransport-spine mechanism, and its own done-when was the e2e round-trip test +
+      QG-green across the four repos, not the live wiring — but no plan/issue doc after 2026-07-30 carried the wiring as
+      a tracked todo until this audit (2026-08-10) surfaced it. Full cited evidence in the Progress Log below.
 - [ ] [DATA] P1. **Determine the correct fix for `BenchmarkFillEngine.settle()`'s flat leg-settlement loop** — does
       making paper/batch model REAL leader/hedge-deadline/unwind risk mean (a) calling into `AtomicLegExecutor`'s actual
       logic in simulated-fill mode (reusing the SAME sequencing/timing code paper vs. live, which is the correct
@@ -186,3 +191,48 @@ might come in handy."
     zero callers of the whole module + the capability being fully superseded by `AtomicLegExecutor` LEADER_HEDGE. Actual
     code removal of BOTH is tracked by the gated execution plan `multi_leg_execution_systems_execution_2026_08_10.md`
     ("Retire whichever system(s) the audit verdicted DELETE").
+- 2026-08-10 (todo 4, slot 9): **routing seam (`publish_atomic_instruction`/`route_atomic_instructions`) origin =
+  INTENTIONAL-DEFERRAL-THAT-BECAME-UNTRACKED**, with cited evidence:
+  - **Original intent — the seam was RULED + built as a scoped round-trip proof, not a live wiring.** The seam is the
+    deliverable of `plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md`'s sole `[BACKEND] P1` todo
+    (shipped 2026-07-30: `unified-api-contracts@7eb56a5f`, `strategy-service@baccf22a` (publish side),
+    `execution-service@15ed3104` (subscribe side), `e2e-testing@8d31206` (round-trip test)). The archived issue's
+    architecture was **RULED 2026-07-28 by the operator**: the `AtomicInstruction -> AtomicLegExecutor` bridge goes via
+    the UTL `EventTransport` event-log spine (`/codex/02-data/live-data-persistence-and-event-log.md`), NOT a direct
+    call — strategy-service publishes, execution-service subscribes+routes. The todo's own **done-when was explicitly
+    scoped to the mechanism, not the runtime**: "the round-trip test passes (yes) and `quality-gates.sh` is green across
+    all four touched repos", and its text explicitly gated live activation: "a real live deployment threads Pub/Sub
+    instead, not exercised here — paper-vs-live promotion and Betfair account/credential/jurisdiction sign-off stay
+    gated exactly as documented above."
+  - **The intended caller was described in future/conditional tense, never built.** `live_routing.py`'s module docstring
+    ("strategy_service/engine/strategies/v2/live_routing.py:13-18") says the publish side exists "so the tick runtime
+    can forward on_tick's output to execution-service without a direct T4 import" — i.e. `V2EngineOrchestrator.on_tick`
+    stays I/O-free and returns the emitted list "for the caller to forward"; the seam was built FOR that caller, which
+    was never created. The parity-gap issue's own investigation confirmed `colocated_engine.py`, `client_worker.py`, and
+    `live_execution_handler.py` never reference `on_tick`/`AtomicInstruction`/the seam (re-confirmed fresh 2026-08-10:
+    all three have 0 refs).
+  - **Fresh-grep confirmation the seam still has zero production callers (2026-08-10, not cached):**
+    `publish_atomic_instruction` and `route_atomic_instructions` each appear ONLY in their own defining module +
+    `e2e-testing/tests/unit/test_atomic_instruction_live_routing_seam.py` (the isolated round-trip test). No production
+    strategy publishes (all real engines — `staked_basis.py`, `recursive_staked.py`, etc. — emit via
+    `base.py::emit_instructions`, which is observability-recording only, never the EventTransport shard) and no
+    production service process subscribes. Each seam file has exactly ONE commit (`baccf22a` / `15ed3104`, both
+    2026-07-30); no later commit wired it in.
+  - **The deferral was never re-tracked as a `- [ ]` follow-up (the dropped half).**
+    `rg publish_atomic_instruction| route_atomic_instructions` across `plans/active` + `plans/archive` after the
+    archived bridge issue returns only the two 2026-08-10 multi-leg plans (this audit + its execution plan),
+    `prediction_satellite_ao_dispatch_batch6` (which duplicated the bridge issue's round-trip todo verbatim), and the
+    archived bridge issue itself. No plan/issue doc between 2026-07-30 and 2026-08-10 tracked "wire the seam into the
+    real colocated/live runtime" as a todo — the wiring step was left as the bridge issue's prose ("the caller ... calls
+    publish_atomic_instruction per emitted AtomicInstruction") and silently dropped on archival (the issue was marked
+    `resolved` on the round-trip proof). This is the workspace's own "every follow-up is a `- [ ]` todo, never prose"
+    HARD RULE being violated at archival time.
+  - **Sequencing implication for the execution plan:** treat it as **finishing an intentionally-deferred task**, not
+    fixing a dropped one — the architecture is already RULED and the mechanism shipped; the work is purely the missing
+    caller wiring (call `publish_atomic_instruction` per `on_tick`-emitted `AtomicInstruction` in the real paper/
+    colocated tick driver, and run `route_atomic_instructions`/`AtomicLegExecutor` in a live/paper service process),
+    which the execution plan's "Wire into live dispatch" todo already targets. The operator-gated live-promotion /
+    Betfair-credential items are separate and stay NA. Note: even the PAPER mode bypasses the seam today
+    (`GroupBRunner`→`BenchmarkFillEngine.settle()` flat loop), so wiring must cover the paper/colocated
+    (`InMemoryTransport`) topology too — that is todo 5's `BenchmarkFillEngine.settle()` recommendation, not just the
+    live Pub/Sub leg.
