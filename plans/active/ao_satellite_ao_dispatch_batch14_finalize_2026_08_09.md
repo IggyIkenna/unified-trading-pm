@@ -120,9 +120,18 @@ source: >-
       `deepseek_claude_blended_provider_routing_2026_07_28.md`'s own `[INFRA] P2` checkbox** — replace the
       redirect-pointer text batch14 left behind with the real completion evidence (both hosts, verified). **Done when**:
       the source checkbox carries real evidence, not a bare redirect pointer.
-- [ ] [REVIEW] P1. **Do NOT archive the source doc** — it has 4 other open items that stay genuinely operator-gated /
-      time-gated (2 production pilots, 1 CLI-version design call, 1 gitignored-per-VM data check), unaffected by this
-      batch. Confirm that count is still accurate at reconciliation time and leave the doc `active`.
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-10 (slot 5) — count re-verified, still accurate, source doc left `active`.**
+      Fresh-pulled + re-read `deepseek_claude_blended_provider_routing_2026_07_28.md`'s full Todos section (grep for
+      every `- [ ]`/`- [x]` line, 2026-08-10): 6 unchecked items total, not 4 — but 2 of those 6 ARE covered
+      by/related to this batch's own work (line 448's `[INFRA] P2` GSM re-source checkbox, the exact one this
+      finalize plan's todo 3 reconciles; line 407's `[OPERATOR] P2` balance-recurrence, surfaced by that same
+      re-sourcing work and cited on both this finalize plan's flipped todos above) and so are correctly excluded from
+      the "4 other" count. The remaining 4 — line 311 `[REVIEW] P2` (pilot the blended pool one week), line 320
+      `[REVIEW] P1` (re-run the local pilot against the redesigned policy) = the "2 production pilots"; line 335
+      `[INFRA] P1` (confirm production-VM `claude` CLI Skills support) = the "1 CLI-version design call"; line 343
+      `[DATA] P1` (ratio-check account-count/cost against gitignored `accounts.json`) = the "1 gitignored-per-VM data
+      check" — exactly match the described categories, genuinely unaffected by this batch, still open. Count
+      confirmed accurate; doc left `status: active` (no archival action taken).
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch14_2026_08_09.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan
@@ -152,3 +161,10 @@ source: >-
   is still exhausted (`balance_usd=-0.21`) so a clean-200 spawn couldn't be confirmed; ran a real `claude -p` probe
   through the new config instead — `402 Insufficient Balance` (not 401/403), proving the new auth path itself works.
   Full evidence on the flipped todo above. Todo 3 (reconcile into source doc) can now proceed — real evidence exists.
+- **2026-08-10 (slot 5, review craft) — todo 4 DONE (dispatched ahead of todo 3, which has no backlog task yet).**
+  Re-verified the source doc's "4 other open items" claim by re-reading its full Todos section fresh: 6 items are
+  genuinely unchecked, but 2 (the `[INFRA] P2` GSM re-source checkbox at line 448 and the `[OPERATOR] P2`
+  balance-recurrence at line 407) are directly covered by/related to this batch's own work, not independent. The
+  remaining 4 (2 production pilots, 1 CLI-version design call, 1 gitignored-per-VM data check) match the described
+  categories exactly and are genuinely unaffected by this batch. Count confirmed accurate; source doc left `active`,
+  no archival action taken. Full evidence on the flipped todo above.
