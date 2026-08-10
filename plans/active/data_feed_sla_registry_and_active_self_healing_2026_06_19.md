@@ -165,7 +165,7 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
       23/23 repos at msgpack>=1.2.1, ignore fully dropped.
 - [x] ✅ [SCRIPT] P3. **Re-export `ACCOUNT_STATE_FRESHNESS` via the UAC facade** — UAC@`6b91f1f`: added to
       `internal/reference/__init__.py` + `internal/__init__.py` (import + `__all__`);
-      `from unified_api_contracts.internal     import ACCOUNT_STATE_FRESHNESS` now works. (Unblocked once the
+      `from unified_api_contracts.internal import ACCOUNT_STATE_FRESHNESS` now works. (Unblocked once the
       `ledger_asset_resolution` WIP landed.)
 - [x] ✅ [DEFERRED] P0. ~~**Drop the vcrpy `--ignore-vuln GHSA-rpj2-4hq8-938g`** when vcrpy can be bumped~~ (gated on
       the aiohttp-3.14 unblock — `/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`, ARCHIVED
@@ -184,7 +184,7 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
       (`scripts/recovery/refetch_feed.py` + 12 tests + README), backed by UAC@`31ba9e4` (`ActionType.REFETCH_FEED`
       enum) + UTL@`398c005c` (`RecoveryScriptRegistry` entry — the closed-set SSOT). Looks up
       `ALL_FRESHNESS_CONTRACTS[feed_id]` and invokes the **real** owning-service CLI re-fetch:
-      `market-tick-data-service --operation download --mode batch     --asset-group <ag> --venues <source> --day <today-UTC>`
+      `market-tick-data-service --operation download --mode batch --asset-group <ag> --venues <source> --day <today-UTC>`
       (verified against the live MTDS CLI), emitting `AgentActionEvent` like its sibling scripts. **Limitation:** coarse
       `--day` window (the finer `--shard-key` targeting from infrastructure_master B.2 Phase 5 is a future tightening);
       `execution`/`feature`/`ml` feeds raise `UnroutableFeedError` (their owning CLIs are out of the MTDS scope) → the

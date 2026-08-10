@@ -249,7 +249,7 @@ context_scope:
       **Confirmed**: `catalog.py` exports `build_carry_basis_perp_inv` as a plain (non-underscore) name — no underscore
       alias existed for it (unlike the other two builders), so the test's import line was changed from
       `_build_carry_recursive_staked as _build_carry_recursive_borrow_perp_hedged` to
-      `build_carry_basis_perp_inv as     _build_carry_recursive_borrow_perp_hedged`. Directly verified the real catalog:
+      `build_carry_basis_perp_inv as _build_carry_recursive_borrow_perp_hedged`. Directly verified the real catalog:
       10 rows, all correctly slot-labeled `CARRY_BASIS_PERP_INV@...` (was silently `CARRY_RECURSIVE_STAKED@...` before).
       The `>=5` row-count assertion needed no change (10>=5). 40/40 tests pass (`pytest -m "not requires_credentials"`);
       full `quality-gates.sh --no-fix` green (126s, sentinel written). Shipped `strategy-service@628a0a32`.

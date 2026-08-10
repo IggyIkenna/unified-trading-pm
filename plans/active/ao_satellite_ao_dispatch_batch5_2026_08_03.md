@@ -244,7 +244,7 @@ below rather than duplicated here.
       naming this failure mode (grep for "sharing one slot"/"multi-operator" hits each); `check_agent_rules_size_cap.py`
       still passes; the source issue doc's `[DOCS] P2` todo flips `[x]` with the commit sha. Source:
       `/plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` (its
-      `[DOCS]     P2` item only — items 2-4, the operator-decision cluster, are NOT in scope). Repo: unified-trading-pm.
+      `[DOCS] P2` item only — items 2-4, the operator-decision cluster, are NOT in scope). Repo: unified-trading-pm.
 
 - [ ] [BACKEND] P3. **Thread the already-shipped `self_declared_complete` kick-classification signal
       (`agent-orchestrator/server/worker_liveness/__init__.py`, computed ~line 717 via `_SELF_DECLARED_COMPLETE_RE`,
@@ -288,7 +288,7 @@ below rather than duplicated here.
       2026-08-06 (slot 2). Verified `unified-trading-pm@2db15bb21`
       (`fix(dev): env-var fallback for slack-read-channel.py when gcloud ADC fails`, 2026-07-28): the
       `SLACK_ALERTS_READER_BOT_TOKEN` env-var fallback at `scripts/dev/slack-read-channel.py:65`
-      (`os.environ.get("SLACK_ALERTS_READER_BOT_TOKEN", "")  # noqa:     qg-empty-fallback`) satisfies the original Gate
+      (`os.environ.get("SLACK_ALERTS_READER_BOT_TOKEN", "")  # noqa: qg-empty-fallback`) satisfies the original Gate
       — documented as secondary (script header lines 12-30), never touches disk/argv (env var only), and the
       `# noqa: qg-empty-fallback` marker permanently exempts it from the `no_empty_string_fallback_baseline` ratchet.
       The na-eligibility-audit's 2026-07-30 "direction superseded" annotation (ruling: grant IAM + REMOVE fallback)

@@ -71,7 +71,7 @@ context_scope:
 
 - [ ] [DATA] P3. **Reconcile.** From a cloud VM (this read is a documented heavy-I/O exception — do not retry from a
       laptop, see `/codex/05-infrastructure/vm-launcher-runbook.md`), run the bounded, column-pruned
-      `read_availability_index(bucket, columns=["venue","chain","data_type","instrument_type","capture_status"],     filters=[("venue","==","kamino_lending")])`
+      `read_availability_index(bucket, columns=["venue","chain","data_type","instrument_type","capture_status"], filters=[("venue","==","kamino_lending")])`
       (case variants too) scoped to the accumulation window 2026-08-05T17:42Z (last retire run) through
       2026-08-06T08:29Z (deploy landed, ~15h). If any rows are found, re-run
       `market-tick-data-service/scripts/one_offs/retire_kamino_lending_legacy_venue_2026_08_05.py --apply`

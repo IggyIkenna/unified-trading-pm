@@ -157,7 +157,7 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       `ml-store-{prd,test}-central-element-323112` (the folded targets) under `ml-*`; none of the 5 legacy source names
       (`ml-models-store`, `ml-models-store-prd`, `ml-predictions-store`, `ml-configs-store`, `ml-training-artifacts`,
       `ml-artifacts`) exist in this project any more — cross-checked via
-      `gcloud asset search-all-resources     --scope=projects/central-element-323112 --asset-types=storage.googleapis.com/Bucket`
+      `gcloud asset search-all-resources --scope=projects/central-element-323112 --asset-types=storage.googleapis.com/Bucket`
       (project-level inventory, immune to any per-bucket IAM quirk) which independently confirms the same 2-bucket-only
       result — either already deleted in an earlier untracked pass, or (for the 3 names that returned a
       permission-denied rather than a clean 404 on a direct `gcloud storage buckets describe`) the bare name has since
