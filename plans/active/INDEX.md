@@ -1077,10 +1077,6 @@ by hand._
   — shared_ci_workflow_repo_extraction_2026_08_06.md extracted the 2 files every repo calls via `uses:` (the actual
   cross-repo dependency surface) into unified-trading-ci. It deliberately left alone a SECOND, larger class: ~9 more
   workflow…
-- [`infra_satellite_ao_dispatch_batch11_finalize_2026_08_09`](./infra_satellite_ao_dispatch_batch11_finalize_2026_08_09.md)
-  — Gated closeout for `infra_satellite_ao_dispatch_batch11_2026_08_09.md`, per the finalize-plan-coverage gate
-  (task_template.md §4, operator ruling 2026-07-24; machine-enforced by
-  `scripts/quality_gates/check_finalize_plan_coverage.py`).…
 - [`infra_satellite_ao_dispatch_batch12_2026_08_09`](../archive/2026_08/infra_satellite_ao_dispatch_batch12_2026_08_09.md)
   — Twelfth AO-dispatch batch for the `infra` topic tranche. Single source: the one remaining CLEARED-but-unbatched item
   from `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred section (item 5, "`managed-by` launcher label…

@@ -42,7 +42,7 @@ related:
     /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch11_2026_08_09.md,
-    /plans/active/infra_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
     /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
     /plans/active/issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md,
     /plans/active/issues/operator_action_items_consolidated_2026_08_08.md,

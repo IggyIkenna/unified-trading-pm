@@ -46,7 +46,6 @@ context_scope:
   ]
 supersedes:
 superseded_by:
-archive_exempt: true # 2026-08-10: bridge for todo-2 flip-only commit; drop in follow-up git mv archival
 source: >-
   Authored alongside its parent batch by `/ag-closeout-audit infra` (2026-08-09, second dispatch of the day, slot 9),
   per the standing finalize-plan-coverage rule (every ≥2-todo `assigned_vm: planning` plan needs a gated finalize twin).
