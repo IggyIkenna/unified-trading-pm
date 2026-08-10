@@ -813,7 +813,8 @@ into the same fix — carried forward here so it isn't lost with the archive:
   ~734, §O emit_empty_gaps line ~764) are already claimed as open todos in
   `sports_satellite_ao_dispatch_batch9_2026_08_04.md` (`assigned_vm: planning`, status: active, all 4 still `- [ ]`
   there too) — added inline "Already extracted" citations at each so this doesn't get re-derived as a fresh extraction
-  candidate next pass. 1 (§M Runtime re-division, line ~677) reconfirmed genuinely design-gated (mechanism
+  candidate next pass. 1 (§M Runtime re-division, line ~677) reconfirmed genuinely design-gated (mechanism choice, not a
+  mechanical patch) — not extracted. No new work found; doc stays `assigned_vm: NA`.
 - **batch9-021 rateLimit-residual census 2026-08-10 (slot 23)**: **ALL 61 HEALED — ZERO remaining `rateLimit`
   `attempted_failed` rows attributable to the 2026-07-18 15:27-15:57Z api-football 5-VM concurrency window.** Live
   canonical (`instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, read via
@@ -836,4 +837,4 @@ into the same fix — carried forward here so it isn't lost with the archive:
     `rateLimit` rows there (the only residual `rateLimit` rows anywhere are `STANDINGS`, from a later tracked campaign)
     — so all 61 have transitioned to `captured`/`empty_confirmed`.
   - **No explicit re-attempt needed.** Batch9 todo (`sports_satellite_ao_dispatch_batch9_2026_08_04.md` item) flipped
-    same-turn. choice, not a mechanical patch) — not extracted. No new work found; doc stays `assigned_vm: NA`.
+    same-turn.
