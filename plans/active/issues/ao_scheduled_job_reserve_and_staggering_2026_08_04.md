@@ -382,21 +382,21 @@ raw `-H` command-line arg, which is a real, reusable lesson for every future dis
       (repo: agent-orchestrator)
 
       **RE-CHECKED 2026-08-09 (slot 11, data_engineering) — INCONCLUSIVE, still NOT closed.** Queried the live
-                      SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
-                      2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
-                      below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
-                      pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
-                      rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
-                      survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
-                      both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
-                      original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
-                      per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
-                      08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
-                      also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
-                      week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
-                      rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
-                      above for a causal read. New follow-up filed directly below given the climbing raw rate.
-                      (repo: agent-orchestrator)
+                          SQLite state via the S3 DR backup (`s3://uts-orchestrator-state-427895769566/backups/sqlite/planning/
+                          2026-08-09/live_20260809T210230Z.db`, `sqlite3 -readonly`, same read path as the capacity-queue verification
+                          below). `agents` table (`agent_kind`/`exit_reason`/`role`/`registered_at`) only retains 190 rows total —
+                          pre-fix history is thin, so this is a partial re-check, not a clean close: (a) all 7 `kind=cicd` reaped-stale
+                          rows in the snapshot have `registered_at` AFTER the 2026-08-06 15:04:08 fix commit — zero pre-fix `cicd` rows
+                          survive in this retention window to compare against, and the originally-cited `agt-80c470`/`agt-53f733` are
+                          both gone (purged). (b) Those 7 are all `ldr_qg_failure` workers, runtime 114-2296s (2-38min) — short vs. the
+                          original 26420s/51302s long-runner signature, still consistent with "different mechanism, not a regression"
+                          per the note above. (c) Fleet-wide reaped-stale-as-%-of-dispatched is CLIMBING day over day since the fix:
+                          08-06 7.7% (1/13) -> 08-07 25.0% (4/16) -> 08-08 36.0% (18/50) -> 08-09 44.7% (46/103) — but dispatch VOLUME
+                          also grew ~8x over the same window (13->103 agents/day, plausibly the capacity/timer fixes shipped this same
+                          week), so rising %-share does not cleanly separate "the fix regressed" from "more workers, same underlying
+                          rate, more absolute reaps." Root cause remains unestablished; still blocked on the observability-enabler todo
+                          above for a causal read. New follow-up filed directly below given the climbing raw rate.
+                          (repo: agent-orchestrator)
 
 - [x] ✅ [DATA] P2. **Bump the observability-enabler todo above (session-teardown instrumentation, was P3) given the
       08-09 re-check's climbing reaped-stale rate** — without it, the "regression vs. new mechanism vs. volume artifact"
@@ -897,3 +897,19 @@ gates promotion to `main`, not the fix's correctness.
   `[DATA] P3` to `[DATA] P2` per the 08-09 re-check's climbing reaped-stale rate (1/08-06 -> 4/08-07 -> 18/08-08 ->
   46/08-09). Priority-metadata-only — no code shipped, none needed for this todo's own job. The instrumentation
   implementation itself remains open at its new P2 priority.
+- **2026-08-10 (slot 25, data_engineering, `ao_scheduled_job_reserve_and_staggering-029`) — 4a77bfe CI-surface
+  verification.** Checked both clauses of the verify todo: (1) **Deploy Dashboard (Firebase Hosting) on LDR — CONFIRMED
+  it completes.** The 4a77bfe run (#377, 17:00 08-06) was `cancelled` (concurrency-group supersession during the busy
+  17:00-17:44 window — runs #376-380 all cancelled, then #383-385 later that evening `success`); all recent 08-10 LDR
+  runs (`31375300238` etc.) `success`. So the workflow is functional on LDR; the concern "nobody has confirmed that
+  workflow ever COMPLETES on LDR" is resolved. (2) **quality-gates-v2 on the promote PR carrying 4a77bfe — UNVERIFIABLE
+  (finding): NO promote PR exists.** The last merged `chore(promote)` for agent-orchestrator is #783 (08-05T09:43); no
+  open promote PRs exist; `compare main...4a77bfe` = diverged (4a77bfe not on main, ahead_by=9). Agent-orchestrator's
+  LDR→main promote has produced no merged PR since 08-05 (≈5 days), leaving 4a77bfe + ~820 LDR commits unpromoted — a
+  promotion-lag finding, plausibly related to the fleet-workflow migration
+  (`fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`; main's recent commits #817-820 are direct
+  `fix(ci)` stubs, not promotes). This is NOT a CI failure of 4a77bfe (local gate was green pre-commit, confirmed by the
+  todo); it's a separate promote-infrastructure gap. **Checkbox stays OPEN** — the "actual required check"
+  (quality-gates-v2 on a promote PR) cannot be confirmed until the promote resumes; a future worker should re-check the
+  promote state (`gh pr list --search "chore(promote)"` / promote-lag monitor), not re-derive this history. No code
+  shipped.
