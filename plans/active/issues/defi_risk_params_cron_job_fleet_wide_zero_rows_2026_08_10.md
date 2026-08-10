@@ -109,10 +109,22 @@ Investigate and fix the Cloud Run Job's execution path:
 
 ## Todos
 
-- [ ] [DATA] P0. Diagnose the Cloud Run Job `uts-prod-mtds-collect-risk-params` — pull its execution log from the
+- [x] ✅ [DATA] P0. Diagnose the Cloud Run Job `uts-prod-mtds-collect-risk-params` — pull its execution log from the
       2026-08-10T00:50 UTC trigger, compare its entrypoint/args/env/service-account against the known-working manual VM
       run (`mtds-risk-params-backfill-20260805-fixverify` from todo 8), identify why all 12 venues produce zero rows
-      when the same code produced real data on a manual VM. Repo: market-tick-data-service, deployment-service.
+      when the same code produced real data on a manual VM. Repo: market-tick-data-service, deployment-service. —
+      **Diagnosis complete (slot 27, data_engineering). THREE root causes found — none are Cloud Run Job vs VM config
+      differences. (1) AAVE_V3 subgraph schema drift (PRIMARY): `Type 'Reserve' has no field 'eModeCategoryId'` on ALL 8
+      chains (ETHEREUM, ARBITRUM, POLYGON, AVALANCHE, BASE, LINEA, BSC, and OPTIMISM also lost top-level `reserves`
+      field). The subgraph schemas changed between the Aug 3-5 manual VM run and the Aug 10 Cloud Run Job run — the
+      code/entrypoint/args/env/SA are IDENTICAL between VM and Cloud Run, but the external data source evolved. (2)
+      SPARK subgraph: `Type 'Query' has no field 'reserves'` — same schema-migration pattern. (3) OOM-killed execution
+      left `row_count=0` manifest entries — the pre-fix execution finalized its per-VM shard (`process_final=True`, 648
+      entries) before the SIGKILL, and those entries were consolidated into `availability_index.parquet` before the
+      post-fix execution (42bqr) could overwrite them. Execution 42bqr DID successfully produce 2939 rows (MORPHO 904,
+      COMPOUND_V3 1800, FLUID 12, KAMINO 113, SOLEND 54, MARGINFI 56) and the consolidated manifest was updated
+      2026-08-10T13:54:07Z. The "all zero" re-verify by slot 23 was against a pre-consolidation snapshot. See Progress
+      Log for full evidence.**
 - [x] ✅ [DATA] P0. Fix the root cause and re-run — apply the fix (image tag, entrypoint, permissions, or config),
       manually trigger a fresh execution, and confirm `capture_status=captured`/`row_count>0` appears for at least
       MORPHO/FLUID (the previously-working venues) on 2026-08-10. Repo: market-tick-data-service, deployment-service. —
@@ -131,6 +143,15 @@ Investigate and fix the Cloud Run Job's execution path:
       ALL `empty_confirmed`(966) or `expected_unattempted`(466). OOM was necessary but NOT sufficient — the zero-row
       root cause is distinct from the memory crash. Todo 1 (deeper diagnosis: compare Cloud Run Job vs manual VM
       execution path) is now the critical blocker.
+- [ ] [DATA] P0. Fix AAVE_V3 subgraph query — remove `eModeCategoryId` from `_AAVE_V3_RISK_PARAMS_QUERY` or make the
+      field optional (the 8 AAVE_V3 Messari subgraphs no longer expose this field on the `Reserve` type, causing
+      `SubgraphSchemaError` on ALL chains). Also handle AAVE_V3-OPTIMISM and SPARK where the top-level `reserves` query
+      field has been removed entirely (subgraph schema migration — may need a different query version or subgraph ID).
+      Repo: market-tick-data-service. See Progress Log 2026-08-10 slot 27 for full subgraph IDs and error details.
+- [ ] [DATA] P0. Re-run the Cloud Run Job after the AAVE_V3/SPARK query fix and verify `captured`/`row_count>0` appears
+      for MORPHO, COMPOUND_V3, AAVE_V3 (fixed), SPARK (fixed), and all other venues on 2026-08-10. Compare against the
+      execution 42bqr baseline (2939 rows from unfixed venues — the fix should add AAVE_V3 and SPARK rows). Repo:
+      market-tick-data-service.
 
 ## Progress Log
 
@@ -149,3 +170,56 @@ Investigate and fix the Cloud Run Job's execution path:
   venues with `row_count=0`. The 2026-08-10T01:37 UTC `attempted_at` confirms the cron fired but the Job produced
   dishonest zero-row stamps. Root cause investigation deferred to the P0 diagnostic todo above — this issue doc is the
   escalation, not the fix.
+- **2026-08-10 (slot 27, data_engineering)**: **DIAGNOSIS COMPLETE — Todo 1.** Three distinct root causes identified,
+  none of which are Cloud Run Job config vs manual VM differences (the entrypoint/args/env/SA are IDENTICAL):
+
+  **Root Cause 1: AAVE_V3 subgraph schema drift (PRIMARY — 8 chains affected).** The Graph `_AAVE_V3_RISK_PARAMS_QUERY`
+  in `risk_params_handler.py:126-137` includes `eModeCategoryId` in the `reserves` field list. Between Aug 3-5 (manual
+  VM) and Aug 10 (Cloud Run), the AAVE_V3 Messari subgraphs removed this field from the `Reserve` type. The resulting
+  `SubgraphSchemaError` is caught at `_collect_one_shard:631` → `record_shard_failure()` — the shard is recorded as
+  failed, not honest-zero. Affected chains: ETHEREUM (Cd2gEDVeqnjBn1hSeqFMitw8Q1iiyV9FYUZkLNRcL87g), ARBITRUM
+  (DLuE98kEb5pQNXAcKFQGQgfSQ57Xdou4jnVbAEqMfy3B), POLYGON (Co2URyXjnxaw8WqxKyVHdirq9Ahhm5vcTs4dMedAq211), AVALANCHE
+  (2h9woxy8RTjHu1HJsCEnmzpPHFArU33avmUh4f71JpVn), BASE (GQFbb95cE6d8mV989mL5figjaGaKCQB3xqYrr1bRyXqF), LINEA
+  (Gz2kjnmRV1fQj3R8cssoZa5y9VTanhrDo4Mh7nWW1wHa), BSC (7Jk85XgkV1MQ7u56hD8rr65rfASbayJXopugWkUoBMnZ). OPTIMISM has a
+  different error: `Type 'Query' has no field 'reserves'` (subgraph 3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi) — the
+  TOP-LEVEL `reserves` field is gone, suggesting a full schema migration.
+
+  **Root Cause 2: SPARK subgraph schema migration.** SPARK's subgraph (GbKdmBe4ycCYCQLQSjqGg6UHYoYfbyJyq5WrG35pv1si)
+  also no longer has `Type 'Query' has no field 'reserves'` — same full schema migration as AAVE_V3-OPTIMISM. SPARK
+  shares AAVE_V3's query code path (`_AAVE_V3_RISK_PARAMS_QUERY` + `parse_messari_reserves`).
+
+  **Root Cause 3: OOM-killed execution left stale `row_count=0` entries (RESOLVED — re-run overwrites).** Pre-fix
+  execution (uts-prod-mtds-collect-risk-params-q622x or earlier) finalized its per-VM shard with `process_final=True`
+  (648 entries) BEFORE being OOM-killed. Those entries — carrying `row_count=0` for venues that hadn't been fully
+  processed — were consumed by the manifest consolidator into `availability_index.parquet`. Post-fix execution 42bqr
+  (completed 2026-08-10T09:04:57Z) successfully produced 2,939 risk_params rows across 6 protocols: MORPHO (568 ETH +
+  336 BASE = 904), COMPOUND_V3 (600 ETH + 400 ARB + 500 BASE + 300 OPT = 1,800), FLUID (12 ETH), KAMINO_LENDING (113
+  SOL), SOLEND (54 SOL), MARGINFI (56 SOL). The per-VM shard was finalized (`local-1-0b4b.parquet`, 648 entries, 176
+  new, `process_final=True`). The consolidated `availability_index.parquet` was updated 2026-08-10T13:54:07Z. Slot 23's
+  "still all zero" re-verify was likely against a pre-consolidation snapshot.
+
+  **Evidence for subgraph schema drift:** Execution 42bqr logs (GCP Logging, asia-northeast1):
+
+  ```
+  09:04:27 WARNING Failed to collect risk_params aave_v3 on ETHEREUM: Subgraph Cd2gEDVeqnjBn1hSeqFMitw8Q1iiyV9FYUZkLNRcL87g schema error: [{'locations': [{'column': 5, 'line': 10}], 'message': "Type 'Reserve' has no field 'eModeCategoryId'"}]
+  09:04:28 WARNING Failed to collect risk_params aave_v3 on ARBITRUM [...same error...]
+  [...6 more AAVE_V3 chains — same error]
+  09:04:28 WARNING Failed to collect risk_params aave_v3 on OPTIMISM: [...Type 'Query' has no field 'reserves'...]
+  09:04:52 WARNING Failed to collect risk_params spark on ETHEREUM: [...Type 'Query' has no field 'reserves'...]
+  ...
+  09:04:57 INFO Risk params collection complete: 2939 total records ({'aave_v3_ETHEREUM': 0, ...all 8 aave_v3=0, 'morpho_ETHEREUM': 568, 'morpho_BASE': 336, 'compound_v3_ETHEREUM': 600, ...})
+  ```
+
+  **Evidence that Cloud Run Job config matches manual VM:**
+
+  ```yaml
+  Job: uts-prod-mtds-collect-risk-params (asia-northeast1)
+  Image: asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/market-tick-data-service:latest
+  Args: --operation collect-risk-params --mode batch
+  Memory: 8Gi (bumped from 2Gi by slot 23), CPU: 2
+  SA: unified-trading-sa@central-element-323112.iam.gserviceaccount.com
+  Env: CLOUD_PROVIDER=gcp DEPLOYMENT_ENV=prod GCP_PROJECT_ID=central-element-323112 MANIFEST_PER_VM_SHARDS=true
+  ```
+
+  The manual VM `mtds-risk-params-backfill-20260805-fixverify` used the SAME tarball image, same args, same SA. The
+  failure is NOT a config/deployment difference — it's an external data-source schema change between Aug 3-5 and Aug 10.
