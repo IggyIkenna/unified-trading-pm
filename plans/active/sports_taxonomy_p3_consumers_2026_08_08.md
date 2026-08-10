@@ -604,18 +604,3 @@ spelling variant survives, which is the entire point of the panel". It does not.
   - `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md`, flip this checkbox with evidence
     (coverage delta 0.0% → 5.7%/17.2%/15.6% non-null already measured; perf delta pending), and `/done`
     (`sports_taxonomy_p3_consumers-cf4d5df0dd61`). Prior entry above (efca9c56bc) carries the tarball sha + VM names.
-
-- **2026-08-10 (slot 26, data_engineering→backend_engineer)** — ML § T-2h/T-6h MODEL-horizons todo: 5th-attempt VMs
-  terminal. **4 of 5 FAILED identically** (2a/2b/2c/2d, ~4h runtime, TERMINATED 20:46Z):
-  `ValueError: Input X contains NaN` in `SklearnTrainer.train()` at `model_trainer_factory.py:258` — the sklearn
-  `HuberRegressor` (ensemble weight=0.15) rejects NaN natively. CatBoost/XGBoost/LightGBM all trained fine (they
-  tolerate NaN). Root cause: heterogeneous per-date feature concatenation produces all-NaN columns when a feature family
-  only exists for some dates; the earlier CatBoost NaN fix (`9b68494b76`) only covered NaN in TARGETS, not features.
-  **Fix shipped: `ml-service@f0e0a61981`** — `SklearnTrainer._drop_all_nan_columns()` drops columns where every training
-  value is NaN (lossless — zero signal) before `model.fit()`, aligns `x_val`. 3 regression tests. QG green, quickmerge
-  landed on LDR, ancestry verified. **model_2e** (T-2h, 2019-2025 range) still RUNNING, still in feature-loading phase
-  (hasn't reached training yet — will hit same NaN if it does). **Retrain must be re-launched** on a fresh tarball
-  carrying this fix to produce the measured coverage + performance delta. Horizon-declaration code (the checkbox's code
-  half) was already shipped (slot-11: `ml-service@8af9324`, `features-service@3394de8`). Checkbox stays unflipped per
-  prior entry — retrain evidence still pending. This session closes the dispatch with the NaN root-cause fix shipped;
-  the retrain is unblocked for the next dispatch.

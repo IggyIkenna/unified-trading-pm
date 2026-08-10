@@ -121,17 +121,10 @@ memory and that's what kills sessions" as-is.
 - 42% of all tmux losses hit a slot mid-task (not idle) — directly interrupting live work, which is exactly the
   mechanism inflating `dispatches` without a matching `done` (the `dispatches/done` and per-role/slot/day breakdown
   shipped this session: `agent-orchestrator@016abaff2f`, `@8a7a8c0fe0`).
-- **Context saturation is a real but MINOR contributor, not the ~43% it first looked like — narrowed same session (see
-  Progress Log).** The proactive path (`server/context_lifecycle.py`) works as designed: force `/pre-compact` (locates a
-  resume point) then force `/compact`, injected into the SAME live pane — a successful cycle never touches
-  `task_dispatched` at all (the task stays `dispatched` on the same session throughout), so it correctly does NOT show
-  up as a redispatch. The only genuine failure mode is `tmux_pruner.py`'s reactive path: a session that dies WHILE
-  already at/above `resume_fresh_context_pct` (the resume-eligibility ceiling) can't be resumed — resuming a session
-  already past the ceiling would just re-hit it — so it's requeued fresh instead, logged distinctly as
-  `context_saturated_session_lost_task_requeued`. Re-querying with the EXACT event (not any compact-flavored event
-  nearby, which mostly just means "a routine successful compact also happened somewhere in a long gap on a busy slot"):
-  only 7 of 142 redispatches (5%) show it. The other 69/142 (49%) that show SOME compact-related event are very likely
-  coincidental co-occurrence, not causal.
+- Context saturation (compact/force-compact events) co-occurs with 43% of redispatch gaps, including one directly
+  self-descriptive event name, `context_saturated_session_lost_task_requeued` — this is the strongest concrete lead for
+  a SUBSET of cases (hitting the context ceiling appears to itself precipitate a session loss in some fraction of runs),
+  but doesn't explain the other ~57%.
 
 ## Todo
 
@@ -150,13 +143,11 @@ memory and that's what kills sessions" as-is.
       independent of host load)? Join the 1203 `tmux_session_lost` events' `slot_id` against `SlotRow.account_id` at
       that time and look for a skew. **Done when**: either a specific account/provider is shown to explain a
       disproportionate share, or the loss rate is confirmed roughly uniform across accounts. Repo: agent-orchestrator.
-- [x] [INFRA] P3. ~~Narrow the context-saturation lead~~ — **done same session**: only 7/142 redispatches (5%) show the
-      exact `context_saturated_session_lost_task_requeued` failure event; the other 69/142 that show some
-      compact-flavored event nearby are most likely coincidental. Context saturation is a minor contributor, not a major
-      one — the proactive precompact->compact->resume path works in-place and correctly never shows up as a redispatch
-      when it succeeds. No further action here; the 5% failure case is inherently rare-and-bounded (only fires when a
-      session dies exactly while already past the resume ceiling) and not worth chasing further compared to the other
-      three todos below.
+- [ ] [INFRA] P3. **Narrow the context-saturation lead**: of the 43% of redispatch gaps that show a
+      compact/force-compact event, how many specifically show `context_saturated_session_lost_task_requeued` (the
+      self-descriptive one) vs. an unrelated compact that happened to also be in the window? If the former is common,
+      the actual fix may be in the context-saturation/force-compact path itself (does forcing a compact near the context
+      ceiling sometimes crash the session instead of shrinking it?). Repo: agent-orchestrator.
 - [ ] [INFRA] P3. **Re-run the resource-history correlation with tighter sampling** if the sampler's interval allows —
       the current pass could miss a spike shorter than the sample gap. Check `resource_history.SAMPLE_INTERVAL_SECONDS`
       and, if it's coarse (e.g. 60s+), consider whether a sub-interval spike is plausible given `iowait_percent`'s
@@ -170,18 +161,3 @@ memory and that's what kills sessions" as-is.
   pending `TaskUsageRow.dispatch_role` fallback fix for the role breakdown). Investigation run entirely read-only via
   SSM against the live `state.db` + `resource_history` JSONL — no code changed as part of this doc. All four follow-ups
   above are diagnostic reads, not fixes — a real fix can't be scoped until one of them lands on an actual cause.
-- 2026-08-10 (same session, continued): operator asked whether a normal precompact->compact->resume cycle should even
-  count toward the redispatch metric, since that path is supposed to be a same-session resume, not a fresh worker
-  pickup. Read `server/context_lifecycle.py` (the proactive force-precompact-then-force-compact path, injected into the
-  live pane, no `task_dispatched` involved when it works) and `server/tmux_pruner.py` (the reactive
-  `context_saturated_session_lost_task_requeued` path — fires ONLY when a session dies while `context_used_pct` is
-  already at/above `resume_fresh_context_pct`, so resume is correctly refused and the task is requeued instead).
-  Confirmed the operator's read is right: a successful compact cycle genuinely never touches `task_dispatched`, so it
-  was never miscounted in the first place. Re-queried with the exact failure event (not the loose
-  compact-event-somewhere-in-the-gap heuristic from the first pass): only 7/142 redispatches (5%), down from the
-  original 43% figure, which was mostly coincidental co-occurrence on long-running busy slots. Todo 3 closed as a result
-  — context saturation is now a well-quantified minor contributor, not an open lead. (Note: this correction was lost
-  twice to this same session's shared-checkout contention — safe-doc-push.sh's quarantine-before-stage swallowing it,
-  then a second loss during an overlapping concurrent-commit race on this heavily shared checkout — before landing on
-  the third attempt. See `pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` for the standing tracked
-  pattern.)

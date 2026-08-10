@@ -944,10 +944,3 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   notable improvement over prior passes' consistent `checks`-slice ratchet failures. Zero `Timeout (>150s)` recurrence
   anywhere. Window NOT yet closed (day ~5 of ~14, closes ~2026-08-20); releasing via skip-current-task with
   `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per slot-32's fix.
-- **slot-9 2026-08-10 ~20:20Z (twenty-fifth pass, same task)**: spot-checked 4 representative repos
-  (unified-api-contracts, instruments-service, features-service, unified-trading-pm) latest 2 `quality-gates-v2` runs
-  each (runs ~19:22Z–20:14Z 2026-08-10). unified-api-contracts/instruments-service/features-service: 6/6
-  `conclusion=success`. unified-trading-pm: 1 success (`31423817156`), 1 failure (`31428081882`) — job-level check
-  confirms `QG slice (checks): failure`, `QG slice (tests): success` — known ratchet class, not pytest-timeout. Zero
-  pytest-timeout recurrence anywhere. Window NOT yet closed (day ~5 of ~14, closes ~2026-08-20); releasing via
-  skip-current-task with `reason_code: "GATED"`, `estimated_unblock_minutes: 180` per slot-32's fix.

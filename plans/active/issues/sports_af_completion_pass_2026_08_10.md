@@ -316,50 +316,19 @@ depends_on: []
           continues — later years will be denser. Run now ~4h old.
         - No code shipped — pure monitoring.
 
-      - **2026-08-10 (slot 28, data_engineering, ~20:42Z–~20:45Z)** — STANDINGS VM continued monitoring:
-        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
-          `2021-05-31` (earlier check) → `2021-06-01` (GCS tee, ~20:42Z). Monotonic, forward progress. Heartbeat alive
-          at ~20:43Z. No `exit_code=` yet. VM confirmed RUNNING.
-        - Stall watchdog reported progress resumed: `2021-05-30` → `2021-06-01` — no stall, normal progression through
-          2021 season-start dates. Pace continues at ~1-2 season-start-dates/min. Run now ~4.2h old.
-        - No code shipped — pure monitoring.
+## Deferred work after 2026-08-10 ~20:38Z
 
-      - **2026-08-10 (slot 28, data_engineering, ~20:50Z)** — Pre-compact check:
-        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
-          `2021-06-01` (~20:45Z) → `2021-06-07` (GCS tee, ~20:50Z). Monotonic, forward progress. No `exit_code=` yet.
-          Heartbeat alive. Queue unchanged.
-        - No code shipped — pre-compact ritual.
-
-      - **2026-08-10 (slot 28, data_engineering, ~20:51Z–~21:00Z)** — Post-compact + pre-compact sessions:
-        - VM progressed from `2021-06-07` (~20:50Z) → `2021-06-17` (multiple checks across compact+resume cycles) →
-          `2021-06-20` (~21:00Z). Monotonic, forward progress. VM RUNNING in `asia-northeast1-c`. No `exit_code=` yet.
-          Heartbeat alive.
-        - Pace remains ~1-2 season-start-dates/min, non-linear deceleration into denser 2022+ seasons as expected. Run
-          now ~4.5h old. No reliable ETA — STANDINGS is season-scoped, pace depends on league density per season.
-        - No code shipped — pure monitoring across multiple compact+resume cycles.
-        - `/pre-compact` executed — tree clean, `ahead=0`, nothing at risk.
-
-      - **2026-08-10 (slot 28, data_engineering, ~21:07Z)** — Pre-compact check:
-        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
-          `2021-06-17` (~20:51Z) → `2021-07-11` (~21:07Z). Monotonic, forward progress. ~396/2258 days done (~17.5%).
-          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
-        - Pace ~94 season-start-dates in ~16 min (~6 dates/min burst) — faster than prior trend. Still in 2021 seasons;
-          non-linear deceleration expected into denser 2022+ seasons.
-        - `/pre-compact` executed — tree clean, `ahead=0`, nothing at risk.
-
-## Deferred work after 2026-08-10 ~21:10Z
-
-| Item                                                             | State / why deferred                                 | Blocked on                         |
-| ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-07-11`, pace variable non-linear      | VM completion (real infra)         |
-| **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
-| **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
-| **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
-| **PLAYER_STATS backfill**                                        | Queued behind FIXTURE_LINEUPS (singleton lock)       | FIXTURE_LINEUPS VM exit_code=0     |
-| **Re-census to confirm ~0**                                      | Gated on all 5 per-entity backfills converging       | All per-entity VMs exit_code=0     |
-| **Unpark `sports_af_full_entity_completion-9798da269f23`**       | Gated on re-census ~0                                | Re-census confirms ~0 needed       |
-| **All-entity mode stall bug** (2 VMs — `*-154220`, `*-160958`)   | Reproducible: hangs after 1st date, per-entity works | Post-hoc diagnosis (non-blocking)  |
-| **VM rightsizing** (multiple VMs, all `e2-standard-8` on-demand) | Carries forward from prior sessions                  | After each VM >30min or terminates |
+| Item                                                             | State / why deferred                                  | Blocked on                         |
+| ---------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------- |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-05-30`, pace ~1.4 dates/min non-linear | VM completion (real infra)         |
+| **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)              | STANDINGS VM exit_code=0           |
+| **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                  | TEAMS VM exit_code=0               |
+| **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)          | FIXTURE_STATS VM exit_code=0       |
+| **PLAYER_STATS backfill**                                        | Queued behind FIXTURE_LINEUPS (singleton lock)        | FIXTURE_LINEUPS VM exit_code=0     |
+| **Re-census to confirm ~0**                                      | Gated on all 5 per-entity backfills converging        | All per-entity VMs exit_code=0     |
+| **Unpark `sports_af_full_entity_completion-9798da269f23`**       | Gated on re-census ~0                                 | Re-census confirms ~0 needed       |
+| **All-entity mode stall bug** (2 VMs — `*-154220`, `*-160958`)   | Reproducible: hangs after 1st date, per-entity works  | Post-hoc diagnosis (non-blocking)  |
+| **VM rightsizing** (multiple VMs, all `e2-standard-8` on-demand) | Carries forward from prior sessions                   | After each VM >30min or terminates |
 
 **Recommended NEXT item**: Wait for STANDINGS VM `af-backfill-20260810-162910` boot + first progress. When complete:
 launch TEAMS → FIXTURE_STATS → FIXTURE_LINEUPS → PLAYER_STATS serial.

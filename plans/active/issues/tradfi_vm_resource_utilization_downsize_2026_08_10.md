@@ -124,16 +124,3 @@ I/O-bound enough to tolerate it, but that's an inference, not a direct measureme
   completed-VM measurement the done_definition requires. **Todo remains gated**: needs a sample of COMPLETED VMs
   (post-downsize) for a valid throughput comparison. Releasing back to queue with `reason_code: GATED` per worker.md §
   4c.
-- **data_engineering (slot 20) 2026-08-10T20:45Z**: Re-measurement re-attempted. Downsize shipped
-  `deployment-service@01ea77a5` (13:36Z); post-downsize = OHLCV VMs launched ≥14:00Z. Of that set, exactly ONE has
-  completed: `tradfi-bf-cfe-ohlcv-1m-2020-20260810-193025` (e2-highmem-8 ✓, exit 0, 54 min wall). Throughput **3,678,568
-  rows / 54 min = 68.1k rows/min** (from run.log venue-row markers) — above, not below, the 46.9k anchor. CPU avg **11%
-  / max 50%** (52 `resource_samples`), mem avg 6.9% / max 14.1% → **brief-burst profile confirmed, no sustained
-  saturation** (done_definition leg (b) holds on the completed sample + an in-flight CFE VM `-2024` at ~70 min: CPU avg
-  9.5% / max 13.7%). **BUT the anchor's own workload has ZERO completed post-downsize VMs**: every CME/ICE/ NASDAQ/NYSE
-  heavy-root VM launched in the 15:00/18:00Z waves is SPOT-preempted mid-run (no `EXIT_STATUS` in any of their vm-logs;
-  watchdog traces stop abruptly; wave-launcher last tick 18:00Z). The completed CFE VM is a light single-instrument VX
-  futures-chain workload — not comparable to the CME GC/ES/NQ/CL heavy-root rate the 46.9k baseline was measured on, so
-  the throughput leg of the done_definition is still UNVERIFIED. **Todo remains gated**: needs a completed post-downsize
-  CME-family heavy-root VM (roots currently preempting + relaunching on SPOT) for a valid throughput comparison.
-  Releasing back to queue with `reason_code: GATED` per worker.md § 4c.
