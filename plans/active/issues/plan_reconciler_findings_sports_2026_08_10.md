@@ -96,7 +96,40 @@ depends_on: []
 
 ## Filed
 
-(none yet)
+1. **`regenerate_active_plan_index.py` frontmatter parser silently drops docs with a commented multi-line `asset_group:`
+   array** — root-caused and reproduced live (not inferred): `parse_frontmatter()`'s block-scalar continuation-line
+   consumption (`scripts/plans/regenerate_active_plan_index.py:80-88`) only skips a continuation line that is LITERALLY
+   `[` or `]`; a line like `  [sports] # corrected 2026-07-25 (... ), a genuine mistag: ...` (a legitimate, encouraged
+   corpus style — the `/ag-closeout-audit` retag convention itself uses inline `#` comments to explain a correction)
+   gets appended verbatim, comment text included, into the raw `asset_group` value. Then `parse_asset_groups()`'s naive
+   `raw.strip("[]"); raw.split(",")` shatters that comment prose on its OWN internal commas into 5 garbage tokens
+   (verified:
+   `['sports] # corrected 2026-07-25 (... fix) -- was [cross-cutting]', 'a genuine mistag: # 100% sports-specific (FixturesBrowser.tsx', 'fixtures_browser.py', 'sports fixture catalogue)', 'no cross-AG mechanism']`),
+   none of which equal `sports` — so the doc silently lands in neither its correct domain section NOR "uncategorized"
+   (the raw value wasn't empty), it just vanishes. Confirmed live via
+   `python3 -c "... parse_frontmatter(...); parse_asset_groups(...)"` against
+   `sports_fixtures_browser_single_catalogue_source_2026_07_24.md`. This is WHY re-running the regenerator this run did
+   NOT add either of the 2 sports docs flagged by the cefi/tradfi sibling runs' `INDEX.md` drift check (see Scope above)
+   — it's not a staleness problem, it's a parser bug, so a plain regen (which I ran, verified via a post-regen `grep`
+   returning 0 hits for both docs, then reverted since it doesn't fix the sports gap and touches all 10 domains) cannot
+   fix it. **Not sports-isolated**: the same `raw.strip("[]"); raw.split(",")` pattern (grepped) also appears in
+   `check_priority_tier_policy.py` and `count_operator_blocking_todos.py` — unverified whether those two share the exact
+   same continuation-comment bug, but worth auditing together. **A correct pattern already exists in this same corpus**
+   to fix from: `check_na_corpus_ratchet.py` and `scripts/docs/docspec.py` both use a real `import yaml` parser instead
+   of the hand-rolled one, which is presumably why the NA-corpus-ratchet check did NOT mis-parse this doc's
+   `asset_group`. Outside `plans/**` (my role's hard limit), so filed rather than fixed. Suggested fix: either switch
+   `regenerate_active_plan_index.py` (and the other 2 scripts, if confirmed affected) to `docspec.py`'s
+   `parse_frontmatter`, or apply the same `re.sub(r"\s+#.*$", "", val).strip()` trailing-comment strip already used for
+   single-line scalars (line ~89) to each continuation line before appending it in the block-scalar branch.
+   - [ ] [SCRIPT] P2. Fix `regenerate_active_plan_index.py`'s frontmatter parser (and audit
+         `check_priority_tier_policy.py` + `count_operator_blocking_todos.py` for the same bug) so a multi-line
+         `asset_group:` array with a trailing inline `# comment` on its continuation line parses correctly — evidence +
+         repro + suggested fix above. Definition of done: the 4 known-affected docs
+         (`sports_fixtures_browser_single_catalogue_source_2026_07_24.md`,
+         `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`,
+         `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md`,
+         `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`) all appear in a regenerated `INDEX.md` under
+         every asset_group they declare, and a unit test covers the commented-continuation-line case.
 
 ## Archive candidates (operator review)
 
@@ -139,3 +172,10 @@ depends_on: []
   INDEX.md; it's a normative ref, in scope for every shard).
 - 2026-08-10: Sports corpus inventory built (101 docs, size/mtime/status/parent_epic), partitioned into 8 size-balanced
   epic-cluster hunter batches (~400-500KB / 12-13 docs each). Proceeding to STEP 3 hunter fan-out.
+- 2026-08-10: STEP 3 launched — 8 parallel read-only epic-cluster hunters (sonnet, one per batch) fanned out over all
+  101 docs. While awaiting results, investigated the 2 sports INDEX.md-drift entries directly (mechanical, no hunter
+  needed): root-caused + reproduced a genuine parser bug in `regenerate_active_plan_index.py` (see `## Filed` #1) — ran
+  the regenerator, confirmed via live repro it does NOT add either flagged sports doc (comment-swallowing bug in the
+  hand-rolled frontmatter parser, not staleness), then reverted the partial 10-domain-wide regen from the working tree
+  rather than commit an out-of-sports-scope diff that doesn't even fix the thing it was run for. Filed as a
+  `[SCRIPT] P2` todo (outside `plans/**`, outside this role's write scope) with full repro + suggested fix.
