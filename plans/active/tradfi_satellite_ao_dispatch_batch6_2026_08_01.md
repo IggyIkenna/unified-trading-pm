@@ -885,3 +885,26 @@ switch to standard (non-SPOT) for one launch to guarantee completion.
 
 - **NEXT ACTION**: Monitor for data output or preemption. If preempted again within <30 min: try standard provisioning.
   Once VMs complete: manifest query → coverage check → plan-flip.
+
+### 2026-08-10T11:31Z — 2nd SPOT preemption in 2 attempts, switched to standard (non-SPOT)
+
+**Status: IN FLIGHT — todo #2 still `[ ]`.** Both 2nd-attempt VMs dead by T+6 min:
+
+- `tradfi-bf-es-opt-light-2025-20260810-112526` — **self-deleted** at 04:30:42 PDT (T+5m14s, `operation-1786361442684`,
+  `delete` type). Pipeline launched at T+2m50s (`mtds_chunk_loop.sh` PID 4884, python PID 4898, startup exit 0), ran
+  only ~2.5 min before self-delete — serial console inaccessible post-deletion, root cause unconfirmed (possible
+  pipeline error, or VM_SHUTDOWN_ON_COMPLETION on a fast failure).
+- `tradfi-bf-es-opt-light-2026-20260810-112540` — **SPOT-preempted** at 04:30:45 PDT (T+5m03s,
+  `systemevent-1786361445085`, `compute.instances.preempted`). 0 rows written.
+
+Two preemptions in two attempts within <30 min — qualifies as "repeatedly" per the plan's own escalation criterion.
+Switched to **standard (non-SPOT)** provisioning via `--on-demand`:
+
+- `tradfi-bf-es-opt-light-2025-20260810-113247` — 2025, STANDARD, RUNNING (no PREEMPTIBLE flag)
+- `tradfi-bf-es-opt-light-2026-20260810-113302` — 2026, STANDARD, RUNNING (no PREEMPTIBLE flag)
+
+Standard VMs are immune to preemption — they'll run until pipeline completion (success or error). Monitor `b5t41nwqo`
+watching for data output or completion. Higher cost but guarantees the backfill finishes.
+
+- **NEXT ACTION**: These VMs won't be preempted — wait for data output, then completion. Once both self-delete on
+  completion: manifest query → coverage check → plan-flip.
