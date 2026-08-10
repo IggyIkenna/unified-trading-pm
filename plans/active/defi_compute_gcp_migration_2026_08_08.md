@@ -516,3 +516,20 @@ them).
     - **2026-08-10 (slot-17, same session — todo 10)**: Deleted AWS `uts-strategy-service-prod` ECS service
       (`delete-service --force`, status `DRAINING`), deregistered task definition `:1` (→ `INACTIVE`). Was already at
       idle (desired=0, running=0 since 2026-07-17).
+  - **2026-08-10 (slot-9, AO worker — todo 13, observation-window gate, NOT completed)**: Todo 13 dispatched before
+    the plan's own "minimum a few days" observation gate is met — verified live, skipped with `reason_code: GATED`
+    (fleet cooldown armed; not a `- [x]` completion). Live state as of ~11:00 UTC: all 3 GCP Cloud Run services
+    `Ready` with anonymous `/health` + `/readiness` → 200. AWS `uts-defi-prod` cluster: `ACTIVE`, 2 services
+    remaining (`uts-features-service-prod`, `uts-execution-service-prod`), both `desiredCount=0`/`runningCount=0`
+    (`uts-strategy-service-prod` already deleted by todo 10); cluster + services + task-definition families NOT yet
+    deleted — correct, the gate hasn't elapsed. Observation windows so far: features-service 2026-08-08 12:44Z →
+    ~1.9 days; execution-service + strategy-service 2026-08-10 ~09:49Z → hours. Earliest deletion consistent with
+    "minimum a few days" on all 3 ≈ 2026-08-13/14. **Inline finding + fix (features-service IAM regression)**: of the
+    3 services, only features-service had NO `allUsers:roles/run.invoker` binding (anonymous `/health` → 403, token →
+    401) — yet the plan's own 08-08 record shows anonymous 200s served through 14:33Z, so the binding present at
+    deploy was lost between 08-08 and 08-10 (Cloud audit log shows only project-level `SetIamPolicy` events; nearest
+    candidates: operator IAM session 08-09 ~14:06Z, `unified-trading-sa` 08-10 09:58Z — exact actor/mechanism not
+    auditable at service level from this identity). Restored 08-10:
+    `gcloud run services add-iam-policy-binding features-service --member=allUsers --role=roles/run.invoker`
+    (asia-northeast1, central-element-323112) → re-verified anonymous `/health` 200 + `/readiness` 200, matching
+    execution-service/strategy-service posture. No repo code changed. Next: todo 13 is actionable from ~08-13/14.
