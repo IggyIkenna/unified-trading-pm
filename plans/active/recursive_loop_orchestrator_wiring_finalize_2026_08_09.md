@@ -64,7 +64,7 @@ context_scope:
       described but never actually written as a checkbox. Repo: unified-trading-pm. Done-when: the follow-up either
       doesn't apply (a poller was found and wired) or exists as a real tracked `- [ ]` todo. — unified-trading-pm.
       Independently re-verified 2026-08-09 (slot 29, review): the parent plan's todo 6 outcome is
-      `(b) no suitable     poller exists` (confirmed via the parent plan's own Progress Log + Todos section —
+      `(b) no suitable poller exists` (confirmed via the parent plan's own Progress Log + Todos section —
       `HealthFactorMonitor` has zero production callers, no Cloud-Scheduler endpoint exists); the required follow-up
       `[DESIGN]` todo IS a real trackable `- [ ]` checkbox in this same file (todo 4 below, "Decide + scope the RIGHT
       mechanism..."), not prose-only — confirmed via direct grep of the live file content, not a trust of the prior
@@ -94,18 +94,18 @@ context_scope:
       plan) is filed against that ruling.
 
       **RULED 2026-08-09 (main, via BLK-b0af53e2, slot 4)**: option (1) — clone the `HealthFactorMonitor` pattern into a
-                                                                  new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
-                                                                  Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
-                                                                  (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
-                                                                  perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
-                                                                  (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
-                                                                  rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
-                                                                  service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
-                                                                  code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
-                                                                  opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
-                                                                  docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
-                                                                  would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
-                                                                  requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
+          new in-process asyncio poll loop in execution-service, wired at `api/app.py` startup, one instance per open
+          Family-2 position, 5-min interval. Rationale: reuses a proven, already-shipped primitive in the SAME service
+          (lowest implementation risk, no new operational surface to build/debug); keeps `PerpHedgeSizer` + on-chain/
+          perp-venue reads colocated in execution-service, matching the T4 no-service-to-service-dependency tier-import rule
+          (`/codex/04-architecture/tier-and-import-architecture.md`) rather than introducing new coupling. Option (2)
+          rejected — needs new Cloud Scheduler infra plus an admin HTTP auth surface not yet proven for this shape in this
+          service, disproportionate blast radius for what an in-process timer already satisfies. Option (3) rejected — per
+          code evidence gathered for the blocked-question (`recursive_staked.py`'s `_on_tick_family2_basis_perp_inv()` only
+          opens the Family-2 position ONCE, guarded by `if self.current_position_units != 0: return []`, and its own
+          docstring already frames live rebalancing as "a separate, not-yet-wired poll-cycle concern" — reusing on_tick
+          would require reworking that one-shot-open guard and conflates market-tick-driven cadence with a fixed 5-min poll
+          requirement). Properly-scoped implementation todo filed as todo 5 below, same-turn.
 
 - [x] ✅ [BACKEND] P2. Implement the `HealthFactorMonitor`-pattern asyncio poller CLASS for `PerpHedgeSizer` (Family-2
       `CARRY_BASIS_PERP_INV`), per todo 4's 2026-08-09 ruling (option A). Build a new `PerpHedgeMonitor` class in
