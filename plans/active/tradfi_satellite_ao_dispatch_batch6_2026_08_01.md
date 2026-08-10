@@ -790,3 +790,15 @@ Re-armed watcher: PID **1434027** (isolated, PGID=SID=PID, setsid nohup). Poll 1
 - **NEXT ACTION (fresh session)**: check todo #2 checkbox. If `[ ]`: check `kill -0 1434027`; likely dead, re-arm from
   `deployment-service/scripts/vm/es-opt-backfill-watcher.sh`. Fleet is genuinely alive and draining slowly — the lock
   WILL clear eventually, just not imminently.
+
+### 2026-08-10T~10:46Z — slot 21, session-end pre-compact
+
+Session spanned ~65 min, 8 watcher re-arms (all died within ~5 min — same pattern), fleet drained 8→6→5 then stable at 5
+for 45+ min. Staleness-checked 3 oldest VMs mid-session: all confirmed genuinely alive (CPU 100%, heartbeats fresh).
+FRED full (28h runtime, ~28% through) is the bottleneck — lock won't clear for hours. 2 Progress Log entries pushed
+(PM@6237221bf4, PM@7f2a708b1e). Current watcher: PID 3828905 (armed ~10:45Z, will die per pattern). 8 cold scratchpads
+in /tmp (all regenerable — watcher.sh copies + heredoc query extracts + logs). Task remains IN FLIGHT.
+
+- **NEXT ACTION**: `kill -0 3828905` — dead (expected). Re-arm from committed watcher script. Fleet likely still 5 (FRED
+  bottleneck). When the lock eventually clears: watcher launches ES_OPT 2025+2026, manifest-verifies, plan-flips,
+  commits, pushes, calls /done.
