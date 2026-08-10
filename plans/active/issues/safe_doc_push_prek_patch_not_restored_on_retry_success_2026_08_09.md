@@ -130,16 +130,16 @@ mitigations, cheapest first:
       → detected, exit 1 from the check function; no patch → clean exit 0).
 
       **Reconciled against todo-1's note that `locked_git_commit()`'s `_prek_race_snapshot`/`_prek_race_check`
-                                  (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
-                                  retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
-                                  before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
-                                  and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
-                                  `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
-                                  behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
-                                  `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
-                                  only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
-                                  both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
-                                  redundant, so both mechanisms are now kept.
+                                      (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
+                                      retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
+                                      before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
+                                      and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
+                                      `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
+                                      behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
+                                      `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
+                                      only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
+                                      both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
+                                      redundant, so both mechanisms are now kept.
 
 - [x] ✅ [DEVOPS] P2. **RE-SCOPED (2026-08-10, per todo 1's verdict — reproduction did NOT confirm a genuine prek
       defect):** do not file upstream against prek. Instead, document in `scripts/dev/safe-doc-push.sh`'s own header
@@ -237,3 +237,15 @@ mitigations, cheapest first:
   (whether that archival is even still current) belongs to whichever session owns it. Left the patch file in place for
   that owner to recover; noting here per this doc's own established practice of logging live recurrences of this failure
   signature.
+- **2026-08-10 (slot 18, tradfi data_engineering, `tradfi_databento_billing_unblock_vix_yahoo_floor-79934626265b`)**:
+  the same safety net fired live again on this slot's `safe-doc-push.sh` runs (both exited 9 after successful pushes
+  `9e2041f7ba` + `07acc676ce`). Orphaned patches `1786367557125-3897200.patch`, `1786367570016-3908325.patch`,
+  `1786367737168-4049490.patch` (all byte-identical, 2554B) diff an UNRELATED file this session never touched —
+  `plans/active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md` (a `[REVIEW] P3` todo-5 flip to `[x] ✅`
+  citing `unified-trading-pm@e5697ac5c`, still carrying a literal `@<SHA>` placeholder — an incomplete draft). Working
+  tree clean before/after both runs; own commits verified on origin. Identical patches kept reappearing between my runs
+  (e.g. a 13:14 patch between my 13:12 and 13:15 pushes) — a concurrent session sharing this host's
+  `~/.cache/prek/patches/` cache dir is repeatedly stashing the same infra-file edit. The infra file's own last mtime
+  was 12:31 (pre-run), so it is a dead session's leftover WIP, not a live in-flight change. Did NOT apply the patch or
+  touch the infra file — wrong task/repo scope (this session is tradfi, not infra batch9). Left the patch file(s) in
+  place for the owning session to recover; noting per this doc's established practice.
