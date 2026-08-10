@@ -4029,6 +4029,43 @@ else
     log_success "STEP 5.106: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# ── STEP 5.107: every pytest.xfail / unconditional @pytest.mark.skip must cite a tracked slug ─
+#
+# Standing rule (operator finding 2026-08-08, fleet-wide "tests weakened rather
+# than fixed" sweep): an xfail with a good reason and no remediation todo is
+# indistinguishable, six months later, from coverage that was never written.
+# This AST check requires every ``pytest.xfail(...)`` / ``@pytest.mark.xfail`` /
+# unconditional ``@pytest.mark.skip`` reason to cite a tracked plan/issue slug
+# (a plans/… / issues/… / codex/… path, a dated 20YY_MM_DD stamp, or a ``.md``
+# doc reference). ``@pytest.mark.skipif`` (has a condition — env-gated) and
+# reason-bearing ``pytest.skip("…")`` calls (environmental gating) are exempt by
+# design — boundary documented in the checker docstring.
+# SHRINKING ratchet: xfail_skip_tracked_baseline.yaml (43 entries at bootstrap —
+# the pre-existing untracked markers; each must gain a slug or be fixed, never
+# ADD a new entry). Runs against THIS repo's tests/ only.
+_XST_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_xfail_skip_tracked.py"
+if [ -f "$_XST_CHECKER" ]; then
+    _XST_REPO=$(basename "$PROJECT_ROOT")
+    _XST_WS="$REPO_ROOT"
+    _XST_LOG="${TMPDIR:-/tmp}/xfail_skip_tracked_qg.log.$$"
+    if $PYTHON_CMD "$_XST_CHECKER" \
+            --workspace-root "$_XST_WS" --scope "$_XST_REPO" >"$_XST_LOG" 2>&1; then
+        if grep -q '^\[WARN\]' "$_XST_LOG" 2>/dev/null; then
+            log_warn "STEP 5.107: $(grep -c '^\[WARN\]' "$_XST_LOG") baselined untracked xfail/skip marker(s) (pending_removal — must cite a tracked slug or be fixed); 0 new"
+        else
+            log_success "STEP 5.107: no untracked xfail/skip markers (every xfail/skip cites a tracked plan/issue slug)"
+        fi
+    else
+        log_fail "STEP 5.107: NEW untracked xfail/skip marker — every pytest.xfail / unconditional @pytest.mark.skip reason must cite a tracked plan/issue slug (operator finding 2026-08-08; xfail_skip_tracked_baseline.yaml is a SHRINKING ratchet, never grow it):"
+        cat "$_XST_LOG"
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_xfail_skip_tracked.py --workspace-root $_XST_WS --scope $_XST_REPO"
+        V=$(( V + 1 ))
+    fi
+    rm -f "$_XST_LOG" 2>/dev/null
+else
+    log_success "STEP 5.107: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
 #
 # Every ``record_empty(reason=...)`` / ``record_expected_empty(reason=...)`` call

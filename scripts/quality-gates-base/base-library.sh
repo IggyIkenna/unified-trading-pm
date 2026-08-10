@@ -1481,6 +1481,29 @@ if [ -f "$_ESF_CHECKER" ]; then
     fi
 fi
 
+# ── STEP 5.102: every pytest.xfail / unconditional @pytest.mark.skip must cite a tracked slug ─
+# Library-repo parity with base-service.sh STEP 5.107. Standing rule (operator
+# finding 2026-08-08, "tests weakened rather than fixed" sweep): an xfail with a
+# good reason and no remediation todo is indistinguishable, six months later,
+# from coverage that was never written. SHRINKING ratchet:
+# xfail_skip_tracked_baseline.yaml (43 entries at bootstrap).
+_XST_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_xfail_skip_tracked.py"
+if [ -f "$_XST_CHECKER" ]; then
+    _XST_REPO=$(basename "$PROJECT_ROOT")
+    if "${PYTHON_CMD:-python3}" "$_XST_CHECKER" \
+            --workspace-root "$REPO_ROOT" --scope "$_XST_REPO" >${TMPDIR:-/tmp}/xfail_skip_tracked_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' ${TMPDIR:-/tmp}/xfail_skip_tracked_qg.log 2>/dev/null; then
+            log_warn "STEP 5.102: $(grep -c '^\[WARN\]' ${TMPDIR:-/tmp}/xfail_skip_tracked_qg.log) baselined untracked xfail/skip marker(s) (pending_removal — must cite a tracked slug or be fixed); 0 new"
+        else
+            log_ok "STEP 5.102: No NEW untracked xfail/skip markers (every xfail/skip cites a tracked plan/issue slug)"
+        fi
+    else
+        log_fail "STEP 5.102: NEW untracked xfail/skip marker — every pytest.xfail / unconditional @pytest.mark.skip reason must cite a tracked plan/issue slug (xfail_skip_tracked_baseline.yaml is a SHRINKING ratchet, never grow it):"
+        cat ${TMPDIR:-/tmp}/xfail_skip_tracked_qg.log
+        exit 1
+    fi
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
