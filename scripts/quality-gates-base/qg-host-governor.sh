@@ -95,15 +95,6 @@
 # Mac Studio was capped at 2 instead of 6. `sysctl -n hw.physicalcpu` is the macOS
 # equivalent of `lscpu -p=core` (TRUE physical cores, not logical — `hw.ncpu` and
 # `hw.logicalcpu` would over-count on SMT Intel Macs).
-#
-# PREMISE REFINED 2026-08-10 (measured, same day): the paragraph above says lscpu and nproc
-# are BOTH absent on macOS. lscpu is; `nproc` is NOT — it ships with GNU coreutils, and on
-# the operator Mac this session it returned 10. So the PRE-fix behaviour varied by host
-# setup rather than being uniformly 2: a coreutils-equipped Mac resolved floor(nproc/4)
-# (logical), a bare one fell through to the hardcoded 4. That makes the sysctl fix MORE
-# worthwhile, not less — it removes a silent dependency on whether coreutils happens to be
-# installed, and hw.physicalcpu is right either way. Measured caps today: operator Mac → 2,
-# agent-orchestrator planning VM (lscpu, 16 physical) → 4.
 _qg_governor_default_k() {
     local cores
     # physical cores: lscpu (Linux) → sysctl (macOS) → logical nproc → 4
