@@ -191,9 +191,20 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
       candidates' evidence), retag with the same evidence-cited convention, and re-run `check_ag_closeout_linkage.py` +
       `check_frontmatter_schema.py` after. Done when: `/ag-closeout-audit ui`'s own Phase 0.3 discovery count stops
       changing between two consecutive runs a week apart.
-- [ ] [INFRA] P2. First `/ag-closeout-audit ui` + `/plan-reconcile ui` runs, scoped to this tranche — establishes the
+- [x] ✅ [INFRA] P2. First `/ag-closeout-audit ui` + `/plan-reconcile ui` runs, scoped to this tranche — establishes the
       real orphan-projection baseline (this tracker's own todos above are a manual first pass, not a substitute for the
-      skill's per-doc Phase 1 judgment) and drafts `ui_satellite_ao_dispatch_batch1_<date>.md` if warranted.
+      skill's per-doc Phase 1 judgment) and drafts `ui_satellite_ao_dispatch_batch1_<date>.md` if warranted. — **DONE,
+      verified by plan_reconciler 2026-08-10 (dispatch `agt-ec1688`).** `/ag-closeout-audit ui` has now run 4×
+      (2026-08-06/07/08/09, all cited above) and drafted batch1. `/plan-reconcile ui` has now run 2× — a first pass
+      2026-08-07 (dispatch `agt-a40e5f`, `plans/active/issues/plan_reconciler_findings_2026_08_07.md`) that applied zero
+      fixes (grace/lock blocked everything that run) but DID establish the coverage baseline this todo asks for, and
+      this 2026-08-10 pass (`plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md`), which applied ~20 fixes
+      across 10 files. **Correction to several prior Progress Log entries below** (2026-08-07 through 08-09, from
+      `ag_closeout_auditor`/`na-eligibility-audit`): those entries state "`/plan-reconcile ui` has still never run" /
+      "genuinely has not run yet" — this was factually incorrect from 2026-08-07 onward, contradicted by that same day's
+      own `plan_reconciler_findings_2026_08_07.md` (dispatch `agt-a40e5f`, with a full coverage report). Not editing
+      those past entries (historical record of what was believed at the time); recording the correction here instead,
+      per this workspace's append-don't-replace convention for shared docs.
 
 ## Progress Log
 
@@ -327,3 +338,14 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   still unchecked: `/ag-closeout-audit ui` has now run 4 times (08-06/07/08/09) but `/plan-reconcile ui` has still never
   run on this tranche. No reclassification, no citation fix, no archival warranted.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **plan_reconciler 2026-08-10 (ui tranche, dispatch `agt-ec1688`)**: second `/plan-reconcile ui` run (first was
+  2026-08-07, `agt-a40e5f` — zero fixes applied that run due to grace/lock, but it DID read + baseline the tranche,
+  contradicting the "still never run" framing several entries above repeated through 2026-08-09; not editing those past
+  entries, see Todo 6's own correction note above). This run: 5-hunter fan-out + adversarial self-verification, ~20
+  fixes applied across 10 files (missed-flips, stale frontmatter/body contradictions, prosewrap-padding hygiene, 6 codex
+  dangling-refs, 2 missing sequential gates, stale batch-naming). Flipped Todo 6 above. New corpus-wide finding:
+  `locked_by: live-defi-rollout` (incl. on THIS epic's own child `deployment_ui_smoke_failures` doc) traced to a
+  hardcoded placeholder script default, not a real lock — filed
+  `issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md`, asked via `/blocked`. 4 items routed to
+  the operator (delete-autonomy contradiction, the locked_by ruling, 2 codex-drift items needing new prose / cross-doc
+  scope). Full write-up: `issues/plan_reconciler_findings_ui_2026_08_10.md`.
