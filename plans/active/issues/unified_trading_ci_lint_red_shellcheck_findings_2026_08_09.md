@@ -34,6 +34,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
+archive_exempt: true
 source: ["discovered 2026-08-09 while shipping uac_value_only_config_change_breaks_utl_untested_2026_07_20.md item [A]"]
 ---
 
@@ -89,11 +90,11 @@ consolidation, missing quotes) across the three named files so `lint.yml` goes g
       live count 2026-08-09: 14 findings, not the 1 originally logged** — this todo's original count was
       stale/undercounted, same class of drift as the semver-agent.yml todo above) so the `lint` actionlint job goes
       green. — unified-trading-ci@14be063 (see Progress Log for detail).
-- [ ] [DEVOPS] P3. Fix shellcheck findings in `unified-trading-ci/.github/workflows/major-bump-issue-handler.yml` (3
+- [x] ✅ [DEVOPS] P3. Fix shellcheck findings in `unified-trading-ci/.github/workflows/major-bump-issue-handler.yml` (3
       findings, live count 2026-08-09) — a 4th file with findings not covered by any of this doc's original 3 todos,
       discovered while verifying the semver-agent.yml fix against a live `lint` run
       (`gh run view --repo IggyIkenna/unified-trading-ci --log-failed`, run 31339579198). Same fix class as the other 3
-      todos, so the `lint` actionlint job goes green.
+      todos, so the `lint` actionlint job goes green. — unified-trading-ci@369a96d (see Progress Log for detail).
 
 ## Progress Log
 
@@ -125,3 +126,16 @@ consolidation, missing quotes) across the three named files so `lint.yml` goes g
   major-bump-issue-handler.yml (todo 4, out of scope); confirmed live in CI too (`gh run view 31346582234 --log-failed`
   on `main` HEAD `14be063` — zero `request-major-bump.yml` mentions in the failed-check log, only
   `major-bump-issue-handler.yml`). Todo 4 remains open — different file, out of this task's own dispatched scope.
+- **2026-08-10 (cicd worker, slot 4)**: Closed todo 4 (major-bump-issue-handler.yml) — unified-trading-ci@369a96d,
+  direct push to `main` ONLY (not `live-defi-rollout`) — this repo's README § "Branch model" (added during the
+  2026-08-07 divergence reconciliation, `unified_trading_ci_no_promotion_tiers_divergence_2026_08_07.md`) explicitly
+  states `live-defi-rollout` "is not a live target" and "nothing should push to it"; the todo-2/todo-3 dual-push pattern
+  in the Progress Log above predates that guidance and is the exact "pusher's habit" the README asks future sessions to
+  stop, not a pattern to keep following. Confirmed the two branches were already in sync (0 commits apart) before this
+  push, so no divergence was introduced either way. Live count confirmed 3, matching the doc: 1× SC2129 (Parse issue
+  metadata step, 4 consecutive `GITHUB_OUTPUT` redirects grouped into `{ ...; } >> "$GITHUB_OUTPUT"`), 2× SC2015 (Send
+  Slack notification + notify-failure Slack alert steps, `curl && echo ... || true` converted to real `if`/`then`/`fi`,
+  same pattern as the other 3 files' fixes). Verified: actionlint v1.7.12 local run 0 findings in this file after (was
+  3), whole-repo local run 0 findings total (down from 3), YAML re-parses cleanly, confirmed live in CI
+  (`gh run view 31359123014` on `main` HEAD `369a96d` — `lint` job **success**, first green run in this doc's history).
+  All 4 todos now closed — this issue doc is archival-eligible (unlocked, no remaining open todos).
