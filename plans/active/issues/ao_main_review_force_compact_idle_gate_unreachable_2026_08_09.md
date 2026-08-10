@@ -44,6 +44,7 @@ source: >-
   Isolated 2026-08-09 (interactive session, slot 4) while diagnosing orch-agent-main pinned at 99% context. The
   measurement bug that masked this is fixed; this is the remaining structural gap underneath it.
 depends_on: []
+archive_exempt: true # flip-then-mv bridge (dropped in the immediately-following archival commit) — see /codex/12-agent-workflow/plan-completion-and-archival-discipline.md
 context_scope:
   [
     agent-orchestrator/server/context_lifecycle.py,
@@ -113,11 +114,16 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
       gate on that decision — it now serves as the CONFIRMING run over a full window. Report it as confirmation that the
       cooperative path keeps working, not as new input to a pending ruling. — measured 2026-08-10 (slot 9); see Progress
       Log for the counts.
-- [ ] [BACKEND] P2. Machine-guard the ruling so it cannot be silently reversed: add a test asserting main and review
+- [x] ✅ [BACKEND] P2. Machine-guard the ruling so it cannot be silently reversed: add a test asserting main and review
       route through the idle-gated `_maybe_force_compact` and never the worker unconditional-force path (the mirror of
       `_forbid_idle_checks`, which already guards the worker side). A doc-only ruling is not a gate — a future agent
       "fixing" the gate would otherwise ship the reversal green. Done-when: the test fails if a main/review target
-      reaches `_force_compact_now` without the idle verdict.
+      reaches `_force_compact_now` without the idle verdict. — agent-orchestrator@9f8845e (already shipped by slot 20,
+      checkbox unflipped — found + flipped by slot 23, 2026-08-10): parametrized
+      `test_main_and_review_never_reach_force_compact_without_the_idle_verdict` (main + review) proves both halves —
+      structurally, `_forbid_worker_force_path` raises if either role ever touches `_tick_worker`; behaviorally, a busy
+      pane blocks the force indefinitely and only 3 consecutive idle ticks let it through. Re-ran both parametrized
+      cases locally: 2 passed.
 - [x] ✅ [BACKEND] P1. Make main's terminal wedge-recovery reachable when no force ever fired.
       `_rearm_if_force_ineffective` returns early on `state.forced_at is None`, so the kill + `claude_session_id`
       clear + keeper respawn path cannot arm for a main that the idle gate never let through. Add a saturation-based
@@ -237,3 +243,10 @@ fix the two unambiguous structural defects, leaving the policy reversal explicit
   - **Consistent with the operator's 3.7h sample** (todo 5 above: "idle gate blocked only once" for main, review
     reaching zero forces) — same shape holds over the fuller window, nothing new surfaces. Reported as the CONFIRMING
     run per the 2026-08-10 retarget, not as new input to a pending decision.
+
+- 2026-08-10 (slot 23) — Dispatched todo 3 (the machine-guard test) and found it was already shipped at
+  `agent-orchestrator@9f8845e` (slot 20, 2026-08-10T01:59:37Z) — code landed on `live-defi-rollout` but the plan
+  checkbox was never flipped (a missed Half-2 of the commit+push+flip rule, not a double-dispatch collision — only one
+  implementation exists). Verified the shipped test still passes on a fresh pull
+  (`test_main_and_review_never_reach_force_compact_without_the_idle_verdict[main]` and `[review]`, 2 passed) before
+  flipping the checkbox against the existing commit rather than reimplementing.
