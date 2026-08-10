@@ -110,7 +110,14 @@ aws ssm get-command-invocation --command-id "${CMD_ID}" \
     --instance-id "${INSTANCE_ID}" --region "${REGION}" \
     --query 'StandardOutputContent' --output text | tr -d '\r' | head -1 | tr -d '\n' > "${TMPTOK}"
 
-if [[ ! -s "${TMPTOK}" || "$(tr -cd '.' < "${TMPTOK}" | wc -c)" != "2" ]]; then
+# TRAP 3 (2026-08-10): `wc -c` pads its output with leading spaces on BSD/macOS
+# ("       2"), so this comparison failed against the literal "2" for a PERFECTLY VALID
+# token and the script rejected every mint attempted on an operator laptop -- the exact
+# host class it exists for (measured: the mint itself returned a well-formed JWT every
+# time; only this check was wrong, so the third occurrence of the token-expiry outage
+# still needed a hand-rolled mint). `tr -d ' '` makes it portable; GNU wc emits no
+# padding, so this is a no-op on the VM.
+if [[ ! -s "${TMPTOK}" || "$(tr -cd '.' < "${TMPTOK}" | wc -c | tr -d ' ')" != "2" ]]; then
     echo "minted output is not a JWT (empty or wrong segment count) -- ${OUT} untouched" >&2
     exit 1
 fi
