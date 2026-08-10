@@ -391,13 +391,14 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       re-attempt. Source: `sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`. Done when: a written
       per-cell verdict is recorded for all 61 original rows, with zero remaining `rateLimit` `attempted_failed` rows
       attributable to that window.
-- [ ] [PROCESS] P2. Codify the lesson "before launching a `--force` whole-corpus refetch to fix ONE column, check
+- [x] ✅ [PROCESS] P2. Codify the lesson "before launching a `--force` whole-corpus refetch to fix ONE column, check
       whether a surgical column-filler script already exists" into a codex SSOT (e.g.
       `/codex/05-infrastructure/vm-launcher-runbook.md`), citing the ~1,800x-call-volume-reduction precedent
       (`backfill_sports_fixture_round_2026_07_17.py`'s ~600-700 total calls vs the full `--force --entity FIXTURES`
       backfill's ~1,260,000 calls). Source: `sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`. Done
       when: the chosen codex SSOT carries this lesson as a named rule/heuristic with the cited precedent, and a grep for
-      the lesson text returns a hit.
+      the lesson text returns a hit. — unified-trading-pm@aa4124c7a0: lesson codified as a HARD RULE in
+      `/codex/05-infrastructure/vm-launcher-runbook.md` (grep "surgical column-filler" → hit; ~1,800x precedent cited).
 - [ ] [CODE] P2. Extend `emit_empty_gaps_for_entity` in
       `instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py` so its expected-league
       denominator for the 4 per-fixture enrichment entities (FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS)
