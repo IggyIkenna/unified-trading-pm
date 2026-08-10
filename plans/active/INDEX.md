@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 310 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 309 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -153,7 +153,7 @@ by hand._
   via depends_on + gate_on_depends: true until that doc's 2 remaining todos (P0 vendor-catalog request gate; P1
   `--apply`…
 
-### defi (43)
+### defi (42)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -285,10 +285,6 @@ by hand._
 - [`defi_venue_lst_rates_residual_2026_07_24`](./defi_venue_lst_rates_residual_2026_07_24.md) — 2 small residual todos
   forked verbatim out of the archived migration-verification/orphan-safety harness plan (2026-07-24 plan line-cap
   remediation split): folding the `lst-rates` corpus into the DeFi could-exist / data-status view, and…
-- [`family2_position_registry_unwind_consumption_2026_08_09`](./family2_position_registry_unwind_consumption_2026_08_09.md)
-  — Add unwind/close consumption to Family2PositionRegistry.enumerate_open_positions() once strategy-service ships a
-  real Family-2 close/unwind emission path. Gated on strategy_service_family2_close_unwind_emission_2026_08_09.md —
-  split out…
 - [`lst_rate_honest_coverage_2026_07_21`](./lst_rate_honest_coverage_2026_07_21.md) — Operator-directed (2026-07-21)
   build to bring the four LST exchange-rate surfaces to HONEST COVERAGE end-to-end so the DeFi interest PnL can sit on
   real data. is a phantom-minting anti-pattern). is dormant — wire a collection branch +…

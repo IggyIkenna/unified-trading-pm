@@ -44,7 +44,7 @@ related_plans:
   - ../active/cross_venue_funding_reversion_research_2026_07_24.md
   - ../active/crypto_alpha_research_2026_07_24.md
   - ../active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md
-  - ../active/family2_position_registry_unwind_consumption_2026_08_09.md
+  - ../archive/2026_08/family2_position_registry_unwind_consumption_2026_08_09.md
   - ../active/l2_book_microstructure_capture_2026_07_13.md
   - ../active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md
   - /plans/archive/2026_08/strategy_service_family2_close_unwind_emission_2026_08_09.md
@@ -186,7 +186,7 @@ engineless archetypes + 9 unwired venues
 
 ## P3 — backlog; revisit quarterly
 
-### [`family2_position_registry_unwind_consumption_2026_08_09`](../active/family2_position_registry_unwind_consumption_2026_08_09.md)
+### [`family2_position_registry_unwind_consumption_2026_08_09`](../archive/2026_08/family2_position_registry_unwind_consumption_2026_08_09.md)
 
 **status**: active · **estimate**: 0.2 cal AI-days (class: refactor) **title**: Family2PositionRegistry — consume the
 Family-2 close/unwind event once it exists
