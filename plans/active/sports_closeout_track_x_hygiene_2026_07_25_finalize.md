@@ -65,12 +65,18 @@ context_scope:
       commits (`unified-trading-pm@dc8b142a4e` cross-link, `unified-trading-pm@69b8c3f7f3` league_id fold-in,
       `unified-api-contracts@f3f1bbe0` contamination fix, `market-tick-data-service@03b9ffd6` worktree changes +
       `deployment-service` no-op) — each confirmed on origin via `git log` (not the child plan's claim alone).
-- [ ] [REVIEW] P1. **Confirm the league_id fold-in item's landing has actually unblocked the parent's Track V league_id
-      todos** — re-read Track V's league_id-migration section and verify it now cites the merged `LEAGUE_ID_TO_TIER`
-      mapping + 28-unmapped-`league_id` gap-analysis rather than treating them as still-external. If Track V's own text
-      still reads as blocked on this item, do NOT silently mark it resolved — file a follow-up noting the gap. **Done
-      when**: Track V's league_id section is confirmed to cite the merged location, or a follow-up is filed if it does
-      not.
+- [x] ✅ [REVIEW] P1. **Confirm the league_id fold-in item's landing has actually unblocked the parent's Track V
+      league_id todos** — re-read Track V's league_id-migration section and verify it now cites the merged
+      `LEAGUE_ID_TO_TIER` mapping + 28-unmapped-`league_id` gap-analysis rather than treating them as still-external. If
+      Track V's own text still reads as blocked on this item, do NOT silently mark it resolved — file a follow-up noting
+      the gap. **Done when**: Track V's league_id section is confirmed to cite the merged location, or a follow-up is
+      filed if it does not. — **DONE 2026-08-10, `unified-trading-pm` (this commit)**: Track V's league_id-migration
+      section at `sports_consolidated_closeout_2026_07_19.md:748-755` explicitly cites
+      `issues/sports_league_id_namespace_migration_2026_07_20.md` § "MERGED TRACKING 2026-07-27" as the single settled
+      location for the `LEAGUE_ID_TO_TIER` mapping + the 28 unmapped IDs — the note was added by the fold-in commit
+      `unified-trading-pm@69b8c3f7f3` (verified via `git show`), and the MERGED TRACKING section is confirmed present on
+      origin in the issue doc (line 669). No Track V league_id todo still treats the mapping/gap-analysis as external.
+      No follow-up needed.
 - [ ] [DOC] P1. **Archive `sports_closeout_track_x_hygiene_2026_07_25.md`** via the standard 6-step ritual: confirm todo
       2 above resolved cleanly → add the archive banner → codex-alignment check (no new codex doc was created by this
       extraction, so this is a no-op confirmation, not a skip) → grep the corpus for every referrer of
