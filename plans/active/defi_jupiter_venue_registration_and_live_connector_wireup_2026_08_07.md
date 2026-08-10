@@ -232,7 +232,7 @@ Jupiter surfaces, and narrowed the wire-in track from 3 files to 1:
       `dex_pool_swaps` updated, citing unified-api-contracts@ad003d03, instruments-service@06c6f2dd,
       market-tick-data-service@9e9c9817, execution-service@507093de, market-tick-data-service@73abd655.
 
-- [ ] [TEST] P2. **Capture the two missing WS frame cassettes that are currently held open by `pytest.xfail`.**
+- [x] ✅ [TEST] P2. **Capture the two missing WS frame cassettes that are currently held open by `pytest.xfail`.**
       `unified-api-contracts/tests/test_ws_cassette_coexistence.py` xfails BOTH `jupiter_solana_ws` (2026-08-07) and
       `aave_liquidations_ethereum_ws` (2026-08-08, `unified-api-contracts@12bed42e`) because each connector landed
       without a cassette + venue mapping. Both xfails are honestly written ("needs a real WS capture, not a fabricated
