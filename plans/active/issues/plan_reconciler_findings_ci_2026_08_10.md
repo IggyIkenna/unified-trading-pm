@@ -12,7 +12,11 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [role, plan_reconciler, reconciliation, plan-hygiene, ci, sharded-run]
-related: [/plans/active/issues/plan_reconciler_findings_ci_2026_08_09.md]
+related:
+  [
+    /plans/active/issues/plan_reconciler_findings_ci_2026_08_09.md,
+    /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
+  ]
 created: "2026-08-10"
 author: plan_reconciler
 source: agt-fb0ce4
@@ -87,8 +91,20 @@ not blanket ci-tranche findings).
 ## Archive candidates (operator review)
 
 - **`ui_build_warm_cache_2026_06_17.md`** — flagged by today's `ag_closeout_audit_ci_parked_2026_08_10.md` as now
-  zero-open-work, archival blocked only by `locked_by: live-defi-rollout`. To be independently re-verified in Phase 2/4
-  rather than taken on faith, then parked (never auto-archived/unlocked per HARD LIMITS).
+  zero-open-work, archival blocked only by `locked_by: live-defi-rollout`. Independently re-verified: 0 open / 4 done
+  checkboxes (`grep -cE '^[[:space:]]*[-*] \[ \]'` / `\[x\]`), `status: complete`, `locked_since:` blank. **This is the
+  same `locked_by: live-defi-rollout` placeholder-lock defect** a sibling ui-tranche run root-caused and filed today as
+  `/plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` (P1, `[OPERATOR]`, pending an
+  A/B/C ruling — NOT a genuine lock, traced to `scripts/plans/fix_epic_frontmatter_2026_05_21.py:133`). Not re-filed as
+  a duplicate; this doc is 2 more corroborating hits for that ticket, not a new finding. Also found in-tranche with the
+  identical signature (`locked_since: 2026-05-21`, predating the doc's own later `created:` date — the same "impossible
+  claim" tell): `plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md` and
+  `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` (both `status: open`, not
+  independently re-checked for done-ness since the lock is the blocking question either way). Left that corpus-wide doc
+  itself untouched — it's <12h old (created today by the ui-tranche run), inside this run's own grace window, and not
+  mine to edit; the corroboration lives here with a cross-reference instead, for a future `all` pass (or the operator
+  ruling once it lands) to consolidate. **Parked, not archived** — per HARD LIMITS, `locked_by:` is never auto-unlocked
+  regardless of how confident the evidence.
 
 ## Refuted (dropped by verify)
 
