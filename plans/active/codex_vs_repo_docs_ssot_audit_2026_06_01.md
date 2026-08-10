@@ -42,8 +42,7 @@ source:
   ]
 assigned_role: review
 drift_direction: correct-codex
-model_tier: opus-required
-execution_model: opus-1m
+model_tier: sonnet-doable
 thinking: high
 context_scope:
   [
@@ -62,12 +61,12 @@ context_scope:
 > `/plans/archive/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md` is the ruling — the
 > deliberate 2026-07-27 `NA→planning` reclassification was the authorization signal, confirming it just removes the
 > standing contradiction rather than creating a new risk. Phases 3/4 (REDIRECT/DELETE/slim APPLY, ~20 repos) may now
-> proceed. **Unchanged safeguard**: this work stays `model_tier: opus-required` / `execution_model: opus-1m` per this
-> plan's own "Execution model" section — a sonnet orchestrator may drive dispatch, but the actual redirect/slim
-> editorial judgment must run on an opus sub-agent fan-out (plan-sanctioned), never a default-tier worker delegating the
-> call out. **Mandate for whoever executes Phases 3/4**: full completion across every repo in the per-repo rollout list
-> below — no partial/half-applied REDIRECT or DELETE passes, no repo skipped because it "looked fine last time." Once
-> applied, update every per-repo registry note below that still says "Apply stays Phase-3/4 under the operator's
+> proceed. **`model_tier` CORRECTED 2026-08-10 (plan_reconciler infra shard, agt-716973)**: `opus-required` →
+> `sonnet-doable`, `execution_model: opus-1m` removed — this plan's sole surviving opus rationale ("cross-repo +
+> governance judgment") was retired as an opus trigger 2026-08-04 (`model-tier-selection.md:256-259`); see "Execution
+> model" below. **Mandate for whoever executes Phases 3/4**: full completion across every repo in the per-repo rollout
+> list below — no partial/half-applied REDIRECT or DELETE passes, no repo skipped because it "looked fine last time."
+> Once applied, update every per-repo registry note below that still says "Apply stays Phase-3/4 under the operator's
 > FIX-STALE-only hold" — that phrase is now historical (describes the audit-time state, 2026-06-01 through 2026-07-27),
 > not a current gate; leaving it unedited after Phase 3/4 land would itself become a stale contradiction of the kind
 > this exact gate was created to catch.
@@ -82,27 +81,18 @@ context_scope:
 > codex first (never lost). End state: **zero documentation duplication between codex and repo docs.** Contract:
 > `/codex/06-coding-standards/documentation-standards.md` **§ S5.11** (codified 2026-06-01).
 
-## Execution model — **opus-1m** (suggested)
+## Execution model — **sonnet-doable** (corrected 2026-08-10)
 
-**Run this plan on `claude-opus` with the 1M-token context window (`opus-1m`), `thinking: high`.** Rationale (per
-`/codex/06-coding-standards/model-tier-selection.md`, this is `opus-required`, not `sonnet-doable`):
+**Run this plan on Sonnet 5, `thinking: high`.** Both qualitative opus rationales below are now RETIRED (corrected by
+`plan_reconciler`, infra shard, agt-716973, 2026-08-10):
 
-- ~~**Large working set**: … a 200k window forces lossy chunking and mis-classification.~~ **RETIRED as a rationale
-  2026-07-26 (`/plan-reconcile` infra shard) — this bullet cited a trigger the codex SSOT it names has since deleted.**
-  `/codex/06-coding-standards/model-tier-selection.md:36-38` reads: "Sonnet 5 has a **1M context window — the same size
-  as Opus 4.8.** This retires context SIZE as an opus-escalation reason entirely: the old '>200k context provably
-  required' and '>50KB plan + multiple full files' triggers below are **RETIRED**, not just softened. Opus is now a
-  PURELY QUALITATIVE escalation" (operator ruling 2026-07-23; mirrored in `cursor-configs/CLAUDE.md` § Model tier). Size
-  never justifies Opus now — Sonnet 5 holds the same 1M working set. **The `opus-required` tier below still stands**, on
-  the next bullet alone.
-- **Cross-repo + governance judgment** (the ONE surviving qualitative trigger for this plan): migrate-vs-redirect-vs-
-  delete + "migrate unique delta into codex" are irreversible-ish editorial calls across 20 repos. This is cross-cutting
-  architecture/governance work — Opus-grade reasoning, not Sonnet.
-- **Sub-agents**: per-repo audit/consolidation may fan out to sub-agents; those `Agent` calls MUST set `model`
-  explicitly (`opus` for the migrate/redirect judgment passes; `sonnet` acceptable only for the mechanical FIX-STALE
-  literal sweeps).
-- **Self-check at task start** (mandatory per model-tier rule): confirm running model == `opus-1m`. Sonnet on this plan
-  → STOP.
+- ~~**Large working set**~~ — RETIRED 2026-07-26 (`/plan-reconcile`): Sonnet 5's 1M context window retires context SIZE
+  as an opus-escalation reason (`model-tier-selection.md:36-38`).
+- ~~**Cross-repo + governance judgment**: migrate/redirect/delete calls across 20 repos are Opus-grade, not Sonnet.~~
+  RETIRED 2026-08-10 — `model-tier-selection.md:256-259`: "cross-repo architecture judgment... retired 2026-08-04... now
+  classifies `sonnet-doable`." No qualitative trigger survives.
+- **Sub-agents**: set `model` explicitly on every `Agent` call — `sonnet` (no longer opus).
+- **Self-check**: confirm running model == Sonnet 5. Opus is no longer required or expected on this plan.
 
 ## Principles (operator, 2026-06-01)
 
@@ -312,19 +302,22 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
 - [ ] [DOCS] P1. **market-tick-data-service finish**: `DEPLOYMENT_GUIDE_FEMI.md` (person-named onboarding dup) +
       `SHAHRIYAR_DEPLOYMENT_INFRA_SPEC.md` (infra-spec dup) → migrate unique delta, replace with redirect to
       `codex/05-infrastructure` + `codex/08-workflows`, delete the dumps. Slim `DEPENDENCIES.md` / `ARCHITECTURE.md`.
-- [x] ✅ [DOCS] P0. **deployment-service** (79) — deploy-flow/infra/bucket/VM-tarball docs vs `codex/05-infrastructure`,
+- [ ] [DOCS] P0. **deployment-service** (79) — deploy-flow/infra/bucket/VM-tarball docs vs `codex/05-infrastructure`,
       `codex/08-workflows`. Highest duplication surface. **AUDIT DONE 2026-07-27** — refreshed per-doc registry (89
       repo-owned docs: 47 core + 42 infra/profiles/runbooks; excl. `docs/archive/*` 13 + vendored `.terraform` provider
       CHANGELOGs 10) in **Appendix B** below; SUPERSEDES the stale `deployment-service (~52)` entry in Appendix A. Net:
       12 DELETE (dead Feb/Mar-2026 impl-plan dumps + the `audit/` trio, not codex-dups) · 14 REDIRECT (all 12 codex
       targets VERIFIED-EXIST — none need creating) · systemic FIX-STALE = archived-mirror `unified-trading-codex/`
-      links + a stale `POST_PLAN_BANNER_2026_05_06` replicated across ~30 files. **REDIRECT half SHIPPED**
-      (`deployment-service@07ba33fc2`, verified ancestor of `origin/live-defi-rollout` 2026-08-06) — **DELETE half NOT
-      shipped** (`docs/{MASTER_ML_IMPLEMENTATION_PLAN,ML_IMPLEMENTATION,MASTER_IMPLEMENTATION_INDEX}.md` +
-      `docs/specs/PLANS_ALIGNMENT.md` still live on disk, re-verified 2026-08-06). The Phase-3/4 hold itself LIFTED
-      2026-07-28 (GATE-1 banner above) — corrected 2026-08-06 (/plan-reconcile ao).
-- [x] ✅ [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`. **AUDIT VERIFIED +
-      FIX-STALE APPLIED 2026-07-27** (Appendix-A UAC registry HOLDS, ground-truthed against live code): confirmed
+      links + a stale `POST_PLAN_BANNER_2026_05_06` replicated across ~30 files. **REDIRECT half ✅ SHIPPED**
+      (`deployment-service@07ba33fc2`, verified ancestor of `origin/live-defi-rollout` 2026-08-06). **DEFERRED — DELETE
+      half NOT shipped** (`docs/{MASTER_ML_IMPLEMENTATION_PLAN,ML_IMPLEMENTATION,MASTER_IMPLEMENTATION_INDEX}.md` +
+      `docs/specs/PLANS_ALIGNMENT.md` all 4 confirmed still live on disk — RE-VERIFIED 2026-08-10 by plan_reconciler
+      infra shard, agt-716973, same 4 files). Un-checked 2026-08-10 — was `[x]` despite the DELETE half being unshipped
+      (violates this plan's own GATE-1 "no partial passes" mandate; CLAUDE.md half-done convention: flip only the
+      shipped half). Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1 banner above) — corrected 2026-08-06
+      (/plan-reconcile ao).
+- [ ] [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`. **AUDIT VERIFIED + FIX-STALE
+      APPLIED 2026-07-27** (Appendix-A UAC registry HOLDS, ground-truthed against live code): confirmed
       `canonical/normalize/` + `schemas/` dirs are GONE (normalizers now `normalize_utils/{trades,orderbooks,…}.py`;
       `_venue_errors_*` now `normalize_utils/errors`) and the 4 DELETE-class docs (`ICLOUD_REPO_MIGRATION_PROMPT`,
       `SCHEMA_NORMALIZATION_GAPS_AUDIT`, `UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY`, `VIX_LIVE_RESEARCH`) each
@@ -332,12 +325,15 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       `unified-trading-codex/` refs → verified-live PM `/codex` (`vcr-cassette-ownership.md`,
       `contracts-scope-and-layout.md`, `contracts-integration.md`) in `docs/{README,MOCKS_AND_VCR,SCHEMA_GOVERNANCE}.md`
       — **unified-api-contracts@25085037**. Sonnet-scoped to the mechanical literal sweep (plan §"Execution model"
-      permits sonnet ONLY for FIX-STALE literal sweeps). **REDIRECT half SHIPPED** (`PACKAGE_LAYOUT_AND_SCOPE`/
+      permits sonnet ONLY for FIX-STALE literal sweeps). **REDIRECT half ✅ SHIPPED** (`PACKAGE_LAYOUT_AND_SCOPE`/
       `BATCH_LIVE_SYMMETRY`/`canonical-instrument-ids`, `unified-api-contracts@f952e17f`, verified ancestor of
-      `origin/live-defi-rollout` 2026-08-06) — **DELETE half + the rest not independently re-verified this pass**:
-      DELETE the 4 `docs/` twins; `SCHEMA_GOVERNANCE` placement-table rewrite; 3 residual mirror refs with NO 1:1 live
-      target (`SCHEMA_CHANGELOG` L13 `canonical-schema-versioning.md`; `BATCH_LIVE_SYMMETRY` L208 + `UAC_FULL_GAP…` L278
-      `batch-live-symmetry.md` → pick live equivalent). Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected
+      `origin/live-defi-rollout` 2026-08-06). **DEFERRED — DELETE half + the rest not shipped** (RE-VERIFIED 2026-08-10
+      by plan_reconciler infra shard, agt-716973: all 4 `docs/` DELETE-class twins — `ICLOUD_REPO_MIGRATION_PROMPT`,
+      `SCHEMA_NORMALIZATION_GAPS_AUDIT`, `UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY`, `VIX_LIVE_RESEARCH` — still
+      live on disk): DELETE the 4 `docs/` twins; `SCHEMA_GOVERNANCE` placement-table rewrite; 3 residual mirror refs
+      with NO 1:1 live target (`SCHEMA_CHANGELOG` L13 `canonical-schema-versioning.md`; `BATCH_LIVE_SYMMETRY` L208 +
+      `UAC_FULL_GAP…` L278 `batch-live-symmetry.md` → pick live equivalent). Un-checked 2026-08-10 — see
+      deployment-service item above for rationale. Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected
       2026-08-06 (/plan-reconcile ao).
 - [x] ✅ [DOCS] P0. **market-data-processing-service** (22→25) — path/manifest/candle docs vs `codex/02-data`. **AUDIT
       REFRESHED 2026-07-27** (registry in **Appendix B**): Appendix-A largely HOLDS but drifted — `GCS_PATHS.md` is NO
@@ -348,25 +344,25 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       · no MIGRATE. **REDIRECT half SHIPPED** (`market-data-processing-service@0e9656c`, verified ancestor of
       `origin/live-defi-rollout` 2026-08-06) — DELETE/FIX-STALE halves not independently re-verified this pass;
       Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected 2026-08-06 (/plan-reconcile ao).
-- [x] ✅ [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`,
-      `codex/02-venues`. **AUDIT VERIFIED + FIX-STALE APPLIED 2026-07-27** (Appendix-A `execution-service (20)` registry
-      HOLDS, ground-truthed vs live code): pass-1 FIX-STALE already landed @`4b0ea42f` (ARCHITECTURE bucket literals
-      env-tiered `execution-store-{ag}-{env}-{project_id}` ✓; README py3.13-canonical ✓). Applied the
-      operator-hold-PERMITTED residual FIX-STALE only: 2 archived-mirror `unified-trading-codex/` refs → verified-live
+- [ ] [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`, `codex/02-venues`.
+      **AUDIT VERIFIED + FIX-STALE APPLIED 2026-07-27** (Appendix-A `execution-service (20)` registry HOLDS,
+      ground-truthed vs live code): pass-1 FIX-STALE already landed @`4b0ea42f` (ARCHITECTURE bucket literals env-tiered
+      `execution-store-{ag}-{env}-{project_id}` ✓; README py3.13-canonical ✓). Applied the operator-hold-PERMITTED
+      residual FIX-STALE only: 2 archived-mirror `unified-trading-codex/` refs → verified-live
       `../../unified-trading-pm/codex/` (`06-coding-standards/integration-testing-layers.md` in `docs/TESTING.md`;
       `08-workflows/t1-batch-dag.md` in `docs/GCS_PATHS.md` — both VERIFIED-EXIST) + 1 dangling deploy-spec ref (dead
       `docs/SHARDING_GUIDE.md`+`docs/SHAHRIYAR_DEPLOYMENT_INFRA_SPEC.md` → live `docs/DEPLOYMENT_GUIDE.md`, in
       `docs/`+`specs/BACKTEST_DEPLOYMENT.md`) — **execution-service@`0c6a93e1`** (QG-green sentinel c4fbb495).
       Sonnet-scoped mechanical sweep (plan §"Execution model" permits sonnet ONLY for FIX-STALE literal sweeps).
-      **REDIRECT half SHIPPED** (`GCS_PATHS`/`ROUTING_MATRIX`/`CONFIGURATION`/`ERROR_HANDLING`/`DEPLOYMENT_GUIDE`,
-      `execution-service@2a59ca09`, verified ancestor of `origin/live-defi-rollout` 2026-08-06) — **DELETE half not
-      independently re-verified this pass**: DELETE
-      `UNIFIED_BATCH_LIVE_ARCHITECTURE`/`CLEAN_ALGORITHM_INTERFACE_DESIGN`/`DEFI_INTEGRATION_TODO` (the 3 residual
-      `batch-live-symmetry.md` mirror refs left in-place inside the slated-for-deletion
+      **REDIRECT half ✅ SHIPPED** (`GCS_PATHS`/`ROUTING_MATRIX`/`CONFIGURATION`/`ERROR_HANDLING`/`DEPLOYMENT_GUIDE`,
+      `execution-service@2a59ca09`, verified ancestor of `origin/live-defi-rollout` 2026-08-06). **DEFERRED — DELETE
+      half not shipped** (RE-VERIFIED 2026-08-10 by plan_reconciler infra shard, agt-716973: all 3 files still live on
+      disk): DELETE `UNIFIED_BATCH_LIVE_ARCHITECTURE`/`CLEAN_ALGORITHM_INTERFACE_DESIGN`/`DEFI_INTEGRATION_TODO` (the 3
+      residual `batch-live-symmetry.md` mirror refs left in-place inside the slated-for-deletion
       `UNIFIED_BATCH_LIVE_ARCHITECTURE` — live equiv is `/codex/04-architecture/batch-live-architecture.md`). no MIGRATE
       (codex/04-architecture already holds the execution-arch SSOTs; codex/02-venues exists w/
-      venue-registry-reference). Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected 2026-08-06
-      (/plan-reconcile ao).
+      venue-registry-reference). Un-checked 2026-08-10 — see deployment-service item above for rationale. Phase-3/4 hold
+      itself LIFTED 2026-07-28 (GATE-1) — corrected 2026-08-06 (/plan-reconcile ao).
 - [x] ✅ [DOCS] P0. **instruments-service** (19→13) — IS→MTDS contract/path docs vs `codex/04-architecture`,
       `codex/02-data`. **AUDIT REFRESHED 2026-07-27** (read-only via opus sub-agent; registry in **Appendix B** below,
       SUPERSEDES the stale Appendix-A `(19)` entry). Repo drifted hard from Appendix-A: `specs/` dir GONE (consolidated
