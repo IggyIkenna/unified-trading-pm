@@ -154,8 +154,11 @@ continuously across all 10 tranches.
 
 ## Operator approval gate
 
-**This plan is `status: draft` — awaiting operator review.** Flip to `status: active` only after explicit approval (its
-finalize twin is already `status: active` per the no-double-gate ruling and will stay correctly gated either way).
+**RULED 2026-08-09 (operator, bulk approval): approved.** Flipped `status: draft` → `status: active` in
+`unified-trading-pm@78e91572f3` ("flip 14 satellite-extraction batches draft->active for AO dispatch") alongside 13
+sibling batches (ao batch9-16, infra batch11-14, prediction batch10, sports batch12); its finalize twin was already
+`status: active` per the no-double-gate ruling and stayed correctly gated either way. This banner was stale (still read
+"awaiting review" against an already-`active` frontmatter) until fixed by `/ag-closeout-audit infra` 2026-08-10.
 
 ## Codex SSOTs (read before touching a todo)
 

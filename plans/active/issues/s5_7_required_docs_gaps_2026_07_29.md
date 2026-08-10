@@ -40,7 +40,7 @@ thinking_tier: medium
 estimate_class: design
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
-last_updated: 2026-07-29
+last_updated: "2026-08-10"
 supersedes:
 superseded_by:
 drift_direction: advance-code
@@ -104,8 +104,14 @@ the dispatch-scope-eligibility ruling):
       not-applicable instead of missing; every other repo keeps the full S5.1 set. Codified in
       `/codex/06-coding-standards/documentation-standards.md` new § S5.1a (+ S5.7/S5.10 cross-refs updated to match).
       (repo: unified-trading-pm)
-- [ ] [DOCS] P2. **Fill the genuine data-service gaps** now that tiering is decided: market-data-processing-service
-      `DEPLOYMENT_GUIDE.md` + `TESTING.md` (real service, docs genuinely absent). (repo: market-data-processing-service)
+- [ ] [DOCS] P2. **CORRECTED 2026-08-10 (was: "fill the genuine data-service gaps" — see Progress Log).** Reconcile
+      market-data-processing-service's `DEPLOYMENT_GUIDE.md` + `TESTING.md` against the S5.1 filename set using the SAME
+      thin-redirect-stub approach the operator ruled for instruments-service (item 77 below): verify
+      `DEPLOYMENT_GUIDE_FEMI.md` / `TESTING_GUIDE.md` genuinely cover what the canonical S5.1 filenames would need to
+      say (per `codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s 2026-07-27 refreshed registry DELETE classification —
+      "stub → FEMI" / "stub, `pytest` direct → TESTING_GUIDE", both REDIRECT targets already verified to exist), then
+      add S5.11-template redirect stubs at `DEPLOYMENT_GUIDE.md`/`TESTING.md` pointing at them (mirror
+      instruments-service's 6-stub pattern). Not net-new content. (repo: market-data-processing-service)
 - [x] ✅ [DOCS] P3. **DECIDED + DONE 2026-08-08 — Reconcile instruments-service's reorganized docs against the S5.1
       filename set.** OPERATOR RULING: add thin redirect stubs at the canonical filenames pointing at the reorganized
       docs. Added 6 stub files under `instruments-service/docs/` (`ARCHITECTURE.md` → `ADAPTER_ARCHITECTURE.md`;
@@ -117,6 +123,13 @@ the dispatch-scope-eligibility ruling):
 
 ## Progress Log
 
+- **ag-closeout-audit 2026-08-10 (infra tranche)**: Resolved the 2026-08-08 conflict by logic, not escalation — the
+  competing claim (`codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s dated, specific 2026-07-27 refreshed registry entry,
+  still `status: active`) is the more authoritative, more recent, more direct evidence, and it matches the
+  already-executed instruments-service precedent exactly (same redirect-stub pattern, same operator ruling session).
+  Corrected the open todo below from "fill genuine gaps" to "verify + add redirect stubs," citing both sources. Not
+  itself extracted into a batch this run (the corrected todo is bounded/conflict-clear, but a live per-file content
+  verification is warranted before dispatch — see `infra_satellite_ao_dispatch_batch15_2026_08_10.md` if drafted).
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid — but with a real conflict found, not a
   clean RECLASSIFY. Re-read end-to-end; `grep -cE '^- \[ \]'` = 1, matching (the market-data-processing-service
   `DEPLOYMENT_GUIDE.md`/`TESTING.md` fill item). Today's operator ruling (item 76) is a strong candidate for closing the

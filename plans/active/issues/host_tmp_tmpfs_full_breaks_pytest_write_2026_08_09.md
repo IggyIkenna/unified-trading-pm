@@ -11,10 +11,10 @@ summary:
   `enum-univ-defi-*.parquet` at 2.8G each (5.6G of the 8G total), plus `enum-univ-catalog-prediction-*.parquet` (282M
   x2), `repro-venv` (808M), several `cefi-corrector-*`/`regen-ldr-plans-*` scratch files — none of these are mine, and
   per the multi-agent-safety HARD RULE against touching another slot's untracked/dirty state, I did not delete anything.
-  Distinct from `plans/active/issues/host_root_disk_full_transient_2026_07_13.md` (that issue is the root filesystem
-  `/dev/root`, currently a healthy 75% used / 175G free; THIS issue is the separate RAM-backed `/tmp` tmpfs mount, which
-  is a fixed 8GB ceiling that doesn't grow with root-disk headroom — a distinct capacity class needing its own fix
-  (either raise the tmpfs size, or route large scratch parquets to a non-tmpfs scratch dir)."
+  Distinct from `plans/archive/2026_08/issues/host_root_disk_full_transient_2026_07_13.md` (that issue is the root
+  filesystem `/dev/root`, currently a healthy 75% used / 175G free; THIS issue is the separate RAM-backed `/tmp` tmpfs
+  mount, which is a fixed 8GB ceiling that doesn't grow with root-disk headroom — a distinct capacity class needing its
+  own fix (either raise the tmpfs size, or route large scratch parquets to a non-tmpfs scratch dir)."
 status: open
 nature: process
 asset_group: [infrastructure]
@@ -24,7 +24,7 @@ scope: [engineer, admin]
 tags: [infra, disk-space, tmpfs, host-contention, capacity, pytest]
 related:
   [
-    /plans/active/issues/host_root_disk_full_transient_2026_07_13.md,
+    /plans/archive/2026_08/issues/host_root_disk_full_transient_2026_07_13.md,
     /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]

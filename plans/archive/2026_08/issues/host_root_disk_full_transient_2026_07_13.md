@@ -9,7 +9,7 @@ summary: |
   breaking `bash scripts/setup.sh` for execution-service (`uv pip install -e .` editable-install failure). Two
   independent full-disk events in one session upgrades this from "self-recovered blip" to "recurring capacity
   problem" — retitled + reprioritized accordingly.
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -29,8 +29,8 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: infra
 drift_direction: advance-code
 resolved_by:
+  unified-trading-pm@2c028dee9d (both todos), archived unified-trading-pm (ag-closeout-audit infra, 2026-08-10)
 locked_by:
-archive_exempt: true # 2026-08-09: 0 open todos, full archival deferred -- see Progress Log 2026-08-09
 context_scope:
   [
     /plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md,
@@ -50,6 +50,10 @@ depends_on: []
 ---
 
 # Host root disk hit 100% full TWICE in one session — recurring, not transient
+
+> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** Both todos shipped + verified (`unified-trading-pm@9dcd37631` uv-cache prune
+> cron + `unified-trading-pm@2c028dee9d` the `.tabs/` mount-boundary hardlink-dedup fix, `nlink=2` confirmed live). See
+> Progress Log below.
 
 ## Recurrence (2026-07-13, ~1hr after first occurrence)
 
