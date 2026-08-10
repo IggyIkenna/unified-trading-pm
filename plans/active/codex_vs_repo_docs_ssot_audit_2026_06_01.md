@@ -872,15 +872,15 @@ present).
 > converted to an S5.11 "Canonical SSOT:" redirect stub) — DELETE/FIX-STALE halves not independently re-verified this
 > pass; the Phase-3/4 hold itself LIFTED 2026-07-28 (GATE-1) — corrected 2026-08-06 (/plan-reconcile ao).
 
-**market-data-processing-service (25)** — DELETE: `DEPLOYMENT_GUIDE.md` (stub → FEMI), `TESTING.md` (stub, `pytest`
-direct → TESTING_GUIDE), `REFACTORING_STANDARDS_COMPLIANCE.md` (one-off + archived-mirror refs),
-`specs/PLANS_ALIGNMENT.md` + `specs/README.md` (stale plan map — archived plans). FIX-STALE: `DEPENDENCIES.md`
-(`{category}` vocab + `gs://market-data-tick-{category}`), `DEPLOYMENT_GUIDE_FEMI.md` (`{category}` + hyphen partition
-`day-{date}/`; its `{env}` bucket refs ARE tiered), `CONFIGURATION.md` (`{category}` + un-tiered processed bucket),
-`ERROR_HANDLING.md` (`category="CEFI"` arg), `SCHEMA_VALIDATION.md` (`category` schema-column "spot/perp/future" retired
-vocab), `GCS_PATHS.md` (inline `gs://`/`gsutil ls` vs `resolve_bucket_name` — NO LONGER un-tiered, now `{env}`-carrying
-since 2026-07-21), root `README.md` (archived-mirror ref). REDIRECT (targets exist):
-`TIMEFRAME_AGGREGATION_SPECIFICATION.md` (→ `/codex/02-data/bar-boundary-candle-edge-convention.md` +
+**market-data-processing-service (25)** — DELETE: `DEPLOYMENT_GUIDE.md` (stub → FEMI, ✅ EXECUTED 2026-08-10),
+`TESTING.md` (stub, `pytest` direct → TESTING_GUIDE, ✅ EXECUTED 2026-08-10), `REFACTORING_STANDARDS_COMPLIANCE.md`
+(one-off + archived-mirror refs), `specs/PLANS_ALIGNMENT.md` + `specs/README.md` (stale plan map — archived plans).
+FIX-STALE: `DEPENDENCIES.md` (`{category}` vocab + `gs://market-data-tick-{category}`), `DEPLOYMENT_GUIDE_FEMI.md`
+(`{category}` + hyphen partition `day-{date}/`; its `{env}` bucket refs ARE tiered), `CONFIGURATION.md` (`{category}` +
+un-tiered processed bucket), `ERROR_HANDLING.md` (`category="CEFI"` arg), `SCHEMA_VALIDATION.md` (`category`
+schema-column "spot/perp/future" retired vocab), `GCS_PATHS.md` (inline `gs://`/`gsutil ls` vs `resolve_bucket_name` —
+NO LONGER un-tiered, now `{env}`-carrying since 2026-07-21), root `README.md` (archived-mirror ref). REDIRECT (targets
+exist): `TIMEFRAME_AGGREGATION_SPECIFICATION.md` (→ `/codex/02-data/bar-boundary-candle-edge-convention.md` +
 `/codex/02-data/mdps-candle-canonical-reconciliation.md`), `SCHEMA_VALIDATION_AND_TIMEFRAME_SUFFIXING_E2E.md` (→
 `/codex/02-data/schema-governance.md` + `/codex/02-data/canonical-schema-groups.md`),
 `UNIFIED_SCHEMA_AND_CLIENT_USAGE_GUIDE.md` (→ `/codex/02-data/canonical-schema-groups.md`). KEEP: `ARCHITECTURE.md`,
@@ -888,7 +888,10 @@ since 2026-07-21), root `README.md` (archived-mirror ref). REDIRECT (targets exi
 `USAGE_GUIDE.md`, `TESTING_GUIDE.md`, `VERIFICATION_GUIDE.md`, `CONTRIBUTING.md`, `QUALITY_GATE_BYPASS_AUDIT.md`,
 `docs/README.md`. No MIGRATE (candle-edge/schema material codex needs already lives in the REDIRECT targets).
 `TIMEFRAME_AGGREGATION`'s `resample(closed='right', label='right')` is ALIGNED with the codex right/close-edge
-convention (genuine duplication → REDIRECT, not FIX-STALE).
+convention (genuine duplication → REDIRECT, not FIX-STALE). `DEPLOYMENT_GUIDE.md`/`TESTING.md` DELETE EXECUTED
+2026-08-10 (deleted at `market-data-processing-service@6da3e45`, Phase-4 SSOT audit; both absent repo-wide as of
+2026-08-10; real content covered by `DEPLOYMENT_GUIDE_FEMI.md`/ `TESTING_GUIDE.md`; operator ruling BLK-2b076fa9 option
+A — DELETE wins, no redirect stubs).
 
 ### instruments-service refreshed registry (2026-07-27) — supersedes the stale Appendix-A `(19)` entry
 
