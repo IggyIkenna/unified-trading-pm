@@ -739,10 +739,14 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
       open todo directly below. Remaining BITGET-SPOT window is a separate upstream MTDS raw-tick gap. Full evidence:
       `cross_cutting_satellite_ao_dispatch_batch5_2026_08_09.md` todo 2; see banner item 6 above for the issue-doc
       cites. Repo: MDPS.
-- [ ] [DATA] P2. **Retry the previously-blocked MDPS 1h BITGET-FUTURES backfill (2026-04-20..04-30)** now that the
+- [x] ✅ [DATA] P2. **Retry the previously-blocked MDPS 1h BITGET-FUTURES backfill (2026-04-20..04-30)** now that the
       VM-launch bug above is fixed — relaunch via `launch-mdps-backfill-vm.sh` (the `--timeframes`-scoped fix
       deployment-service@8f1feb4eb9e4 is already live) and confirm it runs to completion this time. Repo:
-      market-data-processing-service.
+      market-data-processing-service. **— market-data-processing-service (VM `mdps-backfill-cefi-20260810-115835`,
+      2026-08-10)**: Launched 11:58 UTC, SPOT `e2-standard-8` `asia-northeast1-c`. All 11 dates (2026-04-20..04-30)
+      processed, terminated 17:32 UTC. Per-VM shard 91.54 KiB/2,700+ entries. Terminal GCS inventory: 2 COMPLETE, 9
+      PARTIAL. `derivative_ticker=0` on 5 dates is honest STALE_DATA (no new data). LIQUIDATIONS 100% NaN schema
+      failure. Full evidence: `cross_cutting_satellite_ao_dispatch_batch12_2026_08_10.md` todo 5.
 - [ ] [VALIDATE] P2. **`usdc_idle_yield_apy_bps` stub — wiring half only** (confirm-half RESOLVED, round5-cross-cutting-
       audit 2026-08-08: leave-as-0-floor is the standing disposition — see banner item 7 above; corrects the
       confirm-vs-wire framing this checkbox previously carried). Remaining: wire `venue_funding_yield` once

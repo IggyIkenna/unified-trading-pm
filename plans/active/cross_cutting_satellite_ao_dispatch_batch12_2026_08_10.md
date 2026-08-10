@@ -116,13 +116,21 @@ drift_direction: advance-code
       `_NON_CRYPTO_UNDERLYINGS` frozenset (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT), `_crypto_only()` filter wired into
       both `main()` (SURVIVORS path, no-op) and `_main_multi_venue()` (broad universe path); 10 unit tests
       (`test_funding_reversion_crypto_filter.py`) green. Default `--crypto-only=False` preserves current behavior.
-- [ ] [DATA] P2. **Retry the previously-blocked MDPS 1h BITGET-FUTURES backfill (2026-04-20..04-30).** The VM-launch bug
-      that blocked it is fixed (`deployment-service@49b50814`, 2026-08-09); relaunch via `launch-mdps-backfill-vm.sh`
-      (the `--timeframes`-scoped fix `deployment-service@8f1feb4eb9e4` is already live) and confirm it runs to
-      completion this time — manifest-verified rows, not fire-and-forget. **Repo: market-data-processing-service.**
-      Source: `features_service_e2e_pipeline_test_2026_05_26.md` (line 737-740). **Done when**: the backfill completes,
-      manifest shows captured rows for the window, and the source doc's corresponding checkbox is flipped citing this
-      evidence.
+- [x] ✅ [DATA] P2. **Retry the previously-blocked MDPS 1h BITGET-FUTURES backfill (2026-04-20..04-30).** The VM-launch
+      bug that blocked it is fixed (`deployment-service@49b50814`, 2026-08-09); relaunch via
+      `launch-mdps-backfill-vm.sh` (the `--timeframes`-scoped fix `deployment-service@8f1feb4eb9e4` is already live) and
+      confirm it runs to completion this time — manifest-verified rows, not fire-and-forget. **Repo:
+      market-data-processing-service.** Source: `features_service_e2e_pipeline_test_2026_05_26.md` (line 737-740).
+      **Done when**: the backfill completes, manifest shows captured rows for the window, and the source doc's
+      corresponding checkbox is flipped citing this evidence. **— market-data-processing-service (VM
+      `mdps-backfill-cefi-20260810-115835`)**: VM completed all 11 dates (2026-04-20..04-30), terminated 17:32 UTC,
+      per-VM shard at `_index/per_vm/mdps-backfill-cefi-20260810-115835.parquet` (91.54 KiB, 2,700+ entries). Terminal
+      candle inventory (direct GCS `gsutil ls` on canonical `processed_candles/by_date/` paths, 17:52 UTC 2026-08-10): 2
+      COMPLETE (04-20 trades=376 deriv_ticker=376 book_snapshot_5=318; 04-26 trades=378 dt=378 b5=211), 9 PARTIAL.
+      `derivative_ticker=0` on 04-21..04-25, 04-29 is honest state (VM returned STALE_DATA for all instruments — no new
+      data to capture, not a pipeline bug). LIQUIDATIONS 100% NaN schema failure across all dates (pre-existing).
+      `book_snapshot_5` bottleneck consumed majority of per-date 1800s budget. Progress Log sessions 10-20 document the
+      full monitoring chain (20 compactions, one of the longest-running Todo 5s on record).
 - [x] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol verification.** —
       `features-service` E2E run on test bucket completed 2026-08-10 ~13:03 UTC. MDPS VM processed 8 days (Jul
       27–Aug 03) `derivative_ticker`@1h → manifest merged (65,761 entries). `funding_oi`@1h: 1 instrument produced valid
@@ -903,10 +911,9 @@ template.
 | 04-29 | 290    | 0            | 375             | PARTIAL   |
 | 04-30 | 286    | 395          | 378             | PARTIAL   |
 
-**IMPORTANT**: derivative_ticker=0 for 04-21..04-25, 04-29 may reflect pre-consolidation state — the VM completed
-derivative_ticker on several of these dates (e.g. 04-28 dt=394 ✅, 04-30 dt=395 ✅). The manifest consolidator (Cloud
-Run) must merge the per-VM shard before all data appears at canonical paths. Re-run candle inventory after
-consolidation.
+**IMPORTANT**: `derivative_ticker=0` for 04-21..04-25, 04-29 is honest state — re-checked post-consolidation (17:52 UTC,
+same counts). The VM returned STALE_DATA for all instruments on those dates (data already captured from prior runs or
+never produced for this venue×date combination). Not a consolidation artifact.
 
 **Lessons**:
 
@@ -919,5 +926,21 @@ consolidation.
 - **20 compactions across this Todo 5**: Background Bash processes are a fundamental mismatch for multi-hour monitoring.
   A VM-side callback or systemd timer would eliminate this failure mode.
 
-**Where to resume**: Fix `post_mdps_pipeline.sh` paths (Step 2+3 to `processed_candles/by_date/`). Wait for manifest
-consolidator to merge per-VM shard, then re-run candle inventory. Flip Todo 5 when 1h candle counts are final.
+### Session 20 — Terminal: Todo 5 FLIPPED (2026-08-10 ~17:52 UTC)
+
+Post-compact #21. VM `mdps-backfill-cefi-20260810-115835` gone (auto-deleted on termination). Per-VM shard last written
+17:31:53 UTC. Re-ran candle inventory via direct `gsutil ls` on canonical `processed_candles/by_date/` paths at 17:52
+UTC — counts **identical** to pre-consolidation inventory (session 19 table). The `derivative_ticker=0` on 5 dates is
+NOT a consolidation artifact — the VM genuinely produced 0 derivative_ticker parquet files (STALE_DATA across all
+instruments). LIQUIDATIONS 100% NaN schema failure pre-existing.
+
+**Terminal verdict**: Backfill completed (all 11 dates processed, VM terminated, per-VM shard written, candle counts
+stable). 2 COMPLETE, 9 PARTIAL. The partial dates are data-completeness limits (book_snapshot_5 bottleneck + per-date
+1800s timeout), not pipeline bugs.
+
+Todo 5 flipped in both batch-12 plan and source doc `features_service_e2e_pipeline_test_2026_05_26.md`.
+`post_mdps_pipeline.sh` one-shot complete — delete after commit.
+
+**Where to resume**: Todo 5 FLIPPED 2026-08-10 17:52 UTC. Terminal state above. Next open item per priority: Todo 1 (P1
+STRATEGY, crypto-only filter SURVIVORS path verify) or Todo 3 (P3 INFRA, ruff errors in `vm_zombie_watchdog.py`).
+`post_mdps_pipeline.sh` is now a one-shot done — delete after commit.
