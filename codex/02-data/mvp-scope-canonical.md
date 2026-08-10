@@ -111,6 +111,14 @@ lending-writer fix (`../../plans/archive/2026_07/defi_lending_writer_retire_prer
 | data_types | odds / ODDS / odds_snapshot / markets / outcomes / settlements (MTDS odds market-data)                                                                                                                                                                                                              |
 | Sources    | 6 reference sources (api_football / footystats / understat / transfermarkt / soccer_football_info / open_meteo) + odds_api                                                                                                                                                                          |
 
+**Sources row caveat (ruled 2026-08-10)**: the "6 reference sources + odds_api" list above is the MVP _business_ scope,
+not each source's actual capture scope — `open_meteo`/`soccer_football_info`/`odds_api` are deliberately capped at the
+33-league PREDICTION tier only (`get_expected_leagues_for_source(source, ["Prediction"])`), narrower than the 96-league
+football universe that `api_football`/`footystats`/`transfermarkt` cover. This is INTENDED behaviour, not a gap —
+weather/SFI/odds data outside Prediction-tier leagues is genuinely out of scope (not wanted), so it must not be
+attempted, must not inflate the honest-coverage numerator/denominator via `empty_confirmed`, and should carry a distinct
+out-of-scope tag instead. See `sports-data-source-coverage-matrix.md` §1/§2 for the per-source league counts.
+
 **Structural honest-absence (decision #6)** — `(league × source)` combos a source structurally NEVER carries are
 expected-absent AND skipped by the IS producers (no attempt → no `attempted_failed`). SSOT:
 `is_sports_structural_gap(source, league)`:
