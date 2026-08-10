@@ -493,6 +493,16 @@ if [ -n "$FILES_ARG" ]; then
   done
 fi
 
+# Whole-tree WIP snapshot. _QM_ENTRY_FINGERPRINT above covers only --files, i.e. the work you are
+# shipping; nothing watched the REST of the tree, so a reconcile that ate an uncommitted edit to
+# an unrelated file did so silently and still reported success. Measured 2026-08-10.
+_QM_WIP_SNAPSHOT=""
+if [ -f "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/tree-wip-guard.sh" ]; then
+  # shellcheck source=/dev/null
+  source "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/tree-wip-guard.sh" 2>/dev/null || true
+  declare -F wip_guard_snapshot >/dev/null 2>&1 && _QM_WIP_SNAPSHOT="$(wip_guard_snapshot)"
+fi
+
 # Returns 1 when the caller's named files no longer match what they handed us.
 _qm_content_vanished() {
   [ -n "$_QM_ENTRY_FINGERPRINT" ] || return 0
@@ -1943,7 +1953,13 @@ if [ -f "scripts/quality-gates.sh" ]; then
       if [ "$_qm_regate_rc" -ne 0 ]; then
         # ❌ lines that are NOT the duration budget. Zero of them => no CONTENT check failed, so
         # this is a load verdict and must not be reported as a content one.
-        _qm_other_fail=$(sed 's/\x1b\[[0-9;]*m//g' "$_qm_regate_log" 2>/dev/null | grep '❌' | grep -vc 'must complete in <' || true)
+        # Count EVERY failure vocabulary, not just ❌. Measured 2026-08-10, on this guard's first
+        # real failure: pytest emits `FAILED tests/...` with no ❌ at all, so a genuine test
+        # failure counted as zero and the run told the agent "every content check passed. Do NOT
+        # go looking for a content bug" while one was staring at it. A false all-clear is worse
+        # than the false alarm this branch was written to remove.
+        _qm_other_fail=$(sed 's/\x1b\[[0-9;]*m//g' "$_qm_regate_log" 2>/dev/null \
+          | grep -E '❌|^FAILED |^ERROR |^E   ' | grep -vc 'must complete in <' || true)
         if [ "${_qm_other_fail:-1}" -eq 0 ]; then
           echo "[$REPO_NAME] ⏳ Re-gate hit ONLY the duration budget — every content check passed."
           echo "[$REPO_NAME]    This is HOST CONTENTION, not your change. Do NOT go looking for a content bug."
@@ -2658,6 +2674,12 @@ echo "[$REPO_NAME] ✅ post-push ancestry verified — ${_QM_PUSHED_SHA:0:9} is 
 # check_plan_commit_sha_evidence.py failure on work that was genuinely done -- and it is
 # silent on the authoring machine, where the orphaned object still resolves.
 echo "[$REPO_NAME] 📌 CITE THIS in the plan checkbox: ${REPO_NAME}@${_QM_PUSHED_SHA:0:10}"
+# Did this run's reconcile eat uncommitted work OUTSIDE --files? Advisory: the push already
+# succeeded and must not be retroactively failed, but silence here is what made the original
+# loss invisible.
+if [ -n "${_QM_WIP_SNAPSHOT:-}" ] && declare -F wip_guard_report >/dev/null 2>&1; then
+  wip_guard_report "$_QM_WIP_SNAPSHOT" "$FILES_ARG" || true
+fi
 # ...or don't, and let this fill it in: any `<repo>@PENDING` already written into a PM plan is
 # resolved to the sha that actually landed, so the flip can be authored BEFORE the ship without
 # a second edit pass afterwards.
