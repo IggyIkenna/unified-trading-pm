@@ -137,8 +137,47 @@ a normal ratchet into a self-reinforcing wall.
       them. Decide whether the answer is a higher steady-state ceiling, a faster retirement cadence, or narrowing what
       must become a tracked NA doc — re-baselining on each breach is not a steady state. Owner: operator.
 
+- [ ] [BACKEND] P1. **The deadlock SURVIVED the cancellation fix — it is now a supersede TREADMILL, and this is the
+      controlling blocker.** Measured 16:00-16:35Z 2026-08-10: PR #2713 was CLOSED with `mergedAt: null`, then #2714,
+      then #2715, each superseded within a tick; `origin/main..origin/live-defi-rollout` GREW 1622 → 1728 across the
+      window. The bot's own log states the rule:
+      `⏭ existing promote PR … has a FAILED QG slice (doomed run) —     superseding this tick instead of waiting it out`.
+      The mechanism is a rate mismatch, not a bug in any one check: `QG slice (checks)` fails in ~3.5 min, the promote
+      bot ticks every ~15 min, and LDR receives roughly 4 commits per 3 min from the fleet — so every tick mints a NEW
+      frozen head and restarts the whole gate from zero. **Any check that fails FAST therefore guarantees an unbounded
+      stream of fresh PRs that can never finish**, while the `tests` slice (which PASSES — measured run 31408156018)
+      never gets to matter. Fix the rate mismatch, not just today's failing check: e.g. do not supersede while a run is
+      still in progress unless the head is materially different, or require N consecutive failures before superseding.
+      Repo: unified-trading-pm (`.github/workflows/ldr-to-main-promote.yml`). **Note for whoever picks this up: the
+      cancel-in-progress exemption shipped earlier today (932db1955e) was a REAL fix for a REAL cause, but it was never
+      sufficient on its own — cancellation stopped and superseding took its place. Do not read its presence as
+      "promotion is handled".**
+- [ ] [BACKEND] P2. **`check_ag_closeout_linkage` is another corpus-wide ratchet with no diff-scoped fast path** — the
+      same class this doc already documents for the `DIFF_BASE_REF` four. It failed the promote gate at frozen head
+      `37d720dc4291` with `1 orphan(s) (baseline 0)`, yet at LDR tip `0f7d704066` it reports **0 orphans** (verified
+      locally in a clean worktree), so the violation was transient corpus state that no individual commit owned. Its
+      `--only` mode passes on staged files while the corpus-wide mode fails, which is exactly the (f)-class blind spot:
+      a violation introduced via a fast path surfaces later on an unrelated commit's full run. Give it the same
+      diff-scoped treatment as the migrated six. Repo: unified-trading-pm (`scripts/plan-hygiene/`).
+- [ ] [BACKEND] P3. **`check_ui_api_flow_coverage.py` fails OPEN on a missing manifest.** Run outside the expected
+      workspace layout it prints `ERROR: Manifest not found: …/unified-trading-pm/ui-api-flow-test-manifest.yaml` and
+      **exits 0** (measured 2026-08-10). A gate whose absent input yields PASS cannot be trusted to be enforcing
+      anything; if the manifest ever goes missing in CI, its `BLOCK: 2 critical journey(s) have ZERO real-flow tests`
+      verdict silently disappears instead of failing loudly. Make a missing manifest a hard error, and separately
+      resolve the two flagged journeys (`deploy-service`, `kill-switch-toggle`). Repo: unified-trading-pm
+      (`scripts/checkers/`).
+
 ## Progress Log
 
+- **2026-08-10 ~16:35Z (/ci-reconcile, slot-2·laptop)** — **The promotion did NOT drain; reopening the analysis.** A 2h
+  watcher on PR #2713 terminated on its own timeout branch (distinct exit code 3, deliberately not 0 — an earlier
+  watcher this session exited 0 on a fallthrough and I misreported it as success). Its verdict: #2713 CLOSED unmerged,
+  `ahead` growing throughout. Follow-up measurement established the treadmill and its rate mismatch (todo above), that
+  the `tests` slice PASSES while only `checks` fails, and that the specific failing check is already clean at LDR tip.
+  Also recorded: PM's `ldr-to-main-promote.yml` reports `success` on EVERY ~15-min tick while promoting nothing — the
+  same green-run/wrong-outcome class as the semver-agent that ran green for 41 days minting zero tags, and a concrete
+  instance of the "no detection surface" todo above. Correction to this doc's earlier framing: the two shipped items
+  under "What shipped" are genuine fixes but did NOT unblock promotion; the wall stands.
 - **2026-08-10 (/ci-reconcile, slot-2·laptop)** — Root-caused and remediated per the two items under "What shipped".
   Fleet sweep at the same time: 25/26 repos green on `quality-gates-v2`@LDR (`unified-trading-ci` has no such workflow —
   it hosts the reusable one); all 23 GH-Actions standing monitors green except `ldr-docs-gate`; both host-dispatched
