@@ -90,7 +90,7 @@ source: >-
   new `[OPERATOR]` todo without altering any prior content.
 ---
 
-# Parked findings — 2026-08-10 `/ag-closeout-audit tradfi` (2 dispatch shapes ran the same day — see Finding 3)
+# Parked findings — 2026-08-10 `/ag-closeout-audit tradfi` (3 dispatch shapes ran the same day — see Finding 3 + Finding 6)
 
 ## Carried forward, still OPEN
 
