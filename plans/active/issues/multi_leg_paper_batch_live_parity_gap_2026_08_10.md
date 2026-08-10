@@ -251,6 +251,169 @@ of both legs, no partial-fill/follower-failure modeling" shortcut the operator a
    and (3) ship, to get a real measured execution-alpha figure for leader-follower risk on basis/arb strategies (today
    there is none — the gap was invisible precisely because paper==batch agree with each other).
 
+## Audit verdicts — multi-leg execution system disposition (2026-08-10)
+
+> **Decision artifact for `multi_leg_execution_systems_audit_2026_08_10.md`.** This section records the definitive
+> per-system disposition the paired execution plan (`multi_leg_execution_systems_execution_2026_08_10.md`,
+> `depends_on` + `gate_on_depends` this audit) implements against. **Why in this issue doc, not a dedicated decisions
+> doc:** this issue is the finding that spawned the audit; the execution plan already references it; splitting the
+> decision from its investigative context would fragment the record without adding clarity.
+
+### System 1: `MultiLegOrchestrator` → **DELETE**
+
+**Verdict**: DELETE. Zero production callers, zero strategy-family demand for its unique capability.
+
+**Evidence** (fresh grep 2026-08-10, not cached):
+
+- `MultiLegOrchestrator(` instantiated ONLY in 3 test files; the `multi_leg_orchestrator` module imported nowhere
+  outside its own file + tests; `execution_service/engine/__init__.py` does not export it.
+- Zero of 9 strategy-family docs (`codex/09-strategy/architecture-v2/families/*.md`) reference `MultiLegOrchestrator`,
+  `LIQUIDITY_AWARE`, or any book-depth-based leader-selection intent. The only codex doc describing `LIQUIDITY_AWARE` is
+  the SUPERSEDED pre-v2 `/codex/09-strategy/_archived_pre_v2/cross-cutting/multi-leg-execution.md`.
+- The current multi-leg model (`/codex/04-architecture/strategy-execution-protocol.md:259`) is
+  `execution_mode: ATOMIC | LEADER_HEDGE | SEQUENCED_WITH_PACING` — the `AtomicLegExecutor` model, not
+  `MultiLegOrchestrator`.
+
+**Capability-gap note (why not KEEP-AS-REFERENCE):** `MultiLegOrchestrator`'s `LIQUIDITY_AWARE` mode (book-depth-based
+auto leader selection) is not replicated by `AtomicLegExecutor`'s fixed `leader_leg` index. But the KEEP-AS-REFERENCE
+bar — a NAMED, currently-planned strategy family needing it — is unmet. If such a need arises, add it to
+`AtomicLegExecutor` as a leader-selection policy; do not revive `MultiLegOrchestrator`. Per the workspace
+delete-deprecated-code HARD RULE: no shims.
+
+**Implementation**: delete `execution-service/execution_service/engine/multi_leg_orchestrator.py` + its tests + its
+references in `instruction_adapter.py` — tracked by `multi_leg_execution_systems_execution_2026_08_10.md`.
+
+---
+
+### System 2: `instruction_adapter.py`'s `_decompose_hedge_basis` / `HEDGE_BASIS` path → **DELETE**
+
+**Verdict**: DELETE. Zero production callers, zero emission of the instruction type it decomposes, fully superseded by
+`AtomicLegExecutor` LEADER_HEDGE.
+
+**Evidence** (fresh grep 2026-08-10, not cached):
+
+- `_decompose_hedge_basis` referenced ONLY inside `instruction_adapter.py` itself (dispatch at line 98, def at line
+  360). The module's entry points (`adapt_strategy_instruction`, `group_instructions_to_multi_leg`,
+  `adapt_to_engine_instruction`) have zero callers in ANY repo's non-test code.
+- `StrategyInstructionType.HEDGE_BASIS` has **zero emission sites** in strategy-service production code. All
+  basis/arb/MM/prediction v2 engines construct `AtomicInstruction` instead (the real mechanism).
+- No strategy-family doc requests spot+perp `HEDGE_BASIS` decomposition. The one grep hit (`vol-trading.md` "Delta-hedge
+  engine") is unrelated dynamic re-hedging for vol strategies. The only codex doc referencing `instruction_adapter` is
+  SUPERSEDED pre-v2.
+
+**Distinctness from System 1**: independent evidence, even though both land on DELETE. `MultiLegOrchestrator` is dead by
+zero instantiation + no liquidity-aware-routing family intent; `instruction_adapter`'s `HEDGE_BASIS` path is dead by
+zero emission of the instruction type it decomposes + zero callers of the whole module + the capability being fully
+superseded by `AtomicLegExecutor` LEADER_HEDGE (the real basis engine `CarryStakedBasisEngine.on_tick()` already emits
+the same spot+perp pair as `AtomicInstruction` with `execution_mode=LEADER_HEDGE`, which `AtomicLegExecutor.execute()`
+covers with real sequencing/timing risk).
+
+**Implementation**: delete the `HEDGE_BASIS`-specific path in `instruction_adapter.py` (the `_decompose_hedge_basis`
+function + its dispatch branch + the `HEDGE_BASIS` member of `StrategyInstructionType` if no other consumer exists) —
+tracked by `multi_leg_execution_systems_execution_2026_08_10.md`.
+
+---
+
+### System 3: `AtomicLegExecutor` / `AtomicInstruction` / LEADER_HEDGE routing seam → **WIRE-IN**
+
+**Verdict**: WIRE-IN. This is the real mechanism — six production strategy engines emit LEADER_HEDGE
+`AtomicInstruction`; the routing seam was built 2026-07-30 as a RULED round-trip proof and intentionally deferred on
+live wiring (which was never re-tracked as a `- [ ]` todo).
+
+#### Call-site map — the six emitting engines
+
+| #   | Engine                                       | File                                                        | LEADER_HEDGE sites                                              |
+| --- | -------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------- |
+| 1   | `CarryStakedBasisEngine`                     | `carry_and_yield/staked_basis.py:784-793`                   | 5-leg ATOMIC, `leader_leg=0`, `CLOSE_LEADER_IF_HEDGE_FAILS`     |
+| 2   | `CarryBasisDatedEngine`                      | `carry_and_yield/basis_dated.py:138,189,249`                | 3 sites: open-leg entry, rescale, dated-contract roll           |
+| 3   | `ArbitrageCrossDomainEventEngine`            | `arbitrage_structural/cme_polymarket.py:201`                | CME ↔ Polymarket cross-domain event arb                         |
+| 4   | `ArbitragePriceDispersionEngine`             | `arbitrage_structural/price_dispersion.py:255,348,713`      | 3 sites: cross-venue prediction, cross-exchange, DEX dispersion |
+| 5   | `ArbitragePriceDispersionHierarchicalEngine` | `arbitrage_structural/price_dispersion_hierarchical.py:176` | 1 LEADER_HEDGE site                                             |
+| 6   | `StatArbPairsFixedEngine`                    | `stat_arb_pairs/pairs_fixed.py:179,232`                     | 2 sites: open + rescale                                         |
+
+The "prediction-arb engines" (plural) referenced by the parity-gap issue are engines 3, 4, 5 (all
+`arbitrage_structural`-family).
+
+#### The routing seam (built 2026-07-30, never wired)
+
+- **Publish side**:
+  `strategy-service/strategy_service/engine/strategies/v2/live_routing.py::publish_atomic_instruction()` — UTL
+  `EventTransport` facade (`InMemoryTransport` for paper/colocated, Pub/Sub for live). Zero production callers.
+- **Subscribe side**: `execution-service/execution_service/v2/atomic_instruction_router.py::route_atomic_instructions()`
+  — reads from EventTransport, calls `AtomicLegExecutor.execute()`. Zero production callers.
+- **Origin**: `plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md` — RULED 2026-07-28 (operator:
+  the bridge goes via EventTransport event-log spine). Done-when scoped to the round-trip proof
+  (`e2e-testing/tests/unit/test_atomic_instruction_live_routing_seam.py`), not live wiring. The wiring was an
+  intentionally-deferred task that was never re-tracked as a `- [ ]` todo on archival — this audit (2026-08-10) surfaces
+  it.
+
+#### Exact wiring points — where each runtime needs a new call/branch
+
+**1. Paper mode** (`GroupBRunner._process_tick()`, `runner.py:234-250`): After `V2EngineOrchestrator.on_tick()` returns
+and before `BenchmarkFillEngine.settle()`, filter for LEADER_HEDGE `AtomicInstruction`s and call
+`publish_atomic_instruction()` for each. In paper mode with `InMemoryTransport`, the publish→subscribe round-trip is
+synchronous → `route_atomic_instructions` → `AtomicLegExecutor.execute()` produces the leader/hedge/unwind-aware fill in
+the same tick. `BenchmarkFillEngine.settle()` must then be **replaced** (not supplemented) for LEADER_HEDGE instructions
+— keeping both paths would double-count fills.
+
+**2. Live/colocated mode**: A new tick driver is needed that calls `V2EngineOrchestrator.on_tick()`. The existing
+`StrategySupervisor` (`colocated_engine.py`) spawns per-client `client_worker.py` subprocesses but neither currently
+runs any tick loop. Wiring requires either (a) adding a tick loop to `client_worker.py` that drives
+`V2EngineOrchestrator.on_tick()` → `publish_atomic_instruction()` per emitted LEADER_HEDGE instruction, or (b) adding
+the same to `colocated_engine.py`'s main supervisor loop. Execution-service's `live_execution_handler.py` would then
+invoke `route_atomic_instructions()` (the subscribe side) alongside its existing single-order `Instruction` handling.
+
+**3. Batch/grid-search mode**: Identical to paper — `GroupBRunner._process_tick()` is the shared code path. Same wiring
+point, same `InMemoryTransport` pattern.
+
+---
+
+### `BenchmarkFillEngine.settle()` — recommended fix approach
+
+**Recommendation: Option (a)** — route multi-leg benchmark settlement through `AtomicLegExecutor`'s real
+leader/hedge/unwind code in simulated-fill mode, NOT (b) a parallel model inside `BenchmarkFillEngine`.
+
+**Current state**: `benchmark_fills.py:372` `_compute_atomic_fill` iterates `instruction.legs` independently — each leg
+priced at its own benchmark reference, always-successful. No leader/follower ordering, no `hedge_deadline_ms`, no
+partial-fill/naked/unwind modeling.
+
+**Why (a) — route through AtomicLegExecutor with a synthetic venue adapter:**
+
+- `AtomicLegExecutor` is already paper-default: constructed with no `sports_adapter`/`mode`, it builds a
+  `PaperBettingAdapter` (registered under every venue key), zero real I/O. Its `execute()` already implements
+  leader-first, hedge-within-deadline, and status-aware compensation (`CLOSE_LEADER_IF_HEDGE_FAILS` unwinds leader +
+  placed hedges; `naked_position=False` only when the venue confirmed the unwind).
+- **IBKR MEL precedent** (`runtime-topology.yaml` `ibkr_gateway_connectivity.batch_mode`): MEL replays historical events
+  through the same adapter callback interface that IB Gateway uses live — adapters don't know whether the source is real
+  or synthetic. This is the workspace's own proven pattern for batch=live symmetry. Benchmark settlement = replay
+  benchmark fills through the same `AtomicLegExecutor` interface with a synthetic venue adapter.
+- Requires: a synthetic benchmark venue adapter implementing the `SportsAdapter` protocol (`place_bet`/`cancel_bet`)
+  returning arrival-mid/mark fills as pure functions of (instruction, snapshot, now_utc) for determinism;
+  `hedge_deadline_ms` becomes a modeling parameter (hedge fills at reference within its modeled window, else fails →
+  unwind at a modeled worse price); the async executor must be driven deterministically from the synchronous backtest
+  loop.
+- **Fallback (a′)** if the `SportsAdapter` protocol coupling proves too strong for non-sports legs: extract the
+  leader/hedge/unwind state machine into a shared adapter-agnostic core that both the live executor and a benchmark
+  driver invoke.
+
+**Why NOT (b):** a parallel leader/hedge model inside `BenchmarkFillEngine` would be a SECOND implementation of
+safety-critical sequencing semantics → the two diverge → breaks the paper(W)==batch(W) ε=0 determinism spine
+(`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`). Duplicates tested logic; violates the
+reuse-one-code-path pattern.
+
+**Sequencing**: implement (a) AFTER the live-wiring call-site work, so the SAME executor serves live + benchmark.
+
+---
+
+### Summary table
+
+| System                                    | Verdict              | Reason                                                                                                                      | Implementation                                                  |
+| ----------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `MultiLegOrchestrator`                    | **DELETE**           | Zero callers, zero strategy-family demand for `LIQUIDITY_AWARE`                                                             | Remove module + tests; no shim                                  |
+| `instruction_adapter.py` HEDGE_BASIS path | **DELETE**           | Zero callers, zero `HEDGE_BASIS` emission, superseded by `AtomicLegExecutor` LEADER_HEDGE                                   | Remove `_decompose_hedge_basis` + dispatch branch               |
+| `AtomicLegExecutor` + routing seam        | **WIRE-IN**          | 6 engines emit LEADER_HEDGE; seam built but never wired; the real mechanism                                                 | Wire into paper/live/batch runtime at the 3 call sites above    |
+| `BenchmarkFillEngine.settle()`            | **REPLACE with (a)** | Flat per-leg loop is structurally optimistic; route through `AtomicLegExecutor` with synthetic adapter per IBKR MEL pattern | Implement after live wiring; SAME executor for live + benchmark |
+
 ## Todos
 
 - [ ] [OPERATOR] P1. Decide whether to prioritize wiring the live multi-leg execution path (item 2 above) ahead of any
