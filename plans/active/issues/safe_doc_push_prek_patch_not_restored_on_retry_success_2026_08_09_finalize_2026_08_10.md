@@ -86,11 +86,20 @@ source: >-
       exited **9**, matching the call-site wiring (`if ! check_orphaned_prek_patches; then ... exit 9; fi`). **VERDICT:
       CONFIRMED (independently, cross-session)** — the safety net genuinely detects an orphaned patch and fails loudly
       (exit 9); it does not silently exit 0.
-- [ ] [REVIEW] P1. **Confirm todo 3's disposition matches todo 1's actual verdict** — if the reproduction confirmed a
+- [x] ✅ [REVIEW] P1. **Confirm todo 3's disposition matches todo 1's actual verdict** — if the reproduction confirmed a
       genuine prek-level defect, confirm it was filed upstream or a known-good prek version was pinned or the workaround
       was documented in the script's own header comment (whichever the source doc's todo 3 actually did); if the
       reproduction pointed at `safe-doc-push.sh`'s own retry loop instead, confirm todo 3 was correctly re-scoped rather
-      than blindly executed as originally worded.
+      than blindly executed as originally worded. — CONFIRMED (2026-08-10, slot 33, review): independently read the
+      shipped header-comment block (`scripts/dev/safe-doc-push.sh` lines 90-103, § "ON PREK'S OWN PATCH RESTORE
+      RELIABILITY") — it accurately states todo 3 was re-scoped, not blindly executed as originally worded: no confirmed
+      prek-level defect (matches todo 1's independently-reproduced verdict from both the prior session and slot 15's
+      re-verification), so nothing was filed upstream against prek and no version pin was needed; instead the comment
+      correctly points at `_prek_race_snapshot`/`_prek_race_check` (inside `locked_git_commit`) as the actual mitigation
+      for the real risk — the cross-process race documented in
+      `prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`. This corroborates slot 15's identical
+      finding via an independent read of the current file content. — unified-trading-pm (verification only, no code
+      change).
 - [ ] [INFRA] P0. **Archive the source doc if all 3 todos are genuinely done**, then run the 6-step archival ritual:
       banner `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`, move to
       `plans/archive/2026_08/issues/`, fix every corpus-wide referrer including this finalize plan's own
@@ -146,3 +155,9 @@ source: >-
   setup, strengthening the verdict rather than just re-citing it. Todo 3 was already independently re-verified by slot
   15 (disposition matches todo 1's verdict, header comment accurate) — leaving that checkbox for whichever session is
   actually dispatched todo 3 to flip, per one-task-per-session scope discipline.
+- **2026-08-10 (slot 33, review,
+  `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09_finalize-2ee2b6e1d78c`)**: this session's
+  dispatched task was todo 3. Flipped above — independently read the current shipped header-comment block
+  (`scripts/dev/safe-doc-push.sh` lines 90-103), corroborating slot 15's identical finding via a fresh read of the file
+  content rather than re-citing the prior entry. All 3 of the source doc's todos are now flipped in THIS finalize doc;
+  todo 4 (archive the source doc + run the 6-step ritual) is the only remaining item, next in the sequential chain.
