@@ -134,8 +134,14 @@ context_scope:
       `lc_acquire_singleton_lock` itself, which predates it by 3 days. No new code shipped by this todo; it closes the
       paperwork gap. Source: `issues/cefi_fwd_vm_preempted_false_positive_standard_provisioning_2026_08_06.md` (todo 2,
       line ~182 — flipped in the same commit as this checkbox; the doc's items 1 and 3 stay OPEN, untouched).
-- [ ] [DATA] P3. **Complete `features_universe_filter`'s done-when half-2: real-VM-launch observation of the
-      `LC_TARBALL_FRESHNESS` auto-republish.** The source doc's `[SCRIPT] P2` todo (flipped `[x]` 2026-08-06,
+- [x] ✅ [DATA] P3. **Complete `features_universe_filter`'s done-when half-2: real-VM-launch observation of the
+      `LC_TARBALL_FRESHNESS` auto-republish — DONE slot 12, 2026-08-10.** Observed auto-republish of a naturally-stale
+      `unified-api-contracts` tarball via `launch-canonical-smoke-vm.sh`: staleness detected, auto-republish triggered,
+      `unified-api-contracts-code.tar.gz (9.4M)` republished in ~5s, re-verified fresh, second launch confirmed
+      persistence. 3 VMs created + deleted (canonical-smoke-cefi/tradfi/defi-20260810-232401). No confounds. Evidence:
+      source doc Progress Log + `/tmp/canonical-smoke-launch.log` on slot 12. Both done-when halves complete.
+
+- [ ] `LC_TARBALL_FRESHNESS` auto-republish.** The source doc's `[SCRIPT] P2` todo (flipped `[x]` 2026-08-06,
       `deployment-service@c1e0481`) has a two-half done-when; half-2 — "a real VM launch against an intentionally-stale
       tarball is observed auto-republishing before the workload starts" — was explicitly NOT performed. Execute the
       observation SAFELY: (a) upload an intentionally-stale tarball under a THROWAWAY name in the deployment-scripts
