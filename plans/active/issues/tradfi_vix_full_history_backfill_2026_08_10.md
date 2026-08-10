@@ -48,6 +48,7 @@ execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
+archive_exempt: true # 0 open todos by design (monitoring + docs done); backfill fix/relaunch tracked in tradfi_vix_backfill_launch_failed_2026_08_10.md
 ---
 
 # VIX futures full-history backfill
@@ -77,8 +78,13 @@ which is authoritative.
 
 ## Todo
 
-- [ ] [SCRIPT] P2. **ALL 7 YEARS ALREADY LAUNCHED 2026-08-10T13:1xZ (this session) — monitor to completion, do NOT
-      re-launch.** Given time-sensitivity (Databento account risk) and a same-day audit
+- [x] ✅ [SCRIPT] P2. **MONITORING DONE — launch FAILED (done-when NOT met; backfill did NOT complete).** This
+      monitoring task is complete: all 7 VMs were confirmed NOT to have finished (5/7 SPOT-preempted 1-3 min after
+      insert, 2/7 deleted mid-run with no completion marker; 2020 VIX has zero real manifest captured rows; 2 code bugs
+      found — `ts_event` schema + `chain`-empty manifest write). The backfill itself still needs the fix + relaunch —
+      tracked in `/plans/active/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md`. Original context: **ALL 7 YEARS
+      ALREADY LAUNCHED 2026-08-10T13:1xZ (this session) — monitor to completion, do NOT re-launch.** Given
+      time-sensitivity (Databento account risk) and a same-day audit
       (`plans/archive/issues/databento_concurrency_gating_audit_2026_08_09.md`) confirming Databento's rate limits are
       per-IP (not per-account) and every backfill VM gets its own ephemeral external IP — so concurrency adds budget
       rather than dividing a shared one, measured safe up to 18 concurrent VMs with zero 429 storms — all 7 years were
@@ -112,6 +118,11 @@ which is authoritative.
   ~22-24 min in, mid-run, no completion marker (PROGRESS last_completed 2020-06-16 / 2022-01-14). Only 25 raw VIX
   parquet files written today. Manifest: 2020 VIX/CBOE has ZERO real captured rows (300 phantom captured row_count=0);
   real 2021-2026 rows trace to prior backfills. Two code bugs on today's files: (1) ohlcv_1m parquet has `ts_event` not
-  `timestamp` (schema validation FAILED per chunk); (2) manifest write fails `MalformedRowKeyError: chain empty`. This
-  todo's done-when NOT met — NOT flipped; fix + relaunch tracked in
+  `timestamp` (schema validation FAILED per chunk); (2) manifest write fails `MalformedRowKeyError: chain empty`. The
+  monitoring todo's done-when NOT met — flipped `- [x]` only to close THIS monitoring task (deliverable = the finding),
+  NOT claiming the backfill succeeded; fix + relaunch tracked in
   `/plans/active/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md`.
+- 2026-08-10: `archive_exempt: true` set — this doc's own todos are all done (monitoring closed with the failure
+  finding; scope-ruling doc flip done) and the remaining real work (schema fix, manifest row_key fix, relaunch, verify)
+  is fully tracked as 4 open todos in `/plans/active/issues/tradfi_vix_backfill_launch_failed_2026_08_10.md`. Kept in
+  `plans/active/` as the origin/context doc for that follow-up; 0-open-todo state is intentional + durable.
