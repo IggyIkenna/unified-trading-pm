@@ -384,13 +384,19 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       — unified-trading-library@471dee02: `_read_slow_path` now checks blob age vs 5× budget threshold; age < 5× budget
       → "staleness budget may be too tight" (softened); age ≥ 5× or blob missing → "consolidator appears DOWN". 2 new
       unit tests + 2 existing tests updated; QG green.
-- [ ] [DATA] P2. Run a manifest census on the exact 61 `rateLimit` `attempted_failed` cells produced during the
+- [x] ✅ [DATA] P2. Run a manifest census on the exact 61 `rateLimit` `attempted_failed` cells produced during the
       2026-07-18 15:27-15:57Z api-football 5-VM concurrency window (entities
       FIXTURE_EVENTS/FIXTURE_LINEUPS/FIXTURE_STATS/PLAYER_STATS in `instruments-sports`) and confirm each (date, entity)
       cell has since transitioned to `captured`/`empty_confirmed`; for any still `attempted_failed`, trigger an explicit
       re-attempt. Source: `sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`. Done when: a written
       per-cell verdict is recorded for all 61 original rows, with zero remaining `rateLimit` `attempted_failed` rows
-      attributable to that window.
+      attributable to that window. — **DONE 2026-08-10 (slot 23): ALL 61 HEALED — zero `rateLimit` `attempted_failed`
+      rows remain attributable to the window.** Live-manifest census (`read_availability_index_safe`,
+      `instruments-store-sports-prd-central-element-323112`): 0 `rateLimit` `attempted_failed` in the 4 incident
+      entities; 0 `attempted_failed` (any reason) with `attempted_at` in 2026-07-18 15:27-15:57Z. The only current
+      `rateLimit` rows are 103 `STANDINGS` (attempted 08-05..08-10, tracked in-flight `af-backfill` campaign) — not
+      window-attributable. No re-attempt needed. Full per-cell verdict + method + reconstruction note in
+      `sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md`'s Progress Log.
 - [x] ✅ [PROCESS] P2. Codify the lesson "before launching a `--force` whole-corpus refetch to fix ONE column, check
       whether a surgical column-filler script already exists" into a codex SSOT (e.g.
       `/codex/05-infrastructure/vm-launcher-runbook.md`), citing the ~1,800x-call-volume-reduction precedent
