@@ -268,3 +268,9 @@ relaunch todo added above for once it reaches a terminal state.
   VM-delete guardrail signals confirm alive (heartbeat signals seconds-old, run.log actively writing, not a
   `canonical-migration-` prefix). Todo 2 remains gated — releasing back to the queue with `reason_code: GATED` per
   worker.md § 4c; not busy-waiting on a week-scale external condition.
+- **data_engineering (slot 13) 2026-08-10T23:12Z**: Re-checked terminal-state gate for todo 2 (the `-018` re-dispatch of
+  slot-15's same check). VM `mdps-backfill-cefi-20260808-095136` still `RUNNING` (`gcloud compute instances describe`
+  status=RUNNING, created 2026-08-08T08:57Z) — run.log actively logging `POLARS AGGREGATED` at `2026-08-10T23:11:14Z`
+  (seconds before this check), heartbeat file present, not a `canonical-migration-` prefix. Terminal state NOT reached —
+  todo 2 remains gated on it. Releasing back to the queue with `reason_code: GATED` (fleet cooldown will re-dispatch
+  after the ~3h window); not busy-waiting on a week-scale external condition.
