@@ -2120,9 +2120,27 @@ git fetch origin main --quiet
 # copied into this worktree as uncommitted modifications, and moving HEAD underneath them risks
 # a checkout conflict against files we are about to commit. Being behind origin is handled
 # downstream anyway, by the existing push-retry rebase.
+# True when $BRANCH is checked out by SOME OTHER worktree of this clone, which is exactly when
+# `git checkout $BRANCH` will die with "already used by worktree at ...".
+_qm_branch_held_elsewhere() {
+  local here
+  here="$(git rev-parse --show-toplevel 2>/dev/null)"
+  git worktree list --porcelain 2>/dev/null | awk -v b="refs/heads/$BRANCH" -v here="$here" '
+    /^worktree /   { wt = substr($0, 10) }
+    /^branch /     { if (substr($0, 8) == b && wt != here) { found = 1 } }
+    END            { exit(found ? 0 : 1) }
+  '
+}
+
 _qm_checkout_ship_branch() {
-  if [ -n "${QM_IN_ISOLATION:-}" ]; then
-    echo "[$REPO_NAME] isolation: staying on detached HEAD (the shared clone holds $BRANCH); will push HEAD:$BRANCH"
+  # Stay detached in quickmerge's OWN isolation, and equally whenever the branch is simply held
+  # by another worktree. The first condition alone was too narrow (2026-08-10): running
+  # --no-isolated from a private worktree of the same clone -- the sane way to work when a
+  # shared slot checkout keeps reverting you -- took the normal path and died on the very
+  # collision this function exists to prevent. The predicate that matters is "is the branch
+  # available to check out here", not "which mode am I in".
+  if [ -n "${QM_IN_ISOLATION:-}" ] || _qm_branch_held_elsewhere; then
+    echo "[$REPO_NAME] staying on detached HEAD ($BRANCH is held by another worktree); will push HEAD:$BRANCH"
     return 0
   fi
   if git show-ref --verify --quiet "refs/heads/$BRANCH" 2>/dev/null; then
@@ -2706,7 +2724,7 @@ while [ "$_qm_push_attempt" -lt "$_QM_PUSH_RETRIES" ]; do
   # no local branch for `-u` to bind and `git push -u origin $BRANCH` would push the SHARED
   # clone's stale refs/heads/$BRANCH instead of the commit we just made. Push the explicit
   # refspec, exactly as safe-doc-push.sh does.
-  if [ -n "${QM_IN_ISOLATION:-}" ]; then
+  if [ -n "${QM_IN_ISOLATION:-}" ] || _qm_branch_held_elsewhere; then
     _qm_push_err=$(git push origin "HEAD:refs/heads/$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
   else
     _qm_push_err=$(git push -u origin "$BRANCH" --quiet 2>&1) && { _qm_push_ok=1; break; }
