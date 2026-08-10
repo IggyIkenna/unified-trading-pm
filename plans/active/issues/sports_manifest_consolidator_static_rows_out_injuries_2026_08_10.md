@@ -139,6 +139,57 @@ compounded by an unrelated, already-monitored rate-limit event on the same VM la
 zero canonical growth during a window where canonical growth was genuinely (if temporarily) zero. No code fix is needed
 in `check_shard_freshness`, `_should_skip_date_for_per_league`, or the consolidator for INJURIES.
 
+## P2 verdict (2026-08-10, slot 7, data_engineering) — the `error=locked` streak was a STALE lock, not contention
+
+**Verdict: STALE lock from an ORPHANED holder.** The streak (01:22:55Z–01:29:43Z) was a stale `_index/consolidator.lock`
+blob left by a Cloud Run consolidator execution (`6tx26`) that Cloud Run killed at its **1800s task timeout mid-merge**
+— NOT legitimate serialized contention from concurrent live holders. The lock mechanism is **NOT defective** — the TTL
+reclaim worked exactly as designed and the bucket self-healed. The recurring enabler is a **config mismatch** (task
+timeout shorter than real merge duration) → tracked as a new P3.1 follow-up below.
+
+### Evidence (Cloud Logging, `uts-prod-manifest-consolidator-instruments-sports`, asia-northeast1)
+
+Lock config for this bucket: `CONSOLIDATOR_LOCK_TTL_SECONDS=2400`, `CONSOLIDATOR_STALL_ALERT_CYCLES=40`, job
+`timeoutSeconds=1800` (verified live; tf value 1800 matches).
+
+| time (UTC)            | execution     | event                                                                                                                                                                  |
+| --------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 00:49:55              | `6tx26`       | `phase=lock_acquired` (lock blob `started_at=00:49:55`)                                                                                                                |
+| 00:50:00              | `6tx26`       | `phase=duckdb_merge_start` (real merge 1)                                                                                                                              |
+| 01:05:42              | `6tx26`       | `phase=duckdb_merge_done rows_out=17090954` — **real absorption** (+271 over prior 17090683)                                                                           |
+| 01:05:55–57           | `6tx26`       | CAS-write retry re-reads canonical + shards, `duckdb_merge_start` again (merge 2)                                                                                      |
+| 01:19:29              | `6tx26`       | `Terminating task because it has reached the maximum timeout of 1800 seconds` — **Cloud Run SIGKILL mid-merge-2; `finally: _release_lock` never runs → lock orphaned** |
+| 01:20:20–32           | `6tx26` retry | `skipping cycle … fresh lock present` → `error=locked` → `exit(0)`                                                                                                     |
+| **01:22:55–01:29:43** | every tick    | `error=locked` streak — lock age 1980s→2388s, all **< 2400s TTL** (still "fresh" from the orphan)                                                                      |
+| 01:30:54.6            | `xzc5v`       | `clearing stale lock (age=2459.3s > TTL=2400.0s)` — TTL reclaim fires                                                                                                  |
+| 01:30:54.8            | `xzc5v`       | `phase=lock_acquired` → real merge 01:31:02→01:51:35 (`rows_out=17091186`, +232) — **self-healed**                                                                     |
+| 01:51:48–52           | `xzc5v`       | CAS retry → second `duckdb_merge_start`                                                                                                                                |
+| 02:00:27              | `xzc5v`       | **`Terminating task … maximum timeout of 1800 seconds`** — SAME timeout-kill pattern repeats                                                                           |
+| 02:10:57.9            | `86ghl`       | `clearing stale lock (age=2403.3s > TTL=2400.0s)` — repeats                                                                                                            |
+| 02:10:58              | `86ghl`       | `phase=lock_acquired` → real merge 02:11:04 — repeats                                                                                                                  |
+
+### Why it's the stale-lock branch, not contention
+
+- Every streak tick hit the **same orphaned lock** (`started_at=00:49:55` from the dead `6tx26`). There was **no
+  concurrent live holder** — `6tx26` was SIGKILLed at 01:19:29, ~3.5 min before the streak began, and no other execution
+  acquired the lock between 00:49:55 and 01:30:54 (verified: lock_acquired events only at 00:49:55/01:30:54/ 02:10:58).
+  This is the 2026-07-13 "lock-orphan blind spot" shape (SIGKILL bypasses `finally:`), here triggered by the **Cloud Run
+  task-timeout kill** rather than OOM — the `phase=duckdb_merge_start` at 01:05:57 with no matching `merge_done` is the
+  tell (a genuinely-finished merge always logs both).
+- No OOM/SIGKILL/MemoryError logged on either execution — the kill was purely the platform's 1800s task timeout.
+- The lock TTL (2400s) is deliberately > task timeout (1800s) per the tf design invariant ("a fresh lock can only belong
+  to a still-legally-running execution"), and it worked: the orphan self-cleared at 01:30:54 (age 2459.3s > 2400s) and
+  the next execution merged normally. The streak is just the _TTL−timeout = 600s_ window after a timeout-kill where the
+  dead execution's lock still reads "fresh".
+
+### Recurring enabler (this session: twice in ~1h)
+
+`6tx26` (killed 01:19:29) and `xzc5v` (killed 02:00:27) BOTH died the same way: a single Cloud Run execution ran a real
+merge (~15–20 min) **plus** a CAS-write retry re-merge, exceeding the 1800s task timeout, so Cloud Run killed a
+legitimately-still-running merge and orphaned its lock. The 1800s timeout was sized for the bucket's 6–9 min merges (tf
+comment) but this bucket now merges 72–75 shards / 17.3M rows_in in ~15–20 min per cycle. The consolidator lock logic is
+correct; the fix is config (mirror defi's 3600s timeout + 4200s TTL). Filed as P3.1 below.
+
 ## Todos
 
 - [x] ✅ [SCRIPT] P1. Determine whether INJURIES' `check_shard_freshness` path (or equivalent freshness-sentinel logic)
@@ -150,13 +201,40 @@ in `check_shard_freshness`, `_should_skip_date_for_per_league`, or the consolida
       collision class (single producer, no foreign `service_name`/`source` collision possible), and the observed stall
       was a real, self-recovering artifact of a wide-range backfill VM re-scanning already-covered ground, compounded by
       an unrelated rate-limit termination the fleet monitor already caught correctly.
-- [ ] [SCRIPT] P2. Confirm whether the `error=locked` streak observed (01:22:55Z-01:29:43Z, every attempt in that window
-      failed to acquire the lock) is a stale lock from a crashed/orphaned holder or legitimate serialized contention
-      from concurrent consolidator invocations — check the lock file's held-since timestamp against the holder
-      instance's actual liveness before assuming either. Repo: unified-trading-library (manifest_writer/consolidator
-      lock logic).
+- [x] ✅ [SCRIPT] P2. Confirm whether the `error=locked` streak observed (01:22:55Z-01:29:43Z, every attempt in that
+      window failed to acquire the lock) is a stale lock from a crashed/orphaned holder or legitimate serialized
+      contention from concurrent consolidator invocations — check the lock file's held-since timestamp against the
+      holder instance's actual liveness before assuming either. Repo: unified-trading-library (manifest_writer/
+      consolidator lock logic). — **RESOLVED, stale lock from an ORPHANED holder; no UTL code change.** See "P2 verdict
+      (2026-08-10)" above. Lock was `started_at=00:49:55` from execution `6tx26`, which Cloud Run SIGKILLed at 01:19:29
+      at its 1800s task timeout mid-second-merge (CAS-retry), so `finally: _release_lock` never ran; the orphan stayed
+      "fresh" (age < 2400s TTL) through the whole streak, and was TTL-reclaimed at 01:30:54 (age 2459.3s) — the next
+      execution merged normally. No concurrent live holder existed during the window (only lock_acquired events 00:49:55
+      / 01:30:54 / 02:10:58). Lock logic works as designed; the recurring enabler (task timeout 1800s < real merge+retry
+      duration) is a deployment-service config issue → P3.1.
 - [ ] [DOCS] P3. If confirmed as a genuine, recurring consolidator defect (not just an upstream freshness-skip bug each
       time), consider whether `census_all_af_entities_completion_2026_08_03.py` and
       `census_fixture_stats_lineups_widening_volume_2026_07_31.py` should cross-check a live VM's own progress marker
       (e.g. `[[VM_PROGRESS]]`) against the canonical read and warn when they diverge, rather than silently trusting a
       potentially-stale canonical snapshot.
+- [ ] [SCRIPT] P3.1. Bump the `instruments-sports` manifest-consolidator Cloud Run task timeout from 1800s to 3600s AND
+      its `CONSOLIDATOR_LOCK_TTL_SECONDS` from 2400s to 4200s (mirroring the `market-data-defi` per-bucket override
+      pattern) so a legitimately-running merge + CAS-retry re-merge (~15–20 min/cycle at current 72–75-shard /
+      17.3M-rows_in working set) can no longer hit the 1800s task timeout and get SIGKILLed mid-merge, orphaning the
+      lock and blocking the bucket for the TTL window (observed TWICE in ~1h on 2026-08-10 — `6tx26` killed 01:19:29Z,
+      `xzc5v` killed 02:00:27Z; both left stale locks reclaimed only at 2400s TTL). Keep the "TTL > task timeout"
+      structural invariant. Repo: deployment-service (terraform/gcp/manifest_consolidator_scheduler.tf) — deploy the
+      per-bucket override like `market-data-defi`'s, then verify via Cloud Logging that the next long merge logs no
+      task-timeout termination.
+
+## Progress Log
+
+- **2026-08-10 (slot 7, data_engineering)**: Resolved P2 — the `error=locked` streak was a STALE lock from an ORPHANED
+  holder (`6tx26`, killed by the 1800s Cloud Run task timeout at 01:19:29Z mid-CAS-retry-merge; `finally: _release_lock`
+  never ran; orphan stayed fresh under the 2400s TTL through the whole 01:22:55Z–01:29:43Z window and was reclaimed at
+  01:30:54Z). NOT serialized contention — no concurrent live holder. Lock logic (UTL `manifest_consolidator.py`
+  `_is_lock_fresh`/`_acquire_lock`/TTL) verified correct. Recurring enabler (same timeout-kill orphan struck `xzc5v`
+  again at 02:00:27Z, <1h later) filed as P3.1 (deployment-service task-timeout + TTL bump). No UTL code change shipped
+  — the lock worked as designed; the fix is config. Evidence via Cloud Logging (executions `6tx26`/`xzc5v`/`86ghl`,
+  `Terminating task … timeout of 1800` + `clearing stale lock age>2400s` events) + live job env
+  (`CONSOLIDATOR_LOCK_TTL_SECONDS=2400`, timeoutSeconds=1800).
