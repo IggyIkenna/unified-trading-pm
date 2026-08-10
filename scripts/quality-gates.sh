@@ -746,6 +746,36 @@ if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: Conflict-marker gate (plan hygiene — catches committed git conflict markers) ──
+# check_conflict_markers.sh lives ONLY in the pre-commit hook (run_hygiene_sweep.sh --precommit)
+# and in no CI/CD workflow or quality-gates.sh path. A pre-commit bypass (--no-verify, git rebase
+# --continue, a prek race condition, or a quickmerge sentinel-invalid re-gate that skips the hook)
+# lets committed conflict markers reach LDR undetected — committed_conflict_marker_plan_doc_2026_
+# 08_10.md. This is the second line of defense, scoped to your changeset (same pattern as the
+# frontmatter schema check above).
+# SSOT: plans/active/issues/committed_conflict_marker_plan_doc_2026_08_10.md
+CONFLICT_MARKER_CHECKER="${REPO_ROOT}/scripts/plan-hygiene/check_conflict_markers.sh"
+if [ -f "$CONFLICT_MARKER_CHECKER" ]; then
+    echo "Running conflict-marker check (plans/codex in your changeset)..."
+    _cm_files=""
+    for _f in $_fm_scoped_list; do
+        [ -f "$REPO_ROOT/$_f" ] || continue
+        _cm_files="${_cm_files} $REPO_ROOT/$_f"
+    done
+    if [ -z "${_cm_files// /}" ]; then
+        log_success "Conflict-marker check skipped (no doc changes in your changeset)"
+    else
+        if bash "$CONFLICT_MARKER_CHECKER" --quiet $_cm_files; then
+            log_success "Conflict-marker check passed (no conflict markers in your changeset)"
+        else
+            echo "❌ Conflict-marker check failed — a staged/changed plan/codex doc has committed" >&2
+            echo "   git conflict markers (<<<<<<<, >>>>>>>, or prettier-mangled form)." >&2
+            echo "   Resolve the markers before committing. See check_conflict_markers.sh header." >&2
+            _post_gate_fail "conflict-markers"
+        fi
+    fi
+fi
+
 # ── Post-gates: Doc retrieval-layer parity (L0 index <-> schema; cross-agent doctrine) ──
 # SSOT: codex/11-project-management/doc-frontmatter-schema.md + plans/active/docs_retrieval_layer_reconcile_2026_07_23.md.
 # Guards two things nothing else checks: (1) scripts/docs/gen_doc_index.py's hand-maintained
