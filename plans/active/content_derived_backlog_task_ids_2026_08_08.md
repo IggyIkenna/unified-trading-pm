@@ -235,29 +235,29 @@ Both were established by reading the code, and both are silent — neither raise
       back.
 
       Renames every derived-key namespace `-013`'s `derived_keys_for_row` enumerated: `tasks.task_id`, `backlog.yaml`'s
-              `id:`, `slot_skips.task_id`, `blocked_queue` (`task_id` column + the `BLK-op-` `blocked_id` shape only — a
-              regular blocked question's `blocked_id` is a random UUID and is never touched), `prerequisites.name`
-              (`auto_unpark__` shape) + `backlog.yaml`'s own `prereqs.prerequisites` list entries, `dispatch_cooldowns.key`
-              (`task:` shape), and the two `dedup_state` seen-keys JSON files (one exact remap, one prefix scan for the sixth
-              namespace whose `incoming_brief_hash` suffix is never persisted statically). Also handles a wrinkle `-013`
-              flagged but didn't resolve: an existing `<old_id>--ruling` materialized-operator-ruling task gets its OWN,
-              unrelated content-hash in the map (computed from its own distinct brief) — this script ignores that and instead
-              renames it, in the same pass as its parent, directly to `<new_id>--ruling`, the convention
-              `_materialize_operator_ruling_tasks`'s dedup actually depends on (a naive per-map-entry rename would have
-              stranded the old-named row and caused a duplicate re-materialization on the next regen tick). Hazard 1
-              (dispatched-row deferral) is re-checked FRESH per row at apply time (not trusted from the map's snapshot
-              `status`), deferring anything still in flight to `content_id_migration.py`'s three existing transition-point
-              hooks. Appends a `backlog_task_id_migrated` activity_log row per rename (append-only, matching `-012`'s ruling —
-              never rewrites history).
+                  `id:`, `slot_skips.task_id`, `blocked_queue` (`task_id` column + the `BLK-op-` `blocked_id` shape only — a
+                  regular blocked question's `blocked_id` is a random UUID and is never touched), `prerequisites.name`
+                  (`auto_unpark__` shape) + `backlog.yaml`'s own `prereqs.prerequisites` list entries, `dispatch_cooldowns.key`
+                  (`task:` shape), and the two `dedup_state` seen-keys JSON files (one exact remap, one prefix scan for the sixth
+                  namespace whose `incoming_brief_hash` suffix is never persisted statically). Also handles a wrinkle `-013`
+                  flagged but didn't resolve: an existing `<old_id>--ruling` materialized-operator-ruling task gets its OWN,
+                  unrelated content-hash in the map (computed from its own distinct brief) — this script ignores that and instead
+                  renames it, in the same pass as its parent, directly to `<new_id>--ruling`, the convention
+                  `_materialize_operator_ruling_tasks`'s dedup actually depends on (a naive per-map-entry rename would have
+                  stranded the old-named row and caused a duplicate re-materialization on the next regen tick). Hazard 1
+                  (dispatched-row deferral) is re-checked FRESH per row at apply time (not trusted from the map's snapshot
+                  `status`), deferring anything still in flight to `content_id_migration.py`'s three existing transition-point
+                  hooks. Appends a `backlog_task_id_migrated` activity_log row per rename (append-only, matching `-012`'s ruling —
+                  never rewrites history).
 
-              15 new tests (idempotency, dispatched-row deferral, dry-run, resumable batching across multiple small
-              transactions, every derived-key namespace, the `--ruling` wrinkle, cross-task `completed_tasks`/`prerequisites`
-              remapping in `backlog.yaml`, activity_log append-only, seen-keys file rewriting, and invert/rollback both for a
-              real prior apply and for a row that was never actually applied) — using the same real-ORM-schema
-              `create_all_tables()` fixture pattern as `test_content_id_migration_wiring.py`, not hand-rolled DDL. QG: 2944
-              passed (full suite), basedpyright 0 errors, ruff clean. Also verified end-to-end via direct CLI invocation
-              (dry-run, apply, idempotent re-apply, invert) against a throwaway scratch DB — all four modes behaved correctly.
-              Evidence: agent-orchestrator@a7dfb9652 (verified ancestor of origin/live-defi-rollout). Repo: agent-orchestrator.
+                  15 new tests (idempotency, dispatched-row deferral, dry-run, resumable batching across multiple small
+                  transactions, every derived-key namespace, the `--ruling` wrinkle, cross-task `completed_tasks`/`prerequisites`
+                  remapping in `backlog.yaml`, activity_log append-only, seen-keys file rewriting, and invert/rollback both for a
+                  real prior apply and for a row that was never actually applied) — using the same real-ORM-schema
+                  `create_all_tables()` fixture pattern as `test_content_id_migration_wiring.py`, not hand-rolled DDL. QG: 2944
+                  passed (full suite), basedpyright 0 errors, ruff clean. Also verified end-to-end via direct CLI invocation
+                  (dry-run, apply, idempotent re-apply, invert) against a throwaway scratch DB — all four modes behaved correctly.
+                  Evidence: agent-orchestrator@a7dfb9652 (verified ancestor of origin/live-defi-rollout). Repo: agent-orchestrator.
 
 - [ ] [OPERATOR] P1. **Dry-run the migration against a SCRATCH COPY of `state.db`, never the live file.** Operator-gated
       because it requires copying live orchestrator state and reading it outside the service. Assert: row-count
@@ -269,7 +269,10 @@ Both were established by reading the code, and both are silent — neither raise
       identity that must not diverge (`remint_backlog_collision` already accepts this two-store risk for ONE row; this
       is ~1,728). Run at a quiet dispatch moment — per CLAUDE.md, maintenance-window scheduling is skipped
       pre-live-trading, so this means "not obviously busy", not a formal window. Verify against the Phase-2 assertions
-      immediately after. (repo: agent-orchestrator)
+      immediately after. **Done-when**: the live apply completes, the Phase-2 assertions (exact-match row count,
+      byte-identical `done_sha`/`done_at`/`done_evidence`, all `completed_tasks` references remapped-or-justified) all
+      re-pass against post-apply live state, and the result is attached to this plan's Progress Log. (repo:
+      agent-orchestrator)
 - [ ] [BACKEND] P2. **Re-verify the two live collisions are gone and stay gone.** `fleet_promoter_glue_runner_stall-001`
       (resolved 2026-08-08 by closing its last todo) and
       `mtds_backfill_launcher_guard_overapplies_to_nontardis_venues-002` (open at authoring time). Done-when:

@@ -70,8 +70,12 @@ context_scope:
       cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run each todo's
       own stated done-when check where it is a command (the na-eligibility-timer fire-completion read, the orch_token
       reporter-staleness read, the JWT-secret token-survives-restart + healthz check, the 4 orphan-commit dispositions,
-      the wip-preserve ref disposition). **Done when**: all 8 verified, and any claim whose evidence does not hold up is
-      re-opened as a new tracked todo in this doc's Progress Log with the discrepancy stated.
+      the wip-preserve ref disposition). **NOTE (plan_reconciler agt-c7578b, 2026-08-10)**: the na-eligibility-timer
+      item and the wip-preserve-ref item were EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch10_2026_08_09.md`
+      (todos 1/2) and never completed inside batch2 itself — do NOT expect a done-when check to succeed against batch2
+      for those 2 specifically; check batch10's own evidence for them instead. **Done when**: all 8 verified, and any
+      claim whose evidence does not hold up is re-opened as a new tracked todo in this doc's Progress Log with the
+      discrepancy stated.
 - [ ] [REVIEW] P0. **Reconcile each todo's evidence into its TRUE source doc (8 docs, listed below)** — batch 2 was an
       extraction, so the 8 source-doc items it covers are the ones that go stale, not the batch's. Flip the specific
       todo in each of: `ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (3 of its 4 todos),
