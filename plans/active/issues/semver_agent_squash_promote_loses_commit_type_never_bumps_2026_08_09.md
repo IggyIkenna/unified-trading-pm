@@ -338,3 +338,13 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   consecutive identical re-check — confirms the earlier note that further re-checks add no new information until the
   promote PR's hard-failure class or the PR itself changes. Leaving todo 2 open/unchecked; skipping with
   `reason_code: GATED` again.
+- **2026-08-10 (infra worker, slot 30, todo 2 re-check)**: Re-verified from scratch —
+  `git merge-base --is-ancestor 30ed07eff origin/main` on `unified-trading-pm` still returns NO
+  (`origin/main..origin/live-defi-rollout` now 1186 commits, up from slot 8's 1162). `unified-trading-library`'s
+  `origin/main` tag is still `v0.77.0` (`git describe --tags origin/main` = `v0.77.0-2-gf2544c6a`) with
+  `git tag --contains 609299adf4bf49d5b027fd21289d6abd60a8bcfa` still empty. The auto-drain promote PR has rolled to
+  #2710 (opened 2026-08-10T07:16:26Z, superseding slot 8's #2709) — `QG slice (checks)` FAILED (same ratchet class:
+  prettier proseWrap, reference path convention, NA corpus size), `QG slice (tests)` still `in_progress`. Same blocker,
+  same root cause (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent
+  (hand off, don't chase serially — that doc's own scope, not this INFRA todo's). No alternate lever available. This is
+  the 11th consecutive identical re-check. Leaving todo 2 open/unchecked; skipping with `reason_code: GATED` again.
