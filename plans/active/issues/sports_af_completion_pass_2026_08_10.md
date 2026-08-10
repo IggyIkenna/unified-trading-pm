@@ -347,11 +347,20 @@ depends_on: []
           non-linear deceleration expected into denser 2022+ seasons.
         - `/pre-compact` executed — tree clean, `ahead=0`, nothing at risk.
 
-## Deferred work after 2026-08-10 ~21:10Z
+      - **2026-08-10 (slot 28, data_engineering, ~21:11Z–~21:14Z)** — Post-compact monitoring + pre-compact:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-07-11` (~21:07Z) → `2021-07-14` (~21:11Z). Monotonic, forward progress. ~399/2258 days done (~17.7%).
+          Heartbeat alive at `21:11:10Z`, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace ~3 season-start-dates in ~4 min — steady, consistent with prior trend. Still in 2021 seasons; non-linear
+          deceleration expected into denser 2022+ seasons. Run now ~4.6h old.
+        - No code shipped — pure monitoring across compact+resume cycles.
+        - `/pre-compact` executed — tree clean, `ahead=0`, nothing at risk.
+
+## Deferred work after 2026-08-10 ~21:15Z
 
 | Item                                                             | State / why deferred                                 | Blocked on                         |
 | ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-07-11`, pace variable non-linear      | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-07-14`, pace variable non-linear      | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
