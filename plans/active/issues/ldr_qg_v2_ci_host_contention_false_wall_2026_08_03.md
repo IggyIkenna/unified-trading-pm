@@ -151,13 +151,33 @@ green one).
       onto `/opt/.qg-governor-glue-shared` as this todo's own text suggested as the first option — see Progress Log for
       why that was live-disproven mid-fix (every interactive-slot process is sandboxed away from `/opt` entirely;
       unified onto a `/home`-based root instead). Full detail in the Progress Log entry below.
-- [ ] [INFRA] P2. **Determine whether the shared host running both the interactive agent-orchestrator slot fleet and the
-      per-repo GH Actions glue-runner CI is undersized for their combined peak concurrent demand.** Measure physical
-      core count + typical interactive-slot heavy-QG-phase concurrency + glue-runner concurrency during a representative
-      busy period (`uptime`, `qg-host-governor.sh --status`, `ps aux | grep glue`), and compare against
-      `qg_resource_baseline.json`'s assumed baseline. Done-when: a stated verdict (undersized / adequate) with the
-      measured numbers cited; if undersized, file a follow-up todo recommending either more headroom or a hard cap on
-      concurrent heavy-QG slots while glue-runner CI is active on the same host.
+- [x] [INFRA] P2. ✅ **Determine whether the shared host running both the interactive agent-orchestrator slot fleet and
+      the per-repo GH Actions glue-runner CI is undersized for their combined peak concurrent demand.** —
+      unified-trading-pm (doc-only, see Progress Log 2026-08-10 slot-9 entry for full measured numbers). **Verdict:
+      UNDERSIZED.** The physical envelope (8 physical cores / 16 vCPU, 30GiB RAM, `orchestrator.service` cgroup-capped
+      at ~26GiB) cannot safely absorb the fleet's own documented peak concurrent heavy-QG demand — the 2026-08-09
+      slot-29 incident (already in this doc's Progress Log) measured up to 19 concurrent `quality-gates.sh` processes
+      (vs. the CLAUDE.md-documented ≤2 rule) with load average climbing 40→69 and 14GB+ swap, and the RAM watchdog
+      killing even trivial near-zero- footprint background commands — evidence the host, not just the QG governor's
+      accounting, was at its real ceiling. A live re-check today (moderate period, no glue-runner CI active on this host
+      right now — see below) still showed load average 15.85 against 8 physical cores (~2x oversubscribed) with only 3-4
+      concurrent `quality-gates.sh` processes running. `qg_resource_baseline.json`'s wall-clock figures are all
+      `measured_concurrency: 1` (serial, uncontended) — e.g. `deployment-service` baseline `wall_s=106.0`, but this
+      doc's own finding 1 shows the SAME test suite hit `345s` wall (3.25× baseline) purely from contention, tripping
+      the `MAX_DURATION=300s` gate that was never calibrated for real fleet concurrency. Filed follow-up todo below
+      (hard-cap tightening, now that todo 2's ledger unification makes it enforceable) rather than recommending a host
+      resize, which is an operator cost decision out of AO scope.
+- [ ] [INFRA] P2. **Tighten the qg-host-governor's admission caps now that the CI-glue-runner and interactive-slot
+      ledgers are unified (todo 2, 2026-08-10)** — the UNDERSIZED verdict above means the current budget (live-measured
+      today: `qg_host_capacity` reports `cpu_slots=6` of 8 cores, and the reservation-mode `--status` output separately
+      shows a `total-instance gate: K=8`) still permits enough simultaneous heavy QG phases to reproduce the 2026-08-09
+      incident's RAM-pressure kills (19 concurrent `quality-gates.sh` processes measured, vs. the CLAUDE.md-documented
+      ≤2-full-QGs-at-once rule). Lower `QG_HOST_CONCURRENCY` (CPU-slot budget) and/or the total-instance gate's `K`, or
+      make the cap actively account for any self-hosted CI leg currently holding a reservation in the now-unified
+      ledger, then re-measure `uptime`/swap/kill-count under a representative busy period to confirm the 2026-08-09 kill
+      pattern no longer recurs. Done-when: a lowered cap is shipped + a follow-up busy-period measurement shows no
+      RAM-watchdog kills of unrelated (non-overbudget) processes. (repo: unified-trading-pm,
+      `scripts/quality-gates-base/qg-host-governor.sh`)
 - [ ] [REVIEW] P1. **Confirm whether `quality-gates-v2` is actually enforced as a REQUIRED branch-protection check on
       `deployment-service`'s `ldr_main` promotion path**, given PR#678 merged to `main` with zero successful
       `quality-gates-v2` runs against its head SHA (one timeout-failed, one cancelled) — per CLAUDE.md,
@@ -364,3 +384,58 @@ and just burn more contended compute.
   `_QG_GLUE_RUNNER_SHARED_ROOT` var references, flipped its test 3 assertion from "unchanged .tabs stripping" to "now
   collapses to the same root as glue-runner CI", added a 6th case proving `QG_HOST_SHARED_LEDGER_ROOT` overrides both
   branches at once) — all 8 assertions pass.
+
+- **2026-08-10 (slot-9, infra craft) — todo 3 RESOLVED, verdict: UNDERSIZED.** Live measurement on this shared host (the
+  same one both slot-12 and slot-14 worked on earlier today):
+  - **Physical envelope**: `lscpu`/`_qg_physical_cores()` → 8 physical cores, 16 logical (2 threads/core, 1 socket).
+    `free -h`: 30GiB total RAM, 47GiB swap configured. `orchestrator.service` cgroup (every interactive slot's actual
+    ceiling, confirmed via `/proc/self/cgroup`): `memory.max=27917287424` (approx 26.0GiB), `memory.high=24696061952`
+    (approx 23.0GiB throttle point), `memory.current=17147256832` (approx 16.0GiB, ~61% of cap) at measurement time.
+  - **Live snapshot right now** (moderate period — no self-hosted CI active on this host at measurement time, see
+    below): `uptime` load average **15.85, 15.69, 17.23** against 8 physical cores (~2x oversubscribed even with light
+    load); `qg-host-governor.sh --status` shows `physical_cores=8`, `CPU slots (80% x 8): 6`, `running heavy phases: 0`,
+    `live reservations: none`, `total-instance gate: K=8, tokens held now: 0/8`; live `ps aux` showed **3-4 concurrent
+    `quality-gates.sh` processes** from 3 different slots (27, 18, one more) despite the governor reporting zero
+    reservations — consistent with this doc's already-diagnosed (todo 1) ledger-visibility gap, now fixed as of today
+    but not yet observed under a genuinely busy period post-fix.
+  - **Documented peak** (this doc's own 2026-08-09 slot-29 entry, already in this Progress Log above): load average
+    climbed **40 to 69** over ~90 min, **up to 19 concurrent `quality-gates.sh` processes** host-wide (vs. the
+    CLAUDE.md-documented at-most-2-full-QGs-at-once rule), **14GB+ swap**, and the governor's own RAM self-abort
+    watchdog (`_qg_watchdog_pressure_hit`, default trip at <20% available) killed multiple runs legitimately — plus
+    trivial near-zero-footprint backgrounded `sleep` commands were ALSO killed within seconds, which that entry
+    attributed to the shared `orchestrator.service` cgroup itself being at/near its ceiling independent of what
+    host-wide `free -h` reported as "available." Today's live cgroup read above (`memory.max` approx 26.0GiB) confirms
+    that cap is real and not large relative to the fleet's peak demand.
+  - **Glue-runner CI concurrency right now**: **zero** — `ps aux | grep glue` found no glue-runner processes, and
+    `find /opt -iname '*glue*'` found no `/opt/github-glue-runners*` install on this host at all (only the inert
+    `glue-runner-crash-loop-watchdog` systemd timer + the now-unused `/opt/.qg-governor-glue-shared` ledger dir from
+    before todo 2's fix). Cross-checked `scripts/self-hosted-runners/self-hosted-qg-repos.txt`: 7 private repos
+    (`agent-orchestrator`, `strategy-service`, `e2e-testing`, `features-service`, `market-tick-data-service`,
+    `execution-service`, `ml-service`) are still configured to route their real `qg-slices` job to self-hosted runners,
+    but none has a live pool on THIS host at measurement time — reconciles slot-12's earlier finding that the
+    glue-runner pools for the 7 remaining repos are not currently colocated here. This measurement window therefore
+    could not directly observe interactive-slot + glue-runner CI concurrently saturating the SAME host at once; the
+    verdict below rests on the interactive-slot fleet's own documented peak (2026-08-09) plus today's baseline-vs-live
+    comparison, not a fresh combined-load observation.
+  - **Baseline comparison**: `qg_resource_baseline.json` is uniformly `measured_concurrency: 1` (single-process,
+    uncontended profiling) — e.g. `deployment-service` local baseline `wall_s=106.0`, `unified-trading-library` local
+    baseline `wall_s=215.7` / `peak_rss_mb=5406` (approx 5.3GB for ONE repo's QG run alone). This doc's own finding 1
+    already showed the identical `deployment-service` suite hit `345s` wall (3.25x baseline) purely from host
+    contention, tripping the `MAX_DURATION=300s` gate. The baseline was never calibrated against realistic fleet
+    concurrency, so any wall-clock-based CI gate keyed to it will keep producing false reds whenever real concurrent
+    load (which the fleet's own operation routinely produces, per the 2026-08-09 measurement) pushes wall time past
+    approximately 3x baseline — structurally, not as a rare fluke.
+  - **Verdict: UNDERSIZED.** 8 physical cores / 26GiB cgroup-capped RAM is not enough headroom for the interactive-slot
+    fleet's own documented peak concurrency (19 simultaneous heavy QG runs) to run safely, independent of whether
+    self-hosted CI is also active — the 2026-08-09 incident reproduced RAM-pressure kills from interactive-slot load
+    alone, with zero glue-runner involvement. Adding self-hosted CI (7 repos still configured) on top of that peak, now
+    correctly visible to a single shared reservation ledger (todo 2, shipped earlier today), will surface admission
+    contention/queueing that was previously invisible rather than adding new physical capacity — the resource envelope
+    itself is unchanged. Filed the follow-up hard-cap-tightening todo above per this todo's own done-when instruction;
+    did not recommend a host resize (operator cost decision, out of AO scope) as the primary fix.
+  - **Caveat**: this measurement window did not catch a live host state combining BOTH a busy interactive-slot period
+    AND active self-hosted glue-runner CI simultaneously (none of the 7 configured repos had a live run in progress at
+    measurement time) — the verdict is a synthesis of this doc's own prior peak-load evidence (interactive-slot side)
+    plus today's baseline/cgroup/governor-config reading, not a single fresh combined-saturation observation. A future
+    re-check during an active self-hosted CI run would strengthen this further but is not required for this todo's
+    stated done-when (verdict + measured numbers cited).
