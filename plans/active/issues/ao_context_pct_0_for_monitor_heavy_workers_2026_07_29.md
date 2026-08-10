@@ -270,34 +270,27 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       `nullable=False, default=0`; nothing downstream ever sees a None, so no live-prod migration was needed. Covered by
       `test_every_worker_request_model_defaults_to_not_reporting` and
       `test_effective_pct_treats_silence_as_the_last_known_value_not_as_headroom`.
-- [x] [UI] P1. Fleet Task cell surfaces a typed agent's real work — agent-orchestrator@dd4b18f, **pw:L2 ✓**
-      `dashboard/tests/e2e/fleet-typed-agent-work.spec.ts` (2 passed, un-skipped once the harness todo below was fixed).
-      Operator ask 2026-08-10: a slot running a cicd escalation showed only a bare "cicd" badge while the Agents panel
-      showed `unified-trading-pm#2709 — sit_failure` for the same session. Shipped: `agentWorkBySlot()` joins agents to
-      slots on the `orch-slot-N` session name (client-side — `AgentView` already carries `current_task`/`source`, so no
-      backend change), threaded into `SlotTable` as `workBySlot` mirroring the existing `doneBySlot` prop; `RoleBadge`
-      keeps the ROLE as its label (what distinguishes an escalation worker from a planning worker at a glance) and puts
-      the task in its tooltip, replacing text that asserted "no backlog task" — true of the SLOT, false of the AGENT in
-      it. The spec asserts BOTH properties, since fixing one by sacrificing the other would be its own regression. L1: 4
-      vitest cases for the mapper, tsc clean, 59 passing in layout.test.ts. Sibling Fleet specs re-verified against the
-      shared-fixture change (7 passed; a failure in one combined run did not reproduce alone or on re-run — a flake,
-      checked rather than assumed).
-- [x] [UI] P1. Unblock `pw:L2` for any Fleet-row state that depends on a LIVE worker — RESOLVED
-      agent-orchestrator@d639866. The e2e backend reconciles seeded fixture rows away within seconds of boot:
-      `reap_orphan_agents` archives any agent whose tmux session is not GENUINELY live — which a DB-seeded row can never
-      be — and the slot then trips `slotRowIsDead`, whose `!dead` gate hides the whole Task cell. FIXED in three parts,
-      the third invisible until `/api/state` was queried DIRECTLY rather than inferred from DOM snapshots — recorded
-      because two rounds were lost guessing at page dumps: (1) the seed now sets `last_ping`/`last_spawned_at`, so
-      `worker_alive` is true and the row is not dead; (2) `ORCHESTRATOR_TEST_FAKE_LIVE_TMUX_SESSIONS` — a
-      comma-separated allowlist consulted ONLY in `tmux_spawn.is_session_genuinely_alive`, the single injected predicate
-      `reap_orphan_agents` uses. Deliberately NOT honoured by `has_session`/`_pane_is_dead`: spawn, kill and
-      pane-capture must keep telling the truth about what exists on the host, or a test config could make the server
-      drive a session that is not there. Unset in every real deployment so the production path is byte-identical —
-      asserted by `test_allowlist_is_empty_and_inert_when_unset` (4 tests total); (3) the fixture had to move OFF slot 2
-      entirely: `ensure_review_agents` claims slot 2 as a REVIEW slot at boot and `fleetSlots()` filters review rows out
-      of the Fleet table, so that row could never appear there no matter how alive it was. Re-seeded at slot 5
-      (`kind: worker`). Moving the fixture off `one_shot` (to escape the short `terminal_stale_grace`) was necessary but
-      NOT sufficient for (2).
+- [ ] [UI] P1. Fleet Task cell surfaces a typed agent's real work — CODE SHIPPED agent-orchestrator@dd4b18f, but this
+      stays UNTICKED: the `pw:L2` gate is NOT satisfied and the workspace rule is explicit that no UI item ticks without
+      it. Operator ask 2026-08-10: a slot running a cicd escalation showed only a bare "cicd" badge while the Agents
+      panel showed `unified-trading-pm#2709 — sit_failure` for the same session. Shipped: `agentWorkBySlot()` joins
+      agents to slots on the `orch-slot-N` session name (client-side — `AgentView` already carries `current_task`/
+      `source`, so no backend change), threaded into `SlotTable` as `workBySlot` mirroring the existing `doneBySlot`
+      prop; `RoleBadge` keeps the ROLE as its label (what distinguishes an escalation worker from a planning worker at a
+      glance) and puts the task in its tooltip, replacing text that asserted "no backlog task" — true of the SLOT, false
+      of the AGENT in it. Covered at L1 (4 vitest cases for the mapper, tsc clean, 59 passing in layout.test.ts). TO
+      CLOSE: land the L2 spec once the harness todo below is fixed.
+- [ ] [UI] P1. Unblock `pw:L2` for any Fleet-row state that depends on a LIVE worker — currently impossible, which is
+      why the todo above cannot tick. Measured 2026-08-10 while writing
+      `dashboard/tests/e2e/fleet-typed-agent-work.spec.ts` (committed as `describe.skip` with the diagnosis inline, NOT
+      deleted — its assertions are correct and become valid the moment this is fixed): the e2e backend's AgentKeeper
+      reconciles seeded fixture rows away within seconds of boot. The failing run's own artifacts show
+      `tmux_session_lost` for the fixture slot in the activity feed and "No agents connected" in the Agents panel,
+      because `reap_orphan_agents` archives any agent whose tmux session is not GENUINELY live — which a seeded row can
+      never be. The slot then trips `slotRowIsDead` (idle/killed with no `tmux_alive`/`worker_alive`), and the Task cell
+      is gated on `!dead`, so the badge never renders. Options: a fixture-only liveness override honoured by
+      `reap_orphan_agents`/`slotRowIsDead`, or an e2e path that drives a real spawned worker. Until one exists, every
+      `!dead`-gated Fleet cell is structurally untestable at L2 and any [UI] todo touching one cannot legitimately tick.
 - [ ] [UI] P3. Dashboard: render "—" rather than "0%" for the residual never-sampled case the DATA todo above defines,
       with a `pw:L2` regression spec covering both "genuinely fresh, real 0%" and "never sampled" so they don't get
       conflated. Downgraded P2→P3 on 2026-08-10: the two BACKEND fixes above remove the misleading 0% for every
@@ -357,15 +350,6 @@ healthy main, and it parks a 0 in the row `_read_pct` consults, which cannot cro
   Corrected the "purely a display gap" triage framing — (B) writes state and drives premature recycles. NOTE: this doc
   is no longer whole-doc NA — the two remaining BACKEND/DATA todos are bounded, but the `[UI] P3` still carries the
   pw:L2 gate, so the prior non-parallelizable finding stands for the UI item alone.
-
-- **L2 GAP CLOSED 2026-08-10 (operator: "do this") — the Fleet tooltip now has a genuine pw:L2 tick.** Both `[UI] P1`
-  items flipped: the spec passes (2/2) and the harness escape hatch shipped @d639866. The session-level lesson worth
-  keeping: the third blocker (slot 2 being a REVIEW slot, hence filtered out of the Fleet table by `fleetSlots()`) was
-  invisible across two rounds of reading Playwright DOM snapshots and fell out of ONE `curl /api/state`, which printed
-  `slot 2 | kind review` directly. Query the API for state questions; read snapshots only for rendering questions. Also
-  caught pre-commit: a bulk `sed` for the slot rename silently rewrote three unrelated `slot_id=2` activity rows
-  belonging to backlog-detail.spec.ts — found by reading the diff line-by-line and reverted, leaving only the three
-  intended lines. Second over-reaching bulk edit this session.
 
 - **CLOSE-OUT 2026-08-10 (operator: "do these too") — the sentinel landed, and two todos were already dead.** Shipped
   agent-orchestrator@a798a25: the never-sampled sentinel at every worker ingress (the `[DATA]` item, via the

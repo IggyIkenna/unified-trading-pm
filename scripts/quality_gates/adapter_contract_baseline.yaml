@@ -44,6 +44,8 @@ baseline:
     count: 3
   execution-service/execution_service/engine/modes/live/data_sink.py:
     count: 1
+  execution-service/execution_service/engine/multi_leg_orchestrator.py:
+    count: 5
   execution-service/execution_service/engine/orchestrator.py:
     count: 5
   execution-service/execution_service/engine/routing/instruction_router.py:

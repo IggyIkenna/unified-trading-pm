@@ -42,7 +42,7 @@ source: >-
   hard-block re-dispatch because no machine `depends_on` existed. This plan supplies the 2 real upstream todos so the
   companion gated plan can hold on them for real.
 assigned_role: data_engineering
-sequential: true
+sequential: false
 drift_direction: advance-code
 context_scope:
   [

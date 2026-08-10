@@ -276,21 +276,9 @@ def get_first_paragraph_after_heading(body_text: str) -> str | None:
 
     if paragraph_lines:
         result = " ".join(paragraph_lines)
-        # Truncate to reasonable length, respecting word/sentence boundaries
+        # Truncate to reasonable length
         if len(result) > 200:
-            truncated = result[:197]
-            # Prefer sentence boundary: period/exclamation/question-mark followed by space
-            last_sentence = -1
-            for punct in (". ", "! ", "? "):
-                pos = truncated.rfind(punct)
-                if pos > last_sentence:
-                    last_sentence = pos
-            if last_sentence > 0:
-                result = truncated[: last_sentence + 1] + " ..."
-            else:
-                # Fall back to last whole-word boundary
-                last_space = truncated.rfind(" ")
-                result = truncated[:last_space] + " ..." if last_space > 0 else truncated + "..."
+            result = result[:197] + "..."
         return result
     return None
 

@@ -60,7 +60,6 @@ last_updated: 2026-07-27
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-sequential: true
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 8
@@ -257,7 +256,7 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       any other slot's) in-flight VMs. 9b's own full-matrix completion remains genuinely open, now owned by slot-7's
       in-flight run — see the disposition note below.
 - [x] 9b-duplicate-vm-guard-mdps. ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-2)** —
-      `market-data-processing-service@063cea2` + `deployment-service@c8ee47e`. Re-checked live fleet state on pickup of
+      `market-data-processing-service@6cd96e8` + `deployment-service@c8ee47e`. Re-checked live fleet state on pickup of
       9b: slot-7's driver (PID 3665121, started 11:21 UTC) still running, 1h18m+ elapsed, genuinely progressing — stood
       down rather than launch a competing run, same precedent as `9b-duplicate-vm-guard` above. Ported the identical
       `_find_inflight_duplicate_vm` guard (labels- based `aggregated_list_instances` check, no raw gcloud/subprocess)
@@ -438,7 +437,7 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `process_candles_handler` with `is_mock_mode=False` updated to mock `DependencyChecker` (previously they never
       exercised any real dependency-checking code before reaching the mocked dispatch primitive — my new pre-filter step
       now runs ahead of that point). Full QG green (2315 passed / 2 skipped). Evidence:
-      `market-data-processing-service@09259b3`.
+      `market-data-processing-service@28e6c06`.
 - [x] ✅ 14-followup. [SCRIPT] P1. **NEW 2026-07-31 (slot-4, from todo 14's post-phase codex audit).** Add an
       "inverse-phantom" `content_check=` verdict to both `/data-pipeline-check-mdps` and `/data-pipeline-check-features`
       drivers: a freshly-written parquet with 100% NaN bins while the manifest records `capture_status=captured` should
@@ -450,7 +449,7 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       two-signal contract". Repos: market-data-processing-service, features-service. — **DONE (slot-8, 2026-07-31)**:
       shared `check_inverse_phantom()` engine primitive shipped in `unified-trading-library@8b894105`
       (`pipeline_e2e_check/shard_verify.py` + `ShardCheckResult.content_check`/`content_check_nan_ratio` fields + a
-      report "Content" column); consumed by both drivers — `market-data-processing-service@274eadb`
+      report "Content" column); consumed by both drivers — `market-data-processing-service@12a3f6b`
       (`_check_content_for_inverse_phantom`, consults the SAME `mdps_ohlc_is_nullable` UAC oracle the write seam uses so
       a legitimate nullable-OHLC honest-absence window is never mislabeled) and `features-service@6afdb414`
       (`_check_content_for_inverse_phantom`, checks every non-identity numeric column since no per-type nullability
@@ -472,7 +471,7 @@ primitive to `unified_trading_library.pipeline_e2e_check.shard_verify` (bar: eve
 `value_columns` NaN, not merely most — a row with even one real value is never flagged) plus
 `ShardCheckResult.content_check`/`content_check_nan_ratio` + a report "Content" column, all shipped in
 `unified-trading-library@8b894105`. Wired into both drivers: MDPS's `_check_content_for_inverse_phantom`
-(`market-data-processing-service@274eadb`) consults the SAME `mdps_ohlc_is_nullable` UAC oracle the write seam itself
+(`market-data-processing-service@12a3f6b`) consults the SAME `mdps_ohlc_is_nullable` UAC oracle the write seam itself
 uses (via `_type_token_from_canonical_id` for the instrument_type) before flagging, so a legitimate nullable-OHLC
 honest-absence window (`trades`/`derivative_ticker`/etc) is never mislabeled; features-service's twin
 (`features-service@6afdb414`) has no equivalent per-type oracle, so it checks every non-identity numeric column against
@@ -496,7 +495,7 @@ needs redesigning the function's data_type derivation, not a 1-line unpack fix) 
 still-open issue doc rather than a fresh one (same root cause, already active, `assigned_vm: planning`) — did NOT fix it
 here, out of this todo's scope.
 
-Repos shipped: `unified-trading-library@8b894105`, `market-data-processing-service@274eadb`,
+Repos shipped: `unified-trading-library@8b894105`, `market-data-processing-service@12a3f6b`,
 `features-service@6afdb414`.
 
 > **History extracted 2026-07-24 (plan-hygiene line-cap remediation).** The fully-closed dated entries from session
