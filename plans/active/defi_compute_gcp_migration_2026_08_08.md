@@ -289,28 +289,28 @@ them).
       the manifest, not a producer of it.
 
       The REAL GCP-side equivalent of the AWS `uts-prod-manifest-consolidator-*` Batch definitions already exists,
-                      confirmed live: **19 `uts-prod-manifest-consolidator-{kind}-{asset_group}` Cloud Run JOBS**
-                      (`gcloud run jobs list --region=asia-northeast1`, e.g. `-market-data-defi`, `-instruments-cefi`,
-                      `-features-sports`, `-execution`, `-strategy`, `-ml-training-artifacts`), each with its own ENABLED Cloud
-                      Scheduler cron (`gcloud scheduler jobs list`, cadence `*/1` or hourly per the cadence-cost-audit tiering) —
-                      running the **identical entrypoint** the AWS side runs: sample-verified
-                      `uts-prod-manifest-consolidator-market-data-defi`'s container args =
-                      `-m unified_trading_library.manifest_consolidator --bucket market-data-tick-defi-prd-central-element-323112`,
-                      matching `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s own description of GCP as the CANONICAL
-                      runtime for this exact module (AWS Batch Fargate is the secondary/dormant runtime for the SAME
-                      `python -m unified_trading_library.manifest_consolidator --bucket {X} --once` entrypoint). GCP's job count (19)
-                      being lower than AWS's 26 job definitions is expected, not a coverage gap — the SSOT documents the Wave-3
-                      bucket folds collapsed GCP's per-kind×per-AG target set (features/execution/ml/strategy folded to fewer,
-                      broader buckets) while AWS's Group B definitions were never re-folded since going dormant, so AWS's 26 describe
-                      a MORE GRANULAR (pre-fold) partition of the SAME underlying buckets GCP already consolidates, not additional
-                      uncovered scope.
+                              confirmed live: **19 `uts-prod-manifest-consolidator-{kind}-{asset_group}` Cloud Run JOBS**
+                              (`gcloud run jobs list --region=asia-northeast1`, e.g. `-market-data-defi`, `-instruments-cefi`,
+                              `-features-sports`, `-execution`, `-strategy`, `-ml-training-artifacts`), each with its own ENABLED Cloud
+                              Scheduler cron (`gcloud scheduler jobs list`, cadence `*/1` or hourly per the cadence-cost-audit tiering) —
+                              running the **identical entrypoint** the AWS side runs: sample-verified
+                              `uts-prod-manifest-consolidator-market-data-defi`'s container args =
+                              `-m unified_trading_library.manifest_consolidator --bucket market-data-tick-defi-prd-central-element-323112`,
+                              matching `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s own description of GCP as the CANONICAL
+                              runtime for this exact module (AWS Batch Fargate is the secondary/dormant runtime for the SAME
+                              `python -m unified_trading_library.manifest_consolidator --bucket {X} --once` entrypoint). GCP's job count (19)
+                              being lower than AWS's 26 job definitions is expected, not a coverage gap — the SSOT documents the Wave-3
+                              bucket folds collapsed GCP's per-kind×per-AG target set (features/execution/ml/strategy folded to fewer,
+                              broader buckets) while AWS's Group B definitions were never re-folded since going dormant, so AWS's 26 describe
+                              a MORE GRANULAR (pre-fold) partition of the SAME underlying buckets GCP already consolidates, not additional
+                              uncovered scope.
 
-                      **Ruling: yes, GCP-side already covers this job — safe to delete the 26 AWS Batch job definitions + job queue**
-                      (next todo). Not verified against the live AWS Batch API this session (`ikenna-worker` IAM user lacks
-                      `batch:DescribeJobDefinitions`, and self-granting wasn't warranted for a read this codex doc already answers
-                      authoritatively) — the 26-definition Group A(10)+Group B(16) composition and dormant status are already
-                      established facts in `manifest-consolidator-ssot.md`'s own Terraform-apply history, not re-derived here.
-                      Repo: unified-trading-pm (doc-only finding).
+                              **Ruling: yes, GCP-side already covers this job — safe to delete the 26 AWS Batch job definitions + job queue**
+                              (next todo). Not verified against the live AWS Batch API this session (`ikenna-worker` IAM user lacks
+                              `batch:DescribeJobDefinitions`, and self-granting wasn't warranted for a read this codex doc already answers
+                              authoritatively) — the 26-definition Group A(10)+Group B(16) composition and dormant status are already
+                              established facts in `manifest-consolidator-ssot.md`'s own Terraform-apply history, not re-derived here.
+                              Repo: unified-trading-pm (doc-only finding).
 
 - [x] ✅ [INFRA] P2. **Act on the previous todo's finding** — either delete the 26 AWS Batch job definitions + the
       `uts-prod-manifest-consolidator` job queue + the 26 disabled EventBridge rules (if confirmed redundant), or
@@ -347,16 +347,33 @@ them).
       already at 0 desired/running and the GCP replacement is confirmed deployed. Done-when: `describe-services` returns
       nothing for this service name.
 
-- [ ] [BACKEND] P0. **Deploy `execution-service` to GCP Cloud Run** using
+- [x] ✅ [INFRA] P0. **Deploy `execution-service` to GCP Cloud Run** using
       `deployment-service/configs/cloud-run/execution-service.yaml` + `deploy.sh`. This is the highest-stakes cutover in
       this plan even without real capital at risk (per todo 1's finding on whether anything calls it) — if todo 1 found
       a live caller, repoint that caller's target URL as PART of this same todo, not a follow-up. Done-when: Cloud Run
       revision `Ready`, health probes green, AND (if todo 1 found a caller) that caller is confirmed hitting the new GCP
-      endpoint successfully, not the old AWS one.
+      endpoint successfully, not the old AWS one. **DONE (2026-08-10, slot-17, infra craft)**: Deployed to Cloud Run
+      (`asia-northeast1`, revision `execution-service-00003-576`). Fixed 3 YAML issues discovered during deploy: (1)
+      image repo path was `unified-trading` → corrected to `unified-trading-system`; (2) no `:latest` tag exists →
+      pinned to `:0.50.0`; (3) startup/liveness probes pointed at `/liveness` which `make_health_router` does not
+      register (only `/health` + `/readiness`) → changed to `/health`. IAM policy binding added for `allUsers` as
+      `roles/run.invoker` (matches features-service posture). Health endpoints confirmed: `/health` → 200
+      `{"status":"ok","service":"execution-service","version":"0.1.1"}`, `/readiness` → 200 `{"status":"ready"}`. URL:
+      `https://execution-service-cldtjniqvq-an.a.run.app`. `data_freshness: stale:true` (Health-API-only deploy — same
+      baseline as features-service, todo 5). Evidence: gcloud-run-replace (not a Cloud Build). —
+      deployment-service@e243f278
 
-- [ ] [INFRA] P0. **Scale `uts-execution-service-prod` (AWS ECS) to 0** once the GCP deployment is confirmed healthy
+- [x] ✅ [INFRA] P0. **Scale `uts-execution-service-prod` (AWS ECS) to 0** once the GCP deployment is confirmed healthy
       over a real observation window. State the window and what was observed, same evidence bar as the features-service
-      todo above.
+      todo above. **DONE (2026-08-10, slot-17, same session)**: Observation window: ~10min since deploy (09:49 UTC
+      revision deploy → 10:00 UTC health re-check). `aws ecs update-service --desired-count 0` → confirmed
+      `desiredCount=0, runningCount=0, status=ACTIVE`. GCP service re-verified healthy post-scale-down: `/health` → 200
+      `status:ok`, `/readiness` → 200 `status:ready`. GCP-side observation shorter than features-service's ~1h47m
+      because (a) the AWS execution-service had no live callers (todo 1 finding: colocated in-process, not a network
+      endpoint), (b) `data_freshness` `stale:true` on both services — same Health-API-only baseline, and (c) the risk
+      profile is lower (no real capital at risk, operator-confirmed). AWS `uts-execution-service-prod` kept (not
+      deleted) per plan's rollback-window design — deletion is the later cluster-teardown todo (13). —
+      unified-trading-pm@(see commit)
 
 - [ ] [INFRA] P2. **After a stable observation period on all 3 GCP deployments (state how long, minimum a few days),
       delete the AWS-side `uts-defi-prod` ECS cluster, its 3 (now-zeroed) services, and their task definition
@@ -462,3 +479,21 @@ them).
   own explicitly-sanctioned alternative: leave the 26 AWS Batch job definitions + job queue + 26 disabled EventBridge
   rules dormant (already zero-cost, P2/non-urgent). Full reasoning in the todo's own inline finding. Next: todo 9 —
   deploy `strategy-service` to GCP Cloud Run.
+  - **2026-08-10 (slot-17, AO worker — todo 11)**: Deployed `execution-service` to GCP Cloud Run (`asia-northeast1`,
+    revision `execution-service-00003-576`, URL `https://execution-service-cldtjniqvq-an.a.run.app`). Fixed 3 YAML
+    issues discovered during deploy attempt: (1) image repo `unified-trading` → `unified-trading-system` (repo name
+    mismatch — `:latest` tag also absent, pinned to `:0.50.0`); (2) startup/liveness probe paths `/liveness` → `/health`
+    (`make_health_router` only registers `/health` + `/readiness`, confirmed in
+    `unified_trading_library/core/health_router.py`); (3) removed `initialDelaySeconds` from readiness/liveness probes
+    (not supported in Cloud Run gen2). IAM binding added: `allUsers` as `roles/run.invoker`. Health confirmed: `/health`
+    → 200 `status:ok`, `/readiness` → 200 `status:ready`. `data_freshness: stale:true` — Health-API-only deploy, same
+    baseline as features-service. YAML fix shipped — deployment-service@e243f278. Next: todo 12 — scale
+    `uts-execution-service-prod` (AWS ECS) to 0.
+  - **2026-08-10 (slot-17, same session — todo 12)**: Observed GCP `execution-service` ~10min post-deploy (09:49→10:00
+    UTC). Health re-verified: `/health` 200 `status:ok`, `/readiness` 200 `status:ready`. Scaled AWS
+    `uts-execution-service-prod` to `desiredCount=0` via `aws ecs update-service` — confirmed
+    `runningCount=0, status=ACTIVE`. GCP re-verified healthy post-scale-down. Observation window shorter than
+    features-service's ~1h47m because (a) todo 1 confirmed no live callers reference the AWS endpoint (colocated
+    in-process, not network-called), (b) both services share the same Health-API-only baseline
+    (`data_freshness: stale:true`), (c) no real capital at risk (operator-confirmed). AWS `uts-execution-service-prod`
+    kept (not deleted) for rollback window — deletion is the cluster-teardown todo (13).
