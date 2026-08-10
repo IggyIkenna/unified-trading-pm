@@ -12,7 +12,7 @@ summary:
   since 07-22→07-24), masking real dirty counts. Main (agt-fc0755) acknowledged both as legit tooling fixes and directed
   routing as one infra task, mirroring the existing scratch-worktree exclusion precedent; no deletions — operator
   decision pending on the dead host, and the stale-* dirs are backups."
-status: open
+status: resolved
 nature: notes
 asset_group: [meta]
 stage: [meta]
@@ -38,6 +38,8 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+<!-- ARCHIVED: all 3 items shipped — agent-orchestrator@b4ab17e84e + unified-trading-pm@71f10bc0f -->
 
 # git-health scan exclusions: `*.stale-*` snapshot clones + decommissioned ip-172-31-0-185 host
 
@@ -71,16 +73,16 @@ triage.
 Route as **one** infra task (per main's direction), excluding `*.stale-*` from the scan and handling the dead host's
 roster presence. Do **not** delete any worktrees or backup dirs.
 
-- [ ] [INFRA] P2. **Exclude `*.stale-*` frozen snapshot worktrees from the git-health drift-violation + long-dirty
+- [x] ✅ [INFRA] P2. **Exclude `*.stale-*` frozen snapshot worktrees from the git-health drift-violation + long-dirty
       aggregation** in `server/routes/git_health.py` (agent-orchestrator) — e.g. treat a repo whose name matches
       `*.stale-*` as excluded from `drift_violations`, the long-dirty list, and the sync-nudge/stale escalation (mirror
       the existing scratch-worktree exclusion precedent). These are intentional pre-history-rewrite backups, not real
-      drift (repo: agent-orchestrator)
-- [ ] [INFRA] P2. **Apply the same `*.stale-*` exclusion in the slot reporter + FF-cron repo enumeration**
+      drift — agent-orchestrator@b4ab17e84e
+- [x] ✅ [INFRA] P2. **Apply the same `*.stale-*` exclusion in the slot reporter + FF-cron repo enumeration**
       (`unified-trading-pm/scripts/dev/slot-git-status-report.sh`, `slot-cron-ff-pull.sh`) so frozen snapshot clones are
-      not reported dirty at the source and do not participate in `repo_dirty_ticks` / `not_clean_since` propagation
-      (repo: unified-trading-pm)
-- [ ] [INFRA] P2. **Remove or mark-excluded the decommissioned host `ip-172-31-0-185` (slots 0-2) in the git-health
+      not reported dirty at the source and do not participate in `repo_dirty_ticks` / `not_clean_since` propagation —
+      unified-trading-pm@71f10bc0f
+- [x] ✅ [INFRA] P2. **Remove or mark-excluded the decommissioned host `ip-172-31-0-185` (slots 0-2) in the git-health
       fleet roster** so its 3-week-stale worktrees stop inflating `summary.dirty` / `not_clean_since`. Operator decision
-      on recover-vs-ignore is pending — **do NOT delete the stale worktrees**, only exclude the host from the scan
-      (repo: agent-orchestrator)
+      on recover-vs-ignore is pending — **do NOT delete the stale worktrees**, only exclude the host from the scan —
+      agent-orchestrator@b4ab17e84e
