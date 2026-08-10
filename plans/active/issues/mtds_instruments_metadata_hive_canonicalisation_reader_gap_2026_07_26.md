@@ -403,7 +403,7 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
       venues (not just SOLEND/MARGINFI) have `row_count=0`. MORPHO/FLUID (previously verified working by todo 8's manual
       VM) are now also `empty_confirmed`/`row_count=0`. This is a fleet-wide Cloud Run Job regression, not a
       SOLEND/MARGINFI-specific issue. Escalated per data-correctness HARD RULE → new P0 issue doc:
-      `/plans/active/issues/defi_risk_params_cron_job_fleet_wide_zero_rows_2026_08_10.md`. Repo:
+      `/plans/archive/issues/defi_risk_params_cron_job_fleet_wide_zero_rows_2026_08_10.md`. Repo:
       market-tick-data-service.
 
 > **2026-08-06 archive-candidate audit**: Progress Log (slot-4, 2026-08-05): 'Smoke-fetch verification deferred to next
@@ -420,6 +420,6 @@ Not a judgment call — the fix pattern already exists and shipped for 6 sibling
   `b63200a7`) was confirmed (slot-28) to have both `d5882379` and `bd153821` as ancestors, so the failure is in the
   Job's execution path (image resolution, entrypoint, permissions, config), not a missing code fix. Escalated per
   CLAUDE.md's data-correctness HARD RULE → filed new P0 issue doc
-  `/plans/active/issues/defi_risk_params_cron_job_fleet_wide_zero_rows_2026_08_10.md` with 3 diagnostic + fix +
+  `/plans/archive/issues/defi_risk_params_cron_job_fleet_wide_zero_rows_2026_08_10.md` with 3 diagnostic + fix +
   re-verify todos. All 9 original todos in this doc are now ✅; the Cloud Run regression is tracked in the new P0 doc.
   This doc is now eligible for archive (all todos done, no lock).
