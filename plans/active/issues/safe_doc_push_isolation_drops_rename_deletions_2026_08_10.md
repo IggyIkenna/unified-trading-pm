@@ -112,10 +112,14 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       `safe-doc-push.sh` lines 321-342: when a named file is absent from the caller tree but present at
       `origin/$BRANCH`, rm it from the isolated worktree so `git add` stages the deletion. Regression test:
       `tests/test_safe_doc_push_isolated_deletion_propagates.bats` (4 tests, all passing via `npx bats`).
-- [ ] [SCRIPT] P1. **Fail loudly instead of skipping silently.** The `skipping copy` branch currently logs at info level
-      and proceeds. A named file that is absent from the caller tree AND absent from HEAD is a caller error; absent from
-      the caller tree but PRESENT in HEAD is a deletion. Distinguish the two and never silently no-op a named path.
-      **Done when**: the ambiguous case exits non-zero with a message naming the path.
+- [x] ✅ [SCRIPT] P1. **Fail loudly instead of skipping silently.** — unified-trading-pm@37bbd172be. The `skipping copy`
+      branch (isolated copy loop, `safe-doc-push.sh`) now distinguishes the two cases: a named path absent from the
+      caller tree but PRESENT at `origin/$BRANCH` is a deletion (propagated — `18ae9a4312`); a named path absent from
+      the caller tree AND absent from `origin/$BRANCH` is a caller error and now **exits non-zero (2) with a message
+      naming the path**, instead of logging at info level and silently no-op'ing (which dropped the path from the commit
+      while still reporting success). Regression: `tests/test_safe_doc_push_isolated_deletion_propagates.bats` — the
+      "absent AND untracked" case now asserts exit 2 + a path-naming message (24/24 bats tests pass; full
+      `quality-gates.sh` green).
 - [x] ✅ [DOCS] P1. **Correct the archival-ritual SSOT.** — unified-trading-pm@2f9efbcfaf.
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "must not drop the rename's delete side"
       updated: safe-doc-push option-1 now carries an isolation caveat — documents that isolated-worktree mode previously
@@ -136,6 +140,13 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
   the same session via `SDP_ISOLATED=0`. Filed rather than fixed in-line because the fix touches a fleet-wide ship
   script every repo and every agent depends on, which wants its own regression test and blast-radius check (rule 11)
   rather than a same-session patch buried in a docs close-out.
+- **slot-29 2026-08-10 (infra, todo 2, SHIPPED)**: "Fail loudly instead of skipping silently" — the isolated copy loop's
+  `skipping copy` branch now exits 2 with a path-naming message when a named file is absent from the caller tree AND
+  absent from `origin/$BRANCH` (a caller error), instead of logging at info level and silently dropping the path from
+  the commit. Deletion case (absent here, tracked on origin) already handled by `18ae9a4312`. Shipped
+  `unified-trading-pm@37bbd172be` via quickmerge; regression test updated
+  (`tests/test_safe_doc_push_isolated_deletion_propagates.bats` now asserts exit 2 + path-naming for the caller-typo
+  case), 24/24 bats tests + full `quality-gates.sh` green.
 
 ## Sweep result — TWO diverged pairs found 2026-08-10 (feeds todo 5)
 
