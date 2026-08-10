@@ -294,6 +294,13 @@ classify_repo() {
     local repo_name branch local_sha int_branch state dirty_files ahead behind dirty_oldest_iso unpushed_plans dirty_sample
     local repo_key repo_dirty_ticks
     repo_name=$(basename "${repo_dir}")
+    # Skip frozen snapshot backup clones (*.stale-*) — these are intentional
+    # pre-history-rewrite backups, not real drift or dirt. Excluding them
+    # mirrors the existing scratch-worktree exclusion precedent
+    # (git_health_scan_exclusion_infra_routing_2026_08_10.md).
+    case "${repo_name}" in
+        *.stale-*) return 0 ;;
+    esac
     int_branch="${INTEGRATION_BRANCH}"
 
     pushd "${repo_dir}" >/dev/null 2>&1 || return 0
