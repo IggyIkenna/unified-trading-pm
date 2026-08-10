@@ -18,10 +18,13 @@ name: deployment_and_user_management_master
 tier: L3
 priority: P0
 assigned_vm:
-  NA # corrected 2026-08-10 (plan_reconciler, cross-cutting tranche, generalising the 2026-08-02/06 § 2e
-  # ruling already applied to agent_operating_framework_master/orchestrator_master/plan_hygiene_master);
-  # PLAN_FORMAT.md:211 -- NA is the expected value on every current epic, a legacy vm-<id> is optional-historical only.
-  # (was: vm-operator-ops)
+  vm-operator-ops # REVERTED 2026-08-10 (plan_reconciler) -- my own 2026-08-10 edit to NA was WRONG, self-caught same
+  # run: `instruments_master.md`/`sports_master.md` carry an explicit, on-the-record ruling
+  # (finding 123/262, 2026-07-12, §A2 B-queue) that legacy vm-<id> epic values are RETAINED WORKSPACE-WIDE, no value
+  # change, migration out of scope -- distinct from the "was: planning" pattern the 2026-08-02/06 § 2e fixes actually
+  # addressed (agent_operating_framework_master/orchestrator_master/plan_hygiene_master all had the MISLEADING
+  # `planning` value, not a legacy vm-id). PLAN_FORMAT.md's "a legacy vm-<id> still validates... archaeology, never
+  # dispatch-resolved" already covers this value as sanctioned, not stale.
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
