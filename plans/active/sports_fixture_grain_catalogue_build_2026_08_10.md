@@ -124,7 +124,7 @@ not a block on dispatch, it is a design constraint the first worker must satisfy
       adapter-invocation todo leaves both outcomes open. **Done when**: the adapters are invoked (or a documented
       decision NOT to invoke them is recorded with rationale), and the catalogue row count is verified against a real
       GCS read of the output.
-- [ ] [REVIEW] P3. **Post-phase codex alignment check.** If the manifest/catalog grain changed,
+- [x] ✅ [REVIEW] P3. **Post-phase codex alignment check.** — instruments-service@0f2a798c65
       `/codex/02-data/availability-manifest-and-data-status.md` and `/codex/02-data/honest-coverage-model.md` need a
       corresponding update (HARD RULE "post-phase codex audit"). Also update
       `instruments-service/docs/SPORTS_INSTRUMENTS.md`'s "11-step pipeline" section so it accurately reflects the
@@ -179,3 +179,11 @@ not a block on dispatch, it is a design constraint the first worker must satisfy
   stage: (a) the `entity={fixtures,teams,injuries}/` path is a different namespace from the closeout's frozen
   `entity=fixtures/`; (b) the parallel fixture-grain designs address different concerns (Track E repoints readers, todo
   2 extends the manifest write schema). **No closeout item blocks the manifest-schema design. Proceed with todo 2.**
+
+- **2026-08-10 (slot 5, todo 5 — post-phase codex alignment check)** — Verdict: **codex docs are CURRENT** —
+  `availability-manifest-and-data-status.md` and `honest-coverage-model.md` both correctly describe the sports manifest
+  grain (league-grain, fixture_id as row-level column, no shard-axis change). No manifest grain change has occurred
+  (todos 2-4 are still unflipped). **SPORTS_INSTRUMENTS.md updated** — added a "Catalogue rollup" subsection to the
+  11-step pipeline documenting the two-grain catalogue (league-grain from manifest + fixture/team/player-grain from
+  observed by_date snapshots, shipped 2026-07-09) with the builder functions and real row counts.
+  instruments-service@0f2a798c65.
