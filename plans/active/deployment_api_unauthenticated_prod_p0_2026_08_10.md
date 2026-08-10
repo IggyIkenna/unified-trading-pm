@@ -113,20 +113,20 @@ cause an outage).
 
       **Decision: Option (a)** — make the guard read both `ENVIRONMENT` and `DEPLOYMENT_ENV`.
 
-                      **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
-                      1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
-                      2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
-                      3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
-                      4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
-                      5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
-                      6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
-                      7. `UTL sampling_service.py:59` — sampling env (env-normalized)
-                      8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
-                      9. `UTL service_runtime.py:207` — runtime env value
+                          **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
+                          1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
+                          2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
+                          3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
+                          4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
+                          5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
+                          6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
+                          7. `UTL sampling_service.py:59` — sampling env (env-normalized)
+                          8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
+                          9. `UTL service_runtime.py:207` — runtime env value
 
-                      **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
+                          **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
 
-                      **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
+                          **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
 
 - [x] ✅ [BACKEND] P0. **Issue a real deployment-api API key and wire it.** Generate a high-entropy key, store it as a
       GSM secret in `central-element-323112`, wire it into the prod Cloud Run service's env via the deploy path (not a
@@ -225,3 +225,18 @@ are unaffected.
   `handle_service_deployed_dispatch.py::_deploy_one`). GSM/GH values fingerprint-match the generated key (sha256[0:16]
   identical). Both done-when conditions met: expected key resolves non-None in prod AND listener confirmed sending the
   header. Auth still DISABLE_AUTH=true — enforcement flip is step 4.
+- **2026-08-10 (slot 19)** — Todo 3 complete. Audited every caller of `_authenticated_router` routes (26-repo scan +
+  live Cloud Run request-log reconciliation for `uts-shared-deployment-api`) and recorded the full inventory with
+  per-caller verdicts in this plan's "## Caller inventory (todo 3)" section. Fixed 4 credential-less callers: (1)
+  `client-reporting-api` `deployment_api_client.py` now sends `X-API-Key` from a `DEPLOYMENT_API_KEY` config field
+  (client-reporting-api@18adba76) + the same GSM secret wired into its Cloud Run env via `--update-secrets`; (2)
+  `resource-watchdog.sh` now sends `X-API-Key` (RW_DEPLOYMENT_API_KEY env or runtime GSM fetch — no secret in repo;
+  unified-trading-pm@90e4807b9a); (3) agent-orchestrator MCP `data_status` proxy sends `X-API-Key` from
+  `CAPABILITY_MCP_DATA_STATUS_API_KEY` (agent-orchestrator@9005ac55, key wired into orchestrator `.env.local`); (4)
+  Cloud Scheduler `uts-prod-cost-snapshot-cron` now sends an `X-API-Key` header (verified present via
+  `gcloud scheduler jobs describe`) so `verify_any_auth` accepts it post-flip. deployment-ui partially fixed:
+  `src/api/client.ts` now attaches `Authorization: Bearer <stored google_id_token>` when present
+  (deployment-ui@1ccad739); residual — deployment-api's `verify_any_auth` accepts Firebase not Google OAuth + prod build
+  bakes `VITE_SKIP_AUTH=true` — flagged for step 4/5 (step 4's 401-watch is the rollback net). All SHAs verified on
+  origin/live-defi-rollout. Each caller fix is empty-safe (omits the header when the env is unset) so nothing breaks
+  during rollout. Enforcement still DISABLE_AUTH=true — flip is step 4.
