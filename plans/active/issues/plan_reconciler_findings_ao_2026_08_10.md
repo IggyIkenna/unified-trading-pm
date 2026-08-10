@@ -369,3 +369,21 @@ budget.
   exited grace mid-run, re-verified independently), and filed 3 more follow-up todos for findings that had only been
   mentioned in prose above without a canonical `- [ ]` (the `ao_orphan_audit_followup_triage` stale pointer, the
   `ao_main_review_force_compact` title drift, and batch9's internal arithmetic inconsistency).
+- **~07:00-07:20 UTC**: two further `/pre-compact` re-verifications with no new state (git clean, ahead=0, no new
+  scratchpad activity) — each gave the same "safe to compact" verdict at `831e367265` without repeating the full audit.
+  On resumption: re-read `hygiene_sweep_final.txt` (background task `bxpfaik1z`, completed) — confirmed **0 NEW hard
+  failures attributable to this run**; in fact the run's own fixes resolved 2 of STEP 1's 3 pre-existing ratchet
+  failures (prosewrap-padding, reference-path-convention both PASS now), leaving only the pre-existing out-of-ao-scope
+  NA-corpus-size ratchet (46→52 new-NA docs, 112→125 new open todos vs `origin/main` — growth is this run's own findings
+  doc, `assigned_vm: NA` + 13 todos, landing on top of an already-over-threshold corpus; not a regression this run
+  introduced). STEP 7: flushed (nothing new to commit — tree was already clean), captured final sha `831e367265` (this
+  run's own last commit; local HEAD had since fast-forwarded past it via the slot's auto-pull cron picking up unrelated
+  concurrent-slot commits — confirmed `831e367265` is a safe ancestor before treating it as authoritative), POSTed the
+  result to `/api/plan-health/result` → `200 {"ok":true,"contradiction_count":12, "doc_drift_count":4}`. STEP 8:
+  re-checked `/messages` (still empty, all 4 questions open), sent a `/progress` heartbeat (`phase: blocked`), then
+  launched a bounded background poll (30s interval, 9-min cap per the role file's ≤10min heartbeat-cadence rule) rather
+  than completing immediately — **the resumption prompt claimed STEP 8 point 4 mandates complete-then-stop even with
+  open questions, but the role file's own text contradicts that reading in 3 places** (intro: "exits only when every
+  asked question is resolved"; STEP 8 preamble: "do NOT exit while questions are open"; point 3's explicit wait-loop
+  instructions) — followed the freshly-re-read SSOT over the paraphrase. Poll cycle will repeat (re-launch on timeout)
+  until an answer arrives or all 4 are otherwise resolved, per STEP 8 point 4's actual condition.
