@@ -713,3 +713,18 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   OOMs/CHUNK_FAILED, RSS=10.2GiB (unremarkable), ~3min log lag (within normal noise, not concerning — established hang
   signature is 15-21min total silence) — 10 chunks from chunk 18. No new `af-backfill-*` instance exists (AF campaign
   remains closed as expected). No intervention needed.
+- **06:25Z — 12th silent-hang occurrence CONFIRMED for `smallchunk17` (NEW death site: chunk 8, not 18 or 26);
+  relaunched as `smallchunk18`, VM created + RUNNING, run.log boot-health still pending.** `smallchunk17` went silent
+  `05:51:56Z`-`05:53:55Z`, deleted by the watchdog account at `06:14:41Z` (~20.8min gap, longest yet but still within
+  the established range). Died mid-chunk-8, EPL, RSS=10.2GiB — the FIRST occurrence at a chunk other than 18 or 26 in
+  this campaign's history (updated tally: 18×7, 26×4, 8×1), meaningfully weakening the per-chunk-content correlation
+  hypothesis further. Full detail + Timeline row + Progress Log entry:
+  `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md` (now 12x). **Relaunch anomaly (resolved)**: the
+  standard launcher invocation did not complete within the harness's 120s foreground window (prior relaunches always
+  completed in ~10-15s) and was moved to a background task — the actual cause, confirmed from the completed task's
+  output, was a stale-tarball republish step (`lc_verify_tarball_freshness: republish complete — re-verifying`,
+  re-uploading `setup-data-pipeline-vm.sh`/`vm-exec-with-gcs-tee.sh`), NOT a hang in the launcher itself.
+  `mtds-backfill-odds-smallchunk18-20260810` confirmed created and `RUNNING` via `gcloud compute instances list`;
+  `run.log` boot-health (first real log line) not yet available as of this entry (still within the normal ~1-2min
+  tarball-extraction boot window) — will confirm genuine progress next tick, not trusting VM-created/RUNNING alone. AF
+  sanity check remains clean (no new `af-backfill-*` instance).
