@@ -161,6 +161,21 @@ Four structural reasons, none of which file-level partitioning prevents:
    codex-compliance checks that run ONLY in the full gate (file-size ratchet, banned-token scan, hardcoded-project-id)
    are invisible to them. Every such violation surfaces at the parent's gate, after the fact.
 
+**Fan-out width is capped at 5, not 10 (operator ruling 2026-08-10).** The cap is per-SLOT but the constraint is
+per-HOST: ~4 slots share one operator laptop (~10 physical cores), so a 10-wide fan-out in each slot is up to 40
+concurrent agents on 10 cores. 5 keeps the worst case to ~20 — still oversubscribed, deliberately, because agents are
+mostly I/O-blocked on tool calls rather than CPU-bound, but within a factor the box can absorb.
+
+Sizing intuition for the gate queue behind them — the governor's own limit is DERIVED, not fixed
+(`scripts/quality-gates-base/qg-host-governor.sh`):
+
+- `K = max(2, floor(physical_cores / 4))`, overridable via `QG_HOST_CONCURRENCY`.
+- On **macOS** `lscpu`/`nproc` are both absent, so `cores` degrades to 4 → `floor(4/4)=1` → the min-2 floor lifts it to
+  exactly **K=2**. An operator laptop therefore grants 2 gate slots NO MATTER how many cores it physically has (10-core
+  box, still 2) — which is why a wide fan-out cannot speed shipping up on a laptop.
+- On **Linux** (the AO VM) `lscpu` resolves, so it gets its real `floor(cores/4)` (e.g. 24-core → 6).
+- Separately `QG_TOTAL_INSTANCE_CAP` (total-instance gate) defaults to `floor(cores × 0.75)`, floored at 6.
+
 **The shape that works**: fan out authoring → collect ALL agents → ship dependency repos FIRST → then ONE full gate per
 dependent repo (QG-sweep batching: gate once over the combined tree, then per-unit commits) → ship serially. Never run
 two gates concurrently yourself, and never bulk-kill a peer slot's gate to free a token (banned) — patience is the

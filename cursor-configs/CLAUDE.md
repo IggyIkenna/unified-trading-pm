@@ -155,7 +155,7 @@ SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
 
 ## Agent behavior
 
-- **Context7** for external-lib questions; **max 10 parallel agents** (different repos safe; same file never) —
+- **Context7** for external-lib questions; **max 5 parallel agents** (different repos safe; same file never) —
   **parallelise AUTHORING ONLY: gate+ship stay SERIAL, deps first** (laptop-only, never AO) →
   `…/host-concurrency-and-commit-provenance.md` §5; sub-agents ~10× cheaper — paste `SUB_AGENT_MANDATORY_RULES.md` at
   spawn top (if injection fails, the agent MUST NOT proceed). **Finish-to-DONE / `/autonomous`** = also apply
