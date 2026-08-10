@@ -254,6 +254,69 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   rather than a content migration.] C: **Something else** — e.g. one doc is actually stale/superseded and should be
   archived outright. Other: operator can type a custom answer.
 
+## 🚧 BLOCKED-OPERATOR-DECISION 6 — `alwaysApply: true` doesn't track the `core/` directory it's meant to (added 2026-08-10)
+
+- [ ] [DOCS] P2. **Decide whether `.cursor/rules/core/`'s membership should be reconciled to match `alwaysApply: true`,
+      or the flag reconciled to match the directory — then apply that decision fleet-wide.**
+
+  Found while fixing a docs-reconcile doctrine-consistency finding (a misplaced rule file,
+  `cursor-configs/imports/uac-import-surface-enforcement.mdc`, `alwaysApply: true`, sitting outside `.cursor/rules/`
+  entirely so Cursor never loads it at all — that part is uncontroversial and will be relocated once this is settled).
+  Measuring the actual corpus (150 total `.mdc` files) surfaced a bigger, pre-existing mismatch between the stated rule
+  and reality in BOTH directions:
+
+  - `/codex/06-coding-standards/cursor-rules-system.md` states plainly: "Only `core/` rules set `alwaysApply: true`."
+  - Measured: only **18 of `core/`'s 48 files** actually have `alwaysApply: true` — the other 30 are
+    `alwaysApply: false` with a semantic-match `description:`, same as any context-sensitive rule.
+  - Measured: **4 files outside `core/`** also set `alwaysApply: true`: `imports/uci-no-domain-schemas.mdc`,
+    `testing/no-manual-pytest.mdc`, `ci-cd/ci-rollout-ownership.mdc`, `dependencies/dependency-install-protocol.mdc`.
+
+  This is not a hypothetical — `alwaysApply: true` is a real behavioral flag (fires on every file, regardless of
+  Cursor's semantic match), so today's actual enforcement surface is "the 18+4 = 22 files that set the flag," not "the
+  48 files living in `core/`" the codex SSOT describes. `.cursor/rules/README.md`'s header was ALSO wrong about both
+  numbers (126/48 vs the measured 150/22) and has been corrected to the measured facts as part of this same sweep — but
+  correcting the count is not the same as resolving which of the two (directory or flag) should govern, which is a
+  design call this skill's own contract does not let it make unilaterally.
+
+  A: **Reconcile the 4 outside files INTO `core/`** (move them; `core/` becomes exactly "the alwaysApply:true set").
+  [RECOMMENDED — matches the codex SSOT's stated intent with the least net change, and `core/`'s own doc-comment purpose
+  ("always active, easy to find") reads as wanting this to be true.] B: **Reconcile `core/`'s 30 non-flagged files OUT
+  of core/** (relocate them to their topical directories, leaving `core/` with only the 18 that already have the flag) —
+  larger diff, but arguably more honest about which 18 rules are actually load-bearing on every file. C: **Drop the
+  "only core/ sets alwaysApply:true" claim from the codex SSOT instead** — if directory-vs-flag was never meant to be a
+  hard 1:1 mapping (e.g. `uci-no-domain-schemas.mdc` genuinely needs always-on enforcement but also fits the `imports/`
+  topic better than `core/`), state that explicitly rather than reconciling files to match an aspirational rule nobody
+  has been enforcing. Other: operator can type a custom answer.
+
+## 📋 Report-only P1/P2 findings (not authority calls, no operator ruling needed — surfaced for a future pass)
+
+Found during the 2026-08-10 docs-reconcile sweep's self-consistency/structural hunters. Each is either self-flagged by
+the doc's own author as not-yet-resolved, or a lower-confidence candidate the verification pass couldn't confirm with
+certainty (a plausible non-contradictory reading exists) — neither class is auto-fixed nor blocks on an operator ruling,
+just tracked here so they aren't lost:
+
+- `/codex/02-data/honest-coverage-model.md`: a section header claims the whole 5-AG coverage table was "re-measured
+  2026-07-03 08:52 UTC," but a newly-added cefi-row annotation says 4 of 5 rows were "refreshed 2026-07-28" — plausibly
+  non-contradictory ("refreshed" could mean re-reviewed without new numbers), needs a reader with the underlying
+  measurement history to confirm which framing is accurate.
+- `/codex/02-data/availability-manifest-and-data-status.md`: a paragraph says a terraform-default bug was "Fixed," then
+  two sentences later says defi/tradfi "share the same static-default pattern (not yet fixed as of this writing)" —
+  plausibly non-contradictory (the antecedent for "same pattern" may be a different remediation than the code fix
+  itself), needs the original author to disambiguate.
+- `/codex/02-data/pipeline-mode-partition.md`: the T+1 batch≈live reconciliation section is still labeled
+  `[GATED — after M4 + M1-BREAKING live writers]`; both named preconditions now read satisfied elsewhere in the same doc
+  (per this sweep's M4 fix above), so the gate label may be stale too — but T+1 could legitimately depend on more than
+  the two named preconditions, so this needs verification rather than a blind flip.
+- `/codex/05-infrastructure/agent-orchestrator-deploy.md`: a sentence reads "...do not describe this box as still
+  hosting runners on the planning VM..." — confusing/possibly-garbled wording (the CI-runner VM doesn't host runners
+  "on" a different box), but a careful reader recovers the intended meaning (don't conflate the two boxes), so this is a
+  clarity issue, not a factual error worth an autonomous rewrite.
+- `/codex/09-strategy/mvp-universe-per-asset-group.md`: a 2026-08-09 blockquote flags VIX 15m / Barchart preload /
+  CBOE-BTC-options-on-IBIT as retired/declined, but the doc's own untouched "Backtest universe" + "TradFi data capture"
+  sections 8 lines below still list them as current — self-flagged by the blockquote's own "not yet rewritten below"
+  admission, not a silent defect. Tracked here only because a reader who jumps straight to those sections (this repo's
+  own standard doc-retrieval pattern) would miss the caveat.
+
 ## Progress Log
 
 - 2026-08-02 (docs_reconciler, dispatch agt-0b4ee1): filed. 4 other commits from this same sweep already shipped
@@ -352,3 +415,27 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
   since item 5 was added. Both remaining open items (4: Fireblocks rotation-cadence contradiction; 5: plan-hygiene.md
   duplication) are explicit `BLOCKED-OPERATOR-DECISION` A/B/C authority calls per the doc's own framing, no
   evidence-determined single answer for either. Textbook KEEP-NA.
+- **docs-reconcile 2026-08-10** (one-off `docs_reconciler` boot): full Phase 0-5 autonomous sweep. Phase 0 deterministic
+  checks all green (0 new violations across parity/frontmatter/freshness/body-links; freshness strict==baseline, no
+  gap). Phase 1 fanned out 7 hunters (collision, summary-quality, doctrine-consistency, broken-link triage,
+  self-consistency ×3 batches covering the 65 codex docs touched in the prior 24h). Phase 2 ran genuine dual-agent
+  adversarial verification on the 9 P0 self-consistency candidates (8 confirmed unanimously by both independent
+  verifiers, 1 refuted — `honest-absence-downstream-handling.md`'s STALLED_HEAD classification turned out to be a
+  deliberate, internally-consistent distinction both verifiers found on a closer read, not a copy-paste error).
+  Applied + shipped 4 commits: (1) 15 truncated `plans/active/issues/*.md` summary fields — 14 of these were the SAME
+  docs as this doc's own BLOCKED-OPERATOR-DECISION-3-adjacent "DONE" item, which turned out to still be broken (the
+  cited commit `97ce494ecd` never touched them — see that item's own updated checkbox note); (2) 4 cross-agent
+  doctrine-gap/stale-reference fixes (AGENTS.md missing the memory-ban rule + a stale model= convention, 11 bare
+  `.cursor/rules/` paths, 3 stale `unified-trading-codex` pointers, wrong rule counts); (3) relocated 3 misplaced `.mdc`
+  rule files into `.cursor/rules/architecture/` (needed a follow-up commit — the first landed only the ADD half of the
+  git-mv, not the DELETE half, likely a prek-patch-restore-vs-autostash race under the extreme branch churn this session
+  hit throughout, load average 22+ on a 16-core host); (4) 12 internal self-contradiction/structural fixes across 7
+  codex docs, all derivable from each doc's own other content. Also fixed an unrelated fabricated commit-SHA citation
+  (`c692a472e6`, not a valid object) blocking the corpus-wide `plan-commit-sha-evidence` gate for every agent on this
+  repo, in `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md` — found only because it started
+  blocking THIS session's own pushes. Added BLOCKED-OPERATOR-DECISION 6 (alwaysApply:true doesn't track core/ membership
+  in either direction — broader than the single misplaced-file finding that surfaced it) and a new report-only P1/P2
+  section for 5 lower-confidence/self-flagged findings. Broken-link ratchet: confirmed stable, not fixed further — 0 in
+  `doc_reference_baseline.yaml`, 24 in `doc_body_link_baseline.yaml` (12 GENUINE-DEAD, 12 PLACEHOLDER-PROSE checker
+  false-positives already tracked by `doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md`); 0 CLEARED, 0
+  MOVED this run — no baseline changes made. Full Phase-5 report in this run's chat transcript / `/done` evidence.
