@@ -67,7 +67,7 @@ related_plans:
   - ../active/infra_satellite_ao_dispatch_batch13_finalize_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch14_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md
-  - ../active/infra_satellite_ao_dispatch_batch7_2026_08_04.md
+  - ../archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md
   - ../active/infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md
   - ../active/infra_satellite_ao_dispatch_batch9_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md
@@ -745,7 +745,7 @@ finalize (reconcile source-doc checkbox + archive the batch)
 **status**: active · **estimate**: 0.08 cal AI-days (class: infra) **title**: Infra satellite AO dispatch batch 14 —
 finalize (reconcile source-doc checkbox + archive the batch)
 
-### [`infra_satellite_ao_dispatch_batch7_2026_08_04`](../active/infra_satellite_ao_dispatch_batch7_2026_08_04.md)
+### [`infra_satellite_ao_dispatch_batch7_2026_08_04`](../archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md)
 
 **status**: active · **estimate**: 0.56 cal AI-days (class: infra)
 

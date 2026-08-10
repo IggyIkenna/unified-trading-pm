@@ -524,7 +524,7 @@ not data-pipeline).
   `na_eligibility_incremental_diff_false_positive_on_frontmatter_only_backfills_2026_08_03.md`'s 2 todos and
   `deployment_service_live_event_log_disconnected_tofu_root_2026_08_03.md`'s investigation-only half (its structural
   decision half stays operator-gated) were conflict-clear and bounded. Drafted
-  [infra_satellite_ao_dispatch_batch7_2026_08_04.md](/plans/active/infra_satellite_ao_dispatch_batch7_2026_08_04.md) +
+  [infra_satellite_ao_dispatch_batch7_2026_08_04.md](/plans/archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md) +
   its finalize twin (3 todos, both `status: draft`). **New finding**: 4 drafted batches (4/5/6/7) now sit unreviewed,
   oldest 4 days — see
   [issues/ag_closeout_audit_infra_parked_2026_08_04.md](/plans/active/issues/ag_closeout_audit_infra_parked_2026_08_04.md)
