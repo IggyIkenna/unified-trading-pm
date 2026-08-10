@@ -466,3 +466,48 @@ transcript available in that session's Progress Log entry on
   something this session can shortcut). Next session picking up todo 3 once the census completes: apply the SAME
   disposition logic per affected triple (check for a canonical twin first; quarantine-not-refetch when one exists with
   real data; only fall through to a fresh api_football fetch when no canonical twin exists) rather than re-deriving it.
+
+- **2026-08-10 (slot-29, data_engineering, dispatched on todo 1 — "enumerate full scope")**: checked both census VMs'
+  real state (not the last log line — `gcloud compute instances describe` + `EXIT_STATUS`/`run.log` per the
+  false-SUCCEEDED lesson two entries above) and downloaded + analyzed both reports directly (small objects, not a corpus
+  walk — bounded reads of the writer's own consolidated report).
+
+  **`features-sports-prd` half — CONFIRMED COMPLETE AND CLEAN**: VM
+  `sports-schema-census-features-sports-20260809-225453` self-deleted with `EXIT_STATUS=0` and `run.log` shows
+  `DONE: validated=158826 total_rows_in_report=158826` (a genuine terminal signal — the walk exhausted
+  `sports_features/by_date/` under `feature_group=`, not a bootstrap-only log line). Downloaded the 158,826-row report
+  (`gs://features-sports-prd-central-element-323112/_index/audit/sports_reference_schema_census_sports-schema-census-features-sports-20260809-225453.parquet`,
+  1.7MB) and analyzed with pandas: **`contamination_codes` non-empty on 0 of 158,826 rows** — zero instrument-catalogue
+  sentinel-column hits across every `feature_group` (`fixture_features`/`derived_features`/`fixtures`/`standings`/
+  `teams`/`venues`/`fixture_events`/`leagues`/`sfi_progressive`/`odds_features`/`fixture_lineups`/`fixture_stats`/
+  `injuries`/`odds_targets`/`fixture_player_stats`). `schema_verdict` is `NOT_CHECKED` for all rows (expected — no
+  per-`feature_group` UAC contract exists, per the script's own design). 0 `READ_ERROR` rows. **This half of todo 1's
+  scope is DONE — `features-sports-prd` carries no schema-mismatched (contaminated) objects.**
+
+  **`instruments-store-sports-prd` half — STILL IN PROGRESS, healthy, 0 contamination found so far**:
+  `sports-schema-census-instruments-store-20260809-224053` confirmed still `RUNNING` via
+  `gcloud compute instances describe` (not self-deleted). Downloaded the current checkpoint report (333,000 rows as of
+  this check, up from the 329,895 bytes / prior entry's in-flight size — confirms continued healthy progress, not a
+  stall) and analyzed it: covers `day` range `2019-01-01`–`2021-07-18` (410 distinct days) across `entity` values
+  `teams`/`standings`/ `footystats_predictions`/`fixtures_schedule`/`fixtures_outcomes`/`footystats_odds`/`fixtures`
+  (10,206 objects so
+  far)/`fixture_events`/`fixture_lineups`/`fixture_stats`/`player_stats`/`progressive_stats`/`footystats_matches`/
+  `weather`/`injuries`/`player_values`/`understat_xg`/`understat_xg_shots`/`transfermarkt_leagues`/`leagues`/
+  `sfi_leagues`. **`contamination_codes` non-empty on 0 of 333,000 rows so far** — no NEW contaminated objects found in
+  the range covered to date. (Expected: the one known-contaminated object is at `day=2026-04-14`, ~4.5 years past the
+  current day-frontier at the walk's current pace — the census has not reached it yet, consistent with every prior
+  entry's progress notes.) `schema_verdict=FAIL` fires broadly (278,276/333,000 rows) — per the script's own documented
+  caveat this is the widespread `wrong_dtype` all-NaN-column round-trip artifact, NOT contamination evidence; only
+  `contamination_codes` is the precise signal for this issue. 0 `READ_ERROR` rows (no shard-level read failures so far).
+
+  **Runtime/ETA note (do not repeat the false-SUCCEEDED mistake)**: this VM has run ~6.5h since launch
+  (`22:40:53Z`→`~05:07Z`) covering ~410 distinct days; the sports corpus spans the 2020-06-06 floor (plus some pre-floor
+  reference-entity days visible in this partial range, out of this issue's scope to explain) through 2026-08-10 —
+  order-of-magnitude many more hours remain at the observed rate, matching the doc's own "genuinely long corpus-scale
+  walk...many hours, not minutes" note. **Todo 1 stays OPEN** — only the `features-sports-prd` half is closed;
+  `instruments-store-sports-prd` requires the walk to reach `NOT_FOUND` on `gcloud compute instances describe`
+  (self-delete after full completion) before its half can be closed. Not arming a long-lived watchdog this session (ETA
+  is many hours, well beyond a bounded single-session wait) — next session picking up todo 1 should repeat this exact
+  check (VM terminal state + report row-count growth across two time points) before trusting any "DONE"-looking log
+  line, then, once truly complete, consolidate both reports' `contamination_codes`-positive rows into the final
+  per-entity/day/pipeline_mode count the todo's done-when requires.
