@@ -27,6 +27,7 @@ related:
   [
     /plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-08"
 author: interactive session (/autonomous)

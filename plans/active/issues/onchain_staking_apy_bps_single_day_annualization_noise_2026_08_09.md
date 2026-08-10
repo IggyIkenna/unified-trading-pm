@@ -28,6 +28,7 @@ related:
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
     /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
     /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-09"
 author: unknown
