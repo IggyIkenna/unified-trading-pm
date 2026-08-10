@@ -84,11 +84,11 @@ outcome; todo 2: `tier_a_ci_status_gate_unrecoverable_deadlock_2026_08_09.md` on
 ## Todos
 
 - [x] ✅ [DOC] P2. **Resolve the `check_archive_candidates.sh --only` vs. never-combine-flip-and-mv SSOT conflict.** —
-      unified-trading-pm@<SHA> (to be filled after commit). Path (a) confirmed: the M3 gap IS closed for mode 1. Direct
-      trial (slot 17, scratch-repo simulation) verified `_archival_rename_disposition` detects a same-commit
-      flip+`git mv`; the existing test `test_done_accepts_cross_repo_self_archived_with_annotated_checked_line` PASSES.
-      Codex narrowed to mode-2 only; `archive_exempt` bridge documented for the cross-repo two-commit split. Source
-      doc's both todos now `[x]`. See Progress Log for full evidence trail.
+      unified-trading-pm@a4b2248b6f. Path (a) confirmed: the M3 gap IS closed for mode 1. Direct trial (slot 17,
+      scratch-repo simulation) verified `_archival_rename_disposition` detects a same-commit flip+`git mv`; the existing
+      test `test_done_accepts_cross_repo_self_archived_with_annotated_checked_line` PASSES. Codex narrowed to mode-2
+      only; `archive_exempt` bridge documented for the cross-repo two-commit split. Source doc's both todos now `[x]`.
+      See Progress Log for full evidence trail.
 
   **Resolution (2026-08-10, slot 17): path (a) taken.** Direct trial confirmed `_archival_rename_disposition` detects a
   same-commit flip+`git mv` → `plan_ref_self_archived_with_marker`. Codex narrowed (`79171795f2` + citation-fix
