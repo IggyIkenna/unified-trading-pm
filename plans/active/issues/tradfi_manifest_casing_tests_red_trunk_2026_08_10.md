@@ -87,13 +87,51 @@ repo-blocker auto-resolves and pending quickmerge ships proceed.
 
 ## Todos
 
-- [ ] [DATA] P1. **Fix `_tradfi_manifest_itype("CME", "continuous_future")` to return `"FUTURE"`** — repo:
-      market-tick-data-service.
+- [ ] [DATA] P1. **Fix the 3 STALE mtds tests to match the UTL canon reversal (`74fe04fd`, 2026-08-10) — NOT by
+      restoring the `continuous_future→FUTURE`/`combo→COMBO` mapping** — repo: market-tick-data-service. **CORRECTED
+      ROOT CAUSE (2026-08-10, slot 20 — supersedes this todo's original hypothesis below):** the 3 failures are STALE
+      TEST EXPECTATIONS, not a production bug. UTL canon `unified-trading-library@74fe04fd` (2026-08-10 21:10Z)
+      **deliberately reversed** the prior `continuous_future→FUTURE`/`combo→COMBO` manifest-column mapping, after a live
+      census showed **473,374 manifest rows with bundle-grain signature (populated `underlying`, null `instrument_id`)
+      incorrectly classified as per-contract FUTURE rows** — `combo`/`continuous_future` are id-less bundle aggregates,
+      permanently excluded from casing-upgrade like `futures_chain`/`options_chain`. That commit updated the UTL +
+      instruments-service tests but NOT these 3 mtds tests. The production code (`_tradfi_manifest_itype` in
+      `_tradfi_manifest_shard.py`, `build_casing_frame` in the casing migration script, `_record_venue_shard_counts` in
+      `venue_fetch.py:391`) all route through the shared UTL canon and are CORRECT. **The fix is to update the 3 tests
+      to expect lowercase pass-through** (`continuous_future` stays `'continuous_future'`, `combo` stays `'combo'`),
+      matching `74fe04fd`'s canonical list. Do NOT restore the mapping — that re-introduces the misclassification bug
+      the reversal fixed. 1.
       `tests/unit/engine/test_tradfi_manifest_shard.py::test_tradfi_manifest_itype_continuous_future_now_upgrades_to_future`
-      asserts the canonical UPPERCASE emitter converts the residual `continuous_future` token; it currently returns the
-      unconverted lowercase value. Root-cause whether the emitter's conversion table / the `_tradfi_manifest_itype`
-      dispatch dropped the `continuous_future`→`FUTURE` entry (recent casing-migration commits `4e631a3d`/`4122df13`
-      re-exported the UTL canon and removed a local shim — the shim may have carried the mapping). Then confirm the full
-      casing-frame test (`test_migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py`, `changed_count 6→7`) and the
-      COMBO uppercase test (`test_cme_combo_shard_itype_upgrades_but_id_stays_empty`, `'combo'→'COMBO'`) are all green
-      in the same fix. Done when: full `bash scripts/quality-gates.sh` green on market-tick-data-service.
+      → expect `_tradfi_manifest_itype("CME", "continuous_future") == "continuous_future"` (rename test). 2.
+      `tests/unit/scripts/test_migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py::test_build_casing_frame_upgrades_every_known_residual_token`
+      → the 7-token frame's `combo` row now stays lowercase: `changed_count == 6`, full_df set drops `"COMBO"`, keeps
+      `"combo"` (combo is bundle-grain excluded, not a known residual token anymore). 3.
+      `tests/unit/test_venue_fetch_cefi_manifest_canonicalization.py::TestTradfiRecordVenueShardCountsCanonicalization::test_cme_combo_shard_itype_upgrades_but_id_stays_empty`
+      → `shard_key[3] == "combo"` (was `"COMBO"`); the test name + docstring change too (combo no longer upgrades). Done
+      when: full `bash scripts/quality-gates.sh` green on market-tick-data-service (which also unblocks the cefi ship
+      waiting on repo-blocker RB-90251f57).
+
+## Progress Log
+
+- **2026-08-10 (slot 20, dispatched on the fix todo, root-caused + CORRECTED the hypothesis)** — Investigated the 3
+  failures fully and found the original todo hypothesis was WRONG. Verified: (a) the mtds venv resolves UTL from the
+  sibling source clone (`.tabs/20/unified-trading-library`), which carries `74fe04fd` (2026-08-10 21:10Z, on origin);
+  (b) `74fe04fd` deliberately removed `continuous_future`/`combo` from `_MANIFEST_ITYPE_CANONICAL` and added both to
+  `_BUNDLE_GRAIN_EXCLUDED` (census: 473,374 bundle-grain rows misclassified as per-contract FUTURE); (c) all 3 mtds
+  tests assert the pre-reversal behavior and are STALE — the production code paths
+  (`_tradfi_manifest_itype`/`build_casing_frame`/`_record_venue_shard_counts`) route through the shared UTL canon and
+  are correct. **This todo's fix is to update the 3 stale tests, NOT restore the mapping** (restoring would re-introduce
+  the misclassification bug). Test edits are fully specified in the todo body above; each is a one-line assertion/name
+  change. Compaction interrupted mid-task (context gate) — the edits are NOT yet applied; resume by making the 3 test
+  edits, running `bash scripts/quality-gates.sh`, then quickmerge + flip.
+
+## Deferred work after 2026-08-10
+
+| Item                                                                                                           | State / why deferred                                                                                  | Blocked on                                    |
+| -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Update the 3 stale mtds tests to expect lowercase `continuous_future`/`combo` (UTL canon `74fe04fd`)           | Not done — root-caused + fully specified, edits not yet applied (compact interruption)                | Nobody — pick up here                         |
+| Re-run `bash scripts/quality-gates.sh` on market-tick-data-service green, then quickmerge + flip this checkbox | Not done — depends on the test edits above                                                            | The test edits above                          |
+| Ship cefi wire-superset fix `market-tick-data-service@13ac6245` (already committed + plan flip pushed)         | Not done — push blocked on this same trunk red (repo-blocker RB-90251f57); fixing the tests clears it | This todo's test fix + the repo turning green |
+
+**Recommended next item**: make the 3 test edits specified in the todo body above (they are precise one-liners), run QG,
+quickmerge, flip this checkbox — this simultaneously unblocks the cefi ship waiting on RB-90251f57.
