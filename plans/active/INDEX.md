@@ -271,9 +271,6 @@ by hand._
 - [`solana_dex_pool_swaps_indexer_2026_08_08_finalize`](./solana_dex_pool_swaps_indexer_2026_08_08_finalize.md) — Gated
   finalize companion for solana_dex_pool_swaps_indexer_2026_08_08.md — reconcile evidence back into the source scoping
   doc, re-check any deferred follow-up, then archive both docs per the standard 6-step ritual.
-- [`strategy_service_family2_close_unwind_emission_2026_08_09`](./strategy_service_family2_close_unwind_emission_2026_08_09.md)
-  — Ship a real close/unwind AtomicInstruction emission path in recursive_staked.py's Family-2 tick handler. Today it
-  only ever opens a position once and never emits a close. Prerequisite for…
 
 ### tradfi (29)
 

@@ -47,7 +47,7 @@ related_plans:
   - ../active/family2_position_registry_unwind_consumption_2026_08_09.md
   - ../active/l2_book_microstructure_capture_2026_07_13.md
   - ../active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md
-  - ../active/strategy_service_family2_close_unwind_emission_2026_08_09.md
+  - /plans/archive/2026_08/strategy_service_family2_close_unwind_emission_2026_08_09.md
   - ../active/v2_engine_venue_buildout_2026_06_15.md
 last_updated: 2026-06-11
 locked_by: live-defi-rollout
@@ -174,9 +174,9 @@ opportunity-checker + wizard full-parameterization
 **status**: active · **estimate**: 5.0 cal AI-days (class: brand-new) **title**: Deeper-Than-L5 Order Book Capture —
 populate queue_position_* for MARKET_MAKING_QUEUE_MICROSTRUCTURE
 
-### [`strategy_service_family2_close_unwind_emission_2026_08_09`](../active/strategy_service_family2_close_unwind_emission_2026_08_09.md)
+### [`strategy_service_family2_close_unwind_emission_2026_08_09`](/plans/archive/2026_08/strategy_service_family2_close_unwind_emission_2026_08_09.md)
 
-**status**: active · **estimate**: 0.6 cal AI-days (class: design) **title**: Family-2 (CARRY_BASIS_PERP_INV)
+**status**: complete · **estimate**: 0.6 cal AI-days (class: design) **title**: Family-2 (CARRY_BASIS_PERP_INV)
 close/unwind instruction emission — strategy-service
 
 ### [`v2_engine_venue_buildout_2026_06_15`](../active/v2_engine_venue_buildout_2026_06_15.md)

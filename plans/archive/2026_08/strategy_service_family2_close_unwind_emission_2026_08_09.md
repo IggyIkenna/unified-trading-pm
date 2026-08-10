@@ -5,7 +5,7 @@ summary: >-
   Ship a real close/unwind AtomicInstruction emission path in recursive_staked.py's Family-2 tick handler. Today it only
   ever opens a position once and never emits a close. Prerequisite for
   family2_position_registry_unwind_consumption_2026_08_09.md, split out per BLK-0fb75f8f (main ruling, 2026-08-09).
-status: active
+status: complete
 nature: design
 asset_group: [defi]
 stage: [strategy]
@@ -20,7 +20,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-10"
 parent_epic: strategy_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
