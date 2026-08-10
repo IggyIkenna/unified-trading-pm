@@ -85,10 +85,10 @@ consolidation, missing quotes) across the three named files so `lint.yml` goes g
       best-effort `A && B || C`) converted to a real `if`/`then`/`fi`, same pattern as the semver-agent.yml fix.
       Verified: actionlint 0 findings in this file after (was 4), YAML re-parses, whole-repo run confirms the remaining
       17 findings are unrelated (request-major-bump.yml, major-bump-issue-handler.yml — todos 2 and 3).
-- [ ] [DEVOPS] P3. Fix shellcheck findings in `unified-trading-ci/.github/workflows/request-major-bump.yml` (**actual
+- [x] ✅ [DEVOPS] P3. Fix shellcheck findings in `unified-trading-ci/.github/workflows/request-major-bump.yml` (**actual
       live count 2026-08-09: 14 findings, not the 1 originally logged** — this todo's original count was
       stale/undercounted, same class of drift as the semver-agent.yml todo above) so the `lint` actionlint job goes
-      green.
+      green. — unified-trading-ci@14be063 (see Progress Log for detail).
 - [ ] [DEVOPS] P3. Fix shellcheck findings in `unified-trading-ci/.github/workflows/major-bump-issue-handler.yml` (3
       findings, live count 2026-08-09) — a 4th file with findings not covered by any of this doc's original 3 todos,
       discovered while verifying the semver-agent.yml fix against a live `lint` run
@@ -112,3 +112,16 @@ consolidation, missing quotes) across the three named files so `lint.yml` goes g
   both `live-defi-rollout` and `main` (kept the two branches in sync; this repo's `lint.yml` only fires on push to
   `main`). Todos 3-4 (request-major-bump.yml, major-bump-issue-handler.yml) remain — different files, out of this task's
   own dispatched scope.
+- **2026-08-10 (cicd worker, slot 4)**: Closed todo 3 (request-major-bump.yml) — unified-trading-ci@14be063, pushed to
+  both `main` and `live-defi-rollout` (same sync pattern as todo 2). Session died mid-task after the first two of three
+  fixes were staged but uncommitted; the orchestrator's dirty-state gate auto-preserved that partial WIP to
+  `wip-preserve/orchestrator-slot-4-3dd2656` on respawn — re-verified it matched, then re-applied all 3 fixes fresh
+  (superset of the preserved partial WIP) rather than merging the stale branch. Live count confirmed 14, matching the
+  doc's already-corrected count: 1× SC2129 (Validate step, 4 consecutive `GITHUB_OUTPUT` redirects grouped into
+  `{ ...; } >> "$GITHUB_OUTPUT"`), 11× SC2086 + 1× SC2129 (Summary step, `$GITHUB_STEP_SUMMARY` quoted + 11 redirects
+  grouped), 1× SC2015 (notify-failure Slack alert, `curl && echo || true` converted to real `if`/`then`/`fi`, same
+  pattern as the semver-agent.yml/update-dependency-version.yml fixes). Verified: downloaded actionlint v1.7.12 locally,
+  0 findings in this file after (was 14); whole-repo run confirms remaining 3 findings are all in
+  major-bump-issue-handler.yml (todo 4, out of scope); confirmed live in CI too (`gh run view 31346582234 --log-failed`
+  on `main` HEAD `14be063` — zero `request-major-bump.yml` mentions in the failed-check log, only
+  `major-bump-issue-handler.yml`). Todo 4 remains open — different file, out of this task's own dispatched scope.
