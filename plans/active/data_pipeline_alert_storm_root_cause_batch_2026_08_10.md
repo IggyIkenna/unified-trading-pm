@@ -152,7 +152,30 @@ last_updated: 2026-06-27
       `features` kind buckets); make the "relaunching through the Tardis/launcher concurrency guard" text conditional on
       the VM's ACTUAL launcher binding (`mdps-*` binds `launch-mdps-sharded-backfill.sh`, which has ZERO Tardis
       references); exempt cron/launcher HOST VMs from the capture-based `GONE_NO_CAPTURE` population.
-- [ ] [SCRIPT] P2. Make `/data-pipeline-alerts-reconcile` AO-schedulable (agent-orchestrator) — it has no timer and no
+- [x] ✅ [SCRIPT] P2. Make `/data-pipeline-alerts-reconcile` AO-schedulable — **already shipped upstream by a peer
+      while this session worked** (agent-orchestrator slot-18): the `data_pipeline_alerts_reconciler` AgentKind, the
+      `plan_health` mode + prompt-template mapping, and `install-data-pipeline-alerts-reconciler-timer.sh` were all
+      on origin by the time this slot went to push, so this session's independently-written versions were DISCARDED
+      as duplicates rather than merged (verified line-by-line first: zero unique content). What was genuinely unique
+      — the tests — was rebased onto the peer's implementation and shipped, and one of them was rewritten after it
+      failed: it asserted server-side smart-tier forcing, which upstream DELIBERATELY omits for this mode (tier comes
+      from the role file's frontmatter, same as its `ci_reconcile` sibling). The test now pins that real contract
+      instead of "fixing" upstream to match an assumption.
+      **Bug found and fixed in the peer's shipped code while adding those tests**: the `--window 6hour` guard built
+      an ISO-8601 string PREFIX (`f"{date}T{(hour//6)*6:02d}"`) and matched with `startswith`, but a 6-hour bucket
+      spans SIX clock hours and a prefix can only match one. Measured against the real predicate with the guard
+      firing at 09:30: a prior run at 06:15 blocked, but 07:15 / 08:15 / 09:15 / 10:15 / 11:15 all came back
+      UNBLOCKED — so the 60-minute timer would have dispatched up to FIVE duplicate reconcilers per bucket, each
+      burning a Max-plan slot, the exact opposite of the "at most one success per 6h bucket" the installer
+      advertises. Replaced with a real timestamp comparison (`day`/`hour` keep prefix semantics byte-for-byte).
+      Evidence: **agent-orchestrator@0eb0da5**, `AO_QG_EXIT=0`, **3,364 passed / 0 failed**; the parametrized
+      negative control fails on hours 7-11 against the pre-fix code and passes on all six after (verified by running
+      the new tests against a clean copy of the old implementation). NOTE: the earlier AO gate reporting 9 failures
+      was HOST CONTENTION, not this change — the same tests passed on a stashed-clean tree, and the full suite ran
+      3,363 passed / 0 failed in 264s once the host was quiet vs 776s under load 283.
+      The timer INSTALLER remains deliberately un-run — see the cross-cloud WIF todo below; ship the code, hold the
+      installer.
+      Superseded original text: it has no timer and no
       server module today, which is why this storm sat unattended. Includes confirming AO's SA has
       `secretmanager.versions.access` on `SLACK_ALERTS_READER_BOT_TOKEN`.
 - [ ] [DATA] P1. Determine which layer wrote the cefi `attempted_failed` rows (MTDS fetch vs MDPS derivation) and
@@ -354,3 +377,43 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   checkout was 111 commits behind with my previous session's edits sitting dirty on top; every one of those files was
   already on origin in prettier-normalised form (verified file-by-file before discarding), so the apparent "unshipped
   work" was a stale-checkout artifact, not lost work.
+
+## Liquidations re-drive — operator decision recorded 2026-08-11
+
+**There is nothing to migrate, delete, or overwrite.** Schema validation raises at
+`canonical_writer.py:537`, while `finalize_local()` (539) and `_upload_local_to_gcs` (553) come AFTER it — so every
+one of the 150,182 failed cells wrote NO parquet. There is no corrupt data on GCS; the manifest rows are honest
+`attempted_failed` markers doing exactly their job. (Established from the writer's control flow, NOT from a corpus
+walk — single-walk discipline; a scoped prefix probe on a few known-failed shard-days would confirm it empirically
+if ever needed.)
+
+**It is therefore a re-DERIVE, not a re-FETCH.** The raw liquidation ticks are intact (704,780 `captured` rows
+written by market-tick-data-service), so the work is pure recompute off existing GCS objects: no Tardis API cost, no
+vendor rate limits, and the hard 1-concurrent-Tardis-VM cap does NOT apply. Launcher already exists:
+`deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh` (the `mdps-*` family — which, per this plan's own
+alert-accuracy finding, has ZERO Tardis references, consistent with MDPS reading from MTDS rather than the vendor).
+
+**Operator ruling (2026-08-11): CANARY FIRST, then full.** The canary must cover at least one `@LIN` and one `@INV`
+instrument so BOTH notional branches execute against real data — every number this produces is new data that did not
+exist before, and a swapped linear/inverse branch would be silently plausible rather than loudly broken. Verify the
+manifest rows flip to `captured` AND spot-check written `liquidation_notional_usd` values before the full run.
+
+**Hard prerequisite: the fix must be DEPLOYED first.** `market-data-processing-service@6c2c4b6e` is on
+`live-defi-rollout` only. MDPS VMs deploy from a tarball built off promoted code, so a re-drive launched before
+promotion+deploy would re-derive all 150k cells and fail them identically — burning the VM and rewriting the same
+150k rows. Promotion is HEALTHY, not stalled (operator ruling: check, nudge only if genuinely stalled): this repo uses
+Option-B DIRECT promotion, so the absence of `chore(promote)` PRs is expected rather than a stall, and main advanced
+three times in the two hours around the ship (20:19 / 21:33 / 22:01 UTC). The commit's 21:26 UTC commit-object time
+predates the 22:01 sweep, but its PUSH landed after it (the object was created before the re-gate + retry loop), so
+the NEXT cycle takes it. No manual dispatch — `ldr-to-main-promote-fleet.yml` is a shared single-concurrency slot and
+ad-hoc dispatches measurably starved it for 2+ hours on 2026-08-07.
+
+- [ ] [OPERATOR] P1. Canary re-drive: after `6c2c4b6e` promotes + deploys, run a scoped
+      `launch-mdps-sharded-backfill.sh` slice covering one `@LIN` and one `@INV` cefi perpetual across a few days,
+      then verify (a) those manifest rows flip `attempted_failed` → `captured` and (b) the written
+      `liquidation_notional_usd` values are plausible for both margin types. Progress must be measured as the count
+      of TARGET artifacts created (entity-scoped, `time_created`), never activity — an entity-agnostic check can pass
+      for hours while the target entity writes zero rows.
+- [ ] [OPERATOR] P1. Full re-drive of the remaining ~150k cells once the canary verifies. Expect ~1,578 (≈1%) to
+      REMAIN `attempted_failed` by design — the unresolved-margin-type ids that raise `MalformedTickFieldError`
+      rather than take a guessed branch; they clear only when the instruments-service reference-data todo lands.
