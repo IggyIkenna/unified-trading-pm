@@ -119,10 +119,24 @@ literal default for a `resolve_bucket_name(...)` call in ~21 identifiable files)
 ## Todos
 
 - [ ] [INFRA] P3. Migrate the VM tarball deployment path's hardcoded `deployment-scripts-central-element-323112`
-      bucket-name default to resolve via `resolve_bucket_name(...)` (per the workspace storage-code rule), starting with
-      `setup-data-pipeline-vm.sh:47` and `create-code-tarballs.sh:46`, then the remaining files found via
-      `grep -rl "deployment-scripts-central-element-323112" deployment-service/scripts --include="*.sh"` (21 files
-      measured 2026-08-09 — re-run the grep at fix time, the set may have shifted). Repo: deployment-service.
+      bucket-name default to resolve via the B-011 canonical bash form (`deployment-scripts-${PROJECT}` /
+      `-${PROJECT_ID}`, per /codex/05-infrastructure/vm-tarball-deployment.md — the bash-side equivalent of the
+      storage-code `resolve_bucket_name(...)` rule; `resolve_bucket_name()` is Python-only and the yaml SSOT has no
+      `deployment-scripts` kind, and `setup-data-pipeline-vm.sh` needs the bucket before UTL is installed), across all
+      23 files found by the re-run grep (2026-08-09 measured 21; re-measured 2026-08-10 at fix time = 23, the set
+      shifted: `vm_heartbeat_sidecar.sh` + `vm_instruments_reference.sh` were not in the original 21-file list),
+      starting with `setup-data-pipeline-vm.sh:47` and `create-code-tarballs.sh:46`. Repo: deployment-service. —
+      deployment-service@f979b809
+- [ ] [INFRA] P3. Extend the deployment-bucket resolution migration to the remaining NON-`.sh` / cross-repo hardcoded
+      `deployment-scripts-central-element-323112` occurrences surfaced by the 2026-08-10 cross-repo scan:
+      deployment-service `.github/workflows/sync-vm-scripts-to-gcs.yml:46` (`BUCKET:` env) +
+      `runbooks/tarball_cleanup_maintenance.md` + `scripts/vm/README.md`; e2e-testing
+      `scripts/common/{vm_prediction_backfill,vm_instruments_backfill,vm_setup_and_run,vm_fss_features,vm_mdps_reprocess,vm_instruments_reference,vm_mtds_backfill}.sh` +
+      `scripts/prediction/setup-backfill-vm.sh`; market-tick-data-service
+      `scripts/{analyze_shard_memory,migrate_cefi_v2}.py` +
+      `scripts/sports/league_id_relocation/manifest_swap_2026_07_22.py` +
+      `scripts/sports/k1k2_casing_revert_2026_07_27/manifest_swap_casing_revert_2026_07_27.py`. Repo:
+      deployment-service, e2e-testing, market-tick-data-service.
 
 ## Progress Log
 
@@ -131,3 +145,20 @@ literal default for a `resolve_bucket_name(...)` call in ~21 identifiable files)
   two AWS-lane bugs it was to be combined with are BOTH already shipped 2026-08-07/08 (`unified-trading-pm@b87cc06fcf`,
   `deployment-service@61cf93f44`) — re-confirmed live against current workflow/script content, not just read from the
   prior issue doc's own claim. Filed one new todo for (a); no new todo for (b).
+- **2026-08-10** — Todo 1 code COMPLETE but SHIP-PENDING. Migrated all 23 `scripts/vm/*.sh` hardcoded
+  `deployment-scripts-central-element-323112` occurrences (re-grep at fix time = 23 files, up from the 2026-08-09
+  measure of 21 — `vm_heartbeat_sidecar.sh` + `vm_instruments_reference.sh` were not in the original list) to the B-011
+  canonical bash form `deployment-scripts-${PROJECT}`/`-${PROJECT_ID}`: VM-side scripts (`setup-data-pipeline-vm.sh`,
+  `setup-cefi-live-consolidated-vm.sh`, `setup-prediction-live-consolidated-vm.sh`, `vm_heartbeat_sidecar.sh`,
+  `vm_{mtds,instruments,instruments_reference}_backfill.sh`) derive PROJECT/PROJECT_ID from GCE metadata (fallback =
+  prod project id); `create-code-tarballs.sh` / `launch-strategy-test-vm.sh` from env with prod default; the remaining
+  launchers reuse their existing `PROJECT="central-element-323112"` var. No live behavior change (all forms resolve to
+  the same bucket). Verification: `grep -rl "deployment-scripts-central-element-323112" scripts --include="*.sh"` = 0
+  files, `bash -n` clean on all 156 derived-form launchers. Committed locally as `deployment-service@f979b809` but **NOT
+  shipped** — Pass-1 QG is RED for a PRE-EXISTING reason: 11 `test_dp_recovery_actuators.py` failures (PAGE vs SUCCEEDED
+  on preemption-relaunch pin resolution) introduced by peer dp-monitors commits `49cb5de6`/`2f077c97`/etc. landing
+  between the last green sentinel `8a033d44` and LDR head `1717d294`. Verified not mine (actuator only checks
+  launcher-file existence, never reads .sh content; tests mock run_launcher). Repo-blocker declared; issue filed
+  (`dp_recovery_actuator_tests_regression_2026_08_10.md`). Cross-repo scan surfaced related hardcoded literals in
+  e2e-testing (8 .sh copies), market-tick-data-service (4 .py), and deployment-service's non-.sh surfaces (workflow
+  env + runbook/README) — filed as follow-up todo 2 above.
