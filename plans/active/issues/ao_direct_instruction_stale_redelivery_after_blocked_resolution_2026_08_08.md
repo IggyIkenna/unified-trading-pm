@@ -45,6 +45,7 @@ parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
+archive_exempt: true # TEMPORARY — for split-commit flip+archival per RULES.md §2 (M3 verification). Removed in the archival commit immediately following.
 resolved_by:
 source: >-
   Review agent (slot 1) flagged the 4th same-day recurrence in chat (message id 4072, 2026-08-08T09:39:23Z). Main
@@ -189,14 +190,42 @@ stale-redelivery problem this doc is primarily about.
       heartbeat: `messages: [], message_ids: []` — message gone, (e) read-only DB query: `answered_at IS NOT NULL` = 1
       for id 6835, proving `take_pending_messages`' filter excludes it for all future sessions. No code changes needed
       (verification-only task). Repo: agent-orchestrator.
-- [ ] [INFRA] P3. Separately check whether `POST /api/slots/{id}/message` direct instructions are reliably durable
-      against a slot that's mid-task when the message arrives (this doc's own first filing attempt was lost this way) —
-      confirm whether the message is genuinely dropped in that case, or whether it should have queued and simply hasn't
-      been checked long enough yet; if genuinely dropped, that is a second, related dispatch-durability gap worth its
-      own fix.
+- [x] ✅ [INFRA] P3. Separately check whether `POST /api/slots/{id}/message` direct instructions are reliably durable
+      against a slot that's mid-task when the message arrives — INVESTIGATED 2026-08-10 (slot-14, infra craft).
+      **Delivery IS reliable for `task_id IS NULL` messages (the default "Direct instruction from main" case).**
+      `take_pending_messages` is called on every worker endpoint (`/boot`, `/heartbeat`, `/progress`, `/done`,
+      idle-poll) and drains pending messages into the response — a mid-task worker receives the message on its very next
+      API call. Session-scoped delivery (Phase 2b, 2026-07-16) ensures the message survives session resets. **For
+      `task_id IS NOT NULL` messages, there IS a genuine silent-drop case**: if the target slot's `current_task` ≠ the
+      message's `task_id` (slot finished/reassigned/idle-between-tasks), `take_pending_messages` stamps `answered_at`
+      immediately — permanently terminated, never delivered. This is intentional (prevents stale task-scoped messages
+      landing in unrelated work) but means a task-scoped message sent while the slot is briefly idle between tasks IS
+      silently dropped. **The plan's slot-11 anecdote was NOT a drop**: the message had `task_id IS NULL`, so it
+      survived and redelivered to every session — it was not ACTIONED because each worker prioritized its assigned
+      backlog task. **The structural gap is prioritization, not durability**: a direct instruction competes with the
+      worker's backlog task; the one-task-per-session rule means a mid-task worker can't act before session end, and the
+      next session has its own task. No mechanism exists to say "drop your current task and do this instead." No code
+      changes needed for this todo (verification-only). Full trace: `SendMessageRequest` (worker_api.py:300-318) →
+      `post_message` (slots_ops.py:78-90) → `enqueue_message` (activity.py:283-309) → `take_pending_messages`
+      (activity.py:333-411).
 
 ## Progress Log
 
+- **2026-08-10 (slot-14, infra craft)**: Investigated Todo 3 — whether `POST /api/slots/{id}/message` direct
+  instructions are reliably durable against a mid-task slot. **Finding: delivery IS reliable for `task_id IS NULL`
+  messages (the common case).** Traced the full code path through `SendMessageRequest` (worker_api.py:300-318) →
+  `post_message` (slots_ops.py:78-90) → `enqueue_message` (activity.py:283-309) → `take_pending_messages`
+  (activity.py:333-411). `take_pending_messages` fires on EVERY worker endpoint — the next `/heartbeat` or `/progress`
+  after the send drains it. Session-scoped delivery (delivered_to_session / claude_session_id) means it survives
+  respawns. **For `task_id IS NOT NULL` messages, there IS a genuine silent-drop case**: if `current_task` ≠ `task_id`,
+  the row is immediately terminal (`answered_at` stamped) — intentional (prevents stale task-scoped messages landing in
+  unrelated work), but means a task-scoped message sent while the slot is briefly idle between tasks IS dropped. **The
+  plan's slot-11 anecdote was NOT a drop**: `task_id` was NULL (default for "Direct instruction from main"), so the
+  message survived — it was delivered but not ACTIONED because each worker prioritized its assigned backlog task. The
+  structural gap is prioritization, not durability. The live HTTP round-trip test was blocked: the uvicorn process on
+  this host stopped accepting connections mid-investigation (connection refused on 127.0.0.1:8765 despite the process
+  still running — likely crashed between boot and now; not investigated further as it's out of this todo's scope). No
+  code changes needed. All 4 plan todos now done.
 - **2026-08-08 ~13:03Z (main agt-30eb02)**: Review (msg 4116, agt-d470f7) caught a real dispatch-gating bug in this
   doc's own frontmatter: Todo 2 (the P2 slot_messages ack-primitive fix) said "leaving implementation to normal AO
   dispatch" but the doc itself carried `assigned_vm: NA` / `execution_scope: local-only`. Independently verified in code
