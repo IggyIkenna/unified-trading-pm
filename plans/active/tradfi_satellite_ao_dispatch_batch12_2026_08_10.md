@@ -98,15 +98,17 @@ slot-25's already-thorough batch11.
       `issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md` todo 1. ✅ `UAC@a65c2fa9` —
       `_data_type_floor_overrides` field in `VenueMapping`; `MTDS@fe000178` — `data_type` param on
       `is_venue_available()` wrapper.
-- [ ] [DATA] P3. **Relaunch the CBOE Treasury-INDEX backfill for the newly-unblocked 2000-2020-06 window.** Once the
-      floor fix above ships, relaunch `launch-tradfi-bf-cboe-indices-ohlcv-24h.sh` with `--start-floor 2000-01-01` and
-      verify real `captured` rows land in the manifest for all 4 pre-2018 tenors (US3M/US5Y/US10Y/US30Y) back to
-      2000-01-03, and US2Y back to 2018-08-13. Repo: market-tick-data-service / deployment-service. Source:
+- [ ] [DATA] P3. **Relaunch the CBOE Treasury-INDEX backfill for the newly-unblocked 2018-2020-06 window.** Once the
+      floor fix above ships, relaunch `launch-tradfi-bf-cboe-indices-ohlcv-24h.sh` with `--start-floor 2018-01-01` and
+      verify real `captured` rows land in the manifest for all 4 pre-2018 tenors (US3M/US5Y/US10Y/US30Y) from 2018-01-01
+      onward, and US2Y back to 2018-08-13. Capped at 2018 per operator decision 2026-08-10 — real Yahoo history exists
+      back to 2000-01-03 for 4 of 5 tenors, but the operator explicitly does not want that chased; 2018 onward is
+      sufficient. Repo: market-tick-data-service / deployment-service. Source:
       `issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md` todo 2. Sequenced after
       todo 1 above within this same-priority pair only by logical dependency (the launcher would no-op without the fix)
       — not marking `sequential: true` at the plan level since no other todo exists to race. Done when: a live manifest
       query (venue=CBOE, data_type=ohlcv_24h, date<2020-06-01) shows `captured` rows with populated `instrument_id` for
-      all 4 tenors' full history.
+      all 4 tenors' history from 2018-01-01 onward.
 
 ## Conflict-check (per `ao-dispatch-batch-naming-and-conflict-check.md` §3)
 
