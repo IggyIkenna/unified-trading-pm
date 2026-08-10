@@ -1,0 +1,13 @@
+---
+doc_type: cursor-rule
+description: normalize_utils is UAC-internal only
+globs:
+- '**/*.py'
+---
+# normalize_utils is Internal
+
+`unified_api_contracts.normalize_utils` is internal to UAC.
+- Services and interfaces must NOT import from normalize_utils
+- Use the facade: `from unified_api_contracts.{domain} import X`
+- Or for normalization: `from unified_api_contracts.external.{source}.normalize import X` (interfaces only)
+- Shared helpers (_helpers.py) are only for use within UAC
