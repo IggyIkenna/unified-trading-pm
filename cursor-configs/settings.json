@@ -99,6 +99,17 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Read|Grep|Glob|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/unified-trading-pm/cursor-configs/hooks/batching-nudge.py"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [

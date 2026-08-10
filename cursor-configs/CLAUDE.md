@@ -162,23 +162,23 @@ SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
   `cursor-configs/AUTONOMOUS_AGENT_RULES.md` + drive to completion on a self-paced loop (handoff doc = the plan's
   Progress Log; termination condition + climbing metric; inherits every safety rule).
 - **Rule-amnesia stop** — halt on `os.getenv()`/`pip install`/direct `git push`/skip-test suggestions. **No
-  `python3 << EOF` for file analysis** (`re`-backtracking runaways) — use `rg`/`grep`. **CLAIM ≤ MEASUREMENT**: 0 hits ≠
-  missing (runtime-resolved — READ the consumer; uncertain → ASK); a PROXY (line count, exit 0, green test, cached
-  `origin/`) ≠ the property — measure or say you didn't → `/codex/12-agent-workflow/measurement-claims-discipline.md`.
-  **Pane deep** (`tmux capture-pane -S -50`).
+  `python3 << EOF` for file analysis** (`re`-backtracking runaways) — use `rg`/`grep`. **Grep-then-READ, not
+  grep-then-conclude** (0 hits ≠ missing — features are runtime-resolved; READ the candidate consumer; uncertain → ASK).
+  **Inspect an agent's pane with depth** (`tmux capture-pane -S -50`).
 - **Async-wait / poll / background-task discipline (HARD RULE — recurring "found asleep" class)**: never report a
   backgrounded task done before its real exit; rely on the tracked-task auto-re-invoke (don't poll harness tasks); poll
   only external work on a **progress metric** (flat = STALL → diagnose); don't over-watch / no-sawtooth / don't poll
   what you can direct-check; **backfill/migration progress = count of TARGET artifacts created (entity-scoped,
-  `time_created` not `updated`), NEVER activity** — an entity-agnostic check passes for hours while the target writes
-  ZERO rows; monitors read terminal `exit_code` + manifest counts + log-mtime → a TERMINAL **measured** verdict
-  (liveness `kill -0 <PID>`, no self-match); `ScheduleWakeup` / a dispatched sub-agent are NOT reliable wakes — arm your
-  OWN `run_in_background` heartbeat watchdog (≤30-min) in the SAME turn. SSOT:
+  `time_created` not `updated`), NEVER activity** — an entity-agnostic check can pass for hours while the target entity
+  writes ZERO rows, masked by OTHER entities writing; monitors read terminal `exit_code` + manifest counts + log-mtime →
+  a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no self-match); `ScheduleWakeup` / a dispatched sub-agent
+  are NOT reliable wakes — arm your OWN `run_in_background` heartbeat watchdog (≤30-min) in the SAME turn. SSOT:
   `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Batch independent tool calls** — compound `&&`/`;` Bash, several `tool_use` blocks per message, `replace_all` over
-  serial Edits; only result-dependent calls stay sequential. Measured: 57.3% collapsible, each a ~406k prefix re-read.
-  SSOT: `/codex/06-coding-standards/tool-call-batching.md`.
-- **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`).
+  serial Edits; only result-dependent calls stay sequential. Measured: 57.3% of calls collapsible, each costing a ~406k
+  prefix re-read + a round-trip. SSOT: `/codex/06-coding-standards/tool-call-batching.md`.
+- **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`,
+  plans, memory).
 - **Pre-task plan/issue conflict check (HARD RULE)** — before ANY task grep `plans/active/`+`issues/`: plans go
   stale/superseded between daily `/plan-reconcile` sweeps: no-flag≠current; 0 hits ≠ clear (grep-then-read) — check
   status/supersedes. Context economy: scope reads + Bash output (`grep -c`/`tail -5`, not full dumps), terse replies.
@@ -198,25 +198,17 @@ architecture (L0–L4)".
 
 ## Plans — format + authoring discipline
 
-- **Authoring a plan? READ `plans/active/task_template.md` FIRST (HARD RULE)** — it carries the LOCAL (human,
-  `assigned_vm: NA` + `execution_scope: local-only`, never ingested) vs AO-DISPATCHED (`assigned_vm: planning`) tracks +
-  the AO authoring rules: **10-100 todos max** (raised from 10-20, operator ruling 2026-07-23); **a plan's independent
-  same-priority todos run CONCURRENTLY across workers by default** (intended — one plan can fan out to N agents; the ONE
-  rule: concurrent todos MUST touch different files), `sequential: true` serialises the WHOLE plan (use ONLY for a real
-  dependency chain or same-file overlap — don't reflex-set it), **partial-parallelism isn't expressible in one plan →
-  SPLIT** (parallel work in Plan A; the gated step in Plan B via `depends_on` + `gate_on_depends: true`); **no per-todo
-  prereq syntax** (prereqs come only from `sequential`/`gate_on_depends`); per-task `[TAG]` roles route each todo
-  (SHIPPED); **every AO todo with a GCS delete/`--apply` or VM launch needs `[OPERATOR]`+delete-safety-cite OR a stated
-  safe-idempotent justification** (`task_template.md` finding O; path (c) reversibility-verified — a FRESH same-run
-  `gcs_bucket_soft_delete_retention_seconds()` ≥604800s check, never a whole-bucket destroy — QUALIFIES, finding T, SSOT
-  delete-safety codex §3a; soft pre-filter `check_delete_vm_launch_gating.sh`); an audit is its own plan **only when
-  precisely scoped** — a todo is AO-eligible only if its outcome is DETERMINABLE by the worker alone (a checkable fact,
-  a scoped change, an audit with a stated done-when), NEVER an open-ended judgment/design call ("figure out how X should
-  look" is a human decision wearing a todo's clothes — resolve it FIRST as a LOCAL plan/interactive session, dispatch
-  only the properly-scoped todo against that decision's outcome; operator ruling 2026-07-23, SSOT
-  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility"); draft-gated
-  phase chains (later phases `status: draft` until the prior phase's last todo flips them `active`). **Never hand-edit
-  `backlog.yaml`** — author plans, the backend derives it.
+- **Authoring a plan? READ `plans/active/task_template.md` FIRST (HARD RULE)** — it carries the LOCAL (`assigned_vm: NA`
+  + `execution_scope: local-only`, never ingested) vs AO-DISPATCHED (`planning`) tracks and the full authoring rules.
+  Headlines: **10-100 todos**; independent same-priority todos run CONCURRENTLY by default (the ONE rule: they MUST
+  touch different files); `sequential: true` serialises the WHOLE plan — don't reflex-set it; partial parallelism isn't
+  expressible in one plan → **SPLIT** (gated step in Plan B via `depends_on` + `gate_on_depends: true`); no per-todo
+  prereq syntax; per-task `[TAG]` roles route each todo; **any AO todo with a GCS delete/`--apply` or VM launch needs
+  `[OPERATOR]`+delete-safety-cite OR a stated safe-idempotent justification** (pre-filter
+  `check_delete_vm_launch_gating.sh`, SSOT delete-safety codex §3a); **AO-eligible = outcome DETERMINABLE by the worker
+  alone**, never an open-ended judgment/design call — resolve that first as a LOCAL plan, then dispatch against its
+  outcome (SSOT `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope
+  eligibility"); draft-gated phase chains. **Never hand-edit `backlog.yaml`** — author plans, the backend derives it.
 - **Plan destination — ASK BEFORE CREATING (HARD RULE)**: before writing any new plan, ask the operator: _"Should this
   be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
   auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. **Valid
@@ -272,6 +264,11 @@ architecture (L0–L4)".
   data audit FREEZES layer-N+1 work (foundation-completion-gate). **External data is always available** — exhausting the
   free path = a credential ask, NOT a descope; build the adapter scaffold anyway + status `BLOCKED-CREDENTIALS`. SSOTs:
   `/codex/02-data/data-pipeline-correctness-hard-rule.md`, `…/external-data-always-available-rule.md`.
+- **A doc/comment/pointer that MISLED you is a finding — fix it in the same turn.** Stale path, wrong claim,
+  rotted count, dead reference: you already paid the search; leaving it makes every future agent pay it again.
+  Correct it where it lives, state what you verified, and delete the number/name that rotted rather than
+  updating it (counts like "the 2 hooks" re-rot). Too big for a line → `- [ ]` todo. Confirm the doc is really
+  wrong first — a truncated `head` read is not evidence of absence.
 - **Findings triage**: in your file → fix in same commit; adjacent → fix in YOUR plan; outside-plan small+clear → ≤30
   min; ambiguous → diagnose both sides; audit-scope → wrapper plan → epic VM; outside every plan →
   `plans/active/issues/<slug>_<date>.md` — issue resolves to folded-in-plan/AO-scope/operator-gated, never passive.
@@ -351,24 +348,24 @@ architecture (L0–L4)".
   per-tier SAs), `/codex/05-infrastructure/gcs-object-operations.md`.
 - **Touching UI?** No Python tools (tsc/ESLint/Vitest/Playwright only); TS strict; **playwright gate** — no tick without
   `[UI]` + `pw:L2 ✓` + a cited regression spec. SSOT: `/codex/06-coding-standards/ui-testing-layers.md`.
-- **Launching VMs / infra?** Read the runbook FIRST — gotchas live there, not here. Heavy I/O (full-corpus GCS walks,
-  manifest rewrites, bulk renames) NEVER runs on the operator's local machine, always a VM in-region; **no
-  fire-and-forget** (verify STARTED + ongoing progress + terminal state); name/register every launcher via
-  `VM_PREFIX_TO_BUCKET`, never hand-roll; **backfill VMs default SPOT**, preemption resume from measured PROGRESS, never
-  replays `START_DATE`; **Tardis: hard cap 1 concurrent VM, both clouds** (count the fleet first); audit
-  preemption/billing-waste via `/vm-preemption-billing-waste-audit`. **Rightsizing (2026-08-10)**: any VM >30min gets
-  `/vm-resource-rightsizing-check` unless a cited doc justifies the sizing. **Shared-bucket check (2026-08-10)**: verify
-  no co-tenant VM already writes the target bucket — a newcomer gets throttled ~7-9x, the incumbent barely dips; measure
-  marginal impact if unavoidable. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`,
+- **Launching VMs / infra?** READ `/codex/05-infrastructure/vm-launcher-runbook.md` FIRST (full gotchas + measured
+  incidents live there, not here). Headline HARD RULES: heavy I/O (full-corpus GCS walks, manifest rewrites, bulk
+  renames) NEVER runs on the operator's local machine, always a VM in-region; **no fire-and-forget** (verify STARTED +
+  ongoing progress + a terminal state); name/register every launcher via the `VM_PREFIX_TO_BUCKET` registry, never
+  hand-roll; **backfill VMs default SPOT**, preemption recovery resumes from measured PROGRESS, never replays
+  `START_DATE`; **Tardis: hard cap 1 concurrent VM, both clouds** (N>1 storms the API — count the fleet before
+  launching); regularly audit for preemption-without-recovery + billing-waste (`/vm-preemption-billing-waste-audit`).
+  **Rightsizing HARD RULE (2026-08-10)**: any VM running >30min gets `/vm-resource-rightsizing-check` (CPU+mem-growth) —
+  skip only if a cited doc justifies the sizing. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`,
   `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`,
   `…/vm-preemption-and-billing-waste-monitoring.md`, `…/data-pipeline-alerts.md`.
-- **A critical service (AO first) looks idle/broken?** Diagnose before restarting — READ the runbook's fix-vs-not table
-  FIRST. **Escalation stuck/looping → `escalation_queue.last_error` names the reason**; quota alone does NOT stall
-  sonnet-tier dispatch (DeepSeek = baseline fallback). SSOT: `/codex/15-runbooks/safe-service-restart-procedures.md`.
-- **AO scheduled jobs (systemd timers / status model / capacity queue)?** `dispatched` = spawn receipt, NOT completion
+- **A critical service (AO first) looks idle/broken?** Diagnose before restarting — usually account/quota headroom
+  (`disabled` != auto-clear on `rate_limited_until`; check `weekly_resets_at`). Queue never needs manual replay. SSOT
+  (diagnostic order + fix-vs-not table, per service): `/codex/15-runbooks/safe-service-restart-procedures.md`.
+- **AO scheduled jobs (8 systemd timers / status model / capacity queue)?** `dispatched` = spawn receipt, NOT completion
   (`agent_exit_reason == "lifecycle-complete"` is done); `git pull` does NOT reinstall a timer — re-run
-  `sudo bash scripts/install-<job>-timer.sh`; `no_capacity` is legacy (queue-on-no-capacity default);
-  `quarantined/timeout/error` page, `dispatched/queued` don't. SSOT:
+  `sudo bash scripts/install-<job>-timer.sh`; `no_capacity` is legacy (queue-on-no-capacity is the default);
+  `quarantined/timeout/ error` page, `dispatched/queued` don't. SSOT:
   `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
@@ -412,9 +409,10 @@ deploy/launch+subscriptions backend for both UIs. **Architecture**: Central orch
 13.113.200.22) with N slot workers, role-based dispatch (no per-epic VMs; single-VM architecture 2026-06-27).
 **`planning` is the ONLY VM** (human-planning TERMINATED 2026-08-03). Workspace configs canonical in
 `unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright).
-Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json` →
-`cursor-configs/settings.json` (don't commit personal `model`/`theme` drift in it) →
-`/codex/05-infrastructure/claude-code-settings-symlink.md`. **Personal per-tab context-checkpoint automation** (tmux
+Claude Code TEAM settings = git-TRACKED `cursor-configs/settings.json`, inherited via the per-slot
+`.claude/settings.json` symlink (`link-claude-skills.sh`, run by workspace-bootstrap + `quality-gates.sh`), so a
+hook registered there reaches every slot/machine on an LDR pull; `~/.claude/settings.json` is PERSONAL, never
+tracked, NOT a symlink → `/codex/05-infrastructure/claude-code-settings-symlink.md`. **Personal per-tab context-checkpoint automation** (tmux
 `send-keys`-forced `/pre-compact` then `/compact`; needs a terminal-hosted `claude` session — the Cursor/VS Code chat
 panel isn't tmux-reachable, its terminal tab is) → `/codex/05-infrastructure/local-tmux-precompact-watcher.md`.
 Analysis: `rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
@@ -426,4 +424,4 @@ self-heals (AutoSpawn/failover/watchdog ON — never manually kill tmux). **Orch
 status from a dev checkout** (no JWT, VM:8765 has no inbound rule): `/check-agent-orchestrator` skill or
 `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` — read-only via AWS SSM, never a manual
 API-guessing session. SSOTs: `/codex/04-architecture/runtime-deployment-topology.md`,
-`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`, `…/agent-orchestrator-overview.md`.
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.

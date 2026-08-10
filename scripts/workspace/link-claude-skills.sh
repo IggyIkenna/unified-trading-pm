@@ -18,9 +18,10 @@
 #
 # WHY #3 EXISTS (added 2026-07-23, see
 # /plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md): unlike CLAUDE.md and
-# skills/, cursor-configs/settings.json is GITIGNORED (personal model/effortLevel drift used to jam
+# skills/, cursor-configs/settings.json WAS gitignored when this was written (personal model/effort drift jammed
 # slot-cron-ff-pull's dirty-check — see .gitignore) — so it never arrives via `git pull` and must be
-# manually re-seeded per clone. This script does NOT invent or copy that content across clones (there
+# manually re-seeded per clone. NO LONGER TRUE: it was RE-TRACKED 2026-07-23, so it DOES arrive via
+# `git pull` — which is what lets a team-policy hook registered there reach every slot and machine. This script does NOT invent or copy that content across clones (there
 # is no single git-tracked source of truth to copy from); it only links `.claude/settings.json` to
 # `cursor-configs/settings.json` WHEN that file already exists in THIS root's own PM clone, and skips
 # cleanly (non-blocking) otherwise. Before this fix, NO root on the human-planning VM had this

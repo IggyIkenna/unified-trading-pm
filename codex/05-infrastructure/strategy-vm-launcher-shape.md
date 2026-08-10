@@ -28,7 +28,7 @@ referenced_by:
     /codex/05-infrastructure/strategy-shard-vm-topology.md,
   ]
 owner:
-last_reviewed: 2026-05-12
+last_reviewed: 2026-08-11
 code_refs:
 related_plan: plans/active/promote_workflow_may23_cli_path_2026_05_10.md
 ---

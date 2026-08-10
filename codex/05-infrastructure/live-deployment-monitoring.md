@@ -26,7 +26,7 @@ authoritative_for:
   silent stalls are visible within minutes.
 referenced_by: [plans/archive/2026_07/master_to_live_defi_2026_05_23.md]
 owner:
-last_reviewed: 2026-05-12
+last_reviewed: 2026-08-11
 code_refs:
 ---
 

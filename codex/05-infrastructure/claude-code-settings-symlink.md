@@ -117,8 +117,10 @@ Keep it a real, personal file.
 
 ## Hook commands: use `$CLAUDE_PROJECT_DIR`, never a hardcoded absolute path
 
-The 2 hooks in this file's `hooks` key (`PreToolUse` → `block_destructive_commands.py`, `UserPromptSubmit` →
-`context-threshold-nudge.sh`) reference their scripts via `$CLAUDE_PROJECT_DIR/...`, not an absolute path. Claude Code
+The hooks in this file's `hooks` key — `PreToolUse` → `block_destructive_commands.py`, `UserPromptSubmit` →
+`context-threshold-nudge.sh`, `SessionStart` → `session-start-collision-check.sh`, `PostToolUse` →
+`batching-nudge.py` (2026-08-10) — reference their scripts via `$CLAUDE_PROJECT_DIR/...`, not an absolute path.
+(This said "the 2 hooks" until 2026-08-10, having rotted as hooks were added — enumerate, never re-add a count.) Claude Code
 exports `CLAUDE_PROJECT_DIR` to every hook-command subprocess, set to the project root the session was launched from —
 confirmed empirically (2026-07-23) to resolve correctly and DIFFERENTLY per launch root: a session opened at the true
 workspace root gets that path, one opened in `.tabs/1` gets `.../.tabs/1`, one opened in `.tabs/2` gets `.../.tabs/2` —
@@ -139,6 +141,33 @@ genuine INTERACTIVE `claude` session inside a detached tmux pane and pastes the 
 anywhere in the real dispatch path), but don't assume hooks gate a `claude -p` invocation if one ever gets scripted
 elsewhere. See `agent-orchestrator/scripts/hooks/block_destructive_commands.py`'s docstring for the same note at the
 code site.
+
+## `PostToolUse` → `batching-nudge.py`: how a behavioural hook reaches the WHOLE fleet (2026-08-10)
+
+Registered because a written rule had already failed at this problem: `SUB_AGENT_MANDATORY_RULES.md` has carried a
+batching directive since ~2026-08-05 (measured then: ~11% of fleet turns batched >1 call), yet a controlled measurement
+five days later still found 57.3% of ALL calls in collapsible same-tool chains. In-loop feedback at the moment of the
+behaviour is a different mechanism from a rule read once at session start. Rationale + baseline:
+`/codex/06-coding-standards/tool-call-batching.md`.
+
+**Propagation — the reason a hook is worth writing at all:**
+
+| Piece                                      | How it reaches other slots / machines                                                                  |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `cursor-configs/hooks/batching-nudge.py`   | git-tracked, mode `100755` (`core.fileMode=true`), so the exec bit survives the pull                    |
+| the `PostToolUse` registration             | lives in `cursor-configs/settings.json`, **git-tracked** since 2026-07-23                               |
+| the `<root>/.claude/settings.json` symlink | created by `scripts/workspace/link-claude-skills.sh` — run by `workspace-bootstrap.sh` AND `scripts/quality-gates.sh` |
+
+A slot or teammate machine that pulls `live-defi-rollout` and has bootstrapped (or has simply run PM's quality gate
+once) picks this up with no further action. **Real agent-orchestrator workers are covered**: `tmux_spawn.spawn()`
+launches a genuine INTERACTIVE `claude` in a detached tmux pane, so hooks apply — the `claude -p` gap noted above is
+explicitly NOT the dispatch path. AO workers get their own `CLAUDE_CONFIG_DIR` (user-level, seeded only with
+`autoUpdates: false`); hooks here are PROJECT-level and resolve from the slot's own checkout.
+
+**It nudges, never blocks.** `PostToolUse` (the call already ran), every failure path exits 0 silently, and it HOLDS its
+counter rather than advancing when calls arrive within `SAME_MESSAGE_WINDOW_SECONDS` — so an agent already batching
+correctly is never nudged. A naive same-tool counter would fire hardest at correct behaviour, the one outcome that would
+make this hook worse than nothing.
 
 ## `PreCompact` stays UNREGISTERED — client-side auto-compact must remain enabled (HARD RULE, 2026-08-06)
 
