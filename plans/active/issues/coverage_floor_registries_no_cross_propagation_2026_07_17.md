@@ -266,7 +266,11 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       MVP-removal and backfill-launcher-exclusion findings above are still correct; only "has NEVER been fetched" is
       false. The open remediation (`[INFRA] P3` in the doc cited above, and echoed in
       `/plans/active/cefi_satellite_ao_dispatch_batch10_2026_08_08.md`) is the live tracking location — no new todo
-      needed here.
+      needed here. **RESOLVED 2026-08-10**: the `[INFRA] P3` deregistration landed — BINANCE-DELIVERY removed from
+      `VENUES_BY_ASSET_GROUP["cefi"]` + `tardis_to_venue`/`all_tardis_exchanges` (the forward-poll's actual iteration
+      source) + `VENUE_DATA_TYPE_CAPABILITIES` (unified-api-contracts@56db28e6, verified ancestor of
+      `origin/live-defi-rollout`); sibling doc archived resolved. This checkbox stays `[x]` — kept in sync per batch10
+      todo 4.
 - [x] ✅ [DATA] P2. Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 carries `# TODO verify` while
       `venue_mapping.py`'s 2020-01-01 does not; probe the manifest to confirm 2020-01-01 is correct, update
       `TRADFI_SOURCE_COVERAGE_START["CME"]`, and drop the TODO marker. (repo: unified-api-contracts) —

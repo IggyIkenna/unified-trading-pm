@@ -42,6 +42,7 @@ drift_direction: advance-code
 source: [code_tarball_refresh_job_silently_failing_since_2026_07_30_2026_08_01-worker]
 resolved_by:
 locked_by:
+archive_exempt: true
 context_scope:
   [
     /codex/05-infrastructure/vm-tarball-deployment.md,
@@ -363,13 +364,25 @@ for visibility per the data-pipeline-correctness HARD RULE, not to be conflated 
 
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **2026-08-10 (cefi_satellite_ao_dispatch_batch10_2026_08_08_finalize todo-1, slot-17)**: flipped the last 2 open P3
+  follow-ups (heartbeat status field + `_publish_boundary_event`) — doc now 0 open todos. Set `archive_exempt: true` as
+  a bridge: archival (git mv + banner + 7-file/10-ref corpus referrer sweep) is out of this reconciliation's scope and
+  is a candidate for a dedicated archival pass; kept in `plans/active/` as a complete incident record until then.
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Fix heartbeat status field that never updates past 'starting' on LONG_LIVED_LIVE VMs (cosmetic, 'worth
-      a P3 note', flagged 2026-08-01).
-- [ ] [DATA] P3. Investigate the 'instrument-window flush failed ASTER:PERPETUAL:1000LUNC-USDT@LIN' exception in
-      _publish_boundary_event (minor, 'worth a P3 note, not investigated further', flagged 2026-08-02).
+- [x] ✅ [DATA] P3. Fix heartbeat status field that never updates past 'starting' on LONG_LIVED_LIVE VMs (cosmetic,
+      'worth a P3 note', flagged 2026-08-01). **DONE 2026-08-10 (slot-3, `cefi_satellite_ao_dispatch_batch10` todo 5)**
+      — created `deployment-service/scripts/vm/vm_heartbeat_sidecar.sh` (writes `"running"` from the first tick,
+      replacing the GCS-hosted version that hardcoded `"starting"`) + added it to `create-code-tarballs.sh`'s upload
+      set. Evidence: deployment-service@88f8834c (verified ancestor of `origin/live-defi-rollout`).
+- [x] ✅ [DATA] P3. Investigate the 'instrument-window flush failed ASTER:PERPETUAL:1000LUNC-USDT@LIN' exception in
+      _publish_boundary_event (minor, 'worth a P3 note, not investigated further', flagged 2026-08-02). **ROOT-CAUSED +
+      FIXED 2026-08-10 (slot-3, `cefi_satellite_ao_dispatch_batch10` todo 5)** — the `publish_boundary_event` helper in
+      `_ws_window_helpers.py` passed raw `str` values for `asset_group`/`data_type` to `CandleBoundaryCrossedEvent`
+      (StrEnum fields); fixed with explicit `AssetGroup()`/`DataType()` construction, removing the
+      `pyright: ignore[reportArgumentType]` suppressions. Evidence: market-tick-data-service@f6b7f8b7 (verified ancestor
+      of `origin/live-defi-rollout`).
 
 > **2026-08-06 archive-candidate audit**: Doc's own entries flag two unfixed bugs as 'worth a P3 note but not
 > investigated further here' — prose-only deferrals never turned into tracked `- [ ]` todos (all incident todos
