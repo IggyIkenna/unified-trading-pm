@@ -97,13 +97,59 @@ an INJURIES-entity freshness-sentinel collision) applies here is NOT yet verifie
 symptom recurred for a different entity; the investigation that distinguished "consolidator bug" from "upstream
 freshness-skip bug" for the odds_api case has not been repeated for INJURIES.
 
+## Root cause (2026-08-10, slot 14, data_engineering) — P1 todo
+
+**Verdict: NOT the odds_api sentinel-collision bug class, and NOT a genuine new consolidator defect.** The static
+`rows_out` window was a real (not stale) reflection of the canonical state during that window, and it self-resolved —
+compounded by an unrelated, already-monitored rate-limit event on the same VM later in its run.
+
+1. **Structurally, the ODDS_API-class collision cannot occur for INJURIES.** That bug depended on a foreign pipeline
+   (MDPS) writing under the SAME `service_name` as the checking caller (MTDS) so a blind `venue`/`data_type` match
+   collided across sources. INJURIES has exactly one producer fleet-wide — queried the current consolidated index
+   (`_index/availability_index.parquet`, single read, not a new corpus walk) for every distinct
+   `(service_name, source, venue)` combo with `data_type='INJURIES'`: **one row: `instruments-service` / `api_football`
+   / `venue=''`, 955,848 rows.** No foreign `service_name` or `source` stamps this `data_type` anywhere in the bucket,
+   so the collision precondition (two producers sharing a dedup-key match) is absent by construction.
+2. **INJURIES never reaches the coarse `check_shard_freshness` path that had the odds_api bug anyway.** INJURIES is a
+   member of `_SPORTS_PER_LEAGUE_ENTITIES`
+   (`instruments-service/instruments_service/engine/orchestrator/process_preflight.py:178`) — the coarse date-only
+   pre-flight is explicitly SKIPPED for it in favour of `_should_skip_date_for_per_league`
+   (`instruments-service/instruments_service/engine/orchestrator/sports.py:416`), which scopes its freshness check to
+   the EXACT `(service_name, date, data_type, league_id)` tuple — no blind venue/data_type OR-match, no cross-`source`
+   blindness. This is the same exact-scoping shape the 2026-07-30 blast-radius audit already verified is safe for every
+   other asset_group's non-sports callers.
+3. **What actually explains the flat window**: Cloud Logging shows the "stall" was real but temporary — `rows_out` held
+   at `17090683` for the 5 cycles cited (`23:49:05Z`->`00:49:04Z`), then genuinely GREW twice more: `17096317` at
+   `02:31:30Z` (+5,634) and `17097852` at `03:03:35Z` (+1,535), before plateauing again through `04:53:19Z`. A
+   static-forever stall would never recover on its own; a VM walking a wide date range that revisits
+   already-fully-captured ground before crossing into a genuine gap produces exactly this on/off growth pattern.
+   Corroborated directly: querying the same index for INJURIES `capture_status`, the entity is 97.7% `empty_confirmed`
+   (935,223 of 955,848 rows) — i.e. almost every (date, league) combo genuinely has no injury data, so a wide sweep
+   naturally re-confirms mountains of already-`empty_confirmed` rows (harmless, correctly deduped) while only rarely
+   crossing a real gap.
+4. **Separately, this specific VM (`af-backfill-20260809-222924`) hit an upstream rate limit and was already caught by
+   existing monitoring** — Cloud Logging:
+   `exit_code_fleet_monitor: af-backfill-20260809-222924 verdict=rate_limited exit_code=0 captured=0->0` at `04:26:10Z`,
+   immediately followed by the VM's own shutdown sequence (`04:23:59Z` onward) and its disappearance from the live
+   instance list. This verdict landed AFTER the cited stall window (23:49Z-00:49Z), so it explains the LATER plateau
+   (03:19Z-04:53Z+), not the originally-reported one — but it confirms the fleet's existing `exit_code_fleet_monitor`
+   already detects and terminates a rate-limited INJURIES backfill VM correctly; no new detection gap found.
+
+**Conclusion for the doc's own premise ("census reads may be stale"): the census was NOT stale.** It accurately reported
+zero canonical growth during a window where canonical growth was genuinely (if temporarily) zero. No code fix is needed
+in `check_shard_freshness`, `_should_skip_date_for_per_league`, or the consolidator for INJURIES.
+
 ## Todos
 
-- [ ] [SCRIPT] P1. Determine whether INJURIES' `check_shard_freshness` path (or equivalent freshness-sentinel logic) has
-      the same class of bug the odds_api investigation found (silently marking dates "fresh" that shouldn't be, causing
-      the writer to re-emit rows identical to what's already canonical, which the consolidator then
+- [x] ✅ [SCRIPT] P1. Determine whether INJURIES' `check_shard_freshness` path (or equivalent freshness-sentinel logic)
+      has the same class of bug the odds_api investigation found (silently marking dates "fresh" that shouldn't be,
+      causing the writer to re-emit rows identical to what's already canonical, which the consolidator then
       correctly-but-uselessly dedupes away) — or whether this is a genuinely new, INJURIES-specific consolidator issue.
-      Repo: market-tick-data-service or instruments-service (wherever INJURIES' freshness-check path lives).
+      Repo: market-tick-data-service or instruments-service (wherever INJURIES' freshness-check path lives). —
+      **RESOLVED, no code change**: neither. See "Root cause (2026-08-10)" above — structurally immune to the odds_api
+      collision class (single producer, no foreign `service_name`/`source` collision possible), and the observed stall
+      was a real, self-recovering artifact of a wide-range backfill VM re-scanning already-covered ground, compounded by
+      an unrelated rate-limit termination the fleet monitor already caught correctly.
 - [ ] [SCRIPT] P2. Confirm whether the `error=locked` streak observed (01:22:55Z-01:29:43Z, every attempt in that window
       failed to acquire the lock) is a stale lock from a crashed/orphaned holder or legitimate serialized contention
       from concurrent consolidator invocations — check the lock file's held-since timestamp against the holder
