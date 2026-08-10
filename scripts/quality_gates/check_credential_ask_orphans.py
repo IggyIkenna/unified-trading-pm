@@ -15,6 +15,15 @@ This check walks `plans/active/*.md`, finds every `BLOCKED-CREDENTIALS` line,
 and reports any without a recognisable ping-reference token in ±5 lines of
 context.
 
+NAMING SPLIT (2026-08-10): `BLOCKED-CREDENTIALS` is for vendor API-key/secret
+credential asks (needs the operator to supply a Secret Manager secret).  IAM-
+permission gaps — where our own GCP/AWS identity lacks a specific role but the
+fix is self-service (grant the role per RULES.md § 5) — use the distinct
+`BLOCKED-PERMISSIONS` marker instead.  This checker intentionally tracks ONLY
+`BLOCKED-CREDENTIALS` (vendor-credential orphans); `BLOCKED-PERMISSIONS` items
+are NOT counted (they are self-service, no operator secret needed, so no ping
+required).  The ratchet stays meaningful for real vendor-credential debt.
+
 Baseline-ratchet semantics (matching codex_doc_freshness + plan_discipline):
   --baseline-write writes current orphan count to
     `scripts/quality_gates/credential_ask_orphans_baseline.yaml`.
@@ -71,6 +80,10 @@ SECRET_NAME_RE = re.compile(r"\b[a-z][a-z0-9-]+-(api-key|api-secret|secret-key|p
 # still tripped the ratchet because neither cites a file-based ping).
 BLK_ID_RE = re.compile(r"\bBLK-[0-9a-f]{6,}\b")
 
+# Only track BLOCKED-CREDENTIALS (vendor API-key/secret credential asks).
+# BLOCKED-PERMISSIONS (IAM-permission gaps) is intentionally NOT tracked here —
+# IAM gaps are self-service (the agent grants the missing role per RULES.md § 5),
+# no operator secret/ping needed, so they are never credential-ask orphans.
 BLOCKED_RE = re.compile(r"BLOCKED-CREDENTIALS")
 
 # A line that enumerates MULTIPLE distinct BLOCKED-* status tokens is DEFINING the status
