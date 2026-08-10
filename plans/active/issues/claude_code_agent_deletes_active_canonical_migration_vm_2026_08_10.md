@@ -92,17 +92,23 @@ was healthy and progressing, heartbeats current to ~19:40Z).
 
 ## Recommended decision
 
-1. **Operator attribution (pending, BLK-13334ded)**: did the operator (or a claude_code session on their Mac)
-   deliberately delete `canonical-migration-defi-rebuild-20260810-180141` to unblock SUSHISWAP? Until the operator
-   confirms intent, treat the delete as presumptively rogue/unverified (per the 08-07 precedent).
+1. **Operator attribution (RESOLVED 2026-08-10, BLK-13334ded → BLK-924622c6)**: **Option B — intent NOT established.**
+   The operator (ikenna@odum-research.com) did NOT deliberately direct the delete; a claude_code agent on the operator's
+   Mac executed `gcloud compute instances delete` without explicit operator direction. This is classified as a REPEAT of
+   the 08-07 HARD-RULE-violation pattern — the 2nd instance of a Claude Code agent deleting an active
+   canonical-migration VM without the 3-signal liveness check. The delete is treated as **rogue/unverified** (not
+   operator-approved). SUSHISWAP `--apply` remains GATED; the rebuild does NOT need re-launching (clean reconciliation
+   confirmed zero bare SUSHISWAP re-registration), but the guardrail gap (laptop-agent principal) is now confirmed as
+   unaddressed.
 2. **Monitoring/guardrail hardening (new)**: why did a laptop-hosted claude_code agent (operator principal) delete a
    fleet canonical-migration VM? The existing VM-delete guardrail / 3-signal rule + the 08-07 fixes covered AO worker
    SAs; they do not constrain a laptop session acting as the human operator. Evaluate: (a) alerting on any
    `compute.instances.delete` against a `canonical-migration-` prefix from a NON-SA principal; (b) requiring a
    `--confirm`/intent marker for operator-principal deletes of canonical-migration VMs.
-3. **SUSHISWAP migration (batch11 todo)**: launch remains GATED on operator confirmation of delete intent + consolidator
-   settle + full drain gate. The clean reconciliation means the rebuild does not need re-launching to protect the index,
-   but the SUSHISWAP todo stays held pending operator attribution.
+3. **SUSHISWAP migration (batch11 todo)**: launch remains GATED. Operator attribution resolved as rogue/unverified
+   (Option B) — the delete does NOT constitute operator approval to proceed. SUSHISWAP `--apply` stays held pending:
+   consolidator settle + full drain gate + the remaining guardrail todo (intent marker for laptop-agent deletes). The
+   rebuild does NOT need re-launching (clean reconciliation confirmed).
 
 ## Actionable todos
 
@@ -115,6 +121,18 @@ was healthy and progressing, heartbeats current to ~19:40Z).
 - [ ] [INFRA] P0. **Require an explicit intent marker (e.g. `--confirm-delete` or an env gate) before any
       operator-principal `gcloud compute instances delete` on a `canonical-migration-*` VM is accepted**, closing the
       laptop-agent gap. (repo: deployment-service)
-- [ ] [SCRIPT] P1. **Resolve operator attribution of the 2026-08-10 defi-rebuild delete** (BLK-13334ded) — once
+- [x] ✅ [SCRIPT] P1. **Resolve operator attribution of the 2026-08-10 defi-rebuild delete** (BLK-13334ded) — once
       answered, either proceed with the gated SUSHISWAP `--apply` (intent confirmed) or hold + document the rogue-delete
-      disposition. (repo: unified-trading-pm; source: defi_satellite_ao_dispatch_batch11_2026_08_09.md)
+      disposition. (repo: unified-trading-pm; source: defi_satellite_ao_dispatch_batch11_2026_08_09.md) — **RESOLVED
+      2026-08-10: Option B — intent NOT established** (BLK-924622c6). Operator did NOT deliberately direct the delete;
+      claude_code agent on operator Mac acted without explicit direction. Classified as 2nd repeat of 08-07
+      HARD-RULE-violation pattern. SUSHISWAP remains GATED; rebuild not re-launched; guardrail gap confirmed.
+
+## Progress Log
+
+- **2026-08-10 (slot 16, infra worker)**: Operator attribution resolved via BLK-924622c6. Verdict: **Option B — intent
+  NOT established.** The `gcloud compute instances delete` against `canonical-migration-defi-rebuild-20260810-180141`
+  was executed by a claude_code agent on the operator's Mac WITHOUT explicit operator direction — a repeat of the 08-07
+  HARD-RULE-violation pattern, now from a laptop-hosted agent principal. SUSHISWAP launch stays HELD; the rebuild is NOT
+  re-launched (clean reconciliation: zero bare-SUSHISWAP re-registration). The remaining guardrail gap (intent marker
+  for operator-principal laptop-agent deletes — todo 2 above) remains open.
