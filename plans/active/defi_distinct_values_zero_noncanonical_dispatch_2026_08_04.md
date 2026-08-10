@@ -502,3 +502,98 @@ the manifest consolidator cron and trigger a fresh honest-coverage rollup (this 
     script (currently uncommitted in market-tick-data-service); continue monitoring the rebuild VM to terminal state;
     trigger a fresh honest-coverage rollup once the VM is terminal (consolidator already resumed); re-confirm live
     whether HYPERLIQUID (non-canonical chain) and the 45 non-canonical venues still need separate work.
+- **2026-08-10 — root-caused why "rerun the rollup" alone would NOT have fixed dex_pools/dex_swaps/KAMINO_LENDING/
+  BLAZESTAKE, fixed it, and re-scoped the remaining non-canonical work after reading this doc's own prior (found- stale)
+  investigations.** Operator screenshot of the live Distinct Values panel (venues 32/102 non-canonical, instrument_types
+  1/16, data_types 4/33, chains 1/23) triggered this pass.
+  - **Panel mechanism corrected**: the panel (`deployment-ui` `DistinctValuesPanel.tsx` →
+    `GET /distinct-values/{asset_group}` → `deployment-api/routes/data_status/_distinct_values.py`) does NOT read
+    `_axis_census.py`'s live-query endpoint at all (that endpoint's capture_status fix from 2026-08-09,
+    `deployment-api@3d7c7759c`, is real but irrelevant to THIS panel) — it reads a pre-computed nightly
+    `gs://{project}-honest-coverage/{date}/coverage.json` rollup produced by
+    `instruments-service/scripts/measure_honest_coverage.py`.
+  - **Root cause found + fixed**: `measure_honest_coverage.py`'s `by_venue`/`by_venue_data_type`/
+    `by_venue_instrument_type`/`by_chain` dicts — the ONLY consumer of which is this exact distinct-values endpoint
+    (verified via a full-codebase grep, no other reader touches these 4 keys) — were built by grouping the FULL,
+    unfiltered manifest dataframe, with no `capture_status` exclusion anywhere. A retired (`attempted_failed`) row's
+    venue/data_type/instrument_type/chain name stayed a dict KEY regardless of status, so a fully-retired legacy value
+    never disappeared from the enumeration no matter how many times the rollup reran — the exact same bug class already
+    fixed once in `_axis_census.py` (2026-08-09), now closed at the actual SOURCE this panel reads. Fixed by filtering
+    to `capture_status != "attempted_failed"` before those 4 specific groupby blocks only (NOT
+    `ag_counts`/Layer-1/`by_day`/`by_venue_instrument_type_data_type` — those legitimately want the full breakdown;
+    confirmed via the same reader-scope grep). Existing test `test_by_venue_instrument_type_correct_counts` asserted the
+    OLD (buggy) behavior — updated its expectations + added
+    `test_by_venue_instrument_type_attempted_failed_only_key_excluded` covering the actual fix (a key with ONLY
+    attempted_failed rows must vanish entirely, not just zero its counts while surviving). Shipped
+    `instruments-service@8b59e8ba2`.
+  - **24 composite `PROTOCOL-CHAIN` venues (BALANCER-ETHEREUM, UNISWAP_V3-ARBITRUM, CURVE-ETHEREUM, etc.) — CONFIRMED
+    already resolved, NOT a bug, no action.** This doc's own row 3 (2026-08-05) already root-caused this via a VM-run
+    provenance trace: the writer is `market-data-processing-service`'s already-completed one-time
+    `backfill_defi_dex_pool_swaps_source_correction.py` campaign (813,150 objects, 0 errors) — real backing data under
+    MDPS's own `processed_candles/` path convention, not MTDS `raw_tick_data/` drift. "No fold, no purge, nothing to
+    execute" (see `plans/active/issues/defi_underscored_multichain_composite_venue_fold_2026_08_04.md`, status:
+    resolved). Live-verified magnitude matches (~227-237 rows/venue, 100% `captured`, consistent with this being real,
+    intentional, low-volume MDPS output, not legacy drift debris). **This eliminates 75% of the 32 flagged non-canonical
+    venues from the worklist entirely** — they will keep showing non-canonical on this panel (genuinely different naming
+    convention, not something to fold), which is correct/expected, not a defect.
+  - **`POOL` (uppercase) instrument_type — retirement candidate, but NOT SAFE TO RUN YET (moving-target corpus).** The
+    2026-08-05 `fold_pool_instrument_type_casing_2026_08_05.py` run (this doc's row 2) was SCOPED ONLY to
+    `dex_pool_swaps`/`dex_swaps` and is genuinely "0 remaining captured POOL" for that scope as verified then.
+    Live-verified NOW: **`dex_pool_swaps` alone currently shows 1,574,108 `captured` POOL rows** (100% of the live
+    total; no other data_type carries POOL) — meaning EITHER new POOL-cased data has landed in `dex_pool_swaps` since
+    2026-08-05, or (more likely) the currently-running rebuild VM is surfacing pre-existing GCS objects whose hive path
+    segment is genuinely `instrument_type=POOL` that the manifest hadn't made visible before this rebuild walked those
+    dates. **Two back-to-back live queries ~10 minutes apart measured 1,323,097 then 1,574,108** — the count is GROWING,
+    not stable, confirming the corpus is an active moving target while the rebuild VM
+    (`canonical-migration-defi-rebuild-20260809-163511`) is still running and the consolidator is still merging its
+    per-VM shards. Note `rebuild_defi_manifest.py`'s own `parse_hive_path` already lowercases every `instrument_type` it
+    derives (`p["itype"].lower()`), so the rebuild's OWN new writes cannot be producing fresh uppercase POOL rows — the
+    growth must be pre-existing historical rows becoming index-visible via consolidation, not a live writer bug. **Do
+    NOT run a POOL retirement (or trust any snapshot count) until the rebuild VM reaches terminal state** — a direct-CAS
+    full-index-rewrite retirement (same profile as the dex_pools/dex_swaps retirements this epic) racing an
+    actively-merging consolidator is exactly the hazard this epic already paused the consolidator for twice this
+    session; retiring against a still-growing population risks retiring an incomplete/stale snapshot and having to redo
+    it.
+  - **`dex_pool_fees` — reader repoint DONE, retirement status unconfirmed, tiny scope regardless.** This doc's row 5
+    (sub-agent, DONE): the corpus was 0 objects for its entire lifetime (phantom manifest rows only, never real backing
+    data) — `strategy-service`'s reader was repointed off it (`strategy-service@f7ca12767`), the materializer script
+    deleted. A prior live read noted "dex_pool_fees shows 21" rows still counting on the (now- fixed) axis-census panel
+    — unclear if those 21 rows were ever capture_status-retired. Low priority given the tiny scope; check
+    post-VM-completion alongside POOL/rate_indices.
+  - **`rate_indices` — retirement candidate, same moving-target caution as POOL.** Fold "GENUINELY 100% COMPLETE
+    (2026-08-07)" per this doc's row 4 update, but per the now-established "fold ≠ retirement" pattern (the
+    dex_pools/dex_swaps lesson from earlier this session), the legacy pre-fold rows were never capture_status- retired.
+    Magnitude not yet re-measured live — defer measurement + retirement to the same post-VM-completion pass as POOL, for
+    the same consolidator-race safety reason.
+  - **`<blank>` instrument_type — mostly a panel false-positive, tiny real gap.** Live-verified: 5,352,845 raw
+    blank-instrument_type rows, but **5,352,476 (99.99%) are `empty_confirmed`** (legitimate honest-absence markers — an
+    empty_confirmed row correctly has no instrument_type since there's no actual data to type; heavily concentrated
+    across ~15 data_types at a remarkably uniform ~212,800-215,600 each, consistent with one empty-marker per missing
+    (date × venue × chain) cell, not a writer bug). Only **58 `captured`** rows (+ 268 `attempted_failed`, 43
+    `expected_unattempted`) represent a genuine gap — real captured data missing its instrument_type. The panel's
+    `<blank>` badge doesn't distinguish `empty_confirmed` from `captured` blanks, so it's currently over-reporting a
+    ~5.3M-row "finding" that's actually a ~58-row one. Not fixed this pass (lower priority than the enumeration-key bug
+    above; would need its own `_distinct_values.py`/rollup change to exclude `empty_confirmed` from the blank check
+    specifically).
+  - **`ASTER`/`GMX`/`HYPERLIQUID`/`EXTENDED`/`LIGHTER` venues + `HYPERLIQUID` chain + `AAVEV3` bare-alias historical
+    rows** — status unchanged from earlier this epic: genuinely new/unresolved work (venue registration decisions,
+    `[OPERATOR]`-gated historical purge respectively), not touched this pass.
+  - **REVISED completion sequencing (supersedes earlier same-day framing)** — do NOT attempt POOL/rate_indices/
+    dex_pool_fees retirements before the rebuild VM reaches terminal state; the corpus is actively moving and a
+    retirement now risks acting on a stale/incomplete snapshot:
+    1. ✅ `measure_honest_coverage.py` fix shipped (this entry).
+    2. ⏳ Rebuild VM (`canonical-migration-defi-rebuild-20260809-163511`) reaches terminal — monitor via its `run.log`
+       `Rebuild complete:` line; a `CronCreate` one-shot check is already scheduled ~06:43 local 2026-08-10
+       (session-only, dies with the scheduling session — if it fires, whichever session picks it up should re-read this
+       entry for full context first).
+    3. Once terminal: re-measure POOL/rate_indices/dex_pool_fees live counts (must be STABLE across two queries a few
+       minutes apart before trusting them); pause the manifest consolidator cron
+       (`uts-prod-manifest-consolidator-market-data-defi-cron`, `asia-northeast1`); retire each via the proven
+       reversible `capture_status: captured→attempted_failed` pattern (mirror
+       `retire_dex_pools_legacy_captured_rows_2026_08_05.py`/`retire_dex_swaps_legacy_captured_rows_2026_08_09.py`);
+       resume the consolidator.
+    4. Trigger a fresh `measure_honest_coverage.py` rollup run.
+    5. Re-check the Distinct Values panel — expect venues down to the genuinely-unresolved set (ASTER/GMX/
+       HYPERLIQUID/EXTENDED/LIGHTER + the 24 composite venues, which are CORRECTLY non-canonical-but-accepted, not a
+       bug), data_types clean (dex_pools/dex_swaps/rate_indices/dex_pool_fees all retired), instrument_types clean
+       modulo the small genuine `<blank>` gap.
