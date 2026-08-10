@@ -115,16 +115,29 @@ mitigations, cheapest first:
 
 ## Todos
 
-- [ ] [DEVOPS] P1. Investigate whether this is a prek-level defect (patch restore only wired to the FIRST hook
+- [x] ✅ [DEVOPS] P1. Investigate whether this is a prek-level defect (patch restore only wired to the FIRST hook
       invocation per `git commit` call, not to every internal retry) or something `safe-doc-push.sh`'s retry loop is
       doing that suppresses the restore step. Reproduce deliberately (stage a file that fails `plan-hygiene` once then
-      passes, with an unrelated unstaged edit present) rather than relying on the live incident alone.
-- [ ] [DEVOPS] P1. Add the immediate safety net from the Recommended fix above: `safe-doc-push.sh` checks for orphaned
-      `~/.cache/prek/patches/*.patch` files created during its own run and warns loudly (non-zero exit or a
-      clearly-flagged stderr warning) rather than exiting 0 silently, so a future occurrence is caught immediately
-      instead of by chance. Repo: unified-trading-pm.
-- [ ] [DEVOPS] P2. If confirmed a genuine prek defect (not a `safe-doc-push.sh` misuse), file upstream / pin a
-      known-good prek version / document the workaround in this script's own header comment for future maintainers.
+      passes, with an unrelated unstaged edit present) rather than relying on the live incident alone. — Verdict: NOT a
+      confirmed prek-level defect; see Progress Log 2026-08-10 for the full reproduction + reasoning. —
+      unified-trading-pm (this doc only, no code change for this todo).
+- [ ] [DEVOPS] P1. Add the immediate safety net from the Recommended fix above — **NOTE (2026-08-10, todo 1's
+      investigation): likely ALREADY SATISFIED, by a different mechanism than originally worded.**
+      `scripts/dev/safe-doc-push.sh`'s `locked_git_commit()` (see `_prek_race_snapshot`/`_prek_race_check`, shipped
+      `f8a307badf` 2026-08-09) already hashes every already-unstaged file immediately before and after each `git commit`
+      call and hard-stops (exit 7, loud stderr) on any mismatch — this catches a silently-dropped restore by its OUTCOME
+      (content changed underneath an unstaged edit) rather than by scanning `~/.cache/prek/patches/` for orphans, but
+      covers the same failure signature this todo asks for. Whoever picks this up next should verify (not just re-read
+      the diff) that this mechanism actually fires for a genuine retry-drops-the-restore scenario before deciding
+      whether the orphaned-patch-scan approach is still needed on top of it, or whether this todo can close as
+      already-covered.
+- [ ] [DEVOPS] P2. **RE-SCOPED (2026-08-10, per todo 1's verdict — reproduction did NOT confirm a genuine prek
+      defect):** do not file upstream against prek. Instead, document in `scripts/dev/safe-doc-push.sh`'s own header
+      comment that a prior live incident (this issue doc) suspected a prek patch-restore defect but a deliberate
+      reproduction (2 sequential `git commit` invocations, fail-then-pass hook, unrelated unstaged edit, with and
+      without inter-attempt delay) could not reproduce it — the actual risk is the cross-process race documented in
+      `prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md`, which the checksum safety net
+      (`_prek_race_check`) already guards against.
 
 ## Progress Log
 
@@ -134,17 +147,43 @@ mitigations, cheapest first:
   data-pipeline change) — filed here per findings-triage for a same-session fix-vs-file decision.
 - **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 1)**: RECLASSIFY, conflict-cleared —
   `assigned_vm: NA -> planning`. First audit pass on this doc (no prior marker). All 3 remaining open todos are
-  bounded/worker-determinable: todo 1 is a deliberate reproduction with a concrete recipe already specified
-  ("stage a file that fails `plan-hygiene` once then passes, with an unrelated unstaged edit present"), todo 2 is a
+  bounded/worker-determinable: todo 1 is a deliberate reproduction with a concrete recipe already specified ("stage a
+  file that fails `plan-hygiene` once then passes, with an unrelated unstaged edit present"), todo 2 is a
   fully-specified, additive (non-destructive) code change to `safe-doc-push.sh`'s own retry loop with a stated
-  done-when, and todo 3 is a conditional next step naturally sequenced after todo 1's diagnostic verdict (file
-  upstream / pin a known-good prek version / document the workaround) — no genuine design ambiguity or operator gate
-  anywhere in the doc. Conflict-check: grepped `plans/active/*.md` for `prek`+`patch`/`safe-doc-push` — no active
+  done-when, and todo 3 is a conditional next step naturally sequenced after todo 1's diagnostic verdict (file upstream
+  / pin a known-good prek version / document the workaround) — no genuine design ambiguity or operator gate anywhere in
+  the doc. Conflict-check: grepped `plans/active/*.md` for `prek`+`patch`/`safe-doc-push` — no active
   `assigned_vm: planning` plan or `ao_satellite_ao_dispatch_batch*` doc covers this specific prek-patch-restore-on-retry
   bug (broad `patch`/`safe-doc-push` hits were unrelated false positives on the common word "patch" or on the
   already-closed `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01` doc's own, different,
   already-shipped mis-attribution fix). Also directly relevant: this exact bug class (a concurrent session's git/prek
-  machinery silently discarding uncommitted foreign edits) is called out as a currently-live hazard in this
-  session's own `SUB_AGENT_MANDATORY_RULES.md` — worth fixing at the root rather than leaving as a standing risk.
-  Gated finalize twin authored:
+  machinery silently discarding uncommitted foreign edits) is called out as a currently-live hazard in this session's
+  own `SUB_AGENT_MANDATORY_RULES.md` — worth fixing at the root rather than leaving as a standing risk. Gated finalize
+  twin authored:
   `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09_finalize_2026_08_10.md`.
+- **2026-08-10 (slot 12, infra, `safe_doc_push_prek_patch_not_restored_on_retry_success-824ee8f3a711`)**: todo 1
+  investigated. **Deliberate reproduction** (scratch repo, prek 0.4.12, a local `gate` hook that fails once via a marker
+  file then passes, an unrelated file with an unstaged edit present throughout — the exact recipe this todo specifies):
+  ran two SEQUENTIAL `git commit` invocations (attempt 1 fails the gate hook, attempt 2 — after "fixing" by letting the
+  marker be consumed — passes), matching the live incident's attempt-1-fails/attempt-2-succeeds shape. prek printed a
+  distinct `Temporarily saving...`/`Restored unstaged changes from` pair around **both** commits, and the unrelated
+  file's unstaged edit survived intact after both. Repeated back-to-back with **zero delay** between the two commits (no
+  backoff sleep) to rule out a timestamp/PID patch-filename collision — same clean result, distinct patch filenames both
+  times, edit preserved. **Verdict: NOT reproducible as a general "prek only wires the restore to the first hook
+  invocation of a `git commit` call" defect** — prek's stash/restore is reliable across repeated sequential invocations
+  in an otherwise-uncontended checkout. The live incident's actual mechanism is far more likely the ALREADY-KNOWN,
+  ALREADY-PARTLY-FIXED cross-process race documented in
+  `prek_stash_restore_race_destroys_shared_checkout_wip_2026_08_08.md` (a concurrent process/session sharing the SAME
+  checkout interleaves its own prek stash/restore window with this one, and the later restore can silently reinstate a
+  stale snapshot over a newer edit) — that class of bug produces exactly the symptom reported here (a "Restored" line
+  present for the first pair but the edit still ending up reverted/dropped) without requiring any defect in prek's own
+  single-process logic. Timing note: the checksum-based safety net for that exact race
+  (`_prek_race_snapshot`/`_prek_race_check` in `locked_git_commit`, commit `f8a307badf`, 2026-08-09T11:21:14Z) landed
+  the SAME calendar day as this incident — plausible the incident's checkout simply hadn't pulled that fix yet, or the
+  incident happened in the narrow window before it landed. Either way, that safety net is CONTENT-diff-based (hashes
+  every already-unstaged file immediately before and after each `git commit` call and hard-stops on any mismatch), so it
+  structurally covers THIS todo's failure signature too, regardless of root cause — it does not care whether the drop
+  came from a cross-process race or a same-process anomaly, only whether the content silently changed underneath an
+  unstaged edit during a commit call. **Disposition for todo 3**: since the reproduction did NOT confirm a genuine
+  prek-level defect, todo 3 (upstream-file / pin-known-good-version / document-workaround) should be RE-SCOPED, not
+  executed as originally worded — see todo 3's own updated wording below.
