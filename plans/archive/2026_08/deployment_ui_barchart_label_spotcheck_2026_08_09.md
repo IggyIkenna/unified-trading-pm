@@ -7,7 +7,7 @@ summary: >-
   launch/devops console dropdowns may still carry a "Barchart" source-name label from before the retirement (CLAUDE.md:
   "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). Migrated into a tracked todo per the 6-step archival ritual's rule
   1 ("never let a deferral evaporate with the archived plan") ahead of archiving batch11, which is otherwise fully done.
-status: open
+status: closed
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -29,9 +29,13 @@ source: >-
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+superseded_by: /plans/active/cefi_satellite_ao_dispatch_batch16_2026_08_10.md
 ---
 
 # deployment-ui Barchart label spot-check
+
+> **ARCHIVED 2026-08-10** — Resolved by `cefi_satellite_ao_dispatch_batch16_2026_08_10.md` (slot 6,
+> `deployment-ui@6a323bfd0`): Barchart references found and removed. See archive copy for full evidence.
 
 ## What I found
 
@@ -50,10 +54,11 @@ retired data source — low severity (P3, cosmetic/informational, not a data-cor
 Grep `deployment-ui` for "Barchart"/"barchart" (source dropdowns, config lists, docs). If found, remove/replace
 consistent with the removal already done elsewhere; if not found, close this doc with the negative-result evidence.
 
-- [ ] [UI] P3. Grep `deployment-ui` for "Barchart"/"barchart" references in launch/devops console source dropdowns or
+- [x] ✅ [UI] P3. Grep `deployment-ui` for "Barchart"/"barchart" references in launch/devops console source dropdowns or
       config; remove if found (mirroring the removal already shipped in unified-api-contracts@fc1b4897 +
       market-tick-data-service@aea655a9), or close this doc citing the negative-result grep if none exist. Repo:
-      deployment-ui.
+      deployment-ui. **Done**: `deployment-ui@6a323bfd0` (slot 6, 2026-08-10) — found real references, removed all via
+      surgical prune, tsc+eslint+vitest green (1108 passed). Archived 2026-08-10.
 
 ## Progress Log
 

@@ -51,6 +51,9 @@ context_scope:
 
 # CeFi satellite AO batch 16 — finalize
 
+> **ARCHIVED 2026-08-10** — Finalize complete (slot 15). Batch16 sole todo DONE (`deployment-ui@6a323bfd0`, slot 6). All
+> 3 docs self-archiving.
+
 ## Todos
 
 - [ ] [DOCS] P3. Once batch16's sole todo is done, reconcile its evidence into
