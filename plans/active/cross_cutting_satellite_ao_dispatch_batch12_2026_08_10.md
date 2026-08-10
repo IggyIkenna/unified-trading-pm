@@ -326,3 +326,41 @@ describe returned 404). GCS monitor confirmed Aug 03 has **4/4 modes** (was 2 du
 
 **Todo 7 flipped** with full evidence. Source doc checkbox
 `/plans/active/features_service_e2e_pipeline_test_2026_05_26.md` line 711 also flipped.
+
+**Session 6 verdict (pre-compact ~13:07 UTC)**: **Safe to compact: YES** — pushed `eb096a69b7`, `ahead=0`, clean tree.
+
+**What was at risk and is saved**:
+
+- Session 6 E2E pipeline evidence: manifest merge (65,761 entries), funding_oi run (1 instrument valid, remainder below
+  lookback), returns blocked on missing `trades` data. Full mechanical path MDPS→manifest→features verified.
+- `gs://` double-prefix discovery: `PROTOCOL_DATA_SOURCE_BUCKET_CEFI` and `PROTOCOL_DATA_SINK_BUCKET_CEFI` must NOT
+  include the `gs://` prefix — the feature service code prepends its own, yielding `gs://gs://` which silently returns
+  empty manifests. The premature runs (sessions 2-5) used `gs://` prefix and got fallback behavior from the instruments
+  store instead of the test bucket manifest. Correct: bare bucket name (no `gs://`).
+- `trades` data gap formally documented: test bucket has zero `trades` data for any date. The MDPS VM only processed
+  `derivative_ticker` (`MDPS_DATA_TYPES='derivative_ticker'`). `realized_vol_20` needs `trades` → a separate MDPS VM
+  with `MDPS_DATA_TYPES='trades'` is required. The premature run's apparent "331 instruments found" for returns was the
+  instruments-store fallback, not actual trades data.
+
+**Deliberately NOT saved**: `/tmp/post_mdps_pipeline_stdout_v{2,3,5}.log` (dead pipeline stdout from killed processes,
+superseded by workspace log at `.tabs/14/post_mdps_pipeline.log`). Pipeline script `.tabs/14/post_mdps_pipeline.sh` kept
+as historical recipe (may be deleted after plan archive).
+
+**Lessons carried forward**:
+
+1. `gsutil ls | wc -l` returns 1 when zero objects match (the error message is stdout, not stderr). Always use
+   `gsutil -q ls ... && echo EXISTS || echo MISSING` for presence checks.
+2. `nohup ... &` and `run_in_background: true` do NOT survive harness compaction — scripts die reliably across
+   compactions. On resume, always check `ps aux | grep <script>` and re-arm if dead.
+3. `PROTOCOL_DATA_*_BUCKET_*` env vars expect bare bucket names (no `gs://` prefix). The code prepends `gs://`.
+4. `merge_manifest_from_canonical_paths` signature: `(bucket: str, *, service_name: str, prefix: str, dry_run: bool)` —
+   no `asset_group` parameter. The prefix `processed_candles/by_date` is the key.
+5. Features CLI: `--operation compute --mode batch --feature-group <SINGULAR> --timeframe 1h` (not `--feature-groups`).
+   Use `--skip-preflight` to bypass lookback validation.
+6. `by_date/` is the GCS structure for both raw MDPS output AND features output. The flat `funding_oi/` / `returns/`
+   prefixes don't exist — features write to `by_date/day=.../feature_group=.../`.
+
+**Where to resume**: Todo 7 is DONE. Next task in batch-12 is likely the next open checkbox in this plan (if any). If
+the operator wants to close the `trades` gap for `realized_vol_20`: launch a fresh MDPS VM with
+`MDPS_DATA_TYPES='trades' MDPS_TIMEFRAMES='1h'` for the same date range (or longer for lookback headroom), then re-run
+`merge_manifest_from_canonical_paths` + `returns` feature compute.
