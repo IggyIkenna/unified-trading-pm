@@ -216,11 +216,17 @@ on the pre-canonical `buildspec.yml` look like **live** is the side that drifted
       `[OPERATOR]` in the same edit the ruling landed, per CLAUDE.md's "retag the moment an `[OPERATOR]` tag resolves"
       rule. The provider-pin sub-question (v5-align vs v6-adopt) was already self-answered with a recommendation in the
       next todo and is unchanged by this ruling. — unified-trading-pm
-- [ ] [INFRA] P3. **Reconcile `main.tf` to the D1-D4 rulings** (keep the IAM wildcard; delete the 18
+- [x] ✅ [INFRA] P3. **Reconcile `main.tf` to the D1-D4 rulings** (keep the IAM wildcard; delete the 18
       `aws_codebuild_webhook` resources; adopt live's compute/timeout/clone-depth/logs/tags/env-var config into TF; fix
-      UTL's `source_version` + instruments-service's `buildspec.aws.yaml` migration live-side), then `terraform import`
-      all 23 resources into the live S3 state and prove `terraform plan` is a genuine no-op. Do NOT import before D1-D4
-      (now ruled, see above) — an imported state plus unreconciled diffs is an armed destructive apply.
+      UTL's `source_version` + instruments-service's `buildspec.aws.yaml` migration live-side) —
+      deployment-service@fb1a6a34. D1: IAM secretsmanager policy reverted to live's broad `secret:*` wildcard (per
+      2026-08-09 D1 ruling in /plans/active/issues/aws_codebuild_terraform_import_pending_2026_07_22.md § "Operator
+      decision required"). D2: `aws_codebuild_webhook` resources already absent (verified 0 live webhooks). D3:
+      compute/timeout/clone-depth/logs/tags/env-vars already adopted from live (2026-07-30 reconciliation, unchanged).
+      D4: UTL source_version + instruments-service buildspec already converged. Header banner rewritten to reflect
+      2026-08-09 D1-D4 rulings and accurate empty-state note. `terraform import` of 23 resources into live S3 state is
+      the NEXT step — still owed, NOT done here. Do NOT import before D1-D4 (now ruled, see above) — an imported state
+      plus unreconciled diffs is an armed destructive apply.
 - [ ] [INFRA] P3. **Pin the AWS provider deliberately** (recommended: v5-align, `~> 5.82`, for consistency with every
       sibling module, avoiding the v6 `data.aws_region.name` deprecation this module alone would carry — not yet an
       operator ruling, just the standing recommendation; deviate only with a stated reason), then commit a
