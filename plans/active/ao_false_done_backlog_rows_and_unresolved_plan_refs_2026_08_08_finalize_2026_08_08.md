@@ -104,6 +104,17 @@ context_scope:
   audit is not clean. Filed the full finding + per-row reopen/FLIP todos in
   `plans/archive/issues/audit_false_done_16_rows_still_red_2026_08_10.md`. This todo stays `- [ ]` until a fresh audit
   re-run exits 0 after the 16 rows are triaged.
+- **2026-08-10T19:25Z (slot 29, review, task
+  `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize-28aa3f5fc829`)**: **Todo 1 re-run — audit
+  still RED, NOT flipping.** Fresh run of `scripts/orchestrator/audit_false_done.py` against the LIVE DB
+  (`/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/state.db`, 313MB, origin/live-defi-rollout @
+  `7861143b97`): **`false_done 2 · honest 941 · UNAUDITABLE 11 · unresolved 1562`, exit code 1**. Massive improvement vs
+  slot 22's run (16→2 false_done — 14 of 16 resolved, 27 honest rows gained 914→941), but the finalize premise ("audit
+  exits 0") is still NOT met. Two false_done rows remain: (1)
+  `sports_all_vendor_honest_coverage_convergence-9e96b5aa58cd` — `done_sha=3270573db3`, todo still `- [ ]`; (2)
+  `anthropic_per_task_actual_spend_and_account_calibration-596923de2d5b` — `done_sha=b14d991a89`, todo still `- [ ]`.
+  Unresolved plan_refs grew 1,528→1,562 (+34). **Do NOT archive the parent doc** — the audit is not clean. This todo
+  stays `- [ ]` until a fresh audit re-run exits 0.
 - **2026-08-10 (slot 11, review, task `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize-002`)**:
   **Todo 2 done — all 4 spot-checks (3 groups) independently CONFIRMED.** (1)
   `mtds_migrate_executor_progress_checkpoint_gap-009` — `6ddb0374` is a real on-origin commit (slot-8,
