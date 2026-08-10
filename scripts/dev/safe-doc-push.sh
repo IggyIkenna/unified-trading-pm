@@ -232,7 +232,29 @@ if [[ "$_SDP_ISO_DEPTH" -ge 1 ]]; then
   fi
 fi
 
-if [[ "${SDP_ISOLATED:-1}" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
+# HOST GATE (2026-08-10, operator ruling — same rule quickmerge already applies).
+# Isolation defends against ONE hazard: two processes sharing a single checkout, whose prek
+# patch save/restore and autostash push/pop interleave and silently revert the loser's
+# uncommitted edits. That needs a SHARED INDEX. It is a laptop condition — interactive sessions
+# have no allocation mechanism and routinely share a .tabs/N checkout. On the agent-orchestrator
+# VM the dispatcher runs ONE task per slot and each slot is its own clone, so there is no second
+# writer and isolation buys nothing while costing a full ~7,155-file worktree checkout on EVERY
+# doc push (and AO's doc pushes are constant — every checkbox flip is one).
+#
+# What the VM does NOT lose by turning this off: isolation never addressed push contention on
+# the shared branch, which is the race AO actually has. That is handled by the per-repo+branch
+# push mutex, the rebase-and-retry loop, the advisory drift gate (which removed the livelock),
+# and the exit-10 content-vanished guard — all host-independent and all still active here.
+#
+# Host label reuses slot-identity-lib.sh's existing signal rather than inventing one.
+_sdp_host_label() {
+  local h="${ORCHESTRATOR_VM_ID:-${VM_NAME:-$(git config --global slotIdentity.host 2>/dev/null || true)}}"
+  echo "${h:-laptop}"
+}
+_sdp_isolation_default() { [[ "$(_sdp_host_label)" == "laptop" ]] && echo 1 || echo 0; }
+_SDP_ISOLATED_EFFECTIVE="${SDP_ISOLATED:-$(_sdp_isolation_default)}"
+
+if [[ "$_SDP_ISOLATED_EFFECTIVE" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
   _sdp_iso_parent="${TMPDIR:-/tmp}/sdp-iso-$$"
   _sdp_origin_repo="$(pwd)"
   # Propagate the CALLER's slot identity into the isolated worktree path
@@ -917,6 +939,18 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
       exit 6
     fi
     committed=true
+  fi
+
+  # Rebase-invalidated evidence citations are reconciled HERE -- after the last rebase, before
+  # the push -- because that is the only point where the old->new SHA mapping still exists AND
+  # nothing has shipped yet. A pre-commit check cannot catch this: at commit time the citation
+  # IS resolvable; the rebase invalidates it afterwards. Best-effort and non-blocking.
+  if [[ -f "${_SDP_SELF%/*}/reconcile-sha-citations.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${_SDP_SELF%/*}/reconcile-sha-citations.sh" 2>/dev/null || true
+    if declare -F reconcile_sha_citations >/dev/null 2>&1; then
+      reconcile_sha_citations "$BRANCH" "${FILES[@]}" || true
+    fi
   fi
 
   if git push origin "HEAD:${BRANCH}" 2>/tmp/_sdp_push_err; then
