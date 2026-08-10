@@ -16,7 +16,7 @@ summary: >-
   the checkbox flipping). The other 14 are NEW false-done rows not in the parent doc's triaged set. The finalize plan's
   premise ("confirm audit exits 0 before archiving the parent doc") is NOT met — do NOT archive the parent doc until the
   16 rows are triaged to a genuinely clean audit.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -44,15 +44,17 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 resolved_by:
 locked_by:
-# Bridge for the flip-then-mv two-commit archival (last open todo = own archival
-# trigger; see check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md).
-# Dropped when this doc is git mv'd to plans/archive/issues/ in the following commit.
-archive_exempt: true
 depends_on: []
 source: >-
   Live audit re-run for `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md` todo 1
   (slot 22 dispatch, task `-28aa3f5fc829`, 2026-08-10).
 ---
+
+> **ARCHIVED** — 2026-08-10 (slot 16). All 4 todos done: 16 false-done rows reopened (audit re-run exits 0), 1,529
+> unresolved fully re-characterised (100% archived-plan referents, no defect), 2 recurring rows root-caused (`-025` =
+> audit `_still_unchecked` recurrence blind spot fixed in `agent-orchestrator@42d29c3d7a`; `-011` = per-row `no-code:`
+> mishandling), and the `_still_unchecked` fix shipped with regression tests. This doc's own archival was the remaining
+> gate; the parent finalize doc remains active.
 
 # audit-false-done 2026-08-10 re-run: still 16 false_done (up from 14), 1,528 unresolved (up from 1,013)
 
