@@ -116,11 +116,11 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       and proceeds. A named file that is absent from the caller tree AND absent from HEAD is a caller error; absent from
       the caller tree but PRESENT in HEAD is a deletion. Distinguish the two and never silently no-op a named path.
       **Done when**: the ambiguous case exits non-zero with a message naming the path.
-- [ ] [DOCS] P1. **Correct the archival-ritual SSOT.**
+- [x] ✅ [DOCS] P1. **Correct the archival-ritual SSOT.** — unified-trading-pm@2f9efbcfaf.
       `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § "must not drop the rename's delete side"
-      currently presents safe-doc-push as the preferred safe shape with no isolation caveat. Until the fix above ships,
-      it must say that isolated mode drops deletions and that a rename needs `SDP_ISOLATED=0` (or a verified both-sides
-      commit). **Done when**: the section names the isolation caveat and cites this doc.
+      updated: safe-doc-push option-1 now carries an isolation caveat — documents that isolated-worktree mode previously
+      dropped deletions silently (pre-`18ae9a4312`), the fix now propagates them, pre-fix checkouts need
+      `SDP_ISOLATED=0` for archival commits with a rename. Cites this issue doc.
 - [ ] [SCRIPT] P2. **Add a post-commit assertion to the ritual.** After any archival commit, assert
       `git show --name-status <sha>` contains a `D`/`R` for every `plans/active/**` path named. A create-only archival
       commit should fail the ship script, not reach origin. **Done when**: the check exists and is wired into the same
