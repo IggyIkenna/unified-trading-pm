@@ -324,3 +324,17 @@ per-repo-workflow-copy HARD RULE — never hand-edit a repo's copy.
   `Semver Agent`'s caller stub; classifier fetch still unpinned to PM's live default branch). This is the 9th
   consecutive identical re-check across ~24h with zero forward progress possible from this todo's own scope. Leaving
   todo 2 open/unchecked; skipping with `reason_code: GATED` again.
+- **2026-08-10 (backend_engineer worker, slot 8, todo 2 re-check)**: Re-verified from scratch once more —
+  `git merge-base --is-ancestor 30ed07eff origin/main` on `unified-trading-pm` still returns NO
+  (`origin/main..origin/live-defi-rollout` now 1162 commits, up from slot 32's 1066). `unified-trading-library`'s
+  `origin/main` tag is still `v0.77.0` (`git describe --tags origin/main` = `v0.77.0-2-gf2544c6a`) with
+  `git tag --contains 609299adf4bf49d5b027fd21289d6abd60a8bcfa` still empty. The auto-drain promote PR is still the SAME
+  #2709 slot 32 found (opened 2026-08-10T04:46:28Z, `updatedAt` 2026-08-10T05:31:27Z — unchanged) — `pr checks` shows
+  the EXACT SAME run (`31356548320`/job `93357243278`) still `fail` on `QG slice (checks)`, `QG slice (tests)` still
+  `pending`. This is not just the same failure class, it is the literal same CI run slot 32 observed — zero state change
+  between checks. Same blocker, same root cause
+  (`plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md`), same precedent (hand off, don't
+  chase serially — that doc's own scope, not this INFRA todo's). No alternate lever available. This is the 10th
+  consecutive identical re-check — confirms the earlier note that further re-checks add no new information until the
+  promote PR's hard-failure class or the PR itself changes. Leaving todo 2 open/unchecked; skipping with
+  `reason_code: GATED` again.
