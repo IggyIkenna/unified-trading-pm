@@ -72,8 +72,8 @@ with zero committed content is not, by itself, an actionable finding for this ru
    correctly `[x]`, the doc's OWN 08-03 prose was stale by the time a later 08-06 audit read it) — bridging notes added,
    2 malformed/duplicate Follow-up todos closed as moot rather than deleted. Resolved + archived (see Flips).
 2. 3 docs citing `cross_cutting_consolidated_closeout_2026_07_25.md` as "over the 1000-line hard cap" — live-verified
-   720 lines (already split via a prior commit). **Not yet fixed in the 3 citing docs** — routed, see Filed below (low
-   priority, the citations are individually stale but harmless; a future pass can batch-fix).
+   720 lines (already split via a prior commit). **Not yet fixed in the 3 citing docs** — routed, see Plans not reached,
+   Item N (low priority, individually stale but harmless; a future pass can batch-fix).
 3. `is_catalogue_g1_root_audit_log_2026_07_24.md` self-contradicts on G1.run-full-history ownership (one line says
    EXTRACTED elsewhere, another says still-owned-here) — **not yet resolved**, see Plans not reached.
 4. `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s "Deferred work — migrated to:" section is
@@ -132,6 +132,15 @@ was a genuine near-miss, not something to bury.
    Log entry appended to the target doc itself (already carries the tracked `- [ ]` todos — no new todo needed, this is
    a re-verify + escalate, not a new finding). Not counted as a hunter candidate (found via direct read while
    cross-referencing grace-window `ag_closeout_audit_cross_cutting_parked_*` docs for the Phase-0 pileup check).
+2. **`plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md`** — P0, data-pipeline-correctness-
+   tagged; 3 separate na-eligibility-audit passes (07-30/08-03/08-06) all independently recommended promoting the
+   bundled ~5-deliverable todo into its own wrapper plan/epic, unactioned for 3+ weeks. Escalated: `BLK-8bb28da4`
+   (options A-D, recommendation A — promote now, `assigned_vm: planning`). Progress Log entry appended to the target
+   doc; did not author the wrapper plan myself (that is exactly the ask-before-creating call the prior audits already
+   deferred to the operator).
+3. **`plans/active/issues/features_service_clean_check_dangling_fleet_ci_dedup_revert_2026_08_07.md`** — zero-checkbox
+   HARD RULE violation (`assigned_vm: planning` but structurally undispatchable). Converted the prose "Resolution path"
+   into a real `- [ ]` [INFRA] P2 todo directly (mechanical fix, applied — see Hygiene fixes).
 
 ## Archive candidates (operator review)
 
@@ -142,12 +151,113 @@ was a genuine near-miss, not something to bury.
 
 ## Refuted (dropped by verify)
 
-(none yet)
+1. INFRA_A's C4 (`bucket_iam_write_protection_per_tier_2026_06_09.md`'s "no remaining project-wide objectAdmin"
+   success-criteria bullet vs. the doc's own later note that broader `roles/storage.admin` is still present) — verified
+   this is NOT a hidden gap: the residual drift is already tracked in its own dedicated issue doc
+   (`unified_trading_sa_live_iam_drift_vs_terraform_2026_07_31.md`), cited by name in the same paragraph the hunter
+   flagged. No action needed.
+2. INFRA_A's C5 (the 3 non-grace `ag_closeout_audit_cross_cutting_parked_2026_08_02/06/07.md` docs, suspected possible
+   duplicates per a prior session's flagged concern) — read all 3 in full (plus the 2 grace-window siblings,
+   08-01/08-08, as context): genuinely distinct content per run, each explicitly avoiding re-duplicating prior runs'
+   still-open findings. Confirms a real corpus-growth pattern (new dated doc per run vs. one rolling register) but NOT a
+   contradiction or duplication bug — refuted as a finding requiring a fix.
+3. INSTRUMENTS' hedge-pointer check (3 "uncaptured, flagged for follow-up" fragments in
+   `instruments_remaining_work_audit_2026_07_10.md`) — fresh-grepped by the hunter; all 3 already resolve to a real,
+   correctly-tracking owner doc. No rewrite needed (the hedge language is arguably now stale-but-harmless, since the
+   owners are confirmed correct — below the bar for a dedicated fix at P3).
 
 ## Coverage (hunters / batches / docs)
 
-(in progress)
+**9 hunters** (7 epic-cluster + 2 topic), all completed, all reports processed: INFRA_A (18 docs), INFRA_B (18 docs),
+MTDS_MDPS (6 docs), INSTRUMENTS (11 docs), STRATEGY (6 docs), MANIFEST_BLS (12 docs), AOF_HYGIENE_SMALL (18 docs),
+topic-CI/CD (grep sweep across 89-doc working set + `issues/`), topic-AO-lifecycle (grep sweep, same scope). **89 of 89
+non-grace docs read in full by exactly one epic-cluster hunter** (7 batches partition the full 89-doc workable set with
+no gaps or overlaps — verified against the Phase-0 inventory at dispatch time). 58 grace-window docs read as context
+only where a hunter's batch or a topic hunter's cross-reference touched them.
+
+**Candidates generated**: ~50 distinct findings across all 9 reports (contradictions, missed-flips, codex-drift,
+AO-readiness, hedge-pointers, structural/prose, zero-checkbox). **Verified + applied this run**: 19 (see Flips verified
+/ Codex corrections / Hygiene fixes above, plus the epic-roster regeneration touching 22 files and a
+self-caught-and-reverted mistake). **Escalated**: 2 (`BLK-46b42d75`, `BLK-8bb28da4`). **Routed below (confirmed
+findings, not auto-fixable this run)**: 14, enumerated in Plans not reached. **Refuted / no-action-needed**: 3
+(INFRA_A's C4 already tracked in a separate known issue doc; C5's 3 `ag_closeout_audit_cross_cutting_parked_*` docs
+confirmed genuinely distinct, not duplicates; INSTRUMENTS' hedge-pointer fragments confirmed already correctly owned).
+**Ledger check**: 19 applied + 2 escalated + 14 routed + 3 refuted = 38 dispositioned findings out of ~50 generated; the
+remaining ~12 were P3-cosmetic (whitespace/backtick-parity nits) explicitly not worth individual fixes at corpus scale —
+noted by the hunters, not silently dropped, but not itemized below either (see note at end of Plans not reached).
 
 ## Plans not reached
 
-(none yet)
+Confirmed findings this run did NOT apply, with reasons — each is either genuinely operator/judgment-gated, needs a live
+re-verify I didn't have time for, or is a script/codex-level fix outside a single reconciliation pass's mandate. None of
+these are silently dropped; each names its target doc so a future pass (or the operator) can pick it up directly instead
+of re-discovering it.
+
+Grace-window, could not touch (<12h old at check time):
+
+- Item A. `ag_closeout_audit_cross_cutting_parked_2026_08_06.md` todo #1 (retag the now-archived+resolved
+  `deployment_api_quickmerge_blocked_pre_existing_test_failures_2026_08_04.md` — should get the same MOOT treatment its
+  own sibling doc's precedent already established). Touched by another agent 38 min before I checked; deferred.
+
+Operator/judgment-gated, not mine to decide:
+
+- Item B. `/codex/05-infrastructure/bucket-isolation-model.md` §8/§8.5 — god-SA-removal status still says "Pending"
+  though P2.1b shipped 2026-08-08. Not a single substitution (needs the whole §8 framing reworded plus the residual
+  `storage.admin` drift reflected) — doesn't qualify for the f2 mechanical carve-out.
+- Item C. `/codex/02-data/external-data-always-available-rule.md` — prescribes a RETIRED ping-file mechanism plus a
+  stale cross-link to an archived doc. Multi-part rewrite, not a single substitution.
+- Item D. `plans/active/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md` — open `[OPERATOR]` re-install
+  todo whose literal instructions now hard-fail (the script it names moved to `systemd --user`, refuses `sudo`), and
+  whose "not-live" premises are contradicted by dated evidence elsewhere in the corpus, including this run. Needs a
+  careful rewrite, not a quick substitution.
+- Item E. `plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md` — the Drift creds/RPC todo (annotated,
+  not flipped, this run). Genuinely unclear whether it duplicates the sibling MTDS-production todo.
+- Item F. `plans/epics/manifest_master.md` — carries live `[AGENT]`/`[OPERATOR]` open checkboxes directly in the epic
+  body, invisible to every plan-corpus tool (all scan `plans/active/*.md`, never `plans/epics/*.md`). A distinct orphan
+  class. Moving them to a real plan is a structural decision outside this run's mandate.
+
+Needs a live re-verify I didn't run, time-bounded this session:
+
+- Item G. `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md` — G3/G10 marked "still genuinely
+  open as of 2026-07-27" but the successor plan shows both DONE. `status: open` never revisited.
+- Item H. `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` P9.2 — cites UAC version drift dated
+  2026-06-20; the same doc's own later entries show UAC had already moved far past those versions two days later. High
+  likelihood self-resolved, not independently re-checked against current UAC.
+- Item I. `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` — frontmatter `status: open`,
+  `locked_by: live-defi-rollout`, but body is 100% done (20/20 checkboxes). Strong archive candidate once unlocked. Not
+  actioned this run (locked; prioritized the already-verified `bucket_iam` case instead).
+
+Script/tooling-level, backend_engineer scope, not a plan-doc fix:
+
+- Item J. `check_na_corpus_ratchet.py`'s new `--diff-base` mode inherits an already-documented fenced-code-block
+  checkbox-overcounting bug (open, unfixed since 2026-08-02). Code-verified live today: `_CHECKBOX_RE` has no
+  fence-awareness.
+- Item K. `plans/active/issues/plan_hygiene_ratchet_regressions_outpace_serial_ci_fix_velocity_2026_08_09.md` — 4
+  Progress Log entries claim a "P3 backlog todo" exists for prosewrap `--diff-base` conversion; no such checkbox exists
+  anywhere in the doc. Real still-needed work has no tracked home. This doc was grace-protected when checked (touched by
+  a same-tranche dispatch <12h earlier), so I could not add the missing todo myself.
+- Item L. `plans/active/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md` line 138 — a checked `[x]`
+  todo cites a literal unfilled template placeholder as its evidence sha. Underlying work is genuinely done
+  (independently verified against a different doc); just needs the real sha backfilled.
+
+Duplicate open-todo pair, both stale identically, routed as one item:
+
+- Item M. `context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md` and
+  `governance_sweep_deferred_followups_2026_08_06.md` both independently track the same "restore 2 dropped context_scope
+  entries" action on the same target doc, created the same day. Neither reflects that 1 of the 2 entries was already
+  restored by an unrelated edit — both still say 2.
+
+Low-priority stale citations, harmless, batchable later:
+
+- Item N. 3 docs (`promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`,
+  `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`,
+  `unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`) cite the cross-cutting closeout hub doc as
+  "already over the 1000-line hard cap" — live-verified 720 lines (split via an earlier, untraced commit). Confirmed 2
+  of the 3 exact citations by direct grep; the 3rd references the same underlying line-cap-deadlock chain indirectly and
+  wasn't fully traced to a single fixable line this run. All 3 claims are stale but harmless.
+
+**~12 P3-cosmetic findings not itemized** (whitespace/backtick-parity artifacts, minor verb-tense nits, off-by-one
+counts in Progress Log prose) across INFRA_A (S2-S5), MTDS_MDPS (#7-#8), AOF_HYGIENE (S1-S2, minor AO-readiness verb
+nits), topic-AO (#2/HEDGE-1) — each individually named in the hunter scratch reports this run's coverage section
+references; not worth a dedicated fix pass at corpus scale, flagged here so the count is honest rather than silently
+absorbed.
