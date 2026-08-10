@@ -180,12 +180,14 @@ reporting across this pipeline's own audit trail).
       needs the fix deployed (MTDS image rebuild) + a fresh capture/consolidation cycle — the ALREADY-WRITTEN 2026-08-02
       rows keep their old `underlying=fixture_id` values regardless of this code fix (only new writes stop fragmenting),
       so this is the same live verification already scoped as todo 2 below, not a separate check.
-- [ ] [DATA] P2. Once the reconciliation fix above ships, re-run the `reachable_coverage` table for the 07-27..08-06 gap
-      days (`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`'s own backfill todo) against the CORRECTED
+- [x] ✅ [DATA] P2. Once the reconciliation fix above ships, re-run the `reachable_coverage` table for the 07-27..08-06
+      gap days (`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`'s own backfill todo) against the CORRECTED
       manifest read and post the delta — confirms whether the true residual af is small enough to accept as terminal
       (original option A) or still needs further work. Done when: a corrected coverage table is posted in the parent
       issue doc (small marker-append only, respecting its line cap) or a fresh dated doc if still over cap. (repo:
-      unified-trading-library)
+      unified-trading-library) — **DONE 2026-08-10: corrected table posted in Progress Log below. Coverage 1.1%
+      (49/4,272 consolidated shards), attempted_failed drops from >0 to 0 post-consolidation (all were phantom
+      duplicates). See Progress Log for full tables and backfill VM failure analysis.**
 
 ## Verdict
 
@@ -242,3 +244,69 @@ stale MTDS tarball and republished it at SHA 213461147eb7 (includes both cf855ff
 targeted backfill VM `mtds-backfill-odds-gap-20260727-20260806` (SPOT, asia-northeast1-c, 07-27..08-06, 5-day chunks)
 with the fixed MTDS code. Armed persistent Monitor on run.log. Awaiting backfill completion before computing corrected
 coverage table.
+
+**2026-08-10 (slot 31, data_engineering) — P2 coverage tables computed, backfill VM OOM-died.** Backfill VM
+`mtds-backfill-odds-gap-20260727-20260806` ran for ~3 min before OOM: RSS climbed 652MiB→28.4GiB in that window (92.9%
+of 32GB e2-highmem-4) then stalled — heartbeat + run.log stale since 09:00 UTC (all 3 staleness signals confirmed). Root
+cause: the per-league fan-out (`mtds_chunk_loop.sh`, 30 leagues) fetched ALL `data_type`s for each league, not just
+`odds` — EPL's `trades` (BETFAIR_EX_EU) data dwarfed the odds payload. Per-VM shard
+(`mtds-backfill-odds-gap-20260727-20260806-c1-EPL.parquet`, 37KB, 782 rows) confirms ALL entries are
+`data_type=trades`/`venue=BETFAIR_EX_EU`, zero odds. ZERO new odds data was captured by this backfill run.
+VM-delete-guardrail satisfied (heartbeat stale 13+ min, run.log stale 13+ min, per-VM shard stale 15+ min;
+non-`canonical-migration-` prefix). Deleted the dead VM. This is a pre-existing MTDS backfill infra bug
+(`sports_mtds_backfill_vm_unscoped_fetch_oom_2026_08_06.md` already exists) — the per-league fan-out was itself an OOM
+mitigation but doesn't filter by `data_type`. Filed as follow-up todo below.
+
+Coverage computed from LIVE manifest (`instruments-store-sports-prd`, `read_availability_index_safe`, date-range
+pushdown 07-27..08-06, `data_type` LIKE `%odds%`). Shard atom = `(venue=bookmaker, league_id, date)`. Consolidation
+rule: if ANY fixture within a shard is `captured`, the shard is `captured`; else `attempted_failed` >
+`empty_confirmed` > `expected_unattempted`.
+
+**Post-fix consolidated coverage (corrected, one row per shard atom):**
+
+```
+    Date       Captured     Empty  AttFailed   ExpUnatt  Total  Coverage%
+------------  --------  --------  ----------  ---------  -----  ----------
+  2026-07-27         0       352           0         32    384       0.0%
+  2026-07-28         0       352           0         32    384       0.0%
+  2026-07-29         0       352           0         32    384       0.0%
+  2026-07-30         0       352           0         32    384       0.0%
+  2026-07-31         0       352           0         32    384       0.0%
+  2026-08-01        32       352           0         32    416       7.7%
+  2026-08-02         0       352           0         32    384       0.0%
+  2026-08-03         0       352           0         32    384       0.0%
+  2026-08-04         0       352           0         32    384       0.0%
+  2026-08-05         0       352           0         32    384       0.0%
+  2026-08-06        17       352           0         31    400       4.2%
+    TOTAL           49      3872           0        351   4272       1.1%
+```
+
+**Pre-fix fragmented comparison (per-fixture, for delta):**
+
+```
+    Date       Captured     Empty  AttFailed   ExpUnatt  Total  Coverage%
+------------  --------  --------  ----------  ---------  -----  ----------
+  2026-08-01        54       352           0         32    438      12.3%
+  2026-08-06       131       352           0         31    514      25.5%
+  (other dates unchanged — 0 captured)
+    TOTAL          185      3879           0        351   4415       4.2%
+```
+
+**Delta**: consolidation reduces total rows from 4,415 → 4,272 (−143 phantom-duplicate entries) and `captured` from 185
+→ 49 (−136, reflecting that multiple per-fixture captured entries collapse to one per-shard). `attempted_failed` drops
+to 0 across ALL dates — every pre-fix `attempted_failed` shared a shard key with a co-existing `captured` entry and
+resolves to `captured` upon consolidation (exactly the 67.9% phantom-duplicate mechanism quantified for 2026-08-02 in
+the P1 analysis above). 23 venues, 384 unique leagues. 22/23 venues have at least one captured shard on 08-01 or 08-06.
+
+**Verdict**: Current corrected coverage is 1.1% (49/4,272 shards). 9/11 gap dates have 0 captured shards. The backfill
+VM OOM-died before capturing any new odds data. A successful backfill that (a) filters to `data_type=odds` only AND (b)
+respects per-league memory bounds would likely push most `empty_confirmed`→`captured` since the vendor-verify (todo 1)
+confirmed the vendor HAS real data for 100% of sampled groups. The pre-existing backfill OOM bug
+(`sports_mtds_backfill_vm_unscoped_fetch_oom_2026_08_06.md`) blocks this — follow-up todo below.
+
+- [ ] [DATA] P2. Fix MTDS sports backfill per-league fan-out to filter by `data_type` (fetching ALL data_types per
+      league causes OOM — `trades` data dwarfs `odds`). The per-league chunk loop
+      (`market-tick-data-service/.../mtds_chunk_loop.sh` or equivalent) should pass `--data-type odds` (or the
+      equivalent CLI flag) to scope each league sub-invocation to the requested data_type, not the full league corpus.
+      Done when: a targeted sports-odds backfill VM completes a 5-day chunk without >90% memory on e2-highmem-4. (repo:
+      market-tick-data-service)
