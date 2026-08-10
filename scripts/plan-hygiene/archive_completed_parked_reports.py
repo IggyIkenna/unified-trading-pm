@@ -31,6 +31,14 @@ TRAPS HIT BUILDING THIS (2026-08-10) — do not re-learn them:
 3. **Derive the target set at runtime, never hardcode it.** The eligible set grows as other plans clear todos; a frozen
    list goes stale the moment a batch lands.
 
+5. **Promoting a scratchpad script is its first real quality gate — expect it to fail.** Scratchpad files are never
+   linted; `scripts/` is. This file failed ruff E501 + `ruff format` the moment it moved, having run fine for hours.
+   Promote tools EARLY, not at checkpoint time, so the gate fires while you still have context to fix it cheaply.
+
+6. **Measure line length with ruff, not `awk 'length>120'`.** `awk` counts BYTES, ruff counts CHARACTERS, and every
+   em-dash here is 3 bytes — so `awk` reports phantom over-long lines that ruff is perfectly happy with. Chasing one
+   cost a wasted edit cycle. `ruff check <file>` is the only authority.
+
 4. **`safe-doc-push` isolated mode used to DROP the deletions** this script creates, producing create-only archive
    commits with a live duplicate left at the old path (measured on 8ac88720e6: 17 A, zero D). Fixed
    2026-08-10 in unified-trading-pm@18ae9a4312. If you are on an older checkout, ship with `SDP_ISOLATED=0` and ALWAYS
