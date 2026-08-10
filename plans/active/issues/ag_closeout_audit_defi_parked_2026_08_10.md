@@ -230,3 +230,19 @@ to this doc. ✓
   carried time-gate finding directly on its source doc) + Phase 1 (14-agent Workflow classification of all never-cited
   candidates) + Phase 2 (this synthesis) complete. Phase 3: no batch13 drafted (1-item pool, see decision above). 7
   findings parked, ledger reconciled.
+- **Second concurrent run, same day — `/ag-closeout-audit all` (slot 26, task-less one-off)**: an independent
+  all-tranche run hit a filename collision with this doc mid-push (both runs landed
+  `ag_closeout_audit_defi_parked_2026_08_10.md` the same day — expected under concurrent sharded/all-mode dispatch, per
+  SKILL.md's own documented hazard). Resolved per the "append, don't replace" rule rather than picking one side: this
+  doc (the more thorough 15-candidate, full-pre-filter run) is kept as the base; the slot-26 run's independent, narrower
+  pass (using `check_ag_closeout_linkage.py`'s stricter graph-reachability signal directly, 2 defi candidates only)
+  reached IDENTICAL conclusions on both docs it examined — `defi_aavev3_bare_alias_enumerator_bug_2026_08_08.md`
+  (verdict `operator_gated_other`, same 2 items: the operator-only 46,300-row purge + the `PROTOCOL_LAUNCH_DATES` design
+  call) and `onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md` (verdict
+  `orphaned_never_touched`/design-gated, matching this doc's Finding 3 item 3) — no new content, no contradiction,
+  cross-verification only. Slot-26's own batch16 draft (unrelated — cefi tranche) and 6 other tranches' parked-findings
+  docs shipped independently in that same push; see `ag_closeout_audit_cefi_parked_2026_08_10.md` / `…ao_parked…` /
+  `…cross_cutting_parked…` / `…tradfi_parked…` / `…infra_parked…` / `…prediction_parked…` for that run's other tranches.
+  `check_ag_closeout_linkage.py` baseline ratcheted 49→0 corpus-wide by that run (this doc's own 2 defi orphans included
+  in that count at the time, both resolved by the same mechanism this doc already independently confirmed —
+  operator-gated, not a coverage gap).

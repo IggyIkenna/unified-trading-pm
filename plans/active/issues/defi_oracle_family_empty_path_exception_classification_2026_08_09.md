@@ -24,6 +24,7 @@ related:
   [
     /plans/archive/2026_08/issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-09"
 author: slot-6

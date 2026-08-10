@@ -32,6 +32,7 @@ related:
     /plans/archive/2026_08/issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch12_2026_08_09.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-09
 author: slot-8 (infra)

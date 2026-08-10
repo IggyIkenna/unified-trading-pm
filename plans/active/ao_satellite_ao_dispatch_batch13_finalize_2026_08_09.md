@@ -18,6 +18,7 @@ related:
     /plans/active/ao_satellite_ao_dispatch_batch13_2026_08_09.md,
     /plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"

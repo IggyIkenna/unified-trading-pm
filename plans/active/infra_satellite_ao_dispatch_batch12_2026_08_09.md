@@ -24,6 +24,7 @@ related:
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"

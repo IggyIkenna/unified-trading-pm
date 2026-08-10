@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: Infra satellite AO batch 13 — diagnose + fix the unified-trading-system-ui mock dev-server crash under sustained Playwright load
+title:
+  Infra satellite AO batch 13 — diagnose + fix the unified-trading-system-ui mock dev-server crash under sustained
+  Playwright load
 summary: >-
   Thirteenth AO-dispatch batch for the `infra` topic tranche, produced during a round-9 combined
   RECLASSIFY+satellite-extraction sweep (2026-08-09). Single source:
@@ -23,6 +25,7 @@ related:
     /plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md,
     /plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md,
     /codex/06-coding-standards/ui-testing-layers.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"
@@ -59,13 +62,13 @@ source: >-
 
 ## Why this plan exists
 
-`issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` (filed today, slot-28)
-found two SEPARATE, orthogonal gaps blocking `tests/e2e/user-management.spec.ts` from exiting 0: (1) `/api/v1/*` admin
-routes need real Firebase Admin credentials — an operator/infra decision on approach (real creds vs. emulator, who
-provisions the CI secret) and NOT extracted here; (2) the mock Next dev server (`pnpm dev:mock`) becomes unstable and
-dies (`ERR_CONNECTION_REFUSED`) partway through a ~20-test sequential Playwright run, reproduced both self-started and
-under Playwright's own `webServer` management — a self-contained diagnose-and-fix task with no operator judgment call
-embedded in it (capture server logs, find the crash cause, fix it). Only item (2) is extracted here.
+`issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` (filed today,
+slot-28) found two SEPARATE, orthogonal gaps blocking `tests/e2e/user-management.spec.ts` from exiting 0: (1)
+`/api/v1/*` admin routes need real Firebase Admin credentials — an operator/infra decision on approach (real creds vs.
+emulator, who provisions the CI secret) and NOT extracted here; (2) the mock Next dev server (`pnpm dev:mock`) becomes
+unstable and dies (`ERR_CONNECTION_REFUSED`) partway through a ~20-test sequential Playwright run, reproduced both
+self-started and under Playwright's own `webServer` management — a self-contained diagnose-and-fix task with no operator
+judgment call embedded in it (capture server logs, find the crash cause, fix it). Only item (2) is extracted here.
 
 ## Conflict check (before drafting)
 
@@ -81,16 +84,16 @@ embedded in it (capture server logs, find the crash cause, fix it). Only item (2
 ## Todos
 
 - [ ] [INFRA] P2. **Diagnose + fix why the `pnpm dev:mock` Next dev server dies (`ERR_CONNECTION_REFUSED`) partway
-      through a sustained ~20-test sequential Playwright run.** Reproduced both self-started (`next dev --webpack -p
-      <port>`) and Playwright-`webServer`-managed (which detects the server is down and respawns it, but subsequent
-      tests still fail near-instantly, suggesting the respawn itself doesn't recover cleanly). Capture the dev server's
-      OWN stdout/stderr across a full `tests/e2e/user-management.spec.ts` run (redirect `next dev`'s output directly,
-      not just Playwright's summary) to find the crash cause (candidates not yet ruled in/out: memory growth under
-      `next.config.mjs`'s webpack dev config, an unhandled rejection in `lib/api/mock-handler.ts`'s request
-      interception under load, a file-watcher/HMR leak) — then fix it. Done when: `npx playwright test
-      --project=chromium tests/e2e/user-management.spec.ts` (or the subset of it that does not depend on Firebase Admin
-      credentials — see the source doc's separate, non-extracted item 1) runs the full sequential suite without a
-      dev-server connection failure, with the root cause documented. Source:
+      through a sustained ~20-test sequential Playwright run.** Reproduced both self-started
+      (`next dev --webpack -p     <port>`) and Playwright-`webServer`-managed (which detects the server is down and
+      respawns it, but subsequent tests still fail near-instantly, suggesting the respawn itself doesn't recover
+      cleanly). Capture the dev server's OWN stdout/stderr across a full `tests/e2e/user-management.spec.ts` run
+      (redirect `next dev`'s output directly, not just Playwright's summary) to find the crash cause (candidates not yet
+      ruled in/out: memory growth under `next.config.mjs`'s webpack dev config, an unhandled rejection in
+      `lib/api/mock-handler.ts`'s request interception under load, a file-watcher/HMR leak) — then fix it. Done when:
+      `npx playwright test     --project=chromium tests/e2e/user-management.spec.ts` (or the subset of it that does not
+      depend on Firebase Admin credentials — see the source doc's separate, non-extracted item 1) runs the full
+      sequential suite without a dev-server connection failure, with the root cause documented. Source:
       `issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` todo 2. Repo:
       unified-trading-system-ui.
 

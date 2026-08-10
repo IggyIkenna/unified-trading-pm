@@ -19,6 +19,7 @@ related:
     /plans/active/infra_satellite_ao_dispatch_batch13_2026_08_09.md,
     /plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"
@@ -61,12 +62,12 @@ early, regardless of whether the batch is `draft` or `active` at the time.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`'s
-      todo 2.** Once batch13's todo ships, flip that source doc's matching `- [ ]` checkbox to `[x]`, citing the batch13
-      commit SHA. **Do NOT archive the source doc** — confirm its todo 1 (Firebase Admin credential/emulator decision)
-      and todo 3 (re-run gated on both 1 and 2) are still genuinely open before concluding anything about archival
-      eligibility; the source doc stays active with 2 open items regardless of batch13's outcome. (repo:
-      unified-trading-pm)
+- [ ] [REVIEW] P2. **Reconcile
+      `issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md`'s todo 2.**
+      Once batch13's todo ships, flip that source doc's matching `- [ ]` checkbox to `[x]`, citing the batch13 commit
+      SHA. **Do NOT archive the source doc** — confirm its todo 1 (Firebase Admin credential/emulator decision) and todo
+      3 (re-run gated on both 1 and 2) are still genuinely open before concluding anything about archival eligibility;
+      the source doc stays active with 2 open items regardless of batch13's outcome. (repo: unified-trading-pm)
 - [ ] [DOC] P3. **Archive both `infra_satellite_ao_dispatch_batch13_2026_08_09.md` and
       `infra_satellite_ao_dispatch_batch13_finalize_2026_08_09.md`** once the reconciliation above is verified — run the
       standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix every corpus referrer path, confirm
@@ -82,6 +83,6 @@ early, regardless of whether the batch is `draft` or `active` at the time.
 
 ## Progress Log
 
-- **2026-08-09** — Drafted alongside `infra_satellite_ao_dispatch_batch13_2026_08_09.md` during the round-9 infra-tranche
-  combined RECLASSIFY+satellite-extraction sweep. Set `status: active` per the no-double-gate ruling (its own
-  `depends_on`+`gate_on_depends: true` on the still-`draft` parent already prevents early dispatch).
+- **2026-08-09** — Drafted alongside `infra_satellite_ao_dispatch_batch13_2026_08_09.md` during the round-9
+  infra-tranche combined RECLASSIFY+satellite-extraction sweep. Set `status: active` per the no-double-gate ruling (its
+  own `depends_on`+`gate_on_depends: true` on the still-`draft` parent already prevents early dispatch).

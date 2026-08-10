@@ -26,6 +26,7 @@ related:
     /plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"

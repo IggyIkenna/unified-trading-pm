@@ -24,7 +24,11 @@ repos: [unified-trading-pm]
 scope: [engineer]
 tags: [ci, quality-gates, codex-compliance, qg-blind-spot, broad-except, regex-gap]
 related:
-  [/plans/archive/issues/pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md, /QUALITY_GATE_BYPASS_AUDIT.md]
+  [
+    /plans/archive/issues/pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md,
+    /QUALITY_GATE_BYPASS_AUDIT.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-08-09
 author: slot-24 (backend_engineer)
 parent_epic: infrastructure_master

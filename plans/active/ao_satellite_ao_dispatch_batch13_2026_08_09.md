@@ -26,6 +26,7 @@ related:
     /plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md,
     /plans/archive/2026_08/issues/tradfi_finding_e1_unsourced_operator_ruling_citation_2026_08_03.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"
@@ -103,28 +104,28 @@ both also 1 todo).
       home" — citing where the primary transcript actually lives is not fabrication).
 
       **4 remain, in two distinct classes, neither fixable within this todo's own scope:**
-          (a) **2 genuinely unrecoverable** — both match the ALREADY-established precedent in this todo's own source doc
-          (`operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`: "Not fixed, deliberately... Left in the 53"):
-          `ao_open_issues_consolidated_close_out_2026_07_17.md:407` — the AO state-home ruling (2026-07-18, "keep AO
-          backend state IN the repo"): grepped `codex/` for any doc recording this ruling (not just describing the
-          resulting state) — 0 hits; `data_completion_defi_2026_07_15.md:223` — the DeFi-volatility-family removal
-          (2026-07-17, "no DeFi options products"): same grep, 0 hits. Neither has a primary record anywhere in the corpus
-          beyond the bare assertion itself; self-citing either would satisfy the gate mechanically while pointing at a doc
-          that cannot confirm a human decided anything — the exact failure mode this gate exists to catch, per the source
-          doc's own reasoning.
-          (b) **2 fixed-then-REVERTED because their host file was already over the 1000-line hard cap before this todo
-          touched it** (`check_line_caps.sh`'s precommit gate is an absolute per-staged-file bar, task_template.md §3
-          finding J — editing an already-over-cap file blocks the commit regardless of who caused the overage):
-          `ao_open_issues_consolidated_close_out_2026_07_17.md` (1014L committed, cap 1000 — both its violations, the
-          reword above AND the state-home escalation, had to revert together since they share the file) and
-          `sports_consolidated_closeout_2026_07_19.md:720` (1008L committed). A real fix (extract closed Progress-Log
-          sections into an archive-bound history doc per finding J's remedy) is its own separate body of work, out of this
-          todo's scope — filed as the new todo directly below rather than rushed here.
-          Verified: `python3 scripts/quality_gates/check_plan_operator_ruling_evidence.py` → 4 (baseline 52, real shrink);
-          baseline regenerated via `--baseline-write` → 4. `run_hygiene_sweep.sh --precommit` clean on all 20 shipped files
-          (only pre-existing soft line-count warnings, no hard failures). Repo: unified-trading-pm. Source:
-          `/plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md:103` (its `[SCRIPT] P2`
-          item).
+              (a) **2 genuinely unrecoverable** — both match the ALREADY-established precedent in this todo's own source doc
+              (`operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md`: "Not fixed, deliberately... Left in the 53"):
+              `ao_open_issues_consolidated_close_out_2026_07_17.md:407` — the AO state-home ruling (2026-07-18, "keep AO
+              backend state IN the repo"): grepped `codex/` for any doc recording this ruling (not just describing the
+              resulting state) — 0 hits; `data_completion_defi_2026_07_15.md:223` — the DeFi-volatility-family removal
+              (2026-07-17, "no DeFi options products"): same grep, 0 hits. Neither has a primary record anywhere in the corpus
+              beyond the bare assertion itself; self-citing either would satisfy the gate mechanically while pointing at a doc
+              that cannot confirm a human decided anything — the exact failure mode this gate exists to catch, per the source
+              doc's own reasoning.
+              (b) **2 fixed-then-REVERTED because their host file was already over the 1000-line hard cap before this todo
+              touched it** (`check_line_caps.sh`'s precommit gate is an absolute per-staged-file bar, task_template.md §3
+              finding J — editing an already-over-cap file blocks the commit regardless of who caused the overage):
+              `ao_open_issues_consolidated_close_out_2026_07_17.md` (1014L committed, cap 1000 — both its violations, the
+              reword above AND the state-home escalation, had to revert together since they share the file) and
+              `sports_consolidated_closeout_2026_07_19.md:720` (1008L committed). A real fix (extract closed Progress-Log
+              sections into an archive-bound history doc per finding J's remedy) is its own separate body of work, out of this
+              todo's scope — filed as the new todo directly below rather than rushed here.
+              Verified: `python3 scripts/quality_gates/check_plan_operator_ruling_evidence.py` → 4 (baseline 52, real shrink);
+              baseline regenerated via `--baseline-write` → 4. `run_hygiene_sweep.sh --precommit` clean on all 20 shipped files
+              (only pre-existing soft line-count warnings, no hard failures). Repo: unified-trading-pm. Source:
+              `/plans/archive/issues/operator_ruling_evidence_baseline_raised_58_to_76_2026_08_09.md:103` (its `[SCRIPT] P2`
+              item).
 
 - [ ] [DOC] P3. **Trim `ao_open_issues_consolidated_close_out_2026_07_17.md` (1014L) and
       `sports_consolidated_closeout_2026_07_19.md` (1008L) under the 1000-line hard cap** — both blocked a

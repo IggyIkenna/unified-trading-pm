@@ -22,6 +22,7 @@ related:
     /plans/archive/issues/ao_main_agent_context_never_compacts_poisoned_calibration_window_2026_08_09.md,
     /plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-09
 last_updated: "2026-08-09"
