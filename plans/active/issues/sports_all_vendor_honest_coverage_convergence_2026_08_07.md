@@ -735,3 +735,22 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
 - **07:13Z — Odds fleet healthy, no new hang (still 12x); cleared chunk 8 (the new confirmed danger point) cleanly.**
   `smallchunk18`: chunk 9/425, zero OOMs/CHUNK_FAILED, fresh (~1.3min log lag) — 9 chunks from chunk 18. AF sanity check
   remains clean (no new `af-backfill-*` instance). No intervention needed.
+- **07:37Z — CORRECTION + better ground-truth tool found: a dedicated odds_api-wide gap census DOES exist**
+  (`market-tick-data-service/scripts/sports/census_odds_api_gap_verify_2026_08_02.py`), contradicting an earlier tick's
+  claim that no such script exists (that was a search-thoroughness miss, not a fact about the codebase) — it was built
+  by the prior `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` investigation (635→590→300 missing days across
+  several rounds of fixes: OOM bug, manifest-consolidator stall, credential/quota block). Ran it fresh: **300 of 2257
+  calendar days since the 2020-06-06 floor still have ZERO manifest row for odds_api** — byte-identical to the
+  2026-08-02 reading, i.e. genuinely ZERO net gap-closure in the ~8 days since, despite this whole campaign's relaunch
+  history. This is NOT a stall: the current run walks sequentially from 2020-06-06 forward and is only at chunk 13/425
+  (~2020-08-09) — the earliest of the 151 real gap-ranges is 2021-06-07, so the campaign hasn't reached a single actual
+  gap day yet; everything so far has been skip-fast through already-covered 2020 ground (1957/2257 days, 87%, are
+  already captured — this was never a from-scratch backfill). The 300-day gap is dominated by 3 named multi-week ranges
+  (2024-11-21→12-31 41d, 2026-02-22→03-28 35d, 2026-06-25→07-15 21d) plus ~148 smaller 3-5 day ranges scattered
+  2021-2026 — full breakdown + root-cause history in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`. **Going
+  forward, this census (re-run periodically, not every tick — it's cheap, ~4s/one manifest read) is the authoritative
+  completion signal for this campaign, not the chunk-counter proxy** — the chunk counter tells us the VM is alive and
+  progressing but not whether real gap-closing work is happening yet; watch for the 300 to start dropping once the
+  frontier passes ~chunk 70 (≈2021-06). **Odds fleet health this tick**: `smallchunk18` at chunk 13/425, zero
+  OOMs/CHUNK_FAILED, fresh (~1.5min log lag) — 5 chunks from chunk 18 (tightening next wakeup to watch it through the
+  danger zone). Still 12x hang occurrences (no 13th). AF sanity check remains clean.
