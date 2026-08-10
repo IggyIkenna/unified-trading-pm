@@ -125,17 +125,9 @@ source: >-
       supports it, and compare the resulting P&L/fill-rate figures against whatever was previously reported (if any
       prior paper runs exist) to characterize how much the old flat-loop shortcut was overstating execution quality —
       this is a real, evidence-backed answer to "how wrong were we," not a theoretical concern.
-- [x] ✅ [DOC] P2. **Update `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`** with the new
+- [ ] [DOC] P2. **Update `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`** with the new
       multi-leg-specific verification the regression tests above establish, so this class of gap has a named, checkable
-      invariant going forward rather than relying on someone noticing the same way this session did. —
-      unified-trading-pm@a10c4ca341 + evidence: added §4.2.1 "Multi-leg (`LEADER_HEDGE`) sequencing — a named, checkable
-      invariant" to the codex SSOT — the invariant (paper/batch MUST settle LEADER_HEDGE through the real
-      leader/hedge/unwind sequencing, simulated fills + real semantics, never a flat parallel loop), the mechanism
-      (`_compute_atomic_leader_hedge_fill`/`_compute_unwind_fill`/`_NO_FILL_ACTIONS`, 50 bps unwind penalty), and the
-      four named regression tests (`test_atomic_missing_leg_state_models_hedge_failure`,
-      `test_paper_settle_surfaces_unhedged_risk_when_hedge_fails`,
-      `test_paper_settle_hold_leg_alert_exposes_naked_position`, `test_paper_batch_rerun_epsilon0_on_real_sequencing`)
-      as the checkable verification; added the plan to the doc's `referenced_by`.
+      invariant going forward rather than relying on someone noticing the same way this session did.
 - [ ] [DOC] P3. **Close out `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md`** with
       `resolved_by` evidence once all of the above is live-verified — archive per the workspace's completion discipline.
 
@@ -194,13 +186,3 @@ source: >-
     construction. The full paper-run CLI (`--operation paper-run`) was confirmed functional but gated on GCS
     feature-data access — a follow-up would dispatch to a dedicated VM. Analysis script is one-shot per
     `script-homes.md`.
-- 2026-08-10 (todo 7, slot 8): **Multi-leg-specific verification named in the determinism-spine SSOT.** Added §4.2.1
-  "Multi-leg (`LEADER_HEDGE`) sequencing — a named, checkable invariant" to
-  `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` (`unified-trading-pm@a10c4ca341`). It names the
-  invariant — every inter-leg-dependent instruction (`LEADER_HEDGE`) MUST be settled in paper/batch through the SAME
-  leader/hedge/unwind sequencing semantics the live `AtomicLegExecutor` uses (benchmark-simulated fills, real
-  sequencing; a flat per-leg loop or a parallel benchmark model are both determinism-spine defects) — the mechanism
-  (`_compute_atomic_leader_hedge_fill` leader-first / hedge-failure-via-missing-market-state / 50 bps-penalty unwind /
-  `_NO_FILL_ACTIONS` skip), and the four regression tests as the checkable verification (unhedged-risk visibility +
-  ε=0-on-real-sequencing). Also added the execution plan to the codex doc's `referenced_by`. Doc push via
-  `safe-doc-push.sh` (pure-docs path).

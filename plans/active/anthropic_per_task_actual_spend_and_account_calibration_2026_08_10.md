@@ -134,19 +134,23 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
 
 ## Todos
 
-- [x] ✅ [BACKEND] P0. **Meter-history sampler SHIPPED — agent-orchestrator@ce3389f.** `account_usage_history` (PK
-      `account_id, sampled_at`) plus `snapshot_account_usage_history()` called on every UsagePoller tick, covered by
-      `tests/test_account_usage_history.py`. **Cadence verified adequate 2026-08-10**: the poller runs every 30 min
-      (`usage_poll_interval_minutes`, default 30), giving ~336 samples per weekly window and ~10 per 5-hour window.
-      Reset-boundary resolution is +/-30 min, which introduces no bias — the multiplier is a DELTA between two observed
-      samples and the transcript walk is clipped to exactly that interval. Flipped late: the code landed days before the
-      checkbox, which is precisely the false-progress this rule exists to prevent.
-- [x] ✅ [BACKEND] P0. **Slot-to-account-over-time attribution map SHIPPED — agent-orchestrator@5516a0a.**
-      `server/slot_account_attribution.py` builds `AccountInterval`s from `AgentRow` history and resolves a turn (or a
-      whole transcript) to the account that held the slot AT THAT TIME, so a post-compaction session still attributes
-      correctly. `calibrate_account_value.value_window()` consumes it, and `test_calibration_end_to_end.py` proves a
-      session owned by a DIFFERENT account contributes nothing — the property the whole reservation depends on. Flipped
-      late, same reason as the sampler above.
+- [ ] [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour of
+      delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
+      verified 2026-08-10), so it holds CURRENT STATE ONLY: every past weekly and 5-hour window is already
+      unrecoverable, leaving exactly one weekly observation per account and zero historical 5h observations. Persist
+      `weekly_pct`, `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`,
+      `overage_status`, `account_status` on a cadence at least twice per 5-hour window, keyed
+      `(account_id, sampled_at)`. Independent of every other todo — do not let the attribution work delay it. **Done
+      when**: the table exists on the live VM, a query shows >= 2 distinct `sampled_at` rows per active account, and the
+      sampler survives an orchestrator restart.
+- [ ] [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves to
+      the account that owned its slot at that timestamp.** Current attribution has no correct path:
+      `agents.claude_session_id` holds only the CURRENT session id, so compaction mints a new id and orphans every
+      earlier transcript (measured: `sub-c-ikenna-odum` shows 274 completed tasks but only 1,723 resolvable turns,
+      ~6/task, against 503-turn tasks visible in the same DB). Derive intervals from `AgentRow` (`account_id`,
+      `tmux_session`/`last_tmux_session`, `registered_at`, `finished_at`) and assign each turn by its own timestamp.
+      **Done when**: a unit test proves a turn in a post-compaction transcript still attributes to the correct account,
+      and the resolver returns the same account for two sessions of one agent split by a compaction.
 - [x] ✅ [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
       account-window, regardless of how many files or task windows contain it.** `scan_session_usage` already dedups
       within one file; the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a
@@ -255,36 +259,26 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       about throughput; if they differ, that ratio is itself a purchasing decision. **Done when**: a post-reset Pro
       window is measured the same way the max20 one was, both multipliers are recorded here with their valuation dates,
       and any divergence is stated rather than averaged.
-- [x] ✅ [BACKEND] P2. **`account_id` filter axis landed on `window_task_usage_totals` +
-      `GET /api/backlog/usage/windows` — agent-orchestrator@12fad94355.** Composes AND-wise with
-      provider/model/role_group. `test_per_account_totals_sum_to_the_provider_total` is the operator's own acceptance
-      test — per-account slices must sum to the provider total exactly as DeepSeek pro+flash already do. A third test
-      pins the honest edge: rows with a NULL `account_id` (written before capture began ~2026-08-06) match NO account
-      filter, so per-account sums legitimately fall SHORT of the unfiltered total on historical data — that shortfall is
-      the signal those rows are unattributed, not an aggregation bug.
-- [x] ✅ [UI] P2. **Per-account filter row added to `TaskUsageWindows.tsx` — agent-orchestrator@12fad94355. pw:L2 ✓**,
-      regression spec `dashboard/tests/e2e/task-usage-account-filter.spec.ts` (6/6 chromium). Buttons are built from the
-      LIVE accounts registry, not hardcoded — accounts are paused/rotated often enough that a literal list would be
-      stale within days — and sorted by `account_id` so they cannot reshuffle under the cursor between polls. The last
-      spec deliberately asserts the SHORTFALL: tasks on an unregistered account are unreachable by any filter, so the
-      per-account slices sum to 12,000 of 17,000 rather than the whole. **Trap worth keeping**: the first version of
-      that spec read the cell with `textContent` straight after clicking a filter and raced the refetch, silently
-      summing the PREVIOUS slice (29,000 instead of 12,000). Use auto-retrying `toHaveText`; the sibling
-      provider/role-group specs never hit this because they only ever assert one slice.
+- [ ] [BACKEND] P2. **Add an `account_id` filter axis to `window_task_usage_totals` and
+      `GET /api/backlog/usage/windows`, composing AND-wise with the existing provider/model/role_group filters.**
+      Per-account totals must sum to the provider total exactly as DeepSeek Pro+Flash already sum to DeepSeek. **Done
+      when**: a test asserts the per-account sums equal the provider-scoped total for the same window, and the endpoint
+      returns per-account rows.
+- [ ] [UI] P2. **Add per-account filter buttons to `TaskUsageWindows.tsx` as a third independent filter row, alongside
+      the existing provider and role-group rows.** Labels come from the accounts registry (`label`/`account_id`), not
+      hardcoded. **Done when**: `[UI]` + `pw:L2 ✓` with a cited regression spec under `dashboard/tests/e2e/`, per
+      `/codex/06-coding-standards/ui-testing-layers.md`.
 - [ ] [UI] P2. **Surface the spend basis in the task-usage panel so a DeepSeek dollar (metered) and an Anthropic dollar
       (subscription-attributed at a measured multiplier) are distinguishable, and keep Anthropic's
       percent-of-weekly-limit visible alongside it.** Operator intent 2026-08-10: Anthropic becomes actual spend, the
       percent stays as a supplementary signal rather than the only one. **Done when**: `pw:L2 ✓` with a spec asserting
       both the $ figure and the basis indicator render for an Anthropic-scoped window.
-- [ ] [SCRIPT] P2. **`reprice_task_usage.py` SHIPPED (agent-orchestrator@c40d847ac6) — remaining: the live dry run.**
-      Dry-run by default, `--apply` to write, `--only-unpriced` to touch just the blank rows, idempotent, prices each
-      row at the rates in force on its OWN `completed_at`. Reports newly-priced / repriced / unchanged / still-unpriced
-      and names every model it could not price. **Deviation from the todo, stated:** the exact-vs-approximate split was
-      NOT built. Repricing is a pure DB recompute from each row's stored tokens, so a window that ran on more than one
-      model is priced at `task_usage.model` (the LAST turn's). Instead of a second transcript-reading code path, the
-      script REPORTS how many changed rows still have a `claude_session_id`, which is the information needed to decide
-      whether the exact path is worth building at all. **Still open because the done-when requires a live dry run**
-      against the VM DB.
+- [ ] [SCRIPT] P2. **Ship `scripts/orchestrator/reprice_task_usage.py` — recompute `spend_usd` for every row where it is
+      NULL, transcript-accurate where the transcript survives and flagged-approximate where it has rotated.** Dry-run by
+      default, `--apply` to write, idempotent, mirroring `backfill_task_usage.py`'s structure and provenance
+      conventions. Must report exact/approximate/still-unpriced counts and name any model string it could not price.
+      **Done when**: a dry run against the live DB reports a per-model coverage breakdown and the script has a
+      regression test for the approximate-fallback path.
 - [ ] [OPERATOR] P2. **Run `reprice_task_usage.py --apply` against the live orchestrator VM via SSM after reviewing the
       dry-run report.** Tagged `[OPERATOR]` because it mutates ~1,993 live production rows; mirrors the established
       precedent of `deepseek_flash_ab_routing_test_2026_08_05.md` todo 16's `repair_unpriced_deepseek_spend.py --apply`.
@@ -294,14 +288,16 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       figure for 1h, 5h, 24h, 7d and lifetime.** That was one backfilled mixed-model row poisoning four windows. **Done
       when**: the live endpoint response for `provider=deepseek&role_group=planning` is pasted here showing a non-null
       `spend_usd` in every window.
-- [x] ✅ CANCELLED [BACKEND] P0. **Fleet-aggregate calibration — no longer needed; the operator's reservation removed
-      the problem it existed to route around.** This was a workaround for one specific defect: laptop consumption
-      landing on an unknown account, making per-account denominators untrustworthy, with no recoverable login history to
-      repair them. As of 2026-08-10 evening `sub-a-ikenna` and `sub-e-odum3default` are AO-exclusive and every other
-      Claude account is paused, so a per-account denominator is exact BY CONSTRUCTION for any window after the Wednesday
-      resets — no aggregation needed. Cancelled on the merits rather than deferred: summing across accounts would now
-      DESTROY the very signal we want, since the whole point of running both a Pro and a max20 account is to compare
-      their multipliers, and an aggregate collapses them into one number. Re-open only if the reservation is withdrawn.
+- [ ] [BACKEND] P0. **Calibrate FLEET-AGGREGATE rather than per-account, which sidesteps the unrecoverable login
+      timeline entirely.** Because every laptop tab shares one login at a time, laptop consumption always lands on SOME
+      account we own — so summing numerator and denominator across all accounts makes per-account attribution
+      unnecessary: numerator = total list value (all AO accounts + all laptop turns), denominator = sum over accounts of
+      `consumed_fraction x window_cost`. This is the only route to a real number before the todo-3 logger has
+      accumulated history, and it dissolves the [32.2x, 126.1x] bracket that per-account calibration is currently stuck
+      with. Requires a COMMON period across accounts, so it depends on todo 1's meter history (per-account windows are
+      offset by days and `weekly_pct` is current-state only). **Done when**: a fleet-aggregate multiplier is reported
+      for one common period with its numerator and denominator broken out, and it is stated whether it falls inside the
+      published 6-10x band.
 - [x] ✅ [BACKEND] P1. **`claude-opus-5` registered (with 4.8/4.7/4.6, Fable 5, Sonnet 4.6/4.5, Haiku 4.5) —
       agent-orchestrator@c40d847ac6.** `test_every_model_the_fleet_runs_is_priced` parametrises over the models actually
       observed in transcripts. Dated ids (`claude-haiku-4-5-20251001`) resolve by stripping the `-YYYYMMDD` suffix, so a
@@ -311,26 +307,23 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       `ATTRIBUTION_CAPTURE_ERA_START` (2026-08-06) and one straddling a month boundary, and explicitly does NOT treat
       partial consumption as a disqualifier — a window that consumed 7% is a valid sample because the percentage is what
       converts to dollars. Tests cover accept / month-straddle / pre-capture / partial-consumption.
-- [ ] [OPERATOR] P2. **LAPTOP-ONLY — log the laptop's login identity on change, as ASSURANCE that the reservation held
-      (no longer time-critical, and no longer for attribution).** Downgraded from P0 on 2026-08-10 evening: its original
-      purpose was to attribute laptop turns to the right account for calibration, and the reservation makes that
-      unnecessary — the calibrated accounts are AO-exclusive, so laptop turns land on a DIFFERENT account entirely and
-      cannot enter their windows. What remains is genuinely useful but smaller: a log of
-      `(timestamp, accountUuid, emailAddress)` from `~/.claude.json`'s `oauthAccount` is the only way to EVIDENCE that
-      the laptop never logged into `sub-a` or `sub-e`, which is exactly what the reservation-verification todo needs to
-      check rather than assume. No longer time-critical because nothing is being lost hour by hour: the windows that
-      matter start Wednesday. **Done when**: the log exists and covers the first post-reset window.
-- [ ] [BACKEND] P1. **Report `max(measured)` as the defensible floor for PRE-reservation windows — but stop calling
-      post-reservation windows lower bounds, because they are not.** Amended 2026-08-10 evening. The original reasoning
-      still holds for history: `sub-c` was a laptop login on 2026-08-02, the `~/.claude-accounts/*.env` absence never
-      proved `sub-d` was clean (env files serve headless spawns; interactive login goes through `claude /login`), and
-      unattributed laptop turns only ever REMOVE tokens from the numerator — so contamination biases a historical
-      multiplier DOWN and the largest measurement is closest to truth (currently >= 32.2x at August promo rates for
-      max20). But from the Wednesday resets onward `sub-a`/`sub-e` are AO-exclusive, so their windows are exact, not
-      floors, CONTINGENT on the reservation-verification todo actually confirming zero laptop sessions. Labelling an
-      exact measurement a lower bound is its own error — it invites someone to inflate it. **Done when**: the
-      calibration output distinguishes the two regimes explicitly (pre-reservation = lower bound,
-      post-reservation-and-verified = measured), and never averages across accounts in either.
+- [ ] [OPERATOR] P0. **LAPTOP-ONLY, TIME-CRITICAL — start recording the laptop's login identity on every change, because
+      the switch history is unrecoverable and the operator switches accounts often.** `~/.claude.json`'s `oauthAccount`
+      is current-state only; the sole surviving evidence on disk is three snapshots across eight days showing TWO
+      different accounts (2026-08-02 `ikenna@odum-research.com` = `sub-c`, 2026-08-10 `iggy2london@gmail.com` =
+      `sub-b`). Telemetry carries no account fields and `~/.claude/session-env` is empty, so nothing else records it.
+      Append `(timestamp, accountUuid, emailAddress)` to a local log whenever it changes, so future windows are
+      attributable even though past ones are not. Laptop-only — this state exists on no other machine. **Done when**:
+      the log exists, contains at least one entry, and survives a Claude Code restart.
+- [ ] [BACKEND] P1. **Treat EVERY measured multiplier as a lower bound and report `max(measured)` as the defensible
+      floor — no account can currently be certified laptop-free.** Retracts this plan's earlier "four pure
+      agent-orchestrator accounts" claim: `sub-c` was a laptop login on 2026-08-02, and the `~/.claude-accounts/*.env`
+      absence that made `sub-d` look clean proves nothing, since those env files serve headless AO slot spawns while
+      interactive login goes through `claude /login` and needs no env file. Laptop contamination only ever removes
+      tokens from the numerator, so contamination biases the multiplier DOWN and the largest measurement is the closest
+      to truth — currently **>= 32.2x at August promo rates for max20**, already well above the published 6-10x band.
+      **Done when**: the calibration output labels each per-account figure a lower bound, states the fleet-wide floor as
+      the maximum, and never averages across accounts.
 - [x] ✅ [BACKEND] P1. **`7 / days_in_month x monthly_price` implemented as the dollar anchor —
       agent-orchestrator@c40d847ac6.** `subscription_value.weekly_budget_usd()` uses the real month length, and the
       calibration report prints it (`$200.00/mo ex-tax x 7/31 days -> $45.16 per weekly window`). A month-straddling
@@ -397,20 +390,20 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       replayed turns were never re-billed and must not inflate list value, but the probe's own genuine turns do consume
       quota. **Done when**: a test proves a replayed turn is excluded from value and a probe's own turn is retained, and
       the calibrated totals change in the expected direction.
-- [x] ✅ CANCELLED [OPERATOR] P2. **Measuring laptop consumption to decontaminate `sub-b-iggy2london` — moot; `sub-b` is
-      paused and is not being calibrated.** The AO pool is now DeepSeek + `sub-a` + `sub-e` only. `sub-b` is not in it,
-      so there is no `sub-b` multiplier to decontaminate and no window that needs its laptop half measured. The
-      4,026-transcript scan this described would cost real time to produce a number nothing consumes. Cancelled, not
-      deferred. (The scanning METHOD is not lost — it is written up in
-      `/codex/06-coding-standards/tool-call-batching.md`'s re-measurement section, including the requestId-UNION rule
-      that a naive dedup gets wrong.)
-- [x] ✅ CANCELLED [OPERATOR] P2. **Reconstructing the historical login timeline from recollection — moot; those windows
-      are refused by the calibration script regardless of what we recall.** Two independent gates already exclude every
-      pre-reservation window: `window_disqualification()` refuses anything opening before attribution capture began
-      2026-08-06, and calibration now runs forward from the Wednesday resets. Operator recollection cannot make a
-      refused window usable, so this would buy a fuzzy timeline for measurements that will never be taken. Cancelled on
-      the merits. The honest statement it was meant to produce is already recorded: pre-logger windows can only ever
-      yield lower bounds.
+- [ ] [OPERATOR] P2. **LAPTOP-ONLY — measure this laptop's own Claude consumption per window so `sub-b-iggy2london` can
+      be decontaminated rather than discarded.** Scan `~/.claude/projects/**/*.jsonl` (4,026 transcripts, ~4.1G, four
+      concurrent interactive tabs active as of 2026-08-10 15:01) deduping by `requestId`, and sum tokens per model
+      inside each `sub-b` calibration window. Local transcripts carry NO account identifier, so this is only sound
+      because the laptop's login is known to be `sub-b` alone; state that assumption in the output. Runs on the
+      operator's laptop by necessity — `~/.claude` exists nowhere else. Read-only, no VM, no deletes. **Done when**:
+      laptop token totals per window are recorded here, and `sub-b`'s AO-only value plus laptop value is compared
+      against its meter percentage.
+- [ ] [OPERATOR] P2. **LAPTOP-ONLY — reconstruct as much of the historical login timeline as the operator can recall, to
+      bound which windows are contaminated.** Disk evidence is exhausted (three snapshots, two accounts, no telemetry or
+      session-env record), so operator recollection is the only remaining source for windows before the todo-3 logger
+      starts. Even coarse answers ("sub-c was my laptop account most of early August") materially change which
+      measurements are usable. **Done when**: either a recalled timeline is recorded here with its uncertainty stated,
+      or it is explicitly noted that pre-logger windows can only ever yield lower bounds.
 - [x] ✅ [DATA] P1. **Tool-call batching SSOT written — `/codex/06-coding-standards/tool-call-batching.md`.** Carries
       `authoritative_for: tool-call-batching` frontmatter and the full measured baseline (57.3% of calls collapsible,
       Bash 52.8%, runs of 20/23/26/28/32, 69% of Bash calls in a chain, 405,833 mean cache-read tokens per call, 8.6h of

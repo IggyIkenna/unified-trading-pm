@@ -41,7 +41,6 @@ referenced_by:
     /codex/08-workflows/t1-batch-dag.md,
     /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
     /codex/09-strategy/operational/cli-promote-paths.md,
-    /plans/active/multi_leg_execution_systems_execution_2026_08_10.md,
   ]
 owner:
 last_reviewed: 2026-06-22
@@ -261,53 +260,6 @@ fills (3)**.
 > venue fills** (`LiveMatchingEngine`, live only). The benchmark is the shared reference both realities measure against,
 > never a third reality. A third _simulation_ on the batch/paper path — or batch and paper using _different_ matching
 > engines — is review-blocking (it re-creates the divergence).
-
-### 4.2.1 Multi-leg (`LEADER_HEDGE`) sequencing — a named, checkable invariant (2026-08-10)
-
-**The invariant.** Every multi-leg instruction with an inter-leg dependency — `AtomicExecutionMode.LEADER_HEDGE`
-(leader-first → hedge(s) within deadline → compensate on failure) — MUST be settled in paper/batch through the SAME
-leader/hedge/unwind sequencing semantics the live executor uses (`execution-service` `v2/atomic_leg_executor.py`
-`AtomicLegExecutor.execute()`), with benchmark-simulated fills (the IBKR-MEL synthetic-adapter shape: same sequencing,
-real vs synthetic source). A flat per-leg loop that prices each leg independently — the pre-2026-08-10 behavior of
-`BenchmarkFillEngine.settle()` — is a determinism-spine defect: it silently fills both legs with no model of sequencing
-risk, so an **unhedged position** (the exact failure multi-leg execution exists to avoid) is invisible in paper/batch
-results. A _parallel_ leader/hedge model inside the benchmark engine is equally a violation — a second implementation of
-safety-critical sequencing semantics that diverges from the live executor and breaks `paper(W) == batch-rerun(W)` (audit
-verdict 2026-08-10: option (a), route benchmark settlement through the real sequencing; (b) REJECTED; SSOT
-`/plans/active/multi_leg_execution_systems_execution_2026_08_10.md`).
-
-**The mechanism (strategy-service `engine/backtest/benchmark_fills.py`).** `BenchmarkFillEngine.settle()` →
-`compute_benchmark_fill` → `_compute_atomic_fill` (`:546`) branches on `execution_mode`:
-
-- **`LEADER_HEDGE`** → `_compute_atomic_leader_hedge_fill` (`:476`): the leader leg fills FIRST; each hedge leg must
-  have usable `MarketStateSnapshot` data (missing/invalid state = the deterministic model of a failed/timed-out hedge
-  fill — no `KeyError`, no silent both-leg fill). On any hedge failure the `compensation_policy` fires:
-  `CLOSE_LEADER_IF_HEDGE_FAILS` unwinds the now-naked leader at a 50 bps penalty (`_compute_unwind_fill` `:440`,
-  `_UNWIND_PENALTY_BPS` `:69`); `HOLD_LEG_AND_ALERT` / `RETRY_HEDGE_UNTIL_DEADLINE` leave the leader open — the naked
-  position visible as a fill record missing its hedge leg. Control-plane actions (TRANSFER/BRIDGE/CANCEL/CONVERT_DUST)
-  settle at zero cost in benchmark space (`_NO_FILL_ACTIONS` `:53`) — skipped, not failures.
-- **`ATOMIC` / `ATOMIC_ON_CHAIN` / `SEQUENCED_WITH_PACING`** → flat per-leg loop (no inter-leg dependency; a missing leg
-  is still a hard `KeyError` — batch=live demands deterministic legs).
-
-**The checkable verification — the regression tests name the invariant
-(`strategy-service/tests/unit/engine/backtest/test_benchmark_fills.py`, shipped `strategy-service@aae2ae064d` /
-`11e23c5fb7` / `5a8a014eed`, 2026-08-10):**
-
-| Test (line)                                                          | Proves                                                                                                              |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `test_atomic_missing_leg_state_models_hedge_failure` (`:380`)        | LEADER_HEDGE with a missing hedge-leg snapshot → leader + 50 bps unwind fill, not `KeyError`/silent both-leg fill.  |
-| `test_paper_settle_surfaces_unhedged_risk_when_hedge_fails` (`:468`) | The exact paper/batch path (`settle()`) surfaces unhedged risk when the hedge fails; deterministic across runs.     |
-| `test_paper_settle_hold_leg_alert_exposes_naked_position` (`:516`)   | Under `HOLD_LEG_AND_ALERT` the naked position is exposed (leader with no hedge/unwind) — never hidden.              |
-| `test_paper_batch_rerun_epsilon0_on_real_sequencing` (`:552`)        | ε=0 determinism STILL holds (keyed trade-by-trade, citadel methodology) against the REAL sequencing in both passes. |
-
-**Live parity note.** `AtomicLegExecutor` is paper-default by construction (`create_sports_adapter(mode)` defaults to
-`OperationalMode.PAPER`, `atomic_leg_executor.py:9-10`); live wires the same executor through the EventTransport spine
-(`/codex/02-data/live-data-persistence-and-event-log.md`). Paper/batch settle LEADER_HEDGE via the benchmark counterpart
-of that same sequencing — simulated fills, real sequencing — so `paper(W) == batch-rerun(W)` now validates the real
-multi-leg risk path, not a parallel shortcut. The live publish/subscribe seam
-(`strategy-service/engine/strategies/v2/live_routing.py::publish_atomic_instruction[_sync]` →
-`execution-service/v2/atomic_instruction_router.py::route_atomic_instructions`) was wired into dispatch 2026-08-10
-(`strategy-service@4ca4385c` / `execution-service@27a4bd59`).
 
 ### 4.3 The ledger pipeline (G3)
 

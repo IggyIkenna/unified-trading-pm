@@ -82,24 +82,19 @@ check exists to catch.
       `blocked_question_payload_quality_and_condition_retirement_2026_08_10.md:250`** — replaced with the real reachable
       commit sha `034cb4e2ad` by `5f5654c90e` (18th dispatch agt-e56165). Ratchet verified green: 2725 citations, 0
       unresolvable. — unified-trading-pm@5f5654c90e (repo: unified-trading-pm)
-- [x] ✅ [INFRA] P1. **RECURRENCE 2026-08-10 — a SECOND unresolvable citation, already on origin, has knocked the
-      ratchet off zero again.** `plans/active/ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md:66` cites
-      `4f901b9916` as its completion evidence. That object does not exist anywhere — `git cat-file -t 4f901b9916`
-      returns `Not a valid object name`, and it appears in no branch (`git log --all`, 0 hits) — so it is not merely an
-      unpushed commit. It landed on origin in `72adcb234c`. **The detail that makes this worth reading**: the todo
-      carrying the bad sha is itself a SHA-VERIFICATION todo — its text reads "Verified all 3 cited SHAs are real
-      ancestors of `origin/live-defi-rollout`", and the three shas it names in the body do resolve. Only its own
-      evidence sha, the one asserting that the verification work happened, is fake. A checker that validates the
-      cited-in-body shas but not the evidence sha would pass this. **Impact**: `check_plan_commit_sha_evidence.py` is a
-      hard gate baselined at 0, so this makes every PM `quality-gates.sh` re-gate fail for every session in a shared
-      checkout until it is fixed — measured live 2026-08-10 (slot-1, blocked a `scripts/plan-hygiene/` quickmerge).
-      **Done when**: the citation is replaced with the real commit or removed, and the ratchet reads 0 unresolvable
-      again. Do NOT re-baseline it to 1. **Resolved**: the stale citation was already repaired by slot-23 on 2026-08-10
-      — `4f901b9916` → `unified-trading-pm@72adcb234c` (the actual "flip ci batch12 finalize todo 1" commit, verified
-      ancestor of `origin/live-defi-rollout`; recorded in the archived
-      `ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md` Progress Log + the
-      `pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` P1 todo). Ratchet verified green 2026-08-10
-      (slot-11): 2832 citations, 0 unresolvable. — unified-trading-pm@72adcb234c
+- [ ] [INFRA] P1. **RECURRENCE 2026-08-10 — a SECOND unresolvable citation, already on origin, has knocked the ratchet
+      off zero again.** `plans/active/ci_satellite_ao_dispatch_batch12_finalize_2026_08_10.md:66` cites
+      `unified-trading-pm@4f901b9916` as its completion evidence. That object does not exist anywhere —
+      `git cat-file -t 4f901b9916` returns `Not a valid object name`, and it appears in no branch (`git log --all`, 0
+      hits) — so it is not merely an unpushed commit. It landed on origin in `72adcb234c`. **The detail that makes this
+      worth reading**: the todo carrying the bad sha is itself a SHA-VERIFICATION todo — its text reads "Verified all 3
+      cited SHAs are real ancestors of `origin/live-defi-rollout`", and the three shas it names in the body do resolve.
+      Only its own evidence sha, the one asserting that the verification work happened, is fake. A checker that
+      validates the cited-in-body shas but not the evidence sha would pass this. **Impact**:
+      `check_plan_commit_sha_evidence.py` is a hard gate baselined at 0, so this makes every PM `quality-gates.sh`
+      re-gate fail for every session in a shared checkout until it is fixed — measured live 2026-08-10 (slot-1, blocked
+      a `scripts/plan-hygiene/` quickmerge). **Done when**: the citation is replaced with the real commit or removed,
+      and the ratchet reads 0 unresolvable again. Do NOT re-baseline it to 1.
 
 ## Progress Log
 
@@ -108,9 +103,3 @@ check exists to catch.
   2725 citations, 0 unresolvable. Flipped the sole todo ✅. `archive_exempt: true` is TEMPORARY — per RULES.md §2's
   "never combine the checkbox flip with a git mv archival in ONE commit", the archive will be a separate follow-up
   commit immediately after this one.
-- **2026-08-10 (slot-11, infra worker)**: RECURRENCE todo — the `4f901b9916` citation was already repaired by slot-23 on
-  2026-08-10 (`unified-trading-pm@4f901b9916` → `unified-trading-pm@72adcb234c`, the real "flip ci batch12 finalize todo
-  1" commit, verified ancestor of `origin/live-defi-rollout` via `git merge-base --is-ancestor`). Verified ratchet green
-  fresh: `check_plan_commit_sha_evidence.py` → 2832 citations, 0 unresolvable (baseline 0). Flipped the recurrence todo
-  ✅ with evidence. This issue doc's two todos are now both done; archival is a separate follow-up commit (never combine
-  flip + `git mv` archival in one commit, cross-repo mode-2).

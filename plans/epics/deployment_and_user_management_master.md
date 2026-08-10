@@ -39,8 +39,8 @@ related_plans:
   - ../active/ui_consolidated_closeout_2026_07_30.md
   - ../active/ui_satellite_ao_dispatch_batch1_2026_08_06.md
   - ../active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md
-  - ../archive/2026_08/ui_satellite_ao_dispatch_batch2_2026_08_08.md
-  - ../archive/2026_08/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md
+  - ../active/ui_satellite_ao_dispatch_batch2_2026_08_08.md
+  - ../active/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md
 last_updated: 2026-07-30
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -163,13 +163,13 @@ single-file catalogue source (P10-B backend + follow-ups)
 **status**: active · **estimate**: 0.9 cal AI-days (class: design) **title**: Sports/prediction MVP write-time
 precompute — manifest schema v9→10 stamp + historical backfill
 
-### [`ui_satellite_ao_dispatch_batch2_2026_08_08`](../archive/2026_08/ui_satellite_ao_dispatch_batch2_2026_08_08.md)
+### [`ui_satellite_ao_dispatch_batch2_2026_08_08`](../active/ui_satellite_ao_dispatch_batch2_2026_08_08.md)
 
-**status**: superseded · **estimate**: 1.1 cal AI-days (class: infra)
+**status**: active · **estimate**: 1.1 cal AI-days (class: infra)
 
-### [`ui_satellite_ao_dispatch_batch2_finalize_2026_08_08`](../archive/2026_08/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md)
+### [`ui_satellite_ao_dispatch_batch2_finalize_2026_08_08`](../active/ui_satellite_ao_dispatch_batch2_finalize_2026_08_08.md)
 
-**status**: complete · **estimate**: 0.4 cal AI-days (class: infra)
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra)
 
 ## P3 — backlog; revisit quarterly
 
