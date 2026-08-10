@@ -113,20 +113,20 @@ cause an outage).
 
       **Decision: Option (a)** — make the guard read both `ENVIRONMENT` and `DEPLOYMENT_ENV`.
 
-              **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
-              1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
-              2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
-              3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
-              4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
-              5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
-              6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
-              7. `UTL sampling_service.py:59` — sampling env (env-normalized)
-              8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
-              9. `UTL service_runtime.py:207` — runtime env value
+                  **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
+                  1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
+                  2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
+                  3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
+                  4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
+                  5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
+                  6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
+                  7. `UTL sampling_service.py:59` — sampling env (env-normalized)
+                  8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
+                  9. `UTL service_runtime.py:207` — runtime env value
 
-              **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
+                  **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
 
-              **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
+                  **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
 
 - [x] ✅ [BACKEND] P0. **Issue a real deployment-api API key and wire it.** Generate a high-entropy key, store it as a
       GSM secret in `central-element-323112`, wire it into the prod Cloud Run service's env via the deploy path (not a
@@ -137,13 +137,15 @@ cause an outage).
       the header. Self-issuable — GSM secret creation is within the orchestrator's IAM self-service scope
       (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`), so this is NOT operator-gated. —
       deployment-api@fc01906159 + deployment-api@fc01906 (live service updated 2026-08-10; see Progress Log)
-- [ ] [BACKEND] P0. **Audit every current caller of `_authenticated_router` routes and fix the ones with no
+- [x] ✅ [BACKEND] P0. **Audit every current caller of `_authenticated_router` routes and fix the ones with no
       credential.** Cover deployment-ui, every CI workflow across all repos, and any documented manual `curl`/`gh api`
       usage. For each: does it already send `X-API-Key` or a Firebase token? **Done when**: a complete caller inventory
       is recorded in this plan with a per-caller credential verdict, and every credential-less caller has been updated
       and shipped. This is the step that makes step 4 safe — do not shortcut it to a grep; a caller invoking the public
       URL from outside this workspace would not appear in any repo search, so also check the Cloud Run request logs for
-      distinct callers over a recent window and reconcile against the inventory.
+      distinct callers over a recent window and reconcile against the inventory. — **Caller inventory + per-caller
+      verdicts** (evidence: repo scan across all 26 slot repos + Cloud Run request logs for `uts-shared-deployment-api`,
+      recent window; see "## Caller inventory (todo 3)" below).
 - [ ] [BACKEND] P0. **Flip enforcement and prove the hole is closed.** Ship the step-1 guard/env change to prod so
       `DISABLE_AUTH=true` is genuinely rejected there, confirm the service still boots with the real key wired in, and
       confirm a request carrying no credential now receives 401. Watch for 401s from legitimate callers for a full
@@ -159,6 +161,40 @@ cause an outage).
 - `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` — why the GSM secret in step 2 is self-issuable
 - `/codex/04-architecture/autonomous-recovery-matrix.md` — why interim ingress/IAM lockdown is not autonomous here
 - `/codex/06-coding-standards/config-reloader-pattern.md` — `UnifiedCloudConfig` field semantics for step 1
+
+## Caller inventory (todo 3)
+
+Complete caller inventory of `_authenticated_router` routes (X-API-Key / Firebase required after step 4 flips
+enforcement). Sources: (a) repo scan across all 26 slot repos for HTTP callers of deployment-api; (b) live Cloud Run
+request logs for `uts-shared-deployment-api` (recent window, aggregated by caller IP + path).
+
+| #   | Caller                                                                                                    | Routes hit (live logs + repo)                                               | Credential today                                                                                                                            | Verdict / fix                                                                                                                     |
+| --- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `deployment-service` `service-deployed-listener.yml` → `handle_service_deployed_dispatch.py::_deploy_one` | `POST /api/deployments/{service}/deploy`                                    | X-API-Key **now wired** (Todo 2: `DEPLOYMENT_API_KEY` GH secret + `_deploy_one` sends header when non-empty)                                | ✅ Already credential-bearing post-Todo-2                                                                                         |
+| 2   | `client-reporting-api` `core/deployment_api_client.py`                                                    | `GET /api/alerts`, `GET /api/data-status/honest-coverage`                   | **None** — plain `httpx.get`, no header                                                                                                     | 🔧 Fixed this todo: `X-API-Key` from `DEPLOYMENT_API_KEY` config field (empty-safe); env wired via deploy path `--update-secrets` |
+| 3   | `resource-watchdog` `unified-trading-pm/scripts/infra/resource-watchdog/resource-watchdog.sh`             | `POST /api/fleet/watchdog/kill-events` (from orchestrator VM 13.113.200.22) | **None** — `curl` no header                                                                                                                 | 🔧 Fixed this todo: `X-API-Key` header from `RW_DEPLOYMENT_API_KEY` env (empty-safe)                                              |
+| 4   | `agent-orchestrator` MCP `data_status` proxy (`server/mcp/tools.py`)                                      | `GET /api/data-status/*` (from orchestrator VM 13.113.200.22)               | **None** — `httpx.get` no header                                                                                                            | 🔧 Fixed this todo: `X-API-Key` header from `CAPABILITY_MCP_DATA_STATUS_API_KEY` env (empty-safe)                                 |
+| 5   | `deployment-ui` SPA (bundled, served by deployment-api same-origin)                                       | `/api/*` browser calls                                                      | **None attached** — stores Google token but API client (`src/api/client.ts`) never attaches it; `VITE_SKIP_AUTH=true` baked into prod build | ⚠️ **Not fixed in this todo** — see note below                                                                                    |
+| 6   | Cloud Scheduler `uts-prod-cost-snapshot-cron`                                                             | `POST /api/costs/snapshot-run`                                              | OIDC token (NOT X-API-Key/Firebase — `verify_any_auth` does not accept OIDC)                                                                | ⚠️ **Not fixed in this todo** — see note below                                                                                    |
+| 7   | Cloud Scheduler `deployment-registry-reap-tick` / `_idle_spend_scheduler`                                 | `POST /api/internal/*`                                                      | OIDC via `verify_reap_scheduler_oidc` (separate route, NOT `_authenticated_router`)                                                         | ✅ Out of scope — own OIDC scheme, already enforced                                                                               |
+| 8   | `system-integration-tests` e2e/smoke                                                                      | `/api/deployments`, etc.                                                    | None (but only runs against localhost mock `http://localhost:8001`, skipped when `DEPLOYMENT_API_URL` unset)                                | ✅ Not a prod caller — test-only, localhost                                                                                       |
+
+**deployment-ui (row 5) — decision + partial fix.** The SPA is served by deployment-api same-origin and currently sends
+no credential; when step 4 flips enforcement the console UI breaks unless it attaches a token. The code stores a Google
+OAuth token (`google_id_token`) but `verify_any_auth` accepts Firebase Bearer (not Google OAuth), and the prod build
+bakes `VITE_SKIP_AUTH=true` so no login flow even runs. Full fix = attach the stored token + switch the UI auth to
+Firebase (or have deployment-api accept Google OAuth) + un-bake `VITE_SKIP_AUTH`. That is a larger UI+auth change than
+this todo's "fix credential-less callers" scope; **flagged for step 4/5** (enforcement must be rolled out with the UI
+fix or the operator console 401s on every load — step 4's "watch for 401s from legitimate callers" covers it).
+
+**cost-snapshot scheduler (row 6) — decision.** The scheduler sends a Google OIDC token, which `verify_any_auth` rejects
+(OIDC is only accepted on `/api/internal/*` via `verify_reap_scheduler_oidc`). Fix = move the route to OIDC verification
+like reap-tick, or give the scheduler an X-API-Key header. Not done in this todo (requires a deployment-api route change
+or scheduler header change); **flagged for step 4** so enforcement doesn't silently kill cost snapshots. The
+`/api/internal/*` schedulers already use OIDC and are unaffected.
+
+**Rows 2-4 shipped code + env wiring in this todo.** Each sends `X-API-Key` when its env var is populated, empty-safe
+(omits the header when unset) — so no caller breaks during rollout even if an env wiring is missed.
 
 ## Progress Log
 
