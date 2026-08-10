@@ -989,3 +989,9 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   instead — filed a `[BACKEND] P2` follow-up. No code shipped (one live read-only monitoring GET).
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **2026-08-10 (slot 5, infra)**: SIGABRT RECURRED — 6+ `Worker (pid:*) was sent SIGABRT!` 22:05-22:16 UTC (revisions
+  00515/00516/00517) during venue-year-coverage cefi requests; faulthandler dump reached Cloud Logging and identifies
+  the abort call site: `_live_coverage_venue_year.py:186` = `df.apply(_classify, axis=1)` in `_process_manifest_chunk` —
+  answers this doc's open `[BACKEND] P3` for this recurrence (evidence + vectorize fix in
+  `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md`; bounded local repro completes at 1.74 GiB peak, so
+  slowness/churn not raw memory; older silent-window recurrences share the data-status-burst trigger).
