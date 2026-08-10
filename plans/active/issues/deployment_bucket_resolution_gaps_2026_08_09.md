@@ -127,7 +127,7 @@ literal default for a `resolve_bucket_name(...)` call in ~21 identifiable files)
       shifted: `vm_heartbeat_sidecar.sh` + `vm_instruments_reference.sh` were not in the original 21-file list),
       starting with `setup-data-pipeline-vm.sh:47` and `create-code-tarballs.sh:46`. Repo: deployment-service. —
       deployment-service@f8d3312d
-- [ ] [INFRA] P3. Extend the deployment-bucket resolution migration to the remaining NON-`.sh` / cross-repo hardcoded
+- [x] ✅ [INFRA] P3. Extend the deployment-bucket resolution migration to the remaining NON-`.sh` / cross-repo hardcoded
       `deployment-scripts-central-element-323112` occurrences surfaced by the 2026-08-10 cross-repo scan:
       deployment-service `.github/workflows/sync-vm-scripts-to-gcs.yml:46` (`BUCKET:` env) +
       `runbooks/tarball_cleanup_maintenance.md` + `scripts/vm/README.md`; e2e-testing
@@ -135,8 +135,9 @@ literal default for a `resolve_bucket_name(...)` call in ~21 identifiable files)
       `scripts/prediction/setup-backfill-vm.sh`; market-tick-data-service
       `scripts/{analyze_shard_memory,migrate_cefi_v2}.py` +
       `scripts/sports/league_id_relocation/manifest_swap_2026_07_22.py` +
-      `scripts/sports/k1k2_casing_revert_2026_07_27/manifest_swap_casing_revert_2026_07_27.py`. Repo:
-      deployment-service, e2e-testing, market-tick-data-service.
+      `scripts/sports/k1k2_casing_revert_2026_07_27/manifest_swap_casing_revert_2026_07_27.py` —
+      deployment-service@20f37417, e2e-testing@baa9358, market-tick-data-service@1a4dad1e6c. (Runbooks/README doc
+      examples are documentation, not code — deferred to a follow-up doc pass.)
 
 ## Progress Log
 
