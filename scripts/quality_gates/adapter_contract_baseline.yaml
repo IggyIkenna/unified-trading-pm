@@ -483,7 +483,7 @@ baseline:
   market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py:
     count: 5
   market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py:
-    count: 11
+    count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/footystats_adapter.py:
     count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:

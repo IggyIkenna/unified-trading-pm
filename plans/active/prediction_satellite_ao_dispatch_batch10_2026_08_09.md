@@ -168,10 +168,11 @@ assumed from the Phase-1 agents' own grep alone).
       `af_key` threading, and `TestPolymarketCrossReferenceFixture` (the dedicated test class). `quality-gates.sh` green
       (`.qg_last_passed_sha=4b55c57b3ecf51c587441e7017c9c34b992803d0`); verified on origin/live-defi-rollout.
 
-- [ ] [BACKEND] P2. **Delete the dead live-REST-polling interface on the Kalshi + Polymarket MTDS adapters**, per the
-      same 2026-08-07 operator ruling (option A) applied to the sibling market-tick-data-service finding: prediction
-      markets get market/price data from the canonical manifest/GCS-objects batch path, not a live-polling REST
-      interface. Delete
+- [x] ✅ [BACKEND] P2. **Delete the dead live-REST-polling interface on the Kalshi + Polymarket MTDS adapters** —
+      market-tick-data-service@a0b4957e, per
+      /plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md market-tick-data-service
+      finding: prediction markets get market/price data from the canonical manifest/GCS-objects batch path, not a
+      live-polling REST interface. Delete
       `KalshiAdapter.{parse_market,parse_trade,parse_order_book,normalize_market,normalize_odds,     _load_tickers_from_gcs}` +
       `PolymarketAdapter.{get_markets,get_prices,_convert_gamma_market,     _build_order_book_record,parse_market,parse_token,parse_order_book,normalize_market,normalize_odds,     _load_condition_ids_from_gcs}`
       and their dedicated tests. Grepped the full 15-doc covering set for
