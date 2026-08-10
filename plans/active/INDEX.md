@@ -81,13 +81,6 @@ by hand._
 - [`cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10`](./cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10.md)
   — Gated closeout for `cefi_satellite_ao_dispatch_batch17_2026_08_10.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until that batch's 3 todos are done. Reconciles the verified todos' evidence back into…
-- [`cefi_satellite_ao_dispatch_batch18_2026_08_10`](./cefi_satellite_ao_dispatch_batch18_2026_08_10.md) **[draft]** —
-  Eighteenth AO-dispatch batch for cefi. Extracted from 1 doc found `orphaned_never_touched` + AO-eligible by the
-  2026-08-10 `/ag-closeout-audit cefi` run's Phase 1 (`status: open`, never cited by any of the 22 discovered cefi
-  covering…
-- [`cefi_satellite_ao_dispatch_batch18_finalize_2026_08_10`](./cefi_satellite_ao_dispatch_batch18_finalize_2026_08_10.md)
-  — Finalize plan for `cefi_satellite_ao_dispatch_batch18_2026_08_10.md`. Gated behind batch18's sole todo completing
-  (`gate_on_depends: true`). On completion: reconcile the source issue doc's checkbox, verify linkage, archive if fully…
 - [`cefi_satellite_ao_dispatch_batch9_2026_08_07`](./cefi_satellite_ao_dispatch_batch9_2026_08_07.md) — Ninth
   AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-07 (scheduled autonomous dispatch,
   tranche=cefi, slot 4, dispatch agt-ed7b44). Phase 0 re-derived the covering-plan set via…
