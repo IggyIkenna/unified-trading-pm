@@ -170,9 +170,14 @@ Sizing intuition for the gate queue behind them — the governor's own limit is 
 (`scripts/quality-gates-base/qg-host-governor.sh`):
 
 - `K = max(2, floor(physical_cores / 4))`, overridable via `QG_HOST_CONCURRENCY`.
-- On **macOS** `lscpu`/`nproc` are both absent, so `cores` degrades to 4 → `floor(4/4)=1` → the min-2 floor lifts it to
-  exactly **K=2**. An operator laptop therefore grants 2 gate slots NO MATTER how many cores it physically has (10-core
-  box, still 2) — which is why a wide fan-out cannot speed shipping up on a laptop.
+- Detection order is `lscpu -p=core` (Linux physical) → `sysctl -n hw.physicalcpu` (macOS physical) → `nproc` (logical)
+  → 4. **The macOS branch was ADDED 2026-08-10**: before it, `lscpu` AND `nproc` are both absent on macOS, so `cores`
+  fell through to the hardcoded 4 → `floor(4/4)=1` → min-2 floor → **K=2 on every Mac regardless of size**. It went
+  unnoticed because a 10-physical-core operator laptop lands on `floor(10/4)=2` anyway — the same answer — but a 24-core
+  Mac Studio was silently capped at 2 instead of 6. Note `hw.physicalcpu`, NOT `hw.ncpu`/`hw.logicalcpu`, which
+  over-count on SMT Intel Macs.
+- So a **10-core operator laptop still grants only 2 gate slots** — correctly, not by accident. That is why a wide
+  fan-out cannot speed shipping up on a laptop, and the fix above does not change that.
 - On **Linux** (the AO VM) `lscpu` resolves, so it gets its real `floor(cores/4)` (e.g. 24-core → 6).
 - Separately `QG_TOTAL_INSTANCE_CAP` (total-instance gate) defaults to `floor(cores × 0.75)`, floored at 6.
 

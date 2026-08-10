@@ -84,13 +84,22 @@
 # Floor RAISED 1 → 2 (operator 2026-06-05): the host must be able to run 2 full QGs
 # at once, not just 1. RAM-safe by the documented sizing rule (per-VM RAM ≥ peak-RSS
 # × K): the UTL ceiling 5.27 GB × 2 = ~10.6 GB still fits a 16 GB worker; service
-# repos (~1.9 GB) are trivial. On the macOS operator host lscpu+nproc are both absent
-# → cores degrades to 4 → floor(4/4)=1 → the min-2 floor lifts it to exactly 2 (the
-# desired Mac cap); bigger boxes keep their higher floor(cores/4) (24-core → 6).
+# repos (~1.9 GB) are trivial.
+#
+# macOS core detection FIXED 2026-08-10 (operator). Previously `lscpu` and `nproc`
+# are BOTH absent on macOS, so `cores` fell through to the hardcoded 4 → floor(4/4)=1
+# → the min-2 floor produced K=2. That happened to be right on a 10-physical-core
+# operator laptop (floor(10/4)=2 — the same answer), which is why it went unnoticed,
+# but the old comment's claim that "bigger boxes keep their higher floor(cores/4)"
+# was FALSE on macOS specifically: every Mac got 2 regardless of size, so a 24-core
+# Mac Studio was capped at 2 instead of 6. `sysctl -n hw.physicalcpu` is the macOS
+# equivalent of `lscpu -p=core` (TRUE physical cores, not logical — `hw.ncpu` and
+# `hw.logicalcpu` would over-count on SMT Intel Macs).
 _qg_governor_default_k() {
     local cores
-    # physical cores if lscpu is available, else logical (nproc), else 4
+    # physical cores: lscpu (Linux) → sysctl (macOS) → logical nproc → 4
     cores="$(lscpu -p=core 2>/dev/null | grep -vc '^#')"
+    [[ "${cores:-0}" -ge 1 ]] || cores="$(sysctl -n hw.physicalcpu 2>/dev/null)"
     [[ "${cores:-0}" -ge 1 ]] || cores="$(nproc 2>/dev/null || echo 4)"
     local k=$(( cores / 4 ))
     (( k >= 2 )) || k=2
