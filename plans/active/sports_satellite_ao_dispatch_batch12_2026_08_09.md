@@ -327,11 +327,11 @@ Tracked in the parked-findings doc as "possibly ripe now, needs a live deploy-st
 
 ## Deferred work after 2026-08-10
 
-| Item                                                           | State / why deferred                                                                                                                                                                                                                                                                                                                                                       | Blocked on                                                                                               |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Todo 1 — `--apply-prod` for 2025 population (~88 rows)         | **DONE, independently verified (data-level fact).** `market-tick-data-service@56df68f7f`; 0 confirmed-missing remain post-write. The verifying process only survived via a resource-watchdog rate-limit fluke (see Progress Log) — the data outcome is trustworthy, the process-survival mechanism is not repeatable.                                                      | Nothing — complete.                                                                                      |
-| Todo 1 — `--apply-prod` for 2018-2020 population (~1,210 rows) | **Blocked — fix 3 insufficient.** Dry-run genuinely killed by `resource-watchdog` (`KILL #56`, rss=9,855,504kB > 4,194,304kB cap) almost immediately after the index load. Count still unmeasured under ANY code version. Peak RSS under fix 3 (9.6-14GB) is essentially unchanged from fix 2 (12-14GB) — `dtype_backend="pyarrow"` did not bring this under the ~4GB cap. | A real structural fix (column-projected read) — not a blind retry of fix 3.                              |
-| Flip todo 1's checkbox + final evidence citation               | Not done — the "done when" bar spans both populations; 2025 alone is insufficient to flip it.                                                                                                                                                                                                                                                                              | The 2018-2020 population's structural fix landing + verified apply-prod + independent post-write verify. |
+| Item                                                           | State / why deferred                                                                                                                                                                                                                                                                                                  | Blocked on                                                                                                                                            |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Todo 1 — `--apply-prod` for 2025 population (~88 rows)         | **DONE, independently verified (data-level fact).** `market-tick-data-service@56df68f7f`; 0 confirmed-missing remain post-write. The verifying process only survived via a resource-watchdog rate-limit fluke (see Progress Log) — the data outcome is trustworthy, the process-survival mechanism is not repeatable. | Nothing — complete.                                                                                                                                   |
+| Todo 1 — `--apply-prod` for 2018-2020 population (~1,210 rows) | **Dry-run now succeeds (fix 4, pyarrow-native, 2026-08-10)** — `confirmed missing (no GCS object): 1,210`, matches plan estimate, first clean run under any code version. `--apply-prod --confirm-prod-write` NOT yet executed.                                                                                       | `quality-gates.sh --no-fix` (task `bhb8g8bhf`, PID 793826) reaching green, then quickmerge ship, then the actual apply-prod run + independent verify. |
+| Flip todo 1's checkbox + final evidence citation               | Not done — the "done when" bar spans both populations; 2025 alone is insufficient to flip it.                                                                                                                                                                                                                         | Fix 4 shipping + 2018-2020 `--apply-prod` executing + independently verified 0-confirmed-missing.                                                     |
 
 **Recommended next action**: do NOT blindly retry the 2018-2020 dry-run with fix 3 as-is — the RSS evidence shows it
 reads the same oversized 17M-row, 5-column frame regardless of population filter, and fix 3 only shaved peak RSS from
@@ -349,3 +349,36 @@ confirmed-missing via independent post-write dry-runs, flip todo 1's checkbox wi
 
 - both verification outputs cited, then archive-check this plan per the completion-and-archival discipline SSOT once
   every todo in it is done.
+
+- **2026-08-10 (slot-29, todo 1 -- 4th fix (pyarrow-native, column-projected) written; 2018-2020 dry-run succeeds for
+  the FIRST TIME under any code version; QG in flight, not yet shipped)**: Root-caused WHY fix 3
+  (`dtype_backend="pyarrow"`) failed to move peak RSS despite its design rationale: read metadata-only
+  (`ParquetFile(...).schema_arrow`, zero materialization risk) to confirm the live index is **42 columns** (not 5) x
+  17,090,683 rows, ~249MB compressed on disk -- fix 3 still read the FULL 42-column table into pandas, and the
+  subsequent `.loc[mask, col] = value` mutation + `.to_parquet()` re-serialize almost certainly force the Arrow-backed
+  columns' zero-copy storage to materialize/copy (pandas mutation semantics don't preserve Arrow's copy-on-write
+  guarantee), so `dtype_backend="pyarrow"` bought nothing once the mutate+write path ran -- consistent with the measured
+  9.6-14GB peak (unchanged from fix 2's 12-14GB). **Fourth fix**: rewrote the script to use `pyarrow.compute` /
+  `pyarrow.Table` natively instead of pandas for all full-table operations --
+  `pyarrow.parquet.read_table(..., columns=[...])` column-projects the read-only paths (dry-run, verify) down to the 4
+  columns actually needed (`date`, `league_id`, `data_type`, `capture_status`) instead of all 42; mask-building uses
+  `pc.and_`/`pc.equal`/ `pc.utf8_slice_codeunits`/`pc.starts_with`/`pc.less` instead of pandas boolean indexing;
+  `apply()`'s write path still reads the full 42-column table (a write can't be column-projected without losing the
+  other 38 columns) but mutates via `Table.set_column()` -- an O(1) column-pointer swap for just
+  `capture_status`/`error_reason` that never touches/copies the other 40 columns, replacing `_relabel()`'s pandas
+  `.loc[mask, col] = value` entirely (`_relabel()` deleted). Validated the `pyarrow.compute` API surface
+  (`indices_nonzero`, `take`, `if_else`, `set_column`) against a trivial synthetic table BEFORE touching the real
+  script, specifically to avoid discovering an API mismatch only after a multi-minute resource-constrained run.
+  **Result**: launched a fresh dry-run for the 2018-2020 population (the population that has NEVER completed under fixes
+  1-3) -- it ran to completion cleanly, no `resource-watchdog` kill (output has no truncation/`Killed` marker, full
+  expected tail printed): `candidate captured rows: 3,394`, **`confirmed missing (no GCS object): 1,210`**,
+  `date range: 2018-01-01 .. 2020-06-05 (237 distinct)` -- this exactly matches the plan's stated "~1,210" estimate and
+  is the first-ever successful measurement of this population under any code version. **Not yet shipped**:
+  `quality-gates.sh --no-fix` launched in background (PID 793826, watched by task `bhb8g8bhf`) but had not reached
+  completion when this note was written (last observed at ~52% of the pytest suite, 10,504 items) -- script changes are
+  uncommitted on disk as of this note. Next: once QG is green, ship via `quickmerge.sh`, independently verify the push
+  (ancestry + `ahead=0`), then run `--population 2018_2020 --apply-prod --confirm-prod-write`, then independently
+  re-verify via a fresh separate dry-run process (do not trust the writer process's own self-reported VERIFY alone, per
+  the pattern this plan already established for the 2025 population). The 2025 population's write remains independently
+  verified and unaffected by this entry (unchanged, see prior entries) -- only the 2018-2020 population's blocker is
+  addressed here.
