@@ -183,27 +183,27 @@ host/root-clone access (main agent's own session, or the operator).
       host-level config).
 
       **PREPARED 2026-08-08 (operator ruling, ao round-5 apply session item 20): "Operator will set it - needs
-                                                              Claude to provide exact file/value/steps."** Verified against the live repo -- `agent-orchestrator/scripts/bootstrap_vm.sh`
-                                                              (lines ~1069-1109) already implements this wiring for a fresh VM bootstrap; this is that same recipe run
-                                                              manually on the already-live planning VM (`i-0c9b283b31d6b5ca7`, EIP 13.113.200.22). Exact file:
-                                                              `${WORKSPACE_ROOT}/agent-orchestrator/.env.local` (systemd EnvironmentFile, read by
-                                                              `server/notifications/slack.py`'s `_WEBHOOK_URL = os.environ.get("AGENT_ORCHESTRATOR_SLACK_WEBHOOK", "")`).
-                                                              The value already lives in GCP Secret Manager (project `central-element-323112`, per
-                                                              `agent-orchestrator/docs/ENV_VARS.md`) -- no new secret needs creating. Run on the planning VM:
-                                                              ```bash
-                                                              cd "${WORKSPACE_ROOT}/agent-orchestrator"
-                                                              WEBHOOK_VAL="$(gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112 2>/dev/null)"
-                                                              if [ -z "$WEBHOOK_VAL" ]; then
-                                                                WEBHOOK_VAL="$(gcloud secrets versions access latest --secret=alerting-uts-live-alerts-slack-webhook --project=central-element-323112 2>/dev/null)"
-                                                              fi
-                                                              if [ -n "$WEBHOOK_VAL" ] && ! grep -q '^AGENT_ORCHESTRATOR_SLACK_WEBHOOK=' .env.local 2>/dev/null; then
-                                                                printf 'AGENT_ORCHESTRATOR_SLACK_WEBHOOK=%s\n' "$WEBHOOK_VAL" >> .env.local
-                                                                sudo systemctl restart orchestrator
-                                                              fi
-                                                              ```
-                                                              **Verify**: after restart, confirm `journalctl -u orchestrator --since '5 min ago' | grep -i webhook` shows
-                                                              no fresh "no webhook" lines and a real Slack message lands on the next wedge/drift trigger. Do NOT echo
-                                                              `$WEBHOOK_VAL` to any log.
+                                                                  Claude to provide exact file/value/steps."** Verified against the live repo -- `agent-orchestrator/scripts/bootstrap_vm.sh`
+                                                                  (lines ~1069-1109) already implements this wiring for a fresh VM bootstrap; this is that same recipe run
+                                                                  manually on the already-live planning VM (`i-0c9b283b31d6b5ca7`, EIP 13.113.200.22). Exact file:
+                                                                  `${WORKSPACE_ROOT}/agent-orchestrator/.env.local` (systemd EnvironmentFile, read by
+                                                                  `server/notifications/slack.py`'s `_WEBHOOK_URL = os.environ.get("AGENT_ORCHESTRATOR_SLACK_WEBHOOK", "")`).
+                                                                  The value already lives in GCP Secret Manager (project `central-element-323112`, per
+                                                                  `agent-orchestrator/docs/ENV_VARS.md`) -- no new secret needs creating. Run on the planning VM:
+                                                                  ```bash
+                                                                  cd "${WORKSPACE_ROOT}/agent-orchestrator"
+                                                                  WEBHOOK_VAL="$(gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112 2>/dev/null)"
+                                                                  if [ -z "$WEBHOOK_VAL" ]; then
+                                                                    WEBHOOK_VAL="$(gcloud secrets versions access latest --secret=alerting-uts-live-alerts-slack-webhook --project=central-element-323112 2>/dev/null)"
+                                                                  fi
+                                                                  if [ -n "$WEBHOOK_VAL" ] && ! grep -q '^AGENT_ORCHESTRATOR_SLACK_WEBHOOK=' .env.local 2>/dev/null; then
+                                                                    printf 'AGENT_ORCHESTRATOR_SLACK_WEBHOOK=%s\n' "$WEBHOOK_VAL" >> .env.local
+                                                                    sudo systemctl restart orchestrator
+                                                                  fi
+                                                                  ```
+                                                                  **Verify**: after restart, confirm `journalctl -u orchestrator --since '5 min ago' | grep -i webhook` shows
+                                                                  no fresh "no webhook" lines and a real Slack message lands on the next wedge/drift trigger. Do NOT echo
+                                                                  `$WEBHOOK_VAL` to any log.
 
 - [x] ✅ [INFRA] P2. Root-cause why the main agent's `${WORKSPACE_ROOT}/.orch-main-inbox.json` checkpoint (agents/
       main.md) landed inside the agent-orchestrator repo checkout instead of the true workspace root — likely an
@@ -269,3 +269,8 @@ follows correctly — only the webhook config is missing).
   on a ROOT checkout, explicitly outside any slot worker's authorized scope per `agents/RULES.md` § 1. No evidence the
   webhook has since been configured.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of the sole open
+  item (set `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in `.env.local` on the ROOT orchestrator checkout). Explicit hard
+  boundary (`agents/RULES.md` § 1: no worker role may edit root clones) — same item cross-referenced in
+  `operator_action_items_consolidated_2026_08_08.md`. 5 prior audits agree; no new facts found.

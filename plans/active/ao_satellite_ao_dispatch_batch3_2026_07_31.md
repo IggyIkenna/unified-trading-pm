@@ -216,10 +216,10 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 
 ## Deferred — data-correctness finding surfaced during this audit (flagged, not batchable here)
 
-- **`/plans/archive/2026_08/issues/context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today" section asserts two
-  claims that are FALSE as measured live during this run (2026-07-31):** (1) it claims "the field is now REQUIRED
-  (`docspec.py`, `plan`/`issue` doc_types) and `check_frontmatter_schema.py` fails PM QG on a missing one" — but
-  `scripts/docs/docspec.py:136,160` both still read `FieldSpec("context_scope", Req.E, "free_list")` (elective, not
+- **`/plans/archive/2026_08/issues/context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today" section
+  asserts two claims that are FALSE as measured live during this run (2026-07-31):** (1) it claims "the field is now
+  REQUIRED (`docspec.py`, `plan`/`issue` doc_types) and `check_frontmatter_schema.py` fails PM QG on a missing one" —
+  but `scripts/docs/docspec.py:136,160` both still read `FieldSpec("context_scope", Req.E, "free_list")` (elective, not
   required). (2) it claims the `context-scout` skill "backfilled the corpus" — but a live
   `generate_context_scope_inventory.py --json` run this session shows 626 in-scope docs, 616 still `NEVER_SCOUTED`, 10
   `STALE`, 0 `UP_TO_DATE`, i.e. the backfill has barely started, not completed. Both false claims match this batch's own
@@ -496,3 +496,8 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   provisioning, self-service-on-sibling-precedent) — none apply; this is genuinely unbounded, ongoing corpus-scale work
   (the backfill target moves as the corpus itself grows), not a defaulted judgment call. No whole-doc RECLASSIFY, no
   extractable sub-item (the single todo IS the corpus-wide sweep itself, not a list of discrete items).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of the sole open
+  item (corpus-wide `context_scope` backfill). Genuinely unbounded, ongoing corpus-scale work — the backfill target
+  moves as the corpus itself grows, not a defaulted judgment call. 4 prior audits (08-01 through round11-08-09)
+  consistently agree with a well-reasoned round11 marker from the prior day; no new facts found.

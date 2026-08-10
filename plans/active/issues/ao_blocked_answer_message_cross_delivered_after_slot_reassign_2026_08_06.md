@@ -137,3 +137,8 @@ landed, but choosing + implementing a NEW retirement disposition in `classify_re
 (per the 2026-08-07 marker's own reasoning), not a fully-specified mechanical follow-on — no done-when is stated either.
 Corroborated same-day: `/ag-closeout-audit ao` batch12 independently lists this doc under operator-gated (22), declined
 zero-extraction.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of the sole open
+  item ((a)-or-(b) design choice for orphaned `BlockedRow` disposition at reassign time, P3, no stated done-when).
+  round11 (2026-08-09) already confirmed this is a genuine judgment call, not a mechanical follow-on despite todo 1's
+  landing. No new facts found this pass.
