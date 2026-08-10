@@ -111,14 +111,14 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       `(account_id, sampled_at)`. Independent of every other todo — do not let the attribution work delay it. **Done
       when**: the table exists on the live VM, a query shows >= 2 distinct `sampled_at` rows per active account, and the
       sampler survives an orchestrator restart.
-- [x] ✅ [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves
-      to the account that owned its slot at that timestamp.** — agent-orchestrator@5516a0a. Current attribution has no
-      correct path: `agents.claude_session_id` holds only the CURRENT session id, so compaction mints a new id and
-      orphans every earlier transcript (measured: `sub-c-ikenna-odum` shows 274 completed tasks but only 1,723
-      resolvable turns, ~6/task, against 503-turn tasks visible in the same DB). Derive intervals from `AgentRow`
-      (`account_id`, `tmux_session`/`last_tmux_session`, `registered_at`, `finished_at`) and assign each turn by its own
-      timestamp. **Done when**: a unit test proves a turn in a post-compaction transcript still attributes to the
-      correct account, and the resolver returns the same account for two sessions of one agent split by a compaction.
+- [ ] [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves to
+      the account that owned its slot at that timestamp.** Current attribution has no correct path:
+      `agents.claude_session_id` holds only the CURRENT session id, so compaction mints a new id and orphans every
+      earlier transcript (measured: `sub-c-ikenna-odum` shows 274 completed tasks but only 1,723 resolvable turns,
+      ~6/task, against 503-turn tasks visible in the same DB). Derive intervals from `AgentRow` (`account_id`,
+      `tmux_session`/`last_tmux_session`, `registered_at`, `finished_at`) and assign each turn by its own timestamp.
+      **Done when**: a unit test proves a turn in a post-compaction transcript still attributes to the correct account,
+      and the resolver returns the same account for two sessions of one agent split by a compaction.
 - [ ] [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
       account-window, regardless of how many files or task windows contain it.** `scan_session_usage` already dedups
       within one file; the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a
@@ -202,6 +202,22 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       figure for 1h, 5h, 24h, 7d and lifetime.** That was one backfilled mixed-model row poisoning four windows. **Done
       when**: the live endpoint response for `provider=deepseek&role_group=planning` is pasted here showing a non-null
       `spend_usd` in every window.
+- [ ] [BACKEND] P0. **Calibrate FLEET-AGGREGATE rather than per-account, which sidesteps the unrecoverable login
+      timeline entirely.** Because every laptop tab shares one login at a time, laptop consumption always lands on SOME
+      account we own — so summing numerator and denominator across all accounts makes per-account attribution
+      unnecessary: numerator = total list value (all AO accounts + all laptop turns), denominator = sum over accounts of
+      `consumed_fraction x window_cost`. This is the only route to a real number before the todo-3 logger has
+      accumulated history, and it dissolves the [32.2x, 126.1x] bracket that per-account calibration is currently stuck
+      with. Requires a COMMON period across accounts, so it depends on todo 1's meter history (per-account windows are
+      offset by days and `weekly_pct` is current-state only). **Done when**: a fleet-aggregate multiplier is reported
+      for one common period with its numerator and denominator broken out, and it is stated whether it falls inside the
+      published 6-10x band.
+- [ ] [BACKEND] P1. **Register `claude-opus-5` in the price table — the laptop already runs it and the AO fleet does
+      not.** Measured 2026-08-10: laptop windows carry 1.8B cache-read and 4.7M output tokens on `claude-opus-5` ($5/$25
+      per MTok), a model string absent from the AO fleet's entire observed vocabulary. Any fleet dispatch that picks it
+      up would silently null those rows under the unpriced-poisons-the-window rule, and any laptop-inclusive calibration
+      needs it priced. **Done when**: `claude-opus-5` prices correctly in a test and the calibration no longer reports
+      it unpriced.
 - [ ] [BACKEND] P1. **Scale partial windows by their consumed percentage instead of discarding them, and gate only on
       capture completeness.** Operator correction 2026-08-10: a window at 50% is still a valid sample — the
       entitlement-equivalent value is `V / p`, so every window becomes usable and the sample size stops being
@@ -211,14 +227,38 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       identically-entitled max20 accounts. Derive the window as `resets_at - 7d` (verified consistent with the stored
       `weekly_window_start` for every account). **Done when**: the script emits a scaled multiplier for a partial
       window, refuses any window not fully inside the capture era, and a test covers both paths.
-- [ ] [BACKEND] P1. **Calibrate on the four pure-agent-orchestrator accounts and exclude the laptop-shared one.**
-      Measured 2026-08-10 on the operator's laptop: the interactive login is `iggy2london@gmail.com` =
-      `sub-b-iggy2london`, and local slot config dirs went dormant 2026-08-04 while every current calibration window
-      opens 08-05 or later. `sub-c`, `sub-d`, `sub-e`, `sub-f` therefore have NO laptop contamination in their current
-      windows and are clean calibration subjects; `sub-d-odum1default` is doubly clean (no local account env file has
-      ever existed for it). `sub-b` mixes agent-orchestrator with the operator's interactive tabs and its usage cannot
-      be split, because local transcripts carry no account identifier. **Done when**: the calibration reports the four
-      clean accounts separately from `sub-b`, and `sub-b` is labelled contaminated rather than silently averaged in.
+- [ ] [OPERATOR] P0. **LAPTOP-ONLY, TIME-CRITICAL — start recording the laptop's login identity on every change, because
+      the switch history is unrecoverable and the operator switches accounts often.** `~/.claude.json`'s `oauthAccount`
+      is current-state only; the sole surviving evidence on disk is three snapshots across eight days showing TWO
+      different accounts (2026-08-02 `ikenna@odum-research.com` = `sub-c`, 2026-08-10 `iggy2london@gmail.com` =
+      `sub-b`). Telemetry carries no account fields and `~/.claude/session-env` is empty, so nothing else records it.
+      Append `(timestamp, accountUuid, emailAddress)` to a local log whenever it changes, so future windows are
+      attributable even though past ones are not. Laptop-only — this state exists on no other machine. **Done when**:
+      the log exists, contains at least one entry, and survives a Claude Code restart.
+- [ ] [BACKEND] P1. **Treat EVERY measured multiplier as a lower bound and report `max(measured)` as the defensible
+      floor — no account can currently be certified laptop-free.** Retracts this plan's earlier "four pure
+      agent-orchestrator accounts" claim: `sub-c` was a laptop login on 2026-08-02, and the `~/.claude-accounts/*.env`
+      absence that made `sub-d` look clean proves nothing, since those env files serve headless AO slot spawns while
+      interactive login goes through `claude /login` and needs no env file. Laptop contamination only ever removes
+      tokens from the numerator, so contamination biases the multiplier DOWN and the largest measurement is the closest
+      to truth — currently **>= 32.2x at August promo rates for max20**, already well above the published 6-10x band.
+      **Done when**: the calibration output labels each per-account figure a lower bound, states the fleet-wide floor as
+      the maximum, and never averages across accounts.
+- [ ] [BACKEND] P1. **Compute the window's real dollar cost as `7 / days_in_month x monthly_price`, requiring the window
+      to fall entirely within one calendar month.** Operator ruling 2026-08-10: Anthropic never has to give us a dollar
+      figure — we know what we pay, so the subscription price IS the anchor. Exact rather than an averaged
+      4.348-weeks-per-month divisor, and it correctly captures that a 7-day window is cheaper in a 31-day month
+      ($45.16 for max20 in August 2026) than in a 28-day one ($50.00), because the same $200 buys 4.43 windows instead
+      of 4. A window straddling a month boundary must be prorated across the two daily rates or excluded. All five
+      current windows fall entirely within August 2026, so no proration is needed today. **Done when**: the calibration
+      emits the per-window cost from this formula with `days_in_month` shown, and a test covers both the within-month
+      and straddling cases.
+- [ ] [BACKEND] P1. **Stamp every multiplier with the valuation date and the rate set used, because the Sonnet-5
+      promotion expiring 2026-08-31 shifts it ~50% with no change in usage or spend.** The same token volume valued at
+      standard rates instead of the August promo rates moves `sub-c` from 32.2x to 46.9x — a bare multiplier with no
+      date attached is not interpretable, and comparing an August measurement against a September one would read as a
+      real efficiency change when nothing changed. **Done when**: the stored multiplier carries its valuation date and
+      rate-set identifier, and a test proves two windows valued under different rate sets are not silently compared.
 - [ ] [BACKEND] P1. **Correct the cost denominator to subscription PLUS extra-usage spend — overage was paid, contrary
       to the first reading.** `overage_status='rejected'` + `overage_disabled_reason='out_of_credits'` means overage is
       currently REFUSED because the credit pool is exhausted, not that none was used: the laptop account's live `/usage`
@@ -274,12 +314,12 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       operator's laptop by necessity — `~/.claude` exists nowhere else. Read-only, no VM, no deletes. **Done when**:
       laptop token totals per window are recorded here, and `sub-b`'s AO-only value plus laptop value is compared
       against its meter percentage.
-- [ ] [OPERATOR] P2. **LAPTOP-ONLY — record whether the laptop login changes accounts over time, since that silently
-      reassigns all laptop consumption.** `~/.claude.json`'s `oauthAccount` is current-state only (today:
-      `iggy2london@gmail.com`), so a past re-login is invisible and would misattribute every earlier laptop turn.
-      Capture the current identity plus `cachedUsageUtilization.fetchedAtMs` on a cadence, or confirm with the operator
-      that the laptop has only ever been logged into `sub-b`. **Done when**: either a login timeline is recorded, or the
-      single-account assumption is explicitly confirmed and dated.
+- [ ] [OPERATOR] P2. **LAPTOP-ONLY — reconstruct as much of the historical login timeline as the operator can recall, to
+      bound which windows are contaminated.** Disk evidence is exhausted (three snapshots, two accounts, no telemetry or
+      session-env record), so operator recollection is the only remaining source for windows before the todo-3 logger
+      starts. Even coarse answers ("sub-c was my laptop account most of early August") materially change which
+      measurements are usable. **Done when**: either a recalled timeline is recorded here with its uncertainty stated,
+      or it is explicitly noted that pre-logger windows can only ever yield lower bounds.
 - [ ] [DATA] P3. **Write the codex SSOT for cost attribution — pricing basis, the measured-multiplier method, the
       weekly-window calibration procedure, and the attribution rules from todos 1-3 — under `/codex/04-architecture/`.**
       Per CLAUDE.md's SSOT-direction hard rule the durable contract belongs in codex, not in this plan. **Done when**:
@@ -363,9 +403,8 @@ laptop:
 - **The laptop's interactive login is `iggy2london@gmail.com` = `sub-b-iggy2london`** (`~/.claude.json` `oauthAccount`).
 - **Local slot config dirs went dormant 2026-08-04** (`~/.claude-configs/orch-slot-90{1..5}`, `orch-slot-99` — newest
   transcript 2026-08-04 14:35), while every current calibration window opens 2026-08-05 or later.
-- Therefore **`sub-c`, `sub-d`, `sub-e`, `sub-f` are pure agent-orchestrator for their current windows**;
-  `sub-d-odum1default` is doubly clean (no local account env file has ever existed for it). This is the clean
-  calibration subject the operator hoped for, and there are four of them, not one.
+- ~~Therefore `sub-c`, `sub-d`, `sub-e`, `sub-f` are pure agent-orchestrator for their current windows.~~ **RETRACTED
+  same day — see the account-switch entry below. No account can be certified laptop-free.**
 - `sub-b` is genuinely contaminated and cannot be split: **local transcripts carry no account identifier** (fields are
   `cwd`, `effort`, `entrypoint`, `gitBranch`, `sessionId`, `requestId`, `timestamp`, `version` — no account/org id). It
   is also the only account not at 100% weekly (63%), consistent with being the shared one.
@@ -377,15 +416,62 @@ laptop account's live `/usage` payload shows `extra_usage.used_credits = 15078` 
 decimal places) — **£150.78 of real additional billing this month**. Cost denominators must be subscription + extra
 usage, with currency recorded (todo 8).
 
-**No definitive dollar figure exists for subscription usage.** `limit_dollars` / `used_dollars` / `remaining_dollars`
-are present in the `/usage` schema but `null` for both the `five_hour` and `seven_day` windows — only `extra_usage`
-carries money. So the "ask Claude directly for the billing number" route yields percentages, not dollars, and local
-transcripts remain the only ground truth for token volume.
+**Anthropic exposes no dollar figure for subscription usage** — `limit_dollars` / `used_dollars` / `remaining_dollars`
+are in the `/usage` schema but `null` for both the `five_hour` and `seven_day` windows; only `extra_usage` carries
+money. **This does NOT block calibration** (operator correction, same day): we know what we pay, so the subscription
+price is the anchor and Anthropic only ever needed to supply the consumption side. An earlier note here framed the
+missing dollar field as a blocker — it is not; it merely removes an independent cross-check.
+
+**Window cost formula (operator ruling 2026-08-10)**: `7 / days_in_month x monthly_price`, with the window required to
+sit entirely inside one calendar month. For max20 in August 2026 that is `7/31 x $200 = $45.16` — a 1.9% correction to
+the $46.00 (averaged 4.348 weeks/month) used in the first pass. All five current windows satisfy the within-month
+constraint.
+
+**Re-run of the clean accounts against the corrected denominator**, valued at the published August rates INCLUDING the
+Sonnet-5 promotion (the correct valuation for an August window):
+
+| account            | list value (promo) | multiplier |             at standard rates |
+| ------------------ | -----------------: | ---------: | ----------------------------: |
+| sub-c-ikenna-odum  |          $1,455.53 |      32.2x |                         46.9x |
+| sub-d-odum1default |          $1,088.19 |      24.1x |                         35.1x |
+| sub-f-odum2default |            $699.73 |      15.5x |                         22.8x |
+| sub-e-odum2default |            $274.89 |       6.1x | 7.8x (excluded — capture era) |
+
+**The denominator is now exact and the spread survives it** — 15.5x to 32.2x across three clean, identically-entitled
+max20 accounts. The residual error is therefore entirely in the NUMERATOR (attribution coverage), which todos 2-6
+address; no further denominator precision will close it.
+
+**Timing trap**: the Sonnet-5 promo expires 2026-08-31, so the identical token volume becomes ~50% more valuable at list
+on 2026-09-01. The multiplier jumps by half with no change in usage or spend — hence todo 10's requirement that every
+multiplier carry its valuation date and rate set.
 
 **AO is discarding most of the `/usage` payload** (todo 9): it keeps `weekly_pct` and `five_hour_pct` and drops the
 `seven_day_opus` / `seven_day_sonnet` per-model sub-meters, the `limits[]` array with model-scoped buckets
 (`kind: weekly_scoped`, `scope.model.display_name: "Fable"`), and the whole `extra_usage` block. Those per-model
 sub-meters are exactly the quota-weight signal todo 7 was written to go hunting for.
+
+### 2026-08-10 — RETRACTION: the laptop switches accounts, so no account is certifiably clean
+
+Operator correction: "we literally switched accounts today and we switch often." Investigated every account-history
+source on the laptop. Findings:
+
+- **Only three login observations survive on disk, showing TWO different accounts**: `2026-08-02 23:41` =
+  `ikenna@odum-research.com` (**`sub-c-ikenna-odum`**, from a stale `.claude.json.tmp` file), and `2026-08-10 12:36` +
+  `14:32` = `iggy2london@gmail.com` (`sub-b`). So `sub-c` — named a clean calibration subject hours earlier — was itself
+  a laptop login inside the same month.
+- **No switch history exists anywhere**: `~/.claude/telemetry` carries no account-bearing fields,
+  `~/.claude/session-env` is empty, `~/.claude/backups` spans only today, and local transcripts have no account
+  identifier. The timeline is unrecoverable.
+- **The "sub-d is doubly clean" inference was also wrong.** `~/.claude-accounts/*.env` files serve HEADLESS AO slot
+  spawns; interactive login goes through `claude /login` and requires no env file, so their absence says nothing about
+  interactive use.
+
+**Consequence**: no account can currently be certified laptop-free, and every per-account multiplier is a LOWER BOUND of
+unknown tightness. The useful invariant is directional — laptop contamination only ever removes tokens from the
+numerator, never adds them — so contamination biases the multiplier DOWN and `max(measured)` is the closest to truth.
+That yields a defensible fleet floor today of **>= 32.2x at August 2026 promo rates for max20**, still far above the
+published 6-10x band. Fixed by todo 3 (start logging login identity now — same "cannot recover the past" property as the
+meter sampler) and todo 6 (report lower bounds and a max, never an average).
 
 **Incidental findings**: every cache write on this fleet is 1h TTL (`ephemeral_5m_input_tokens` = 0 across 17,446+
 sampled turns), so only the 2.0x cache-write tier matters; cache-read volume is enormous (5.2B tokens on `sub-c` in one
