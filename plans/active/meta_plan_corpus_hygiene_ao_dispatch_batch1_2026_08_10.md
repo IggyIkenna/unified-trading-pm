@@ -33,7 +33,7 @@ related:
     /plans/active/issues/ag_closeout_audit_ci_parked_2026_08_10.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_06.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_07.md,
-    /plans/active/issues/ag_closeout_audit_ui_parked_2026_08_08.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_ui_parked_2026_08_08.md,
     /plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_08_09.md,
     /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_finalize_2026_08_10.md,
