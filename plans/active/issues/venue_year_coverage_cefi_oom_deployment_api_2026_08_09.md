@@ -360,3 +360,11 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   **Not flipping the INFRA todo — the clean-window acceptance bar is NOT met.** UTL `609299ad` is content-on-main but
   still unreleased (no tag contains it; the semver-agent squash fix released v0.78.0-.3 for other commits, not this one)
   — moot for THIS route since `iter_manifest_row_groups` does its own footer-only column narrowing.
+  - **2026-08-10 (slot 4, backend_engineer)**: Vectorized `_classify` in `_process_manifest_chunk` — shipped
+    `deployment-api@fb3df79`. Replaced the per-row `df.apply(_classify, axis=1)` (~280 s measured for cefi's
+    ~26M-row/215-row-group manifest per the slot-5 infra repro above) with vectorized pandas column operations
+    (`str.lower()` + `str.contains()` + `.where()`) — same semantics (capture_status lowercased is the default
+    _status_key; attempted_failed + error_reason contains blocked_credentials → pending_paid_key), ~100× faster. Full
+    `quality-gates.sh` green, sentinel=fb3df79. Combined with the row-group-streamed read (deployment-api@3d72470) and
+    the narrowed-columns retry (unified-trading-library @609299ad), this removes the last known per-row-group CPU
+    bottleneck on the venue-year-coverage hot path.
