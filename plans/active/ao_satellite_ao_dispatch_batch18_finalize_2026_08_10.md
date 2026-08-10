@@ -92,7 +92,7 @@ source: >-
       todos** — NOT archived: source doc has 5 open todos (2/4/12a/17b/25), all extracted to
       `ao_satellite_ao_dispatch_batch12_2026_08_09.md`. 4 of 5 are done there (todos 1-4: `[x]`), but batch12 todo 5 (←
       source todo 25, `backfill_task_usage.py` one-off extension) is still `- [ ]` — genuinely unfinished. Doc stays
-      `status: active` until batch12 (+finalize) closes it out. — unified-trading-pm@d93d01ea27
+      `status: active` until batch12 (+finalize) closes it out. — unified-trading-pm@494c76c538
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch18_2026_08_10.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`, then re-run the active-plan inventory
