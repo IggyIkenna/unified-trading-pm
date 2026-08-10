@@ -95,13 +95,21 @@ unified-trading-pm@d901c4e050 — YAML parses, `bash -n` clean, actionlint uncha
 
 - [ ] [DEVOPS] P2. **Propagate the fixed template to the per-repo copies — CI is unchanged until this runs.** The
       mechanism is `bash scripts/propagation/rollout-agent-workflows.sh` (`--dry-run` / `--repo <name>` available; it
-      renders `{{SERVICE_NAME}}`, runs a full `quality-gates.sh` per repo, then `quickmerge --agent`). **Two cautions
+      renders `{{SERVICE_NAME}}`, runs a full `quality-gates.sh` per repo, then `quickmerge --agent`). **Three cautions
       measured 2026-08-10, do NOT skip them**: (1) the script has NO per-template filter, so a blanket run ALSO syncs
       `agent-audit.yml` into ~13 repos from market-tick-data-service's live copy (it uses that as the prototype source —
-      `PROTOTYPE_AUDIT` at line 78 — there is no `scripts/templates/agent-audit.yml`), which is unreviewed drift
-      unrelated to this fix; prefer `--repo` per repo, or review that diff first. (2) it runs a full QG per repo
-      serially — deferred this session because the host was at load 189/10-cores, where that is hours of gates. Affected
-      repos are the `[self-hosted, glue]` ones carrying `plan-alignment-agent.yml`: execution-service, features-service,
+      `PROTOTYPE_AUDIT` at line 78 — there is no `scripts/templates/agent-audit.yml`); that is NOT a benign sync — the
+      MTDS prototype is a migrated "canonical thin form" and e.g. strategy-service still carries the legacy
+      full-autonomous-agent version, a 134-line functional divergence. Prefer `--repo` per repo, or review that diff
+      first. (2) **RESOLVED before it bit, keep the lesson**: the TEMPLATE was itself the stale side of a drift — 5 of
+      the 6 glue repos matched it byte-for-byte at 84 lines, but strategy-service had drifted AHEAD at 88 with a
+      `concurrency:` block the template lacked, so a rollout would have SILENTLY STRIPPED it. Adopted into the template
+      in unified-trading-pm@90069a38ba, which is now a SUPERSET of every live copy (the only remaining non-comment delta
+      against any repo is the EACCES guard the rollout exists to deliver). **Re-run that superset check before any
+      future rollout of this template** — "never hand-edit a per-repo copy" is usually framed as protecting the
+      template, and this is the same rule pointing the other way. (3) it runs a full QG per repo serially — deferred
+      this session because the host was at load 189/10-cores, where that is hours of gates. Affected repos are the
+      `[self-hosted, glue]` ones carrying `plan-alignment-agent.yml`: execution-service, features-service,
       instruments-service, market-data-processing-service, market-tick-data-service, strategy-service. Repo:
       unified-trading-pm.
 - [ ] [DEVOPS] P3. **Decide whether the runner image should stop shipping a root-owned global
