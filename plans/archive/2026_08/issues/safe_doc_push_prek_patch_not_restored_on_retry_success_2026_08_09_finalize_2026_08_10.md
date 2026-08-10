@@ -6,7 +6,7 @@ summary: >-
   machine-held via `depends_on` + `gate_on_depends: true` until all 3 of that doc's todos are done. Re-verifies the
   reproduction, the shipped safety-net code, and the upstream/pin/document follow-up against reality (not against the
   checkbox), then closes out the source doc.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci, ao]
 stage: [meta]
@@ -15,14 +15,13 @@ scope: [engineer]
 tags: [ao, ao-dispatch, close-out, finalize, safe-doc-push, prek, precommit, data-loss]
 related:
   [
-    /plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
+    /plans/archive/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
     /scripts/dev/safe-doc-push.sh,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-10"
 last_updated: "2026-08-10"
-archive_exempt: true
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -34,6 +33,8 @@ assigned_role: review
 effort: medium
 drift_direction: advance-code
 resolved_by:
+  All 4 todos verified/done this doc's own session set — see Progress Log for the full re-verification + archival
+  ritual trail.
 locked_by:
 locked_since:
 supersedes:
@@ -43,7 +44,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
+    /plans/archive/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]

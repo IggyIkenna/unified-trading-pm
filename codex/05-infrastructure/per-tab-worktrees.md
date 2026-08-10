@@ -548,6 +548,13 @@ actively confirms the wrong conclusion rather than merely omitting the right one
 `scripts/dev/repro-prek-stash-restore-race.sh`. Two code fixes now shrink the window (flock-serializing the `git commit`
 call in `safe-doc-push.sh`/`quickmerge.sh`, plus a checksum-verify hard-stop on those same call sites — see the issue
 doc's Progress Log) but do not close every path — a raw/manual `git commit` outside those two scripts can still hit it.
+A third, complementary safety net (`check_orphaned_prek_patches()` in `scripts/dev/safe-doc-push.sh`, called once after
+every successful push) catches the case those two fixes don't cover — a `~/.cache/prek/patches/*.patch` file created
+during the run that outlived the push, i.e. a restore that never happened, regardless of which process's `git commit`
+produced it — and fails loudly (exit 9) instead of succeeding silently. A dedicated reproduction (2 sequential
+fail-then-pass `git commit` invocations, with and without inter-attempt delay) did NOT confirm a genuine prek-level
+defect in its own single-process restore wiring — see
+`/plans/archive/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`.
 
 - **HARD RULE — back up uncommitted WIP to the scratchpad BEFORE running any git-touching command in a shared checkout,
   and verify the backup before trusting it.** Copy the file(s) you're mid-editing to your scratchpad

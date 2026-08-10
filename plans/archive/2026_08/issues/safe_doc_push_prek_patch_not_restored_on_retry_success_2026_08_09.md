@@ -22,7 +22,7 @@ summary: >-
   succeeded cleanly. Without noticing the missing "Restored" line and going looking for the patch file, this would have
   read as ordinary, unremarked data loss — the two edited files would simply have reverted to their pre-session state
   with no error, no warning, and no trace in `git status`.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci, ao]
 stage: [meta]
@@ -48,6 +48,8 @@ assigned_role: cicd
 drift_direction: none
 depends_on: []
 resolved_by:
+  unified-trading-pm@24ac737541 (todo 2, safety net) + unified-trading-pm@fe47a4b219 (todo 3, header comment) — see
+  Progress Log.
 locked_by:
 locked_since:
 supersedes:
@@ -65,6 +67,14 @@ context_scope:
 ---
 
 # safe-doc-push.sh drops unrelated unstaged edits on a hook-triggered retry
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED.** All 3 todos done and independently re-verified against reality by the gated
+> finalize twin
+> (`/plans/archive/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09_finalize_2026_08_10.md`):
+> the reproduction confirmed NO genuine prek-level defect, the `check_orphaned_prek_patches()` safety net
+> (`scripts/dev/safe-doc-push.sh@24ac737541`) genuinely detects an orphaned patch and fails loudly (exit 9), and todo
+> 3's re-scoped disposition (header comment, `scripts/dev/safe-doc-push.sh@fe47a4b219`) correctly matches todo 1's
+> verdict. 0 open todos, unlocked — archived per the 6-step ritual.
 
 ## What I found
 
