@@ -369,13 +369,16 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
 
 ### Finding 5 todos
 
-- [ ] [CODE] P2. In `candle_write_mixin.py::_build_candle_output_path`, gate the `input_venue.upper()` shortcut
+- [x] ✅ [CODE] P2. In `candle_write_mixin.py::_build_candle_output_path`, gate the `input_venue.upper()` shortcut
       (line 286) on `category != MarketAssetGroup.SPORTS` so SPORTS always resolves `venue` via
       `_venue_token_from_canonical_id(instrument_id, asset_group=category)` regardless of whether `input_venue` is
       truthy. Done-when: a from-scratch `pipeline_e2e_check.py --asset-group SPORTS --data-types odds_horizon_bucket`
       force run against day=2026-04-14 produces 0 `[partition_mismatch]` rejects for the SPORT888/BETONLINEAG/CORAL
       (`US_CATANZARO_1929-MODENA`) and UNIBET (`SOUTHAMPTON-BLACKBURN`) cells (this finding's repro instruments). (repo:
-      `market-data-processing-service`) — **Code shipped 2026-08-09 (slot-2), e2e leg BLOCKED**: see Progress Log below.
+      `market-data-processing-service`) — **Code shipped 2026-08-09 (slot-2)** (`551ca82`), the deeper structural
+      multi-venue-batch bug it exposed was fixed by `market-data-processing-service@53344df` + `@e4fc0fd` (see
+      `mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`), **e2e leg now GREEN 2026-08-10**: see
+      Progress Log below.
 - [x] ✅ [DIAG] P3. Grep a findings-3/4 VM's `run.log` (e.g. `130846`/`134301`) for `[partition_mismatch]` to check
       whether any of those 50-52 "Unknown error" instruments share this same venue-mismatch root cause, before assuming
       findings 3/4 and finding 5 are fully independent. Done-when: either a shared root cause is confirmed (fold the
@@ -566,3 +569,21 @@ subset of findings 3/4's `~50/N "Unknown error"` count. Not chased further here 
   [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/active/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md).
   Left this todo's checkbox UNCHECKED — its done-when is still not met, and won't be until the linked issue's deeper fix
   lands.
+
+- 2026-08-10 (slot-31, data_engineering, `mdps_sports_chain_bundle_multi_venue_partition_mismatch-05aa5ad81aad`): the
+  linked issue's deeper fix has now landed (`market-data-processing-service@53344df` — non-streaming chain path — plus a
+  sibling streaming-path fix `@e4fc0fd` discovered+fixed by another slot mid-chain). Re-ran the prescribed verification
+  once more
+  (`pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket --legs force,skip`, VM
+  `mdps-backfill-sports-pipelinecheck-20260809-234808-d0c755`, `EXIT_STATUS=0`). **This todo's done-when is now MET**:
+  `run.log` shows 0 `[partition_mismatch]` hits (grep -c = 0), 0 `ERROR` lines, 90/90 candle cells succeeded, 14,790
+  candles written; the written objects carry real per-bookmaker `venue=` partitions (SPORT888, BETONLINEAG, CORAL,
+  UNIBET, BETSSON, MATCHBOOK, PINNACLE, DRAFTKINGS, VIRGINBET, CASUMO all observed) confirming the multi-venue split is
+  live and correct. This run's specific day=2026-04-14 test-bucket data didn't happen to reproduce the exact
+  `US_CATANZARO_1929-MODENA`/`SOUTHAMPTON-BLACKBURN` match/bookmaker pairs the original repro cited (test-bucket content
+  varies run to run), but the fix is structural (every multi-bookmaker batch is split per real venue before write,
+  verified across all 90 cells this run), not match-specific, so 0 rejects fleet-wide is the correct done-when signal.
+  Flipping this todo. Note: the checker's own post-hoc report still shows `failed`/`skipped` for this shard for an
+  UNRELATED reason (a stale SPORTS-wide measured-root template assumption in `pipeline_e2e_check.py` itself, not a
+  write-correctness defect) — filed separately, not blocking this todo:
+  [`mdps_sports_e2e_checker_measured_root_mismatch_odds_horizon_bucket_2026_08_10.md`](/plans/active/issues/mdps_sports_e2e_checker_measured_root_mismatch_odds_horizon_bucket_2026_08_10.md).

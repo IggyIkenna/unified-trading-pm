@@ -35,6 +35,7 @@ source: >-
   mdps-backfill-sports-pipelinecheck-20260809-222203-d0c755 (force leg).
 resolved_by:
 locked_by:
+archive_exempt: true
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -159,10 +160,16 @@ The fix needs to move the venue-partitioning boundary from "whole chain file" to
       `pipeline_e2e_check.py` VM run against day=2026-04-14 itself is todo 2 below (re-verification), not re-run as part
       of this todo — it needs a backfill VM, out of scope for this code-fix dispatch. (repo:
       market-data-processing-service)
-- [ ] [DATA] P2. Once the above lands, re-run the same verification and flip Finding 5's `[CODE] P2` todo in
+- [x] ✅ [DATA] P2. Once the above lands, re-run the same verification and flip Finding 5's `[CODE] P2` todo in
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md` with this run's evidence (0
       partition_mismatch rejects for the SPORT888/BETONLINEAG/CORAL and UNIBET cells specifically, plus confirm no NEW
-      mismatch pairs appear). (repo: market-data-processing-service)
+      mismatch pairs appear). (repo: market-data-processing-service) — **DONE 2026-08-10**: re-ran
+      `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS --data-types odds_horizon_bucket --legs force,skip`
+      (VM `mdps-backfill-sports-pipelinecheck-20260809-234808-d0c755`, `EXIT_STATUS=0`) after both `53344df` and the
+      sibling streaming-path fix `e4fc0fd` landed. 0 `[partition_mismatch]` hits in run.log, 0 ERROR lines, 90/90
+      succeeded, 14,790 candles; distinct real `venue=` partitions confirmed for SPORT888, BETONLINEAG, CORAL, UNIBET,
+      BETSSON, MATCHBOOK, PINNACLE, DRAFTKINGS, VIRGINBET, CASUMO — no new mismatch pairs. Flipped Finding 5's todo with
+      this evidence. See Progress Log.
 
 ## Progress Log
 
@@ -188,3 +195,16 @@ The fix needs to move the venue-partitioning boundary from "whole chain file" to
   `551ca82`). Added missing `sequential: true` (mirrors the fix pattern used for the sibling MTDS reader-gap doc) so the
   dispatcher serializes todo 1 before todo 2 instead of re-offering this same premature dispatch. Skipped
   `reason_code: GATED`, no code changed.
+- 2026-08-10 (slot-31, data_engineering, `mdps_sports_chain_bundle_multi_venue_partition_mismatch-05aa5ad81aad`): todo 1
+  had since landed (`53344df`), plus a sibling streaming-path fix (`e4fc0fd`, discovered+fixed by another slot
+  re-running this same verification and finding 54 further rejects originating from `live_workers_streaming.py`'s
+  parallel chain-bundle path). Re-ran the from-scratch VM verification
+  (`mdps-backfill-sports-pipelinecheck- 20260809-234808-d0c755`, `EXIT_STATUS=0`): 0 `[partition_mismatch]` hits, 0
+  errors, 90/90 succeeded, real per-bookmaker `venue=` partitions confirmed for 10 distinct bookmakers. Flipped todo 2 +
+  Finding 5's linked todo in `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md` with this
+  evidence. Filed a separate, narrower follow-up for an unrelated finding surfaced by this same run (the checker's own
+  SPORTS measured-root template doesn't match `odds_horizon_bucket`'s real write shape, plus an open 4h/24h
+  honest-absence-vs-gap question):
+  [`mdps_sports_e2e_checker_measured_root_mismatch_odds_horizon_bucket_2026_08_10.md`](/plans/active/issues/mdps_sports_e2e_checker_measured_root_mismatch_odds_horizon_bucket_2026_08_10.md).
+  Both this doc's todos are now done and it is unlocked — archiving as a separate follow-up commit per the
+  never-combine-flip-with-archival rule.
