@@ -162,23 +162,23 @@ SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
   `cursor-configs/AUTONOMOUS_AGENT_RULES.md` + drive to completion on a self-paced loop (handoff doc = the plan's
   Progress Log; termination condition + climbing metric; inherits every safety rule).
 - **Rule-amnesia stop** — halt on `os.getenv()`/`pip install`/direct `git push`/skip-test suggestions. **No
-  `python3 << EOF` for file analysis** (`re`-backtracking runaways) — use `rg`/`grep`. **Grep-then-READ, not
-  grep-then-conclude** (0 hits ≠ missing — features are runtime-resolved; READ the candidate consumer; uncertain → ASK).
-  **Inspect an agent's pane with depth** (`tmux capture-pane -S -50`).
+  `python3 << EOF` for file analysis** (`re`-backtracking runaways) — use `rg`/`grep`. **CLAIM ≤ MEASUREMENT**: 0 hits ≠
+  missing (runtime-resolved — READ the consumer; uncertain → ASK); a PROXY (line count, exit 0, green test, cached
+  `origin/`) ≠ the property — measure or say you didn't → `/codex/12-agent-workflow/measurement-claims-discipline.md`.
+  **Pane deep** (`tmux capture-pane -S -50`).
 - **Async-wait / poll / background-task discipline (HARD RULE — recurring "found asleep" class)**: never report a
   backgrounded task done before its real exit; rely on the tracked-task auto-re-invoke (don't poll harness tasks); poll
   only external work on a **progress metric** (flat = STALL → diagnose); don't over-watch / no-sawtooth / don't poll
   what you can direct-check; **backfill/migration progress = count of TARGET artifacts created (entity-scoped,
-  `time_created` not `updated`), NEVER activity** — an entity-agnostic check can pass for hours while the target entity
-  writes ZERO rows, masked by OTHER entities writing; monitors read terminal `exit_code` + manifest counts + log-mtime →
-  a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no self-match); `ScheduleWakeup` / a dispatched sub-agent
-  are NOT reliable wakes — arm your OWN `run_in_background` heartbeat watchdog (≤30-min) in the SAME turn. SSOT:
+  `time_created` not `updated`), NEVER activity** — an entity-agnostic check passes for hours while the target writes
+  ZERO rows; monitors read terminal `exit_code` + manifest counts + log-mtime → a TERMINAL **measured** verdict
+  (liveness `kill -0 <PID>`, no self-match); `ScheduleWakeup` / a dispatched sub-agent are NOT reliable wakes — arm your
+  OWN `run_in_background` heartbeat watchdog (≤30-min) in the SAME turn. SSOT:
   `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Batch independent tool calls** — compound `&&`/`;` Bash, several `tool_use` blocks per message, `replace_all` over
-  serial Edits; only result-dependent calls stay sequential. Measured: 57.3% of calls collapsible, each costing a ~406k
-  prefix re-read + a round-trip. SSOT: `/codex/06-coding-standards/tool-call-batching.md`.
-- **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`,
-  plans, memory).
+  serial Edits; only result-dependent calls stay sequential. Measured: 57.3% collapsible, each a ~406k prefix re-read.
+  SSOT: `/codex/06-coding-standards/tool-call-batching.md`.
+- **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`).
 - **Pre-task plan/issue conflict check (HARD RULE)** — before ANY task grep `plans/active/`+`issues/`: plans go
   stale/superseded between daily `/plan-reconcile` sweeps: no-flag≠current; 0 hits ≠ clear (grep-then-read) — check
   status/supersedes. Context economy: scope reads + Bash output (`grep -c`/`tail -5`, not full dumps), terse replies.
@@ -362,13 +362,13 @@ architecture (L0–L4)".
   marginal impact if unavoidable. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`,
   `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`,
   `…/vm-preemption-and-billing-waste-monitoring.md`, `…/data-pipeline-alerts.md`.
-- **A critical service (AO first) looks idle/broken?** Diagnose before restarting — usually account/quota headroom
-  (`disabled` != auto-clear on `rate_limited_until`; check `weekly_resets_at`). Queue never needs manual replay. SSOT
-  (diagnostic order + fix-vs-not table, per service): `/codex/15-runbooks/safe-service-restart-procedures.md`.
-- **AO scheduled jobs (8 systemd timers / status model / capacity queue)?** `dispatched` = spawn receipt, NOT completion
+- **A critical service (AO first) looks idle/broken?** Diagnose before restarting — READ the runbook's fix-vs-not table
+  FIRST. **Escalation stuck/looping → `escalation_queue.last_error` names the reason**; quota alone does NOT stall
+  sonnet-tier dispatch (DeepSeek = baseline fallback). SSOT: `/codex/15-runbooks/safe-service-restart-procedures.md`.
+- **AO scheduled jobs (systemd timers / status model / capacity queue)?** `dispatched` = spawn receipt, NOT completion
   (`agent_exit_reason == "lifecycle-complete"` is done); `git pull` does NOT reinstall a timer — re-run
-  `sudo bash scripts/install-<job>-timer.sh`; `no_capacity` is legacy (queue-on-no-capacity is the default);
-  `quarantined/timeout/ error` page, `dispatched/queued` don't. SSOT:
+  `sudo bash scripts/install-<job>-timer.sh`; `no_capacity` is legacy (queue-on-no-capacity default);
+  `quarantined/timeout/error` page, `dispatched/queued` don't. SSOT:
   `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
