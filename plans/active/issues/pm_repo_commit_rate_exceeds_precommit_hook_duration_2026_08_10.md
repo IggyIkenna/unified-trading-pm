@@ -247,36 +247,42 @@ Directions, cheapest first — each is a todo below:
       `git stash` ref and exit with a distinct code meaning "your edits are in the stash, not on disk". **Done when**:
       an induced exhausted-retries run with a reverted tracked file reports the stash ref instead of the transient
       message, and a test covers the entry-hash comparison. Repo: unified-trading-pm.
-- [ ] [INFRA] P0. **Break F6 — stop the hook chain fighting a peer session's unstaged WIP.** An isolated index is the
-      structural fix: have `safe-doc-push.sh` perform its stage+commit in a throwaway `git worktree` (or equivalent
-      isolated index) rather than the shared checkout, so prek's patch save/restore cycle only ever sees the caller's
-      own files. Several sub-agents in the 2026-08-07 na-eligibility-audit run independently converged on exactly this
-      workaround after giving up on the shared index (recorded in the sibling autostash doc), which is evidence the
-      pattern works. Failing that, at minimum detect the `Reverting the hook changes` line and treat it the way
-      `prek stash/restore race detected` is already treated (`exit 7` with a diagnosis) instead of silently retrying.
-      **Done when**: a commit succeeds with unrelated foreign dirty files present in the checkout, and a regression test
-      creates foreign unstaged WIP and proves the caller's commit still lands. Repo: unified-trading-pm.
-- [ ] [INFRA] P0. **Fix F7 — resolve the repo root from git, not from the directory name.**
-      `check_evidence_backed_completion.py` (and any sibling doing the same) must derive the PM root via
-      `git rev-parse --show-toplevel` rather than assuming a checkout literally named `unified-trading-pm`, and a path
-      it cannot resolve must be reported as an infrastructure error, never as a content verdict — it currently reports
-      "a staged todo cites `<repo>@<sha>` that does not resolve" for a doc citing no SHA at all. This is a prerequisite
-      for the F6 worktree mitigation, which otherwise fails for every agent that adopts it. **Done when**: the commit-
-      SHA evidence check passes from a worktree with an arbitrary directory name, an unresolvable repo root produces a
-      distinct loud error, and a regression test runs the check from a differently-named worktree. Repo:
-      unified-trading-pm.
+- [x] ✅ [INFRA] P0. **Break F6 — stop the hook chain fighting a peer session's unstaged WIP.** DONE 2026-08-10 —
+      isolated-worktree mode is now the DEFAULT in `safe-doc-push.sh` (`SDP_ISOLATED=0` escapes; setup failure degrades
+      to the legacy path rather than blocking). Proven 6/6 vs legacy 0/6 under peer noise. Original text: An isolated
+      index is the structural fix: have `safe-doc-push.sh` perform its stage+commit in a throwaway `git worktree` (or
+      equivalent isolated index) rather than the shared checkout, so prek's patch save/restore cycle only ever sees the
+      caller's own files. Several sub-agents in the 2026-08-07 na-eligibility-audit run independently converged on
+      exactly this workaround after giving up on the shared index (recorded in the sibling autostash doc), which is
+      evidence the pattern works. Failing that, at minimum detect the `Reverting the hook changes` line and treat it the
+      way `prek stash/restore race detected` is already treated (`exit 7` with a diagnosis) instead of silently
+      retrying. **Done when**: a commit succeeds with unrelated foreign dirty files present in the checkout, and a
+      regression test creates foreign unstaged WIP and proves the caller's commit still lands. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P0. **Fix F7 — resolve the repo root from git, not from the directory name.** DONE 2026-08-10 — new
+      `scripts/quality_gates/_pm_root.py` resolves by CONTENT (`plans/` + `scripts/quality_gates/` present), applied to
+      13 call sites across 11 scripts; verified it resolves correctly given a bogus workspace root and that
+      `check_plan_commit_sha_evidence.py` still passes normally. Original text: `check_evidence_backed_completion.py`
+      (and any sibling doing the same) must derive the PM root via `git rev-parse --show-toplevel` rather than assuming
+      a checkout literally named `unified-trading-pm`, and a path it cannot resolve must be reported as an
+      infrastructure error, never as a content verdict — it currently reports "a staged todo cites `<repo>@<sha>` that
+      does not resolve" for a doc citing no SHA at all. This is a prerequisite for the F6 worktree mitigation, which
+      otherwise fails for every agent that adopts it. **Done when**: the commit- SHA evidence check passes from a
+      worktree with an arbitrary directory name, an unresolvable repo root produces a distinct loud error, and a
+      regression test runs the check from a differently-named worktree. Repo: unified-trading-pm.
 - [ ] [INFRA] P1. **Make `prettier-autostage.sh` format regardless of drift.** Formatting is idempotent and has no
       dependency on origin's state; the current "skipping format while behind" guard is what prevents the fast path from
       ever self-correcting (F3). If the reflow-residue concern behind that guard is still real, satisfy it by formatting
       AFTER the wrapper's reconcile step rather than by declining to format at all. **Done when**: the guard is removed
       or moved after reconcile, a formatted-while-behind commit does not leave residue that breaks slot FF-sync, and the
       F3 loop is demonstrably broken. Repo: unified-trading-pm.
-- [ ] [INFRA] P1. **Re-derive the push-governor's validation cap from measured host cores.** `push-host-governor.sh`
-      admits a fixed K=8 validation-phase tokens. Profiling 2026-08-10 showed the sweep is ~18.6s of real work inflated
-      ~6x to 118s by concurrent hook chains on one laptop — 8 concurrent 19s sweeps produce exactly the observed wall
-      time. Mirror `qg-host-governor.sh`'s `max(2, floor(cores/4))` derivation instead of a constant. **Done when**: the
-      cap is core-derived, and a measured before/after shows per-run sweep wall time on a loaded host materially closer
-      to its idle 18.6s. Repo: unified-trading-pm.
+- [x] ✅ [INFRA] P1. **Re-derive the push-governor's validation cap from measured host cores.** DONE 2026-08-10 —
+      `_push_gov_validate_default_k()` now mirrors `qg-host-governor.sh`'s `max(2, floor(cores/4))`; measured 8 -> 2 on
+      the 10-core operator host. Original text: `push-host-governor.sh` admits a fixed K=8 validation-phase tokens.
+      Profiling 2026-08-10 showed the sweep is ~18.6s of real work inflated ~6x to 118s by concurrent hook chains on one
+      laptop — 8 concurrent 19s sweeps produce exactly the observed wall time. Mirror `qg-host-governor.sh`'s
+      `max(2, floor(cores/4))` derivation instead of a constant. **Done when**: the cap is core-derived, and a measured
+      before/after shows per-run sweep wall time on a loaded host materially closer to its idle 18.6s. Repo:
+      unified-trading-pm.
 - [ ] [INFRA] P1. **Shrink the 118s critical section itself** — profile `run_hygiene_sweep.sh --precommit` per sub-check
       and move anything whose cost is corpus-wide-but-not-staged-file-dependent out of the per-commit path (to the
       hourly sweep or the promote-PR QG). The gate set only needs to be _sound for the staged files_ at commit time.
@@ -316,3 +322,24 @@ Directions, cheapest first — each is a todo below:
   cap from measured host cores rather than a fixed 8, the same way `qg-host-governor.sh` already does
   (`max(2, floor(cores/4))`). Filed as a correction to F1 rather than a new finding: F1's conclusion (hook chain longer
   than commit inter-arrival) holds — this identifies WHY it is that long.
+
+- **2026-08-10 (A/B PROOF under concurrency — operator ask "test under high concurrency")**: built
+  `scripts/dev/test-safe-doc-push-concurrency.sh` and ran it on identical configurations (6 workers, one shared
+  checkout, a peer-noise writer continuously dirtying two unrelated tracked files for the whole run). Acceptance is
+  three-part per worker: content landed byte-identical, no exit-0-without-content, and the CALLER's working-tree copy
+  unchanged. **Legacy shared-index mode: 0/6 landed**, every worker `rc=7` (`prek stash/restore race detected`).
+  **Isolated-worktree mode: 6/6 landed, 6/6 caller trees intact, 0 violations.** Throughput under a concurrent session
+  goes from zero to complete. Note the peer-noise writer is load-bearing: an earlier run against a CLEAN checkout scored
+  5/6 for legacy and proved nothing — foreign UNSTAGED WIP is what makes prek's patch save/restore collide with the
+  hook's own autofix, which is the F6 mechanism.
+- **2026-08-10 (four self-inflicted defects the harness caught, all pre-land)**: recorded because they are the argument
+  for the harness existing. (1) `safe-doc-push` gated on `[[ ! -d .git ]]`, but `.git` is a FILE in a linked worktree —
+  isolation re-execs into a worktree, so the child exited 2 and EVERY invocation would have failed; fixed via
+  `git rev-parse --show-toplevel` (agent-orchestrator-independent, shipped `d93a3dc36d`). (2) isolation re-exec'd the
+  WORKTREE's copy of the script rather than the caller's, silently substituting origin's version — a caller on a branch
+  predating a fix would run old code with no indication; now re-execs `$_SDP_SELF`. (3) a comment placed between a
+  trailing `\` and the `bash` call detached the env assignments, so `SDP_IN_ISOLATION` never reached the child and
+  isolation recursed — 116 nested invocations and 722 stray worktrees (272 MB of git admin state) from ONE 6-worker run
+  before it was killed by hand; fixed, plus a `SDP_ISO_DEPTH` backstop that hard-fails at depth >= 1 (exit 11) so a
+  future handshake bug cannot repeat that blast radius. (4) the first harness had no peer-noise writer and so tested the
+  easy case. None of these were reachable by reading the diff.
