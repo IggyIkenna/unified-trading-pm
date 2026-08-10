@@ -80,12 +80,21 @@ with a real message + a Progress Log entry in the dedup plan), or (c) already su
 
 ## Todos
 
-- [ ] [INFRA] P2. Inspect `stash@{0}` in the `features-service-clean-check` worktree (`git stash show -p stash@{0}`) and
-      disposition it per the Resolution path above: (a) abandoned experiment — drop the stash; (b) deliberate rollback
-      that should land — investigate why, commit with a real message, add a Progress Log entry to
-      `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`; or (c) already superseded by a later commit —
-      diff `stash@{0}` against current HEAD to confirm, then drop it. Done when: the stash is resolved (dropped or
-      landed) and this doc's Progress Log records which of (a)/(b)/(c) applied. Repo: features-service.
+- [x] ✅ [DIAG] P2. Inspect the stash and disposition it per the Resolution path above — **RULED 2026-08-10 (slot-15,
+      investigated; confirmed 2026-08-10 by slot-8): (a) abandoned experiment.** See Progress Log for full evidence
+      (last-touching commit `b0c15f11` still HEAD for all 5 files, current content still thin-stub form, dedup plan
+      still active and lists features-service among rolled-out repos, 5/5 recent `quality-gates-v2` runs green). Ruling
+      out (b) deliberate rollback (no rationale anywhere) and (c) superseded (HEAD hasn't moved past `b0c15f11` since).
+- [ ] [OPERATOR] P2. **Drop the ruled-abandoned stash** — `git stash drop` on the entry currently tagged
+      `slot8-2026-08-07: unexplained staged revert of fleet-workflow-dedup thin-caller-stubs...` in the
+      `features-service-clean-check` linked worktree (`.tabs/8/features-service-clean-check`, gitdir
+      `.tabs/8/features-service/.git/worktrees/features-service-clean-check`; currently `stash@{8}` as of 2026-08-10, 37
+      total stashes in that repo). Re-resolve the exact stash index via
+      `git stash list | grep 'unexplained staged revert of fleet-workflow-dedup'` immediately before dropping — the
+      index shifts as the worktree accumulates more stashes. Human-only per this workspace's destructive-command
+      guardrail (`block_destructive_commands.py` hard-blocks `git stash drop`/`clear` unconditionally for autonomous
+      workers) — do not execute autonomously. Done when: the stash is gone and `git stash list` in that worktree no
+      longer shows it.
 
 ## Progress Log
 
@@ -120,3 +129,16 @@ with a real message + a Progress Log entry in the dedup plan), or (c) already su
   inspected or escalated via a blocked-question... rather than attempting the blocked form"), filing `BLK` recommending
   a human/operator perform the drop directly rather than attempting to circumvent the hook. Todo stays open (stash still
   present, unresolved) pending that action.
+- **slot-8 2026-08-10 (infra craft, re-verified)**: Re-confirmed slot-15's disposition still holds — `stash@{8}` still
+  present with the exact same message text; `git log -1` on all 5 workflow files still resolves to `b0c15f11` as the
+  last touching commit; `wc -l` on `main-backmerge-to-ldr.yml` still shows the thin-stub form (34 lines, not the
+  450-line reverted content the stash carries); repo HEAD has moved on (`93db224d`, an unrelated backmerge) but not on
+  any of the 5 files — no new evidence for (b)/(c). Found no prior `BLK-*` entry in the live `blocked_queue` for this
+  doc despite slot-15's Progress Log claiming one was filed — none exists (checked `GET /api/state`'s `blocked_queue`
+  for `fleet_ci_dedup`/`fleet-workflow-dedup`/`thin-caller` — zero hits), so the actual escalation mechanism was never
+  completed. Retagged the todo above to match this worktree's own standing precedent
+  (`features_service_clean_check_dangling_revert_of_hyperliquid_cefi_bucket_fix_2026_08_03.md`'s `[OPERATOR]`-todo
+  pattern, which the backlog regen auto-surfaces as an operator-gated `blocked_queue` entry — no live `/blocked` call
+  needed): split into a `[x]` `[DIAG]` disposition-ruling todo (done) + an open `[OPERATOR]` drop-the-stash todo, so
+  this stops re-dispatching to INFRA workers who cannot execute the drop and instead surfaces to the operator queue.
+  Todo intentionally left open — the stash itself is still present, unresolved pending human action.
