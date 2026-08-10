@@ -127,14 +127,68 @@ The chain `quote=/margin=` partitions change the shard atom → writer↔manifes
 
 ## Decisions defaulted (documented; flag on operator return)
 
-- **Combo** → chain-bundle (matches W1 `_UNDERLYING_PARTITIONED_TYPES` + cefi). Operator ruling named futures/options;
-  combo is the same bundling class.
+- ~~**Combo** → chain-bundle (matches W1 `_UNDERLYING_PARTITIONED_TYPES` + cefi). Operator ruling named futures/options;
+  combo is the same bundling class.~~ **SUPERSEDED 2026-08-11 — see "2026-08-11 update" section below.** This default
+  was never fully implemented: the shipped writer + UAC oracle deliberately excluded combo from the quote=/margin= chain
+  treatment (unsettled leg-id at the time, per `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`), but
+  `migrate_tradfi_canonical_2026_07.py` was never updated to match — causing a real orphaned-duplicate-object bug (see
+  below). The operator's 2026-08-11 ruling is the current design; do not re-apply this original default.
 - **`underlying=12/13/23` garbage** → quarantine loudly; separate pre-existing defect (88% Databento). Own issue doc.
 - **Catalogue MVP-stamping already exists** (`catalog.parquet` `mvp: bool` from UAC `is_mvp()`, config v18; out-of-MVP =
   legitimate absence, never a gap). Action = re-run `build_instrument_catalogue.py --asset-group tradfi` post-migration.
   Flag: tradfi MVP scope is deliberately narrow (CME ES/NQ/commodity + `TRADFI_EQUITY_PERP_BASIS_UNIVERSE` only); most
   of the ~622 SP500/NASDAQ/ETF tickers tag `mvp=False` by design — broadening needs a `MVP_SCOPE` rule edit + version
   bump.
+
+## 2026-08-11 update — combo/chain semantics resolved; duplicate-write root cause found (operator + interactive session)
+
+**Combo's canonical form is bare `underlying=<U>/ticks.parquet`, confirmed live** —
+`partitioned_writer.py::_write_group`, `tradfi_shared.py::build_tradfi_partition_path`, and the UAC oracle
+(`_partition_path_canonicality.py`) all deliberately exclude `combo` from `CHAIN_INSTRUMENT_TYPES`/`is_chain`. The 07-19
+"Decisions defaulted" combo=chain-bundle line above was never actually shipped.
+
+**Operator-resolved design (2026-08-11, supersedes the 07-19 default):**
+
+- `combo` (CEFI's Deribit multi-expiry wrapper string, `manifest_finalize.py::_UNDERLYING_PARTITIONED_TYPES`) renames to
+  `combo_chain` — it collides today with the real `InstrumentType.COMBO` enum member (genuine multi-leg tradeable
+  instruments, e.g. calendar spreads); `combo_chain` disambiguates the grouping-wrapper sense from the real type.
+- For all three bundle types (`futures_chain`, `options_chain`, `combo_chain`): `underlying` = the grouping key (already
+  populated correctly); `instrument_id` = blank for grouping rows, not a synthetic fake id; `instrument_type` accepted
+  as dual-meaning — in these three specific values it means "grouping," not a real tradeable instrument type. Deliberate
+  convention choice, not a new field.
+- A genuine 2-4-leg spread combo (real `InstrumentType.COMBO`, e.g. `CL-BZ`, `WHEAT-CORN` — see
+  `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`) is a DIFFERENT concept from `combo_chain` (a
+  same-instrument-type bundle across related instruments) — both legitimately coexist. `combo/underlying=GC` (a
+  single-underlying bundle) vs `futures_chain/underlying=GOLD` (the dated-contract chain) is NOT duplicate content —
+  combos can bundle instruments across instrument-type combinations by definition; futures_chain is specifically the
+  same-underlying dated-contract chain. Confirmed not a bug.
+- Reconciles the pre-existing operator ruling `BLK-ca110c07` (2026-06-28,
+  `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py::EmptyConfirmedReason.EXPECTED_CHAIN_AGGREGATE`)
+  — chain-aggregate rows were expected to be blank-instrument_id, `row_count=0`, `capture_status=empty_confirmed`
+  structural placeholders excluded from the coverage denominator. The live writer instead produces REAL `captured` rows
+  with a synthetic non-blank instrument_id for futures_chain/options_chain (e.g. `CME:FUTURE:GOLD`) sitting in the SAME
+  bucket as blank-id placeholders and separate per-contract `instrument_type=FUTURE` rows — real double-counting risk
+  for any downstream query summing `captured` rows without filtering to one canonical `instrument_type`. The
+  instrument_id-blank ruling above closes this gap.
+
+**Duplicate-write bug found and root-caused (historical debris, NOT a live/ongoing bug):** `combo/underlying=GOLD` (and
+SP500/WTI/BTC) had TWO physical GCS objects for day=2020-01-06 — a bare-form and a quote=/margin=-suffixed form. Root
+cause: `migrate_tradfi_canonical_2026_07.py`'s `MIGRATE_CHAIN_ADDQM` disposition (`_CHAIN_ITYPES` including `combo`) was
+built against the now-superseded 07-19 "combo=chain-bundle" default and moved bare combo objects to the quote/margin
+form; `recover_tradfi_garbage_underlying_2026_07.py` later wrote FRESH bare-form objects (matching the ACTUAL shipped
+writer, which excludes combo) for previously-quarantined garbage-underlying rows recovered into GOLD/SP500/WTI/BTC —
+landing both forms for the same cell. The live writer is already correct and non-duplicating going forward; this is
+orphaned historical debris from two scripts that disagreed, not an active bug.
+
+**Also found, unresolved:**
+
+- `lifecycle_phase` column dtype drift — `string`-typed (populated) in `futures_chain/underlying=GOLD` vs `null`-typed
+  (all-null) in `combo/underlying=GC`, same VM run, same date — breaks clean multi-file schema unification for
+  downstream readers. Scope (isolated vs. systemic across write eras) not yet assessed.
+- `underlying` naming-convention inconsistency: `combo/` mixes exchange-root short codes (`GC`, `SI`, `HG`, `CL`, `ES`,
+  `6A`-`6M`) with display names (`GOLD`, `SILVER`, `COPPER`, `SP500`, `WTI`) and `AUDUSD`-style FX pairs, all for the
+  same date; `futures_chain/` uses a third convention (bare currency codes `AUD`/`EUR`/`GBP`, plus unidentified codes
+  `XAB`/`XAF`/`XAI`/`XAK`/`XAP`/`XAU`/`XAV`/`XAY`). Not yet scoped as a migration.
 
 ## Sequencing
 
@@ -244,6 +298,30 @@ removal + casing normalization remain before backfill-resume.
       present and wired. Residual 82,311 pre-fix lowercase manifest rows are a separate, already-tracked repair todo
       (that doc's todo `-007`, re-tagged off `[OPERATOR]` 2026-07-28, gated on a fresh soft-delete-retention check) —
       out of this todo's own done-when, not re-duplicated here.
+- [ ] [OPERATOR] P1. **(NEW 2026-08-11) Correct or retire `migrate_tradfi_canonical_2026_07.py`'s stale
+      `MIGRATE_CHAIN_ADDQM`/`_CHAIN_ITYPES` combo membership** — the script still treats combo as chain-eligible for the
+      quote/margin tail, contradicting the shipped writer (see "2026-08-11 update" above) and the now-superseded 07-19
+      default. Prevents any future `--apply` rerun from recreating the bare/quote-margin split for combo. Repo:
+      market-tick-data-service.
+- [ ] [DATA] P1. **(NEW 2026-08-11) Verify content-identity then delete the orphaned quote=/margin=-form combo
+      duplicates** (confirmed for GOLD/SP500/WTI/BTC, day=2020-01-06; scope the full affected date range across the CME
+      combo corpus before any delete) — prod-bucket delete, needs delete-safety-cite per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Repo: market-tick-data-service.
+- [ ] [DATA] P1. **(NEW 2026-08-11) Implement the instrument_id-blank / combo→combo_chain design** (see "2026-08-11
+      update" above) across the writer (`manifest_finalize.py`, `partitioned_writer.py`, `tardis_cefi_shards.py`), the
+      manifest schema, and any downstream reader/pre-flight-skip-check keyed on the old fake instrument_id or the
+      `combo` string — both TradFi and CEFI (CEFI's Deribit multi-expiry wrapper is the direct `combo` string
+      collision). Migrate existing historical manifest rows written under the old convention. Repos:
+      market-tick-data-service, unified-api-contracts.
+- [ ] [DATA] P2. **(NEW 2026-08-11) Scope the `lifecycle_phase` null-vs-string dtype drift** — confirm whether it's
+      isolated to the combo/futures_chain path split or systemic across historical write eras; fix at the writer if
+      systemic. Repo: market-tick-data-service.
+- [ ] [DATA] P2. **(NEW 2026-08-11) Scope the `underlying` naming-convention inconsistency** (exchange-root short codes
+      vs display names vs currency-pair style, differing between combo/ and futures_chain/) — decide one canonical
+      naming convention per axis and migrate. Repos: market-tick-data-service, unified-api-contracts.
+- [ ] [DATA] P2. **(NEW 2026-08-11) Re-verify whether ES_OPT/options_chain rows hit the same real-captured-row-vs-
+      EXPECTED_CHAIN_AGGREGATE-denominator conflict** found for futures_chain/GOLD — not yet directly checked against
+      the blank-instrument_id expectation. Repo: market-tick-data-service.
 
 ## Progress Log
 
@@ -251,3 +329,14 @@ removal + casing normalization remain before backfill-resume.
 - **context-scout 2026-08-03**: re-verified context_scope, unchanged (6 entries) — all todos closed, remaining work
   already cross-linked via the casing-redrift and delete-safety entries already listed.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
+- **2026-08-11 (interactive session)**: Investigating the 2026-08-10 TradFi manifest `source=` write-failure blast
+  radius (`tradfi_vix_backfill_launch_failed_2026_08_10.md`) surfaced a live GCS path collision between
+  `instrument_type=combo/underlying=GC` and `instrument_type=futures_chain/underlying=GOLD` for day=2020-01-06. Traced
+  root cause to this doc's own now-superseded "Combo → chain-bundle" default (2026-07-19) never having been shipped in
+  the writer, and `migrate_tradfi_canonical_2026_07.py` still encoding it — producing genuine orphaned duplicate GCS
+  objects (bare-form + quote/margin-form for the same combo cell). Operator resolved the semantics in-session: combo→
+  `combo_chain` rename, blank `instrument_id` for all three chain-bundle grouping types, `instrument_type` accepted as
+  dual-meaning for grouping rows. Also found: `lifecycle_phase` column dtype drift (string vs null) between the two
+  paths, and an `underlying` naming-convention inconsistency (short exchange codes vs display names vs FX-pair style)
+  co-existing in `combo/` for the same date. See "2026-08-11 update" section above for full detail; 6 new todos filed.
+  Per operator instruction, no backfill relaunches or migrations execute until these todos are actioned.
