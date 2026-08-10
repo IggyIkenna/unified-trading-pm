@@ -188,4 +188,11 @@ pull any specific checkout's full table back up if you want it before deciding.
   list (credential/wallet-key provisioning, IAM/GitHub-org settings, human design reviews, live-trading sign-off,
   per-checkout stash-drop judgment calls) — every remaining item genuinely requires the operator's own hands or
   judgment. The 2 credential items this round's cheat-sheet flagged are already recorded here as DONE, with the
-  re-sourcing follow-up correctly pointed at (and now extracted from) `deepseek_claude_blended_provider_routing_2026_07_28.md`.
+  re-sourcing follow-up correctly pointed at (and now extracted from)
+  `deepseek_claude_blended_provider_routing_2026_07_28.md`.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — full re-read of all 16 items.
+  This doc's own purpose is curation of genuinely operator-only leftovers (credentials/exchange logins, GitHub UI clicks
+  with no API, git-stash-drop (categorically blocked for agents), permanent hard-stops, human judgment reviews) — every
+  remaining item still requires the operator's own hands per its own definition. Round9 (2026-08-09) already re-verified
+  this same conclusion in detail; no new facts found this pass.

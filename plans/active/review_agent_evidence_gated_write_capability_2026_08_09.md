@@ -197,3 +197,8 @@ local sandbox first:
   you're committing) and hand-resolved, preserving both sides. Content preserved via a session-scratchpad backup between
   attempts per exactly the scratchpad-backup rule referenced above. Final landing succeeded once branch contention
   settled.
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: KEEP-NA, valid — explicit dated operator-ruling
+  citation ('operator direction 2026-08-09, local/human track, not AO-dispatched') on a doc adding new write capability
+  to the review role — a role ~30 live agents boot from continuously. Never re-litigate hard rule applies directly;
+  round9 (same day as authoring) already reached this verdict.
