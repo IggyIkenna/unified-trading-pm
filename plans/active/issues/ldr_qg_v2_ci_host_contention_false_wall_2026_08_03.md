@@ -143,18 +143,14 @@ green one).
       `qg-host-governor` reservation ledger with interactive agent-orchestrator slots.** — unified-trading-pm@b867ae4
       (doc-only, findings below). **NO — it calls the identical `qg_governor_acquire()` code path but writes to a
       DIFFERENT, disjoint ledger directory than interactive slots.**
-- [ ] [INFRA] P2. **Wire the glue-runner CI ledger and the interactive-slot ledger back into ONE shared reservation
-      namespace** (follow-up from the todo above) — `scripts/quality-gates-base/qg-host-governor.sh`'s
-      `_qg_shared_root()` (lines 269-277) special-cases `WORKSPACE_ROOT` matching `*/.tabs/*` (interactive slots →
-      `${ws%/.tabs/*}`, e.g. `/home/ubuntu/unified-trading-system-repos`) vs cwd matching `/opt/github-glue-runners*`
-      (glue-runner CI → hardcoded `$_QG_GLUE_RUNNER_SHARED_ROOT` = `/opt/.qg-governor-glue-shared`) — two DIFFERENT
-      directories on the same host/filesystem (verified live: same device id, different inodes), so admission control on
-      one side has zero visibility into concurrent load from the other. Fix: make `_qg_shared_root()` resolve to ONE
-      common root regardless of caller (e.g. always the fixed host path `/opt/.qg-governor-glue-shared`, or a new env
-      var both the reusable workflow and the interactive-slot shell-env installer set explicitly), then re-verify via a
-      live concurrent-load test (one glue-runner CI run + one interactive slot heavy QG phase at once) that each
-      observes the other's reservation in `--status`. Done-when: both surfaces read/write the same ledger dir,
-      live-verified, shipped.
+- [x] [INFRA] P2. ✅ **Wire the glue-runner CI ledger and the interactive-slot ledger back into ONE shared reservation
+      namespace** (follow-up from the todo above) — unified-trading-pm@\<see Progress Log for SHA\>. Fixed
+      `_qg_shared_root()` in `scripts/quality-gates-base/qg-host-governor.sh` so the glue-runner branch
+      (`/opt/github-glue-runners*`) now resolves to the SAME directory the interactive-slot branch (`*/.tabs/*`) already
+      derives in production, live-verified via a real (non-dead-PID) cross-topology reservation test. **NOT** unified
+      onto `/opt/.qg-governor-glue-shared` as this todo's own text suggested as the first option — see Progress Log for
+      why that was live-disproven mid-fix (every interactive-slot process is sandboxed away from `/opt` entirely;
+      unified onto a `/home`-based root instead). Full detail in the Progress Log entry below.
 - [ ] [INFRA] P2. **Determine whether the shared host running both the interactive agent-orchestrator slot fleet and the
       per-repo GH Actions glue-runner CI is undersized for their combined peak concurrent demand.** Measure physical
       core count + typical interactive-slot heavy-QG-phase concurrency + glue-runner concurrency during a representative
@@ -325,3 +321,46 @@ and just burn more contended compute.
   against ITS OWN (disjoint, and at the time near-empty) ledger while the interactive slots' load lived in a ledger the
   CI leg never looks at, and vice versa — functionally equivalent to no shared admission control even though the code
   path is identical. Filed the follow-up wiring todo above per this todo's own done-when instruction.
+
+- **2026-08-10 (slot-14, infra craft) — todo 2 RESOLVED, ledgers unified, but NOT onto `/opt` as originally suggested.**
+  Started implementing the todo's first suggested option (hardcode both branches of `_qg_shared_root()` to
+  `/opt/.qg-governor-glue-shared`) and hit a live, disqualifying discovery mid-fix: **every interactive
+  agent-orchestrator worker process is sandboxed AWAY from `/opt` entirely, always.** Confirmed via `/proc/self/cgroup`
+  → this worker's own process tree is a descendant of the `orchestrator.service` systemd unit; `/proc/self/mountinfo`
+  shows `/` bind-mounted `ro` specifically for that mount namespace (per-mount options `ro,nosuid,relatime` vs. the
+  underlying superblock's real `rw,discard,...`) — a systemd `ProtectSystem`-style sandbox scoped to `ReadWritePaths=`
+  under `/home` + `/tmp`, NOT a real host disk/filesystem incident (ruled that out explicitly: cross-checked that
+  `rsyslogd`/`amazon-ssm-agent`/the AO server itself keep writing to `/var/log` in real time on the SAME host at the
+  SAME moment every write attempt from this worker's own shell to `/opt`, `/var`, or `/etc` failed EROFS, with AND
+  without the Bash tool's own sandbox override — `dangerouslyDisableSandbox: true` made no difference, ruling out a
+  Bash-tool-layer sandbox and confirming it's a systemd/cgroup-layer one instead). This means hardcoding the shared
+  ledger to `/opt/.qg-governor-glue-shared` would have "fixed" the directory-unification bug on paper while silently
+  degrading admission control to unlocked best-effort for the interactive-slot side specifically (via
+  `_qg_ledger_with_lock`'s existing mkdir-failure degrade — no crash, just zero real coordination, defeating the entire
+  point of this todo). Did NOT file this as a separate incident doc — it is not a bug, it is working-as-designed host
+  hardening (protects the shared VM from a worker agent's mistakes), just previously undocumented in this corpus; noting
+  it here and in the code comments so a future investigator doesn't waste time treating `/opt` write failures from an
+  interactive slot as a disk/fs incident. **Actual fix shipped**: `_qg_shared_root()`'s glue-runner branch
+  (`/opt/github-glue-runners*`) now resolves to `${HOME:-/home/ubuntu}/unified-trading-system-repos` (a new
+  `_QG_HOST_SHARED_LEDGER_ROOT_DEFAULT` constant, overridable via `QG_HOST_SHARED_LEDGER_ROOT` env, read fresh per call)
+  — the SAME directory the interactive-slot branch (`*/.tabs/*`) already derives via its original `${ws%/.tabs/*}`
+  stripping in production (every real WORKSPACE_ROOT on this one live host is
+  `${HOME}/unified-trading-system-repos/.tabs/<N>`), so both surfaces genuinely converge without changing the
+  interactive-slot branch's own derivation (which stays dynamic — kept that way deliberately after an initial attempt to
+  also hardcode the `.tabs` branch broke `test-qg-cross-host.sh`'s per-test `$TMP`-isolated ledger dirs; confirmed via a
+  stash-and-rerun against the pre-fix baseline that this was a genuine regression I introduced, not pre-existing).
+  `/opt/.qg-governor-glue-shared` is no longer referenced by the ledger path at all; removed its now-dead
+  pre-provisioning step from `setup-glue-runners.sh`'s `install` (no replacement provisioning needed — the new
+  `/home`-based dir is already writable by both the glue-runner `RUNNER_USER` and every interactive slot, both `ubuntu`,
+  with no new setup). **Live-verified the actual cross-topology fix** (not just unit tests): added a REAL (non-dead-PID,
+  backgrounded `sleep`) reservation under a simulated glue-runner `WORKSPACE_ROOT`, then read it back via
+  `qg-host-governor.sh --status` under a simulated interactive-slot `WORKSPACE_ROOT` — the glue-sim reservation appeared
+  in the interactive side's live-reservations list while the sim process was alive, and disappeared (correctly, via the
+  existing dead-PID sweep) once it exited. Also ran the FULL `test-qg-*.sh` + `test-trap-release.sh` suite (34 files)
+  before and after (via `git stash`/`stash pop`, tree otherwise clean) to separate genuine regressions from pre-existing
+  flakiness: `test-qg-governor-wait-time.sh`'s one failure (`contended acquire recorded wait=0`) and
+  `test-qg-mem-cap.sh`'s SKIP (`systemd-run not available`) reproduce IDENTICALLY on the unmodified baseline —
+  pre-existing, unrelated to this change, not touched. Updated `test-qg-glue-runner-shared-root.sh` (renamed the old
+  `_QG_GLUE_RUNNER_SHARED_ROOT` var references, flipped its test 3 assertion from "unchanged .tabs stripping" to "now
+  collapses to the same root as glue-runner CI", added a 6th case proving `QG_HOST_SHARED_LEDGER_ROOT` overrides both
+  branches at once) — all 8 assertions pass.

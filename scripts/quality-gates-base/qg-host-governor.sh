@@ -63,6 +63,12 @@
 #   QG_TOTAL_GOVERNOR_DIR total-instance token dir (default: host-shared dir, same
 #                         placement rule as the RAM ledger — see _qg_shared_root)
 #   QG_TOTAL_GOVERNOR_DISABLE  set to "true" to make the total-instance gate a no-op
+#   QG_HOST_SHARED_LEDGER_ROOT  override the ONE shared root both interactive slots
+#                         (.tabs) AND glue-runner CI (/opt/github-glue-runners*)
+#                         collapse to for ledger placement (default
+#                         ${HOME:-/home/ubuntu}/unified-trading-system-repos — NOT
+#                         /opt, which is outside every interactive slot's sandboxed
+#                         ReadWritePaths) — see _qg_shared_root
 #   QG_HOST_RAM_ABORT_PCT       runtime-abort-monitor trip point, host-used % (default 80)
 #   QG_WATCHDOG_INTERVAL_SECONDS  poll interval for the runtime abort-monitor (default 15)
 #   QG_WATCHDOG_CONSECUTIVE_HITS  consecutive over-threshold samples before abort (default 2)
@@ -244,34 +250,75 @@ qg_host_capacity() {
 # so the upcoming dual-gate admission can bound the SUM of concurrent peak-RSS
 # (the 6×UTL stacking case) instead of a fixed count. One row per reservation:
 #     <pid> <repo> <rss_mb> <ts>
-# HOST-SHARED path: strip the per-slot `/.tabs/<N>` suffix off WORKSPACE_ROOT so
-# every slot on a host shares ONE ledger — raw WORKSPACE_ROOT is per-slot (set by
-# setup-tab-worktrees.sh), which would make the ledger per-slot and defeat
-# cross-slot coordination. On a single-clone host the strip is a no-op.
 # SSOT: plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
 #
-# GLUE-RUNNER topology (plans/archive/2026_08/qg_governor_glue_runner_ledger_coordination_2026_08_03.md):
-# on the GHA self-hosted glue-runner host, each repo's CI job runs from its own
-# POOL_TAG-suffixed runner dir (/opt/github-glue-runners[-<repo>]/glue-N/_work/<repo>),
-# so quality-gates.sh's own `WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"`
-# resolves to that per-repo-job path — the same defeat-cross-coordination problem as
-# .tabs, one topology layer up (confirmed live 2026-08-02: ~10 repos' independently-empty
-# ledgers on one host). Collapse ANY such path to one host-shared dir — NOT the
-# per-pool `/opt/github-glue-runners[-<repo>]` parent itself (verified 2026-08-03 via SSM:
-# every pool's top-level dir is root:root 0755, so the glue-runner user `ubuntu` cannot
-# mkdir under it — the same class of failure setup-glue-runners.sh's own 2026-07-16
-# incident comment describes for SLOT_VENV/SLOT_REPO). setup-glue-runners.sh's `install`
-# pre-provisions this dir ubuntu-owned so new hosts self-provision; already applied to the
-# one live host via a one-time root SSM step (2026-08-03).
-_QG_GLUE_RUNNER_SHARED_ROOT="/opt/.qg-governor-glue-shared"
+# ONE SHARED ROOT FOR EVERY CALLER TOPOLOGY (fixed 2026-08-10,
+# ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md todo 2 — closes the gap todo 1
+# on that doc found: interactive slots and glue-runner CI resolved to two genuinely
+# DISJOINT directories, so admission control on one side had zero visibility into
+# concurrent load from the other, even though both run on the identical shared VM and
+# both correctly call qg_governor_acquire() in reservation mode). Previously:
+#   - interactive slots (WORKSPACE_ROOT matching `*/.tabs/<N>`) stripped to the
+#     per-HOST root (e.g. /home/ubuntu/unified-trading-system-repos) — correct
+#     cross-SLOT coordination, but a path private to this topology.
+#   - glue-runner CI (WORKSPACE_ROOT matching `/opt/github-glue-runners[-<repo>]/...`,
+#     one POOL_TAG-suffixed dir per repo) collapsed to /opt/.qg-governor-glue-shared —
+#     correct cross-REPO coordination (plans/archive/2026_08/
+#     qg_governor_glue_runner_ledger_coordination_2026_08_03.md), but a path private
+#     to THIS topology, never the same as the interactive-slot one above even on the
+#     SAME host (live-verified 2026-08-10: same filesystem device id, different
+#     inodes — not a symlink, genuinely two ledgers).
+# Fix: BOTH topologies now collapse to the identical shared root, so a `--status` run
+# from either surface reads the other's live reservations.
+#
+# WHY THE SHARED ROOT IS /home/ubuntu/unified-trading-system-repos, NOT
+# /opt/.qg-governor-glue-shared (rejected during this same 2026-08-10 fix, do not
+# revert to it without re-reading this): every interactive agent-orchestrator worker
+# process is a descendant of the `orchestrator.service` systemd unit (confirmed via
+# `/proc/self/cgroup` → `system.slice/orchestrator.service`), and that unit's own
+# `/proc/self/mountinfo` shows `/` bind-mounted `ro` FOR THAT MOUNT NAMESPACE
+# specifically (per-mount options `ro,nosuid,relatime` vs. the underlying superblock's
+# real `rw,discard,...` — a systemd `ProtectSystem`-style sandbox scoped to
+# `ReadWritePaths=` under /home + /tmp, not a real host disk/filesystem incident —
+# confirmed live 2026-08-10 by cross-checking that `rsyslogd`/`amazon-ssm-agent`/the AO
+# server itself keep writing to /var/log in real time on the SAME host while every
+# write attempt from an agent-orchestrator worker shell to /opt, /var, or /etc fails
+# EROFS, with and without the Bash tool's own sandbox override). So /opt is
+# UNREACHABLE from every interactive slot's shell by design, always — hardcoding the
+# shared ledger there would silently degrade admission control to unlocked
+# best-effort for the interactive-slot side specifically (via
+# _qg_ledger_with_lock's existing mkdir-failure degrade — no hard failure, but zero
+# real coordination, defeating the point of this fix). /home IS in the sandbox's
+# ReadWritePaths (proven: every interactive slot's own git worktree already lives
+# there) and the glue-runner CI systemd unit runs as the SAME OS user (`ubuntu`,
+# unsandboxed — it already had /opt access, e.g. its own historical ledger writes up
+# to 2026-08-05), so /home/ubuntu is writable by BOTH topologies without any new
+# provisioning step.
+#
+# Overridable via QG_HOST_SHARED_LEDGER_ROOT (env, read fresh on every
+# _qg_shared_root() call — not captured to a fixed var at source time — so a caller
+# can export it at runtime without re-sourcing this file, e.g. from
+# install-qg-governor-shell-env.sh or the reusable CI workflow) for a host with a
+# different sandbox/ReadWritePaths shape — falls back to unlocked best-effort ledger
+# writes via _qg_ledger_with_lock's existing mkdir-failure degrade, same as any other
+# missing-dir/unwritable-dir case, never a hard failure.
+_QG_HOST_SHARED_LEDGER_ROOT_DEFAULT="${HOME:-/home/ubuntu}/unified-trading-system-repos"
 _QG_LEDGER_FD=220
 
+# .tabs branch keeps its ORIGINAL dynamic `${ws%/.tabs/*}` derivation as the fallback
+# (not the fixed default directly) so a synthetic WORKSPACE_ROOT under an isolated test
+# root (e.g. test-qg-cross-host.sh's `$TMP/h_.../.tabs/1`) still strips to that test's
+# OWN isolated dir, not the real host's shared ledger — on the one real host, that
+# dynamic derivation already equals $_QG_HOST_SHARED_LEDGER_ROOT_DEFAULT (WORKSPACE_ROOT
+# is always ${HOME}/unified-trading-system-repos/.tabs/<N> there), so production
+# unification with the glue-runner branch below still holds; QG_HOST_SHARED_LEDGER_ROOT
+# overrides BOTH branches when a caller needs to force agreement explicitly.
 _qg_shared_root() {
     local ws="${WORKSPACE_ROOT:-}"
     case "$ws" in
         "")                        echo "${TMPDIR:-/tmp}" ;;
-        */.tabs/*)                 echo "${ws%/.tabs/*}" ;;
-        /opt/github-glue-runners*) echo "$_QG_GLUE_RUNNER_SHARED_ROOT" ;;
+        */.tabs/*)                 echo "${QG_HOST_SHARED_LEDGER_ROOT:-${ws%/.tabs/*}}" ;;
+        /opt/github-glue-runners*) echo "${QG_HOST_SHARED_LEDGER_ROOT:-$_QG_HOST_SHARED_LEDGER_ROOT_DEFAULT}" ;;
         *)                         echo "$ws" ;;
     esac
 }

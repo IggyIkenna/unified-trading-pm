@@ -350,12 +350,16 @@ cmd_install() {
   # venv and git clone both accept an existing EMPTY dir, so pre-creating is the tight fix (rather
   # than handing the runner user ownership of ${RUNNER_BASE}).
   install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${SLOT_VENV}" "${SLOT_REPO}"
-  # qg-host-governor.sh's shared reservation-ledger dir for the glue-runner topology — same
-  # root-owned-parent problem as above, one level up (RUNNER_BASE is per-POOL_TAG; this path is
-  # NOT), so it needs its own pre-create. Idempotent: every repo's `install` calls this on the
-  # SAME absolute path, first call creates it, the rest are no-ops.
-  # SSOT: scripts/quality-gates-base/qg-host-governor.sh's _QG_GLUE_RUNNER_SHARED_ROOT.
-  install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "/opt/.qg-governor-glue-shared"
+  # qg-host-governor.sh's shared reservation-ledger dir used to live under
+  # /opt/.qg-governor-glue-shared (pre-created here, same root-owned-parent problem as above)
+  # — REMOVED 2026-08-10 (ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md todo 2): every
+  # interactive agent-orchestrator slot's shell runs sandboxed to /home+/tmp ReadWritePaths
+  # (systemd ProtectSystem-style, confirmed live via /proc/self/mountinfo — /opt is genuinely
+  # unreachable from that side), so the ledger root moved to
+  # ${RUNNER_USER}'s own home (unified_trading_system_repos sibling — see
+  # scripts/quality-gates-base/qg-host-governor.sh's _QG_HOST_SHARED_LEDGER_ROOT_DEFAULT),
+  # which both this runner user and every interactive slot can already write to with zero new
+  # provisioning. No pre-create needed here anymore — _qg_ledger_with_lock mkdir -p's it lazily.
   # PER-RUNNER tool cache (see glue-runner-run.sh for the measured race that killed the shared one).
   for inst in $(all_instances); do
     install -d -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${RUNNER_BASE}/${inst}/toolcache"
