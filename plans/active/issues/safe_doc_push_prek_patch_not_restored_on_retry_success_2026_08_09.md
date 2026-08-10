@@ -130,16 +130,16 @@ mitigations, cheapest first:
       → detected, exit 1 from the check function; no patch → clean exit 0).
 
       **Reconciled against todo-1's note that `locked_git_commit()`'s `_prek_race_snapshot`/`_prek_race_check`
-                          (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
-                          retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
-                          before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
-                          and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
-                          `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
-                          behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
-                          `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
-                          only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
-                          both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
-                          redundant, so both mechanisms are now kept.
+                                  (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
+                                  retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
+                                  before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
+                                  and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
+                                  `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
+                                  behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
+                                  `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
+                                  only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
+                                  both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
+                                  redundant, so both mechanisms are now kept.
 
 - [x] ✅ [DEVOPS] P2. **RE-SCOPED (2026-08-10, per todo 1's verdict — reproduction did NOT confirm a genuine prek
       defect):** do not file upstream against prek. Instead, document in `scripts/dev/safe-doc-push.sh`'s own header
@@ -220,3 +220,20 @@ mitigations, cheapest first:
   (`plan-commit-sha-evidence` gate confirmed); `fe47a4b219` ("docs(scripts): safe-doc-push.sh header note on prek
   patch-restore reproduction verdict") matches the claimed change exactly (same file, same header-comment content, same
   commit message topic) — the work was genuinely done, only the citation was wrong.
+- **2026-08-10 (slot 23, unrelated task — hit the `check_orphaned_prek_patches()` safety net firing live)**: a
+  `safe-doc-push.sh` archival commit for a different doc
+  (`ao_main_review_force_compact_idle_gate_unreachable_2026_08_09`) succeeded (push `dd11edb0d4`) but exited 9 with an
+  orphaned-patch warning: `~/.cache/prek/patches/1786341882503-3487590.patch` (mtime 2026-08-10T06:04:42Z), diffing an
+  UNRELATED file this session never touched —
+  `plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` (a `status: active -> complete` flip +
+  an archived banner, attributed in the patch text to "plan_reconciler agt-c7578b"). The target path doesn't exist —
+  only `plans/active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md` does, with no banner and `status: active` —
+  so that other process's git-mv-plus-edit never landed at all, not just the edit. My own working tree was clean
+  (`git status --porcelain` empty) both before and after, confirming this todo's own safety net
+  (`check_orphaned_prek_patches()`) is doing exactly its job: catching a leftover patch from a DIFFERENT concurrent
+  process sharing this host's `~/.cache/prek/patches/` cache dir (consistent with CLAUDE.md's documented "two
+  operators/sessions sharing ONE slot's checkout" collision class), not a defect in this run's own commit. Did NOT apply
+  the patch or attempt the batch4_finalize archival myself — wrong task/repo scope, and the target's fuller context
+  (whether that archival is even still current) belongs to whichever session owns it. Left the patch file in place for
+  that owner to recover; noting here per this doc's own established practice of logging live recurrences of this failure
+  signature.
