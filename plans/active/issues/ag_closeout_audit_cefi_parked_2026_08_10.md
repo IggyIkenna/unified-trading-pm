@@ -18,7 +18,7 @@ related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_satellite_ao_dispatch_batch18_2026_08_10.md,
-    /plans/active/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md,
+    /plans/archive/2026_08/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md,
   ]
 parent_epic: agent_operating_framework_master
 created: 2026-08-10

@@ -557,8 +557,8 @@ book_snapshot_5, so 1h candles are at least partially secured before the timeout
 before book_snapshot_5 ate the window → 04-27 trades will come from cascade in 04-28.
 
 **Manifest staleness issue** persists (intermittent, 2.4% failure rate — age=3-8s rejected by 86400s threshold). Already
-tracked as P3 issue `/plans/active/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md`. Non-blocking, no new
-action.
+tracked as P3 issue `/plans/archive/2026_08/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md`. Non-blocking,
+no new action.
 
 **Infrastructure armed**:
 
@@ -718,7 +718,7 @@ cascade from 04-26 (139) + 04-27 (57 trades + 57 book). The final dates will fac
 
 **Stale manifest errors expanded**: Now observed on 04-24 (age=2-12s) and 04-26 (age=3-8s) in addition to previously
 noted occurrences. All report age <15s against threshold=86400s — comparison direction clearly inverted. Issue doc:
-`/plans/active/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md`.
+`/plans/archive/2026_08/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md`.
 
 **Lessons reinforced**:
 

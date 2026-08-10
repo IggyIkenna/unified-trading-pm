@@ -17,7 +17,7 @@ tags: [cefi, ao-dispatch, close-out, batch-18, satellite-docs, mdps, manifest, s
 related:
   [
     /plans/active/cefi_satellite_ao_dispatch_batch18_finalize_2026_08_10.md,
-    /plans/active/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md,
+    /plans/archive/2026_08/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -46,7 +46,7 @@ source: >-
   bounded AO-eligible work.
 context_scope:
   [
-    /plans/active/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md,
+    /plans/archive/2026_08/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 ---
