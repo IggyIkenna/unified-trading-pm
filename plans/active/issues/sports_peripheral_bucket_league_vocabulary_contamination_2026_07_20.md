@@ -246,7 +246,7 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
   2026-08-01 (root cause fixed, todo split, delete-safety gate cleared, migration script shipped); the remaining
   `[DATA] P2` apply todo now reads as bounded on its own text (no `[OPERATOR]` step required, clear done-when). Ran the
   conflict-check (`ao-dispatch-batch-naming-and-conflict-check.md` §3) before reclassifying and found a CONFLICT: the
-  active `assigned_vm: planning` plan `sports_closeout_track_x_hygiene_2026_07_25.md` (same
+  active `assigned_vm: planning` plan `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` (same
   `parent_epic: sports_master`) already carries the verbatim-identical open todo ("Migrate the 9,733 legacy-contaminated
   `instruments-store-sports-prd` objects... Done when: a fresh census... returns 0 objects...", line 138) and explicitly
   names this issue doc as its own "Detail:"/"Full detail:" reference — i.e. dispatch for this exact work already happens
@@ -256,8 +256,8 @@ Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl
 
 - **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — re-confirmed the 2026-08-06 conflict-check finding
   still holds against today's ledger: the sole open todo (apply the migration to prod) is verbatim-duplicated in the
-  sibling AO-dispatched plan `sports_closeout_track_x_hygiene_2026_07_25.md` (line 138, backlog task
-  `sports_closeout_track_x_hygiene-006`, `status: queued`/`done_sha: null` as of the 2026-08-08 false-done audit
+  sibling AO-dispatched plan `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` (line 138, backlog
+  task `sports_closeout_track_x_hygiene-006`, `status: queued`/`done_sha: null` as of the 2026-08-08 false-done audit
   `plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md`, which independently verified
   0 objects have actually moved and the 9,733-object count is unchanged) — dispatch for this exact work already exists
   live. Flipping this doc too would create a duplicate AO task for identical work. No flip, no extraction.

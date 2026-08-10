@@ -668,12 +668,12 @@ objects, needs its own copy+swap pass) + the coverage-registry refresh + the hum
 
 ## MERGED TRACKING 2026-07-27 — `LEAGUE_ID_TO_TIER` mapping + 28-unmapped-`league_id` gap analysis (from `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`)
 
-Per `sports_closeout_track_x_hygiene_2026_07_25.md` todo 2 (the canonical-form conflict between that plan and this
-closeout's Track V) — **this section is now the single settled location** for the two open gap-analysis items that
-plan's own "P1 — gap-analysis follow-ups" section tracks as its own todos 1-2. This is a tracking merge only: it does
-not implement the mapping, and the source plan's todos stay open there (still the execution home for that work) — this
-section exists so the mapping + gap list are visible from the league_id-migration tracking, not only from the
-originating plan.
+Per `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` todo 2 (the canonical-form conflict between
+that plan and this closeout's Track V) — **this section is now the single settled location** for the two open
+gap-analysis items that plan's own "P1 — gap-analysis follow-ups" section tracks as its own todos 1-2. This is a
+tracking merge only: it does not implement the mapping, and the source plan's todos stay open there (still the execution
+home for that work) — this section exists so the mapping + gap list are visible from the league_id-migration tracking,
+not only from the originating plan.
 
 **⚠️ Vocabulary flag (the actual conflict this merge resolves):** the source plan's own text labels raw api-football
 display strings (`PREMIER_LEAGUE`, `BUNDESLIGA`, `SERIE_A`, `LA_LIGA`, …) plus the odds_api-native `SOCCER_*` machine
@@ -862,11 +862,11 @@ offered to the queue once these are the only real blockers.
   (`odds_horizon_bucket` MDPS reprocess re-run, `batch_footystats` copy+swap apply script) — confirmed still outstanding
   per this doc's own 2026-07-28 re-dispatch checks, no newer evidence contradicts that.
 
-- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — re-checked against today's accumulated
-  precedents. The sole open todo (ship Track H's denominator once its 2 blockers land) is already tracked via the
-  dedicated `sports_track_h_denominator_gated_2026_07_28.md` / `sports_track_h_denominator_prereqs_2026_07_28.md` pair,
-  itself dependency-gated on an unrelated `market-tick-data-service` QG-red repo-blocker (`RB-166e706f`) not yet
-  confirmed cleared — per `plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md`'s "Parked —
-  dependency-gated" entry (today). That same ledger separately flags this doc's own untracked residual (the human-gated
-  final delete of ~256,954 old non-canonical objects) for a future dedicated delete-safety pass, not a batch todo — a
-  new finding, not a reason to flip. No flip, no extraction (would duplicate the tracked prereqs pair).
+- **round11 RECLASSIFY+satellite sweep 2026-08-09**: KEEP-NA, valid — re-checked against today's accumulated precedents.
+  The sole open todo (ship Track H's denominator once its 2 blockers land) is already tracked via the dedicated
+  `sports_track_h_denominator_gated_2026_07_28.md` / `sports_track_h_denominator_prereqs_2026_07_28.md` pair, itself
+  dependency-gated on an unrelated `market-tick-data-service` QG-red repo-blocker (`RB-166e706f`) not yet confirmed
+  cleared — per `plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md`'s "Parked — dependency-gated" entry
+  (today). That same ledger separately flags this doc's own untracked residual (the human-gated final delete of ~256,954
+  old non-canonical objects) for a future dedicated delete-safety pass, not a batch todo — a new finding, not a reason
+  to flip. No flip, no extraction (would duplicate the tracked prereqs pair).

@@ -10,7 +10,7 @@ summary: >-
   are deliberately NOT duplicated here. What remains is 4 todos: 2 orphan-satellite-plan reconciliations (rescoped per
   task_template.md finding S / operator ruling to drop open-ended judgment), 1 root-cause+fix+migrate data-correctness
   item, and 1 ship-2-already-verified-changes item.
-status: active
+status: complete # (was: active) 2026-08-10 — all 4 todos done, archived via the standard 6-step ritual
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -20,7 +20,7 @@ tags: [sports, ao-dispatch, close-out, track-x, plan-hygiene, satellite-docs]
 related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_closeout_track_x_hygiene_2026_07_25_finalize.md,
+    /plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25_finalize.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md,
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
@@ -50,12 +50,19 @@ drift_direction: advance-code
 context_scope:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_closeout_track_x_hygiene_2026_07_25_finalize.md,
+    /plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25_finalize.md,
     /plans/active/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md,
     /codex/02-data/sports-gcs-path-ssot.md,
     market-tick-data-service/scripts/sports/league_id_relocation/migrate_instruments_store_sports_league_vocabulary_2026_08_04.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10.** All todos done; the finalize twin
+> (`plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25_finalize.md`) confirmed the parent closeout's Track
+> X pointer reads ✅ DONE (todo 1) and Track V's league_id section cites the merged tracking location (todo 2), then
+> archived this doc alongside itself. Superseded by nothing — the work shipped across `unified-trading-pm`,
+> `unified-api-contracts`, `instruments-service`, and `market-tick-data-service` and is permanent record in those repos'
+> git history.
 
 # Sports closeout Track X — plan/doc hygiene + orphan-satellite reconciliation
 

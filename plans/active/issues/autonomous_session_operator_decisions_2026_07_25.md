@@ -331,10 +331,11 @@ sports) into parent+child implicitly ratified option A for sports too.
 
 **Status**: resolved — option A executed. `sports_consolidated_closeout_2026_07_19.md` trimmed 986L→753L (well under the
 1000L hard cap); split into 3 new AO-dispatch children (`sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`,
-`sports_closeout_track_x_hygiene_2026_07_25.md`, `sports_closeout_track_s2_foldin_2026_07_25.md`) + their gated finalize
-plans, wired via `depends_on`/`gate_on_depends`/`related:`. The 3 queued fixes (stale `51/11`→`65/39` count, the
-`96`→`94` arithmetic slip, the missing casing-contradiction cross-reference) were applied to the parent in the same
-pass. Commits: `647987de1`, `474296235`, `c24129ea7`, `95b9d2327`, `32fad89bb`, `dfbee37ef` — all verified durable on
+`/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md`,
+`sports_closeout_track_s2_foldin_2026_07_25.md`) + their gated finalize plans, wired via
+`depends_on`/`gate_on_depends`/`related:`. The 3 queued fixes (stale `51/11`→`65/39` count, the `96`→`94` arithmetic
+slip, the missing casing-contradiction cross-reference) were applied to the parent in the same pass. Commits:
+`647987de1`, `474296235`, `c24129ea7`, `95b9d2327`, `32fad89bb`, `dfbee37ef` — all verified durable on
 `origin/live-defi-rollout`.
 
 ## 10. Archive the 2 fully-done-but-soft-evidenced cross-cutting index docs, or keep them live? (2026-07-26, cross-cutting)

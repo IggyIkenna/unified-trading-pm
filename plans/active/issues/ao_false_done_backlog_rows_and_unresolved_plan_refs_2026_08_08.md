@@ -197,9 +197,9 @@ plan + verifying the `done_sha`, never from the row's status alone.
       executed, and that same slot-8 commit deliberately left the plan-level P2 checkbox open ("Plan- level P2 checkbox
       stays open (gated on the full migration, not just the script)"). Verified against the REAL object count per this
       item's own instruction, not just the prose: read the cited plan
-      (`plans/active/sports_closeout_track_x_hygiene_2026_07_25.md` line 138) — still honestly `- [ ]`, "Done when: a
-      fresh census of `instruments-store-sports-prd` returns 0 objects carrying the contaminated vocabulary" — and the
-      split sub-todos in `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`: todo 2
+      (`plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` line 138) — still honestly `- [ ]`, "Done
+      when: a fresh census of `instruments-store-sports-prd` returns 0 objects carrying the contaminated vocabulary" —
+      and the split sub-todos in `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`: todo 2
       (build+dry-run) is `[x]` but explicitly documents the dry-run was NOT run; todo 3 ("Apply the migration to prod,
       gated on todo 2's dry-run review") is still `- [ ]`. No object has actually moved — the 9,733-object count is
       unchanged from its 2026-07-20 census. So the false-done state the 03:15 UTC audit snapshot captured (backlog row
@@ -442,8 +442,8 @@ plan + verifying the `done_sha`, never from the row's status alone.
   `status: "queued"`, `done_sha: null`. `976786c5` (market-tick-data-service, slot-8, 2026-08-04) only built + shipped
   the migration SCRIPT — the dry-run was never executed and that same commit's own plan-flip explicitly left the
   plan-level checkbox open. Verified against the real object count per this item's instruction, not just prose: the
-  cited plan (`sports_closeout_track_x_hygiene_2026_07_25.md` line 138) is still honestly `- [ ]`, and the issue doc's
-  own gated "Apply the migration to prod" sub-todo
+  cited plan (`/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md` line 138) is still honestly
+  `- [ ]`, and the issue doc's own gated "Apply the migration to prod" sub-todo
   (`sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`) is still `- [ ]` — no object has actually
   moved, the 9,733-object count is unchanged. Both the backlog and the plan checkbox already reflect the honest open
   state; nothing to correct. See the checklist item above for the full trail.
@@ -522,9 +522,10 @@ plan + verifying the `done_sha`, never from the row's status alone.
   no code shipped, no backlog rows touched.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
 
-- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA-STALE, valid — `grep -cE
-  '^[[:space:]]*[-*] \[ \]'` = **2**, both citation-pointers already correctly marked `➡️ EXTRACTED 2026-08-09 to
-  ao_satellite_ao_dispatch_batch12_2026_08_09.md` (todos 6 and 7) — real remaining work on this doc is zero. Note: the
-  round7 (2026-08-08) marker's claim to have flipped `assigned_vm: NA → planning` never actually landed in this doc's
-  own frontmatter (still `NA` as of this read) — but this is now moot, since both real items are already covered
-  elsewhere; re-flipping would be a pointless duplicate dispatch against work with nothing left to do. Not re-flipping.
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep)**: KEEP-NA-STALE, valid —
+  `grep -cE '^[[:space:]]*[-*] \[ \]'` = **2**, both citation-pointers already correctly marked
+  `➡️ EXTRACTED 2026-08-09 to ao_satellite_ao_dispatch_batch12_2026_08_09.md` (todos 6 and 7) — real remaining work on
+  this doc is zero. Note: the round7 (2026-08-08) marker's claim to have flipped `assigned_vm: NA → planning` never
+  actually landed in this doc's own frontmatter (still `NA` as of this read) — but this is now moot, since both real
+  items are already covered elsewhere; re-flipping would be a pointless duplicate dispatch against work with nothing
+  left to do. Not re-flipping.
