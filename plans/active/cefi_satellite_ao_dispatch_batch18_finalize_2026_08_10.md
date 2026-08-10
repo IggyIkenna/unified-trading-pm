@@ -5,7 +5,7 @@ summary: >-
   Finalize plan for `cefi_satellite_ao_dispatch_batch18_2026_08_10.md`. Gated behind batch18's sole todo completing
   (`gate_on_depends: true`). On completion: reconcile the source issue doc's checkbox, verify linkage, archive if fully
   resolved.
-status: completed
+status: active
 nature: process
 asset_group: [cefi]
 stage: [meta]
@@ -67,7 +67,7 @@ context_scope:
       removed this commit. Source: `cefi_satellite_ao_dispatch_batch18_2026_08_10.md`. — `unified-trading-pm@5f012d2842`
       (archival).
 
-- [x] ✅ [DOC] P3. **Verify closeout linkage.** `check_ag_closeout_linkage.py --tranche cefi` → 0 cefi orphans (756 docs
-      scanned, baseline 0). Linkage green. Source:
-      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`. — `unified-trading-pm@<sha>` (this
-      commit).
+- [ ] [DOC] P3. **Verify closeout linkage.** Run `check_ag_closeout_linkage.py --tranche cefi` and confirm 0 cefi
+      orphans. If the source doc was archived, verify no broken referrers remain. Source:
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`. **Done when**: linkage check is
+      green for cefi.

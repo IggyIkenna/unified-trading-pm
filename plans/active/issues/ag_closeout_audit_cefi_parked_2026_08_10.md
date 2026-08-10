@@ -5,7 +5,7 @@ summary: >
   Parked findings from the 2026-08-10 `/ag-closeout-audit cefi` run (Phase 0-2 only, slot 27, dispatch agt-dab448). 0
   parked findings — zero BLOCKED-OPERATOR-DECISION, zero conflict-gated, zero operator-gated. The one genuinely orphaned
   doc (`mdps_manifest_staleness_check_inverted_2026_08_10.md`) carries bounded AO-eligible work extracted into
-  `cefi_satellite_ao_dispatch_batch18_2026_08_10.md` (status: completed, archived). One mechanical fix applied in-run:
+  `cefi_satellite_ao_dispatch_batch18_2026_08_10.md` (status: draft). One mechanical fix applied in-run:
   `mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md` retagged from `[cefi, cross-cutting]` → `[cross-cutting]`.
 status: open
 nature: issue
@@ -17,7 +17,7 @@ tags: [ag-closeout-audit, cefi, parked, 2026-08-10]
 related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch18_2026_08_10.md,
+    /plans/active/cefi_satellite_ao_dispatch_batch18_2026_08_10.md,
     /plans/archive/2026_08/issues/mdps_manifest_staleness_check_inverted_2026_08_10.md,
   ]
 parent_epic: agent_operating_framework_master
@@ -48,8 +48,7 @@ discovered. 7 never-cited docs classified per-doc:
 No findings meet the operator-gated/conflict-gated/time-gated bar. The single orphaned doc
 (`mdps_manifest_staleness_check_inverted_2026_08_10.md`) carries bounded AO-eligible work (investigate MDPS staleness
 comparison logic — read-only, code + config check) extracted into `cefi_satellite_ao_dispatch_batch18_2026_08_10.md`
-(status: completed, archived 2026-08-10). Root cause: NOT inverted comparison — transient GCS/parse error. Fix:
-`unified-trading-library@26294ddf71`.
+(status: draft).
 
 ## Resolved this run
 
