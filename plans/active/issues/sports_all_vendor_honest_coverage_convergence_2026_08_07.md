@@ -844,3 +844,10 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   the AO-dispatch pattern just set up in this doc's own new todo above; the two todos now track overlapping scope (both
   "keep the odds fleet alive to completion") and should be treated as the same underlying work, not duplicated effort —
   the sibling doc already cross-references this doc as "Full live tracker," closing the loop in one direction.
+- **2026-08-10T~10:06Z (slot 25, `sports_all_vendor_honest_coverage_convergence-9e96b5aa58cd`)**: Odds babysit dispatch
+  — fleet: single live instance `mtds-backfill-odds-smallchunk14-20260809` RUNNING, booted ~09:42-09:52Z; run.log
+  genuine (MEM_PRECHECK chunk 3/2171 league=ELITESERIEN mem_avail ~29GiB, PIPELINE_HEARTBEAT fresh); PROGRESS.json
+  last_completed=2020-08-30 monotonic. Fresh relaunch after smallchunk14's 08:36Z SPOT-preemption STOP (hang-doc
+  DP-VM-003) — landed ~09:29Z by another actor; no action needed this dispatch. Silent-hang occ. count: 12 (hang-doc
+  Timeline). Frontier ≈2020-08-30, NOT past the 2021-06-07 milestone → gap census NOT re-run (300/2257 unchanged per
+  todo guidance). No code/VM changes this dispatch.
