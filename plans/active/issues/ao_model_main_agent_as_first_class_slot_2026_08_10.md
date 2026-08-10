@@ -124,9 +124,30 @@ row appear to belong to main.
       `test_main_slot_row_created_and_tracks_agent_row_every_tick` (two ticks, proves update-in-place not
       recreate-on-tick, asserts context_pressure derivation) and `test_main_slot_row_status_idle_when_session_dead`;
       full suite 3079 passed, 2 skipped, ruff + basedpyright clean.
-- [ ] [BACKEND] P1. Prove the dispatch exclusion still holds with the row present: main must never be handed a backlog
+- [x] [BACKEND] P1. Prove the dispatch exclusion still holds with the row present: main must never be handed a backlog
       task and must never count toward claimable capacity. Done-when: a unit test asserts `_task_is_routable_to` rejects
-      main's slot and that AutoSpawn skips it, with the `dispatch.py:606-611` incident cited in the test's docstring.
+      main's slot and that AutoSpawn skips it, with the `dispatch.py:606-611` incident cited in the test's docstring. —
+      agent-orchestrator@3fa500e: found a REAL gap, not just a happenstance-holds property — `_task_is_routable_to` had
+      no guard against `slot_id==0` at all; an explicit hit on `/api/slots/0/boot`/`/heartbeat` would have sailed
+      through every other filter (main is in no craft/model/review-slot config) and been dispatched real backlog work,
+      now that `MainAgentKeeper._sync_main_slot_row` (todo 3) writes a real, non-provisioning-gap `SlotRow(slot_id=0)`
+      every tick instead of leaving it permanently unconfigured. Added an unconditional early-return guard in
+      `_task_is_routable_to` (checked before the target_slot match, so an explicit `target_slot=0, affinity=high` pin
+      cannot override it either) plus `dispatch._MAIN_SLOT_ID` as an independent literal (same avoid-a-circular-import
+      rationale as `main_agent_keeper.MAIN_SLOT_ID`'s own docstring). New `tests/test_dispatch_main_slot_gate.py`
+      proves: `pick_next_task(session, 0, ...)` returns nothing even with every other filter passing; an explicit
+      high-affinity pin to slot 0 doesn't override the exclusion; `_task_is_routable_to` rejects slot 0 unconditionally;
+      and main's row (no worktree/branch/operator) never satisfies `slot_is_spawnable`, so it still never counts toward
+      the AutoSpawn spawn budget — asserted directly rather than via `claimable_queued_task_ids`'s own "superset-on-
+      doubt" empty-candidate-set fallback, which would pass a naive "main-only fleet → claimable == set()" assertion for
+      the wrong reason (a first draft of this test hit exactly that trap: it asserted `set()` and failed, since a
+      main-only fleet is claimable via superset-on-doubt regardless of whether main itself is a real candidate).
+      `tests/test_autospawn.py` gets a dedicated test for `AutoSpawnLoop._should_spawn`'s pre-existing `"main_slot"`
+      skip reason (previously shipped 2026-08-08 but never directly asserted). `test_dispatch_review_slot_gate.py`'s
+      stale 2026-07-13 docstring ("no main-role slot to test... it never reaches a slot dispatch route at all") is
+      corrected to point at the new file, since todo 3 invalidated that premise. Full suite 3085 passed, 2 skipped,
+      ruff + basedpyright clean (one unrelated `test_worker_liveness_watchdog.py` timing flake observed under concurrent
+      shared-host QG load, confirmed non-reproducing on a clean re-run).
 - [ ] [BACKEND] P2. Collapse `_main_pct()` into the ordinary `_read_pct()` slot path now that main has a row, keeping
       the self-report floor semantics identical (higher of {self-report, probe}, ratchet-up persisted). Done-when: the
       main-specific branch is deleted, and the existing `_main_pct` regression tests pass unchanged against the unified
