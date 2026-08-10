@@ -141,10 +141,10 @@ context_scope:
       reversibility-qualified at 604,800s), 928 differing-twin objects QUARANTINED (intentionally kept, pending
       content-union decision). Fresh census: 0 delete-eligible contaminated objects remain for the 3 mappings
       (SEGUNDA_DIVISION→LA_LIGA_2, BRAZIL_SERIE_A→BRASILEIRAO, ENGLAND_PREMIER_LEAGUE→EPL). Full evidence at
-      `issues/sports_legacy_league_vocab_recontamination_2026_08_10.md` todo 4. (repo: instruments-service /
-      market-tick-data-service). **Done when**: a fresh census of `instruments-store-sports-prd` returns 0 objects
-      carrying the country-prefixed contaminated vocabulary (excluding any quarantine population, tracked separately if
-      non-empty).
+      `/plans/archive/issues/sports_legacy_league_vocab_recontamination_2026_08_10.md` todo 4. (repo:
+      instruments-service / market-tick-data-service). **Done when**: a fresh census of `instruments-store-sports-prd`
+      returns 0 objects carrying the country-prefixed contaminated vocabulary (excluding any quarantine population,
+      tracked separately if non-empty).
 - [x] ✅ [CODE] P2. **Ship the 2 parked, already-verified-correct changes sitting unshipped in worktrees.** —
       `market-tick-data-service@03b9ffd6` + `deployment-service` (no-op: clean). **Finding (2026-08-04, slot-4)**: both
       worktrees (`deployment-service-sports-wt`, `market-tick-data-service-sports-wt`) no longer exist — no git
@@ -193,12 +193,13 @@ review-blocking.
   (standings/teams dual-written 2026-08-06/07 alongside LA_LIGA_2; footystats_matches available_at=2026-08-07), root
   causes = `api_football_reference.py:165` raw `build_league_id`, `FOOTYSTATS_HISTORICAL_SEASON_IDS`→SEGUNDA_DIVISION,
   and the SEGUNDA_DIVISION/LA_LIGA_2 registry duplicate. Delete pass = no-migrate-first (Part 3 fails). Filed
-  `issues/sports_legacy_league_vocab_recontamination_2026_08_10.md` (P1 fix todos + gated delete-pass todo) + shipped
-  the delete-pass tool. This todo's done-when is NOT met — requires the writer/registry fixes first, then the delete.
+  `/plans/archive/issues/sports_legacy_league_vocab_recontamination_2026_08_10.md` (P1 fix todos + gated delete-pass
+  todo) + shipped the delete-pass tool. This todo's done-when is NOT met — requires the writer/registry fixes first,
+  then the delete.
 - **2026-08-10 (slot 25, data_engineering, `sports_closeout_track_x_hygiene-006`)**: Dispatched to complete the
   plan-level P2 migration checkbox. Verified the live state before re-running anything: the migration apply (delete
   pass) is NOT autonomously executable and the done-when is not yet met. Per slot-22's same-day finding
-  (`issues/sports_legacy_league_vocab_recontamination_2026_08_10.md`), a live writer still emits
+  (`/plans/archive/issues/sports_legacy_league_vocab_recontamination_2026_08_10.md`), a live writer still emits
   `league=SEGUNDA_DIVISION` (standings/teams dual-written 2026-08-06/07 alongside LA_LIGA_2; footystats_matches
   `available_at=2026-08-07`), so delete-safety protocol Part 3 (no live writer) FAILS → `no-migrate-first`: nobody
   deletes until the writers are fixed. Confirmed via `GET /api/backlog` that all 3 P1 writer/registry fixes from that
