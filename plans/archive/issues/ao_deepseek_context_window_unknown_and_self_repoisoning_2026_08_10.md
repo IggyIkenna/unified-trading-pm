@@ -13,7 +13,7 @@ summary: >-
   DeepSeek-vs-Claude asymmetry is measured and recorded below: DeepSeek's usage is ~99.4% cache_read_input_tokens and
   its pane renders a real CLI percentage almost every turn, so it calibrates constantly, where sonnet-5 almost never
   does.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -46,7 +46,6 @@ source: >-
   Operator observation 2026-08-10 ("with deepseek we got this context bloating issue reappearing, is deepseek pro and
   flash set to 1m or 500k?"), measured live via read-only SSM in the same session.
 depends_on: []
-archive_exempt: true
 context_scope:
   [
     agent-orchestrator/server/context_probe.py,
@@ -56,6 +55,13 @@ context_scope:
 ---
 
 # DeepSeek's real context window is unknown and its learned value re-poisons itself
+
+> **🟢 ARCHIVED 2026-08-10** — `status: resolved`, all 5 todos `[x]`, unlocked; archived per
+> [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md).
+> All five todos shipped to agent-orchestrator@LDR: impossible-window guard (`4af78dc99`), measured DeepSeek priors
+> (`29526a4`), DeepSeek pane-pct calibration exclusion (`6be3454`), `token_total()` resident-context verification, and
+> the standing calibrated-window move-invariant (`c730f46`). Moved by the 2026-08-10 checkbox-flip + archive pass (slot
+> 14).
 
 ## Measured evidence (orchestrator VM, 2026-08-10, read-only)
 
