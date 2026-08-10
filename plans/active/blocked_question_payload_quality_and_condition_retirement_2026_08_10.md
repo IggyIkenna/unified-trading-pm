@@ -252,11 +252,17 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
       must be a governance doc (`CLAUDE.md` / `SUB_AGENT_MANDATORY_RULES.md`) since the live finding emitted a plan
       filename instead. **Done when**: the JSON schema block and its worked example carry all six fields and the
       required/optional split is explicit. Repo: unified-trading-pm.
-- [ ] [BACKEND] P2. **Validate the POSTed findings shape server-side** rather than rendering whatever arrives — an item
-      missing a required key, or naming a `doc` outside the governance-doc set, is logged as a `doc_drift_malformed`
-      activity and skipped, not turned into a card. **Done when**: a malformed item produces the new activity row and no
-      `BlockedRow`, a test covers each rejection reason, and the rejection count appears in the dispatch result payload.
-      Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P2. **Validate the POSTed findings shape server-side** rather than rendering whatever arrives — an
+      item missing a required key, or naming a `doc` outside the governance-doc set, is logged as a
+      `doc_drift_malformed` activity and skipped, not turned into a card. **Done when**: a malformed item produces the
+      new activity row and no `BlockedRow`, a test covers each rejection reason, and the rejection count appears in the
+      dispatch result payload. Repo: agent-orchestrator. — agent-orchestrator@ab7ca12 (QG green 3190 passed;
+      `_doc_drift_shape_error` gate + `doc_drift_malformed` activity carrying the item + reason;
+      `malformed_doc_drift_count` in the `record_result` payload AND `PlanHealthResultResponse` API model; non-dict
+      entries rejected as `not an object`; new tests cover missing-key / off-set doc / non-object / mixed
+      valid+malformed; the two A2 empty-key suppression tests were repurposed into A4 rejection tests and
+      `resolution_required=false` suppression kept with a well-formed fixture; also fixed a pre-existing live-host-only
+      worker_liveness test flake at 7bc9ed0).
 
 ### B — structured context, collapsed by default
 
@@ -345,3 +351,15 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
   `plan_health.py`, three edit `orm.py` — the same-file-overlap case the rule sanctions) and SPLIT the two `[UI]` todos
   into the `gate_on_depends` companion plan rather than leaving a real dependency expressed as mere ordering. The
   NA-corpus ratchet note filed with the original version is dropped — this doc no longer counts against that corpus.
+- **2026-08-10 (A4, slot-16 worker)**: Implemented todo A4 — server-side validation of the POSTed doc_drift shape.
+  `_doc_drift_shape_error()` in `server/plan_health.py` rejects an item missing a required key (the 7-key contract from
+  todo A3) or naming a `doc` outside `{CLAUDE.md, SUB_AGENT_MANDATORY_RULES.md}`; each rejection logs a
+  `doc_drift_malformed` activity (with the offending item + reason) and the item is skipped entirely — no dedup key, no
+  `doc_drift_open`, no BlockedRow, no Slack page. `malformed_doc_drift_count` added to the `record_result` payload AND
+  the `PlanHealthResultResponse` API model so the POSTing worker sees its own shape violations. Non-dict entries in the
+  `doc_drift` list are rejected as `not an object` instead of being silently dropped. — agent-orchestrator@ab7ca12 (QG
+  green 3190 passed). Repurposed the two A2 empty-key suppression tests into A4 rejection tests (missing-key / off-set
+  doc), kept `resolution_required=false` suppression with a well-formed fixture, and added shape-gate / non-object /
+  mixed valid+malformed count tests. Along the way fixed a pre-existing live-host-only `test_working_spinner_not_kicked`
+  flake (stale `context_used_pct` mock → the code's live `context_reading` call site, which reads a real slot-1 config
+  dir on this host) that turned the first Pass-1 QG run red — agent-orchestrator@7bc9ed0.
