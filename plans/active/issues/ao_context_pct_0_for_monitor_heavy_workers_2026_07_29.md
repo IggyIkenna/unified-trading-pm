@@ -176,13 +176,26 @@ Downstream blast radius beyond the cosmetic column: a stored 0 cannot cross the 
       do not cover this: `autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md` addresses the autostash pop,
       not the stage→commit race, and quickmerge's own `_qm_locked_git_commit` flock does not help — it SERIALISES
       commits without SCOPING them, so the peer's turn under the lock still commits whatever this session had staged.
-      **The remedy already exists in this workspace and quickmerge simply has not adopted it**:
-      `scripts/dev/safe-doc-push.sh` defaults to isolated-worktree mode (`SDP_ISOLATED=1`), building a private index in
-      a throwaway worktree at `origin/<branch>`, copying in ONLY the named files, and leaving the caller's working tree
-      untouched — added for the same class of race per
-      `/plans/active/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` (F6). Port that to
-      `quickmerge.sh --files`, or at minimum swap the `git add` + bare `git commit` for an explicit
-      `git commit -- <files>` pathspec, which ignores the rest of the index.
+      CORRECTION, same day: isolated-worktree mode LANDED in `quickmerge.sh` (`--isolated`/`--no-isolated`,
+      `ISOLATED_MODE=auto` resolving by host) mid-session on 2026-08-10 by operator ruling, and CLAUDE.md now mandates
+      it — so "quickmerge has not adopted it", as this todo first read, is no longer true. The contamination above was
+      measured on a quickmerge invocation that predated the flag arriving in this checkout. What remains open is
+      VERIFYING it actually engages: confirm `auto` resolves ON for a laptop slot clone, and that a scoped commit can no
+      longer be absorbed by a peer. Keep the cheaper belt-and-braces fix in scope either way — swapping the `git add` +
+      bare `git commit` for an explicit `git commit -- <files>` pathspec, which ignores the rest of the index and
+      protects the non-isolated path (incl. the AO VM, where isolation is auto-OFF).
+- [ ] [BACKEND] P1. Isolated-worktree mode is UNUSABLE from a slot clone — it deadlocks against the
+      `fix-commit-identity` pre-commit hook. Measured 2026-08-10, 3/3 attempts: `safe-doc-push.sh` (isolation always-on
+      per CLAUDE.md) builds its worktree under `$TMPDIR/sdp-iso-$$`, whose path yields the identity
+      `ikennaigboaka [main·laptop]`, but the worktree inherits `user.name = ikennaigboaka [slot-4·laptop]` from the slot
+      clone's config. The hook rejects the mismatch, applies `git config --worktree` to correct it, and advises "just
+      RE-RUN your commit" — but the NEXT run mints a fresh PID-named worktree, discarding that correction, so it fails
+      identically forever. `GIT_AUTHOR_NAME`/`GIT_COMMITTER_NAME` overrides do not reach it (the hook reads
+      `git config`). Only `SDP_ISOLATED=0` got this session's doc pushed — i.e. the newly-MANDATED protection had to be
+      switched off to ship, which also silently reopens the contamination window this doc's other todo is about. Fix the
+      hook to derive identity from the CALLER's repo (`SDP_CALLER_REPO` is already exported for exactly this kind of
+      need) or seed the isolated worktree's `user.name` at creation. Verify quickmerge's new `--isolated` does not have
+      the same defect before relying on it.
 - [ ] [BACKEND] P2. Make main actually self-report `context_used_pct`, closing defect (A) at source for the one role the
       slot-mirror cannot cover (main is not on an `orch-slot-N` session). `agents/main.md:293` already instructs
       `"context_used_pct": <0-100, your /usage estimate>` on every `/poll`, yet the live row read 0 with a fresh ping —
