@@ -39,6 +39,7 @@ resolved_by:
 source: >-
   Migrated from /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md's Deferred table during its
   2026-08-10 archival (batch12-finalize ritual step 1 — never let a prose deferral evaporate).
+depends_on: []
 ---
 
 # DeepSeek flash ~$2.35 real-time-vs-task-usage spend residual
