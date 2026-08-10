@@ -148,10 +148,12 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
 
 ## Filed
 
-- [ ] [DOCS] P2. Fix `quality_gates_quickmerge_timing_baseline_2026_07_31.md`'s stale "Deferred work after 2026-07-31"
-      table (Contradictions #5 — Phase 2 row says "needs the operator" while the Todos section shows all 3 Phase-2 items
-      `[x]` done 2026-08-09) + `..._finalize_2026_08_08.md`'s stale "5 remaining" summary text (live: 1 remaining). Both
-      `asset_group: [meta]`, adjacent/out-of-tranche — not fixed this run under time budget.
+- [x] ✅ [DOCS] P2. Fix `quality_gates_quickmerge_timing_baseline_2026_07_31.md`'s stale "Deferred work after
+      2026-07-31" table (Contradictions #5 — Phase 2 row says "needs the operator" while the Todos section shows all 3
+      Phase-2 items `[x]` done 2026-08-09) + `..._finalize_2026_08_08.md`'s stale "5 remaining" summary text (live: 1
+      remaining). Both `asset_group: [meta]`, adjacent/out-of-tranche. **DONE 2026-08-10**: replaced stale table with
+      current "Deferred work after 2026-08-10" (2 real remaining items + done summary); corrected finalize summary
+      "5"→"1" (14/15 todos `[x]`). — unified-trading-pm@2828e0e230
 - [ ] [DOCS] P3. Re-count and correct `defi_compute_gcp_migration_2026_08_08.md` + its finalize's off-by-one todo-number
       citations (Doc-drift #1 — e.g. "todo 14" cited for what a positional recount shows is todo 15). Needs a careful
       fresh recount done in one sitting to avoid introducing a second error.
