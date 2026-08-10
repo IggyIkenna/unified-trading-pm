@@ -180,41 +180,6 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
       working)"), and **still 502 at 2026-08-08T01:20Z** (15h+ outage, direct probe with the correct `id`/`season`
       params, ~52s latency before the 502 — see Progress Log entry below). Tagged BLOCKED-UPSTREAM-OUTAGE; do not
       relaunch without verifying the endpoint returns 200 first.
-- [ ] [SCRIPT] P1. **Odds_api gap-backfill campaign — babysit the `mtds-backfill-odds-*` fleet to genuine completion.**
-      This todo replaces reliance on an interactive session's own self-scheduled monitoring loop — handing it to normal
-      AO dispatch (this doc is already `assigned_vm: planning`) so it survives across dispatches without needing a
-      specific chat session kept alive. **Done-when**: re-run
-      `cd market-tick-data-service && GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp     DEPLOYMENT_ENV=prod CLOUD_MOCK_MODE=false .venv/bin/python     scripts/sports/census_odds_api_gap_verify_2026_08_02.py 2>&1 | grep -E "DAY-LEVEL|VERDICT"`
-      reads 0 missing days, OR 2+ consecutive dispatches (spaced hours apart) read an identical small residual — treat
-      that as a genuine honest-absence floor the same way the AF entities' small non-zero floors were treated (see
-      `sports_af_full_entity_completion_2026_08_03.md`), then flip this todo citing the stable reading. Full gap
-      breakdown + root-cause history: `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` (635→590→300 missing days
-      across several rounds of fixes: launcher OOM bug, manifest-consolidator stall, credential/quota block — all
-      resolved). **State at handoff (2026-08-10T08:30Z)**: 300/2257 days missing, unchanged since 2026-08-02 — NOT a
-      stall, the current run walks sequentially from 2020-06-06 forward and hadn't yet reached the earliest real gap
-      (2021-06-07, ≈chunk 70/425) as of this entry; re-run the census only when the frontier is estimated to have passed
-      a milestone like that, not every dispatch (it's cheap but there's no point re-reading an unchanged number). **Each
-      dispatch, in order**: (1) check `mtds_odds_backfill_watchdog_kill_after_silent_hang_2026_08_08.md`'s tail for the
-      current occurrence count and read its Timeline table + the most recent Progress Log entries for the full
-      established playbook (chunk 18 and chunk 26 are the historically dominant silent-hang death sites, 7/12 and 4/12
-      respectively; chunk 8 is also now a confirmed danger point per occurrence 12 — don't assume safety at any specific
-      chunk); (2)
-      `gcloud compute instances list --account=1060025368044-compute@developer.gserviceaccount.com     --filter="name~'mtds-backfill-odds'"`
-      for the live instance; (3) if gone, distinguish CONFIRMED SILENT HANG (triple-signal ~15-21min silence across
-      run.log/heartbeat-blob/WATCHDOG_TRACE.log, then a `delete` op from account
-      `1060025368044-compute@developer.gserviceaccount.com` — add a Timeline row + Progress Log entry to the hang-doc,
-      bump its occurrence count) from a ROUTINE SPOT PREEMPTION (`compute.instances.preempted` system event, not a
-      `delete` op — NOT an occurrence, wait ~5min for the fleet's own auto-recovery via `unified-trading-sa@...` before
-      relaunching manually); (4) relaunch via
-      `CLOUDSDK_CORE_ACCOUNT=1060025368044-compute@developer.gserviceaccount.com bash     deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --vm-name     mtds-backfill-odds-smallchunkN-20260810`
-      (increment N; the launcher can background past a short foreground timeout on tarball republish — check its output
-      when it completes rather than assuming failure), confirm genuine boot via `run.log` content, not
-      exit_code/creation alone; (5) journal a Progress Log entry to this doc citing chunk position, OOM count,
-      occurrence count, and (only when re-run) the gap census reading; commit+push+verify
-      (`git rev-list --count origin/<branch>..HEAD` must be 0 after push). **Not AO-dispatchable as a single one-shot
-      todo** (the underlying task runs for days across many silent-hang cycles) — this is intentionally designed to be
-      picked up, make partial progress, and left open across many repeated dispatches, the same proven pattern already
-      used for weeks in `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`'s own P1/P2 todos.
 - [x] ✅ [SCRIPT] P2. **Launched weather (open_meteo) full backfill, ran to `exit_code=0`** —
       `weather-backfill-20260807-120241` completed cleanly but did NOT resolve the gap (re-census:
       `expected_unattempted` barely moved 205,517→205,302; 16,241 new `attempted_failed` rows appeared) — split into the
@@ -794,53 +759,3 @@ UAC-registered scope) rather than assuming there's nothing else; not yet done.
   it clears. AF sanity check remains clean (no new `af-backfill-*` instance). Not re-running the odds_api gap census
   this tick (nothing new to learn — frontier is still deep in already-covered 2020 ground, well before the first real
   gap at ~chunk 70/2021-06). No intervention needed.
-- **08:06Z — `smallchunk18` gone: a routine SPOT preemption (NOT the tracked 13-occurrence-yet silent-hang bug), but
-  auto-recovery didn't fire within ~11min (longer than the ~2-4min auto-recovery window seen earlier this session for
-  the same preemption class) — relaunching manually as `smallchunk19`.** Confirmed via `gcloud compute operations list`:
-  a `compute.instances.preempted` system event at `07:55:55Z` (aligning almost exactly with the last observed signals —
-  run.log `07:53:50Z`, heartbeat `07:55:31Z`, WATCHDOG_TRACE `07:55:03Z`), NOT a `delete` op from the
-  `1060025368044-compute@...` watchdog account — this is the routine SPOT-preemption pattern (same class as
-  smallchunk16's and FIXTURE_LINEUPS' earlier preemptions), distinct from the hang-doc's tracked silent-hang signature;
-  still 12x confirmed hang occurrences, this is NOT a 13th. Died at chunk 15/425 (well before chunk 18), zero
-  OOMs/CHUNK_FAILED beforehand. Waited ~11min for the fleet's own auto-recovery mechanism (which handled prior
-  preemptions within ~2-4min) — no new instance appeared, so relaunched manually via the standard launcher
-  (`--vm-name mtds-backfill-odds-smallchunk19-20260810`); the launch command backgrounded past the harness's 120s
-  timeout (this time all 4 tarballs were already fresh, unlike occurrence 12's republish-driven delay — cause of the
-  slowness this time unclear). Guard confirmed `0 running + 1 planned = 1 <= cap 1`, `smallchunk19` created and
-  `RUNNING`; `run.log` boot-health still pending as of this entry, not yet trusted on VM-created/RUNNING alone. AF
-  sanity check remains clean.
-- **08:31Z — `smallchunk19` ALSO preempted, within ~2min of creation (before any run.log line was ever written) —
-  relaunched as `smallchunk20`.** Confirmed via `gcloud compute operations list`: insert `08:09:50Z`, a second
-  `compute.instances.preempted` system event at `08:11:45Z` — routine SPOT variance, not the tracked hang (no `delete`
-  op from the watchdog account, and no processing ever started to exhibit that signature anyway). Two preemptions in
-  ~35min is unusual but not itself actionable (no available evidence distinguishes it from ordinary zone-level SPOT
-  capacity variance; not switching to on-demand over 2 data points). No auto-recovery fired again within the ~20min this
-  VM was absent, so relaunched manually via the standard launcher (`--vm-name mtds-backfill-odds-smallchunk20-20260810`)
-  — guard confirmed `0 running + 1 planned = 1 <= cap 1`, all 4 tarballs fresh, created and `RUNNING`. **New todo added
-  this tick**: a proper `- [ ]` AO-dispatchable todo for this fleet's ongoing babysitting-to-completion was missing from
-  this doc's `## Todos` section (the doc has always been `assigned_vm: planning`, but all monitoring work since
-  2026-08-07 has lived only in this Progress Log narrative with no open checkbox for AO's backlog regenerator to pick
-  up) — added, citing the full established playbook (hang-doc, preemption-vs-hang disambiguation, census script,
-  relaunch command) so a fresh AO dispatch can continue this without needing this session's accumulated context. AF
-  sanity check remains clean.
-- **09:05Z — CORRECTION: 3rd preemption confirmed for `smallchunk20` too (not a hang); found another session's VM
-  already covering the gap — did NOT launch a duplicate `smallchunk21`.** Verified via `gcloud compute operations list`:
-  `smallchunk20` also died via `compute.instances.preempted` (`08:38:22Z`, ~5.5min lifespan) — **all 3 of
-  smallchunk18/19/20 were routine preemptions, zero actual silent-hangs this window**, confirmed via the authoritative
-  operations list each time (not inferred from silence alone). A concurrent AO dispatch of the sibling
-  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` doc's own P1 backfill todo independently observed the same
-  0-VM window and tentatively logged it as "13th/14th hang occurrence" — that inference didn't check operations list and
-  is incorrect per the evidence above; **the hang-doc's occurrence count stays correctly at 12x**, not 13x/14x. My own
-  relaunch attempt (`smallchunk21`) failed outright at launch time (stale `unified-api-contracts` tarball even after
-  auto-republish — transient, the repo's working tree is clean now) and never created an instance. By the time I checked
-  again, a different VM had appeared: `mtds-backfill-odds-gap-20260727-20260806` (`--start 2026-07-27 --end 2026-08-06`,
-  a narrow targeted range covering the scheduler-dormancy gap window, `RESUME_ALLOW_PARALLEL=true`, created `08:54:37Z`)
-  — confirmed genuinely healthy and real-fetching (chunk 1, real `Processed date=2026-07-27` rows, `ManifestWriter`
-  writes), though its RSS was climbing fast (9→28GiB in ~3min, 92.9% mem at last sample — worth watching for an OOM next
-  tick). Did NOT launch a duplicate, respecting the fleet's singleton-VM policy — the sibling doc's own dispatch
-  independently reached the same non-duplication decision. **Discovered this tick**: AO is already actively dispatching
-  the ORIGINAL `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` doc's own P1 backfill todo (task
-  `-3b44a0a4ec31`, multiple dispatches: slot 20, slot 3, slot 26...) — this is a working, proven precedent for exactly
-  the AO-dispatch pattern just set up in this doc's own new todo above; the two todos now track overlapping scope (both
-  "keep the odds fleet alive to completion") and should be treated as the same underlying work, not duplicated effort —
-  the sibling doc already cross-references this doc as "Full live tracker," closing the loop in one direction.

@@ -232,10 +232,6 @@ nothing changed that could clear a conflict or create a new candidate.
 
 ## Progress Log
 
-- **2026-08-10 (operator-approved archival)**: flipped the `[OPERATOR]` P2 todo above — operator asked directly and
-  approved a targeted `[unlock-plan]` for `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`, unlocked
-  + archived to `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`. The
-  other open todo (verify the full 6-item CLEARED list at batch1_finalize todo 4 execution time) is unaffected.
 - **2026-08-09 (ag_closeout_auditor, dispatch agt-db95b9, slot 24)**: Phase 0 discovery — candidate set re-confirmed at
   14 via two independent methods (`generate_ag_closeout_audit_candidates.py --tranche ui` and a manual
   frontmatter-block-aware scan), covering set unchanged (closeout + batch1[done, unarchived] + batch1_finalize[3/4

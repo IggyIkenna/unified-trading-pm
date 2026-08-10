@@ -523,9 +523,8 @@ find-replace. Known landscape so far, NOT yet fully confirmed:
   todo 24. Also marked `pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md` **superseded**: it was
   scoping moving MORE of PM's workflows TO self-hosted (billing-motivated, written while PM was private); that premise
   is now moot in the opposite direction. Separately started
-  `/plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md` (LOCAL plan) to extract the reusable
-  workflow YAML itself into a small dedicated public repo (`unified-trading-ci`), so PM can go private again in the
-  future (e.g. if today's accidental flip reflects a real sensitivity concern) without breaking CI fleet-wide — that
-  plan is the durable architecture fix; this plan's todo 24 is the same billing-driven revert already applied to the
-  other 17.
+  `/plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md` (LOCAL plan) to extract the reusable workflow YAML
+  itself into a small dedicated public repo (`unified-trading-ci`), so PM can go private again in the future (e.g. if
+  today's accidental flip reflects a real sensitivity concern) without breaking CI fleet-wide — that plan is the durable
+  architecture fix; this plan's todo 24 is the same billing-driven revert already applied to the other 17.
 - **context-scout 2026-08-06**: populated context_scope (6 entries).

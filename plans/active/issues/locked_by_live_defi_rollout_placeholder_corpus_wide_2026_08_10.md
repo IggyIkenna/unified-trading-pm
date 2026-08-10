@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [locked_by, archival, hygiene, corpus-wide, plan_reconciler, bug]
 related:
   [
-    /plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md,
+    /plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md,
     /plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -61,16 +61,14 @@ depends_on: []
    remaining 24 are spread `2026-05-25`→`2026-07-11` (consistent with a copy-pasted template default that kept
    propagating into newly-created docs over months, each stamped with that doc's own creation time rather than a real
    claim event).
-4. **Directly blocked a confirmed-done archive** (RESOLVED 2026-08-10 for this one doc, see Progress Log — the
-   corpus-wide question below is unchanged):
-   `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` —
-   `locked_by: live-defi-rollout`, `locked_since: 2026-05-21`, but `created: "2026-07-21"` — the lock predated the doc's
-   own existence by 2 months, which is impossible for a genuine claim. All 3 todos were `[x]` done (re-verified
-   2026-08-10). Flagged as a likely-stale lock on **5 consecutive audit passes**
+4. **Directly blocks a confirmed-done archive**:
+   `plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` —
+   `locked_by: live-defi-rollout`, `locked_since: 2026-05-21`, but `created: "2026-07-21"` — the lock predates the doc's
+   own existence by 2 months, which is impossible for a genuine claim. All 3 todos are `[x]` done (re-verified
+   2026-08-10). Flagged as a likely-stale lock on **5 consecutive audit passes** now
    (`ui_satellite_ao_dispatch_batch1_2026_08_06.md` § Findings; `plan_reconciler_findings_2026_08_07.md`;
    `ag_closeout_audit_ui_parked_2026_08_08.md`; `ag_closeout_audit_ui_parked_2026_08_09.md`; this run) with zero
-   autonomous resolution (unlocking is a HARD-STOP no worker may do regardless of confidence) — the operator was then
-   asked directly, approved the `[unlock-plan]` for this specific doc, and it was unlocked + archived 2026-08-10.
+   resolution, because unlocking is a HARD-STOP that no worker may do autonomously regardless of confidence.
 
 ## Why this is filed corpus-wide, not folded into the ui-tranche findings doc
 
@@ -106,15 +104,9 @@ mis-treating a doc that coincidentally has a real reason to be locked under that
       `# Delete-when:` marker per script-homes.md) that clears `locked_by`/`locked_since` on exactly the docs where
       `locked_by == "live-defi-rollout"` (verify each doc individually — do not blind-regex the whole corpus in one
       shot), commit in batches, re-run `check_archive_candidates.sh` after.
-- [x] ✅ [REVIEW] P2. Once unlocked, re-run archival eligibility on
+- [ ] [REVIEW] P2. Once unlocked, re-run archival eligibility on
       `plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` specifically (all 3 todos
       already HARD-verified done as of 2026-08-10) and archive via the 6-step ritual if still eligible.
-      **RESOLVED 2026-08-10** — this specific doc did not wait on the corpus-wide Option A/B/C ruling (todos 1-2 above,
-      still open): the operator was asked directly and explicitly approved a targeted `[unlock-plan]` for just this one
-      doc. All 3 todos re-verified `[x]` done, `locked_by`/`locked_since` cleared, archived to
-      `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` via the 6-step
-      ritual, all active-corpus referrer paths fixed. The remaining 95 docs carrying the same placeholder value are
-      unaffected — todos 1-2 stay open for that corpus-wide decision.
 
 ## Progress Log
 
@@ -123,7 +115,3 @@ mis-treating a doc that coincidentally has a real reason to be locked under that
   action. Root-caused to `scripts/plans/fix_epic_frontmatter_2026_05_21.py:133` + corpus-wide grep evidence (96 docs,
   distributional analysis above). Not fixed — corpus-wide fix is outside this run's ui-scoped mandate and unlocking is
   HARD-STOP operator-only regardless of scope.
-- **2026-08-10 (later same day)** — Operator asked directly whether to unlock+archive
-  `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` specifically, and approved. Flipped todo 3 above
-  citing that approval; todos 1-2 (the corpus-wide Option A/B/C ruling for the remaining 95 docs) remain open — this was
-  a targeted single-doc exception, not a resolution of the underlying corpus-wide question.

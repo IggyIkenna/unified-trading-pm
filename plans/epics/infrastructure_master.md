@@ -67,8 +67,8 @@ related_plans:
   - ../active/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch13_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch13_finalize_2026_08_09.md
-  - ../archive/2026_08/infra_satellite_ao_dispatch_batch14_2026_08_09.md
-  - ../archive/2026_08/infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md
+  - ../active/infra_satellite_ao_dispatch_batch14_2026_08_09.md
+  - ../active/infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md
   - ../archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md
   - ../active/infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md
   - ../active/infra_satellite_ao_dispatch_batch9_2026_08_09.md
@@ -78,7 +78,7 @@ related_plans:
   - ../active/qg_host_adaptive_resource_governor_2026_07_14.md
   - ../active/repo_scripts_governance_audit_2026_06_18.md
   - ../active/self_hosted_runner_public_repo_revert_2026_08_05.md
-  - ../archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md
+  - ../active/shared_ci_workflow_repo_extraction_2026_08_06.md
   - ../active/stash_pile_workspace_cleanup_2026_06_03.md
 last_updated: 2026-07-14 # was: 2026-07-12 — stale vs. the body's own 2026-07-13 addendum (10-way utl_reuse phase split), never bumped when added [finding 83, synced 2026-07-14]. Prior: was 2026-06-19 — stale vs. related_plans' cicd_mvp_ldr_to_main_pipeline_2026_06_30 entry (added without a bump); corrected alongside the body edits below [finding 69, §A2 B-queue]
 locked_by: live-defi-rollout
@@ -625,7 +625,7 @@ replace fixed-K with resource reservation
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Revert self-hosted CI runners to
 GitHub-hosted for confirmed-public repos
 
-### [`shared_ci_workflow_repo_extraction_2026_08_06`](../archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md)
+### [`shared_ci_workflow_repo_extraction_2026_08_06`](../active/shared_ci_workflow_repo_extraction_2026_08_06.md)
 
 **status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: Extract shared reusable CI workflows into a
 new dedicated public repo (unified-trading-ci)
@@ -737,12 +737,12 @@ launcher label standardization (batch1's last cleared deferral)
 **status**: active · **estimate**: 0.08 cal AI-days (class: infra) **title**: Infra satellite AO dispatch batch 13 —
 finalize (reconcile source-doc checkbox + archive the batch)
 
-### [`infra_satellite_ao_dispatch_batch14_2026_08_09`](../archive/2026_08/infra_satellite_ao_dispatch_batch14_2026_08_09.md)
+### [`infra_satellite_ao_dispatch_batch14_2026_08_09`](../active/infra_satellite_ao_dispatch_batch14_2026_08_09.md)
 
 **status**: active · **estimate**: 0.12 cal AI-days (class: infra) **title**: Infra satellite AO batch 14 — add a
 `.pre-commit-config.yaml` to `unified-trading-ci`
 
-### [`infra_satellite_ao_dispatch_batch14_finalize_2026_08_09`](../archive/2026_08/infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md)
+### [`infra_satellite_ao_dispatch_batch14_finalize_2026_08_09`](../active/infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md)
 
 **status**: active · **estimate**: 0.08 cal AI-days (class: infra) **title**: Infra satellite AO dispatch batch 14 —
 finalize (reconcile source-doc checkbox + archive the batch)

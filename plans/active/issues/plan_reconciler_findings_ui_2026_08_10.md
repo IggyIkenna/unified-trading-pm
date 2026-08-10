@@ -207,11 +207,10 @@ new measurement run — self-verified every path with `ls`/`grep` before applyin
    ever run concurrently. Noted for whoever dispatches either. **Formalized 2026-08-10 — see `## Todos` below (todo 3);
    re-confirmed both todos (`batch1_finalize` todo 4 at line 280, `batch3_finalize` todo 1 at line 56) are still open
    and the collision risk is unchanged.**
-10. `plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` archive candidate —
-    all 3 todos independently re-verified done (2 hunters cross-checked via the deployment-ui git history this run,
-    confirming no regression through later renames). Was blocked solely by the `locked_by` bug (item 1 above);
-    **RESOLVED 2026-08-10 via a targeted operator-approved `[unlock-plan]` for this one doc** (did not wait on item 1's
-    corpus-wide ruling) — unlocked + archived to the path above.
+10. `plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` archive candidate — all 3
+    todos independently re-verified done (2 hunters cross-checked via the deployment-ui git history this run, confirming
+    no regression through later renames). Blocked solely by the `locked_by` bug (item 1 above). Will archive immediately
+    once that's ruled.
 
 ## Todos
 
@@ -242,10 +241,9 @@ new measurement run — self-verified every path with `ls`/`grep` before applyin
 
 ## Archive candidates (operator review)
 
-1. `plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` — 3/3 todos
-   HARD-verified done, was `locked: true` (`live-defi-rollout`, almost certainly the corpus-wide placeholder bug, filed
-   above). **RESOLVED 2026-08-10**: `archived: true` — operator asked directly, approved a targeted `[unlock-plan]` for
-   this doc (ahead of the corpus-wide placeholder ruling), unlocked + archived via the 6-step ritual.
+1. `plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` — 3/3 todos HARD-verified
+   done, `locked: true` (`live-defi-rollout`, almost certainly the corpus-wide placeholder bug, not filed above).
+   `archived: false` — blocked pending the locked_by ruling.
 
 ## Refuted (dropped by verify)
 
@@ -290,11 +288,6 @@ staged batch before commit).
 
 ## Progress Log
 
-- **2026-08-10 (operator-approved archival)**: the `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`
-  archive candidate (item 10 in Filed, item 1 in Archive candidates) was unlocked + archived — operator asked directly
-  and approved a targeted `[unlock-plan]` for this one doc, ahead of the corpus-wide `locked_by` placeholder ruling in
-  `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` (todos 1-2 there remain open for the other 95
-  docs). Doc now lives at `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`.
 - **2026-08-10 (prose-findings formalization sweep)**: converted 3 prose findings into 3 formal todos (1 already
   resolved, cited inline — Filed item 6, `ui_consolidated_closeout` Todo 6 confirmed `[x]`); Filed items 7-9 (orphaned
   Firestore-migration successor scoping, undefined soak-window duration, batch1/batch3-finalize same-file conflict-check

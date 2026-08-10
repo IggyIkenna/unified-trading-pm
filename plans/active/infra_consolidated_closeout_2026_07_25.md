@@ -24,7 +24,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
-    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
@@ -181,9 +181,9 @@ reference-path convention rollout complete corpus-wide.
 > this Track's close-out criterion no longer belongs to the infra tranche's own completeness measurement.
 
 **Source** (historical — now `ui`-tranche primary):
-[issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md](/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md)
+[issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md](/plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md)
 (8 pre-existing deployment-ui smoke/playwright failures — Daily Costs page, mobile nav; generic product/UI bugs, not
-data-pipeline or CI mechanics; RESOLVED + ARCHIVED 2026-08-10) ·
+data-pipeline or CI mechanics) ·
 [artifact_pipeline_observability_2026_07_17.md](/plans/active/artifact_pipeline_observability_2026_07_17.md)
 (build→artifact→deploy lineage UI — Cloud Build images, VM tarballs, drift-vs-running; deployment-observability domain,
 not data-pipeline).

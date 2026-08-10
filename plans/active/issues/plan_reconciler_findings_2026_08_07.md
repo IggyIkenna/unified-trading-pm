@@ -20,7 +20,7 @@ related:
     /plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md,
     /plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md,
     /plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md,
-    /plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md,
+    /plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md,
     /plans/active/deployment_registry_firestore_p5_verify_2026_07_14.md,
     /plans/active/deployment_registry_firestore_migration_2026_07_14.md,
   ]
@@ -79,20 +79,16 @@ confirm the lock is genuine (and flip these manually) or unlock the doc so the n
 
 ## Archive candidates (operator review)
 
-### `issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` — RESOLVED 2026-08-10
+### `issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`
 
-- **Status (at filing)**: `status: open`, 0 open todos, 3 done (`[x]`)
-- **Lock (at filing)**: `locked_by: live-defi-rollout`, `locked_since: 2026-05-21`
+- **Status**: `status: open`, 0 open todos, 3 done (`[x]`)
+- **Lock**: `locked_by: live-defi-rollout`, `locked_since: 2026-05-21`
 - **Finding**: The lock timestamp (`2026-05-21`) **predates the doc's own `created: 2026-07-21` by 2 months** —
   impossible for a genuine exclusive claim. Strongly suggests a stale placeholder value.
 - **Previously flagged**: `ui_satellite_ao_dispatch_batch1_2026_08_06.md` § "Findings" (2026-08-06) flagged this same
   doc with the same observation.
 - **Action**: Operator should verify the lock is stale, `[unlock-plan]`, then archive via the 6-step ritual. All 3 todos
   are verified done (fresh re-verification through 2026-08-06 context-scout entry, no reopening).
-- **RESOLVED 2026-08-10**: operator asked directly and approved a targeted `[unlock-plan]` for this doc. Unlocked +
-  archived to `/plans/archive/2026_08/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` per the
-  6-step ritual; see `/plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` todo 3 for
-  the fuller evidence trail.
 - **Broader pattern**: `locked_by: live-defi-rollout` appears on **62 docs corpus-wide** (per batch1's own grep) —
   whether this is a genuine mechanism or stale template default affecting archival eligibility across the corpus is
   unclear from a ui-scoped run. Worth a dedicated corpus-wide check.

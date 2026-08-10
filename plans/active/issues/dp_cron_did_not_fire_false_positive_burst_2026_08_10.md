@@ -94,7 +94,6 @@ tags:
 related:
   [
     /plans/active/issues/dp_vm_002_detector_generic_alert_text_and_bucket_kind_blindness_2026_08_09.md,
-    /plans/active/issues/dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/runtime-deployment-topology.md,
   ]
@@ -192,57 +191,14 @@ is exactly the kind of judgment call this doc should surface, not resolve.
 
 ## Todos
 
-- [x] ✅ [SCRIPT] P1. **RESOLVED (2026-08-10 follow-up session)** — finding 2 (`mtds-live-prediction-`) is SUPERSEDED,
-      not revived: the 2026-06-27..29 consolidated-launcher migration was tried for ~2 days then abandoned (a burst of
-      `instances.insert`/`instances.delete` cycles then nothing since); production prediction live-capture has run
-      continuously since via the separate, older `prediction-live-` prefix (`launch-prediction-live.sh`, 3 VMs confirmed
-      `RUNNING`, launched 2026-08-03), which is already registered as its own `LONG_LIVED_LIVE` prefix in
-      `vm_prefix_registry.VM_PREFIX_TO_BUCKET`. Classified `SUPERSEDED` in the new
-      `deployment_service.data_pipeline_monitors.producer_lifecycle.SUPERSEDED_PREFIXES` (see Part 2 below) —
-      `mtds-live-prediction-` is excluded from DP-LIVE-003's must-be-running evaluation but left unchanged in
-      `VM_PREFIX_TO_BUCKET` itself (a comment there now cross-references this doc) so other consumers (deployment-ui
-      Monitor tabs, heartbeat/exit-code/zombie-watchdog) are unaffected. Evidence:
-      `deployment-service@f6a830f94f044fa9ee98b567ea47217629e9052d` (quality-gates.sh --no-fix ALL PASSED, 314s;
-      `tests/unit/test_missing_live_producer_watcher.py::test_superseded_producer_absent_never_pages`). Repo:
-      deployment-service.
-- [x] ✅ [SCRIPT] P1. **PARTIALLY RESOLVED (2026-08-10 follow-up session)** — 6 of the 8 confirmed-genuinely-absent
-      producers (findings 4/5/6/8/9/10: `mdps-features-live-sports-`, `mdps-features-live-prediction-`,
-      `defi-recursive-`, `greeks-compute-live-`, `strategy-live-`, `mtds-live-defi-`) are classified `NOT_YET_ACTIVE` in
-      the new `producer_lifecycle.NOT_YET_ACTIVE_PREFIXES` (Part 2 below) — every one has ZERO
-      `instances.insert`/`instances.delete` audit-log events in the 90-day retention window (never operated at all, not
-      "recently stopped"), matching the operator's confirmation that these are pre-live-trading placeholders ("expensive
-      to run live with no real money at stake yet"). DP-LIVE-003 no longer evaluates these as must-be-running; their
-      absence will never page. The remaining 2 (findings 3/7: `mdps-features-live-tradfi-`, `prediction-arb-detector-`)
-      have CONFIRMED real operational history (a past launch/delete cycle — regression- shaped, not
-      rollout-ahead-shaped) and are deliberately left classified `ACTIVE`/alerting per the fail-toward- alerting rule —
-      see the NEW narrower operator todo below for just these 2. Evidence:
-      `deployment-service@f6a830f94f044fa9ee98b567ea47217629e9052d`. Repo: deployment-service.
-- [ ] [OPERATOR] P1. For the 2 producers NOT resolved by the lifecycle-state pass above (`mdps-features-live-tradfi-` —
-      short launch/delete cycles on 2026-08-04, ~6 days absent at time of finding; `prediction-arb-detector-` — ran
-      continuously until deleted 2026-06-29, ~6 weeks absent at time of finding), confirm operational intent: real
-      regression needing relaunch, or a deliberate pause the lifecycle-state framework should also mark
-      `not_yet_active`/`superseded`. Both currently stay `ACTIVE` and WILL page again on the next DP-LIVE-003 sweep
-      cycle (by design — fail toward alerting on ambiguous evidence). Do not relaunch blind — each producer's current
-      config/entrypoint needs a fresh look before restart. Repo: deployment-service.
-- [x] ✅ [SCRIPT] P1. **RESOLVED (2026-08-10 follow-up session)** — finding 1's `agent-orch-planning-vm-` exclusion was
-      a same-day stopgap (blanket `_GCP_CENSUS_UNOBSERVABLE_PREFIXES` exclusion); it now has a REAL, dedicated AWS EC2
-      liveness check (`missing_live_producer_watcher._agent_orch_planning_vm_present`, via a new
-      `deployment_service.backends.aws_census.describe_ec2_instance_state` seam — deferred boto3, honest degradation) —
-      filters by the orchestrator's Elastic IP (`13.113.200.22`, resilient to the instance ever being replaced) with the
-      instance id (`i-0c9b283b31d6b5ca7`) as a belt-and-braces cross-check. Live-verified in this session with real AWS
-      CLI credentials: `aws ec2 describe-instances --region ap-northeast-1 --instance-ids i-0c9b283b31d6b5ca7` correctly
-      reports `State.Name=running`, `PublicIpAddress=13.113.200.22` — the check's logic is genuinely correct. **BUT a
-      real, confirmed blocker remains for PRODUCTION activation**: see the new issue doc
-      `dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md` — the `uts-prod-dp-meta-watchers` Cloud Run Job that
-      runs this detector has ZERO AWS credentials wired in (confirmed via
-      `terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf`'s `environment_variables` block — GCP-only — and the SAME
-      documented gap already called out in `cost_snapshot_scheduler.tf`'s AWS cost-slice comment). In production today
-      this check will call `aws_census.describe_ec2_instance_state`, get a `NoCredentialsError`, and honestly degrade to
-      `None` — DP-LIVE-003 SKIPS the prefix every sweep (never pages, never falsely reports present) — functionally
-      identical to the prior blanket-exclusion state for now, but the code path is real, tested, and will self- activate
-      the moment credentials are provisioned (no further code change needed). `agent-orch-planning-vm-` was also REMOVED
-      from `_GCP_CENSUS_UNOBSERVABLE_PREFIXES` (now empty) since it has its own dedicated resolver. Evidence:
-      `deployment-service@f6a830f94f044fa9ee98b567ea47217629e9052d`. Repo: deployment-service.
+- [ ] [OPERATOR] P1. Decide the fate of finding 2 (`mtds-live-prediction-`): was the 2026-06-28 consolidated-migration
+      abandoned by design (→ drop the `mtds-live-prediction-` registry entry from DP-LIVE-003's scope, mirroring the
+      agent-orch-planning-vm- fix) or should it be revived (→ this is instead evidence of the SAME genuine-gap class as
+      findings 3-10, and the consolidated VM needs relaunching)? Repo: deployment-service.
+- [ ] [OPERATOR] P1. For each of the 8 confirmed-genuinely-absent producers (findings 3-10), confirm operational intent:
+      currently expected to be always-on (real regression, needs relaunch) vs. not-yet-rolled-out-to-prod (registry got
+      ahead of the actual deployment, DP-LIVE-003 correctly catching a real gap but not an urgent one). Do not relaunch
+      blind — each producer's current config/entrypoint needs a fresh look before restart. Repo: deployment-service.
 - [x] ✅ [SCRIPT] P2. **CONFIRMED (ag-closeout-audit cross-cutting 2026-08-10, iterative-drain round)** — live
       `gcloud compute instances list --filter="name~'prediction-live-kalshi-book-snapshot-5'"` returns zero instances,
       GCP project `central-element-323112`: `prediction-live-kalshi-book-snapshot-5-*` (the 4th documented
@@ -262,33 +218,3 @@ is exactly the kind of judgment call this doc should surface, not resolve.
   unambiguous detector bug (`agent-orch-planning-vm-`, cross-cloud + stale per-epic-registry mismatch) via
   `deployment-service@be725b0277781b4b3f9d7609254ab82ea9ef4467`, and flagged the remaining 9 (1 likely-same-bug-class
   needing an operator call, 8 confirmed genuinely absent) rather than silently resolving or blind-relaunching.
-- 2026-08-10 (follow-up session — 2 coupled pieces of work, both shipped
-  `deployment-service@f6a830f94f044fa9ee98b567ea47217629e9052d`): **Part 1 — real AWS liveness for
-  `agent-orch-planning-vm-`**: replaced the blanket `_GCP_CENSUS_UNOBSERVABLE_PREFIXES` exclusion with a dedicated
-  cross-cloud check (`missing_live_producer_watcher._agent_orch_planning_vm_present`, via new
-  `aws_census.describe_ec2_instance_state` — deferred boto3, honest degradation, filters by the orchestrator's EIP
-  `13.113.200.22` + instance id `i-0c9b283b31d6b5ca7`). Live-verified with real AWS credentials in this session
-  (`aws ec2 describe-instances` → `running`) — the check logic is genuinely correct. Filed a NEW issue,
-  `dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md`, for the confirmed production blocker: the
-  `uts-prod-dp-meta-watchers` Cloud Run Job has zero AWS credentials wired in, so in production the check currently
-  degrades to `None` every sweep (skip, never page) — same net effect as the prior exclusion until credentials are
-  provisioned, but the code is real, tested, and self-activates with zero further code change once that happens. **Part
-  2 — formal `not_yet_active`/`superseded` producer lifecycle state**: new
-  `deployment_service.data_pipeline_monitors.producer_lifecycle` module (`ProducerLifecycleState` enum: `ACTIVE` /
-  `NOT_YET_ACTIVE` / `SUPERSEDED`), consulted by `missing_live_producer_watcher.live_producer_prefixes()` before a
-  prefix is evaluated. Explicitly LINKED to `launcher_registry.LAUNCHER_FOR_VM_PREFIX`'s existing `None` = "not
-  auto-relaunchable" convention (module docstring explains the correlation + why it's evidence-gated rather than derived
-  — `None`-ness alone over-fires on active Cloud-Run-Job-class entries like `manifest-consolidator-`), with a guard test
-  (`test_not_yet_active_launcher_registry_correlation_documented_subset`) keeping the two registries from silently
-  drifting apart on the subset where they're claimed to overlap. 6 of the burst's 8 genuinely-absent producers (findings
-  4/5/6/8/9/10) classified `NOT_YET_ACTIVE` — each has zero `instances.insert`/`.delete` audit-log events in the 90-day
-  window (never operated, not "recently stopped"). The remaining 2 (findings 3/7, `mdps-features-live-tradfi-` and
-  `prediction-arb-detector-`) have real past-operation history and were deliberately left `ACTIVE`/alerting per
-  fail-toward-alerting — a new, narrower `[OPERATOR]` todo scopes just these 2. `mtds-live-prediction-` (finding 2)
-  resolved to `SUPERSEDED` (superseded by the already-registered, currently-3-VMs-running `prediction-live-` prefix)
-  rather than left ambiguous. Regression tests added for all three required properties: the AWS check reports real state
-  correctly (mocked + live-verified out-of-band), a `NOT_YET_ACTIVE` producer never pages when absent, and an `ACTIVE`
-  producer (including the 2 ambiguous-but- regression-shaped ones) still pages when genuinely absent. Evidence:
-  `quality-gates.sh --no-fix` ALL PASSED (314s, sentinel `b35b5e0fd9c4a6fcb3901622e3c5670b224fdcb5`); shipped via
-  quickmerge, landed on `live-defi-rollout` at `deployment-service@f6a830f94f044fa9ee98b567ea47217629e9052d`
-  (ancestry-verified against origin).

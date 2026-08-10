@@ -14,7 +14,7 @@ summary: >-
   same 2026-08-08 audit ("todo 20 ... shows no conflict on its own ... flagging todo 20 as a RECLASSIFY candidate for a
   future, properly-scoped follow-up once todo 3's collision clears") — this batch is that follow-up, re-conflict-checked
   fresh as of 2026-08-09.
-status: complete
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -23,13 +23,13 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, satellite-docs, batch-14, ci-cd, pre-commit, hygiene]
 related:
   [
-    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md,
-    /plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md,
+    /plans/active/infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md,
+    /plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-10"
+last_updated: "2026-08-09"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -43,8 +43,7 @@ sequential: false
 drift_direction: advance-code
 locked_by:
 locked_since:
-context_scope:
-  [/plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md, /codex/08-workflows/ci-cd-flow.md]
+context_scope: [/plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md, /codex/08-workflows/ci-cd-flow.md]
 supersedes:
 superseded_by:
 depends_on: []
@@ -55,12 +54,6 @@ source: >-
 ---
 
 # Infra satellite docs — AO dispatch batch 14
-
-> **ARCHIVED 2026-08-10** — Single todo shipped and verified (slot 16, infra, 2026-08-10): added
-> `.pre-commit-config.yaml` + `.gitleaks.toml` to `unified-trading-ci` (commit `ce50bc9`); all 11 pre-commit hooks pass
-> clean on `--all-files`; gitleaks catches a staged secret; conventional-commit validates the message. Closed out by
-> `/plans/archive/2026_08/infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md`. Source-doc todo 20 reconciled +
-> source doc archived there.
 
 ## Why this plan exists
 
