@@ -124,3 +124,20 @@ parent issue doc's Progress Log for the exact VM names / evidence.
   the parent doc) because it's cross-repo (features-service, not ml-service) and is real, precisely-scoped AO-eligible
   backfill work, not a judgment call needing operator sign-off — the exact backfill command already has prior-run
   precedent (2026-07-26, narrow window) and needs no new credentials or design decision, only a wider date range.
+- 2026-08-10 (slot-28): launched the P0 backfill VM. Two deviations from this doc's literal recommendation, both
+  code-verified before launch: (1) **start-date clamped to `2020-06-06`** (sports data-floor SSOT
+  `/codex/02-data/sports-2020-06-data-floor.md` — odds tick data starts 2020-06-06; the `2019-08-01` union-range start
+  is pre-floor fabrication-by-construction, wiped from GCS + manifest, and the floor clamps every sports backfill
+  launcher's START_DATE to it; end-date `2026-07-31` unchanged). (2) **`--tables odds_targets` instead of
+  `--feature-group odds_targets`**: the batch handler selects feature-groups via `--tables` only — `--feature-group` is
+  a live-mode-only flag (parser.py/main.py `_run_batch`), so the literal April-window command shape is a no-op for batch
+  table selection. Also added `--skip-fetch` passthrough to `launch-features-sports-backfill-vm.sh`
+  (`deployment-service@a190d542`, QG green) because `export_odds_targets` reads only MTDS `odds_horizon_bucket`
+  (`read_bucketed_odds`) and needs none of the instruments-service reference-data fetch — a 6-year run otherwise pays a
+  per-date ~14-entity reference read it never consumes. **VM launched: `fts-backfill-20260810-083557`** (e2-standard-4,
+  SPOT, zone asia-northeast1-c, `--force` bypassing the singleton lock held by the running
+  `fts-backfill-20260809-012626` derived_features/fixture_features VM — genuinely disjoint feature-group, per launcher's
+  own `--force` contract). Command:
+  `python -m features_service.sports --operation compute --mode batch --asset-group SPORTS --tables odds_targets --start-date 2020-06-06 --end-date 2026-07-31 --skip-fetch`.
+  Spot-check of resulting `feature_group=odds_targets/` objects + non-null `odds_clv_home` counts still pending — do not
+  trust exit code alone (per this doc's own warning).
