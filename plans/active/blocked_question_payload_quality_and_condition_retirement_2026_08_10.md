@@ -246,12 +246,12 @@ an audit with a stated done-when. Two that could look operator-shaped, and why t
       would have been suppressed. Repo: agent-orchestrator. — agent-orchestrator@8a785cd (QG green: 3131 passed;
       `_blocked_row_suppression_reason` gate + `doc_drift_suppressed` activity; 5 new tests cover suppressed/raised
       paths incl. the live-instance shape; also fixed pre-existing live-state-coupled switch tests at 425a779).
-- [ ] [DOCS] P1. **Tighten the `plan_health` agent finding contract** in `unified-trading-pm/agents/plan_health.md` —
-      make `contradicted_by` and `description` REQUIRED, add `doc_line` / `contradicted_by_line` anchors and a
-      `resolution_required` boolean the worker sets itself, and restate that `doc` must be a governance doc (`CLAUDE.md`
-      / `SUB_AGENT_MANDATORY_RULES.md`) since the live finding emitted a plan filename instead. **Done when**: the JSON
-      schema block and its worked example carry all six fields and the required/optional split is explicit. Repo:
-      unified-trading-pm.
+- [x] ✅ [DOCS] P1. **Tighten the `plan_health` agent finding contract** in `unified-trading-pm/agents/plan_health.md` —
+      unified-trading-pm@0f9b8a65ca make `contradicted_by` and `description` REQUIRED, add `doc_line` /
+      `contradicted_by_line` anchors and a `resolution_required` boolean the worker sets itself, and restate that `doc`
+      must be a governance doc (`CLAUDE.md` / `SUB_AGENT_MANDATORY_RULES.md`) since the live finding emitted a plan
+      filename instead. **Done when**: the JSON schema block and its worked example carry all six fields and the
+      required/optional split is explicit. Repo: unified-trading-pm.
 - [ ] [BACKEND] P2. **Validate the POSTed findings shape server-side** rather than rendering whatever arrives — an item
       missing a required key, or naming a `doc` outside the governance-doc set, is logged as a `doc_drift_malformed`
       activity and skipped, not turned into a card. **Done when**: a malformed item produces the new activity row and no
