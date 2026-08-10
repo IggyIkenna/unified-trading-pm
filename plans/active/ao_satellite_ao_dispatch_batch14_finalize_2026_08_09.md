@@ -67,31 +67,31 @@ source: >-
       clean spawn-auth test remains genuinely untestable, not a new regression.
 
       **DISCREPANCY FOUND**: batch14's claim "Literal key removed from the live file; re-sourced via
-              `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest --secret=deepseek-v4-pro-api-key
-              --project=central-element-323112)"`" did not actually happen. Direct verification of the live file
-              `~/.claude-accounts/deepseek-v4-pro.env` (the exact `oauth_token_env_file` the running orchestrator's
-              `data/config/accounts.json` resolves for this account — confirmed via that file, not a guess): `sha256sum` of the
-              live file is BYTE-IDENTICAL to `deepseek-v4-pro.env.bak-presm-1786317618` (the "pre-secret-manager" backup batch14
-              itself created before the intended edit) — `42b42e22...c9d181b` both. `grep -c "gcloud secrets versions access"`
-              on the live file returns `0`. The live file's mtime (`2026-08-04 15:39:18`) predates the claimed edit date
-              (2026-08-09) entirely and matches the backup's mtime almost exactly (`cp -p`-preserved), consistent with the
-              backup having been taken but the actual substitution edit never applied. Net effect: the literal API token is
-              STILL live in the file today, unchanged; batch14's "hash-match + identical-402-both-configs" verification method
-              was comparing the unedited file against itself under two labels, not a genuine before/after comparison — it could
-              not have caught this because there was no "after" state to compare against.
+                  `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest --secret=deepseek-v4-pro-api-key
+                  --project=central-element-323112)"`" did not actually happen. Direct verification of the live file
+                  `~/.claude-accounts/deepseek-v4-pro.env` (the exact `oauth_token_env_file` the running orchestrator's
+                  `data/config/accounts.json` resolves for this account — confirmed via that file, not a guess): `sha256sum` of the
+                  live file is BYTE-IDENTICAL to `deepseek-v4-pro.env.bak-presm-1786317618` (the "pre-secret-manager" backup batch14
+                  itself created before the intended edit) — `42b42e22...c9d181b` both. `grep -c "gcloud secrets versions access"`
+                  on the live file returns `0`. The live file's mtime (`2026-08-04 15:39:18`) predates the claimed edit date
+                  (2026-08-09) entirely and matches the backup's mtime almost exactly (`cp -p`-preserved), consistent with the
+                  backup having been taken but the actual substitution edit never applied. Net effect: the literal API token is
+                  STILL live in the file today, unchanged; batch14's "hash-match + identical-402-both-configs" verification method
+                  was comparing the unedited file against itself under two labels, not a genuine before/after comparison — it could
+                  not have caught this because there was no "after" state to compare against.
 
-              **Process note**: while diagnosing, a partial live-token substring was inadvertently printed to this session's
-              own tool output before the mistake was caught (RULES.md "never print or log the literal secret value" — a real
-              violation, flagged here for the record; no further prints followed, and the token's plaintext exposure surface
-              does not change since it was already resident in cleartext on this host prior to and independent of this
-              session).
+                  **Process note**: while diagnosing, a partial live-token substring was inadvertently printed to this session's
+                  own tool output before the mistake was caught (RULES.md "never print or log the literal secret value" — a real
+                  violation, flagged here for the record; no further prints followed, and the token's plaintext exposure surface
+                  does not change since it was already resident in cleartext on this host prior to and independent of this
+                  session).
 
-              **Actions taken**: (a) reverted `ao_satellite_ao_dispatch_batch14_2026_08_09.md`'s own todo 1 checkbox from
-              `[x]` back to `[ ]` (verified false-done claim, task confirmed non-`dispatched` in the live backlog first) +
-              called `POST /api/backlog/ao_satellite_ao_dispatch_batch14-2e3084f54dd3/reopen`; (b) opened a new tracked todo
-              immediately below to actually perform the fix, per this todo's own done-when clause. Todo 2 (reconcile) below
-              MUST NOT proceed until that new todo is genuinely done — its whole job is writing REAL evidence into the source
-              checkbox, which doesn't exist yet.
+                  **Actions taken**: (a) reverted `ao_satellite_ao_dispatch_batch14_2026_08_09.md`'s own todo 1 checkbox from
+                  `[x]` back to `[ ]` (verified false-done claim, task confirmed non-`dispatched` in the live backlog first) +
+                  called `POST /api/backlog/ao_satellite_ao_dispatch_batch14-2e3084f54dd3/reopen`; (b) opened a new tracked todo
+                  immediately below to actually perform the fix, per this todo's own done-when clause. Todo 2 (reconcile) below
+                  MUST NOT proceed until that new todo is genuinely done — its whole job is writing REAL evidence into the source
+                  checkbox, which doesn't exist yet.
 
 - [x] ✅ [INFRA] P0. **DONE 2026-08-10 (slot 5).** Actually applied the GSM re-sourcing to the live env file — batch14's
       todo 1 done-claim was false (see above): the literal token was still live in
@@ -120,9 +120,24 @@ source: >-
       `deepseek_claude_blended_provider_routing_2026_07_28.md`'s own `[INFRA] P2` checkbox** — replace the
       redirect-pointer text batch14 left behind with the real completion evidence (both hosts, verified). **Done when**:
       the source checkbox carries real evidence, not a bare redirect pointer.
-- [ ] [REVIEW] P1. **Do NOT archive the source doc** — it has 4 other open items that stay genuinely operator-gated /
-      time-gated (2 production pilots, 1 CLI-version design call, 1 gitignored-per-VM data check), unaffected by this
-      batch. Confirm that count is still accurate at reconciliation time and leave the doc `active`.
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-10 (slot 18) — confirmed doc stays `active`, but the "4 other open items" claim
+      undercounts by 1.** Re-grepped every top-level `- [ ]` in `deepseek_claude_blended_provider_routing_2026_07_28.md`
+      (fresh-pulled tree). Excluding line 448 (the item this batch itself handles, currently mid-reconciliation via todo
+      3 above), **5 genuinely open items remain, not 4**: (1) line 311 `[REVIEW] P2` pilot the blended pool one week;
+      (2) line 320 `[REVIEW] P1` re-run the local pilot against the redesigned policy; (3) line 335 `[INFRA] P1` confirm
+      prod-VM Skills support; (4) line 343 `[DATA] P1` ratio-check account-count/cost (gitignored `accounts.json`,
+      per-VM); (5) line 407 `[OPERATOR] P2` — the `deepseek-v4-pro` balance-recurrence item (found 2026-08-09, back to
+      $0, a separate operator-gated top-up decision), which this todo's original "4 other" count missed entirely — it is
+      genuinely open, genuinely unaffected by this batch's line-448 reconciliation, and not one of the 4 named
+      categories (pilots/CLI-version/data-check). Doc correctly stays `active` regardless (5 open items is still "not
+      fully closed," same conclusion the original 4-count reached) — only the count itself needed correcting.
+      **Separately flagged, not actioned here**: todo 3 above (the reconcile todo, earlier in this `sequential: true`
+      plan) has NO derived backlog task at all (`GET /api/backlog` filtered on this plan's `plan_ref` shows only this
+      todo's own id `dispatched` + one earlier orphaned-done id — no `queued`/`dispatched` entry for todo 3's checkbox)
+      even though it's textually unchecked and precedes this todo in sequence — the dispatcher handed me todo 4 instead.
+      Did not root-cause `regen_backlog_from_plan.py` for this (out of this todo's scope, and this todo's own
+      correctness didn't depend on todo 3's completion), but whoever picks up todo 3 next may need to force a manual
+      `POST /api/backlog/regen` first if it still doesn't appear.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch14_2026_08_09.md`, move to `plans/archive/2026_08/`, fix every
       corpus-wide referrer including this finalize plan's own `related:`/`depends_on:`, then re-run the active-plan
@@ -152,3 +167,12 @@ source: >-
   is still exhausted (`balance_usd=-0.21`) so a clean-200 spawn couldn't be confirmed; ran a real `claude -p` probe
   through the new config instead — `402 Insufficient Balance` (not 401/403), proving the new auth path itself works.
   Full evidence on the flipped todo above. Todo 3 (reconcile into source doc) can now proceed — real evidence exists.
+- **2026-08-10 (slot 18, review craft, task `-19a70e8f5f6b`) — todo 4 DONE.** Dispatched directly to todo 4 ("do not
+  archive") ahead of todo 3 ("reconcile") in this `sequential: true` plan — todo 3 has no derived backlog task at all
+  right now (checked `GET /api/backlog` filtered on this plan's `plan_ref`), a dispatch-ordering anomaly flagged on the
+  flipped todo above but not root-caused (out of scope for this dispatch; didn't block todo 4's own correctness since
+  it's independent of todo 3's completion). Re-verified the source doc's open-item count directly: the "4 other open
+  items" claim undercounts by 1 — 5 remain (the 4 named categories plus a separately-open `[OPERATOR] P2`
+  balance-recurrence item at line 407 that the original count missed). Corrected the count in place; doc correctly stays
+  `active` either way. Todo 5 (archive the batch plan) still depends on todo 3 landing real evidence first — not touched
+  here.
