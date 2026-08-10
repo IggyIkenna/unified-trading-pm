@@ -10,7 +10,7 @@ summary: >-
   after a fresh fetch — no object with that prefix under any ref). Introduced by the slot-20 flip commit `2540439aad`
   (2026-08-10); the sha was the worker's in-flight local HEAD and was rebased away on push. With baseline 0 this red
   leaves the PM tree not-green, blocking every PM worker's quickmerge ship.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -42,6 +42,10 @@ source: [PM quality-gates.sh run 2026-08-10 (slot-23), plan-commit-sha-evidence 
 assigned_role: infra
 drift_direction: advance-code
 ---
+
+> **ARCHIVED**: resolved 2026-08-10 — the unresolvable `13ac6245` citation is corrected to the landed
+> `market-tick-data-service@335c94f1` (slot 20 reconcile + this slot-8 task's line-272 fix).
+> `check_plan_commit_sha_evidence.py` green (758 plans, 2853 citations, 0 unresolvable, baseline 0). Successor: none.
 
 # plan-commit-sha-evidence gate red: cefi_lighter_zksync cites fabricated market-tick-data-service@13ac6245
 
@@ -77,12 +81,16 @@ LIGHTER-ZKSYNC content-upgrade fix. Candidate: `46db6785` (the "tolerate canonic
 todo's DECISION (a) content-upgrade) — confirm it is the intended commit before landing, since the doc is another
 worker's active file and was not edited by this task.
 
-- [ ] [DOCS] P1. Fix the unresolvable citation at
-      `plans/active/issues/cefi_lighter_zksync_systemic_collision_2026_08_08.md:241`: replace
-      `market-tick-data-service@13ac6245` with the real sha for the LIGHTER-ZKSYNC content-upgrade commit (candidate
-      `46db6785` — confirm intent before landing). Then
-      `python3     scripts/quality_gates/check_plan_commit_sha_evidence.py` must be green (baseline 0) and the fix
-      shipped via quickmerge. Repo: unified-trading-pm.
+- [x] ✅ [DOCS] P1. Fix the unresolvable citation at
+      `plans/active/issues/cefi_lighter_zksync_systemic_collision_2026_08_08.md:241`: replace the fabricated short sha
+      `13ac6245` with the real sha for the LIGHTER-ZKSYNC content-upgrade commit (candidate `46db6785` — confirm intent
+      before landing). Then `python3     scripts/quality_gates/check_plan_commit_sha_evidence.py` must be green
+      (baseline 0) and the fix shipped via quickmerge. Repo: unified-trading-pm. **RESOLVED 2026-08-10** — the citation
+      is now the landed content-upgrade sha `market-tick-data-service@335c94f1` (the wire-superset three-way-verdict
+      commit; the local-only `13ac6245` never reached origin). Line 241's flip was corrected by slot-20's reconcile
+      (`c89090ed1d`); this task corrected the last remaining `mtds@13ac6245` at line 272 to
+      `market-tick-data-service@335c94f1`. `check_plan_commit_sha_evidence.py` green: 758 plans, 2852 citations, 0
+      unresolvable (baseline 0).
 
 ## Progress Log
 

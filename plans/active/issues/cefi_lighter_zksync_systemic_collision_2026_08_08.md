@@ -269,14 +269,15 @@ pair (2026-07-03 `0G`):
   option (a) content-upgrade. The wire is a verified strict column-superset (real `ts_event` + `next_funding_timestamp`,
   shared columns dtype-equal) of the schema-OLDER canonical — keeping the canonical + deleting the wire loses real data
   (violates the data-correctness hard rule), and leave-both permanently blocks the Range-2 apply. (a) is the unique
-  data-lossless resolution, worker-determinable from the data. IMPLEMENTED + SHIPPED `mtds@13ac6245`:
-  `_broad_compare_equal` now returns a three-way verdict (`identical`/`wire_superset`/`collision`); the wire-superset
-  class previously STOP-ON-SURPRISE'd as "genuine collision" is now a `RenamePlan(upgrade=True)` → `do_rename` copy-over
-  (backup-first to `_UPGRADE_BACKUP_PREFIX`) then delete-wire. Added `_column_values_equal` for the dtype-equal
-  shared-column compare (float64/all-NaN vs object/all-None artifact). Dry-run stats split `would_rename` vs
-  `would_upgrade`; summary log gained an `upgrades=` term. Regression test file extended to the verdict contract (12
-  tests green). quality-gates.sh green on the commit SHA. Range-2 apply (todo above) is the follow-up — its gate is now
-  just the cron-pause/verify/apply/resume sequence, no longer blocked on this comparison class.
+  data-lossless resolution, worker-determinable from the data. IMPLEMENTED + SHIPPED `market-tick-data-service@335c94f1`
+  (landed equivalent of the local-only `13ac6245`, per the reconcile entry above): `_broad_compare_equal` now returns a
+  three-way verdict (`identical`/`wire_superset`/`collision`); the wire-superset class previously STOP-ON-SURPRISE'd as
+  "genuine collision" is now a `RenamePlan(upgrade=True)` → `do_rename` copy-over (backup-first to
+  `_UPGRADE_BACKUP_PREFIX`) then delete-wire. Added `_column_values_equal` for the dtype-equal shared-column compare
+  (float64/all-NaN vs object/all-None artifact). Dry-run stats split `would_rename` vs `would_upgrade`; summary log
+  gained an `upgrades=` term. Regression test file extended to the verdict contract (12 tests green). quality-gates.sh
+  green on the commit SHA. Range-2 apply (todo above) is the follow-up — its gate is now just the
+  cron-pause/verify/apply/resume sequence, no longer blocked on this comparison class.
 - **2026-08-10 (slot 27, data_engineering, dispatched on the BROAD-comparison todo)** — Shipped `mtds@5c0c7f3f` (BROAD
   label/casing exclusions + casefolded `instrument_type`) + `mtds@46db6785` (canonical column-superset tolerance in
   `_broad_compare_equal`), each QG-green + LDR-verified + tarball-republished. Re-ran the venue-scoped LIGHTER-ZKSYNC
