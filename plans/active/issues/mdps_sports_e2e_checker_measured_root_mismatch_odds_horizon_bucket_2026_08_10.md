@@ -112,17 +112,28 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
 
 ## Todos
 
-- [ ] [DIAG] P2. Determine why no `processed_candles/.../timeframe=4h/` or `timeframe=24h/` (or `1d/`) objects exist for
-      `odds_horizon_bucket` day=2026-04-14 despite the run.log reporting 90/90 succeeded — read the per-VM manifest
+- [x] ✅ [DIAG] P2. Determine why no `processed_candles/.../timeframe=4h/` or `timeframe=24h/` (or `1d/`) objects exist
+      for `odds_horizon_bucket` day=2026-04-14 despite the run.log reporting 90/90 succeeded — read the per-VM manifest
       shard
       (`market-data-tick-sports-test-central-element-323112/_index/per_vm/     mdps-backfill-sports-pipelinecheck-20260809-234808-d0c755.parquet`)
-      for the 4h/24h capture_status rows and determine honest-absence vs genuine gap. (repo:
-      market-data-processing-service)
-- [ ] [CODE] P2. Fix `scripts/pipeline_e2e_check.py`'s `_measured_root()`/`_MEASURED_SPORTS_ROOT` so it only applies the
-      horizon-bucketed-shape template to the sports data_type(s) that genuinely use it, and routes `odds_horizon_bucket`
-      (and any other candle-shaped sports data_type) through the standard `_MEASURED_CANDLE_ROOT`. Done-when: a
-      from-scratch `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS     --data-types odds_horizon_bucket`
-      force run reports `passed` (not `skipped`/`non_canonical_object_path`) for the 15m/1h cells. (repo:
+      for the 4h/24h capture_status rows and determine honest-absence vs genuine gap. **RESOLVED 2026-08-10 (slot 17):
+      NEITHER — see Progress Log for full finding.** (repo: market-data-processing-service)
+- [ ] [CODE] P2. Fix `scripts/pipeline_e2e_check.py` so `odds_horizon_bucket` (and any other sports candle-shaped
+      data_type) reports `passed`, not `skipped`/`failed`, for its actually-writable cells. Needs BOTH fixes, per the
+      DIAG todo's finding: (a) `_measured_root()`/`_MEASURED_SPORTS_ROOT` so it only applies the horizon-bucketed-shape
+      template to the sports data_type(s) that genuinely use it, routing `odds_horizon_bucket` through the standard
+      `_MEASURED_CANDLE_ROOT`; AND (b) `_valid_timeframes()` so it does NOT test 4h/24h/1d for sports data_types at all
+      — it currently calls UAC's `get_valid_timeframes_for_data_type()` (a base-granularity-only check, which returns
+      `[15m, 1h, 4h, 24h]` for `odds_horizon_bucket`), but the production writer's OWN
+      `MarketDataProcessingServiceConfig.resolve_timeframes()` scopes every sports asset_group down to
+      `unified_api_contracts.internal.schemas._candle_contracts.MDPS_TIMEFRAMES_SPORTS = ("1m", "15m", "1h")` before any
+      per-timeframe loop runs (`market-data-processing-service/config.py` `_TIMEFRAME_CEILING_BY_ASSET_GROUP`) — no
+      SchemaContract exists for sports 4h/24h/1d, by deliberate design since the 2026-07-26
+      `SchemaContractNotFoundError` storm fix (`mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`). Testing a cell the
+      writer can never produce will always read `failed`/`no_candle_under`, forever — this is a checker defect, not a
+      backfill gap. Done-when: a from-scratch
+      `pipeline_e2e_check.py --day 2026-04-14 --asset-group SPORTS     --data-types odds_horizon_bucket` force run
+      reports `passed` for 15m/1h and does NOT enumerate 4h/24h/1d cells at all for sports shards. (repo:
       market-data-processing-service)
 
 ## Progress Log
@@ -132,3 +143,35 @@ re-litigating an already-fixed bug because the checker's own pass/fail bit never
   rejects), but the checker's own pass/fail bit for this shard is unreliable due to this separate template-root
   mismatch. Did not fix inline (needs the 4h/24h diagnosis first, and touches the shared checker script other
   asset_groups also rely on).
+- **2026-08-10 (slot 17, data_engineering, DIAG todo resolved)**: Read the run's own per-VM manifest shard directly
+  (`gs://market-data-tick-sports-test-central-element-323112/_index/per_vm/mdps-backfill-sports-pipelinecheck-20260809-234808-d0c755.parquet`,
+  via UTL `download_from_storage`/`gcs_describe_object` — 410 rows, single small per-VM shard read, not a corpus walk),
+  filtered to `data_type=odds_horizon_bucket, date=2026-04-14`: **410/410 rows are `timeframe∈{15m,1h}` /
+  `capture_status=captured` — ZERO rows of ANY capture_status (not `captured`, not `attempted_failed`, not
+  `empty_confirmed`) exist for `timeframe∈{4h,24h,1d}`.** The complete absence of even an `empty_confirmed` row rules
+  out honest-absence (that requires an actual checked-and-genuinely-empty attempt) — the writer never iterated these
+  timeframes at all for this shard.
+  - **Root cause, traced to source**: `odds_horizon_bucket`'s base granularity is `15m`
+    (`unified_api_contracts/registry/market_data_categories.py` `BASE_GRANULARITY_BY_DATA_TYPE`), so UAC's
+    `get_valid_timeframes_for_data_type("odds_horizon_bucket")` returns `["15m", "1h", "4h", "24h"]` — a
+    base-granularity-only check with no knowledge of per-asset-group SchemaContract registration. But the PRODUCTION
+    writer never calls that UAC helper for its own timeframe loop — it calls
+    `MarketDataProcessingServiceConfig.resolve_timeframes(MarketAssetGroup.SPORTS)`
+    (`market-data-processing-service/config.py`), which intersects the candidate list against
+    `_TIMEFRAME_CEILING_BY_ASSET_GROUP[SPORTS] = unified_api_contracts.internal.schemas._candle_contracts.MDPS_TIMEFRAMES_SPORTS = ("1m", "15m", "1h")`
+    — confirmed live in UAC source. 4h/24h/1d are NOT in this tuple; they are scoped OUT before the per-timeframe write
+    loop even starts, for every sports/sports-derived data_type (odds, odds_movement, odds_snapshot,
+    odds_horizon_bucket, arbitrage_opportunity — per config.py's own comment), by deliberate design since the 2026-07-26
+    fix for the sports `_4h`/`_5m`/`_15s`/`_24h` `SchemaContractNotFoundError` storm
+    (`mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`) — no SchemaContract is registered for sports at those
+    timeframes, so attempting them would hard-error, not just skip.
+  - **Verdict: this is NEITHER honest-absence NOR a genuine backfill gap — it's a SECOND, more fundamental checker
+    defect** (alongside the root-path mismatch this doc already tracks): `pipeline_e2e_check.py`'s `_valid_timeframes()`
+    (scripts/pipeline_e2e_check.py:813, called from every leg loop at lines 1350/1376/1491/1505/1757/2124/2126) derives
+    its per-shard timeframe list from the UAC base-granularity helper, not from the writer's own
+    `resolve_timeframes()`/asset-group ceiling — so it tests cells the production code structurally can never produce
+    for sports, and will report `failed`/`no_candle_under` for them forever, regardless of any real regression or fix.
+    Reworded todo 2 above to cover this second fix (both `_measured_root()` AND `_valid_timeframes()` need to change) so
+    the CODE todo's done-when actually closes the checker's full false-negative surface for this shard family, not just
+    the root-path half of it. No code changes made this turn — this Progress Log entry + the todo reword are the only
+    changes.
