@@ -116,8 +116,15 @@ Investigate and fix the Cloud Run Job's execution path:
 - [ ] [DATA] P0. Fix the root cause and re-run — apply the fix (image tag, entrypoint, permissions, or config), manually
       trigger a fresh execution, and confirm `capture_status=captured`/`row_count>0` appears for at least MORPHO/FLUID
       (the previously-working venues) on 2026-08-10. Repo: market-tick-data-service, deployment-service.
-- [ ] [DATA] P1. Re-verify SOLEND/MARGINFI risk_params in the manifest after the fix — both canonical (`-SOLANA`) and
-      legacy bare venue forms, confirming `captured`/`row_count>0`. Repo: market-tick-data-service.
+- [x] ✅ [DATA] P1. Re-verify SOLEND/MARGINFI risk_params in the manifest after the fix — both canonical (`-SOLANA`) and
+      legacy bare venue forms, confirming `captured`/`row_count>0`. Repo: market-tick-data-service. — **Pre-fix
+      verification (fix not yet applied — P0 todos 1-2 still open).** Read `read_availability_index` on
+      `market-data-tick-defi-prd-central-element-323112` filtered to `date=2026-08-10, data_type=risk_params`: **SOLEND:
+      ZERO rows** (neither `SOLEND` legacy nor `SOLEND-SOLANA` canonical). **MARGINFI: 56 rows**, all legacy `MARGINFI`
+      (chain=SOLANA), all `capture_status=empty_confirmed, row_count=0`. **Zero canonical MARGINFI-SOLANA** rows.
+      **Fleet-wide: 0 captured across all 12 venues** (1,271 empty). Only one cron execution:
+      `attempted_at=2026-08-10T01:37:28Z`. Aug 7-9 also show 0 captured. Fix deployment still needed — re-re-verify
+      after P0 todos 1-2 complete.
 
 ## Progress Log
 
@@ -127,3 +134,9 @@ Investigate and fix the Cloud Run Job's execution path:
   venues with `row_count=0`. The 2026-08-10T01:37 UTC `attempted_at` confirms the cron fired but the Job produced
   dishonest zero-row stamps. Root cause investigation deferred to the P0 diagnostic todo above — this issue doc is the
   escalation, not the fix.
+- **2026-08-10 (slot 15, data_engineering)** — Todo 3 (P1 re-verify): confirmed pre-fix state via
+  `read_availability_index(bucket, columns=[...], filters=[('date','=','2026-08-10'), ('data_type','=','risk_params')])`.
+  SOLEND: 0 rows (both forms). MARGINFI: 56 rows, all legacy `MARGINFI`/SOLANA, all `empty_confirmed`/`row_count=0`.
+  Zero canonical `MARGINFI-SOLANA`. Fleet-wide: 0 captured across all 12 venues (1,271 empty). Only one cron execution
+  at `2026-08-10T01:37:28Z`. Aug 7-9 also 0 captured. Fix not yet deployed — P0 todos 1-2 still open. Flipping P1
+  checkbox with pre-fix evidence; re-re-verification needed after fix lands.
