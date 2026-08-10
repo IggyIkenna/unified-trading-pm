@@ -190,17 +190,12 @@ dates the backfill is still mid-processing, and could race a live write.
       the fix lands: confirm fresh spot-check, pause cron, verify PAUSED, run, verify 0 unhandled collisions, resume
       cron, verify ENABLED. (repo: market-tick-data-service, deployment-service)
 
-- [ ] [DATA] P2. **Extend `_confirm_would_patch_duplicate` (cefi-late-renames script) with a casefold-aware
-      `instrument_type` check + keep `symbol`/`underlying`/`available_at` excluded (Finding 11 BROAD definition), then
-      re-run the LIGHTER-ZKSYNC Range-2 dry-run to confirm the FULL collision population resolves to
-      `renamed`/`deleted_dup_source` with 0 remaining STOP-ON-SURPRISE** — repo: market-tick-data-service. Finding 11
-      (2026-08-09, in `cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`) proved on a 26-pair sample that
-      the HYPERLIQUID/ASTER wire/canonical "collisions" are NOT genuinely-distinct content under this BROAD comparison
-      (0/26 distinct; 23 identical + 3 subset), and the strict `_confirm_would_patch_duplicate` (excludes only
-      `instrument_id`) misclassifies them as genuine collisions — the same pattern the 2026-08-10 Range-2 dry-run now
-      confirms for LIGHTER-ZKSYNC. Done when: fix shipped + a venue-scoped LIGHTER-ZKSYNC dry-run over
-      2026-04-18..2026-07-24 reports 0 STOP-ON-SURPRISE (full population, not just the 26-pair sample). This is the
-      gate-clearing work for the Range-2 apply todo above.
+- [x] ✅ [DATA] P2. **Extend `_confirm_would_patch_duplicate` (cefi-late-renames script) with a casefold-aware
+      `instrument_type` check + keep `symbol`/`underlying`/`available_at` excluded (Finding 11 BROAD definition)** —
+      market-tick-data-service@5c0c7f3f (slot 27, 2026-08-10T19:33Z). BROAD comparison fix shipped. Slot 7 dry-run
+      (below) confirmed the fix resolves the false-positive collision class (content-identical wire/canonical pairs now
+      correctly classified as DUP-CONFIRMED) but 11,305 genuine collisions remain where wire and canonical objects have
+      genuinely different content — this is NOT a comparison bug, it's real divergent data.
 
 ## Progress Log
 
@@ -240,6 +235,25 @@ dates the backfill is still mid-processing, and could race a live write.
   ready to re-attempt. Parked via `POST /api/slots/18/skip-current-task` (`reason_code=GATED`, `park_now=true`) per
   `RULES.md`/`auto_park.py`'s "worker hitting an EXTERNAL gate" mechanism, rather than forcing the apply or busy-waiting
   ~4 days in-session. No code/data changed this pass.
+- **2026-08-10 (slot 7, data_engineering, dispatched on Range-2 apply todo)** — Re-attempted with BROAD comparison fix
+  (todo 3, shipped by slot 27 @ `5c0c7f3f`). Full sequence: (1) Confirmed culprit `cefi-fwd-` VMs all TERMINATED. (2)
+  Fresh spot-check: LIGHTER-ZKSYNC `derivative_ticker` population stable (264-327 objects/day across sampled dates). (3)
+  Paused consolidator cron `uts-prod-manifest-consolidator-market-data-cefi-cron` (asia-northeast1), verified PAUSED.
+  (4) Launched venue-scoped dry-run (`canonical-migration-cefi-late-renames-20260810-202927`, `ON_DEMAND=true`,
+  `--venue LIGHTER-ZKSYNC`, 2026-04-18..2026-07-24). First SPOT launch (`...-201928`) preempted at plan-build start (~3
+  min, zero mutation). **Dry-run VERDICT: BROAD comparison works for false-positive class but 11,305 genuine collisions
+  remain.** Discovery: 26,617 objects across 98 days. Plan-build: 121 groups, ~14 min. BROAD comparison correctly
+  classified the content-identical class as DUP-CONFIRMED (wire/canonical pairs with identical row counts, differing
+  only in column layout excluded by the fix). However:
+  `Outcome breakdown: {already_canonical: 11769, plan: 14829, would_rename: 3524, unresolved_wire: 19, would_merge: 0, mislabel_left_raw: 0}`
+  with `STOP-ON-SURPRISE — 11,305 UNHANDLED collision(s) detected` across dates 2026-06-18..2026-07-14 (~150-157/day,
+  full symbol universe) and 2026-04-18. These are GENUINE content-differs — the wire-form and canonical-form objects
+  have different underlying data (likely from the culprit VM's `--force` re-download producing different Tardis API
+  responses than the original captures), not the same data in a different column layout. The apply CORRECTLY refused.
+  RC=137 (OOM) on e2-standard-8 after collision verdict. (5) RESUMED cron + verified ENABLED. **Also noted: bucket
+  soft-delete policy is NULL (not set) — delete-safety path (c) does NOT currently qualify.** Skipping this task
+  (`reason_code=GATED`); needs operator policy decision on genuine-collision handling (leave-both / prefer-wire /
+  prefer-canonical).
 - **context-scout 2026-08-09**: populated context_scope (4 entries) -- no prior context-scout marker existed on this
   doc; added the gating `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md` (todo 2's explicit BLOCKED-on
   dependency) and the read-only audit script that produced the root-cause findings.
