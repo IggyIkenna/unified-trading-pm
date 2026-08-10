@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [cefi, depth_of_book_10, live-capture, data-correctness, pubsub, websocket]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch13_2026_08_09.md,
     /plans/active/l2_book_microstructure_capture_2026_07_13.md,
   ]
 created: "2026-08-09"
@@ -43,8 +43,8 @@ depends_on: []
 > **🟢 ARCHIVED 2026-08-09 — RESOLVED.** All 4 per-venue debug todos + the wiring gap + the P3 MDPS-enum question are
 > shipped. Codex updated at `/codex/05-infrastructure/live-pipeline-architecture.md` § "Trigger cascade". Remaining work
 > (VM cycle + fresh manifest read across all 5 venues to prove real captured rows) is tracked on
-> `/plans/active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 2 (its `BLOCKED-ON:` tag on this doc was cleared
-> in the same session — see that plan's Progress Log).
+> `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 2 (its `BLOCKED-ON:` tag on this doc
+> was cleared in the same session — see that plan's Progress Log).
 
 ## What I found
 
@@ -252,7 +252,7 @@ operator/architecture call, not a mechanical fix.
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s "never combine the checkbox flip with the
   `git mv` in one commit" rule (this doc's own path is the orchestrator task's `plan_ref`, so `/done`'s M3 check needs
   the flip visible at this still-active path first). The remaining VM-redeploy + re-verify pass across all 5 venues is
-  tracked on `/plans/active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 2, not as a new todo here.
+  tracked on `/plans/archive/2026_08/cefi_satellite_ao_dispatch_batch13_2026_08_09.md` todo 2, not as a new todo here.
 
 - **2026-08-09, slot 6**: Closed the COINBASE-SPOT `[CODE] P2` todo. Live-verified against the real Coinbase Exchange WS
   API (unauthenticated `level2` subscribe → rejected with an `error` frame the connector never logged) that the root

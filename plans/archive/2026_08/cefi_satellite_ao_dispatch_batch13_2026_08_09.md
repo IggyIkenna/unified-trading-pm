@@ -8,7 +8,7 @@ summary: >-
   of a 23-item, otherwise wholesale-operator-gated research plan; item 2 is a wiring-gap fix whose source doc's own
   2026-08-08 investigation already re-scoped it from an operator question ("should the pipeline be relaunched") to a
   bounded fact ("the pipeline IS live, one data_type just isn't wired into the new event-log capture path").
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -51,6 +51,17 @@ context_scope:
 ---
 
 # CeFi satellite AO batch 13 — item-level extraction (strategy_master group)
+
+> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** Both todos shipped/verified with real evidence (todo 1 `e2e-testing@06c709e`;
+> todo 2 `deployment-service@28e64163/778ee0e3/4b947b63` + `market-tick-data-service@15f5657b/52383e877/55fac6f5`,
+> live-verified 1,743 warm parquet objects + 9,156 availability-index rows across all 5 capable venues), reconciled
+> against their 2 source docs (`crypto_alpha_research_2026_07_24.md`, `l2_book_microstructure_capture_2026_07_13.md`)
+> and independently re-verified by finalize-plan todos 1-2. Archived per the 6-step ritual
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); a codex-alignment contract gap surfaced in
+> the process — `depth_of_book_10` is live-captured but has no SINK_MATRIX entry — filed as
+> `/plans/active/issues/cefi_depth_of_book_10_sink_matrix_contract_gap_2026_08_10.md`. Finalize plan
+> `cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize.md` completed and archived alongside this doc. No deferred
+> items (both source-doc remaining-open counts re-stated in the finalize's Progress Log).
 
 > **Status: ACTIVE.** Conflict-checked 2026-08-09 — no active `assigned_vm: planning` plan under
 > `parent_epic: strategy_master` claims either todo's target (see Progress Log). **Cross-todo file-collision check**:

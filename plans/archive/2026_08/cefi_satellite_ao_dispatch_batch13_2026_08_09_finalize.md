@@ -6,7 +6,7 @@ summary: >-
   (`crypto_alpha_research_2026_07_24.md`, `l2_book_microstructure_capture_2026_07_13.md`) checkbox pointers once
   batch13's 2 todos land, and archiving batch13 via the 6-step ritual. `status: active` from the start;
   `gate_on_depends: true` machine-holds every todo until batch13's own tasks are done.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-13, finalize, item-level-extraction]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch13_2026_08_09.md,
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch11_2026_08_09_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -43,12 +43,19 @@ source: >-
   task_template.md §4's finalize-plan-coverage rule.
 context_scope:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md,
+    /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch13_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
 # CeFi satellite AO batch 13 — finalize
+
+> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** All 3 todos done: source-doc pointer reconciliation (todo 1,
+> `unified-trading-pm@b502acfcab`), the l2_book todo-5 re-check (todo 2, still correctly gated on operator
+> authorization), and this archival (todo 3). batch13 archived per the 6-step ritual
+> (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); a codex-alignment contract gap surfaced in
+> the process — `depth_of_book_10` live-captured but missing from SINK_MATRIX — filed as
+> `/plans/active/issues/cefi_depth_of_book_10_sink_matrix_contract_gap_2026_08_10.md`. No deferred items.
 
 > **Status: active from the start.** `gate_on_depends: true` machine-holds every todo below until batch13's own 2 tasks
 > are `done`. **Machine-gated on `cefi_satellite_ao_dispatch_batch13_2026_08_09.md`.** `sequential: true` because todo 2
@@ -74,12 +81,15 @@ context_scope:
       (slot 22): still correctly unflipped — todo 7 is done (depth_of_book_10 is live) but the operator's 2026-07-14
       Option C decision explicitly withheld authorization for the MDPS column-pipeline extension plan; the completion of
       todo 7 removes a data dependency but does not auto-authorize. See Progress Log for full finding.**
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch13_2026_08_09.md`** via the standard 6-step ritual: add the
-      archive banner → confirm no new durable contract needs codex-alignment → grep the corpus for every referrer of
+- [x] ✅ [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch13_2026_08_09.md`** via the standard 6-step ritual: add
+      the archive banner → confirm no new durable contract needs codex-alignment → grep the corpus for every referrer of
       `cefi_satellite_ao_dispatch_batch13_2026_08_09` and repoint each to the archived path → clear `locked_by` (already
       empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_08/`, every corpus referrer resolves to
       the new path, `run_hygiene_sweep.sh` stays green, and this finalize doc is archived alongside it in the same
-      commit.
+      commit. — **DONE 2026-08-10 (slot-6)**: batch13 + this finalize moved to `plans/archive/2026_08/`; referrers
+      repointed (`plans/epics/strategy_master.md`, archived batch11, archived depth_of_book issue); `locked_by` was
+      already empty (confirmed); codex-alignment check surfaced the SINK_MATRIX contract gap, filed as
+      `plans/active/issues/cefi_depth_of_book_10_sink_matrix_contract_gap_2026_08_10.md`; `run_hygiene_sweep.sh` green.
 
 ## Codex SSOTs
 
@@ -106,3 +116,13 @@ context_scope:
   authorization.
 - **2026-08-09** — drafted alongside batch13; `status: active` from the start, machine-held by `gate_on_depends: true`
   until batch13's todos are done.
+- **2026-08-10 (slot-6, data_engineering, todo 3)** — Executed the batch13 archival per the 6-step ritual: (1) no
+  deferred items (both source-doc remaining-open counts already re-stated in todo-1's entry). (2) Archived banner added
+  to batch13. (3) Codex-alignment check surfaced a real contract gap — `depth_of_book_10` is live-captured to the
+  central event-log warm sink (batch13 todo 2) but has no `("cefi","depth_of_book_10")` entry in
+  `unified_api_contracts/events/sink_matrix.py`, and the completeness-gate test the module docstring names is absent —
+  filed as `plans/active/issues/cefi_depth_of_book_10_sink_matrix_contract_gap_2026_08_10.md` (AO-dispatchable). (4) No
+  new CLAUDE.md rule. (5) Corpus-wide referrer sweep: repointed `plans/epics/strategy_master.md` (4 refs) + archived
+  batch11 (1 related ref) + archived depth_of_book issue (3 path refs) to the archive paths; INDEX.md auto-regenerated
+  by the hygiene sweep. (6) `locked_by` already empty (confirmed); both docs `git mv`'d to `plans/archive/2026_08/`.
+  `run_hygiene_sweep.sh` green.

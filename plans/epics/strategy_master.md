@@ -39,8 +39,8 @@ related_plans:
   - ../active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md
   - ../active/carry_staked_basis_funding_scan_experiment_2026_06_16.md
   - ../active/carry_strategy_ensemble_productionization_2026_07_24.md
-  - ../active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md
-  - ../active/cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize.md
+  - ../archive/2026_08/cefi_satellite_ao_dispatch_batch13_2026_08_09.md
+  - ../archive/2026_08/cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize.md
   - ../active/cross_venue_funding_reversion_research_2026_07_24.md
   - ../active/crypto_alpha_research_2026_07_24.md
   - ../active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md
@@ -149,14 +149,14 @@ wiring plan reconciliation + archival
 
 ## P2 — useful; opportunistic
 
-### [`cefi_satellite_ao_dispatch_batch13_2026_08_09`](../active/cefi_satellite_ao_dispatch_batch13_2026_08_09.md)
+### [`cefi_satellite_ao_dispatch_batch13_2026_08_09`](../archive/2026_08/cefi_satellite_ao_dispatch_batch13_2026_08_09.md)
 
-**status**: active · **estimate**: 0.48 cal AI-days (class: infra) **title**: CeFi satellite AO batch 13 — item-level
+**status**: complete · **estimate**: 0.48 cal AI-days (class: infra) **title**: CeFi satellite AO batch 13 — item-level
 extraction from 19 non-qualifying NA docs (strategy_master group)
 
-### [`cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize`](../active/cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize.md)
+### [`cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize`](../archive/2026_08/cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize.md)
 
-**status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: CeFi satellite AO batch 13 — finalize
+**status**: complete · **estimate**: 0.24 cal AI-days (class: infra) **title**: CeFi satellite AO batch 13 — finalize
 (reconcile source docs + archive)
 
 ### [`cross_venue_funding_reversion_research_2026_07_24`](../active/cross_venue_funding_reversion_research_2026_07_24.md)
