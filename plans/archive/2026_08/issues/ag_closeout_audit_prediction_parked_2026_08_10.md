@@ -21,9 +21,9 @@ scope: [engineer, admin]
 tags: [prediction, sports, ui, ag-closeout-audit, parked-findings, clean-run]
 related:
   [
-    /plans/active/issues/ag_closeout_audit_prediction_parked_2026_08_09.md,
-    /plans/active/issues/ag_closeout_audit_sports_parked_2026_08_09.md,
-    /plans/active/issues/ag_closeout_audit_ui_parked_2026_08_09.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_prediction_parked_2026_08_09.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_sports_parked_2026_08_09.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_ui_parked_2026_08_09.md,
     /scripts/plan-hygiene/check_ag_closeout_linkage.py,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
   ]
