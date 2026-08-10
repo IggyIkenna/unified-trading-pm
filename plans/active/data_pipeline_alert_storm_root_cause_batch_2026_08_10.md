@@ -126,13 +126,17 @@ last_updated: 2026-06-27
 
 ### Root-cause fixes — in flight (sub-agent authored, parent ships)
 
-- [ ] [SCRIPT] P1. Preemption-safe per-VM manifest shard flush (unified-trading-library). The shard rewrite is
-      count+time debounced and guaranteed only on `close()`/`atexit`; SPOT sends SIGTERM then SIGKILL ~30s later, where
-      `atexit` does not run — so candles land in GCS while the manifest never records them. This is a real
-      data-accounting loss that PRESENTS as an alerting false positive.
-- [ ] [SCRIPT] P0. Chain adapter route-on-content (market-data-processing-service) — part 1 of 2. Route
-      `instrument_type=options_chain|futures_chain` bundles to the existing `CefiOptionsChainAdapter` /
-      `CefiFuturesChainAdapter` instead of `CefiTradesAdapter`. Non-destructive: no repath, no migration.
+- [x] ✅ [SCRIPT] P1. Preemption-safe per-VM manifest shard flush — SIGTERM/SIGINT handler forcing a `process_final`
+      drain, install-once with rollback, chains to any pre-existing handler (incl. `SIG_DFL` re-delivery via `os.kill`),
+      degrades to a logged no-op off the main thread, never raises. Extracted to a new
+      `manifest_writer/_preemption_signal.py` so `_state.py` stays byte-identical to HEAD (it was already exactly at its
+      900-line cap). Evidence: **unified-trading-library@3b006d9f**, `UTL_QG_EXIT=0`, 7 new + 546 manifest_writer tests
+      green, basedpyright clean.
+- [x] ✅ [SCRIPT] P0. Chain adapter route-on-content — part 1 of 2. Routes on the authoritative `instrument_type=` path
+      segment (deterministic, not column-sniffing), so a genuine trades bundle can never misroute. Evidence:
+      **market-data-processing-service@93d783df**, `MDPS_QG_EXIT=0`, 2399 passed; 8 new tests including a NEGATIVE
+      CONTROL that reproduces `MalformedTickFieldError` against `CefiTradesAdapter` with the real 25-column frame —
+      which is what makes the fix provable rather than merely passing.
 - [ ] [SCRIPT] P1. features-service must record honest absence, not exit 1, when an upstream instruments-service shard
       for the CURRENT day does not exist yet (batch mode). Preserve LIVE-mode halt exactly. Never fake
       `record_captured`.
@@ -150,11 +154,27 @@ last_updated: 2026-06-27
 
 ### New findings surfaced by the 2026-08-10 fan-out (none existed before this session)
 
-- [ ] [DATA] P0. **LIVE REGRESSION — cefi `liquidations` `SCHEMA_VALIDATION_FAILED` went from 1 row (2026-08-02) to
-      150,182 rows, essentially all inside 24h** — 88% of that cell and the single biggest `attempted_failed` driver
-      fleet-wide. No commits touched the schema/writer files in that window, which points at an UPSTREAM venue
-      payload-shape change our schema contract now rejects, not a regression we shipped. Every VM still exits 0, so this
-      corrupts coverage silently. Evidence: DuckDB query over
+- [ ] [DATA] P0. **⚠️ DIAGNOSIS REVERSED 2026-08-10 — READ THIS BEFORE ACTING.** The "brand-new regression / missing
+      SchemaContract" framing below is WRONG and must not be acted on. A direct manifest query (`duckdb` over the cefi
+      `_index/availability_index.parquet`, grouping the `SCHEMA_VALIDATION_FAILED` rows by `instrument_type`/`venue`)
+      returned: `PERPETUAL/BINANCE-FUTURES 73,767 (2020-01-01→2026-01-21)`, `PERPETUAL/OKX-SWAP 38,832`,
+      `PERPETUAL/BYBIT 24,678`, `PERPETUAL/KRAKEN-FUTURES 9,784`, `PERPETUAL/BITFINEX-FUTURES 2,892`,
+      `FUTURE/BYBIT 128`, `PERPETUAL/DERIBIT 93`, `FUTURE/KRAKEN-FUTURES 8`. Two facts kill the original hypothesis: (a)
+      the dates span **SIX YEARS of historical data**, not new capture; and (b) it is overwhelmingly **`PERPETUAL`,
+      which IS registered** (perpetual was the ORIGINAL `liq_agg` type — `future` was the one added later by
+      `mdps_liq_agg_contract_missing_future_instrument_type_2026_07_27`). So this is NOT a missing registration, and
+      shipping one would have been a no-op. **What it actually is: a recent BACKFILL WAVE over 2020-2026 historical
+      liquidations failed schema validation across every major perp venue.** The "150k in the last 24h" figure measured
+      manifest WRITE time (the backfill's run time), not data date — that was misread as onset. **NEXT STEP**: diff what
+      the `liq_agg` writer emits against what the `liq_agg_{tf}` SchemaContract demands (`_candle_contracts.py`,
+      `liq_shape=True`, `ohlcv_core=False`) — the failure is at `candle_write_mixin.py:~650`
+      (`ParquetSchemaEnforcer.validate_dataframe`, OUTPUT-side validation before upload), not on the input ticks.
+      Operator has approved FULL remediation (fix + re-drive the ~150k cells). Superseded framing follows for provenance
+      only — **LIVE REGRESSION — cefi `liquidations` `SCHEMA_VALIDATION_FAILED` went from 1 row (2026-08-02) to 150,182
+      rows, essentially all inside 24h** — 88% of that cell and the single biggest `attempted_failed` driver fleet-wide.
+      No commits touched the schema/writer files in that window, which points at an UPSTREAM venue payload-shape change
+      our schema contract now rejects, not a regression we shipped. Every VM still exits 0, so this corrupts coverage
+      silently. Evidence: DuckDB query over
       `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, discriminated by
       `service_name` + `error_reason`. Prior doc
       `/plans/active/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` records this reason
@@ -216,6 +236,43 @@ last_updated: 2026-06-27
 - [ ] [SCRIPT] P3. Pre-existing QG violation not owned by this session: "Hardcoded prod project ID in tests" in
       `tests/unit/test_vm_launcher_scripts.py` (honest-coverage VM + bucket). Non-blocking today (gate still exits 0).
 
+## Deferred work after 2026-08-10
+
+| item                                                                                                              | state / why deferred                                                                                                                                                                                                                                                                                                                                  | blocked-on                              |
+| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| **deployment-service ship** (#1 relaunch state + #2/#3/#5/#6 alert accuracy)                                      | **Not done.** Code complete, lint clean, 392 tests pass, all files under the 960 cap. Gate FAILS on the basedpyright ratchet: `1268 errors > BASEDPYRIGHT_MAX_ERRORS=1259` — the two extractions (`_captured_reader.py`, `_classify.py`) added ~9 type errors above baseline. Ratchets only go DOWN, so these must be fixed, not baselined.           | nobody — pick up directly               |
+| **agent-orchestrator ship** (#17)                                                                                 | **Not done.** Gate GREEN (`AO_QG_EXIT=0`), sentinel==HEAD, 6 files intact. Quickmerge BLOCKED `PRECOMMIT_WORKING_TREE_CONFLICT behind=107`. A `git pull --ff-only` autostash re-apply then left `UU tests/test_autospawn.py` — **foreign WIP in this shared checkout, NOT ours**. Deliberately NOT resolved (never touch a dirty file you don't own). | resolve/park the foreign conflict first |
+| **features-service ship** (#14)                                                                                   | **Not done.** Gate GREEN (`FS_QG_EXIT=0`, 18,387 passed). Quickmerge was mid auto-retry (`sentinel invalid — a peer pushed`, retry 1/3) at checkpoint. Likely just needs a re-run.                                                                                                                                                                    | transient peer-push race                |
+| **liquidations P0 root cause**                                                                                    | **Not done.** Operator approved FULL remediation (fix + re-drive ~150k cells). Diagnosis is NOT yet complete — see the reversal in the Progress Log below.                                                                                                                                                                                            | nobody — highest-value next item        |
+| **#9 chain relabel migration**                                                                                    | **Not done.** Part 2 of the operator's "both, sequenced". Entity-rename scope.                                                                                                                                                                                                                                                                        | needs #8 live first (shipped)           |
+| **#13 date sharding, #15 rightsizing, #11 empty instrument_id, #18 shellcheck flake, #19 test-hermeticity guard** | **Not done.** All scoped, none started.                                                                                                                                                                                                                                                                                                               | nobody                                  |
+| **AO ledger live verification**                                                                                   | **Cannot be done yet** in-session — SSM `send-command` failed on parameter quoting (access is fine: valid IAM identity, `i-0c9b283b31d6b5ca7` = `agent-orchestrator-vm-1`, running). Retry with a JSON parameter file.                                                                                                                                | mechanical retry                        |
+| **Cross-cloud WIF for the AO VM**                                                                                 | **Operator-owned.** The AO VM has NO GCP identity at all (AWS EC2, no ADC, no SA key, no WIF pool). Blocks the #17 timer from ever being installed.                                                                                                                                                                                                   | operator                                |
+| **liquidations remediation execution**                                                                            | **Operator-owned** at the backfill step (re-driving ~150k cells is a VM launch + cost decision under delete-safety/launch gating).                                                                                                                                                                                                                    | operator, after root cause              |
+
+**Recommended NEXT item: the liquidations root cause** — it is the only finding still actively degrading (~150k
+attempted_failed cells accruing), and its diagnosis just reversed, so nobody should act on the old hypothesis.
+
+## Lessons — carry these, they each cost real time
+
+1. **A control sample is not optional before anything destructive.** The "2019 Deribit vintage" theory was refuted by
+   ONE probe of a 2025 shard (identical 25-column schema, identical failure). Acting on it would have deleted 6+ years
+   of good data and left the real bug (adapter routing) live. Now encoded as `/data-pipeline-alerts-reconcile` §1.5(iv).
+2. **`| tail` destroys the exit code.** Three times this session a "green" gate/ship was actually a FAILURE — the
+   reported code was `tail`'s. Always `rc=$?; echo "X_EXIT=$rc"; exit $rc`, never pipe the thing whose status matters.
+3. **A "fixed template" claim must be read in the code, not inherited from a doc.** The `(0 → 0)` figure was ALWAYS
+   interpolated; the repeated zeros were a symptom of the bucket-blind reader. The issue doc was wrong and it was
+   repeated several times before an agent read the git history to inception.
+4. **`ruff --fix` is WRONG for F401 on intentional re-exports** — it deletes the import and silently breaks the
+   attribute paths an extraction was designed to preserve. Use `# noqa: F401` with a reason.
+5. **A gate can pass and still be non-hermetic.** The pytest fake-GCS backend at `$TMPDIR/local-storage/` PERSISTS
+   between runs, so a claim written by one run suppressed the alert the next run asserted on — two tests passed, then
+   failed, with no code change. Run a suite TWICE before trusting it.
+6. **Extraction's second-order cost**: a moved function takes its imports with it, so every `patch('<old_module>.X')`
+   must be repointed. Caught in `_captured_reader` (resolve_bucket_name) — worth checking on every future extraction.
+7. **Verify the emitter, don't infer it from cadence.** `gcloud logging read` on `resource.labels.job_name` proved the
+   Cloud Run Job was the sole source of the storm; a cadence match alone would have been circumstantial.
+
 ## Progress Log
 
 - **2026-08-10 (interactive, slot 1)**: Traced one pasted alert dump to root cause rather than triaging alert-by-alert.
@@ -227,3 +284,22 @@ last_updated: 2026-06-27
   `tail`, so the reported exit code was tail's, not the gate's — corrected by propagating `exit $rc`. Three successive
   QG runs failed for three different causes (a SIGPIPE flake; non-hermetic state I introduced; an isort violation I
   introduced) before a genuine `QG_EXIT=0`.
+
+- **2026-08-10 (checkpoint before compaction)**: SHIPPED this session — `unified-trading-library@3b006d9f`
+  (preemption-safe manifest drain), `market-data-processing-service@93d783df` (chain adapter routing),
+  `unified-trading-pm@8ad5879647` (parallel-agent rule + codex §5), `unified-trading-pm@b2c20ccdae` (parallel-agent cap
+  10→5), `unified-trading-pm@280b3c0aac` (macOS physical-core detection in qg-host-governor),
+  `unified-trading-pm@67c4c42f92` (QG governor default flipped token→reservation, fleet-wide). Firestore IAM
+  (`roles/datastore.user` on `uts-prd-sa`) applied by the operator and verified live.
+
+  **The throughput story, corrected twice.** I spent a long stretch attributing slow shipping to "the governor caps
+  gates at 2 host-wide, so parallel gating is futile", and wrote that into codex §5. Both halves were wrong. First, the
+  macOS branch of `_qg_governor_default_k` never existed, so `lscpu`+`nproc` both missing made `cores` fall back to a
+  hardcoded 4 → K=2 on EVERY Mac regardless of size (a 24-core Mac Studio got 2, not 6) — fixed with
+  `sysctl -n hw.physicalcpu`; it happens to yield the SAME K=2 on this 10-core box, which is why it hid. Second, and
+  much bigger: the reservation ledger that replaces fixed-K admission was already fully built, tested, and LIVE on the
+  AO VM since 2026-07-22 — this laptop was simply never bootstrapped, so `QG_GOVERNOR_MODE` was unset and defaulted to
+  `token`. A dispatched agent, briefed to BUILD the wiring, correctly refused and verified the existing implementation
+  instead. Flipping the default (operator decision, previously deferred six times) takes this host from K=2 to **8 CPU
+  slots / 17.2 GB RAM budget**, verified by `--status` and by slots 1+2 resolving to the identical shared ledger. codex
+  §5 has been corrected to say `K` is a token-mode backstop only.

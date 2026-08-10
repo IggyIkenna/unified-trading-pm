@@ -176,8 +176,13 @@ Sizing intuition for the gate queue behind them — the governor's own limit is 
   unnoticed because a 10-physical-core operator laptop lands on `floor(10/4)=2` anyway — the same answer — but a 24-core
   Mac Studio was silently capped at 2 instead of 6. Note `hw.physicalcpu`, NOT `hw.ncpu`/`hw.logicalcpu`, which
   over-count on SMT Intel Macs.
-- So a **10-core operator laptop still grants only 2 gate slots** — correctly, not by accident. That is why a wide
-  fan-out cannot speed shipping up on a laptop, and the fix above does not change that.
+- **`K` is the TOKEN-mode cap, and token mode is no longer the default.** `QG_GOVERNOR_MODE` was flipped
+  `token → reservation` fleet-wide on 2026-08-10, so `K` now serves only as a runaway backstop; real admission is the
+  RAM/CPU reservation ledger (§ above). Under reservation the same 24 GB/10-core laptop admits **8 concurrent
+  service-repo gates** (RAM budget 17.2 GB, CPU slots 8), not 2. An earlier revision of this section claimed a laptop
+  "grants 2 gate slots no matter what" — that was true only of token mode, and only of un-bootstrapped hosts, which is
+  precisely the condition the flip removed. Do not re-derive throughput limits from `K` without first checking
+  `qg-host-governor.sh --status` for the live `MODE=`.
 - On **Linux** (the AO VM) `lscpu` resolves, so it gets its real `floor(cores/4)` (e.g. 24-core → 6).
 - Separately `QG_TOTAL_INSTANCE_CAP` (total-instance gate) defaults to `floor(cores × 0.75)`, floored at 6.
 
