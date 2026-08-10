@@ -802,3 +802,31 @@ in /tmp (all regenerable — watcher.sh copies + heredoc query extracts + logs).
 - **NEXT ACTION**: `kill -0 3828905` — dead (expected). Re-arm from committed watcher script. Fleet likely still 5 (FRED
   bottleneck). When the lock eventually clears: watcher launches ES_OPT 2025+2026, manifest-verifies, plan-flips,
   commits, pushes, calls /done.
+
+### 2026-08-10T11:01Z — slot 21, post-compaction continuation — fleet 5→3, watcher re-armed
+
+**Status: IN FLIGHT — todo #2 still `[ ]`.** Session resumed post-compaction (PM@88a4d6df51, ahead=0, all repos clean).
+Prior watcher PID 3828905 dead at pickup (expected — no `es.opt` processes in `ps -ef`). 7 cold scratchpads in `/tmp`,
+all regenerable.
+
+**Direct lock check (11:01Z)**: **3** `tradfi-bf-*` VMs (down from 5 at the ~10:46Z checkpoint — NASDAQ 2024-d02 and one
+CME shard completed + self-deleted normally):
+
+- `tradfi-bf-cme-ohlcv-1m-eth-2022-20260810-030103` (~8.0h old, launched 2026-08-09 20:01 PDT)
+- `tradfi-bf-fred-full-20260809-150543` (~27.0h old, launched 2026-08-09 08:05 PDT — still the bottleneck)
+- `tradfi-bf-nyse-ohlcv-1m-2024-d02-20260810-090937` (~1.9h old, launched 2026-08-10 02:09 PDT)
+- 0 `tradfi-bf-es-opt-*` VMs
+- 0 `wave_launcher.py`
+
+**Re-armed watcher**: PID **485362**, verified isolated (PGID=SID=PID=485362, PPID=219433), setsid nohup from committed
+`deployment-service/scripts/vm/es-opt-backfill-watcher.sh` (sed-patched slot=21,
+task=tradfi_satellite_ao_dispatch_batch6- f9921af83ce2). Poll 1 confirmed 3 VMs, heartbeat to AO server `{"ok":true}`.
+Scratchpad: `/tmp/es-opt-watcher-slot21-20260810T110131Z`. No code changes — all fixes
+(`c99ab99b`/`acf965d9`/`be6d4669`/`77a95833`) already on origin. Watcher targets only 2025+2026, checkbox flip gated on
+2025≥90% AND 2026≥95%.
+
+**Fleet trend**: 8→6→5→3 across ~2h. FRED full (27h+, ~28% through ~78 months) remains the long pole — lock unlikely to
+clear for several more hours. Operator standing directive unchanged: keep waiting, no `--force`.
+
+- **NEXT ACTION**: `kill -0 485362` — likely dead (expected per pattern). Re-arm from committed watcher script. Fleet
+  trending down; FRED full is the bottleneck. When lock clears: watcher launches ES_OPT 2025+2026 autonomously.
