@@ -139,11 +139,13 @@ shared-plan-file contention class that already produced
       landing on LDR. See Progress Log for full investigation details. Done when: a marker-bearing plan committed via
       the same path is REJECTED pre-push, with the gap identified + closed (or a documented, intentional exclusion).
       (repo: unified-trading-pm)
-- [ ] [DEVOPS] P2. **Narrow `check_conflict_markers.sh`'s `=======` exclusion** so an ORPHANED mid-doc `=======` line (a
-      committed `=======` NOT directly under an H1 text line as a setext underline — the corpus uses ATX headers, so a
-      genuine setext underline is already non-canonical) is flagged as conflict-marker debris. Keep the
-      setext-H1-underline false-positive guard. Done when: a fixture with an orphaned `=======` in a Progress Log fails
-      the check, and a genuine `Title` + setext-underline form still passes. (repo: unified-trading-pm)
+- [x] ✅ [DEVOPS] P2. **Narrow `check_conflict_markers.sh`'s `=======` exclusion** — `unified-trading-pm@9b7e2cc451`.
+      Added an awk-based orphaned-`=======` check: lines of 7+ `=` signs NOT directly under a non-empty text line
+      (setext-H1 guard) and shorter than 30 chars (separator-line guard) are flagged as conflict-marker debris. Tested:
+      orphaned `=======` → exit 1 (caught); `Title\n=======` setext → exit 0 (skipped); `======...======` (42 chars)
+      separator → exit 0 (skipped); combined `=======` + `seven-`>` close-marker` fixture → exit 1 (both caught). Full
+      810-file corpus clean (exit 0). Done when: a fixture with an orphaned `=======` in a Progress Log fails the check,
+      and a genuine `Title` + setext-underline form still passes. (repo: unified-trading-pm)
 - [ ] [DOCS] P2. **Scan active plans for the concurrent-same-file-Progress-Log shape** that corrupted
       `multi_leg_execution_systems_audit_2026_08_10.md`: multiple same-priority `- [ ]` todos in ONE plan doc that each
       append a Progress-Log entry + flip a checkbox in that same doc (concurrent dispatch → parallel slots edit one
@@ -180,3 +182,11 @@ shared-plan-file contention class that already produced
   unreachable in the current clone — consistent with a rebase-created commit whose original hash was garbage-collected.
   **Deferred to P2 todos**: (a) narrowing the `=======` exclusion in `check_conflict_markers.sh` to catch orphaned
   mid-doc `=======` lines, (b) scanning active plans for the concurrent-same-file-Progress-Log shape.
+- **2026-08-10 (slot 6, cicd)**: todo 2 shipped (`unified-trading-pm@9b7e2cc451`). Added awk-based orphaned-`=======`
+  check to `check_conflict_markers.sh`. Lines matching `^={7,}$` are flagged UNLESS (a) the previous line is a non-empty
+  text line (setext-H1 underline guard), or (b) the line is ≥30 `=` chars (visual separator convention). Three fixtures
+  verified: orphaned `=======` → exit 1 (caught), `Title\n=======` setext → exit 0 (correctly skipped),
+  `======...======` 42-char separator → exit 0 (correctly skipped). Combined `seven-`>` close-marker` + orphaned
+  `=======` fixture → exit 1 (both caught, separate messages). Full 810-file plans corpus clean (exit 0). The original
+  open/close marker PAT is unchanged — this only adds the middle-marker detection that was the proven blind spot in
+  `505bfe3ced`.
