@@ -25,7 +25,11 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [agent-orchestrator, deploy-currency, ao-self-pull, dirty-gate, main-agent, gitignore, silent-alert-failure]
-related: [/plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md]
+related:
+  [
+    /plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-07-30
 author: unknown
 priority: P1
