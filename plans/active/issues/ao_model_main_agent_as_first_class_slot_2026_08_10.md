@@ -97,10 +97,15 @@ row appear to belong to main.
       reads `slot_id == 0`, classifying each as "main identity" vs "no-slot sentinel". Done-when: the inventory is in
       this doc's Progress Log with file:line for each, and each is labelled with which of the two meanings it uses. —
       agent-orchestrator (audit-only, see Progress Log)
-- [ ] [BACKEND] P1. Disambiguate the sentinel: give the no-worker-slot rows a distinct marker (a nullable `slot_id` or a
+- [x] [BACKEND] P1. Disambiguate the sentinel: give the no-worker-slot rows a distinct marker (a nullable `slot_id` or a
       dedicated sentinel value that cannot collide with a real slot id) and migrate existing rows. Done-when: no code
       path uses `slot_id == 0` to mean "no slot", and a migration test proves existing plan-level rows still resolve
-      correctly.
+      correctly. — agent-orchestrator@0efa913: added `orm.NO_WORKER_SLOT_SENTINEL = -1`, migrated every write/read site
+      (`bootstrap.py`, `plan_health.py`, `blocked_reconcile.py`, `routes/backlog.py`, `regen_backlog_from_plan.py`'s raw
+      SQL) off the literal `slot_id=0`, added `bootstrap._migrate_blocked_queue_no_slot_sentinel` (data-only UPDATE for
+      existing rows on live DBs) + `tests/test_migrate_blocked_queue_no_slot_sentinel.py` proving a legacy `slot_id=0`
+      row migrates to -1, a real worker row is untouched, and the migration is idempotent; full test suite (3069
+      passed) + ruff + basedpyright clean.
 - [ ] [BACKEND] P1. Create and maintain a real `SlotRow` for main (id per the audit's decision), owned by
       `MainAgentKeeper`: `status`, `context_used_pct`, `context_pressure`, `last_ping`, `claude_session_id` kept current
       on the keeper's own tick. Done-when: `/api/state` shows main's row with a live context pct that tracks its
@@ -181,3 +186,25 @@ row appear to belong to main.
   Net: three distinct encodings of "no real SlotRow" collide today — literal `0` meaning main (A), literal `0` meaning
   "no slot at all, not main" (B), and `None` meaning main inside `context_lifecycle.py` specifically (C). Any fix for
   the todo-2 disambiguation must account for all three, not just the two the issue originally named.
+
+- 2026-08-10 — Todo 2 (disambiguate the sentinel) complete, agent-orchestrator@0efa913. Resolved Meaning B only (A and C
+  are untouched — Meaning A's literal `0` for main stays until todo 3 gives main a real `SlotRow`;
+  `context_lifecycle.py` already used `is None`, confirmed clean by the audit). Chose a dedicated constant
+  (`orm.NO_WORKER_SLOT_SENTINEL = -1`) over a nullable `BlockedRow.slot_id` column: the audit found SQLite has no
+  `ALTER COLUMN` support in this repo (only `ADD COLUMN`, guarded by `inspector.get_columns()`), so making an existing
+  `NOT NULL` column nullable would need a net-new 12-step-dance migration primitive with zero precedent; a same-shape
+  `UPDATE ... SET slot_id = -1 WHERE slot_id = 0` fits the existing `bootstrap.py` migration-function pattern exactly
+  (mirrors `_migrate_escalation_root_key`'s backfill). Verified safe to blanket-rewrite: main has no path that ever
+  creates a REAL `BlockedRow` with `slot_id=0` today (`main_agent_keeper.py` is the first RESPONDER to worker `/blocked`
+  questions, never a creator of its own), so every existing `slot_id=0` row is provably Meaning-B. Touched:
+  `bootstrap.py` (write site + new `_migrate_blocked_queue_no_slot_sentinel`, wired into `create_all_tables`),
+  `plan_health.py` (doc_drift write), `blocked_reconcile.py` + `routes/backlog.py` (read/branch sites — two
+  previously-unguarded `get_slot(row.slot_id)` lookups now self-heal to `None` for a sentinel row since no `SlotRow` is
+  ever keyed on `-1`, documented in place), `regen_backlog_from_plan.py`'s raw-sqlite3 GC `DELETE` (easy to miss — not
+  ORM). Updated every test fixture constructing `BlockedRow(slot_id=0, ...)` for the Meaning-B shape across 7 files
+  (found 2 the initial pass missed: `test_plan_health.py:1441`'s `add_blocked` call-arg assertion and
+  `test_regen_backlog_from_plan.py`'s raw-SQL GC seed — both would have silently broken against the new sentinel had
+  they not been caught by the targeted pytest run before shipping). New migration test
+  `tests/test_migrate_blocked_queue_no_slot_sentinel.py` proves a legacy `slot_id=0` row migrates to `-1`, a real worker
+  row (`slot_id=7`) is untouched, and the migration is idempotent. Full suite (3069 passed, 2 skipped) + ruff +
+  basedpyright clean.
