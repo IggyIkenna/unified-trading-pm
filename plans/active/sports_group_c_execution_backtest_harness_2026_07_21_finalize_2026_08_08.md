@@ -25,7 +25,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-10"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -99,11 +99,21 @@ context_scope:
       **Done when**: a citation note exists in the live-mode-readiness doc's Progress Log either way (still blocked on
       Group-B, or genuinely unblocked). Repo: unified-trading-pm.
 
-- [ ] [DOCS] P3. **Archive the parent plan per the 6-step ritual, and only then.** In order: (1) confirm zero open
-      `- [ ]` todos remain (all 5, post-verification above); (2) add the archival banner + set `status: complete`; (3)
-      confirm no codex doc needs an update (this plan didn't introduce a new pattern beyond the existing
-      cefi/tradfi/defi domain-runner shape, so likely none — verify, don't assume); (4) update every referrer's path
-      corpus-wide — grep for `sports_group_c_execution_backtest_harness_2026_07_21` and repoint each hit (including
+- [ ] [TASK] P3. **Fix the review finding on `Any` + `# type: ignore` introduced in the harness commits**
+      (`execution-service@893355cb` + `@7680d3f0d`).
+      `execution_service/engine/backtest/actors/signal_driven_v3_base.py:88` ships
+      `instruction_data: dict[str, dict[str, Any]]` (changed from `object` because Nautilus' msgspec `dec_hook` rejects
+      `object` fields) — a nested-generic `Any` the QG Any-grep (`: Any|-> Any|[Any]`) does not catch, so the gate
+      slipped green. Replace it with a typed shape (a `TypedDict`/Pydantic model, or `dict[str, dict[str, Unknown]]` if
+      that round-trips) and VERIFY Nautilus msgspec serialization still round-trips for the instruction values (int
+      direction, float benchmark_price, NaN TP/SL placeholders). Also remove the 2 blanket `# type: ignore` in
+      `tests/unit/cli/test_sports_backtest_exec_alpha.py:74,78` (workspace-wide ban, STEP 5.24) — prefer a targeted
+      narrow ignore or a typed fix. **Done when**: no `Any` remains in the production file, the test has no blanket
+      `# type: ignore`, QG is green, and the hermetic exec-alpha test still passes. Repo: execution-service. In order:
+      (1) confirm zero open `- [ ]` todos remain (all 5, post-verification above); (2) add the archival banner + set
+      `status: complete`; (3) confirm no codex doc needs an update (this plan didn't introduce a new pattern beyond the
+      existing cefi/tradfi/defi domain-runner shape, so likely none — verify, don't assume); (4) update every referrer's
+      path corpus-wide — grep for `sports_group_c_execution_backtest_harness_2026_07_21` and repoint each hit (including
       `sports_predictions_live_mode_activation_readiness_2026_07_21.md`'s `related:` list and prerequisites section) to
       the archived path (leading-slash, repo-root-relative); (5) clear the lock if any was set (confirm rather than
       assume — none is expected here); (6) run `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci     --no-regen` and
@@ -127,3 +137,10 @@ contract) · `plans/active/task_template.md` §4 (finalize-plan-coverage rule)
   `gate_on_depends: true` until the parent plan's 5 todos are done, mirroring the
   `defi_compute_gcp_migration_2026_08_08_finalize_2026_08_08.md` precedent for a self-contained (non-batch) plan's
   finalize sibling.
+
+- **2026-08-10 (main agent, routing review finding)**: Review surfaced a craft/standards finding on the harness commits
+  (`execution-service@893355cb` + `@7680d3f0d`): `signal_driven_v3_base.py:88` ships `dict[str, dict[str, Any]]` (a
+  nested-generic `Any` the QG Any-grep misses, so the gate slipped green) + 2 blanket `# type: ignore` in
+  `tests/unit/cli/test_sports_backtest_exec_alpha.py:74,78`. Not done-blocking (hermetic `execution_alpha_bps` test
+  itself verified good) — routed as a new `[TASK] P3` todo above. Slot 19 (author) is killed; the todo is available for
+  any worker.
