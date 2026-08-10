@@ -254,6 +254,41 @@ _sdp_host_label() {
 _sdp_isolation_default() { [[ "$(_sdp_host_label)" == "laptop" ]] && echo 1 || echo 0; }
 _SDP_ISOLATED_EFFECTIVE="${SDP_ISOLATED:-$(_sdp_isolation_default)}"
 
+# After an isolated push, a file that was UNTRACKED in the caller's tree is now tracked on
+# origin -- while the caller still has an untracked file sitting at that same path. The next
+# `git pull` / `git merge --ff-only` then refuses with "The following untracked working tree
+# files would be overwritten by merge ... Please move or remove them", which READS LIKE A
+# CONFLICT and is not one. Reported live on 2026-08-10 by a peer session, minutes after
+# isolation shipped: "trivial once understood, but the failure mode reads like a real conflict
+# at first glance."
+#
+# Remove ONLY the provably redundant copies -- untracked here AND byte-identical to the blob
+# that just landed. A copy that DIFFERS is left exactly where it is and warned about: it is
+# newer content, and this script's whole premise is that it never destroys what it did not
+# write. (Byte-identity is checked against the pushed blob, not assumed from the fact that we
+# copied the file in: the caller may have edited it while the child was running.)
+_sdp_reconcile_caller_duplicates() {
+  local f blob_local blob_remote removed=0
+  for f in "${FILES[@]}"; do
+    [ -f "$f" ] || continue
+    # Only an UNTRACKED file can produce the ff-only "would be overwritten" refusal.
+    [ -z "$(git ls-files -- "$f" 2>/dev/null)" ] || continue
+    # The worktree shares this repo's object store and refs, so the child's push already
+    # advanced origin/<branch> here -- no fetch needed. If it does not resolve, do nothing.
+    blob_remote="$(git rev-parse -q --verify "origin/${BRANCH}:${f}" 2>/dev/null)" || continue
+    [ -n "$blob_remote" ] || continue
+    blob_local="$(git hash-object -- "$f" 2>/dev/null)"
+    if [ "$blob_local" = "$blob_remote" ]; then
+      rm -f -- "$f" && removed=$((removed + 1))
+      echo "  ✓ removed now-redundant untracked copy of $f — identical to what landed; it arrives TRACKED on your next ff-pull"
+    else
+      echo "  ⚠ $f is untracked here and DIFFERS from what landed — left in place. A following ff-pull will refuse to overwrite it; that is a stale duplicate, NOT a conflict: move it aside, pull, then re-apply." >&2
+    fi
+  done
+  [ "$removed" -gt 0 ] && echo "  (isolated mode commits from a private checkout, so a NEW file never becomes tracked in your own tree)"
+  return 0
+}
+
 if [[ "$_SDP_ISOLATED_EFFECTIVE" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
   _sdp_iso_parent="${TMPDIR:-/tmp}/sdp-iso-$$"
   _sdp_origin_repo="$(pwd)"
@@ -320,6 +355,7 @@ if [[ "$_SDP_ISOLATED_EFFECTIVE" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
       SDP_IN_ISOLATION=1 SDP_ISO_DEPTH=$((_SDP_ISO_DEPTH + 1)) SDP_CALLER_REPO="$_sdp_origin_repo" bash "$_SDP_SELF" "$MSG" --files "${FILES[*]}" "$BRANCH"
       _sdp_rc=$?
       cd "$_sdp_origin_repo" || true
+      [ "$_sdp_rc" = "0" ] && _sdp_reconcile_caller_duplicates
       exit "$_sdp_rc"
     fi
     echo "  isolation: could not stage caller files into the worktree — falling back to shared index" >&2

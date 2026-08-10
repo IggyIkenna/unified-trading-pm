@@ -52,10 +52,16 @@ setup() {
   cd "${WORK}/.tabs/29/unified-trading-pm"
   echo "content" > plan.md
 
-  PATH="${WORK}/bin:$PATH" run bash "$SCRIPT" "docs(plans): identity propagation regression" --files "plan.md"
+  # SDP_ISOLATED=1 is REQUIRED, not incidental. setup() exports ORCHESTRATOR_VM_ID=planning to
+  # pin the host label in the expected author string, and isolation now defaults OFF on a named
+  # VM — so without this the test quietly stopped exercising isolated mode at all while still
+  # claiming to (caught 2026-08-10, the same day the host gate landed).
+  PATH="${WORK}/bin:$PATH" SDP_ISOLATED=1 run bash "$SCRIPT" "docs(plans): identity propagation regression" --files "plan.md"
 
   [ "$status" -eq 0 ]
   [[ "$output" == *"✅ Pushed"* ]]
+  # Proves isolation actually engaged; the author assertion below is meaningless otherwise.
+  [[ "$output" == *"isolated-worktree mode"* ]]
   # The push updates origin, not the caller's local branch — read the PUSHED commit's author.
   run git ls-remote "${WORK}/origin.git" live-defi-rollout
   pushed_sha="${lines[0]%%$'\t'*}"
