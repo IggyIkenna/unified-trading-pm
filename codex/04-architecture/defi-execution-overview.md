@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [defi, execution, connectors, cost, mev, aave, uniswap]
 related:
   [
-    mev-protection.md,
+    /codex/04-architecture/mev-protection.md,
     /codex/04-architecture/interface-credential-convention.md,
     /codex/04-architecture/custody-providers.md,
   ]
@@ -449,3 +449,21 @@ depend on `defi_catalogue_chain_primitives_2026_05_10.md` Phase 3. Update this s
 | execution-service `matching_engine/defi/slippage_cost_model.py`      | Pool-matcher + analytical slippage estimation                   |
 | execution-service `matching_engine/defi/flash_premium_cost_model.py` | FlashLoanProvider + FLASH_PREMIUM_BPS                           |
 | execution-service `matching_engine/defi/cost_aggregator.py`          | DefiCostAggregator + DefiCostEstimate + build_defi_fill_context |
+
+## Removed vendors — the ban is FLEET-WIDE, not DeFi-execution-only (ruled 2026-08-10)
+
+Never scaffold an adapter, a registry entry, a `PLANNED_VENUES`/`SourceCapability` declaration, or a credential ask for:
+**Elysium · Arkham · Bloxroute · Infura · Kaiko · Massive (formerly Polygon.io)**. (The `polygon` that appears in DeFi
+code is the CHAIN, not the vendor — that one is fine.)
+
+**Why this section exists.** Until 2026-08-10 this list lived only in `cursor-configs/CLAUDE.md`'s _"Working on DeFi
+EXECUTION?"_ conditional bullet. On 2026-08-09 a session scaffolded a brand-new **Kaiko on-chain analytics** adapter in
+market-tick-data-service (`adapters/onchain/kaiko.py` + test + a `PLANNED_VENUES` entry + a UAC `SourceCapability`) and
+filed a credential ask for `kaiko-api-key` — entirely in good faith, because writing an MTDS _analytics_ adapter is not
+"working on DeFi execution", so the conditional bullet did not obviously bind it. The operator ruled the ban is
+workspace-wide, the scaffold was removed under `/plans/active/kaiko_provider_removal_2026_08_10.md`, and the rule was
+promoted into CLAUDE.md's **always-on** section so no subsystem can read itself out of scope again.
+
+**The generalisable lesson**: a ban that applies to every subsystem must not live under a conditional
+`§ When your task touches X` heading — the conditional index is explicitly "open this only when your task touches that
+domain", so anything filed there is invisible to every other domain by design.

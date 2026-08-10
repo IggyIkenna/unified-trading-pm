@@ -54,7 +54,8 @@ ENFORCES the bans, so you don't memorise them: no `os.getenv()` (use `UnifiedClo
 `basedpyright` clean; lazy-import heavy ML deps; file/complexity limits; **DTZ / TID251 / fallback-import baselines only
 go DOWN (no new violations on shipping)**. SSOT: `codex/06-coding-standards/` (README + quality-gates.md). Use UAC SSOT
 types (`unified_api_contracts.{domain}` only — never `canonical.*`/`normalize_utils.*`/deleted dirs); deep paths are
-UAC-internal.
+UAC-internal. **Removed vendors — FLEET-WIDE ban, not DeFi-only: Elysium · Arkham · Bloxroute · Infura · Kaiko ·
+Massive-fka-Polygon.io** (`polygon` = the CHAIN).
 
 ## Git discipline + shipping pipeline
 
@@ -356,10 +357,10 @@ architecture (L0–L4)".
   hand-roll; **backfill VMs default SPOT**, preemption recovery resumes from measured PROGRESS, never replays
   `START_DATE`; **Tardis: hard cap 1 concurrent VM, both clouds** (N>1 storms the API — count the fleet before
   launching); regularly audit for preemption-without-recovery + billing-waste (`/vm-preemption-billing-waste-audit`).
-  **Rightsizing HARD RULE (2026-08-10)**: any VM running >30min gets `/vm-resource-rightsizing-check`
-  (CPU+mem-growth) — skip only if a cited doc justifies the sizing.
-  SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`, `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`,
-  `…/deployment-observability.md`, `…/vm-preemption-and-billing-waste-monitoring.md`, `…/data-pipeline-alerts.md`.
+  **Rightsizing HARD RULE (2026-08-10)**: any VM running >30min gets `/vm-resource-rightsizing-check` (CPU+mem-growth) —
+  skip only if a cited doc justifies the sizing. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`,
+  `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`,
+  `…/vm-preemption-and-billing-waste-monitoring.md`, `…/data-pipeline-alerts.md`.
 - **A critical service (AO first) looks idle/broken?** Diagnose before restarting — usually account/quota headroom
   (`disabled` != auto-clear on `rate_limited_until`; check `weekly_resets_at`). Queue never needs manual replay. SSOT
   (diagnostic order + fix-vs-not table, per service): `/codex/15-runbooks/safe-service-restart-procedures.md`.
@@ -369,9 +370,8 @@ architecture (L0–L4)".
   `quarantined/timeout/ error` page, `dispatched/queued` don't. SSOT:
   `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
-  IS→MTDS→features-onchain→strategy→execution; removed providers, do NOT reference:
-  Elysium/Arkham/Bloxroute/Infura/Kaiko + Massive-formerly-Polygon.io (the `polygon` in DeFi code is the CHAIN, not the
-  vendor); Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT: `/codex/04-architecture/defi-execution-overview.md`.
+  IS→MTDS→features-onchain→strategy→execution; Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
+  `/codex/04-architecture/defi-execution-overview.md`.
 - **Touching TRANSFERS / funds / clients?** **HARD: funds NEVER move between clients** — every transfer scoped to one
   `client_id` (`TransferCoordinator` raises `CrossClientTransferForbiddenError`); "cross-client rebalancing" framing is
   review-blocking. Per-client isolation = one subprocess per client. SSOTs:

@@ -27,8 +27,8 @@ related:
 created: "2026-08-10"
 last_updated: "2026-08-10"
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.4
@@ -133,3 +133,12 @@ each source doc's own Progress Log (not just trusting the classifier's one-line 
   `ao_satellite_ao_dispatch_batch*` (1-18) + finalizes — no overlap found for either source doc. See the run's own
   parked-findings append (`ag_closeout_audit_ao_parked_2026_08_10.md`) for the full per-doc classification ledger,
   including the 2 `ao_eligible:true` classifier calls that were checked and overridden to false on direct verification.
+
+- **2026-08-10 — dispatch-enablement fix (autonomous run, slot 1).** The operator approved this batch, and
+  `status: draft` → `active` was flipped accordingly. That alone did NOT make it dispatchable: this doc was authored
+  `assigned_vm: NA` + `execution_scope: local-only`, both of which
+  `regen_backlog_from_plan.py::_plan_contributes_briefs` rejects outright, so its 2 todos would never have reached the
+  AO backlog. Its own peer batches (batch13, batch17) are `planning` / `orchestrator-agent`. Corrected to match, so the
+  approval takes effect. The source parked doc's todo text ("Flip to `status: active` to dispatch") was itself
+  incomplete and is the reason this was missed — noted here so the next batch approval checks all three fields, not just
+  `status`.

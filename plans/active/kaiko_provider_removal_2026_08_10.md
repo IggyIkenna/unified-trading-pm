@@ -86,9 +86,10 @@ have.
 
 ## Todos
 
-- [ ] [DATA] P2. **Remove Kaiko from `unified-api-contracts` first** (dependency order: UAC is T2, MTDS depends on it).
-      Delete `KAIKO_BASE_URL` and the `_KAIKO` `SourceCapability` from
-      `unified_api_contracts/registry/capability_declarations/_altdata.py` and its re-export from that package's
+- [x] ✅ [DATA] P2. **DONE 2026-08-10 — `unified-api-contracts@c48238266b`** (QG ALL PASSED 655s, post-push ancestry
+      verified on LDR; `rg -ci kaiko` across the repo = 0). **Remove Kaiko from `unified-api-contracts` first**
+      (dependency order: UAC is T2, MTDS depends on it). Delete `KAIKO_BASE_URL` and the `_KAIKO` `SourceCapability`
+      from `unified_api_contracts/registry/capability_declarations/_altdata.py` and its re-export from that package's
       `__init__.py`. **Done when**: `rg -ci kaiko` returns 0 across `unified-api-contracts/` (excluding `.venv`), and
       `bash scripts/quality-gates.sh` is green in that repo. Ship via quickmerge.
 - [ ] [DATA] P2. **Remove the MTDS adapter and its wiring.** Delete
