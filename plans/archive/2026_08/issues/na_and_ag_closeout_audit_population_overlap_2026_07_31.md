@@ -21,7 +21,7 @@ summary: >-
   same-day, into the sibling `/ag-closeout-audit ci` skill's draft `ci_satellite_ao_dispatch_batch4_2026_07_31.md` —
   caught only because this run happened to cross-check that draft manually before finalizing verdicts; nothing in either
   skill's own procedure currently requires that check.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ao] # corrected 2026-08-04 (ag-closeout-audit ao tranche run) -- was [cross-cutting]. Agent-operating-framework
@@ -59,6 +59,9 @@ estimate_calibrated_ai_days: 0.3
 assigned_role: infra
 drift_direction: correct-codex
 resolved_by:
+  operator ruling 2026-08-08 (question 1, keep including NA docs) +
+  /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 3 surface (d) (question 2, already
+  shipped — confirmed live 2026-08-10)
 locked_by:
 locked_since:
 supersedes:
@@ -75,6 +78,13 @@ context_scope:
 ---
 
 # na-eligibility-audit / ag-closeout-audit population overlap
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). Both open items closed: question 1
+> (should `/ag-closeout-audit` exclude `assigned_vm: NA` docs) was operator-ruled 2026-08-08 (keep including them); the
+> 4th conflict-check surface this doc recommended is confirmed already live in
+> `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3 (surface (d), word-for-word match)
+> and referenced by both `na-eligibility-audit/SKILL.md` and `ag-closeout-audit/SKILL.md` — that stale checkbox is what
+> this archival pass caught and closed. Archived by the `ao` full-tranche RECLASSIFY sweep, group 3.
 
 ## What I found
 
@@ -138,13 +148,20 @@ batch/finalize docs drafted in the SAME run; (c) the tranche's own consolidated-
 draft batch from the OTHER skill's prior run" — exactly what caught today's 3 overlaps. This part is a low-risk,
 mechanical addition (not a judgment call) and I'd recommend it regardless of how (1) resolves:
 
-- [ ] [DOC] P2. Add a 4th conflict-check surface to
-      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3: "(d) any `status: draft`
-      `{ag}_satellite_ao_dispatch_batch{N}_*.md` for the same tranche, from EITHER skill's prior run (not just the same
-      run) — grep its `Source:`/`## Deferred`/`## Already covered` citations for the candidate doc's path before
-      finalizing a RECLASSIFY or drafting a new extraction." Update both `na-eligibility-audit/SKILL.md` and
-      `ag-closeout-audit/SKILL.md` to reference the new surface explicitly (the former's Phase 2, the latter's own Phase
-      3 conflict-check) rather than leaving it to be independently rediscovered per run.
+- [x] ✅ [DOC] P2. ~~Add a 4th conflict-check surface to
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3~~ — **CONFIRMED ALREADY SHIPPED
+      2026-08-10 (ao full-tranche sweep, group 3), checkbox was stale.** The codex doc's § 3 already carries surface
+      "(d) any `status: draft` `{ag}_satellite_ao_dispatch_batch{N}_*.md` for the same tranche, from EITHER
+      `/ag-closeout-audit` or `/na-eligibility-audit`'s prior runs (not just the current run) — grep its
+      `Source:`/`## Deferred`/`## Already covered` citations..." — word-for-word matching this todo's own recommended
+      text. Both `cursor-configs/skills/na-eligibility-audit/SKILL.md` (lines 34-35, 88-91, 237-238) and
+      `cursor-configs/skills/ag-closeout-audit/SKILL.md` (lines 233, 530) already cite the shared § 3 protocol
+      explicitly. Traced the actual shipping commit: `ao_satellite_ao_dispatch_batch6_2026_08_04.md`'s own todo (its
+      Progress Log cites `unified-trading-pm@c2083029dc`, "docs(codex): add 4th conflict-check surface for draft
+      satellite batches") shipped the codex-doc half of this fix; `plan_reconciler_findings_2026_08_08.md:205` confirms
+      it and notes this doc was left tracking "the SKILL.md cross-reference half... separately" — which the SKILL.md
+      grep above confirms is also already done. This is in fact the exact conflict-check protocol this sweep itself ran
+      against every RECLASSIFY/extraction in this session — confirming it is live, not just documented.
 - [x] ✅ [SCRIPT] P3. **RESOLVED 2026-08-08 (operator ruling, ao round-5 apply item 11 — see
       /plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md): "Keep including them -- catches
       real orphans."** Decided question (1) as option (b): `generate_ag_closeout_audit_candidates.py`'s candidate
@@ -172,3 +189,13 @@ duplicate-dispatch risk this run.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — Prior verdict re-verified — content unchanged or only
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: found the sole remaining open item (the 4th
+  conflict-check surface) was already shipped -- confirmed live in
+  `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sec 3 (word-for-word match) and cited by
+  both SKILL.md files; traced to `unified-trading-pm@c2083029dc` via ao_satellite_ao_dispatch_batch6_2026_08_04.md's own
+  todo. Flipped [x] with evidence. Doc now has 0 open todos, unlocked -- archived per the
+  plan-completion-and-archival-discipline HARD RULE (a plan with every todo done + unlocked MUST be archived
+  immediately). 6-step ritual applied: banner added above, status: open -> resolved, resolved_by filled, git mv to
+  plans/archive/2026_08/issues/, corpus referrers updated (ao_satellite_ao_dispatch_batch6_2026_08_04.md,
+  ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md).

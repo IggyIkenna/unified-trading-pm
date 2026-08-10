@@ -95,13 +95,19 @@ Two distinct defects compound:
       actually being on origin for code tasks — a `/done` with the slot clone still `ahead>0` on the touched repo should
       flip the task back to a landing-pending state, not read as durably done. Cross-ref
       `check_evidence_backed_completion.py`.
-- [ ] [INFRA] P1. Recover the orphaned commits on BOTH victim slots via a live-pane path, then confirm code on origin —
-      do NOT leave either false-done: - **slot 9 / `-010`**: land slot 9's orphaned features-service commit (`ahead=2`,
-      clean) — respawn slot 9 so a fresh worker re-runs quickmerge with a non-orphaned pane, OR operator lands the
-      committed SHA. - **slot 8 / `-011`**: land slot 8's orphaned features-service work — BUT this clone is
-      `ahead=2, behind=7` (review-reported, unchanged since 20:33:48), so recovery needs a **rebase-then-land**, not a
-      bare push; a fresh worker re-running quickmerge (STAGE 0.4 autostash-rebase) is the clean path. `-011` is the SOLE
-      remaining blocker of `sports_closeout_batch1_finalize-001` (critical path), so this recovery is time-sensitive.
+- [x] ✅ [INFRA] P1. ~~Recover the orphaned commits on BOTH victim slots via a live-pane path, then confirm code on
+      origin~~ — **CLOSED MOOT 2026-08-10 (ao full-tranche sweep, group 3)**. The 2026-07-31 conflict-gated re-triage
+      flagged this as "very likely moot" (both source plans fully archived with 0 open todos) but left the actual
+      "5-minute direct check" undone. Ran it: the sports pipeline-middle-leg-check work these `-010`/`-011` tasks were
+      both attempting is confirmed landed via a later, independent, SQUASHED commit —
+      `plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md:337` records **`features-service@7ea10aaa`**
+      explicitly as a "corrected citation — `4639106a` never reached origin; quickmerge hit repeated host-contention
+      timeouts + a strict-quickmerge trailer conflict from two separate manual commits, resolved by squashing to one
+      commit before the final green quickmerge run" — i.e. the orphaned slot-9/slot-8 work was superseded/re-shipped as
+      one clean commit rather than needing individual recovery. Independently confirmed `7ea10aaa` is a live ancestor of
+      `origin/live-defi-rollout` (`git merge-base --is-ancestor` from a live `features-service` checkout, 2026-08-10).
+      No recovery action needed; the orphaned local commits in slots 9/8's now-long-gone clones were simply abandoned in
+      favor of this superseding work.
 
 ## Second occurrence — slot 8 / `-011` (review slot-1 flag + main verify, 2026-07-24)
 
@@ -160,3 +166,12 @@ Confirmed a **second victim** of the same mechanism (review slot-1 msg 1892; mai
   superficial edits since last marker. Operator-gated, design-judgment, or standing-corpus-ruling work remains open.
 
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+
+- **na-eligibility-audit 2026-08-10 (ao full-tranche sweep, group 3)**: closed the orphaned-commit-recovery todo as MOOT
+  (see the checkbox above for the evidence chain -- features-service@7ea10aaa confirmed the superseding landed work,
+  independently re-verified as a live origin ancestor). **The remaining [INFRA] P1 item (gate /done acceptance on
+  code-on-origin) stays KEEP-NA** -- it touches the same /done completion path (server/routes/slots_worker.py) that 2
+  OTHER currently-active docs (cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md,
+  data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md) also have real open work against -- a genuine
+  file/logic-collision risk on dispatch-critical-path completion-acceptance code, not a stale gate. Doc goes from 2 open
+  items to 1.

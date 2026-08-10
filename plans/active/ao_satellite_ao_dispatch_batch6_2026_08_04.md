@@ -231,8 +231,8 @@ evidence-backed, zero-risk housekeeping action, not new work.
       `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3; wired both
       `na-eligibility-audit/SKILL.md` (its Phase 2) and `ag-closeout-audit/SKILL.md` (its own Phase 3 conflict-check
       section) to reference the new surface explicitly. Source:
-      `/plans/active/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item — its 2nd item is
-      an explicit operator/design-owner decision, stays open/NA). Repo: unified-trading-pm.
+      `/plans/archive/2026_08/issues/na_and_ag_closeout_audit_population_overlap_2026_07_31.md` (its 1st item — its 2nd
+      item was operator-ruled 2026-08-08; source doc fully closed + archived 2026-08-10). Repo: unified-trading-pm.
 
 - [x] ✅ [BACKEND] P2. **Rescue the 3 orphaned slot-12 commits onto `origin/live-defi-rollout`, one repo at a time —
       MOOT, all 3 already independently landed under fresh SHAs before this run.** For each of
