@@ -629,20 +629,21 @@ primary contention finding; LINT does.
       face value). One new tracked follow-up todo added (planning-vm profiler run) rather than leaving the gap as prose.
       — unified-trading-pm@(this commit)
 
-## Deferred work after 2026-07-31
+## Deferred work after 2026-08-10
 
-| Item                                                                                     | State / why deferred                                                                                                                                                                                                                                                             | Blocked on                                                                                                                                  |
-| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Optimize `check_pm_script_path_refs.py` (28% of a from-scratch run)                      | Not done — real work, well-scoped, nobody's turn but the next session's                                                                                                                                                                                                          | Nobody — pick it up any time                                                                                                                |
-| Solo re-measurement of `--test`/`--skip-typecheck`/`--skip-lint`/`--fast`/`--skip-codex` | **Done 2026-08-09 (slot-25)** — closed as "consider it satisfied" per this row's own text: host genuinely not idle (load 31.74/16 cores) at investigation time, and the profiler already answers "where does time go"; a bonus idle-window capture remains open but non-blocking | Nobody — satisfied                                                                                                                          |
-| `--skip-tests --skip-<X>` delta measurement (real per-phase cost)                        | **Done 2026-08-09** — see Results table 3; noise-limited (busy shared host), a clean idle-host re-run is a new optional follow-up, not this row                                                                                                                                  | Nobody — satisfied                                                                                                                          |
-| Phase 2 — planning-vm concurrent-load measurement (3 todos)                              | Cannot be done yet — needs the operator to say how to reach the planning-vm interactively (SSM vs. AO-dispatched task); the whole point is observing REAL concurrent-agent contention, not an idle-VM number                                                                     | **Operator** — needs a decision, not more local work                                                                                        |
-| Missing `.venv` on `ibkr-gateway-infra`/`unified-api-contracts` (this slot)              | Not done — noted as a real gap (same class as the `strategy-service` fix), ruled out as a QG-timing driver by the profiler, but still worth a `uv sync` for its own sake (stops the VSCode nag)                                                                                  | Nobody — trivial fix, just not yet done; not tracked as its own todo since it's a one-line `cd <repo> && uv sync` per repo, not scoped work |
+| Item                                                                        | State / why deferred                                                                                                                                                                                 | Blocked on                                     |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Run `profile_qg_resources.py` on planning-vm (P3, the 1 remaining `[ ]`)    | **Not done** — the last open todo; needs an AO-dispatched task to run the profiler single-core-pinned on the planning-vm under measured concurrent load to get a load-drift-free per-phase breakdown | Nobody — pick it up any time (AO-dispatchable) |
+| Missing `.venv` on `ibkr-gateway-infra`/`unified-api-contracts` (this slot) | Not done — noted as a real gap (same class as the `strategy-service` fix), ruled out as a QG-timing driver by the profiler, but still worth a `uv sync` for its own sake (stops the VSCode nag)      | Nobody — trivial fix, just not yet done        |
 
-**Recommended next item**: the `--skip-tests --skip-<X>` delta (3rd row) — it's the cheapest of the open items (a few
-short runs, no new tooling), directly closes the "Important nuance" gap in Results table 1, and doesn't need an operator
-decision. Phase 2 (4th row) is the actual point of this whole plan but is genuinely blocked on the operator, not on more
-solo work.
+**Previously deferred, now done 2026-08-09**: `check_pm_script_path_refs.py` optimization (done 2026-08-08,
+`unified-trading-pm@ec01e4167`) · solo re-measurement of 5 flags (slot-25, satisfied) · `--skip-tests --skip-<X>` delta
+(Results table 3) · Phase 2 planning-vm concurrent-load measurement (all 3 todos `[x]` — mechanism decided, results
+captured, contention-delta analysis written).
+
+**Recommended next item**: archive this doc — 14/15 todos `[x]`, only the P3 planning-vm profiler run remains. The
+finalize doc (`quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md`) is gated on zero open todos;
+either flip the last P3 or decide it's deferrable and archive anyway.
 
 ## Progress Log (na-eligibility-audit incremental marker)
 
