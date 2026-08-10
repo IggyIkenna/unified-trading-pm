@@ -76,7 +76,7 @@
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.0.74",
     "instruments-service": "0.101.0",
-    "market-tick-data-service": "0.120.0",
+    "market-tick-data-service": "0.121.0",
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.108.0",
     "unified-trading-library": "0.77.0",
@@ -339,7 +339,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.95.0",
       "codebase_health": {
         "qg_red_reason": null,
@@ -763,7 +763,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 8,
         "qg_red_reason": null,
