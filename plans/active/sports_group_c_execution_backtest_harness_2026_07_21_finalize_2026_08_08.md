@@ -109,11 +109,13 @@ context_scope:
       direction, float benchmark_price, NaN TP/SL placeholders). Also remove the 2 blanket `# type: ignore` in
       `tests/unit/cli/test_sports_backtest_exec_alpha.py:74,78` (workspace-wide ban, STEP 5.24) — prefer a targeted
       narrow ignore or a typed fix. **Done when**: no `Any` remains in the production file, the test has no blanket
-      `# type: ignore`, QG is green, and the hermetic exec-alpha test still passes. Repo: execution-service. In order:
-      (1) confirm zero open `- [ ]` todos remain (all 5, post-verification above); (2) add the archival banner + set
-      `status: complete`; (3) confirm no codex doc needs an update (this plan didn't introduce a new pattern beyond the
-      existing cefi/tradfi/defi domain-runner shape, so likely none — verify, don't assume); (4) update every referrer's
-      path corpus-wide — grep for `sports_group_c_execution_backtest_harness_2026_07_21` and repoint each hit (including
+      `# type: ignore`, QG is green, and the hermetic exec-alpha test still passes. Repo: execution-service.
+
+- [ ] [DOCS] P3. **Archive the parent plan per the 6-step ritual, and only then.** In order: (1) confirm zero open
+      `- [ ]` todos remain (all 5, post-verification above); (2) add the archival banner + set `status: complete`; (3)
+      confirm no codex doc needs an update (this plan didn't introduce a new pattern beyond the existing
+      cefi/tradfi/defi domain-runner shape, so likely none — verify, don't assume); (4) update every referrer's path
+      corpus-wide — grep for `sports_group_c_execution_backtest_harness_2026_07_21` and repoint each hit (including
       `sports_predictions_live_mode_activation_readiness_2026_07_21.md`'s `related:` list and prerequisites section) to
       the archived path (leading-slash, repo-root-relative); (5) clear the lock if any was set (confirm rather than
       assume — none is expected here); (6) run `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci     --no-regen` and
