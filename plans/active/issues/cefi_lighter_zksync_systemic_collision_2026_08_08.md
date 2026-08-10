@@ -255,6 +255,16 @@ pair (2026-07-03 `0G`):
 
 ## Progress Log
 
+- **2026-08-10 (slot 20, SHIP RECONCILIATION — the actual landed SHA is `market-tick-data-service@335c94f1`)** — The
+  wire-superset content-upgrade fix this doc's flip attests was authored + committed by slot 20 as `13ac6245`, but the
+  push was blocked by a pre-existing mtds trunk red (3 stale TradFi casing tests, repo-blocker RB-90251f57). Two things
+  landed in parallel: a peer fixed the trunk red (UTL canon `74fe04fd` reversal; mtds tests updated as `5f037099`), and
+  a peer shipped a functionally-identical cefi fix as **`335c94f1`** (same `_UPGRADE_BACKUP_PREFIX` / `upgrade` /
+  `would_upgrade` / `_column_values_equal` / three-way verdict vocabulary). Slot 20 reconciled: rebased + verified
+  `335c94f1` is equivalent (diffed), dropped its now-redundant local commits, aligned the branch to origin (ahead=0),
+  and corrected this flip's citation to the landed `335c94f1` — **replacing the earlier unresolvable `13ac6245`**
+  (13ac6245 was a local-only commit that never reached origin; `335c94f1` is the shipped equivalent). QG green on the
+  shipped tree; RB-90251f57 auto-resolved. The cefi Range-2 apply todo remains the gated follow-up.
 - **2026-08-10 (slot 20, data_engineering, dispatched on the "Decide + implement the resolution" todo)** — DECISION:
   option (a) content-upgrade. The wire is a verified strict column-superset (real `ts_event` + `next_funding_timestamp`,
   shared columns dtype-equal) of the schema-OLDER canonical — keeping the canonical + deleting the wire loses real data
