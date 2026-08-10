@@ -1062,11 +1062,6 @@ else
       echo "[$REPO_NAME] ✅ not behind $_QM_REMOTE_REF (ahead=$_QM_AHEAD; local deviations are fine) — proceeding"
     else
       echo "[$REPO_NAME] behind $_QM_REMOTE_REF by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
-      # autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
-      # (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md).
-      if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
-        autostash_guard_bound_backlog "${_QM_REMOTE_REF}" || true
-      fi
       # Keep git's OWN reason. Discarding it (the old `2>/dev/null`) is what turned the branch
       # below from a diagnosis into a guess: measured 2026-08-10, a run blocked with
       # "working-tree overlap" and a RECOVERY line telling the agent to `git stash push -- <file>`,
@@ -1119,12 +1114,6 @@ else
         # anything) and guarantees the index holds only what this run explicitly re-adds,
         # regardless of what the pop just restaged.
         git restore --staged . 2>/dev/null || true
-        # autostash chain-breaker (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md):
-        # if the pop restored stale content that reverts origin, quarantine it NOW so the next
-        # cycle does NOT re-stash it.
-        if declare -F autostash_guard_quarantine_stale_pop >/dev/null 2>&1; then
-          autostash_guard_quarantine_stale_pop "${FILES_ARG:-}" "${_QM_REMOTE_REF}" || true
-        fi
       else
         # Structured error contract (265, 2026-06-17): emit a machine-parseable QUICKMERGE_BLOCKED
         # line so an agent self-serves recovery without an operator paste. Capture the conflicting

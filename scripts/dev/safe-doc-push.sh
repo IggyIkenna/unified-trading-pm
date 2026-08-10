@@ -738,12 +738,6 @@ autostash_rebase_reconcile() {
     echo "  explicit pop succeeded -- edits restored to the working tree"
   fi
   git restore --staged . 2>/dev/null || true
-  # autostash chain-breaker (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md):
-  # if the pop restored stale content that reverts origin, quarantine it NOW so the next cycle does
-  # NOT re-stash it. Only affects files NOT in this run's --files (the caller's explicit edits).
-  if declare -F autostash_guard_quarantine_stale_pop >/dev/null 2>&1; then
-    autostash_guard_quarantine_stale_pop "${FILES[*]}" "origin/${BRANCH}" || true
-  fi
   return 0
 }
 
@@ -899,12 +893,6 @@ final_ok=false
 # from inside the loop (rebase conflict, non-drift push failure, a deterministic hook
 # rejection) auto-releases via the OS closing the FD on process death.
 push_gov_acquire_push "$_SDP_REPO_NAME" "$BRANCH"
-
-# autostash chain-breaker: bound the backlog BEFORE creating any new autostash entries
-# (multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md).
-if declare -F autostash_guard_bound_backlog >/dev/null 2>&1; then
-  autostash_guard_bound_backlog "origin/${BRANCH}" || true
-fi
 
 for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   echo "── attempt ${attempt}/${MAX_ATTEMPTS} ──"

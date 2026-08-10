@@ -50,9 +50,6 @@ context_scope:
   ]
 ---
 
-> **ARCHIVED 2026-08-10** — 0 open todos. All 5 batch-12 extracted items flipped with evidence. Archived alongside
-> `cross_cutting_satellite_ao_dispatch_batch12_2026_08_10.md`.
-
 # carry_staked_basis — ensemble orchestrator engine + strategy-service productionization
 
 > **Forked from `carry_staked_basis_funding_scan_experiment_2026_06_16.md` on 2026-07-24** (line-cap remediation — that
@@ -126,21 +123,17 @@ is the validated foundation + a runnable paper path TODAY.
       inside strategy-service (today it arrives as the `funding_rank_pct` feature from upstream). —
       **unified-api-contracts@95faaed2b8** + **strategy-service@be6acc8572** (2026-08-10). **Repo:
       unified-api-contracts + strategy-service.**
-- [x] ✅ [UI] P3. **NICE-TO-HAVE (provenance: P1c-engine 2026-06-19; operator-raised)** Surface
-      `CARRY_FUNDING_DISPERSION` in the strategy wizard/catalog. **NOT CI-breaking** — the UI's
-      `lib/architecture-v2/enums.ts` is a hand-maintained CURATED 18-archetype subset (the mirror test asserts
-      `STRATEGY_ARCHETYPES_V2.toHaveLength(18)` + internal consistency, NOT parity with UAC's 58), and
-      `lib/registry/ui-reference-data.json` is a generated snapshot — so the new archetype is simply absent from the
-      wizard until deliberately surfaced. To surface: (1) add `CARRY_FUNDING_DISPERSION` to `STRATEGY_ARCHETYPES_V2` +
-      `ARCHETYPE_TO_FAMILY` (CARRY_AND_YIELD) in `lib/architecture-v2/enums.ts` + bump `enums.test.ts`
-      `toHaveLength(18)`→19; (2) regenerate `lib/registry/ui-reference-data.json` via
-      `unified-api-contracts/scripts/generate_ui_reference_data.py` (picks up the catalog `build_funding_dispersion`
-      slots) + any label/wizard-screener entry. **Playwright gate (HARD RULE): ticking needs `[UI]` + `pw:L2 ✓` + a
-      regression spec → a UI-capable slot. Repo: unified-trading-system-ui (+ UAC generator).** —
-      **unified-trading-system-ui@f579aaa3ba** (2026-08-10, slot 16): `CARRY_FUNDING_DISPERSION` (strategy archetype)
-      already present in `STRATEGY_ARCHETYPES_V2` + `ARCHETYPE_TO_FAMILY` from prior session. Companion allocator
-      archetype `CARRY_FUNDING_DISPERSION_RANK` added to `AllocatorArchetype` type + `ALLOCATOR_ARCHETYPES` array
-      (mirrors UAC Todo 1's `unified-api-contracts@95faaed2b8`). 288 Vitest tests pass, QG green.
+- [ ] [UI] P3. **NICE-TO-HAVE (provenance: P1c-engine 2026-06-19; operator-raised)** Surface `CARRY_FUNDING_DISPERSION`
+      in the strategy wizard/catalog. **NOT CI-breaking** — the UI's `lib/architecture-v2/enums.ts` is a hand-maintained
+      CURATED 18-archetype subset (the mirror test asserts `STRATEGY_ARCHETYPES_V2.toHaveLength(18)` + internal
+      consistency, NOT parity with UAC's 58), and `lib/registry/ui-reference-data.json` is a generated snapshot — so the
+      new archetype is simply absent from the wizard until deliberately surfaced. To surface: (1) add
+      `CARRY_FUNDING_DISPERSION` to `STRATEGY_ARCHETYPES_V2` + `ARCHETYPE_TO_FAMILY` (CARRY_AND_YIELD) in
+      `lib/architecture-v2/enums.ts` + bump `enums.test.ts` `toHaveLength(18)`→19; (2) regenerate
+      `lib/registry/ui-reference-data.json` via `unified-api-contracts/scripts/generate_ui_reference_data.py` (picks up
+      the catalog `build_funding_dispersion` slots) + any label/wizard-screener entry. **Playwright gate (HARD RULE):
+      ticking needs `[UI]` + `pw:L2 ✓` + a regression spec → a UI-capable slot. Repo: unified-trading-system-ui (+ UAC
+      generator).**
 - [x] ✅ [HISTORICAL] P3. ~~funding_dispersion ENGINE + UAC archetype~~ (SUPERSEDED — DONE above; original blast-radius
       analysis retained for the record). **FLIPPED 2026-07-31 (corpus-sweep, operator-ruled):** this item was already
       self-labelled SUPERSEDED-DONE but left as an open checkbox, so it double-counted its own `[x]` twin (the
@@ -192,20 +185,14 @@ is the validated foundation + a runnable paper path TODAY.
       (3) self-delete fallback `|| log` → `|| echo … || true` (the self-delete races its own process + `log` isn't in
       the `bash -c` subshell → was a FALSE DEPLOYMENT_FAILED rc=127 on clean rc=0 runs). Diagnosed across 4 launches
       (wrong VM_TASK → install bug → venv path → green).
-- [x] ✅ [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Wire the DAILY recurrence — the funding-ensemble paper
-      VM is a verified one-shot self-deleting run; the daily trigger is an external scheduler re-launching it (a Cloud
+- [ ] [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Wire the DAILY recurrence — the funding-ensemble paper VM
+      is a verified one-shot self-deleting run; the daily trigger is an external scheduler re-launching it (a Cloud
       Scheduler → Pub/Sub → Cloud Function running the launcher, or a crontab on an always-on VM invoking
-      `launch-funding-ensemble-paper-cron-vm.sh`, like `daily_positioning_dump.sh`). **Repo: deployment-service.** —
-      **deployment-service@d85832ba7d** (2026-08-10): `launch-funding-ensemble-daily-cron-host.sh` ships the cron host
-      (e2-micro SCHEDULED_RECURRING, fires worker launcher daily at 03:15 UTC). Operator: launch once to activate.
-- [x] ✅ [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Pre-existing ruff errors in
+      `launch-funding-ensemble-paper-cron-vm.sh`, like `daily_positioning_dump.sh`). **Repo: deployment-service.**
+- [ ] [INFRA] P3. **NICE-TO-HAVE (provenance: P2 2026-06-19)** Pre-existing ruff errors in
       `deployment-service/scripts/vm/vm_zombie_watchdog.py` (lines 62/78/1143/1334 — NOT introduced by the P2 watchdog
       registration; surfaced by the funding-ensemble dry-run lint) — clean them so the deployment-service QG is green.
-      **Repo: deployment-service.** — **deployment-service@391e214c** (2026-08-10): `quality-gates.sh` green (exit 0,
-      310s), `ruff check` passes `All checks passed!`, no ratchet regressions. The specific ruff errors cited were fixed
-      by prior commits (`98ec8ddb`, `3d545372`, `58af2ab1`, `0e94ceee`, `89b18e99`). One harmless RUF100 informational
-      warning on the `# noqa: qg-deep-import` marker — that marker is REQUIRED by the custom `check-import-patterns.py`
-      checker, ruff's "invalid directive" is a false positive.
+      **Repo: deployment-service.**
 
 ## Basis archetypes split + LIVE venue/coin coverage gap (operator 2026-06-18)
 
@@ -319,15 +306,11 @@ PM LDR — content preserved, not lost; reverting would have destroyed the forei
 P1b numbers fold-in; asset-class filter for the broad universe; P2 billed launch + event wrapping; pre-existing
 vm_zombie_watchdog ruff cleanup. No DEFERRED-without-successor; no broken state.
 
-- [x] ✅ [STRATEGY] P2. **NICE-TO-HAVE (provenance: P1a 2026-06-19)** Asset-class filter for the live broad universe —
-      the top-volume perp universe now includes tokenized equity/commodity perps
-      (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT) the venues list; add an optional crypto-only gate (or a UAC asset-class
-      tag) so the carry book can exclude non-crypto underlyings when desired. The funding winsor already tames the
-      extreme prints. **Repo: e2e-testing → unified-api-contracts (asset-class registry).** — **e2e-testing@f2b26a2**
-      (2026-08-10): added `--crypto-only` flag, `_NON_CRYPTO_UNDERLYINGS` frozenset
-      (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT), `_crypto_only()` filter wired into both `main()` (SURVIVORS path,
-      no-op) and `_main_multi_venue()` (broad universe path); 10 unit tests green. Default `--crypto-only=False`
-      preserves current behavior.
+- [ ] [STRATEGY] P2. **NICE-TO-HAVE (provenance: P1a 2026-06-19)** Asset-class filter for the live broad universe — the
+      top-volume perp universe now includes tokenized equity/commodity perps (CRCL/INTC/MRVL/MU/SKHYNIX/SNDK/XAG/XAUT)
+      the venues list; add an optional crypto-only gate (or a UAC asset-class tag) so the carry book can exclude
+      non-crypto underlyings when desired. The funding winsor already tames the extreme prints. **Repo: e2e-testing →
+      unified-api-contracts (asset-class registry).**
 - [x] ✅ [STRATEGY] P1. Backtest-coverage completion: evaluate the full per-venue universe on Bybit/OKX/Aster (not just
       majors) so live coverage is backed by backtest evidence per venue x coin. **Repo: e2e-testing.** —
       **e2e-testing@de3da7d** (2026-06-19): added per-venue cached fetchers (Bybit funding+kline, Aster fapi, OKX SWAP

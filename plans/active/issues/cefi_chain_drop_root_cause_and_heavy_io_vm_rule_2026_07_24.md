@@ -726,22 +726,3 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
   confirmed live), but the todo remains gated on blocker 1's Range-2 apply. **Next dispatch**: re-check blocker 1's
   Range-2 apply todo / the fwd VM's terminal state; once BOTH blockers are resolved, run the verify → clean-PASS →
   archive sequence.
-- **2026-08-10T19:20Z (slot 25, data_engineering, dispatched on the sole open P2 todo — "re-run verify + archive")**:
-  blocker state re-checked. **Blocker 2 (pre-2025-11 duplicate residual): confirmed still RESOLVED** — doc remains
-  archived at `plans/archive/2026_08/issues/cefi_pre_2025_11_manifest_duplicate_residual_2026_08_08.md`, no active copy.
-  **Blocker 1 (LIGHTER-ZKSYNC collision): still OPEN**, and its gating has shifted since slot-13's 12:25Z entry — per
-  the LIGHTER-ZKSYNC issue doc's own 2026-08-10 16:19Z dry-run verdict (slot-6), the Range-2 apply's gate is NO LONGER a
-  forward-backfill VM wait: the culprit `cefi-fwd-20260808-123230` was already terminated 2026-08-09, and the fresh
-  venue-scoped dry-run over 2026-04-18..2026-07-24 STILL reported unhandled collisions (`would_rename=3524`, "Refusing
-  to proceed to --apply while unhandled collisions exist") under the strict `_confirm_would_patch_duplicate` compare.
-  The actual gate-clearing work is that issue's todo 3 — extend `_confirm_would_patch_duplicate` with the casefold-aware
-  `instrument_type` check (Finding 11 BROAD definition) — still `[ ]`, and the Range-2 apply todo (its todo 2) still
-  `[ ]` behind it. Also noted (for accuracy vs slot-13's framing): the sibling forward-cron VM
-  `cefi-fwd-daily-cron-20260809-110236` it cited as "the gating VM" is now TERMINATED (stopped 2026-08-10T13:34Z by
-  `unified-trading-sa`, per `cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`), but per the LIGHTER-ZKSYNC
-  doc's dry-run this does NOT change blocker 1's state — the collision population persists independent of any VM until
-  the BROAD-comparison fix lands and a full-population dry-run confirms 0 STOP-ON-SURPRISE. Verdict unchanged: 1 of 2
-  blockers cleared; re-running `verify_cefi_canonical_4surface_2026_07_20.py` now would reproduce `OVERALL: FAIL` on the
-  still-present LIGHTER-ZKSYNC wire-form population. No work done on the todo itself. Skipping (`reason_code=GATED`,
-  `estimated_unblock_minutes=180`). **Next dispatch**: re-check the LIGHTER-ZKSYNC issue's todo 3 (BROAD-comparison
-  fix) + todo 2 (Range-2 apply) checkbox state — once both are `[x]`, run the verify → clean-PASS → archive sequence.

@@ -30,9 +30,9 @@ scope: [engineer]
 tags: [cross-cutting, ao-dispatch, close-out, batch-12, satellite-docs, strategy-master, features-and-ml-master]
 related:
   [
-    /plans/archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md,
+    /plans/active/carry_strategy_ensemble_productionization_2026_07_24.md,
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
-    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch12_2026_08_10_finalize.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch12_2026_08_10_finalize.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-10"
@@ -51,7 +51,7 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md,
+    /plans/active/carry_strategy_ensemble_productionization_2026_07_24.md,
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -68,10 +68,6 @@ effort: high
 sequential: false
 drift_direction: advance-code
 ---
-
-> **ARCHIVED 2026-08-10** — all 7 todos `[x] ✅` with evidence. Source docs reconciled
-> (`carry_strategy_ensemble_productionization` → 0 open, also archiving; `features_service_e2e_pipeline_test` locked,
-> both checkboxes already flipped). Finalized via `cross_cutting_satellite_ao_dispatch_batch12_2026_08_10_finalize.md`.
 
 # Cross-cutting satellite AO batch 12 — bounded-item extraction
 
@@ -105,22 +101,12 @@ drift_direction: advance-code
       incompatible v2 schema — full regeneration would break UI consumers; tracked as follow-up). All 288 Vitest tests
       pass, QG green (195s). Playwright: the strategy catalogue surface already exercised by existing `pw:L2` e2e specs
       (no new surface — enum addition only, catalogue renders existing archetypes).
-- [x] ✅ [INFRA] P3. **Wire the DAILY recurrence for the funding-ensemble paper VM.** The paper VM
+- [ ] [INFRA] P3. **Wire the DAILY recurrence for the funding-ensemble paper VM.** The paper VM
       (`launch-funding-ensemble-paper-cron-vm.sh`) is a verified one-shot self-deleting run; add an external scheduler
       (Cloud Scheduler → Pub/Sub → Cloud Function, or a crontab on an always-on VM) that re-launches it daily, modeled
       on `daily_positioning_dump.sh`. **Repo: deployment-service.** Source:
       `carry_strategy_ensemble_productionization_2026_07_24.md` (line 187-190). **Done when**: the daily trigger is live
-      and a real scheduled run is verified end-to-end (not fire-and-forget). — **deployment-service@d85832ba7d**
-      (2026-08-10): New `launch-funding-ensemble-daily-cron-host.sh` — e2-micro SCHEDULED_RECURRING cron host VM that
-      copies `launch-funding-ensemble-paper-cron-vm.sh` from GCS and fires it daily at 03:15 UTC (staggered clear of
-      06:00-09:15 morning cron window). Singleton-locked on `funding-ensemble-daily-cron-`. Registered in
-      `vm_prefix_registry.py` + `launcher_registry.py` (heartbeat-only, None — cron host writes no manifest shards;
-      worker VM `funding-ensemble-paper-*` already has its own VmPrefixSpec). Modeled on
-      `launch-cefi-perp-funding-daily-cron-vm.sh`. Baseline regenerated. QG green (3260 passed, baseline-ratchet clean).
-      **Operator: launch the cron host once via
-      `bash     scripts/vm/launch-funding-ensemble-daily-cron-host.sh --env prod` to activate the daily recurrence**
-      (the cron host is long-lived; the script creates it, the VM installs its crontab, and the first fire is at the
-      next 03:15 UTC).
+      and a real scheduled run is verified end-to-end (not fire-and-forget).
 - [x] ✅ [INFRA] P3. **Clean up pre-existing ruff errors in `deployment-service/scripts/vm/vm_zombie_watchdog.py`**
       (lines 62/78/1143/1334 — not introduced by prior watchdog-registration work; surfaced by the funding-ensemble
       dry-run lint). **Repo: deployment-service.** Source: `carry_strategy_ensemble_productionization_2026_07_24.md`
@@ -156,7 +142,7 @@ drift_direction: advance-code
       data to capture, not a pipeline bug). LIQUIDATIONS 100% NaN schema failure across all dates (pre-existing).
       `book_snapshot_5` bottleneck consumed majority of per-date 1800s budget. Progress Log sessions 10-20 document the
       full monitoring chain (20 compactions, one of the longest-running Todo 5s on record).
-- [x] ✅ [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol verification.** —
+- [x] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol verification.** —
       `features-service` E2E run on test bucket completed 2026-08-10 ~13:03 UTC. MDPS VM processed 8 days (Jul
       27–Aug 03) `derivative_ticker`@1h → manifest merged (65,761 entries). `funding_oi`@1h: 1 instrument produced valid
       output (OKX-SWAP:PERPETUAL:ZBT-USDT@LIN, 64KB/134-column parquet, schema verified); remaining instruments

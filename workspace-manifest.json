@@ -75,7 +75,7 @@
     "features-service": "0.81.2",
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.0.74",
-    "instruments-service": "0.101.2",
+    "instruments-service": "0.101.1",
     "market-tick-data-service": "0.124.0",
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.111.3",
@@ -885,7 +885,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "warn_file_count": 47,
         "large_file_count": 0,
@@ -2229,8 +2229,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.101.2",
-      "published_at": "2026-08-10T19:19:39Z",
+      "version": "0.101.2.dev1+gfc6a7dbe9",
+      "published_at": "2026-08-10T18:34:15Z",
       "registry": "artifact-registry"
     }
   }

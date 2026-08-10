@@ -178,12 +178,12 @@ discipline for whoever executes these:
       the "## Out of scope — gated until November 2026" list, remove the `- VIX FUTURE (CBOE).` bullet (moved to
       in-scope). Repo: unified-trading-pm.
 
-- [x] ✅ [SCRIPT] P2. **Launch + verify the VIX futures backfill** — deployment-service@scripts (VM launch only, no code
-      changes). Launched 7 CFE year-shard SPOT VMs (2020-2026, e2-highmem-8, asia-northeast1-c) via
-      `launch-tradfi-bf-cfe-ohlcv-1m.sh`; 2021 VM SPOT-preempted (expected), 6 still RUNNING. Manifest verified: 7,341
-      captured CBOE ohlcv_1m rows (1,523 with `instrument_id=CBOE:FUTURE:VIX`, date range 2020-06-01→2026-08-07). 2020
-      VM run.log confirms live XCBF.PITCH capture (~22,790 records/date, ohlcv_1m+ohlcv_1s). VIX futures backfill is
-      operational.
+- [ ] [SCRIPT] P2. **Launch + verify the VIX futures backfill** (once the todo above lands). Run
+      `deployment-service/scripts/vm/launch-tradfi-bf-cfe-ohlcv-1m.sh` (existing launcher,
+      `CFE_INSTRUMENT_IDS="VX.FUT"`, default window 2018-11-04→today). Verify via a manifest query (venue=CBOE,
+      data_type=ohlcv_1m) showing real `captured` rows with populated `instrument_id`. Do NOT use the sampler/checker
+      tooling's canonical `VIX` symbol to verify — it will misreport per the known translation bug above; query the
+      manifest directly instead. Repo: deployment-service / market-tick-data-service.
 
 - [ ] [DATA] P2. **Scope the Yahoo CBOE Treasury discovery-floor fix, capped at 2018 (operator decision 2026-08-10 — "i
       only want data from 2018 even for yahoo that's fine")** — edit

@@ -401,13 +401,6 @@ ff_one() {
 
     local repo_name repo_key branch local_sha remote_sha merge_base ahead behind int_branch
     repo_name=$(basename "${repo_dir}")
-    # Skip frozen snapshot backup clones (*.stale-*) — these are intentional
-    # pre-history-rewrite backups, not real drift or dirt. Excluding them
-    # mirrors the existing scratch-worktree exclusion precedent
-    # (git_health_scan_exclusion_infra_routing_2026_08_10.md).
-    case "${repo_name}" in
-        *.stale-*) popd >/dev/null; return 0 ;;
-    esac
     # Per-repo identity for the dirty-streak confirm-gate (repo_name/basename alone is NOT
     # enough — every slot's PM clone is named "unified-trading-pm", every slot's clone of
     # any other repo shares that repo's name too, so basename would re-collapse the

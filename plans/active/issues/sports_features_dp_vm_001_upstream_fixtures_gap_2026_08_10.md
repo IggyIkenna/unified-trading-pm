@@ -89,29 +89,18 @@ locked_since:
 - The 19-VM relaunch storm (8 with no logs) is itself a finding: a self-heal actuator or external launcher loop firing
   ~12× beyond the bound with no workload behind ~40% of launches.
 
-## Decision (operator-approved 2026-08-10)
+## Recommended decision
 
-- Escalation agt-af22dd closed as **self-resolved** — operator/main approved "do NOT relaunch, track in issue"
-  (BLK-4fecb718 answer, main@msg 7139): (a) the failed VM's range was recovered by later runs; (b) a registry-tag
-  relaunch (`--end-date 2026-08-10`) would re-fail identically on the still-missing upstream base fixtures; (c) 19
-  features-sports VMs today far exceeds the ≤2/(prefix,day) bound with no fix shipped ⇒ carve-out N/A. No VM relaunch
-  performed. Residual open item = upstream sports reference-data availability gap (base fixtures for 2026-08-10 missing
-  at source), which requires the sports reference-data pipeline to backfill, not a features relaunch.
-
-## Tracked follow-ups
-
-- [ ] [DATA] P1. Upstream sports reference `entity=fixtures` for day=2026-08-10 is absent (only
-      fixtures_outcomes/schedule/injuries present) — track until base fixtures exist under
-      `gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/day=2026-08-10/entity=fixtures/`;
-      confirm the running `af-backfill-20260810-162910` historical backfill writes it when it reaches 2026-08-10.
-      (instruments-service reference-capture gap)
-- [ ] [DATA] P2. Relaunch-storm observation: 19 `features-sports-sports-*` VMs launched 2026-08-10 (~8 with empty
-      vm-logs, e.g. `-181406`) ≈ 12× the ≤2/(prefix,day) bound. Verify the self-heal actuator dedup
-      (`launch_budget_registry`) and whether an external launcher loop is firing without real workloads. Resource-waste
-      observation.
-- [ ] [DATA] P1. Recompute day=2026-08-10 sports features once upstream fixtures land — the 15:42Z compute is sparse
-      (row_count 1-2/league, computed from partial upstream). Per operator ruling, do NOT flip the parent
-      features-backfill item done until this recompute completes.
-- [ ] [DATA] P3. Verify the 2022 year-sharded features VM (`features-sports-sports-2022-20260810-051126`): no
-      EXIT_STATUS (terminated mid-run 07:15Z, skip-if-fresh only) — confirm 2022 features coverage in the availability
-      index.
+1. **Do NOT relaunch `features-sports-sports-2026-20260810-051126`** — its range is already computed by later successful
+   runs; a relaunch re-fails on the missing upstream fixtures. Mark this escalation self-resolved.
+2. **Investigate the upstream instruments-service sports reference capture for day=2026-08-10**: why is base
+   `entity=fixtures` absent (only fixtures_outcomes/schedule/injuries present) when 2026-08-09 had full per-league
+   fixtures? Check the sports reference forward-poll / `af-backfill` path; the running `af-backfill-162910` historical
+   run should eventually reach 2026-08-10 — confirm it writes `entity=fixtures` when it does.
+3. **Recompute day=2026-08-10 sports features once upstream fixtures are present** (force-recompute the captured-but-
+   sparse shards; the current 15:42 compute was from partial inputs).
+4. **Triage the relaunch storm**: why were 19 features-sports VMs launched today with ~8 empty-log launches? Verify the
+   self-heal actuator dedup/`≤2/day` bound (launch_budget_registry) and whether an external launcher loop is firing.
+5. **Verify the 2022 year-sharded VM** (`features-sports-sports-2022-20260810-051126`): no EXIT_STATUS (terminated
+   mid-run 07:15Z); it was skip-if-fresh so its work was likely already done — confirm 2022 features coverage in the
+   availability index.

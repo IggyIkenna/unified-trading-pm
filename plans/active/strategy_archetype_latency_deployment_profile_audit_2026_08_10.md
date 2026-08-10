@@ -205,21 +205,11 @@ collapsing them into one number the way the archived doc did.
       comparison + the stale archetype-frontmatter finding (150-500ms / standard-basic for the corrected Low families) +
       5 invalid `min_sla_tier` enum values written to `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` for the
       execution plan / todo 10.
-- [x] ✅ [DATA] P2. **Confirm whether `strategy-service`'s archetype registry or engine layer currently READS these
-      family docs at runtime, or whether they're purely human-readable documentation today** — grep for any programmatic
+- [ ] [DATA] P2. **Confirm whether `strategy-service`'s archetype registry or engine layer currently READS these family
+      docs at runtime, or whether they're purely human-readable documentation today** — grep for any programmatic
       consumption of `codex/09-strategy/architecture-v2/families/*.md` content (unlikely, but confirm rather than
       assume) so the execution plan knows whether it's building a NEW runtime link from scratch or wiring into something
-      that partially exists. **Done**: `unified-trading-pm@e2f3af9187` — verdict recorded in
-      `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` § "2026-08-10 — runtime consumption of `families/*.md`
-      (audit todo 9)": `families/*.md` has ZERO runtime consumers (purely human-readable docs today —
-      `rg -F "families/"` across
-      strategy-service/deployment-service/unified-api-contracts/unified-trading-library/execution-service runtime code
-      finds nothing on that path); the runtime enforcement pipeline EXISTS but reads the sibling `archetypes/*.md`
-      `topology_requirements` frontmatter via `strategy_service/topology_enforcement.py::load_topology_requirements()` +
-      `cli/service_entry.py` Phase-5 boot gate (raises `TopologyRequirementError` on mismatch), with isolation sourced
-      from `runtime-topology.yaml` via UTL `topology_reader.get_isolation_policy()`. So the execution plan WIRES INTO
-      existing enforcement (updates the stale archetype frontmatter the boot gate already reads — todo-8's finding), NOT
-      building a new family-doc parser.
+      that partially exists.
 - [ ] [DOC] P2. **Write the final decision artifact**: a single new section in
       `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` (or a new dedicated doc if that one is a poor fit — check
       first) mapping every archetype family → latency category → required deployment_profile → whether the current
@@ -318,16 +308,3 @@ collapsing them into one number the way the archived doc did.
   `min_sla_tier` values outside the UAC `SLATier` enum (`high` ×4 arbitrage-mev-*, `ultra-premium` ×1
   market-making-queue-microstructure) that raise on the `SLATier()` cast under enforcement. All captured as input to the
   execution plan / todo 10 decision artifact.
-- **data_engineering (slot 19) 2026-08-10T19:31Z**: Todo 9 done. Confirmed `strategy-service`'s archetype registry /
-  engine layer does NOT read `codex/09-strategy/architecture-v2/families/*.md` at runtime (`rg -F "families/"` across
-  strategy-service/deployment-service/UAC/UTL/execution-service runtime code returns nothing on that path — the family
-  docs are purely human-readable spec). BUT the runtime enforcement layer the execution plan needs ALREADY EXISTS,
-  reading the sibling `archetypes/*.md` `topology_requirements` YAML frontmatter via
-  `strategy_service/topology_enforcement.py::load_topology_requirements()` (`cli/service_entry.py`
-  `_enforce_archetype_topology_from_env()` Phase-5 boot gate before ServiceBootstrap, raises
-  `TopologyRequirementError`), with isolation sourced from `runtime-topology.yaml` via
-  `unified_trading_library/topology/topology_reader.py::get_isolation_policy()`. Verdict + evidence appended to
-  `/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` (`unified-trading-pm@e2f3af9187`): the execution plan should
-  WIRE INTO the existing archetype-frontmatter enforcement (fix the stale `topology_requirements` blocks todo 8 found —
-  the boot gate already reads them), NOT build a new family-doc→runtime parser. UAC `archetypes/<kebab>.md` citations +
-  `openapi/prospectus/*.md` `[CODEX-DERIVED]` docs are build-time/doc-gen, not runtime family-doc reads.

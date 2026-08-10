@@ -13,7 +13,7 @@ summary: >-
   unknown: the deployed `:latest` image (pushed 2026-08-09T22:28 UTC, commit `b63200a7`) was confirmed (slot-28) to have
   both `d5882379` and `bd153821` as ancestors, so the code should be correct — the failure is downstream of the reader
   fix, not a missing fix.
-status: resolved
+status: open
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -30,7 +30,7 @@ related:
 created: "2026-08-10"
 author: infra-worker-slot30
 parent_epic: infrastructure_master
-resolved_by: unified-api-contracts@243b1bcb, market-tick-data-service@a591a281
+resolved_by:
 locked_by:
 locked_since:
 source: >-
@@ -44,12 +44,6 @@ priority: P0
 drift_direction: advance-code
 depends_on: []
 ---
-
-> **✅ ARCHIVED 2026-08-10** — `status: resolved`, all 6 todos done, no lock. Full lifecycle complete: the OOM-kill root
-> cause (2Gi→8Gi bump) + the AAVE_V3 `eModeCategoryId` schema-drift fix (7 chains) + the SPARK/AAVE_V3-OPTIMISM
-> data-source replacement (SPARK `markets` schema on the same ID; AAVE_V3-OPTIMISM → Aave-native deployment
-> `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb`) are all shipped and verified (execution fkxqk, 3,101 records). Moved
-> to `plans/archive/issues/` per the issue-doc-lifecycle archival ritual. Referrers repointed.
 
 # Cloud Run Job `uts-prod-mtds-collect-risk-params` produces zero rows fleet-wide
 
@@ -163,23 +157,11 @@ Investigate and fix the Cloud Run Job's execution path:
       COMPOUND_V3 1,800, FLUID 12, KAMINO 113, SOLEND 54, MARGINFI 56 — consistent with baseline. Cloud Build `7a2bcc8b`
       → SUCCESS. SPARK + AAVE_V3-OPTIMISM still 0 (subgraph `reserves` gone entirely — tracked in follow-up todo below).
       Evidence: cloudbuild=7a2bcc8b (Docker image build), Cloud Run Job execution fkxqk. Repo: market-tick-data-service.
-- [x] ✅ [DATA] P2. Find replacement subgraph IDs (or alternative data sources) for SPARK-ETHEREUM and AAVE_V3-OPTIMISM.
+- [ ] [DATA] P2. Find replacement subgraph IDs (or alternative data sources) for SPARK-ETHEREUM and AAVE_V3-OPTIMISM.
       Both existing subgraphs no longer expose the `reserves` query field (full schema migration from Messari lending
       format). SPARK: `GbKdmBe4ycCYCQLQSjqGg6UHYoYfbyJyq5WrG35pv1si`. AAVE_V3-OPTIMISM:
       `3RWFxWNstn4nP3dXiDfKi9GgBoHx7xzc7APkXs1MLEgi`. OPTIMISM already has a documented RPC-fallback policy per UAC
-      `_defi.py` — may apply same strategy. Repo: market-tick-data-service, unified-api-contracts. — **DONE (slot 6,
-      data_engineering) — unified-api-contracts@243b1bcb.** Live-verified 2026-08-10 via thegraph gateway. (1)
-      SPARK-ETHEREUM needs NO ID change — its Messari deployment migrated to the protocol-level `markets` schema; the
-      same ID `GbKdmBe4yc...` serves `markets(first:1000)` (18 markets, all risk fields, hasIndexingErrors:false) which
-      market-tick-data-service@a591a281's `_SPARK_RISK_PARAMS_QUERY` + `parse_messari_markets` already queries. (2)
-      AAVE_V3-OPTIMISM: the Messari ID `3RWFx...` is dead on every query shape (`reserves` gone, `markets`=0). Swapped
-      UAC `SUBGRAPH_IDS["aave_v3"]["OPTIMISM"]` to the Aave-native github-README deployment
-      `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb` (live-verified: serves BOTH the native `reserves` block — 14
-      OPTIMISM reserves with baseLTVasCollateral/ reserveLiquidationThreshold/reserveLiquidationBonus/reserveFactor —
-      AND `reserveParamsHistoryItems`; `_meta.block.number` 155395187, hasIndexingErrors:false). Existing
-      `_AAVE_V3_RISK_PARAMS_QUERY` + `parse_messari_reserves` work unchanged. Regenerated ui-reference-data.json + added
-      regression test `test_aave_v3_optimism_subgraph_is_aave_native`. RPC fallback (policy 2026-05-30) remains the
-      lending_indices 3rd-tier cascade fallback. QG green; quickmerge landed on LDR.
+      `_defi.py` — may apply same strategy. Repo: market-tick-data-service, unified-api-contracts.
 
 ## Progress Log
 
@@ -262,18 +244,3 @@ Investigate and fix the Cloud Run Job's execution path:
   158 rows (ETH 67, ARB 20, POLY 21, AVAX 18, BASE 15, LINEA 9, BSC 8). Other venues unchanged (MORPHO 908, COMPOUND_V3
   1,800, FLUID 12, KAMINO 113, SOLEND 54, MARGINFI 56). SPARK + AAVE_V3-OPTIMISM still 0 (`reserves` gone — new
   follow-up todo added). Both checkboxes flipped.
-- **2026-08-10 (slot 6, data_engineering)**: **P2 RESOLVED — replacement sources verified + shipped
-  (unified-api-contracts@243b1bcb).** Live probes against the thegraph gateway:
-  - **SPARK-ETHEREUM**: the SAME subgraph ID `GbKdmBe4ycCYCQLQSjqGg6UHYoYfbyJyq5WrG35pv1si` now serves the new
-    protocol-level `markets` schema — `markets(first:1000)` returns 18 markets (wstETH/USDC/weETH/WBTC/DAI/...), all
-    risk fields present, `_meta.block.number` 25726610 / hasIndexingErrors:false. No ID change needed; slot-10's
-    `_SPARK_RISK_PARAMS_QUERY` + `parse_messari_markets` (market-tick-data-service@a591a281) already handle it.
-  - **AAVE_V3-OPTIMISM**: the Messari ID `3RWFx...` is dead on every query shape (`reserves` → "Type Query has no field
-    reserves"; `markets` → 0 rows). Swapped UAC `SUBGRAPH_IDS["aave_v3"]["OPTIMISM"]` to the Aave-native github-README
-    deployment `DSfLz8oQBUeU5atALgUFQKMTSYV9mZAVYp4noLSXAfvb` — live-verified 2026-08-10: serves the native `reserves`
-    block (14 OPTIMISM reserves: USDC/wstETH/LINK/WETH/OP/WBTC/AAVE/sUSD/USDT/rETH/LUSD/DAI/MAI, all risk fields) AND
-    `reserveParamsHistoryItems` (the lending_indices native query). The handler's existing
-    `_AAVE_V3_RISK_PARAMS_QUERY` + `parse_messari_reserves` work unchanged against it. Regenerated
-    `ui-reference-data.json` (subgraph_ids aave_v3/OPTIMISM) + added regression test
-    `test_aave_v3_optimism_subgraph_is_aave_native`. RPC fallback (policy 2026-05-30) remains the lending_indices
-    3rd-tier cascade fallback only. QG green (243b1bcb sentinel), quickmerge landed on LDR.

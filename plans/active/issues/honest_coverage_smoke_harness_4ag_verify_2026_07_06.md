@@ -206,34 +206,34 @@ numbering.)**
       re-run + prd/prod path reconciliation has not been done or evidenced.
 
       **round5-cross-cutting-audit 2026-08-08: option (d) resolved — amend the task text, do NOT wait for the operator
-                      to write to `prd/`.** `/codex/02-data/non-canonical-path-inventory.md:211` independently confirms this exact
-                      pattern for the sibling defi/pred instruments-store buckets: `prd/` is the NON-canonical leaked short
-                      `DEPLOYMENT_ENV_SHORT` form; the intended/canonical prefix is the LONG env form `prod/` (confirmed by the actual
-                      writer, `instruments-service/scripts/build_instrument_catalogue.py:32-33`). No operator input needed — the task
-                      text should reference `prod/catalog.parquet` (already present, 10.5MB), clearing the BLOCKED-PREREQUISITES
-                      marker for a re-run.
+                  to write to `prd/`.** `/codex/02-data/non-canonical-path-inventory.md:211` independently confirms this exact
+                  pattern for the sibling defi/pred instruments-store buckets: `prd/` is the NON-canonical leaked short
+                  `DEPLOYMENT_ENV_SHORT` form; the intended/canonical prefix is the LONG env form `prod/` (confirmed by the actual
+                  writer, `instruments-service/scripts/build_instrument_catalogue.py:32-33`). No operator input needed — the task
+                  text should reference `prod/catalog.parquet` (already present, 10.5MB), clearing the BLOCKED-PREREQUISITES
+                  marker for a re-run.
 
-                  **RECLASSIFIED 2026-08-08 (na-eligibility-audit round7)**: `assigned_vm` flipped `NA` → `planning` — the
-                  BLOCKED-PREREQUISITES marker is cleared per the round5 finding above (no operator input needed). **AMENDED
-                  task**: re-run `run_live_verify_tradfi.py` against
-                  `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (NOT `prd/`) and publish the
-                  fresh matrix + smoke set as evidence, closing this todo. Done when: -004 is `[x]` with a fresh
-                  matrix/smoke-set citation.
+              **RECLASSIFIED 2026-08-08 (na-eligibility-audit round7)**: `assigned_vm` flipped `NA` → `planning` — the
+              BLOCKED-PREREQUISITES marker is cleared per the round5 finding above (no operator input needed). **AMENDED
+              task**: re-run `run_live_verify_tradfi.py` against
+              `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (NOT `prd/`) and publish the
+              fresh matrix + smoke set as evidence, closing this todo. Done when: -004 is `[x]` with a fresh
+              matrix/smoke-set citation.
 
-                  **STATUS 2026-08-10 (slot 2) — AMENDED `prod/` path VALIDATED, but the runner is pathologically slow on a real
-                  catalogue (NEW finding).** Re-ran `run_live_verify_tradfi.py --output-dir <dir> --today 2026-08-10 --cloud gcp
-                  --deployment-env prod` (bounded 10G via run-bounded-analysis.sh) against
-                  `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (the canonical long-env prefix
-                  per the round5 finding). **The AMENDED path works — the catalogue loads: `tradfi catalogue loaded: 13
-                  (venue, instrument_type) cells, 919184 total instruments`** (non-empty — this definitively resolves the
-                  original 404-empty-matrix problem). **BUT the runner then burned 97% CPU for 1.5h with zero output** — root
-                  cause is a harness scaling defect that was latent because no prior run ever had a real tradfi catalogue
-                  (`e2e-testing/scripts/build_smoke/live_manifest_reader.py` `read_shard_cells` → `_filter_to_atom`: a
-                  **full-DataFrame linear-scan boolean mask per atom** over the cached manifest, so the run is O(atoms × rows);
-                  tradfi's 919k instruments ⇒ millions of atoms × a ~1M-row manifest ⇒ estimated multi-hour total). Stopped the
-                  run (unacceptable shared-host CPU for a smoke check) — matrix NOT yet published, done-when not met. Follow-up
-                  tracked below: fix the per-atom lookup (indexed/pre-grouped manifest, or sample-based verification for large
-                  catalogues), then re-run + publish.
+              **STATUS 2026-08-10 (slot 2) — AMENDED `prod/` path VALIDATED, but the runner is pathologically slow on a real
+              catalogue (NEW finding).** Re-ran `run_live_verify_tradfi.py --output-dir <dir> --today 2026-08-10 --cloud gcp
+              --deployment-env prod` (bounded 10G via run-bounded-analysis.sh) against
+              `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (the canonical long-env prefix
+              per the round5 finding). **The AMENDED path works — the catalogue loads: `tradfi catalogue loaded: 13
+              (venue, instrument_type) cells, 919184 total instruments`** (non-empty — this definitively resolves the
+              original 404-empty-matrix problem). **BUT the runner then burned 97% CPU for 1.5h with zero output** — root
+              cause is a harness scaling defect that was latent because no prior run ever had a real tradfi catalogue
+              (`e2e-testing/scripts/build_smoke/live_manifest_reader.py` `read_shard_cells` → `_filter_to_atom`: a
+              **full-DataFrame linear-scan boolean mask per atom** over the cached manifest, so the run is O(atoms × rows);
+              tradfi's 919k instruments ⇒ millions of atoms × a ~1M-row manifest ⇒ estimated multi-hour total). Stopped the
+              run (unacceptable shared-host CPU for a smoke check) — matrix NOT yet published, done-when not met. Follow-up
+              tracked below: fix the per-atom lookup (indexed/pre-grouped manifest, or sample-based verification for large
+              catalogues), then re-run + publish.
 
 - [ ] [CODE] P2. Fix the honest-coverage smoke harness's per-atom manifest lookup
       (`e2e-testing/scripts/build_smoke/     live_manifest_reader.py` `read_shard_cells` → `_filter_to_atom`): it does a
@@ -355,18 +355,3 @@ numbering.)**
   authored — `doc_type: issue` is structurally exempt from the finalize-plan-coverage rule (precedent:
   `governance_sweep_deferred_followups_2026_08_06.md`'s 7 reclassified issue docs).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
-- **2026-08-10T19:25Z (slot 25, data_engineering, dispatched on -004 "re-run tradfi verify + publish")**: blocker state
-  re-checked after slot-2's pathological-slowness finding. (1) Confirmed the harness per-atom fix has NOT landed:
-  `e2e-testing` HEAD at `live-defi-rollout`, `scripts/build_smoke/live_manifest_reader.py:200` `_filter_to_atom` still
-  does the full-DataFrame linear-scan boolean mask per atom (no indexed/groupby lookup added since slot-2's finding;
-  last reader commit is `9675d75`, a column-projection perf tweak only). (2) Confirmed the fix is now its OWN tracked
-  backlog task — `honest_coverage_smoke_harness_4ag_verify-9ff581df0b71` ("Fix the honest-coverage smoke harness's
-  per-atom manifest lookup"), **queued + unclaimed** (same priority 50 as -004) — the genuine gate for this todo. (3)
-  Re-running `run_live_verify_tradfi.py` as-is would reproduce slot-2's outcome: multi-hour shared-host CPU burn with
-  zero output (919k-instrument catalogue × ~1M-row manifest, O(atoms×rows)) — infeasible as a smoke check and a
-  shared-host-violation risk, so NOT attempted. -004's done-when ("publish a fresh matrix/smoke-set") is genuinely gated
-  on the fix task landing. No work done on -004 itself. Skipping (`reason_code=GATED`, `estimated_unblock_minutes=180`)
-  — the dispatcher should route the fix task (`9ff581df0b71`, already queued) to a slot in the cooldown window; once it
-  lands + the tradfi matrix completes in <10 min, re-dispatch -004 to publish. **Next dispatch**: check `9ff581df0b71`
-  checkbox state first; if `[x]` (fix shipped + matrix <10min), re-run `run_live_verify_tradfi.py --deployment-env prod`
-  and publish.

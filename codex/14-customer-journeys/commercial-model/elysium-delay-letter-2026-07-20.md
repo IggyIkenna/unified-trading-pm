@@ -27,19 +27,9 @@ last_reviewed:
 code_refs: []
 ---
 
-> **Provenance (2026-08-10 reconciliation).** Body synced to the letter **as actually sent**, which carried operator
-> edits not present in the 2026-07-20 draft: the WhatsApp opening line, "for the delay" appended to both 30-day
-> monitoring-period mentions, the CEFFU/SLA paragraphs merged, and a revised closing line. The typo "WhatsApp massager"
-> is recorded **verbatim as sent** — this doc is `authoritative_for` exact wording, so it is not silently corrected.
->
-> **Send-date caveat.** Both attachments carry mtime 2026-07-29 18:56 and the opening line above is absent from the
-> 2026-07-20 draft, so the real send was likely ~29 July. Confirming and redating this record is a tracked todo on
-> [`elysium_sla_v4_support_period_and_stale_dates_2026_08_08`](/plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md).
-
 Hi Patrick,
 
-Following the quick WhatsApp massager the other day I wanted to send a proper update on Phase 2 rather than keep sending
-bits over email.
+I wanted to send a proper update on Phase 2 rather than keep sending bits over email.
 
 Short version is we're behind and I'm aware. I'd rather be honest now and give you a timeline I believe in with latest
 context and with rationale as to the extra benefits this delay incorporates rather than keep moving it backwards a few
@@ -65,14 +55,14 @@ have much more confidence in this date than the previous one.
   kill-switches, production accounting, and an overall much stronger data platform.
 - Backtesting is now being tied directly into the live execution path rather than existing separately.
 - We're including Deribit as a fourth venue for you at no additional cost.
-- The draft SLA includes a complimentary 30-day post-launch monitoring period for the delay.
+- The draft SLA includes a complimentary 30-day post-launch monitoring period.
 - CEFFU is entirely your decision and we can support either route.
 
 **Why we're later**
 
 The biggest mistake on our side was assuming development would continue at roughly the same speed.
 
-Early on the platform was relatively small so changes were quick. Today it's roughly a 1.4-million-line codebase across
+Early on the platform was relatively small so changes were quick. Today it's roughly a 1.4 million line codebase across
 code and configuration, spread over more than twenty services. A feature that used to touch one or two modules can now
 touch dozens, which means significantly more regression testing, documentation, validation and deployment work before
 anything ships.
@@ -134,7 +124,7 @@ automatically switches between basis and staked basis, handles venue-specific co
 opportunities shift between venues. In today's compressed basis environment that's proving to be one of the biggest
 contributors to maintaining returns.
 
-At this point we're well past strategy discovery. The remaining work is integration, validation, production hardening,
+At this point we're well past strategy discovery. The remaining work is integration, validation, production hardening
 and rollout rather than researching new strategies or changing architecture.
 
 **Testing**
@@ -199,14 +189,17 @@ integrations.
 
 **CEFFU and support**
 
-CEFFU integration is entirely your decision. If you'd like to use it for the Binance leg we'll just need the API spec,
-sandbox access, sub-account model and Copper production credentials before launch.
+CEFFU integration is entirely your decision.
 
-If you'd rather not use it, that's completely fine too. I've also attached a revised draft SLA covering post-launch
-support. The original agreement was intentionally lightweight, so this mainly formalises monitoring, support
-expectations and deliverables.
+If you'd like to use it for the Binance leg we'll just need the API spec, sandbox access, sub-account model and Copper
+production credentials before launch.
 
-The SLA also includes a complimentary 30-day post-launch monitoring period for the delay.
+If you'd rather not use it, that's completely fine too.
+
+I've also attached a revised draft SLA covering post-launch support. The original agreement was intentionally
+lightweight, so this mainly formalises monitoring, support expectations and deliverables.
+
+The SLA also includes a complimentary 30-day post-launch monitoring period.
 
 Overall we're later than either of us wanted.
 
@@ -216,10 +209,9 @@ to trust the platform with real capital, and we've absorbed that work ourselves 
 scope.
 
 Most of the difficult engineering is now behind us. What's left is finishing integrations, validating everything under
-production conditions, and getting it live.
+production conditions and getting it live.
 
-Happy if you want comment or suggest edits to any of the docs and happy to jump on a call this week or next if you'd
-like to go through any of it properly.
+Happy to jump on a call this week or next if you'd like to go through any of it properly.
 
 Cheers,
 

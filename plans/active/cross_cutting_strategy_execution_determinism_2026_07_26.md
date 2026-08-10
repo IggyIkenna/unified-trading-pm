@@ -19,7 +19,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
-    /plans/archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md,
+    /plans/active/carry_strategy_ensemble_productionization_2026_07_24.md,
     /plans/active/cross_venue_funding_reversion_research_2026_07_24.md,
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
@@ -65,7 +65,7 @@ context_scope:
 ## Sources (moved verbatim from the parent's Track 24)
 
 - [carry_staked_basis_funding_scan_experiment_2026_06_16.md](/plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md)
-- [carry_strategy_ensemble_productionization_2026_07_24.md](/plans/archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md)
+- [carry_strategy_ensemble_productionization_2026_07_24.md](/plans/active/carry_strategy_ensemble_productionization_2026_07_24.md)
 - [cross_venue_funding_reversion_research_2026_07_24.md](/plans/active/cross_venue_funding_reversion_research_2026_07_24.md)
   (the carry_staked_basis family — combines DeFi LST staking with CeFi perp funding across venues; open: live/broad-
   universe coverage-completion work)
@@ -119,7 +119,7 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
   over 8 source plans (this doc's own todo is a future triage pass, not itself code work), so no source-code path
   applies; existing plan/issue/codex links remain the minimal correct set.
 - **na-eligibility-audit 2026-08-08 (round7 RECLASSIFY sweep)**: KEEP-NA, valid -- this doc's own
-  round5-cross-cutting-audit entry (2026-08-08) already resolved the plan-destination question the sole todo raises,
-  citing the standing "Plan destination -- ASK BEFORE CREATING" HARD RULE: default `NA` unless the operator explicitly
-  overrides. The sole todo's own output is authoring a NEW dispatch batch, which defaults NA -- not re-litigating an
-  already-resolved-today question.
+  round5-cross-cutting-audit entry (2026-08-08) already resolved the plan-destination question the sole todo
+  raises, citing the standing "Plan destination -- ASK BEFORE CREATING" HARD RULE: default `NA` unless the
+  operator explicitly overrides. The sole todo's own output is authoring a NEW dispatch batch, which defaults
+  NA -- not re-litigating an already-resolved-today question.
