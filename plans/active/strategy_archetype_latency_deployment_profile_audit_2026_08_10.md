@@ -157,7 +157,18 @@ collapsing them into one number the way the archived doc did.
       weakest of any latency-relevant family) as a discrepancy the deployment-profile derivation todo resolves. Same
       commit fixed a pre-existing bare-filename `related:` frontmatter reference (`ml-directional.md`/`event-driven.md`
       → leading-slash paths) flagged by plan-hygiene.
-- [ ] [DOC] P2. **Populate `stat-arb-pairs.md`** with the same section, category `Low`.
+- [x] ✅ [DOC] P2. **Populate `stat-arb-pairs.md`** with the same section, category `Low`. **Done**:
+      `unified-trading-pm@0004728881` — formal `## Latency Requirements` section added (category `Low`, archived
+      Statistical Arb row confirmed as the baseline: <100ms / <100ms / venue-dep. / <200ms E2E; the cross-venue /
+      cross-asset fixed-pair row borrows the archived Cross-Exchange Arb <300ms E2E ceiling; the cross-sectional row
+      notes its rank-update-driven decision cadence), the `### Decision latency vs. inter-leg execution gap` subsection
+      (same-venue ATOMIC pairs bounded by the family's Atomic multi-leg execution primitive; cross-venue / leader-lagger
+      pairs the real risk surface — ms-realm operating target per the 2026-08-10 operator ruling
+      (`/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` frontmatter `source:`)), and
+      the Low→`co_located_vm` deployment implication flagging the current `STAT_ARB_PAIRS` § 6 `topology_requirements`
+      row (co-location `no` / min SLA `standard`) as a discrepancy the deployment-profile derivation todo resolves. Same
+      commit fixed a pre-existing bare-filename `related:` frontmatter reference (`ml-directional.md` → leading-slash
+      path) flagged by plan-hygiene.
 - [ ] [DOC] P3. **Populate `vol-trading.md`, `event-driven.md`, `portfolio.md`** with the same section — derive category
       from the archived doc's closest analog per the rubric table above; state the derivation reasoning inline in each
       doc so a future reader can see it wasn't a guess.
@@ -235,3 +246,13 @@ collapsing them into one number the way the archived doc did.
   co-location / min SLA `basic`) as a discrepancy the deployment-profile derivation todo resolves. Same commit fixed a
   pre-existing bare-filename `related:` frontmatter reference (`ml-directional.md`/`event-driven.md` → leading-slash
   paths) flagged by plan-hygiene.
+- **quant_dev (slot 8) 2026-08-10T16:26Z**: Todo 6 done. Added formal `## Latency Requirements` to `stat-arb-pairs.md`
+  (`unified-trading-pm@0004728881`): category `Low` — archived Statistical Arb row confirmed as the baseline (<100ms /
+  <100ms / venue-dep. / <200ms E2E; the cross-venue / cross-asset fixed-pair row borrows the archived Cross-Exchange Arb
+  <300ms E2E ceiling, the cross-sectional row noting its rank-update-driven decision cadence),
+  `### Decision latency vs. inter-leg execution gap` subsection (same-venue ATOMIC pairs bounded by the family's Atomic
+  multi-leg execution primitive; cross-venue / leader-lagger pairs the real risk surface with an ms-realm operating
+  target per the 2026-08-10 operator ruling), and Low→`co_located_vm` deployment implication flagging the current
+  `STAT_ARB_PAIRS` § 6 topology_requirements row (`no` co-location / min SLA `standard`) as a discrepancy the
+  deployment-profile derivation todo resolves. Same commit fixed a pre-existing bare-filename `related:` frontmatter
+  reference (`ml-directional.md` → leading-slash path) flagged by plan-hygiene.
