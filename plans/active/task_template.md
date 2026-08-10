@@ -9,7 +9,12 @@ summary:
   / `dispatch.py` so an author never relies on unbuilt behavior.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [meta] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is 100%
+  # project-management process/format documentation for how to author ANY plan corpus-wide (LOCAL and
+  # AO-dispatched alike), identically applicable to every tranche -- genuinely process-spanning, matching its
+  # own `stage: [meta]` and the `meta` asset_group definition exactly, not a "generic infra-data-pipeline
+  # concern" (cross-cutting's actual bar).
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

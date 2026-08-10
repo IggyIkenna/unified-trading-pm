@@ -16,7 +16,11 @@ summary: >-
   the churn while the fleet-wide root cause is being investigated.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is 100% AO
+  # fleet-wide slot-wedge/crash-loop reliability (repos:[agent-orchestrator]); its own todo 1 depends on
+  # review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md, same incident/repo/author, tagged [ao] not
+  # cross-cutting -- direct in-corpus evidence of the correct tranche.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
@@ -24,6 +28,7 @@ tags: [agent-orchestrator, tmux, crash-loop, task-affinity, live-incident, spawn
 related:
   - /plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md
   - /plans/active/issues/solana_dex_pool_swaps_indexer_002_repeat_wedge_parked_2026_08_08.md
+  - /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md
 created: 2026-08-08
 author: agt-22de53 (main)
 parent_epic: infrastructure_master

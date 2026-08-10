@@ -23,12 +23,16 @@ summary: >-
   investigation since nobody has actually looked at either.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is 100% an
+  # agent-orchestrator server-code defect (server/escalation.py:_poll_wall_resolution); the wall_type values it
+  # mishandles are escalation CATEGORIES the mechanism routes, not asset groups the doc spans -- same mistag
+  # pattern already corrected elsewhere (data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md).
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [escalation, data-pipeline-correctness, false-resolution, hard-rule-violation, qg-fallthrough]
-related: []
+related: [/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md]
 created: 2026-08-09
 author: agt-22de53 (main), consolidating a finding from escalation_queue_reconciler (slot 11, task agt-21fadd)
 parent_epic: agent_operating_framework_master
@@ -127,10 +131,10 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
       actually looked at either") is stale for DP-FETCH-009 specifically; DP-VM-003 above is untouched by this
       re-verification and remains open.
 - **[BACKEND] P2. EXTRACTED 2026-08-09 → `cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md`.** Now that the
-  BLK-2a812311 quickmerge fix has landed (`agent-orchestrator@884a9bfe1`), spot-check a bounded sample of the
-  historical `data_pipeline_failure`/`provenance_blocked`/`sit_failure`/`plan_health` rows auto-closed via this bug
-  (beyond DP-VM-003/DP-FETCH-009) for any other still-live, still-unaddressed problems masquerading as resolved. See
-  the batch doc for the full scoped todo; do not duplicate-dispatch from here.
+  BLK-2a812311 quickmerge fix has landed (`agent-orchestrator@884a9bfe1`), spot-check a bounded sample of the historical
+  `data_pipeline_failure`/`provenance_blocked`/`sit_failure`/`plan_health` rows auto-closed via this bug (beyond
+  DP-VM-003/DP-FETCH-009) for any other still-live, still-unaddressed problems masquerading as resolved. See the batch
+  doc for the full scoped todo; do not duplicate-dispatch from here.
 - [x] ✅ [REVIEW] P2. **DONE 2026-08-09 (main) — verified against `agent-orchestrator@884a9bfe1`.** Allowlist gate
       exactly matches scope: `_QG_SIGNAL_WALLS = frozenset({"ldr_qg_failure", "main_ci_red"})`, checked via
       `if     wall_type not in _QG_SIGNAL_WALLS: return None` right before the generic
@@ -165,7 +169,7 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
   `uv sync` after — fixed via `uv sync --frozen`, no lockfile/floor changes needed). Shipped
   `agent-orchestrator@884a9bfe1` via quickmerge. DP-VM-003 and the P2 historical-sample todo remain genuinely open —
   this entry only covers the code-fix landing.
-- **round9-cross-cutting-sweep 2026-08-09**: satellite-extracted the bounded `[BACKEND] P2` historical-sample audit
-  into `cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md` — the code-fix prerequisite it was waiting on has
-  landed. Whole-doc RECLASSIFY not applied — the `[OPERATOR] P1` DP-VM-003 confirm/relaunch item stays open and
-  genuinely operator-tagged.
+- **round9-cross-cutting-sweep 2026-08-09**: satellite-extracted the bounded `[BACKEND] P2` historical-sample audit into
+  `cross_cutting_satellite_ao_dispatch_batch7_2026_08_09.md` — the code-fix prerequisite it was waiting on has landed.
+  Whole-doc RECLASSIFY not applied — the `[OPERATOR] P1` DP-VM-003 confirm/relaunch item stays open and genuinely
+  operator-tagged.

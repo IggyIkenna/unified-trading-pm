@@ -10,7 +10,10 @@ summary: >
   just the one that found it.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is a
+  # basedpyright quality-gate ratchet breach blocking every future quickmerge to one repo -- squarely
+  # ci-tranche CI/CD-pipeline-mechanics territory, not cross-AG data-pipeline content.
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer]

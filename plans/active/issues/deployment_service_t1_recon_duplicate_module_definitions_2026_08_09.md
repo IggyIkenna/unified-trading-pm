@@ -21,7 +21,11 @@ summary: >-
   state rm` + code deletion.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [infrastructure] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is a
+  # live-verified Terraform/OpenTofu duplicate-module-definition bug (deployment-service IaC hygiene) -- its own
+  # parent doc (deployment_service_prod_terraform_drift_2026_08_07.md) is already dispositioned `infrastructure`
+  # in this hub's own "Known non-orphan dispositions" section; this same-day sibling matches that precedent.
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer]

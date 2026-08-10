@@ -14,7 +14,11 @@ summary: >-
   no live key, i.e. zero test coverage ran by default.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [sports] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is 100%
+  # sports (sportradar-api-key for the sports-only SportradarAdapter, discussed against sports vendors/data
+  # types) -- forked from Step 4 of the cross-AG coordinator data_completion_to_100_all_ag_2026_06_21.md,
+  # inherited the parent's [cross-cutting] tag verbatim despite narrowing to single-AG scope.
 stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer, admin]

@@ -13,7 +13,11 @@ summary: >-
   code — only an explicit subscription decision + an `ALLOWED_DATABENTO_DATASETS` allowlist addition once approved.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [tradfi] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is squarely
+  # TradFi (Databento ICE = Brent/Gasoil/softs futures; OPRA = US listed options); own tags: already include
+  # `tradfi` and cite tradfi-databento-sourcing-ssot.md -- classic fork-inherited-tag trap from the cross-AG
+  # coordinator data_completion_to_100_all_ag_2026_06_21.md, narrowed to single-AG but keeping the parent tag.
 stage: [data]
 repos: [market-tick-data-service, market-data-processing-service]
 scope: [engineer, admin]

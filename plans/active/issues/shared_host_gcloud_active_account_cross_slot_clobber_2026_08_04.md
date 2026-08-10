@@ -19,7 +19,12 @@ summary: >-
   hard-abort instead of dying silently).
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [infrastructure] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is a
+  # shared-host gcloud active-account race across concurrent slots -- generic multi-agent-shared-host/VM-launcher
+  # hazard, squarely infrastructure-tranche (per-tab-worktrees.md territory), not a cross-AG data/pipeline
+  # concern. Flagged as this exact mistag by 3 prior runs (2026-08-06, 08-07, 08-08 parked-findings docs) but
+  # never actually retagged until now -- this closes that gap.
 stage: [meta]
 repos: [unified-trading-pm, deployment-service]
 scope: [engineer, admin]

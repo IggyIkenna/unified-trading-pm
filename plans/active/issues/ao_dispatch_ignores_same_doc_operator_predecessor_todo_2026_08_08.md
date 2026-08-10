@@ -18,7 +18,10 @@ summary: >-
   the underlying [OPERATOR] decision item remains correctly tracked separately and is unaffected by the park.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is 100%
+  # agent-orchestrator dispatch/backlog-mechanism internals (same-doc predecessor-todo gating), not a
+  # cross-AG data-pipeline concern -- repos:[agent-orchestrator] only.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
@@ -26,6 +29,7 @@ tags: [agent-orchestrator, dispatch, todo-ordering, task-affinity, live-incident
 related:
   - /plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md
   - /plans/active/issues/ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md
+  - /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md
 created: 2026-08-08
 author: agt-22de53 (main)
 parent_epic: infrastructure_master
