@@ -70,12 +70,14 @@ skill's no-double-gate mechanism).
       unified-trading-pm@ad3fb19596 (deployed_versions retirement). Todo 5 (`[OPERATOR] P3` AWS IAM grant) stays open —
       correctly not this batch's scope. Source doc is NOT an archival candidate (todo 5 remains open,
       `assigned_vm: NA`). Progress Log entry added to source doc citing this reconciliation. (repo: unified-trading-pm)
-- [ ] [REVIEW] P3. **Note G2's resolution against `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred
-      item 3.** That item is prose documentation (not a live checkbox) recording why the 0.10.8-constant move was
-      originally parked. Once batch9's todo 1 ships, add a one-line dated note to that Deferred entry pointing at
-      `infra_satellite_ao_dispatch_batch9_2026_08_09.md`'s commit as the resolution (batch1 itself stays active — it has
-      its own unrelated open todo, the E2E login-helper chain — this is a citation-accuracy fix only, not a
-      reconciliation of a checkbox). (repo: unified-trading-pm)
+- [x] ✅ [REVIEW] P3. **Note G2's resolution against `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred
+      item 3.** — unified-trading-pm@5afa5cd466. Added a dated RESOLVED note to that archived doc's Deferred item 3
+      pointing at batch9 todo 1's landing commit (unified-trading-pm@e5697ac5c, `UV_VERSION` centralized into
+      `resolve-canonical-versions.py`) as the resolution. Note: the todo's "(batch1 stays active)" caveat is stale —
+      batch1 was archived 2026-08-09 (the E2E login-helper open todo lives in
+      `infra_satellite_ao_dispatch_batch1_finalize` territory, and the doc's Deferred disposition already records this);
+      the citation note went to the archived doc's Deferred entry, which is where item 3 physically lives. (repo:
+      unified-trading-pm)
 - [ ] [DOC] P3. **Archive `infra_satellite_ao_dispatch_batch9_2026_08_09.md`** once both todos above are done and both
       reconciliations are verified — run the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix
       every corpus referrer path, confirm `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py` both
@@ -96,3 +98,7 @@ skill's no-double-gate mechanism).
 - **2026-08-10 (slot-5, review) — todo 1 reconciliation**: Source doc's todos 1-4 already `[x]` (closed 2026-08-09).
   Updated each with batch9 landing commit citations. Source doc confirmed NOT an archival candidate (todo 5 `[OPERATOR]`
   stays open).
+- **2026-08-10 (slot-5, review) — todo 2 (G2 citation note)**: Added dated RESOLVED note to archived batch1's Deferred
+  item 3 pointing at batch9 todo 1's landing commit (unified-trading-pm@e5697ac5c) as the resolution. Shipped as
+  unified-trading-pm@5afa5cd466. Also repointed 4 pre-existing dangling reference paths in that archived doc to their
+  archived homes (the pre-commit reference-path gate blocks re-staging it otherwise).
