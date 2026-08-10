@@ -46,7 +46,7 @@ tags:
 related:
   [
     /plans/archive/issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md,
-    /plans/active/issues/wip_preserve_refs_silently_unrecovered_2026_07_29.md,
+    /plans/archive/2026_08/wip_preserve_refs_silently_unrecovered_2026_07_29.md,
     /plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md,
     /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
     /plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md,
@@ -71,7 +71,7 @@ locked_by:
 context_scope:
   [
     /plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md,
-    /plans/active/issues/wip_preserve_refs_silently_unrecovered_2026_07_29.md,
+    /plans/archive/2026_08/wip_preserve_refs_silently_unrecovered_2026_07_29.md,
     agent-orchestrator/server/worktree_clean_check/_liveness.py,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
@@ -333,7 +333,7 @@ authority is the expensive answer to a question that a verifier answers for free
 The prevention side is already owned and should not be duplicated here:
 `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` item 8 owns the `cascade_dep_branch`
 prevention-vs-preserve fix (its item 7 proved the current preserve-guard has an inherent TOCTOU race), and
-`/plans/active/issues/wip_preserve_refs_silently_unrecovered_2026_07_29.md`'s `[SCRIPT] P3` owns the
+`/plans/archive/2026_08/wip_preserve_refs_silently_unrecovered_2026_07_29.md`'s `[SCRIPT] P3` owns the
 `refs/wip-preserve/**` surfacing sweep. This doc is only about routing the ALREADY-orphaned backlog.
 
 ## Live worker commits observed but deliberately NOT touched (PROTECT)
