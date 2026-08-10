@@ -18,10 +18,7 @@ summary: >-
   nor a plain `state.db` query lets an operator or a reviewing agent tell, at a glance, which completed work was
   actually produced by a Claude session vs a much cheaper/weaker DeepSeek Flash session — undermining any policy
   (explicit or implicit) that scales scrutiny by model tier.
-status: open
-# Sanctioned bridge (archive-exempt on the flip-only commit, dropped on the archival git mv) —
-# see /codex/12-agent-workflow/plan-completion-and-archival-discipline.md § archive_exempt.
-archive_exempt: true
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -46,7 +43,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: agent-orchestrator@70281b1
 source:
   [
     "discovered 2026-08-06 during an interactive audit of two other issues' worker-attribution history — read-only
@@ -60,6 +57,11 @@ context_scope:
     /codex/06-coding-standards/model-tier-selection.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-10 — RESOLVED** (status: resolved, 0 open todos, unlocked). All four todos shipped: `model`
+> telemetry fix at `agent-orchestrator@eb6a763`, dashboard/consumer audit (no change), todo-3 audit, and the
+> effort/thinking provider-gate fix recovered from orphan `cf9eef3` and shipped at `agent-orchestrator@70281b1` (+
+> test-isolation `7a1016f`). Full `quality-gates.sh` green. Archived 2026-08-10 per the archive-immediately rule.
 
 # AO boot telemetry mislabels DeepSeek-provider sessions as `model: "sonnet"`
 

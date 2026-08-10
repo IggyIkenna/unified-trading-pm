@@ -44,7 +44,7 @@ related:
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch8_2026_08_07.md,
     /plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md,
     /plans/archive/issues/ao_worker_context_thrash_no_recycle_escape_2026_08_06.md,
-    /plans/active/issues/ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md,
+    /plans/archive/2026_08/issues/ao_deepseek_provider_model_telemetry_mislabeled_2026_08_06.md,
     /plans/archive/issues/stale_agentwork_scratch_clone_not_deletable_unpushed_stashes_2026_07_30.md,
     /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
