@@ -172,47 +172,20 @@ last_updated: 2026-06-27
       `mdps_liq_agg_contract_missing_future_instrument_type_2026_07_27`). So this is NOT a missing registration, and
       shipping one would have been a no-op. **What it actually is: a recent BACKFILL WAVE over 2020-2026 historical
       liquidations failed schema validation across every major perp venue.** The "150k in the last 24h" figure measured
-      manifest WRITE time (the backfill's run time), not data date — that was misread as onset. **✅ ROOT CAUSE FOUND +
-      PROVEN 2026-08-10 (second pass).** Not a regression at all: `liq_agg` has NEVER been able to write. The
-      `liq_agg_{tf}` contract (`liq_shape=True`) demands `liquidation_count int64 NOT NULL` +
-      `liquidation_notional_usd float64 NOT NULL`; `CefiLiquidationsAdapter` satisfies NEITHER — it builds
-      `liq_count_arr` as `np.int32` (the write seam coerces `trade_count` int32→int64 but not `liquidation_count`), and
-      `CandleOutput`'s field was spelled `liquidation_notional` (no `_usd`) and was never populated by any adapter,
-      while the strict writer matches contract columns BY NAME. Proven by running the REAL validator
-      (`unified_api_contracts.internal.schemas._validation.validate_dataframe`, the one
-      `canonical_writer.py:499 _utl_write_chunk` calls under `strict=True` — NOT the `candle_write_mixin.py:~650`
-      `ParquetSchemaEnforcer` pre-flight, which is a different schema source and was a wrong pointer in the earlier
-      framing) over four candidate frame shapes: current shape → exactly 2 violations
-      (`missing_column liquidation_notional_usd`, `wrong_dtype liquidation_count int32≠int64`); +notional +int64 → 0
-      violations; extra OHLCV columns are tolerated. Corroborating measurements: (a) all 4,491 MDPS `captured`
-      liquidation rows have a BLANK `instrument_id` (day/venue aggregate rows, `instrument_count` up to 190,080) — so NO
-      per-instrument `liq_agg` shard has ever been captured; (b) 150,181 of the 150,182 failures have `written_at` in
-      2026-08, confirming one backfill wave over six years of data dates; (c) the manifest's own `margin_type` column is
-      EMPTY on every failing row, so the `@LIN`/`@INV` instrument_id suffix is the only usable margin discriminator
-      (143,082 LIN · 5,522 INV · 1,578 neither). Notional arithmetic is fixed by `MarginType`'s own docstring + real
-      tick files: linear `amount` is BASE units → `Σ(price×amount)`; inverse `amount` is USD-denominated contracts →
-      `Σ(amount)`. Operator approved FULL remediation (fix + re-drive the ~150k cells); the ~1% unresolved-margin ids
-      fail honestly rather than get a fabricated notional. Superseded framing follows for provenance only — **LIVE
-      REGRESSION — cefi `liquidations` `SCHEMA_VALIDATION_FAILED` went from 1 row (2026-08-02) to 150,182 rows,
-      essentially all inside 24h** — 88% of that cell and the single biggest `attempted_failed` driver fleet-wide. No
-      commits touched the schema/writer files in that window, which points at an UPSTREAM venue payload-shape change our
-      schema contract now rejects, not a regression we shipped. Every VM still exits 0, so this corrupts coverage
+      manifest WRITE time (the backfill's run time), not data date — that was misread as onset. **NEXT STEP**: diff what
+      the `liq_agg` writer emits against what the `liq_agg_{tf}` SchemaContract demands (`_candle_contracts.py`,
+      `liq_shape=True`, `ohlcv_core=False`) — the failure is at `candle_write_mixin.py:~650`
+      (`ParquetSchemaEnforcer.validate_dataframe`, OUTPUT-side validation before upload), not on the input ticks.
+      Operator has approved FULL remediation (fix + re-drive the ~150k cells). Superseded framing follows for provenance
+      only — **LIVE REGRESSION — cefi `liquidations` `SCHEMA_VALIDATION_FAILED` went from 1 row (2026-08-02) to 150,182
+      rows, essentially all inside 24h** — 88% of that cell and the single biggest `attempted_failed` driver fleet-wide.
+      No commits touched the schema/writer files in that window, which points at an UPSTREAM venue payload-shape change
+      our schema contract now rejects, not a regression we shipped. Every VM still exits 0, so this corrupts coverage
       silently. Evidence: DuckDB query over
       `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, discriminated by
       `service_name` + `error_reason`. Prior doc
       `/plans/active/issues/cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` records this reason
       at exactly 1 row as of 2026-08-02, which is what dates the onset.
-- [ ] [DATA] P2. Resolve `margin_type` for the ~1,578 cefi liquidation instrument_ids that carry NEITHER an `@LIN` nor
-      an `@INV` suffix (`BINANCE-FUTURES:PERPETUAL:IP-USDC`, `BYBIT:PERPETUAL:XRPUSD`, `BYBIT:FUTURE:BTC-20250926`, …)
-      from instruments-service reference data — the proper SSOT — instead of string heuristics. Surfaced by the liq_agg
-      fix: the notional formula BRANCHES on margin type, so an unresolvable id must fail honestly rather than take a
-      guessed branch (a wrong notional is worse than a failed shard). Until this lands, ~1% of liquidation shards stay
-      `attempted_failed` with a precise unresolved-margin reason. Cross-links the same reference-data gap as
-      `/plans/active/issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md`.
-- [ ] [SCRIPT] P3. The write seam (`canonical_writer_shaping._inject_schema_contract_columns`) coerces ONLY
-      `trade_count` int32→int64 against contract dtypes. `liquidation_count` had the identical int32 defect and was
-      invisible for the life of the pipeline. Either widen the coercion to every contract-declared int64 column or
-      assert at the seam that adapter dtypes match the contract, so the next adapter cannot reintroduce this class.
 - [ ] [SCRIPT] P1. Audit `UNCLASSIFIED_ADAPTER_ERROR` rows — 51% of the `trades` cell and 14% of `derivative_ticker`.
       The UAC enum's OWN docstring says any production occurrence is "a bug in the calling adapter", so half the trades
       cell is a self-declared bug nobody has been reading.
@@ -337,20 +310,3 @@ attempted_failed cells accruing), and its diagnosis just reversed, so nobody sho
   instead. Flipping the default (operator decision, previously deferred six times) takes this host from K=2 to **8 CPU
   slots / 17.2 GB RAM budget**, verified by `--status` and by slots 1+2 resolving to the identical shared ledger. codex
   §5 has been corrected to say `K` is a token-mode backstop only.
-
-- **2026-08-10 (post-compaction, slot 1) — liquidations P0 root cause CLOSED (diagnosis → proven cause).** The reversed
-  diagnosis resolved on the second pass, and the answer was neither of the two earlier hypotheses (not a missing
-  SchemaContract registration, not an upstream venue payload change). `liq_agg` has never been writable: the contract
-  asks for two columns the adapter cannot supply. Method that settled it, recorded because the earlier passes each
-  failed on a _pointer_ rather than on reasoning: I stopped reading call sites and ran the REAL validator over four
-  candidate frame shapes, which returned the exact violation list instead of a plausible story. That also corrected an
-  inherited wrong pointer — the manifest's `SCHEMA_VALIDATION_FAILED` rows come from the strict UTL writer
-  (`canonical_writer.py:499`), NOT from the `candle_write_mixin.py:~650` `ParquetSchemaEnforcer` pre-flight the previous
-  framing named; the two use DIFFERENT schema sources, so a fix aimed at the pre-flight would have changed nothing.
-  Three measurements then bounded the blast radius and the fix's shape: the 4,491 "captured" rows are
-  blank-instrument_id aggregates (so nothing has ever succeeded), `written_at` puts 150,181 of 150,182 failures in
-  2026-08 (one wave, six years of data), and the manifest `margin_type` is empty on every failing row (so the
-  `@LIN`/`@INV` suffix, not the manifest, must carry the linear-vs-inverse branch). **Also corrected**: PM's local
-  checkout was 111 commits behind with my previous session's edits sitting dirty on top; every one of those files was
-  already on origin in prettier-normalised form (verified file-by-file before discarding), so the apparent "unshipped
-  work" was a stale-checkout artifact, not lost work.
