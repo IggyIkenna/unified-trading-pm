@@ -3,8 +3,9 @@ doc_type: issue
 title: "plan_reconciler findings — ui tranche, 2026-08-10 (dispatch agt-ec1688)"
 summary: >-
   Second sharded plan_reconciler run over the `ui` asset_group tranche (23 docs: 11 plans + 12 issues, incl. 3 batch
-  docs + 3 finalize docs). Re-checks every item filed by the 2026-08-07 run (agt-a40e5f) plus fresh multi-agent fan-out
-  coverage. In progress.
+  docs + 3 finalize docs). Re-checked every item filed by the 2026-08-07 run (agt-a40e5f), 5-hunter fan-out for fresh
+  coverage, ~20 fixes applied across 10 files, 4 items routed to the operator via /blocked (locked_by placeholder
+  ruling, GCS-delete autonomy contradiction, 2 codex-drift items needing new prose/cross-doc scope).
 status: open
 nature: process
 asset_group: [ui]
@@ -229,6 +230,23 @@ new measurement run — self-verified every path with `ls`/`grep` before applyin
 ## Plans not reached
 
 None — all 23 tranche docs were read (21 in full by a hunter or myself, 2 grace-protected read as context only).
+
+## Exit hygiene-gate status
+
+Re-ran `run_hygiene_sweep.sh --ci` after all fixes landed: **1 hard failure** (`assigned_vm:NA corpus size (ratchet)` —
+51 new NA-population docs / 115 new open todos vs. `origin/main`), **1 soft warning** (delete/VM-launch tagging,
+pre-existing candidate signal, no ui-tranche hits). The NA-corpus ratchet was **already red at this run's own STEP 1
+baseline** (46/112, before any edit) — confirmed pre-existing, not a regression introduced here, and its shrink is
+`/na-eligibility-audit`'s standing job, not this skill's (SKILL.md's own precedent from the 2026-08-07 run treats this
+exact class of corpus-wide ratchet failure the same way). Honest accounting: this run's own 2 new NA docs (this findings
+doc + the locked_by issue doc, both correctly `assigned_vm: NA` — a coordination record and an operator-decision-gated
+issue, neither AO-dispatchable work) are a small part of the +5-doc growth since STEP 1; the remainder is concurrent
+corpus activity from other sessions on the shared branch (confirmed: a sibling plan_reconciler dispatch `agt-33a6ec` was
+actively working the cross-cutting tranche during this run, per its own Progress Log entry found in
+`issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md`). proseWrap-padding and reference-path-convention — both
+hard-red at STEP 1 — are GREEN now (my fixes + the sibling cross-cutting run's own fixes both landed against the same
+shared ratchet). Every doc this run touched is individually `run_hygiene_sweep.sh`-clean (verified via `--only` on each
+staged batch before commit).
 
 ## Progress Log
 

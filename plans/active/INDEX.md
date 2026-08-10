@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 309 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 315 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (31)
+### cefi (33)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -83,6 +83,13 @@ by hand._
 - [`cefi_satellite_ao_dispatch_batch16_finalize_2026_08_10`](./cefi_satellite_ao_dispatch_batch16_finalize_2026_08_10.md)
   — Gated closeout for `cefi_satellite_ao_dispatch_batch16_2026_08_10.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until that batch's single todo is done. Reconciles the verified todo's evidence back into…
+- [`cefi_satellite_ao_dispatch_batch17_2026_08_10`](./cefi_satellite_ao_dispatch_batch17_2026_08_10.md) **[draft]** —
+  Seventeenth AO-dispatch batch for cefi. Extracted from 2 docs found `orphaned_never_touched` + AO-eligible by the
+  2026-08-10 `/ag-closeout-audit cefi` run's Phase 1 (both were `status: open`, never cited by any of the 20 discovered
+  cefi…
+- [`cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10`](./cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10.md)
+  — Gated closeout for `cefi_satellite_ao_dispatch_batch17_2026_08_10.md` — machine-held via `depends_on` +
+  `gate_on_depends: true` until that batch's 3 todos are done. Reconciles the verified todos' evidence back into…
 - [`cefi_satellite_ao_dispatch_batch9_2026_08_07`](./cefi_satellite_ao_dispatch_batch9_2026_08_07.md) — Ninth
   AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-08-07 (scheduled autonomous dispatch,
   tranche=cefi, slot 4, dispatch agt-ed7b44). Phase 0 re-derived the covering-plan set via…
@@ -268,7 +275,7 @@ by hand._
   — Ship a real close/unwind AtomicInstruction emission path in recursive_staked.py's Family-2 tick handler. Today it
   only ever opens a position once and never emits a close. Prerequisite for…
 
-### tradfi (27)
+### tradfi (29)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -335,6 +342,13 @@ by hand._
   — Gated closeout for tradfi_satellite_ao_dispatch_batch11_2026_08_10.md — machine-held via depends_on plus
   gate_on_depends: true until all 14 of that plan's todos are done. Mirrors the batch1-9-finalize pattern: reconcile
   each distinct…
+- [`tradfi_satellite_ao_dispatch_batch12_2026_08_10`](./tradfi_satellite_ao_dispatch_batch12_2026_08_10.md) **[draft]**
+  — Satellite-batch extraction mirroring /ag-closeout-audit's pattern. This is the THIRD same-day tradfi tranche
+  dispatch (slot 26 all-mode → slot 25 sharded, both already parked in `ag_closeout_audit_tradfi_parked_2026_08_10.md`;
+  this is…
+- [`tradfi_satellite_ao_dispatch_batch12_2026_08_10_finalize`](./tradfi_satellite_ao_dispatch_batch12_2026_08_10_finalize.md)
+  — Gated closeout for tradfi_satellite_ao_dispatch_batch12_2026_08_10.md — machine-held via depends_on plus
+  gate_on_depends: true until both of that plan's todos are done. Reconciles the 1 source doc…
 - [`tradfi_satellite_ao_dispatch_batch6_2026_08_01`](./tradfi_satellite_ao_dispatch_batch6_2026_08_01.md) — Sixth
   AO-dispatch batch for tradfi, produced by a fresh `/ag-closeout-audit tradfi` pass on 2026-08-01 (autonomous mode,
   scheduled daily worker). Phase 0 rediscovered the covering set as 13 docs (up from the 11 a stale…
@@ -820,7 +834,7 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (46)
+### ao (48)
 
 - [`ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08`](./ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md)
   — Gated closeout for `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md` — machine-held via
@@ -891,6 +905,13 @@ by hand._
   Gated closeout for `ao_satellite_ao_dispatch_batch18_2026_08_10.md` — machine-held via `depends_on` +
   `gate_on_depends: true` until its sole todo is done. Reconciles evidence back into
   `deepseek_flash_ab_routing_test_2026_08_05.md`'s own…
+- [`ao_satellite_ao_dispatch_batch19_2026_08_10`](./ao_satellite_ao_dispatch_batch19_2026_08_10.md) **[draft]** —
+  NINETEENTH AO-dispatch batch for the `ao` topic tranche — output of a full `/ag-closeout-audit ao` Phase 0-3 run,
+  2026-08-10 (72-doc candidate corpus, generate_ag_closeout_audit_candidates.py + a per-doc Workflow classification
+  pass). Of…
+- [`ao_satellite_ao_dispatch_batch19_finalize_2026_08_10`](./ao_satellite_ao_dispatch_batch19_finalize_2026_08_10.md) —
+  Gated closeout for `ao_satellite_ao_dispatch_batch19_2026_08_10.md` — machine-held via `depends_on` +
+  `gate_on_depends: true` until both its todos are done. Reconciles evidence back into…
 - [`ao_satellite_ao_dispatch_batch2_2026_07_30`](./ao_satellite_ao_dispatch_batch2_2026_07_30.md) — SECOND AO-dispatch
   batch for the `ao` topic tranche, produced by the `/ag-closeout-audit ao` skill run (2026-07-30, autonomous mode, real
   Workflow per-doc fan-out — unlike the 2026-07-26/07-30 prior audits, which were single-threaded with…
