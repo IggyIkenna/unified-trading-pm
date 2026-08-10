@@ -20,10 +20,23 @@
 # the gate fails only on current > baseline + buffer. Tune the buffer here if the observed noise
 # band changes; it does not relax "never hand-raise the baseline" for a genuine, reviewed spike.
 #
+# WIDENED 10/30 -> 20/200 (2026-08-10, operator ruling: "give it room of 200 todos and 20 docs so
+# that only a real bloat explosion will trigger it again"). The 30-todo buffer was measurably
+# smaller than one day's ordinary churn: a single `git pull` on 2026-08-10 brought +52 open todos,
+# and the count moved 1109 -> 1150 -> 1158 -> 1177 inside a few hours with no NA-eligibility drift
+# at all -- so the gate was firing on normal multi-agent plan authoring rather than on backlog
+# bloat, and it had to be re-baselined three times in ~2 days. This is a BUFFER change (the noise
+# band the file already invites tuning), NOT a baseline raise: max_na_docs/max_na_open_todos are
+# untouched, so a genuine sustained climb still trips the gate -- it now just has to be a real
+# explosion (>20 docs / >200 todos above the reviewed baseline) rather than a normal Tuesday.
+# The standing question this defers -- that fleet-wide findings-triage creates NA docs faster than
+# /na-eligibility-audit retires them -- is the ADMIN todo in
+# /plans/active/issues/na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md
+#
 # See codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md § 4 for the full
 # rationale.
 max_na_docs: 389
-na_doc_buffer: 10
+na_doc_buffer: 20
 max_na_open_todos: 1150
-na_todo_buffer: 30
+na_todo_buffer: 200
 last_updated: "2026-08-10"
