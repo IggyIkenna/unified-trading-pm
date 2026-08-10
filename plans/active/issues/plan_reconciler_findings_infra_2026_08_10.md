@@ -170,12 +170,14 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
 7. `s5_7_required_docs_gaps_2026_07_29.md` vs. `codex_vs_repo_docs_ssot_audit_2026_06_01.md` — both docs already
    self-flag a live contradiction (does MDPS's `DEPLOYMENT_GUIDE.md`/`TESTING.md` need filling, per s5_7, or DELETING,
    per the SSOT audit's DELETE classification?) — genuinely undecided, both sides evidenced, not this run's call.
+   **ESCALATED**: `POST /api/slots/6/blocked` → `BLK-2b076fa9` (options A/B/C, recommendation A).
 8. Coverage gap (batch 2 special task): `self_hosted_runner_public_repo_revert_2026_08_05.md` +
    `shared_ci_workflow_repo_extraction_2026_08_06.md` (both substantial, shipped, dual-tagged `[ci, infrastructure]` P1
    plans) have no consolidated-closeout coordinator doc tracking them — `ci_consolidated_closeout_2026_07_25.md` has
    been archived/dormant since before either plan existed. Structural gap, not a doc defect in either file — flagging
    for operator awareness (revive the ci closeout, or explicitly fold CI-tagged infra work into
-   `infra_consolidated_closeout`'s own Tracks).
+   `infra_consolidated_closeout`'s own Tracks). **ESCALATED**: `POST /api/slots/6/blocked` → `BLK-9a03622c` (options
+   A/B/C, recommendation A).
 9. `/codex/05-infrastructure/vm-launcher-runbook.md` doesn't document the live, reproduced freshness-gap race from
    `vm_launcher_setup_script_freshness_gap_2026_07_31.md` despite CLAUDE.md pointing engineers there for "full gotchas
    - measured incidents." Exceeds the mechanical-codex-staleness carve-out (a new addition, not a substitution) — needs
@@ -282,3 +284,9 @@ of the 42 writable docs was read and assessed by a hunter this run.
   both converted+deleted 2026-08-06/08, live-verified now hosted in `unified-trading-ci`) under the STEP 5.f2
   mechanical-codex-staleness carve-out. Findings doc updated with the full itemized run summary (this edit). Moving to
   STEP 5's exit gate (hygiene re-check) then STEP 6 (route filed items) / STEP 7 (final report).
+- **2026-08-10 06:35 UTC (approx)** — STEP 6: posted 2 blocked-questions for the genuine judgment calls in the Filed
+  list (items 7 and 8 above) — `BLK-2b076fa9` (MDPS DELETE-vs-FILL contradiction) and `BLK-9a03622c` (CI-tagged infra
+  closeout coverage gap), both `can_continue: true`. The other 8 Filed items are bounded/mechanical-but-deferred, not
+  genuine authority/preference calls per SKILL.md's calibration test — not escalated, left as tracked follow-ups only.
+  **Phase 5.9(a) ledger**: routed-to-operator = 2, parked-in-issue-doc = 2 (both also recorded in the Filed section
+  above with their `BLK-*` ids) — balanced.
