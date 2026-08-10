@@ -10,7 +10,7 @@ summary: >-
   (`_tradfi_manifest_itype` / COMBO casing / casing-frame `changed_count`), NOT the cefi migration being shipped. The
   cefi change itself is green (10508 passed; its own 12 regression tests pass). This doc tracks the pre-existing trunk
   red so a fix-worker can clear it and unblock quickmerge on this repo.
-status: open
+status: archived
 nature: issue
 asset_group: [tradfi, cefi]
 stage: [data]
@@ -37,8 +37,11 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true
 ---
+
+> **🗄️ ARCHIVED 2026-08-10** — resolved: the 3 stale mtds tests updated to match the UTL canon reversal
+> (`unified-trading-library@74fe04fd`) and shipped as `market-tick-data-service@5f037099`; full `quality-gates.sh` green
+> on this HEAD; repo-blocker RB-90251f57 cleared. Sole todo closed.
 
 # market-tick-data-service QG red on trunk — 3 pre-existing TradFi casing tests
 

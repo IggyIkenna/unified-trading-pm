@@ -20,7 +20,7 @@ tags: [quality-gates, plan-commit-sha-evidence, evidence, broken-citation]
 related:
   [
     /plans/active/issues/cefi_lighter_zksync_systemic_collision_2026_08_08.md,
-    /plans/active/issues/tradfi_manifest_casing_tests_red_trunk_2026_08_10.md,
+    /plans/archive/2026_08/issues/tradfi_manifest_casing_tests_red_trunk_2026_08_10.md,
   ]
 created: 2026-08-10
 author: slot-23 (infra worker, task doc_body_link_checker_blind_to_backtick_citations-002)
