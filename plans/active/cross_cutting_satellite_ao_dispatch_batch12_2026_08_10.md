@@ -377,3 +377,10 @@ Continuation-only session (post-compaction resume). Step 1 audit: clean git tree
 (`post_mdps_pipeline.{sh,log}`) — no dangling references, no secrets, no chat-only findings. Steps 2-7 no-op — nothing
 created, discovered, or flipped. Todo 7 remains done (`eb096a69b7` + `98c8bd10f3`). Deliberately dropped: same workspace
 files (regenerable, session-specific). **Where to resume**: Todo 5 (P2 DATA, BITGET-FUTURES).
+
+**Session 9 verdict (pre-compact ~13:25 UTC)**: **Safe to compact: YES** — `ahead=0`, clean tree, no new changes.
+Continuation-only session (post-compaction resume). Step 1 audit: `ahead=0` after `git pull --ff-only` (caught up
+`24b4450a45`), clean tree, same two regenerable workspace files (`post_mdps_pipeline.{sh,log}`) — no dangling
+references, no secrets, no chat-only findings. Steps 2-7 no-op — nothing created, discovered, or flipped. Todo 7 remains
+done (`eb096a69b7` + `98c8bd10f3`). Deliberately dropped: same workspace files (regenerable, session-specific). **Where
+to resume**: Todo 5 (P2 DATA, BITGET-FUTURES backfill retry).
