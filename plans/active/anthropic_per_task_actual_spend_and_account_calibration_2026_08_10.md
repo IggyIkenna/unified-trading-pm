@@ -151,13 +151,16 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       `tmux_session`/`last_tmux_session`, `registered_at`, `finished_at`) and assign each turn by its own timestamp.
       **Done when**: a unit test proves a turn in a post-compaction transcript still attributes to the correct account,
       and the resolver returns the same account for two sessions of one agent split by a compaction.
-- [ ] [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
+- [x] ✅ [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
       account-window, regardless of how many files or task windows contain it.** `scan_session_usage` already dedups
       within one file; the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a
       second transcript — `measure-claude-usage-value.py`'s own docstring records 588,821 duplicate turns against
       649,255 real ones on this VM, ~47%). **Done when**: a test with the same `message.id` present in two transcript
       files under one account yields one counted turn, and the walker's total for a known window matches a hand-verified
-      count.
+      count. — agent-orchestrator@ff2f1c5 + QG green; `scan_usage_across_transcripts` (first-occurrence-wins across
+      files) + `scan_account_transcripts` (per-account window clip + global dedup); tests prove cross-file dedup (same
+      `message.id` in two files counted once) and the known-window total equals the hand-verified count (input 300 /
+      output 30).
 - [x] ✅ [BACKEND] P0. **Fix `task_usage` double-counting: a typed one-off with `assigned_at=None` bills the WHOLE
       session, and overlapping per-task windows on one slot bill the same turns to several tasks.** This corrupts
       per-task cost independently of pricing and is why the task_usage-derived multiplier reads HIGHER than the
