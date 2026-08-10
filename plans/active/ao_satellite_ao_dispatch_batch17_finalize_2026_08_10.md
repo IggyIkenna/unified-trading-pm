@@ -58,14 +58,21 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify batch17's done-claim against reality** — re-run
+- [x] ✅ [REVIEW] P1. **Re-verify batch17's done-claim against reality** — re-run
       `git merge-base --is-ancestor <cited-sha> origin/live-defi-rollout` on whatever SHA batch17's todo cites as the
       landed/confirmed-equivalent commit; confirm it really is an ancestor, and if a content-diff-equivalence claim was
-      made instead of a fresh landing, independently re-diff to confirm the claim holds.
+      made instead of a fresh landing, independently re-diff to confirm the claim holds. — **VERIFIED 2026-08-10 (slot
+      23): batch17's done-claim HOLDS.** Re-ran `git merge-base --is-ancestor 5b30f41 origin/live-defi-rollout` on
+      `market-data-processing-service` → **true**. Commit `5b30f41`
+      (`fix(mdps): throttle defi-dex-swaps checkpoint     writes to avoid GCS 429`, author slot-12) is a real fresh
+      landing, not a content-equivalence claim. Content re-confirmed independently: the proactive throttle delta
+      (`_CHECKPOINT_MIN_INTERVAL_SECONDS = 2.0` + always-flush-final-day `is_last_day` gate) is present in the commit
+      AND still on the current LDR file `scripts/backfill_defi_dex_pool_swaps_source_correction.py:112,530` (not
+      reverted by any later commit). Done-when MET.
 - [ ] [REVIEW] P0. **Reconcile verified evidence into the source doc's own checkbox** —
-      `orphaned_wip_slot12_slot8_recovery_2026_08_04.md`'s sole remaining todo, replacing the redirect-pointer with
-      real completion evidence (commit sha + ancestor-verification, or the equivalence citation). **Done when**: the
-      source checkbox carries real evidence, not a bare pointer.
+      `orphaned_wip_slot12_slot8_recovery_2026_08_04.md`'s sole remaining todo, replacing the redirect-pointer with real
+      completion evidence (commit sha + ancestor-verification, or the equivalence citation). **Done when**: the source
+      checkbox carries real evidence, not a bare pointer.
 - [ ] [REVIEW] P0. **Archive the source doc** — confirm all 3 of its todos are now `[x]` (todos 1-2 were already done
       pre-extraction; this finalize closes todo 3), then run the 6-step archival ritual: banner
       `/plans/active/issues/orphaned_wip_slot12_slot8_recovery_2026_08_04.md`, move to `plans/archive/2026_08/issues/`,
@@ -84,6 +91,12 @@ source: >-
 ## Progress Log
 
 - **2026-08-10** — Authored in the same turn as batch17, per the mandatory finalize-twin rule (task_template.md §4).
-  `sequential: true` since the 4 todos are a genuine chain (verify → reconcile → archive source → archive self).
-  Ships `status: active` (not `draft`) — `gate_on_depends` already machine-holds every task until batch17's own todo
-  is done, matching the batch7-16 finalize precedent.
+  `sequential: true` since the 4 todos are a genuine chain (verify → reconcile → archive source → archive self). Ships
+  `status: active` (not `draft`) — `gate_on_depends` already machine-holds every task until batch17's own todo is done,
+  matching the batch7-16 finalize precedent.
+- **2026-08-10 (slot 23, todo 1)** — Re-verified batch17's done-claim against reality:
+  `market-data-processing-service@5b30f41` IS an ancestor of `origin/live-defi-rollout` (re-ran
+  `git merge-base --is-ancestor` → true); commit content re-confirmed as the proactive GCS-429 throttle
+  (`_CHECKPOINT_MIN_INTERVAL_SECONDS = 2.0`, `is_last_day` flush gate) in the commit AND still on the current LDR file
+  (`scripts/backfill_defi_dex_pool_swaps_source_correction.py:112,530`). Fresh landing, not a content-equivalence claim.
+  Claim HOLDS — todo 1 flipped.
