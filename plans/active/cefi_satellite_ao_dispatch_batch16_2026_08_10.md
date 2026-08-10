@@ -55,8 +55,6 @@ context_scope:
 
 # CeFi satellite AO batch 16 — deployment-ui Barchart label spot-check
 
-> **ARCHIVED 2026-08-10** — Sole todo DONE (`deployment-ui@6a323bfd0`, slot 6). Finalized by batch16_finalize (slot 15).
-
 > **Status: DRAFT — awaiting operator approval to flip `active`.** Conflict-checked 2026-08-10: grepped all cefi tranche
 > covering docs (`cefi_consolidated_closeout_2026_07_18.md`, its `aggregated_sources` sibling, and every active
 > `cefi_*batch*`/`*finalize*` doc) for "Barchart"/"barchart" — the only hits are

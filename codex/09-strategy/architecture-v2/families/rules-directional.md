@@ -12,13 +12,7 @@ stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, rules, features, odds, execution, cefi, tradfi]
-related:
-  [
-    /codex/09-strategy/architecture-v2/families/ml-directional.md,
-    /codex/09-strategy/architecture-v2/families/event-driven.md,
-    ../archetypes/rules-directional-continuous.md,
-    ../axes/signal-sources.md,
-  ]
+related: [ml-directional.md, event-driven.md, ../archetypes/rules-directional-continuous.md, ../axes/signal-sources.md]
 created: 2026-04-17
 authoritative_for: [Rules Directional strategy family spec (alpha thesis + 2 archetypes)]
 referenced_by:
@@ -162,71 +156,6 @@ archetype.
   auto-retires stale rules
 - **Kill switches**: same as ML Directional (rapid price move, venue outage)
 - **Concentration**: managed via per-rule max-position + per-family gross exposure
-
-## Latency Requirements
-
-**Category: `Low`** — sub-second total E2E, live mode only (batch mode has no latency requirements; it replays
-historical data at compute speed). Baseline: the archived
-[`/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md`](/codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md)
-table has **no Rules Directional row** — this family is greenfield here, not a correction of existing numbers. The
-closest archived analogs are `Momentum` (< 7 s Medium) and `Mean Reversion` (< 3 s Medium) — the two pre-v2 strategy
-docs (`cefi/momentum.md`, `cefi/mean-reversion.md`) that this family's Migration table maps to
-`RULES_DIRECTIONAL_CONTINUOUS` — both **superseded for this family** by the 2026-08-10 operator correction
-(rules-directional must be in the ms realm, the same correction that set ml-directional). The segment budgets below are
-derived from the archived doc's own **internal** pipeline budgets instead: `features-*-service` < 100 ms per
-single-instrument feature update, `strategy-service` < 20 ms per strategy evaluation (the rule-evaluator leg), and
-`execution-service` < 50 ms for a simple market/limit order — plus the archived sports/prediction venue-latency table
-for the event-settled fill leg. Unlike ML Directional, this family has **no model-inference leg** in the decision path:
-a rule fires directly off feature values, so the tick-to-signal budget is dominated by the feature-update leg with the
-rule-evaluator pass on top, not by an inference call. The family's `Rule firing timeline` + `Feature-condition heatmap`
-UI dashboard metrics, backed by the archived **Feature Freshness** circuit breaker (feature age > 2× expected → WARN,
-
-> 5× expected → strategy emits no signals), are the operational monitors that enforce the decision-latency numbers: a
-> rule firing on a stale feature IS a decision-latency breach, and a rising stale-feature rate is the family-specific
-> signal to tighten the pipeline.
-
-| Expression                                                                      | Tick-to-Signal | Signal-to-Order | Order-to-Fill                                                                                      | Total E2E | Category |
-| ------------------------------------------------------------------------------- | -------------- | --------------- | -------------------------------------------------------------------------------------------------- | --------- | -------- |
-| Continuous single-instrument (spot/perp/dated future)                           | < 100 ms       | < 100 ms        | Venue-dep. (CeFi 20–50 ms order / 10–30 ms fill; TradFi FIX 1–10 ms; DeFi perp confirmation-bound) | < 200 ms  | Low      |
-| Continuous options expression (directional — synthetic = long call + short put) | < 100 ms       | < 100 ms        | Venue-dep. (Deribit 15–40 ms order / 10–25 ms fill)                                                | < 200 ms  | Low      |
-| Event-settled (sports / prediction-market rule-based)                           | < 500 ms       | < 250 ms        | < 300 ms (odds-venue API 50–300 ms)                                                                | < 1 s     | Low      |
-
-The tick-to-signal budget is dominated by the **feature-update leg**, which is what separates this family's decision
-path from ML Directional's: a rule signal needs a feature refresh + rule-evaluator pass before any instruction can be
-emitted, and the `< 100 ms` figure above is the archived feature-update budget plus the rule-evaluator's `< 20 ms`
-strategy-evaluation budget with margin — not a decision-at-light-speed claim. Cold rule-registry loads (a new rule
-version pulling in a fresh YAML registry) are excluded from the live decision path — a loading rule must not block a
-warm path that already has a signal.
-
-**Deployment implication:** `Low` ⇒ the `co_located_vm` deployment profile per the `/configs/runtime-topology.yaml`
-`deployment_profiles` category mapping (bundled services on one VM for low-latency handoff), matching the market-making,
-arbitrage-structural, carry-and-yield, and ml-directional families' derivation. Note this is NOT yet reflected in
-[`/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md`](/codex/04-architecture/client-isolation-sla-and-runtime-profiles.md)
-§ 6's `RULES_DIRECTIONAL` `topology_requirements` row (execution isolated / strategy shared OK / co-location `no` / min
-SLA `basic`), which predates this latency categorization — that row's `no` co-location + `basic` SLA tier (the weakest
-of any latency-relevant family, below the `standard` tier the other `Low` families were given) conflicts with the
-Low→`co_located_vm` rubric, a discrepancy this audit surfaces for the derivation todo that writes
-`/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md`.
-
-### Decision latency vs. inter-leg execution gap
-
-The `< 200 ms` figures above are the **decision budget** — market tick → feature update → rule-evaluator pass → edge
-check → a single `StrategyInstruction`. They are NOT the whole requirement for this family's multi-leg expressions,
-where the binding constraint is the **inter-leg execution gap** (2026-08-10 operator ruling: "we are executing two legs
-of a trade... how are we ensuring the lag leg followed by the lead leg is ms timing"):
-
-- **Options expressions** (Deribit directional, **synthetic = long call + short put**): a rule signal expressed as a
-  synthetic is two legs that must be entered together — a short put left naked because its paired call leg filled late
-  is the same directional tail risk the Risk profile section warns about. An options position carried with a **delta
-  hedge on the underlying** has the same requirement: the hedge leg must follow the fill at ms timing.
-- **In-play event-settled rules** (sports rule-based betting): the stake is a single leg, but the rule fires on _live_
-  feature conditions and odds — an in-play rule computing against a stale odds or feature read is a mispriced bet. Live
-  in-play markets are the tight case (Betfair streaming 50–500 ms odds-update cadence + live feature updates drive the
-  `< 1 s` event-settled row); pre-game windows are seconds-to-minutes and relax toward the `Low` category's upper bound.
-
-So for Rules Directional, "Low" means the **inter-leg execution timing budget is ms-realm for every multi-leg
-expression** (options synthetics + hedges), while single-leg continuous and pre-game event-settled rules are bounded by
-the (still sub-second) decision budget.
 
 ## UI dashboard (shared)
 

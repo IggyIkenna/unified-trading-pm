@@ -22,25 +22,6 @@ jobs:
         with:
           path: unified-trading-pm
 
-      - name: Set up Python
-        # setup.sh (which each canary repo's quickmerge --unit-only runs) requires the EXACT
-        # workspace-pinned patch (3.13.9), and ubuntu-latest now ships a newer patch — without
-        # provisioning it here every tick failed "[FAIL] Python 3.13.9 not found" + "[FAIL]
-        # ripgrep not found" (measured: 12 consecutive red runs 2026-08-03→08-10, silent — the
-        # workflow has no notify job). Mirrors python-quality-gates-v2.yml's setup-python.
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13.9"
-
-      - name: Ensure ripgrep
-        # ubuntu-latest does NOT ship ripgrep; setup.sh step 9 hard-fails without it.
-        run: |
-          if command -v rg >/dev/null 2>&1; then
-            echo "ripgrep present: $(rg --version | head -1)"
-          else
-            sudo apt-get update && sudo apt-get install -y ripgrep
-          fi
-
       - name: Clone canary repos (levels 0-2)
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
