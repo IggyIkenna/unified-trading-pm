@@ -304,3 +304,14 @@ Unlike the openapi-regen case reclassified elsewhere in this same sweep (a git-r
 an explicit pre-commit checkpoint), a mis-executed credential-file migration here could break `gcloud`/`gsutil`
 resolution for every dispatching worker mid-flight — not comparably reversible. No RECLASSIFY, no satellite-extraction.
 No ARCHIVE.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:da0e2f132b663b85]: KEEP-NA,
+valid — grep confirms exactly 2 open todos (lines 164, 185), matching the phase0 figure; 1 further todo is checked done
+(the head [OPERATOR-DECISION], resolved 2026-08-08, cited to doc
+operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md in the same batch). The 2 remaining implementation todos are
+held NA under a standing, twice-reconfirmed ruling: round-7 (2026-08-08) and round-11 (2026-08-09) both explicitly hold
+this KEEP-NA on a 'too_large_or_risky' basis -- shared credential-resolution infrastructure every AO worker slot boots
+from, spanning two repos (one, agent-orchestrator, outside this session's own scope), where a mis-executed change 'risks
+breaking gcloud/gsutil resolution for every dispatching worker mid-flight -- not comparably reversible.' Per the
+rubric's 'never re-litigate an established ruling' instruction, this standing risk-based holding is respected rather
+than re-derive...

@@ -750,3 +750,12 @@ did not overturn 5 independently-corroborated prior KEEP-NA passes without a mat
 basis (role-mismatch framing plus a genuinely-unscoped design-call status, both re-derived across 5 passes) was not
 re-litigated here — a fresh scoping pass, not a mechanical precedent match, would be needed to responsibly flip this. No
 `assigned_vm` change.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:89b0d764539e5bed]: KEEP-NA,
+valid — Full read of this 753-line plan confirms 3 open items, with 6 independent prior audit passes (2026-07-30 through
+2026-08-08) all KEEP-NA, each re-deriving from a large corpus of dozens of already-SHIPPED near-identical items in this
+same doc (all tagged [CODE][UI], each requiring pw:L2 + a cited regression spec -- the doc's own established, successful
+AO-dispatch convention for this exact class of work). The most recent (2026-08-08 round7) verdict explicitly states that
+'requires a [UI]-capable assigned_role is not itself disqualifying for AO dispatch' and calls for 'a fresh scoping pass,
+not a mechanical precedent match' to responsibly reconsider -- I performed a partial one here rather than mechanically
+re-confirming.

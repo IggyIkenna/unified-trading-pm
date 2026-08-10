@@ -166,3 +166,13 @@ failure (75 orphans vs 69 baseline).
   cosmetic, not worth a dedicated pass) and the mtds title/summary rewrite (editorial characterization judgment call,
   not a deterministic fix). This doc's own `assigned_vm: NA` stays correct — the doc remains a live findings-tracker
   with genuine residual (non-extracted) items, not a candidate for whole-doc RECLASSIFY.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:f0bf533d397b6bf2]: KEEP-NA,
+valid — grep confirms exactly 2 open todos (lines 129, 135), matching the phase0 figure; 7 of the doc's 9 tracked
+findings are already closed via checkmarks (mostly 'already resolved by round-9 sweep verification' or 'moot --
+superseded'). The 2 remaining P3 items are each explicitly self-classified in-doc as judgment/priority calls, not
+bounded fixes: (1) an archived-doc off-by-one cross-reference typo, explicitly deferred as 'low-value... not worth a
+dedicated pass'; (2) a title/summary editorial rewrite of a sibling doc, explicitly self-classified 'NOT AO-ELIGIBLE
+(judgment call)...

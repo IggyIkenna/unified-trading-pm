@@ -795,3 +795,14 @@ valid — 10 open items now (was 9; today's new `[INFRA] P3` MAX_DURATION-drift 
 same class as the other 9 — a real, well-specified engineering follow-on under the standing top-of-doc 2026-07-14
 "LOCAL/operator-driven, human-driven" ruling, not defaulted-and-never-assessed). No duplicate found in any active
 `assigned_vm: planning` sibling. No RECLASSIFY, no ARCHIVE.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:26b8b937ea93491b]: KEEP-NA,
+valid — Doc opens with an explicit dated operator-ruling banner (confirmed real by direct read): 'LOCAL /
+operator-driven plan (assigned_vm: NA) -- not AO-ingested. Operator decision 2026-07-14: human-driven, and raise K on
+current hosts as an interim quick-win before the full governor.' Frontmatter confirms assigned_vm: NA / execution_scope:
+local-only; the 2026-07-14 Progress Log entry independently corroborates ('Operator decisions (2026-07-14): human-driven
+plan...'). This doc has been through FIVE prior na-eligibility-audit passes (2026-07-30 KEEP-NA-STALE citation-cleanup,
+2026-08-03/08-04/08-06/08-09 all CONFIRMS-KEEP-NA-valid), each re-verifying open items against this same standing ruling
+and finding none clear the whole-doc RECLASSIFY bar.

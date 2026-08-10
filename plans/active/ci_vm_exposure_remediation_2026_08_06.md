@@ -177,3 +177,14 @@ not a missing grant, a script-push carve-out, or a stale operator-decision gate,
 across 25 self-hosted runner pools still needing (1) a runner-version support confirmation, (2) a canary on one
 low-traffic pool, and (3) K sized from real per-run measurements — none of which is a checkable fact a worker can
 resolve alone. No RECLASSIFY, no satellite-extraction. No ARCHIVE.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:8f715348bf4afe64]: KEEP-NA,
+valid — Full read + grep confirm 1 open todo (line 107, fleet-wide CI concurrency cap; matches phase0=1). Doc shows real
+live-measured investigation: 2 candidate mechanisms (TasksMax cap, io-controller delegation) investigated and REJECTED
+with real numbers (TasksCurrent 274-326 idle baseline, ~46 tasks/run measured via a real dispatched quality-gates-v2 run
+31076459850); the recommended mechanism (host-side runner hook wrapping qg-host-governor.sh) needs (1) confirming
+ACTIONS_RUNNER_HOOK_JOB_STARTED support for the pinned runner version + JIT-ephemeral runners, (2) a canary on ONE
+low-traffic pool of 25, (3) K sized from real per-run measurements -- a genuinely unresolved live-production-infra
+judgment call across a fleet-wide shared resource, not a single checkable fact.

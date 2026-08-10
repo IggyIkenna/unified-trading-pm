@@ -212,3 +212,12 @@ named-owner coordination. No `assigned_vm` change.
 valid — re-verified the sole open item (#3, cicd-events ledger `build_id`), still an explicit low-confidence judgment
 call. Independently re-confirmed by today's batch7 fresh full read ("0 extractable... explicit low-confidence judgment
 call"). No `assigned_vm` change.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:be6858001ed87410]: KEEP-NA,
+valid — Doc carries an explicit dated top-of-doc operator ruling ('Page-first, do NOT fix here', operator 2026-07-21)
+governing the AWS-lane items #4/#7 (both [x] closed, shipped 2026-08-07) and #1 (already [x] closed, operator-confirmed
+2026-07-24 the semver-agent is dead deliberately, SHA-only tagging is intentional). The sole remaining open item (#3) is
+phrased as 'confirm whether the cicd-events ledger should carry build_id; low priority' -- a low-confidence judgment
+call, not a bounded deterministic task, and the doc itself notes 'verify before acting.' Independently re-confirmed
+KEEP-NA across 7+ prior audit rounds (2026-07-30 through 2026-08-09, spanning multiple different dispatch IDs) and again
+by ci_satellite_ao_dispatch_batch7_2026_08_09.md same-day: '0 extractable.

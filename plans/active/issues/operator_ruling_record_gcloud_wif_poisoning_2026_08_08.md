@@ -82,3 +82,12 @@ a third party cannot tell which from the outside). The confirmation todo below s
   `orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`. Deliberately scoped to transcription only — the
   ruling is copied verbatim from its citing todo and attributed to that doc, so this adds traceability without adding
   authority. Authenticity confirmation is tracked as the open `[OPERATOR]` todo above, not assumed.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:6896a5b27835b713]: KEEP-NA,
+valid — grep confirms exactly 1 open todo (line 72), matching the phase0 figure. Brand-new doc (created 2026-08-09, no
+prior audit marker) whose entire purpose is to hold a transcribed operator ruling ('option (b), a non-shared credential
+file per job') and its confirmation. The doc's own text is explicit that it settles traceability only, not authenticity
+-- 'only the operator can confirm it was really issued as quoted.' The sole todo is explicitly [OPERATOR]-tagged and
+cannot be resolved by a worker. Genuinely operator-gated by design. KEEP_NA_VALID.

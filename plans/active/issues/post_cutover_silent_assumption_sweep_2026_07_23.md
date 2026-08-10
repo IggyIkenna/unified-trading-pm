@@ -750,3 +750,11 @@ away from a bulk-write); the F3 success-reporting item's PM-owned half was alrea
 sites, still genuinely open but not newly bounded; F4 stays the bundled bounded+open-ended pair described above; the
 digest-gap item stays a design call. No new facts from today's round-9 cheat sheet (GSM secrets, Slack webhooks) apply
 to this doc's content. No `assigned_vm` change.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:2f1897ab7a615737]: KEEP-NA,
+valid — Large audit doc, 5 open checkboxes (matches phase0=5 and my grep). Six prior na-eligibility-audit passes
+(2026-07-30, 08-01, 08-06, 08-07, 08-08 round7, 08-09 round-9) all verdicted KEEP-NA valid; independently re-read all 5
+items end-to-end rather than rubber-stamping: (1) F1 kill-switch (L439) -- TIME-GATED per an explicit dated 2026-07-28
+operator ruling quoted verbatim in the doc ('Standing 2026-07-23 ruling preserved... KEEP TRACKED, DO NOT FIX YET'; gate
+= execution-service handling live order flow, not yet true pre-live-trading) -- honored per the never-re-litigate rule;
+citation verified real by reading it in place. Tag: DEPENDENCY_BLOCKED.

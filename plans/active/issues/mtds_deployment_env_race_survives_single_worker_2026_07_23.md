@@ -188,3 +188,13 @@ and did not clear it — near-identical instrumentation is already documented as
 sibling monkeypatch-leak doc, and this doc's own bisection found non-deterministic clean/dirty outcomes even under
 confirmed-serial execution. Surface-bounded, substance-unbounded — unchanged. No RECLASSIFY, no satellite-extraction. No
 ARCHIVE.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:16fa1446d8159ec7]: KEEP-NA,
+valid — grep confirms exactly 1 open todo (line 146), matching the phase0 figure. Sibling doc to the monkeypatch-leak
+issue -- documents that the sibling doc's own 'PYTEST_WORKERS=1 is a structural fix' claim is empirically false
+(identical leak reproduced under confirmed serial '1/1 worker' execution; clean/dirty/dirty/clean across 4 consecutive
+runs of materially the same tree). The sole open todo ('instrument quickmerge's cascade/pull step') was explicitly
+stress-tested against the RECLASSIFY bar on 2026-08-03 and found NOT to clear it -- near-identical print-based
+instrumentation is already documented as tried-and-clean across 8 runs in the sibling doc, and this doc's own bisection
+found non-deterministic clean/dirty outcomes even under confirmed-serial execution ('surface-bounded,
+substance-unbounded').

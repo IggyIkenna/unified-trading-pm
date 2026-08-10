@@ -549,3 +549,14 @@ confirm; the tmux_session_lost root-cause investigation (line 220, filed 2026-08
 (a/b/c) and may be bounded enough for extraction, though it concerns a now 10-day-stale incident. Neither promoted to
 RECLASSIFY this run (doc-level flip blocked by item 3; sub-item extraction is `/ag-closeout-audit`'s satellite-batch
 mechanism, not this skill's). No `assigned_vm` change.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:c1657352b96324ef]: KEEP-NA,
+valid — MANDATORY RE-ASSESSMENT of the 2 carried-forward MISCLASSIFIED_LIKELY_AO_ELIGIBLE items from the 2026-08-09 run,
+completed. Item 3 (line 231, RETRY_PER_TICK global-vs-partitioned retry-budget tradeoff in server/escalation.py)
+RE-CONFIRMED as a genuine open design tradeoff that blocks whole-doc RECLASSIFY on its own: its own 'Done when' clause
+offers 2 non-mechanical paths -- (a) a recorded 'leave as-is' ruling, or (b) ship+verify a scaled/partitioned budget
+against a live comparable incident burst -- neither is a single checkable fact, and it touches server/escalation.py's
+live AO-dispatch-critical-path retry mechanism (the exact 'multi-file rewrite of live-dispatch-critical-path machinery'
+caution class), so a wrong partition choice risks a new starvation failure mode. Confirmed genuine and unchanged.

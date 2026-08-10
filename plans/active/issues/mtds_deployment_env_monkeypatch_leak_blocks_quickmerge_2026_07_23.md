@@ -369,3 +369,14 @@ IAM/credential/secret gap, it's an unconfirmed cross-process race with 14+ occur
 test-level fixes, and a falsified "structural guarantee" claim. The sibling doc
 (`mtds_deployment_env_race_survives_single_worker_2026_07_23.md`) it must be read together with is in this same tranche
 and reaches the identical conclusion below. No RECLASSIFY, no satellite-extraction. No ARCHIVE.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:5ed3016a3a236391]: KEEP-NA,
+valid — grep confirms exactly 1 open todo (line 335), matching the phase0 figure. Sole todo is an open-ended,
+non-deterministic root-cause hunt for a flaky DEPLOYMENT_ENV env-var leak in MTDS's pytest suite: 14+ confirmed
+occurrences across multiple independent sessions, TWO test-level fixes empirically falsified by quickmerge's own
+re-gate, a 'PYTEST_WORKERS=1 is a structural guarantee' claim directly falsified (5 more failures reproduced under
+confirmed single-worker serial execution), and a leading-but-unconfirmed 'quickmerge cascade-step' theory (correlated
+with, not proven by, several cross-referenced sibling-session data points). Outcome is not determinable by a worker
+alone -- this is investigative, not bounded/deterministic work.

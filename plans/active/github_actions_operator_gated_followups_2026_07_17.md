@@ -998,3 +998,12 @@ shipped as `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`) — n
 `ci_satellite_ao_dispatch_batch5_2026_08_02.md` todo 2 is done.
 
 **round-9 sweep, 2026-08-09**: KEEP-NA, valid — unchanged from round7; no round-9 new-facts apply here.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:058d1b97f5f905f2]: KEEP-NA,
+valid — Full read (1001 lines, both pages) + grep confirm 4 open todos, matching phase0=4. (1) line 106 STEP 2d
+assert-not-decorative: doc's own D3 table row states 'digest-drift-sweep still unfixed and STEP 2d is still held for it
+(its design depends on this remaining undecided item)' -- dependency-blocked on the still-open
+/plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md investigation. (2) line 188
+bare-host bootstrap PROVE: container leg done, but IMDS/EC2-role, GCP ADC (doc's own text flags this leg 'interactive'),
+systemd, and real GH runner registration 'structurally cannot' run in a container -- doc ties this explicitly to 'the
+upcoming planning-VM deploy,' a genuine host rebuild.

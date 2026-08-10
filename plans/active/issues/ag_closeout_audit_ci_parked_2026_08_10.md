@@ -332,3 +332,15 @@ run re-confirmed rather than newly escalated it).
   linkage, the `ui_build_warm_cache` lock flag) checked and found unchanged-or-improved. No new batch drafted — batch12
   remains the correct, sole pending artifact for this tranche, still awaiting operator approval. See "Second dispatch
   delta" section above for full detail.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:5a37ac6cc8918440]: KEEP-NA,
+valid — Full read + grep confirm 0 open checkboxes (matches phase0=0). This is a findings-tracker/report doc produced by
+the sibling ag-closeout-audit skill (not na-eligibility-audit), documenting today's (2026-08-10) two scheduled dispatch
+passes for the ci tranche: extracted 2 conflict-clear AO-eligible items into
+ci_satellite_ao_dispatch_batch12_2026_08_10.md (status: draft) + gated finalize (status: active); archived 2 stale
+predecessor report docs as housekeeping; flagged 1 doc (ui_build_warm_cache_2026_06_17.md) as a clean unlock-and-archive
+candidate pending an operator decision (a flag/note, not a checkbox todo of THIS doc). Checked for the
+prose-only-remaining-work trap: all remaining content is informational findings (Finding 1-4) + pointers to
+batch12/finalize, which carry the actual dispatchable work -- none of it is actionable prose belonging to THIS doc.

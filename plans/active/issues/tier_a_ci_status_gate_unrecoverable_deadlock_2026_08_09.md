@@ -129,3 +129,13 @@ already-resolved-on-LDR content mismatch at the promotion boundary.
 - `scripts/repo-management/ldr_ci_monitor.py` (the separate, non-clobbering `ldr_ci_status` monitor axis — confirmed its
   green signal does NOT and should NOT clear the promotion `ci_status` axis).
 - Dashboard escalation `BLK-96d38ee3` (question, options, main's answer, `authority: operator_pending`).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:233a2ff9e6d06e7e]: KEEP-NA,
+valid — TRAP CONFIRMED: zero `- [ ]` checkboxes exist in this doc (verified via the mandated grep, matches the given
+phase0 figure of 0), but the doc is NOT archive-eligible -- `status: open`, `resolved_by:` blank in frontmatter, and
+substantial PROSE-ONLY remaining work sits under '## Suggested resolution paths (not attempted here --
+scope/authorization boundary)' as a numbered list that was never converted to tracked checkboxes (a violation of the
+workspace's own 'every follow-up is a `- [ ]` todo, never prose' hard rule, though fixing that is outside my read-only
+scope).

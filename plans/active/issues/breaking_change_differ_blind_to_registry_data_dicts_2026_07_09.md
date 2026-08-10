@@ -277,3 +277,10 @@ valid — re-verified the sole open item, still parked as Deferred E8, unruled. 
 > open item as of this correction is todo 6 (`[SCRIPT] P2`, NEW 2026-08-08 — implement the consumer-QG promote fan-out
 > per the ruling), which is genuinely still open and correctly gives the same KEEP-NA verdict a valid basis — the
 > verdict itself is not disputed, only the cited reason for it.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:e5c4312406fb5fa2]: KEEP-NA,
+valid — 8 todos total, 7 closed [x] with verified SHA citations. The [DESIGN] P2 todo that anchored 7 consecutive prior
+KEEP-NA audit passes (parked as Deferred E8) was itself RESOLVED 2026-08-08 via explicit operator ruling ('yes, add the
+consumer QG gate') and closed [x]; a NEW [SCRIPT] P2 mechanical-implementation todo was created directly beneath it the
+same day -- that is the doc's real current sole open item, not the old DESIGN question (I am not re-litigating the
+ruling, which is settled; I am assessing the new implementation todo it spawned).

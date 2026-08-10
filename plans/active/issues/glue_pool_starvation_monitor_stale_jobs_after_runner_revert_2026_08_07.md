@@ -272,3 +272,15 @@ every healthy tick forever) — that is a real, if modest, additional job
   reason still current (the referring doc's `check_line_caps.sh` deadlock is unresolved). Not archive-eligible until
   that deadlock doc's operator decision lands, per the doc's own prior entry.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:aabe4e5e555cea20]: KEEP-NA,
+valid — 0 open '- [ ]' todos confirmed (doc's sole P3 INFRA todo flipped [x] 2026-08-09, unified-trading-pm@4bd8a11d0b
+-- a fleet-wide 27-workflow recovery-bookend audit; citation self-corrected in-doc 2026-08-09 after an initial wrong
+SHA, verified ancestor of live-defi-rollout). Doc is content-complete ('all items resolved (0 open todos), genuinely
+archival-eligible' per its own 2026-08-09 Progress Log entry) but is deliberately held status:open + archive_exempt:true
+rather than physically archived, because the referring doc
+plans/active/cross_cutting_consolidated_closeout_2026_07_25.md is over its 1000-line hard cap and a same-line
+link-repoint edit there has no check_line_caps.sh carve-out (tracked in
+plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md).

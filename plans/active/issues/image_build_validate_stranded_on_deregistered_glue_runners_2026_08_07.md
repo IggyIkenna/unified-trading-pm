@@ -185,3 +185,15 @@ needed a brand new dispatch). Result: `validate / GCP Cloud Build — alerting-s
 **na-eligibility-audit 2026-08-09** (ci tranche, autonomous, dispatch agt-4e0ea5) [body-hash:5dc1e65cce36b844]: KEEP-NA,
 valid — the sole open item (todo 2, standing-check design decision) remains a genuine, un-scoped design call. No
 `assigned_vm` change.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:3e4d55f31a632aea]: KEEP-NA,
+valid — 1 open todo (line 125, P3 INFRA: a standing check for 'workflow moved private->public / caller
+runner-registration changed' as a re-audit trigger). Re-confirmed as a genuine open design/architecture call, not a
+bounded spec -- it requires designing a NEW detection heuristic from scratch (there is no existing historical-state
+tracker for repo visibility or cross-repo runner registration to diff against), matching the 2 prior
+na-eligibility-audit confirmations (2026-08-08, 2026-08-09). Corroborating cross-reference found this run:
+plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md's own todo 10 independently raises the
+SAME 'should we build a standing visibility-change alert' question and was itself independently classified 'genuine...
+design/priority call, not a bounded spec...

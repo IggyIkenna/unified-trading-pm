@@ -206,3 +206,12 @@ reversibility-qualified deletes, Option B retired, GSM secret + 5 Slack webhooks
 3, `[INFRA] P3`) is still an undecided architecture tradeoff ("Consider whether STEP 5.83 should validate against a
 canonical/fresh state... rather than each shipping repo's local, possibly-stale sibling checkouts") — a design call with
 no stated decision, not a bounded outcome a worker can execute. No RECLASSIFY, no satellite- extraction. No ARCHIVE.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:45b026ac7efc1ece]: KEEP-NA,
+valid — The doc's actual blocking scope (todo 1, deployment-api checkout staleness) was fully resolved same-day
+2026-08-03, verified via a clean quality-gates.sh re-run and a shipped quickmerge (execution-service@4485e0bd); todo 2
+is N/A (no baseline regen was needed since mtds_meta.py was never actually renamed upstream). status: open is
+deliberately retained only for the non-blocking todo 3. The sole remaining open item is explicitly phrased 'Consider
+whether STEP 5.83 should validate against a canonical/fresh state... rather than each shipping repo's local,
+possibly-stale sibling checkouts' -- an undecided architecture tradeoff (per-run network/git-show cost vs. accepting
+host-checkout staleness) with no decision made and no stated done-when.

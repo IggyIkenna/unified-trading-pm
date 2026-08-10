@@ -252,3 +252,11 @@ call — no `assigned_vm` change. `locked_by` anomaly (flagged 2026-08-01, still
 valid — the sole open item (step 3, quickmerge.sh branch-check broadening, D4-1) remains a genuine design/judgment call,
 gated on `scripts/quickmerge.sh` ownership contention. `locked_by: live-defi-rollout` anomaly (flagged 2026-08-01, still
 unactioned) unchanged — not this run's to clear autonomously. No `assigned_vm` change.
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:003eb4f7e5a28a06]: KEEP-NA,
+valid — Steps 2 and 4 of the suggested-next-steps are done (shipped unified-trading-library@dc1dc7df + fleet grep found
+no other repo carries the risky pattern). The sole remaining open sub-item is step 3: revisit whether quickmerge.sh's
+branch check should broaden to recognise live-defi-rollout/staging as production. The doc's own body documents a
+same-repo TRIAL FIX that was built, applied, and locally re-gated -- it eliminated the 5 originally-failing tests but
+immediately surfaced 2 DIFFERENT failures elsewhere in the same repo, because a second config surface
+(UnifiedCloudServicesConfig) has the OPPOSITE documented default from the first (resolve_bucket_name).

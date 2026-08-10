@@ -1002,3 +1002,12 @@ repeated here.
 - **2026-08-09 (plan_reconciler ci-tranche, agt-04cb0e)** — re-tested todo 1's gate: ledger-coordination fix landed
   (`status: complete`, Phase 2+3 `[x]`) but recurrence did NOT stop — `continued3` logs a fresh occurrence 2026-08-09
   ~02:20-03:15Z. Todo 3's archive condition unmet; both stay open.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-08-10** (ci tranche, autonomous, dispatch agt-74eff9) [body-hash:b3a968bf485c1cf8]: KEEP-NA,
+valid — 2 open checkboxes (matches phase0=2 and my grep; todo 2 is already [x] DONE 2026-08-08, a cooldown/dedup fix,
+not open). Todo 1 (P3, track capacity-side root-cause fix + re-test) and todo 3 (P3, gated
+archive-all-four-docs-together condition) both hinge on qg_governor_glue_runner_ledger_coordination_2026_08_03.md Phase
+2-3 'landing AND holding (sustained)'. Independently verified (direct grep of the archived doc's frontmatter, not just
+trusted the claim): that doc is genuinely at plans/archive/2026_08/, status: complete -- Phase 2-3 landed.
