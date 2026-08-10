@@ -64,11 +64,11 @@ a third party cannot tell which from the outside). The confirmation todo below s
   (`/plans/archive/issues/dispatch_sequential_gate_fix_2026_07_24.md`) the same edit had **already** been
   operator-approved and shipped 2026-08-06 during `/plan-reconcile ao` — so item 1 duplicates an earlier ruling.
 - **Item 2 — persist review-agent findings** — _"Yes, build it."_ Cited by
-  `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md` (~line 163). Scope per that todo: make review findings a
-  structured, queryable event (e.g. a `review_finding` activity-log entry with severity + task_id) rather than
-  chat-only.
+  `/plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md` (~line 163). Scope per that todo: make review
+  findings a structured, queryable event (e.g. a `review_finding` activity-log entry with severity + task_id) rather
+  than chat-only.
 - **Item 3 — task-usage backfill** — _"Run the backfill."_ Cited by
-  `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md` (~line 444). Scope: extend
+  `/plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md` (~line 444). Scope: extend
   `agent-orchestrator/scripts/orchestrator/backfill_task_usage.py` to cover one-off completions and run it for the
   completions lost while the todo-24 bug was live.
 - **Item 4 — cross-role routing change sign-off** — _"Conditional: check for conflicts with other

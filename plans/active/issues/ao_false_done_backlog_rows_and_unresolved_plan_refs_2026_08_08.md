@@ -340,16 +340,20 @@ plan + verifying the `done_sha`, never from the row's status alone.
       large unexplained residue is a silent-blindspot, not bookkeeping noise. Report the split; do not bulk-mutate. —
       **verified 2026-08-08 (slot 22): expected explanation accounts for 100% of the bulk, zero unexplained residue.**
       Full trail in the Progress Log below.
-- [ ] [BACKEND] P3. **Bound the 12 `UNAUDITABLE` (`brief_hash IS NULL`) rows.**
+- [x] ✅ [BACKEND] P3. **Bound the 12 `UNAUDITABLE` (`brief_hash IS NULL`) rows.**
       `regen_positional_task_ids_not_content_stable_2026_07_17.md` already shipped `agent-orchestrator@aaa2db8` to bound
       this tail and the count still moves — re-measure, and confirm every remaining unhashed row is a `done` row (which
-      is what bounds the exposure). **➡️ EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 6
-      — do NOT action here.**
-- [ ] [BACKEND] P3. **Decide whether a standing false-done breach should page.** It currently only transitions Slack
+      is what bounds the exposure). — **DONE 2026-08-10 via batch12 todo 6**: re-ran `audit_false_done.py` against the
+      live `state.db` — UNAUDITABLE = **11** (down from 12), ALL `status=done` (zero non-done unauditable rows, exposure
+      bounded). Full audit same run: 15 false_done, 911 honest, 1513 unresolved.
+- [x] ✅ [BACKEND] P3. **Decide whether a standing false-done breach should page.** It currently only transitions Slack
       state via `audit_cron_notify.apply_transition` (breach→breach stays silent, by design), so a breach that never
       clears is silent after its first notify while the systemd unit stays red indefinitely. Confirm that matches the
-      actionable-only alerting contract in `/codex/04-architecture/agent-orchestrator-alerting.md`. **➡️ EXTRACTED
-      2026-08-09 to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 7 — do NOT action here.**
+      actionable-only alerting contract in `/codex/04-architecture/agent-orchestrator-alerting.md`. — **DONE 2026-08-10
+      via batch12 todo 7**: **VERDICT MATCH** — `audit_cron_notify.apply_transition` implements exactly the
+      state-transition dedup the contract mandates (clean→breach fires the OPEN page, breach→clean fires the ✅ RESOLVED
+      bookend, breach→breach / clean→clean stay silent, disk-persisted via `dedup_state.load/save_bool_sentinel`).
+      Contract clause cited in the batch12 plan. No mismatch → no follow-up.
 
 ## Codex SSOTs
 

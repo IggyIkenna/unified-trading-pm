@@ -26,7 +26,7 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-12, satellite-docs,
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch12_finalize_2026_08_09.md,
-    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
     /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
     /plans/archive/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md,
     /plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md,
@@ -52,7 +52,7 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
     /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
     /plans/archive/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md,
     /plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md,
@@ -102,7 +102,7 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       `select_account_for_spawn` path (per the source doc's 2026-08-05 ratio-skew Progress Log finding), not just the
       `_deepseek_flash_should_route` accumulator in isolation. **Done when**: the test passes deterministically across 3
       consecutive local runs and `bash scripts/quality-gates.sh` is green in `agent-orchestrator/`. Source:
-      `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:79` (todo 2). Repo: agent-orchestrator. —
+      `/plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md:79` (todo 2). Repo: agent-orchestrator. —
       agent-orchestrator@4d27bc1. 6 new tests in `test_deepseek_provider_routing.py`, all exercising
       `select_account_for_spawn` end-to-end (not the accumulator in isolation): exact 50/50 alternation with active-slot
       counts held equal, reproducibility across a simulated process-restart (both split accumulators reset to their
@@ -116,14 +116,15 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       `/codex/06-coding-standards/ui-testing-layers.md`) for the already-shipped per-model pro/flash filter toggle in
       `agent-orchestrator/dashboard/src/TaskUsageWindows.tsx`** (the `_FILTER_OPTIONS` UI change from
       `agent-orchestrator@7d73ded`). **Done when**: the spec asserts the pro/flash filter actually narrows the rendered
-      rows, is tagged `pw:L2`, and passes in CI. Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:97`
-      (todo 4). Repo: agent-orchestrator. — `agent-orchestrator@26f8a49`. New
-      `dashboard/tests/e2e/task-usage-provider-filter.spec.ts` (5 tests) reuses the shared e2e fixture (every seeded
-      `TaskUsageRow` is `model=deepseek-v4-pro`) rather than mutating it — asserts "All providers" / "DeepSeek (all)" /
-      "DeepSeek · Pro" all sum the same 3 rows (17.0K lifetime input, 3 tasks), while "DeepSeek · Flash" and "Anthropic"
-      genuinely NARROW the rendered windows down to the known-zero row (never the panel's empty state, per
-      `window_task_usage_totals`'s always-5-windows contract — same pattern task-usage-role-group-filter.spec.ts's
-      "Conflict resolver" case already established), plus a switch-back-restores-the-sum test. `pw:L2 ✓`
+      rows, is tagged `pw:L2`, and passes in CI. Source:
+      `/plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md:97` (todo 4). Repo: agent-orchestrator. —
+      `agent-orchestrator@26f8a49`. New `dashboard/tests/e2e/task-usage-provider-filter.spec.ts` (5 tests) reuses the
+      shared e2e fixture (every seeded `TaskUsageRow` is `model=deepseek-v4-pro`) rather than mutating it — asserts "All
+      providers" / "DeepSeek (all)" / "DeepSeek · Pro" all sum the same 3 rows (17.0K lifetime input, 3 tasks), while
+      "DeepSeek · Flash" and "Anthropic" genuinely NARROW the rendered windows down to the known-zero row (never the
+      panel's empty state, per `window_task_usage_totals`'s always-5-windows contract — same pattern
+      task-usage-role-group-filter.spec.ts's "Conflict resolver" case already established), plus a
+      switch-back-restores-the-sum test. `pw:L2 ✓`
       (`npx playwright test --project=chromium tests/e2e/task-usage-provider-filter.spec.ts`, 5/5 passed; sibling
       `task-usage-role-group-filter.spec.ts` re-run to confirm no regression, 5/5 passed). Full
       `bash scripts/quality-gates.sh` green (3069 pytest + 262 vitest + tsc + basedpyright + ruff, run twice — once
@@ -134,30 +135,31 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       agent-orchestrator, plus a query/report endpoint or script and a regression test proving emission + retrieval.
       Operator already ruled "yes, build it" (2026-08-08, ao round-5 apply session, item 2). **Done when**: the event is
       emitted on every real review finding, the query endpoint/script returns it, the regression test passes, and
-      `bash scripts/quality-gates.sh` is green. Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:170`
-      (todo 12a). Repo: agent-orchestrator. — agent-orchestrator@7a7ef2e. `POST /api/slots/{slot_id}/message` now logs a
-      `review_finding` activity event (task_id/severity/finding_text/agent_id) whenever `from_role == "review"` —
-      task_id falls back to the target slot's `current_task` when the caller omits it, severity defaults to
-      `needs-rework` (this send path is documented in `review.md` as reserved for worker-actionable defects), so
-      emission requires no `review.md` change to start firing on real findings today. Added a new
-      `GET /api/review-findings` query endpoint (task_id/slot/severity/date-range filters, severity applied post-fetch
-      since it lives in `details_json`) plus a `task_id` SQL filter on `list_activity()`. 7 new regression tests
-      (`tests/test_review_findings.py`) cover emission (explicit task_id+severity, slot-current_task fallback,
-      non-review roles don't fire) and retrieval (task_id filter, severity filter, event-type isolation). Full
-      `quality-gates.sh` green (3076 pytest, run twice — once pre-commit, once re-verified on the exact committed SHA
-      per the sentinel-ordering rule), ancestry-verified on `origin/live-defi-rollout`.
+      `bash scripts/quality-gates.sh` is green. Source:
+      `/plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md:170` (todo 12a). Repo: agent-orchestrator. —
+      agent-orchestrator@7a7ef2e. `POST /api/slots/{slot_id}/message` now logs a `review_finding` activity event
+      (task_id/severity/finding_text/agent_id) whenever `from_role == "review"` — task_id falls back to the target
+      slot's `current_task` when the caller omits it, severity defaults to `needs-rework` (this send path is documented
+      in `review.md` as reserved for worker-actionable defects), so emission requires no `review.md` change to start
+      firing on real findings today. Added a new `GET /api/review-findings` query endpoint
+      (task_id/slot/severity/date-range filters, severity applied post-fetch since it lives in `details_json`) plus a
+      `task_id` SQL filter on `list_activity()`. 7 new regression tests (`tests/test_review_findings.py`) cover emission
+      (explicit task_id+severity, slot-current_task fallback, non-review roles don't fire) and retrieval (task_id
+      filter, severity filter, event-type isolation). Full `quality-gates.sh` green (3076 pytest, run twice — once
+      pre-commit, once re-verified on the exact committed SHA per the sentinel-ordering rule), ancestry-verified on
+      `origin/live-defi-rollout`.
 - [x] ✅ [UI] P3. **Investigate whether DeepSeek's OpenAI/Anthropic-compatible API endpoint actually honors the Claude
       Code CLI's `thinking: on/off` flag, then relabel the Fleet table's thinking-brain icon honestly based on the
       finding** (the icon currently echoes the CLI's own flag regardless of provider — unconfirmed whether DeepSeek's
       API honors or silently ignores it). **Done when**: the investigation's finding is recorded with evidence (a real
       request/response trace, or documented API-spec confirmation), and the icon's label/tooltip matches reality.
-      Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:231` (todo 17b). Repo: agent-orchestrator. —
-      **Investigated + fixed 2026-08-10 (slot-6, ui_developer): finding is broader than the todo assumed — the flag is
-      inert on adaptive-reasoning models regardless of provider, not a DeepSeek-specific honesty gap.** Evidence: 1.
-      **DeepSeek's own docs** (`api-docs.deepseek.com/guides/anthropic_api/`): the Anthropic-compat endpoint's
-      compatibility table lists `thinking` as "Supported (`budget_tokens` is ignored)" — the on/off type is nominally
-      honored, but the CLI's specific `--max-thinking-tokens 31999` value is documented-ignored; DeepSeek applies its
-      own internal reasoning-depth control instead. 2. **Live transcript sampling** (real fleet sessions,
+      Source: `/plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md:231` (todo 17b). Repo:
+      agent-orchestrator. — **Investigated + fixed 2026-08-10 (slot-6, ui_developer): finding is broader than the todo
+      assumed — the flag is inert on adaptive-reasoning models regardless of provider, not a DeepSeek-specific honesty
+      gap.** Evidence: 1. **DeepSeek's own docs** (`api-docs.deepseek.com/guides/anthropic_api/`): the Anthropic-compat
+      endpoint's compatibility table lists `thinking` as "Supported (`budget_tokens` is ignored)" — the on/off type is
+      nominally honored, but the CLI's specific `--max-thinking-tokens 31999` value is documented-ignored; DeepSeek
+      applies its own internal reasoning-depth control instead. 2. **Live transcript sampling** (real fleet sessions,
       `~/.claude-configs/*/projects/*/<claude_session_id>.jsonl`, grepped for `"type":"thinking"` content blocks): 3
       DeepSeek-routed sessions spawned via `server/escalation.py` (which never passes a `thinking` kwarg — confirmed via
       `_do_spawn`'s `thinking: str | None = None` default, so these ran with the flag OFF/unset) showed 77-118 genuine
@@ -197,8 +199,8 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       test (a one-off candidate with no `SlotHistoryRow` gets matched and backfilled), a live dry-run report is
       reviewed, `--apply` runs via SSM against the live orchestrator VM, and the affected window's one-off
       `TaskUsageRow` count is verified non-zero (or genuinely unmatched due to transcript rotation — report either way).
-      Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md:447` (todo 25). Repo: agent-orchestrator. —
-      agent-orchestrator@463ee10. Extended `backfill_task_usage.py` with a second candidate source
+      Source: `/plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md:447` (todo 25). Repo:
+      agent-orchestrator. — agent-orchestrator@463ee10. Extended `backfill_task_usage.py` with a second candidate source
       (`_load_one_off_candidates` + `_match_one_off_usage` + `_slot_id_from_transcript`): archived one_shot/scheduled
       AgentRows registered in the deploy window (reflog-pinned to `de73f93` 2026-08-06 09:22:53Z → `acd6d70` 16:05:58Z)
       lacking a `TaskUsageRow`, each matched by resolving its OWN transcript via `claude_session_id` (globally-unique

@@ -91,10 +91,15 @@ unique to lose), so the fix is a clean re-clone/reset of these 5 repos on this s
       2026-08-05 Progress Log entry) for the full resolution trail. This finding (filed 2026-08-08, 5 days later)
       re-discovered the identical stale-host signature without cross-referencing that resolution — no new decision
       needed, decommission is already the executed outcome.
-- [x] ✅ [DEVOPS] P2. **KEEP-NA-STALE, citation-closed 2026-08-09 (na-corpus-hygiene pass).** Clean-reset the 5
-      drift-violating repos on ip-172-31-5-118 slot 0 — content already extracted verbatim into
-      `/plans/active/ao_satellite_ao_dispatch_batch12_2026_08_09.md` (per this doc's own 2026-08-09 Progress Log entry
-      below). Tracked there going forward, not duplicated here.
+- [x] ✅ [DEVOPS] P2. **Clean-reset the 5 drift-violating repos on ip-172-31-5-118 slot 0** (`e2e-testing`,
+      `instruments-service`, `unified-trading-library`, `execution-service`, `market-data-processing-service`) onto
+      current post-history-rewrite `live-defi-rollout`. — **DONE 2026-08-10 via batch12 todo 8**: confirmed clean
+      working trees on all 5 (no uncommitted work lost), tagged each old `HEAD` as `archive/pre-reset-20260810T015655Z`
+      for reversibility, then
+      `git fetch origin live-defi-rollout && git switch -C     live-defi-rollout origin/live-defi-rollout` per repo
+      (branch-ref-only move; never `reset --hard`/`rm -rf`; the `alternates` object stores untouched). All 5 now
+      ahead=0/behind=0 against `origin/live-defi-rollout`; `git fsck` clean. Re-verified in the batch12-finalize review
+      (same host): all 5 on `live-defi-rollout` at ahead=0/behind=0 + archive tags present.
 
 ## Progress Log
 

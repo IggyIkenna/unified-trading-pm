@@ -83,18 +83,26 @@ never executed". With forces now firing from 60, the two separate cleanly — an
 
 ## Todos
 
-- [x] ✅ [BACKEND] P1. **KEEP-NA-STALE, citation-closed 2026-08-09 (na-corpus-hygiene pass).** Detect the queued-message
-      state and do not spend the force latch on it — content already duplicated verbatim as
-      `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 9 (`assigned_vm: planning`, confirmed present at that doc's
-      own line ~163, citing this exact line). Tracked there going forward, not duplicated here; this checkbox closes
-      only to stop double-counting, not because the underlying work is done.
-- [x] ✅ [BACKEND] P1. **KEEP-NA-STALE, citation-closed 2026-08-09 (na-corpus-hygiene pass).** Verify the compaction by
-      its EFFECT, not by its submission — content already duplicated verbatim as
-      `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 10 (confirmed present at that doc's own line ~171). Tracked
-      there going forward.
-- [x] ✅ [BACKEND] P2. **KEEP-NA-STALE, citation-closed 2026-08-09 (na-corpus-hygiene pass).** Reproduce deliberately —
-      content already duplicated verbatim as `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 11. Tracked there
-      going forward.
+- [x] ✅ [BACKEND] P1. **Detect the queued-message state and do not spend the force-compact latch on it.** — **DONE
+      2026-08-10 via batch12 todo 9 (`agent-orchestrator@a1e2969`)**: added `pane_has_queued_messages()` to
+      `server/tmux_spawn.py` + `_TargetState.queued_since`; `_force_compact_now` checks it first and holds the latch
+      un-spent (returns without submitting or advancing `precompact_forced_at`/`forced_at`) while the pane shows a
+      queued-not-yet-executed message; logs `context_force_compact_queued_hold`.
+      `test_worker_force_holds_latch_unspent_while_pane_shows_queued_message` proves it across 2 queued ticks. QG green
+      (3022 passed, 2 skipped). Re-verified in the batch12-finalize review.
+- [x] ✅ [BACKEND] P1. **Verify the compaction by its EFFECT, not by its submission.** — **DONE 2026-08-10 via batch12
+      todo 10 (`agent-orchestrator@59d9417`)**: added `context_probe.compaction_confirmed_since()` reading the
+      transcript's own `compact_boundary` system record; `context_lifecycle._tick_target` now treats
+      `pct_dropped OR boundary_confirmed` as "compaction observed" (boundary check only consulted once the pct-drop
+      heuristic fails AND a force is outstanding — no added per-tick cost). Closes the blind spot where a worker that
+      compacts then goes quiet left `pct` stuck high.
+      `test_boundary_confirms_compaction_the_old_pct_check_would_have_missed` + 3 more in test_context_probe.py. QG
+      green (3109 passed). Re-verified in the batch12-finalize review.
+- [x] ✅ [BACKEND] P2. **Build a deliberate repro for the queued-not-executed `/compact` mechanism.** — **DONE
+      2026-08-10 via batch12 todo 11 (`agent-orchestrator@66be387`)**: 8 new unit tests in
+      `tests/test_tmux_spawn_targets.py` — `pane_has_queued_messages` (detect/absent/error), `submit_to_pane`
+      (clears/retry/stuck/error) + `test_repro_queued_compact_returns_true_but_shows_queued` proving the full ambiguity.
+      All 27 tests in the file pass (re-verified in the batch12-finalize review).
 - [ ] [BACKEND] P3. **Re-measure the wedge rate once the above lands.** Baseline to beat, measured on the clean fleet
       after `c6e6d982a`/`9b269c0ce`: ~3.5 wedges/hr with forces distributed 62-97. Pre-measurement-fix baseline was
       ~9.7/hr with every force at 91-100.

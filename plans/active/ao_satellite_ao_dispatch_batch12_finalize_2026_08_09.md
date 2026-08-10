@@ -19,7 +19,7 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-12, finalize, satel
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch12_2026_08_09.md,
-    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
     /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
     /plans/archive/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md,
     /plans/active/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md,
