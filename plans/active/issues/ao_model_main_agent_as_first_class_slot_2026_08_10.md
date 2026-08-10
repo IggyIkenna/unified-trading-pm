@@ -155,9 +155,9 @@ row appear to belong to main.
 - [ ] [BACKEND] P2. Collapse the derived-pressure and wedge-recovery main branches the same way, so main reaches those
       paths as a slot rather than via a special case. Done-when: both main-specific branches are deleted and their
       existing tests pass against the shared path.
-- [ ] [BACKEND] P2. Add a standing guard against the regression class: a test asserting every context-lifecycle target
-      returned by the policy's own target list has a SlotRow. Done-when: the test fails if a future target is added
-      without one.
+- [x] ✅ [BACKEND] P2. Add a standing guard against the regression class: a test asserting every context-lifecycle
+      target returned by the policy's own target list has a SlotRow. Done-when: the test fails if a future target is
+      added without one. — agent-orchestrator@c8109bd
 - [ ] [DOCS] P2. Post-phase codex audit: record the ruling and the resulting shape in
       `/codex/04-architecture/agent-orchestrator-worker-liveness.md`, superseding the sections that document main's
       slot-less special-casing as expected. Done-when: the SSOT describes main as a first-class slot and names the
@@ -243,3 +243,11 @@ row appear to belong to main.
   `tests/test_migrate_blocked_queue_no_slot_sentinel.py` proves a legacy `slot_id=0` row migrates to `-1`, a real worker
   row (`slot_id=7`) is untouched, and the migration is idempotent. Full suite (3069 passed, 2 skipped) + ruff +
   basedpyright clean.
+- 2026-08-10 — Todo 7 (standing guard) complete, agent-orchestrator@c8109bd. Added
+  `test_every_context_lifecycle_target_has_slot_row` to `tests/test_context_lifecycle.py`: mirrors
+  `ContextLifecyclePolicy.tick()`'s target-list construction (main + review + `_active_worker_slot_ids` workers) and
+  asserts every target resolves to a real `SlotRow` — main via `main_agent_keeper.MAIN_SLOT_ID` (its slot_id=None in the
+  target list maps there), review/worker via their int slot ids. The mirror is intentional: a future change to
+  `tick()`'s target construction must also update this test, at which point the author verifies the new target has a
+  SlotRow. Full suite 3093 passed, 2 skipped + ruff + basedpyright clean via `quality-gates.sh`; landed on LDR via
+  quickmerge.
