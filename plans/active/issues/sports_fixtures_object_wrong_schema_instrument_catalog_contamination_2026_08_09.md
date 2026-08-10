@@ -558,3 +558,23 @@ transcript available in that session's Progress Log entry on
   the whole thing done or falsely withhold credit for real, finished, verified-clean scope) — see the Todos section
   above: `features-sports-prd` checked off with this session's evidence, `instruments-store-sports-prd` carried forward
   as its own open item with the current checkpoint status inline.
+
+- **2026-08-10T12:20Z (slot 13, data_engineering, dispatched on todo 3 — "fix write path + remediate")**: checked the
+  census VM's real state (per the false-SUCCEEDED lesson two entries above) —
+  `gcloud compute instances describe sports-schema-census-instruments-store-20260809-224053` → still `RUNNING`;
+  downloaded + analyzed the current checkpoint report (698,000 rows, up from 333,000 at slot-29's ~05:07Z check —
+  healthy monotonic growth, not a stall): covers `day` `2019-01-01`→`2022-09-25` (844 distinct days) across 21 entity
+  values incl. `fixtures`, **0 `contamination_codes`-positive rows** so far, and 0 rows at `day>=2026-04-14` yet (the
+  known-contaminated object's partition is still ~3.5 years ahead of the walk's frontier). **Nothing new to remediate
+  this session**: the write-path half is already resolved (todo 2: shipped guard
+  `_assert_not_cross_domain_contamination()`, `instruments-service@b3cb6f8c`, structurally covers `entity=fixtures`),
+  and the one confirmed contaminated object (BOLIVIA_PRIMERA_DIVISION) is already quarantined
+  (`instruments-service@cfc3736b`). Todo 3's corpus-wide done-when ("fresh scoped check of affected triples returns 0
+  schema-mismatched objects") remains genuinely gated on todo 1's census reaching terminal self-delete and its FINAL
+  report being folded into a per-entity/day/pipeline_mode count. Not busy-waiting on a ~half-complete multi-hour
+  background walk — skipping this task back to the queue (`reason_code=GATED`, `estimated_unblock_minutes=180`). **Next
+  dispatch**: re-check the census VM for terminal (`NOT_FOUND`) state, download the FINAL report, and fold its
+  `contamination_codes`-positive rows into the per-entity/day/pipeline_mode count; only then disposition any newly-found
+  affected triples per the same canonical-twin-first logic the BOLIVIA_PRIMERA_DIVISION remediation used
+  (quarantine-not-refetch when a canonical twin holds real data), and flip the todo-3 checkbox once the scoped check
+  returns 0 schema-mismatched objects.
