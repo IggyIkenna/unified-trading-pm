@@ -13,7 +13,7 @@ summary: >-
   between 8a033d44 and LDR head 1717d294 peer commits changed deployment_service/data_pipeline_monitors/ (49cb5de6 "stop
   meta-watchers OOM + preemption-relaunch re-fire storm", 2f077c97 "stop GONE_NO_CAPTURE false pages", 6d47fe23,
   ac910e17, d85832ba). Likely the PAGE-vs-SUCCEEDED / pin-resolution decision changed in 49cb5de6 or 2f077c97.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -49,6 +49,10 @@ context_scope:
     deployment-service/deployment_service/vm/tarball_pins.py,
   ]
 ---
+
+> **ARCHIVED**: resolved by deployment-service@c472a818 (2026-08-10) — the pre-existing dp-recovery-actuator test
+> regression (11 `test_dp_recovery_actuators.py` PAGE-vs-SUCCEEDED failures) was already fixed on LDR when a re-dispatch
+> verified it (all 59 tests pass, full QG green, exit 0). Successor: none.
 
 # deployment-service QG RED — test_dp_recovery_actuators.py 11 failures (pre-existing on LDR)
 
@@ -115,5 +119,5 @@ contract, per the incident referenced by the tests).
   the disk fallback path. Fix `c472a818` ("force disk-path budget in dp_recovery actuator tests") is already on LDR
   HEAD. All 59 tests pass (verified), full QG green (exit 0). No code changes needed from this dispatch.
 
-- [ ] [INFRA] P3. **Archive this resolved issue doc** — all work already on LDR, doc is terminal (repo:
-      unified-trading-pm)
+- [x] ✅ [INFRA] P3. **Archive this resolved issue doc** — all work already on LDR, doc is terminal (repo:
+      unified-trading-pm) — archived via `git mv` to `plans/archive/2026_08/issues/` (2026-08-10, slot 5).

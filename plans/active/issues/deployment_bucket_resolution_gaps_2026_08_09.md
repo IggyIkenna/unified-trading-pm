@@ -159,9 +159,9 @@ literal default for a `resolve_bucket_name(...)` call in ~21 identifiable files)
   on preemption-relaunch pin resolution) introduced by peer dp-monitors commits `49cb5de6`/`2f077c97`/etc. landing
   between the last green sentinel `8a033d44` and LDR head `1717d294`. Verified not mine (actuator only checks
   launcher-file existence, never reads .sh content; tests mock run_launcher). Repo-blocker declared; issue filed
-  (`dp_recovery_actuator_tests_regression_2026_08_10.md`). Cross-repo scan surfaced related hardcoded literals in
-  e2e-testing (8 .sh copies), market-tick-data-service (4 .py), and deployment-service's non-.sh surfaces (workflow
-  env + runbook/README) — filed as follow-up todo 2 above.
+  (`/plans/archive/2026_08/issues/dp_recovery_actuator_tests_regression_2026_08_10.md`). Cross-repo scan surfaced
+  related hardcoded literals in e2e-testing (8 .sh copies), market-tick-data-service (4 .py), and deployment-service's
+  non-.sh surfaces (workflow env + runbook/README) — filed as follow-up todo 2 above.
 - **2026-08-10** — Todo 1 SHIPPED: `deployment-service@f8d3312d` (rebased SHA; originally `f979b809`). The pre-existing
   QG red (11 `test_dp_recovery_actuators.py` failures) was fixed by the fleet via escalation `agt-acb0ed` +
   `c472a818 fix(dp-monitors): force disk-path budget in dp_recovery actuator tests` (a test-environment/budget-path fix,
