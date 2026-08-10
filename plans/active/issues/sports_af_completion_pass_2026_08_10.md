@@ -363,11 +363,19 @@ depends_on: []
         - Pace ~4 season-start-dates in ~3 min — steady, consistent. Run ~4.7h old. Still in 2021 seasons.
         - No code shipped — pure monitoring. Tree clean, `ahead=0`.
 
-## Deferred work after 2026-08-10 ~21:20Z
+      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM quick check:
+        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
+          `2021-07-26` (monitor event ~21:17Z) → `2021-07-30`. Monotonic, forward progress. ~409/2258 days done
+          (~18.1%). Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
+        - Pace ~4 season-start-dates since prior check. Still in 2021 seasons; non-linear deceleration expected into
+          denser 2022+ seasons. Run now ~5h+ old.
+        - No code shipped — pure monitoring. `/pre-compact` executed.
+
+## Deferred work after 2026-08-10 ~21:30Z
 
 | Item                                                             | State / why deferred                                 | Blocked on                         |
 | ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-07-24`, ~405/2258 days (~17.9%)       | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-07-30`, ~409/2258 days (~18.1%)       | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
