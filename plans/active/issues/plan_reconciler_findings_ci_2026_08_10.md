@@ -459,3 +459,11 @@ written).
   discovered only during this audit — the blocked-question retrieval gap itself. Committing this checkpoint now; STEP 8
   (apply-answer-then-`/done`) resumes once the background poll resolves (answer found, or its 480s bound expires) — not
   resolved as of this checkpoint, so `/done` has NOT been called yet.
+- **2026-08-10 ~07:02 UTC** — Background poll `bjg620o2c` completed: `loop_exit=124` (timeout — the 480s bound expired
+  with `GET /api/slots/2/messages` still returning `{"messages":[]}"` throughout). Ran one final direct re-check of both
+  documented channels post-timeout: `/api/slots/2/messages` still empty, `/api/slots/2/blocked` returns
+  `405 Method Not Allowed` (not a data channel). Treating this as confirmed-unresolved rather than retrying further —
+  the async-wait-and-poll-discipline HARD RULE calls for a bounded watchdog, not indefinite polling, and it already ran
+  to its bound. Not escalating further this run: item 9 above already captures the gap as a durably filed, routed
+  finding; `can_continue: true` was set at blocked-question submission time (SUB_AGENT_MANDATORY_RULES ASK-never-BLOCK),
+  so the sweep's completion was never contingent on this answer arriving. Proceeding to close the one-shot lifecycle.
