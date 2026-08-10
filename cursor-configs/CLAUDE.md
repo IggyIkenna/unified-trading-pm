@@ -30,14 +30,13 @@
 ## Model tier
 
 Default **Sonnet**; model tier (sonnet/opus/fable) and effort (`low<medium<high<xhigh<max`) are INDEPENDENT axes (ground
-truth: `agent-orchestrator/server/model_tier.py`). **`opus-required` = ZERO categories** — opus is now manual-only
-(cross-repo/trading/sizing dropped 2026-07-23/08-04; main dropped 2026-08-07 — `main.md` sonnet+`default`).
-**`sonnet_variant: light|default` picks sonnet-4.6 vs sonnet-5** — **sonnet-5 is the default for EVERYTHING**
-(2026-08-08 ruling INVERTING 2026-08-04's ≥80%-light target: 5 is smarter, 1M-vs-200K context AND cheaper through end of
-Aug 2026); `light` is an explicit opt-in nothing declares — re-check pricing before re-arming it. Every
-`assigned_vm: planning` plan defaults to `effort: max`. **Effort default (2026-07-22)**: no declared tier →
-todo-count-derived (`xhigh`/`max` past `LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent `Agent` calls MUST
-set `model=` explicitly. Self-check every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP. SSOT:
+truth: `agent-orchestrator/server/model_tier.py`). **`opus-required` = ZERO categories** — opus is manual-only
+(`main.md` is sonnet+`default`). **`sonnet_variant: light|default` picks sonnet-4.6 vs sonnet-5** — **sonnet-5 is the
+default for EVERYTHING** (2026-08-08 ruling: smarter, 1M-vs-200K context AND cheaper through end of Aug 2026); `light`
+is an explicit opt-in nothing declares — re-check pricing before re-arming it. Every `assigned_vm: planning` plan
+defaults to `effort: max`. **Effort default (2026-07-22)**: no declared tier → todo-count-derived (`xhigh`/`max` past
+`LARGE_PLAN_TODO_THRESHOLD`), not silent "medium". Sub-agent `Agent` calls MUST set `model=` explicitly. Self-check
+every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP. SSOT:
 `/codex/06-coding-standards/model-tier-selection.md`.
 
 ## Environment + how to run quality gates
@@ -123,11 +122,9 @@ Cloud Run revision pin can freeze deploys at 0% — verify `status.traffic`. **`
 Phase-3): `ci-status-update.yml` writes Firestore only (per-repo-doc CAS + `is_stale_write` ordering) — NEVER re-add a
 per-transition manifest commit, the `manifest-update` concurrency group, or the retired `ci-status-reconciler`; the
 hourly `ci-status-consolidator` owns the manifest-cache projection (manifest stays a fallback cache, read Firestore for
-live state). **Never `gh workflow run ldr-to-main-promote-fleet.yml` just to check whether your repo promoted** — it's a
-shared, single-concurrency-slot workflow every agent verifying its own promotion converges on, and ad-hoc dispatches
-starve it under multi-agent load (measured: 2+ hour livelock, 2026-08-07,
-`plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md`) — read
-`scripts/cicd/promotion_lag_monitor.py`'s live output or `gh pr list --search "chore(promote)"` instead. SSOT:
+live state). **Never `gh workflow run ldr-to-main-promote-fleet.yml` to check your own promotion** — shared
+single-concurrency slot; ad-hoc dispatches starve it (measured 2+ h livelock 2026-08-07). Read
+`scripts/cicd/promotion_lag_monitor.py` or `gh pr list --search "chore(promote)"`. SSOT:
 `/codex/08-workflows/ci-cd-flow.md`.
 
 ## Commit + Push + Flip plan checkboxes as you ship (HARD RULE)
@@ -172,13 +169,15 @@ SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
   only external work on a **progress metric** (flat = STALL → diagnose); don't over-watch / no-sawtooth / don't poll
   what you can direct-check; **backfill/migration progress = count of TARGET artifacts created (entity-scoped,
   `time_created` not `updated`), NEVER activity** — an entity-agnostic check can pass for hours while the target entity
-  writes ZERO rows, masked by OTHER entities writing; monitors read terminal `exit_code` + manifest counts + log-mtime
-  - a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no self-match); `ScheduleWakeup` / a dispatched sub-agent
-    are NOT reliable wakes — arm your OWN `run_in_background` heartbeat watchdog (≤30-min) in the SAME turn. SSOT:
-    `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+  writes ZERO rows, masked by OTHER entities writing; monitors read terminal `exit_code` + manifest counts + log-mtime →
+  a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no self-match); `ScheduleWakeup` / a dispatched sub-agent
+  are NOT reliable wakes — arm your OWN `run_in_background` heartbeat watchdog (≤30-min) in the SAME turn. SSOT:
+  `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+- **Batch independent tool calls** — compound `&&`/`;` Bash, several `tool_use` blocks per message, `replace_all` over
+  serial Edits; only result-dependent calls stay sequential. Measured: 57.3% of calls collapsible, each costing a ~406k
+  prefix re-read + a round-trip. SSOT: `/codex/06-coding-standards/tool-call-batching.md`.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`,
-  plans, memory). **Escalating a question**: ≥2 OPTIONS, your pick marked `[WORKER REC]`, never open-ended; ≤1 min
-  read-only investigation first. **Deps**: `uv pip install`, never `pip`; never re-lock.
+  plans, memory).
 - **Pre-task plan/issue conflict check (HARD RULE)** — before ANY task grep `plans/active/`+`issues/`: plans go
   stale/superseded between daily `/plan-reconcile` sweeps: no-flag≠current; 0 hits ≠ clear (grep-then-read) — check
   status/supersedes. Context economy: scope reads + Bash output (`grep -c`/`tail -5`, not full dumps), terse replies.
@@ -405,19 +404,19 @@ architecture (L0–L4)".
 ## System map + workspace configs
 
 Repo map: events→UTL · schemas→UAC · cloud→unified-cloud-interface · market data→MTDS · execution→execution-service ·
-reference data→instruments-service (URDI is live-internal; no NEW URDI refs in docs) · UI→`unified-trading-system-ui`
-(incl. DART) + `deployment-ui` (devops + launch consoles; `user-management-ui` ARCHIVED) ·
-orchestration→`agent-orchestrator` (uvicorn :8765). **deployment-api** = single deploy/launch+subscriptions backend for
-both UIs. **Architecture**: **`planning` is the ONLY VM** (EIP 13.113.200.22) with N slot workers, role-based dispatch.
-Workspace configs canonical in `unified-trading-pm/cursor-configs/` (setup
-`scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright). Claude Code settings inherited by
-symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json` → `cursor-configs/settings.json` (don't commit
-personal `model`/`theme` drift in it) → `/codex/05-infrastructure/claude-code-settings-symlink.md`. **Personal per-tab
-context-checkpoint automation** (tmux `send-keys`-forced `/pre-compact` then `/compact`, mirrors
-`agent-orchestrator/server/context_lifecycle.py` at personal scale; requires a terminal-hosted `claude` CLI session —
-the Cursor/VS Code extension chat panel isn't tmux-reachable, its built-in terminal tab is) →
-`/codex/05-infrastructure/local-tmux-precompact-watcher.md`. Analysis:
-`rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
+reference data→instruments-service (URDI is a live internal module — "phantom" label retired 2026-07-12; no NEW URDI
+refs in docs) · UI→`unified-trading-system-ui` (incl. DART) + `deployment-ui` (devops + launch consoles;
+`user-management-ui` ARCHIVED) · orchestration→`agent-orchestrator` (uvicorn :8765). **deployment-api** = single
+deploy/launch+subscriptions backend for both UIs. **Architecture**: Central orchestrator VM (id `planning`, EIP
+13.113.200.22) with N slot workers, role-based dispatch (no per-epic VMs; single-VM architecture 2026-06-27).
+**`planning` is the ONLY VM** (human-planning TERMINATED 2026-08-03). Workspace configs canonical in
+`unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright).
+Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json` →
+`cursor-configs/settings.json` (don't commit personal `model`/`theme` drift in it) →
+`/codex/05-infrastructure/claude-code-settings-symlink.md`. **Personal per-tab context-checkpoint automation** (tmux
+`send-keys`-forced `/pre-compact` then `/compact`; needs a terminal-hosted `claude` session — the Cursor/VS Code chat
+panel isn't tmux-reachable, its terminal tab is) → `/codex/05-infrastructure/local-tmux-precompact-watcher.md`.
+Analysis: `rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
 `source scripts/workspace/load-gh-token.sh`. **agent-orchestrator auth**: dashboard JWT HS256 (central only) / internal
 proxy ES256 / accounts via GSM, never `.credentials.json`; backlog plan-driven (`regen_backlog_from_plan.py`, never
 hand-edit `backlog.yaml`); role-dispatch routes tasks to spawned workers by skill (central + role registry); runtime
