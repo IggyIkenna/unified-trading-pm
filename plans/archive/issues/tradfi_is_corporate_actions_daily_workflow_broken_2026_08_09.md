@@ -12,7 +12,7 @@ summary: >-
   dividends/splits/earnings, `--mode corporate_actions --upload-to-gcs`) has no equivalent scheduled job anywhere else
   in the live fleet — unlike its `run_instruments` step, which IS functionally covered by the working `is-daily-enum-*`
   jobs, so corporate_actions ingestion looks like it may be silently unscheduled.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi, defi]
 stage: [data]
@@ -40,6 +40,10 @@ locked_by:
 resolved_by:
 context_scope: [/codex/05-infrastructure/deployment-observability.md, /codex/05-infrastructure/vm-launcher-runbook.md]
 ---
+
+> **ARCHIVED** — 2026-08-10 (slot-21). Both GCP resources deleted (`instruments-service-daily` Workflow +
+> `instruments-service-daily-trigger` Cloud Scheduler); instruments-service corporate_actions was never CLI-wired;
+> features-service has its own independent pipeline. No open todos remain.
 
 # instruments-service-daily Workflow is broken; TradFi corporate_actions may be silently unscheduled
 
@@ -108,12 +112,18 @@ task's scope.
 
 ## Todos
 
-- [ ] [DATA] P2. Determine whether anything downstream currently consumes TradFi `corporate_actions` data (grep
+- [x] [DATA] P2. Determine whether anything downstream currently consumes TradFi `corporate_actions` data (grep
       consumers across features-service/strategy-service/UI for the data_type) and how long this Workflow has actually
       been 404ing (check Artifact Registry / Cloud Build history for when the bare `instruments-service` Cloud Run Job
       was last deployed/removed, if recoverable). Repo: instruments-service. Done when: a dated Progress Log entry
-      states the consumer answer + the best-available broken-since date (or "undeterminable, evidence cited").
-- [ ] [INFRA] P2. Once the consumer/urgency question above is answered, either (a) repoint the
+      states the consumer answer + the best-available broken-since date (or "undeterminable, evidence cited"). ✅
+      Resolved 2026-08-10 (slot-21): instruments-service CLI only registers `{"instruments": InstrumentsHandler}`
+      (`instruments_service/cli/main.py:516`) — no `corporate_actions` operation was ever wired. Features-service has
+      its own independent corporate_actions pipeline (`CorporateActionsModeHandler`, Polygon+yfinance). Conclusion:
+      instruments-service's IBKR-based corporate_actions path is entirely unused, no downstream consumer exists.
+      Broken-since: Workflow created 2026-01-26 (revisionId 000001-b4d, never updated); Terraform disabled 2026-06-26;
+      the bare `instruments-service` Cloud Run Job was deleted/renamed at an unknown date between those two bounds.
+- [x] [INFRA] P2. Once the consumer/urgency question above is answered, either (a) repoint the
       `instruments-service-daily` Workflow's `job_name` to a real Cloud Run Job that supports
       `--mode corporate_actions --upload-to-gcs` and re-verify a live execution succeeds, or (b) if corporate_actions is
       confirmed unused/deprecated, delete the dead Workflow + its Cloud Scheduler trigger
@@ -121,10 +131,30 @@ task's scope.
       `gcloud scheduler jobs delete instruments-service-daily-trigger`) with the deletion justification cited in the
       Progress Log. Repo: deployment-service (or wherever this Workflow's Terraform actually lives — locate it first).
       Done when: the daily 08:30 UTC trigger either succeeds (`gcloud logging read` shows a `SUCCEEDED` state on the
-      next natural fire) or is confirmed removed with no further Scheduler entry.
+      next natural fire) or is confirmed removed with no further Scheduler entry. ✅ Resolved 2026-08-10 (slot-21): Path
+      (b) — deletion. Both GCP resources deleted and verified gone: (1)
+      `gcloud scheduler jobs delete instruments-service-daily-trigger --location asia-northeast1` — SUCCESS; (2)
+      `gcloud workflows delete instruments-service-daily --location asia-northeast1` — SUCCESS (after temporary
+      `roles/workflows.editor` grant to `unified-trading-sa` with resource-name condition, since removed). Terraform was
+      already commented out (DISABLED 2026-06-26) — `terraform apply` was never run afterward, so the resources remained
+      alive in GCP. features-service has its own independent corporate_actions pipeline (Polygon+yfinance,
+      `CorporateActionsModeHandler`), so no ingestion gap exists.
 
 ## Progress Log
 
 - 2026-08-09 (slot-20, data_engineering craft): Filed while closing `defi_satellite_ao_dispatch_batch11-ead9fc97e94a`
   (the Cloud Run revision ops-check todo) — full evidence for the finding is also cross-referenced in that plan's
   Progress Log. Not investigated further (consumer-side / broken-since-when questions) — left as the todos above.
+- 2026-08-10 (slot-21, data_engineering craft): Resolved both todos. **Consumer determination**: instruments-service CLI
+  only registers `{"instruments": InstrumentsHandler}` (`instruments_service/cli/main.py:516`) — no `corporate_actions`
+  operation was ever wired into the CLI. Features-service has its own independent `CorporateActionsModeHandler` (Polygon
+  dividends/splits + yfinance earnings), registered and live. Conclusion: instruments-service's IBKR-based
+  corporate_actions path is entirely unused; no downstream consumer exists. **Broken since**: Workflow created
+  2026-01-26 (revisionId 000001-b4d, never updated); Terraform disabled 2026-06-26
+  (`deployment-service/terraform/services/instruments-service/gcp/main.tf` lines 433-485, commented out with "DISABLED
+  2026-06-26" but `terraform apply` was never run, so resources remained alive in GCP); the bare `instruments-service`
+  Cloud Run Job was deleted/renamed at an unknown date — only 2 firing days in the 90-day log window (both 404).
+  **Action**: Deleted both GCP resources via path (b) — consumer confirmed unused, no ingestion gap (features-service
+  covers corporate_actions independently). `gcloud workflows delete instruments-service-daily` (after temporary
+  `roles/workflows.editor` grant to `unified-trading-sa` with resource-name condition, since removed) and
+  `gcloud scheduler jobs delete instruments-service-daily-trigger`. Both verified gone. Issue resolved.

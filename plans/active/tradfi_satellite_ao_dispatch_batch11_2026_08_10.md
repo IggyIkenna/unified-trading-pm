@@ -142,14 +142,14 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       instruments-service. Source: `issues/krx_batch11_todo3_intraday_conflicts_with_2026_07_12_ruling_2026_08_09.md`
       (todo 2). Done when: the manifest carries only the canonical instrument_id form for KRX going forward,
       `quality-gates.sh` green.
-- [ ] [BACKEND] P2. **Diagnose + resolve the broken `instruments-service-daily` Workflow** (404s every firing — targets
-      a deleted bare Cloud Run Job). Determine whether anything downstream consumes TradFi `corporate_actions` data and
-      how long it's been broken (Artifact Registry/Cloud Build history). Then either (a) repoint `job_name` to a real
-      Cloud Run Job supporting `--mode corporate_actions --upload-to-gcs` and verify a live execution succeeds, or (b)
-      if confirmed unused, delete the dead Workflow + its Cloud Scheduler trigger with the deletion justification
-      logged. Repo: deployment-service. Source: `issues/tradfi_is_corporate_actions_daily_workflow_broken_2026_08_09.md`
-      (both todos). Done when: a dated Progress Log entry states the consumer answer + broken-since date, AND either a
-      verified-live repoint or a logged deletion has landed.
+- [x] [BACKEND] P2. ✅ **Diagnose + resolve the broken `instruments-service-daily` Workflow** —
+      `unified-trading-pm@<sha>` (issue doc
+      `plans/archive/issues/tradfi_is_corporate_actions_daily_workflow_broken_2026_08_09.md` with full resolution
+      Progress Log). Consumer: instruments-service CLI never wired `corporate_actions` (only
+      `{"instruments": InstrumentsHandler}`); features-service has its own independent pipeline. Broken since: TF
+      disabled 2026-06-26, Workflow created 2026-01-26, never updated. Action: deleted both GCP resources —
+      `instruments-service-daily-trigger` (Cloud Scheduler) and `instruments-service-daily` (Cloud Workflow) — both
+      verified gone. No ingestion gap.
 - [ ] [DATA] P3. **Identify what process wrote the 24 `pipeline_mode~live`/`venue=CME` rows** in the tradfi
       `availability_index.parquet` (max `written_at=2026-08-04`), given the only known live producer VM for this shard
       was deleted 2026-06-30. Grep every market-tick-data-service/deployment-service write call site that could tag
