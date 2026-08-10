@@ -93,7 +93,10 @@ that the failure mode on this task isn't limited to the exact `forced_compact`->
       accumulation** (the citadel plan's 103-line log means each successive worker pays MORE boot context than the last
       — a self-reinforcing cycle). Full comparison across all four dimensions + the `solana_dex_pool_swaps_indexer-002`
       parallel analysis in the Progress Log entry below. Repo: agent-orchestrator (investigation + doc-writeup only,
-      read-only — unified-trading-pm@<sha>).
+      read-only — unified-trading-pm@d875b73ed3). **Independently re-verified 2026-08-10 (batch19 finalize, slot 29
+      review)**: the flip commit `unified-trading-pm@d875b73ed3` is on `origin/live-defi-rollout`; the Progress Log
+      comparison carries concrete measured data for BOTH named tasks across all four dimensions (prompt-size tables,
+      tool-call patterns, `du -sm` repo sizes, ~12GB worktree) plus the dispatch-ordering + temporal-overlap findings.
 - [ ] [OPERATOR] P2. **CHECKED 2026-08-09 (operator, interactive session) — LEAN UNPARK, best odds of the 3 sibling
       parked tasks, not a guarantee.** `agent-orchestrator@dd01255` (cited by one prior sub-agent pass) does NOT apply
       here — it fixes chat-loop-role (review/main) liveness, not standard worker dispatch. The relevant fix is

@@ -113,20 +113,20 @@ cause an outage).
 
       **Decision: Option (a)** — make the guard read both `ENVIRONMENT` and `DEPLOYMENT_ENV`.
 
-                              **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
-                              1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
-                              2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
-                              3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
-                              4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
-                              5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
-                              6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
-                              7. `UTL sampling_service.py:59` — sampling env (env-normalized)
-                              8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
-                              9. `UTL service_runtime.py:207` — runtime env value
+                                  **Consumer enumeration of `UnifiedCloudConfig.environment`** (the `ENVIRONMENT` var):
+                                  1. `deployment-api/auth.py:19` — the broken prod guard (FIXED)
+                                  2. `unified-trading-api/middleware/auth.py:29` — identical guard pattern (same latent bug, out of scope for this plan)
+                                  3. `unified-trading-api/routes/health.py:144` — diagnostic only (`"app_env"`), no behavioral impact
+                                  4. `UTL core/config.py:573,578` — `is_production`/`is_development` properties (library code, shared by all services)
+                                  5. `UTL cloud_config.py:795-805` — same `is_production`/`is_development`/`is_testing` on UnifiedCloudConfig
+                                  6. `UTL secret_manager.py:164` — secret name resolution (env-normalized)
+                                  7. `UTL sampling_service.py:59` — sampling env (env-normalized)
+                                  8. `UTL cloud_auth_factory.py:131,158,184` — auth factory env resolution
+                                  9. `UTL service_runtime.py:207` — runtime env value
 
-                              **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
+                                  **Why Option (a) doesn't break any of the above**: the new `deployment_env` field is purely additive — it reads `DEPLOYMENT_ENV` alongside the existing `environment` field which still reads `ENVIRONMENT`. No existing consumer's behavior changes. Option (b) (`ENVIRONMENT=production`) would change behavior for ALL 9 consumers on the prod service, some of which (secret_manager, sampling_service) may have production-specific code paths that were never exercised because `ENVIRONMENT` was always unset.
 
-                              **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
+                                  **Implementation**: Added `deployment_env: str` to `BaseConfig` (reads `DEPLOYMENT_ENV`, default `""`). Updated `deployment_api/auth.py` guard to: `if _disable_auth_raw and (_environment == "production" or _deployment_env in ("production", "prod"))`. Guard logic verified — condition evaluates True when `DEPLOYMENT_ENV=prod`. Do NOT deploy to prod — that is step 4.
 
 - [x] ✅ [BACKEND] P0. **Issue a real deployment-api API key and wire it.** Generate a high-entropy key, store it as a
       GSM secret in `central-element-323112`, wire it into the prod Cloud Run service's env via the deploy path (not a
@@ -155,6 +155,30 @@ cause an outage).
       With a real key required, public ingress may still be intentional (external CI callers) or may be removable
       defence-in-depth. **Done when**: an explicit keep-or-restrict verdict is recorded with the reasoning, and if
       restricting, the change is shipped and callers re-verified.
+
+## Follow-ups (post-flip durable close-out)
+
+- [ ] [OPERATOR] P0. **Provision a Google OAuth 2.0 client ID for the deployment-ui console + wire it end-to-end**
+      (operator-gated — Google Cloud console access the worker doesn't have): create the OAuth client, set
+      `VITE_GOOGLE_CLIENT_ID` in deployment-api's Dockerfile build env, un-bake `ENV VITE_SKIP_AUTH=true` (Dockerfile
+      lines 45-46), and make `deployment_api/firebase_auth.py::verify_any_auth` accept Google OAuth ID tokens (currently
+      only X-API-Key/Firebase). Until this lands, the operator console 401s on every load post-flip (accepted trade-off
+      per operator Option B). **Done when**: a browser console load authenticates via Google and `/api/*` succeeds.
+      (repo: deployment-api, deployment-ui)
+- [ ] [BACKEND] P1. **Ship the step-1 guard code to prod (blocked on UTL base image)**: rebuild the UTL base image from
+      LDR (which carries `deployment_env`, commit `336f2b3b`) + let `update-dependency-version.yml` refresh
+      deployment-api's pinned `BASE_IMAGE_DIGEST`, then rebuild + deploy deployment-api so `DISABLE_AUTH=true` is
+      genuinely rejected at boot in prod. Currently no published UTL base image contains `deployment_env` — the guard
+      image cannot boot. Enforcement is already ON via the old image's `verify_any_auth` (`DISABLE_AUTH=false` live);
+      this is the durable defense. **Done when**: a deploy with `DISABLE_AUTH=true` env is rejected at startup. (repo:
+      unified-trading-library, deployment-api)
+- [ ] [INFRA] P1. **Update the RUNNING resource-watchdog on the orchestrator VM to the fixed script** (the repo's
+      `unified-trading-pm/scripts/infra/resource-watchdog/resource-watchdog.sh` sends `X-API-Key` from a GSM runtime
+      fetch; the installed `/usr/local/bin/resource-watchdog.sh` predates the fix and sends no key → post-flip 401 on
+      `POST /api/fleet/watchdog/kill-events`). Requires root/systemd (sudo unavailable in worker containers): copy the
+      repo version to `/usr/local/bin/`, `systemctl restart resource-watchdog`. Kill events are fire-and-forget
+      notifications (local kill unaffected) but the deployment-api notification is dropped until this lands. **Done
+      when**: a watchdog kill-event POST returns 200. (repo: unified-trading-pm, deployment-api)
 
 ## Codex SSOTs
 
@@ -259,3 +283,47 @@ are unaffected.
   401 until Google OAuth is provisioned as an operator-gated follow-up (do NOT bake the X-API-Key into the served SPA;
   monitor post-flip for unexpected 401s beyond cost-scheduler + console; file the Google OAuth client-ID provisioning as
   the durable follow-up).
+- **2026-08-10T17:15Z (slot 22, backend_engineer, step-4 EXECUTION — enforcement FLIPPED + verified live; guard-code
+  ship blocked; 2 post-flip regressions found + 1 fixed)**. Executed the flip per operator Option B:
+  1. **Enforcement FLIPPED ON**:
+     `gcloud run services update uts-shared-deployment-api --update-env-vars DISABLE_AUTH=false` → revision `00510-fmp`
+     serving 100%. **Verified live**: credential-less `GET /api/services` → **401**; with issued `X-API-Key` → **200**;
+     bad key → **401**; `/health` → 200; cost-scheduler caller (`POST /api/costs/snapshot-run` with the issued key) →
+     **200**. P0 hole closed.
+  2. **Regression found + fixed — reap-tick 503**: with `DISABLE_AUTH=false`, `verify_reap_scheduler_oidc`'s
+     `if DISABLE_AUTH: return _MOCK_INVOKER` short-circuit no longer fires, so it hit the real OIDC path → 503
+     fail-closed (`REAP_SCHEDULER_INVOKER_SA` unset on the live service). The caller inventory row 7 ("already
+     enforced") was WRONG — it was only "enforced" via the DISABLE_AUTH mock short-circuit. **Fixed**: configured
+     `REAP_SCHEDULER_INVOKER_SA=unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (the scheduler's OIDC
+     identity) on the live service; verified via manual `gcloud scheduler jobs run deployment-registry-reap-tick` →
+     **200** on the fixed revision. The same `verify_reap_scheduler_oidc` covers idle-spend (same SA) — unaffected
+     route-wise but same config now satisfied.
+  3. **Guard-code (step-1) ship BLOCKED — genuine cross-repo dependency**: the deployment-api image `:latest` build
+     (from LDR, which carries the step-1 guard) **fails to boot** —
+     `AttributeError: 'UnifiedCloudConfig' object has no attribute 'deployment_env'`. Root cause: deployment-api's
+     Dockerfile pins `ARG BASE_IMAGE_DIGEST=sha256:2d87c5c…` (UTL base image), and **no published UTL base image
+     includes the `deployment_env` field** (commit `336f2b3b`, 14:41Z; all 0.56.0-* base tags predate it). The guard
+     code literally cannot boot against any published UTL base. Enforcement is NOT dependent on the guard (it's the
+     `verify_any_auth` `DISABLE_AUTH` check on the OLD image that enforces), so the P0 is closed regardless — but the
+     durable "reject `DISABLE_AUTH=true` at boot" defense cannot land until UTL republishes its base image with
+     `deployment_env` and deployment-api's digest is refreshed. **`:latest` re-pinned back to the known-good image
+     (`sha256:4f899227…`, revision 00510's image)** so future deploys don't pick up the broken build. Filed as follow-up
+     (UTL base rebuild + digest refresh is the cross-repo owner).
+  4. **Regression found, NOT yet fixed — resource-watchdog caller 401** (row 3): post-flip
+     `POST /api/fleet/watchdog/kill-events` from the orchestrator VM returns **401**. Root cause: the RUNNING watchdog
+     at `/usr/local/bin/resource-watchdog.sh` is a STALE copy predating the row-3 fix — its curl sends NO `X-API-Key`
+     (the repo's fixed version does, with a GSM runtime fetch, but the installed copy was never updated + the fix is not
+     in the systemd-managed path). **Blocked on root**: updating `/usr/local/bin/` +
+     `systemctl restart resource-watchdog` needs sudo, which is unavailable in this container (`no new privileges`). The
+     kill-event POST is fire-and-forget notification (the local `kill -TERM` is independent of it), so the watchdog's
+     core kill function is unaffected — only the deployment-api notification of kills is dropped. Needs an operator/root
+     session to update the installed script + restart the service. Filed as follow-up.
+  5. **No real listener deploy yet post-flip** (done-when condition 3): no `POST /api/deployments/{service}/deploy`
+     through `service-deployed-listener.yml` observed since 16:44Z — the next natural deploy will exercise it (listener
+     sends the key; the route verified 200 with key). The finalize plan's P1 ("confirm no legitimate caller was broken…
+     at least one real end-to-end deploy through the listener post-flip") is the designed verification point.
+     **Disposition**: step-4 checkbox NOT flipped — enforcement (done-when conditions 1+2) is met and verified, but the
+     guard-code ship (durable defense) is blocked on the UTL base dependency and the real-deploy-through-listener
+     verification is pending a natural deploy. Skipping GATED; the follow-ups (Google OAuth console provisioning, UTL
+     base rebuild + deployment-api digest refresh for the guard, watchdog installed-copy update) are the durable
+     close-out.

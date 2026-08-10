@@ -30,7 +30,7 @@ related:
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md,
     /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_10.md,
-    /plans/active/issues/ag_closeout_audit_ci_parked_2026_08_10.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_10.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_06.md,
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_07.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_ui_parked_2026_08_08.md,
@@ -215,16 +215,32 @@ Two independent causes, both now fixed:
       via the standard 6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — all 3
       todos done, unlocked, and its own Progress Log already flags it archival-eligible. **Done when**: archived with
       the SUPERSEDED/archived banner and every corpus referrer repointed.
-- [ ] [DOCS] P2. **Reconcile the 28 `ag_closeout_audit_*_parked_*.md` docs against this batch — ONE pass, one worker.**
-      (a) Flip each todo this batch has completed to `[x]` citing this plan; (b) collapse the cross-day duplicates into
-      the single oldest carrier and re-date it, per SKILL.md's new rule 3 — `self_dispatched_orphan_count` (5 copies:
-      infra 08-03/-04/-06/-08/-09), `Scope + conflict-check the 2 flagged batch-era candidates` (5 copies, same docs),
+- [x] ✅ [DOCS] P2. **Reconcile the 28 `ag_closeout_audit_*_parked_*.md` docs against this batch — ONE pass, one
+      worker.** (a) Flip each todo this batch has completed to `[x]` citing this plan; (b) collapse the cross-day
+      duplicates into the single oldest carrier and re-date it, per SKILL.md's new rule 3 —
+      `self_dispatched_orphan_count` (5 copies: infra 08-03/-04/-06/-08/-09),
+      `Scope + conflict-check the 2 flagged batch-era candidates` (5 copies, same docs),
       `deployment_api_prod_disable_auth_true` retag (2 copies: cross-cutting 08-07/-08); (c) convert the 5 "No action
       needed on Finding N" tombstones (prediction 07-31 ×1, prediction 08-09 ×4) and the 4 "left unchecked for
       continuity only" entries (cross-cutting 08-10) from `- [ ]` lines into prose in the findings body, per rule 2.
       **This todo is deliberately single-owner** — every other todo in this batch is forbidden from editing a parked
       doc, so these 28 files have exactly one writer. **Done when**: no finding appears in two parked docs, no
-      actor-less `- [ ]` remains, and the corpus-wide open count is reported before/after.
+      actor-less `- [ ]` remains, and the corpus-wide open count is reported before/after. — **DONE 2026-08-10 (slot 32,
+      task `meta_plan_corpus_hygiene_ao_dispatch_batch1-d52772441159`)**. **Corpus-wide open count: 16 → 14** (all 44
+      `ag_closeout_audit_*_parked_*.md` docs, active + archive). (a) Flipped 2 parked-doc checkboxes for landed batch
+      todos: `ag_closeout_audit_cross_cutting_parked_2026_08_07.md` finding 4 (`deployment_api_prod_disable_auth_true`
+      retag, batch todo 1 @`unified-trading-pm@278b479e9f`) and `ag_closeout_audit_ci_parked_2026_08_10.md` finding 1
+      (4-doc `[ci, infrastructure]`→`[ci]` retag, batch todo 2 @`unified-trading-pm@242e239214`). The other 14 open
+      parked-doc items each map to a still-in-flight batch todo (3,4,5,7,8,9,14,16) — left open per the docs' own "do
+      not flip them early" notes. (b) Duplicate collapse verified already executed by the batch authoring / prior
+      passes: `self_dispatched_orphan_count` + `Scope + conflict-check` both origin-carried in
+      `ag_closeout_audit_infra_parked_2026_08_03.md` (flipped → `operator_action_items_consolidated_2026_08_08.md`),
+      DEDUPED markers present in infra 08-04/06/08/09; `deployment_api_prod_disable_auth_true` retag copy in
+      `ag_closeout_audit_cross_cutting_parked_2026_08_08.md` already marked DEDUPED. Open-todo subject scan: no finding
+      subject appears in >1 parked doc. (c) Tombstone conversion verified already executed: prediction 07-31 (0 open),
+      prediction 08-09 (findings 1-4 converted to prose 2026-08-10), cross-cutting 08-10 continuity entries are prose
+      inside `[x]` CARRIED/RESOLVED markers; no open `- [ ]` carries informational phrasing. All edits shipped via
+      `safe-doc-push.sh` + `check_frontmatter_schema` 2013 docs zero violations.
 
 ## Deferred — genuinely operator-only, NOT dispatchable (per `task_template.md` finding U's positive test)
 
@@ -249,11 +265,18 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
 
 ## Follow-ups
 
-- [ ] [DOCS] P2. **Fix `/na-eligibility-audit`'s whole-doc RECLASSIFY bar.** Its SKILL.md requires EVERY open todo in a
-      doc to clear before the doc can move off `assigned_vm: NA`, so a single operator-gated sibling pins bounded work
-      indefinitely — measured live on `ag_closeout_audit_ci_parked_2026_08_10.md` (2026-08-10 verdict quoted above). The
-      fix is a per-todo verdict with a split path (extract the bounded slice into a batch, keep the rest NA), the shape
-      this plan had to apply by hand. **Done when**: the skill emits per-todo verdicts and names the extraction path.
+- [x] ✅ [DOCS] P2. **Fix `/na-eligibility-audit`'s whole-doc RECLASSIFY bar.** — `unified-trading-pm@953db0e945`. Its
+      SKILL.md requires EVERY open todo in a doc to clear before the doc can move off `assigned_vm: NA`, so a single
+      operator-gated sibling pins bounded work indefinitely — measured live on
+      `ag_closeout_audit_ci_parked_2026_08_10.md` (2026-08-10 verdict quoted above). The fix is a per-todo verdict with
+      a split path (extract the bounded slice into a batch, keep the rest NA), the shape this plan had to apply by hand.
+      **Done when**: the skill emits per-todo verdicts and names the extraction path.
+
+      **Shipped**: split the old whole-doc-only RECLASSIFY (verdict 4) into two sub-verdicts — verdict 4 (whole-doc, every
+              open todo bounded → flip `assigned_vm` in place) and verdict 5 (per-todo split path, mixed bounded + operator-gated →
+              extract bounded slice into `{topic}_satellite_ao_dispatch_batch{N}` + `_finalize` pair, source doc stays NA). Added
+              extraction mechanics to Phase 3 (topic resolution, conflict-check-before-write, source-doc checkbox flip, Progress
+              Log marker). Updated the "Why RECLASSIFY volume is inherently low" section to document the new model.
 
 ## Codex SSOTs
 
@@ -290,3 +313,12 @@ generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidat
   data_pipeline_failure escalation this relaunch was dispatched under) is terminal — absent from the active queue. No
   code change (VM-operation todo); the flip cites the live VM state above. Full live tracker for the ongoing campaign:
   `plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md`.
+- **2026-08-10 (slot 32, infra, task `meta_plan_corpus_hygiene_ao_dispatch_batch1-d52772441159`) — todo 17
+  (28-parked-doc reconciliation) executed.** Before/after open count: **16 → 14** across all 44 parked docs (active +
+  archive). Flipped 2 parked-doc checkboxes for landed batch todos (cross-cutting 08-07 finding 4 → todo 1
+  @`unified-trading-pm@278b479e9f`; ci 08-10 finding 1 → todo 2 @`unified-trading-pm@242e239214`). The remaining 14 open
+  items map to still-in-flight batch todos 3/4/5/7/8/9/14/16 — left open per the "do not flip early" notes. (b)
+  duplicate collapse + (c) tombstone conversion verified already executed by the authoring/prior passes (infra 08-03
+  origin + DEDUPED markers in 08-04/06/08/09; cross-cutting 08-08 `deployment_api` copy DEDUPED; prediction 07-31/08-09
+  - cross-cutting 08-10 continuity entries already prose). No finding subject appears in >1 parked doc; no actor-less
+    `- [ ]` remains. Shipped via `safe-doc-push.sh`; `check_frontmatter_schema` 2013 docs zero violations.

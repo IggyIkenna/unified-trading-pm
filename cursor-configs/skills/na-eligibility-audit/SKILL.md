@@ -42,16 +42,30 @@ mis-defaulted AO-eligible content.
 regardless of `assigned_vm` (`/plan-reconcile`'s corpus, though its Phase 2 "done-but-unchecked" bar is the SAME
 evidence bar this skill uses for a KEEP-NA-STALE verdict).
 
-**Why RECLASSIFY volume is inherently low per run (2026-08-07 clarification, so this doesn't get re-derived from
-scratch)**: `assigned_vm` flips at the WHOLE-DOC level, not per-todo, and the bar is that the doc's ENTIRE remaining
-scope must be bounded/deterministic. A doc with 15 open todos where one item's operator question just got answered does
-NOT become RECLASSIFY-eligible — the other 14 are usually still real judgment/design work, so the doc correctly stays NA
-(confirmed live: a full 10-tranche, 373-doc run on 2026-08-07 found only 4 genuine whole-doc RECLASSIFYs). **This is not
-the corpus's main unblock-to-AO pathway.** `/ag-closeout-audit`'s satellite-batch extraction
-(`<topic>_satellite_ao_dispatch_batchN.md`) is — it pulls just the specific newly-actionable item(s) out of an NA-heavy
-doc into their own small `assigned_vm: planning` doc without needing the WHOLE source doc to qualify. If a session's
-real question is "why isn't previously-unblocked work reaching AO", check satellite-batch cadence for that topic before
-assuming this skill's RECLASSIFY rate is the bottleneck.
+**RECLASSIFY is per-todo, not whole-doc (2026-08-10 fix — was whole-doc only before this, and that was the bug).** The
+old bar required EVERY open todo in a doc to be bounded/deterministic before the doc could move off `assigned_vm: NA` —
+so a single operator-gated sibling pinned bounded work indefinitely. Measured live on
+`ag_closeout_audit_ci_parked_2026_08_10.md` (2026-08-10 na-eligibility-audit verdict): _"Todo 1 reads as
+bounded/mechanical on its own, but the whole-doc RECLASSIFY bar requires every open todo to clear, and todo 2 does not —
+doc stays NA."_ The `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` plan had to apply the extraction by
+hand.
+
+**The fix — two RECLASSIFY sub-verdicts, applied per-todo, not per-doc:**
+
+1. **RECLASSIFY (whole-doc) → planning** — every open todo in the doc is bounded/deterministic. Flip
+   `assigned_vm: NA → planning` in place (same as the old verdict 4). This is still the minority case, and that's fine —
+   most NA docs are NA for real reasons.
+2. **RECLASSIFY (per-todo, split path)** — the doc has a MIX of bounded and operator-gated/judgment items. The bounded
+   slice is extracted into its own `{topic}_satellite_ao_dispatch_batch{N}_{date}.md` + `_finalize` pair (the SAME
+   pattern `/ag-closeout-audit` already uses — this skill does not invent a new extraction format), and the source doc
+   stays NA for the remaining genuinely-operator-gated items. The extraction is a Phase 3 action, not just a verdict —
+   see the new "Extraction mechanics" subsection there.
+
+This is NOW the corpus's main unblock-to-AO pathway alongside `/ag-closeout-audit`'s own satellite-batch extraction —
+the two skills' extraction formats are identical by design (same pairing convention, same conflict-check, same
+`{topic}_satellite_ao_dispatch_batch{N}` naming), so a downstream consumer doesn't need to know which skill produced the
+batch. If a session's real question is "why isn't previously-unblocked work reaching AO", check BOTH satellite-batch
+cadence AND this skill's per-todo RECLASSIFY extraction rate.
 
 ## The verdict rubric (unchanged from the proven plan — do not re-derive a new one)
 
@@ -71,17 +85,26 @@ For each `assigned_vm: NA`, `status` ∈ `{active, open}` doc with ≥1 open tod
 3. **KEEP-NA-STALE (already-duplicated)** — the doc's own remaining open checkboxes describe work an active
    `assigned_vm: planning` doc already extracted verbatim (checkbox simply never got flipped to cite the extraction).
    Fix the citation, do NOT reclassify — flipping `assigned_vm` here would dispatch a duplicate.
-4. **RECLASSIFY → planning** — bounded/deterministic-outcome work, simply defaulted to NA and never assessed. Run the
-   shared conflict-check (Phase 2 below) BEFORE flipping — never flip on the classifier's verdict alone.
-5. **ARCHIVE** — fully resolved or fully moot. Run the standard 6-step archival ritual
-   (`codex/11-project- management/`), never autonomous on a `locked_by:` doc.
+4. **RECLASSIFY → planning (whole-doc)** — every open todo is bounded/deterministic. Run the shared conflict-check
+   (Phase 2 below) BEFORE flipping — never flip on the classifier's verdict alone. Flip `assigned_vm: NA → planning` in
+   place, correct `execution_scope` if stale, fill `assigned_role` if missing.
+5. **RECLASSIFY (per-todo, split path)** — the doc has a MIX of bounded and genuinely-operator-gated/judgment items.
+   Extract the bounded slice into its own `{topic}_satellite_ao_dispatch_batch{N}_{date}.md` + `_finalize` pair (SAME
+   pattern `/ag-closeout-audit` uses — see Phase 3 "Extraction mechanics" for the full procedure). The source doc stays
+   NA for the remaining items and gets a Progress Log marker citing the extraction. This is NOT a fallback for
+   borderline items — a per-todo RECLASSIFY candidate must still clear the SAME bounded-outcome bar (verdict 4's test)
+   individually; the split path is for docs where some items clear that bar and others don't, not for items that
+   half-clear it.
+6. **ARCHIVE** — fully resolved or fully moot. Run the standard 6-step archival ritual (`codex/11-project-management/`),
+   never autonomous on a `locked_by:` doc.
 
-Bounded-outcome bar for verdict 4 is the SAME test `/plan-reconcile`'s AO-dispatch-readiness hunters and
-`/ag-closeout-audit`'s Phase 3 already use — `/codex/12-agent-workflow/agent-orchestrator-single-vm- architecture.md` §
+Bounded-outcome bar for verdicts 4 and 5 is the SAME test `/plan-reconcile`'s AO-dispatch-readiness hunters and
+`/ag-closeout-audit`'s Phase 3 already use — `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` §
 "Dispatch-scope eligibility": is the outcome determinable by the worker alone, or does it need a design/judgment call
-that isn't already decided? A flagged judgment call stays NA even if the classifier marks it `ao_eligible: true` — the
-classifier's verdict is a strong signal, not a final ruling (the proven plan's own Phase-3 run kept 3 of 6
-classifier-flagged candidates NA on independent review — see its Progress Log for why each one stayed).
+that isn't already decided? A flagged judgment call stays NA (or, under verdict 5, stays in the source doc's remaining
+NA pool) even if the classifier marks it `ao_eligible: true` — the classifier's verdict is a strong signal, not a final
+ruling (the proven plan's own Phase-3 run kept 3 of 6 classifier-flagged candidates NA on independent review — see its
+Progress Log for why each one stayed).
 
 ## Naming, grouping, and the conflict-check — all live in ONE codex doc, not restated here
 
@@ -249,11 +272,38 @@ check).
 
 ## Phase 3 — apply
 
-- **RECLASSIFY, conflict-cleared**: flip `assigned_vm: NA → planning` in place (no rename), correct `execution_scope` to
-  `orchestrator-agent` if stale, fill `assigned_role` if missing (validate against the live `agents/*.md` registry,
-  never hand-type a near-miss), author the companion `{stem}_finalize_{today}.md` per `task_template.md`'s
-  finalize-plan-coverage rule (`plan` doc type only — an issue doc is structurally exempt,
+- **RECLASSIFY, conflict-cleared (whole-doc — verdict 4)**: flip `assigned_vm: NA → planning` in place (no rename),
+  correct `execution_scope` to `orchestrator-agent` if stale, fill `assigned_role` if missing (validate against the live
+  `agents/*.md` registry, never hand-type a near-miss), author the companion `{stem}_finalize_{today}.md` per
+  `task_template.md`'s finalize-plan-coverage rule (`plan` doc type only — an issue doc is structurally exempt,
   `check_finalize_plan_coverage.py` only globs `plans/active/*.md`).
+- **RECLASSIFY, conflict-cleared (per-todo split path — verdict 5) — extraction mechanics**: the bounded items are
+  extracted into a NEW `{topic}_satellite_ao_dispatch_batch{N}_{date}.md` + `_finalize` pair under `plans/active/`. This
+  is the SAME pattern `/ag-closeout-audit` already uses — same naming convention, same pairing convention, same
+  conflict-check protocol. The procedure:
+
+  1. **Determine the topic and batch number.** The topic is the owning tranche per Phase 0's primary-owner rule
+     (`parent_epic`→tranche mapping). `N` = the next unused batch number for that topic — grep
+     `plans/active/<topic>_satellite_ao_dispatch_batch*.md` and pick `max(existing) + 1`.
+  2. **Draft the satellite-batch plan.** Follow `task_template.md`'s AO-dispatched track: `assigned_vm: planning`,
+     `execution_scope: orchestrator-agent`, `status: active` (not `draft` — the parent skill's own verdict IS the
+     operator decision that flips the draft gate; `/ag-closeout-audit`'s own batches are `draft` because that skill is
+     read-only by design, but THIS skill IS authorized to apply). Each extracted item becomes one `- [ ]` todo in the
+     batch plan, citing the source doc + the specific item's text verbatim. The batch's `Source:` cites this skill run.
+     The `_finalize` doc is `depends_on` + `gate_on_depends: true`, `status: active` (not `draft` — same reasoning).
+  3. **Conflict-check the batch BEFORE writing.** Run the shared conflict-check protocol (Phase 2) against every item in
+     the batch — same bar as verdict 4. An item that conflicts stays in the source doc; only conflict-cleared items go
+     into the batch.
+  4. **Flip the extracted items' checkboxes in the source doc** — `[x]` citing the batch plan's path + the item number
+     (e.g. "extracted to `<batch-plan>.md` item 1"). This is a KEEP-NA-STALE-class action on those specific items only.
+     The source doc keeps `assigned_vm: NA` for its remaining genuinely-operator-gated items.
+  5. **Write a Progress Log marker in the source doc** recording the extraction: date, which items were extracted, which
+     batch plan they landed in, and the remaining NA-worthy item count.
+
+  The source doc does NOT get an `assigned_vm` flip — it stays NA. Only the extracted batch doc carries
+  `assigned_vm: planning`. The batch's own items dispatch normally through the AO backlog; the source doc's remaining
+  items stay in the NA corpus and are re-assessed on the next `/na-eligibility-audit` run for that tranche.
+
 - **KEEP-NA-STALE**: fix the checkbox citation only (cite the extracting doc's commit/sha); zero `assigned_vm` or
   backlog impact — pure hygiene so a future run doesn't re-flag the same content as an unaddressed orphan.
 - **ARCHIVE**: standard 6-step ritual, `locked_by:` blocks it without `[unlock-plan]` (ask, never autonomous).

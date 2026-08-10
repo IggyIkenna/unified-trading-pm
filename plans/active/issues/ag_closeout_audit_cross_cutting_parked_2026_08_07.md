@@ -280,10 +280,17 @@ spot per this skill's SKILL.md).
       `[cross-cutting]` → `[ci]` or `[infrastructure]` (finding 3, `ci` recommended, `infrastructure` defensible) —
       owning-tranche fix. Done when: the tag is corrected to a single real tranche and folded into that tranche's
       closeout membership.
-- [ ] [DOCS] P1. Retag `plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md`'s `asset_group`
-      `[cross-cutting]` → `[ui]` (finding 4) — owning-tranche fix, leave to the `ui` tranche's own audit, **flagged
-      urgent**: live unauthenticated-prod-endpoint exposure, all 4 fix-steps still open. Done when: the tag is corrected
-      and the `ui` tranche's audit picks it up with priority commensurate with a live P1 security hole.
+- [x] ✅ [DOCS] P1. **DONE 2026-08-10 — dispatched as todo 1 of
+      `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, landed
+      `unified-trading-pm@278b479e9f`** (target retagged `asset_group: [ui]` + named in `ui`'s consolidated-closeout
+      membership; `check_ag_closeout_linkage --only` 0 new orphans + `check_frontmatter_schema` clean). Fix-steps report
+      from that todo's worker: all 4 `[BACKEND] P1` fix-steps STILL OPEN, already escalated to
+      `/plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md` (step 1 done
+      `UTL@336f2b3b6c`+`deployment-api@d0eebac4e6`). Original text preserved for record. Was: Retag
+      `plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md`'s `asset_group` `[cross-cutting]` →
+      `[ui]` (finding 4) — owning-tranche fix, leave to the `ui` tranche's own audit, **flagged urgent**: live
+      unauthenticated-prod-endpoint exposure, all 4 fix-steps still open. Done when: the tag is corrected and the `ui`
+      tranche's audit picks it up with priority commensurate with a live P1 security hole.
 - [x] ✅ [DOCS] P3. MOOT 2026-08-09 — the target doc (`promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`) resolved
       and archived to `plans/archive/2026_08/issues/` before the `ci` tranche picked up this retag; asset_group no
       longer matters for an archived, resolved doc. No action taken (retagging a closed archive entry has no downstream
