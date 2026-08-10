@@ -148,13 +148,13 @@ context_scope:
       startup binds Bybit connector + shutdown tears down cleanly + orchestrator carries both HL and Bybit connectors;
       `quality-gates.sh` green. — execution-service@39b9c88143, QG green (7965 passed, 21 skipped, 93s).
 
-- [ ] [BACKEND] P2. Wire Bybit fetch readers into `PerpHedgeFetchProvider`. Add `fetch_current_perp_size_bybit`,
+- [x] ✅ [BACKEND] P2. Wire Bybit fetch readers into `PerpHedgeFetchProvider`. Add `fetch_current_perp_size_bybit`,
       `fetch_available_margin_bybit`, `fetch_initial_margin_estimate_bybit` callables sourced from
       `BybitPerpHedgeConnector.fetch_positions()`/`fetch_balance()`. `PerpHedgeFetchProvider.build_fetch_callables()`
       picks the correct connector by venue (HL vs Bybit) — the existing connector-agnostic callables already accept a
       venue parameter; extend to resolve Bybit when `PerpVenueId.BYBIT`. Repo: execution-service. Done-when: unit tests
       with mock Bybit connector responses (perp size, available margin, initial margin estimate); `quality-gates.sh`
-      green.
+      green. — execution-service@22a8923ef6, QG green (7965 passed, 21 skipped, 103s).
 
 - [ ] [BACKEND] P3. Bybit USDC margin topup path — honest interim stub. Extend `PerpHedgeConsumer._topup_guard()` to
       accept `PerpVenueId.BYBIT` with `TopupSource.TREASURY_HOT`, returning an honest `NOT_WIRED` result with a filed
