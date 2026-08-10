@@ -102,8 +102,8 @@ to quantify and quarantine ONE account, not to feed the main calibration.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour of
-      delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
+- [x] ✅ [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour
+      of delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
       verified 2026-08-10), so it holds CURRENT STATE ONLY: every past weekly and 5-hour window is already
       unrecoverable, leaving exactly one weekly observation per account and zero historical 5h observations. Persist
       `weekly_pct`, `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`,
@@ -392,3 +392,26 @@ sampled turns), so only the 2.0x cache-write tier matters; cache-read volume is 
 week), which is what pushes measured value so far above the published band — nearly free on a subscription, expensive at
 list rates. A bare `sonnet` model alias appears on 68 turns and would keep poisoning rows even after the canonical model
 ids are registered.
+
+### 2026-08-10 — Todo 1 shipped: account_usage_history table + snapshot on every UsagePoller tick
+
+**Shipped**: agent-orchestrator@ce3389fbe9
+
+**What was built**:
+
+- `AccountUsageHistoryRow` ORM model — composite PK `(account_id, sampled_at)`, stores `weekly_pct`,
+  `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`, `overage_status`,
+  `account_status`
+- `snapshot_account_usage_history()` in `state_store/account_usage.py` — copies every current `account_usage` row into
+  history, idempotent per `(account_id, sampled_at)`
+- Wired into `UsagePoller._tick_once()` after the per-account refresh loop — every 30-min tick snapshots all accounts
+  (~10x per 5-hour window, well above the "at least twice" floor)
+- `Base.metadata.create_all()` auto-creates the table on deploy — no manual migration needed
+- 4 unit tests: snapshot coverage, idempotency guard, multi-tick accumulation, table creation by bootstrap
+
+**What still needs to happen on the live VM** (the "done when" gate's live-verification clause — deploy + 2+ ticks):
+
+- Deploy this commit to the orchestrator VM (the standard LDR→main promote flow)
+- Wait ≥2 UsagePoller ticks (~60 min) for `account_usage_history` to accumulate ≥2 distinct `sampled_at` rows per active
+  account
+- Verify sampler survives an orchestrator restart (table created by `Base.metadata.create_all` on boot)
