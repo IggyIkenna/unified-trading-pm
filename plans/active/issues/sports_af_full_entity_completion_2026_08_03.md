@@ -999,3 +999,12 @@ are genuinely in scope for the operator's "no exceptions" directive.
   FIXTURE_STATS 136 · FIXTURE_LINEUPS 136 = ~976 (was 146,640). ~all `expected_unattempted`/absent tail, 19 TEAMS
   `attempted_failed` — completion pass would close it, NOT confirmed floors. LINEUPS+INJURIES backfills done since last
   entry (af-backfill-20260809-* exit_code=0). Checkbox OPEN.
+- **2026-08-10 (slot 18, data_engineering, `sports_af_full_entity_completion-9798da269f23` stale re-dispatch of the
+  final re-census todo)**: The todo's done-when is explicitly "once every backfill above completes" — and a backfill is
+  STILL in-flight: `gcloud compute instances list` shows `af-backfill-20260810-103218` RUNNING (created
+  2026-08-10T03:32Z, `instruments_chunk_loop.sh`, heartbeat daemon alive), processing an INJURIES historical chunk
+  (`--sports-entity INJURIES --start-date 2022-08-25 --end-date 2022-11-22`). Running the 8-entity re-census now would
+  capture a mid-backfill snapshot, not the terminal convergence check the todo exists to perform — the same
+  stale-baseline reasoning slot 25's re-census (above) and the sibling paper-gate doc both applied. Declining to run the
+  census this turn; skipping with `reason_code: GATED` + `park_now: true` so it stops re-dispatching to fresh workers
+  until the INJURIES backfill terminates. No code/report changes; this Progress Log entry is the only change this turn.
