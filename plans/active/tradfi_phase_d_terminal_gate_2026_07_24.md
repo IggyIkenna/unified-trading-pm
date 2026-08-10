@@ -107,10 +107,10 @@ context_scope:
       call) succeeded 2026-08-10, no auth/suspended error — see
       `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s Progress Log. Prior gate
       (superseded, kept for history): ~~BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09, see
-      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~. **BILLING GATE LIFTED
-      2026-08-10** — the databento account billing-suspension is resolved account-wide (live-reverified 2026-08-10:
-      `metadata.list_datasets()` succeeded, 29 datasets, no auth/suspended error; real metered `GLBX.MDP3` ES.FUT and
-      `XCBF.PITCH` VX.FUT pulls both succeeded — see
+      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~.
+      **`BILLING GATE LIFTED 2026-08-10`** — the databento account billing-suspension is resolved account-wide
+      (live-reverified 2026-08-10: `metadata.list_datasets()` succeeded, 29 datasets, no auth/suspended error; real
+      metered `GLBX.MDP3` ES.FUT and `XCBF.PITCH` VX.FUT pulls both succeeded — see
       `/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`). **Still blocked by a SEPARATE,
       unrelated reason — the databento gate lifting does NOT clear this todo**: Phase D is not literally green per the
       note above; do not start this until the chain-bundle follow-up
@@ -123,14 +123,14 @@ context_scope:
       follow-up it's still blocked on — see that todo's note). Prior gate (superseded, kept for history):
       ~~BLOCKED-OPERATOR-DECISION (depends on the MVP backfill readiness gate above, itself blocked on databento account
       billing-suspended 2026-08-09, see
-      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~. **BILLING GATE LIFTED
-      2026-08-10** — the databento account billing-suspension is resolved account-wide (live-reverified 2026-08-10:
-      `metadata.list_datasets()` succeeded; real metered `GLBX.MDP3`/`XCBF.PITCH` pulls both succeeded — see
-      `/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`). **Post-full-backfill
-      reconciliation RUN checkpoint (both raw-tick and candles layers)** — after the MVP backfill readiness gate above
-      goes green, run `/data-pipeline-reconciliation --asset-group tradfi` against PROD as this terminal gate's final
-      verification step (added per `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md` §11's
-      checkpoint-cadence requirement — the terminal gate currently ends at the MVP backfill readiness gate with no
+      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~.
+      **`BILLING GATE LIFTED 2026-08-10`** — the databento account billing-suspension is resolved account-wide
+      (live-reverified 2026-08-10: `metadata.list_datasets()` succeeded; real metered `GLBX.MDP3`/`XCBF.PITCH` pulls
+      both succeeded — see `/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`).
+      **Post-full-backfill reconciliation RUN checkpoint (both raw-tick and candles layers)** — after the MVP backfill
+      readiness gate above goes green, run `/data-pipeline-reconciliation --asset-group tradfi` against PROD as this
+      terminal gate's final verification step (added per `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md`
+      §11's checkpoint-cadence requirement — the terminal gate currently ends at the MVP backfill readiness gate with no
       reconciliation run cited). Definition of done: a dated reconciliation report path cited, covering both the
       raw-tick and candles layers, with any finding either resolved or explicitly carried forward as a new tracked todo.
       Inherits P0's same flagged-citation caveat above (not independently re-checked).
