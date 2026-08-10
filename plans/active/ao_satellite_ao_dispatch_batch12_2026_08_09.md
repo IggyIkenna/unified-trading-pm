@@ -212,14 +212,19 @@ that are bounded, worker-determinable, and conflict-clear. This batch extracts t
       clause cited. Source:
       `/plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md:347`. Repo:
       agent-orchestrator (read-only).
-- [ ] [DEVOPS] P2. **Clean-reset the 5 drift-violating repos on `ip-172-31-5-118` slot 0** (`e2e-testing`,
+- [x] ✅ [DEVOPS] P2. **Clean-reset the 5 drift-violating repos on `ip-172-31-5-118` slot 0** (`e2e-testing`,
       `instruments-service`, `unified-trading-library`, `execution-service`, `market-data-processing-service`) onto
-      current post-history-rewrite `live-defi-rollout` — the source doc confirms no committed work sits on the stale
-      base (a re-clone/reset, not a rescue-merge). Requires execution access to that specific host/slot via SSM. **Done
-      when**: all 5 repos show `ahead=0`/`behind=0` (or normal small drift) after reset. Source:
-      `/plans/archive/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md:87` (Finding 2 / todo 2
-      — Finding 1 was closed as a stale duplicate directly on the source doc, not extracted here). Repo:
-      agent-orchestrator (SSM host maintenance).
+      current post-history-rewrite `live-defi-rollout`. Confirmed clean working trees on all 5 (no uncommitted work to
+      lose), tagged each old `HEAD` as `archive/pre-reset-20260810T015655Z` for reversibility, then
+      `git fetch origin live-defi-rollout && git switch -C live-defi-rollout origin/live-defi-rollout` per repo
+      (branch-ref-only move, never `reset --hard`/`rm -rf` — the object stores that `.tabs/<N>/<repo>` clones reference
+      via `alternates` were never touched, only each root repo's own branch pointer + working tree). All 5 now show
+      `ahead=0`/`behind=0` against `origin/live-defi-rollout`; `git fsck` clean on both a root repo and a dependent
+      `.tabs/17` clone post-reset (old pre-rewrite history is dangling-but-reachable via the archive tags, not deleted).
+      Source: `/plans/archive/issues/fleet_host_inventory_dead_host_and_pre_rewrite_drift_2026_08_08.md:87` (Finding 2 /
+      todo 2 — Finding 1 was closed as a stale duplicate directly on the source doc, not extracted here). Repo:
+      agent-orchestrator (SSM host maintenance — no SSM needed; slot 17's own session runs on `ip-172-31-5-118`, the
+      same host, so this was done in-place, not remotely).
 - [x] ✅ [BACKEND] P1. **Detect the queued-message state and do not spend the force-compact latch on it.** Added a
       `pane_has_queued_messages()` probe to `agent-orchestrator/server/tmux_spawn.py` and had `context_lifecycle`'s
       force-compact path hold the latch un-spent (not re-send) while the target pane shows a queued-not-yet-executed
