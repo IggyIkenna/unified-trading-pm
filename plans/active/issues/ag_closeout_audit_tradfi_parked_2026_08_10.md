@@ -1,9 +1,9 @@
 ---
 doc_type: issue
 title:
-  "tradfi /ag-closeout-audit 2026-08-10 — 2 dispatch shapes ran the same day: all-mode's 2-orphan linkage-only sweep
-  (slot 26) + sharded $TRANCHE=tradfi's full 52-doc Phase 1 sweep (slot 25, 31 orphans) — 4 findings total needing
-  operator/main-agent attention"
+  "tradfi /ag-closeout-audit 2026-08-10 — 3 dispatch shapes ran the same day: all-mode's 2-orphan linkage-only sweep
+  (slot 26) + sharded $TRANCHE=tradfi's full 52-doc Phase 1 sweep (slot 25, 31 orphans) + a 2nd sharded re-run's
+  candidate-diff sweep (slot 22, 1 residual gap) — 6 findings total needing operator/main-agent attention"
 summary: >-
   Tradfi's first-ever `/ag-closeout-audit` pass, filed twice the same day by two different dispatch shapes (a real
   operational gap, see Finding 3 below). **Slot 26** (`all`-mode, no `$TRANCHE`) ran Phase 0 via
@@ -20,7 +20,13 @@ summary: >-
   batchable subset, and parks 2 additional non-batchable findings here (Finding 1: a second, DIFFERENT stalled
   plan_reconciler run at `plan_reconciler_findings_tradfi_2026_08_09.md`, locked + abandoned since 2026-08-09T16:52Z,
   not the same doc slot 26 found; Finding 2: a 2026-08-07 operator ruling sitting 2/8 and 0/1 unexecuted across 4+ audit
-  cycles).
+  cycles). **Slot 22** (sharded `$TRANCHE=tradfi`, a 3rd same-day dispatch) substituted a mechanical re-diff of a fresh
+  candidate-generator run against slot 25's actual output text for a full re-run of the 52-agent Phase 1 fan-out (the
+  ~4-hour gap made a blind repeat near-certain to be pure waste); found 1 genuine residual gap
+  (`cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md`, never cited anywhere despite
+  predating all 3 passes) and drafted `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` (+finalize) for it; the other
+  4 candidate-diff hits were already fully accounted for by slot 25's findings or correctly out of tradfi's scope
+  (Finding 6 below has the full breakdown).
 status: open
 nature: issue
 asset_group: [tradfi]
@@ -37,6 +43,9 @@ related:
     /plans/active/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch11_2026_08_10.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch12_2026_08_10_finalize.md,
+    /plans/active/issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md,
     /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -47,7 +56,7 @@ related:
 created: "2026-08-10"
 author:
   "slot-26 (ag_closeout_auditor, all-tranche mode) + slot-25 (ag_closeout_auditor, sharded tradfi, dispatch agt-022d39,
-  appended)"
+  appended) + slot-22 (ag_closeout_auditor, sharded tradfi, dispatch agt-a19d1f, appended)"
 last_updated: "2026-08-10"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -76,7 +85,9 @@ source: >-
   `check_ag_closeout_linkage.py`. **Appended same day** by the sharded `$TRANCHE=tradfi` dispatch (slot 25, dispatch
   agt-022d39) per this skill's "APPEND to a same-day doc if one already exists" rule — found this doc already landed on
   origin mid-ship (a genuine same-day filename collision between the two dispatch shapes, not a conflict to discard),
-  pulled latest, appended Findings 1/2/3 below without altering slot-26's original content.
+  pulled latest, appended Findings 1/2/3 below without altering slot-26's original content. **Appended again same day**
+  by a 2nd sharded `$TRANCHE=tradfi` dispatch (slot 22, dispatch agt-a19d1f) — same append rule, appended Finding 6 + 1
+  new `[OPERATOR]` todo without altering any prior content.
 ---
 
 # Parked findings — 2026-08-10 `/ag-closeout-audit tradfi` (2 dispatch shapes ran the same day — see Finding 3)
@@ -177,6 +188,45 @@ instead, alongside a methodology note explaining the 2-vs-31 orphan-count gap be
 - [ ] [OPERATOR] P1. **Complete or explicitly re-park the 2026-08-07 ruling's remaining 2/8 + 0/1 items** (finding 5) —
       flip `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (+finalize) to `active`, and schedule item 8's
       fold/archive of `tradfi_consolidated_closeout_2026_07_18.md` once the currently-active tradfi batches clear.
+- [ ] [OPERATOR] P3. **Review why the tradfi tranche received THREE `/ag-closeout-audit` dispatches on the same day**
+      (finding 6) — slot 26 (`all`-mode, no `$TRANCHE`), slot 25 (sharded, dispatch agt-022d39), and slot 22 (sharded,
+      dispatch agt-a19d1f, this pass). No content harm resulted (each pass either found nothing new or, this pass, found
+      one genuine residual gap — see finding 6 below), but 3 dispatches in one day is real duplicated compute against
+      one tranche while others may be under-served. Worth checking whether
+      `agent-orchestrator/scripts/install-ag-closeout-auditor-timer.sh`'s per-tranche fan-out is firing more than once
+      per day, or whether these were independent manual triggers.
+
+## Appended 2026-08-10 (slot 22, sharded `$TRANCHE=tradfi` dispatch agt-a19d1f) — Finding 6
+
+**Third same-day tradfi dispatch.** Rather than repeat slot-25's already-thorough 52-agent Phase 1 fan-out from ~4 hours
+earlier (near-zero probability of new signal given how little of the corpus changed in that window — verified: exactly 1
+tradfi doc changed since slot-25's `6489d742bf` commit, a self-dispatched DP-FETCH-009 re-confirmation with no
+classification impact), this pass instead re-ran Phase 0.3's candidate generator fresh
+(`generate_ag_closeout_audit_candidates.py --tranche tradfi`: 55 candidates now vs. 52 at slot-25's snapshot, 17
+covering docs now including batch11+finalize) and diffed its `never_cited` output against slot-25's actual batch11
+Deferred/Flagged text (read in full, not just the summary claim) plus this doc's own findings 1-5. This is a methodology
+substitution worth recording for future same-day-redispatch scenarios: a mechanical re-diff against a very recent full
+audit is far cheaper than a blind re-audit and still catches genuine gaps, as it did here.
+
+6. **One genuine gap survived the diff:
+   `issues/cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md`** — real, open,
+   `asset_group: [tradfi]` since 2026-08-09 (not a same-day retag, not created after slot-25's snapshot), 2
+   bounded/conflict-clear todos (a data-type-aware discovery-floor fix in `is_venue_available()` + a follow-up backfill
+   relaunch), never cited in ANY of the 17 covering docs' text. Live-verified the code is still unfixed
+   (`is_venue_available(venue: str, date: str) -> bool` at
+   `market_tick_data_service/engine/orchestrator/__init__.py:410`, still the 2-arg signature the source doc describes)
+   before extracting. Conflict-checked against every active tradfi covering doc (zero collisions — the only other open
+   CBOE-related work, batch9's `mdps_cboe_vx_futures_chain_grain_excluded_from_ohlcv_15m_24h_2026_08_09.md`, is a
+   different subsystem: MDPS aggregation-grain policy, not MTDS's venue-availability preflight gate). Extracted into
+   `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` (+ gated finalize, both new this pass, `status: draft`/`active`
+   per convention). The other 4 "never-cited" hits from the fresh candidate generator were NOT gaps — 2 already fully
+   triaged by findings 1+4 above, 1 (`dp_cron_did_not_fire_false_positive_burst_2026_08_10.md`) correctly out-of-scope
+   for tradfi (5-tranche doc, `parent_epic: infrastructure_master` routes it to `infra`), and 1
+   (`databento_ice_opra_subscription_ask_2026_08_09.md`) was tagged `[cross-cutting]` not `[tradfi]` at slot-25's exact
+   snapshot moment and got retagged + independently triaged by the CONCURRENT cross-cutting tranche's own audit 10
+   minutes later (`unified-trading-pm@ca9dd1cdac` at 01:34:37Z vs. slot-25's `6489d742bf` at 01:24:46Z) — a genuine
+   cross-tranche timing race, not a miss by either pass. Full reasoning for all 5 lives in batch12's own "Not extracted
+   this batch" section.
 
 ## Progress Log
 
@@ -197,3 +247,14 @@ instead, alongside a methodology note explaining the 2-vs-31 orphan-count gap be
   Deferred/Flagged sections + this doc's findings 4-5, which are process gaps not content orphans). Also fixed a live
   tooling gap found this pass: `generate_ag_closeout_audit_candidates.py`'s hub-doc exclusion regex
   (`unified-trading-pm@e7ac1ed4e1`) — see finding 3.
+- **2026-08-10 (appended, slot 22, sharded `$TRANCHE=tradfi` dispatch agt-a19d1f)**: third same-day tradfi dispatch.
+  Substituted a mechanical re-diff (fresh `generate_ag_closeout_audit_candidates.py` run vs. slot-25's actual batch11
+  text + this doc) for a full re-run of slot-25's 52-agent Phase 1 fan-out, given the ~4-hour gap and confirmed-minimal
+  corpus drift (1 doc changed, no classification impact). Ledger: 5 "never-cited" hits found by the fresh diff, 4
+  already fully accounted for (2 in findings 1+4 above, 1 correctly cross-tranche-owned, 1 a cross-tranche retag race 10
+  minutes after slot-25's snapshot — none are gaps), 1 genuine gap
+  (`cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md`) extracted into new
+  `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` (+finalize, both `status: draft`/`active` per convention, both
+  QG-validated: `check_frontmatter_schema.py` + `check_todo_format.sh` + `check_line_caps.sh` all clean). 1 new finding
+  parked here (finding 6, plus an `[OPERATOR]` todo on the 3-same-day-dispatches observation itself) — **balanced** (5
+  never-cited hits = 4 already-accounted-for + 1 batched, all disposed with evidence, none silently dropped).
