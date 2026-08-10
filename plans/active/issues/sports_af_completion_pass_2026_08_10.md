@@ -166,15 +166,26 @@ depends_on: []
           (2026-08-10) calls for `/vm-resource-rightsizing-check` on any VM >30min — flagged for next session.
         - **No code shipped** — pure monitoring task. The VM is the same one launched by slot 15; no new launches.
 
-## Deferred work after 2026-08-10 ~15:31Z
+      - **2026-08-10 (slot 28, data_engineering, ~15:36Z–15:42Z)** — Post-compact monitoring session:
+        - Resumed with VM at `2026-06-20`. Progressed to `2026-07-12` (GCS tee, 15:35:56Z log timestamp) — ~22 dates in
+          ~6 min, ~3-4 dates/min (slower pace — larger per-date payloads in recent seasons, more injuries per fixture).
+        - VM RUNNING per `gcloud compute instances list`; PIPELINE_HEARTBEAT alive at 15:35:32Z. No `exit_code=` yet.
+        - ~29 days remaining (2026-07-13 → 2026-08-10). At current pace (~3-4 dates/min), ETA ~15:48Z-15:52Z.
+        - **Pace observation**: rate slowed from ~10 dates/min (sparse 2020-2024 seasons) to ~3-4 dates/min (dense
+          2025-2026 seasons — more fixtures, more injuries per date, more API calls). This is expected behavior, not a
+          stall.
+        - **Rightsizing note**: VM now running ~5.5h on `e2-standard-8` (on-demand). Flag carries forward.
+        - **No code shipped** — pure monitoring. Session compacting again; VM near completion.
+
+## Deferred work after 2026-08-10 ~15:42Z
 
 | Item                                                                                                                | State / why deferred                                     | Blocked on                                                                                           |
 | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, `2026-05-22` (~98%), ~79 days left, ETA ~15:46Z | VM completion (real infra)                                                                           |
+| **INJURIES backfill** (`af-backfill-20260810-103218`)                                                               | RUNNING, `2026-07-12` (~99%), ~29 days left, ETA ~15:50Z | VM completion (real infra)                                                                           |
 | **All-entity backfill** (STANDINGS 271 + TEAMS 96 + FIXTURE_STATS 136 + FIXTURE_LINEUPS 136 + PLAYER_STATS 3 = 642) | Queued — singleton lock held by INJURIES VM              | INJURIES VM exit_code=0                                                                              |
 | **Re-census to confirm ~0**                                                                                         | Gated on all backfills converging                        | All entity backfills complete                                                                        |
 | **Unpark `sports_af_full_entity_completion-9798da269f23`**                                                          | Gated on re-census ~0                                    | `POST /api/prerequisites/auto_unpark__sports_af_full_entity_completion-9798da269f23 {"value": true}` |
-| **VM rightsizing check** (`af-backfill-20260810-103218`)                                                            | VM running >5h on `e2-standard-8`                        | After VM terminates (or now if CPU/mem telemetry accessible)                                         |
+| **VM rightsizing check** (`af-backfill-20260810-103218`)                                                            | VM running ~5.5h on `e2-standard-8`                      | After VM terminates (or now if CPU/mem telemetry accessible)                                         |
 
 **Recommended NEXT item**: Check `af-backfill-20260810-103218` — by now it should be TERMINATED or very close:
 
