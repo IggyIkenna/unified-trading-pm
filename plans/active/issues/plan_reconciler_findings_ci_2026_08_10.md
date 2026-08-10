@@ -209,7 +209,9 @@ scope note). No ci-tranche hygiene action needed from the Phase-0 corpus-wide ch
 
 Routed to the operator via `POST /api/slots/2/blocked` (`blocked_id: BLK-6b80187a`, batched Q1-Q4 + 1 FYI note per
 SUB_AGENT_MANDATORY_RULES escalation format, options + `[WORKER REC]` marked). Every item below is durably tracked here
-too, per Phase-5.9(a)'s routed==parked reconciliation (8 routed, 8 parked — balanced):
+too, per Phase-5.9(a)'s routed==parked reconciliation. **9 items filed** (8 sent in the blocked-question call + 1
+discovered afterward, item 9 below — the blocked-question mechanism itself, so not something that could have been
+included in its own call):
 
 - [ ] [DOC] P1. **`pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md` is 1004L, OVER the 1000L hard
       cap** (confirmed via `check_line_caps.sh` directly — the periodic sweep misses this doc because it globs
@@ -244,6 +246,38 @@ too, per Phase-5.9(a)'s routed==parked reconciliation (8 routed, 8 parked — ba
       pre-existing bats failures are in-scope, or define a threshold for "a full fleet PR cycle." Needs scoping before
       AO dispatch proceeds cleanly. Not separately escalated via blocked-question (lower stakes, bundled here for the
       record per Phase-5.9(b) — every skip/defer gets enumerated, not just a bare count).
+- [ ] [INFRA] P2. **Blocked-question answer retrieval may have a real gap.** A harness-level notification stated the
+      operator had answered `BLK-6b80187a`, but the two documented retrieval channels
+      (`GET /api/slots/$SLOT_ID/messages`; the `messages` array on a `/progress` POST response) both returned empty
+      across 6 attempts spanning ~20 min, and 4 guessed alternate endpoint shapes (`/api/blocked/<id>`,
+      `/api/blocked-questions/<id>`, `/api/slots/2/blocked-questions`, `/api/slots/2/status`, with and without
+      `X-Orchestrator-Secret`) all 404'd. Two explanations, not distinguished this run: (a) a genuine answer-delivery
+      gap in the blocked-question mechanism (worth checking whether OTHER plan_reconciler/na-
+      eligibility-audit/ag-closeout-audit runs' blocked-questions have silently never received their answers either —
+      same failure shape as the escalation-queue's own past `verify_dispatched_escalations` gap, different subsystem),
+      or (b) this specific notification fired without a real backing answer (a harness artifact). Worth an operator-side
+      check of the dashboard's actual delivery path for `BLK-6b80187a` specifically, and — if genuinely broken — a wider
+      audit of whether other slots' blocked-questions are in the same silently-unretrievable state.
+
+## Deferred work after 2026-08-10
+
+| Item                                                         | State              | Blocked on                                                       |
+| ------------------------------------------------------------ | ------------------ | ---------------------------------------------------------------- |
+| `pytest_timeout_60s_flaky_under_contention_continued2` split | **Operator-owned** | split/extraction decision (line-cap at 1004L, over hard cap)     |
+| `fleet_wide_qg_self_hosted_runner_capacity_crisis` split     | **Operator-owned** | split/extraction decision (998L, 2 lines of headroom)            |
+| `github_actions_operator_gated_followups` split              | **Operator-owned** | split/extraction decision (exactly 1000L, zero headroom)         |
+| `credential_ask_orphan_checker` AO-scope fix                 | **Operator-owned** | a design/naming decision only a human can make                   |
+| `ci_pipeline_speed_and_cost_redesign` "5→3 glue" re-check    | **Not done**       | real work — arithmetic re-verification across 2 docs, nobody yet |
+| AWS Cost Explorer extraction into next ci batch              | **Not done**       | real work — needs a batch-authoring pass, 9 days overdue         |
+| Unlock `plan_reconciler_findings_ci_2026_08_09.md`           | **Operator-owned** | unlock authority (dead-session lock, HARD-STOP per rules)        |
+| `pm_bats_tests` definition-of-done scoping                   | **Not done**       | real work — small scoping decision, nobody yet                   |
+| Blocked-question retrieval gap investigation                 | **Operator-owned** | needs dashboard-side visibility this worker doesn't have         |
+
+**Recommended NEXT item**: the 3 line-cap-blocked splits (rows 1-3) are the highest-leverage — each unblocks an
+already-drafted, already-verified correction that's just sitting blocked on doc size, and
+`fleet_wide_qg_self_hosted_runner_capacity_crisis` is one Progress Log entry from breaching its hard cap a 3rd time
+regardless of whether this specific correction ever lands. Everything else is lower urgency (no live incident, no
+fleet-wide impact).
 
 ## Archive candidates (operator review)
 
@@ -344,6 +378,41 @@ None — all 32 writable docs were covered (30 via the 6 hunter batches, 2 read 
 were read only as cross-reference context where a writable doc cited them, per the grace-window contract (never
 written).
 
+## Lessons (this run)
+
+- **A corpus-wide hygiene-sweep FAIL can be a transient snapshot, not a stable verdict, on this high-churn shared
+  branch.** `run_hygiene_sweep.sh --ci` showed 3 hard failures at run start; re-running the specific check
+  (`check_reference_paths.py`) minutes later showed 2 of the 3 passing. Always re-verify a Phase-0 flag's current state
+  before treating it as still-live, especially anything corpus-wide rather than doc-specific.
+- **`lscpu -p=core | grep -vc '^#'` counts LOGICAL cpus, not physical** — it emits one row per hyperthread sibling with
+  no dedup, which looks like it should return physical-core count but doesn't. This bit the original
+  `ci_vm_io_starvation_audit...` doc's author (2026-08-06) and my own hunter batch 1 both assumed physical-core
+  semantics until an empirical on-host check (`lscpu -p=core` raw output, unique-vs-total row count) settled it. Worth
+  remembering for any future host-sizing claim citing this exact command.
+- **Self-correction, not a hunter's**: my own first-pass logging mis-attributed the "missing `related:` cross-ref"
+  finding to `fleet_workflow_template_dedup...` when the hunter had actually named
+  `self_hosted_runner_public_repo_revert_2026_08_05.md`. Caught by re-reading the hunter's raw text before applying, not
+  by trusting my own paraphrase in the findings doc. General lesson: when applying a hunter's finding, re-check its
+  literal file citation against the source text, not a summary written a few messages earlier.
+- **A blind pull→add→commit retry loop is unsafe under this level of branch churn.** Chaining
+  `git pull --rebase --autostash && git add $FILES && git commit` inside a tight bash loop, without checking for
+  conflict-marker syntax between steps, let one `git stash pop` merge-conflict land literal git conflict-marker text
+  (angle-bracket/equals-sign runs) into 2 staged files — caught only because the pre-commit hook's conflict-marker check
+  fired, not by the loop itself. The safer pattern used afterward: pull once, explicitly grep for that syntax, only then
+  add+commit — one cycle at a time, not a blind N-iteration loop. (Self-referential note: writing this lesson down the
+  first time literally tripped the same conflict-marker check on THIS doc — the checker matches the raw character
+  sequence anywhere in a staged file, including inside a backtick-quoted description of it, so describe the syntax in
+  prose rather than spelling it out literally.)
+- **Cross-tranche same-finding collisions are a real, expected occurrence on this fleet, not a bug.** A concurrent
+  infra-tranche `plan_reconciler` run independently found and fixed the identical `ci-cd-flow.md` staleness I had (same
+  corpus-wide codex doc, read by every tranche that touches CI/CD). Resolution: when a stash-pop conflict shows the
+  other side's fix is equivalent and already live, take theirs and drop your redundant edit rather than trying to merge
+  two versions of the same correction.
+- **The documented blocked-question answer-retrieval channels did not surface an answer this run** despite a
+  harness-level notification claiming one existed — see Filed item 9. Noting this here too since it's the kind of thing
+  that's easy to explain away as "must have been checking wrong" in the moment, and worth taking at face value as a
+  possible real gap instead.
+
 ## Progress Log
 
 - **2026-08-10 05:19 UTC** — Run started. FF'd PM + all 25 sibling repo clones (all clean, no reconciliation needed —
@@ -372,3 +441,21 @@ written).
   1 needs-more-arithmetic contradiction, 1 overdue extraction, 1 stale dead-session lock, 1 definition-of-done gap) as a
   batched blocked-question (`BLK-6b80187a`, Q1-Q4 + FYI, options + `[WORKER REC]` marked) — `can_continue: true`.
   Routed==parked reconciled at 8==8 (Phase-5.9(a)).
+- **2026-08-10 ~06:35 UTC** — STEP 7: `POST /api/plan-health/result` sent (15 confirmed / 2 refuted, coverage 6 hunters
+  / 6 batches / 32 docs, `commit_sha: 2ed4199b00`). STEP 8: a harness notification indicated the operator had answered
+  `BLK-6b80187a`, but 6 polling attempts across ~15 min via both documented channels (`GET /api/slots/2/messages`, the
+  `/progress` response's own `messages` array) plus several undocumented endpoint-shape guesses (`/api/blocked/<id>`,
+  `/api/blocked-questions/<id>`, `/api/slots/2/status`, with and without `X-Orchestrator-Secret`) all returned
+  empty/404. Not treating the notification as unfounded — the answer may simply not be retrievable through this worker's
+  available HTTP surface. Every one of the 8 filed items is independently durable (this doc's Filed section + the
+  standing `BLK-6b80187a` record in the dashboard) regardless. Armed a bounded (480s) background poll of
+  `GET /api/slots/2/messages` rather than busy-waiting, and continued other STEP-6/7-adjacent work while it ran.
+- **2026-08-10 ~06:50 UTC** — `/pre-compact` invoked mid-wait (background poll `bjg620o2c` still running, not yet
+  resolved). Ran the full pre-compact ritual: confirmed `ahead=0`/`behind=0` before starting, found one legitimate
+  uncommitted addition (the STEP 7/8 Progress Log entry above — the exact kind of loss this ritual exists to catch),
+  swept the scratchpad (12 files, all cheap-to-regenerate tranche-population/hygiene-sweep artifacts, none referenced by
+  anything committed, none secret-shaped — deliberately not promoted, see verdict), added the
+  `## Deferred work after 2026-08-10` table and `## Lessons` section this ritual requires, and filed 1 new item (9)
+  discovered only during this audit — the blocked-question retrieval gap itself. Committing this checkpoint now; STEP 8
+  (apply-answer-then-`/done`) resumes once the background poll resolves (answer found, or its 480s bound expires) — not
+  resolved as of this checkpoint, so `/done` has NOT been called yet.
