@@ -185,8 +185,8 @@ discipline for whoever executes these:
       VM run.log confirms live XCBF.PITCH capture (~22,790 records/date, ohlcv_1m+ohlcv_1s). VIX futures backfill is
       operational.
 
-- [ ] [DATA] P2. **Scope the Yahoo CBOE Treasury discovery-floor fix, capped at 2018 (operator decision 2026-08-10 — "i
-      only want data from 2018 even for yahoo that's fine")** — edit
+- [x] ✅ [DATA] P2. **Scope the Yahoo CBOE Treasury discovery-floor fix, capped at 2018 (operator decision 2026-08-10 —
+      "i only want data from 2018 even for yahoo that's fine")** — edit
       `plans/active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md`. Grep-check:
       `grep -c "start-floor 2018-01-01" <file>` — skip if ≥1. This plan's todo 2 (search for
       `**Relaunch the CBOE Treasury-INDEX backfill for the newly-unblocked 2000-2020-06 window.**`) currently targets
@@ -198,7 +198,8 @@ discipline for whoever executes these:
       Leave todo 1 (the code fix itself, `is_venue_available()` data-type-aware floor resolution) UNCHANGED — the code
       fix's own technical capability should still correctly support the real Yahoo floor (2000-01-03/2018-08-13) if ever
       needed later; only the ACTUAL BACKFILL LAUNCH target window is capped at 2018, not the code's capability. Repo:
-      unified-trading-pm.
+      unified-trading-pm. — unified-trading-pm@ac45412f05 (batch12 todo 2 now targets `--start-floor 2018-01-01`, US2Y
+      stays 2018-08-13, capped-at-2018 note added; todo 1 unchanged)
 
 ## Codex SSOTs (read before touching this workstream)
 
@@ -213,3 +214,8 @@ discipline for whoever executes these:
   `pull --rebase --autostash`. Operator asked to flip the remaining work to this AO plan rather than continue fighting
   the race interactively. The live Databento re-verification (3 real API calls) IS a completed, confirmed finding —
   captured above so no worker needs to redo it; only the doc edits themselves remain.
+- 2026-08-10 (slot-24, AO worker): todo 8 (Yahoo CBOE Treasury floor capped at 2018) done —
+  unified-trading-pm@ac45412f05. `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` todo 2 now targets
+  `--start-floor 2018-01-01` (was 2000-01-01), window title "2018-2020-06", "from 2018-01-01 onward" for the 4 non-US2Y
+  tenors, US2Y stays 2018-08-13, plus the capped-at-2018 note; todo 1 (the `is_venue_available()` code fix) untouched.
+  Grep-verified before/after commit. All 8 todos now complete.
