@@ -70,12 +70,37 @@ setup() {
   [ -z "$output" ]
 }
 
-@test "the precommit guard's literal matches what the resolver writes" {
-  # The guard greps -F '@PENDING'. If the resolver's token and the guard's literal ever drift,
-  # an unresolved placeholder would sail through — so assert they agree on the same string.
-  printf -- '- [x] 1. shipped — market-tick-data-service@PENDING\n' > "${PM}/plans/active/p.md"
-  run grep -c -F '@PENDING' "${PM}/plans/active/p.md"
-  [ "$output" = "1" ]
-  run grep -q -F '@PENDING' "${REPO_ROOT}/scripts/plan-hygiene/run_hygiene_sweep.sh"
+# The guard's detector, extracted verbatim from run_hygiene_sweep.sh. Kept in lockstep by the
+# last test in this file, which asserts the sweep still contains this exact expression — if the
+# two drift, either an unresolved placeholder sails through or documentation gets blocked again.
+_pending_detect() {
+  awk '
+    { s = $0; gsub(/`[^`]*`/, "", s)
+      if (s ~ /[a-z][a-z0-9-][a-z0-9-]+@PENDING/) print FILENAME ":" FNR ": " $0 }
+  ' "$@"
+}
+
+@test "the guard blocks a REAL unresolved placeholder" {
+  printf -- '- [x] 1. shipped — Evidence: market-tick-data-service@PENDING\n' > "${PM}/plans/active/p.md"
+  run _pending_detect "${PM}/plans/active/p.md"
+  [ -n "$output" ]
+}
+
+@test "the guard does NOT block prose that documents the convention" {
+  # This is the case that actually happened on 2026-08-10: the first doc the naive `grep -F
+  # '@PENDING'` version blocked was the issue doc explaining the convention. A guard that makes
+  # its own feature undocumentable is a broken guard.
+  cat > "${PM}/plans/active/p.md" <<'EOF'
+Write `<repo>@PENDING` and the push fills it in.
+PENDING is resolved by the quickmerge push that creates the commit.
+A worked example: `market-tick-data-service@PENDING` becomes a real sha.
+EOF
+  run _pending_detect "${PM}/plans/active/p.md"
+  [ -z "$output" ]
+}
+
+@test "the extracted detector is still identical to the one in run_hygiene_sweep.sh" {
+  run grep -qF 'if (s ~ /[a-z][a-z0-9-][a-z0-9-]+@PENDING/) print FILENAME ":" FNR ": " $0' \
+    "${REPO_ROOT}/scripts/plan-hygiene/run_hygiene_sweep.sh"
   [ "$status" -eq 0 ]
 }

@@ -99,7 +99,7 @@ each source doc's own Progress Log (not just trusting the classifier's one-line 
 
 ## Todos
 
-- [ ] [INFRA] P2. **Unpark the ruled-and-ready dispatch-ordering task, then verify clean re-dispatch.** Source:
+- [x] ✅ [INFRA] P2. **Unpark the ruled-and-ready dispatch-ordering task, then verify clean re-dispatch.** Source:
       `/plans/active/issues/ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md` todos 1 (the "standing
       follow-up" prose inside the already-`[x]`'d `[DOC] P1` todo) + 3 (`[REVIEW] P3`). (a) Issue
       `POST /api/backlog/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-0d5981dddb99/unpark` against the live
@@ -109,7 +109,17 @@ each source doc's own Progress Log (not just trusting the classifier's one-line 
       filter server-side, confirmed 2026-08-08) that it completes a full boot→work→done cycle without re-triggering a
       near-identical blocked-nudge. **Done when**: the task is unparked, dispatches, and completes cleanly (or, if it
       re-triggers the same block, that itself is evidence for a fresh finding — report either outcome). Repo:
-      agent-orchestrator (live API action, no code change).
+      agent-orchestrator (live API action, no code change). — unified-trading-pm@<flip-sha>: task resolved via alternate
+      path — the [OPERATOR] ruling (2026-08-09, option a) was followed by direct implementation
+      (`unified-trading-pm@d765b4cfb1`) in the same operator session. The parked backlog task
+      (`plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-0d5981dddb99`) was cleaned up when its source doc's todo
+      (`plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` todo 2) was flipped `[x]` — the next
+      PlanRegenLoop removed it from the backlog and cleared the cooldown/park record. The `/unpark` endpoint correctly
+      returned 404 "not auto-parked" (no cooldown row, no parked_condition). No re-dispatch occurred → no blocked-nudge
+      re-trigger. This is a valid outcome per the plan's own "report either outcome" clause. The source issue doc
+      (`ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md`) still carries an open `[BACKEND] P2` todo
+      (template convention update — explicitly not extracted here per §"Why this plan exists" item 1) and an open
+      `[REVIEW] P3` verification todo.
 - [x] ✅ [BACKEND] P1. **TmuxPruner-wedge workload-characteristic cross-check.** Source:
       `/plans/active/issues/citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md` todo 1. Now that
       the fleet-wide TmuxPruner/keeper root cause is identified and fixed (`agent-orchestrator@e32d962`, TmuxPruner
@@ -143,3 +153,16 @@ each source doc's own Progress Log (not just trusting the classifier's one-line 
   approval takes effect. The source parked doc's todo text ("Flip to `status: active` to dispatch") was itself
   incomplete and is the reason this was missed — noted here so the next batch approval checks all three fields, not just
   `status`.
+
+- **2026-08-10 (slot 4, infra worker, this session)**: Executed todo 1 (the unpark+verify task). The
+  `POST /api/backlog/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock-0d5981dddb99/unpark` call returned 404 "not
+  auto-parked" — the cooldown row was already cleared. Investigation confirmed the task was resolved via an alternate
+  path: the operator's ruling session (2026-08-09) both decided option (a) AND implemented it directly
+  (`unified-trading-pm@d765b4cfb1`, shipped via quickmerge), flipping the source doc's `[INFRA] P1` todo `[x]` in the
+  same pass. The next PlanRegenLoop tick derived the flipped todo as done, removed the backlog task (`-0d5981dddb99`)
+  from `backlog.yaml`, and cleared its cooldown/park record — so there's nothing to unpark. No re-dispatch occurred, no
+  blocked-nudge re-triggered. The source issue doc
+  (`ao_dispatch_ignores_same_doc_operator_predecessor_todo_2026_08_08.md`) still carries two open todos: a
+  `[BACKEND] P2` (template-convention update, explicitly not extracted here per "Why this plan exists" item 1) and a
+  `[REVIEW] P3` (verification of the now-de-facto-completed unpark). This batch's own `batch19_finalize_2026_08_10.md`
+  should reconcile the P2/P3 status back into the source doc.
