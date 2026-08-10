@@ -158,15 +158,21 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       unless a genuine mis-tagging bug is found. Repo: market-tick-data-service. Source:
       `issues/tradfi_live_shard_atom_unknown_writer_2026_08_09.md`. Done when: the writer is identified and cited, or
       the read is confirmed stale/mis-scoped.
-- [ ] [SCRIPT] P1. **Confirm `wave_launcher.py`'s actual production deployment mechanism** — reconcile the docstring's
-      claim ("Cloud Run Job + Scheduler") against `_write_last_run_sentinel`'s comment ("HOST cron"), which are in
-      tension; `deployment-service/terraform/gcp/wave_launcher_scheduler.tf` documents a Cloud Run Job + Cloud Scheduler
-      `0 */3 * * *` design consistent with the docstring, but this hasn't been cross-checked against whether it actually
-      picked up `deployment-service@bcf55c781f98f3834298252c443ed5ffa6f42a35` (the CME dedup fix). Repo:
-      deployment-service (terraform/deployment config — distinct from the todo below's target file). Source:
-      `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (todo, line 165). Done when: the actual
-      invocation mechanism is confirmed AND, if it's an image-based Cloud Run Job, either a redeploy has run or one is
-      explicitly triggered.
+- [x] [SCRIPT] P1. ✅ **Confirm `wave_launcher.py`'s actual production deployment mechanism** —
+      `unified-trading-pm@<sha>`. **ACTUAL mechanism: HOST cron on the monitor host** — the `_write_last_run_sentinel`
+      comment ("runs as a HOST cron (0 */3 on the monitor host)") is ACCURATE. The Cloud Run Job
+      `uts-prod-tradfi-wave-launcher` + Cloud Scheduler `uts-prod-tradfi-wave-launcher-cron` (`0 */3 * * *`) EXIST per
+      Terraform but are DORMANT: Scheduler PAUSED since 2026-06-24, last job execution 2026-06-25. Neither has driven
+      any launches since June. The LIVE mechanism is the host cron — evidence: `wave-launcher-last-run.json` sentinel
+      reads `2026-08-10T15:00:06.881598+00:00` (today, 3h-aligned), yet no Cloud Run execution exists after June. The
+      Scheduler pause was the stopgap for the scope-ruling violation (pre-bcf55c781). **CME dedup fix pickup
+      CONFIRMED**: the host cron runs from a git checkout (not a container image), so `git pull` picks up
+      `deployment-service@bcf55c781`. Proof: VMs launched today at ~2026-08-10T18:49-18:51 UTC
+      (`tradfi-bf-cme-ohlcv-1m-btc-2021-20260810-184911`, `…-gc-2020-20260810-184942`, `…-ng-2020-20260810-185141`) use
+      the clean SINGLE-ROOT naming from `bcf55c781`, NOT the old broken `g${idx}-${first}-${last}` bundling pattern. No
+      image rebuild needed for the live path. The dormant Cloud Run Job's `:latest` image is stale (no evidence of
+      post-bcf55c781 rebuild) — a rebuild MUST run before un-pausing the Scheduler. Repo: deployment-service. Source:
+      `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (todo, line 165).
 - [x] [CODE] P1. **Patch `wave_launcher.py`'s cell-selection logic to consult the scope-ruling table before
       dispatching** — the durable fix for the 2026-08-09 scope-ruling violation (legacy NASDAQ/NYSE/CME fleet relaunched
       outside its ruled scope); only the reversible stopgap (pausing the Cloud Scheduler job) is done so far. Without
@@ -307,3 +313,13 @@ identical primary-owner precedent batch6/7/8 established for the same docs:
   `generate_ag_closeout_audit_candidates.py`'s hub-doc exclusion regex fix, found live this same pass). 14 todos
   extracted; conflict-checked against all active tradfi covering docs + the cross-cutting
   `governance_sweep_deferred_followups_2026_08_06.md` conflict — zero new collisions. Not yet reviewed by the operator.
+- 2026-08-10 (slot-21, data_engineering craft): resolved todo #10 (wave_launcher deployment mechanism). **Findings**:
+  (1) ACTUAL live mechanism = HOST cron on the monitor host, NOT the Cloud Run Job — the `_write_last_run_sentinel`
+  comment is ACCURATE. The Cloud Run Job `uts-prod-tradfi-wave-launcher` exists (Terraform-managed) but is DORMANT:
+  Cloud Scheduler PAUSED since 2026-06-24, last job execution 2026-06-25. The host cron wrote the
+  `wave-launcher-last-run.json` sentinel TODAY at 2026-08-10T15:00 UTC — the Scheduler hasn't fired in 6+ weeks. (2) CME
+  dedup fix (`deployment-service@bcf55c781`) CONFIRMED PICKED UP by the live mechanism: VMs launched today (~18:49-18:51
+  UTC) use the clean single-root naming (`tradfi-bf-cme-ohlcv-1m-btc-2021-...`, `…-gc-2020-...`, `…-ng-2020-...`) from
+  the fixed launcher script, not the old broken bundling pattern. The host cron runs from a git checkout — no image
+  rebuild needed. The dormant Cloud Run Job's `:latest` image is stale (no evidence of post-bcf55c781 rebuild); a
+  rebuild MUST run before un-pausing the Scheduler.
