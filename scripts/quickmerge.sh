@@ -551,11 +551,32 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
   if git worktree add --detach -q "$_qm_iso_wt" HEAD 2>/dev/null; then
     _QM_ISO_ROOT="$_qm_iso_parent"
     trap _qm_cleanup_isolation EXIT
-    # gitignored build state quality-gates.sh needs
-    for _qm_link in .venv .venv-workspace node_modules; do
-      [ -e "$_qm_caller_repo/$_qm_link" ] && [ ! -e "$_qm_iso_wt/$_qm_link" ] \
-        && ln -s "$_qm_caller_repo/$_qm_link" "$_qm_iso_wt/$_qm_link" 2>/dev/null
+    # ---- make the worktree a COMPLETE MINIATURE WORKSPACE -------------------------------
+    # quality-gates.sh computes WORKSPACE_ROOT as "$(git rev-parse --show-toplevel)/.." and is
+    # NOT env-overridable, then installs LOCAL_DEPS (unified-api-contracts, unified-trading-
+    # library) as editable SIBLINGS from there. A bare tmpdir worktree has no siblings, so those
+    # installs silently no-op and the re-gate dies with ModuleNotFoundError. Symlink every
+    # sibling repo of the caller's workspace next to the worktree so the derivation resolves.
+    _qm_ws_root="$(cd "$_qm_caller_repo/.." && pwd -P)"
+    for _qm_sib in "$_qm_ws_root"/*; do
+      [ -d "$_qm_sib" ] || continue
+      [ -e "$_qm_sib/.git" ] || continue
+      _qm_sib_name="$(basename "$_qm_sib")"
+      [ "$_qm_sib_name" = "$_qm_repo_name" ] && continue   # the worktree IS this repo
+      [ -e "$_qm_iso_parent/$_qm_sib_name" ] || ln -s "$_qm_sib" "$_qm_iso_parent/$_qm_sib_name" 2>/dev/null
     done
+
+    # ---- private, CACHED venv -- never the caller's -------------------------------------
+    # Symlinking the caller's .venv was WRONG and measurably harmful: base-service.sh runs
+    # `UV_PROJECT_ENVIRONMENT=.venv uv sync --frozen`, and `uv sync` PRUNES packages absent from
+    # the lock -- so an isolated run stripped unified_api_contracts / unified_trading_library /
+    # pandas out of the operator's real environment (observed 2026-08-10; restored by hand).
+    # Give isolation its own venv, cached per repo so the uv sync cost is paid once rather than
+    # per commit, and keep it entirely outside any checkout the operator uses.
+    _qm_iso_venv="${QM_ISO_VENV_CACHE:-$HOME/.cache/qm-iso-venv}/$_qm_repo_name"
+    mkdir -p "$(dirname "$_qm_iso_venv")" 2>/dev/null
+    ln -sfn "$_qm_iso_venv" "$_qm_iso_wt/.venv" 2>/dev/null
+
     _qm_copy_ok=true
     # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated list
     for _qm_f in $FILES_ARG; do
