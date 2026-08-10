@@ -22,7 +22,7 @@ related:
     /plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
-    /plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md,
+    /plans/archive/2026_08/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md,
     /plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]

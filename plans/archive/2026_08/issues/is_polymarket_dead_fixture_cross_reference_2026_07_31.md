@@ -14,8 +14,7 @@ summary: >-
   (`tests/unit/test_prediction_adapters_comprehensive.py::TestCrossReferenceFixture`); the ONLY other reference to it in
   the codebase is `_build_sports_id()`'s own docstring, which explicitly calls it "the unused, network-dependent
   `_cross_reference_fixture()`" and states it was deliberately left unwired for capture-throughput reasons.
-status: open
-archive_exempt: true
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [data]
@@ -43,7 +42,7 @@ source:
     prediction_consolidated_native_ao_extract_2026_07_25.md todo 1's adapter dead-code/fallback audit, per
     /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md.",
   ]
-resolved_by:
+resolved_by: instruments-service@4b55c57b
 locked_by:
 locked_since:
 supersedes:
@@ -58,6 +57,13 @@ context_scope:
 ---
 
 # instruments-service: dead Polymarket fixture cross-reference capability
+
+> **🟢 ARCHIVED 2026-08-09 — RESOLVED** (status: resolved, 0 open todos, unlocked). Deleted
+> (instruments-service@4b55c57b): `PolymarketReferenceDataAdapter._cross_reference_fixture()`, `_fixture_cache`, the
+> `api_football_api_key` constructor param, `factory.py`'s `af_key` threading, and the dedicated
+> `TestPolymarketCrossReferenceFixture` test class. `quality-gates.sh` green
+> (`.qg_last_passed_sha=4b55c57b3ecf51c587441e7017c9c34b992803d0`); verified on origin/live-defi-rollout. Executed via
+> `plans/active/prediction_satellite_ao_dispatch_batch10_2026_08_09.md`'s todo of the same name.
 
 ## What I found
 

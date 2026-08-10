@@ -104,7 +104,7 @@ re-verified this run via the Orthogonality HARD CHECK, see below):
 5. [`issues/ag_closeout_audit_prediction_parked_2026_07_31.md`](/plans/active/issues/ag_closeout_audit_prediction_parked_2026_07_31.md)
    Finding 1 — an (A) delete vs (B) keep-and-document judgment call on 2 _other_ adapter dead-code docs (distinct from
    the 2 extracted below), still explicitly unadjudicated. Correctly non-batchable (operator-gated).
-6. [`issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`](/plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md)
+6. [`issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`](/plans/archive/2026_08/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md)
    — the judgment call that blocked this WAS resolved (operator RULED 2026-08-07, option A: DELETE), but the deletion
    itself was never executed — **extracted to batch10 todo 3**.
 7. [`issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`](/plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md)

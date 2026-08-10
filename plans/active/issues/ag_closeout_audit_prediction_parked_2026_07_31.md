@@ -28,7 +28,7 @@ related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/archive/issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md,
-    /plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md,
+    /plans/archive/2026_08/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md,
     /plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
     /plans/archive/issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md,
@@ -79,7 +79,7 @@ context_scope:
 `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 1 (adapter dead-code/fallback audit, done 2026-07-31)
 filed two new issue docs:
 
-- [`issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`](/plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md)
+- [`issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`](/plans/archive/2026_08/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md)
   — instruments-service's Polymarket adapter threads a real `api_football` secret into a `_cross_reference_fixture()`
   capability with zero non-test call sites.
 - [`issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`](/plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md)

@@ -376,10 +376,10 @@ fixture-linked before MVP backfill.
     `[prediction, ao]`, `parent_epic: orchestrator_master` — genuinely owned by the `ao` tranche's own closeout
     (dispatcher/checkpoint architecture, not prediction data work), not re-drafted here per the primary-owner rule for
     multi-tranche docs.
-  - [`plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`](/plans/active/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md)
+  - [`plans/archive/2026_08/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md`](/plans/archive/2026_08/issues/is_polymarket_dead_fixture_cross_reference_2026_07_31.md)
     — **new 2026-07-31** (filed by `prediction_consolidated_native_ao_extract_2026_07_25.md` todo 1's adapter dead-code
-    audit). 1 open `[BACKEND] P2` — genuine (A) delete vs (B) keep-and-document judgment call, explicitly "not
-    adjudicated" by its own filing; operator-gated, not AO-dispatchable as written.
+    audit). **RESOLVED 2026-08-09** — operator ruled DELETE (option A) 2026-08-07, executed + archived
+    (instruments-service@4b55c57b) via batch10's todo; the doc is now 0-open-todos and archived.
   - [`plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md`](/plans/active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md)
     — **new 2026-07-31** (same audit). 1 open `[BACKEND] P2` — same shape (A) delete vs (B) keep-and-document,
     operator-gated.
