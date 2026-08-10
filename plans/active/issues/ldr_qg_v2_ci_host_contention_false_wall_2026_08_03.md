@@ -139,13 +139,22 @@ green one).
 
 ## Todos
 
-- [ ] [INFRA] P2. **Determine whether the CI glue-runner's `quality-gates.sh` invocation shares the `qg-host-governor`
-      reservation ledger with interactive agent-orchestrator slots.** Trace whether the glue-runner's QG invocation
-      calls `qg_governor_acquire()` (`scripts/quality-gates-base/qg-host-governor.sh`) the same way an interactive slot
-      does, or bypasses the ledger entirely — this doc's finding 4 above observed `0s     governor queue-wait` on a CI
-      leg despite the host being severely loaded (`uptime` 26-32 on 8 cores), suggesting a bypass. Done-when: a stated
-      YES/NO on whether the glue-runner participates in the same reservation ledger, with the code path cited
-      (function + file); if NO, file a follow-up todo to wire it in.
+- [x] [INFRA] P2. ✅ **Determine whether the CI glue-runner's `quality-gates.sh` invocation shares the
+      `qg-host-governor` reservation ledger with interactive agent-orchestrator slots.** — unified-trading-pm@b867ae4
+      (doc-only, findings below). **NO — it calls the identical `qg_governor_acquire()` code path but writes to a
+      DIFFERENT, disjoint ledger directory than interactive slots.**
+- [ ] [INFRA] P2. **Wire the glue-runner CI ledger and the interactive-slot ledger back into ONE shared reservation
+      namespace** (follow-up from the todo above) — `scripts/quality-gates-base/qg-host-governor.sh`'s
+      `_qg_shared_root()` (lines 269-277) special-cases `WORKSPACE_ROOT` matching `*/.tabs/*` (interactive slots →
+      `${ws%/.tabs/*}`, e.g. `/home/ubuntu/unified-trading-system-repos`) vs cwd matching `/opt/github-glue-runners*`
+      (glue-runner CI → hardcoded `$_QG_GLUE_RUNNER_SHARED_ROOT` = `/opt/.qg-governor-glue-shared`) — two DIFFERENT
+      directories on the same host/filesystem (verified live: same device id, different inodes), so admission control on
+      one side has zero visibility into concurrent load from the other. Fix: make `_qg_shared_root()` resolve to ONE
+      common root regardless of caller (e.g. always the fixed host path `/opt/.qg-governor-glue-shared`, or a new env
+      var both the reusable workflow and the interactive-slot shell-env installer set explicitly), then re-verify via a
+      live concurrent-load test (one glue-runner CI run + one interactive slot heavy QG phase at once) that each
+      observes the other's reservation in `--status`. Done-when: both surfaces read/write the same ledger dir,
+      live-verified, shipped.
 - [ ] [INFRA] P2. **Determine whether the shared host running both the interactive agent-orchestrator slot fleet and the
       per-repo GH Actions glue-runner CI is undersized for their combined peak concurrent demand.** Measure physical
       core count + typical interactive-slot heavy-QG-phase concurrency + glue-runner concurrency during a representative
@@ -281,3 +290,38 @@ and just burn more contended compute.
   for a DIFFERENT source doc (`host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`, already
   archived) — no overlap. `sequential: true` added (all 3 todos record findings into this same doc). Finalize twin:
   `/plans/active/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03_finalize_2026_08_10.md`.
+
+- **2026-08-10 (slot-12, infra craft) — todo 1 RESOLVED, NO (disjoint ledger, not a full bypass).** Traced the full code
+  path rather than re-running any CI: `python-quality-gates-v2.yml`'s `qg-slices` job (reusable workflow,
+  `unified-trading-ci/.github/workflows/python-quality-gates-v2.yml:293-320`) sets `QG_GOVERNOR_MODE: reservation`
+  whenever the caller passes `self_hosted_runner_labels` (empty ⟹ `token`, a no-op on single-tenant `ubuntu-latest`),
+  then its "Run quality gates" step (`:775+`) execs the SAME `scripts/quality-gates.sh` → `base-service.sh` that every
+  interactive slot runs, cloned fresh from PM at `live-defi-rollout` HEAD in the preceding "Clone unified-trading-pm and
+  dependencies" step (not a per-repo fork). `base-service.sh:825-827` unconditionally calls `qg_governor_acquire()`
+  before TESTS/TYPECHECK (unless sentinel-hit or no heavy phase) — no `QG_GOVERNOR_DISABLE` is set anywhere in any
+  workflow (fleet-wide grep, zero hits), so the glue-runner leg does NOT skip the governor call. `qg_governor_acquire()`
+  (`qg-host-governor.sh:593-595`) dispatches to `_qg_governor_acquire_reservation()` when `QG_GOVERNOR_MODE=reservation`
+  — confirmed this VM's own interactive slot shell env also runs `QG_GOVERNOR_MODE=reservation` (installed via
+  `install-qg-governor-shell-env.sh` sourcing `.env.local`; live-checked: `QG_GOVERNOR_MODE=reservation`,
+  `QG_HOST_CONCURRENCY=6` in this very session's env) — so BOTH surfaces run the identical reservation-mode function.
+  **The actual gap**: the reservation ledger's location is `_qg_ledger_dir()` → `_qg_shared_root()`
+  (`qg-host-governor.sh:269-278`), whose `case` statement resolves DIFFERENTLY per caller — `WORKSPACE_ROOT` matching
+  `*/.tabs/*` (every interactive slot) → `${ws%/.tabs/*}` (this host: `/home/ubuntu/unified-trading-system-repos`), but
+  cwd matching `/opt/github-glue-runners*` (glue-runner CI, per `setup-glue-runners.sh`'s `RUNNER_BASE` default) → the
+  hardcoded `$_QG_GLUE_RUNNER_SHARED_ROOT` = `/opt/.qg-governor-glue-shared`. **Live-verified these are genuinely
+  disjoint, not a symlink**: both directories exist on this host (same filesystem device id `66305`) but different
+  inodes (`1624209` vs `524911`); the interactive-slot ledger (`~/unified-trading-system-repos/.benchmarks/qg-governor`)
+  has fresh entries as of 2026-08-10 (today), while the glue-shared ledger
+  (`/opt/.qg-governor-glue-shared/.benchmarks/qg-governor`) last wrote 2026-08-05 (consistent with
+  `deployment-service` + 14 other public repos being reverted off self-hosted runners that same day per
+  `self-hosted-qg-repos.txt`'s own changelog — fewer self-hosted callers since, though the 7 remaining private
+  self-hosted repos, incl. `agent-orchestrator`, should still be writing there on their next run). Also checked this
+  host currently has NO live `/opt/github-glue-runners*` install (`find /opt -iname '*glue*'` → only
+  `/opt/.qg-governor-glue-shared` + unrelated `/opt/glue-deploy`; no matching systemd units beyond the crash-loop
+  watchdog) — the glue-runner pools for the 7 still-self-hosted repos are evidently NOT colocated on THIS particular
+  host anymore, a separate fact from the ledger-split finding itself (worth folding into todo 2's live measurement, not
+  re-litigated here). **Answer: NO, they do not share the same reservation ledger** — this reconciles finding 4's
+  `governor queue-wait: 0s` observation: the CI leg wasn't bypassing the governor, it was correctly reporting zero wait
+  against ITS OWN (disjoint, and at the time near-empty) ledger while the interactive slots' load lived in a ledger the
+  CI leg never looks at, and vice versa — functionally equivalent to no shared admission control even though the code
+  path is identical. Filed the follow-up wiring todo above per this todo's own done-when instruction.
