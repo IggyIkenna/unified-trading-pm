@@ -101,25 +101,32 @@ context_scope:
       `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_13.md`. **Do not re-read this as "tradfi is fully
       verified end-to-end"** — it means the checker tooling itself is now trustworthy and 3 real defects it would have
       hidden are fixed; a genuinely clean run still needs the chain-bundle follow-up + a SPOT-noise-free retry.
-- [ ] [DATA] P0. **UNBLOCKED 2026-08-10 (this is the recommended follow-up pass the 2026-08-09 flag below asked
-      for)** — the databento account-level billing-suspension gate is confirmed resolved account-wide, not just for
-      the narrower MVP-of-MVP scope: live `DatabentoBaseClient.warmup()` → `metadata.list_datasets()` (an unscoped,
-      account-level call) succeeded 2026-08-10, no auth/suspended error — see
+- [ ] [DATA] P0. **UNBLOCKED 2026-08-10 (this is the recommended follow-up pass the 2026-08-09 flag below asked for)** —
+      the databento account-level billing-suspension gate is confirmed resolved account-wide, not just for the narrower
+      MVP-of-MVP scope: live `DatabentoBaseClient.warmup()` → `metadata.list_datasets()` (an unscoped, account-level
+      call) succeeded 2026-08-10, no auth/suspended error — see
       `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s Progress Log. Prior gate
-      (superseded, kept for history): ~~BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09,
-      see /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~. **Still blocked by a
-      SEPARATE, unrelated reason — the databento gate lifting does NOT clear this todo**: Phase D is not literally
-      green per the note above; do not start this until the chain-bundle follow-up
+      (superseded, kept for history): ~~BLOCKED-OPERATOR-DECISION (databento account billing-suspended 2026-08-09, see
+      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~. **BILLING GATE LIFTED
+      2026-08-10** — the databento account billing-suspension is resolved account-wide (live-reverified 2026-08-10:
+      `metadata.list_datasets()` succeeded, 29 datasets, no auth/suspended error; real metered `GLBX.MDP3` ES.FUT and
+      `XCBF.PITCH` VX.FUT pulls both succeeded — see
+      `/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`). **Still blocked by a SEPARATE,
+      unrelated reason — the databento gate lifting does NOT clear this todo**: Phase D is not literally green per the
+      note above; do not start this until the chain-bundle follow-up
       (`tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4, CBOE VIX + 15 micro-contract codes + 8
-      sector-identity codes) is resolved or the operator explicitly accepts the current evidence as sufficient.
-      **MVP backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single
-      Databento IP, throughput-fixed) and verify manifest-counted canonical rows for each MVP cell.
+      sector-identity codes) is resolved or the operator explicitly accepts the current evidence as sufficient. **MVP
+      backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single Databento IP,
+      throughput-fixed) and verify manifest-counted canonical rows for each MVP cell.
 - [ ] [DATA] P1. **UNBLOCKED 2026-08-10** — same databento resolution as the MVP backfill readiness gate above; this
       todo's remaining blocker is purely its dependency on that gate above (and, transitively, the chain-bundle
       follow-up it's still blocked on — see that todo's note). Prior gate (superseded, kept for history):
-      ~~BLOCKED-OPERATOR-DECISION (depends on the MVP backfill readiness gate above, itself blocked on databento
-      account billing-suspended 2026-08-09, see
-      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~. **Post-full-backfill
+      ~~BLOCKED-OPERATOR-DECISION (depends on the MVP backfill readiness gate above, itself blocked on databento account
+      billing-suspended 2026-08-09, see
+      /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md)~~. **BILLING GATE LIFTED
+      2026-08-10** — the databento account billing-suspension is resolved account-wide (live-reverified 2026-08-10:
+      `metadata.list_datasets()` succeeded; real metered `GLBX.MDP3`/`XCBF.PITCH` pulls both succeeded — see
+      `/plans/active/tradfi_databento_billing_unblock_vix_yahoo_floor_2026_08_10.md`). **Post-full-backfill
       reconciliation RUN checkpoint (both raw-tick and candles layers)** — after the MVP backfill readiness gate above
       goes green, run `/data-pipeline-reconciliation --asset-group tradfi` against PROD as this terminal gate's final
       verification step (added per `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md` §11's
@@ -138,13 +145,13 @@ context_scope:
 
 - **2026-08-10 (live-verification session)**: acted on the 2026-08-09 na-eligibility-audit flag below asking for a
   direct-read follow-up pass. Independently live-verified Databento account access is restored — an unscoped
-  `DatabentoBaseClient.warmup()` → `client.metadata.list_datasets()` call succeeded (29 datasets, no
-  auth/suspended error), stronger evidence than the 2026-08-09 in-scope-only verification since it's not limited to
-  the MVP-of-MVP scope list. Lifted the databento-specific citation on both open todos (P0 MVP backfill readiness
-  gate, P1 post-full-backfill reconciliation checkpoint) — see each item's `UNBLOCKED 2026-08-10` note. **Neither
-  todo is dispatchable yet**: the P0 gate's SEPARATE chain-bundle-sampler blocker
-  (`tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4) is untouched by this pass and remains open; the P1
-  todo inherits that same block transitively. Doc stays NA, still genuinely gated (by a different blocker now).
+  `DatabentoBaseClient.warmup()` → `client.metadata.list_datasets()` call succeeded (29 datasets, no auth/suspended
+  error), stronger evidence than the 2026-08-09 in-scope-only verification since it's not limited to the MVP-of-MVP
+  scope list. Lifted the databento-specific citation on both open todos (P0 MVP backfill readiness gate, P1
+  post-full-backfill reconciliation checkpoint) — see each item's `UNBLOCKED 2026-08-10` note. **Neither todo is
+  dispatchable yet**: the P0 gate's SEPARATE chain-bundle-sampler blocker
+  (`tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4) is untouched by this pass and remains open; the P1 todo
+  inherits that same block transitively. Doc stays NA, still genuinely gated (by a different blocker now).
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) — swapped 2 general codex/sibling-plan entries for
   the 2 real `EXCHANGE_CODE_TO_NAME` source files the blocking chain-bundle issue names, since both open todos gate on
   that contradiction.

@@ -140,9 +140,9 @@ discipline for whoever executes these:
       reference-capture restore actually running, and the second noting it's now genuinely dispatchable. Repo:
       unified-trading-pm.
 
-- [ ] [DOCS] P1. **Un-gate `tradfi_phase_d_terminal_gate_2026_07_24.md`'s 2 billing-blocked todos, PRESERVE the separate
-      Phase-D-completeness caveat.** Grep-check: `grep -c "BILLING GATE LIFTED 2026-08-10" <file>` — skip if ≥1. The 2
-      todos matching `(databento account billing-suspended 2026-08-09` need the billing citation replaced with
+- [x] ✅ [DOCS] P1. **Un-gate `tradfi_phase_d_terminal_gate_2026_07_24.md`'s 2 billing-blocked todos, PRESERVE the
+      separate Phase-D-completeness caveat.** Grep-check: `grep -c "BILLING GATE LIFTED 2026-08-10" <file>` — skip if
+      ≥1. The 2 todos matching `(databento account billing-suspended 2026-08-09` need the billing citation replaced with
       `**BILLING GATE LIFTED 2026-08-10**` + the same evidence line as above. **Do NOT clear the todo's OTHER, separate
       blocker**: `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (`status: open`) has a confirmed, still-open
       CBOE VIX canonical-name (`VIX`→`VX`/`VX.FUT`) translation bug making the checker/sampler tooling misreport CBOE
