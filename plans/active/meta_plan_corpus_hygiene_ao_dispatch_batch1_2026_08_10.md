@@ -1,0 +1,267 @@
+---
+doc_type: plan
+title:
+  Plan-corpus hygiene AO batch 1 — 17 bounded, worker-determinable items extracted from the 28 live
+  `ag_closeout_audit_*_parked_*.md` docs (2026-08-10 operator review)
+summary: >-
+  First AO-dispatch batch drawn from the PARKED-findings corpus rather than from satellite plans. A 2026-08-10 operator
+  review of all 28 live `ag_closeout_audit_<tranche>_parked_<date>.md` docs found 62 open todos of which only ~1/3 were
+  real, uncovered, human-needing work: ~22 were mechanical corpus hygiene (named-doc/named-field `asset_group` retags,
+  stale-claim fixes, checkbox reconciliation) that the audit run could simply have executed, 5 were informational
+  tombstones with no actor or done-when, and several were the SAME unresolved finding re-parked into a fresh dated doc
+  every run (one ran 7 days across 5 docs, self-labelling "carried, 7th day"). Every doc was pinned `assigned_vm: NA`
+  because AO-eligibility was being judged PER DOC — one operator-gated todo pinned the whole doc, so its bounded
+  siblings never dispatched. This plan extracts the bounded slice and dispatches it. Three items were additionally
+  RETAGGED off `[OPERATOR]` under `task_template.md` finding U (2026-07-27 operator ruling — read-only diagnostics and
+  named-launcher relaunches are not operator-gated): the DP-VM-003 relaunch, the tradfi triple-dispatch investigation,
+  and the `[ci, cross-cutting]` dual-tag content call. The recurrence is closed separately in
+  `cursor-configs/skills/ag-closeout-audit/SKILL.md` (new HARD section "Three things that must NOT reach a parked doc").
+status: active
+nature: process
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-pm, agent-orchestrator, unified-trading-system-ui, instruments-service]
+scope: [engineer, admin]
+tags: [meta, ao-dispatch, plan-hygiene, ag-closeout-audit, parked-findings, asset-group-retag, batch-1, finding-u-retag]
+related:
+  [
+    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
+    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
+    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
+    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md,
+    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_10.md,
+    /plans/active/issues/ag_closeout_audit_ci_parked_2026_08_10.md,
+    /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_06.md,
+    /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_07.md,
+    /plans/active/issues/ag_closeout_audit_ui_parked_2026_08_08.md,
+    /plans/active/issues/ag_closeout_audit_tradfi_parked_2026_08_10.md,
+    /plans/active/issues/ag_closeout_audit_prediction_parked_2026_08_09.md,
+    /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_finalize_2026_08_10.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/task_template.md,
+  ]
+created: "2026-08-10"
+last_updated: "2026-08-10"
+parent_epic: agent_operating_framework_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: refactor
+estimate_baseline_ai_days: 1.5
+estimate_calibrated_ai_days: 0.6
+assigned_role: infra
+effort: medium
+drift_direction: none
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on: []
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/task_template.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
+    /scripts/docs/docspec.py,
+  ]
+source: >-
+  Operator review 2026-08-10 (interactive session, slot 1) of all 28 live `ag_closeout_audit_*_parked_*.md` docs.
+  Operator question: "why can't we make things like these AO plans? essentially they are tiny todos, their scope is
+  understood, and this would auto-heal the issues." Verified mechanically ingestible —
+  `agent-orchestrator/server/regen_backlog_from_plan.py:1799-1807` scans `plans/active/issues/` and ingests any doc
+  declaring an `assigned_vm` (186 of 456 issue docs already do); the `NA` on the parked docs was a per-doc choice, not a
+  structural rule. Every target's current `asset_group` and `locked_by` was verified live before this plan was written
+  (all 17 unlocked; 2 originally-named targets found already archived and dropped from scope).
+---
+
+# Plan-corpus hygiene — AO dispatch batch 1 (2026-08-10)
+
+## Why this batch exists
+
+`/ag-closeout-audit` correctly routes AO-eligible work OUT of its parked doc and into an
+`<ag>_satellite_ao_dispatch_batchN` plan. That worked for satellite-doc findings. It did NOT work for findings the audit
+generated about the **plan corpus itself** — a wrong `asset_group`, a stale "0 open todos" claim, an unflipped checkbox
+whose evidence the run had just cited. Those landed in the parked doc as `[DOCS] P3` todos on an `assigned_vm: NA` /
+`execution_scope: local-only` doc, where nothing could ever pick them up. The oldest in this batch has been sitting
+since 2026-08-01.
+
+Two independent causes, both now fixed:
+
+1. **The audit parked mechanical fixes instead of executing them.** The `ao` tranche's own 2026-08-10 run did the
+   opposite — it fixed its mistags in-run under the Orthogonality HARD CHECK and shipped them
+   (`unified-trading-pm@60b2953cc5`). The same day, the `cross-cutting` and `ci` runs parked the identical class of
+   work. Closed by SKILL.md's new "Three things that must NOT reach a parked doc" § rule 1.
+2. **AO-eligibility was judged PER DOC, not per todo.** Verbatim from a 2026-08-10 `/na-eligibility-audit` verdict on
+   `ag_closeout_audit_ci_parked_2026_08_10.md`: _"Todo 1 (the 4-doc `ci`↔`infrastructure` retag pass) reads as
+   bounded/mechanical on its own, but the whole-doc RECLASSIFY bar requires every open todo to clear, and todo 2 does
+   not — doc stays NA."_ One un-dispatchable sibling pinned a bounded todo indefinitely. This plan is the workaround
+   (extract the bounded slice into its own dispatchable doc); the whole-doc-bar question itself is a
+   `/na-eligibility-audit` SKILL.md design issue and is filed as its own follow-up, not silently fixed here.
+
+## Scope discipline for every todo below
+
+- **The tag value is a content call the worker makes and states.** Where this plan names two candidate tags, read the
+  target doc and pick one, recording the reasoning in the Progress Log. Do not leave a dual-tag in place — a doc belongs
+  to exactly ONE tranche (Orthogonality HARD CHECK).
+- **Retag = frontmatter `asset_group` only.** Do not restructure, re-prioritise, or archive the target as a side effect
+  unless the todo says so explicitly.
+- **Verify before editing**: re-read the target's current `asset_group` and `locked_by` at execution time. This plan's
+  values were correct as of 2026-08-10 09:35 but the corpus is live. A locked target → skip, note it, do not force.
+- **Do not edit the parked docs.** Their checkbox reconciliation is handled centrally by todo 17, once, to avoid N
+  workers writing the same files concurrently.
+
+## Todos
+
+- [ ] [DOCS] P1. **Retag `/plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md`** `asset_group`
+      `[cross-cutting]` → `[ui]`. **Flagged urgent on 3 consecutive audit days** (2026-08-07, -08, -10) and never
+      actioned: the doc records a live unauthenticated prod endpoint with all 4 fix-steps still open, and the wrong
+      tranche tag is why no tranche's closeout ever claimed it. **Done when**: `asset_group: [ui]` and the doc is named
+      in `ui`'s consolidated-closeout membership. Also report in the Progress Log whether those 4 fix-steps are still
+      open — if they are, that is a P1 security finding needing its own escalation, not a retag follow-up.
+- [ ] [DOCS] P2. **Collapse the 4 `[ci, infrastructure]` dual-tags to `[ci]`** —
+      `ci_pipeline_speed_and_cost_redesign_     2026_08_05.md`,
+      `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`,
+      `self_hosted_runner_public_repo_revert_2026_08_05.md`, `shared_ci_workflow_repo_extraction_2026_08_06.md` (all in
+      `/plans/active/issues/`). The `ci` tranche's 2026-08-10 audit already confirmed all 4 CI-pipeline-primary by
+      content. **Done when**: all 4 read `asset_group: [ci]`.
+- [ ] [DOCS] P3. **Retag the 3 surviving `cross-cutting` 2026-08-07 findings to their real owner** (all in
+      `/plans/active/issues/`): `deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md` → `[ci]` or
+      `[infrastructure]` (audit recommended `ci`, `infrastructure` defensible — pick by content);
+      `provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md` → `[ci]`;
+      `qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md` → `[infrastructure]`. **Note**: the other 2 targets
+      that audit named (`agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md`,
+      `alerting_service_deploy_chain_blocked_by_layered_cicd_bugs_2026_08_06.md`) were verified 2026-08-10 as already
+      archived under `/plans/archive/2026_08/issues/` — out of scope, no action. **Done when**: all 3 carry a single
+      real tranche tag.
+- [ ] [DOCS] P3. **Retag the 12 outstanding `cross_cutting_parked_2026_08_08` findings** (its findings 1-9 and 11-13;
+      finding 10 `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` was already fixed to
+      `[infrastructure]` by the `ao` tranche's 2026-08-10 run — skip it). Read that parked doc's findings section for
+      each target's recommended owner (`ao` ×3, `ci` ×6, `infrastructure` ×3, `meta` ×1) and verify the recommendation
+      against the target's own content before applying. Targets verified still un-retagged 2026-08-10. **Done when**:
+      all 12 carry a single real tranche tag, none retains `cross-cutting`.
+- [ ] [DOCS] P3. **Retag the 5 remaining 2026-08-01/08-06 cross-cutting mistags** (all in `/plans/active/issues/`):
+      `checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md` → `[ao]`;
+      `gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md` → `[infrastructure]`;
+      `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md` → `[infrastructure]`;
+      `unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md` → `[ui]`;
+      `over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md` `[defi, cross-cutting]` → `[ci]` or
+      `[infrastructure]` (owner TBD by content — pick one and say why). **Done when**: all 5 carry a single real tranche
+      tag.
+- [ ] [DOCS] P3. **Resolve the `[ci, cross-cutting]` dual-tag on
+      `/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`** to a single owner.
+      Two prior audits (2026-08-09 Finding 4, 2026-08-10 Finding 2) both read the content as closer to
+      `infrastructure`/`meta` than `ci` — i.e. the `ci` half may itself be wrong, not just the `cross-cutting` half.
+      **RETAGGED from `[OPERATOR]` per `task_template.md` finding U**: this is a named-doc, named-field content call a
+      worker can make and evidence, not a business/spend judgment, a credential gap, or an irreversible mutation. **Done
+      when**: a single `asset_group` value with the deciding content cited in the Progress Log.
+- [ ] [DOCS] P3. **Retag `/plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`**
+      from `[defi]` to `[ui]` or `[cross-cutting]` by content — its `repos:` is
+      `[unified-api-contracts, unified-trading-system-ui]` and the content is strategy-archetype DRIFT venue cleanup,
+      not defi-specific. Carried unactioned since 2026-08-07. **Done when**: retagged, reasoning in the Progress Log.
+- [ ] [DOCS] P3. **Fix the stale "0 open todos" claim in `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`**
+      (~line 745): it states `phantom_audit_estate_coverage_gap_2026_07_10.md` has "0 open todos
+      (closed/archived/record-only)" but that doc carries 1 open `[SCRIPT] P2` (widen the phantom audit to the full
+      ~47-bucket kind×AG matrix). Re-verified still wrong 2026-08-10. **Done when**: the line reflects the target's real
+      open-todo count.
+- [ ] [DOCS] P2. **Verify + flip the 3 already-resolved checkboxes** in
+      `/plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md`. The
+      resolving evidence is already cited in `ag_closeout_audit_cross_cutting_parked_2026_08_10.md` finding 3 —
+      re-verify each against the real artifact (do not flip on the parked doc's say-so alone), then flip. **Done when**:
+      each of the 3 is either `[x]` with cited evidence or explicitly re-confirmed still open.
+- [ ] [DOCS] P3. **Fix the stale Phase 7 wording in `/plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md`**
+      (~line 202): its Deferred item 8 still describes `artifact_pipeline_observability_2026_07_17.md`'s Phase 7 as
+      "STILL OPEN — prod is silent...", but Phase 7 closed 2026-08-07. Re-verified still stale 2026-08-10. **Done
+      when**: the wording matches Phase 7's actual closed state.
+- [ ] [DATA] P1. **Relaunch the stalled backfill VM DP-VM-003.** **RETAGGED from `[OPERATOR]` per `task_template.md`
+      finding U** (2026-07-27 operator ruling — `[OPERATOR]` is for a business/spend judgment, a human-only credential,
+      or an irreversible destroy; a named-launcher relaunch is none of those): AO workers have driven DP-VM-003
+      repeatedly and on the record (`agt-5065b7`, `agt-71ccbf`, `agt-c14d58`), and both cloud identities are
+      IAM-self-service. Follow `/codex/05-infrastructure/vm-launcher-runbook.md`: no fire-and-forget — verify STARTED,
+      verify ongoing progress against a real progress metric, and record a terminal state. Preemption recovery resumes
+      from measured PROGRESS, never replays `START_DATE`. **Done when**: relaunched and progressing, or a measured
+      verdict on why it cannot be, in the Progress Log.
+- [ ] [REVIEW] P3. **Investigate why the `tradfi` tranche received THREE `/ag-closeout-audit` dispatches on 2026-08-10**
+      — slot 26 (`all`-mode, no `$TRANCHE`), slot 25 (sharded, `agt-022d39`), slot 22 (sharded, `agt-a19d1f`). No
+      content harm resulted, but triple-dispatch is wasted fleet capacity and suggests the `all`-mode and sharded
+      schedulers do not deconflict. **RETAGGED from `[OPERATOR]` per finding U**: a read-only diagnostic can never be
+      operator-gated regardless of subject. **Done when**: the dispatch path is identified from AO scheduled-job
+      config/logs and either a fix is filed as a follow-up todo or the overlap is shown to be intentional.
+- [ ] [SCRIPT] P3. **Dispatch a fresh `/plan-reconcile tradfi` pass** to complete the stalled
+      `plan_reconciler_findings_tradfi_2026_08_09.md` run from STEP 4 onward and file its 5 named P0/P1 candidates.
+      Scope note: this is the WORKER half only — clearing that doc's `locked_by` needs `[unlock-plan]`, which stays
+      operator-only (see this batch's Deferred section). Run the pass and write findings to a NEW dated doc if the
+      original is still locked. **Done when**: STEP 4 onward is complete and the 5 candidates are filed.
+- [ ] [DATA] P3. **Raise the per-date subprocess timeout in the DeFi MDPS candle backfill** above 1800s for DeFi years
+      with 10K+ instruments, per `/plans/active/issues/defi_mdps_candle_backfill_fleet_outcome_2026_08_06.md`'s sole
+      remaining open item (its `[DATA] P2` relaunch item is already done). Confirmed 2026-08-10 as NOT covered by
+      `defi_satellite_ao_dispatch_batch11_2026_08_09.md`. **Done when**: the timeout is raised to a value justified by
+      measured per-date runtime at 10K+ instruments (state the measurement), and the change is shipped.
+- [ ] [REVIEW] P3. **Verify `instruments-service@62a8b1d8` actually covers parts 3a and 3b**, not just 3c, before anyone
+      treats `/plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md`'s fixture-pairing checkbox as
+      closable — 3a = registry-resolution, 3b = `mapped_sport_event_id` / `PredictionMarketCrossVenueMapping`
+      population, 3c = team-name canonicalisation (the only part the commit message claims). **Done when**: an explicit
+      per-part verdict against the real diff is written into that doc.
+- [ ] [DOCS] P3. **Archive `/plans/active/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`**
+      via the standard 6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — all 3
+      todos done, unlocked, and its own Progress Log already flags it archival-eligible. **Done when**: archived with
+      the SUPERSEDED/archived banner and every corpus referrer repointed.
+- [ ] [DOCS] P2. **Reconcile the 28 `ag_closeout_audit_*_parked_*.md` docs against this batch — ONE pass, one worker.**
+      (a) Flip each todo this batch has completed to `[x]` citing this plan; (b) collapse the cross-day duplicates into
+      the single oldest carrier and re-date it, per SKILL.md's new rule 3 — `self_dispatched_orphan_count` (5 copies:
+      infra 08-03/-04/-06/-08/-09), `Scope + conflict-check the 2 flagged batch-era candidates` (5 copies, same docs),
+      `deployment_api_prod_disable_auth_true` retag (2 copies: cross-cutting 08-07/-08); (c) convert the 5 "No action
+      needed on Finding N" tombstones (prediction 07-31 ×1, prediction 08-09 ×4) and the 4 "left unchecked for
+      continuity only" entries (cross-cutting 08-10) from `- [ ]` lines into prose in the findings body, per rule 2.
+      **This todo is deliberately single-owner** — every other todo in this batch is forbidden from editing a parked
+      doc, so these 28 files have exactly one writer. **Done when**: no finding appears in two parked docs, no
+      actor-less `- [ ]` remains, and the corpus-wide open count is reported before/after.
+
+## Deferred — genuinely operator-only, NOT dispatchable (per `task_template.md` finding U's positive test)
+
+Left in their parked docs deliberately. Each is finding U (i) a business/spend judgment or (ii) a human-held credential
+— not reflexive caution:
+
+| Item                                                                                                                                      | Parked in                  | Finding U class                            |
+| ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------------------------------------ |
+| Provision `glassnode-api-key` + `kaiko-api-key` GSM secrets, or decline                                                                   | cross-cutting 08-10        | (ii) human-held credential                 |
+| Provision `sportradar-api-key` + decide its scope, or decline                                                                             | cross-cutting 08-10        | (ii) human-held credential                 |
+| Approve/decline the ICE/OPRA Databento subscription add                                                                                   | cross-cutting 08-10        | (i) spend judgment                         |
+| Provision the IPRoyal residential-proxy credential (~$7 PAYG)                                                                             | tradfi 08-10               | (ii) human-held credential                 |
+| Supply the rate-limit-probe engineering spec                                                                                              | cross-cutting 08-10        | (i) design input, no data-derivable answer |
+| Approve draft batches (cefi batch16, ao batch19, infra batch11)                                                                           | cefi/ao/infra 08-10        | skill design — drafts never auto-ship      |
+| `[unlock-plan]` ×3 (`deployment_ui_smoke_failures…`, `plan_reconciler_findings_2026_08_06`, `plan_reconciler_findings_tradfi_2026_08_09`) | ui 08-09/-10, tradfi 08-10 | CLAUDE.md: ASK, never autonomous           |
+| Confirm the 6 transcribed rulings in `operator_ruling_record_ao_round5…`                                                                  | ao 08-10                   | operator-only by construction              |
+
+Open-ended design calls also left NA (not finding U, but not worker-determinable either): where future ruling sessions
+get recorded; the aggregate-zero-path signal design fork; the `context_scope` sufficiency metric; whether
+`/ag-closeout- audit all` mode should budget for the full per-tranche sweep; the `self_dispatched_orphan_count`
+generator addition; scoping the 2 flagged `CITE_RE`-hardening batch-era candidates.
+
+## Follow-ups
+
+- [ ] [DOCS] P2. **Fix `/na-eligibility-audit`'s whole-doc RECLASSIFY bar.** Its SKILL.md requires EVERY open todo in a
+      doc to clear before the doc can move off `assigned_vm: NA`, so a single operator-gated sibling pins bounded work
+      indefinitely — measured live on `ag_closeout_audit_ci_parked_2026_08_10.md` (2026-08-10 verdict quoted above). The
+      fix is a per-todo verdict with a split path (extract the bounded slice into a batch, keep the rest NA), the shape
+      this plan had to apply by hand. **Done when**: the skill emits per-todo verdicts and names the extraction path.
+
+## Codex SSOTs
+
+- `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — the 6-step archival ritual (todo 16)
+- `/codex/11-project-management/doc-frontmatter-schema.md` + `/scripts/docs/docspec.py` — `asset_group` enum (all
+  retags)
+- `/codex/05-infrastructure/vm-launcher-runbook.md` — no fire-and-forget, progress-metric verification (todo 11)
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § Dispatch-scope eligibility — the bar every
+  todo here had to clear
+- `/codex/11-project-management/cross-reference-path-convention.md` — leading-slash refs
+
+## Progress Log
+
+- **2026-08-10** — Authored from an operator review of all 28 live parked docs (interactive session, slot 1). Verified
+  before writing: `plans/active/issues/` IS AO-ingestible (`regen_backlog_from_plan.py:1799-1807`, 186/456 issue docs
+  already `assigned_vm: planning`), so the parked docs' `NA` was a per-doc choice not a structural rule; all 17 targets
+  unlocked; 2 originally-named targets (`agent_orchestrator_stale_pm_workflow_ref…`, `alerting_service_deploy_chain…`)
+  already archived and dropped from scope; `autostash_pop…` already retagged by the `ao` run and skipped. Three items
+  retagged off `[OPERATOR]` under finding U. Recurrence closed in SKILL.md (3 edits: coverage bar, finding-U positive
+  test in the operator-gated taxonomy, new "Three things that must NOT reach a parked doc" HARD section).
