@@ -123,26 +123,14 @@ Investigate and fix the Cloud Run Job's execution path:
       OOM-killed with "Container terminated on signal 9" at RSS 2040-2475MiB. Job image
       (market-tick-data-service:latest), args (--operation collect-risk-params --mode batch), env, and SA all confirmed
       correct — pure memory issue.
-- [x] ✅ [DATA] P1. Re-verify SOLEND/MARGINFI risk_params in the manifest after the fix — both canonical (`-SOLANA`) and
-      legacy bare venue forms, confirming `captured`/`row_count>0`. Repo: market-tick-data-service. — **Verified
-      2026-08-10: data still zero fleet-wide.** OOM fix confirmed working (execution succeeded, 472 manifest entries, no
-      signal-9), but ALL 12 venues still `empty_confirmed`/`row_count=0`. SOLEND-SOLANA/SOLEND/MARGINFI-SOLANA: ZERO
-      manifest rows (not even registered). MARGINFI: 56 rows, ALL `empty_confirmed`/`row_count=0`. MORPHO: 1,432 rows,
-      ALL `empty_confirmed`(966) or `expected_unattempted`(466). OOM was necessary but NOT sufficient — the zero-row
-      root cause is distinct from the memory crash. Todo 1 (deeper diagnosis: compare Cloud Run Job vs manual VM
-      execution path) is now the critical blocker.
+- [ ] [DATA] P1. Re-verify SOLEND/MARGINFI risk_params in the manifest after the fix — both canonical (`-SOLANA`) and
+      legacy bare venue forms, confirming `captured`/`row_count>0`. Repo: market-tick-data-service.
 
 ## Progress Log
 
 - **2026-08-10 (slot 23, data_engineering)**: Diagnosed + fixed todo 2. Root cause: OOM kill — 2Gi insufficient for
   ~42M-row defi availability index bulk_load(). Fixed: 2Gi→8Gi + CPU 1→2 (live via gcloud run jobs update + terraform
   sync at deployment-service@2726759c). Re-ran: execution 42bqr succeeded (472 manifest entries).
-- **2026-08-10 (slot 23, data_engineering)**: Re-verified SOLEND/MARGINFI (todo 3). OOM fix confirmed working (no
-  signal-9), but data still zero fleet-wide. SOLEND-SOLANA/SOLEND/MARGINFI-SOLANA: ZERO manifest rows (not even
-  registered as venues). MARGINFI: 56 rows, all `empty_confirmed`/`row_count=0`. MORPHO: 1,432 rows, all
-  `empty_confirmed`(966)/`expected_unattempted`(466). ALL 12 venues zero. OOM was necessary but not sufficient — the
-  zero-row root cause is distinct from the memory crash. Todo 1 (deeper diagnosis: manual VM vs Cloud Run Job execution
-  path comparison) is now the sole remaining blocker.
 - **2026-08-10 (slot 30, data_engineering)**: Filed during the P2 follow-up re-check in
   `mtds_instruments_metadata_hive_canonicalisation_reader_gap_2026_07_26.md`. Evidence: `read_availability_index` on
   `market-data-tick-defi-prd-central-element-323112`, filtered `data_type=risk_params`/`date=2026-08-10`, showed all 12

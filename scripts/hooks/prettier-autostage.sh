@@ -47,20 +47,7 @@ fi
 # FF-pull cron skips it and the slot stops syncing (observed 2026-06-02: PM slot,
 # 69-file prettier reflow residue from aborted commits). Mirror check-branch-drift.sh's
 # condition and no-op early so an about-to-be-blocked commit leaves NO residue.
-#
-# 2026-08-10 (pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md F3): this
-# condition must MIRROR check-branch-drift.sh, which is what the paragraph above says it is
-# doing — and that gate has since gained an advisory mode, so the mirror had gone stale.
-# DRIFT_GATE_ADVISORY=1 means a reconciling wrapper is driving the commit and the drift gate
-# will NOT abort it, so the residue scenario this guard protects against cannot occur; skipping
-# the format there is pure downside. It was real downside: PM is behind origin almost
-# continuously (60-80s commit inter-arrival, measured), so the fast path could essentially
-# never self-format, committed unformatted content, the hygiene hook autofixed it, and prek
-# then failed the run with "files were modified by this hook" — a closed loop with no exit.
-# The residue protection is UNCHANGED for a bare `git commit`, which is the case it was
-# written for (2026-06-02, 69-file reflow residue).
-if [[ -z "${GITHUB_ACTIONS:-}" && -z "${CI:-}" && "${SKIP_BRANCH_DRIFT:-0}" != "1" &&
-  "${DRIFT_GATE_ADVISORY:-0}" != "1" ]]; then
+if [[ -z "${GITHUB_ACTIONS:-}" && -z "${CI:-}" && "${SKIP_BRANCH_DRIFT:-0}" != "1" ]]; then
   _PA_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
   if [[ -n "$_PA_BRANCH" && "$_PA_BRANCH" != "HEAD" ]]; then
     git fetch origin "$_PA_BRANCH" --quiet 2>/dev/null || true

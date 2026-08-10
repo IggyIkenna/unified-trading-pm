@@ -140,21 +140,13 @@ Fix the writers + registry FIRST, then run the delete pass:
       direction SEGUNDA_DIVISION→LA_LIGA_2. Migrated all 15 FOOTYSTATS provider-id mappings + season structure +
       transfer windows + honest-coverage clusters + polymarket mappings + api-football team aliases + footystats drift
       script + bookmaker coverage JSON to LA_LIGA_2. Updated tests. QG 12636 passed.
-- [x] ✅ [DATA] P1. Fix `FOOTYSTATS_HISTORICAL_SEASON_IDS` so the Spanish-2nd-division competition ids map to the
-      canonical key, and confirm the 15 ids mapped to `SEGUNDA_DIVISION` genuinely belong to one league (repo:
-      unified-api-contracts). — unified-api-contracts@e8df4dc37 (drift-script reverse-alias bridging); core
-      FOOTYSTATS_HISTORICAL_SEASON_IDS value changes absorbed into unified-api-contracts@3cca83603 (todo 2). Confirmed
-      all 16 season IDs (39,40,41,42,43,172,1670,2415,4167,4245,4249,6120,7592,9675,12467,15066) map to footystats
-      competition UID f5e5596b0efdef8e (URL slug: la-liga-2) — all belong to Spanish 2nd division.
+- [ ] [DATA] P1. Fix `FOOTYSTATS_HISTORICAL_SEASON_IDS` so the Spanish-2nd-division competition ids map to the canonical
+      key, and confirm the 15 ids mapped to `SEGUNDA_DIVISION` genuinely belong to one league (repo:
+      unified-api-contracts).
 - [ ] [DATA] P2. After the writer/registry fixes land: run the gated delete pass
       (`market-tick-data-service/scripts/sports/league_id_relocation/delete_instruments_store_sports_league_vocabulary_2026_08_04.py`)
       for the 12,988 verified-twin objects + fresh census = 0 for the 3 mappings; 928 differing-twin objects stay
-      quarantined pending a content-union decision (repo: market-tick-data-service / instruments-service). — RECOVERY
-      NOTE (main 2026-08-10): this script already exists as orphan commit `0dcddec1` (slot-22,
-      `market-tick-data-service`, "feat(sports): add gated delete-pass...", dry-run exit 0) — on `live-defi-rollout` it
-      is **1 ahead of origin and unshipped**. The worker picking up this todo MUST recover that commit
-      (`git -C <tabs>/22/market-tick-data-service show 0dcddec1`), verify against the migration script, and ship it via
-      quickmerge BEFORE running the pass — do NOT re-author it.
+      quarantined pending a content-union decision (repo: market-tick-data-service / instruments-service).
 
 ## Progress Log
 
@@ -166,12 +158,6 @@ Fix the writers + registry FIRST, then run the delete pass:
 - **2026-08-10 (slot 23, data_engineering)**: Shipped todo 1 — replaced raw build_league_id(country, name) slug with
   registry-first get_league_by_api_football_id(fixture.league.api_football_id) at instruments-service@12cafa1b. Falls
   back non-lossy to build_league_id() when api_football_id is None.
-- **2026-08-10 (slot 23, data_engineering)**: Verified + flipped todo 3. The FOOTYSTATS_HISTORICAL_SEASON_IDS fix was
-  already shipped as part of todo 2's unified-api-contracts@3cca83603 — all 16 suspect competition IDs map to LA_LIGA_2;
-  zero BRAZIL_SERIE_A / ENGLAND_PREMIER_LEAGUE in values; only SEGUNDA_DIVISION remaining is the
-  HISTORICAL_LEAGUE_ID_NORMALISATION_MAP alias. All 3 writer/registry fixes are now in place (todo 1: registry-first
-  league key, todo 2: registry dedupe + FOOTYSTATS migration, todo 3: verified). Todo 4 (gated delete pass) is the sole
-  remaining item — needs a fresh census confirming zero new SEGUNDA_DIVISION writes.
 - **2026-08-10 (slot 25)**: Cross-reference — the plan-level P2 checkbox in
   `/plans/active/sports_closeout_track_x_hygiene_2026_07_25.md` (backlog task `sports_closeout_track_x_hygiene-006`)
   tracks the SAME migration completion as this issue's todo 4 (the gated delete pass, `-81828e9c8a94`, currently queued

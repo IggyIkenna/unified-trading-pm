@@ -54,16 +54,3 @@ depends_on: []
   `auto_unpark__...-9798da269f23`=0, set_by slot-25 2026-08-10 09:51:52) and correctly so — its done-when (~0) is unmet.
   But nothing tracks the ~976-object completion pass itself; this doc owns it. Fleet impact of leaving it unowned: the
   parked re-census is the top idle-blocker-inferred source (17 events) holding ~270 downstream tasks.
-- **2026-08-10 (slot 15, data_engineering)** — Residual completion pass started:
-  - Fresh census (`census_all_af_entities_completion_2026_08_03.py`) confirmed slot 25's numbers byte-for-byte:
-    PLAYER_STATS needed=3 · INJURIES needed=334 · STANDINGS needed=271 · TEAMS needed=96 (grand total 704 across 4
-    entities). FIXTURE_STATS (136) + FIXTURE_LINEUPS (136) still from slot 25's snapshot = ~976 total.
-  - No `af-backfill-*`/`af-audit-*` VMs were running (singleton lock clear). Live API-Football `/status`:
-    remaining_daily_quota=135,443 (healthy).
-  - **Launched `af-backfill-20260810-102659`** (SPOT, `--entity INJURIES 2020-06-06 2026-08-10`) — vanished during boot,
-    likely SPOT preemption before `run.log` was written. **Re-launched `af-backfill-20260810-103218`** (on-demand,
-    `e2-standard-8`, same range/entity) — confirmed RUNNING and healthy via SSH at 10:35Z: `instruments_chunk_loop.sh`
-    active, chunk 1 processing dates from 2020-06-14, fetching INJURIES, rate-budget 167 req/min, manifest per-VM shard
-    writing. Fetched 0 INJURIES for early dates (2020-06-14, 2020-06-15 — expected for COVID-era sparse fixture
-    calendar). VM left running; next entities (STANDINGS/TEAMS/FIXTURE_STATS/FIXTURE_LINEUPS/PLAYER_STATS) queued behind
-    the singleton lock. Will monitor for completion via run.log → exit_code.

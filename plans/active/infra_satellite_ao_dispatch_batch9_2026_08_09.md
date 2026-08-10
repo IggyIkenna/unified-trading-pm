@@ -155,21 +155,16 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
       `cloudbuild.yaml` still references `_AR_REPO` instead of `_REGISTRY_REPO` before deleting). Done when: no live
       code path can produce a build using the stale `unified-trading` AR-repo name. Source:
       `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` findings 1-2. (repo: unified-trading-pm)
-- [x] ✅ [INFRA] P3. **Check + clean up the possibly-orphaned `api-contracts-build`/`api-contracts-feature-build` GCP
-      Cloud Build triggers.** Both confirmed dead + deleted 2026-08-10 (GCP-only todo; no repo commit). Evidence:
-      `gcloud builds     triggers describe api-contracts-build` / `api-contracts-feature-build`
-      (`--project=central-element-323112     --region=asia-northeast1`) both bind to the stale
-      `repositories/api-contracts` in connection `iggyikenna-github` — the GitHub repo was renamed
-      `api-contracts`→`unified-api-contracts` (`IggyIkenna/unified-api-contracts`;
-      `gh api repos/IggyIkenna/api-contracts` redirects to the new name). `api-contracts-build` (`^main$`): last build
-      2026-06-19, and `main` is pushed daily (2026-08-10T08:42Z, 07:06Z) with zero trigger builds — stale binding
-      receives no webhook events — while the current `unified-api-contracts-live-defi-rollout` trigger fires SUCCESS
-      daily (2026-08-10 10:21, 10:16, 09:56…). `api-contracts-feature-build` (`^feat/.*`): **0 builds ever**. Deleted
-      both via `gcloud builds triggers delete <name> --project=central-element-323112 --region=asia-northeast1 --quiet`
-      → `Deleted     [.../triggers/api-contracts-build]` + `Deleted [.../triggers/api-contracts-feature-build]`;
-      verified both absent from `gcloud builds triggers list` and the current `unified-api-contracts-live-defi-rollout`
-      trigger intact. Source: `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` finding 3. (repo:
-      unified-trading-pm / GCP project central-element-323112)
+- [ ] [INFRA] P3. **Check + clean up the possibly-orphaned `api-contracts-build`/`api-contracts-feature-build` GCP Cloud
+      Build triggers.** These look like a pre-rename leftover from before the repo became `unified-api-contracts` — a
+      separate `unified-api-contracts-live-defi-rollout` trigger already exists and covers current naming. Confirm via
+      each trigger's GitHub repo binding
+      (`gcloud builds triggers describe <name> --project=central-element-323112     --region=asia-northeast1`) whether
+      either still fires on real pushes; if confirmed dead, delete both (`gcloud builds triggers delete`). Done when:
+      both triggers are either confirmed-live (leave as-is, note why) or confirmed-dead-and-deleted, with the
+      verification command output cited as evidence. Source:
+      `issues/codex_drift_followups_dual_cloud_image_builds_2026_08_08.md` finding 3. (repo: unified-trading-pm / GCP
+      project central-element-323112)
 - [ ] [INFRA] P3. **Decide + fix `deployed_versions`/`deployed_versions_aws` manifest provenance.** Both
       `cloud-build-router.yml` and `cloud-build-router-aws.yml` write-intend these `workspace-manifest.json` fields on a
       successful build, but live state (verified 2026-08-08) shows `deployed_versions` present-but-empty
@@ -209,10 +204,3 @@ explicitly operator-gated and excluded here (stays with the source doc as its ow
   `.github/workflows/cloud-build-router.yml` +
   `scripts/self-hosted-runners/hosted-baseline/{cloud-build-router,image-build-validate}.yml`. Also fixed
   plan-discipline ratchet in `codex_vs_repo_docs_ssot_audit` (added Deferred banner). unified-trading-pm@809d6b8d22.
-- **2026-08-10 (slot 17, infra)**: Todo 3 shipped (GCP-only, no repo commit). Confirmed + deleted the orphaned
-  `api-contracts-build` / `api-contracts-feature-build` Cloud Build triggers in project central-element-323112 (region
-  asia-northeast1). Both bound to the stale `repositories/api-contracts` connection binding (repo renamed
-  `api-contracts`→`unified-api-contracts` in IggyIkenna org); `api-contracts-build` silent since 2026-06-19 despite
-  daily `main` pushes while the current `unified-api-contracts-live-defi-rollout` trigger builds SUCCESS daily;
-  `api-contracts-feature-build` had zero builds ever. Deleted both via `gcloud builds triggers delete --quiet` and
-  verified them absent from `gcloud builds triggers list` with the current trigger intact.

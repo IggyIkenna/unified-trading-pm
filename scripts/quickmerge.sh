@@ -1982,14 +1982,6 @@ _qm_restage_target_files() {
 _qm_locked_git_commit() {
   local lock_fd=222 lock_file rc
   lock_file="$(git rev-parse --git-dir 2>/dev/null)/quickmerge-commit.lock"
-  # pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10 (P0): the pre-commit drift
-  # gate is ADVISORY for quickmerge's own commit -- STAGE 0.4 already reconciles against origin
-  # and the push path re-reconciles on rejection, so "your commit sits on current origin" is
-  # enforced AFTER the commit, where it costs seconds instead of re-paying a 118s hook chain.
-  # Measured 2026-08-10 in unified-trading-pm: hook chain 118s vs 60-80s commit inter-arrival,
-  # so the gate fired on essentially every attempt. Scoped to this call and unset right after,
-  # so it never leaks; a bare human `git commit` keeps the hard block.
-  export DRIFT_GATE_ADVISORY=1
   # push-host-governor.sh (2026-08-09): host-wide validation-phase token (K=8 default) around
   # the hook-chain-running commit call itself, nested OUTSIDE this pre-existing per-checkout
   # flock (that one only prevents the prek-stash-restore race WITHIN one checkout; this one
@@ -1998,7 +1990,6 @@ _qm_locked_git_commit() {
   if [ -z "$lock_file" ] || [ "$lock_file" = "/quickmerge-commit.lock" ]; then
     git commit "$@"
     rc=$?
-    unset DRIFT_GATE_ADVISORY
     push_gov_release_validate
     return "$rc"
   fi
@@ -2008,13 +1999,11 @@ _qm_locked_git_commit() {
     rc=$?
     flock -u "$lock_fd" 2>/dev/null || true
     eval "exec ${lock_fd}>&-" 2>/dev/null || true
-    unset DRIFT_GATE_ADVISORY
     push_gov_release_validate
     return "$rc"
   fi
   git commit "$@"
   rc=$?
-  unset DRIFT_GATE_ADVISORY
   push_gov_release_validate
   return "$rc"
 }
