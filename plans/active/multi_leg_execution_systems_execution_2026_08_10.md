@@ -118,13 +118,11 @@ source: >-
       whose hedge fails (leader + 50 bps-penalty unwind), and a plain trade — driven through fresh paper and batch
       engines reproduces byte-identical keyed fills with zero deviations, proving the todo-3 fix did NOT break the ε=0
       spine. QG green, sentinel = shipping SHA, landed on LDR.
-- [x] ✅ [DATA] P1. **Re-run (or newly run) a real paper-trading session for a basis/arb strategy** —
-      strategy-service@5a8a014eed (analysis script + Progress Log evidence: 11-scenario sweep exercising real
-      leader/hedge sequencing, characterizing ~9 pp fill-rate overstatement, risk-visibility gap closed, ε=0 determinism
-      preserved) covering enough history to hit at least one genuine hedge-leg-failure scenario if the market data
-      supports it, and compare the resulting P&L/fill-rate figures against whatever was previously reported (if any
-      prior paper runs exist) to characterize how much the old flat-loop shortcut was overstating execution quality —
-      this is a real, evidence-backed answer to "how wrong were we," not a theoretical concern.
+- [ ] [DATA] P1. **Re-run (or newly run) a real paper-trading session for a basis/arb strategy** covering enough history
+      to hit at least one genuine hedge-leg-failure scenario if the market data supports it, and compare the resulting
+      P&L/fill-rate figures against whatever was previously reported (if any prior paper runs exist) to characterize how
+      much the old flat-loop shortcut was overstating execution quality — this is a real, evidence-backed answer to "how
+      wrong were we," not a theoretical concern.
 - [ ] [DOC] P2. **Update `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`** with the new
       multi-leg-specific verification the regression tests above establish, so this class of gap has a named, checkable
       invariant going forward rather than relying on someone noticing the same way this session did.
@@ -170,19 +168,3 @@ source: >-
   comparison with zero deviations. This validates determinism against the REAL leader/hedge/unwind sequencing the todo-3
   fix wired into the shared settlement path, not the old flat per-leg loop. Shipped `strategy-service@5a8a014eed`, QG
   green, landed on LDR.
-  - 2026-08-10 (todo 6, slot 10): **Paper-trading basis/arb analysis complete.** Ran a comprehensive paper-session
-    analysis (`strategy-service/scripts/paper_basis_analysis.py`, one-shot) exercising the REAL
-    `BenchmarkFillEngine.settle()` leader/hedge sequencing (the exact path `GroupBRunner._process_tick` calls in paper
-    mode) across 11 scenarios — 5 hedge-failure + 6 happy-path — including carry-basis spot+perp pairs and multi-leg
-    arbitrage trades. Key findings: (a) **Hedge fill-rate overstatement: ~9 pp** — old flat loop filled every leg with
-    market data independently (55% hedge fill rate across scenarios); new sequencing correctly models hedge failure (45%
-    fill rate). Old code would either KeyError on missing market state or produce single-leg fills with no risk signal.
-    (b) **Risk visibility gap closed** — old: unhedged risk INVISIBLE in 6/11 scenarios; new: risk SURFACED via unwind
-    penalty fills (`CLOSE_LEADER_IF_HEDGE_FAILS` → 50 bps on the leader), explicit missing-hedge records, or
-    `HOLD_LEG_AND_ALERT` exposure signals. (c) **ε=0 determinism PRESERVED** — all 3 regression tests pass (3/3, QG
-    green), confirming the determinism spine holds against real leader/hedge sequencing. (d) **No prior paper equity
-    data available for comparison** — GCS `paper_equity.parquet` requires Cloud Run credentials not on this shared dev
-    host; the overstatement is structural (not data-dependent): the old loop was blind to hedge-failure risk by
-    construction. The full paper-run CLI (`--operation paper-run`) was confirmed functional but gated on GCS
-    feature-data access — a follow-up would dispatch to a dedicated VM. Analysis script is one-shot per
-    `script-homes.md`.

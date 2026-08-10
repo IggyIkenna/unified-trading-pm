@@ -226,6 +226,3 @@ harsh_orchestrator/backlog.yaml
 # in here. With the root cause closed, this file can safely go back to being git-tracked — the
 # whole POINT of the team-shared layer (permissions.allow, mcpServers, hooks) is that it should
 # sync via `git pull` like everything else, not require a manual per-clone `cp`.
-
-# Parked-WIP recovery notice left by tree-wip-guard.sh — per-checkout, never committed
-.parked-wip

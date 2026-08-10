@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 303 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 306 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (37)
+### cefi (38)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -75,6 +75,13 @@ by hand._
   — Finalize twin for `cefi_satellite_ao_dispatch_batch10_2026_08_08.md` (drafted 2026-08-08 by the /ag-closeout-audit
   skill, slot 8, dispatch agt-6bc9c4). Reconciling 6 source docs' checkboxes once batch10's 6 todos land, asking the
   operator…
+- [`cefi_satellite_ao_dispatch_batch13_2026_08_09`](./cefi_satellite_ao_dispatch_batch13_2026_08_09.md) — Thirteenth
+  AO-dispatch batch for cefi, sibling of `cefi_satellite_ao_dispatch_batch11_2026_08_09.md` (same item-level-extraction
+  run, same 19-doc candidate list — see that doc for the full methodology). This batch is the `parent_epic:…
+- [`cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize`](./cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize.md)
+  — Finalize twin for `cefi_satellite_ao_dispatch_batch13_2026_08_09.md`. Reconciling 2 source docs'
+  (`crypto_alpha_research_2026_07_24.md`, `l2_book_microstructure_capture_2026_07_13.md`) checkbox pointers once
+  batch13's 2 todos land, and…
 - [`cefi_satellite_ao_dispatch_batch17_2026_08_10`](./cefi_satellite_ao_dispatch_batch17_2026_08_10.md) — Seventeenth
   AO-dispatch batch for cefi. Extracted from 2 docs found `orphaned_never_touched` + AO-eligible by the 2026-08-10
   `/ag-closeout-audit cefi` run's Phase 1 (both were `status: open`, never cited by any of the 20 discovered cefi…
@@ -117,9 +124,6 @@ by hand._
 - [`data_completion_cefi_2026_07_15_finalize_2026_07_27`](./data_completion_cefi_2026_07_15_finalize_2026_07_27.md) —
   Gated closeout for data_completion_cefi_2026_07_15.md -- machine-held via depends_on + gate_on_depends: true until all
   of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once its AO-dispatched todos ship…
-- [`data_pipeline_alert_storm_root_cause_batch_2026_08_10`](./data_pipeline_alert_storm_root_cause_batch_2026_08_10.md)
-  — One live underneath) was traced end-to-end rather than triaged alert-by-alert. The storm itself was the primary bug:
-  the emitting `uts-prod-dp-exit-code-monitor` is a Cloud Run JOB on a */5 schedule (PROVEN via `gcloud logging read` —…
 - [`data_pipeline_check_mdps_features_2026_07_20`](./data_pipeline_check_mdps_features_2026_07_20.md) — Extend the
   shared UTL `pipeline_e2e_check` engine to two new services — market-data-processing-service (candle derivation) and
   features-service (feature compute) — with thin per-service `scripts/pipeline_e2e_check.py` drivers + two Claude…
@@ -404,7 +408,7 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (39)
+### sports (38)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -416,9 +420,6 @@ by hand._
 - [`data_completion_sports_2026_07_24`](./data_completion_sports_2026_07_24.md) — Sports slice of the
   data-completion-to-100% program, split out of data_completion_to_100_all_ag_2026_06_21 (M-1) on 2026-07-24 per the
   plan line-cap remediation (plans/active/issues/plan_line_cap_remediation_2026_07_23.md,…
-- [`data_pipeline_alert_storm_root_cause_batch_2026_08_10`](./data_pipeline_alert_storm_root_cause_batch_2026_08_10.md)
-  — One live underneath) was traced end-to-end rather than triaged alert-by-alert. The storm itself was the primary bug:
-  the emitting `uts-prod-dp-exit-code-monitor` is a Cloud Run JOB on a */5 schedule (PROVEN via `gcloud logging read` —…
 - [`data_pipeline_check_mdps_features_2026_07_20`](./data_pipeline_check_mdps_features_2026_07_20.md) — Extend the
   shared UTL `pipeline_e2e_check` engine to two new services — market-data-processing-service (candle derivation) and
   features-service (feature compute) — with thin per-service `scripts/pipeline_e2e_check.py` drivers + two Claude…
@@ -637,7 +638,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (67)
+### cross-cutting (66)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -751,9 +752,6 @@ by hand._
   — The residual per-asset-group data-backfill/scope decisions forked out of
   data_pipeline_hardening_self_monitoring_2026_06_22.md's "TradFi pending work" section + the DeFi/TradFi correctness
   items surfaced during per-AG hardening dispatch,…
-- [`data_pipeline_alert_storm_root_cause_batch_2026_08_10`](./data_pipeline_alert_storm_root_cause_batch_2026_08_10.md)
-  — One live underneath) was traced end-to-end rather than triaged alert-by-alert. The storm itself was the primary bug:
-  the emitting `uts-prod-dp-exit-code-monitor` is a Cloud Run JOB on a */5 schedule (PROVEN via `gcloud logging read` —…
 - [`data_pipeline_alerts_batch_remediation_2026_07_15`](./data_pipeline_alerts_batch_remediation_2026_07_15.md) —
   "Operator pasted a dense batch of data-pipeline-alerts Slack alerts (2026-07-14 23:50 to 2026-07-15 00:19 UTC) —
   DP_RUN_MOSTLY_EMPTY across sports/cefi/defi/tradfi and DP_VM_EXIT_NONZERO for features-sports VMs — and asked (a) why…
@@ -1068,7 +1066,7 @@ by hand._
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) **[complete]** — Keep the UI quality-gate
   build cache warm so incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (16)
+### infrastructure (18)
 
 - [`codex_violations_ratchet_to_five_2026_06_10`](./codex_violations_ratchet_to_five_2026_06_10.md) — Ratchet all repo
   codex-violation budgets to ≤5 fleet-wide and split egregious oversized source files (registry.py 18k, orchestrator.py
@@ -1103,6 +1101,12 @@ by hand._
 - [`infra_satellite_ao_dispatch_batch13_finalize_2026_08_09`](./infra_satellite_ao_dispatch_batch13_finalize_2026_08_09.md)
   — Gated closeout for `infra_satellite_ao_dispatch_batch13_2026_08_09.md`, per the finalize-plan-coverage gate
   (task_template.md §4). Once the batch's single todo is done, reconciles the corresponding item back into…
+- [`infra_satellite_ao_dispatch_batch15_2026_08_10`](./infra_satellite_ao_dispatch_batch15_2026_08_10.md) — Fifteenth
+  AO-dispatch batch for the `infra` topic tranche, produced by `/ag-closeout-audit infra` (autonomous mode, 2026-08-10).
+  Two independent, conflict-clear sources: (1) `host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md` — the…
+- [`infra_satellite_ao_dispatch_batch15_finalize_2026_08_10`](./infra_satellite_ao_dispatch_batch15_finalize_2026_08_10.md)
+  — Gated closeout for `infra_satellite_ao_dispatch_batch15_2026_08_10.md`, per the finalize-plan-coverage gate
+  (task_template.md §4). Once both of the batch's todos are done, reconciles each item back into its own source doc…
 - [`infra_satellite_ao_dispatch_batch7_finalize_2026_08_04`](./infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md)
   — Gated closeout for `infra_satellite_ao_dispatch_batch7_2026_08_04.md`, per the finalize-plan-coverage gate
   (task_template.md §4, operator ruling 2026-07-24; machine-enforced by

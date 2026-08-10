@@ -102,7 +102,7 @@ context_scope:
   `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed-025` now `done_sha=0e9185d2c` — both re-done
   with checkbox still `- [ ]`), 14 are NEW, and unresolved grew 1,013→1,528. **Do NOT archive the parent doc** — the
   audit is not clean. Filed the full finding + per-row reopen/FLIP todos in
-  `plans/archive/issues/audit_false_done_16_rows_still_red_2026_08_10.md`. This todo stays `- [ ]` until a fresh audit
+  `plans/active/issues/audit_false_done_16_rows_still_red_2026_08_10.md`. This todo stays `- [ ]` until a fresh audit
   re-run exits 0 after the 16 rows are triaged.
 - **2026-08-10 (slot 11, review, task `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize-002`)**:
   **Todo 2 done — all 4 spot-checks (3 groups) independently CONFIRMED.** (1)

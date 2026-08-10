@@ -68,8 +68,8 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.0",
-    "deployment-api": "0.77.2",
-    "deployment-service": "0.124.3",
+    "deployment-api": "0.77.0",
+    "deployment-service": "0.124.2",
     "deployment-ui": "0.1.0",
     "execution-service": "0.57.0",
     "features-service": "0.81.0",
@@ -78,15 +78,15 @@
     "instruments-service": "0.101.0",
     "market-tick-data-service": "0.124.0",
     "system-integration-tests": "0.15.0",
-    "unified-api-contracts": "0.111.1",
-    "unified-trading-library": "0.78.0",
+    "unified-api-contracts": "0.111.0",
+    "unified-trading-library": "0.77.0",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.28.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.100.3",
     "greeks-service": "0.18.13",
     "trading-agent-service": "0.12.11",
-    "strategy-service": "0.55.1",
+    "strategy-service": "0.55.0",
     "ml-service": "0.58.0",
     "alerting-service": "0.61.2",
     "unified-trading-api": "0.4.0",
@@ -2045,7 +2045,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT failed — open for fixes",
+    "locked_reason": "SIT passed — validated + unlocked",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -2219,13 +2219,13 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.78.0",
-      "published_at": "2026-08-10T18:06:49Z",
+      "version": "0.77.1.dev8+gc92a04108",
+      "published_at": "2026-08-10T15:33:40Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.111.1",
-      "published_at": "2026-08-10T17:55:08Z",
+      "version": "0.111.1.dev2+g67316e9fc",
+      "published_at": "2026-08-10T16:22:19Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {

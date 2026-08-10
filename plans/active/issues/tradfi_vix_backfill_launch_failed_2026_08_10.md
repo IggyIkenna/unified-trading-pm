@@ -146,30 +146,6 @@ operations log (all times UTC):
       self-deleted), re-verify the consolidated manifest covers the full 2020-06-01→today window with real captured rows
       (row_count>0) across all years. Per-VM manifests already show data flowing; this is the terminal gate. (repo:
       market-tick-data-service)
-- [x] ✅ [DATA] P0. **DONE 2026-08-10 (main, Claude Code session) — the `market-tick-data-service@e14f358b` source=
-      kwarg bug (todo above) is NOT VIX-specific: it hit 6 CME futures roots too, one of them still actively failing
-      live when found.** Checked every `tradfi-bf-cme-ohlcv-1m-*` VM launched today (19 total, all pre-fix, 12:07-15:07
-      UTC — the 20-min fix landed at 16:56 UTC) for the same
-      `Manifest write failed... Multi-source manifest write     missing required source= kwarg` warning: **6 affected**
-      — `BTC-2021` (18 occurrences), `GC-2020` (119, still RUNNING and actively re-hitting it when found), `HG-2020`
-      (12), `MET-2025` (47), `NG-2020` (10), `SI-2020` (28). 13 others clean (the bug is per-underlying nondeterministic
-      within the same shared code path, not universal). **Action taken**: killed the still-running `GC-2020` VM
-      (`gcloud compute instances delete`, stopping the waste immediately); relaunched all 6 via
-      `launch-tradfi-bf-cme-ohlcv-1m.sh --only-root <ROOT> --year <YEAR>` (dry-run verified identical VM-name/date-range
-      targeting first). All 6 confirmed RUNNING with the fixed code — 0 manifest- write-failure occurrences on the
-      relaunches (checked `GC-2020`'s new run.log directly), real manifest rows landing
-      (`Manifest updated: date=2020-01-06 ... complete=True`). No separate "manifest rebuild" tool was needed —
-      relaunching with the fixed code IS the rebuild mechanism: the buggy writes left the affected dates' manifest rows
-      genuinely absent (not just stale), so the launcher's existing skip-if-captured pre-flight check correctly treats
-      them as real gaps needing a fetch, while dates that were never affected stay untouched. **Blast-radius check
-      across other asset groups (operator ask)**: sports and defi adapters have ZERO chain-bundle
-      (`futures_chain`/`options_chain`) manifest-write code path at all — architecturally cannot hit this bug, no
-      further action. CEFI's Tardis adapter (`tardis_cefi_shards.py`) DOES route through the same shared
-      `manifest_finalize._write_bundle_shard_row` function — checked all 4 `cefi-queue-heavy-binancefutu-*` backfill VMs
-      from the last 2 weeks (2026-07-27 through 2026-08-09): **0 occurrences** — CEFI's chain-bundle cells are
-      registered single-source in UAC SOURCE_PRIORITY, so they never hit the "must pass source=" requirement this bug is
-      gated on. No CEFI/sports/defi manifest rebuild needed. Repo: deployment-service (relaunch),
-      market-tick-data-service (bug already fixed by slot-16, this todo is the blast-radius sweep + CME remediation).
 
 ## Progress Log
 

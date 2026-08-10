@@ -44,7 +44,6 @@ estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: fix
-archive_exempt: true
 locked_by:
 locked_since:
 supersedes:
@@ -99,12 +98,14 @@ gate-assessment evidence from slot-6 is recorded in this doc's Progress Log belo
 
 ## Recommended decision
 
-- [x] ✅ [DOCS] P2. **Bring `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` under the 1000L hard cap AND
-      prettier-clean it in one commit** — done 2026-08-10 (slot-9, `unified-trading-pm@74366a0e00`). Moved Progress Log
-      entries (2026-07-30 through 2026-08-10, 56 entries, 407 lines) + the ADDITIVE-FALLBACK investigation block
-      verbatim to `plans/archive/2026_08/defi_cefi_venue_chain_axis_contamination_history_2026_07_28.md` (507L,
-      prettier-clean). Parent now 553L (was 1008L), `prettier --check` clean, `check_line_caps.sh` SOFT only. All
-      `- [ ]`/`- [x]` todos preserved in parent; only history/prose moved.
+- [ ] [DOCS] P2. **Bring `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` under the 1000L hard cap AND
+      prettier-clean it in one commit** — mirror the tradfi resolution: move the older `## Progress Log` entries
+      (verbatim, nothing summarized) to a new
+      `plans/archive/2026_08/defi_cefi_venue_chain_axis_contamination_history_2026_07_28.md` record doc, leave a short
+      pointer note in the parent, and run pinned prettier `--write` on the parent so it is prettier-clean going forward.
+      Verified done-when: `wc -l` parent < 1000 AND `npx -y prettier@3.9.5 --check <parent>` clean AND
+      `check_line_caps.sh <parent>` exits 0 (SOFT only). Repo: unified-trading-pm. (Note: this must NOT delete any
+      `- [ ]`/`- [x]` todo — only history/prose; the P1 checkbox and all open todos stay in the parent.)
 - [x] ✅ [DATA] P1. **2026-08-10 gate re-check on the contamination P1 operator-ruling todo — recorded here because the
       contamination doc is blocked.** (1) Step-1 gate NOT MET:
       `probe_cefi_perp_funding_raw_coverage.py --start 2026-08-06 --end 2026-08-10` (fresh, list-only) = **0 objects for
@@ -128,9 +129,3 @@ gate-assessment evidence from slot-6 is recorded in this doc's Progress Log belo
   `npx prettier@3.9.5 --check` warns; `--write` on a copy changes line 25 + 245-298). Recorded the contamination P1 gate
   re-check evidence here (see the `- [x]` above) since the SSOT doc cannot accept it. Contamination doc's P1 checkbox
   stays `- [ ]`; the gated task was released with reason_code GATED pending the forward-gap backfill.
-- **slot-9 2026-08-10 (data_engineering, task
-  `defi_contamination_doc_over_cap_and_prettier_dirty_blocks_routine_edits-70fea8f1625b`)**: Flipped the P2 todo —
-  line-cap + prettier fix shipped `unified-trading-pm@74366a0e00`. Parent doc 1008L→553L, prettier-clean. Set
-  `archive_exempt: true` on this doc: both todos now done, but the doc should be user-archived (not auto-archived by the
-  next worker) so the operator can review the resolution before closing. The archive step (`git mv` + banner + referrer
-  sweep) is trivial and deterministic — a P3 archive-candidates cleanup.

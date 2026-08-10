@@ -168,8 +168,7 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       bad text, never reproduce it.) With the ruling now given: both banners corrected to cite the REAL ruling and to
       record that the claim originally ran ahead of its authority, the `related:` ref the archive copy of `2026_08_06`
       had lost (`[]` vs the active copy's `tradfi_consolidated_closeout_2026_07_18.md`) carried forward, both stale
-      active copies deleted (`unified-trading-pm@f989e49532`). The matching `ALLOWED_DUPLICATE_STEMS` shrink is written
-      and verified green locally but is NOT yet on origin — see the [SCRIPT] P2 todo below for why and what is left.
+      active copies deleted, and both stems removed from `ALLOWED_DUPLICATE_STEMS`.
 - [x] ✅ [DOCS] P3. **DONE 2026-08-10 — and the premise of this todo was wrong; correcting it is the finding.** Neither
       pair was content-diverged. `diff` reported 30 lines "only in the active copy" of
       `ao_satellite_ao_dispatch_batch2_2026_07_30.md`, and I recorded that as unique verification detail — it was the
@@ -193,21 +192,6 @@ all 17 pairs were byte-identical, so no divergence had accumulated.
       when**: each pair is either merged into one doc or split onto distinct slugs, both sides' findings are preserved
       (neither run's findings may be dropped on the grounds that the other exists), referrers are repointed, and all 3
       stems come off `ALLOWED_DUPLICATE_STEMS` leaving only `INDEX.md`.
-- [ ] [SCRIPT] P2. **Land the `ALLOWED_DUPLICATE_STEMS` 8→4 shrink** in
-      `scripts/plan-hygiene/check_create_only_archive_commits.py` (drop `plan_reconciler_findings_2026_08_06.md`,
-      `plan_reconciler_findings_tradfi_2026_08_09.md`, `ao_satellite_ao_dispatch_batch2_2026_07_30.md`,
-      `infra_satellite_ao_dispatch_batch7_2026_08_04.md` — all four pairs reconciled in
-      `unified-trading-pm@f989e49532`). The edit is written and verified locally (`ruff` clean; the guard reports
-      `no create-only archive/active duplicate pairs at HEAD` with the shrunk list), but **three failures unrelated to
-      it blocked the quickmerge re-gate**, which validates the whole current tree rather than just the named files — and
-      in a shared checkout that tree carries other sessions' in-flight work: (1) the QG duration budget, twice, under 12
-      concurrent QG runs / load 38; (2) a peer's UNCOMMITTED `cursor-configs/CLAUDE.md` edit pushing it 3 B over the
-      40,960 B cap while `HEAD` sat comfortably under at 40,804 B; (3) the unresolvable-sha regression filed as a
-      recurrence on `/plans/active/issues/plan_commit_sha_evidence_unresolvable_0f9b8a65ca_2026_08_10.md`. **Deferring
-      is safe**: with the stale entries still listed the guard merely over-exempts four pairs that no longer exist, so
-      it cannot miss a NEW duplicate — the failure mode is a stale allowlist, not a blind gate. **Done when**: the
-      shrink is on origin and the guard's list is the 3 `ag_closeout` stems + `INDEX.md`. **Blocked-on**: (3) above
-      being fixed by its owner, or a quiet host.
 
 ## Progress Log
 

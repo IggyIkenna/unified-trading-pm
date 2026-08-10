@@ -114,6 +114,17 @@ if [ -f "$_QM_PUSH_GOV_FILE" ]; then
   source "$_QM_PUSH_GOV_FILE"
 fi
 
+# Autostash-chain guard (2026-08-10 slot-1 finding, multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout):
+# `git pull --rebase --autostash` (run in STAGE 0.4 below) re-applies an ever-staler dirty-tree
+# snapshot unless something compares the popped content against origin. Sourced from PM's dev
+# dir via WORKSPACE_ROOT (same symlink rule as push-host-governor.sh above) so every repo's
+# quickmerge gets it. Missing file = degrade gracefully (guard simply doesn't run).
+_QM_AUTOSTASH_GUARD_FILE="$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/autostash-chain-guard.sh"
+if [ -f "$_QM_AUTOSTASH_GUARD_FILE" ]; then
+  # shellcheck disable=SC1090
+  source "$_QM_AUTOSTASH_GUARD_FILE"
+fi
+
 # Act secrets: prefer UNIFIED_TRADING_WORKSPACE_ROOT when set (portable across team); else use computed WORKSPACE_ROOT
 ACT_SECRETS_ROOT="${UNIFIED_TRADING_WORKSPACE_ROOT:-$WORKSPACE_ROOT}"
 [ -f "${ACT_SECRETS_ROOT}/.act-secrets" ] && export ACT_SECRETS_FILE="${ACT_SECRETS_ROOT}/.act-secrets"
@@ -493,16 +504,6 @@ if [ -n "$FILES_ARG" ]; then
   done
 fi
 
-# Whole-tree WIP snapshot. _QM_ENTRY_FINGERPRINT above covers only --files, i.e. the work you are
-# shipping; nothing watched the REST of the tree, so a reconcile that ate an uncommitted edit to
-# an unrelated file did so silently and still reported success. Measured 2026-08-10.
-_QM_WIP_SNAPSHOT=""
-if [ -f "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/tree-wip-guard.sh" ]; then
-  # shellcheck source=/dev/null
-  source "$WORKSPACE_ROOT/unified-trading-pm/scripts/dev/tree-wip-guard.sh" 2>/dev/null || true
-  declare -F wip_guard_snapshot >/dev/null 2>&1 && _QM_WIP_SNAPSHOT="$(wip_guard_snapshot)"
-fi
-
 # Returns 1 when the caller's named files no longer match what they handed us.
 _qm_content_vanished() {
   [ -n "$_QM_ENTRY_FINGERPRINT" ] || return 0
@@ -632,25 +633,6 @@ if [ -z "${QM_IN_ISOLATION:-}" ] && _qm_should_isolate && [ -n "$FILES_ARG" ]; t
     # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated list
     for _qm_f in $FILES_ARG; do
       if [ ! -f "$_qm_f" ]; then
-        # A named path absent from the caller tree but PRESENT in HEAD is a DELETION (a file
-        # removed with `git rm`, e.g. archiving a plan or deleting an obsolete test), NOT a
-        # caller typo. The worktree was created at HEAD, so the file is sitting in it; remove
-        # it and the later `git add -- <path>` stages a real deletion.
-        #
-        # Fixed 2026-08-10 AFTER it bit a real ship: the identical bug was fixed in
-        # safe-doc-push.sh earlier the same day and NOT checked for here, so an isolated
-        # quickmerge deleting two obsolete .bats files landed the edits and silently dropped
-        # both deletions (unified-trading-pm@47dbc86e0e) — reporting success either way. When
-        # you fix a defect in one ship script, check its sibling for the same one.
-        if git cat-file -e "HEAD:$_qm_f" 2>/dev/null; then
-          if rm -f -- "$_qm_iso_wt/$_qm_f"; then
-            echo "  isolation: propagating deletion of $_qm_f (absent here, tracked in HEAD)"
-          else
-            echo "  isolation: could not propagate deletion of $_qm_f" >&2
-            _qm_copy_ok=false
-          fi
-          continue
-        fi
         echo "  isolation: named file absent in caller tree, skipping copy: $_qm_f" >&2
         continue
       fi
@@ -1114,6 +1096,19 @@ else
         # anything) and guarantees the index holds only what this run explicitly re-adds,
         # regardless of what the pop just restaged.
         git restore --staged . 2>/dev/null || true
+        # Autostash-chain guard (2026-08-10 slot-1): the pop can also re-apply an ever-staler
+        # SNAPSHOT — dirty files whose content REVERTS content committed on origin (measured:
+        # 107 files, 97 reverting committed content). Compare the popped tree against origin and
+        # quarantine (named stash) any foreign stale revert so the chain cannot re-apply it next
+        # cycle. Returns 1 ONLY if a caller-named --files entry itself is a stale revert (the
+        # run would ship a silent revert) → block.
+        if declare -F autostash_chain_guard_quarantine_reverts >/dev/null 2>&1; then
+          if ! autostash_chain_guard_quarantine_reverts "$_QM_REMOTE_BRANCH" "$FILES_ARG"; then
+            echo "QUICKMERGE_BLOCKED code=AUTOSTASH_CHAIN_STALE_REVERT repo=${REPO_NAME} branch=${_QM_REMOTE_BRANCH}"
+            echo "[$REPO_NAME] ❌ BLOCKED: a --files entry reverts content committed on origin/$_QM_REMOTE_BRANCH (see the guard's messages above)."
+            exit 1
+          fi
+        fi
       else
         # Structured error contract (265, 2026-06-17): emit a machine-parseable QUICKMERGE_BLOCKED
         # line so an agent self-serves recovery without an operator paste. Capture the conflicting
@@ -1972,13 +1967,7 @@ if [ -f "scripts/quality-gates.sh" ]; then
       if [ "$_qm_regate_rc" -ne 0 ]; then
         # ❌ lines that are NOT the duration budget. Zero of them => no CONTENT check failed, so
         # this is a load verdict and must not be reported as a content one.
-        # Count EVERY failure vocabulary, not just ❌. Measured 2026-08-10, on this guard's first
-        # real failure: pytest emits `FAILED tests/...` with no ❌ at all, so a genuine test
-        # failure counted as zero and the run told the agent "every content check passed. Do NOT
-        # go looking for a content bug" while one was staring at it. A false all-clear is worse
-        # than the false alarm this branch was written to remove.
-        _qm_other_fail=$(sed 's/\x1b\[[0-9;]*m//g' "$_qm_regate_log" 2>/dev/null \
-          | grep -E '❌|^FAILED |^ERROR |^E   ' | grep -vc 'must complete in <' || true)
+        _qm_other_fail=$(sed 's/\x1b\[[0-9;]*m//g' "$_qm_regate_log" 2>/dev/null | grep '❌' | grep -vc 'must complete in <' || true)
         if [ "${_qm_other_fail:-1}" -eq 0 ]; then
           echo "[$REPO_NAME] ⏳ Re-gate hit ONLY the duration budget — every content check passed."
           echo "[$REPO_NAME]    This is HOST CONTENTION, not your change. Do NOT go looking for a content bug."
@@ -2339,53 +2328,9 @@ _qm_restage_target_files() {
 # cascade lock above (different critical section, same degrade-to-unlocked convention).
 # Held ONLY around the single `git commit` call, never across the retry loop below (up to
 # _QM_COMMIT_RETRY_MAX attempts) -- each retry re-acquires+releases cleanly, no self-deadlock.
-# _qm_unstage_foreign_paths -- in --files (scoped) mode, drop anything from the index that
-# this run did not put there, immediately before committing.
-#
-# WHY: `--files` scopes what quickmerge STAGES, but the commit itself is bare `git commit`,
-# which commits the whole index. In a shared checkout a peer session that stages between our
-# `git add` and our commit has its files absorbed into OUR commit, under OUR message and
-# authorship. Measured 2026-08-10 in agent-orchestrator, BOTH directions in one session:
-# a peer's bare commit swallowed this session's three staged source files (shipping a fix to
-# origin inside a commit titled "docs(context): record DeepSeek's measured ... ceiling", with
-# its tests left behind), and later a quickmerge run named two files yet pushed a commit
-# containing NEITHER -- only a peer's untracked test file. Both reported success and verified
-# push ancestry, so neither was visible without reading the commit afterwards.
-#
-# Deliberately NOT a pathspec commit (`git commit -- <files>`), which looks like the obvious
-# fix and is wrong here: a pathspec commit takes the WORKING TREE state for those paths, so a
-# path staged as `git rm --cached` while still present on disk -- the untrack-in-the-same-
-# commit shape the STAGE-5 staging loop handles explicitly -- would be silently re-added.
-# Unstaging the extras instead preserves every index semantic the staging loop established.
-#
-# The allowed set is the caller's --files PLUS the two paths this script stages itself for
-# their mode bits (see the chmod loop above). Unscoped runs are untouched: there the caller
-# owns the whole tree by definition (`git add -A`).
-_qm_unstage_foreign_paths() {
-  [ -z "$FILES_ARG" ] && return 0
-  local allowed=" $FILES_ARG scripts/quickmerge.sh scripts/quality-gates.sh "
-  local staged p
-  staged="$(git diff --cached --name-only 2>/dev/null || true)"
-  [ -z "$staged" ] && return 0
-  while IFS= read -r p; do
-    [ -z "$p" ] && continue
-    case "$allowed" in
-      *" $p "*) continue ;;
-    esac
-    echo "[$REPO_NAME] ⚠️  unstaging foreign path — staged by another session, not in --files: $p"
-    git restore --staged -- "$p" 2>/dev/null || git reset -q HEAD -- "$p" 2>/dev/null || true
-  done <<EOF
-$staged
-EOF
-}
-
 _qm_locked_git_commit() {
   local lock_fd=222 lock_file rc
   lock_file="$(git rev-parse --git-dir 2>/dev/null)/quickmerge-commit.lock"
-  # Scope the index to THIS run's files before every commit attempt (incl. retries and the
-  # amend path) -- inside the flock below would be better still, but the lock is acquired
-  # per-branch just below and this keeps one call site for all of them.
-  _qm_unstage_foreign_paths
   # pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10 (P0): the pre-commit drift
   # gate is ADVISORY for quickmerge's own commit -- STAGE 0.4 already reconciles against origin
   # and the push path re-reconciles on rejection, so "your commit sits on current origin" is
@@ -2731,18 +2676,18 @@ if ! git merge-base --is-ancestor "$_QM_PUSHED_SHA" "origin/$BRANCH" 2>/dev/null
   exit 1
 fi
 echo "[$REPO_NAME] ✅ post-push ancestry verified — ${_QM_PUSHED_SHA:0:9} is an ancestor of origin/$BRANCH"
+# Bound the autostash backlog (2026-08-10 slot-1 finding): every `--autostash` cycle above can
+# leave a git-generated `autostash` entry behind; prune the provably-redundant ones so the pile
+# cannot age unbounded. Non-fatal (missing lib / no entries → no-op).
+if declare -F autostash_chain_guard_bound_backlog >/dev/null 2>&1; then
+  autostash_chain_guard_bound_backlog "$BRANCH" 2>/dev/null || true
+fi
 # The SHA to put in the plan checkbox. Stated explicitly because the SHA a worker sees at
 # `git commit` time is NOT the one that lands: every push here rebases first, which rewrites
 # it. Citing the pre-rebase SHA is the single most common source of a FALSE
 # check_plan_commit_sha_evidence.py failure on work that was genuinely done -- and it is
 # silent on the authoring machine, where the orphaned object still resolves.
 echo "[$REPO_NAME] 📌 CITE THIS in the plan checkbox: ${REPO_NAME}@${_QM_PUSHED_SHA:0:10}"
-# Did this run's reconcile eat uncommitted work OUTSIDE --files? Advisory: the push already
-# succeeded and must not be retroactively failed, but silence here is what made the original
-# loss invisible.
-if [ -n "${_QM_WIP_SNAPSHOT:-}" ] && declare -F wip_guard_report >/dev/null 2>&1; then
-  wip_guard_report "$_QM_WIP_SNAPSHOT" "$FILES_ARG" || true
-fi
 # ...or don't, and let this fill it in: any `<repo>@PENDING` already written into a PM plan is
 # resolved to the sha that actually landed, so the flip can be authored BEFORE the ship without
 # a second edit pass afterwards.

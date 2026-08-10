@@ -142,46 +142,31 @@ different tranche by `parent_epic` (`## Flagged`, following the established batc
       instruments-service. Source: `issues/krx_batch11_todo3_intraday_conflicts_with_2026_07_12_ruling_2026_08_09.md`
       (todo 2). Done when: the manifest carries only the canonical instrument_id form for KRX going forward,
       `quality-gates.sh` green.
-- [x] [BACKEND] P2. ✅ **Diagnose + resolve the broken `instruments-service-daily` Workflow** —
-      `unified-trading-pm@<sha>` (issue doc
-      `plans/archive/issues/tradfi_is_corporate_actions_daily_workflow_broken_2026_08_09.md` with full resolution
-      Progress Log). Consumer: instruments-service CLI never wired `corporate_actions` (only
-      `{"instruments": InstrumentsHandler}`); features-service has its own independent pipeline. Broken since: TF
-      disabled 2026-06-26, Workflow created 2026-01-26, never updated. Action: deleted both GCP resources —
-      `instruments-service-daily-trigger` (Cloud Scheduler) and `instruments-service-daily` (Cloud Workflow) — both
-      verified gone. No ingestion gap.
-- [x] [DATA] P3. ✅ **Identify what process wrote the 24 `pipeline_mode~live`/`venue=CME` rows** —
-      `unified-trading-pm@<sha>`. **IDENTIFIED: two writers, no mis-tagging bug.** Current manifest read shows 36 rows
-      (not 24 — new VM added 12 since the issue was filed), all `pipeline_mode=live_databento`, `data_type=trades`,
-      `source=databento`. The 24 rows visible at filing time (2026-08-09) break down as: (a) **8 rows with
-      `written_at=2026-07-07`** — manifest consolidator run carrying forward the old VM's June 2026 capture history
-      (`capture_status`: 4 empty_confirmed + 4 attempted_failed, all `instrument_type=None`, dates 2026-06-21/22); (b)
-      **16 rows with `written_at=2026-08-04`** — another manifest consolidator run rebuilding the index from individual
-      shard parquets, carrying the old VM's captured rows (dates 2026-06-22 through 2026-06-25,
-      `instrument_type=FUTURE`, `capture_status=captured`). The `written_at` timestamp reflects CONSOLIDATOR RUN TIME,
-      not capture time — the consolidator updates it on each index rebuild. **The actual live writer**:
-      `mtds-live-tradfi-cme-trades-20260809-163443` (launched 2026-08-09 ~16:34 UTC, RUNNING as of 2026-08-10), labels
-      `purpose=mtds-live, shard-slug=tradfi-cme-trades`. This VM replaced the deleted
-      `mtds-live-tradfi-cme-trades-20260623-095619` (deleted 2026-06-30) and has added 12 new manifest entries (4
-      captured + 8 empty_confirmed for dates 2026-08-09/10, `written_at` 2026-08-09T21:59 through 2026-08-10T18:01). No
-      code change needed — the `written_at`-is-consolidator-time measurement trap is the root cause of the apparent
-      mystery, not an unidentified writer. Repo: market-tick-data-service. Source:
-      `issues/tradfi_live_shard_atom_unknown_writer_2026_08_09.md`.
-- [x] [SCRIPT] P1. ✅ **Confirm `wave_launcher.py`'s actual production deployment mechanism** —
-      `unified-trading-pm@<sha>`. **ACTUAL mechanism: HOST cron on the monitor host** — the `_write_last_run_sentinel`
-      comment ("runs as a HOST cron (0 */3 on the monitor host)") is ACCURATE. The Cloud Run Job
-      `uts-prod-tradfi-wave-launcher` + Cloud Scheduler `uts-prod-tradfi-wave-launcher-cron` (`0 */3 * * *`) EXIST per
-      Terraform but are DORMANT: Scheduler PAUSED since 2026-06-24, last job execution 2026-06-25. Neither has driven
-      any launches since June. The LIVE mechanism is the host cron — evidence: `wave-launcher-last-run.json` sentinel
-      reads `2026-08-10T15:00:06.881598+00:00` (today, 3h-aligned), yet no Cloud Run execution exists after June. The
-      Scheduler pause was the stopgap for the scope-ruling violation (pre-bcf55c781). **CME dedup fix pickup
-      CONFIRMED**: the host cron runs from a git checkout (not a container image), so `git pull` picks up
-      `deployment-service@bcf55c781`. Proof: VMs launched today at ~2026-08-10T18:49-18:51 UTC
-      (`tradfi-bf-cme-ohlcv-1m-btc-2021-20260810-184911`, `…-gc-2020-20260810-184942`, `…-ng-2020-20260810-185141`) use
-      the clean SINGLE-ROOT naming from `bcf55c781`, NOT the old broken `g${idx}-${first}-${last}` bundling pattern. No
-      image rebuild needed for the live path. The dormant Cloud Run Job's `:latest` image is stale (no evidence of
-      post-bcf55c781 rebuild) — a rebuild MUST run before un-pausing the Scheduler. Repo: deployment-service. Source:
-      `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (todo, line 165).
+- [ ] [BACKEND] P2. **Diagnose + resolve the broken `instruments-service-daily` Workflow** (404s every firing — targets
+      a deleted bare Cloud Run Job). Determine whether anything downstream consumes TradFi `corporate_actions` data and
+      how long it's been broken (Artifact Registry/Cloud Build history). Then either (a) repoint `job_name` to a real
+      Cloud Run Job supporting `--mode corporate_actions --upload-to-gcs` and verify a live execution succeeds, or (b)
+      if confirmed unused, delete the dead Workflow + its Cloud Scheduler trigger with the deletion justification
+      logged. Repo: deployment-service. Source: `issues/tradfi_is_corporate_actions_daily_workflow_broken_2026_08_09.md`
+      (both todos). Done when: a dated Progress Log entry states the consumer answer + broken-since date, AND either a
+      verified-live repoint or a logged deletion has landed.
+- [ ] [DATA] P3. **Identify what process wrote the 24 `pipeline_mode~live`/`venue=CME` rows** in the tradfi
+      `availability_index.parquet` (max `written_at=2026-08-04`), given the only known live producer VM for this shard
+      was deleted 2026-06-30. Grep every market-tick-data-service/deployment-service write call site that could tag
+      `pipeline_mode` containing `"live"` for `asset_group=tradfi`, cross-check VM launch history for anything active
+      around 2026-08-04, report the actual source (or confirm the read was stale/mis-scoped). No code change required
+      unless a genuine mis-tagging bug is found. Repo: market-tick-data-service. Source:
+      `issues/tradfi_live_shard_atom_unknown_writer_2026_08_09.md`. Done when: the writer is identified and cited, or
+      the read is confirmed stale/mis-scoped.
+- [ ] [SCRIPT] P1. **Confirm `wave_launcher.py`'s actual production deployment mechanism** — reconcile the docstring's
+      claim ("Cloud Run Job + Scheduler") against `_write_last_run_sentinel`'s comment ("HOST cron"), which are in
+      tension; `deployment-service/terraform/gcp/wave_launcher_scheduler.tf` documents a Cloud Run Job + Cloud Scheduler
+      `0 */3 * * *` design consistent with the docstring, but this hasn't been cross-checked against whether it actually
+      picked up `deployment-service@bcf55c781f98f3834298252c443ed5ffa6f42a35` (the CME dedup fix). Repo:
+      deployment-service (terraform/deployment config — distinct from the todo below's target file). Source:
+      `issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md` (todo, line 165). Done when: the actual
+      invocation mechanism is confirmed AND, if it's an image-based Cloud Run Job, either a redeploy has run or one is
+      explicitly triggered.
 - [x] [CODE] P1. **Patch `wave_launcher.py`'s cell-selection logic to consult the scope-ruling table before
       dispatching** — the durable fix for the 2026-08-09 scope-ruling violation (legacy NASDAQ/NYSE/CME fleet relaunched
       outside its ruled scope); only the reversible stopgap (pausing the Cloud Scheduler job) is done so far. Without
@@ -322,23 +307,3 @@ identical primary-owner precedent batch6/7/8 established for the same docs:
   `generate_ag_closeout_audit_candidates.py`'s hub-doc exclusion regex fix, found live this same pass). 14 todos
   extracted; conflict-checked against all active tradfi covering docs + the cross-cutting
   `governance_sweep_deferred_followups_2026_08_06.md` conflict — zero new collisions. Not yet reviewed by the operator.
-- 2026-08-10 (slot-21, data_engineering craft): resolved todo #10 (wave_launcher deployment mechanism). **Findings**:
-  (1) ACTUAL live mechanism = HOST cron on the monitor host, NOT the Cloud Run Job — the `_write_last_run_sentinel`
-  comment is ACCURATE. The Cloud Run Job `uts-prod-tradfi-wave-launcher` exists (Terraform-managed) but is DORMANT:
-  Cloud Scheduler PAUSED since 2026-06-24, last job execution 2026-06-25. The host cron wrote the
-  `wave-launcher-last-run.json` sentinel TODAY at 2026-08-10T15:00 UTC — the Scheduler hasn't fired in 6+ weeks. (2) CME
-  dedup fix (`deployment-service@bcf55c781`) CONFIRMED PICKED UP by the live mechanism: VMs launched today (~18:49-18:51
-  UTC) use the clean single-root naming (`tradfi-bf-cme-ohlcv-1m-btc-2021-...`, `…-gc-2020-...`, `…-ng-2020-...`) from
-  the fixed launcher script, not the old broken bundling pattern. The host cron runs from a git checkout — no image
-  rebuild needed. The dormant Cloud Run Job's `:latest` image is stale (no evidence of post-bcf55c781 rebuild); a
-  rebuild MUST run before un-pausing the Scheduler.
-- 2026-08-10 (slot-21, data_engineering craft): resolved todo #9 (pipeline_mode~live CME rows writer identification).
-  **Findings**: Current manifest shows 36 rows (the original 24 + 12 new since filing), all `live_databento`,
-  `data_type=trades`, `source=databento`. **Writer identified**: (a) 8 rows `written_at=2026-07-07` + 16 rows
-  `written_at=2026-08-04` = the **manifest consolidator** (Cloud Run/Batch-Fargate) rebuilding the index from individual
-  shard parquets — these carry the OLD VM's June 2026 capture history forward with consolidator-run-time `written_at`.
-  The `written_at` column reflects consolidator run time, NOT data capture time — this measurement trap is the root
-  cause of the apparent mystery. (b) 12 rows post-2026-08-09 = the NEW live VM
-  `mtds-live-tradfi-cme-trades-20260809-163443` (launched 2026-08-09 ~16:34 UTC, RUNNING as of today, labels
-  `purpose=mtds-live, shard-slug=tradfi-cme-trades`). This VM replaced the deleted
-  `mtds-live-tradfi-cme-trades-20260623-095619` (deleted 2026-06-30). No mis-tagging bug; no code change needed.

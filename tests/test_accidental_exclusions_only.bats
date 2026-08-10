@@ -23,13 +23,7 @@ setup() {
   AO_PY="$(dirname "$REPO_ROOT")/agent-orchestrator/.venv/bin/python3"
   # A real AO-dispatched plan with open todos and no pre-existing accidental exclusion.
   SRC="${REPO_ROOT}/plans/active/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07_finalize_2026_08_09.md"
-  # UNIQUE per test, not a fixed path (2026-08-10). The probe has to live under plans/active/
-  # for the corpus-relative check to treat it as a plan, so it cannot move to a tmpdir — but a
-  # single shared filename means the 6 tests in this file race each other the moment bats runs
-  # with -j, one test's teardown deleting the probe another is mid-way through asserting on.
-  # That produced exactly one parallel-only failure when the suite was parallelised, which is
-  # the worst kind: it looks like a real regression in the thing under test.
-  PROBE="${REPO_ROOT}/plans/active/.accex_bats_probe.$$.${BATS_TEST_NUMBER:-0}.md"
+  PROBE="${REPO_ROOT}/plans/active/.accex_bats_probe.md"
   [ -f "$SRC" ] || skip "source plan absent (corpus moved) — pick another assigned_vm: planning plan"
   [ -x "$AO_PY" ] || skip "sibling agent-orchestrator venv absent — the check is a no-op here by design"
 }

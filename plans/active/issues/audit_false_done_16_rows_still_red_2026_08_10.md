@@ -16,7 +16,7 @@ summary: >-
   the checkbox flipping). The other 14 are NEW false-done rows not in the parent doc's triaged set. The finalize plan's
   premise ("confirm audit exits 0 before archiving the parent doc") is NOT met — do NOT archive the parent doc until the
   16 rows are triaged to a genuinely clean audit.
-status: resolved
+status: open
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -49,12 +49,6 @@ source: >-
   Live audit re-run for `ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08_finalize_2026_08_08.md` todo 1
   (slot 22 dispatch, task `-28aa3f5fc829`, 2026-08-10).
 ---
-
-> **ARCHIVED** — 2026-08-10 (slot 16). All 4 todos done: 16 false-done rows reopened (audit re-run exits 0), 1,529
-> unresolved fully re-characterised (100% archived-plan referents, no defect), 2 recurring rows root-caused (`-025` =
-> audit `_still_unchecked` recurrence blind spot fixed in `agent-orchestrator@42d29c3d7a`; `-011` = per-row `no-code:`
-> mishandling), and the `_still_unchecked` fix shipped with regression tests. This doc's own archival was the remaining
-> gate; the parent finalize doc remains active.
 
 # audit-false-done 2026-08-10 re-run: still 16 false_done (up from 14), 1,528 unresolved (up from 1,013)
 
@@ -156,7 +150,7 @@ dispatched `sports_travel_calculator-001` 38 times). These 16 must be reopened/t
       first-occurrence); `-011` is per-row mishandling (worker marked done with `no-code:gate-still-unmet-verified`
       without flipping the checkbox). Fix tracked as a `- [ ]` follow-up below.
 
-- [x] ✅ [BACKEND] P2. **Fix `audit_false_done.py::_still_unchecked` to not re-flag a repeated `- [ ]` line whose first
+- [ ] [BACKEND] P2. **Fix `audit_false_done.py::_still_unchecked` to not re-flag a repeated `- [ ]` line whose first
       line is byte-identical to an already-`[x]`-flipped todo in the same plan.** The recurring "Round-8 ACTUAL LAUNCH"
       gate in `cefi_content_migration_..._2026_07_31.md` recurs because the audit matches by first-line hash alone
       (`_UNCHECKED_RE` + `_brief_hash`), so every "launch the next round" instance with the same first line re-derives
@@ -165,20 +159,6 @@ dispatched `sports_travel_calculator-001` 38 times). These 16 must be reopened/t
       agent-orchestrator; scripts/orchestrator/audit_false_done.py)
 
 ## Progress Log
-
-### 2026-08-10 — Todo 4 shipped: `_still_unchecked` recurrence blind spot fixed (slot 16, task `audit_false_done_16_rows_still_red-03d405b42cae`)
-
-**Fix**: `scripts/orchestrator/audit_false_done.py::_still_unchecked` now collects the set of briefs already
-`[x]`-flipped anywhere in the same plan (with the `✅` decoration stripped, mirroring regen's `_parse_done_todos`), and
-a matching `- [ ]` line is only reported as still-unchecked if that brief is NOT in the flipped set. A
-flipped-and-replaced recurrence (byte-identical first line — the recurring "Round-8 ACTUAL LAUNCH" gate) is therefore no
-longer re-flagged, while genuinely-open duplicate briefs (no flip anywhere) still flag.
-
-**Tests**: `tests/test_audit_false_done.py` — 5 cases covering the -025 recurrence shape, plain still-unchecked,
-flipped-only honest, unflipped duplicates still flag, and cross-brief non-suppression.
-
-**Evidence**: `agent-orchestrator@42d29c3d7a` (full QG green: 3310 passed, 2 skipped; dashboard tsc + vitest clean;
-quickmerge landed, SHA ancestor of `origin/live-defi-rollout`).
 
 ### 2026-08-10 ~16:40Z — P1 unresolved characterisation (slot 10, task `audit_false_done_16_rows_still_red-29e848430531`)
 

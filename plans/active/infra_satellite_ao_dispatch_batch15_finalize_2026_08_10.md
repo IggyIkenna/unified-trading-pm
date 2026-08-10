@@ -7,7 +7,7 @@ summary: >-
   (`host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md`'s 2 todos; `s5_7_required_docs_gaps_2026_07_29.md`'s
   corrected todo), archives the fully-closed source doc if it becomes archival-eligible, then archives the batch pair
   itself.
-status: complete
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [infra, ao-dispatch, finalize, batch-15, tmpfs, docs-standards, plan-hygiene]
 related:
   [
-    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch15_2026_08_10.md,
+    /plans/active/infra_satellite_ao_dispatch_batch15_2026_08_10.md,
     /plans/active/issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md,
     /plans/active/issues/s5_7_required_docs_gaps_2026_07_29.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
@@ -39,7 +39,7 @@ locked_by:
 locked_since:
 context_scope:
   [
-    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch15_2026_08_10.md,
+    /plans/active/infra_satellite_ao_dispatch_batch15_2026_08_10.md,
     /plans/active/issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md,
     /plans/active/issues/s5_7_required_docs_gaps_2026_07_29.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -54,12 +54,6 @@ source: >-
 ---
 
 # Infra satellite AO batch 15 — finalize
-
-> **🟢 ARCHIVED 2026-08-10 — COMPLETE.** All 3 todos done: reconciled
-> `host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md`'s 2 todos + `s5_7_required_docs_gaps_2026_07_29.md`'s
-> corrected todo (both source docs keep `archive_exempt: true` bridges), then archived
-> `infra_satellite_ao_dispatch_batch15_2026_08_10.md` + this finalize plan via the standard 6-step ritual. Both docs now
-> at `/plans/archive/2026_08/`.
 
 > **`status: active`, but machine-gated** (`depends_on` + `gate_on_depends: true`) — per the no-double-gate ruling, the
 > finalize twin stays `active` even while its parent batch (`infra_satellite_ao_dispatch_batch15_2026_08_10.md`) is
@@ -98,11 +92,12 @@ early, regardless of whether the batch is `draft` or `active` at the time.
       `DEPLOYMENT_GUIDE.md`/`TESTING.md` DELETE marked EXECUTED 2026-08-10 (both absent repo-wide, deleted at
       `market-data-processing-service@6da3e45` Phase-4). Source doc keeps `archive_exempt: true` (bridge until the
       parent audit plan reaches terminal status) — not archived, per the todo's own guard.
-- [x] ✅ [DOC] P3. **Archived both `infra_satellite_ao_dispatch_batch15_2026_08_10.md` and
-      `infra_satellite_ao_dispatch_batch15_finalize_2026_08_10.md`** via the standard 6-step archival ritual — `git mv`
-      to `plans/archive/2026_08/`, banner + `status: complete` on both, every corpus referrer path repointed (incl.
-      `codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`), INDEX.md regenerated. `check_ag_closeout_linkage.py`
-      0 orphans (baseline 0) + `regenerate_active_plan_inventory.py` verified clean. (repo: unified-trading-pm)
+- [ ] [DOC] P3. **Archive both `infra_satellite_ao_dispatch_batch15_2026_08_10.md` and
+      `infra_satellite_ao_dispatch_batch15_finalize_2026_08_10.md`** once both reconciliations above are verified — run
+      the standard 6-step archival ritual (`git mv` to `plans/archive/2026_08/`, fix every corpus referrer path, confirm
+      `check_ag_closeout_linkage.py` and `regenerate_active_plan_inventory.py` both stay clean). Do this as a SEPARATE
+      commit from the checkbox-flip commits above (never combine a flip + `git mv` in one commit —
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). (repo: unified-trading-pm)
 
 ## Codex SSOTs
 
@@ -126,8 +121,3 @@ early, regardless of whether the batch is `draft` or `active` at the time.
   MDPS registry entry in `codex_vs_repo_docs_ssot_audit_2026_06_01.md`: `DEPLOYMENT_GUIDE.md`/`TESTING.md` DELETE marked
   EXECUTED 2026-08-10 (both absent repo-wide, deleted at `market-data-processing-service@6da3e45` Phase-4). Flipped this
   plan's todo 2 `[x]`; source doc not archived (kept `archive_exempt: true` bridge) per the todo's guard.
-- **2026-08-10 (slot-17, infra) — todo 3**: Archived `infra_satellite_ao_dispatch_batch15_2026_08_10.md` to
-  `plans/archive/2026_08/` via the standard 6-step ritual, then archived this finalize plan alongside it (all 3 todos
-  now done, unlocked). Both `git mv`'d + banner + `status: complete`; every corpus referrer repointed (incl.
-  `codex/05-infrastructure/shared-host-tmp-tmpfs-capacity.md`); INDEX.md regenerated. `check_ag_closeout_linkage.py` 0
-  orphans (baseline 0) + `regenerate_active_plan_inventory.py` clean.

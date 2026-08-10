@@ -20,7 +20,7 @@ tags: [infra, tmpfs, /tmp, disk-space, shared-host, pytest, scratch, parquet, ca
 related:
   [
     /plans/active/issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md,
-    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch15_2026_08_10.md,
+    /plans/active/infra_satellite_ao_dispatch_batch15_2026_08_10.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
@@ -33,7 +33,7 @@ authoritative_for:
 referenced_by:
   [
     /plans/active/issues/host_tmp_tmpfs_full_breaks_pytest_write_2026_08_09.md,
-    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch15_2026_08_10.md,
+    /plans/active/infra_satellite_ao_dispatch_batch15_2026_08_10.md,
   ]
 owner:
 last_reviewed: 2026-08-10

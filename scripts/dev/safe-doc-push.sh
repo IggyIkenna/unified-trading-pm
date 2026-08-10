@@ -120,6 +120,16 @@ _SDP_RUN_START_EPOCH="$(date +%s)"
 # exactly the code the caller invoked rather than the worktree checkout's copy.
 _SDP_SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/$(basename "${BASH_SOURCE[0]}")"
 
+# Autostash-chain guard (2026-08-10 slot-1 finding, multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout):
+# `git pull --rebase --autostash` (run in autostash_rebase_reconcile below) re-applies an
+# ever-staler dirty-tree snapshot unless the popped content is compared against origin.
+# Sourced from this script's own scripts/dev/ dir; missing file = guard simply doesn't run.
+_SDP_AUTOSTASH_GUARD_FILE="$(dirname "$_SDP_SELF")/autostash-chain-guard.sh"
+if [ -f "$_SDP_AUTOSTASH_GUARD_FILE" ]; then
+  # shellcheck disable=SC1090
+  source "$_SDP_AUTOSTASH_GUARD_FILE"
+fi
+
 MSG=""
 BRANCH="live-defi-rollout"
 FILES=()
@@ -402,19 +412,6 @@ _sdp_fingerprint_named() {
   done
 }
 _SDP_ENTRY_FINGERPRINT="$(_sdp_fingerprint_named)"
-
-# Whole-tree snapshot. The fingerprint above covers only the NAMED files -- the work being
-# shipped. An uncommitted edit elsewhere in the tree can still be eaten by the reconcile's
-# autostash and vanish silently (measured 2026-08-10, /codex/05-infrastructure/per-tab-worktrees.md
-# "When a ship eats work it was never asked to touch"). Isolated mode makes this a non-issue by
-# not touching the caller's tree at all, but the shared-index fallback and the AO VM (isolation
-# off by host gate) both still run through here.
-_SDP_WIP_SNAPSHOT=""
-if [ -f "${_SDP_SELF%/*}/tree-wip-guard.sh" ]; then
-  # shellcheck source=/dev/null
-  source "${_SDP_SELF%/*}/tree-wip-guard.sh" 2>/dev/null || true
-  declare -F wip_guard_snapshot >/dev/null 2>&1 && _SDP_WIP_SNAPSHOT="$(wip_guard_snapshot)"
-fi
 
 # Print a loud, actionable warning if the named files no longer match what the caller handed us.
 # Returns 1 when content changed (caller should NOT report a plain transient failure).
@@ -738,6 +735,18 @@ autostash_rebase_reconcile() {
     echo "  explicit pop succeeded -- edits restored to the working tree"
   fi
   git restore --staged . 2>/dev/null || true
+  # Autostash-chain guard (2026-08-10 slot-1 finding): the pop can also re-apply an ever-staler
+  # SNAPSHOT -- dirty files whose content REVERTS content committed on origin (measured: 107
+  # files, 97 reverting committed content, 9 archived plans resurrected as untracked). Compare
+  # the popped tree against origin and quarantine (named stash) any foreign stale revert so the
+  # chain cannot re-apply it next cycle. Returns 1 ONLY if a caller-named --files entry itself
+  # is a stale revert (this push would ship a silent revert) → treat as needing a human.
+  if declare -F autostash_chain_guard_quarantine_reverts >/dev/null 2>&1; then
+    if ! autostash_chain_guard_quarantine_reverts "$BRANCH" "${FILES[*]:-}"; then
+      echo "  ❌ autostash-chain guard: caller-named file(s) would revert committed origin/$BRANCH content — blocking this push (see guard messages above)." >&2
+      return 1
+    fi
+  fi
   return 0
 }
 
@@ -1037,10 +1046,13 @@ for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
   if git push origin "HEAD:${BRANCH}" 2>/tmp/_sdp_push_err; then
     if verify_pushed; then
       echo "✅ Pushed $(git rev-parse --short HEAD) -> ${BRANCH}"
-      if [ -n "${_SDP_WIP_SNAPSHOT:-}" ] && declare -F wip_guard_report >/dev/null 2>&1; then
-        wip_guard_report "$_SDP_WIP_SNAPSHOT" "${FILES[*]}" || true
-      fi
       final_ok=true
+      # Bound the autostash backlog (2026-08-10 slot-1 finding): every `--autostash` cycle above
+      # can leave a git-generated `autostash` entry behind; prune the provably-redundant ones so
+      # the pile cannot age unbounded. Non-fatal (missing lib / no entries → no-op).
+      if declare -F autostash_chain_guard_bound_backlog >/dev/null 2>&1; then
+        autostash_chain_guard_bound_backlog "$BRANCH" 2>/dev/null || true
+      fi
       break
     fi
     echo "❌ git push exited 0 but origin/${BRANCH} does not contain HEAD -- refusing to report success." >&2

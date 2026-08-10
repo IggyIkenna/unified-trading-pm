@@ -355,62 +355,16 @@ Directions, cheapest first — each is a todo below:
       quickmerge outright — verified errexit-safe, and the classifier verified against git's real wording. Evidence:
       unified-trading-pm@f71c12e40a. Repo: unified-trading-pm.
 
-- [x] [INFRA] P1. **Script the two hand-steps that cost a tool call on every commit.** ✅ Done — operator directive
-      2026-08-10: "anything which can be scripted in the git workflow for commits and tests should be, so we spend less
-      agent credits." Two were costing a round trip each. (1) Prosewrap repair is now automatic: the check gained
-      `--only --emit-lines`, which is the only thing in the repo that can distinguish a violation THIS commit introduced
-      from the file's pre-existing debt, and `fix_prosewrap_padding.py --scoped` repairs exactly those lines;
-      `run_hygiene_sweep --precommit` runs the pair and re-verifies, passing only because the check agrees afterwards,
-      never because a fixer ran. (2) `<repo>@PENDING` lets a flip be authored before the ship: the quickmerge push that
-      creates the commit substitutes the sha that actually landed, and a staged plan still carrying an unresolved
-      placeholder is blocked at commit time. Evidence: unified-trading-pm@a29967623a;
-      `tests/test_prosewrap_scoped_autorepair.bats` 5/5 + `tests/test_pending_evidence_placeholder.bats` 5/5. Repo:
+- [ ] [INFRA] P2. **`fix_prosewrap_padding.py` cannot be auto-wired until it is line-scoped.** Agents are still
+      hand-repairing prosewrap corruption (a peer did so today) even though the fixer exists, because it is whole-file
+      scoped: measured on 25 active plans, it rewrites 10 of them, one by 51 lines. Those edits are genuine repairs (the
+      corpus check is at BASELINE, not zero — a green check does not mean a clean file), but auto-applying them at
+      commit time would attach dozens of unrelated line changes to every plan commit, widening the merge-conflict
+      surface on the busiest file class in a repo already fighting contention. The check's failure message now names the
+      fixer and this caveat. **Done when**: the fixer accepts the check's flagged line set (or a `--only <file>` mode
+      that repairs solely the violations this commit introduced), with a test proving it leaves pre-existing corruption
+      elsewhere in the file untouched — then it can be wired into the `--only` precommit path as an autofix. Repo:
       unified-trading-pm.
-
-- [x] [INFRA] P2. **`fix_prosewrap_padding.py` cannot be auto-wired until it is line-scoped.** ✅ Done — line-scoping
-      shipped with the item above; the fixer now takes the check's flagged line set and leaves everything else alone
-      (asserted directly: the pre-existing corrupted line is byte-identical after a scoped repair, while whole-file mode
-      still rewrites both lines for the supervised corpus-remediation path). Evidence: unified-trading-pm@a29967623a.
-      Superseded framing, kept for the record: Agents are still hand-repairing prosewrap corruption (a peer did so
-      today) even though the fixer exists, because it is whole-file scoped: measured on 25 active plans, it rewrites 10
-      of them, one by 51 lines. Those edits are genuine repairs (the corpus check is at BASELINE, not zero — a green
-      check does not mean a clean file), but auto-applying them at commit time would attach dozens of unrelated line
-      changes to every plan commit, widening the merge-conflict surface on the busiest file class in a repo already
-      fighting contention. The check's failure message now names the fixer and this caveat. **Done when**: the fixer
-      accepts the check's flagged line set (or a `--only <file>` mode that repairs solely the violations this commit
-      introduced), with a test proving it leaves pre-existing corruption elsewhere in the file untouched — then it can
-      be wired into the `--only` precommit path as an autofix. Repo: unified-trading-pm.
-
-## CI audit + QG-timing findings (2026-08-10 evening)
-
-- [x] [INFRA] P0. **The QG duration cap was patched in the wrong file.** ✅ CPU-second budget first landed in
-      `base-library.sh` (unified-trading-pm@32749169f3) — but PM and every service repo source **`base-service.sh`**,
-      which still had the wall-clock check. Verified "on origin" without verifying "in the file that runs": shipped
-      mistaken for live. Re-patched in `base-service.sh`. Evidence: pending ship (see Deferred).
-- [x] [INFRA] P0. **The re-gate classifier gave a false all-clear on its first real failure.** ✅ It counted `❌` lines
-      only; pytest emits `FAILED tests/...` with no `❌`, so a genuine test failure counted as zero and the run printed
-      "every content check passed … Do NOT go looking for a content bug" while one was failing. A false all-clear is
-      worse than the false alarm it replaced. Hardened to also match pytest-style `FAILED`/`ERROR`/`E`-prefixed lines,
-      not just the emoji.
-- [ ] [INFRA] P0. **BLOCKED: a peer's uncommitted UTL edit red-lines every PM quality gate on this host.**
-      `tests/unit/test_capability_verdict_matrix.py::test_fixture_matches_live_engine_registry` dies with
-      `ImportError: cannot import name '_per_vm_shard_backlog' from 'unified_trading_library.manifest_writer._state'`.
-      Measured: the symbol IS on `origin/live-defi-rollout`, is ABSENT from the local working file, and the UTL clone is
-      `behind=0` with 6 dirty files — so an uncommitted local edit removed it. NOT reverted: that is foreign WIP, and
-      destroying it is the exact harm this issue doc exists to stop. **Owner: whoever holds that UTL WIP.** Until it is
-      committed or parked, no PM ship can gate green from this checkout. **Done when**: the symbol resolves again and
-      the test passes.
-- [ ] [INFRA] P1. **One dead evidence citation red-lines the whole repo's promote flow.** `4f901b9916` (written by
-      slot-12 at 16:50, a SHA that never existed here — the pre-rebase id of its own commit) failed
-      `check_plan_commit_sha_evidence` corpus-wide, failing PM's gate, failing the promote PR — the "QG slice(s) FAILED
-      | unified-trading-pm" → "PROMOTION LAG cause unknown" pair repeating hourly all day. Repaired to `72adcb234c`. The
-      orphan-healing reconciler CANNOT fix this form: the SHA never existed locally, so there is no object to patch-id
-      match. **Done when**: quickmerge refuses to commit a `- [x]` whose citation does not resolve against origin at
-      commit time, closing it at the source instead of corpus-wide hours later.
-- [ ] [INFRA] P2. **60 of 229 PM bats tests fail and NOTHING gates them.** Measured full run: 169 ok / 60 not ok. PM's
-      gate (`base-service.sh`) carries bats as warn-only for service repos; PM's own 30 bats files are not invoked by
-      its gate at all. None of the 60 are from this session's five new files. **Done when**: PM's bats suite is either
-      gated or its failures are ratcheted.
 
 ## Deferred work after 2026-08-10
 
@@ -423,19 +377,9 @@ Directions, cheapest first — each is a todo below:
 | `check_chain_set_inclusion` 3 failures                            | **Not done** — pre-existing, unrelated to this work                                                                    | nobody; low priority     |
 | PM CI green (ldr-docs-gate, na_corpus ratchet promotion deadlock) | **Cannot be done yet** — separate CI/promotion defects already being worked by a peer (two issue docs in slot 2's WIP) | that peer's work landing |
 
-| UTL `_per_vm_shard_backlog` foreign WIP | **Operator-owned** — uncommitted edit in a sibling clone; reverting it
-destroys another agent's work | that WIP's owner | | Commit-time citation-resolves-against-origin gate | **Not done** —
-closes the dead-citation class at source | nobody; pick it up | | PM bats: 60/229 failing, ungated | **Not done** —
-pre-existing, none from this session | nobody; pick it up | | Release-tag stall (7 repos), UTL prod trigger, glue runner
-228 restarts | **Not done** — untouched CI groups from the alert audit | nobody; pick it up |
-
-**Recommended next item**: unblock the UTL import — it red-lines every PM gate on this host, so nothing else can ship
-until it clears. Then the commit-time citation gate, which removes the largest recurring cause of PM promote-flow
-stalls. (Superseded recommendation: `fix_prosewrap_padding.py` line-scoping.)
-
-**Superseded**: `fix_prosewrap_padding.py` line-scoping. Agents are still hand-repairing corruption a script already
-knows how to fix, and it is the only remaining item that costs time on every affected commit. (Cross-repo citation
-reconciliation, the previous recommendation, shipped 2026-08-10.)
+**Recommended next item**: `fix_prosewrap_padding.py` line-scoping. Agents are still hand-repairing corruption a script
+already knows how to fix, and it is the only remaining item that costs time on every affected commit. (Cross-repo
+citation reconciliation, the previous recommendation, shipped 2026-08-10.)
 
 ## Lessons carried forward (would otherwise be re-learned)
 

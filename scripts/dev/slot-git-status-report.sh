@@ -749,24 +749,6 @@ check_token_expiry_for_slot() {
 # `expires_at` can currently tell you. Read-only w.r.t. the claim's JSON content (never rewrites
 # agent_id/expires_at/etc.) — only the file's own mtime changes, so this can never race the server's own
 # `refresh_expiry()` writes or corrupt a legitimate claim.
-# Surface a `.parked-wip` notice to whoever actually owns this checkout.
-#
-# The gap this closes (2026-08-10): when a ship's reconcile parks a PEER's uncommitted work — or
-# an agent stashes it deliberately to unblock a gate — every warning goes to the SHIPPING run's
-# stderr, i.e. to the wrong person. The owner is in another session and the only trace is a stash
-# entry they have no reason to look at. This reporter already runs every 5 minutes in each slot,
-# so it is the one channel that reliably reaches them without inventing a new one.
-report_parked_wip() {
-    local slot_id="$1" slot_dir="$2" notice repo
-    for repo in "${slot_dir}"*/; do
-        notice="${repo}.parked-wip"
-        [[ -f "${notice}" ]] || continue
-        [[ -s "${notice}" ]] || continue
-        log "[parked-wip] slot ${slot_id} — $(basename "${repo}"): uncommitted work was PARKED by another session."
-        log "[parked-wip]   recovery instructions are in ${notice} — read it before re-applying anything."
-    done
-}
-
 refresh_agent_claim_heartbeat() {
     local slot_id="$1" slot_dir="$2" claim_file tmux_session
     claim_file="${slot_dir}.agent-claim"
@@ -806,7 +788,6 @@ for slot_dir in "${TABS_DIR}"/*/; do
     done
     post_snapshot "${slot_id_str}" "${rows_tsv}"
     refresh_agent_claim_heartbeat "${slot_id_str}" "${slot_dir}"
-    report_parked_wip "${slot_id_str}" "${slot_dir}"
     check_starvation_for_slot "${slot_id_str}" "${slot_dir}"
     check_stash_pile_for_slot "${slot_id_str}" "${slot_dir}"
     check_token_expiry_for_slot "${slot_id_str}"
