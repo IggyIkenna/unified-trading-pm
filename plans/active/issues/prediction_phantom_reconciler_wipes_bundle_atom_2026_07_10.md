@@ -28,9 +28,9 @@ repos: [unified-trading-library, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [manifest, phantom-reconciler, bundle-atom, data-correctness, prediction, canonicalisation, cross-repo]
 related: [
-    plans/archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md, # (was: plans/active/... — corrected
+    /plans/archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md, # (was: plans/active/... — corrected
     # 2026-07-14, doc-reconciliation finding 175: folded into M-1 + archived 2026-07-13, path no longer resolves)
-    plans/archive/2026_07/downstream_services_manifest_canonicalisation_2026_06_01.md, # (was: plans/active/... —
+    /plans/archive/2026_07/downstream_services_manifest_canonicalisation_2026_06_01.md, # (was: plans/active/... —
     # same 2026-07-13 fold-in/archive, corrected alongside finding 175)
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
@@ -345,5 +345,6 @@ the diagnostic script itself (kept for lifecycle-marker traceability, delete-whe
       scripts per the Kalshi precedent
 
 > **2026-08-06 archive-candidate audit**: The [DATA] P3 todo fixed enumerate_expected_universe.py
-> (instruments-service@2b165597) but its own completion says 'Backstamp of historical rows is a follow-on data
-> operation' - a deferred follow-up not turned into its own todo
+> (instruments-service@2b165597); its own completion says 'Backstamp of historical rows is a follow-on data operation' —
+> the deferred follow-up IS tracked as the `- [ ] [DATA] P3` todo in the Follow-ups section above (corrected by
+> plan_reconciler 2026-08-10 — previously described as untracked).
