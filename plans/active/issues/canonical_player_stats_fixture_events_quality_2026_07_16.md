@@ -45,6 +45,7 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+archive_exempt: true
 source: [sports cutover T2.4 measurement 2026-07-16]
 context_scope:
   [
@@ -287,15 +288,28 @@ its own touched subset piecemeal.
   script (`census_player_stats_2025_missing_2026_08_02.py`, investigation closed) for the reconciliation script the sole
   open Follow-up todo names directly (`reconcile_player_stats_missing_gcs_manifest_2026_08_05.py`, shipped but its
   `--apply-prod` pass still pending).
+- **2026-08-10 (slot-29)**: the sole open Follow-up flipped `[x]` (both PLAYER_STATS populations independently verified
+  0 confirmed-missing — see the todo's own DONE note and the batch12 plan's Progress Log for full detail).
+  `archive_exempt: true` set on THIS commit per the RULED-2026-08-09 two-commit bridge (this doc's own last todo is its
+  archival trigger) — dropped in the immediately-following `git mv` archival commit.
 
 ## Follow-ups
 
-- [ ] [DATA] P3. Execute the actual --apply-prod --confirm-prod-write pass of
-      scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py (market-tick-data-service@25c7a3f2) over
-      the 88 2025-era + ~1,210 2018-2020-era PLAYER_STATS captured-without-GCS cells (relabel captured->attempted_failed
-      with the recorded distinct error_reasons), then verify the manifest — decision made + script shipped, only the
-      prod apply remains.
+- [x] [DATA] P3. Execute the actual --apply-prod --confirm-prod-write pass of
+      scripts/sports/reconcile_player_stats_missing_gcs_manifest_2026_08_05.py over the 88 2025-era + ~1,210
+      2018-2020-era PLAYER_STATS captured-without-GCS cells (relabel captured->attempted_failed with the recorded
+      distinct error_reasons), then verify the manifest. **DONE 2026-08-10 (slot-29)**: 2025 population —
+      `market-tick-data-service@56df68f7f`, 88 rows relabeled, independently verified 0 confirmed-missing (separate
+      dry-run pid 4057523). 2018-2020 population — required two further bugfixes beyond the originally-shipped
+      `25c7a3f2` (a pyarrow-native column-projected rewrite to fix a resource-watchdog RSS kill,
+      `market-tick-data-service@22a305ff1`, then a `.length`->`len()` one-line fix,
+      `market-tick-data-service@975d6a4f8`) before the apply-prod pass could complete without being killed; 1,210 rows
+      relabeled, independently verified 0 confirmed-missing among the remaining 2,184 captured rows (separate dry-run
+      pid 2169822, no `--apply-prod`). Full diagnostic detail (resource-watchdog kill evidence, retry reasoning) in
+      `/plans/active/sports_satellite_ao_dispatch_batch12_2026_08_09.md` Progress Log, 2026-08-09/10 entries.
 
 > **2026-08-06 archive-candidate audit**: Progress Log 2026-08-05 (slot-16): P3 reconciliation 'SCRIPT SHIPPED
 > (market-tick-data-service@25c7a3f2)... Actual `--apply-prod --confirm-prod-write` execution pending — the script is
-> ready' — the todo was flipped `[x]` while the actual prod manifest mutation is still unexecuted open work.
+> ready' — the todo was flipped `[x]` while the actual prod manifest mutation is still unexecuted open work. **Resolved
+> 2026-08-10**: the prod apply has now genuinely executed for both populations, independently verified per above — the
+> premature-flip pattern this audit warned about does not recur here.
