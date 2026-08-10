@@ -35,7 +35,7 @@ repos: [agent-orchestrator]
 tags: [agent-orchestrator, e2e, playwright, deepseek, test-reliability, fixture-drift]
 related:
   [
-    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
     /plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md,
   ]
 created: 2026-08-06
@@ -63,7 +63,7 @@ context_scope:
     agent-orchestrator/server/deepseek_usage_poller.py,
     agent-orchestrator/dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts,
     agent-orchestrator/dashboard/tests/e2e/run-e2e-backend.sh,
-    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
   ]
 ---
 

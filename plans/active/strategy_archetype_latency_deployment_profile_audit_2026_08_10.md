@@ -101,18 +101,9 @@ collapsing them into one number the way the archived doc did.
       ms timing per the 2026-08-10 operator ruling,
       `/plans/active/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` frontmatter `source:`) and the
       Low→`co_located_vm` deployment implication referencing `runtime-topology.yaml` + the SLA-tier doc.
-- [x] ✅ [DOC] P2. **Populate `arbitrage-structural.md`** with the same section, category `Low`, distinguishing stat-arb
+- [ ] [DOC] P2. **Populate `arbitrage-structural.md`** with the same section, category `Low`, distinguishing stat-arb
       vs. cross-exchange arb's inter-leg execution gap explicitly (two legs on two different venues — the gap is the
-      real risk surface). **Done**: `unified-trading-pm@b62348bb59` — formal `## Latency Requirements` section added
-      (category `Low`, archived Statistical Arb / Cross-Exchange Arb / Sports Arbitrage rows confirmed as the baseline,
-      segment budgets <200ms / <300ms / <2s E2E, UI-dashboard latency monitor cited), a
-      `### Decision latency vs.     inter-leg execution gap` subsection distinguishing the stat-arb/ATOMIC sub-profile
-      (atomicity bounds the gap) from cross-exchange arb's two-legs-two-venues leg-and-hedge gap (the real risk surface;
-      `max_hedge_delay_ms: 500` = abort ceiling, operating target ms-realm per the 2026-08-10 operator ruling), and the
-      Low→`co_located_vm` deployment implication flagging the current `client-isolation-sla-and-runtime-profiles.md` § 6
-      `ARBITRAGE_STRUCTURAL` topology_requirements row (co-location `no` / min SLA `standard`) as a discrepancy the
-      deployment-profile derivation todo resolves. Same commit fixed a pre-existing dangling `related:` frontmatter
-      reference (`market-making.md` → leading-slash path) flagged by plan-hygiene.
+      real risk surface).
 - [ ] [DOC] P2. **Populate `carry-and-yield.md`** (basis/staking-basis family) with the same section, category `Low` per
       the operator correction above — explicitly document the spot-leg/perp-hedge-leg inter-leg gap requirement, not
       just a decision-latency number.
@@ -166,12 +157,3 @@ collapsing them into one number the way the archived doc did.
   delta-hedge + cross-venue quote legs must track at ms timing per the 2026-08-10 operator ruling) and the
   Low→`co_located_vm` deployment implication cross-referencing `runtime-topology.yaml` and
   `client-isolation-sla-and-runtime-profiles.md` § 6 (MM = exec+strategy co-located, min SLA premium).
-- **quant_dev (slot 11) 2026-08-10T15:21Z**: Todo 2 done. Added formal `## Latency Requirements` to
-  `arbitrage-structural.md` (`unified-trading-pm@b62348bb59`): category `Low` — archived Statistical Arb /
-  Cross-Exchange Arb / Sports Arbitrage rows confirmed as baseline (sub-second E2E), with the
-  `### Decision latency vs. inter-leg execution gap` subsection distinguishing stat-arb/ATOMIC (atomicity bounds the
-  gap) from cross-exchange arb's two-legs- on-two-venues leg-and-hedge gap (the real risk surface;
-  `max_hedge_delay_ms: 500` = abort ceiling, operating target ms-realm) per the 2026-08-10 operator ruling, and the
-  Low→`co_located_vm` deployment implication flagging the current `ARBITRAGE_STRUCTURAL` topology_requirements row (`no`
-  co-location / min SLA `standard`) as a discrepancy the deployment-profile derivation todo resolves. Same commit fixed
-  a pre-existing dangling `related:` frontmatter reference (`market-making.md` → leading-slash path).

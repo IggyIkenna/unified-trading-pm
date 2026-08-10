@@ -338,14 +338,8 @@ if [[ "$_SDP_ISOLATED_EFFECTIVE" != "0" && -z "${SDP_IN_ISOLATION:-}" ]]; then
           fi
           continue
         fi
-        # A named path absent from the caller tree AND absent from origin/$BRANCH is neither a
-        # deletion (nothing to propagate) nor a copy (nothing to copy) -- it is a caller error:
-        # the path exists nowhere this push could stage it from. Fail loudly with the path
-        # named; a silent continue here drops the path from the commit while still reporting
-        # success (the create-only archival class this issue documents). Same shape the
-        # shared-index path rejects with exit 2 ("Refusing: named path does not exist").
-        echo "  isolation: FAILED: named path exists in neither the caller tree nor origin/$BRANCH: $_f" >&2
-        exit 2
+        echo "  isolation: named file not present in caller tree, skipping copy: $_f" >&2
+        continue
       fi
       mkdir -p "$_sdp_iso_wt/$(dirname "$_f")" 2>/dev/null || true
       cp "$_f" "$_sdp_iso_wt/$_f" || _sdp_copy_ok=false

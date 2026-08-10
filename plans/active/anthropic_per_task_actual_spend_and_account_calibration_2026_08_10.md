@@ -21,7 +21,7 @@ scope: [engineer]
 tags: [agent-orchestrator, billing, cost-attribution, pricing, anthropic, calibration, task-usage, dashboard]
 related:
   [
-    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /plans/active/issues/ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md,
     /plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md,
@@ -119,13 +119,14 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       `tmux_session`/`last_tmux_session`, `registered_at`, `finished_at`) and assign each turn by its own timestamp.
       **Done when**: a unit test proves a turn in a post-compaction transcript still attributes to the correct account,
       and the resolver returns the same account for two sessions of one agent split by a compaction.
-- [ ] [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
-      account-window, regardless of how many files or task windows contain it.** `scan_session_usage` already dedups
-      within one file; the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a
-      second transcript — `measure-claude-usage-value.py`'s own docstring records 588,821 duplicate turns against
-      649,255 real ones on this VM, ~47%). **Done when**: a test with the same `message.id` present in two transcript
-      files under one account yields one counted turn, and the walker's total for a known window matches a hand-verified
-      count.
+- [x] ✅ [BACKEND] P0. **Add a globally `message.id`-deduped transcript walker so one turn is counted exactly once per
+      account-window, regardless of how many files or task windows contain it.** — agent-orchestrator@ff2f1c5
+      (peer-shipped: `scan_usage_across_transcripts` + `scan_account_transcripts` with window filtering + 3 tests
+      covering cross-file dedup and hand-verified window totals) `scan_session_usage` already dedups within one file;
+      the account-level aggregate needs dedup ACROSS files (resume/replay copies the same turns into a second transcript
+      — `measure-claude-usage-value.py`'s own docstring records 588,821 duplicate turns against 649,255 real ones on
+      this VM, ~47%). **Done when**: a test with the same `message.id` present in two transcript files under one account
+      yields one counted turn, and the walker's total for a known window matches a hand-verified count.
 - [ ] [BACKEND] P0. **Fix `task_usage` double-counting: a typed one-off with `assigned_at=None` bills the WHOLE session,
       and overlapping per-task windows on one slot bill the same turns to several tasks.** This corrupts per-task cost
       independently of pricing and is why the task_usage-derived multiplier reads HIGHER than the transcript-derived one
@@ -320,33 +321,16 @@ to quantify and quarantine ONE account, not to feed the main calibration.
       starts. Even coarse answers ("sub-c was my laptop account most of early August") materially change which
       measurements are usable. **Done when**: either a recalled timeline is recorded here with its uncertainty stated,
       or it is explicitly noted that pre-logger windows can only ever yield lower bounds.
-- [ ] [DATA] P1. **Write the tool-call batching SSOT under `/codex/06-coding-standards/` (suggested filename
-      `tool-call-batching.md`) — the durable contract every other surface points at.** Measured 2026-08-10: 57.3% of ALL
-      API calls are consecutive same-tool chains collapsible into one (Bash alone 52.8%, runs of 20/23/26/28/32
-      observed, 69% of Bash calls inside a chain); each collapse saves one ~406k-token prefix re-read AND one model
-      round-trip (median gap 10.5s, 8.6h of aggregate agent-time sits inside collapsible chains in a 4h25m window).
-      State the rule positively — compound shell with `;`/`&&`, multiple `tool_use` blocks in one message for
-      independent calls, `replace_all` or one Write instead of serial Edits, never re-read a file already read — plus
-      the exception that genuinely result-dependent calls must stay sequential. **Done when**: the doc exists with
-      `authoritative_for:` frontmatter and carries the measured baseline.
-- [ ] [DOC] P1. **Propagate a one-line batching directive + SSOT pointer to EVERY agent-prompt surface, because AO
-      worker classes do not share one rules file.** Distribution paths verified 2026-08-10: `CLAUDE.md` (auto-loaded by
-      every session — orchestrator main, planning workers, interactive), `agents/RULES.md` (all AO workers),
-      `SUB_AGENT_MANDATORY_RULES.md` (sub-agents, which do NOT auto-load CLAUDE.md), and
-      `cursor-configs/AUTONOMOUS_AGENT_RULES.md` (`/autonomous` only). Targeting only the autonomous file would leave
-      escalation workers, scheduled jobs, CI/CD, data-pipeline and planning workers unchanged. Condense to one line +
-      pointer per the size budgets both rules files are QG-gated on (CLAUDE.md <= 40KB, SUB_AGENT_MANDATORY_RULES.md <=
-      10KB) — never inline the full guidance. **Done when**: all four files carry the directive,
-      `check_agent_rules_size_cap.py` still passes, and a grep shows each pointing at the codex SSOT rather than
-      restating it.
-- [ ] [DOC] P2. **Audit the 23 per-role files in `agents/` for any instruction that actively encourages sequential
-      single-tool calls, and fix those specifically.** A universal rule is undermined if a role doc walks its agent
-      through numbered one-command-per-step procedures. Roles to check include the escalation family (`cicd`,
-      `conflict_resolver`, `data_pipeline_failure`), the scheduled family (`plan_health`, `plan_reconciler`,
-      `docs_reconciler`, `ag_closeout_auditor`, `na_eligibility_auditor`, `context_scout_auditor`, `cefi_*`), the craft
-      roles (`backend_engineer`, `infra`, `quant_dev`, `ui_developer`, `data_engineering`, `review`), and
-      `main`/`worker`. **Done when**: each role file is either confirmed clean or amended, with the list of amended
-      files recorded here.
+- [ ] [DOC] P1. **Add tool-call batching guidance to `cursor-configs/AUTONOMOUS_AGENT_RULES.md` so every autonomous run
+      inherits it — measured 2026-08-10 as the single highest-leverage cost change available.** 65.1% of API calls in
+      the controlled window came from sessions that genuinely invoked `/autonomous` (8 sessions, 63.8% of cache reads),
+      and 57.3% of ALL calls are consecutive same-tool chains that could collapse into one — Bash alone is 52.8%, with
+      observed runs of 20, 23, 26, 28 and 32 consecutive Bash calls. Every collapsed call saves one full ~406k-token
+      prefix re-read. State the rule positively (compound shell commands with `;`/`&&`; multiple `tool_use` blocks in
+      one message for independent calls; `replace_all` or one Write instead of serial Edits; never re-read a file
+      already read) and note the exception that genuinely result-dependent calls must stay separate. **Done when**: the
+      rules file carries the guidance and a follow-up measurement over a later window shows the consecutive-same-tool
+      share below 40%.
 - [ ] [DATA] P2. **Re-measure the collapsible-call share after the batching guidance ships, to confirm it moved rather
       than assuming it did.** Baseline to beat (2026-08-10 controlled window): 3,123 calls, 57.3% collapsible, 405,833
       mean cache-read tokens per call, 1.27B total reads. Reuse the same requestId-unioned method (content blocks must

@@ -110,10 +110,9 @@ operations log (all times UTC):
 - [ ] [DATA] P1. Fix DatabentoAdapter VIX/CBOE (XCBF.PITCH) ohlcv_1m schema mapping to emit canonical `timestamp`
       instead of `ts_event` (repo: market-tick-data-service) — today's files fail
       `Schema validation FAILED:     missing columns=['timestamp']`; prior-07-27 VIX + CME ES files carry `timestamp`.
-- [x] [DATA] P1. Fix futures_chain manifest `record_captured` row_key to omit `chain` when empty (repo:
+- [ ] [DATA] P1. Fix futures_chain manifest `record_captured` row_key to omit `chain` when empty (repo:
       market-tick-data-service) — currently every VIX shard write fails `MalformedRowKeyError: chain explicitly empty`,
-      so captured rows never reach the manifest. — market-tick-data-service@f0345e7df4 (omit empty chain from the
-      nontrade-sentinel row_key + 3 regression tests locking in the bundle-path omit-when-empty fix)
+      so captured rows never reach the manifest.
 - [ ] [SCRIPT] P1. RELAUNCH the 7-year VIX futures backfill (2020-2026, CBOE/ohlcv_1m) on-demand or with a
       preemption-resilient strategy after the two code fixes land (repo: deployment-service) — the 2026-08-10 SPOT
       launch lost 5/7 VMs to preemption within minutes and the other 2 were deleted mid-run with no completion.

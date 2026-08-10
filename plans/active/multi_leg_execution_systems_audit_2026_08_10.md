@@ -122,14 +122,13 @@ might come in handy."
       leader/hedge/unwind sequencing in simulated-fill mode (a synthetic venue adapter in the IBKR-MEL shape:
       `runtime-topology.yaml` `ibkr_gateway_connectivity.batch_mode`), NOT (b) a parallel leader/hedge model inside
       `BenchmarkFillEngine`. Full evidence + tradeoffs in the Progress Log below.
-- [x] ✅ [DOC] P1. **Write the decision artifact**: added
-      `## Audit verdicts — multi-leg execution system disposition (2026-08-10)` section to
-      `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md` — unified-trading-pm@ea0418421 — with
-      the three systems' verdicts (DELETE MultiLegOrchestrator, DELETE instruction_adapter HEDGE_BASIS path, WIRE-IN
-      AtomicLegExecutor + routing seam), the exact 6-engine call-site map + 3-runtime wiring points, the
-      BenchmarkFillEngine option-(a) recommendation with IBKR MEL precedent, and a summary table. Kept in the issue doc
-      rather than a dedicated decisions doc because the issue is the finding that spawned the audit and the paired
-      execution plan already references it.
+- [ ] [DOC] P1. **Write the decision artifact**: a new section in
+      `plans/active/issues/multi_leg_paper_batch_live_parity_gap_2026_08_10.md` (or a dedicated decisions doc if that
+      issue doc is a poor fit for a durable decision record — state the reasoning) with the three systems' verdicts, the
+      exact call-site map for wiring `AtomicLegExecutor` into live, and the recommended fix approach for
+      `BenchmarkFillEngine`. This is the artifact the paired execution plan
+      (`multi_leg_execution_systems_execution_2026_08_10.md`, `depends_on` + `gate_on_depends` this plan) implements
+      against.
 
 ## Progress Log
 

@@ -10,7 +10,7 @@ summary:
   the billing dashboard to break spend down by exact model (not just provider), and — the part that actually matters —
   runs a completion-quality audit on a matched sample from each pool once the window closes, since a cheaper model that
   produces broken work is not actually cheaper.
-status: archived
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -47,7 +47,7 @@ context_scope:
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
   ]
 supersedes:
-superseded_by: [deepseek_claude_blended_provider_routing_2026_07_28]
+superseded_by:
 depends_on:
 source: operator-conversation-2026-08-05
 assigned_role: infra
@@ -55,13 +55,6 @@ drift_direction: advance-code
 ---
 
 # DeepSeek flash-vs-pro A/B routing test — cost, throughput, and completion-quality comparison
-
-> **ARCHIVED 2026-08-10** — all 25+ todos done (the 5 batch12-extracted items reconciled to this doc's checkboxes, the 6
-> time-gated items completed by batch18 once the 24h monitoring window elapsed). Final verdict: **KEEP FLASH**.
-> Superseded by `/plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md` (continuing routing policy). The
-> one remaining deferred item — the ~$2.35 flash real-time-vs-task-usage spend residual — was migrated to
-> `/plans/active/issues/deepseek_flash_spend_235_residual_2026_08_10.md` before archival (per the archival-discipline
-> ritual, never let a prose deferral evaporate). Archived by the batch12-finalize plan (2026-08-10).
 
 ## Background
 
@@ -84,18 +77,18 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       field and the model lives only in the account's own env file, invisible to AutoSpawn. Done-when: `basedpyright`
       clean, existing `AccountDef` tests still pass. — `agent-orchestrator@7d73ded`, basedpyright 0 errors, full pytest
       suite (2431 passed) green.
-- [x] 2. ✅ [INFRA] P1. In `server/autospawn.py`, at the point where `provider == "deepseek"` and
+- [ ] 2. [INFRA] P1. In `server/autospawn.py`, at the point where `provider == "deepseek"` and
       `_pick_headroom_account(..., provider="deepseek")` is called (~line 1316), split the candidate pool by `variant`
       and deterministically alternate between the pro and flash sub-pools — reuse the same style of persistent,
       debuggable accumulator `_deepseek_should_route()` already uses (not an in-memory-only counter that resets on
       restart; key off a real persisted count, e.g. total DeepSeek dispatches so far mod 2, or hash on `task_id`).
       Accounts with `variant: None` (the default/unset case) are treated as pro. Done-when: a unit test proves N
       consecutive DeepSeek dispatches split ~50/50 across variants and the split is reproducible across a process
-      restart. — **DONE 2026-08-10 via batch12 todo 1 (`agent-orchestrator@4d27bc1`)**: 5 new unit tests in
-      `tests/test_deepseek_provider_routing.py` exercising the FULL `select_account_for_spawn` path prove the ~50/50
-      split (exact alternation with active-slot counts held equal, reproducibility across a simulated process restart,
-      determinism across 3 fresh-state runs, degrade-to-pro when the flash pool is empty, ratio-skew regression).
-      Re-verified green (60-test file) in the batch12-finalize review 2026-08-10.
+      restart. **PARTIAL — shipped in `agent-orchestrator@7d73ded` and verified working live (see Progress Log), but NO
+      dedicated unit test was written proving the ~50/50 ratio/reproducibility** — the full QG pass being green does not
+      satisfy this todo's own stated done-when, since no new test exercises `_deepseek_flash_should_route` or the
+      variant filter in `_pick_headroom_account`. Left unchecked deliberately; real remaining work, see Deferred table.
+      **➡️ EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 1 — do NOT action here.**
 - [x] 3. ✅ [BACKEND] P1. Extend `GET /api/backlog/usage/windows` (and whatever backs `TaskUsageWindowsPanel`) to break
       down spend/tokens by exact `model`, not just `provider` — return per-model rows (deepseek-v4-pro,
       deepseek-v4-flash) AND a combined/aggregated deepseek row, for every window (1h/5h/24h/7d/lifetime). Done-when:
@@ -103,16 +96,14 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       `agent-orchestrator@7d73ded`; verified live via
       `curl localhost:8765/api/backlog/usage/windows?model=deepseek-v4-pro` vs `?model=deepseek-v4-flash` on the
       orchestrator VM, both returning distinct per-window rows.
-- [x] 4. ✅ [UI] P2. Extend `dashboard/src/TaskUsageWindows.tsx` (or add a sibling panel) to render the per-model
-      breakdown from the previous todo — pro and flash visible side-by-side, not just folded into one DeepSeek row.
-      Playwright regression spec per `/codex/06-coding-standards/ui-testing-layers.md`. **PARTIAL — the component change
-      shipped in `agent-orchestrator@7d73ded`** (new `_FILTER_OPTIONS` toggle: "DeepSeek (all)" / "· Pro" / "· Flash"),
-      existing vitest unit tests (`TaskUsageWindows.test.ts`, 10 tests) still pass — **but no Playwright regression spec
-      was written**, so this todo's explicit acceptance bar (`pw:L2` per the UI-testing-layers SSOT) is NOT met. Left
-      unchecked deliberately; real remaining work, see Deferred table. — **DONE 2026-08-10 via batch12 todo 2
-      (`agent-orchestrator@26f8a49`)**: new `dashboard/tests/e2e/task-usage-provider-filter.spec.ts` (5 tests, `pw:L2`)
-      asserts the pro/flash filter genuinely narrows the rendered rows + switch-back restores the sum; 5/5 passed,
-      sibling role-group spec re-run green, full QG green.
+- [ ] 4. [UI] P2. Extend `dashboard/src/TaskUsageWindows.tsx` (or add a sibling panel) to render the per-model breakdown
+      from the previous todo — pro and flash visible side-by-side, not just folded into one DeepSeek row. Playwright
+      regression spec per `/codex/06-coding-standards/ui-testing-layers.md`. **PARTIAL — the component change shipped in
+      `agent-orchestrator@7d73ded`** (new `_FILTER_OPTIONS` toggle: "DeepSeek (all)" / "· Pro" / "· Flash"), existing
+      vitest unit tests (`TaskUsageWindows.test.ts`, 10 tests) still pass — **but no Playwright regression spec was
+      written**, so this todo's explicit acceptance bar (`pw:L2` per the UI-testing-layers SSOT) is NOT met. Left
+      unchecked deliberately; real remaining work, see Deferred table. **➡️ EXTRACTED 2026-08-09 to
+      `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 2 — do NOT action here.**
 - [x] 5. ✅ [INFRA] P1. `bash scripts/quality-gates.sh` green in `agent-orchestrator/`, ship the routing + dashboard
       change via `quickmerge.sh --agent`. — QG green (ruff/basedpyright/2431 pytest/tsc/200 vitest all passed), shipped
       `agent-orchestrator@7d73ded` via quickmerge, landed on `live-defi-rollout`.
@@ -193,7 +184,7 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       question needed data the review agent generates but doesn't persist. Decision recorded; the build itself is out of
       scope for this A/B-test plan (per this todo's own original scope note) — filed as a new, properly-scoped todo
       below rather than built inline here.
-- [x] 12a. ✅ [BACKEND] P2. **Build a structured `review_finding` event so review-agent output is queryable, not
+- [ ] 12a. [BACKEND] P2. **Build a structured `review_finding` event so review-agent output is queryable, not
       chat-only** (per the 2026-08-08 ruling on todo 12 above). Add a persisted activity-log entry emitted whenever the
       review role posts a finding — minimum fields: `task_id`, `severity` (e.g. correct/needs-rework/broken, matching
       this plan's own todo 10 rubric), `finding_text`/summary, `agent_id`, `created_at`. Emit it from the review role's
@@ -201,11 +192,8 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       currently carries a finding as free-text chat) so future audits (like this plan's todos 10/11) can query real
       review coverage instead of re-deriving it from chat history. **Done when**: the event is written on every review
       finding, a query/report endpoint or script can pull findings by task_id/date range/severity, a regression test
-      proves emission + retrieval, and `quality-gates.sh` is green. Repo: agent-orchestrator. — **DONE 2026-08-10 via
-      batch12 todo 3 (`agent-orchestrator@7a7ef2e`)**: `POST /api/slots/{id}/message` with `from_role=review` now emits
-      a structured `review_finding` activity event (task_id/severity/finding_text/agent_id, task_id falls back to the
-      target slot's current task); new `GET /api/review-findings` query endpoint + task_id SQL filter; 7 regression
-      tests; QG green.
+      proves emission + retrieval, and `quality-gates.sh` is green. Repo: agent-orchestrator. **➡️ EXTRACTED 2026-08-09
+      to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 3 — do NOT action here.**
 - [x] ✅ 13. [DOC] P2. Write up the final verdict (keep flash / drop it / use it only for a specific task class) in this
       plan's Progress Log, with the real numbers cited, then archive this plan per the standard 6-step ritual. — Verdict
       written to Progress Log below (batch18 todo 1, 2026-08-10): **KEEP FLASH** — cheaper per task and per plan even
@@ -263,16 +251,12 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       tsc/vitest clean, full QG green; deployed live (`i-0c9b283b31d6b5ca7`, `HEAD=2941e88`,
       `systemctl is-active`→`active` — the `sudo -u ubuntu systemctl restart` step in `ao-self-pull.sh` failed under
       SSM's root session AGAIN, same as todo 6/16's deploys; had to restart as root directly a second time).
-- [x] 17b. ✅ [UI] P3. **Verify whether `thinking: on/off` is even meaningful for a DeepSeek-routed worker** — it's the
+- [ ] 17b. [UI] P3. **Verify whether `thinking: on/off` is even meaningful for a DeepSeek-routed worker** — it's the
       Claude Code CLI's own flag, echoed regardless of provider; unconfirmed whether DeepSeek's API actually honors it
       or silently ignores it. Label the Fleet table's thinking-brain icon honestly either way once known. Not started —
       needs real investigation (does DeepSeek's OpenAI/Anthropic-compatible endpoint accept/use a thinking param?), not
-      a guess. — **DONE 2026-08-10 via batch12 todo 4 (`agent-orchestrator@64a0291`)**: investigation found the flag is
-      inert on adaptive-reasoning models (sonnet 5 / opus 4.8 / fable 5) for BOTH providers — not a DeepSeek-specific
-      honesty gap (live transcript sampling: 3 DeepSeek + 3 Anthropic sessions, flag unset, all showed genuine thinking
-      blocks); DeepSeek's Anthropic-compat docs confirm `budget_tokens` is ignored. `ModelBadge` tooltip relabeled
-      "Thinking requested: on/off" with the caveat; new `thinking-flag-honesty.spec.ts`. Playwright execution gap
-      honestly disclosed (could not get a green run in the sandbox; spec mirrors a passing sibling pattern).
+      a guess. **➡️ EXTRACTED 2026-08-09 to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 4 — do NOT action
+      here.**
 - [x] 18. ✅ [BACKEND] P1. **Fix cross-account
       $ contamination in the Accounts panel** — operator finding (2026-08-06):
       the Accounts panel's pro/flash lifetime $
@@ -484,11 +468,10 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       **Correction to todo 23's own final Progress Log entry** (2026-08-06, quoted below): "all correctly read zero...
       expected, not a bug" was WRONG — it was bug 1 above, silently swallowing every one-off completion. This fixes it
       going forward from whichever deploy picks up `acd6d70`; it does NOT backfill the historical gap — see todo 25.
-- [x] 25. ✅ [BACKEND] P3. **Operator ruling 2026-08-08**
-      (`/plans/active/issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md`, item 3): "Run the backfill."
-      Extend `agent-orchestrator/scripts/orchestrator/backfill_task_usage.py` to cover one-off completions, then run it,
-      for the completions lost to todo 24's bug 1 while it was live (`agent-orchestrator@de73f93` deploy through
-      whenever `acd6d70` reached the VM) — an unknown-but-nonzero number of
+- [ ] 25. [BACKEND] P3. **Operator ruling 2026-08-08** (ao round-5 apply session, item 3): "Run the backfill." Extend
+      `agent-orchestrator/scripts/orchestrator/backfill_task_usage.py` to cover one-off completions, then run it, for
+      the completions lost to todo 24's bug 1 while it was live (`agent-orchestrator@de73f93` deploy through whenever
+      `acd6d70` reached the VM) — an unknown-but-nonzero number of
       cicd/conflict_resolver/data_pipeline_failure/scheduled completions in that window have no `TaskUsageRow` at all.
       **Investigated 2026-08-08**: read the live script in full — its `backfill()` is keyed purely off `SlotHistoryRow`
       (`slot_id, task_id, completed_at`) joined to `TaskRow.dispatched_at`; one-off tasks have neither row (no backlog
@@ -507,14 +490,8 @@ deterministically (not `random.random() < 0.5`) so a bad run is reproducible and
       candidate with no `SlotHistoryRow` gets matched and backfilled), a live dry-run report is reviewed, then `--apply`
       runs and the affected window's one-off `TaskUsageRow` count is verified non-zero (or genuinely unmatched due to
       transcript rotation — report either way, don't silently drop). Not run yet — the code path needed to run it
-      doesn't exist yet; this is now a concrete, non-operator-gated build+run todo, not an open decision. — **DONE
-      2026-08-10 via batch12 todo 5 (`agent-orchestrator@463ee10`)**: `backfill_task_usage.py` gained a one-off
-      `AgentRow` candidate source (transcript-resolved via `claude_session_id`, slot_id from the `orch-slot-N` dir).
-      Live `--apply` (on orchestrator VM, on-host): dry-run 23 matched / 0 unmatched
-      ($0.9360), apply wrote all 23.
-      Affected window's one-off count verified NON-ZERO: `one-off:agt-7e7e2c` (slot 9, 84 turns, $0.072119) +
-      `one-off:agt-a0bd62` (slot 4, 31 turns, $0.029804), both `backfilled=1`; pre-existing `one-off:agt-53f733` left
-      untouched (idempotency). Re-verified in the batch12-finalize review against live `task_usage`.
+      doesn't exist yet; this is now a concrete, non-operator-gated build+run todo, not an open decision. **➡️ EXTRACTED
+      2026-08-09 to `ao_satellite_ao_dispatch_batch12_2026_08_09.md` todo 5 — do NOT action here.**
 
 ## Codex SSOTs
 

@@ -25,7 +25,7 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-18, satellite-docs,
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch18_finalize_2026_08_10.md,
-    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-10"
@@ -47,7 +47,7 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
+    /plans/active/deepseek_flash_ab_routing_test_2026_08_05.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 source: >-
@@ -91,25 +91,25 @@ here (5 items already extracted this way).
 ## Todos
 
 - [x] ✅ [REVIEW] P1. **DeepSeek flash-vs-pro post-window analysis + writeup (4-part sequential chain, all writing into
-      the same source doc).** Source: `/plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md` todos 9, 10,
-      11, 13. (a) **Pull the post-window comparison** (todo 9): real `$/task`, `$/plan`, avg turn count, avg total
-      tokens/task for pro vs flash over the full monitoring window (now closed, target was `2026-08-06 20:41 UTC`,
-      individually and aggregated — compute whether flash's per-token discount beats pro once turn-count is priced in,
-      not just headline `$/task`. Expect unequal sample sizes between pools (documented ratio-skew finding in the doc's
-      own Progress Log) — report as-is, don't force balance. (b) **Completion-quality audit** (todo 10): Layer 1 (cheap)
-      — for every task in each pool, check whether it was later `/reopen`'d and whether its promoted commit's
-      `quality-gates-v2` run was green. Layer 2 (the one that matters) — pull a stratified sample of ~15-20 completed
-      todos from EACH pool, matched by plan/`estimate_class`, and independently review the actual diff (a fresh agent or
-      operator, no stake in the outcome, exactly as the doc's own text allows) — correct/needs-rework/broken per item,
-      not just an aggregate percentage. (c) **Review-coverage verification** (todo 11): pull the review agent's own
-      activity/chat history for the monitoring window, count how many completed todos it actually touched vs. the total
-      completed count — if coverage is a small fraction, note that Layer 2 above is doing the real work, not a backstop.
-      (d) **Final writeup + archive** (todo 13): write the verdict (keep flash / drop it / use it only for a specific
-      task class) into the source doc's Progress Log with the real numbers cited from (a)-(c), then run the standard
-      6-step archival ritual on that doc IF it reaches zero open todos (it has other closed items already; confirm none
-      of todos 2/4/12a/17b/25's extractions in batch12 are still open before archiving). **Done when**: all 4 sub-items'
-      evidence is recorded in the source doc's own Progress Log with real numbers/verdicts cited (not placeholders), and
-      the source doc is archived if genuinely at zero open todos. Repo: unified-trading-pm (analysis + doc-writeup only,
+      the same source doc).** Source: `/plans/active/deepseek_flash_ab_routing_test_2026_08_05.md` todos 9, 10, 11, 13.
+      (a) **Pull the post-window comparison** (todo 9): real `$/task`, `$/plan`, avg turn count, avg total tokens/task
+      for pro vs flash over the full monitoring window (now closed, target was `2026-08-06 20:41 UTC`, individually and
+      aggregated — compute whether flash's per-token discount beats pro once turn-count is priced in, not just headline
+      `$/task`. Expect unequal sample sizes between pools (documented ratio-skew finding in the doc's own Progress Log)
+      — report as-is, don't force balance. (b) **Completion-quality audit** (todo 10): Layer 1 (cheap) — for every task
+      in each pool, check whether it was later `/reopen`'d and whether its promoted commit's `quality-gates-v2` run was
+      green. Layer 2 (the one that matters) — pull a stratified sample of ~15-20 completed todos from EACH pool, matched
+      by plan/`estimate_class`, and independently review the actual diff (a fresh agent or operator, no stake in the
+      outcome, exactly as the doc's own text allows) — correct/needs-rework/broken per item, not just an aggregate
+      percentage. (c) **Review-coverage verification** (todo 11): pull the review agent's own activity/chat history for
+      the monitoring window, count how many completed todos it actually touched vs. the total completed count — if
+      coverage is a small fraction, note that Layer 2 above is doing the real work, not a backstop. (d) **Final
+      writeup + archive** (todo 13): write the verdict (keep flash / drop it / use it only for a specific task class)
+      into the source doc's Progress Log with the real numbers cited from (a)-(c), then run the standard 6-step archival
+      ritual on that doc IF it reaches zero open todos (it has other closed items already; confirm none of todos
+      2/4/12a/17b/25's extractions in batch12 are still open before archiving). **Done when**: all 4 sub-items' evidence
+      is recorded in the source doc's own Progress Log with real numbers/verdicts cited (not placeholders), and the
+      source doc is archived if genuinely at zero open todos. Repo: unified-trading-pm (analysis + doc-writeup only,
       read-only queries against the live orchestrator VM's `state.db`). — `unified-trading-pm@79e653a7a0`: all 4
       sub-items written into the source doc's Progress Log with real numbers (flash ~13.7% cheaper/task, ~7.4%
       cheaper/plan despite ~68% more turns, because its blended $/M-tokens is ~2.6x cheaper; Layer-1 reopen-rate pro
