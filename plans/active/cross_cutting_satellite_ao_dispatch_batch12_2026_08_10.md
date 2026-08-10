@@ -402,3 +402,10 @@ termination (8h timeout). When it fires: manifest verification → checkbox flip
 
 No relaunch needed — the existing VM IS the retry (the `--timeframes` fix from `deployment-service@8f1feb4eb9e4` is live
 in this VM's command: `MDPS_TIMEFRAMES='1h' MDPS_VENUES='BITGET-FUTURES'`).
+
+### 2026-08-10 — Slot 14 Session 11 (monitoring continuation)
+
+Pure monitoring session — VM `mdps-backfill-cefi-20260810-115835` still RUNNING at compact time (~14:10 UTC). 5/11 dates
+in log (04-20 through 04-24, on `book_snapshot_5` for 04-24). No `DEPLOYMENT_COMPLETED`/`FAILED` yet. ETA still ~17:30
+UTC. Both repos clean, ahead=0. `/compact` killed the monitor again — on resume, check VM status + GCS log tail first,
+then re-arm.
