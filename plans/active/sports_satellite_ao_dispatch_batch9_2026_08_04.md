@@ -221,7 +221,7 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       exact failing file → `success=True`; concurrent `_process_files_parallel(max_workers=4)` over all 50
       `ticks_migrated` files → `failed=0`. No code change needed — fix already shipped. The `[SCRIPT]` no-relaunch STOP
       in the source doc is now cleared. See source doc Progress Log 2026-08-06.
-- [ ] [CODE] P2. Investigate-then-fix finding 5 of
+- [x] ✅ [CODE] P2. Investigate-then-fix finding 5 of
       `mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md` in `market-data-processing-service`:
       first grep findings-3/4's VM `run.log`s (e.g. `mdps-backfill-sports-pcskip-20260801-130846-2bf067` /
       `mdps-backfill-sports-pipelinecheck-20260801-134301-2bf067`) for `[partition_mismatch]` to check whether any of
@@ -233,13 +233,15 @@ conflict_gated (already claimed elsewhere), 14 time_gated, 5 too_large_or_risky,
       shared-root-cause check result is recorded, the code fix lands, and a from-scratch
       `pipeline_e2e_check.py --asset-group SPORTS --data-types odds_horizon_bucket` force run against day=2026-04-14
       produces 0 `[partition_mismatch]` rejects for the SPORT888/BETONLINEAG/CORAL (`US_CATANZARO_1929-MODENA`) and
-      UNIBET (`SOUTHAMPTON-BLACKBURN`) cells. **2026-08-09 (slot-2): grep+code-fix legs DONE
-      (`market-data-processing-service@551ca82`, unit-tested); e2e leg BLOCKED — see
-      [`mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md`](/plans/archive/2026_08/issues/mdps_sports_staleness_guard_ambient_deployment_env_blocks_e2e_check_2026_08_09.md) +
-      the source doc's Progress Log for the full run evidence. **2026-08-09: that doc's own todos are now both done
-      (staleness guard fixed) but re-verification surfaced a DISTINCT, deeper partition_mismatch root cause — see
-      [`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`](/plans/archive/2026_08/issues/mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md).
-      Checkbox stays unflipped pending THAT fix.**
+      UNIBET (`SOUTHAMPTON-BLACKBURN`) cells. — **DONE 2026-08-10 (slot-16, batch9-005).** Full chain: grep+code-fix
+      legs (slot-2): `market-data-processing-service@551ca82` (venue-correction gate, unit-tested); staleness-guard
+      blocker resolved (slot-29): `@d653a42` (pinned `deployment_env="prod"`); deeper multi-venue-batch root cause fixed
+      (slot-5): `@53344df` (per-venue split in `_write_or_record_empty_timeframe`); sibling streaming-path fix:
+      `@e4fc0fd`; e2e re-verification (slot-31): VM `mdps-backfill-sports-pipelinecheck-20260809-234808-d0c755`,
+      EXIT_STATUS=0, 0 `[partition_mismatch]` hits, 0 errors, 90/90 succeeded, 14,790 candles, real per-bookmaker venue
+      partitions confirmed. Source doc's Finding 5 todo + chain-bundle doc
+      (`mdps_sports_chain_bundle_multi_venue_partition_mismatch_2026_08_09.md`) both archived resolved. All three
+      blocker layers cleared.
 - [ ] [DATA] P3. Root-cause the 216 residual poll-key-duplicate canonical sports MDT odds objects (1,266 duplicate-key
       groups where both home AND away team-id legs vary simultaneously, left untouched by the
       single-team-resolution-split rule shipped in `scripts/dedup_odds_api_poll_key_duplicates_2026_07_26.py`) and
