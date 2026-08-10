@@ -101,7 +101,7 @@ happen to know the `SDP_ISOLATED=0` escape hatch.
   landed with author `ikennaigboaka [slot-29·planning]`, NOT `[main·planning]` (the exact bug). **BLOCKER**: PM
   `quality-gates.sh` is red on 8 PRE-EXISTING live-corpus test failures (`check_workspace_code_workspace_drift.py` ×5 +
   `check_finalize_plan_coverage.py` ×3 — see
-  `/plans/active/issues/pm_qg_pre_existing_red_workspace_drift_and_finalize_coverage_2026_08_10.md`, verified
+  `/plans/archive/issues/pm_qg_pre_existing_red_workspace_drift_and_finalize_coverage_2026_08_10.md`, verified
   pre-existing at base HEAD). Fix committed locally as `7b84434c0f` (ahead=1) but NOT pushed — quickmerge sentinel
   requires a green PM QG, which the pre-existing red blocks. Joined fleet-wide repo-blocker `RB-5b82f02e` (PM qg_red,
   escalated). **Resume**: when PM QG is green (fleet fixing via the sibling issue's todos), re-run `quality-gates.sh` on
