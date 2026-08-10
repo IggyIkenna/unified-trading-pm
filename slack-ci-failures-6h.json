@@ -1,0 +1,941 @@
+[
+  {
+    "subtype": "bot_message",
+    "text": ":warning: WARNING — reconcile-release-tags",
+    "type": "message",
+    "ts": "1786360945.206769",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "7vrCp",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":warning: *WARNING* — reconcile-release-tags",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "v0PIO",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *RELEASE TAG STALL* — 7 repo(s) not advancing\\n  • e2e-testing: 73 unreleased commit(s) on main; newest tag v0.41.0 is 15.5d old\\n  • fund-administration-service: 99 unreleased commit(s) on main; newest tag v0.9.32 is 44.0d old\\n  • greeks-service: 109 unreleased commit(s) on main; newest tag v0.18.17 is 44.3d old\\n  • ibkr-gateway-infra: 27 unreleased commit(s) on main; newest tag v0.5.0 is 15.6d old\\n  • system-integration-tests: 57 unreleased commit(s) on main; newest tag v0.15.0 is 15.6d old\\n  • trading-agent-service: 88 unreleased commit(s) on main; newest tag v0.12.11 is 44.0d old\\n  • unified-trading-api: 23 unreleased commit(s) on main; newest tag v0.4.0 is 10.0d old\\n→ Tag minter is semver-agent (fires on a push to the repo's promotion branch) — check it is enabled and targeting the branch this repo actually promotes to.",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "btO0/",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31383113769|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":white_check_mark: INFO — cloud-build-failure-watcher",
+    "type": "message",
+    "ts": "1786361131.968989",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "wEvZk",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":white_check_mark: *INFO* — cloud-build-failure-watcher  |  result: *OK* (`success`)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "R2Cpn",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":white_check_mark: *cloud-build-failure-watcher: recovered* — no failed Cloud Builds this tick (prior tick had failure(s)) — project central-element-323112",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "SEgC2",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31383379965|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":information_source: INFO — ldr-ci-monitor",
+    "type": "message",
+    "ts": "1786361153.103929",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "gqL8P",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":information_source: *INFO* — ldr-ci-monitor",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "UHmJI",
+        "text": {
+          "type": "mrkdwn",
+          "text": "LDR-CI-red monitor detected live-defi-rollout state transition(s):\n:white_check_mark: *1 repo(s) LDR RECOVERED:*\n  • `instruments-service`@`live-defi-rollout` RED → *GREEN* (783b448a) <https://github.com/IggyIkenna/instruments-service/actions/runs/31380511757|gate run>\n",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "0cLMW",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31383279260|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — glue-runner-crash-loop-watchdog",
+    "type": "message",
+    "ts": "1786361252.510249",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "2/058",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — glue-runner-crash-loop-watchdog",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "6jxAT",
+        "text": {
+          "type": "mrkdwn",
+          "text": "`github-glue-runner-ao@glue-2.service` is crash-looping on `i-042a6332509482556` (`NRestarts=228`, state `activating (auto-restart)`) -- the runner process is DOWN, not just slow.",
+          "verbatim": false
+        }
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — python-quality-gates-v2",
+    "type": "message",
+    "ts": "1786361410.267219",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "SE/UK",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — python-quality-gates-v2",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "/qx6v",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *QG slice(s) FAILED* | *unified-trading-pm* | push to `live-defi-rollout` | <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31383427597|sha `5236cfa9e1c82c8c4d489e843bab784298624190`>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "WMYv2",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31383427597|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — python-quality-gates-v2",
+    "type": "message",
+    "ts": "1786363025.022879",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "4Afnm",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — python-quality-gates-v2",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "fNrWb",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *QG slice(s) FAILED* | *unified-trading-pm* | PR #2711 `promote/unified-trading-pm/4840cdac0125` → `main` | <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31375748365|sha `ec57900fa7aa528ae29af6334de6ab76a6a28dc6`>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "9NoCT",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31375748365|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — cloud-build-failure-watcher",
+    "type": "message",
+    "ts": "1786364369.882439",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "EkVP1",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — cloud-build-failure-watcher",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "Tb/e6",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":building_construction: *cloud-build-failure-watcher: 2 failed Cloud Build(s)* in the last 20m (0 silent config-rejection(s)) — project central-element-323112\n:x: Cloud Build FAILURE market-tick-data-service@6dede72 — build 53f9443f-dc89-4b12-914e-5a20c2e054b5 — <https://console.cloud.google.com/cloud-build/builds;region=asia-northeast1/53f9443f-dc89-4b12-914e-5a20c2e054b5?project=1060025368044>\n:x: Cloud Build FAILURE market-tick-data-service@0680b7e — build ac490d02-cb29-45b2-8914-1defabea666b — <https://console.cloud.google.com/cloud-build/builds;region=asia-northeast1/ac490d02-cb29-45b2-8914-1defabea666b?project=1060025368044>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "jaQ7m",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31387408778|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":warning: WARNING — branch-health",
+    "type": "message",
+    "ts": "1786364518.826269",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "05TM5",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":warning: *WARNING* — branch-health",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "msnvq",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":hourglass_flowing_sand: *PROMOTION LAG &gt; 60m* — 1 branch-pair(s) across 1 repo(s) un-propagated\\n  • unified-trading-pm LDR→main: cause unknown — 15 commit(s), oldest 1518m old — \"docs(plans): archive ci_satellite_ao_dispatch_batch1 + final\" (promote PR #2712 state matched none of the known causes; investigate directly)\\n→ open *deployment-ui* → CI/CD Repos page (`/repos`) for per-repo promotion state\\n  (CLI: `gh api repos/IggyIkenna/&lt;repo&gt;/compare/&lt;base&gt;...&lt;head&gt;` to inspect a specific pair)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "XHNoy",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31387489394|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":warning: WARNING — sit-gate-stuck-detector",
+    "type": "message",
+    "ts": "1786364635.783839",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "e80fW",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":warning: *WARNING* — sit-gate-stuck-detector",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "wjh5y",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *SIT GATE STUCK* — 1 repo(s) posted 3+ consecutive `SIT GATE BLOCK` verdicts on `ldr-to-main-promote-fleet.yml` (a stuck gate, not promotion-lag latency):\n  • `unified-api-contracts` — 5 straight SIT-gate-blocked tick(s)\n  → latest tick: <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31387142385>\n  → check IggyIkenna/unified-trading-pm's `sit-gate/fleet-green` status + `sit_validated_tree` — see issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md for the moving-tree race\n---SLACK---\n:rotating_light: *SIT GATE STUCK* — 1 repo(s) posted 3+ consecutive `SIT GATE BLOCK` verdicts on `ldr-to-main-promote-fleet.yml` (a stuck gate, not promotion-lag latency):\n  • `unified-api-contracts` — 5 straight SIT-gate-blocked tick(s)\n  → latest tick: <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31387142385>\n  → check IggyIkenna/unified-trading-pm's `sit-gate/fleet-green` status + `sit_validated_tree` — see issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md for the moving-tree race",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "+wYIc",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31387755575|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":white_check_mark: INFO — sit-gate-stuck-detector",
+    "type": "message",
+    "ts": "1786366283.845879",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "4W3kM",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":white_check_mark: *INFO* — sit-gate-stuck-detector  |  result: *OK* (`success`)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "HOvCh",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":ballot_box_with_check: *sit-gate-stuck-detector: RESOLVED* — the SIT-gate-block streak has cleared (prior tick paged WARNING)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "Cigp2",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31389904444|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":x: CRITICAL — cloud-build-router",
+    "type": "message",
+    "ts": "1786367235.780619",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "nH9Ih",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *CRITICAL* — cloud-build-router  |  result: *FAILED* (`failure`)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "wi+Fh",
+        "text": {
+          "type": "mrkdwn",
+          "text": "unified-trading-library-prod Cloud Build trigger did not fire — the base Docker image every service Dockerfile FROMs has stopped republishing. This is NEVER an intentional pre-cutover state (unlike other repos' prod triggers). Actual error: ``. If that says NOT_FOUND, the trigger itself is gone — recreate `unified-trading-library-prod` in GCP project central-element-323112, region asia-northeast1 (mirror instruments-service-prod's config). Any OTHER error (e.g. INVALID_ARGUMENT / source.revision) means the trigger exists but the router's `gcloud builds triggers run` invocation itself is failing — check `cloud-build-router.yml`'s `trigger_build_in_region` first, do NOT assume the trigger is missing. See plans/active/issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md.",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "7ttzm",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31391165667|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — cloud-build-failure-watcher",
+    "type": "message",
+    "ts": "1786368727.738899",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "vOroQ",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — cloud-build-failure-watcher",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "Xetuf",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":building_construction: *cloud-build-failure-watcher: 1 failed Cloud Build(s)* in the last 20m (0 silent config-rejection(s)) — project central-element-323112\n:x: Cloud Build FAILURE market-tick-data-service@f6b7f8b — build b5342e0a-3a83-4096-b004-4a66e03fc528 — <https://console.cloud.google.com/cloud-build/builds;region=asia-northeast1/b5342e0a-3a83-4096-b004-4a66e03fc528?project=1060025368044>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "h2O3N",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31393305954|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — python-quality-gates-v2",
+    "type": "message",
+    "ts": "1786368997.172429",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "+l8bj",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — python-quality-gates-v2",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "fU1tF",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *QG slice(s) FAILED* | *unified-trading-pm* | push to `live-defi-rollout` | <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31393337496|sha `aa2a89a2d901c6d5c102a35022e54ef4238ab298`>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "IreUC",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31393337496|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — ldr-ci-monitor",
+    "type": "message",
+    "ts": "1786372068.975119",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "PkuYK",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — ldr-ci-monitor",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "wy84C",
+        "text": {
+          "type": "mrkdwn",
+          "text": "LDR-CI-red monitor detected live-defi-rollout state transition(s):\n:x: *1 repo(s) LDR went RED* (live-defi-rollout has no remote CI — caught by Tier-A):\n  • `agent-orchestrator`@`live-defi-rollout` GREEN → *RED* (8f1a08ad) <https://github.com/IggyIkenna/agent-orchestrator/actions/runs/31393234959|gate run>\n      ↳ `04db4ee8` ikennaigboaka [slot-16·planning]: feat(plan_health): close doc_drift rows when their drift key clears\n      ↳ `d990e186` ikennaigboaka [slot-4·laptop]: fix(context): a boot liveness ping must not fabricate a compaction — make heartb\n      ↳ `dd4b18ff` ikennaigboaka [slot-4·laptop]: feat(dashboard): surface a typed agent's real task on the Fleet role badge toolt\n      ↳ `b5d38671` ikennaigboaka [slot-16·planning]: feat(blocked): generalize detector-seeded row retirement via condition_key\n      ↳ `8f1a08ad` ikennaigboaka [slot-4·laptop]: fix(qg): fail closed when the toolchain is missing instead of degrading silently\n",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "SySih",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31398122470|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":white_check_mark: INFO — cloud-build-failure-watcher",
+    "type": "message",
+    "ts": "1786372085.776479",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "ShLKF",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":white_check_mark: *INFO* — cloud-build-failure-watcher  |  result: *OK* (`success`)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "Xn9Jq",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":white_check_mark: *cloud-build-failure-watcher: recovered* — no failed Cloud Builds this tick (prior tick had failure(s)) — project central-element-323112",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "Hmdfr",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31398231991|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":warning: WARNING — branch-health",
+    "type": "message",
+    "ts": "1786372206.080579",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "RqCpl",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":warning: *WARNING* — branch-health",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "uWnUw",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":hourglass_flowing_sand: *PROMOTION LAG &gt; 60m* — 1 branch-pair(s) across 1 repo(s) un-propagated\\n  • unified-trading-pm LDR→main: cause unknown — 17 commit(s), oldest 1646m old — \"docs(plans): archive ci_satellite_ao_dispatch_batch1 + final\" (promote PR #2713 state matched none of the known causes; investigate directly)\\n→ open *deployment-ui* → CI/CD Repos page (`/repos`) for per-repo promotion state\\n  (CLI: `gh api repos/IggyIkenna/&lt;repo&gt;/compare/&lt;base&gt;...&lt;head&gt;` to inspect a specific pair)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "paG19",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31398295529|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":x: CRITICAL — ci-status-update",
+    "type": "message",
+    "ts": "1786372427.602669",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "PDfov",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *CRITICAL* — ci-status-update  |  result: *FAILED* (`failure`)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "zrhXu",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: CI REGRESSION on *main*: *features-service* is *FAILING* (was MAIN_GREEN) — the promoted/main line is RED\n:bust_in_silhouette: pushed by IggyIkenna [automation]",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "EoG2m",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31398730810|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":white_check_mark: INFO — ci-status-update",
+    "type": "message",
+    "ts": "1786373973.239319",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "7B2yj",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":white_check_mark: *INFO* — ci-status-update  |  result: *OK* (`success`)",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "3t/hN",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":large_green_circle: CI RECOVERED: *features-service* FAILING → *FEATURE_GREEN*\n:bust_in_silhouette: pushed by uts-backmerge-bot [unknown]",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "LNqDj",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31401055805|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — python-quality-gates-v2",
+    "type": "message",
+    "ts": "1786375494.053909",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "C428U",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — python-quality-gates-v2",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "sDxAa",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":warning: *QG slice CANCELLED / TIMED-OUT* (timeout-minutes hit, OOM, or cancel) | *market-tick-data-service* | push to `live-defi-rollout` | <https://github.com/IggyIkenna/market-tick-data-service/actions/runs/31403266747|sha `0eb8aa2c8e1c88dd66ee2e776f0cccbe2ee4919e`>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "FAsiI",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/market-tick-data-service/actions/runs/31403266747|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":warning: WARNING — sit-gate-stuck-detector",
+    "type": "message",
+    "ts": "1786375627.869689",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "V/0w9",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":warning: *WARNING* — sit-gate-stuck-detector",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "lEZrZ",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *SIT GATE STUCK* — 1 repo(s) posted 3+ consecutive `SIT GATE BLOCK` verdicts on `ldr-to-main-promote-fleet.yml` (a stuck gate, not promotion-lag latency):\n  • `market-tick-data-service` — 4 straight SIT-gate-blocked tick(s)\n  → latest tick: <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31403360309>\n  → check IggyIkenna/unified-trading-pm's `sit-gate/fleet-green` status + `sit_validated_tree` — see issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md for the moving-tree race\n---SLACK---\n:rotating_light: *SIT GATE STUCK* — 1 repo(s) posted 3+ consecutive `SIT GATE BLOCK` verdicts on `ldr-to-main-promote-fleet.yml` (a stuck gate, not promotion-lag latency):\n  • `market-tick-data-service` — 4 straight SIT-gate-blocked tick(s)\n  → latest tick: <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31403360309>\n  → check IggyIkenna/unified-trading-pm's `sit-gate/fleet-green` status + `sit_validated_tree` — see issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md for the moving-tree race",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "vbaWb",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31403508363|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — python-quality-gates-v2",
+    "type": "message",
+    "ts": "1786376549.818259",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "tIsi+",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — python-quality-gates-v2",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "uP+ka",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *QG slice(s) FAILED* | *unified-trading-pm* | PR #2713 `promote/unified-trading-pm/12bb896a446c` → `main` | <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31395941118|sha `d9cdf532f733ccf6b93944d8398b54b3392bfc9c`>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "CehXY",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31395941118|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":warning: WARNING — sit-gate-stuck-detector",
+    "type": "message",
+    "ts": "1786377145.220579",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "qByE6",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":warning: *WARNING* — sit-gate-stuck-detector",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "KdToo",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *SIT GATE STUCK* — 1 repo(s) posted 3+ consecutive `SIT GATE BLOCK` verdicts on `ldr-to-main-promote-fleet.yml` (a stuck gate, not promotion-lag latency):\n  • `market-tick-data-service` — 7 straight SIT-gate-blocked tick(s)\n  → latest tick: <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31405714780>\n  → check IggyIkenna/unified-trading-pm's `sit-gate/fleet-green` status + `sit_validated_tree` — see issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md for the moving-tree race\n---SLACK---\n:rotating_light: *SIT GATE STUCK* — 1 repo(s) posted 3+ consecutive `SIT GATE BLOCK` verdicts on `ldr-to-main-promote-fleet.yml` (a stuck gate, not promotion-lag latency):\n  • `market-tick-data-service` — 7 straight SIT-gate-blocked tick(s)\n  → latest tick: <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31405714780>\n  → check IggyIkenna/unified-trading-pm's `sit-gate/fleet-green` status + `sit_validated_tree` — see issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md for the moving-tree race",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "r+mCB",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31405844649|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":information_source: INFO — ldr-ci-monitor",
+    "type": "message",
+    "ts": "1786378741.405779",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "8Et37",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":information_source: *INFO* — ldr-ci-monitor",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "eQAgC",
+        "text": {
+          "type": "mrkdwn",
+          "text": "LDR-CI-red monitor detected live-defi-rollout state transition(s):\n:white_check_mark: *1 repo(s) LDR RECOVERED:*\n  • `agent-orchestrator`@`live-defi-rollout` RED → *GREEN* (9005ac55) <https://github.com/IggyIkenna/agent-orchestrator/actions/runs/31407808319|gate run>\n",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "af2zt",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31408143880|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":rotating_light: CRITICAL — python-quality-gates-v2",
+    "type": "message",
+    "ts": "1786378882.190819",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "GFuIJ",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *CRITICAL* — python-quality-gates-v2",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "M89MA",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":x: *QG slice(s) FAILED* | *market-tick-data-service* | push to `live-defi-rollout` | <https://github.com/IggyIkenna/market-tick-data-service/actions/runs/31407887524|sha `fe000178c763cd16370a8171cad156f0af8e87a0`>",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "2w5xP",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/market-tick-data-service/actions/runs/31407887524|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "subtype": "bot_message",
+    "text": ":warning: WARNING — sit-gate-stuck-detector",
+    "type": "message",
+    "ts": "1786378941.175559",
+    "bot_id": "B0B6L1XD10F",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "ZBGK1",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":warning: *WARNING* — sit-gate-stuck-detector",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "section",
+        "block_id": "Cdqzu",
+        "text": {
+          "type": "mrkdwn",
+          "text": ":rotating_light: *SIT GATE STUCK* — 1 repo(s) posted 3+ consecutive `SIT GATE BLOCK` verdicts on `ldr-to-main-promote-fleet.yml` (a stuck gate, not promotion-lag latency):\n  • `market-tick-data-service` — 8 straight SIT-gate-blocked tick(s)\n  → latest tick: <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31408347148>\n  → check IggyIkenna/unified-trading-pm's `sit-gate/fleet-green` status + `sit_validated_tree` — see issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md for the moving-tree race\n---SLACK---\n:rotating_light: *SIT GATE STUCK* — 1 repo(s) posted 3+ consecutive `SIT GATE BLOCK` verdicts on `ldr-to-main-promote-fleet.yml` (a stuck gate, not promotion-lag latency):\n  • `market-tick-data-service` — 8 straight SIT-gate-blocked tick(s)\n  → latest tick: <https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31408347148>\n  → check IggyIkenna/unified-trading-pm's `sit-gate/fleet-green` status + `sit_validated_tree` — see issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md for the moving-tree race",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "context",
+        "block_id": "wrwds",
+        "elements": [
+          {
+            "type": "mrkdwn",
+            "text": "<https://github.com/IggyIkenna/unified-trading-pm/actions/runs/31408491096|View run>",
+            "verbatim": false
+          }
+        ]
+      }
+    ]
+  }
+]
