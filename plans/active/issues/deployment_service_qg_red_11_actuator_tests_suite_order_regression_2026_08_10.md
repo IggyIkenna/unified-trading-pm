@@ -29,6 +29,9 @@ resolved_by:
 created: 2026-08-10
 supersedes: null
 superseded_by: null
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
 ---
 
 # deployment-service QG red — 11 stable actuator-test failures (full-suite only)
