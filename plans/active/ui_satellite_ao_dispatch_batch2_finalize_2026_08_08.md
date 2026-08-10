@@ -70,16 +70,16 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile the source doc's 4 checkboxes.** For batch 2's now-done todo, find the 4 corresponding
-      checkboxes in `cost_observability_deferred_followups_2026_07_10.md`'s "## Unscheduled P3 enhancements" section
-      (month-aware AWS cutoff, credits/discounts view, usage-quantity unit economics, "Other resources" leaf table) and
-      flip each `[x]`, citing the batch-2 commit sha(s) that shipped it. **Verify the cited sha actually exists and is
-      an ancestor of `origin/live-defi-rollout`** (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`) before
-      citing it. If only some of the 4 sub-items shipped (e.g. the todo was partially completed or descoped mid-flight),
-      flip only those and leave the rest open with a stated reason — do not flip on the batch todo's completion alone
-      without verifying each sub-item's actual shipped state. **Done when**: every sub-item that genuinely shipped has
-      its source-doc checkbox flipped with a verified sha; any that didn't ship is left open with a stated reason. Repo:
-      unified-trading-pm.
+- [x] ✅ [REVIEW] P2. **Reconcile the source doc's 4 checkboxes — VERIFIED 2026-08-10 (slot-12).** For batch 2's
+      now-done todo, find the 4 corresponding checkboxes in `cost_observability_deferred_followups_2026_07_10.md`'s "##
+      Unscheduled P3 enhancements" section (month-aware AWS cutoff, credits/discounts view, usage-quantity unit
+      economics, "Other resources" leaf table) and flip each `[x]`, citing the batch-2 commit sha(s) that shipped it.
+      **Verify the cited sha actually exists and is an ancestor of `origin/live-defi-rollout`**
+      (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`) before citing it. If only some of the 4 sub-items
+      shipped (e.g. the todo was partially completed or descoped mid-flight), flip only those and leave the rest open
+      with a stated reason — do not flip on the batch todo's completion alone without verifying each sub-item's actual
+      shipped state. **Done when**: every sub-item that genuinely shipped has its source-doc checkbox flipped with a
+      verified sha; any that didn't ship is left open with a stated reason. Repo: unified-trading-pm.
 
 - [ ] [REVIEW] P2. **Re-check batch 2's 1 `## Deferred` item for resolution.** Has
       `issues/vm_launcher_setup_script_freshness_gap_2026_07_31.md`'s standing follow-up todo ("dedicated migration plan
@@ -132,3 +132,8 @@ source: >-
   agt-a0f1b7, `/ag-closeout-audit ui`, Autonomous mode). Ships `active` per the no-double-gate rule; genuinely cannot
   dispatch early due to `gate_on_depends: true`.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
+- **2026-08-10 (slot-12, review)** — Todo 1 verified. All 4 source-doc checkboxes already flipped by slot-32 with
+  correct SHA citations. Independent verification: `deployment-api@6a536a82d` and `deployment-ui@b7beaf33b` both
+  confirmed ancestors of `origin/live-defi-rollout` via `git merge-base --is-ancestor`. All 4 sub-items shipped and
+  verified: (1) AWS provisional cutoff month-aware; (2) Credits/discounts view; (3) Usage quantity + unit economics; (4)
+  "Other resources" leaf table.
