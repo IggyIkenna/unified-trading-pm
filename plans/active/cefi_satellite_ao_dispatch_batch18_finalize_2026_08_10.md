@@ -54,17 +54,18 @@ context_scope:
 
 ## Todos
 
-- [ ] [DOC] P3. **Reconcile source issue doc.** Verify `mdps_manifest_staleness_check_inverted_2026_08_10.md`'s sole
-      todo is correctly checked off (or still open if the investigation found no bug / needs further work), and that the
-      doc's `status` reflects the actual resolution state. Source: `cefi_satellite_ao_dispatch_batch18_2026_08_10.md`
-      todo 1. **Done when**: source doc's checkbox and status are reconciled against the investigation's actual outcome.
+- [x] ✅ [DOC] P3. **Reconcile source issue doc.** Verified `mdps_manifest_staleness_check_inverted_2026_08_10.md`'s
+      sole todo is correctly checked off with fix evidence (`unified-trading-library@26294ddf71`), and the doc's
+      `status:     resolved` reflects the actual resolution. Root cause: NOT inverted comparison — transient GCS/parse
+      error in fast-path `_read_consolidated_if_fresh()` caused slow path to raise `ManifestConsolidatorStaleError` with
+      misleading message. Source: `cefi_satellite_ao_dispatch_batch18_2026_08_10.md` todo 1. —
+      `unified-trading-pm@5f012d2842` (archival) + stale active copy removed this commit.
 
-- [ ] [DOC] P3. **Archive source issue doc if fully resolved.** If the investigation resolved the root cause (bug
-      found + fixed, or confirmed false alarm with explanation), archive
-      `mdps_manifest_staleness_check_inverted_2026_08_10.md` per the canonical archival discipline
-      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). Source:
-      `cefi_satellite_ao_dispatch_batch18_2026_08_10.md`. **Done when**: doc is archived (or left active with a
-      documented reason if not fully resolved).
+- [x] ✅ [DOC] P3. **Archive source issue doc.** Investigation resolved the root cause (transient GCS/parse error, NOT
+      inverted comparison), fix shipped. Archived to `plans/archive/2026_08/issues/` per canonical archival discipline
+      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). 5 referrers updated. Stale active copy
+      removed this commit. Source: `cefi_satellite_ao_dispatch_batch18_2026_08_10.md`. — `unified-trading-pm@5f012d2842`
+      (archival).
 
 - [ ] [DOC] P3. **Verify closeout linkage.** Run `check_ag_closeout_linkage.py --tranche cefi` and confirm 0 cefi
       orphans. If the source doc was archived, verify no broken referrers remain. Source:
