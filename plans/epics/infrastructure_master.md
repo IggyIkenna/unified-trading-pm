@@ -32,6 +32,8 @@ codex_ssots:
 related_plans:
   - ../active/ao_satellite_ao_dispatch_batch16_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch16_finalize_2026_08_09.md
+  - ../active/cefi_satellite_ao_dispatch_batch17_2026_08_10.md
+  - ../active/cefi_satellite_ao_dispatch_batch17_finalize_2026_08_10.md
   - ../active/aster_and_cefi_rolling_adv_feature_2026_07_21.md
   - ../active/backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md
   - ../active/bucket_estate_consolidation_closeout_2026_07_24.md

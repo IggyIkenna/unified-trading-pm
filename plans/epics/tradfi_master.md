@@ -46,6 +46,7 @@ related_plans:
   - ../active/tradfi_satellite_ao_dispatch_batch7_2026_08_06_finalize.md
   - ../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md
   - ../active/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
+  - ../active/tradfi_satellite_ao_dispatch_batch12_2026_08_10.md
   - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
