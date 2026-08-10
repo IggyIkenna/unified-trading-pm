@@ -18,7 +18,7 @@ summary: >-
   and no `asset_group=`, contradicting three in-repo comments that assert it emits the hive layout. The UTL sink sorts
   partition keys ALPHABETICALLY, so canonicalising IS by adding keys to the partition dict is structurally impossible —
   it needs the sink PREFIX mechanism the sports lane already uses.
-status: resolved
+status: open
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [data]
@@ -56,10 +56,8 @@ depends_on: []
 locked_by:
 locked_since:
 supersedes:
-superseded_by: [backfill_smoke_write_path_canonical_audit_finalize_2026_08_08]
+superseded_by:
 resolved_by:
-archived_to: /plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md
-archived_date: 2026-08-10
 context_scope:
   [
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
@@ -73,13 +71,6 @@ source: >-
   backfill was run, no VM was launched, no GCS object was written or read. Every claim below cites a file:line that was
   opened and read, not grepped.
 ---
-
-> **ARCHIVED 2026-08-10** — All 6 follow-up todos resolved. Doc-comment correction (todo 3) shipped via
-> `instruments-service@37d48151` + `market-tick-data-service@a36d3cf1`, re-verified against live code
-> (`instruments-service@108f5120` had already hive-canonicalised the writer on 2026-07-22). Superseded by
-> `/plans/active/backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md`. Moved to
-> `plans/archive/2026_08/issues/`. Durable facts live in `/codex/02-data/non-canonical-path-inventory.md` entries
-> 16, 17.
 
 # Backfill-smoke write paths — test-bucket enforcement and canonical-grammar audit
 

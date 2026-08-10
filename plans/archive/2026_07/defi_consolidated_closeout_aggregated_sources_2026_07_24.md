@@ -585,7 +585,7 @@ picture.
     - **[DATA] P2.** Remove/relabel the 1 defi/UNISWAP_V3-BASE row mis-filed in the sports manifest under
       `source=api_football` (date=2026-06-26), plus the second mislabeled `source=instruments_service asset_group=cefi`
       row found in the same probe — same wrong-non-blank-value bug class.
-  - [`plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/archive/2026_08/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
+  - [`plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
     (6 open)
     - **1. [DATA] P1.** instruments-service: canonicalise the `instrument_availability` write using the sink PREFIX
       mechanism, not the partition dict (the UTL sink sorts keys alphabetically).

@@ -67,27 +67,27 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "batch-live-reconciliation-service": "0.49.3",
+    "batch-live-reconciliation-service": "0.49.0",
     "deployment-api": "0.77.2",
-    "deployment-service": "0.125.1",
+    "deployment-service": "0.124.3",
     "deployment-ui": "0.1.0",
     "execution-service": "0.58.0",
-    "features-service": "0.81.3",
+    "features-service": "0.81.2",
     "fund-administration-service": "0.9.32",
     "ibkr-gateway-infra": "0.0.74",
-    "instruments-service": "0.101.3",
-    "market-tick-data-service": "0.125.0",
+    "instruments-service": "0.101.2",
+    "market-tick-data-service": "0.124.0",
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.111.4",
     "unified-trading-library": "0.78.2",
     "unified-trading-pm": "1.2.741",
-    "market-data-processing-service": "0.28.2",
-    "e2e-testing": "0.41.1",
+    "market-data-processing-service": "0.28.0",
+    "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.100.3",
-    "greeks-service": "0.18.19",
+    "greeks-service": "0.18.13",
     "trading-agent-service": "0.12.11",
-    "strategy-service": "0.56.1",
-    "ml-service": "0.58.3",
+    "strategy-service": "0.56.0",
+    "ml-service": "0.58.1",
     "alerting-service": "0.61.4",
     "unified-trading-api": "0.4.0",
     "client-reporting-api": "0.32.0"
@@ -390,7 +390,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.95.0",
       "codebase_health": {
         "coverage_pct": null,
@@ -1308,7 +1308,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
@@ -2229,8 +2229,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.101.3",
-      "published_at": "2026-08-10T20:19:41Z",
+      "version": "0.101.2",
+      "published_at": "2026-08-10T19:19:39Z",
       "registry": "artifact-registry"
     }
   }

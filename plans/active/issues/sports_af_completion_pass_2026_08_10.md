@@ -347,43 +347,11 @@ depends_on: []
           non-linear deceleration expected into denser 2022+ seasons.
         - `/pre-compact` executed — tree clean, `ahead=0`, nothing at risk.
 
-      - **2026-08-10 (slot 28, data_engineering, ~21:11Z–~21:14Z)** — Post-compact monitoring + pre-compact:
-        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
-          `2021-07-11` (~21:07Z) → `2021-07-14` (~21:11Z). Monotonic, forward progress. ~399/2258 days done (~17.7%).
-          Heartbeat alive at `21:11:10Z`, no `exit_code=` yet. VM confirmed RUNNING.
-        - Pace ~3 season-start-dates in ~4 min — steady, consistent with prior trend. Still in 2021 seasons; non-linear
-          deceleration expected into denser 2022+ seasons. Run now ~4.6h old.
-        - No code shipped — pure monitoring across compact+resume cycles.
-        - `/pre-compact` executed — tree clean, `ahead=0`, nothing at risk.
-
-      - **2026-08-10 (slot 28, data_engineering, ~21:17Z)** — Post-compact resume + pre-compact:
-        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
-          `2021-07-20` (prior monitor event ~21:14Z) → `2021-07-24` (~21:17Z). Monotonic, forward progress. ~405/2258
-          days done (~17.9%). Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
-        - Pace ~4 season-start-dates in ~3 min — steady, consistent. Run ~4.7h old. Still in 2021 seasons.
-        - No code shipped — pure monitoring. Tree clean, `ahead=0`.
-
-      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM quick check:
-        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
-          `2021-07-26` (monitor event ~21:17Z) → `2021-07-30`. Monotonic, forward progress. ~409/2258 days done
-          (~18.1%). Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
-        - Pace ~4 season-start-dates since prior check. Still in 2021 seasons; non-linear deceleration expected into
-          denser 2022+ seasons. Run now ~5h+ old.
-        - No code shipped — pure monitoring. `/pre-compact` executed.
-
-      - **2026-08-10 (slot 28, data_engineering, post-compact resume)** — STANDINGS VM continued monitoring:
-        - VM `af-backfill-20260810-162910` (STANDINGS, on-demand, `e2-standard-8`, `asia-northeast1-c`): progressed from
-          `2021-07-30` (prior session) → `2021-08-05`. Monotonic, forward progress. ~414/2258 days done (~18.3%).
-          Heartbeat alive, no `exit_code=` yet. VM confirmed RUNNING.
-        - Pace ~6 season-start-dates since prior check. Still in 2021 seasons; non-linear deceleration expected into
-          denser 2022+ seasons. Run now ~5h+ old.
-        - No code shipped — pure monitoring. `/pre-compact` executing.
-
-## Deferred work after 2026-08-10 ~21:25Z
+## Deferred work after 2026-08-10 ~21:10Z
 
 | Item                                                             | State / why deferred                                 | Blocked on                         |
 | ---------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------- |
-| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-08-05`, ~414/2258 days (~18.3%)       | VM completion (real infra)         |
+| **STANDINGS backfill** (`af-backfill-20260810-162910`)           | RUNNING, `2021-07-11`, pace variable non-linear      | VM completion (real infra)         |
 | **TEAMS backfill**                                               | Queued behind STANDINGS (singleton lock)             | STANDINGS VM exit_code=0           |
 | **FIXTURE_STATS backfill**                                       | Queued behind TEAMS (singleton lock)                 | TEAMS VM exit_code=0               |
 | **FIXTURE_LINEUPS backfill**                                     | Queued behind FIXTURE_STATS (singleton lock)         | FIXTURE_STATS VM exit_code=0       |
