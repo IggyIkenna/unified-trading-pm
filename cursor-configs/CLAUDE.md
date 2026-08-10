@@ -356,6 +356,8 @@ architecture (L0–L4)".
   hand-roll; **backfill VMs default SPOT**, preemption recovery resumes from measured PROGRESS, never replays
   `START_DATE`; **Tardis: hard cap 1 concurrent VM, both clouds** (N>1 storms the API — count the fleet before
   launching); regularly audit for preemption-without-recovery + billing-waste (`/vm-preemption-billing-waste-audit`).
+  **Rightsizing HARD RULE (2026-08-10)**: any VM running >30min gets `/vm-resource-rightsizing-check`
+  (CPU+mem-growth) — skip only if a cited doc justifies the sizing.
   SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`, `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`,
   `…/deployment-observability.md`, `…/vm-preemption-and-billing-waste-monitoring.md`, `…/data-pipeline-alerts.md`.
 - **A critical service (AO first) looks idle/broken?** Diagnose before restarting — usually account/quota headroom
