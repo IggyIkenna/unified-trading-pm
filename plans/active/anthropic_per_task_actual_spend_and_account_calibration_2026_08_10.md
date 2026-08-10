@@ -102,15 +102,21 @@ to quantify and quarantine ONE account, not to feed the main calibration.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour of
-      delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
+- [x] ✅ [BACKEND] P0. **TIME-CRITICAL — start snapshotting the account usage meters to a history table now; every hour
+      of delay permanently loses 5-hour windows.** `account_usage` is keyed by `account_id` alone (8 rows, 8 accounts —
       verified 2026-08-10), so it holds CURRENT STATE ONLY: every past weekly and 5-hour window is already
       unrecoverable, leaving exactly one weekly observation per account and zero historical 5h observations. Persist
       `weekly_pct`, `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`,
       `overage_status`, `account_status` on a cadence at least twice per 5-hour window, keyed
       `(account_id, sampled_at)`. Independent of every other todo — do not let the attribution work delay it. **Done
       when**: the table exists on the live VM, a query shows >= 2 distinct `sampled_at` rows per active account, and the
-      sampler survives an orchestrator restart.
+      sampler survives an orchestrator restart. — agent-orchestrator@ce3389f (account_usage_history table + snapshot on
+      every UsagePoller tick) on origin. **Verified live 2026-08-10 (slot 19)**: `account_usage_history` exists on the
+      live state.db with all 9 required columns; 6 distinct `sampled_at` per account across all 8 accounts (sampled
+      14:16→16:01 UTC, ~20-min cadence, ≥2x/5h-window floor met with margin); 36 rows with both `weekly_pct` +
+      `five_hour_pct` non-null (e.g. sub-a weekly_pct=100, five_hour_pct=76). Poller started in `server.py` startup
+      (env-gated by `ORCHESTRATOR_USAGE_POLL_INTERVAL_MINUTES`, default 30min → ~10x/5h-window) → survives orchestrator
+      restart. See Progress Log.
 - [ ] [BACKEND] P0. **Build a slot-to-account-over-time attribution map in `server/` so any transcript turn resolves to
       the account that owned its slot at that timestamp.** Current attribution has no correct path:
       `agents.claude_session_id` holds only the CURRENT session id, so compaction mints a new id and orphans every
@@ -687,3 +693,24 @@ sampled turns), so only the 2.0x cache-write tier matters; cache-read volume is 
 week), which is what pushes measured value so far above the published band — nearly free on a subscription, expensive at
 list rates. A bare `sonnet` model alias appears on 68 turns and would keep poisoning rows even after the canonical model
 ids are registered.
+
+### 2026-08-10 — Todo 1 (meter-history sampler) complete + verified live (slot 19)
+
+Todo 1's code was already shipped (agent-orchestrator@ce3389f, "account_usage_history table and snapshot on every
+UsagePoller tick") but the checkbox was never flipped. Verified live against `data/state/state.db` on the orchestrator
+VM (read-only, `mode=ro`):
+
+- **Table exists**: `account_usage_history` present with all 9 required columns — `account_id`, `sampled_at` (composite
+  PK), `weekly_pct`, `weekly_window_start`, `five_hour_pct`, `five_hour_window_start`, `representative_claim`,
+  `overage_status`, `account_status`.
+- **≥2 distinct sampled_at per active account**: 6 distinct timestamps per account across all 8 accounts (sampled
+  14:16:22→16:01:21 UTC, ~20-min cadence — the poller's fast-reprobe loop; comfortably above the ≥2x-per-5h-window
+  floor, and the 30-min default interval is ~10x per window).
+- **Real meter values**: 36 rows with both `weekly_pct` and `five_hour_pct` non-null — e.g. sub-a-ikenna
+  `weekly_pct=100, five_hour_pct=76, representative_claim=five_hour, overage_status=rejected, account_status=disabled`.
+- **Survives restart**: `UsagePoller.start()` is wired in `server.py` startup (env-gated by
+  `ORCHESTRATOR_USAGE_POLL_INTERVAL_MINUTES`), so the snapshot loop comes back on every orchestrator restart.
+- DeepSeek accounts (`deepseek-v4-pro`/`flash`) are snapshotted too (6 rows each), so the history table is provider-
+  agnostic.
+
+Done-when fully met: table on live VM ✓, ≥2 distinct sampled_at per account ✓, restart-survival wiring ✓.
