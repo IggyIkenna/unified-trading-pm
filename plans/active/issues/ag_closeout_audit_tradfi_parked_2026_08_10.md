@@ -24,6 +24,8 @@ resolved_by:
 locked_by:
 assigned_vm: NA
 execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
 ---
 
 # ag-closeout-audit tradfi — parked findings 2026-08-10

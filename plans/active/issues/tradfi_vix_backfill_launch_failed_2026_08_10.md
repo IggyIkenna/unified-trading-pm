@@ -40,6 +40,9 @@ resolved_by:
 locked_by:
 created: 2026-08-10
 priority: P1
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # VIX futures backfill launch FAILED
