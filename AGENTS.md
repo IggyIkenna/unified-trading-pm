@@ -12,6 +12,9 @@ Shared instructions for all agents (Claude Code, Codex, Cursor) across this work
 - Search existing repos/libraries before implementing anything new
 - Never `git reset --hard` or discard uncommitted work without explicit user request
 - Conventional commits: `feat:`, `fix:`, `chore:`, `feat!:` (breaking)
+- **Agent memory writes are BANNED (HARD RULE)**: never write to `memory/` or `MEMORY.md` — it's per-cwd, local-only,
+  NOT inherited by sub-agents, and causes drift. Session findings go to the plan's Progress Log; the only exception is
+  operator-written personal/secrets state.
 
 ---
 
@@ -52,7 +55,7 @@ Every sub-agent prompt MUST include:
 - "Before any action, read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` and follow ALL rules
   strictly."
 - `WORKSPACE_ROOT: <absolute path>`
-- NEVER pass `model=` in Task tool calls (auto mode = free)
+- MUST set `model=` explicitly (stale "NEVER pass model=" convention retired — CLAUDE.md § "Model tier" is current)
 
 ---
 
