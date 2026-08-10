@@ -353,3 +353,9 @@ drift_direction: advance-code
   the build's UAC version; current `is_mvp` returns False, so the next catalogue rebuild drops it; cosmetic, MVP tag
   unused downstream). Source checkbox in `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` stays open for
   the batch-11 finalize twin to reconcile.
+- **2026-08-10 (slot 24)**: recovery note — the safe-doc-push prek-patch orphan incident
+  (`safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`) manifested on this commit's push: a retried
+  commit stashed unstaged foreign WIP into `~/.cache/prek/patches/` and the restore step never ran. Restored via
+  `git apply`, then verified the content had ALREADY landed on origin via its owners (cefi batch9 LC_TARBALL flip @
+  `43ec2ec651`, sports_af monitoring tick @ `395b50bc83`) — resolved all conflicts to origin, no duplicate commit. No
+  impact on this task's mvp flip (`8a561c3ed0`).
