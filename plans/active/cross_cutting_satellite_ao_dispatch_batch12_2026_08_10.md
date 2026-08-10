@@ -364,3 +364,10 @@ as historical recipe (may be deleted after plan archive).
 the operator wants to close the `trades` gap for `realized_vol_20`: launch a fresh MDPS VM with
 `MDPS_DATA_TYPES='trades' MDPS_TIMEFRAMES='1h'` for the same date range (or longer for lookback headroom), then re-run
 `merge_manifest_from_canonical_paths` + `returns` feature compute.
+
+**Session 7 verdict (pre-compact ~13:17 UTC)**: **Safe to compact: YES** — `ahead=0`, clean tree, no new changes.
+Continuation-only session (post-compaction resume). Step 1 audit: no uncommitted work, no dangling references, no
+secrets, workspace files `post_mdps_pipeline.{sh,log}` still present but regenerable. Steps 2-7 no-op — nothing was
+created, discovered, or flipped this session. Todo 7 remains done (`eb096a69b7` + `98c8bd10f3`). **Recommended next**:
+Todo 5 (P2 DATA, BITGET-FUTURES backfill retry) is the highest-priority open item. Deliberately dropped: stale monitor
+`bxwd163js` (pipeline log watcher) timed out and not re-armed.
