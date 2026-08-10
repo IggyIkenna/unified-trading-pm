@@ -130,16 +130,16 @@ mitigations, cheapest first:
       → detected, exit 1 from the check function; no patch → clean exit 0).
 
       **Reconciled against todo-1's note that `locked_git_commit()`'s `_prek_race_snapshot`/`_prek_race_check`
-                                              (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
-                                              retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
-                                              before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
-                                              and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
-                                              `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
-                                              behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
-                                              `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
-                                              only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
-                                              both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
-                                              redundant, so both mechanisms are now kept.
+                                                  (shipped `f8a307badf`, 2026-08-09) might already cover this**: confirmed it does cover the SAME-PROCESS
+                                                  retry-drops-the-restore scenario from the original incident (the edited file already has an unstaged diff
+                                                  before the snapshot, so a dropped restore on ANY subsequent attempt's commit call changes its post-commit hash
+                                                  and gets caught) — but it is scoped strictly to files already unstaged-dirty at the moment THIS script's OWN
+                                                  `locked_git_commit()` call starts, and only fires around that specific call. It cannot see: (a) a patch left
+                                                  behind by a DIFFERENT process's `git commit` in the same shared `~/.cache/prek/patches/` cache dir (a bare
+                                                  `git commit` outside this script, or a peer session not going through `locked_git_commit`), or (b) a file that
+                                                  only became unstaged-dirty after this script's own snapshot was taken. `check_orphaned_prek_patches()` closes
+                                                  both gaps by checking the shared cache dir directly, once, for the whole run — genuinely complementary, not
+                                                  redundant, so both mechanisms are now kept.
 
 - [x] ✅ [DEVOPS] P2. **RE-SCOPED (2026-08-10, per todo 1's verdict — reproduction did NOT confirm a genuine prek
       defect):** do not file upstream against prek. Instead, document in `scripts/dev/safe-doc-push.sh`'s own header
@@ -216,7 +216,7 @@ mitigations, cheapest first:
   empty) — archival-eligible per the plan-completion-and-archival-discipline SSOT; will `git mv` to `plans/archive/` in
   a separate follow-up commit (never bundled with the checkbox-flip commit).
 - **docs-reconcile 2026-08-10 (unrelated sweep, hit this as a blocking corpus-wide gate failure)**: corrected both
-  `unified-trading-pm@c692a472e6` citations above to the real commit — `c692a472e6` is not a valid object in this repo
+  `unified-trading-pm@fe47a4b219` citations above to the real commit — `c692a472e6` is not a valid object in this repo
   (`plan-commit-sha-evidence` gate confirmed); `fe47a4b219` ("docs(scripts): safe-doc-push.sh header note on prek
   patch-restore reproduction verdict") matches the claimed change exactly (same file, same header-comment content, same
   commit message topic) — the work was genuinely done, only the citation was wrong.
@@ -281,3 +281,14 @@ mitigations, cheapest first:
   present → no `git apply` needed, patches left in place (do-not-delete). Same root cause as the earlier slot-30
   occurrence: prek patch stash/restore on a retry-success leaves an orphan, the safety net catches it; the shared
   `~/.cache/prek/patches/` dir holds the evidence.
+- **2026-08-10 (slot 8, quant_dev, `strategy_archetype_latency_deployment_profile_audit-c01e8f1f0fd5` — todo 5
+  `rules-directional.md`)**: the safety net fired again on this slot's plan-flip `safe-doc-push.sh` push (`31c1441801`),
+  which succeeded but exited 9. Orphaned patches `1786377397449-1118243.patch` + `1786377409239-1124521.patch` diff
+  UNRELATED files this session never touched — `unified_api_contracts/registry/venue_mapping.py` (a reformat-only diff,
+  path does not even exist in the PM tree), `plans/active/multi_leg_execution_systems_execution_2026_08_10.md` (a
+  `[x] ✅` todo flip citing `execution-service@0a2f6018`), and `scripts/quality_gates/adapter_contract_baseline.yaml` (a
+  `multi_leg_orchestrator.py` baseline-entry removal) — all belonging to a concurrent session's
+  `multi_leg_execution_systems` work. `git status --porcelain` clean before and after; this run's own two pushes
+  verified on origin (`a7bc00e23c` + `31c1441801` both `merge-base --is-ancestor`-confirmed). Did NOT apply the patches
+  or touch the foreign files — wrong task/repo scope, live owner is the concurrent `multi_leg_execution_systems`
+  session. Left both patch files in place for that owner to recover; noting per this doc's established practice.
