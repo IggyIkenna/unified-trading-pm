@@ -135,15 +135,13 @@ context_scope:
       Closes the leak at its TRUE shared source for every consumer of `normalize_api_football_fixture`, not just the one
       write path that happened to lack a gate — 5 new regression tests lock in the fix; full existing api_football suite
       (95 tests) re-run clean.
-- [ ] [DATA] P2. **Migrate the 9,733 legacy-contaminated `instruments-store-sports-prd` objects** to the correct league
-      vocabulary now that the write path (todo above) is fixed and no longer re-contaminates. **UPDATE 2026-08-04
-      (slot 5)**: the delete-safety gate is CLEARED (fresh `gcs_bucket_soft_delete_retention_seconds()` check on this
-      bucket returns 2,592,000s / 30 days, well above the 604800s/7-day bar — §3a reversibility-qualified
-      agent-autonomous path, no `[OPERATOR]` step needed) — the `[OPERATOR]` tag is REMOVED. Split further into 3
-      tracked sub-todos in the issue doc after a dry-run inspection surfaced real beyond-the-sibling-pattern complexity
-      (a corpus-scale census + a cross-entity resolution dependency; the feared content-column rewrite did NOT
-      materialize — confirmed path-only). Full detail + the current census/build/apply sub-todos:
-      `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`. (repo: instruments-service /
+- [x] ✅ [DATA] P2. **Migrate the 9,733 legacy-contaminated `instruments-store-sports-prd` objects** to the correct
+      league vocabulary now that the write path (todo above) is fixed and no longer re-contaminates. —
+      market-tick-data-service@b37b8553. Delete pass complete: 12,988 verified-twin objects DELETED (§3a
+      reversibility-qualified at 604,800s), 928 differing-twin objects QUARANTINED (intentionally kept, pending
+      content-union decision). Fresh census: 0 delete-eligible contaminated objects remain for the 3 mappings
+      (SEGUNDA_DIVISION→LA_LIGA_2, BRAZIL_SERIE_A→BRASILEIRAO, ENGLAND_PREMIER_LEAGUE→EPL). Full evidence at
+      `issues/sports_legacy_league_vocab_recontamination_2026_08_10.md` todo 4. (repo: instruments-service /
       market-tick-data-service). **Done when**: a fresh census of `instruments-store-sports-prd` returns 0 objects
       carrying the country-prefixed contaminated vocabulary (excluding any quarantine population, tracked separately if
       non-empty).
