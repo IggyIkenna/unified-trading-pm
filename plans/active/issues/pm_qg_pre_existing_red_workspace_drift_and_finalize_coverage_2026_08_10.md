@@ -39,6 +39,7 @@ superseded_by:
 source:
   - slot-29, 2026-08-10, blocking ship of safe_doc_push_isolation_rewrites_slot_commit_identity
 depends_on: []
+archive_exempt: true
 ---
 
 # PM quality-gates.sh red on 8 pre-existing live-corpus tests
@@ -101,11 +102,14 @@ Fix the two test families so PM QG is deterministic on the shared host:
       explicit `--workspace-root` over `__file__` anchor; tests' own tmp_path fixtures were already correct. Fix
       `465ea24093` (main·laptop) resolved both test families. Verified: 9/9 workspace-drift + 7/7 finalize-coverage
       tests pass deterministically at LDR HEAD.
-- [ ] [INFRA] P1. **Make `check_finalize_plan_coverage.py` tests use a fixed fixture corpus, not the live
-      `plans/active/`** (repo: unified-trading-pm). The 3 failing tests in
-      `scripts/quality_gates/test_check_finalize_plan_coverage.py` scan the live plan corpus and assert violation counts
-      the churning corpus no longer yields. Fix by running them against a fixed tmp fixture corpus. Done when: the 3
-      tests pass deterministically on the shared VM regardless of concurrent plan activity.
+- [x] ✅ [INFRA] P1. **Make `check_finalize_plan_coverage.py` tests use a fixed fixture corpus, not the live
+      `plans/active/`** (repo: unified-trading-pm) — unified-trading-pm@8a7b1860a0 (+ root-cause fix
+      unified-trading-pm@465ea24093). The 3 failing tests in
+      `scripts/quality_gates/test_check_finalize_plan_coverage.py` previously scanned the live plan corpus; they now
+      exercise the coverage logic against a synthetic tmp_path fixture corpus via the `_pm_root_or_legacy` monkeypatch
+      (restored in `8a7b1860a0`), and the `_pm_root.py` `--workspace-root` priority fix (`465ea24093`) ensures the
+      explicit root wins over the `__file__` anchor. Done-when verified: full PM `quality-gates.sh` green at LDR HEAD
+      `79171795f2` (1925 passed, 0 failed) — the 3 tests pass deterministically regardless of concurrent plan activity.
 
 ## Progress Log
 
@@ -118,3 +122,7 @@ Fix the two test families so PM QG is deterministic on the shared host:
   (main·laptop, `fix(qg): P0 — explicit --workspace-root must win over the __file__ anchor in _pm_root`) resolved both
   test families. Verified: 9/9 workspace-drift + 7/7 finalize-coverage tests pass at LDR HEAD (`ad48335f5e`). Flipped
   todo 1 checkbox. Todo 2 also resolved by same root-cause fix — ready for flip.
+- **2026-08-10 (slot-3, infra)**: Flipped todo 2. Code already on LDR (`8a7b1860a0` fixture-corpus test restore +
+  `465ea24093` `_pm_root` root-cause fix). Verified done-when: full PM `quality-gates.sh` green at LDR HEAD `79171795f2`
+  — 1925 passed, 0 failed, "Finalize-plan coverage check passed". The 3 tests now run against a fixed tmp fixture corpus
+  (monkeypatched `_pm_root_or_legacy`), deterministic regardless of concurrent plan activity.
