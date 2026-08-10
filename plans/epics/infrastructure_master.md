@@ -71,8 +71,8 @@ related_plans:
   - ../archive/2026_08/infra_satellite_ao_dispatch_batch14_finalize_2026_08_09.md
   - ../archive/2026_08/infra_satellite_ao_dispatch_batch7_2026_08_04.md
   - ../active/infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md
-  - ../active/infra_satellite_ao_dispatch_batch9_2026_08_09.md
-  - ../active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md
+  - ../archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md
+  - ../archive/2026_08/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md
   - ../active/lst_rate_honest_coverage_2026_07_21.md
   - ../active/pm_bats_tests_never_invoked_by_quality_gates_2026_07_26_finalize_2026_08_08.md
   - ../active/qg_host_adaptive_resource_governor_2026_07_14.md
@@ -701,11 +701,11 @@ fleet workflow templates into unified-trading-ci reusable workflows
 **status**: active · **estimate**: 0.32 cal AI-days (class: infra) **title**: Infra satellite AO batch 13 — diagnose +
 fix the unified-trading-system-ui mock dev-server crash under sustained Playwright load
 
-### [`infra_satellite_ao_dispatch_batch9_2026_08_09`](../active/infra_satellite_ao_dispatch_batch9_2026_08_09.md)
+### [`infra_satellite_ao_dispatch_batch9_2026_08_09`](../archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md)
 
 **status**: active · **estimate**: 0.64 cal AI-days (class: infra)
 
-### [`infra_satellite_ao_dispatch_batch9_finalize_2026_08_09`](../active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md)
+### [`infra_satellite_ao_dispatch_batch9_finalize_2026_08_09`](../archive/2026_08/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md)
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: Infra satellite AO dispatch batch 9 —
 finalize (reconcile source-doc checkboxes + archive)

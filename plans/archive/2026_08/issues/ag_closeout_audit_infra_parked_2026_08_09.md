@@ -39,8 +39,8 @@ related:
   [
     /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_08.md,
     /plans/archive/2026_08/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md,
-    /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
-    /plans/active/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_finalize_2026_08_09.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch11_2026_08_09.md,
     /plans/archive/2026_08/infra_satellite_ao_dispatch_batch11_finalize_2026_08_09.md,
     /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
@@ -78,7 +78,7 @@ context_scope:
   [
     /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_08.md,
     /plans/archive/2026_08/issues/infra_batch3_g1_g2_deferred_gate_update_2026_08_07.md,
-    /plans/active/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
+    /plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 source: >-
